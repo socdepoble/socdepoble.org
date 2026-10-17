@@ -500,7 +500,11 @@ export const loadFils = async (config = {}) => {
        Auditoria adversarial 261016 (P2) · Ací el xat públic de /iaia és un
        grup on la IAIA no contesta (localXat només fa respondre el fil
        'iaia'): no retira la fila «IAIA MarIA» (paginaDeLaIAIA: false), que
-       porta al directe. Comentar a /iaia ja no se l'endú. */
+       porta al directe. Comentar a /iaia ja no se l'endú.
+       Gauntlet 261016_1530 (Bloc 3.6.1) · Derogada la fila directa
+       sintètica de «Sóc de Poble»: la llavor ja porta la COMUNITAT, i les dos
+       juntes eren el duplicat que l'ordre prohibix. Ara només Javi i la IAIA
+       (ACTORS_PERMANENTS). */
     if (seed) return ambXatsPerDefecte(await seed.loadFils(config), { paginaDeLaIAIA: false });
     const supabase = await getClient(config);
     comprovaSenyal(config);
@@ -516,6 +520,9 @@ export const loadFils = async (config = {}) => {
        error es propaga sense cap fila inventada. La llavor ja porta els seus
        fils i no passa per ací (Gauntlet 261016: derogat, vegeu dalt; i des
        d'ara Javi Llinares també és a la cua, ACTORS_PERMANENTS).
+       Gauntlet 261016_1530 (Bloc 3.6.1) · Sóc de Poble ja no hi és: el seu
+       actor és la comunitat, que porta (o hi porta) la llista
+       (sections/xat/actorsDelXat.js), mai un directe inventat.
        Onada 6 (tasca 12) · El xat de la IAIA es diu «IAIA MarIA» i porta la
        seua cara (vestixLaIAIA): el xat públic de /iaia que la fila obri ja no
        la canvia de nom. La llavor no en necessita: el seu fil 'iaia' ja es

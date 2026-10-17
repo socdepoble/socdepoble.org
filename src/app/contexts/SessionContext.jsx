@@ -7,6 +7,7 @@ import {
 } from '../../data/recuperacioPendent.js';
 import { eixDeLaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
 import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../../sections/notes/GlobalSaveManager.js';
+import { entraComAPilot } from '../../data/sessioPilot.js';
 
 const SessionContext = createContext(null);
 const EMPTY_CONFIG = Object.freeze({});
@@ -44,6 +45,12 @@ const ambEntradaExplicita = (entra) => (...args) => {
 const loginWithPasswordDelPort = ambEntradaExplicita((...args) => loginWithPassword(...args));
 const loginWithGoogleDelPort = ambEntradaExplicita((...args) => loginWithGoogle(...args));
 const registerWithPasswordDelPort = ambEntradaExplicita((...args) => registerWithPassword(...args));
+/* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · L'entrada pilot local
+   (data/sessioPilot.js): només en desenvolupament i en mode de proves, sense
+   cap petició. No és del port: la sessió de prova és del nucli, per a tots els
+   backends igual. És una entrada explícita com les altres i també oblida la
+   recuperació en curs. */
+const entraComAPilotDelNucli = ambEntradaExplicita((...args) => entraComAPilot(...args));
 /* Eixir de veres (no buidar només la pestanya) també l'oblida, quan ha anat bé. */
 const iOblidaRecuperacio = (promesa) => Promise.resolve(promesa).then((resultat) => {
   oblidaRecuperacioPendent();
@@ -98,6 +105,7 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
     loginWithGoogle: loginWithGoogleDelPort,
     loginWithPassword: loginWithPasswordDelPort,
     registerWithPassword: registerWithPasswordDelPort,
+    entraComAPilot: entraComAPilotDelNucli,
     listMyOrganizations,
     comprovaServidor: comprovaServidorDelPort,
     demanaRecuperacioContrasenya: demanaRecuperacioDelPort,

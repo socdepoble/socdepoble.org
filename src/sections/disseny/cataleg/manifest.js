@@ -57,7 +57,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
   superposicions: Object.freeze({
     dialeg: '🪟', confirmacio: '❓', calaix: '🗄️', 'pantalla-completa': '📺', pista: '💡',
     menu: '🍽️', 'xat-nova-conversa': '🆕', 'xat-ajustos': '⚙️', visibilitat: '🌍',
-    toast: '📣', enquadrament: '✂️', impressio: '🖨️', 'detall-article': '🔬'
+    toast: '📣', enquadrament: '✂️', impressio: '🖨️', 'detall-article': '🔬',
+    /* Onada 0.3 (Gauntlet 261016) · el visor de fotos de l'Arxiu visual. */
+    'visor-imatges': '📸'
   }),
   inventari: Object.freeze({ global: '🗃️' }),
   emoticones: Object.freeze({ xl: '🌻' })
@@ -287,6 +289,10 @@ const SUPERPOSICIONS = [
   especimen('superposicions', 'pantalla-completa', 'Pantalla completa', 'PedraSeca/organismes/PantallaCompleta.jsx', ['organisme'],
     'Un bloc de la pàgina a tota la caixa de l’App, sense la barra lateral ni les de dalt: el Dialeg de mida completa, amb una franja que només porta «Eixir». Escape també ix, i el focus torna al botó que l’ha obert.',
     'pantalla completa maximitzar eixir calendari agenda'),
+  /* Onada 0.3 (Gauntlet 261016) · el visor de fotos de l'Arxiu visual (/multimedia). */
+  especimen('superposicions', 'visor-imatges', 'Visor d’imatges', 'PedraSeca/organismes/VisorImatges.jsx', ['organisme', 'imatge', 'multimedia'],
+    'Les fotos a pantalla completa sobre el fons fosc del crom, a l’estil de Google Fotos: anterior i següent amb la volta, zoom fluid (roda, doble clic, botons, tecles i pessic) i un panell plegable amb la data i l’hora, el GPS, la càmera, l’autor, el poble, els drets i on s’ha publicat la foto. Sense eixir de la galeria.',
+    'visor lightbox galeria fotos imatges zoom exif gps camera drets arxiu visual multimedia google fotos pantalla completa'),
   especimen('superposicions', 'pista', 'Pista', 'PedraSeca/molecules/Pista.jsx', ['molecula'],
     'Ajuda que es toca: substituïx els títols emergents, que no existixen en pantalla tàctil.'),
   especimen('superposicions', 'menu', 'Menu', 'PedraSeca/molecules/Dropdown.jsx', ['molecula'],

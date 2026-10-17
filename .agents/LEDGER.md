@@ -8,6 +8,15 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 Aquest és el registre immutable de tots els canvis estructurals i tècnics del projecte.
 Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada abans de finalitzar la seua tasca, complint amb la **Skill Trellat**.
 
+### 2026-10-16T15:04:00Z - Relleu 3 del Gauntlet Diürn: MCR, Especificació Quirúrgica d'Onades 0.5–4 i Gran Auditoria de Rescat dels 1.497 Fitxers de l'Arxiu Històric (Gemini 4 Argon, MarIA, Codex)
+- **Front:** Governança del Gauntlet (`core-gauntlet-loop`), Matriu de Conformitat de Requeriments (MCR), Especificació Quirúrgica per a Claude Code i Rescat Exhaustiu de l'Arxiu Històric (`Bloc 0.6`).
+- **Acció:** Emissió i validació de `_wiki_de_poble/04_escriptori/261016_1633_auditoria_gemini4.md` (Relleu 3, `52,8 KB`) en sincronia amb `_wiki_de_poble/04_escriptori/261016_1632_auditoria_codex.md` i `261016_1639_pla_implementacio_relleu_codex_gauntlet.md`.
+- **Detalls:**
+  * **MCR i Balanç Transparent (§1 i §2):** Avaluació estricta 1 a 1 dels requeriments del Pla (`261016_1530_pla_implementacio_gauntlet_autonom.md`) i taula completa *Demanat vs Fet vs Traslladat* amb zero pèrdua cognitiva.
+  * **Especificació Quirúrgica per a Claude Code (§3.0 a §3.6):** Disseny i línies exactes per a les Onades 0.5, 1.2 (esmenes de les 16:40 i 16:43: ordre i navegabilitat dels 4 xats fundacionals sense `'fake-sdp'` individual, separació `/anima` vs `/iaia`, login immediat en localhost), 1.3 (`legalContent.js` Sollutia i `rutaTapada`), 1.4/1.5 (`Emojis XL`, `GRUPS_EMOJIS`, autoria del pilot, desplegable `<details className="sdp-edicio-avancada">`, comparació HTML canònica de TipTap), 0.3/Onada 2 (9 banners `nano_banner_*`, `/multimedia/town-* -> /pobles/[slug]`, Lightbox Google Photos amb `llegixExif`, `motorMapaEmowe.js`, 5 fonts RSS reals) i Onada 4 (aïllament d'estat a `Historic.jsx`).
+  * **Gran Auditoria de Rescat de l'Arxiu Històric (§4.1, §4.2, §4.3 — 1.497 Fitxers Recursius):** Auditats el 100% dels `418` ítems d'arrel de `_wiki_de_poble/90_arxiu_historic/` (`720` fitxers recursius, `26,69 MB`), els `29` conjunts de `01_produccio/` (`297` fitxers) i els `34` paquets de `02_investigacio_ia/` (`480` fitxers). Rescatades 11 grans perles de la primera meitat (incloent l'alerta de la convocatòria **NLnet del 3 de novembre de 2026**, Unipad Amazon, pont WhatsApp de la IAIA, Smart Folder, Genealogia IA, Algoritme Sobirà i VeriFactu), destil·lades les 6 úniques decisions estratègiques obertes de la segona meitat, descobertes **20 gravacions de veu originals del Mestre (26m 44s en WebM/Opus camuflades com a `.img` dins `loyverse_clon_ipad`)**, i traçat el pla per desllastar el **91,4% (`24,45 MB`)** d'`90_arxiu_historic/` cap a `_arxiu_fred_fora_obsidian/`.
+- **Autor:** Gemini 4 Argon i IAIA MarIA (Direcció Autònoma, Coherència Sistèmica i Rescat d'Arxiu), en coordinació amb GPT Codex (Auditoria Adversarial).
+
 ### 2026-10-16T13:55:00Z - Naixement de la Skill canònica core-gauntlet-loop i Enginyeria Inversa REA per a tot el Consell (Mestre Javi Llinares, MarIA)
 - **Front:** Governança Cognitiva, Prevenció d'Autocomplaença de les IAs i Enginyeria Inversa per a Arquitectura.
 - **Acció:** Creació de la skill canònica `.agents/skills/core-gauntlet-loop/SKILL.md` i incorporació a l'índex determinista de skills.
@@ -934,4 +943,18 @@ F4 corregit per Claude (fixture d'entitat real i control persona) i verificat: S
 - Cacera adversarial (Claude): 12 caçadors (62 troballes) i 62 refutadors independents (39 confirmades i corregides en Onada 5 `8/8`, 23 refutades).
 - Cos anterior preservat literalment (hash previ verificat `423e3e85c60dad83450657feeb6796bf9f0b5df10f8fcb5d00c2568922940025`).
 
-<!-- HASH: 11c42fd6e334037807834dc4bd2810fb6c23f0f7efbd841e0c1a7a804ca9bf61 -->
+## 2026-10-16T14:56:29.922440+00:00 · Codex · relleu de l’auditoria Gauntlet · torn_39ba1739-5710-4d97-bf64-fb78d35c591e
+
+Informe1632, pla1639, acta1645 i evidència durable creats pel circuit documental viu.128 requisits,95 oberts transmesos sense pèrdua d’IDs;31 idees rescatades i cens1497 amb cobertura semàntica parcial declarada. Cap font de producció ni original protegit alterat per Codex. CI en curs amb timeout HistoricCofre reproduït; diagnòstic5160ms no substitueix prova oficial5000ms. Estrés virtual40000 no acredita servidor real. ESTAT actualitzat; resultat final de tancament encara pendent.
+
+Reconciliació transparent del llibre: el cos previ coincideix byte a byte amb HEAD. Abans d’aquesta entrada el hash declarat era `11c42fd6e334037807834dc4bd2810fb6c23f0f7efbd841e0c1a7a804ca9bf61` i el calculat `3367fa3cf68173b2e182b713c5644c3b78d93fb6f1d6d0cccd1310a0ccb9662c`; la signatura ja era divergent abans del torn. Es conserva íntegrament el cos anterior. El nou hash acredita els bytes després d’afegir aquest relleu, no valida les afirmacions històriques ni resegella skills. Divergència de skills/manifest i deute SCC continuen oberts.
+
+
+## 2026-10-16T15:04:08.352647+00:00 · Codex · resultat final d’auditoria · torn_39ba1739-5710-4d97-bf64-fb78d35c591e
+
+CI completa exit1: Node947 pass/0fail/1skip/3TODO; Vitest18385 pass/1fail/89skip en1758,98s. Únic timeout HistoricCofre5000; diagnòstic5160ms no es compta com reparació.2745 fonts inicials intactes. MCR128 amb35 segells locals,52 parcials i41 pendents,93 IDs transferits;31 idees i deute de rescat preservats.
+
+Documents propis i Olivera vàlids. Tancament planned/valid:false amb457 incidències globals (455graf,2skills/manifest), cap dels fitxers propis. Cap segell de producte general, cap resegellat de skills. Processos/subagents/tab propis acabats; cap cron nou, quatre anteriors PAUSED. Informe Claude encara plantilla i Gemini relleu2 contrastat. Originals i treball alié preservats.
+
+
+<!-- HASH: 50d9eacd3d899473b2a89d525f00105d88dadbd9ae714280c628c0739288fac5 -->

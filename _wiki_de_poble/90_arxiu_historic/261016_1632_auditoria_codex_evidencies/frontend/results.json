@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-16T14:46:01.319Z",
+  "root": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org",
+  "node": "v24.13.0",
+  "scope": "Local runtime reproduction; no network was sent, fetch was mocked; no browser visual QA or production mutation.",
+  "hashes": {
+    "src/sections/notes/NotesSection.jsx": "cf03bd187369ca45cadfdf0f3c63df0b66d25235ddcf7446dbfc2aaa65d6ae19",
+    "src/components/universal/richText/useUniversalRichText.js": "c3cb50528987cff4655333bc33fe41aa24b4d655f92b041f57a243353084f930",
+    "src/data/telemetria.js": "b999b8d9624df2a1376735d40fe0df24ca4bc9597c3a1609c80872230852682f",
+    "src/components/universal/textosLlavor.js": "704379ef464a4438c771709a2523b3f3b9c406eef22cf12d8084f39bfe6ed22e"
+  },
+  "tiptap": {
+    "geminiWhitespaceComparison": false,
+    "normalizedSeedLength": 335,
+    "normalizedHtmlLength": 328,
+    "sameSchemaCanonicalHtmlComparison": true,
+    "sameSchemaDocumentComparison": true,
+    "seedLength": 335,
+    "editorHtmlLength": 328,
+    "equalityUsedByClearOnFocus": false,
+    "hasBulletList": false,
+    "normalizedHtml": "<h3>Heading 3 (punxa ací per esborrar-ho tot)</h3><p>Aquest és un paràgraf de prova sota un Heading 3.</p><h4>Heading 4</h4><p>Aquest és un paràgraf de prova sota un Heading 4.</p><h5>Heading 5</h5><p>Aquest és un paràgraf de prova sota un Heading 5.</p><h6>Heading 6</h6><p>Aquest és un paràgraf de prova sota un Heading 6.</p>"
+  },
+  "telemetry": {
+    "result": {
+      "tipus": "visita",
+      "nom": null,
+      "url": "/javillinares",
+      "dades": null,
+      "moment": "2026-10-16T14:46:01.317Z",
+      "enviat": true,
+      "motiu": "umami"
+    },
+    "captured": {
+      "url": "https://metriques.example.invalid/api/send",
+      "method": "POST",
+      "body": {
+        "type": "event",
+        "payload": {
+          "website": "11111111-1111-4111-a111-111111111111",
+          "hostname": "socdepoble.org",
+          "language": "en-US",
+          "screen": "0x0",
+          "url": "/javillinares",
+          "referrer": ""
+        }
+      }
+    }
+  }
+}

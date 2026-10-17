@@ -41,6 +41,16 @@
  * «En privat» d'una targeta seua, «Escriu-li al xat») porta Javi, per id o
  * àlies del padró pilot, al seu xat de només lectura; abans acabava al xat de
  * mostra de l'entitat Sóc de Poble, amb compositor i resposta simulada.
+ *
+ * Gauntlet 261016_1530 (prompt, Bloc 3.6.1; relleu F57-F59) · Ordre del
+ * Mestre: «PROHIBIT duplicar Sóc de Poble». Derogat el directe de mostra amb
+ * l'entitat (el 'fake-sdp' amb avatar redó i «Registra't per a descobrir…»):
+ * ara 'fake-sdp' és la COMUNITAT de Sóc de Poble, amb Avisos (la benvinguda
+ * de sempre, sense llegir), General i Beta Testers, com la de la llavor
+ * (xatSeed.js). Els quatre actors van en l'ordre de l'ordre (la comunitat de
+ * Sóc de Poble, Javi, Gent de la Torre i la IAIA): els posa la llista
+ * (actorsDelXat.js), com al xat de veres. «Nova conversa» amb Sóc de Poble
+ * porta a la fitxa d'eixa comunitat (XatSection: /xat/<comunitat>).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
@@ -52,9 +62,32 @@ import {
 } from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
 import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelXat } from '../pobleAmfitrio.js';
+import { ENTITAT_PILOT_ID } from '../../../data/identitatsSeed.js';
+import { RUTA_DE_SOC_DE_POBLE } from '../actorsDelXat.js';
 
 const IAIA = AJUDA_PER_CLAU.iaia;
 const SOC_DE_POBLE = AJUDA_PER_CLAU.socdepoble;
+
+/* Gauntlet 261016_1530 (Bloc 3.6.1) · La comunitat de mostra de Sóc de Poble:
+   l'id de sempre ('fake-sdp'), ara d'una comunitat. El subjecte és l'entitat
+   pilot pel seu id de la llavor (actorsDelXat.js la reconeix i la posa la
+   primera) i la seua ruta, la canònica. El nom del canal de proves és el
+   literal de l'ordre (prompt 261016_1530, Bloc 3.6.1: «Beta Testers»), el
+   mateix de la llavor (xatSeed.js), un nom propi que no es traduïx. */
+const ID_COMUNITAT_SDP = 'fake-sdp';
+const NOM_BETA_TESTERS = 'Beta Testers';
+
+function filsDeSocDePoble(t, ara) {
+  const subjecte = { tipus: 'entitat', id: ENTITAT_PILOT_ID, ruta: RUTA_DE_SOC_DE_POBLE, titol: SOC_DE_POBLE.nom };
+  const comuna = { comunitatId: ID_COMUNITAT_SDP, subjecte, ultimAl: ara, llegitFinsSeq: 0 };
+  return [
+    { id: ID_COMUNITAT_SDP, tipus: 'comunitat', esComunitat: true, name: SOC_DE_POBLE.nom, title: SOC_DE_POBLE.nom, avatar_url: SOC_DE_POBLE.avatar, subjecte, ultimAl: ara, noLlegits: 0 },
+    { ...comuna, id: `${ID_COMUNITAT_SDP}-avisos`, tipus: 'canal', esCanal: true, potEscriure: false, name: t('section.xat.fake.avisos', 'Avisos'), title: t('section.xat.fake.avisos', 'Avisos'), noLlegits: 1, ultimSeq: 2,
+      ultimText: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim.") },
+    { ...comuna, id: `${ID_COMUNITAT_SDP}-general`, tipus: 'grup', esGrup: true, name: t('section.xat.fake.general', 'General'), title: t('section.xat.fake.general', 'General'), noLlegits: 0, ultimSeq: 0, ultimText: '' },
+    { ...comuna, id: `${ID_COMUNITAT_SDP}-beta`, tipus: 'grup', esGrup: true, name: NOM_BETA_TESTERS, title: NOM_BETA_TESTERS, noLlegits: 0, ultimSeq: 0, ultimText: '' }
+  ];
+}
 
 /* Els fils de la comunitat del poble: la comunitat (sense missatges, amb la
    cara del poble si la seua fitxa en té), els Avisos (només lectura, com els
@@ -88,7 +121,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       { id: 'm1', seq: 1, text: t('section.xat.fake.iaia1', "Hola, foraster! Sóc la IAIA MarIA, la intel·ligència d'este poble."), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara },
       { id: 'm2', seq: 2, text: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara }
     ],
-    'fake-sdp': [
+    /* Gauntlet 261016_1530 · La benvinguda de sempre, ara als Avisos de la comunitat. */
+    [`${ID_COMUNITAT_SDP}-avisos`]: [
       { id: 'm3', seq: 1, text: t('section.xat.fake.sdp1', "Benvingut a Sóc de Poble. Som una xarxa de pobles connectats."), sender: 'other', author: SOC_DE_POBLE.nom, is_ai: false, creatAl: ara },
       { id: 'm4', seq: 2, text: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim."), sender: 'other', author: SOC_DE_POBLE.nom, is_ai: false, creatAl: ara }
     ],
@@ -108,6 +142,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
   const iaiaApagada = Boolean(originalContext?.iaiaApagada);
 
   const fakeThreads = useMemo(() => [
+    /* Gauntlet 261016_1530 (Bloc 3.6.1) · La comunitat de Sóc de Poble, al lloc del directe derogat. */
+    ...filsDeSocDePoble(t, ara),
     ...deLPoble,
     ...(iaiaApagada ? [] : [{
       id: 'fake-iaia',
@@ -122,19 +158,6 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       llegitFinsSeq: 0,
       ultimText: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!")
     }]),
-    {
-      id: 'fake-sdp',
-      name: SOC_DE_POBLE.nom,
-      title: SOC_DE_POBLE.nom,
-      avatar_url: SOC_DE_POBLE.avatar,
-      tipus: SOC_DE_POBLE.tipus,
-      participants: [{ id: `ajuda:${SOC_DE_POBLE.tipus}`, nom: SOC_DE_POBLE.nom, tipus: SOC_DE_POBLE.tipus }],
-      ultimAl: ara,
-      noLlegits: 1,
-      ultimSeq: 2,
-      llegitFinsSeq: 0,
-      ultimText: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim.")
-    },
     /* Gauntlet 261016 (Bloc 3.6.1) · Javi Llinares: el missatge automàtic ja
        llegit (els no llegits de la mostra no canvien) i de només lectura. L'avís
        del compositor és la invitació de sempre de la mostra. */
@@ -199,7 +222,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     comunitats,
     getThreadMessages,
     sendChatMessage,
-    /* Els no llegits de les dues entrades d'ajuda: un cadascuna. */
+    /* Els no llegits de les dues entrades d'ajuda: un cadascuna (des del
+       261016_1530, el de Sóc de Poble és als Avisos de la seua comunitat). */
     totalNoLlegits: iaiaApagada ? 1 : 2,
     cercaMembres: async () => AJUDA.filter(({ clau }) => !(iaiaApagada && clau === 'iaia')).map(({ nom, tipus, avatar }) => ({
       nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false
@@ -209,7 +233,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       /* Auditoria adversarial 261016 · Javi, per id o àlies (mai pel nom): el
          seu xat de només lectura, no el de l'entitat. */
       if (esLaPersonaDeContacte({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
-      return 'fake-sdp';
+      /* Gauntlet 261016_1530 · La comunitat de Sóc de Poble (XatSection n'obri la fitxa): cap directe de mostra. */
+      return ID_COMUNITAT_SDP;
     },
     esFilAmagat: (filId) => iaiaApagada && filId === 'fake-iaia'
   }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, iaiaApagada]);

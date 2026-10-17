@@ -16,23 +16,29 @@
  * Onada 6 (integració Xat i Pobles) · Amb la mateixa fitxa, i si l'amfitrió
  * no n'ha declarat el nom, es diu com la gent del poble (nomDelPoble amb
  * `towns`), el nom que tindrà el grup quan existisca.
+ *
+ * Gauntlet 261016_1530 (Bloc 3.6; actorsDelXat.js) · La mateixa fila porta a
+ * la comunitat de Sóc de Poble quan encara no és a la llista: `nom`, `avatar`,
+ * `etiqueta` i `clau` (la llavor de les inicials) són opcionals i, sense
+ * ells, el DOM és el de sempre.
  */
 import { ChevronRight, Pin } from 'lucide-react';
 import { AvatarComunitat } from './FilaConversa.jsx';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext';
 import { avatarDelPoble, nomDelPoble } from '../pobleAmfitrio.js';
 
-export default function FilaPoble({ poble, onObri, t }) {
+export default function FilaPoble({ poble, onObri, t, nom: nomPropi = null, avatar = undefined, etiqueta = null, clau = null }) {
   const { towns } = useCoreContent();
-  const nom = nomDelPoble(poble, towns);
+  const nom = nomPropi || nomDelPoble(poble, towns);
+  const cara = avatar === undefined ? avatarDelPoble(poble, towns) : avatar;
   return (
     <button type="button" className="sdp-xat-fila sdp-xat-fila--comunitat" onClick={() => onObri(poble)}>
-      <AvatarComunitat fil={{ id: `poble:${poble.id}`, avatar_url: avatarDelPoble(poble, towns) }} nom={nom} />
+      <AvatarComunitat fil={{ id: clau || `poble:${poble.id}`, avatar_url: cara }} nom={nom} />
       <span className="sdp-xat-fila__cos">
         <span className="sdp-xat-fila__cap">
           <span className="sdp-xat-fila__nom">
             {nom}
-            <span className="sdp-nomes-lector">{`, ${t('section.xat.poble.etiqueta', 'Grup del poble')}`}</span>
+            <span className="sdp-nomes-lector">{`, ${etiqueta || t('section.xat.poble.etiqueta', 'Grup del poble')}`}</span>
           </span>
           <ChevronRight className="sdp-xat-fila__xebro" size={20} aria-hidden="true" focusable="false" />
         </span>

@@ -847,6 +847,48 @@ const FITXERS = [
   'src/data/agentsSeed.drets.test.js',
   'src/data/supabase/xat.baixa.realtimejs.test.js',
   'src/sections/disseny/cataleg/detalls/EspecimenDretsAutor.test.jsx',
+  /* Gauntlet diürn 261016 · Onada 0.3, Arxiu visual (/multimedia): el visor de
+     Pedra Seca i el seu espècimen, el cens, la Cronologia, els orígens i els
+     drets, el panell de la foto, l'EXIF de la foto oberta i la redirecció de
+     /multimedia/<id>. MultimediaSection.jsx, MultimediaContext.jsx, exif.js,
+     ItemDetailSection.jsx, navigation.js, i18n.js i el catàleg ja són dalt. */
+  'src/components/PedraSeca/organismes/VisorImatges.jsx',
+  'src/components/PedraSeca/organismes/VisorImatges.test.jsx',
+  'src/components/PedraSeca/qualitat.visor.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenVisorImatges.jsx',
+  'src/sections/multimedia/VisorDeLArxiu.jsx',
+  'src/sections/multimedia/censImatges.js',
+  'src/sections/multimedia/censImatges.test.js',
+  'src/sections/multimedia/cronologia.js',
+  'src/sections/multimedia/cronologia.test.js',
+  'src/sections/multimedia/origenImatges.js',
+  'src/sections/multimedia/origenImatges.test.js',
+  'src/sections/multimedia/panellDeLaFoto.js',
+  'src/sections/multimedia/panellDeLaFoto.test.js',
+  'src/sections/multimedia/rutesMultimedia.js',
+  'src/sections/multimedia/useCensImatges.js',
+  'src/sections/multimedia/useMetadadesFoto.js',
+  'src/sections/multimedia/legacyMedia.js',
+  'src/sections/multimedia/mediaContent.js',
+  'src/sections/multimedia/mediaContent.test.js',
+  'src/sections/multimedia/MultimediaContext.test.jsx',
+  'src/sections/multimedia/MultimediaSection.test.jsx',
+  'src/sections/multimedia/MultimediaSection.recursos.test.jsx',
+  'src/sections/multimedia/MultimediaSection.visor.test.jsx',
+  'src/sections/multimedia/i18n.multimedia.test.js',
+  /* Gauntlet diürn 261016 · tancament del carril D (identitat dual, Perfil i
+     Wiki): el rol de superadmin estable durant la comprovació de la sessió, la
+     guarda de la identitat dual i les proves noves. WikiDePobleSection.jsx,
+     PerfilShell.jsx, PerfilShell.espai.test.jsx i MercatSection.autoria.test.jsx
+     ja són dalt. */
+  'src/hooks/useSuperadminEstable.js',
+  'src/hooks/useSuperadminEstable.test.jsx',
+  'src/sections/wiki-de-poble/maquinaria.js',
+  'src/sections/wiki-de-poble/maquinaria.test.js',
+  'src/sections/wiki-de-poble/WikiDePobleSection.sessio.test.jsx',
+  'src/sections/wiki-de-poble/WikiDePobleSection.produccio.test.jsx',
+  'src/data/identitatDual.guarda.test.js',
+  'src/sections/consola/govern/comunicacioGovern.test.js',
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

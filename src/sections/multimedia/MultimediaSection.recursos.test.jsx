@@ -10,12 +10,20 @@ const mocks = vi.hoisted(() => ({ multimedia: null }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: ({ children }) => <main>{children}</main>
 }));
+/* Onada 0.3 (Gauntlet 261016) · La secció llig ?foto= (el visor) i carrega el
+   cens de public/assets: dobles del router i d'un cens buit, perquè la prova
+   continue mirant només els src de la graella i de la cronologia. */
 vi.mock('../../app/contexts/RouterContext', () => ({
-  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>
+  Link: ({ to, children, className }) => <a href={to} className={className}>{children}</a>,
+  useSearchParams: () => [new URLSearchParams(''), () => {}],
+  useLocation: () => ({ pathname: '/multimedia', search: '', state: null }),
+  useNavigate: () => () => {}
 }));
 vi.mock('../../config/navigation', () => ({ getSectionItemPath: (seccio, id) => `/${seccio}/${id}` }));
 vi.mock('./MultimediaContext', () => ({ useMultimedia: () => mocks.multimedia }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }) }));
+vi.mock('./useCensImatges.js', () => ({ useCensImatges: () => ({ mitjans: [], cens: new Map() }) }));
+vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ towns: [] }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }), useUIStateOpcional: () => null }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 import MultimediaSection from './MultimediaSection.jsx';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';

@@ -42,6 +42,7 @@ import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
+import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 
 const CAP = Object.freeze([]);
 
@@ -181,9 +182,21 @@ export function paginaDElement(section, item) {
      mirava section.id === 'pobles', que no era cert mai, i la barra taronja
      d'un poble signava amb l'autor de sèrie. */
   const esPoble = section?.listPath === '/pobles';
-  let authorName = item.author_name;
+  /* Gauntlet 261016 (Bloc -1; ordre del Mestre: «sempre la seua foto
+     personal de perfil», mai el logotip verd) · Qui signa, amb el resolutor
+     únic (identitatsSeed.js · signaturaDeQuiSigna). La persona pilot porta
+     SEMPRE el seu nom i la seua foto: sense cap avatar, la barra taronja ja no
+     cau al de sèrie de PageFrame (DEFAULT_AUTHOR, el quadrat verd), i amb el
+     logotip a avatar_url ja no el pinta. Ho hereten les targetes incrustades
+     (targetaDElement, SincronitzacioTargetes · targetaDeLaPagina.js), que
+     reben l'avatar ja resolt. Qualsevol altre autor, els valors de sempre. */
+  const signatura = signaturaDeQuiSigna(item, {
+    nom: item.author_name,
+    avatar: item.author_avatar || item.avatar_url || item.avatarUrl
+  });
+  let authorName = signatura.nom;
   let authorLocation = item.author_location || item.location;
-  let authorAvatar = item.author_avatar || item.avatar_url || item.avatarUrl;
+  let authorAvatar = signatura.avatar;
 
   if (esPoble) {
     /* La barra signa com la targeta: l'entitat (la gent del poble) i el

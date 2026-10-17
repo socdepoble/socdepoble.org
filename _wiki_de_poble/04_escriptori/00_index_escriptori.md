@@ -32,8 +32,13 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
+
+
+
+- [[261017_1300_prompt_gauntlet_claude_codex]]
+- [[261017_1300_pla_implementacio_gauntlet_extrem]]
+- [[261016_1639_pla_implementacio_relleu_codex_gauntlet]]
 - [[261016_1530_pla_implementacio_gauntlet_autonom]] · torn_50a6a11f-89b2-4040-9566-d6063a4f5029
-- [[261016_1530_prompt_gauntlet_claude_codex_gemini]] · per a [[261016_1530_pla_implementacio_gauntlet_autonom]]
 - [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -762,6 +767,11 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261016_1632_auditoria_codex]]
+- [[../90_arxiu_historic/261016_1530_prompt_gauntlet_claude_codex_gemini]]
+- [[../90_arxiu_historic/261016_1645_acta_marmota_codex_gauntlet_diurn]]
+- [[../90_arxiu_historic/261016_1633_auditoria_gemini4]]
+- [[../90_arxiu_historic/261016_1631_auditoria_claude]]
 - [[../90_arxiu_historic/261016_0035_acta_marmota_codex_gauntlet]]
 - [[../90_arxiu_historic/261016_0022_auditoria_gemini4]]
 - [[../90_arxiu_historic/261016_0022_auditoria_claude]]

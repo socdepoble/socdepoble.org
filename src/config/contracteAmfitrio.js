@@ -32,6 +32,7 @@
 
 import { sanejaEtiqueta, sanejaIdentificador, sanejaRuta } from './configAmfitrio.js';
 import { normalitzaBase } from '../app/contexts/politicaRouter.js';
+import { CLAUS_FUNDACIONALS } from '../data/identitatsSeed.js';
 
 /** Congela un objecte i tot el que penja d'ell (objectes i arrays plans). */
 function congela(valor) {
@@ -237,6 +238,13 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
   patroPoble: '^[a-z0-9][a-z0-9-]{0,62}$'
 });
 
+/* Gauntlet 261016 (F28) · Les fitxes canòniques de primer nivell
+   (/javillinares, /socdepoble, /rentonar) porten el sobrenom en el PRIMER
+   tram: sense esta regla, `sdp-navega` deia a l'amfitrió quina fitxa s'obria,
+   contra la promesa d'esdeveniments.ruta («cap identificador»). Es tapen com
+   qualsevol fitxa, igual que a data/telemetria.js (prova de paritat). */
+const PRIMERS_TRAMS_PERSONALS = new Set(CLAUS_FUNDACIONALS.map((clau) => String(clau).toLowerCase()));
+
 /**
  * La ruta que ix cap a l'amfitrió amb `sdp-navega` (esdeveniments.ruta): la
  * secció i, si era una fitxa, un asterisc. Sense consulta, fragment ni
@@ -248,6 +256,7 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
 export function tapaRuta(ruta) {
   const [primer, ...resta] = String(ruta ?? '').split(/[?#]/)[0].split('/').filter(Boolean);
   if (!primer) return '/';
+  if (PRIMERS_TRAMS_PERSONALS.has(primer.toLowerCase())) return '/perfil/*';
   return resta.length ? `/${primer}/*` : `/${primer}`;
 }
 

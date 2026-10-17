@@ -157,6 +157,9 @@ export function generalDeComunitat(comunitat) {
  *   · o, si no hi és i `virtual` és cert, una fila { tipus: 'poble' }.
  * La fila virtual no es pot triar ni passa els filtres «No llegits» i
  * «Preferits» (no té dades); sí «Grups», perquè és un grup.
+ * Gauntlet 261016_1530 (Bloc 3.6, ordre vigent) · XatSection hi aplica
+ * després anteposaActors (actorsDelXat.js): la fila del poble és el TERCER
+ * actor, darrere de la comunitat de Sóc de Poble i de Javi Llinares.
  */
 export function anteposaPoble(files, { poble, comunitats = [], virtual = true } = {}) {
   if (!poble) return files;

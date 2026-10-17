@@ -6,14 +6,19 @@ import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
    proves de PerfilShell.test miren el model; estes miren que el Workspace
    el pinta com el Bloc de Notes (tres columnes, grups amb etiqueta) i que
    cada clic porta on toca. Els detalls pesats van simulats. */
-const m = vi.hoisted(() => ({ perfil: null, caps: new Set() }));
+const m = vi.hoisted(() => ({ perfil: null, caps: new Set(), sessio: null }));
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,
   useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} }),
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: null, refresh: vi.fn() }) }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ agents: [] }) }));
-vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, estat: 'fora' }) }));
+/* Gauntlet 261016 (Bloc 3.4) · PerfilShell llig si qui mira és superadmin
+   (useSessioOpcional): les utilitats internes només ixen per a ell. */
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({
+  useSession: () => ({ currentUser: null, estat: 'fora' }),
+  useSessioOpcional: () => m.sessio,
+}));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/' } }),
   useNavigate: () => vi.fn(),
@@ -52,6 +57,7 @@ beforeAll(() => {
 });
 beforeEach(() => {
   m.caps = new Set();
+  m.sessio = null;
   m.perfil = {
     identitats: [jo, forn], carregant: false, error: null,
     guardarAjust: vi.fn(), pujaMitja: vi.fn(), recarrega: vi.fn(), creaOrganitzacio: vi.fn(),
@@ -64,10 +70,15 @@ const etiquetesDe = (arrel) => [...arrel.querySelectorAll('.sdp-workspace-nav-it
 const apartats = (container) => [...container.querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent);
 const detall = (container) => container.querySelector('.sdp-workspace-detail');
 
-test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i APLICACIONS', () => {
+/* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+   maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
+   Prova actualitzada a propòsit. Abans fixava les cinc utilitats per a
+   tothom; ara la Consola de Mètriques i el Cervell (intern: true) només ixen
+   per a qui és superadmin (prova de davall). */
+test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i APLICACIONS, sense la maquinària interna', () => {
   const { container } = render(<PerfilShell />);
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Consola de Mètriques', 'Curation AI (Lector RSS)', 'Cervell (Node Graph)', 'Snippet',
+    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Curation AI (Lector RSS)', 'Snippet',
   ]);
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
@@ -77,6 +88,71 @@ test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i A
   expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
   expect(within(detall(container)).getByText('fitxa de Javi Llinares')).toBeTruthy();
   expect(container.querySelector('.perfil-espai .perfil-espai__detall')).toBe(detall(container));
+});
+
+test('Bloc 3.4 · qui és superadmin hi veu també la Consola de Mètriques i el Cervell, al seu lloc', () => {
+  m.sessio = { esSuperadmin: true };
+  render(<PerfilShell />);
+  expect(etiquetesDe(navegacio())).toEqual([
+    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Consola de Mètriques', 'Curation AI (Lector RSS)', 'Cervell (Node Graph)', 'Snippet',
+  ]);
+  /* Una sessió que no és superadmin, o un valor que no és un sí, no les mostra. */
+  for (const sessio of [{ esSuperadmin: false }, { rol: 'veí' }, {}]) {
+    cleanup();
+    m.sessio = sessio;
+    render(<PerfilShell />);
+    expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
+    expect(etiquetesDe(navegacio())).not.toContain('Cervell (Node Graph)');
+  }
+});
+
+test('Bloc 3.4 · una selecció que apuntava a una utilitat interna no peta quan deixa de veure’s: l’espai torna a la primera categoria', () => {
+  m.sessio = { esSuperadmin: true };
+  const { container, rerender } = render(<PerfilShell />);
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Consola de Mètriques' }));
+  expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeTruthy();
+  m.sessio = null;
+  rerender(<PerfilShell />);
+  expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
+  expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
+  expect(within(detall(container)).queryByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeNull();
+});
+
+/* Revisió adversarial del carril D (261016, problema 2) · A cada renovació
+   del JWT la sessió torna a comprovar el rol del mateix compte ('dins' amb el
+   rol 'desconegut' arriba com a 'comprovant') i esSuperadmin val false un
+   moment. Abans, les internes desapareixien i el superadmin queia a la
+   persona; ara es conserva l'últim rol resolt (useSuperadminEstable). */
+test('Bloc 3.4 · la renovació del JWT d’un superadmin que és a les Mètriques no el trau d’allí', () => {
+  const usuari = { id: 'u-1' };
+  m.sessio = { estat: 'dins', currentUser: usuari, rol: 'superadmin', esSuperadmin: true };
+  const { container, rerender } = render(<PerfilShell />);
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Consola de Mètriques' }));
+  const titol = within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' });
+  m.sessio = { estat: 'comprovant', currentUser: usuari, rol: 'desconegut', esSuperadmin: false };
+  rerender(<PerfilShell />);
+  expect(etiquetesDe(navegacio())).toContain('Consola de Mètriques');
+  expect(etiquetesDe(navegacio())).toContain('Cervell (Node Graph)');
+  // El mateix node: ni s'ha reconciliat ni s'ha tornat a muntar.
+  expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBe(titol);
+  m.sessio = { estat: 'dins', currentUser: usuari, rol: 'superadmin', esSuperadmin: true };
+  rerender(<PerfilShell />);
+  expect(within(detall(container)).getByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBe(titol);
+});
+
+test('Bloc 3.4 · si en tornar el rol ja no és superadmin, les internes se’n van i l’espai torna a la persona', () => {
+  const usuari = { id: 'u-1' };
+  m.sessio = { estat: 'dins', currentUser: usuari, rol: 'superadmin', esSuperadmin: true };
+  const { container, rerender } = render(<PerfilShell />);
+  fireEvent.click(within(navegacio()).getByRole('button', { name: 'Consola de Mètriques' }));
+  m.sessio = { estat: 'comprovant', currentUser: usuari, rol: 'desconegut', esSuperadmin: false };
+  rerender(<PerfilShell />);
+  m.sessio = { estat: 'dins', currentUser: usuari, rol: 'usuari', esSuperadmin: false };
+  rerender(<PerfilShell />);
+  expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
+  expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
+  expect(within(detall(container)).queryByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeNull();
 });
 
 test('cada element de l’esquerra obri els seus apartats i el primer al detall', () => {

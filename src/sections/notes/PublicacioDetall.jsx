@@ -52,6 +52,7 @@ import { ETIQUETA_SECCIO } from './masDeLUsuari.js';
 /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat, al peu. */
 import { PublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
 import { titolDeLHistoric, useVeuHistoric } from '../mur/usePublicacionsDeLActor.js';
+import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la barra
@@ -214,10 +215,19 @@ export function PublicacioDetall({ item }) {
      Decisió 3 (261007) · Un avatar de fora passa a '' i no a null: la barra
      pinta la silueta de sempre (BarraTaronja), i un null deixaria que PageFrame
      hi posara l'avatar de sèrie (la marca de Sóc de Poble signaria la
-     publicació d'un veí). */
+     publicació d'un veí).
+     Gauntlet 261016 (Bloc -1; ordre del Mestre: «sempre la seua foto
+     personal de perfil», mai el logotip verd) · Qui signa, amb el resolutor
+     únic (signaturaDeQuiSigna), com la barra de la seua pàgina
+     (paginaDElement): la persona pilot porta sempre el seu nom i la seua
+     foto. Qualsevol altre autor, els valors de sempre. */
+  const signatura = signaturaDeQuiSigna(publicacio, {
+    nom: publicacio.author_name || publicacio.seller || 'Sóc de Poble',
+    avatar: publicacio.author_avatar || publicacio.avatar_url || ''
+  });
   const autoriaDeLaBarra = {
-    authorName: publicacio.author_name || publicacio.seller || 'Sóc de Poble',
-    authorAvatar: imatgePropiaDelDetall(seccio, publicacio.author_avatar || publicacio.avatar_url || '') || '',
+    authorName: signatura.nom,
+    authorAvatar: imatgePropiaDelDetall(seccio, signatura.avatar) || '',
     authorLocation: publicacio.author_location || publicacio.population || publicacio.town_name || '',
     authorHref: rutaDeLaBarraDeLaPublicacio(publicacio)
   };

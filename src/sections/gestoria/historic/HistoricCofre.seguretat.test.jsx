@@ -208,4 +208,6 @@ test('el recorregut sencer no ix de l’ordinador i, en bloquejar-se, no deixa r
   expect(tornada.regles.map((r) => r.patro)).toEqual(['forn de prova', REGLA]);
   expect(JSON.stringify(tornada)).not.toContain(ESBORRANY);
   expect(JSON.stringify(idb.files(NOM_BD_COFRE, 'registres'))).not.toContain(REGLA);
-});
+  /* Gauntlet 261016 (MCR o3_tpv_gestoria, proves 4 i 5): el recorregut sencer tarda 2,5-3,4 s sol i passava
+     dels 5 s per defecte amb la màquina carregada. Només el límit de temps, cap asserció (com HistoricCofre.test.jsx). */
+}, 20000);

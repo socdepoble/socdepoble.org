@@ -101,3 +101,8 @@ export { IconesAlergens } from './molecules/IconesAlergens.jsx';
 //    imatge principal d'aquesta pàgina universal»; estils a
 //    src/css/components.css, § CARRUSEL D'IMATGES) ──
 export { CarruselImatges } from './organismes/CarruselImatges.jsx';
+
+// ── VISOR D'IMATGES (Onada 0.3, Gauntlet 261016; pla 261016_1530: «visor
+//    modal / Lightbox natiu a pantalla completa sobre fons fosc»; estils a
+//    src/css/components.css, § VISOR D'IMATGES) ──
+export { VisorImatges } from './organismes/VisorImatges.jsx';

@@ -35,6 +35,7 @@ vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.m
 
 import { PublicacioDetall } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
+import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
 
 const CREAT = '2026-09-20T09:15:00Z';
 function pinta(item, seccio = 'mur') {
@@ -45,13 +46,30 @@ const fills = (container) => [...container.querySelector('header.page-title').ch
 afterEach(cleanup);
 
 describe('la capçalera de PublicacioDetall la decidix qui signa', () => {
+  /* Gauntlet 261016 · diürn 1530 (Bloc -1; ordre del Mestre: l'avatar de la
+     persona pilot «Sempre és la seua foto personal de perfil») · Esta prova
+     feia servir la persona pilot amb una altra foto ('/assets/javi.png') i el
+     nom curt, i fixava que es conservaven. L'ordre nova diu «sempre»: la regla
+     de qualsevol persona es fixa ara amb una veïna, i la pilot té la seua
+     prova, amb la foto del perfil i el nom sencer. */
   test('una persona: el seu avatar redó (el de la boina) davant de l’H1, sense logotip', () => {
+    const container = pinta({ id: 'cadira', title: 'Cadira', author_name: 'Pepa', owner_user_id: 'u-1', author_avatar: '/assets/pepa.png' }, 'mercat');
+    expect(fills(container).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
+    const img = container.querySelector('header.page-title img.page-title-avatar__imatge');
+    expect(img.getAttribute('src')).toBe('/assets/pepa.png');
+    expect(img.getAttribute('alt')).toBe('Avatar de Pepa');
+    expect(container.querySelector('.page-title-logo')).toBeNull();
+  });
+
+  test('la persona pilot: sempre la seua foto del perfil i el seu nom sencer, encara que en declare una altra', () => {
     const container = pinta({ id: 'mac', title: 'Mac', author_name: 'Javi', owner_user_id: 'javillinares', author_avatar: '/assets/javi.png' }, 'mercat');
     expect(fills(container).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
     const img = container.querySelector('header.page-title img.page-title-avatar__imatge');
-    expect(img.getAttribute('src')).toBe('/assets/javi.png');
-    expect(img.getAttribute('alt')).toBe('Avatar de Javi');
+    expect([img.getAttribute('src'), img.getAttribute('alt')]).toEqual([PERSONA_PILOT.avatar, 'Avatar de Javi Llinares']);
     expect(container.querySelector('.page-title-logo')).toBeNull();
+    const barra = container.querySelector('section.bar-orange');
+    expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Javi Llinares');
+    expect(barra.querySelector('img.sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
   });
 
   test('l’entitat del projecte (per identificador): el seu logotip, cap avatar', () => {
@@ -65,12 +83,24 @@ describe('la capçalera de PublicacioDetall la decidix qui signa', () => {
      l'element: al Mercat porta la marca de Sóc de Poble. */
   test('una persona amb només avatar_url (la marca de Sóc de Poble): ni avatar ni logotip', () => {
     const marca = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
-    const container = pinta({ id: 'mac', title: 'Mac', seller: 'Javi Llinares', author_id: 'javillinares', avatar_url: marca }, 'mercat');
+    const container = pinta({ id: 'cadira', title: 'Cadira', seller: 'Pepa', author_id: 'pepa', avatar_url: marca }, 'mercat');
     expect(fills(container)[0]).toBe('H1.');
     expect(container.querySelector('.page-title-avatar')).toBeNull();
     expect(container.querySelector('.page-title-logo')).toBeNull();
     const srcs = [...container.querySelectorAll('header.page-title img')].map((img) => img.getAttribute('src'));
     expect(srcs).not.toContain(marca);
+  });
+
+  /* Gauntlet 261016 · diürn 1530 (Bloc -1) · Abans esta prova feia servir la
+     persona pilot i exigia «ni avatar ni logotip». Ara la pilot porta la
+     seua foto, i la marca continua sense aparéixer enlloc. */
+  test('la persona pilot amb només avatar_url de la marca: la seua foto, mai el logotip', () => {
+    const marca = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+    const container = pinta({ id: 'mac', title: 'Mac', seller: 'Javi Llinares', author_id: 'javillinares', avatar_url: marca }, 'mercat');
+    expect(fills(container).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
+    expect(container.querySelector('header.page-title img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+    expect(container.querySelector('.page-title-logo')).toBeNull();
+    expect(container.innerHTML).not.toContain(marca);
   });
 
   test('una persona amb una foto a avatar_url però sense author_avatar: cap avatar de capçalera', () => {

@@ -26,10 +26,15 @@ import { FORASTER } from './UniversalUtils';
    el contingut cap avall: mostra un missatge ràpid (useToast, el patró de
    VistaEnConstruccio) propi de cada botó, que se'n va sol als
    DURADA_AVIS_ACCIONS mil·lisegons. */
+/* Gauntlet 261016 (Bloc 3.9; verificació de la MCR) · Traduir tampoc no és
+   operatiu: en edició portava a /traduccions (UniversalPage) i treia la
+   persona de l'editor sense cap avís. Ara es pinta igual, porta
+   aria-disabled i el clic diu el seu missatge (BarraBlava · traduirInoperatiu). */
 export const AVISOS_ACCIONS_EDICIO = Object.freeze({
   comentar: 'Comentar no està operatiu mentre edites. Quan es publique, obrirà el xat per a comentar-ho.',
   compartir: 'Compartir no està operatiu mentre edites. Quan es publique, servirà per a enviar-ne l’enllaç.',
   connectar: 'Connectar no està operatiu mentre edites. Quan es publique, servirà per a guardar-ho al Bloc de Notes.',
+  traduir: 'Traduir no està operatiu mentre edites. Quan es publique, servirà per a llegir-ho en una altra llengua.',
 });
 export const DURADA_AVIS_ACCIONS = 5000;
 
@@ -92,17 +97,25 @@ const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
    data-sdp-drets: la píndola de davall del títol (BotoDretsAutor) i, en
    edició, el copyright de la capçalera (PageFrame). La píndola va primer al
    DOM. La classe d'abans (.sdp-copyright-selector) ja no la porta cap
-   disparador: el focus queia al títol. */
+   disparador: el focus queia al títol.
+   Gauntlet 261016 (Bloc 3.9) · Amb «Edició avançada» la capçalera, el
+   logotip, els drets i el botó «Emojis XL» de la botonera (l'últim) viuen
+   dins del desplegable: cada destí afig el seu lloc d'allí, i el focus
+   l'obri abans d'enfocar (el contingut d'un <details> plegat no rep el
+   focus). Sense el desplegable, els selectors de sempre casen primer. */
 const DESTINS_FOCUS = Object.freeze({
   title: '.editor-title-input',
   subtitle: '.editor-subtitle-input',
   lead: '.editor-lead-input',
   content: '.ProseMirror[contenteditable="true"]',
-  heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled)',
-  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia',
+  heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled), .sdp-edicio-avancada__capcalera [role="button"], .sdp-edicio-avancada__capcalera button:not(:disabled)',
+  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__logotip [role="button"], .sdp-edicio-avancada__logotip button:not(:disabled)',
   copyright: '[data-sdp-drets]',
-  icon: '.bar-orange > button.sdp-emoticona-barra--boto',
+  icon: '.bar-orange > button.sdp-emoticona-barra--boto, .sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child',
 });
+
+/* Bloc 3.9 · El text del desplegable. */
+export const ETIQUETA_EDICIO_AVANCADA = 'Edició avançada';
 
 function AvisosCamps({ avisos, onAccio }) {
   const camps = CAMPS_AMB_AVIS.filter((camp) => avisos?.[camp]?.error || avisos?.[camp]?.comptador);
@@ -292,6 +305,25 @@ export function UniversalEditorShell({
      tenen columna), la cel·la en lectura. */
   emoticona = '',
   onObriEmoticona = null,
+  /* Gauntlet 261016 (Bloc 3.9) · Opcionals, i sense elles el DOM de sempre
+     (Perfil i catàleg).
+     · `placeholderTitol`: el placeholder de l'H1 (el Bloc de Notes hi posa
+       «Nota sense títol», el de la targeta). Per defecte, TEXTOS_LLAVOR.titol.
+     · `edicioAvancada`: un <details> natiu PLEGAT «Edició avançada», dins de
+       l'article, entre els avisos dels camps i la barra d'eines, que agrupa
+       «Editar capçalera», «Editar logotip» i la ranura `classificacio` (la
+       botonera, els drets i les vistes A4 i portada). Plegat, el flux és el
+       bàsic: Títol → Subtítol → Entradilla → eines → text. El que es
+       configura es veu al seu lloc real, com en lectura: la capçalera desada
+       dalt (heroImage) i el logotip desat damunt de l'H1 (logoEntitat).
+       Decisió de direcció (Gauntlet 261016): entre l'H1 i el Subtítol no es
+       pinten ni la línia del copyright ni les píndoles; la llicència es tria
+       dins del desplegable, i en lectura la línia continua igual. */
+  placeholderTitol = null,
+  edicioAvancada = false,
+  classificacio,
+  copyright,
+  onCanviaCopyright,
   ...rest
 }) {
   const debounceTimeouts = useRef({});
@@ -354,6 +386,9 @@ export function UniversalEditorShell({
     if (!campAEnfocar) return;
     const arrel = arrelRef.current;
     const desti = arrel?.querySelector(DESTINS_FOCUS[campAEnfocar]) || arrel?.querySelector(DESTINS_FOCUS.title);
+    /* Bloc 3.9 · Un destí dins de l'«Edició avançada» plegada: primer s'obri. */
+    const plegat = desti?.closest?.('details.sdp-edicio-avancada:not([open])');
+    if (plegat) plegat.open = true;
     desti?.focus();
     setCampAEnfocar(null);
   }, [campAEnfocar]);
@@ -435,6 +470,31 @@ export function UniversalEditorShell({
     if (missatge) showToast(missatge, 'info', DURADA_AVIS_ACCIONS);
   }, [showToast]);
 
+  /* Gauntlet 261016 (Bloc 3.9) · Amb «Edició avançada», les ranures de la
+     capçalera, el logotip i la classificació no van a la UniversalPage sinó
+     al desplegable; la pàgina rep el resultat (la capçalera i el logotip
+     desats, i les categories i etiquetes assignades) al seu lloc de lectura.
+     Sense, les props de sempre, també quan no hi són (cap clau nova). */
+  const capcaleraDesada = edicioAvancada ? (heroImage || '') : null;
+  const logoDesat = edicioAvancada ? shellData.logoDeLectura : null;
+  const deLaRanura = edicioAvancada ? null : {
+    ...(classificacio !== undefined ? { classificacio } : null),
+    ...(copyright !== undefined ? { copyright } : null),
+    ...(onCanviaCopyright !== undefined ? { onCanviaCopyright } : null),
+  };
+  const desplegable = edicioAvancada ? (
+    <details className="sdp-edicio-avancada">
+      <summary className="sdp-edicio-avancada__resum">{ETIQUETA_EDICIO_AVANCADA}</summary>
+      <div className="sdp-edicio-avancada__cos">
+        <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera">{shellData.topBarData.heroComponent}</div>
+        {shellData.topBarData.logoComponent ? (
+          <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip">{shellData.topBarData.logoComponent}</div>
+        ) : null}
+        {classificacio ? <div className="page-title-classificacio">{classificacio}</div> : null}
+      </div>
+    </details>
+  ) : null;
+
   return (
     <EditorErrorBoundary>
       <div ref={arrelRef} className={`sdp-editor-shell-atomic ${className || ''}`.trim()}>
@@ -444,16 +504,24 @@ export function UniversalEditorShell({
             chrome="context"
             layout="contained"
             {...rest}
+            {...deLaRanura}
+            {...(logoDesat ? { logoEntitat: logoDesat } : null)}
             /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà.
                T7 · Cap avís en línia davall de la barra blava (tampoc d'un
-               adaptador): el missatge és el ràpid de cada botó. */
+               adaptador): el missatge és el ràpid de cada botó.
+               Bloc 3.9 (261016) · Traduir també és inoperatiu, amb el seu avís. */
             accionsInoperatives
             onClickInoperatiu={interceptaClicsInoperatius}
+            traduirInoperatiu
             avisAccions={null}
             topBarData={{
-              heroComponent: shellData.topBarData.heroComponent,
-              isEmptyHero: !heroImage && !shellData.heroImage,
-              logoComponent: shellData.topBarData.logoComponent,
+              ...(edicioAvancada
+                ? { heroImage: capcaleraDesada, heroAlt: 'Capçalera' }
+                : {
+                  heroComponent: shellData.topBarData.heroComponent,
+                  isEmptyHero: !heroImage && !shellData.heroImage,
+                  logoComponent: shellData.topBarData.logoComponent
+                }),
               barActions: shellData.topBarData.barActions,
               authorName: barAuthorName,
               authorLocation: barAuthorLocation,
@@ -470,7 +538,7 @@ export function UniversalEditorShell({
                 key={`${id}-title`}
                 className="editor-title-input"
                 html={titleHtml}
-                placeholder={TEXTOS_LLAVOR.titol}
+                placeholder={placeholderTitol || TEXTOS_LLAVOR.titol}
                 onChange={(val) => handleFieldChange('title', val)}
                 onBlur={(val) => handleFieldBlur('title', val)}
               />
@@ -495,10 +563,20 @@ export function UniversalEditorShell({
                 onBlur={(val) => handleFieldBlur('lead', val)}
               />
             }
+            /* Correcció de la revisió (261016; ordre del Mestre del Bloc 3.9.3:
+               el que es configura a l'«Edició avançada», «per exemple […]
+               assigna categories», «s'ubica al seu lloc visible real») · Les
+               categories i les etiquetes assignades, també amb el desplegable:
+               com que la ranura de classificació hi viu, PageFrame les pinta
+               davall de l'H1 com en lectura. Sense res assignat (una nota
+               nova), cap píndola: el flux bàsic queda net. */
             labels={labels}
           >
             {/* T47 · Sempre en esta posició (null sense avisos): el cos no es remunta. */}
             {avisosCamps ? <AvisosCamps avisos={avisosCamps} onAccio={executaAccioDeCamp} /> : null}
+            {/* Bloc 3.9 (261016) · «Edició avançada», just damunt de les eines.
+                També sempre en esta posició (null sense la prop): el cos no es remunta. */}
+            {desplegable}
             {einesDavall ? <div className="sdp-editor-eines">{topBar}</div> : null}
             {children}
           </UniversalPage>
@@ -801,19 +879,32 @@ export function useEditorShell({
   /* Desat l'enquadrament, el botó que obria el diàleg ja no existix: el focus
      va a la capçalera nova quan ja es pinta. Poliment T46 · Només si el focus
      és al body o dins de la capçalera (on era el disparador): si mentrestant
-     s'escriu en un altre camp, no se li roba, i queda desarmat. */
+     s'escriu en un altre camp, no se li roba, i queda desarmat.
+     Gauntlet 261016 (Bloc 3.9) · Amb «Edició avançada», la ranura de la
+     capçalera viu dins del desplegable: el seu lloc compta igual. */
   useEffect(() => {
     if (!enfocaHero || !heroImgRef.current) return;
     const imatge = heroImgRef.current;
     const actiu = imatge.getRootNode().activeElement ?? document.activeElement;
-    const lliure = !actiu || actiu === document.body || Boolean(imatge.closest('.hero-image')?.contains(actiu));
+    const lliure = !actiu || actiu === document.body || Boolean(imatge.closest('.hero-image, .sdp-edicio-avancada__capcalera')?.contains(actiu));
     if (lliure) imatge.focus();
     setEnfocaHero(false);
   }, [enfocaHero, heroImage, heroHandler.isEditing]);
 
+  /* Gauntlet 261016 (Bloc 3.9) · El logotip desat com el pinta la lectura
+     (logoEntitat de PageFrame, damunt de l'H1, que el resol amb
+     resolveAsset): la URL que ha resolt el port per a un sdp-media://, o la
+     referència tal qual. Un sdp-media:// que encara no s'ha resolt no es
+     pinta. Sense logotip, null. */
+  const srcLogoDeLectura = logoImage
+    ? (resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? '' : logoImage))
+    : '';
+  const logoDeLectura = srcLogoDeLectura ? { clar: srcLogoDeLectura, alt: 'Logotip' } : null;
+
   return {
     heroImage,
     logoImage,
+    logoDeLectura,
     isPublished,
     formattedTime,
     formattedDate,

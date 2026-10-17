@@ -90,9 +90,27 @@ function triaFitxer(accept = 'image/*') {
  *        ha inserit res: el fitxer no és una imatge o la pujada s'ha
  *        rebutjat. Sense, com sempre: cap avís per a un fitxer que no és una
  *        imatge i un console.warn per a la pujada.
+ * @param {boolean} [opcions.ambEmojis] Bloc 3.8 del Gauntlet (261016) · Afig
+ *        l'ordre «Emoji», que obri la graella d'emojis del consumidor
+ *        (`obreEmojis`) després de llevar la «/»: l'emoji triat s'inserix al
+ *        cursor. Va davant de «Targeta», que continua sent l'última. Sense,
+ *        les ordres de sempre.
+ * @param {() => void} [opcions.obreEmojis] Qui obri la graella (estable: les
+ *        ordres es fixen en crear l'editor). Sense funció, l'ordre no hi és.
  */
-export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast = null } = {}) {
+export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast = null, ambEmojis = false, obreEmojis = null } = {}) {
   const avisa = typeof onToast === 'function' ? (missatge) => onToast(missatge, 'error') : null;
+  const ambOrdreEmoji = ambEmojis && typeof obreEmojis === 'function';
+  const ordreEmoji = {
+    id: 'emoji',
+    titol: 'Emoji',
+    ajuda: 'Tria un emoji del catàleg i s’escriu ací',
+    paraules: ['emoji', 'emoticona', 'emoticones', 'icona', 'smiley'],
+    executa: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      obreEmojis();
+    }
+  };
   const ordreTargeta = {
     id: 'targeta',
     titol: 'Targeta',
@@ -214,6 +232,7 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast 
         }
       }
     },
+    ...(ambOrdreEmoji ? [ordreEmoji] : []),
     ...(ambTargetes ? [ordreTargeta] : [])
   ];
 }
@@ -229,15 +248,21 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast 
  * Sense, les mateixes extensions de sempre.
  * Ordre del Mestre (261007, ordre E) · `onToast` arriba a l'ordre «Imatge»
  * (creaOrdres). També ha de ser estable: forma part del que es memoritza.
+ * Bloc 3.8 del Gauntlet (261016) · `obreEmojis` (opcional i estable) afig
+ * l'ordre «/» Emoji (creaOrdres · ambEmojis). Cap extensió ni node nou:
+ * l'esquema és el de sempre.
  */
-export function extensionsRiques({ onImageUpload = null, ambTargetes = false, onToast = null } = {}) {
+export function extensionsRiques({ onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null } = {}) {
+  const ambEmojis = typeof obreEmojis === 'function';
   return [
     SdpImage.configure({
       inline: false,
       allowBase64: true,
       HTMLAttributes: { class: 'sdp-imatge-cos', loading: 'lazy', decoding: 'async' }
     }),
-    SlashMenu.configure({ ordres: creaOrdres({ onImageUpload, ambTargetes, onToast }) }),
+    SlashMenu.configure({
+      ordres: creaOrdres({ onImageUpload, ambTargetes, onToast, ...(ambEmojis ? { ambEmojis, obreEmojis } : {}) })
+    }),
     ...(ambTargetes ? [TargetesIncrustades] : [])
   ];
 }

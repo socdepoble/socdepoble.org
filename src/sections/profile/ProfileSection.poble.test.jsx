@@ -24,6 +24,7 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_cla
 
 import ProfileSection from './ProfileSection.jsx';
 import { AGENTS, AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
+import { ETIQUETA_IA } from './fitxaDePerfil.js';
 
 afterEach(cleanup);
 beforeEach(() => { vi.clearAllMocks(); });
@@ -86,4 +87,26 @@ test('els personatges ANIMAL són IA: la targeta porta a la seua fitxa d’IA, i
   expect(mocks.navigate).toHaveBeenLastCalledWith(`/gent/${AGENTS_MAP.JAVI.id}`, expect.anything());
   fireEvent.click(targeta(container, AGENTS_MAP.SOCDEPOBLE.name).querySelector('.sp-card-link-overlay'));
   expect(mocks.navigate).toHaveBeenLastCalledWith(`/empresa/${AGENTS_MAP.SOCDEPOBLE.id}`, expect.anything());
+});
+
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL i els
+   agents són IA «no com a humans», «preservant la seua fitxa») · Al
+   directori, una targeta de tipus 'ia' porta la marca d'IA (ETIQUETA_IA), mai
+   l'etiqueta humana del catàleg: Súper Ratolí deia «GENT». La fitxa del
+   catàleg no canvia, i una persona o una entitat continuen amb la seua. */
+const etiquetesDe = (fitxa) => [...fitxa.querySelectorAll('.sp-card-labels > li')].map((li) => li.textContent);
+
+test('les targetes de tipus IA (animals i agents) porten la marca d’IA, mai «GENT»; la fitxa del catàleg no canvia', () => {
+  const { container } = render(<ProfileSection agents={AGENTS} />);
+  const ia = AGENTS.filter((agent) => tipusDAgent(agent) === 'ia');
+  expect(ia.map((agent) => agent.id)).toEqual(expect.arrayContaining([AGENTS_MAP.IAIA.id, AGENTS_MAP.RATO.id]));
+  for (const agent of ia) {
+    expect([agent.name, etiquetesDe(targeta(container, agent.name))]).toEqual([agent.name, [ETIQUETA_IA]]);
+  }
+  expect(etiquetesDe(targeta(container, AGENTS_MAP.RATO.name))).not.toContain('GENT');
+  /* La fitxa del catàleg es preserva tal qual. */
+  expect([AGENTS_MAP.RATO.type, AGENTS_MAP.RATO.tag]).toEqual(['ANIMAL', 'GENT']);
+  /* Una entitat continua amb la seua etiqueta; una persona, sense cap (Dignitat Humana). */
+  expect(etiquetesDe(targeta(container, AGENTS_MAP.SOCDEPOBLE.name))).toEqual([AGENTS_MAP.SOCDEPOBLE.tag]);
+  expect(etiquetesDe(targeta(container, AGENTS_MAP.JAVI.name))).toEqual([]);
 });

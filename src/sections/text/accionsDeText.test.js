@@ -1,8 +1,8 @@
 /**
  * Onada 10 (261010; decisió del Mestre del 261010) · L'acció gran de les
  * pàgines de text amb ruta pròpia (accionsDeText.js): «L'Ànima de la IAIA»
- * (/iaia) porta «Anar al xat» cap al xat amb la IAIA MarIA, i cap altra
- * pàgina de text en porta.
+ * (/anima des del Bloc 3.6.3; abans /iaia) porta «Anar al xat» cap al xat amb
+ * la IAIA MarIA, i cap altra pàgina de text en porta.
  *
  *  · El verb és el del botó de /page/xat (accioDeLaPagina('xat')): una sola
  *    font, la clau 'section.xat.anarAlXat'.
@@ -18,14 +18,17 @@
 import { describe, expect, test } from 'vitest';
 import { esRutaDeLaPorta } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { createTranslator } from '../../config/i18n.js';
+import { RUTA_FITXA_IAIA } from '../../config/navigation.js';
+import { interlocutorDe, modeXat, objecteDePagina, rutaXatDePagina } from '../../config/objecteConnectable.js';
 import { SECTIONS } from '../../config/sections.js';
 import { SYSTEM_PAGES, accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
+import { PAGINES_AMB_XAT } from '../../data/contracte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import {
   ID_FIL_DE_MOSTRA_DE_LA_IAIA, RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA, rutaDelXatDeLaIAIA
 } from '../xat/useObriXatPerDefecte.js';
 import fontMostra from '../xat/components/FakeChatOnboarding.jsx?raw';
-import { accioDeLaPaginaDeText, accioDeTextAlFinal } from './accionsDeText.js';
+import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from './accionsDeText.js';
 import { PAGE_COPY } from './pageContent.js';
 
 const DIRECTE = `/xat?amb=${IAIA_ID}`;
@@ -105,7 +108,48 @@ describe('accioDeLaPaginaDeText', () => {
     expect(SYSTEM_PAGES.map((pagina) => pagina.key)).not.toContain('anima');
     expect(SYSTEM_PAGES.filter((pagina) => /iaia/i.test(`${pagina.key} ${pagina.href}`))).toEqual([]);
     expect(accioDeLaPagina('anima')).toBeNull();
-    /* La seua secció és una pàgina de text amb ruta pròpia: la pinta TextRoute. */
-    expect(SECTIONS.find((seccio) => seccio.pageKey === 'anima')).toMatchObject({ id: 'ia', path: '/iaia', kind: 'text' });
+    /* La seua secció és una pàgina de text amb ruta pròpia: la pinta TextRoute.
+       Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Actualitzada a posta: el
+       manifest passa de /iaia a /anima; /iaia és la fitxa de la IAIA. */
+    expect(SECTIONS.find((seccio) => seccio.pageKey === 'anima')).toMatchObject({ id: 'ia', path: '/anima', kind: 'text' });
+    expect(SECTIONS.filter((seccio) => seccio.path === '/iaia')).toEqual([]);
+  });
+});
+
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F64) · El manifest ha passat a /anima,
+   que no és a PAGINES_AMB_XAT, i el contracte del servidor no canvia. El seu
+   «Comentar → En públic» continua al xat públic de '/iaia', el mateix d'abans
+   (el de la IAIA MarIA, ara a la ruta de la seua fitxa), amb el títol de la
+   pàgina, com feia rutaXatPerDefecte quan el manifest vivia a /iaia. */
+describe('objecteDeLaPaginaDeText', () => {
+  const TITOL = PAGE_COPY.anima.title;
+
+  test('el manifest comenta en públic al xat de /iaia, amb el destí exacte d’abans', () => {
+    const objecte = objecteDeLaPaginaDeText('anima', TITOL);
+    expect(objecte).toEqual(objecteDePagina({ titol: TITOL, ruta: RUTA_FITXA_IAIA }));
+    expect([objecte.tipus, objecte.ruta]).toEqual(['pagina', '/iaia']);
+    expect(modeXat(objecte)).toBe('comu');
+    /* El destí que tenia «En públic» a /iaia (rutaXatPerDefecte: el títol de la pàgina i la ruta). */
+    expect(rutaXatDePagina(objecte)).toBe(rutaXatDePagina(objecteDePagina({ titol: TITOL, ruta: '/iaia' })));
+    expect(rutaXatDePagina(objecte)).toBe(`/xat?sobre=pagina:%2Fiaia&titol=${encodeURIComponent(TITOL)}&ruta=%2Fiaia`);
+    /* El mateix subjecte que el botó «Anar al xat» en remot (RUTA_XAT_DE_LA_IAIA). */
+    expect(new URLSearchParams(rutaXatDePagina(objecte).split('?')[1]).get('sobre'))
+      .toBe(new URLSearchParams(RUTA_XAT_DE_LA_IAIA.split('?')[1]).get('sobre'));
+    expect(PAGINES_AMB_XAT[RUTA_FITXA_IAIA]).toBe("L'ànima de la iaia");
+    expect(Object.hasOwn(PAGINES_AMB_XAT, '/anima')).toBe(false);
+    /* Sense l'objecte, /anima no tindria cap xat públic: la fila es desactivaria. */
+    expect(rutaXatDePagina(objecteDePagina({ titol: TITOL, ruta: '/anima' }))).toBeNull();
+    /* Cap autor: «En privat» continua sent el xat amb Sóc de Poble. */
+    expect(interlocutorDe(objecte)).toBeNull();
+  });
+
+  test('sense títol, el mateix xat; cap altra pàgina de text en porta (comenten al de la seua ruta)', () => {
+    expect(rutaXatDePagina(objecteDeLaPaginaDeText('anima'))).toBe('/xat?sobre=pagina:%2Fiaia&ruta=%2Fiaia');
+    expect(objecteDeLaPaginaDeText('anima', 7).titol).toBe('');
+    const claus = new Set([...Object.keys(PAGE_COPY), ...SECTIONS.filter((seccio) => seccio.kind === 'text' && seccio.pageKey).map((seccio) => seccio.pageKey)]);
+    expect([...claus].filter((clau) => objecteDeLaPaginaDeText(clau, 'x') !== null)).toEqual(['anima']);
+    for (const estranya of ['constructor', 'toString', '__proto__', '', 'ANIMA', 'iaia', undefined, null, 7, {}]) {
+      expect([String(estranya), objecteDeLaPaginaDeText(estranya, 'x')]).toEqual([String(estranya), null]);
+    }
   });
 });

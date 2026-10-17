@@ -174,10 +174,41 @@ test('T71 · el contingut de fora és una nota (s’edita), sense la ploma per d
   ambNota({ id: 'e2', title: 'Coca', icon: '🍰', origen }, (item) => expect(item.icon).toBe('🍰'));
 });
 
-test('la llavor del cos porta Heading 3 per a esborrar tot', async () => {
-  const { LLAVOR_NOTA } = await import('./NotesSection.jsx');
-  expect(LLAVOR_NOTA).toMatch(/<h3/i);
-  expect(LLAVOR_NOTA).toMatch(/esborrar/i);
+/* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «un template d'exemple
+   canònic (H3, H4, paràgrafs, llistes amb vinyetes) que s'esvaeix al primer
+   clic») · La plantilla porta H3 i H4 amb el seu paràgraf, una llista de pics
+   i una de numerada, i diu que s'esborra; fora l'H5 i l'H6 d'abans. És la
+   mateixa de llavorNota.js, que NotesSection reexporta. */
+test('Bloc 3.9 · la llavor del cos és la plantilla canònica: H3 i H4 amb paràgraf, dues llistes i l’avís que s’esborra', async () => {
+  const { LLAVOR_NOTA: deLaSeccio } = await import('./NotesSection.jsx');
+  const { LLAVOR_NOTA: original, LLAVOR_NOTA_ANTIGA } = await import('./llavorNota.js');
+  expect(deLaSeccio).toBe(original);
+  const doc = new DOMParser().parseFromString(LLAVOR_NOTA, 'text/html').body;
+  expect([...doc.children].map((el) => el.tagName)).toEqual(['H3', 'P', 'H4', 'P', 'UL', 'OL']);
+  expect(doc.querySelectorAll('ul > li').length).toBeGreaterThanOrEqual(2);
+  expect(doc.querySelectorAll('ol > li').length).toBeGreaterThanOrEqual(2);
+  expect(doc.querySelector('h5, h6')).toBeNull();
+  expect(doc.textContent).toMatch(/s’esborrar/i);
+  expect(LLAVOR_NOTA).not.toBe(LLAVOR_NOTA_ANTIGA);
+});
+
+test('Bloc 3.9 · a la llista, la plantilla verge (la d’ara o la d’abans, en qualsevol forma) no fa d’extracte', async () => {
+  const { LLAVOR_NOTA_ANTIGA } = await import('./llavorNota.js');
+  const compacta = (html) => html.replace(/>\s+</g, '><');
+  for (const content of [LLAVOR_NOTA, compacta(LLAVOR_NOTA), LLAVOR_NOTA_ANTIGA, compacta(LLAVOR_NOTA_ANTIGA)]) {
+    ambNota({ id: 'llavor', content, plainText: 'Text pla del servidor', subtitle: '', lead: '' }, (item) => {
+      expect(item.excerpt).toBe('');
+    });
+  }
+  // Un cos de veres sí que en fa.
+  ambNota({ id: 'propia', content: '<p>Comprar planter</p>', plainText: 'Comprar planter', subtitle: '', lead: '' }, (item) => {
+    expect(item.excerpt).toBe('Comprar planter');
+  });
+});
+
+test('Bloc 3.9 · una nota sense títol es diu «Nota sense títol» a la llista, com l’H1 i la targeta', () => {
+  ambNota({ id: 'sense', title: '' }, (item) => expect(item.title).toBe('Nota sense títol'));
+  ambNota({ id: 'buit', title: '<p> </p>' }, (item) => expect(item.title).toBe('Nota sense títol'));
 });
 
 /* ── T39 (ordre del Mestre, 260928) · la nota nova hereta els drets de sèrie ── */
@@ -223,14 +254,17 @@ const entradaDeCrearDes = async (activeCategoryId) => {
 /* D15 (ordre del Mestre, 260930) · Abans (T39), sense herència CREAR NOTA no
    enviava la clau `copyright` i la nota es pintava «© Sóc de Poble». Ara la
    nota nova naix amb la Creative Commons de sèrie (LLICENCIA_PER_DEFECTE).
-   P4 · La nota naix en escriure-hi, no en prémer CREAR NOTA: l'entrada és la mateixa. */
+   P4 · La nota naix en escriure-hi, no en prémer CREAR NOTA: l'entrada és la mateixa.
+   Gauntlet 261016 (Bloc 3.9; ordre del Mestre: la plantilla en TOTA nota
+   nova) · Des d'una carpeta, una categoria o una etiqueta, la nota també porta
+   la llavor del cos (abans només des de «Tot»: esta prova ho fixava). */
 test('D15 · sense cap llicència de sèrie, la nota nova naix amb la Creative Commons per defecte', async () => {
   expect(LLICENCIA_PER_DEFECTE).toBe('CC BY-NC-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-sense', rol: 'persona' }, [], async () => {
     expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
-    expect(await entradaDeCrearDes('f-mur')).toEqual({ folderId: 'f-mur', copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('f-mur')).toEqual({ folderId: 'f-mur', content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
     // També des d'una categoria (la que porta l'espai de treball: cat_…).
-    expect(await entradaDeCrearDes('cat_Sistema')).toEqual({ categories: ['Sistema'], copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('cat_Sistema')).toEqual({ categories: ['Sistema'], content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
   });
   // Una entitat sense copyright a la pertinença ni preferència: també la de sèrie.
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: '' }], async () => {
@@ -261,8 +295,8 @@ test('T39 · amb els drets triats al Perfil en este dispositiu, la nota nova els
   desaLlicenciaPerDefecte('uuid-pep', 'CC BY-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-pep', rol: 'persona' }, [], async () => {
     expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY-SA 4.0' });
-    // Es compon DESPRÉS de l'entrada per carpeta, categoria o etiqueta.
-    expect(await entradaDeCrearDes('tag_Tutorial')).toEqual({ tags: ['Tutorial'], copyright: 'CC BY-SA 4.0' });
+    // Es compon DESPRÉS de l'entrada per carpeta, categoria o etiqueta (Bloc 3.9: també amb la llavor).
+    expect(await entradaDeCrearDes('tag_Tutorial')).toEqual({ tags: ['Tutorial'], content: LLAVOR_NOTA, copyright: 'CC BY-SA 4.0' });
   });
 });
 

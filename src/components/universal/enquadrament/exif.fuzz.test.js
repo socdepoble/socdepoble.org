@@ -198,3 +198,77 @@ describe('K5 · fuzz determinista de llegixExif', () => {
     }
   });
 });
+
+/* Onada 0.3 (Gauntlet 261016) · L'opció ambCamera (Make, Model, Artist i
+   Copyright) sota el mateix fuzz: mai llança, la forma és la de les sis claus
+   i cada text és ASCII imprimible, net i fitat. Sense l'opció, els mateixos
+   mutants continuen tornant les tres claus de sempre. */
+const ascii = (tag, valors) => ({ tag, tipus: TIPUS.ASCII, valors });
+const MOSTRES_CAMERA = Object.freeze([
+  jpegAmbExif({
+    ordre: 'II', ifd0: [orientacio(6), ascii(0x010f, 'Canon'), ascii(0x0110, 'Canon EOS 5D'), ascii(0x013b, 'Pepa'), ascii(0x8298, '(c) Pepa')],
+    exif: dataOriginal('2017:05:14 10:22:33', '+02:00'), gps: gpsTorre(),
+  }),
+  jpegAmbExif({
+    ordre: 'MM', ifd0: [orientacio(3), ascii(0x010f, 'SONY  '), ascii(0x0110, 'DSC-RX100'), ascii(0x8298, 'Sóc de Poble\0IAIA')],
+    exif: dataOriginal('2020:01:02 03:04:05'), gps: gpsTorre({ latRef: 'S', lngRef: 'E', altRef: 1 }),
+  }),
+]);
+
+const textValid = (s) => s === null || (typeof s === 'string' && s.length > 0 && s.length <= 256 && s === s.trim() && /^[\x20-\x7e]+$/.test(s));
+
+function motiuInvalidAmbCamera(r) {
+  if (!r || typeof r !== 'object') return 'no és un objecte';
+  const claus = Object.keys(r).sort().join(',');
+  if (claus !== 'autor,camera,copyright,dataCaptura,gps,orientacio') return `claus ${claus}`;
+  const { camera, autor, copyright, ...resta } = r;
+  const base = motiuInvalid(resta);
+  if (base) return base;
+  if (camera !== null) {
+    if (Object.keys(camera).sort().join(',') !== 'marca,model') return 'forma de la càmera';
+    if (!textValid(camera.marca) || !textValid(camera.model)) return `càmera ${JSON.stringify(camera)}`;
+    if (camera.marca === null && camera.model === null) return 'càmera buida';
+  }
+  if (!textValid(autor)) return `autor ${autor}`;
+  if (!textValid(copyright)) return `drets ${copyright}`;
+  return null;
+}
+
+describe('Onada 0.3 · fuzz determinista de llegixExif amb ambCamera', () => {
+  test('les mostres de partida es lligen senceres', () => {
+    expect(llegixExif(MOSTRES_CAMERA[0], { ambCamera: true })).toMatchObject({
+      camera: { marca: 'Canon', model: 'Canon EOS 5D' }, autor: 'Pepa', copyright: '(c) Pepa'
+    });
+    /* El Copyright amb un caràcter que no és ASCII (la «ó») no es torna: mai s'inventa. */
+    expect(llegixExif(MOSTRES_CAMERA[1], { ambCamera: true })).toMatchObject({
+      camera: { marca: 'SONY', model: 'DSC-RX100' }, autor: null, copyright: null
+    });
+  });
+
+  test('3.000 buffers mutats: cap excepció, la forma de les sis claus, i sense l’opció, la de sempre', () => {
+    const CASOS = 3000;
+    const aleatori = generador(0xca3e7a);
+    const fallades = [];
+    let ambCamera = 0;
+    const inici = performance.now();
+    for (let cas = 0; cas < CASOS; cas += 1) {
+      const bytes = muta(MOSTRES_CAMERA[cas % 2], aleatori, MOSTRES_CAMERA[(cas + 1) % 2]);
+      let r;
+      let perDefecte;
+      try {
+        r = llegixExif(cas % 3 === 0 ? bytes.buffer : bytes, { ambCamera: true });
+        perDefecte = llegixExif(bytes);
+      } catch (err) {
+        fallades.push({ cas, motiu: `ha llançat: ${err?.message}` });
+        continue;
+      }
+      const motiu = motiuInvalidAmbCamera(r) || motiuInvalid(perDefecte);
+      if (motiu) fallades.push({ cas, motiu });
+      if (r.camera) ambCamera += 1;
+    }
+    expect(fallades.slice(0, 5)).toEqual([]);
+    // No és trivial: una part dels mutants encara porta la càmera.
+    expect(ambCamera).toBeGreaterThan(CASOS * 0.05);
+    expect(performance.now() - inici).toBeLessThan(5000);
+  });
+});

@@ -1,7 +1,8 @@
 /**
  * AccioDeLaPaginaDeText.jsx — Onada 10 (261010; decisió del Mestre del
  * 261010) · El botó gran d'una pàgina de text amb ruta pròpia: hui, «Anar al
- * xat» a /iaia, que entra directe al xat amb la IAIA MarIA.
+ * xat» al manifest de la IAIA (/anima des del Bloc 3.6.3; abans /iaia), que
+ * entra directe al xat amb la IAIA MarIA.
  *
  * És la porta gran i blava de Pedra Seca (PortaDePagina: sdp-boto--primari
  * sdp-boto--gran sdp-boto--ple), un Link del router, la MATEIXA peça de

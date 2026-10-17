@@ -1263,7 +1263,11 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte que el port
    sintetitza en remot (xatsPerDefecte.js): el context no n'afig cap, però en
    lleva la que ja té el seu xat real entre els visitants, i la de Sóc de Poble
-   a qui gestiona l'entitat. */
+   a qui gestiona l'entitat.
+   Gauntlet 261016_1530 (Bloc 3.6.1, ordre vigent) · «PROHIBIT duplicar Sóc
+   de Poble»: ja no hi ha cap fila sintètica de Sóc de Poble (el seu actor és
+   la comunitat), i la regla de qui gestiona l'entitat, que només la llevava,
+   es deroga. Les proves que la fixaven s'actualitzen a posta. */
 describe('files d’ajuda per defecte', () => {
   const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
   const perDefecte = () => value.chatThreads.filter(f => f.perDefecte).map(f => f.perDefecte);
@@ -1277,8 +1281,8 @@ describe('files d’ajuda per defecte', () => {
   it('passen del port a la llista, amb la marca, sense comptar com a no llegides ni com a contactes freqüents', async () => {
     mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
     await muntat();
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
-    expect(perDefecte()).toEqual(['socdepoble', 'javi', 'iaia']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect(perDefecte()).toEqual(['javi', 'iaia']);
     expect(value.chatThreads.find(f => f.id === 'fil-A').perDefecte).toBeNull();
     expect(value.totalNoLlegits).toBe(2);
     expect(value.contactesFrequents).toEqual([]);
@@ -1296,11 +1300,16 @@ describe('files d’ajuda per defecte', () => {
     mock.obriFilDePagina.mockResolvedValue({ filId: 'g-iaia', fils: [{ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia",
       subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, participant: false }] });
     await act(async () => { await value.obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }); });
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:javi']);
   });
 
-  it('qui gestiona l’entitat pilot no veu la fila de Sóc de Poble; un membre sense rol de gestió, sí', async () => {
-    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+  /* Gauntlet 261016_1530 (Bloc 3.6.1) · Derogat «qui gestiona l'entitat
+     pilot no veu la fila de Sóc de Poble»: ningú no la veu, perquè no
+     existix. Una fila sintètica seua que arribe d'un port vell tampoc no
+     passa, ni per a qui gestiona l'entitat ni per a qui no. */
+  it('cap fila sintètica de Sóc de Poble, gestione o no l’entitat pilot; la d’un port vell se’n va', async () => {
+    const vella = { ...ambXatsPerDefecte([])[0], id: 'sdp-per-defecte:socdepoble', titol: 'Sóc de Poble', perDefecte: 'socdepoble' };
+    mock.loadFils.mockResolvedValue([...ambXatsPerDefecte([fil()]), vella]);
     mock.identitats = [
       { tipus: 'persona', id: 'A', nom: 'Pepa' },
       { tipus: 'entitat', id: '00000000-0000-4000-8000-0000000000aa', slug: 'socdepoble', rol: 'admin' }
@@ -1310,7 +1319,8 @@ describe('files d’ajuda per defecte', () => {
     expect(perDefecte()).toEqual(['javi', 'iaia']);
     mock.identitats = [{ tipus: 'persona', id: 'A', nom: 'Pepa' }];
     view.rerender(tree(CONFIG));
-    expect(perDefecte()).toEqual(['socdepoble', 'javi', 'iaia']);
+    expect(perDefecte()).toEqual(['javi', 'iaia']);
+    expect(value.chatThreads.some(f => f.id === 'sdp-per-defecte:socdepoble')).toBe(false);
   });
 
   /* Gauntlet 261016 (Bloc 3.6) · La mateixa regla d'identitat que la de dalt:
@@ -1325,7 +1335,7 @@ describe('files d’ajuda per defecte', () => {
     mock.session = { currentUser: { id: 'javillinares' }, generacio: 1 }; mock.actorKey = 'persona::javillinares';
     mock.identitats = [{ tipus: 'persona', id: 'javillinares', nom: 'Javi Llinares' }];
     await muntat();
-    expect(perDefecte()).toEqual(['socdepoble', 'iaia']);
+    expect(perDefecte()).toEqual(['iaia']);
   });
 
   it('un homònim (un altre id amb el nom «Javi Llinares») sí que la veu: mai pel nom', async () => {
@@ -1333,7 +1343,7 @@ describe('files d’ajuda per defecte', () => {
     mock.identitats = [{ tipus: 'persona', id: 'A', nom: 'Javi Llinares' }];
     await muntat();
     expect(value.joNom).toBe('Javi Llinares');
-    expect(perDefecte()).toEqual(['socdepoble', 'javi', 'iaia']);
+    expect(perDefecte()).toEqual(['javi', 'iaia']);
   });
 
   /* Auditoria adversarial 261016 (P2) · En llavor i en local el xat públic de
@@ -1346,7 +1356,7 @@ describe('files d’ajuda per defecte', () => {
     mock.obriFilDePagina.mockResolvedValue({ filId: 'g-iaia', fils: [{ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia",
       subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, participant: false }] });
     await act(async () => { await value.obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }); });
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
   });
 });
 
@@ -1369,7 +1379,7 @@ describe('Javi Llinares per a qui no té sessió en llavor i en local', () => {
   it.each([['seed'], ['local']])('en mode %s, la fila de Javi és el seu xat de només lectura, amb el literal, al lloc de la sintètica', async (dataMode) => {
     await convidat({ dataMode });
     expect(value.senseSessio).toBe(false);
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'fake-javi', 'sdp-per-defecte:iaia']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'fake-javi', 'sdp-per-defecte:iaia']);
     expect(value.chatThreads.find(f => f.id === 'fake-javi')).toMatchObject({
       name: 'Javi Llinares', potEscriure: false, ultimAl: null, noLlegits: 0, ultimText: MISSATGE,
       avisNomesLectura: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"
@@ -1417,7 +1427,7 @@ describe('Javi Llinares per a qui no té sessió en llavor i en local', () => {
     mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
     render(tree({ dataMode: 'seed' }));
     await waitFor(() => expect(value.status).toBe('ready'));
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
     mock.creaFilDirecte.mockResolvedValue('fil-J');
     let filId;
     await act(async () => { filId = await value.creaFil('0001'); });

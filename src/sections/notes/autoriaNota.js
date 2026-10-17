@@ -36,12 +36,70 @@
  * complir-se. El payload queda fora per ordre. Triar entre l'autoria sencera
  * i només el logo és decisió pendent del Mestre: la prova [DEFECTE]
  * d'autoriaNota.test.js reproduïx el deute.
+ *
+ * Gauntlet 261016_1530 (Bloc 3.9, Onada 1.5; ordre del Mestre) · Cap barra
+ * taronja ni cap targeta viva no signa «Foraster». Sense sessió en el mode
+ * del padró pilot (seed o local), i amb la sessió de la persona pilot per
+ * àlies, signa Javi Llinares (AUTORIA_PILOT) i porta a la seua fitxa; amb
+ * una altra sessió, la persona de la sessió (l'actor persona); i, sense nom
+ * ni sessió coneguda, «Veí» sense poble. El payload del Mur
+ * (autoriaDeLActor) no canvia.
  */
-import { DEFAULT_AUTHOR, FORASTER, autorDeSessio, isSafeUrl } from '../../components/universal/UniversalUtils.js';
-import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
-import { esLaIdentitatDAjuda } from '../../data/xatsPerDefecte.js';
+import { DEFAULT_AUTHOR, isSafeUrl } from '../../components/universal/UniversalUtils.js';
+import { RUTA_PERFIL_PROJECTE, RUTES_CANONIQUES, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { esLaIdentitatDAjuda, esLaPersonaDeContacte } from '../../data/xatsPerDefecte.js';
+import { PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
+import { avatarDePersona } from '../../app/contexts/personaDeSessio.js';
 
 export const NOM_SENSE_NOM = 'Veí';
+
+/* Gauntlet 261016_1530 (Bloc 3.9, Onada 1.5; ordre del Mestre: «En redactar
+   una nota sota sessió, pilot o llavor, la barra taronja mostra Javi
+   Llinares i La Torre de les Maçanes amb la seua foto canònica (o la de
+   l'entitat activa). Prohibit etiquetar d'ofici com a "Foraster"») · La
+   signatura de la persona pilot, d'una sola font (identitatsSeed.js): el seu
+   nom, la seua foto canònica i el poble fundacional. Congelada: la targeta
+   viva la compara per identitat. */
+export const AUTORIA_PILOT = Object.freeze({
+  nom: PERSONA_PILOT.nom,
+  avatar: PERSONA_PILOT.avatar,
+  poble: POBLE_FUNDACIONAL
+});
+/* La pàgina de la persona pilot (el seu slug declarat).
+   Correcció de la revisió (261016; ordre del Mestre del Bloc 3.5.1: les rutes
+   canòniques netes) · La seua adreça canònica, /javillinares
+   (RUTES_CANONIQUES), la mateixa que fa servir el xat (actorsDelXat ·
+   RUTA_DE_JAVI) i que declara el SEO; /gent/javillinares obri la mateixa
+   fitxa i queda de reserva. */
+export const RUTA_PERSONA_PILOT = RUTES_CANONIQUES[PERSONA_PILOT.slug] ?? rutaDePerfil('persona', PERSONA_PILOT.slug);
+
+/**
+ * Correcció de la revisió (261016) · El mode de dades que decidix la via pilot
+ * de la signatura: el RESOLT (normalizeBackendConfig, que té en compte
+ * l'elecció remota desada en este navegador), no el `dataMode` cru que demana
+ * el paquet. Un paquet 'seed' que ja ha triat l'entrada real treballa en
+ * remot, i un visitant anònim no ha de vore la persona pilot («mai remot»).
+ * El mateix criteri que reglaDEntrada (connectar/contingutExtern.js) i
+ * App.jsx. Llig la configuració de l'amfitrió i l'elecció desada; cap xarxa.
+ *   · sense config (un muntatge sense NotesDataProvider): undefined, cap via
+ *     pilot pel mode, com abans;
+ *   · una config que no es pot normalitzar (un tenant invàlid): 'remote', que
+ *     no obri mai la via pilot.
+ */
+export function modeDeDadesResolt(config) {
+  if (!config) return undefined;
+  try {
+    return normalizeBackendConfig(config).dataMode;
+  } catch {
+    return 'remote';
+  }
+}
+/* El nom de reserva de l'actor persona quan el compte no en porta cap ni té
+   correu (app/contexts/personaDeSessio.js · nomDePersona). No és el nom de
+   ningú: a la barra, «Veí». */
+const NOM_DE_RESERVA_DEL_COMPTE = 'El meu compte';
+const MODES_DE_LLAVOR = new Set(['seed', 'local']);
 
 /* La nota de benvinguda (n1) és de Sóc de Poble, a La Torre, per a tothom.
    T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · També la
@@ -130,16 +188,31 @@ export function actorAmbPobleDeLEntitat(actor, memberships) {
  *     PerfilEditor). El payload del Mur no la porta: vegeu la capçalera;
  *   · entitat activa: el seu nom i el seu logo, mai la persona (T43.3);
  *   · agent IA actiu: el seu nom, la seua foto i el seu poble;
- *   · si no, la sessió (T22: sense sessió, nom i poble del Foraster junts).
+ *   · la persona pilot (Gauntlet 261016, Bloc 3.9): Javi Llinares, la seua
+ *     foto canònica i La Torre de les Maçanes (AUTORIA_PILOT). Només en dos
+ *     casos: sense sessió i amb el mode de dades EXPLÍCITAMENT 'seed' o
+ *     'local' (el padró pilot del dispositiu: identitatsSeed.js, regla del
+ *     mode seed), o amb una sessió que és la persona pilot per àlies declarat
+ *     (PERSONA_PILOT.alies, mai pel nom). Mai en remot sense sessió (un
+ *     visitant anònim d'un paquet de producció) ni per a una altra sessió;
+ *   · si no, la sessió: l'actor persona d'IdentitatContext (el nom, la foto i
+ *     el poble que tria personaDeSessio amb la fila de profiles), amb les
+ *     metadades de reserva. Sense nom, «Veí» (NOM_SENSE_NOM); sense poble, cap.
+ *     Mai el Foraster: deroga T22 (abans, sense sessió, nom i poble del
+ *     Foraster junts) per ordre del Mestre del 261016.
  * Sense foto, null: la barra i la targeta hi pinten la silueta de reserva
  * (abans l'editor hi posava /assets/system/ui/default-avatar.jpg, que no
  * existix a public/: la barra l'amagava en fallar la càrrega, però la targeta
  * pintava una imatge trencada). El poble pot ser una cadena buida legítima
- * (persona sense poble, entitat): `??`, perquè no es convertisca en el del Foraster.
+ * (persona sense poble, entitat).
+ * `dataMode` (opcional): el mode de dades RESOLT del Bloc
+ * (modeDeDadesResolt(config), correcció de la revisió del 261016; abans el
+ * cru, config.dataMode). Sense, cap via pilot pel mode.
  */
-export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
-  const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
+export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser, dataMode } = {}) {
+  const signant = triaSignant({ notaId, actor, actorId, agents, currentUser, dataMode });
   if (signant.via === 'benvinguda' || signant.via === 'oficial') return AUTORIA_BENVINGUDA;
+  if (signant.via === 'pilot') return AUTORIA_PILOT;
   let qui;
   if (signant.via === 'entitat') {
     qui = { nom: signant.autoria.nom, avatar: actor.avatar, poble: signant.autoria.poble };
@@ -147,29 +220,53 @@ export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser } = 
     const { agent } = signant;
     qui = { nom: agent.name, avatar: agent.avatar_url || agent.image_url, poble: agent.location };
   } else {
-    const sessio = autorDeSessio(currentUser);
-    const meta = currentUser?.user_metadata || {};
-    qui = { nom: sessio.name, avatar: meta.avatar_url || meta.picture, poble: sessio.location };
+    qui = autoriaDeLaSessio(actor, currentUser);
   }
   return {
-    nom: qui.nom || FORASTER.name,
+    nom: net(qui.nom) || NOM_SENSE_NOM,
     avatar: qui.avatar || null,
-    poble: qui.poble ?? FORASTER.location
+    poble: net(qui.poble)
   };
+}
+
+/* Gauntlet 261016 (Bloc 3.9) · La persona que signa amb sessió: l'actor
+   persona d'IdentitatContext (personaDeSessio: la fila de profiles i, de
+   reserva, les metadades), i les metadades quan no hi ha actor persona (un
+   muntatge sense proveïdor). Un correu o el nom de reserva del compte no
+   són cap nom. Sense sessió, ni nom ni foto ni poble: «Veí». */
+function autoriaDeLaSessio(actor, currentUser) {
+  if (!currentUser) return { nom: '', avatar: null, poble: '' };
+  const persona = actor?.tipus === 'persona' ? actor : null;
+  const meta = currentUser.user_metadata || {};
+  const nomDeLActor = net(persona?.nom) === NOM_DE_RESERVA_DEL_COMPTE ? '' : persona?.nom;
+  return {
+    nom: nomPublic(nomDeLActor, meta.full_name, meta.name, currentUser.full_name),
+    avatar: net(persona?.avatar) || avatarDePersona(currentUser),
+    poble: net(persona?.poble) || net(meta.town_name)
+  };
+}
+
+/* La persona pilot signa: sense sessió en el mode del padró pilot, o la
+   sessió és ella per àlies declarat (també el seu actor persona). */
+function esLaPersonaPilot({ actor, currentUser, dataMode }) {
+  if (!currentUser) return MODES_DE_LLAVOR.has(dataMode);
+  return esLaPersonaDeContacte(currentUser) || (actor?.tipus === 'persona' && esLaPersonaDeContacte(actor));
 }
 
 /* Qui signa, en l'ordre de autoriaDeNota: una sola tria per al nom i per a la
    ruta, perquè la barra no diga un autor i porte a la pàgina d'un altre.
    Prompt 261014_0400 (ordre del Mestre) · El pilot, just després de la
    benvinguda i abans de mirar-ne el nom: una fila sense nom tampoc no cau a
-   la persona. */
-function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
+   la persona. Gauntlet 261016 (Bloc 3.9) · La persona pilot, després de
+   l'entitat i de l'agent actius i abans de la sessió. */
+function triaSignant({ notaId, actor, actorId, agents, currentUser, dataMode }) {
   if (notaId != null && IDS_BENVINGUDA.has(String(notaId))) return { via: 'benvinguda' };
   if (esLaIdentitatDAjuda(actor, 'socdepoble')) return { via: 'oficial' };
   const autoria = autoriaDeLActor(actor, currentUser);
   if (actor?.tipus === 'entitat' && autoria) return { via: 'entitat', autoria };
   const agent = (agents || []).find((a) => String(a?.id) === String(actorId));
   if (agent) return { via: 'agent', agent };
+  if (esLaPersonaPilot({ actor, currentUser, dataMode })) return { via: 'pilot' };
   return { via: 'sessio' };
 }
 
@@ -183,16 +280,19 @@ function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
  *   · entitat activa: rutaDAutoria (l'entitat pilot porta al seu perfil; la
  *     resta, a la seua fitxa pública);
  *   · agent IA actiu: la seua fitxa (rutaDePerfil 'ia');
+ *   · la persona pilot (Gauntlet 261016, Bloc 3.9): la seua fitxa, a la seua
+ *     adreça canònica (RUTA_PERSONA_PILOT, /javillinares);
  *   · persona amb sessió: la seua fitxa pública (rutaDePerfil 'persona', amb
  *     l'id de la sessió);
- *   · el Foraster (sense sessió): null. No té pàgina, i un nom sense
- *     identitat coneguda no s'endevina.
+ *   · sense sessió i fora del padró pilot: null. Un nom sense identitat
+ *     coneguda no s'endevina.
  */
-export function rutaDAutoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
-  const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
+export function rutaDAutoriaDeNota({ notaId, actor, actorId, agents, currentUser, dataMode } = {}) {
+  const signant = triaSignant({ notaId, actor, actorId, agents, currentUser, dataMode });
   if (signant.via === 'benvinguda' || signant.via === 'oficial') return RUTA_PERFIL_PROJECTE;
   if (signant.via === 'entitat') return rutaDAutoria({ tipus: 'entitat', id: actor.id });
   if (signant.via === 'agent') return rutaDePerfil('ia', signant.agent.id);
+  if (signant.via === 'pilot') return RUTA_PERSONA_PILOT;
   return currentUser?.id == null ? null : rutaDePerfil('persona', currentUser.id);
 }
 

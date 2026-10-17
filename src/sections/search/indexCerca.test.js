@@ -145,11 +145,22 @@ test('amb la llavor de veres: a «tot», el Mac Mini, la Samarreta i cada poble 
   expect(cercaEntrades(index, 'samarreta').llista.map((e) => e.clau)).toEqual(['mercat:samarreta-socdepoble']);
   expect(cercaEntrades(index, 'tibi').llista.map((e) => e.clau)).toEqual(['pobles:tibi']);
 
+  /* Onada 0.3 (Gauntlet 261016, I35) · Els ids de les fotos derivades són els
+     de l'article (abans, la posició: market-0 i market-1). */
   const fotoMac = cercaEntrades(index, 'mac mini', 'multimedia');
-  expect(fotoMac.llista.map((e) => e.clau)).toEqual(['multimedia:market-0']);
+  expect(fotoMac.llista.map((e) => e.clau)).toEqual(['multimedia:market-mac-mini-m4']);
   expect(fotoMac.total).toBe(1);
-  expect(cercaEntrades(index, 'samarreta', 'multimedia').llista.map((e) => e.clau)).toEqual(['multimedia:market-1']);
+  expect(cercaEntrades(index, 'samarreta', 'multimedia').llista.map((e) => e.clau)).toEqual(['multimedia:market-samarreta-socdepoble']);
   expect(cercaEntrades(index, 'tibi', 'multimedia').llista.map((e) => e.clau)).toEqual(['multimedia:town-tibi']);
+  /* Onada 0.3 (M07) · La foto d'un poble porta a la pàgina canònica del poble,
+     mai a /multimedia/town-<slug>; la clau no canvia. */
+  expect(cercaEntrades(index, 'tibi', 'multimedia').llista[0].href).toBe('/pobles/tibi');
+  for (const poble of TOWNS) {
+    const foto = index.find((e) => e.clau === `multimedia:town-${poble.id}`);
+    expect(foto.href, poble.id).toBe(`/pobles/${poble.id}`);
+  }
+  /* La resta de l'arxiu continua anant a /multimedia/<id>, que obri el visor. */
+  expect(index.find((e) => e.clau === 'multimedia:nano-mur').href).toBe('/multimedia/nano-mur');
   for (const poble of TOWNS) {
     expect(cercaEntrades(index, poble.title).llista.filter((e) => e.titol === poble.title).map((e) => e.clau)).toEqual([`pobles:${poble.id}`]);
     expect(cercaEntrades(index, poble.title, 'multimedia').llista.map((e) => e.clau)).toContain(`multimedia:town-${poble.id}`);

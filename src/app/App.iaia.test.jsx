@@ -19,11 +19,18 @@
  *  · D4 · el botó va DALT I AL FINAL, com «Obrir…» de /page/consola: el mateix
  *    enllaç repetit dins de div.sdp-pagina-accio, l'últim fill del cos.
  *    DEROGAT «un sol enllaç amb eixe nom» i «cap div.sdp-pagina-accio nou».
+ *
+ * Gauntlet 261016_1530 (Bloc 3.6.3; F64 i F65; ordre del Mestre) · Proves
+ * actualitzades a posta. El manifest «L'Ànima de la IAIA» passa de /iaia a
+ * /anima, amb el mateix botó i el mateix cos; /iaia és ara la fitxa pública
+ * de la IAIA MarIA (PerfilPublicSection), i l'àlies històric /ia porta a
+ * /anima. El menú «Sistema» hi apunta.
  */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import PedraSecaEmbed from '../PedraSecaEmbed';
 import { createTranslator } from '../config/i18n.js';
+import { objecteDePagina, rutaXatDePagina } from '../config/objecteConnectable.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { BENVINGUDA_IAIA, IAIA_ID } from '../data/identitatsSeed.js';
@@ -111,7 +118,7 @@ async function capcaleraDe(titol) {
 const fillsDe = (capcalera) => [...capcalera.children].map((fill) => fill.tagName + (fill.className ? `.${fill.className.split(' ')[0]}` : ''));
 const ubicacio = () => window.location.pathname + window.location.search;
 
-describe('/iaia · el botó «Anar al xat» dins del bloc de l’H1 i al final del cos', () => {
+describe('/anima · el botó «Anar al xat» dins del bloc de l’H1 i al final del cos', () => {
   /* Sense sessió en cap dels tres modes (el backend fals no en té): en remot,
      la conversa de mostra (D2); en llavor i en local, el directe de sempre. */
   test.each([
@@ -119,7 +126,7 @@ describe('/iaia · el botó «Anar al xat» dins del bloc de l’H1 i al final d
     ['local', DIRECTE],
     ['remote', RUTA_XAT_DE_MOSTRA_DE_LA_IAIA]
   ])('amb dataMode %s: la porta gran i blava, darrere de l’H1 i repetida al final, cap a %s', async (dataMode, desti) => {
-    await muntaLApp('/iaia', { dataMode }, async () => {
+    await muntaLApp('/anima', { dataMode }, async () => {
       const capcalera = await capcaleraDe(PAGE_COPY.anima.title);
       const fills = fillsDe(capcalera);
       expect(fills.filter((fill) => fill === 'DIV.page-title-accio')).toHaveLength(1);
@@ -151,7 +158,7 @@ describe('/iaia · el botó «Anar al xat» dins del bloc de l’H1 i al final d
 
   test('en llavor, el clic acaba a la conversa «IAIA MarIA» de la llista del Xat', async () => {
     const xatLocal = Object.fromEntries(METODES_DEL_XAT.map((nom) => [nom, vi.fn((...args) => localXat[nom](...args))]));
-    await muntaLApp('/iaia', { dataMode: 'seed' }, async () => {
+    await muntaLApp('/anima', { dataMode: 'seed' }, async () => {
       const capcalera = await capcaleraDe(PAGE_COPY.anima.title);
       const boto = capcalera.querySelector('.page-title-accio > a');
       /* La llista del xat ja porta la fila de la IAIA: és el fil de la llavor. */
@@ -172,11 +179,11 @@ describe('/iaia · el botó «Anar al xat» dins del bloc de l’H1 i al final d
   /* Onada 11 (261010; prompt 261010_1730, tasca 6, D2) · Girada la prova
      [DEFECTE] de la revisió de l'Onada 10: en remot i sense sessió, la fila
      «IAIA MarIA» que el convidat veu a la llista del Xat és la conversa de
-     mostra (FakeChatOnboarding), i el botó de /iaia hi porta. Ja no passa per
+     mostra (FakeChatOnboarding), i el botó de /anima hi porta. Ja no passa per
      l'entrada (/registre) ni pel xat públic de la pàgina. */
   test('D2 · en remot i sense sessió, el clic acaba a la conversa de mostra de la IAIA, no a l’entrada', async () => {
     const t = createTranslator('ca');
-    await muntaLApp('/iaia', { dataMode: 'remote' }, async () => {
+    await muntaLApp('/anima', { dataMode: 'remote' }, async () => {
       const capcalera = await capcaleraDe(PAGE_COPY.anima.title);
       const boto = capcalera.querySelector('.page-title-accio > a');
       await waitFor(() => expect(boto.getAttribute('href')).toBe(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA), ESPERA);
@@ -190,6 +197,73 @@ describe('/iaia · el botó «Anar al xat» dins del bloc de l’H1 i al final d
       }, ESPERA);
       expect(window.location.pathname).not.toBe('/registre');
       expect(document.body.textContent).not.toContain('Ací no hi ha res');
+    });
+  }, LIMIT_DE_PROVA);
+
+  /* Gauntlet 261016 (F65) · /iaia obri la fitxa pública de la IAIA MarIA. */
+  test('F65 · /iaia obri la fitxa pública de la IAIA MarIA com a agent', async () => {
+    await muntaLApp('/iaia', { dataMode: 'seed' }, async () => {
+      const capcalera = await capcaleraDe('IAIA MarIA');
+      expect(capcalera.querySelector('h1').textContent).toBe('IAIA MarIA');
+      expect(document.body.textContent).toContain('Matriarca Digital');
+    });
+  }, LIMIT_DE_PROVA);
+});
+
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F64 i F65; ordre del Mestre: «La ruta
+   /iaia queda reservada per a la pròpia IAIA MarIA […], que és on s'ha
+   d'accedir des del xat i des del cercador») · /iaia ja no és el manifest: és
+   la fitxa pública de la IAIA, la de PerfilPublicSection, en els tres modes
+   (en remot, del paquet: D12). El menú «Sistema» porta el manifest a /anima, i
+   a /iaia s'encén Pobles, com a /perfil/<id>. */
+describe('Bloc 3.6.3 · /iaia és la fitxa de la IAIA MarIA; el manifest, a /anima', () => {
+  test.each(['seed', 'local', 'remote'])('amb dataMode %s, /iaia pinta la fitxa, amb «Parla amb la IAIA», i no el manifest', async (dataMode) => {
+    await muntaLApp('/iaia', { dataMode }, async () => {
+      const capcalera = await capcaleraDe('IAIA MarIA');
+      expect(capcalera.querySelector('.page-title-accio')).toBeNull();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Parla amb la IAIA' })).toBeTruthy(), ESPERA);
+      expect(screen.queryByRole('link', { name: 'Anar al xat' })).toBeNull();
+      expect([...document.querySelectorAll('h3')].map((h) => h.textContent)).not.toContain('El Despertar de la Nina de Silici');
+      expect(window.location.pathname).toBe('/iaia');
+      /* La barra: el manifest penja de «Sistema» cap a /anima; a la fitxa s'encén Pobles. */
+      const sistema = document.getElementById('app-sidebar-sistema');
+      expect(sistema.querySelectorAll('a[href="/anima"]')).toHaveLength(1);
+      expect(document.querySelectorAll('.app-sidebar-nav a[href="/iaia"]')).toHaveLength(0);
+      expect(document.querySelector('.app-sidebar-nav a[href="/pobles"]').getAttribute('aria-current')).toBe('page');
+      expect(sistema.querySelector('a[href="/anima"]').hasAttribute('aria-current')).toBe(false);
+    });
+  }, LIMIT_DE_PROVA);
+
+  test('a /anima, l’entrada del manifest del menú «Sistema» és l’encesa, i cap altra', async () => {
+    await muntaLApp('/anima', { dataMode: 'seed' }, async () => {
+      await capcaleraDe(PAGE_COPY.anima.title);
+      const encesos = [...document.querySelectorAll('.app-sidebar-nav a[aria-current="page"]')].map((a) => a.getAttribute('href'));
+      expect(encesos).toEqual(['/anima']);
+      expect(document.getElementById('app-sidebar-sistema').hidden).toBe(false);
+    });
+  }, LIMIT_DE_PROVA);
+
+  /* «Comentar → En públic» del manifest: abans, a /iaia, obria el xat públic
+     de '/iaia' (títol del servidor «L'ànima de la iaia»). /anima no és a
+     PAGINES_AMB_XAT i el contracte del servidor no canvia: el manifest
+     continua al MATEIX xat, el de la IAIA MarIA, amb la fila activa i el
+     mateix destí (objecteDeLaPaginaDeText). Una altra pàgina de text, al de la
+     seua ruta, com sempre. */
+  test.each([
+    ['/anima', PAGE_COPY.anima.title, '/iaia'],
+    ['/projecte', PAGE_COPY.projecte.title, '/projecte']
+  ])('a %s, «Comentar → En públic» és activa i porta al xat públic de la ruta que toca', async (ruta, titol, rutaDelXat) => {
+    await muntaLApp(ruta, { dataMode: 'seed' }, async () => {
+      await capcaleraDe(titol);
+      const [comentar] = screen.getAllByRole('button', { name: 'Comentar' });
+      fireEvent.click(comentar);
+      const public_ = await screen.findByRole('menuitem', { name: 'En públic' });
+      expect(public_.hasAttribute('aria-disabled')).toBe(false);
+      const empeses = vi.spyOn(window.history, 'pushState');
+      fireEvent.click(public_);
+      const desti = rutaXatDePagina(objecteDePagina({ titol, ruta: rutaDelXat }));
+      expect(desti).toBe(`/xat?sobre=pagina:${encodeURIComponent(rutaDelXat)}&titol=${encodeURIComponent(titol)}&ruta=${encodeURIComponent(rutaDelXat)}`);
+      await waitFor(() => expect(empeses.mock.calls.map((crida) => String(crida[2]))).toContain(desti), ESPERA);
     });
   }, LIMIT_DE_PROVA);
 });
@@ -212,16 +286,23 @@ describe('la resta de pàgines de text no canvien', () => {
      que TextSection no fa arribar a la UniversalPage quan és null
      (TextSection.test.jsx, T8). Onada 11 (D4) · I el botó del final, com a
      fill de TextSection, decidit també amb una funció pura
-     (accioDeTextAlFinal): per a la resta de pàgines, null. */
-  test('TextRoute decidix amb accioDeLaPaginaDeText i accioDeTextAlFinal, i no passa res més a TextSection', () => {
+     (accioDeTextAlFinal): per a la resta de pàgines, null.
+     Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Actualitzada a posta: TextRoute
+     passa una prop més, `objecte`, decidida també amb una funció pura
+     (objecteDeLaPaginaDeText): el xat públic del manifest a /anima continua
+     sent el de '/iaia'. Per a la resta de pàgines és null i TextSection no
+     la fa arribar a la UniversalPage (TextSection.jsx, M3-10). */
+  test('TextRoute decidix amb accioDeLaPaginaDeText, accioDeTextAlFinal i objecteDeLaPaginaDeText, i no passa res més a TextSection', () => {
     const codi = fontApp.replace(/\/\*[\s\S]*?\*\//g, '');
     const inici = codi.indexOf('function TextRoute(');
     const ruta = codi.slice(inici, codi.indexOf('\nexport default function App', inici));
     expect(inici).toBeGreaterThan(-1);
     expect(ruta).toContain('const accioPrincipal = accioDeLaPaginaDeText(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} /> : null;');
+    expect(ruta).toContain('const objecte = objecteDeLaPaginaDeText(pageKey, page.title);');
     expect(ruta).toContain('{accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}');
-    expect(ruta.match(/<TextSection [^>]*>/g)).toEqual(['<TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal}>']);
+    expect(ruta.match(/<TextSection [^>]*>/g)).toEqual(['<TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>']);
     expect(ruta.match(/accioDeLaPaginaDeText|AccioDeLaPaginaDeText/g)).toHaveLength(3);
     expect(ruta.match(/accioDeTextAlFinal/g)).toHaveLength(1);
+    expect(ruta.match(/objecteDeLaPaginaDeText/g)).toHaveLength(1);
   });
 });

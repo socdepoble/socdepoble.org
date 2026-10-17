@@ -38,10 +38,10 @@ function DecisioConflicte({ note, onDescartat }) {
 }
 
 /** Un resum mai entra en l’editor com si tinguera un cos buit editable.
- *  Esmena 2 del pla 261007_1645 · `seccio`: la secció de la carpeta triada
- *  (NotesSection · seccioDeCarpeta), un text. NotesEditor en fa el peu amb el
- *  que l'actor ja hi té publicat; cap clau de muntatge nova. */
-export default function NotesDetail({ activeNote, seccio = null }) {
+ *  Gauntlet 261016 (Bloc 3.9; ordre del Mestre: fora el peu «Ja publicat al
+ *  Mur» de la vista d'edició) · Ja no rep ni passa la `seccio` de la carpeta:
+ *  l'editor no fa cap peu (abans, Esmena 2 del pla 261007_1645). */
+export default function NotesDetail({ activeNote }) {
   const { resolveNote, workspaceKey } = useNotesData();
   const [result, setResult] = useState(null);
   const [attempt, setAttempt] = useState(0);
@@ -75,7 +75,7 @@ export default function NotesDetail({ activeNote, seccio = null }) {
      el cos complet. */
   return (
     <>
-      <NotesEditor key={muntatge} activeNote={activeNote} seccio={seccio} />
+      <NotesEditor key={muntatge} activeNote={activeNote} />
       <DecisioConflicte note={activeNote} onDescartat={() => setMuntatge(value => value + 1)} />
     </>
   );

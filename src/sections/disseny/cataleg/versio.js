@@ -15,7 +15,16 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenEnquadrament.jsx, 2026-10-16T03:02:33+02:00, Gauntlet nocturn
+ * Darrera posada al dia: detailRegistry.jsx, manifest.js i registre.js, 2026-10-16T18:11:39+02:00,
+ * Onada 0.3 (Gauntlet 261016, pla 261016_1530: «visor modal / Lightbox natiu a pantalla completa
+ * sobre fons fosc»): l'organisme nou VisorImatges, el visor de fotos de l'Arxiu visual
+ * (/multimedia), registrat a registre.js, amb l'ítem superposicions/visor-imatges i l'emoji 📸 a
+ * manifest.js, el seu carregador a detailRegistry.jsx i l'espècimen nou EspecimenVisorImatges.jsx
+ * (18:11:11), que el munta de veres sobre la graella de cel·les-botó de /multimedia. Arreplega els
+ * tocats esta vesprada sense posar-la al dia: AssignacioEmoji.jsx i destinsEmoji.js (18:03:31,
+ * Gauntlet 261016, Bloc 3.4: el grup de la Wiki i la carpeta `maquinaria`) i EspecimenXatAjustos.jsx
+ * (17:43:06).
+ * Versió anterior: EspecimenEnquadrament.jsx, 2026-10-16T03:02:33+02:00, Gauntlet nocturn
  * 261016 (pla 261016_0015), Bloc 1 (Llei del Quadrat): la sortida exacta de cada enquadrament
  * (l'avatar, 400 × 400; el logotip, 600 × 600; la capçalera, 1.200 × 1.200 i quadrada, com la
  * targeta) i, Bloc 1.2, la casella ofereixConservarExif amb la seua fila al contracte. Arreplega els
@@ -124,4 +133,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-16T03:02:33+02:00';
+export const VERSIO_CATALEG = '2026-10-16T18:11:39+02:00';

@@ -81,7 +81,9 @@ beforeEach(async () => {
   });
   expect(delivered.map(([id]) => id)).toEqual(['modul-amb-espai']);
   [[, Module]] = delivered;
-});
+  /* Gauntlet 261016 (MCR b4_proves.2): la primera transformació en fred de nucliModuls.js i de
+     @testing-library/react/pure passava dels 10 s del hookTimeout. Només el límit, com el beforeAll. */
+}, 60000);
 
 afterEach(() => {
   try {
@@ -167,4 +169,6 @@ test('100 cicles de selecció i plegat del mòdul en StrictMode alliberen observ
     expect(subscribers.size).toBe(0);
     expect(frames.size).toBe(0);
   }
-});
+  /* Gauntlet 261016 (MCR b4_proves.2): 100 muntatges en StrictMode passaven dels 5 s per defecte sota càrrega.
+     Només el límit: els cicles i les assercions de fuita no canvien. */
+}, 120000);

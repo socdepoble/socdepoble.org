@@ -90,8 +90,10 @@ export const CLOSCA = '.app-grid-page';
    aria-controls) que l'espai marca aria-current. */
 const FILA_OBERTA = '#app-grid-list [aria-current="true"]';
 
-/* On Esc és d'un altre: escriure (un camp de text) o un diàleg obert. */
-const ESC_ALIE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], dialog, [role="dialog"], [role="alertdialog"]';
+/* On Esc és d'un altre: escriure (un camp de text) o un diàleg obert.
+   E1 del Gauntlet (261016) · S'exporta amb ambDialegObert: les dreceres d'un sol caràcter de les
+   notícies (dreceres.js) callen als mateixos llocs que Esc. */
+export const ESC_ALIE ='input, textarea, select, [contenteditable=""], [contenteditable="true"], dialog, [role="dialog"], [role="alertdialog"]';
 
 /* Ordre del Mestre, 261004 (auditoria 0605, «Esc amb l'Índex obert») · Un
    diàleg modal obert damunt de la pàgina: l'Índex de secció de la Pàgina
@@ -121,7 +123,7 @@ const visibles = (on, selector) => (typeof on?.querySelectorAll === 'function'
    dins de .sdp-root, i són nostres. Els de WordPress, fora de .sdp-root, continuen sense comptar
    (D2). Sense .sdp-root (les proves sense embolcall), la closca, com abans. Dins d'una ombra
    (l'encastat), tota l'arrel ombra és nostra: també el destí dels portals locals del Dialeg. */
-function ambDialegObert(closca, arrel, pagina) {
+export function ambDialegObert(closca, arrel, pagina) {
   const ambIndex = [pagina, arrel].some((on) => visibles(on, DIALEG_INDEX).length > 0);
   const delApp = arrel?.host ? arrel : (closca.closest('.sdp-root') || closca);
   return ambIndex || visibles(delApp, DIALEG_MODAL_PROPI).length > 0;

@@ -12,9 +12,9 @@
  */
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
-import { getSectionItemPath, resolveItemPath, resolvePageSlugPath, rutaDePerfil } from '../../config/navigation.js';
+import { getSectionItemPath, resolveItemPath, resolvePageSlugPath, RUTA_FITXA_IAIA, rutaDePerfil } from '../../config/navigation.js';
 import { tipusDAgent } from '../../data/agentsSeed.js';
-import { clauFundacional } from '../../data/identitatsSeed.js';
+import { PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau } from '../../data/identitatsSeed.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
@@ -255,6 +255,15 @@ export function extracteDeResultat(resultat, llistaFitxes = [], max = 200) {
 
 /* ── Adaptadors (un per font) ───────────────────────────────────────────── */
 
+/* Gauntlet 261016_1530 (Bloc 3.6.3; relleu F65; ordre del Mestre: «La ruta
+   /iaia queda reservada per a la pròpia IAIA MarIA […], que és on s'ha
+   d'accedir des del xat i des del cercador») · La IAIA, per identificador i
+   amb el tipus 'ia' (mai pel nom), porta a la seua fitxa neta
+   (RUTA_FITXA_IAIA). La resta, la ruta de perfil de sempre (rutaDePerfil):
+   cap altra fitxa canvia d'enllaç. */
+const esLaIAIA = (perfil, id) => perfil === 'ia' && esIAIA(id);
+const rutaDeLaFitxa = (perfil, id) => (esLaIAIA(perfil, id) ? RUTA_FITXA_IAIA : rutaDePerfil(perfil, id));
+
 /** Catàleg d'agents del contingut base (seed o app_content.agents). */
 export function deAgent(agent, opcions = {}) {
   /* Gauntlet 261016 (Bloc 3) · El vocabulari del directori i del perfil públic,
@@ -270,8 +279,29 @@ export function deAgent(agent, opcions = {}) {
     extracte: primerText(agent?.short_bio, agent?.lema),
     cos: [agent?.role, agent?.town_name, agent?.tag, agent?.lema],
     avatar: { src: agent?.avatar_url, llavor: agent?.id },
-    href: rutaDePerfil(perfil, agent?.id)
+    href: rutaDeLaFitxa(perfil, agent?.id)
   });
+}
+
+/**
+ * Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+ * sense poble») · El poble d'una entitat del Cercador:
+ *   · el que diu el servidor (la fila del padró o la pertinença), si n'hi ha;
+ *   · si no, el de la llavor (entitatSeed, per l'id);
+ *   · si no, per a una de les entitats del Mestre (fundacionalDeLaClau: per
+ *     l'id, un àlies declarat o un id remot declarat; mai pel nom ni pel slug
+ *     de la fila), POBLE_FUNDACIONAL, com la fitxa pública
+ *     (PerfilPublicSection.jsx).
+ * Cap altra entitat s'inventa cap poble: '' i la meta de sempre. Només per a
+ * entitats: una persona o una IA no passen per ací.
+ */
+function pobleDEntitat(id, ...delServidor) {
+  const propi = delServidor.find((valor) => typeof valor === 'string' && valor.trim());
+  if (propi) return propi.trim();
+  const llavor = entitatSeed(id)?.town_name;
+  if (typeof llavor === 'string' && llavor.trim()) return llavor.trim();
+  const fundacional = fundacionalDeLaClau(id);
+  return fundacional && fundacional !== PERSONA_PILOT.slug ? POBLE_FUNDACIONAL : '';
 }
 
 /**
@@ -281,6 +311,11 @@ export function deAgent(agent, opcions = {}) {
  * seed i local i, des de l'ordre del Mestre (261002), el remot amb la capacitat
  * 'directori' (RPC perfil_public, useCercaGlobal). Una entitat sempre enllaça:
  * organization_directory es pot llegir.
+ * Gauntlet 261016 (Bloc 3.5.2) · Una entitat porta el seu poble a la meta i al
+ * cos (pobleDEntitat); una persona i una IA, la meta de sempre.
+ * Gauntlet 261016_1530 (Bloc 3.6.3) · La IAIA MarIA (per id) sempre enllaça a
+ * la seua fitxa, /iaia: la fitxa es pinta del paquet en tots els modes, també
+ * en remot sense 'directori' (PerfilPublicSection.jsx, D12).
  */
 export function deMembre(membre, opcions = {}) {
   const id = membre?.usuari_id ?? membre?.usuariId ?? null;
@@ -288,14 +323,16 @@ export function deMembre(membre, opcions = {}) {
   if (esCorreu(nom)) return null;
   const perfil = membre?.tipus === 'entitat' ? 'entitat' : membre?.tipus === 'ia' ? 'ia' : 'persona';
   const filId = membre?.fil_id ?? membre?.filId ?? null;
-  const fitxaOberta = perfil === 'entitat' || opcions.fitxesDePersones === true;
+  const fitxaOberta = perfil === 'entitat' || opcions.fitxesDePersones === true || esLaIAIA(perfil, id);
+  const poble = perfil === 'entitat' ? pobleDEntitat(id, membre?.town_name, membre?.townName) : '';
   return entrada({
     tipus: perfil === 'entitat' ? 'entitats' : 'persones',
     id,
     titol: nom,
-    meta: [perfil === 'ia' ? opcions.etiquetes?.ia : null],
+    meta: [perfil === 'ia' ? opcions.etiquetes?.ia : null, poble],
+    cos: poble ? [poble] : [],
     avatar: { src: membre?.avatar_url ?? membre?.avatarUrl, llavor: id },
-    href: fitxaOberta ? rutaDePerfil(perfil, id) : null,
+    href: fitxaOberta ? rutaDeLaFitxa(perfil, id) : null,
     accio: id == null ? null : {
       tipus: 'escriu',
       href: filId ? getSectionItemPath('xat', filId) : `/xat?amb=${encodeURIComponent(String(id))}`
@@ -307,6 +344,9 @@ export function deMembre(membre, opcions = {}) {
  * La persona de la sessió i les entitats que gestiona (IdentitatContext).
  * El padró les deixa fora a propòsit; sense açò, ningú es trobaria a si mateix.
  * Si el nom és el correu (nomDePersona hi cau), es mostra `opcions.nomCompte`.
+ * Gauntlet 261016 (Bloc 3.5.2) · Una entitat porta el seu poble a la meta i al
+ * cos: el de la pertinença (IdentitatContext · poble) o el de la fila, si n'hi
+ * ha; si no, el de pobleDEntitat. La persona, el de sempre (`opcions.poble`).
  */
 export function deIdentitat(identitat, opcions = {}) {
   if (!identitat) return null;
@@ -315,12 +355,15 @@ export function deIdentitat(identitat, opcions = {}) {
   const correu = typeof opcions.correu === 'string' ? opcions.correu.trim().toLowerCase() : '';
   const amagat = !nomBrut || esCorreu(nomBrut) || (correu && nomBrut.toLowerCase() === correu);
   const nom = amagat ? (esEntitat ? null : opcions.nomCompte) : nomBrut;
+  const pobleDeLEntitat = esEntitat
+    ? pobleDEntitat(identitat.id, identitat.poble, identitat.town_name, identitat.dades?.town_name)
+    : '';
   return entrada({
     tipus: esEntitat ? 'entitats' : 'persones',
     id: identitat.id,
     titol: nom,
-    meta: esEntitat ? [] : [opcions.poble],
-    cos: esEntitat ? [identitat.slug] : [opcions.poble],
+    meta: esEntitat ? [pobleDeLEntitat] : [opcions.poble],
+    cos: esEntitat ? [identitat.slug, pobleDeLEntitat] : [opcions.poble],
     avatar: { src: identitat.avatar, llavor: identitat.id },
     href: esEntitat ? rutaDePerfil('entitat', identitat.id) : '/el-meu-perfil',
     propia: esEntitat ? 'entitat' : 'persona'

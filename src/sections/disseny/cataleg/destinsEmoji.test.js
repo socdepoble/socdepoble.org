@@ -169,6 +169,18 @@ describe('destinsDeLaWiki', () => {
     ]);
   });
 
+  /* Gauntlet 261016 (Bloc 3.4) · Sense la Maquinària a la vista (fora de DEV i
+     sense superadmin): ni la carpeta, ni la Consola, ni cap eina local; la
+     resta de la Wiki, igual. Per defecte, la de sempre. */
+  test('Bloc 3.4 · amb `maquinaria: false`, ni la carpeta ni la Consola ni les eines locals; la resta, igual', () => {
+    const amb = destinsDeLaWiki(manifest, null, { consola, locals });
+    const sense = destinsDeLaWiki(manifest, null, { consola, locals, maquinaria: false });
+    const delaMaquinaria = new Set(['wiki:carpeta:maquinaria_cat', 'wiki:consola_termodinamica', ...locals.map((eina) => `wiki:${eina.id}`)]);
+    expect(sense.map((desti) => desti.id)).toEqual(amb.map((desti) => desti.id).filter((id) => !delaMaquinaria.has(id)));
+    expect(sense.some((desti) => delaMaquinaria.has(desti.id))).toBe(false);
+    expect(destinsDeLaWiki(manifest, null, { consola, locals, maquinaria: true })).toEqual(amb);
+  });
+
   test('mentre la Wiki compilada no ha arribat, només la portada', () => {
     expect(destinsDeLaWiki(null, { title: 'Wiki' }, { consola, locals }).map((desti) => desti.id)).toEqual(['wiki:portada']);
     expect(destinsDeLaWiki(null, null)).toEqual([]);

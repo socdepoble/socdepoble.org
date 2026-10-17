@@ -8,7 +8,12 @@
    ítems desconeguts, també en producció.
    261006 (MarIA, WikiDePobleSection.jsx de les 01:46; prompt 261006_0224, T6):
    la Consola ja no té carpeta pròpia i penja de «Maquinària de la IAIA». En
-   producció, eixa carpeta només porta la Consola. */
+   producció, eixa carpeta només porta la Consola.
+   Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+   maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
+   Proves actualitzades a propòsit. En producció, la carpeta «Maquinària de la
+   IAIA» (i la Consola incrustada) només ix per a qui és superadmin, com la
+   ruta /consola: abans la veia qualsevol visitant de la Wiki pública. */
 import React from 'react';
 import { afterAll, afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -16,8 +21,12 @@ import { cleanup, render, screen } from '@testing-library/react';
 const fixture = vi.hoisted(() => {
   vi.stubEnv('DEV', false);
   vi.stubEnv('PROD', true);
-  return { itemId: 'gestoria_panell', search: '?item=gestoria_panell', props: null };
+  return { itemId: 'gestoria_panell', search: '?item=gestoria_panell', props: null, sessio: null };
 });
+vi.mock('../../app/contexts/SessionContext.jsx', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useSessioOpcional: () => fixture.sessio,
+}));
 vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({
   UniversalWorkspace: (props) => {
     fixture.props = props;
@@ -32,7 +41,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
-vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
+vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => <p>Doble de la Consola</p> }));
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
 vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
 vi.mock('../tractors/PanellAgents.jsx', () => ({ default: () => <p>Doble dels Agents</p> }));
@@ -43,19 +52,49 @@ vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d�
 import WikiDePobleSection from './WikiDePobleSection.jsx';
 import { PAGE_COPY } from '../text/pageContent';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  fixture.sessio = null;
+});
 afterAll(() => vi.unstubAllEnvs());
 
 test('l’entorn de la prova és el de producció', () => {
   expect(import.meta.env.DEV).toBe(false);
 });
 
-test('cap categoria ni ítem de les eines locals', () => {
+test('cap categoria ni ítem de les eines locals; sense superadmin, tampoc la Maquinària de la IAIA ni la Consola', () => {
+  render(<WikiDePobleSection />);
+  const { model } = fixture.props;
+  expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat']);
+  expect(model.items.map((i) => i.id)).toEqual(['__intro']);
+  /* Una sessió que no és superadmin, o un valor que no és un true, tampoc. */
+  for (const sessio of [{ esSuperadmin: false }, { esSuperadmin: 'true' }, { rol: 'veí' }]) {
+    cleanup();
+    fixture.sessio = sessio;
+    render(<WikiDePobleSection />);
+    expect(fixture.props.model.categories.map((c) => c.id)).toEqual(['__intro_cat']);
+    expect(fixture.props.model.items.map((i) => i.id)).toEqual(['__intro']);
+  }
+});
+
+test('Bloc 3.4 · amb superadmin, la Maquinària de la IAIA i la Consola, com abans; cap eina local', () => {
+  fixture.sessio = { esSuperadmin: true };
   render(<WikiDePobleSection />);
   const { model } = fixture.props;
   expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'maquinaria_cat']);
   expect(model.items.map((i) => i.id)).toEqual(['__intro', 'consola_termodinamica']);
   expect(model.items.filter((i) => i.categoryId === 'maquinaria_cat').map((i) => i.id)).toEqual(['consola_termodinamica']);
+});
+
+test('Bloc 3.4 · una URL vella amb ?item=consola_termodinamica no pinta la Consola a qui no és superadmin: la portada', async () => {
+  fixture.itemId = 'consola_termodinamica';
+  fixture.search = '?categoria=maquinaria_cat&item=consola_termodinamica';
+  const arrel = render(<WikiDePobleSection />).container;
+  expect(arrel.querySelector('header.page-title h1').textContent).toBe(PAGE_COPY.wikidepoble.title);
+  await Promise.resolve();
+  expect(screen.queryByText('Doble de la Consola')).toBeNull();
+  /* Sense la carpeta a l'arbre, la categoria de la URL no es dona per bona: «Tot». */
+  expect(fixture.props.selection.categoryId).not.toBe('maquinaria_cat');
 });
 
 test('una URL amb l’ítem d’una eina no la pinta: l’ítem no existix i es veu la portada', async () => {

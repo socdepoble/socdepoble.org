@@ -1,14 +1,19 @@
 import {render,fireEvent,screen,cleanup} from '@testing-library/react';
 import {afterEach,beforeEach,expect,test,vi} from 'vitest';
-const mocks=vi.hoisted(()=>({navigate:vi.fn(),identitat:{actorId:null},session:{currentUser:null}}));
+const mocks=vi.hoisted(()=>({navigate:vi.fn(),identitat:{actorId:null},session:{currentUser:null},notesData:{},modeResolt:null}));
+/* Correcció de la revisió (261016) · L'elecció remota desada, sense recarregar:
+   amb modeResolt, resolveDataMode torna eixe mode; sense, el de veres. */
+vi.mock('../../config/dataMode.js',async(importOriginal)=>{const real=await importOriginal();return {...real,resolveDataMode:(config)=>mocks.modeResolt??real.resolveDataMode(config)};});
 vi.mock('../../app/contexts/IdentitatContext.jsx',()=>({useIdentitat:()=>mocks.identitat}));
+/* Gauntlet 261016 (Bloc 3.9) · El mode de dades del Bloc: la targeta viva signa com la barra taronja. */
+vi.mock('./NotesDataContext.jsx',()=>({useNotesData:()=>mocks.notesData}));
 vi.mock('../../app/contexts/CoreContentContext.jsx',()=>({useCoreContent:()=>({agents:[]})}));
 vi.mock('../../app/contexts/SessionContext.jsx',()=>({useSession:()=>mocks.session}));
 /* Onada 8 (261009, revisió) · La boina de la targeta viva és un Link quan se sap qui signa. */
 vi.mock('../../app/contexts/RouterContext',()=>({useNavigate:()=>mocks.navigate,Link:({to,children,...rest})=><a href={to} {...rest}>{children}</a>}));
 vi.mock('../../components/universal/NotificationContext.jsx',()=>({useToast:()=>({showToast:vi.fn()})}));
 import {NotaFitxa} from './NotaFitxa.jsx';
-import {ID_NOTA_BENVINGUDA,autoriaDeNota,signaturaDeNota} from './autoriaNota.js';
+import {AUTORIA_PILOT,ID_NOTA_BENVINGUDA,RUTA_PERSONA_PILOT,autoriaDeNota,signaturaDeNota} from './autoriaNota.js';
 import {RUTA_PERFIL_PROJECTE} from '../../config/navigation.js';
 import {AVISOS_TARGETA_VIVA} from '../../components/universal/TargetaViva.jsx';
 import {CLAU_APAGADA,ESDEVENIMENT_DOM} from '../../data/telemetria.js';
@@ -17,7 +22,7 @@ import {ENTITAT_PILOT_SLUG} from '../../data/identitatsSeed.js';
 /* `window.umami` d'amfitrió: el Connectar compta sense backend i cap prova toca la xarxa. */
 let vistos;
 const escolta=(event)=>vistos.push(event.detail);
-beforeEach(()=>{vistos=[];mocks.identitat={actorId:null};mocks.session={currentUser:null};window.localStorage.removeItem(CLAU_APAGADA);window.umami={track:vi.fn()};window.addEventListener(ESDEVENIMENT_DOM,escolta);});
+beforeEach(()=>{vistos=[];mocks.identitat={actorId:null};mocks.session={currentUser:null};mocks.notesData={};mocks.modeResolt=null;window.localStorage.removeItem(CLAU_APAGADA);window.umami={track:vi.fn()};window.addEventListener(ESDEVENIMENT_DOM,escolta);});
 afterEach(()=>{cleanup();vi.clearAllMocks();window.removeEventListener(ESDEVENIMENT_DOM,escolta);delete window.umami;});
 
 /* L'element de la llista com el fa NotesSection (toWorkspaceNote): `data` és la nota crua. */
@@ -64,14 +69,24 @@ test('els altres botons de la previsualització no compten com a Connectar', () 
   expect(vistos.filter((intent) => intent.nom === 'connectar')).toHaveLength(0);
 });
 
-test('una nota buida ensenya a la targeta els mateixos textos de llavor que l’editor', async () => {
+/* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: el placeholder de l'H1 és
+   exactament «Nota sense títol», idèntic a la targeta) · El títol de reserva
+   de la fitxa i de la targeta viva és el de l'H1 (TITOL_NOTA_PREPARADA), ja
+   no TEXTOS_LLAVOR.titol («Sense títol», compartit amb la resta de seccions).
+   Subtítol i entradilla continuen amb els textos de llavor de sempre. */
+test('una nota buida ensenya a la targeta el mateix títol de reserva que l’H1 («Nota sense títol») i els textos de llavor', async () => {
   const { TEXTOS_LLAVOR } = await import('../../components/universal/textosLlavor.js');
+  const { TITOL_NOTA_PREPARADA } = await import('./notaPreparada.js');
+  expect(TITOL_NOTA_PREPARADA).toBe('Nota sense títol');
   const buida = { ...nota({ id: 'n9', title: '', formattedDate: '25/09/26', updatedAt: '2026-09-25T09:00:00Z' }), excerpt: '' };
   render(<NotaFitxa item={buida} onSelect={vi.fn()} />);
-  expect(screen.getByText(TEXTOS_LLAVOR.titol)).toBeTruthy();
+  expect(screen.getByText(TITOL_NOTA_PREPARADA)).toBeTruthy();
+  expect(screen.queryByText(TEXTOS_LLAVOR.titol)).toBeNull();
   expect(screen.getByText(TEXTOS_LLAVOR.entradilla)).toBeTruthy();
   cleanup();
-  render(<NotaFitxa active item={buida} onSelect={vi.fn()} />);
+  // La targeta viva: un títol buit a les dades (la persona l'ha esborrat) també pren la reserva.
+  const { container } = render(<NotaFitxa active item={buida} onSelect={vi.fn()} />);
+  expect(container.querySelector('.sp-card-title').textContent).toBe(TITOL_NOTA_PREPARADA);
   expect(screen.getByText(TEXTOS_LLAVOR.subtitol)).toBeTruthy();
   expect(screen.getByText(TEXTOS_LLAVOR.entradilla)).toBeTruthy();
 });
@@ -120,7 +135,10 @@ test('D2 · amb una entitat activa, la targeta signa com la barra taronja de l�
 
 /* Onada 8 (261009, revisió) · La boina de la targeta viva porta on la barra
    taronja de l'editor (signaturaDeNota): l'entitat activa, a la seua fitxa;
-   la benvinguda, al perfil de Sóc de Poble; el Foraster, cap enllaç. */
+   la benvinguda, al perfil de Sóc de Poble.
+   Gauntlet 261016 (Bloc 3.9; ordre del Mestre: prohibit «Foraster») · Sense
+   sessió ja no hi ha Foraster: fora del padró pilot (sense mode o en remot),
+   «Veí» i cap enllaç; en seed o local, la persona pilot i la seua fitxa. */
 test('Onada 8 · la boina de la targeta viva porta a la pàgina de qui signa, la mateixa de la barra taronja', () => {
   mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa' } } };
   mocks.identitat = { actorId: 'O', actor: { tipus: 'entitat', id: 'O', nom: 'Forn & Cia' } };
@@ -134,8 +152,36 @@ test('Onada 8 · la boina de la targeta viva porta a la pàgina de qui signa, la
   benvinguda.unmount();
   mocks.session = { currentUser: null };
   mocks.identitat = { actorId: null };
-  const foraster = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
-  expect(foraster.container.querySelector('.sp-card-header a.sp-card-author-link')).toBeNull();
+  const senseSessio = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  expect(senseSessio.container.querySelector('.sp-card-header a.sp-card-author-link')).toBeNull();
+  expect(senseSessio.container.querySelector('.sp-card-author-name').textContent).toBe('Veí');
+  expect(senseSessio.container.textContent).not.toContain('Foraster');
+  senseSessio.unmount();
+  // En seed (el padró pilot): Javi Llinares, la seua foto i la seua fitxa, com la barra taronja.
+  mocks.notesData = { config: { dataMode: 'seed' } };
+  const pilot = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  const esperat = signaturaDeNota({ notaId: 'n7', agents: [], currentUser: null, dataMode: 'seed' });
+  expect(esperat).toEqual({ ...AUTORIA_PILOT, ruta: RUTA_PERSONA_PILOT });
+  const boina = pilot.container.querySelector('.sp-card-header');
+  expect(boina.querySelector('a.sp-card-author-link').getAttribute('href')).toBe(RUTA_PERSONA_PILOT);
+  expect(boina.querySelector('.sp-card-author-name').textContent).toBe(AUTORIA_PILOT.nom);
+  expect(boina.querySelector('.sp-card-author-location').textContent).toBe(AUTORIA_PILOT.poble);
+  expect(boina.querySelector('img.sp-card-avatar').getAttribute('src')).toContain(AUTORIA_PILOT.avatar.split('/').pop());
+  expect(pilot.container.textContent).not.toContain('Foraster');
+});
+
+/* Correcció de la revisió adversarial (261016) · La targeta viva signa amb el
+   mode RESOLT, com la barra taronja: un paquet seed que en este navegador ja
+   ha triat l'entrada real (config/dataMode.js · enterRemoteMode) treballa en
+   remot, i sense sessió hi signa «Veí», sense foto ni enllaç. Mai Javi. */
+test('un paquet seed que ja ha triat l’entrada real: sense sessió, la targeta viva signa «Veí»', () => {
+  mocks.notesData = { config: { dataMode: 'seed' } };
+  mocks.modeResolt = 'remote';
+  const { container } = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  const boina = container.querySelector('.sp-card-header');
+  expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Veí');
+  expect(boina.querySelector('a.sp-card-author-link')).toBeNull();
+  expect(container.textContent).not.toContain(AUTORIA_PILOT.nom);
 });
 
 /* Prompt 261014_0400 (ordre del Mestre, tasca 4) · La boina de la targeta viva

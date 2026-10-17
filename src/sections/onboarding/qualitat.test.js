@@ -18,7 +18,15 @@ const CENS = Object.freeze([
   'src/sections/onboarding/OnboardingSection.recuperacio.test.jsx',
   'src/sections/onboarding/onboardingModel.js',
   'src/app/contexts/SessionContext.jsx',
-  'src/app/contexts/SessionContext.test.jsx'
+  'src/app/contexts/SessionContext.test.jsx',
+  /* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · L'entrada pilot local. */
+  'src/sections/onboarding/OnboardingSection.pilot.test.jsx',
+  'src/app/App.entradaPilot.test.jsx',
+  'src/data/sessioPilot.js',
+  'src/data/sessioPilot.test.js',
+  'src/data/sessionService.pilot.test.js',
+  'src/data/identitat.js',
+  'src/data/sessionService.js'
 ]);
 
 describe('el cens', () => {

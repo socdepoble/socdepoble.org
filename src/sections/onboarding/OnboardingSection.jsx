@@ -17,6 +17,8 @@ import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
 import { cancelAuthAttempts } from '../../data/authAttempt.js';
 import { CODI_ENTRADA_EN_MARC, googleEnMarcAlie, urlPerAObrirFora } from '../../data/oauthRelay.js';
+import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { entradaPilotDisponible } from '../../data/sessioPilot.js';
 
 /* Correcció de la revisió T1–T4 (260930) · host.arrenca() no s'espera abans del
    primer pintat i, fins que l'adaptador no s'instal·la, teCapacitat torna false
@@ -79,11 +81,18 @@ export default function OnboardingSection() {
   const {
     currentUser, loginWithGoogle, loginWithPassword, registerWithPassword, teCapacitat, comprovaServidor,
     demanaRecuperacioContrasenya, definixContrasenyaNova, recuperacioPendent: recuperacioDeLaSessio, logout,
-    enllacDeRecuperacio, oblidaEnllacDeRecuperacio
+    enllacDeRecuperacio, oblidaEnllacDeRecuperacio, entraComAPilot
   } = useSession();
   const { externalConfig } = useUIState();
   const normalizedConfig = normalizeBackendConfig(externalConfig);
   const modeDades = normalizedConfig.dataMode;
+  /* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · L'entrada pilot local
+     (data/sessioPilot.js): només en desenvolupament i en mode de proves. Quan
+     n'hi ha, substituïx «Forçar entrada local (Mock)», que només desbloquejava
+     un formulari que el mode de proves rebutja igualment. En un build de
+     producció no n'hi ha mai, i l'avís continua com abans. */
+  const pilotDisponible = entradaPilotDisponible(externalConfig);
+  const potEntrarComAPilot = pilotDisponible && typeof entraComAPilot === 'function' && !currentUser;
 
   /* R (Onada 3, 261003) · Recuperació de contrasenya, només amb la capacitat
      opcional del port: sense ella (Sollutia) ni enllaç ni pantalla nova. Es
@@ -306,6 +315,21 @@ export default function OnboardingSection() {
     }
   };
 
+  /* F66 · Síncrona i sense xarxa: la sessió de prova naix en este navegador i
+     s'aterra on aterra qualsevol entrada (la pròpia identitat). Si es rebutja,
+     l'avís diu per què i no es toca res. */
+  const entraPilot = () => {
+    setErrorEntrada(null);
+    try {
+      entraComAPilot(externalConfig);
+    } catch (err) {
+      mostraError(err);
+      return;
+    }
+    showToast(`Has entrat com a ${PERSONA_PILOT.nom}, la persona pilot. Esta sessió de prova només viu en aquest ordinador.`, 'success');
+    navigate(aterratgeDespresDEntrar(tornar), { replace: true });
+  };
+
   const googleLogin = async () => {
     const op = obriIntent('google');
     setGoogleError('');
@@ -395,7 +419,7 @@ export default function OnboardingSection() {
                 to="avis"
                 accions={<>
                   <Boto varietat="secundari" carregant={sondant} onClick={sondaIEntra}>Torna-ho a provar</Boto>
-                  {(modeDades === 'local' || modeDades === 'seed') ? (
+                  {(modeDades === 'local' || modeDades === 'seed') && !pilotDisponible ? (
                     <Boto varietat="terciari" onClick={() => setSimulaLocal(true)}>Forçar entrada local (Mock)</Boto>
                   ) : null}
                 </>}
@@ -410,6 +434,25 @@ export default function OnboardingSection() {
                 accions={<Boto varietat="secundari" carregant={sondant} onClick={decidixEntrada}>Connectar amb el servidor</Boto>}
               >
                 Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor del poble.
+              </Alerta>
+            ) : null}
+
+            {/* F66 · Fora de la regió viva (viva={false}): no és cap avís nou, és
+                l'explicació d'una eixida. Només quan el servidor no hi és (avís
+                «no respon» o mode de proves triat). Mentre se sonda, el botó
+                espera: una sonda que respon recarrega en remot. */}
+            {potEntrarComAPilot && (servidorCaigut || entradaSuspesa) ? (
+              <Alerta
+                to="info"
+                viva={false}
+                titol="Entra com a persona pilot · només en aquest ordinador"
+                accions={(
+                  <Boto varietat="secundari" disabled={sondant || busyStep !== null} onClick={entraPilot}>
+                    Entra com a persona pilot
+                  </Boto>
+                )}
+              >
+                Per a provar l’app per dins sense el servidor del poble, pots entrar com a {PERSONA_PILOT.nom}, la persona pilot de les dades de mostra. És una sessió de prova: només viu en esta pestanya d’aquest ordinador, no passa pel servidor i no dona cap permís real. Només apareix en desenvolupament.
               </Alerta>
             ) : null}
 

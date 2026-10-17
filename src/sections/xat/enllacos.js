@@ -53,3 +53,33 @@ export function segmentaEnllacos(text) {
   if (ultim < font.length) segments.push({ tipus: 'text', text: font.slice(ultim) });
   return segments;
 }
+
+/* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · La ruta interna d'un
+   document de la Wiki de Poble, tal com la cita la IAIA local
+   (data/iaiaLocal.js · rutaDeDocumentWiki): «/wikidepoble?item=<slug>», a
+   l'inici del text o darrere d'un espai, i mai acabada en punt. */
+const PATRO_RUTA_WIKI = /(^|\s)(\/wikidepoble\?item=[\w.~%-]*[\w~%-])/g;
+
+/**
+ * Parteix els segments de text de `segments` (els de segmentaEnllacos) on hi
+ * ha una ruta de la Wiki de Poble, que passa a ser un segment
+ * { tipus: 'ruta', text, ruta }. Els enllaços externs no es toquen. Funció
+ * pura; només la demana la bombolla de la IAIA MarIA.
+ */
+export function segmentaRutesDeLaWiki(segments) {
+  return (Array.isArray(segments) ? segments : []).flatMap((segment) => {
+    if (segment?.tipus !== 'text') return [segment];
+    const parts = [];
+    let ultim = 0;
+    for (const coincidencia of segment.text.matchAll(PATRO_RUTA_WIKI)) {
+      const inici = coincidencia.index + coincidencia[1].length;
+      const ruta = coincidencia[2];
+      if (inici > ultim) parts.push({ tipus: 'text', text: segment.text.slice(ultim, inici) });
+      parts.push({ tipus: 'ruta', text: ruta, ruta });
+      ultim = inici + ruta.length;
+    }
+    if (!parts.length) return [segment];
+    if (ultim < segment.text.length) parts.push({ tipus: 'text', text: segment.text.slice(ultim) });
+    return parts;
+  });
+}

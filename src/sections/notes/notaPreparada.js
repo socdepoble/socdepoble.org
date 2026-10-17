@@ -29,6 +29,7 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { netejaCamp } from './netejaCamp.js';
+import { esLlavorDeNota, formaCompacta } from './llavorNota.js';
 
 /** El títol de la fitxa de la llista mentre la persona no n'escriu cap. */
 export const TITOL_NOTA_PREPARADA = 'Nota sense títol';
@@ -56,6 +57,18 @@ export function nouIdDeNota() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+/* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: la plantilla «s'esvaeix al
+   primer clic» i la verge no es publica mai) · `llavor` pot ser una llista
+   (la llavor d'ara i la d'abans) i es compara normalitzada: el cos que torna
+   TipTap no porta els salts de línia de la llavor escrita, i abans la cadena
+   exacta no casava mai. Amb una llavor, la plantilla del Bloc
+   (llavorNota.js) tampoc no compta, siga en la forma que siga. */
+function esLlavor(valor, llavor) {
+  const llavors = (Array.isArray(llavor) ? llavor : [llavor]).filter((l) => typeof l === 'string' && l.trim());
+  if (!llavors.length) return false;
+  return llavors.some((l) => valor === l || formaCompacta(valor) === formaCompacta(l)) || esLlavorDeNota(valor);
+}
+
 /** Contingut de veres: algun text (el cos, si no és la llavor) o una imatge.
  *  La classificació, l'emoticona, els drets o la data sols no creen la nota. */
 export function teContingut(camps, llavor = null) {
@@ -63,7 +76,7 @@ export function teContingut(camps, llavor = null) {
     if (typeof valor !== 'string') return false;
     if (CAMPS_D_IMATGE.has(camp)) return valor.trim() !== '';
     if (!CAMPS_DE_TEXT.has(camp)) return false;
-    if (camp === 'content' && llavor && valor === llavor) return false;
+    if (camp === 'content' && esLlavor(valor, llavor)) return false;
     return extractPlainText(valor, Infinity).trim() !== '' || /<img\b/i.test(valor);
   });
 }
@@ -96,7 +109,7 @@ export const useNotaPreparadaDelBloc = () => useContext(NotaPreparadaContext);
  * @param {object} opcions
  * @param {string|null} opcions.clau   L'àmbit (workspaceKey): en canviar, la preparada es reinicia.
  * @param {object} opcions.base        L'entrada de la nota nova (carpeta activa i drets).
- * @param {string|null} opcions.llavor La llavor del cos, que no compta com a escrit.
+ * @param {string|string[]|null} opcions.llavor La llavor del cos (o les llavors), que no compta com a escrit.
  * @param {Array} opcions.notes        Les notes de la llista (per a vore quan ja hi és).
  * @param {Function} [opcions.resolNota] resolveNote: si una creació incerta ha arribat.
  * @param {Function} [opcions.adopta]  (idPreparat, idDelServidor) quan l'endoll posa un altre id.

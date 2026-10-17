@@ -21,32 +21,73 @@
  *     davant dels detalls tècnics, que és el que es busca;
  *   · PODER 3 · l'XML de prova i la seua nota, dins d'un desplegable de
  *     detalls tècnics, tancat d'entrada.
+ * Gauntlet 261016, Onada 3 (el llibre net a l'estil Holded): el període (els
+ * quatre trimestres o tot l'any, i l'any si n'hi ha més d'un), l'estat i la
+ * cerca per número, client o NIF; les columnes Base i IVA; el peu «Total del
+ * període», que no suma les anul·lades i suma les rectificatives amb el seu
+ * signe (resumDelLlibre); i el llibre del període en CSV per a la gestoria
+ * (nucli/llibreCsv.js), amb l'avís que ix sense xifrar. D'entrada, tot l'any
+ * de la factura més nova i totes les factures. Les 50 visibles es compten
+ * després del filtre; la factura mostrada en paper es busca a tot el llibre.
  */
 import { useMemo, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
+import { PillToggle } from '../../../components/PedraSeca/molecules/PillToggle.jsx';
 import { DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { Camp, CampText } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { dataHoraAmbHus } from '../facturacio/registre/empremta.js';
 import { ImpressioFactura } from './ImpressioFactura.jsx';
-import { clauDeFactura, estatDeLaCadena, filesDelLlibre } from './nucli/formulari.js';
+import {
+  OPCIONS_ESTAT_LLIBRE, OPCIONS_PERIODE, anysDelLlibre, clauDeFactura, estatDeLaCadena, euros, filesDelLlibre, resumDelLlibre
+} from './nucli/formulari.js';
+import { AVIS_SENSE_XIFRAR_LLIBRE } from './nucli/llibreCsv.js';
 import { AvisDeZona } from './peces.jsx';
 
 /** Les factures que es mostren d'entrada; la resta, amb «Mostra-les totes». */
 export const FACTURES_VISIBLES = 50;
 
+const ORDINAL = Object.freeze({ 1: '1r', 2: '2n', 3: '3r', 4: '4t' });
+
+/* « del 3r trimestre de 2026», « de 2026» o res: el període al text del botó del CSV. */
+function textDelPeriode(any, trimestre) {
+  if (any === null) return '';
+  return ORDINAL[trimestre] ? ` del ${ORDINAL[trimestre]} trimestre de ${any}` : ` de ${any}`;
+}
+
+/* La nota del peu: el que no suma i el que suma només la diferència. */
+function notaDelTotal(resum) {
+  return [
+    resum.anulades ? 'Les anul·lades no sumen.' : '',
+    resum.ambSubstitucions ? 'Les que en substituïxen d’altres sumen la diferència.' : ''
+  ].filter(Boolean).join(' ');
+}
+
 export function LlibreFactures({ f }) {
   const [anulant, setAnulant] = useState(null);
   const [motiu, setMotiu] = useState('');
   const [totes, setTotes] = useState(false);
+  const [anyTriat, setAnyTriat] = useState(null);
+  const [periode, setPeriode] = useState('any');
+  const [estatTriat, setEstatTriat] = useState('totes');
+  const [cerca, setCerca] = useState('');
+  const [baixant, setBaixant] = useState(false);
   const { mostrada } = f;
   const estat = estatDeLaCadena(f.informe);
   const files = useMemo(() => filesDelLlibre(f.cadena), [f.cadena]);
-  const visibles = totes ? files : files.slice(0, FACTURES_VISIBLES);
+  const anys = useMemo(() => anysDelLlibre(files), [files]);
+  /* L'any triat, si encara és al llibre; si no, el de la factura més nova. */
+  const any = anys.includes(anyTriat) ? anyTriat : (anys[0] ?? null);
+  const trimestre = periode === 'any' ? null : Number(periode);
+  const resum = useMemo(() => resumDelLlibre(files, { any, trimestre, estat: estatTriat, text: cerca }), [files, any, trimestre, estatTriat, cerca]);
+  /* El CSV porta el període sencer, també les anul·lades: la cerca i l'estat només són per a mirar. */
+  const delPeriode = useMemo(() => resumDelLlibre(files, { any, trimestre }).files, [files, any, trimestre]);
+  const visibles = totes ? resum.files : resum.files.slice(0, FACTURES_VISIBLES);
   const hora = Number.isFinite(f.verificatA) ? dataHoraAmbHus(f.verificatA).slice(11, 16) : null;
   const filaMostrada = mostrada ? files.find((fila) => clauDeFactura(fila.registre) === mostrada) ?? null : null;
+  const nota = notaDelTotal(resum);
 
   const obri = (fila) => {
     setMotiu('');
@@ -58,6 +99,11 @@ export function LlibreFactures({ f }) {
   async function anulla() {
     await f.anulla(anulant.registre, motiu);
     setAnulant(null);
+  }
+  /* Com l'anul·lació: el diàleg es tanca sempre i el resultat el diu l'avís del llibre. */
+  async function baixa() {
+    await f.exportaLlibre({ files: delPeriode, any, trimestre });
+    setBaixant(false);
   }
 
   return (
@@ -74,6 +120,18 @@ export function LlibreFactures({ f }) {
       </Alerta>
       <AvisDeZona avis={f.avis} zona="llibre" onTanca={f.tancaAvis} />
       {files.length ? (
+        <div className="sdp-gestoria-panell__accions">
+          {anys.length > 1 ? (
+            <PillToggle etiqueta="Any del llibre" valor={any} onCanvi={setAnyTriat} opcions={anys.map((a) => ({ valor: a, text: String(a) }))} />
+          ) : null}
+          <PillToggle etiqueta={any === null ? 'Període' : `Període de ${any}`} valor={periode} onCanvi={setPeriode} opcions={OPCIONS_PERIODE} />
+          <PillToggle etiqueta="Estat de les factures" valor={estatTriat} onCanvi={setEstatTriat} opcions={OPCIONS_ESTAT_LLIBRE} />
+          <Camp etiqueta="Cerca per número, client o NIF">
+            <CampText tipus="search" value={cerca} spellCheck={false} onChange={(event) => setCerca(event.target.value)} />
+          </Camp>
+        </div>
+      ) : null}
+      {resum.files.length ? (
         <Taula titol="Factures emeses" className="sdp-gestoria-panell__taula">
           <thead>
             <tr>
@@ -81,6 +139,8 @@ export function LlibreFactures({ f }) {
               <th scope="col">Data</th>
               <th scope="col">Tipus</th>
               <th scope="col">Client</th>
+              <th scope="col">Base</th>
+              <th scope="col">IVA</th>
               <th scope="col">Total</th>
               <th scope="col">Estat</th>
               <th scope="col">Acció</th>
@@ -93,6 +153,8 @@ export function LlibreFactures({ f }) {
                 <td>{fila.data}</td>
                 <td>{fila.tipus}</td>
                 <td>{fila.client}</td>
+                <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(fila.base)}</td>
+                <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(fila.quota)}</td>
                 <td className="sdp-gestoria-panell__cel" data-tipus="import">{fila.total}</td>
                 <td><Insignia to={fila.anulada ? 'neutre' : 'exit'}>{fila.anulada ? 'Anul·lada' : 'Emesa'}</Insignia></td>
                 <td>
@@ -112,11 +174,29 @@ export function LlibreFactures({ f }) {
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            {/* Tot el que passa el filtre, no només les 50 visibles; les anul·lades no sumen (resumDelLlibre). */}
+            <tr>
+              <th scope="row" colSpan={4}>Total del període</th>
+              <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(resum.totals.base)}</td>
+              <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(resum.totals.quota)}</td>
+              <td className="sdp-gestoria-panell__cel" data-tipus="import">{euros(resum.totals.total)}</td>
+              <td colSpan={2}>{nota}</td>
+            </tr>
+          </tfoot>
         </Taula>
-      ) : <p>Encara no has emés cap factura amb este programa.</p>}
-      {files.length > visibles.length ? (
+      ) : <p>{files.length ? 'Cap factura del període amb estos filtres.' : 'Encara no has emés cap factura amb este programa.'}</p>}
+      {resum.files.length > visibles.length ? (
         <div className="sdp-gestoria-panell__accions">
-          <Boto varietat="secundari" onClick={() => setTotes(true)}>{`Mostra les ${files.length} factures`}</Boto>
+          <Boto varietat="secundari" onClick={() => setTotes(true)}>{`Mostra les ${resum.files.length} factures`}</Boto>
+        </div>
+      ) : null}
+      {files.length ? (
+        <div className="sdp-gestoria-panell__accions">
+          <Boto varietat="secundari" onClick={() => setBaixant(true)} disabled={Boolean(f.ocupat) || !f.cadenaBona || !delPeriode.length}
+            carregant={f.ocupat === 'csv'}>
+            {`Descarrega el llibre${textDelPeriode(any, trimestre)} (CSV)`}
+          </Boto>
         </div>
       ) : null}
       {filaMostrada ? (
@@ -148,6 +228,9 @@ export function LlibreFactures({ f }) {
           <CampText value={motiu} spellCheck={false} onChange={(event) => setMotiu(event.target.value)} />
         </Camp>
       </DialegConfirmacio>
+      <DialegConfirmacio obert={baixant} onTanca={() => setBaixant(false)} onConfirma={baixa}
+        titol="Descarregar el llibre sense xifrar?" descripcio={AVIS_SENSE_XIFRAR_LLIBRE}
+        etiquetaConfirma="Descarrega’l" etiquetaCancela="Encara no" carregant={f.ocupat === 'csv'} />
     </>
   );
 }

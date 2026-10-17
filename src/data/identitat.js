@@ -1,5 +1,5 @@
 import { getRuntimePolicy } from '../config/runtimePolicy.js';
-import { backendScope } from '../config/backendConfig.js';
+import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js';
 
 /**
  * identitat.js — Font única de la identitat.
@@ -102,6 +102,31 @@ export const CLAU_ORIGEN = 'socdepoble-sessio-origen';
 export const CLAU_PERSISTENT = 'socdepoble-sessio-persistent';
 export const CLAU_BACKEND = 'socdepoble-sessio-backend';
 let backendActiu = null;
+/* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · El mode de dades del backend
+   actiu ('seed', 'local' o 'remote'), el que també porta el seu àmbit. */
+let modeDelBackendActiu = null;
+
+/* ═══════════ Gauntlet 261016_1530 (Bloc 3.6.4; F66) · La sessió pilot local ═══════════
+   El testimoni de la sessió de prova que crea data/sessioPilot.js. No és cap
+   JWT i no el signa ningú: només diu que esta pestanya és «dins» com a persona
+   pilot. Tres regles, totes ací perquè hi ha un sol lector de la sessió:
+     · jwtPerBackend no el torna mai: cap petició el porta (PostgREST, GoTrue,
+       el client de Supabase) i l'eixida no el revoca al servidor;
+     · només val en desenvolupament i dins del backend en mode de proves
+       ('seed' o 'local') on ha nascut. L'àmbit del backend porta el mode: en
+       passar a remot, configuraBackendSessio buida la pestanya, i
+       usuariDeSessio ja no el torna encara abans;
+     · desaSessio no el desa fora d'eixe backend. Sense refresh token, mai no
+       baixa al registre persistent. */
+export const TESTIMONI_PILOT = 'sdp-pilot-local';
+const MODES_DEL_PILOT = new Set(['seed', 'local']);
+const backendDelPilot = () => import.meta.env?.DEV === true && backendActiu !== null && MODES_DEL_PILOT.has(modeDelBackendActiu);
+const testimoniPilotAdmes = () => backendDelPilot() && getEfimer(CLAU_BACKEND, null) === backendActiu;
+
+/** Cert si la sessió d'esta pestanya és la sessió pilot local, i encara val. */
+export function esSessioPilot() {
+  return getEfimer(CLAU_JWT, null) === TESTIMONI_PILOT && testimoniPilotAdmes();
+}
 
 /** A configuration change is a new handshake, never a credential migration. */
 export function configuraBackendSessio(config) {
@@ -110,6 +135,7 @@ export function configuraBackendSessio(config) {
   const canviDeBackend = backendActiu !== null;
   if (getEfimer(CLAU_BACKEND, null) !== scope) esborraSessio({ abast: 'pestanya' });
   backendActiu = scope;
+  modeDelBackendActiu = normalizeBackendConfig(config).dataMode;
   const stored = getVal(CLAU_PERSISTENT, null);
   if (stored && stored.backend !== scope) delVal(CLAU_PERSISTENT);
   // At initial boot the adapter is not ready yet; SessionProvider resolves it.
@@ -121,8 +147,10 @@ export function esBackendDeSessio(config) {
 }
 
 export function jwtPerBackend(config) {
-  return esBackendDeSessio(config) && getEfimer(CLAU_BACKEND, null) === backendActiu
-    ? getEfimer(CLAU_JWT, null) : null;
+  if (!esBackendDeSessio(config) || getEfimer(CLAU_BACKEND, null) !== backendActiu) return null;
+  const jwt = getEfimer(CLAU_JWT, null);
+  /* F66 · El testimoni pilot no viatja mai: les peticions van amb la clau pública. */
+  return jwt === TESTIMONI_PILOT ? null : jwt;
 }
 
 const CLAU_CONVIDAT = 'socdepoble-guest-session-id';
@@ -184,6 +212,8 @@ export function usuariDeSessio() {
   purgaLlegat();
   const jwt = getEfimer(CLAU_JWT, null);
   if (!jwt) return null;
+  /* F66 · La sessió pilot, només dins del seu backend de proves i en desenvolupament. */
+  if (jwt === TESTIMONI_PILOT && !testimoniPilotAdmes()) return null;
   /* Un token caducat és un token que no val. Sense açò, la interfície pinta
      l'usuari i cada escriptura mor amb 401: la sessió fantasma, versió 2. */
   const exp = caducitatJwt(jwt);
@@ -305,6 +335,9 @@ export function capturaSessio() {
  */
 export function desaSessio(sessio, { renovacio = false, restauracio = null, origen = 'propia' } = {}) {
   if (!sessio?.access_token || !sessio?.user?.id) return false;
+  /* F66 · El testimoni pilot només es desa com a entrada nova, en desenvolupament
+     i dins d'un backend en mode de proves. */
+  if (sessio.access_token === TESTIMONI_PILOT && (renovacio || restauracio || !backendDelPilot())) return false;
   if (renovacio && sessio.user.id !== getEfimer(CLAU_USUARI, null)?.id) return false;
   if (restauracio && String(sessio.user.id) !== restauracio.sub) return false;
   const sub = String(sessio.user.id);

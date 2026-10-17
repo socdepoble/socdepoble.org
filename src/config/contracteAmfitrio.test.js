@@ -105,7 +105,13 @@ describe('tapaRuta', () => {
     ['/perfil/agent-sintetic-1', '/perfil/*'],
     ['/perfil/agent-sintetic-1?x=1', '/perfil/*'],
     ['/pobles/sella/xat', '/pobles/*'],
-    ['/?q=nom-sintetic', '/']
+    ['/?q=nom-sintetic', '/'],
+    // Gauntlet 261016 (F28) · Les fitxes canòniques de primer nivell també es tapen.
+    ['/javillinares', '/perfil/*'],
+    ['/socdepoble/', '/perfil/*'],
+    ['/rentonar?x=1', '/perfil/*'],
+    ['/JaviLlinares', '/perfil/*'],
+    ['/socdepoble-noticies', '/socdepoble-noticies']
   ])('%j → %j', (ruta, esperada) => {
     expect(tapaRuta(ruta)).toBe(esperada);
   });

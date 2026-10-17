@@ -170,11 +170,15 @@ function socdepoble_enxufe_registra_actius() {
 	/* Només reserva l'espai de l'element. Cap color ni cap variable: la pell
 	   de l'App viu dins del seu shadow root. 100vh va primer per als
 	   navegadors de la base canònica que encara no entenen dvh. Sollutia ha
-	   de donar la mateixa caixa amb alçada al seu contenidor. */
+	   de donar la mateixa caixa amb alçada al seu contenidor.
+	   Bloc 3.10 (pla 261016_1530) · El mínim de 32rem mai passa del visor:
+	   en un mòbil en horitzontal (≈390px d'alt) la caixa sobreïxia, la barra
+	   inferior quedava davall del plec i el scroll de la pàgina competia amb
+	   el de l'App. Amb 512px d'alt o més, la caixa és la mateixa. */
 	wp_register_style( SOCDEPOBLE_ENXUFE_HANDLE, false, array(), SOCDEPOBLE_ENXUFE_VERSIO );
 	wp_add_inline_style(
 		SOCDEPOBLE_ENXUFE_HANDLE,
-		'.socdepoble-enxufe{display:block;height:100vh;height:100dvh;min-height:32rem}'
+		'.socdepoble-enxufe{display:block;height:100vh;height:100dvh;min-height:min(32rem,100vh);min-height:min(32rem,100dvh)}'
 	);
 }
 add_action( 'init', 'socdepoble_enxufe_registra_actius' );

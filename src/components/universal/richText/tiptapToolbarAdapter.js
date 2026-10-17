@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { TOOLBAR_SCHEMA, ESTAT_BUIT, EXEC_BUIT, mateixEstat } from './toolbarContract.js';
+import { buidaLlavorVerge } from './useUniversalRichText.js';
 
 /**
  * L'ÚNIC FITXER DE LA BARRA QUE PARLA TIPTAP.
@@ -48,11 +49,17 @@ export function llegeixEstat(editor) {
   return { disponible: true, actiu, pot };
 }
 
-/** Execució pura: editor + id neutre → ordre de TipTap. */
+/** Execució pura: editor + id neutre → ordre de TipTap.
+ *  Correcció de la revisió (261016) · Un botó de la barra és el primer clic
+ *  en una nota nova: la plantilla verge s'esvaeix abans de l'ordre, en una
+ *  transacció pròpia (buidaLlavorVerge). Sense, a Chrome el format queia
+ *  dins de la plantilla, i a Safari la cadena petava (RangeError) i el botó
+ *  no feia res. Un editor sense llavor, o ja escrit, no canvia. */
 export function executa(editor, id) {
   const fila = TRADUCCIO[id];
   if (!fila || !editor || editor.isDestroyed) return false;
   try {
+    buidaLlavorVerge(editor);
     return Boolean(fila.ordena(editor.chain().focus()).run());
   } catch {
     return false;

@@ -34,7 +34,13 @@ import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 
 const CONFIG = Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' });
-const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', avatar: 'a.webp', dades: { full_name: 'Pep', is_public: false, town_name: 'La Torre' } };
+/* Gauntlet 261016 (Bloc 3.5.4, verificació; ordre del Mestre) · Fixture
+   actualitzada a propòsit: sense la foto de la sessió (abans, avatar:
+   'a.webp'). Amb ella, l'avatar redó ja la pinta (avatarDeLaFitxa, la font de
+   la barra i de la targeta) i la ranura no hi és; ací es prova el camí de la
+   ranura «Avatar», el d'una persona sense cap foto. El cas de la foto de la
+   sessió el prova PerfilEditor.test.jsx. */
+const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', avatar: null, dades: { full_name: 'Pep', is_public: false, town_name: 'La Torre' } };
 const forn = { id: 'O', mena: 'empresa', nom: 'Forn', rol: 'Propietària', dades: { name: 'Forn', visibility: 'public', role: 'owner' } };
 const CURT = 'data:image/webp;base64,AAAA';
 const MITJA_AVATAR = 'sdp-media://mitjans/t/u/avatars/a.webp';

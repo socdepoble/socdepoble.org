@@ -18,6 +18,12 @@
  *   · T3 · Un fil de tipus 'iaia' fa respondre la IAIA amb la frase fixa
  *     d'identitatsSeed, i l'avís del canal fa que la interfície la demane a
  *     l'instant.
+ *   · Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · La resposta de la IAIA
+ *     és asíncrona: primer busca a la Wiki pública del paquet (iaiaLocal.js)
+ *     i contesta amb els 3 documents més pròxims; sense cap resultat, o si la
+ *     Wiki no es pot carregar, la frase fixa de sempre. Al fil 'iaia' cada
+ *     pregunta espera que ella haja contestat l'anterior: el `seq` sempre va
+ *     pregunta, resposta, pregunta, resposta, sense forats.
  *   · T4 · Cada fil diu qui són els altres (`altres`: id, nom, tipus i avatar)
  *     perquè l'avatar de la conversa enllace amb el perfil públic.
  *
@@ -46,6 +52,7 @@ import { XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from './xatSeed.
 import { ENTITATS_SEED, RESPOSTA_IAIA, esIAIA, rolALEntitat, IAIA_ID } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT, rutaDeSubjecte, subjecteDeXat } from './contracte.js';
+import { respostaDeLaIAIA } from './iaiaLocal.js';
 
 const LIMIT_PER_DEFECTE = 50;
 const LIMIT_MAXIM = 100;
@@ -340,12 +347,12 @@ function avisa(filId, seq) {
 }
 
 /** T3 · La IAIA respon sola, com ho faria un disparador després d'inserir. */
-function respostaIAIA(estat, fil) {
+function respostaIAIA(estat, fil, text = RESPOSTA_IAIA) {
   const parts = estat.participants.get(fil.id);
   const creatAl = new Date().toISOString();
   const resposta = {
     id: crypto.randomUUID(), filId: fil.id, seq: ++fil.ultimSeq, usuariId: IAIA_ID, autorNom: AGENTS_MAP.IAIA.name,
-    text: RESPOSTA_IAIA, tipus: 'text', respostaA: null, editatAl: null, esborratAl: null, metadades: {},
+    text, tipus: 'text', respostaA: null, editatAl: null, esborratAl: null, metadades: {},
     esIA: true, comOrgId: null, creatAl
   };
   estat.missatges.get(fil.id).push(resposta);
@@ -355,6 +362,58 @@ function respostaIAIA(estat, fil) {
   iaia.rebutFinsSeq = Math.max(iaia.rebutFinsSeq, resposta.seq);
   parts.set(IAIA_ID, iaia);
   return resposta;
+}
+
+/* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · Les respostes de la IAIA
+   en curs. Per fil (objecte del magatzem, mai l'id: la llavor repetix l'id del
+   fil 'iaia' a cada àmbit), el torn que una pregunta nova ha d'esperar; a
+   més, totes juntes per a esperaLaIAIA. `generacio` canvia amb
+   reiniciaLocalXat: una resposta d'un magatzem oblidat no s'escriu ni avisa. */
+const tornsDeLaIAIA = new WeakMap();
+const respostesEnCurs = new Set();
+let generacio = 0;
+
+/**
+ * La IAIA contesta `pregunta` quan té la resposta: la de la Wiki
+ * (iaiaLocal.js) o, sense cap resultat o si la Wiki falla, RESPOSTA_IAIA. El
+ * `seq` es pren en escriure-la, mai abans: cap forat que el cursor de la
+ * interfície (despresDeSeq) puga saltar-se. Avisa una sola vegada, amb el seq
+ * de la resposta, com abans.
+ */
+function encarregaRespostaIAIA(estat, fil, pregunta) {
+  const meua = generacio;
+  const torn = { promesa: null };
+  tornsDeLaIAIA.set(fil, torn);
+  respostesEnCurs.add(torn);
+  torn.promesa = (async () => {
+    let text = null;
+    try {
+      text = await respostaDeLaIAIA(pregunta);
+    } catch {
+      text = null;
+    }
+    try {
+      if (meua !== generacio) return;
+      const resposta = respostaIAIA(estat, fil, typeof text === 'string' && text.trim() ? text : RESPOSTA_IAIA);
+      avisa(fil.id, resposta.seq);
+    } catch {
+      /* Cap resposta: el sondeig de la interfície no hi trobarà res nou. */
+    } finally {
+      respostesEnCurs.delete(torn);
+      if (tornsDeLaIAIA.get(fil) === torn) tornsDeLaIAIA.delete(fil);
+    }
+  })();
+}
+
+/** El missatge d'este `id` si ja és al magatzem (idempotència), o null. */
+function jaEnviat(estat, id, jo) {
+  for (const llista of estat.missatges.values()) {
+    const existent = llista.find((m) => m.id === id);
+    if (!existent) continue;
+    if (existent.usuariId !== jo) throw errorXat('SDP-XAT-008', 'este identificador ja és d’una altra persona.');
+    return copia(existent);
+  }
+  return null;
 }
 
 export function createLocalXatAdapter() {
@@ -388,13 +447,20 @@ export function createLocalXatAdapter() {
       const entrada = normalitzaCos(cos);
       const meu = exigixParticipant(estat, filId, jo);
       /* Idempotència per `id`, com fa el servidor amb `on conflict (id) do nothing`. */
-      for (const llista of estat.missatges.values()) {
-        const existent = llista.find((m) => m.id === entrada.id);
-        if (!existent) continue;
-        if (existent.usuariId !== jo) throw errorXat('SDP-XAT-008', 'este identificador ja és d’una altra persona.');
-        return copia(existent);
-      }
+      const repetit = jaEnviat(estat, entrada.id, jo);
+      if (repetit) return repetit;
       const fil = estat.fils.get(filId);
+      /* F25 · Al fil de la IAIA, una pregunta nova espera que ella haja
+         contestat l'anterior. A cada torn es torna a mirar la idempotència: un
+         reintent del mateix `id` que ja ha entrat torna el missatge i no
+         entra dues vegades. */
+      if (fil.tipus === 'iaia') {
+        for (let torn = tornsDeLaIAIA.get(fil); torn; torn = tornsDeLaIAIA.get(fil)) {
+          await torn.promesa;
+          const entretant = jaEnviat(estat, entrada.id, jo);
+          if (entretant) return entretant;
+        }
+      }
       exigixEscriptura(estat, fil, meu, jo);
       const creatAl = new Date().toISOString();
       /* Als Avisos de l'entitat, qui la gestiona hi signa com ella. */
@@ -421,9 +487,10 @@ export function createLocalXatAdapter() {
           virtual.rebutFinsSeq = Math.max(virtual.rebutFinsSeq, nou.seq);
         }
       }
-      let ultimSeq = nou.seq;
-      if (fil.tipus === 'iaia') ultimSeq = respostaIAIA(estat, fil).seq;
-      avisa(filId, ultimSeq);
+      /* F25 · Al fil de la IAIA l'avís el fa la resposta, quan arriba (un sol
+         avís per pregunta, amb el seq de la resposta, com abans). */
+      if (fil.tipus === 'iaia') encarregaRespostaIAIA(estat, fil, nou.text);
+      else avisa(filId, nou.seq);
       return copia(nou);
     },
 
@@ -549,10 +616,17 @@ export function createLocalXatAdapter() {
   };
 }
 
-/** Per a les proves: oblida tots els magatzems i els canals. */
+/** Per a les proves: oblida tots els magatzems i els canals, i les respostes de la IAIA en curs. */
 export function reiniciaLocalXat() {
   magatzems.clear();
   subscriptors.clear();
+  generacio += 1;
+  respostesEnCurs.clear();
+}
+
+/** Per a les proves: espera que la IAIA haja contestat tot el que té pendent. */
+export async function esperaLaIAIA() {
+  while (respostesEnCurs.size) await Promise.all([...respostesEnCurs].map((torn) => torn.promesa));
 }
 
 export const localXat = createLocalXatAdapter();

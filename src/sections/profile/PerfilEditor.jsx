@@ -22,8 +22,8 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { registraEntitatDelProjecte } from '../../config/navigation.js';
 import { esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
-  slugDEntitat,
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeReservaDeFitxa, potEditarFitxa,
+  rutaDeFitxaPublica, slugDEntitat,
 } from './fitxaDePerfil.js';
 
 /* Línia I2 de l'Onada 4 (pla 261008_1201) · La lògica pura de la fitxa viu
@@ -206,10 +206,17 @@ export function PerfilEditor({ identitat }) {
      no hi fa el mateix: per a una persona sense poble a la seua fila, ací
      encara es mira la persona d'`identitats`, i allí no; i allí el valor
      passa per String(). Fins que algú decidisca quina de les dues mana, cada
-     una es queda com era. */
-  const poble = mena === 'organitzacio'
+     una es queda com era.
+     Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+     sense poble») · Sense cap poble, la fitxa d'una de les tres identitats
+     del Mestre porta el seu (pobleDeReservaDeFitxa, la mateixa reserva que
+     pobleDeFitxa i la fitxa pública: clauFundacional, mai pel nom). La barra
+     taronja i la targeta viva ja no pinten Sóc de Poble ni Rentonar sense
+     poble. El poble desat sempre mana; cap altra fitxa se n'inventa cap. */
+  const poble = (mena === 'organitzacio'
     ? (dades.town_name || '')
-    : (dades.town_name || (identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name || '');
+    : (dades.town_name || (identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name || ''))
+    || pobleDeReservaDeFitxa(identitat);
 
   /* T39 (ordre del Mestre, 260928) · L'id amb què les notes noves hereten els
      drets d'esta fitxa: el de l'actor (IdentitatContext). La persona NO és
@@ -477,7 +484,19 @@ export function PerfilEditor({ identitat }) {
      avatarDeLaFitxa (fitxaDePerfil.js), la mateixa que lligen «Les vistes»,
      «El compte» i la fitxa compacta de la llista central. */
   const imatgeDeLaFitxa = fitxa.logoImage || '';
-  const avatarDesat = avatarDeLaFitxa(fitxa, desament.camps, identitat);
+  /* Gauntlet 261016 (Bloc 3.5.4, verificació) · Una imatge que esta fitxa ha
+     canviat ací (`local`: una pujada o «Llevar l'avatar»; «Tornar al que hi ha
+     desat» la retira) compta com l'esborrany de la cua fins que el context
+     del Perfil porta la fila nova (aplicaColumnes). Sense, entre la
+     confirmació de la cua i la identitat nova, la reserva d'abans (la foto
+     vella o la de la sessió, que aplicaColumnes també buida) tornava a eixir
+     un instant després de llevar l'avatar. */
+  const campsDeLaImatge = useMemo(
+    () => (Object.hasOwn(local, 'logoImage') && !Object.hasOwn(desament.camps, 'logoImage')
+      ? { ...desament.camps, logoImage: local.logoImage } : desament.camps),
+    [local, desament.camps],
+  );
+  const avatarDesat = avatarDeLaFitxa(fitxa, campsDeLaImatge, identitat);
   const avatarResolt = useResolvedAsset(esFitxaDelPilot(identitat) ? '' : avatarDesat);
   const avatarBarra = avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat;
 
@@ -717,18 +736,30 @@ export function PerfilEditor({ identitat }) {
      L'entitat pilot es reconeix per esPilot (esRutaDelProjecte de rutaFitxa,
      a dalt, amb l'autoria de la barra taronja).
      Bloc 3.5.4 · `imatgeDeLaFitxa` es calcula a dalt, amb l'avatar de la
-     barra taronja i de la targeta viva: la mateixa instància per a tots. */
+     barra taronja i de la targeta viva: la mateixa instància per a tots.
+     Gauntlet 261016 (Bloc 3.5.4, verificació; ordre del Mestre: «És
+     inadmissible que a la mateixa pantalla es mostre una foto al centre i una
+     altra a la dreta») · L'avatar redó i la ranura beuen ara d'avatarDesat
+     (avatarDeLaFitxa), la mateixa font que la barra taronja, la targeta viva
+     i la fitxa compacta. Abans lligen només fitxa.logoImage: una persona
+     sense avatar_url i amb la foto de la sessió (Google) veia la foto a la
+     barra i al centre i la ranura buida damunt de l'H1. Amb avatar propi o
+     amb un esborrany a la cua, el mateix valor que abans (cap píxel canvia).
+     «Llevar l'avatar» només hi és quan la fitxa té una imatge pròpia
+     (imatgeDeLaFitxa): la foto de la sessió no és cap camp de la fitxa, i
+     buidar avatar_url, que ja és buit, no faria res. */
   const ambAvatarRedo = mena !== 'organitzacio';
-  const ranuraDelLogo = potEditar && !esPilot && (!ambAvatarRedo || !imatgeDeLaFitxa);
+  const ranuraDelLogo = potEditar && !esPilot && (!ambAvatarRedo || !avatarDesat);
   const etiquetaImatgePropia = ambAvatarRedo ? ETIQUETA_AVATAR : ETIQUETA_LOGOTIP;
-  const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && imatgeDeLaFitxa ? {
-    src: imatgeDeLaFitxa,
+  const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && avatarDesat ? {
+    src: avatarDesat,
     alt: `Avatar de ${identitat.nom}`,
     ...(potEditar ? {
-      onCanvia: obriImatgePropia, etiquetaCanvia: ETIQUETA_AVATAR, onLleva: obriLleva, etiquetaLleva: ETIQUETA_LLEVA_AVATAR,
+      onCanvia: obriImatgePropia, etiquetaCanvia: ETIQUETA_AVATAR,
+      ...(imatgeDeLaFitxa ? { onLleva: obriLleva, etiquetaLleva: ETIQUETA_LLEVA_AVATAR } : null),
       ajuda: imatgePropiaPujant ? AJUDA_IMATGE_PUJANT : AJUDA_FOTO, pujant: imatgePropiaPujant,
     } : null),
-  } : null), [ambAvatarRedo, imatgeDeLaFitxa, identitat.nom, potEditar, obriImatgePropia, obriLleva, imatgePropiaPujant]);
+  } : null), [ambAvatarRedo, avatarDesat, imatgeDeLaFitxa, identitat.nom, potEditar, obriImatgePropia, obriLleva, imatgePropiaPujant]);
   /* El logo_url ja resolt (avatarBarra): PageFrame no resol cap sdp-media://
      del logotip d'una entitat. */
   const logoDeLectura = useMemo(() => (

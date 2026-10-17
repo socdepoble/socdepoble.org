@@ -76,6 +76,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'superposicions/calaix': lazyRoute(() => import('./detalls/EspecimenCalaix.jsx')),
   /* Ordre del Mestre, 261001 · el Calendari a pantalla completa. */
   'superposicions/pantalla-completa': lazyRoute(() => import('./detalls/EspecimenPantallaCompleta.jsx')),
+  /* Onada 0.3 (Gauntlet 261016) · el visor de fotos de l'Arxiu visual. */
+  'superposicions/visor-imatges': lazyRoute(() => import('./detalls/EspecimenVisorImatges.jsx')),
   'superposicions/pista': lazyRoute(() => import('./detalls/EspecimenPista.jsx')),
   'superposicions/menu': lazyRoute(() => import('./detalls/EspecimenMenu.jsx')),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */

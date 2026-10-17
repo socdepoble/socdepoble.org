@@ -101,7 +101,11 @@ import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
 import useObriXatPerDefecte from './useObriXatPerDefecte.js';
-import { PREFIX_PER_DEFECTE, esIdPerDefecte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
+import { PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
+/* Gauntlet 261016_1530 (Bloc 3.6) · Els quatre actors al capdamunt, en
+   l'ordre del Mestre, i la fila que porta a la comunitat de Sóc de Poble. */
+import { RUTA_SOBRE_DE_SOC_DE_POBLE, anteposaActors, potPortarLaComunitat } from './actorsDelXat.js';
+import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 /* Onada 6 · La IAIA apagada (nivell d'IA 0), els errors SDP traduïts i
    «Informa d'un error» per als beta testers. */
 import { senseContacteDeLaIAIA } from './contactesAjuda.js';
@@ -176,7 +180,9 @@ function instantDe(valor) {
    del poble que encara no existix (torn 260930, T1) és un grup sense dades:
    passa «Tot» i «Grups», mai «No llegits» ni «Preferits». */
 function passaFiltre(fila, filtre) {
-  if (fila.tipus === 'poble') return filtre === 'tot' || filtre === 'grups';
+  /* Gauntlet 261016_1530 (Bloc 3.6) · La fila que porta a la comunitat de
+     Sóc de Poble ('entitat', actorsDelXat.js), igual que la del poble. */
+  if (fila.tipus === 'poble' || fila.tipus === 'entitat') return filtre === 'tot' || filtre === 'grups';
   if (fila.tipus === 'comunitat') {
     const { comunitat } = fila;
     const fills = comunitat.fills || CAP;
@@ -350,6 +356,12 @@ function XatWorkspace() {
        Javi depén del mode de dades (useObriXatPerDefecte). */
     modeDades = 'remote'
   } = useXat();
+  /* Gauntlet 261016_1530 (Bloc 3.6) · En remot, la comunitat de Sóc de Poble
+     es reconeix per l'id que el backend dona a l'entitat pilot: el Xat torna
+     a pintar quan arriba (useEntitatDelProjecte, la mateixa resolució única
+     d'AppDataLoader), i fins aleshores no hi porta cap fila (actorsDelXat.js). */
+  useEntitatDelProjecte();
+  const comunitatPortable = potPortarLaComunitat(modeDades);
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
   /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
@@ -419,8 +431,20 @@ function XatWorkspace() {
      data/xatsPerDefecte.js) no és cap conversa: ni es munta Conversa ni es
      crida obriFil. Tampoc amb el seu id abans que arribe la llista (un enllaç
      directe, una recàrrega): xat_historial rebutjaria l'id i l'avís taparia
-     la llista. */
-  const trobatPerDefecte = trobat?.perDefecte || null;
+     la llista.
+     Gauntlet 261016_1530 (Bloc 3.6; MCR b36_xat, proposta 1) · L'URL d'una
+     fila sintètica que NO és a la llista (un enllaç vell, l'historial; en
+     llavor, on la IAIA ja és el seu fil) s'encamina per la seua clau
+     (clauPerDefecteDe: 'javi' o 'iaia'), com si s'haguera premut la fila, i
+     sense passar pel 404. Dues guardes: amb la IAIA apagada mana la sortida
+     de dinsDeLaIAIA (cap segona navegació), i Javi no s'obri cap xat amb ell
+     mateix (SDP-XAT-002): torna a la llista. Una clau que ja no té fila
+     ('socdepoble', des del 261016_1530) és un 404, com qualsevol id que no
+     existix. */
+  const clauDeLaRuta = trobat ? null : clauPerDefecteDe(threadId);
+  const javiDavantDeJavi = clauDeLaRuta === 'javi' && esLaPersonaDeContacte({ id: joId });
+  const clauEncaminada = clauDeLaRuta && !(clauDeLaRuta === 'iaia' && iaiaApagada) && !javiDavantDeJavi ? clauDeLaRuta : null;
+  const trobatPerDefecte = trobat?.perDefecte || clauEncaminada;
   const idPerDefecte = Boolean(trobatPerDefecte) || esIdPerDefecte(threadId);
   /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0 la IAIA no apareix: qui és
      dins d'un xat seu (la fila per defecte, el fil de la llista que el
@@ -473,7 +497,10 @@ function XatWorkspace() {
      queda ací, tornar a prémer la fila el torna a demanar.
      Gauntlet 261016 (Bloc 3.6) · També la fila de Javi Llinares, i el mode
      de dades tria la via de la IAIA i la de Javi (en llavor i en local, el
-     directe que contesta). */
+     directe que contesta).
+     Gauntlet 261016_1530 (Bloc 3.6.1) · Ja cap fila de Sóc de Poble (ni la
+     via «En privat» d'ací): les claus són 'javi' i 'iaia', i també
+     s'encaminen sense la fila a la llista (`clauEncaminada`, dalt). */
   const obriPerDefecte = useObriXatPerDefecte();
   const perDefecteTractat = useRef(null);
   useEffect(() => {
@@ -495,6 +522,17 @@ function XatWorkspace() {
     showToast(t('section.xat.iaia.apagada', "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat»."), 'info');
     navigate('/xat', { replace: true });
   }, [dinsDeLaIAIA, threadId, navigate, showToast, t]);
+
+  /* Gauntlet 261016_1530 (Bloc 3.6) · Javi a la ruta de la seua pròpia fila
+     (/xat/sdp-per-defecte:javi): a la llista, amb replace i una sola vegada
+     per ruta. La seua llista no porta eixa fila (XatContext). */
+  const sortidaDeJavi = useRef(null);
+  useEffect(() => {
+    if (!javiDavantDeJavi) { sortidaDeJavi.current = null; return; }
+    if (sortidaDeJavi.current === threadId) return;
+    sortidaDeJavi.current = threadId;
+    navigate('/xat', { replace: true });
+  }, [javiDavantDeJavi, threadId, navigate]);
 
   /* Onada 6 (beta testers) · «Informa d'un error», al peu de la llista (també
      davall de l'avís d'una llista que no s'ha pogut carregar): obri el xat de
@@ -742,14 +780,24 @@ function XatWorkspace() {
        comunitat existix, i la fila virtual feia la llista no buida, tapava el
        «Carregant…» i després es transformava en la de la comunitat.
        Gauntlet 261016 (Bloc 3.6) · Amb el poble del xat: sense amfitrió,
-       «Gent de la Torre». */
-    return anteposaPoble(llista, { poble: pobleDeLaLlista, comunitats, virtual: !senseSessio && status === 'ready' });
-  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status]);
+       «Gent de la Torre».
+       Gauntlet 261016_1530 (Bloc 3.6; ordre vigent, mana sobre la del
+       261007) · Els quatre actors al capdamunt i en este ordre: la comunitat
+       de Sóc de Poble, Javi Llinares, Gent de la Torre i la IAIA
+       (anteposaActors). La fila que porta a la comunitat quan encara no hi
+       és segueix la regla de la del poble (mai mentre carrega ni sense
+       sessió) i, en remot, només quan el backend ja ha donat l'id de
+       l'entitat (potPortarLaComunitat). */
+    const virtual = !senseSessio && status === 'ready';
+    const ambElPoble = anteposaPoble(llista, { poble: pobleDeLaLlista, comunitats, virtual });
+    return anteposaActors(ambElPoble, { comunitat: virtual && comunitatPortable });
+  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status, comunitatPortable]);
   /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
      Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
-     converses i no tenen res a marcar. */
+     converses i no tenen res a marcar. Gauntlet 261016_1530 · Ni la que porta
+     a la comunitat de Sóc de Poble ('entitat'). */
   const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre)
-    && !(modeSeleccio && (fila.tipus === 'poble' || fila.fil?.perDefecte)));
+    && !(modeSeleccio && (fila.tipus === 'poble' || fila.tipus === 'entitat' || fila.fil?.perDefecte)));
   /* La comunitat de la fila del poble (el focus la seguix quan naix). La
      fitxa automàtica només la rep amb un poble declarat (EntradaDelPoble). */
   const comunitatDelPoble = comunitats.find((c) => esComunitatDelPoble(c, pobleDeLaLlista)) || null;
@@ -860,7 +908,10 @@ function XatWorkspace() {
      un fil de pàgina pel seu descriptor (`reobrint`, també amb l'avís d'una
      fallada de xarxa). Un fil que ja s'havia trobat en esta ruta només es
      conserva mentre la llista no està al dia (`trobat`). */
-  if (threadId && !trobat && status === 'ready' && llistaFresca && !reobrint && !dinsDeLaIAIA) {
+  /* Gauntlet 261016_1530 (Bloc 3.6) · Ni l'URL d'una fila sintètica que
+     s'encamina per la seua clau (`clauDeLaRuta`): el 404 es pintava un
+     commit abans que l'efecte navegara (el parpelleig de l'MCR). */
+  if (threadId && !trobat && status === 'ready' && llistaFresca && !reobrint && !dinsDeLaIAIA && !clauDeLaRuta) {
     return <NotFoundPage />;
   }
 
@@ -929,6 +980,11 @@ function XatWorkspace() {
     pobleDemanat.current = true;
     navigate(rutaSobreDelPoble(p, towns));
   };
+
+  /* Gauntlet 261016_1530 (Bloc 3.6) · La fila que porta a la comunitat de
+     Sóc de Poble fa el camí del «Comentar» de /socdepoble: l'efecte ?sobre=
+     l'obri (o la crea, al servidor, perquè la persona ho ha demanat). */
+  const obriEntitat = () => navigate(RUTA_SOBRE_DE_SOC_DE_POBLE);
 
   /* Onada 3B · «Veure-ho tot ›» de la vista de comunitats obri la fitxa i
      conserva la vista d'origen (/xat?comunitat=<id>&vista=comunitats): la
@@ -1131,6 +1187,7 @@ function XatWorkspace() {
         onSelect={handleSelectThread}
         onObriComunitat={obriComunitat}
         onObriPoble={obriPoble}
+        onObriEntitat={obriEntitat}
         locale={locale}
         t={t}
         joId={joId}

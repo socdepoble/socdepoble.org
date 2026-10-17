@@ -1,5 +1,5 @@
 import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
-import { RUTES_CANONIQUES } from './navigation.js';
+import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from './navigation.js';
 
 /*
  * Ordre del Mestre, 261001 · La secció Calendari ('/calendari',
@@ -26,12 +26,18 @@ export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'calendari', 'mu
    (RUTES_CANONIQUES, navigation.js: /javillinares, /socdepoble i /rentonar)
    obrin la mateixa fitxa pública que /gent/:id, /empresa/:id i /grup/:id:
    són subrutes de Pobles com elles, i Pobles s'encén igual. Es lligen de la
-   seua font, mai escrites ací. */
+   seua font, mai escrites ací.
+   Gauntlet 261016_1530 (Bloc 3.6.3; relleu F64 i F65) · El manifest
+   «L'ànima de la iaia» (secció 'ia', la del desplegable «Sistema») passa de
+   /iaia a /anima: és un assaig escrit per la IAIA, no la seua fitxa. /iaia
+   és ara la fitxa pública de la IAIA MarIA (RUTA_FITXA_IAIA, navigation.js),
+   la mateixa que /perfil/<id>: penja de Pobles com /perfil i les tres rutes
+   canòniques, i Pobles s'encén igual. */
 export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat', subrutes: ['/control-xat'] },
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
   { id: 'mercat', path: '/mercat', label: 'Mercat', shortLabel: 'Mercat', icon: ShoppingCart, kind: 'market' },
-  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES)] },
+  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA] },
   { id: 'calendari', path: '/calendari', label: 'Calendari', shortLabel: 'Calendari', icon: CalendarDays, kind: 'agenda' },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },
   { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra' },
@@ -40,7 +46,7 @@ export const SECTIONS = [
   { id: 'notes', path: '/notes', label: 'Notes', shortLabel: 'Notes', icon: NotebookPen, kind: 'notes' },
   { id: 'projecte', path: '/projecte', label: 'El projecte', shortLabel: 'Proj.', icon: FileText, kind: 'text', pageKey: 'projecte' },
   { id: 'constitucio', path: '/constitucio', label: 'Constitució', shortLabel: 'Lleis', icon: ShieldCheck, kind: 'text', pageKey: 'constitucio' },
-  { id: 'ia', path: '/iaia', label: "L'ànima de la iaia", shortLabel: 'IAIA', icon: BrainCircuit, kind: 'text', pageKey: 'anima', subrutes: ['/realitat'] },
+  { id: 'ia', path: '/anima', label: "L'ànima de la iaia", shortLabel: 'IAIA', icon: BrainCircuit, kind: 'text', pageKey: 'anima', subrutes: ['/realitat'] },
   { id: 'roadmap', path: '/roadmap', label: 'Full de ruta', shortLabel: 'Ruta', icon: Route, kind: 'text', pageKey: 'roadmap' },
   { id: 'versions', path: '/versions', label: 'Versions', shortLabel: 'Versions', icon: FileText, kind: 'text', pageKey: 'versions' },
   { id: 'legal', path: '/legal', label: 'Legal i privacitat', shortLabel: 'Legal', icon: FileText, kind: 'text', pageKey: 'legal' },

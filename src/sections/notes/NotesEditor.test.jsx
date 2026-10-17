@@ -10,8 +10,16 @@ const mocks = vi.hoisted(() => {
     TENANT_A, TENANT_B, showToast: vi.fn(), onToast: undefined, noteFolders: [],
     adapter: null, upload: vi.fn(), config: { tenantId: TENANT_A }, notes: [], setLocal: vi.fn(), session: {},
     mou: vi.fn(), esborra: vi.fn(), potEsborrar: false, publish: vi.fn(), compartir: vi.fn(),
-    scopeKey: undefined, NET, desament: vi.fn(() => NET), identitat: { actorId: 'user' }
+    scopeKey: undefined, NET, desament: vi.fn(() => NET), identitat: { actorId: 'user' },
+    /* El mode resolt de config/dataMode.js (null: el de veres). */
+    modeResolt: null
   };
+});
+/* Correcció de la revisió (261016) · L'elecció remota desada, sense recarregar:
+   amb modeResolt, resolveDataMode torna eixe mode; sense, el de veres. */
+vi.mock('../../config/dataMode.js', async (importOriginal) => {
+  const real = await importOriginal();
+  return { ...real, resolveDataMode: (config) => mocks.modeResolt ?? real.resolveDataMode(config) };
 });
 vi.mock('./NotesContext', () => ({
   useNotes: () => ({
@@ -53,6 +61,7 @@ beforeEach(() => {
   mocks.showToast.mockReset();
   mocks.session = {};
   mocks.config = { tenantId: mocks.TENANT_A };
+  mocks.modeResolt = null;
   mocks.potEsborrar = false;
   mocks.scopeKey = undefined;
   mocks.identitat = { actorId: 'user' };
@@ -407,7 +416,8 @@ test('P4 · la nota preparada escriu pel canal del Bloc, sense ploma, sense «Bo
   expect(mocks.adapter.deleteDocument).toBeUndefined();
   expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
   // Els botons de classificació es conserven i hi escriuen pel mateix canal.
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'Etiquetes (0)', 'Emoticona (—)']);
+  // Bloc 3.9 (261016) · El quart botó es diu «Emojis XL» (abans, «Emoticona»).
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'Etiquetes (0)', 'Emojis XL (—)']);
   fireEvent.click(botonera()[0]);
   fireEvent.click(screen.getByRole('radio', { name: 'Altres notes' }));
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
@@ -534,10 +544,40 @@ test('T65 · la benvinguda (n1) oberta amb sessió signa Sóc de Poble; una nota
   expect(barra()).toEqual({ nom: 'Pepa', avatar: 'https://exemple.org/pepa.png', poble: 'Benifallim' });
 });
 
-test('T65 · una nota normal del Foraster (mode seed) continua signant el Foraster', () => {
-  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
+/* Gauntlet 261016_1530 (Bloc 3.9; ordre del Mestre: «En redactar una nota
+   sota sessió, pilot o llavor, la barra taronja mostra Javi Llinares i La
+   Torre de les Maçanes amb la seua foto canònica […]. Prohibit etiquetar
+   d'ofici com a "Foraster"») · Deroga T22: esta prova fixava el Foraster en
+   mode seed i es reescriu a propòsit. Sense sessió en seed o local, la
+   persona pilot; en remot sense sessió, mai Javi (cap visitant anònim d'un
+   paquet de producció no n'hereta el nom ni la foto). */
+test('Bloc 3.9 · una nota normal sense sessió en seed o local signa Javi Llinares, a La Torre, amb la seua foto canònica', async () => {
+  const { AUTORIA_PILOT } = await import('./autoriaNota.js');
+  const { PERSONA_PILOT } = await import('../../data/identitatsSeed.js');
+  for (const dataMode of ['seed', 'local']) {
+    mocks.config = { tenantId: mocks.TENANT_A, dataMode };
+    render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
+    expect(barra(), dataMode).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar, poble: 'La Torre de les Maçanes' });
+    expect(barra(), dataMode).toEqual(AUTORIA_PILOT);
+    cleanup();
+  }
+  // En remot, sense sessió: «Veí», sense foto ni poble. Mai el Foraster.
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'remote' };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
-  expect(barra()).toEqual({ nom: 'Foraster', avatar: null, poble: 'Poble de la persona forastera' });
+  expect(barra()).toEqual({ nom: 'Veí', avatar: null, poble: '' });
+  expect(JSON.stringify(barra())).not.toMatch(/Foraster|forastera/);
+});
+
+/* Correcció de la revisió adversarial (261016) · La via pilot decidix amb el
+   mode RESOLT, no amb el que demana el paquet: un paquet seed que en este
+   navegador ja ha triat l'entrada real (config/dataMode.js · enterRemoteMode)
+   treballa en remot, i un visitant sense sessió hi signa «Veí» («mai remot»). */
+test('Bloc 3.9 · un paquet seed que ja ha triat l’entrada real: sense sessió, la barra signa «Veí» i no porta enlloc', () => {
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
+  mocks.modeResolt = 'remote';
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
+  expect(barra()).toEqual({ nom: 'Veí', avatar: null, poble: '' });
+  expect(mocks.adapter.barAuthorHref).toBeNull();
 });
 
 /* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
@@ -560,10 +600,20 @@ test('261007 · la benvinguda porta al perfil de Sóc de Poble: la còpia de pro
   expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
 });
 
-test('261007 · el Foraster no té pàgina: una nota seua no porta cap enllaç', () => {
+/* Bloc 3.9 (261016) · Abans: «el Foraster no té pàgina» (seed, cap enllaç).
+   Ara la persona pilot porta a la seua fitxa; sense sessió en remot, cap. */
+test('261007 · sense sessió, en seed la barra porta a la fitxa de la persona pilot; en remot, enlloc', async () => {
+  const { RUTA_PERSONA_PILOT } = await import('./autoriaNota.js');
   mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
-  expect(barra().nom).toBe('Foraster');
+  expect(barra().nom).toBe('Javi Llinares');
+  expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERSONA_PILOT);
+  /* Correcció de la revisió (261016; Bloc 3.5.1) · L'adreça canònica neta
+     (RUTES_CANONIQUES), la del xat; abans, l'àlies /gent/javillinares. */
+  expect(RUTA_PERSONA_PILOT).toBe('/javillinares');
+  cleanup();
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'remote' };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
   expect(mocks.adapter.barAuthorHref).toBeNull();
 });
 
@@ -625,44 +675,62 @@ test('T40 · el Bloc activa el calendari de publicació (també a la còpia de p
 test('E8 · la barra grisa no té interfície morta: l’adaptador porta la botonera, no metaActions', () => {
   render(<NotesEditor activeNote={{ id: 'personal', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter).not.toHaveProperty('metaActions');
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emoticona (—)']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emojis XL (—)']);
   expect(botonera().map((b) => b.getAttribute('aria-label'))).toEqual(['Carpetes: Mur', 'Categories: Sistema', null, null]);
 });
 
 /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja: el
-   camp CRU de la nota i el mateix DialegEmoticona que el botó de la botonera
-   (que es conserva: el prova E8). */
-test('T51 · l’adaptador passa l’emoticona crua de la nota, i onObriEmoticona obri el DialegEmoticona', () => {
+   camp CRU de la nota.
+   Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «eliminar la ploma blanca
+   central» de la barra taronja) · Deroga l'obertura des de l'espai central
+   (T51/T66b): l'adaptador ja no porta onObriEmoticona, i el DialegEmoticona
+   s'obri des del quart botó de la botonera, «Emojis XL», que viu dins de
+   l'«Edició avançada». Les dues proves que fixaven la ploma es reescriuen. */
+test('Bloc 3.9 · l’adaptador passa l’emoticona crua sense obridor a la barra, i el botó «Emojis XL» obri el DialegEmoticona', () => {
   mocks.session = { currentUser: { id: 'u' } };
   const nota = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [], icon: '🌿' };
   mocks.notes = [nota];
   render(<NotesEditor activeNote={nota} />);
   expect(mocks.adapter.emoticona).toBe('🌿');
+  expect(mocks.adapter.onObriEmoticona).toBeNull();
   expect(screen.queryByRole('dialog')).toBeNull();
-  act(() => mocks.adapter.onObriEmoticona());
+  // La botonera porta el botó «Emojis XL», l'últim, amb l'emoticona triada.
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', '🌿Emojis XL']);
+  fireEvent.click(botonera()[3]);
   expect(screen.getByRole('dialog', { name: 'Emoticona del document' })).toBeTruthy();
-  // La botonera continua amb el seu botó «Emoticona», l'últim.
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', '🌿Emoticona']);
 });
 
-test('T51 · sense emoticona el camp cru és buit (mai la 🪶 de la llista); sense nota, cap botó', () => {
+test('Bloc 3.9 · cap obridor a l’espai central de la barra taronja: ni amb nota, ni a l’estat buit, ni a la còpia de prova', () => {
   mocks.session = { currentUser: { id: 'u' } };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter.emoticona).toBe('');
-  expect(mocks.adapter.onObriEmoticona).toBeTypeOf('function');
+  expect(mocks.adapter.onObriEmoticona).toBeNull();
   cleanup();
   // Estat buit (persona connectada sense nota): cap document, cap botó.
   render(<NotesEditor />);
   expect(mocks.adapter.document).toBeNull();
   expect(mocks.adapter.onObriEmoticona).toBeNull();
   cleanup();
-  // La còpia de prova del Foraster sí que en té: la primera tecla ja edita.
+  // La còpia de prova del Foraster: la primera tecla ja edita, i l'emoticona es tria a la botonera.
   mocks.session = {};
   render(<NotesEditor />);
   expect(mocks.adapter.document.id).toBe('prova-local');
-  expect(mocks.adapter.onObriEmoticona).toBeTypeOf('function');
+  expect(mocks.adapter.onObriEmoticona).toBeNull();
+  expect(botonera().at(-1).textContent).toBe('Emojis XL (—)');
   // Sense data pròpia: la d'ara la posa la closca (UniversalEditorShell.test, T51).
   expect(mocks.adapter.document.formattedTime ?? null).toBeNull();
+});
+
+/* Bloc 3.9 (261016) · Les claus noves de l'adaptador del Bloc: el
+   placeholder de l'H1 de la targeta, l'«Edició avançada» i les dues llavors. */
+test('Bloc 3.9 · l’adaptador porta «Nota sense títol», l’Edició avançada i les llavors d’ara i d’abans', async () => {
+  const { LLAVORS_NOTA } = await import('./llavorNota.js');
+  mocks.session = { currentUser: { id: 'u' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.placeholderTitol).toBe('Nota sense títol');
+  expect(mocks.adapter.edicioAvancada).toBe(true);
+  expect(mocks.adapter.seedContent).toBe(LLAVORS_NOTA);
+  expect(LLAVORS_NOTA).toHaveLength(2);
 });
 
 test('carpeta: se’n tria una i s’escriu el folderId de la nota', () => {
@@ -680,7 +748,7 @@ test('E5 · el primer desat de la nota de benvinguda conserva totes les etiquete
   mocks.notes = [n1];
   render(<NotesEditor activeNote={n1} />);
   // T7B-V1 · Les quatre etiquetes, dins d'un sol botó (un objectiu per grup).
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'SistemaProductivitatTutorialSóc de Poble', 'Emoticona (—)']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'SistemaProductivitatTutorialSóc de Poble', 'Emojis XL (—)']);
   fireEvent.click(botonera().find((b) => b.getAttribute('aria-label') === 'Etiquetes: Sistema, Productivitat, Tutorial, Sóc de Poble'));
   for (const nom of n1.labels) expect(screen.getByRole('checkbox', { name: nom }).checked).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));

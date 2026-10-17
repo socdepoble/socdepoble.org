@@ -37,11 +37,16 @@
  * fixat; l'origen és el de l'app que el genera (window.location.origin), on
  * l'SPA servix /notes. Porta el títol de la pàgina (300 caràcters com a
  * màxim, MAXIM_CAMP_ORIGEN) i, si hi ha text seleccionat, l'entradeta (256,
- * MAXIM_LEMA). La prova modeDesa.test.js l'executa: si la URL que construïx
- * deixa de ser un snippet vàlid, falla.
+ * MAXIM_LEMA). E1 del Gauntlet (261016) · Hidrata a la manera d'OpenGraph:
+ * el títol és og:title (o twitter:title) i, si no n'hi ha, el de la pàgina;
+ * el subtítol, og:description (o twitter:description), tallat a 300 punts de
+ * codi. La imatge (og:image) no: la doctrina de privacitat la deixa fora
+ * (contingutExtern.js) i canviar-la és decisió del Mestre. La prova
+ * modeDesa.test.js l'executa: si la URL que construïx deixa de ser un snippet
+ * vàlid, falla.
  *
  * Privacitat (correcció T7C-R5). La finestra s'obri amb una petició GET: la
- * consulta (l'adreça, el títol i el text seleccionat) arriba al servidor que
+ * consulta (l'adreça, el títol, el subtítol i el text seleccionat) arriba al servidor que
  * servix l'app abans de cap clic a «Desar», i pot quedar als seus registres.
  * Per això l'adreça viatja SENSE el fragment (#…): ací van els testimonis
  * d'una tornada OAuth (#access_token=…). Una pàgina que només es distingix
@@ -147,8 +152,18 @@ export function paramsDeLaNota({ carpeta = null, nota = null } = {}) {
 
 /* __ORIGEN__ és l'origen de l'app, en JSON, i __DESTI__ la tria de la
    destinació, buida per al Bloc (bookmarkletDesa). La mida de la finestra no
-   és cap punt de tall: qualitat.test.js en lleva la línia de davall. */
-const PLANTILLA_BOOKMARKLET = "javascript:(()=>{const u=new URL('/notes',__ORIGEN__);const p=u.searchParams;p.set('mode','desa');__DESTI__p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();";
+   és cap punt de tall: qualitat.test.js en lleva la línia de davall.
+   E1 del Gauntlet (ordre del Mestre, 261016, I05/I07: «hidrata títol,
+   subtítol, entradeta, URL») · m(n): el content del meta de la pàgina
+   (property="n" o name="n"), net d'espais; o(k): l'OpenGraph og:k i, si no
+   n'hi ha, el de Twitter twitter:k. c(t, n): el text tallat a n punts de codi
+   (mai un emoji partit), com els compta validaContingutExtern, que rebutja i no
+   talla: abans es retallen 2n unitats perquè una selecció enorme no es
+   desplegue sencera. Títol: og:title o document.title (300, MAXIM_CAMP_ORIGEN);
+   subtítol: og:description (300), només si n'hi ha; entradeta: la selecció
+   (256, MAXIM_LEMA); la url, sense el fragment. Cap imatge (og:image): la
+   doctrina de contingutExtern.js no importa la de l'altra web. */
+const PLANTILLA_BOOKMARKLET = "javascript:(()=>{const u=new URL('/notes',__ORIGEN__);const p=u.searchParams;const m=n=>((document.querySelector('meta[property=\"'+n+'\"],meta[name=\"'+n+'\"]')||{}).content||'').trim();const o=k=>m('og:'+k)||m('twitter:'+k);const c=(t,n)=>[...String(t).trim().slice(0,n*2)].slice(0,n).join('');p.set('mode','desa');__DESTI__p.set('url',location.href.split('#')[0]);p.set('titol',c(o('title')||document.title,300));const d=c(o('description'),300);if(d)p.set('subtitol',d);const s=c(getSelection()||'',256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();";
 
 /* Bucle local: només ací s'admet http (desenvolupament). */
 const esLocal = (host) => host === 'localhost' || host.endsWith('.localhost') || host === '127.0.0.1' || host === '[::1]';
@@ -174,7 +189,12 @@ export function origenDelSnippet(valor) {
  * capturar contingut i decidir fàcilment si el destí és el Bloc de notes o el
  * Lector RSS») · `desti`, opcional: 'bloc' (el de sempre: el mateix
  * bookmarklet, caràcter a caràcter, que sense `desti`) o 'lector', que obri
- * el snippet amb ?desti=lector, el Lector ja triat. El Curador continua
+ * el snippet amb ?desti=lector, el Lector ja triat. E1 del Gauntlet (261016) ·
+ * El bookmarklet de sempre canvia a posta (la hidratació OpenGraph de la
+ * plantilla), però la igualtat entre 'bloc' i sense `desti` continua: és el
+ * mateix text. Els ja instal·lats no es tornen a generar i continuen valent: el
+ * snippet no demana cap clau nova (el subtítol és opcional a
+ * contingutExternDeParams). El Curador continua
  * decidint: només l'oferix si el Lector és disponible i, si no, és el Bloc
  * (SnippetCurador.jsx, correcció SN-R1). Qualsevol altre valor, null: cap
  * bookmarklet que porte una destinació que no existix.

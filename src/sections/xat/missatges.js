@@ -85,7 +85,8 @@ export function mapejaFil(fil, ara = Date.now()) {
     comunitatId: fil.comunitatId ?? null,
     subjecte: fil.subjecte ?? null,
     /* Ordre del Mestre (261007) · La fila d'ajuda que el backend sintetitza
-       ('socdepoble' | 'iaia', xatsPerDefecte.js): no és cap fil i XatSection
+       ('javi' | 'iaia' des del Gauntlet 261016_1530; abans també
+       'socdepoble', xatsPerDefecte.js): no és cap fil i XatSection
        l'obri per la seua via, mai amb obriFil. Null en una conversa de veres. */
     perDefecte: fil.perDefecte || null,
     esComunitat: tipus === 'comunitat',

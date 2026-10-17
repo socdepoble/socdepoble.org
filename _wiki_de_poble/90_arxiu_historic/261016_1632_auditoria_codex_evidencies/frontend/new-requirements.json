@@ -1,0 +1,75 @@
+{
+  "localAuth": [
+    {
+      "dataMode": "local",
+      "code": "mode-local",
+      "message": "L’entrada real encara s’està preparant. Recarrega el formulari d’entrada."
+    },
+    {
+      "dataMode": "seed",
+      "code": "mode-local",
+      "message": "L’entrada real encara s’està preparant. Recarrega el formulari d’entrada."
+    }
+  ],
+  "fetchCalls": 0,
+  "at": "2026-10-16T14:46:50.286Z",
+  "scope": "Pure local runtime; local login attempt used fabricated credentials and fetch was blocked; no network",
+  "hashes": {
+    "src/data/xatsPerDefecte.js": "237b323eaf8b1f24222415d2acaf31e8321fe7d195e4386d269dccc540bd2ee2",
+    "src/sections/xat/components/CapcaleraConversa.jsx": "dcc356a594f6b7eba785b997aef6d0b41c374f4cce228fead0b2ce812685933f",
+    "src/sections/xat/components/FakeChatOnboarding.jsx": "4bb5c94c27a68eb28f188203ed1fc1e0fa274c29982bebae92517d6ba41349f7",
+    "src/sections/xat/XatSection.jsx": "49d3e15805e10d28265b9e6f51da536b75351c4f0ad6091be6232a4d9578e7ee",
+    "src/sections/xat/pobleAmfitrio.js": "ea589b0ddba50b71d44f7fcc850b476f1239e4b3544cb57f20b8bfbdf33747e9",
+    "src/config/navigation.js": "b5fb13648b7220c8b4f901036add4bacd8ac0ac90e2dac8b3168e4a91a5acdf9",
+    "src/config/sections.js": "51850a102669d6da40b77279098fc44c1c50f5a86cfa0c888e3b1c87b08b4044",
+    "src/app/App.jsx": "ed347e65ce41fcdece1045d3e5ba7eed0e1bd3f39805e8b373c0578b42490599",
+    "src/data/supabase/auth.js": "2983dc1da4a7c66736b66b7a634759c72c8896e707cc7d76b74954ceda94ff4d",
+    "src/sections/onboarding/OnboardingSection.jsx": "ff67c05809d607254437a4b55bd0841d14e2afdcff0484da9581de738df00565"
+  },
+  "communityWithDefaultDirectMessages": [
+    {
+      "id": "7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d06",
+      "title": "Sóc de Poble",
+      "kind": "comunitat"
+    },
+    {
+      "id": "sdp-per-defecte:socdepoble",
+      "title": "Sóc de Poble",
+      "defaultKey": "socdepoble",
+      "kind": "directe"
+    },
+    {
+      "id": "sdp-per-defecte:javi",
+      "title": "Javi Llinares",
+      "defaultKey": "javi",
+      "kind": "directe"
+    },
+    {
+      "id": "sdp-per-defecte:iaia",
+      "title": "IAIA MarIA",
+      "defaultKey": "iaia",
+      "kind": "directe"
+    }
+  ],
+  "seedCommunityChildren": [
+    "Avisos",
+    "General",
+    "Beta testers"
+  ],
+  "orderAfterPobleHelper": [
+    "Gent de la Torre",
+    "Comunitat Sóc de Poble",
+    "Javi Llinares",
+    "IAIA MarIA"
+  ],
+  "anonymousJaviHeader": {
+    "hasAltres": false,
+    "hasSubjecte": false,
+    "rendersLinkByCurrentCode": false
+  },
+  "currentHeaderDestinations": {
+    "person": "/gent/0001",
+    "entity": "/empresa/socdepoble",
+    "manifest": "/iaia"
+  }
+}

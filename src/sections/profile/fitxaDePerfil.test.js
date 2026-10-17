@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 /* Onada 8 (261009) · El pilot porta al seu perfil (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
-  slugDEntitat,
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, pobleDeReservaDeFitxa, potEditarFitxa,
+  rutaDeFitxaPublica, slugDEntitat,
 } from './fitxaDePerfil.js';
 import { documentDeFitxa } from './perfilCamps.js';
 
@@ -83,6 +83,35 @@ describe('pobleDeFitxa', () => {
     expect(pobleDeFitxa(agent, [jo, agent])).toBe('La Torre');
     expect(pobleDeFitxa({ ...agent, dades: { town_name: 'Ibi' } }, [jo])).toBe('Ibi');
     expect(pobleDeFitxa(agent)).toBe('');
+  });
+
+  /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar
+     entitats sense poble») · Sense poble desat, les tres identitats del Mestre
+     porten el seu (clauFundacional, la regla de la fitxa pública): per l'id o
+     un àlies declarat, o per a la persona, el slug que posa la llavor. Mai pel
+     nom ni pel slug d'una organització, i el desat sempre mana. */
+  test('Bloc 3.5.2 · sense poble, les tres identitats del Mestre porten el seu; cap altra fitxa se n’inventa cap', () => {
+    const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+    const pilot = { id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble', dades: { role: 'owner' } };
+    const rentonar = { id: ENTITAT_RENTONAR_SLUG, mena: 'grup', nom: 'Rentonar', dades: { role: 'owner' } };
+    const persona = { ...jo, dades: { id: 'U', slug: PERSONA_PILOT.slug } };
+    for (const fitxa of [pilot, rentonar, persona, { ...pilot, id: 'soc-de-poble_official' }, { ...jo, dades: { id: PERSONA_PILOT.alies[1] } }]) {
+      expect([fitxa.id, pobleDeReservaDeFitxa(fitxa), pobleDeFitxa(fitxa, [jo])]).toEqual([fitxa.id, POBLE_FUNDACIONAL, POBLE_FUNDACIONAL]);
+    }
+    expect(pobleDeFitxa({ ...rentonar, dades: { town_name: 'Benilloba' } })).toBe('Benilloba');
+    const alienes = [
+      org('owner'),
+      { id: uuid, mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: ENTITAT_PILOT_SLUG } },
+      { id: uuid, mena: 'grup', nom: 'Rentonar', dades: { slug: ENTITAT_RENTONAR_SLUG } },
+      /* Rentonar és un grup: com a empresa, l'id no casa amb el tipus. */
+      { ...rentonar, mena: 'empresa' },
+      { ...jo, dades: { id: 'U' } },
+      { ...agent, id: ENTITAT_PILOT_ID },
+      null,
+    ];
+    for (const fitxa of alienes) {
+      expect([fitxa?.id, fitxa?.mena, pobleDeReservaDeFitxa(fitxa)]).toEqual([fitxa?.id, fitxa?.mena, '']);
+    }
   });
 });
 

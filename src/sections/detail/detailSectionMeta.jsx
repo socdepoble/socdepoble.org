@@ -5,6 +5,7 @@ import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
+import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { esFontImatgePropia, sanitizeHtml } from '../../utils/sanitize.js';
@@ -191,12 +192,22 @@ export function portadaDElement(section, item, pagina, t) {
  * Google, o qualsevol servidor de fora) no es demana. null, com sense
  * author_avatar: l'H1 es pinta sol, i la barra taronja de la mateixa pàgina
  * ja hi pinta la silueta (paginaDElement). Sense `seccio`, cap filtre nou.
+ * Gauntlet 261016 (Bloc -1; ordre del Mestre: «sempre la seua foto personal
+ * de perfil») · La persona pilot porta SEMPRE la seua foto i el seu nom
+ * (identitatsSeed.js · signaturaDeQuiSigna), també quan l'element no porta
+ * author_avatar: la fila de supabase/seed.sql del Mac Mini (sense
+ * author_avatar) deixava la capçalera de /mercat/mac-mini-m4 sense avatar en
+ * remot i en el node local. Qualsevol altra persona, la regla de dalt.
  */
 export function avatarAutorDElement(item, nom, seccio) {
-  const avatarDeLaIdentitat = typeof item.author_avatar === 'string' ? item.author_avatar : '';
+  const signatura = signaturaDeQuiSigna(item, {
+    nom,
+    avatar: typeof item.author_avatar === 'string' ? item.author_avatar : ''
+  });
+  const avatarDeLaIdentitat = signatura.avatar;
   const src = imatgePropiaDelDetall(seccio, avatarDeLaIdentitat);
   return autorDe(item)?.tipus === 'persona' && src
-    ? { src, alt: nom ? `Avatar de ${nom}` : 'Avatar de qui signa' }
+    ? { src, alt: signatura.nom ? `Avatar de ${signatura.nom}` : 'Avatar de qui signa' }
     : null;
 }
 

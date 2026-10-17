@@ -7,7 +7,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
-import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from './paginaDeText.js';
+import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText, rutaVigentDePagina } from './paginaDeText.js';
 import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { DRETS_IMATGES, DRETS_TEXT, esFotoValida, esLlicenciaLliure, triaImatges } from '../pobles/pobleDeViquipedia.js';
@@ -18,7 +18,12 @@ import { ETIQUETES, IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, paginaConsola, pagi
 import { CONFIANCES, TIPUS_NODE } from '../consola/mapa/contracteMapa.js';
 import { toDeColor } from '../consola/semafor.js';
 
-test('les rutes de text amb pageKey propi: /iaia i l’àlies /ia són «anima», amb query, fragment o barra final', () => {
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Ampliada a posta: el manifest és a
+   /anima, i /iaia (la seua ruta d'abans, ara la fitxa de la IAIA) i /ia es
+   conserven com a àlies per a les connexions ja desades a una 'pagina'. */
+test('les rutes de text amb pageKey propi: /anima i els àlies /iaia i /ia són «anima», amb query, fragment o barra final', () => {
+  for (const ruta of ['/anima', '/anima?x=1', '/anima/', '/anima#reflexions', '/page/anima', '/page/ia']) expect([ruta, pageKeyDeRuta(ruta)]).toEqual([ruta, 'anima']);
+  expect(paginaDeRuta('/anima')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
   for (const ruta of ['/iaia', '/iaia?x=1', '/iaia/', '/iaia#reflexions', '/ia']) expect(pageKeyDeRuta(ruta)).toBe('anima');
   expect(pageKeyDeRuta('/ia?x=1')).toBe('anima');
   expect(pageKeyDeRuta('/ia/')).toBe('anima');
@@ -26,6 +31,24 @@ test('les rutes de text amb pageKey propi: /iaia i l’àlies /ia són «anima»
   expect(pageKeyDeRuta('/projecte')).toBe('projecte');
   expect(pageKeyDeRuta('/legal')).toBe('legal');
   expect(paginaDeRuta('/iaia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
+});
+
+/* Bloc 3.6.3 · Revisió adversarial · La ruta on es llig hui la pàgina d'una
+   connexió: les rutes velles del manifest porten a /anima (amb la consulta i
+   el fragment), i cap altra ruta canvia. Sense açò, «Obri l'original» d'una
+   connexió desada a /iaia acabava a la fitxa de la IAIA. */
+test('rutaVigentDePagina: /iaia i /ia del manifest → /anima; la resta, tal qual', () => {
+  expect(rutaVigentDePagina('/iaia')).toBe('/anima');
+  expect(rutaVigentDePagina('/ia')).toBe('/anima');
+  expect(rutaVigentDePagina('/iaia/')).toBe('/anima');
+  expect(rutaVigentDePagina('/iaia#reflexions')).toBe('/anima#reflexions');
+  expect(rutaVigentDePagina('/ia?origen=prova')).toBe('/anima?origen=prova');
+  expect(rutaVigentDePagina('/iaia/?x=1#y')).toBe('/anima?x=1#y');
+  for (const ruta of ['/anima', '/anima#reflexions', '/page/ia', '/projecte', '/legal', '/perfil/iaia-maria', '/iaia-maria',
+    '/xat', '/wikidepoble?item=x', '/iaiaa', '/ia/x', '', 'https://socdepoble.org/iaia', '//iaia']) {
+    expect([ruta, rutaVigentDePagina(ruta)]).toEqual([ruta, ruta]);
+  }
+  expect(rutaVigentDePagina(undefined)).toBeUndefined();
 });
 
 /* T8 (ordre del Mestre, 261001) · /fedivers, on porta la franja de l'amfitrió,
@@ -54,7 +77,8 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
 
 /* Ordre del Mestre (261007) · «El Xat» viu a /page/xat (PageDetailSection),
    sense ruta pròpia: el lector de connexions la resol pel slug. /xat és el
-   Xat (XatSection), no cap pàgina de text. «L'Ànima» continua a /iaia. El
+   Xat (XatSection), no cap pàgina de text. «L'Ànima» continua a /iaia (des
+   del Bloc 3.6.3, a /anima; /iaia en queda com a àlies de connexió). El
    cos seguix l'anatomia de la UniversalPage: cap h1 ni h2, comença en h3. */
 test('261007 · /page/xat és «El Xat»; /xat no és cap pàgina; l’Ànima continua a /iaia', () => {
   expect(pageKeyDeRuta('/page/xat')).toBe('xat');

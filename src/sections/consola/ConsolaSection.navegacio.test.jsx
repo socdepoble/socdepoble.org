@@ -24,9 +24,15 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
     segell: null, immunitari: { operacions: 0 }
   })
 }));
+/* Onada 0.5 (pla 261016_1530) · Sense govern.json: el Govern del Mestre diu que encara no hi ha cap matriu. */
+vi.mock('./govern/governContent.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  carregaGovern: () => Promise.resolve(null)
+}));
 import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext';
 import ConsolaSection from './ConsolaSection.jsx';
 import { paginesConsola } from './consolaPagines.js';
+import { ETIQUETA_NAV_GOVERN, TITOL_GOVERN, TITOL_SALA_MAQUINES, paginesGovern } from './govern/governConsola.js';
 import { SLUGS_XIFRES, rutaXifra } from './xifresMas.js';
 import { ETIQUETA_ACCES, TITOL_DIAGNOSI } from './diagnosiConsola.js';
 
@@ -193,7 +199,12 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
   const delAcces = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_ACCES }));
   expect(delAcces).toEqual(paginesConsola().map((p) => p.ruta));
   expect(cap('/consola', screen.getByRole('region', { name: TITOL_DIAGNOSI }))).toEqual(delAcces);
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length);
+  /* Pla 261016_1530, Onada 0.5 (Mandat Suprem) · I, damunt del tauler, el
+     Govern del Mestre: una targeta per pàgina del govern, cap a la seua
+     pàgina. Derogat EN PART: el total sense les quatre portes del govern. */
+  const delGovern = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_NAV_GOVERN }));
+  expect(delGovern).toEqual(paginesGovern().map((p) => p.ruta));
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -244,12 +255,40 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
     // Ordre del Mestre, 261004 · «orfes» és paraula del Mapa: el pols diu «fora del manifest».
     ['toc-item toc-level-5', '1 skill (0 fora del manifest)']
   ]);
-  // Totes les mètriques del tauler: 3 del pols i 17 de les huit targetes del Mapa.
-  expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(20);
+  /* Totes les mètriques del tauler: 3 del pols i 17 de les huit targetes del Mapa.
+     Pla 261016_1530, Onada 0.5 · I 1 del Govern del Mestre: sense matriu, la
+     Certificació compta les decisions d'este navegador i les altres tres
+     targetes diuen per què no tenen mesura en paràgraf. Derogat EN PART: «20». */
+  expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(21);
+  expect(entrades.some(([classe, text]) => classe === 'toc-item toc-level-5' && text === '0 decisions apuntades en este navegador')).toBe(true);
   // T3 (ordre del Mestre, 260930) · la coberta desglossa estats sense capçaleres:
   // l'Índex no s'empastra, i sota les mètriques no hi penja res.
   expect(document.querySelectorAll('.sdp-consola__estats').length).toBeGreaterThan(0);
   expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-6')).toHaveLength(0);
+  expect(errors).not.toHaveBeenCalled();
+});
+
+/* Revisió adversarial del carril F1 (problemes 2 i 9) · A l'Índex de secció i
+   a la navegació per encapçalaments, el Govern del Mestre és un grup a part:
+   les seues quatre targetes pengen del seu H2, i les nou de la maquinària, de
+   l'H2 de la sala de màquines, no del govern. */
+test('a l’Índex de secció, les nou targetes de la maquinària no pengen del Govern del Mestre', async () => {
+  render(<Aplicacio />);
+  await esperaElTauler();
+  fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
+  const index = screen.getByRole('dialog', { name: 'Taula de continguts' });
+  // L'H2 de què penja cada H3, la primera vegada que l'H3 apareix (l'Índex de la Consola repetix els títols de les pàgines).
+  const pareDe = new Map();
+  let h2 = null;
+  for (const li of index.querySelectorAll('li')) {
+    if (li.className === 'toc-item toc-level-2') h2 = li.textContent;
+    else if (li.className === 'toc-item toc-level-3' && !pareDe.has(li.textContent)) pareDe.set(li.textContent, h2);
+  }
+  const h2s = [...index.querySelectorAll('li.toc-level-2')].map((li) => li.textContent);
+  expect(h2s).toContain(TITOL_GOVERN);
+  expect(h2s.indexOf(TITOL_SALA_MAQUINES)).toBe(h2s.indexOf(TITOL_GOVERN) + 1);
+  for (const p of paginesGovern()) expect(pareDe.get(p.title), p.id).toBe(TITOL_GOVERN);
+  for (const p of paginesConsola()) expect(pareDe.get(p.title), p.id).toBe(TITOL_SALA_MAQUINES);
   expect(errors).not.toHaveBeenCalled();
 });
 

@@ -23,12 +23,19 @@
  * reserva de la barra mòbil passa de la llista al peu (sdp-xat-llista--amb-peu,
  * modules.css), i el botó queda per damunt de la barra. Sense `peu`, la
  * llista de sempre.
+ *
+ * Gauntlet 261016_1530 (Bloc 3.6; actorsDelXat.js) · Una fila
+ * { tipus: 'entitat', entitat } és la comunitat de Sóc de Poble que encara
+ * no és a la llista: la pinta FilaPoble amb el nom i la cara de l'entitat, i
+ * `onObriEntitat(entitat)` hi porta. Sense eixa fila, la llista de sempre.
  */
 import FilaConversa, { FilaComunitat } from './FilaConversa.jsx';
 import FilaPoble from './FilaPoble.jsx';
 
+const sensePortar = () => {};
+
 export default function LlistaConverses({
-  files = null, fils = [], filActiuId = null, onSelect, onObriComunitat, onObriPoble = null, locale, t,
+  files = null, fils = [], filActiuId = null, onSelect, onObriComunitat, onObriPoble = null, onObriEntitat = null, locale, t,
   estatBuit = null, avis = null, carregant = false, seleccio = null, joId = null, peu = null
 }) {
   const llista = Array.isArray(files) ? files : fils.map((fil) => ({ clau: String(fil.id), tipus: 'fil', fil }));
@@ -65,6 +72,16 @@ export default function LlistaConverses({
           <li key={fila.clau} data-clau={fila.clau}>
             {fila.tipus === 'poble' ? (
               <FilaPoble poble={fila.poble} onObri={onObriPoble || (() => {})} t={t} />
+            ) : fila.tipus === 'entitat' ? (
+              <FilaPoble
+                poble={fila.entitat}
+                nom={fila.entitat.nom}
+                avatar={fila.entitat.avatar || null}
+                etiqueta={t('section.xat.comunitat.etiqueta', 'Comunitat')}
+                clau={fila.clau}
+                onObri={onObriEntitat || sensePortar}
+                t={t}
+              />
             ) : fila.tipus === 'comunitat' ? (
               <FilaComunitat comunitat={fila.comunitat} onObri={onObriComunitat} t={t} seleccio={triaDe(fila.clau)} />
             ) : (

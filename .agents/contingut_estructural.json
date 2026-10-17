@@ -44,10 +44,10 @@
       "data": "2026-10-14"
     },
     "legal": {
-      "sha256": "fe8a725dad4920ac7d97b9130bca0e86b067b560414a5bd90c6c781aae6cd44b",
-      "html": 26287,
+      "sha256": "da0371b82cf1b912af13fdb9817bb4a4be7432ffaa0e92877cf3fc69b6b4990b",
+      "html": 29242,
       "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-14"
+      "data": "2026-10-17"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -62,10 +62,10 @@
       "data": "2026-10-05"
     },
     "roadmap": {
-      "sha256": "f22e2cc4a80976607d31fe703b7fc1efdda24f3dbdbaf46d2bca11caa2de6474",
-      "html": 27423,
-      "aprovat_per": "MarIA",
-      "data": "2026-10-09"
+      "sha256": "7515e868b2da9dd12f97d0f840ce1b51ca426534336fe14bc4f6138264df39c5",
+      "html": 27424,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-17"
     },
     "versions": {
       "sha256": "0d29d65a15801cc0461e1fd7ae2488e979fe15bcfcea18178b46878f2a77b4a0",

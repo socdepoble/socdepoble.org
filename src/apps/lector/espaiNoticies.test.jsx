@@ -15,7 +15,9 @@
      · Encàrrec F del Gauntlet (261016, auditoria adversarial del Lector): la notícia oberta es
        queda a la seua carpeta encara que en lleves «Desa per a després»; amb la carpeta de la URL
        amagada a la roda dentada, el detall és el de la llista que es veu; i, en estret, l'Arrere
-       del sistema torna a la llista com l'aspa. */
+       del sistema torna a la llista com l'aspa;
+     · E1 del Gauntlet (261016): les dreceres d'un sol caràcter de Feedly (J/K, N/P, O, M, S, V,
+       Maj+A, Maj+J/Maj+K), només amb el focus dins de la closca (WCAG 2.1.4). */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -30,6 +32,7 @@ import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { NOM_BASE, STORE } from './magatzem.js';
 import manifestLector from './manifest.js';
 import { CAMI_FONTS_VELL, CAMI_TOTES, RUTES, RUTES_NOTICIES } from './rutes.js';
+import { accioDeTecla, ordreDeLArbre } from './vistes/dreceres.js';
 import {
   PREFIX_CARPETA, PREFIX_FONT, carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, rutaDeSeleccio, seleccioDeRuta
 } from './vistes/navegacio.js';
@@ -608,6 +611,325 @@ describe('amb la carpeta de la URL amagada a la roda dentada', () => {
     expect(detall().getByText('16 notícies, 16 sense llegir. Obri’n una de la llista per a llegir-la.')).toBeTruthy();
     fireEvent.click(detall().getByRole('button', { name: 'Marca-ho tot com a llegit' }));
     await waitFor(() => expect(desat(idb)?.llegits).toHaveLength(16));
+  });
+});
+
+/* E1 del Gauntlet (261016, IDs I01 parcial i b0_lector.5) · La navegació ràpida de Feedly
+   (docs.feedly.com, «Keyboard shortcuts»): J/K obrin la notícia següent o l'anterior de la llista
+   que es veu, N/P hi mouen el focus sense obrir-la, O obri o tanca, M commuta llegida, S «Per a
+   després», V l'original en una pestanya nova, Maj+A marca la llista que es veu (amb una cerca,
+   els resultats) i Maj+J/Maj+K canvien de carpeta. WCAG 2.1.4: només amb el focus dins de la
+   closca, mai en un camp de text ni amb un diàleg o un panell per damunt, i mai amb Ctrl, ⌘ o Alt.
+   `fireEvent.keyDown` torna false quan la drecera atén la tecla (preventDefault). */
+describe('les dreceres de teclat a la manera de Feedly (E1, 261016)', () => {
+  const prem = (node, key, extra = {}) => fireEvent.keyDown(node, { key, ...extra });
+  const cerca = (text) => {
+    fireEvent.click(mig().getByRole('button', { name: 'Cercar notícies' }));
+    fireEvent.change(mig().getByRole('searchbox', { name: 'Cercar notícies' }), { target: { value: text } });
+  };
+
+  test('accioDeTecla: les lletres de Feedly, Maj només per a A, J i K; cap modificador, composició ni repetició d’una acció', () => {
+    const tecla = (key, extra = {}) => accioDeTecla({ key, ...extra });
+    expect(['j', 'k', 'n', 'p', 'o', 'm', 's', 'v'].map((key) => tecla(key)))
+      .toEqual(['seguent', 'anterior', 'tria-seguent', 'tria-anterior', 'obri', 'llegit', 'despres', 'original']);
+    expect(['A', 'J', 'K'].map((key) => tecla(key, { shiftKey: true }))).toEqual(['tot-llegit', 'carpeta-seguent', 'carpeta-anterior']);
+    /* El bloqueig de majúscules no canvia la lletra. */
+    expect(tecla('J')).toBe('seguent');
+    for (const modificador of ['ctrlKey', 'metaKey', 'altKey']) expect(tecla('j', { [modificador]: true }), modificador).toBeNull();
+    expect(tecla('j', { defaultPrevented: true })).toBeNull();
+    expect(tecla('j', { isComposing: true })).toBeNull();
+    expect(tecla('S', { shiftKey: true })).toBeNull();
+    for (const key of ['a', 'x', 'Enter', 'ArrowDown', ' ', '?', '', undefined]) expect(tecla(key), String(key)).toBeNull();
+    /* Mantenir premuda una tecla repetix el moviment, mai una acció. */
+    expect(tecla('j', { repeat: true })).toBe('seguent');
+    expect(tecla('J', { repeat: true, shiftKey: true })).toBe('carpeta-seguent');
+    for (const key of ['v', 'o', 'm', 's']) expect(tecla(key, { repeat: true }), key).toBeNull();
+    expect(tecla('A', { repeat: true, shiftKey: true })).toBeNull();
+    expect(accioDeTecla(null)).toBeNull();
+  });
+
+  test('ordreDeLArbre: cada arrel i, darrere, les seues filles, en l’ordre de l’arbre', () => {
+    expect(ordreDeLArbre([
+      { id: 'font:radio', order: 6, parentId: null },
+      { id: 'carpeta:hui', order: 0 },
+      { id: 'font:b', order: 5, parentId: 'carpeta:x' },
+      { id: 'carpeta:x', order: 2, parentId: null },
+      { id: 'font:a', order: 4, parentId: 'carpeta:x' },
+      { id: 'carpeta:y', order: 3 }
+    ])).toEqual(['carpeta:hui', 'carpeta:x', 'font:a', 'font:b', 'carpeta:y', 'font:radio']);
+    expect(ordreDeLArbre(null)).toEqual([]);
+  });
+
+  test('J obri la primera i després la següent, K l’anterior: push, la lectura al detall i el focus a l’H1', async () => {
+    munta('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    const titols = titolsDeLaLlista();
+    expect(titols).toHaveLength(6);
+    const hui = filaDeLArbre('Hui');
+    hui.focus();
+    const abans = window.history.length;
+    expect(prem(hui, 'j')).toBe(false);
+    let h1 = await titolDelLector(titols[0]);
+    expect(window.history.length).toBe(abans + 1);
+    expect(ubicacio()).toMatch(/^\/app\/lector\/noticies\/hui\?article=/);
+    expect(document.activeElement).toBe(h1);
+    /* Obrir-la la llig, com un clic. */
+    expect(vistaDe(filaDeLArbre('Hui'))).toEqual(['Hui', '5']);
+    prem(h1, 'j');
+    h1 = await titolDelLector(titols[1]);
+    expect(window.history.length).toBe(abans + 2);
+    expect(fitxa(titols[1]).getAttribute('aria-current')).toBe('true');
+    expect(vistaDe(filaDeLArbre('Hui'))).toEqual(['Hui', '4']);
+    prem(h1, 'k');
+    h1 = await titolDelLector(titols[0]);
+    expect(window.history.length).toBe(abans + 3);
+    /* K a la primera: res, i la tecla no s'atén. */
+    const oberta = ubicacio();
+    expect(prem(h1, 'k')).toBe(true);
+    expect(ubicacio()).toBe(oberta);
+    expect(window.history.length).toBe(abans + 3);
+  });
+
+  test('N/P mouen el focus per la llista sense obrir res; O obri la fila del focus i, oberta, la tanca', async () => {
+    munta('/app/lector/noticies/festes');
+    await screen.findByRole('region', { name: 'Cultura i festes' });
+    expect(titolsDeLaLlista()).toEqual([CORREFOC, ASSAIG, 'Gràcies per les festes de Sant Miquel']);
+    const festes = filaDeLArbre('Cultura i festes');
+    festes.focus();
+    expect(prem(festes, 'n')).toBe(false);
+    expect(document.activeElement).toBe(fitxa(CORREFOC));
+    prem(document.activeElement, 'n');
+    expect(document.activeElement).toBe(fitxa(ASSAIG));
+    prem(document.activeElement, 'p');
+    expect(document.activeElement).toBe(fitxa(CORREFOC));
+    /* P a la primera: res. */
+    expect(prem(document.activeElement, 'p')).toBe(true);
+    expect(document.activeElement).toBe(fitxa(CORREFOC));
+    /* Triar no obri ni llig res. */
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+    expect(vistaDe(filaDeLArbre('Cultura i festes'))).toEqual(['Cultura i festes', '3']);
+    prem(document.activeElement, 'n');
+    expect(prem(document.activeElement, 'o')).toBe(false);
+    const h1 = await titolDelLector(ASSAIG);
+    expect(ubicacio()).toMatch(/^\/app\/lector\/noticies\/festes\?article=/);
+    prem(h1, 'o');
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(ASSAIG)));
+    /* Sense notícia oberta i sense fila al focus, O no fa res. */
+    expect(prem(festes, 'o')).toBe(true);
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+  });
+
+  test('M commuta llegida i S «Per a després», a la fila del focus i a la notícia oberta', async () => {
+    const { idb } = munta('/app/lector/noticies/festes');
+    await screen.findByRole('region', { name: 'Cultura i festes' });
+    const correfoc = fitxa(CORREFOC);
+    correfoc.focus();
+    expect(prem(correfoc, 'm')).toBe(false);
+    expect(vistaDe(filaDeLArbre('Cultura i festes'))).toEqual(['Cultura i festes', '2']);
+    expect(fitxa(CORREFOC).querySelector('.sdp-gestor-fitxa__subtitol').textContent).not.toMatch(/Nou$/);
+    prem(fitxa(CORREFOC), 'm');
+    expect(vistaDe(filaDeLArbre('Cultura i festes'))).toEqual(['Cultura i festes', '3']);
+    /* Desada i sense llegir: «Per a després» la compta. Res no s'ha obert. */
+    expect(prem(fitxa(CORREFOC), 's')).toBe(false);
+    expect(vistaDe(filaDeLArbre('Per a després'))).toEqual(['Per a després', '1']);
+    await waitFor(() => expect(desat(idb)?.despres).toHaveLength(1));
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+    /* La notícia oberta: les mateixes accions que els botons de la seua capçalera. */
+    prem(fitxa(CORREFOC), 'o');
+    const h1 = await titolDelLector(CORREFOC);
+    const desa = () => detall().getByRole('button', { name: 'Desa per a després' });
+    expect(desa().getAttribute('aria-pressed')).toBe('true');
+    prem(h1, 's');
+    expect(desa().getAttribute('aria-pressed')).toBe('false');
+    await waitFor(() => expect(desat(idb)?.despres).toEqual([]));
+    expect(vistaDe(filaDeLArbre('Cultura i festes'))).toEqual(['Cultura i festes', '2']);
+    prem(h1, 'm');
+    expect(vistaDe(filaDeLArbre('Cultura i festes'))).toEqual(['Cultura i festes', '3']);
+    expect(ubicacio()).toMatch(/[?&]article=/);
+  });
+
+  test('S a «Per a després» lleva la fila del focus i el focus passa a la veïna', async () => {
+    const llavor = creaAdaptadorLlavor({ ara: ARA });
+    const [correfoc, assaig] = await llavor.llistaArticles({ fontId: 'colla-dimonis' });
+    const entorn = prepara();
+    await entorn.magatzem.desa({ llegits: [], despres: [correfoc, assaig], noSeguides: [] });
+    munta('/app/lector/noticies/despres', entorn);
+    await screen.findByRole('region', { name: 'Per a després' });
+    await waitFor(() => expect(fitxes()).toHaveLength(2));
+    const [primera, segona] = fitxes();
+    const titolSegona = segona.querySelector('.sdp-gestor-fitxa__titol').textContent;
+    primera.focus();
+    expect(prem(primera, 's')).toBe(false);
+    await waitFor(() => expect(fitxes()).toHaveLength(1));
+    expect(titolsDeLaLlista()).toEqual([titolSegona]);
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(titolSegona)));
+  });
+
+  test('V obri l’original en una pestanya nova (noopener): una sola volta, mai amb un modificador', async () => {
+    const llavor = creaAdaptadorLlavor({ ara: ARA });
+    const [correfoc] = await llavor.llistaArticles({ fontId: 'colla-dimonis' });
+    expect(new URL(correfoc.enllac).hostname).toBe('example.org');
+    const obertes = [];
+    vi.spyOn(window, 'open').mockImplementation((...args) => { obertes.push(args); return null; });
+    munta('/app/lector/noticies/festes');
+    await screen.findByRole('region', { name: 'Cultura i festes' });
+    const fila = fitxa(CORREFOC);
+    fila.focus();
+    expect(prem(fila, 'v')).toBe(false);
+    expect(obertes).toEqual([[correfoc.enllac, '_blank', 'noopener,noreferrer']]);
+    /* Mantenir-la premuda no obri pestanyes de més; amb ⌘, Ctrl o Alt és del navegador. */
+    expect(prem(fila, 'v', { repeat: true })).toBe(true);
+    for (const modificador of ['metaKey', 'ctrlKey', 'altKey']) expect(prem(fila, 'v', { [modificador]: true }), modificador).toBe(true);
+    expect(obertes).toHaveLength(1);
+    /* No l'obri dins de l'app ni la marca com a llegida. */
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+    expect(vistaDe(filaDeLArbre('Cultura i festes'))).toEqual(['Cultura i festes', '3']);
+  });
+
+  test('Maj+A marca la llista que es veu: amb una cerca, només els resultats; des de la caixa de la cerca, res', async () => {
+    const llavor = creaAdaptadorLlavor({ ara: ARA });
+    const [correfoc] = await llavor.llistaArticles({ fontId: 'colla-dimonis' });
+    const { idb } = munta('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    cerca('correfoc');
+    expect(titolsDeLaLlista()).toEqual([CORREFOC]);
+    /* Escriure a la caixa de la cerca és escriure: cap drecera. */
+    const caixa = mig().getByRole('searchbox', { name: 'Cercar notícies' });
+    caixa.focus();
+    expect(prem(caixa, 'A', { shiftKey: true })).toBe(true);
+    expect(prem(caixa, 'j')).toBe(true);
+    expect(ubicacio()).toBe('/app/lector/noticies/hui');
+    expect(vistaDe(filaDeLArbre('Hui'))).toEqual(['Hui', '6']);
+    fitxa(CORREFOC).focus();
+    expect(prem(fitxa(CORREFOC), 'A', { shiftKey: true })).toBe(false);
+    await waitFor(() => expect(desat(idb)?.llegits).toEqual([correfoc.id]));
+    expect(vistaDe(filaDeLArbre('Hui'))).toEqual(['Hui', '5']);
+    /* Sense cerca, la carpeta sencera, com el botó. */
+    fireEvent.click(mig().getByRole('button', { name: 'Tancar' }));
+    expect(fitxes()).toHaveLength(6);
+    fitxes()[1].focus();
+    prem(fitxes()[1], 'A', { shiftKey: true });
+    await waitFor(() => expect(desat(idb)?.llegits).toHaveLength(6));
+    expect(vistaDe(filaDeLArbre('Hui'))).toEqual(['Hui', null]);
+    /* Ja no en queda cap: la tecla no s'atén. */
+    expect(prem(fitxes()[1], 'A', { shiftKey: true })).toBe(true);
+  });
+
+  test('Maj+J/Maj+K: la carpeta següent o l’anterior de l’arbre (push), amb el focus a l’arbre si la fila se’n va', async () => {
+    munta('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    const abans = window.history.length;
+    fitxa(CORREFOC).focus();
+    expect(prem(fitxa(CORREFOC), 'J', { shiftKey: true })).toBe(false);
+    await screen.findByRole('region', { name: 'Per a després' });
+    expect(ubicacio()).toBe('/app/lector/noticies/despres');
+    expect(window.history.length).toBe(abans + 1);
+    /* La fila del focus ja no hi és: el focus va a la carpeta nova, a l'arbre. */
+    await waitFor(() => expect(document.activeElement).toBe(filaDeLArbre('Per a després')));
+    const passos = ['/app/lector/noticies/ajuntament', '/app/lector/noticies/ajuntament/veu-placa', '/app/lector/noticies/ajuntament/pregoner',
+      '/app/lector/noticies/festes'];
+    for (const cami of passos) {
+      prem(document.activeElement, 'J', { shiftKey: true });
+      await waitFor(() => expect(ubicacio()).toBe(cami));
+    }
+    /* Cap notícia s'obri en canviar de carpeta. */
+    expect(ubicacio()).not.toMatch(/article=/);
+    prem(document.activeElement, 'K', { shiftKey: true });
+    await waitFor(() => expect(ubicacio()).toBe('/app/lector/noticies/ajuntament/pregoner'));
+    /* J, després de canviar de carpeta, obri la primera de la carpeta nova. */
+    expect(closca().contains(document.activeElement)).toBe(true);
+    prem(document.activeElement, 'j');
+    await waitFor(() => expect(ubicacio()).toMatch(/^\/app\/lector\/noticies\/ajuntament\/pregoner\?article=/));
+  });
+
+  test('Maj+K a «Hui» no fa res; des de «Totes», Maj+J va a «Hui» i Maj+K no fa res', async () => {
+    munta('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    const hui = filaDeLArbre('Hui');
+    hui.focus();
+    expect(prem(hui, 'K', { shiftKey: true })).toBe(true);
+    expect(ubicacio()).toBe('/app/lector/noticies/hui');
+    const totes = esquerra().getByRole('button', { name: 'Totes' });
+    fireEvent.click(totes);
+    await screen.findByRole('region', { name: 'Totes' });
+    totes.focus();
+    expect(prem(totes, 'K', { shiftKey: true })).toBe(true);
+    expect(ubicacio()).toBe('/app/lector/noticies/totes');
+    prem(totes, 'J', { shiftKey: true });
+    await waitFor(() => expect(ubicacio()).toBe('/app/lector/noticies/hui'));
+  });
+
+  test('WCAG 2.1.4: res amb el focus fora de la closca (l’amfitrió o perdut), en un camp, amb un diàleg obert o amb la tecla ja atesa', async () => {
+    const campDeLAmfitrio = document.createElement('input');
+    document.body.append(campDeLAmfitrio);
+    const propi = document.createElement('div');
+    propi.setAttribute('role', 'dialog');
+    propi.setAttribute('aria-modal', 'true');
+    const atesa = (event) => { if (event.key === 'j') event.preventDefault(); };
+    try {
+      munta('/app/lector/noticies/hui');
+      await screen.findByRole('region', { name: 'Hui' });
+      const intacta = () => {
+        expect(ubicacio()).toBe('/app/lector/noticies/hui');
+        expect(vistaDe(filaDeLArbre('Hui'))).toEqual(['Hui', '6']);
+      };
+      /* L'amfitrió: el focus és seu. */
+      campDeLAmfitrio.focus();
+      for (const key of ['j', 'n', 'm', 's', 'o']) expect(prem(campDeLAmfitrio, key), key).toBe(true);
+      expect(prem(campDeLAmfitrio, 'A', { shiftKey: true })).toBe(true);
+      expect(document.activeElement).toBe(campDeLAmfitrio);
+      intacta();
+      /* El focus perdut (el body) no és el del Lector. */
+      campDeLAmfitrio.blur();
+      expect(prem(document.body, 'j')).toBe(true);
+      intacta();
+      /* Un camp de text i un element editable dins de la closca. */
+      const camp = document.createElement('input');
+      const editable = document.createElement('div');
+      editable.setAttribute('contenteditable', 'true');
+      document.getElementById('app-grid-list').append(camp, editable);
+      for (const node of [camp, editable]) expect(prem(node, 'j'), node.tagName).toBe(true);
+      camp.remove();
+      editable.remove();
+      intacta();
+      /* Un diàleg modal propi, dins de la closca. */
+      document.getElementById('app-grid-list').append(propi);
+      fitxa(CORREFOC).focus();
+      expect(prem(fitxa(CORREFOC), 'j')).toBe(true);
+      propi.remove();
+      intacta();
+      /* Una tecla que ja ha atès un altre (defaultPrevented) no es torna a atendre. */
+      document.addEventListener('keydown', atesa, { capture: true });
+      prem(fitxa(CORREFOC), 'j');
+      intacta();
+      document.removeEventListener('keydown', atesa, { capture: true });
+      /* Sense res d'això, la mateixa tecla obri la notícia següent. */
+      expect(prem(fitxa(CORREFOC), 'j')).toBe(false);
+      await waitFor(() => expect(ubicacio()).toMatch(/[?&]article=/));
+    } finally {
+      document.removeEventListener('keydown', atesa, { capture: true });
+      campDeLAmfitrio.remove();
+      propi.remove();
+    }
+  });
+
+  test('en mitjana, amb el panell de la navegació obert per damunt, les dreceres callen', async () => {
+    ambAmplada(800);
+    munta('/app/lector/noticies/festes');
+    await screen.findByRole('region', { name: 'Cultura i festes' });
+    await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
+    /* El panell tancat: valen. */
+    fitxa(CORREFOC).focus();
+    expect(prem(fitxa(CORREFOC), 'n')).toBe(false);
+    expect(document.activeElement).toBe(fitxa(ASSAIG));
+    fireEvent.click(document.querySelector('#app-grid-sidebar button[aria-controls="app-grid-sidebar"]'));
+    await waitFor(() => expect(closca().dataset.panell).toBe('left'));
+    const esports = filaDeLArbre('Esports');
+    esports.focus();
+    expect(prem(esports, 'j')).toBe(true);
+    expect(prem(esports, 'J', { shiftKey: true })).toBe(true);
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
   });
 });
 

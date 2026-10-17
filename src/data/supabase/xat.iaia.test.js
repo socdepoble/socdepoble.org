@@ -46,8 +46,9 @@ describe('tasca 12 · el xat de la IAIA es diu «IAIA MarIA»', () => {
   it('a la llista: el fil de /iaia porta el nom i la cara d’AJUDA i la fila sintètica se’n va', async () => {
     client.rpc.mockReturnValueOnce(resposta([filaIaia()]));
     const fils = await loadFils(REMOT);
-    /* Gauntlet 261016 (Bloc 3.6) · Javi Llinares també és a la cua. */
-    expect(fils.map((f) => f.perDefecte ?? f.id)).toEqual(['p-iaia', 'socdepoble', 'javi']);
+    /* Gauntlet 261016 (Bloc 3.6) · Javi Llinares també és a la cua.
+       Gauntlet 261016_1530 (Bloc 3.6.1) · I ja cap fila sintètica de Sóc de Poble. */
+    expect(fils.map((f) => f.perDefecte ?? f.id)).toEqual(['p-iaia', 'javi']);
     expect(fils[0]).toMatchObject({ titol: 'IAIA MarIA', imatgeUrl: AJUDA_PER_CLAU.iaia.avatar });
     /* La pàgina continua sent «L'ànima de la iaia». */
     expect(fils[0].subjecte).toEqual({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" });

@@ -186,22 +186,39 @@ Per reduir dràsticament el FCP (First Contentful Paint) a mòbil, el connector 
 
 ---
 
-### Onada 1.2 · Els 4 Actors Permanents al Xat de Poble i la Intel·ligència Cultural de la IAIA MarIA
+### Onada 1.2 · Els 4 Actors Permanents al Xat de Poble (Ordre Estricte i Zero Redundància)
 
-1. **Els 4 Actors que han d'aparèixer SEMPRE al Xat (Des del Primer Moment):**
-   - El Xat de Poble no pot ser mai un desert buit per a un nou visitant o veí. Hi ha d'haver permanentment **4 converses/actors de referència**:
-     * **1. `Sóc de Poble`**: El suport tècnic oficial i la institució de referència. Sempre visible per resoldre dubtes de la plataforma.
+1. **Ordre Canònic dels 4 Actors al Xat (Mandat Suprem del Mestre Javi Llinares):**
+   - El Xat de Poble mai no pot aparèixer desert ni amb duplicats que confonguen l'usuari. Hi ha d'haver permanentment i en aquest ordre estricte **4 converses/actors de referència**:
+     * **1. `Comunitat Sóc de Poble`**: A dalt de tot, la porta d'entrada oficial. És la comunitat que inclou els canals **Avisos**, **General** i **Beta Testers**. Cobreix íntegrament el suport tècnic, avisos i novetats.
      * **2. `Javi Llinares`**: La persona física responsable del sistema i administrador humà proper. Si un visitant anònim/no registrat vol parlar amb ell, es mostra el missatge automàtic honest:
        > *«Este missatge és automàtic: per a poder parlar amb mi has de registrar-te.»*
-       Però la seua presència al xat és visible i pública des de l'inici.
-     * **3. `Gent de la Torre`**: El canal i comunitat viva del poble per a comboiar la conversa veïnal i permetre que els veïns proven el xat comunitari.
+       La seua presència al xat és visible i pública des de l'inici.
+     * **3. `Gent de la Torre`**: La comunitat viva del poble per a comboiar la conversa veïnal i permetre que els veïns proven el xat comunitari.
      * **4. `IAIA MarIA`**: L'assistent d'intel·ligència artificial i veïna sàvia del Mas.
+   - **Erradicació de la Redundància de Sóc de Poble:**
+     * **PROHIBIT duplicar Sóc de Poble:** S'elimina la fila de xat directe individual sintètica de `Sóc de Poble` (avatar redó buit «Cap missatge»). Com que ja hi ha la Comunitat oficial amb Avisos, General i Beta Testers, tenir un usuari individual separat és una redundància inútil. Només apareixerà un xat directe privat amb Sóc de Poble si en un futur es crea una conversa explícita entre un usuari i l'empresa. Per defecte, **només viu la Comunitat**.
 
-2. **Reparació del Xat de la IAIA MarIA a Localhost:**
+2. **Navegació Directa des de les Capçaleres del Xat (Mandat del Mestre):**
+   - Punxar a la capçalera de cada conversa oberta ha de portar inequívocament a la seua pàgina/perfil canònic de la plataforma:
+     * **Capçalera `Javi Llinares`**: Ha d'enllaçar directament a `/javillinares` (el perfil del Mestre). Actualment no té enllaç i queda inactiva.
+     * **Capçalera `Sóc de Poble`**: Ha d'enllaçar a `/socdepoble` (la pàgina oficial canònica de l'entitat).
+     * **Capçalera `Gent de la Torre`**: Enllaça a `/pobles/la-torre-de-les-macanes` (ja operatiu).
+     * **Capçalera `IAIA MarIA`**: Ha d'enllaçar a la pàgina / perfil de la IAIA MarIA.
+
+3. **Desambiguació Canònica de Rutes: `/iaia` vs `/anima`:**
+   - **El Manifest "L'Ànima de la IAIA":** El document fundacional i filosòfic ("El Còdex Forense: Termodinàmica...") que penja del menú Sistema ha de tenir la ruta **`/anima`**, NO `/iaia`. És un article/assaig escrit per la IAIA, no la pàgina de la IAIA.
+   - **La Pàgina de la IAIA MarIA:** La ruta **`/iaia`** (o `/perfil/iaia`) queda reservada per a la pròpia IAIA MarIA (la seua fitxa de Matriarca Digital, veu i espai d'interacció), que és on s'ha d'accedir des del xat i des del cercador.
+
+4. **Accés i Registre Fàcil a Localhost (Zero Fricció en Desenvolupament):**
+   - A `localhost:3340/registre?mode=entrar`: el formulari d'entrada falla amb `ERR_EMPTY_RESPONSE` intentant cridar `http://127.0.0.1:54321/auth/v1/`.
+   - En mode de desenvolupament local (`dataMode !== 'remote'`), l'accés no ha de dependre d'un backend extern caigut ni de ports ocupats. S'ha de permetre l'entrada immediata del pilot o oferir un mecanisme transparent per provar la sessió localment sense traves.
+
+5. **Reparació del Xat de la IAIA MarIA a Localhost:**
    - A producció (`gentdelatorre.net`) punxar sobre la IAIA MarIA al xat funciona, però a `localhost` falla.
    - Claude i Codex han d'auditar el seed i la configuració de Supabase local (`http://127.0.0.1:54321`) per replicar exactament el comportament de producció, eliminant qualsevol discrepància d'endpoints o registres absents.
 
-3. **Evolució de la IAIA MarIA (Cultura Rural, DCVB i Redacció de Textos):**
+6. **Evolució de la IAIA MarIA (Cultura Rural, DCVB i Redacció de Textos):**
    - Si les IAs (Claude, Codex, Gemini) acaben els fronts d'infraestructura d'aquesta nit i tenen marge de tokens, han de començar a implementar la intel·ligència local de la **IAIA MarIA**:
      * Capacitat d'ajudar els usuaris a **redactar textos** (anuncis, notes, avisos del poble).
      * Accés al fons cultural propi (`_wiki_de_poble/`, `_cultura_de_poble/`, Diccionari Català-Valencià-Balear, botànica de la Torre, tradicions etnogràfiques).

@@ -53,6 +53,7 @@ import { xmlDeRegistres } from '../facturacio/registre/xmlAeat.js';
 import { demanaCarpeta, fontDesDeHandle, oblidaFont, potTriarCarpeta } from '../font/fontNavegador.js';
 import { TIPUS_COPIA, TIPUS_XML, marcaDeCopia, nomFitxerCopia, nomFitxerXml, ultimsConegutsDe } from './nucli/copia.js';
 import { clauDeFactura, euros } from './nucli/formulari.js';
+import { TIPUS_CSV, llibreCsv, nomDelLlibreCsv } from './nucli/llibreCsv.js';
 
 const PERFIL_BUIT = Object.freeze({ config: null, llegat: null, copia: null });
 
@@ -408,6 +409,27 @@ export function useFacturacio({
     return r;
   }, [executa, exit, cadena, config, descarrega]);
 
+  /* Gauntlet 261016, Onada 3: el llibre registre de factures expedides d'un període, en CSV per a la
+     gestoria (nucli/llibreCsv.js). Com l'XML, només d'una cadena correcta: d'un llibre amb incidències,
+     la gestoria rep la còpia del pas 5. La pantalla avisa abans que ix sense xifrar. */
+  const exportaLlibre = useCallback(async ({ files, any = null, trimestre = null } = {}) => {
+    const r = await executa('csv', 'llibre', async () => {
+      if (informeActual.current?.valida !== true) {
+        throw errorAmbCodi('CADENA_AMB_INCIDENCIES', 'Mentre la cadena tinga incidències (pas 4), no es fa el llibre per a la gestoria: primer s’ha d’arreglar el llibre.');
+      }
+      const llista = Array.isArray(files) ? files : [];
+      const nomFitxer = nomDelLlibreCsv({ any, trimestre });
+      descarrega({ nom: nomFitxer, tipus: TIPUS_CSV, dades: new TextEncoder().encode(llibreCsv(llista)) });
+      return { nomFitxer, quantes: llista.length };
+    });
+    if (r.ok) {
+      const quantes = r.resultat.quantes === 1 ? 'una factura' : `${r.resultat.quantes} factures`;
+      exit('llibre', 'Llibre descarregat', `«${r.resultat.nomFitxer}» porta ${quantes} (les anul·lades hi són, marcades). `
+        + 'Ix sense xifrar: guarda’l en un lloc segur.');
+    }
+    return r;
+  }, [executa, exit, descarrega]);
+
   const restaura = useCallback(async (text) => {
     const r = await executa('restaurant', 'copia', async () => {
       const resultat = await restauraCopia(port, text, { verifica: (registres) => verificaCadena(registres, { subtle }) });
@@ -460,6 +482,7 @@ export function useFacturacio({
     verifica,
     exporta,
     exportaXml,
+    exportaLlibre,
     restaura,
     demanaPersistencia
   };

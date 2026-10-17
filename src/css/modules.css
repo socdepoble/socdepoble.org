@@ -5809,6 +5809,13 @@ details[open] summary.accordion-header svg:last-child {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+
+  /* Pla 261016_1530, Onada 0.5 (Mandat Suprem) · El Govern del Mestre
+     (govern/GovernConsola.jsx): l'estat d'una fila de la matriu és una
+     pastilla d'una sola línia. Amb el plec de base, «[PENDENT DE SEGÜENT
+     TANDA]» es feia un ou de quatre línies dins de la columna. Només la
+     pastilla: el text del costat («Deia …») es plega com sempre. */
+  .sdp-consola__estat-fila .sdp-insignia { white-space: nowrap; }
 }
 
 /* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */
@@ -9776,9 +9783,14 @@ details[open] summary.accordion-header svg:last-child {
      resta de pàgines i s'amaguen en baixar (layout.css, «Barres que
      acompanyen el scroll»). En repòs, sticky i static pinten igual. L'abast
      és el <main> de l'arrel de l'app: a socdepoble.org el body també porta
-     .sdp-root (sense is-compact) i un descendent qualsevol casaria. */
-  :where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue,
-  :where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange {
+     .sdp-root (sense is-compact) i un descendent qualsevol casaria.
+     Bloc 3.10 (pla 261016_1530) · Tampoc en una tauleta tàctil
+     (data-sdp-tactil) ni en una caixa baixa (data-sdp-curta): allí les barres
+     de l'ERP també s'amaguen en baixar i tornen en pujar, com les de tota
+     pàgina (layout.css). L'excepció static queda per a l'escriptori sense
+     cap marca; :where() la deixa amb l'especificitat d'abans. */
+  :where(.sdp-root:not(.is-compact):not([data-sdp-tactil]):not([data-sdp-curta]) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue,
+  :where(.sdp-root:not(.is-compact):not([data-sdp-tactil]):not([data-sdp-curta]) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange {
     position: static;
   }
 
@@ -10663,5 +10675,42 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-gestoria-finestreta__accions,
     .sdp-gestoria-finestreta__correccio,
     .sdp-gestoria-finestreta__a-ma { display: none; }
+  }
+}
+
+/* ── Onada 0.3 (Gauntlet 261016, M04) · LES CEL·LES DE L'ARXIU VISUAL ──────
+   Les cel·les de la graella de /multimedia ja no són enllaços (un <a> cap a
+   /multimedia/<id>, la pàgina que ja no existix) sinó botons que obrin el
+   visor (VisorImatges). Llei del Píxel: la cel·la es veu com l'enllaç
+   d'abans. El botó (.photo-grid__boto) és un embolcall transparent de tota
+   l'amplada de la columna, sense pell de botó del navegador, amb la de l'<a>
+   de base.css (el color, que és el de la icona de la cel·la buida, la
+   transició i el hover només amb ratolí). A dins, la cel·la de sempre
+   (.photo-grid__item, capa legacy: amplada, quadrat, radi i vora, tal qual)
+   en bloc, com era l'<a> dins de la graella: creix fins a contindre la foto,
+   marge de la prosa inclòs. Un botó amb la classe de la cel·la no creixia
+   (revisió adversarial del 261016, mesurat al navegador) i la foto tapava la
+   fila de davall. align-self: start, perquè el botó no s'estire fins a
+   l'alçada de la fila: l'<a> d'abans, amb aspect-ratio, no s'estirava (en una
+   graella, `normal` hi val `start`), i un botó estirat centra el contingut en
+   vertical i baixava la cel·la (fins a 19,91 px, mesurat al navegador). */
+@layer components {
+  .photo-grid__boto {
+    display: block;
+    align-self: start;
+    inline-size: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-accent-titol);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    appearance: none;
+    transition: color var(--sdp-t);
+  }
+  .photo-grid__boto > .photo-grid__item { display: block; }
+  @media (hover: hover) and (pointer: fine) {
+    .photo-grid__boto:hover { color: var(--sdp-accent-text-hover); }
   }
 }

@@ -77,6 +77,20 @@ test.each(['/javillinares', '/socdepoble', '/rentonar'])('la ruta canònica %s t
   expect(document.querySelector('meta[name="robots"]')).toBeNull();
   expect(document.querySelector('link[rel="canonical"]').href).toMatch(new RegExp(`${ruta}$`));
 });
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F64 i F65) · /iaia és la fitxa de la IAIA MarIA: la reserva de les
+   fitxes, «Perfil», indexable i amb la seua URL. El manifest, a /anima, no en té cap: el títol el posa
+   la seua pàgina (TextSection), com quan vivia a /iaia. */
+test('Bloc 3.6.3 · /iaia té la reserva de la fitxa, «Perfil», i és indexable; /anima, cap reserva', () => {
+  render(tree());
+  act(() => navigate('/iaia'));
+  expect(document.title).toBe('Perfil | Sóc de Poble');
+  expect(document.querySelector('meta[name="robots"]')).toBeNull();
+  expect(document.querySelector('link[rel="canonical"]').href).toMatch(/\/iaia$/);
+  act(() => navigate('/anima'));
+  expect(document.title).not.toBe('Perfil | Sóc de Poble');
+  expect(document.querySelector('meta[name="robots"]')).toBeNull();
+  expect(document.querySelector('link[rel="canonical"]').href).toMatch(/\/anima$/);
+});
 test('mateix component i mateix títol recalculen canonical amb pathname', () => {
   render(tree()); act(() => navigate('/mercat/a'));
   expect(document.querySelector('link[rel="canonical"]').href).toContain('/mercat/a');

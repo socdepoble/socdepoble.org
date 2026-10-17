@@ -14,10 +14,15 @@ import { PageFrame } from './PageFrame.jsx';
    Ordre del Mestre (261007) · «COMENTARIS = XAT» · A la lectura pública,
    Comentar també es diu «Comentar», però obri el menú de dues vies
    (aria-haspopup). A l'editor no obri cap menú. */
-const INOPERATIUS = ['Comentar', 'Compartir', 'Connectar'];
-const PUBLICS = ['Comentar', 'Compartir', 'Connectar'];
-const VIUS = ['Tornar arrere', 'Índex de secció', 'Tornar endavant', 'Traduir'];
-const CLAUS = { Comentar: 'comentar', Compartir: 'compartir', Connectar: 'connectar' };
+/* Gauntlet 261016 (Bloc 3.9; verificació de la MCR: en edició, Traduir
+   portava a /traduccions i treia la persona de l'editor) · Traduir passa a ser
+   inoperatiu com els altres tres, amb el seu missatge. Les proves que el
+   donaven per viu (T7 i T36) es reescriuen a propòsit; a la lectura pública
+   continua viu. */
+const INOPERATIUS = ['Comentar', 'Compartir', 'Connectar', 'Traduir'];
+const PUBLICS = ['Comentar', 'Compartir', 'Connectar', 'Traduir'];
+const VIUS = ['Tornar arrere', 'Índex de secció', 'Tornar endavant'];
+const CLAUS = { Comentar: 'comentar', Compartir: 'compartir', Connectar: 'connectar', Traduir: 'traduir' };
 const barra = (container) => container.querySelector('header.bar-blue');
 const boto = (container, nom) => barra(container).querySelector(`button[aria-label="${nom}"]`);
 const editor = (props = {}) => render(
@@ -41,7 +46,7 @@ afterEach(() => {
    igual i continuen clicables, però el clic s'intercepta (onClickInoperatiu).
    T7 (P7) · Porten aria-disabled="true" (no `disabled`: es poden enfocar i
    llegir), i cap avís en línia empeny el contingut. */
-test('T7 · a l’editor, Comentar, Compartir i Connectar porten aria-disabled i continuen enfocables; Índex, Traduir i les fletxes, vius', () => {
+test('T7 · a l’editor, Comentar, Compartir, Connectar i Traduir porten aria-disabled i continuen enfocables; Índex i les fletxes, vius', () => {
   const { container } = editor();
   for (const nom of [...INOPERATIUS, ...VIUS]) expect(boto(container, nom).disabled).toBe(false);
   for (const nom of INOPERATIUS) {
@@ -57,15 +62,19 @@ test('T7 · a l’editor, Comentar, Compartir i Connectar porten aria-disabled i
   expect(mocks.showToast).not.toHaveBeenCalled();
 });
 
-test('T36 · un clic als inoperatius no navega ni copia; Traduir i Índex continuen fent la seua faena', () => {
+test('T36 · un clic als inoperatius no navega ni copia; Traduir ja no porta a /traduccions; l’Índex continua fent la seua faena', () => {
   const { container } = editor();
   for (const nom of INOPERATIUS) fireEvent.click(boto(container, nom));
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(writeText).not.toHaveBeenCalled();
+  /* Bloc 3.9 (261016) · Abans: navigate('/traduccions'), i la persona eixia
+     de l'editor. Ara, el missatge propi i cap menú. */
+  mocks.showToast.mockClear();
   fireEvent.click(boto(container, 'Traduir'));
-  /* Auditoria 261007 (B) · Sense ?item_id=: ningú no el llegia i a l'editor
-     sempre valia 'page'. La pantalla d'arribada és la mateixa. */
-  expect(mocks.navigate).toHaveBeenCalledWith('/traduccions');
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(missatges()).toEqual([AVISOS_ACCIONS_EDICIO.traduir]);
+  expect(boto(container, 'Traduir').hasAttribute('aria-haspopup')).toBe(false);
+  expect(barra(container).querySelector('[role="menu"]')).toBeNull();
   fireEvent.click(boto(container, 'Índex de secció'));
   expect(screen.getByRole('dialog', { name: 'Taula de continguts' })).toBeTruthy();
 });
@@ -81,13 +90,14 @@ test('T7 · cada botó mostra el seu missatge ràpid (info, DURADA_AVIS_ACCIONS)
   expect(DURADA_AVIS_ACCIONS).toBe(5000);
 });
 
-test('T7 · els tres missatges són propis i diuen quin botó és; cap text genèric compartit', () => {
-  expect(Object.keys(AVISOS_ACCIONS_EDICIO)).toEqual(['comentar', 'compartir', 'connectar']);
+test('T7 · els quatre missatges són propis i diuen quin botó és; cap text genèric compartit', () => {
+  expect(Object.keys(AVISOS_ACCIONS_EDICIO)).toEqual(['comentar', 'compartir', 'connectar', 'traduir']);
   const textos = Object.values(AVISOS_ACCIONS_EDICIO);
-  expect(new Set(textos).size).toBe(3);
+  expect(new Set(textos).size).toBe(4);
   expect(AVISOS_ACCIONS_EDICIO.comentar).toMatch(/^Comentar no està operatiu mentre edites\./);
   expect(AVISOS_ACCIONS_EDICIO.compartir).toMatch(/^Compartir no està operatiu mentre edites\./);
   expect(AVISOS_ACCIONS_EDICIO.connectar).toMatch(/^Connectar no està operatiu mentre edites\./);
+  expect(AVISOS_ACCIONS_EDICIO.traduir).toMatch(/^Traduir no està operatiu mentre edites\./);
   expect(Object.isFrozen(AVISOS_ACCIONS_EDICIO)).toBe(true);
 });
 

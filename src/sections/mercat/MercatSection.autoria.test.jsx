@@ -7,6 +7,8 @@
  * (cap d'estes peces llig la sessió: l'autoria és de l'element).
  */
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -32,13 +34,16 @@ import { MOCK_MARKET_ITEMS } from './marketSeed.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { paginaDElement } from '../detail/elementDeSeccio.js';
-import { buildMercatDetailSectionMeta } from '../detail/detailSectionMeta.jsx';
+import { avatarAutorDElement, buildMercatDetailSectionMeta } from '../detail/detailSectionMeta.jsx';
 import { BarraTaronja } from '../../components/universal/barres/BarraTaronja.jsx';
+import { EventCard } from '../../components/universal/EventCard.jsx';
+import { propsDeTargetaDeLaPagina } from '../../components/universal/targetaDeLaPagina.js';
+import { EVENTS } from '../mur/eventsContent.js';
 import { PERSONA_PILOT, autoriaSeed } from '../../data/identitatsSeed.js';
 import { desaSessio, esborraSessio, usuariDeSessio } from '../../data/identitat.js';
 import { createLocalPerfilsAdapter } from '../../data/localPerfils.js';
 import { autorDe, rutaDePerfil } from '../../config/navigation.js';
-import { FORASTER } from '../../components/universal/UniversalUtils.js';
+import { DEFAULT_AUTHOR, FORASTER } from '../../components/universal/UniversalUtils.js';
 
 /* Onada 8 (261009) · El logo de l'entitat a la llavor és el PNG (abans, l'SVG). */
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
@@ -210,21 +215,29 @@ test('Mercat: l’entitat signant té prioritat encara que la persona autora sig
   expect(targeta.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/empresa/entitat-remota');
 });
 
-test.each([23, { url: '/assets/proves/avatar.webp' }])('Gauntlet 261016 · avatar no textual %j no llança i la targeta pinta silueta', (avatar) => {
+/* Gauntlet 261016 · diürn 1530 (Bloc -1; ordre del Mestre: l'avatar de la
+   persona pilot «Sempre és la seua foto personal de perfil») · Derogades les
+   tres proves nocturnes que fixaven l'ordre vella: un avatar no textual de la
+   pilot pintava la silueta, i un avatar opac o una altra foto seua es
+   conservaven. L'ordre diu «sempre»: ara totes pinten la foto del perfil, amb
+   el seu nom i el seu perfil (el resolutor únic, signaturaDeQuiSigna). Una
+   entitat signant continua tenint prioritat (la prova de dalt) i un homònim
+   amb un altre id conserva la seua foto (Mercat: l’homònim…). */
+test.each([23, { url: '/assets/proves/avatar.webp' }])('Gauntlet 261016 · avatar no textual %j de la pilot no llança i la targeta pinta la seua foto', (avatar) => {
   const item = { id: 'avatar-invalid', title: 'Producte amb avatar invàlid', author_id: 'javillinares', author_avatar: avatar };
   expect(() => propsDeTargetaDeProducte(item)).not.toThrow();
-  expect(propsDeTargetaDeProducte(item).avatarUrl).toBe(avatar);
+  expect(propsDeTargetaDeProducte(item).avatarUrl).toBe(PERSONA_PILOT.avatar);
   mocks.mur.sortedMarketItems = [item];
   const targeta = targetaDe(render(<MercatSection />).container, item.title);
-  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar: null });
-  expect(targeta.querySelector('.sp-card-header .sp-card-avatar--fallback')).not.toBeNull();
+  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
+  expect(targeta.querySelector('.sp-card-header .sp-card-avatar--fallback')).toBeNull();
   expect(targeta.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/gent/javillinares');
 });
 
-test('Gauntlet 261016 · avatar opac amb nom semblant al logo es conserva sense resoldre’l al mapejador', () => {
+test('Gauntlet 261016 · un avatar opac de la pilot (sdp-media://) dona pas a la seua foto del perfil', () => {
   const avatar = 'sdp-media://mitjans/T/U/avatars/logo-socdepoble-carnaval.webp';
   const props = propsDeTargetaDeProducte({ id: 'avatar-opac', title: 'Foto pròpia', author_id: 'javillinares', author_avatar: avatar });
-  expect(props).toMatchObject({ author: 'Javi Llinares', authorHref: '/gent/javillinares', avatarUrl: avatar });
+  expect(props).toMatchObject({ author: 'Javi Llinares', authorHref: '/gent/javillinares', avatarUrl: PERSONA_PILOT.avatar });
 });
 
 test.each([LOGO, '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'])('Gauntlet 261016 · avatar amb la marca real %s es substituïx per la foto pilot', (avatar) => {
@@ -232,11 +245,124 @@ test.each([LOGO, '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'])('Gauntle
     .toMatchObject({ author: 'Javi Llinares', authorHref: '/gent/javillinares', avatarUrl: PERSONA_PILOT.avatar });
 });
 
-test('Gauntlet 261016 · avatar personal amb nom semblant al logo no se substituïx', () => {
+test('Gauntlet 261016 · una altra foto declarada per a la pilot també dona pas a la del perfil', () => {
   const avatar = '/assets/fotos/logo-socdepoble-carnaval.webp';
   const item = { id: 'avatar-personal', title: 'Foto de carnestoltes', author_id: 'javillinares', author_avatar: avatar };
+  expect(propsDeTargetaDeProducte(item).avatarUrl).toBe(PERSONA_PILOT.avatar);
+  mocks.mur.sortedMarketItems = [item];
+  const targeta = targetaDe(render(<MercatSection />).container, item.title);
+  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
+});
+
+/* Revisió adversarial del carril D (261016, problema 3) · La robustesa que
+   fixaven les proves nocturnes derogades de dalt, ara amb un autor que no és
+   la pilot (el camí `declarat` del resolutor → resolRecursPropi →
+   UniversalCard): un avatar no textual no fa petar res, es conserva tal qual
+   i la targeta pinta la silueta; un avatar opac (sdp-media://) es conserva tal
+   qual i la targeta mai no pinta la referència crua. */
+test.each([23, { url: '/assets/proves/avatar.webp' }])('Mercat: un avatar no textual %j d’un veí no llança, es conserva i la targeta pinta la silueta', (avatar) => {
+  const item = { id: 'avatar-invalid-vei', title: 'Producte del veí amb avatar invàlid', author_name: 'Pepa', author_id: 'pepa', author_avatar: avatar };
+  expect(() => propsDeTargetaDeProducte(item)).not.toThrow();
+  expect(propsDeTargetaDeProducte(item)).toMatchObject({ author: 'Pepa', authorHref: '/gent/pepa' });
   expect(propsDeTargetaDeProducte(item).avatarUrl).toBe(avatar);
   mocks.mur.sortedMarketItems = [item];
   const targeta = targetaDe(render(<MercatSection />).container, item.title);
-  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar });
+  expect(boinaDe(targeta)).toEqual({ nom: 'Pepa', avatar: null });
+  expect(targeta.querySelector('.sp-card-header .sp-card-avatar--fallback')).not.toBeNull();
+  expect(targeta.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/gent/pepa');
+  expect(targeta.innerHTML).not.toContain(PERSONA_PILOT.avatar);
+});
+
+test('Mercat: un avatar opac (sdp-media://) d’un veí, amb un nom de fitxer que sembla el logotip, es conserva tal qual', () => {
+  const avatar = 'sdp-media://mitjans/T/U/avatars/logo-socdepoble-carnaval.webp';
+  const item = { id: 'avatar-opac-vei', title: 'Foto pròpia del veí', author_name: 'Pepa', author_id: 'pepa', author_avatar: avatar };
+  expect(() => propsDeTargetaDeProducte(item)).not.toThrow();
+  expect(propsDeTargetaDeProducte(item)).toMatchObject({ author: 'Pepa', authorHref: '/gent/pepa', avatarUrl: avatar });
+  mocks.mur.sortedMarketItems = [item];
+  const targeta = targetaDe(render(<MercatSection />).container, item.title);
+  expect(boinaDe(targeta).nom).toBe('Pepa');
+  // Mai la referència crua ni la foto de la pilot a la boina.
+  expect(boinaDe(targeta).avatar).not.toBe(avatar);
+  expect(targeta.innerHTML).not.toContain('sdp-media://');
+  expect(targeta.innerHTML).not.toContain(PERSONA_PILOT.avatar);
+});
+
+test('Gauntlet 261016 · un nom curt de la pilot («Javi») es pinta amb el seu nom sencer', () => {
+  const props = propsDeTargetaDeProducte({ id: 'nom-curt', title: 'Taula', author_name: 'Javi', author_id: 'javi' });
+  expect(props).toMatchObject({ author: 'Javi Llinares', avatarUrl: PERSONA_PILOT.avatar });
+});
+
+/* Gauntlet 261016 · diürn 1530 (Bloc -1) · La fila CRUA del Mac Mini de
+   supabase/seed.sql, tal com la servix app_content en remot i al node local
+   (runtime.js no la passa per marketContent): sense author_avatar, amb la foto
+   a avatar_url. I la variant que el Mestre prohibix, amb el quadrat verd a
+   avatar_url. Les dues pinten «Javi Llinares» amb la foto del perfil al
+   Mercat, al Mur, a la barra taronja, a l'avatar redó del detall i a la
+   targeta incrustada (targetaDeLaPagina, que hereta paginaDElement). */
+const QUADRAT_VERD_SVG = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+const FILA = /\('[^']*', '([A-Za-z]+)', '((?:[^']|'')*)'::jsonb/g;
+const macDelSeedSql = () => {
+  const sql = readFileSync(path.join(process.cwd(), 'supabase/seed.sql'), 'utf8');
+  for (const [, clau, json] of sql.matchAll(FILA)) {
+    if (clau === 'marketItems') return JSON.parse(json.replace(/''/g, "'")).find((item) => item.id === 'mac-mini-m4');
+  }
+  return null;
+};
+const MAC_CRU = macDelSeedSql();
+const variantsDelMacCru = () => [
+  ['la fila crua del seed.sql', MAC_CRU],
+  ['la fila crua amb el quadrat verd a avatar_url', { ...MAC_CRU, avatar_url: QUADRAT_VERD_SVG }],
+  ['la fila crua amb el logotip PNG a avatar_url', { ...MAC_CRU, avatar_url: LOGO }],
+  ['la fila crua sense cap avatar', { ...MAC_CRU, avatar_url: undefined }]
+];
+
+test('la fila crua del Mac Mini al seed.sql no porta author_avatar (és el cas que es protegix)', () => {
+  expect(MAC_CRU).toMatchObject({ id: 'mac-mini-m4', author_name: 'Javi Llinares', author_id: 'javillinares' });
+  expect(MAC_CRU).not.toHaveProperty('author_avatar');
+});
+
+test.each(variantsDelMacCru())('Mercat, Mur i detall: %s pinta «Javi Llinares» amb la foto, mai el logotip', (_, mac) => {
+  // Mercat.
+  expect(propsDeTargetaDeProducte(mac)).toMatchObject({ author: 'Javi Llinares', avatarUrl: PERSONA_PILOT.avatar });
+  // Mur.
+  const delMur = render(<TargetaDelMur item={mac} />).container.querySelector('article');
+  expect(boinaDe(delMur)).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
+  cleanup();
+  // Detall: la barra taronja (mai el DEFAULT_AUTHOR de PageFrame) i l'avatar redó de davant de l'H1.
+  const seccio = buildMercatDetailSectionMeta({ marketItems: [mac], t });
+  const pagina = paginaDElement(seccio, mac);
+  expect(pagina).toMatchObject({ authorName: 'Javi Llinares', authorAvatar: PERSONA_PILOT.avatar });
+  expect(avatarAutorDElement(mac, pagina.authorName, seccio)).toEqual({ src: PERSONA_PILOT.avatar, alt: 'Avatar de Javi Llinares' });
+  // La targeta incrustada (SincronitzacioTargetes · propsDeLOriginal) hereta la barra.
+  expect(propsDeTargetaDeLaPagina(pagina)).toMatchObject({ author: 'Javi Llinares', avatarUrl: PERSONA_PILOT.avatar });
+  for (const marca of [LOGO, QUADRAT_VERD_SVG, DEFAULT_AUTHOR.avatarUrl]) {
+    expect(JSON.stringify([propsDeTargetaDeProducte(mac).avatarUrl, pagina.authorAvatar, propsDeTargetaDeLaPagina(pagina).avatarUrl])).not.toContain(marca);
+  }
+});
+
+test('Mur: un acte de la pilot sense avatar ni nom sencer pinta «Javi Llinares» amb la seua foto, mai el quadrat verd', () => {
+  const acte = { id: 'ball', type: 'event', title: 'Ball', date: '2026-11-14', author_name: 'Javi', owner_user_id: 'javillinares' };
+  const article = render(<TargetaDelMur item={acte} />).container.querySelector('article');
+  expect(boinaDe(article)).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
+  expect(article.innerHTML).not.toContain(DEFAULT_AUTHOR.avatarUrl);
+  cleanup();
+  // Amb el logotip com a author_avatar, igual.
+  const ambMarca = render(<TargetaDelMur item={{ ...acte, id: 'ball-2', author_avatar: LOGO }} />).container.querySelector('article');
+  expect(boinaDe(ambMarca)).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
+});
+
+/* Llei del Píxel · Per a qualsevol altre autor, TargetaDelMur no passa cap
+   nom ni cap avatar a EventCard: la boina és la de l'EventCard sense les
+   props noves, la de sempre. */
+test.each([
+  ['l’acte de l’entitat (la llavor)', () => EVENTS[0]],
+  ['l’acte d’un veí', () => ({ id: 'fira', type: 'event', title: 'Fira', date: '2026-11-14', author_name: 'Pepa', owner_user_id: 'pepa' })],
+  ['l’acte de l’entitat amb la pilot com a autora', () => ({ id: 'festa', type: 'event', title: 'Festa', date: '2026-11-14', author_name: 'Sóc de Poble', author_entity_id: 'socdepoble', owner_user_id: 'javillinares' })]
+])('Mur: %s es pinta igual que l’EventCard de sempre', (_, acte) => {
+  const item = acte();
+  const delMur = boinaDe(render(<TargetaDelMur item={item} />).container.querySelector('article'));
+  cleanup();
+  const deSempre = boinaDe(render(<EventCard item={item} />).container.querySelector('article'));
+  expect(delMur).toEqual(deSempre);
+  expect(delMur.nom).not.toBe('Javi Llinares');
 });

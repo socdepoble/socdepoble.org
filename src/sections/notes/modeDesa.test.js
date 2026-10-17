@@ -197,12 +197,27 @@ describe('el bookmarklet (Model B: l’origen de l’app que el genera)', () => 
   /* Un origen sintètic: el de l'app que genera el bookmarklet. */
   const ORIGEN_APP = 'https://poble.exemple.test';
 
+  /* La pàgina de fora: un document de veres (jsdom), amb el seu títol i els meta que es passen,
+     [atribut, nom, contingut] (property="og:title", name="twitter:description"…). Sense HTML cru:
+     el querySelector del bookmarklet hi corre tal com correria al navegador. */
+  function paginaDeFora(titol = '', metes = []) {
+    const pagina = document.implementation.createHTMLDocument('');
+    pagina.title = titol;
+    for (const [atribut, nom, contingut] of metes) {
+      const meta = pagina.createElement('meta');
+      meta.setAttribute(atribut, nom);
+      meta.setAttribute('content', contingut);
+      pagina.head.append(meta);
+    }
+    return pagina;
+  }
+
   /* L'executa com ho faria el navegador, amb la pàgina de fora simulada. */
-  function executa({ href, titol = '', seleccio = null, codi = bookmarkletDesa(ORIGEN_APP) }) {
+  function executa({ href, titol = '', metes = [], seleccio = null, codi = bookmarkletDesa(ORIGEN_APP) }) {
     const oberts = [];
     expect(codi.startsWith('javascript:')).toBe(true);
     const bookmarklet = new Function('location', 'document', 'getSelection', 'open', codi.slice('javascript:'.length));
-    bookmarklet({ href }, { title: titol }, () => seleccio, (url, nom, opcions) => { oberts.push({ url, nom, opcions }); });
+    bookmarklet({ href }, paginaDeFora(titol, metes), () => seleccio, (url, nom, opcions) => { oberts.push({ url, nom, opcions }); });
     return oberts;
   }
 
@@ -273,18 +288,97 @@ describe('el bookmarklet (Model B: l’origen de l’app que el genera)', () => 
     expect(contingut.valor.entradilla).toHaveLength(256);
   });
 
+  /* E1 del Gauntlet (ordre del Mestre, 261016, I05/I07: «hidrata títol, subtítol, entradeta,
+     URL») · El títol i el subtítol, d'OpenGraph (og:title, og:description), amb Twitter de
+     reserva i, per al títol, el de la pàgina. Cap imatge: og:image no viatja (doctrina de
+     privacitat de contingutExtern.js; canviar-la és decisió del Mestre). */
+  describe('la hidratació OpenGraph (E1, 261016)', () => {
+    const OG = (nom, contingut) => ['property', `og:${nom}`, contingut];
+    const TWITTER = (nom, contingut) => ['name', `twitter:${nom}`, contingut];
+
+    test('og:title i og:description passen davant del títol de la pàgina; l’entradeta, la selecció', () => {
+      const [obert] = executa({
+        href: `${URL_PROVA}#seccio`,
+        titol: 'Un article | El diari del poble',
+        metes: [OG('title', 'Un article'), OG('description', '  La descripció de la pàgina.  '), OG('image', `${URL_PROVA}/portada.webp`)],
+        seleccio: 'Un tros'
+      });
+      const desti = new URL(obert.url);
+      expect(llegixDesa(desti.searchParams).contingut).toEqual({
+        ok: true,
+        valor: { url: URL_PROVA, lloc: 'exemple.org', titol: 'Un article', subtitol: 'La descripció de la pàgina.', entradilla: 'Un tros' }
+      });
+      /* La imatge no viatja: cap clau de més a la consulta. */
+      expect([...desti.searchParams.keys()].sort()).toEqual(['entradilla', 'mode', 'subtitol', 'titol', 'url']);
+      expect(obert.url).not.toContain('portada');
+    });
+
+    test('Twitter de reserva (també amb property) i, sense cap meta, el títol de la pàgina i cap subtítol', () => {
+      const [ambTwitter] = executa({
+        href: URL_PROVA, titol: 'El títol de la pàgina',
+        metes: [TWITTER('title', 'El títol de Twitter'), ['property', 'twitter:description', 'La de Twitter']]
+      });
+      expect(llegixDesa(new URL(ambTwitter.url).searchParams).contingut.valor).toMatchObject({ titol: 'El títol de Twitter', subtitol: 'La de Twitter' });
+      /* OpenGraph mana sobre Twitter, també si Twitter va primer al document. */
+      const [ambTots] = executa({
+        href: URL_PROVA, metes: [TWITTER('title', 'Twitter'), OG('title', 'OpenGraph'), TWITTER('description', 'T'), ['name', 'og:description', 'OG']]
+      });
+      expect(llegixDesa(new URL(ambTots.url).searchParams).contingut.valor).toMatchObject({ titol: 'OpenGraph', subtitol: 'OG' });
+      /* Un og:title buit o només d'espais no tapa el títol de la pàgina. */
+      const [senseRes] = executa({ href: URL_PROVA, titol: 'El títol de la pàgina', metes: [OG('title', '   '), OG('description', '')] });
+      const desti = new URL(senseRes.url);
+      expect(desti.searchParams.has('subtitol')).toBe(false);
+      expect(llegixDesa(desti.searchParams).contingut.valor).toMatchObject({ titol: 'El títol de la pàgina', subtitol: '' });
+    });
+
+    test('una og:description enorme es talla a 300 punts de codi (mai un emoji partit) i el snippet continua sent vàlid', () => {
+      /* validaContingutExtern rebutja (no talla) el que passa de 300: sense el tall, el Curador
+         donaria un error de camp en lloc d'hidratar-lo. */
+      const llarga = '🌾'.repeat(400);
+      const [obert] = executa({ href: URL_PROVA, titol: 'T', metes: [OG('description', llarga), OG('title', `${'🍅'.repeat(299)}a🍅🍅`)] });
+      const { contingut } = llegixDesa(new URL(obert.url).searchParams);
+      expect(contingut.ok).toBe(true);
+      expect(Array.from(contingut.valor.subtitol)).toHaveLength(300);
+      expect(contingut.valor.subtitol).toBe('🌾'.repeat(300));
+      expect(contingut.valor.titol).toBe(`${'🍅'.repeat(299)}a`);
+      /* I sense el tall, el mateix text el rebutjaria. */
+      expect(llegixDesa(new URLSearchParams({ url: URL_PROVA, subtitol: llarga })).contingut.ok).toBe(false);
+    });
+  });
+
   /* Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0) · «L'usuari ha de poder capturar
      contingut i decidir fàcilment si el destí és el Bloc de notes o el Lector RSS»: el
      bookmarklet pot portar la destinació. Sense, o amb 'bloc', el de sempre. */
   describe('la destinació opcional (desti)', () => {
-    /* El bookmarklet d'abans d'esta ordre, caràcter a caràcter (Llei del Píxel). */
+    /* El bookmarklet d'abans de la hidratació OpenGraph (E1 del Gauntlet, 261016), caràcter a
+       caràcter: el que porta instal·lat qui el va arrossegar abans. Ja no es genera, però el
+       snippet l'ha de continuar acceptant (prova de davall). */
     const DE_SEMPRE = `javascript:(()=>{const u=new URL('/notes',"${ORIGEN_APP}");const p=u.searchParams;p.set('mode','desa');p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();`;
+    /* Actualitzada a posta per l'E1 del Gauntlet (ordre del Mestre, 261016: «hidrata títol,
+       subtítol, entradeta, URL»): el bookmarklet d'ara, caràcter a caràcter. Fixa el text perquè
+       cap canvi involuntari de la plantilla passe sense vore's. */
+    const HIDRATAT = `javascript:(()=>{const u=new URL('/notes',"${ORIGEN_APP}");const p=u.searchParams;const m=n=>((document.querySelector('meta[property="'+n+'"],meta[name="'+n+'"]')||{}).content||'').trim();const o=k=>m('og:'+k)||m('twitter:'+k);const c=(t,n)=>[...String(t).trim().slice(0,n*2)].slice(0,n).join('');p.set('mode','desa');p.set('url',location.href.split('#')[0]);p.set('titol',c(o('title')||document.title,300));const d=c(o('description'),300);if(d)p.set('subtitol',d);const s=c(getSelection()||'',256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();`;
+
+    test('el bookmarklet d’abans, ja instal·lat, continua obrint un snippet vàlid', () => {
+      expect(bookmarkletDesa(ORIGEN_APP)).not.toBe(DE_SEMPRE);
+      /* No sap res d'OpenGraph: el títol de la pàgina, com sempre, i cap subtítol. */
+      const [obert] = executa({
+        href: `${URL_PROVA}#x`, titol: 'Un article', metes: [['property', 'og:title', 'Un altre títol'], ['property', 'og:description', 'D']],
+        seleccio: 'Un tros', codi: DE_SEMPRE
+      });
+      const desti = new URL(obert.url);
+      expect(`${desti.origin}${desti.pathname}`).toBe(`${ORIGEN_APP}/notes`);
+      expect(llegixDesa(desti.searchParams).contingut).toEqual({
+        ok: true,
+        valor: { url: URL_PROVA, lloc: 'exemple.org', titol: 'Un article', subtitol: '', entradilla: 'Un tros' }
+      });
+    });
 
     test('sense desti, o amb «bloc», el bookmarklet de sempre: obri el Bloc, sense ?desti', () => {
-      expect(bookmarkletDesa(ORIGEN_APP)).toBe(DE_SEMPRE);
-      expect(bookmarkletDesa(ORIGEN_APP, {})).toBe(DE_SEMPRE);
-      expect(bookmarkletDesa(ORIGEN_APP, { desti: DESTINS.bloc })).toBe(DE_SEMPRE);
-      expect(bookmarkletDesa(ORIGEN_APP, { desti: undefined })).toBe(DE_SEMPRE);
+      expect(bookmarkletDesa(ORIGEN_APP)).toBe(HIDRATAT);
+      expect(bookmarkletDesa(ORIGEN_APP, {})).toBe(HIDRATAT);
+      expect(bookmarkletDesa(ORIGEN_APP, { desti: DESTINS.bloc })).toBe(HIDRATAT);
+      expect(bookmarkletDesa(ORIGEN_APP, { desti: undefined })).toBe(HIDRATAT);
       const [obert] = executa({ href: URL_PROVA, titol: 'T', codi: bookmarkletDesa(ORIGEN_APP, { desti: 'bloc' }) });
       const desti = new URL(obert.url);
       expect(desti.searchParams.has('desti')).toBe(false);
@@ -293,8 +387,8 @@ describe('el bookmarklet (Model B: l’origen de l’app que el genera)', () => 
 
     test('amb «lector»: el snippet s’obri amb el Lector ja triat (?desti=lector) i el mateix contingut', () => {
       const codi = bookmarkletDesa(ORIGEN_APP, { desti: DESTINS.lector });
-      expect(codi).not.toBe(DE_SEMPRE);
-      expect(codi.replace("p.set('desti','lector');", '')).toBe(DE_SEMPRE);
+      expect(codi).not.toBe(HIDRATAT);
+      expect(codi.replace("p.set('desti','lector');", '')).toBe(HIDRATAT);
       const [obert, ...resta] = executa({ href: `${URL_PROVA}#ancora`, titol: 'Un article', seleccio: 'Un tros', codi });
       expect(resta).toEqual([]);
       const desti = new URL(obert.url);

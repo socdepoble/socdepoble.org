@@ -85,6 +85,28 @@ test('peça C · un `panell` que no és un id vàlid no passa: queda el de l’a
   expect([buit.panell, majuscules.panell, bo.panell, sense.panell, indefinit.panell, nul.panell]).toEqual(['a', 'b', 'consola', 'd', 'e', null]);
 });
 
+/* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+   maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
+   La Consola de Mètriques i el Cervell són maquinària interna (intern: true,
+   escrit a la taula), i el filtre conserva la marca. Només un true: qualsevol
+   altre valor no hi posa cap clau (una llista federada no canvia). */
+test('Bloc 3.4 · la maquinària interna porta `intern: true`, i el filtre només la conserva quan és un true', () => {
+  expect(APLICACIONS.filter((a) => a.intern === true).map((a) => a.id)).toEqual(['metriques', 'cervell']);
+  const valides = aplicacionsValides(APLICACIONS);
+  expect(valides.filter((a) => a.intern === true).map((a) => a.id)).toEqual(['metriques', 'cervell']);
+  for (const aplicacio of valides.filter((a) => !['metriques', 'cervell'].includes(a.id))) {
+    expect(aplicacio, aplicacio.id).not.toHaveProperty('intern');
+  }
+  const [si, fals, text, sense] = aplicacionsValides([
+    { id: 'a', nom: 'A', intern: true },
+    { id: 'b', nom: 'B', intern: false },
+    { id: 'c', nom: 'C', intern: 'true' },
+    { id: 'd', nom: 'D' },
+  ]);
+  expect(si.intern).toBe(true);
+  for (const aplicacio of [fals, text, sense]) expect(aplicacio, aplicacio.id).not.toHaveProperty('intern');
+});
+
 test('només una utilitat «connectada» amb ruta interna s’enllaça; la resta, pendent', () => {
   const [bona, sensRuta, externa, protocol] = aplicacionsValides([
     { id: 'a', nom: 'A', estat: 'connectada', ruta: '/mercat' },

@@ -43,7 +43,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { oblidaEntitatDelProjecte } from '../../config/navigation.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, IAIA_ID, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 
 const UUID = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
 const BASE = { avatar: '', hero: '', lema: '', bio: '', presentacioHtml: '', poble: '', esIA: false, publicat: true, propietari: false, copyright: '' };
@@ -131,6 +131,32 @@ test('Rentonar i Sóc de Poble sense poble porten el seu, a la píndola i a la b
     cleanup();
     oblidaEntitatDelProjecte();
   }
+});
+
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F65) · La fitxa de la IAIA MarIA (/iaia,
+   App.jsx, amb el seu id del paquet) declara /iaia, s'obriga per on s'obriga;
+   en remot el servidor no la coneix i es pinta del paquet (D12). Una altra IA,
+   cap. */
+test('Bloc 3.6.3 · la fitxa de la IAIA declara /iaia per la ruta neta i per /perfil/<id>; una altra IA, cap', async () => {
+  mocks.load.mockResolvedValue(null);
+  render(<PerfilPublicSection id={IAIA_ID} />);
+  await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.IAIA.name });
+  expect(mocks.load).toHaveBeenCalledWith(IAIA_ID, mocks.ui.externalConfig);
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: AGENTS_MAP.IAIA.name, canonical: 'https://socdepoble.org/iaia' }));
+  cleanup();
+  mocks.seo.mockClear();
+  mocks.id = 'iaia-maria';
+  render(<PerfilPublicSection />);
+  await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.IAIA.name });
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ canonical: 'https://socdepoble.org/iaia' }));
+  cleanup();
+  mocks.seo.mockClear();
+  const GALL = { ...BASE, tipus: 'ia', id: 'gall', slug: null, nom: 'El Gall', esIA: true };
+  mocks.load.mockResolvedValue(GALL);
+  mocks.id = 'gall';
+  render(<PerfilPublicSection />);
+  await screen.findByRole('heading', { level: 1, name: GALL.nom });
+  expect(mocks.seo.mock.calls.every(([opcions]) => !Object.hasOwn(opcions, 'canonical'))).toBe(true);
 });
 
 test('el poble desat sempre mana, i cap altra fitxa sense poble no se n’inventa cap', async () => {

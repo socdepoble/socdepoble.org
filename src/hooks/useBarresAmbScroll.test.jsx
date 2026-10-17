@@ -2,7 +2,8 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef, useSyncExternalStore } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  ATRIBUT_BARRES, BARRES_DALT, BARRES_TOTES, CLASSES_PEU_ANCORAT, ESTAT_INICIAL, FRACCIO_VISOR, seguentEstat, useBarresAmbScroll
+  ALCADA_MAXIMA_CURTA, ATRIBUT_BARRES, ATRIBUT_TACTIL, BARRES_DALT, BARRES_TOTES, CLASSES_PEU_ANCORAT, CONSULTA_TACTIL, ESTAT_INICIAL,
+  FRACCIO_VISOR, esPantallaCurta, seguentEstat, useArrelTactil, useBarresAmbScroll
 } from './useBarresAmbScroll.js';
 
 /* Ordre del Mestre (261012, vespre) · «Fes que les barres acompanyen l'scroll
@@ -61,10 +62,10 @@ describe('seguentEstat · la histèresi', () => {
 /* ── El hook sobre un arnés amb l'anatomia de la closca ─────────────────── */
 const capsa = { barres: null };
 
-function Arnes({ actiu = true, clauRuta = '/legal', extra = null }) {
+function Arnes({ actiu = true, clauRuta = '/legal', extra = null, compacte }) {
   const arrelRef = useRef(null);
   const visorRef = useRef(null);
-  const barres = useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta });
+  const barres = useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta, compacte });
   capsa.barres = barres;
   const potPujar = useSyncExternalStore(barres.subscriu, barres.potPujar, () => false);
   return (
@@ -455,5 +456,216 @@ describe('useBarresAmbScroll · amb un peu ancorat a baix', () => {
     expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_TOTES);
     recorre(visor, [1190, 1170]);
     expect(capsa.barres.potPujar()).toBe(true);
+  });
+});
+
+/* Bloc 3.10 (pla 261016_1530) · Fora del compacte (tauleta tàctil en
+   horitzontal, caixa baixa) no hi ha barra inferior ni botó, i la graella pot
+   portar columnes que fan scroll cadascuna. La refutació de la MCR (b310)
+   va trobar que FRACCIO_VISOR compara alçades: una columna sencera hi passa
+   i amagaria les barres del document de la columna del costat. */
+const Columna = ({ ambBarres = true }) => (
+  <div data-testid="columna">
+    <div className="sdp-universal-page-container">
+      {ambBarres ? <header className="bar-blue" data-testid="blava-columna" /> : null}
+      <article />
+    </div>
+  </div>
+);
+
+describe('useBarresAmbScroll · fora del compacte (compacte=false)', () => {
+  test('només «dalt», també quan el visor arriba a la vora de baix, i mai el botó', () => {
+    const { arrel, visor } = munta({ compacte: false });
+    const avisos = vi.fn();
+    const deixa = capsa.barres.subscriu(avisos);
+    recorre(visor, BAIXA);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // La seqüència que en compacte encén el botó (vegeu més amunt).
+    recorre(visor, [1190, 1170]);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+    expect(capsa.barres.potPujar()).toBe(false);
+    expect(avisos).not.toHaveBeenCalled();
+    expect(arrel.querySelector('.sdp-tornar-dalt')).toBeNull();
+    // I tornen a amagar-se baixant.
+    recorre(visor, [1300, 1400]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    deixa();
+  });
+
+  test('una columna amb barres pròpies: ni el seu scroll ni el del visor les amaguen; sense barres a la columna, el visor sí', () => {
+    const { arrel, visor, dins, rerender } = munta({ compacte: false, extra: <Columna /> });
+    geometria(dins('columna'), { clientHeight: 748, scrollHeight: 5000 });
+    recorre(dins('columna'), BAIXA);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+    recorre(visor, BAIXA);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+    // Control: la mateixa columna sense barres no conté cap peça que es moga.
+    rerender(<Arnes compacte={false} extra={<Columna ambBarres={false} />} />);
+    recorre(visor, [1300, 1400]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+  });
+
+  test('si una columna que no les conté totes fa scroll mentre estan amagades, tornen', () => {
+    const { arrel, visor, dins, rerender } = munta({ compacte: false, extra: <Columna ambBarres={false} /> });
+    geometria(dins('columna'), { clientHeight: 748, scrollHeight: 5000 });
+    recorre(visor, BAIXA);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // Apareix una pàgina a la columna sense canviar de ruta (s'obri un document).
+    rerender(<Arnes compacte={false} extra={<Columna />} />);
+    geometria(dins('columna'), { clientHeight: 748, scrollHeight: 5000 });
+    recorre(dins('columna'), [0, 400]);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+  });
+
+  test('un carrusel o una taula alts, sense cap peça, no les amaguen ni les tornen', () => {
+    const { arrel, visor, dins } = munta({ compacte: false, extra: <div data-testid="carrusel" /> });
+    geometria(dins('carrusel'), { clientHeight: 500, scrollHeight: 3000 });
+    recorre(visor, BAIXA);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // Es mou en vertical i de costat: les barres continuen amagades.
+    recorre(dins('carrusel'), [0, 40, 400]);
+    for (let i = 0; i < 3; i += 1) act(() => { dins('carrusel').dispatchEvent(new Event('scroll')); });
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+    // El visor continua manant: pujant tornen.
+    recorre(visor, [1190, 1170]);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+  });
+
+  test('les barres d’un espècimen, d’un diàleg tancat o d’un node ocult no compten', () => {
+    const quietes = (
+      <>
+        <section className="sdp-especimen"><Columna /></section>
+        <dialog><div className="sdp-universal-page-container"><header className="bar-blue" /></div></dialog>
+        <div hidden><div className="sdp-universal-page-container"><section className="bar-orange" /></div></div>
+        {/* Una .bar-blue que no és filla d'una pàgina: el full no la mou. */}
+        <div><header className="bar-blue" /></div>
+      </>
+    );
+    const { arrel, visor } = munta({ compacte: false, extra: quietes });
+    recorre(visor, BAIXA);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+  });
+
+  test('les eines de l’editor i la capçalera del calendari d’una altra columna també compten', () => {
+    for (const classe of ['sdp-editor-eines', 'sdp-cal-setmana__capcal']) {
+      const { arrel, visor, unmount } = munta({ compacte: false, extra: <div><div className={classe} /></div> });
+      recorre(visor, BAIXA);
+      expect(arrel.hasAttribute(ATRIBUT_BARRES), classe).toBe(false);
+      unmount();
+    }
+  });
+
+  test('en compacte, res d’açò canvia: la columna amb barres pròpies les amaga com sempre', () => {
+    const { arrel, dins } = munta({ extra: <Columna /> });
+    geometria(dins('columna'), { clientHeight: 748, scrollHeight: 5000 });
+    recorre(dins('columna'), BAIXA);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(true);
+  });
+
+  test('passar del compacte a fora (o al revés) reinicia: barres a la vista i cap botó', () => {
+    const { arrel, visor, rerender } = munta();
+    recorre(visor, BAIXA);
+    recorre(visor, [1190, 1170]);
+    expect(capsa.barres.potPujar()).toBe(true);
+    recorre(visor, [1300, 1400]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_TOTES);
+    rerender(<Arnes compacte={false} />);
+    expect(arrel.hasAttribute(ATRIBUT_BARRES)).toBe(false);
+    expect(capsa.barres.potPujar()).toBe(false);
+    recorre(visor, [1500, 1600]);
+    expect(arrel.getAttribute(ATRIBUT_BARRES)).toBe(BARRES_DALT);
+  });
+});
+
+describe('esPantallaCurta · el tall d’alçada de la caixa', () => {
+  test('fins a 760px és curta; sense mesura (0) o més alta, no', () => {
+    expect(ALCADA_MAXIMA_CURTA).toBe(760);
+    expect(esPantallaCurta(390)).toBe(true); // mòbil en horitzontal
+    expect(esPantallaCurta(760)).toBe(true);
+    expect(esPantallaCurta(761)).toBe(false);
+    expect(esPantallaCurta(900)).toBe(false);
+    expect(esPantallaCurta(0)).toBe(false);
+    expect(esPantallaCurta(Number.NaN)).toBe(false);
+  });
+});
+
+/* ── useArrelTactil ─────────────────────────────────────────────────────── */
+const tactilEstat = { valor: null };
+function ArnesTactil() {
+  const arrelRef = useRef(null);
+  tactilEstat.valor = useArrelTactil(arrelRef);
+  return <div className="sdp-root" ref={arrelRef} data-testid="arrel-tactil" />;
+}
+
+/* Una MediaQueryList falsa amb oients, com la del navegador. */
+function consultaFalsa(inicial, { nomesAddListener = false } = {}) {
+  const oients = new Set();
+  const llista = {
+    matches: inicial,
+    media: CONSULTA_TACTIL,
+    canvia(valor) {
+      llista.matches = valor;
+      for (const oient of [...oients]) oient({ matches: valor, media: CONSULTA_TACTIL });
+    },
+    oients
+  };
+  if (nomesAddListener) {
+    Object.assign(llista, { addListener: (o) => oients.add(o), removeListener: (o) => oients.delete(o) });
+  } else {
+    Object.assign(llista, {
+      addEventListener: (tipus, o) => { if (tipus === 'change') oients.add(o); },
+      removeEventListener: (tipus, o) => { if (tipus === 'change') oients.delete(o); }
+    });
+  }
+  return llista;
+}
+
+describe('useArrelTactil · la tauleta tàctil marca l’arrel', () => {
+  test('sense matchMedia (jsdom): fals i cap atribut', () => {
+    vista.matchMedia = undefined;
+    const { getByTestId } = render(<ArnesTactil />);
+    expect(tactilEstat.valor).toBe(false);
+    expect(getByTestId('arrel-tactil').hasAttribute(ATRIBUT_TACTIL)).toBe(false);
+  });
+
+  test('un matchMedia que peta: fals i cap atribut', () => {
+    vista.matchMedia = () => { throw new Error('consulta no admesa'); };
+    const { getByTestId } = render(<ArnesTactil />);
+    expect(tactilEstat.valor).toBe(false);
+    expect(getByTestId('arrel-tactil').hasAttribute(ATRIBUT_TACTIL)).toBe(false);
+  });
+
+  test('pregunta exactament la consulta tàctil, marca l’arrel i segueix el canvi; en desmuntar, ni atribut ni oient', () => {
+    const llista = consultaFalsa(true);
+    const consultes = [];
+    vista.matchMedia = (consulta) => { consultes.push(consulta); return llista; };
+    const { getByTestId, unmount } = render(<ArnesTactil />);
+    const arrel = getByTestId('arrel-tactil');
+    expect(new Set(consultes)).toEqual(new Set([CONSULTA_TACTIL]));
+    expect(CONSULTA_TACTIL).toBe('(hover: none) and (pointer: coarse)');
+    expect(tactilEstat.valor).toBe(true);
+    expect(arrel.hasAttribute(ATRIBUT_TACTIL)).toBe(true);
+    // L'iPad connecta un ratolí: deixa de ser tàctil.
+    act(() => llista.canvia(false));
+    expect(tactilEstat.valor).toBe(false);
+    expect(arrel.hasAttribute(ATRIBUT_TACTIL)).toBe(false);
+    act(() => llista.canvia(true));
+    expect(arrel.hasAttribute(ATRIBUT_TACTIL)).toBe(true);
+    unmount();
+    expect(arrel.hasAttribute(ATRIBUT_TACTIL)).toBe(false);
+    expect(llista.oients.size).toBe(0);
+  });
+
+  test('Safari < 14 (només addListener) també segueix el canvi', () => {
+    const llista = consultaFalsa(false, { nomesAddListener: true });
+    vista.matchMedia = () => llista;
+    const { getByTestId, unmount } = render(<ArnesTactil />);
+    const arrel = getByTestId('arrel-tactil');
+    expect(arrel.hasAttribute(ATRIBUT_TACTIL)).toBe(false);
+    act(() => llista.canvia(true));
+    expect(tactilEstat.valor).toBe(true);
+    expect(arrel.hasAttribute(ATRIBUT_TACTIL)).toBe(true);
+    unmount();
+    expect(llista.oients.size).toBe(0);
   });
 });

@@ -504,3 +504,47 @@ test('MD · si es va al detall des de la navegació, la tornada hi torna (el pan
   expect(panellDe(container)).toBe('left');
   expect(document.activeElement).toBe(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Mur' }));
 });
+
+/* ═══ Gauntlet 261016 (MCR b4_proves.2, proposta 2) · cap fuita de la closca ═══
+   L'únic recurs viu de la closca és el ResizeObserver d'AppGridShell.jsx:244-247, i es desconnecta en la
+   neteja de l'efecte. Fins ara només ho veia el Workspace (tests/gauntlet-codex-lifecycle.test.jsx); el Xat,
+   les apps i la Consola munten la closca sense ell, i les seues proves fan servir un observador inert. Ací,
+   un observador comptador (el patró de lifecycle:14-18): observe l'afig al conjunt dels vius i disconnect
+   el lleva. En StrictMode l'efecte es munta, es desmunta i es torna a muntar: en queda un de viu, que mesura
+   de veres la pàgina (ambAmplada per al clientWidth), i cap després de desmuntar. */
+test('el ResizeObserver de la closca es desconnecta en desmuntar-la: 50 muntatges en StrictMode, sense Workspace', () => {
+  const vius = new Set();
+  const creats = [];
+  vi.stubGlobal('ResizeObserver', class {
+    constructor(callback) {
+      this.callback = callback;
+      this.observats = [];
+      creats.push(this);
+    }
+    observe(element) {
+      this.observats.push(element);
+      vius.add(this);
+    }
+    disconnect() {
+      vius.delete(this);
+    }
+  });
+  for (let cicle = 0; cicle < 50; cicle++) {
+    const amplada = ambAmplada(1400);
+    const { container, unmount } = render(<StrictMode><Closca /></StrictMode>);
+    const shell = container.querySelector('.app-grid-shell');
+    expect(vius.size, `cicle ${cicle}: muntada`).toBe(1);
+    const [viu] = vius;
+    expect(viu.observats).toEqual([container.querySelector('.app-grid-page')]);
+    expect(shell.dataset.layout).toBe('ample');
+    /* L'observador viu és el que mesura: la pàgina es fa estreta i la closca ho nota sense cap altre canvi. */
+    amplada.mockReturnValue(375);
+    act(() => viu.callback([]));
+    expect(shell.dataset.layout, `cicle ${cicle}: estreta`).toBe('estret');
+    unmount();
+    expect(vius.size, `cicle ${cicle}: desmuntada`).toBe(0);
+  }
+  /* StrictMode: dos efectes per muntatge, cap més (la dependència, demanaPanell, és estable), i cap viu. */
+  expect(creats).toHaveLength(100);
+  expect(creats.filter((observador) => vius.has(observador))).toEqual([]);
+});

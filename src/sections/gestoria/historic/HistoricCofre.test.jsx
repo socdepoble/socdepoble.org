@@ -113,6 +113,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/* Gauntlet 261016 (MCR o3_tpv_gestoria, proves 4 i 5): els recorreguts que obrin el cofre i lligen el banc
+   tarden 0,5-1,5 s sols i han passat dels 10 s amb la màquina carregada. Al codi no hi ha cap espera que es
+   puga escurçar (cap setTimeout ni debounce a historic/ ni a cofre/, fora del revokeObjectURL de la
+   descàrrega): el temps és el del PBKDF2 del cofre, el xifratge de cada desament i el recàlcul de la vista
+   sencera a jsdom. A més, tots són fonts del tractor gestoria.historic (tractors.js): no es toquen. Només
+   el límit, cap asserció, com el de l'última prova d'este fitxer (auditoria 261014_1636). */
+const RECORREGUT = 20000;
+
 async function magatzemAprovat() {
   const magatzem = crearMagatzemMemoria();
   await magatzem.afegixClau(autenticador.clau);
@@ -192,7 +200,7 @@ describe('la porta del cofre', () => {
     const foto = screen.getByRole('heading', { level: 2, name: 'La foto del director financer' });
     expect(porta.compareDocumentPosition(foto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(foto.compareDocumentPosition(gestio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
+  }, RECORREGUT);
 
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B). */
   test('amb el cofre bloquejat, la barra no porta l’ull però sí el titular de la sessió i el rellotge viu, l’últim de la barra', async () => {
@@ -240,7 +248,7 @@ describe('el bloqueig buida l’estat', () => {
     expect(await screen.findByText('«forn de prova» → Altres')).toBeTruthy();
     expect(textDe(container)).not.toContain('1.882,50');
     expect(idb.files(NOM_BD_COFRE, 'registres')).toEqual([desada]);
-  });
+  }, RECORREGUT);
 
   test('l’autobloqueig també, encara que la persona mire la pàgina d’una targeta', async () => {
     const { cofre, temporitzadors } = await cofreAmbConfiguracio();
@@ -253,7 +261,7 @@ describe('el bloqueig buida l’estat', () => {
     expect(await screen.findByRole('button', { name: 'Obri el cofre' })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Històric i IA');
     senseRes(container);
-  });
+  }, RECORREGUT);
 
   test('tornar de la pàgina d’una targeta amb el cofre obert no torna a demanar la frase', async () => {
     const { cofre } = await cofreAmbConfiguracio();
@@ -267,7 +275,7 @@ describe('el bloqueig buida l’estat', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'La foto del director financer' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Obri el cofre' })).toBeNull();
     expect(cofre.obert).toBe(true);
-  });
+  }, RECORREGUT);
 
   test('en eixir de la vista, el cofre es bloqueja', async () => {
     const { cofre } = await cofreAmbConfiguracio();
@@ -277,7 +285,7 @@ describe('el bloqueig buida l’estat', () => {
     unmount();
     expect(cofre.obert).toBe(false);
     await expect(persistenciaDelCofre(cofre, COLLECCIO_HISTORIC).llig()).rejects.toMatchObject({ codi: 'COFRE_BLOQUEJAT' });
-  });
+  }, RECORREGUT);
 });
 
 describe('res en clar a l’IndexedDB', () => {
@@ -300,7 +308,7 @@ describe('res en clar a l’IndexedDB', () => {
       expect(desada?.escenari?.facturacio).toBe(12);
       expect(desada.regles).toEqual([{ patro: 'sentinellaprivada', categoria: 'ia', proveidor: null }]);
       expect(Object.values(desada.reclassificacions)).toEqual([{ categoria: 'programari', proveidor: 'google' }]);
-    }, { timeout: 5000 });
+    }, { timeout: 10000 });
 
     const registres = idb.files(NOM_BD_COFRE, 'registres');
     expect(registres.map((r) => [r.colleccio, r.id])).toEqual([[COLLECCIO_HISTORIC, ID_UNIC]]);

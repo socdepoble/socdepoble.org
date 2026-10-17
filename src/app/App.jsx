@@ -1,7 +1,7 @@
 import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
-import { useBarresAmbScroll } from '../hooks/useBarresAmbScroll.js';
+import { ATRIBUT_CURTA, esPantallaCurta, useArrelTactil, useBarresAmbScroll } from '../hooks/useBarresAmbScroll.js';
 import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
@@ -13,7 +13,8 @@ import { NotificationProvider } from '../components/universal/NotificationContex
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { BotoTornarADalt } from '../components/PedraSeca/atoms/BotoTornarADalt.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
-import { RUTES_CANONIQUES } from '../config/navigation.js';
+import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from '../config/navigation.js';
+import { IAIA_ID } from '../data/identitatsSeed.js';
 import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { aterratgeDespresDEntrar, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
@@ -30,7 +31,7 @@ import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
-import { accioDeLaPaginaDeText, accioDeTextAlFinal } from '../sections/text/accionsDeText.js';
+import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
@@ -226,6 +227,9 @@ function AppShell({ children, mobileNav }) {
   const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarClosed, setIsDesktopSidebarClosed] = useState(false);
+  /* Bloc 3.10 (pla 261016_1530) · Una caixa baixa (data-sdp-curta) també
+     deixa que les barres acompanyen el scroll fora del compacte. */
+  const [curta, setCurta] = useState(false);
   const rootRef = useRef(null);
 
   React.useLayoutEffect(() => {
@@ -233,10 +237,15 @@ function AppShell({ children, mobileNav }) {
     if (!root) return;
     // La caixa de l'app, també abans del primer pintat en un amfitrió ample.
     const mesura = () => {
-      const ample = root.getBoundingClientRect().width;
+      const caixa = root.getBoundingClientRect();
+      const ample = caixa.width;
       if (ample > 0) {
         // Tall local del full inferior, independent del mestre de navegació.
         root.toggleAttribute('data-sdp-estret', ample <= 720);
+        // L'alçada de la caixa, no la del visor: també dins de WordPress.
+        const esCurta = esPantallaCurta(caixa.height);
+        root.toggleAttribute(ATRIBUT_CURTA, esCurta);
+        setCurta(esCurta);
         setContainerWidth(ample);
       }
     };
@@ -383,12 +392,18 @@ function AppShell({ children, mobileNav }) {
   /* Ordre del Mestre (261012, vespre) · En compacte i fora del mode immersiu,
      les barres acompanyen el scroll (data-sdp-barres a l'arrel, sense
      repintar res; layout.css) i, quan tornen amb el visor avall, el botó
-     «Tornar a dalt» apareix damunt de «Pobles» (TornarADalt, més avall). En
-     escriptori no hi ha escolta, ni atribut, ni botó. */
+     «Tornar a dalt» apareix damunt de «Pobles» (TornarADalt, més avall).
+     Bloc 3.10 (pla 261016_1530) · També fora del compacte en una tauleta
+     tàctil (data-sdp-tactil: l'iPad horitzontal passa de 1023px) o en una
+     caixa baixa (data-sdp-curta), però allà només la blava i la taronja: cap
+     barra inferior ni botó. En un escriptori amb ratolí i alçada de sobra no
+     hi ha escolta, ni atribut, ni botó. */
+  const tactil = useArrelTactil(rootRef);
   const barres = useBarresAmbScroll({
     arrelRef: rootRef,
     visorRef: mainRef,
-    actiu: isCompact && !immersiu,
+    actiu: (isCompact || tactil || curta) && !immersiu,
+    compacte: isCompact,
     clauRuta: location.pathname
   });
 
@@ -625,8 +640,9 @@ function AppShell({ children, mobileNav }) {
 
       {mobileNav}
       {/* Després de la barra mòbil, i només quan es pot pujar: en repòs no
-          hi ha cap node i la barra continua sent l'últim fill (T3). */}
-      <TornarADalt barres={barres} />
+          hi ha cap node i la barra continua sent l'últim fill (T3). Només en
+          compacte: el seu lloc fix (layout.css) és damunt de «Pobles». */}
+      {isCompact ? <TornarADalt barres={barres} /> : null}
     </div>
     </ProveidorModeImmersiu>
   );
@@ -731,7 +747,8 @@ function TextRoute({ pageKey }) {
     }
     return <Navigate to={DEFAULT_SECTION_PATH} replace />;
   }
-  /* Onada 10 (261010; decisió del Mestre del 261010) · /iaia porta, dins del
+  /* Onada 10 (261010; decisió del Mestre del 261010) · El manifest de la IAIA
+     (/anima des del Gauntlet 261016_1530, Bloc 3.6.3; abans /iaia) porta, dins del
      bloc blanc de l'H1, el botó «Anar al xat» cap al xat amb la IAIA MarIA
      (accioPrincipal de PageFrame, per TextSection). Es decidix amb la funció
      pura, mai amb l'element, com a PageDetailSection. La resta de pàgines de
@@ -740,11 +757,16 @@ function TextRoute({ pageKey }) {
      Onada 11 (261010; prompt 261010_1730, tasca 6, D4) · «Dalt i al final»,
      com «Obrir…» de /page/consola (PageDetailSection · accioAlFinal): el
      mateix botó es repetix després del cos, dins de div.sdp-pagina-accio,
-     l'últim fill de l'article. Es decidix amb accioDeTextAlFinal, pura. */
+     l'últim fill de l'article. Es decidix amb accioDeTextAlFinal, pura.
+     Gauntlet 261016_1530 (Bloc 3.6.3) · «Comentar → En públic» del manifest,
+     a /anima, continua al xat públic de '/iaia', el de la IAIA MarIA
+     (objecteDeLaPaginaDeText, pura): /anima no té xat comú al contracte. La
+     resta de pàgines passen null i TextSection no el fa arribar enlloc. */
   const accioPrincipal = accioDeLaPaginaDeText(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} /> : null;
+  const objecte = objecteDeLaPaginaDeText(pageKey, page.title);
   return (
     <Suspense fallback={<RouteFallback />}>
-      <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal}>
+      <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>
         {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
             Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
         {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
@@ -850,11 +872,13 @@ function AppDataLoader() {
 
 
 
-/* Àlies històric: conserva la consulta dins del router de l’amfitrió. */
+/* Àlies històric del manifest (/ia): conserva la consulta dins del router de
+   l’amfitrió. Gauntlet 261016_1530 (Bloc 3.6.3) · El manifest ja no és a
+   /iaia, que ara és la fitxa de la IAIA MarIA: l'àlies porta a /anima. */
 function RedireccioIaia() {
   const { search } = useLocation();
   const consulta = new URLSearchParams(search).toString();
-  return <Navigate to={consulta ? `/iaia?${consulta}` : '/iaia'} replace />;
+  return <Navigate to={consulta ? `/anima?${consulta}` : '/anima'} replace />;
 }
 
 /* Onada 5 (ordre del Mestre, 261008) · Àlies «chat» → «xat»: un enllaç
@@ -977,7 +1001,14 @@ function ActorRoutes({ agents }) {
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
       <Route path="disseny" element={<DesignSection />} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />
-      <Route path="iaia" element={<TextRoute pageKey="anima" />} />
+      {/* Gauntlet 261016_1530 (Bloc 3.6.3; relleu F64 i F65) · El manifest
+          «L'Ànima de la IAIA» és a /anima, una pàgina de text com /projecte.
+          /iaia és la fitxa pública de la IAIA MarIA (RUTA_FITXA_IAIA,
+          config/navigation.js), la mateixa que /perfil/<id>, pel seu id del
+          paquet: cap component nou. /ia, l'àlies històric del manifest, porta
+          a /anima. */}
+      <Route path="anima" element={<TextRoute pageKey="anima" />} />
+      <Route path={RUTA_FITXA_IAIA.slice(1)} element={<PerfilPublicSection agents={agents} id={IAIA_ID} />} />
       <Route path="ia" element={<RedireccioIaia />} />
       {/* T8 (ordre del Mestre, 261001) · On porta la franja de l'amfitrió: què
           és un node. Pàgina de text fora de la barra lateral i del Mur. */}

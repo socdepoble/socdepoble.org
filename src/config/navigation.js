@@ -3,7 +3,7 @@
    SECTION_ITEM_LOOKUPS, getSectionItems i findSectionItem, i cap pantalla,
    eina ni prova no els cridava. La llavor arriba a l'app per appSeed.js. */
 import {
-  CLAUS_FUNDACIONALS, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED, clauFundacional
+  CLAUS_FUNDACIONALS, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED, clauFundacional, esIAIA
 } from '../data/identitatsSeed.js';
 import {
   esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio
@@ -17,8 +17,12 @@ const PAGE_ROUTE_MAP = {
   constitucio: '/constitucio',
   ruta: '/roadmap',
   roadmap: '/roadmap',
-  anima: '/iaia',
-  ia: '/iaia',
+  /* Gauntlet 261016_1530 (Bloc 3.6.3; relleu F64) · El manifest «L'Ànima de
+     la IAIA» viu a /anima: és un assaig escrit per la IAIA, no la seua fitxa.
+     /iaia queda per a la fitxa (RUTA_FITXA_IAIA, davall). 'ia' és l'àlies
+     històric del mateix manifest. */
+  anima: '/anima',
+  ia: '/anima',
   legal: '/legal',
   versions: '/versions',
   /* T8 (261001) · la cerca i /page/fedivers van a la ruta canònica. */
@@ -71,8 +75,29 @@ export const rutaDePerfil = (tipus, id) => {
    l'adreça neta, la que declara el SEO. */
 export const RUTES_CANONIQUES = Object.freeze(Object.fromEntries(CLAUS_FUNDACIONALS.map((clau) => [clau, `/${clau}`])));
 
-/** La ruta canònica neta d'un perfil públic ({ tipus, id, slug }) d'una de les tres identitats del Mestre, o null. */
-export const rutaCanonicaDePerfil = (perfil) => RUTES_CANONIQUES[clauFundacional(perfil)] || null;
+/* Gauntlet 261016_1530 (Bloc 3.6.3; relleu F65; ordre del Mestre: «La ruta
+   /iaia queda reservada per a la pròpia IAIA MarIA […], que és on s'ha
+   d'accedir des del xat i des del cercador») · La fitxa pública de la IAIA
+   MarIA, la de sempre (PerfilPublicSection amb el seu id, App.jsx), a una
+   adreça neta de primer nivell. Com les tres de RUTES_CANONIQUES, és una
+   adreça més: /perfil/<id> i /perfil/iaia-maria obrin la mateixa fitxa i
+   rutaDePerfil no canvia. La clau '/iaia' del xat públic de la IAIA
+   (PAGINES_AMB_XAT, data/contracte.js; el servidor, 2610042330) és la
+   mateixa ruta: ara coincidix amb la seua fitxa. El manifest que hi vivia
+   és ara a /anima (PAGE_ROUTE_MAP, damunt). */
+export const RUTA_FITXA_IAIA = '/iaia';
+
+/* La IAIA MarIA, per identificador i amb el tipus que toca: mai pel nom ni
+   pel slug que torne un servidor (el seu id és el del paquet, IAIA_ID). */
+const esLaFitxaDeLaIAIA = (perfil) => perfil?.tipus === 'ia' && esIAIA(perfil.id);
+
+/**
+ * La ruta canònica neta d'un perfil públic ({ tipus, id, slug }): la d'una de
+ * les tres identitats del Mestre (RUTES_CANONIQUES) o, per a la IAIA MarIA,
+ * RUTA_FITXA_IAIA (Bloc 3.6.3); null per a la resta.
+ */
+export const rutaCanonicaDePerfil = (perfil) => RUTES_CANONIQUES[clauFundacional(perfil)]
+  || (esLaFitxaDeLaIAIA(perfil) ? RUTA_FITXA_IAIA : null);
 
 /** Qui signa una publicació del Mur o del Mercat: { tipus, id } o null. */
 export function autorDe(item) {
@@ -236,6 +261,19 @@ function esAutorDelProjecte(autor) {
 }
 
 /**
+ * Gauntlet 261016_1530 (Bloc 3.6; relleu F57, F58 i F61) · Cert si
+ * `identitat` ({ tipus, id }: el subjecte d'un fil o l'altra part d'un
+ * directe) és l'entitat pilot, amb el tipus declarat i per identificador:
+ * els de la llavor o el remot que ja ha registrat el backend. Mai pel nom.
+ * El Xat hi reconeix la comunitat de Sóc de Poble i la seua capçalera.
+ */
+export const esEntitatDelProjecte = (identitat) => TIPUS_DECLARATS_D_ENTITAT.has(identitat?.tipus)
+  && esAutorDelProjecte(identitat);
+
+/** Cert si el backend remot ja ha donat l'id de l'entitat pilot (registraEntitatDelProjecte). */
+export const coneixIdRemotDelProjecte = () => IDS_REMOTS_DEL_PROJECTE.size > 0;
+
+/**
  * Ruta de la pàgina de qui signa ({ tipus, id }): RUTA_PERFIL_PROJECTE per a
  * l'entitat pilot (pels ids de la llavor o pel remot que ha tornat el
  * backend), rutaDePerfil per a la resta, o null si no se sap qui és.
@@ -364,5 +402,16 @@ export const resolveItemPath = (item) => {
 
   const sectionId = item?.sectionId;
   if (!sectionId || item?.id == null) return null;
+  /* Onada 0.3 (Gauntlet 261016, M07; pla 261016_1530: «Qualsevol referència o
+     enllaç a un poble ha de redirigir a la seua pàgina canònica
+     /pobles/[slug]») · La foto d'un poble porta a l'article del poble, mai a
+     /multimedia/town-<slug>: pel seu `article` (mediaContent.js ·
+     fotosDelsPobles) o, en una fila vella sense article, pel prefix de l'id. */
+  if (sectionId === 'multimedia') {
+    const article = item.article;
+    if (article?.sectionId === 'pobles' && article.id != null && String(article.id) !== '') return getSectionItemPath('pobles', article.id);
+    const id = String(item.id);
+    if (id.startsWith('town-') && id.length > 'town-'.length) return getSectionItemPath('pobles', id.slice('town-'.length));
+  }
   return getSectionItemPath(sectionId, item.id);
 };

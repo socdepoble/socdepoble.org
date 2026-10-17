@@ -20,12 +20,21 @@
  *
  * Un canal («Avisos») porta el megàfon i un grup sense imatge, la icona de
  * grup, com a la llista (AvatarFil).
+ *
+ * Gauntlet 261016_1530 (Bloc 3.6.2; relleu F60, F61 i F63) · Ordre del
+ * Mestre: la capçalera dels quatre actors porta a la seua pàgina canònica
+ * (actorsDelXat.js · rutaCanonicaDelXat): Javi Llinares a /javillinares (també
+ * el seu xat de només lectura, que abans no enllaçava), Sóc de Poble a
+ * /socdepoble (un fil de la seua comunitat o un directe amb l'entitat) i la
+ * IAIA a /iaia (també la seua conversa de mostra). «Gent de la Torre» ja hi
+ * portava pel subjecte. La resta de converses, com sempre.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { rutaDePerfil } from '../../../config/navigation.js';
 import { AvatarFil } from './FilaConversa.jsx';
+import { rutaCanonicaDelXat } from '../actorsDelXat.js';
 
 /* «{n} participants» (o «1 participant»); res si el backend no ho diu. */
 function participantsDe(n, t) {
@@ -94,10 +103,11 @@ export default function CapcaleraConversa({ fil, onTorna, onSeleccionar, selecci
   /* L'altra part, amb id i tipus: només llavors hi ha perfil on anar. Un fil
      de pàgina no és de ningú: el seu enllaç va a la pàgina. */
   const contrapart = !esGrup && !subjecte && Array.isArray(fil?.altres) && fil.altres.length === 1 ? fil.altres[0] : null;
-  const rutaPerfil = contrapart ? rutaDePerfil(contrapart.tipus, contrapart.id) : null;
+  const rutaCanonica = rutaCanonicaDelXat(fil);
+  const rutaPerfil = subjecte ? null : rutaCanonica || (contrapart ? rutaDePerfil(contrapart.tipus, contrapart.id) : null);
 
   const titolSubjecte = subjecte ? subjecte.titol || nom : '';
-  const rutaSubjecte = subjecte && esRutaInterna(subjecte.ruta) ? subjecte.ruta : null;
+  const rutaSubjecte = subjecte ? rutaCanonica || (esRutaInterna(subjecte.ruta) ? subjecte.ruta : null) : null;
   const sobre = subjecte ? (
     <span className="sdp-xat-capcalera__sobre">{t('section.xat.pagina.sobre', 'Sobre: {titol}').replace('{titol}', titolSubjecte)}</span>
   ) : null;

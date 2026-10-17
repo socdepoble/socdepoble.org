@@ -6,8 +6,13 @@
 // ---------------------------------------------------------------
 // 1. FONT ÚNICA DE VERITAT (l'única cosa que s'edita quan canvia l'avatar)
 // ---------------------------------------------------------------
+/* Gauntlet 261016 (Bloc -1) · La ruta canònica de la foto de la persona
+   pilot, la mateixa de PERSONA_PILOT.avatar (src/data/identitatsSeed.js, que
+   la llig del catàleg d'agents). Este fitxer es servix tal qual des de
+   public/ i no pot importar la llavor: la prova identitatDual.guarda.test.js
+   fixa que les dues rutes són iguals. */
 export const SP_IDENTITY = {
-  avatarUrl: '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg',
+  avatarUrl: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
   avatarAlt: 'Perfil Javi',
   displayName: 'Javi Llinares',
   role: 'La Torre de les Maçanes',

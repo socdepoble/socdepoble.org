@@ -1,8 +1,14 @@
-import { expect, test } from 'vitest';
-import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, actorAmbPobleDeLEntitat, autoriaDeLActor, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
+import { expect, test, vi } from 'vitest';
+import {
+  AUTORIA_BENVINGUDA, AUTORIA_PILOT, ID_COPIA_PROVA, NOM_SENSE_NOM, RUTA_PERSONA_PILOT,
+  actorAmbPobleDeLEntitat, autoriaDeLActor, autoriaDeNota, modeDeDadesResolt, rutaDAutoriaDeNota, signaturaDeNota
+} from './autoriaNota.js';
 import { DEFAULT_AUTHOR, FORASTER, MARQUES_SVG_ANTIGUES } from '../../components/universal/UniversalUtils.js';
-import { RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { RUTA_PERFIL_PROJECTE, RUTES_CANONIQUES, rutaDAutoria } from '../../config/navigation.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
+
+/* L'actor que IdentitatContext posa sense sessió: la persona convidada, amb id. */
+const CONVIDAT = Object.freeze({ tipus: 'persona', id: '00000000-0000-4000-8000-0000000c0f1d', nom: null, avatar: null, rol: 'convidat', poble: null });
 
 /* T50 (D2) · Una sola autoria per a la barra taronja de l'editor de notes i
    per a la targeta viva de la llista. */
@@ -64,10 +70,81 @@ test('si no, la sessió: nom, foto i poble (buit si no en té, mai el del Forast
 });
 
 /* T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · La
-   còpia de la benvinguda que prova el Foraster ja no la signa el Foraster. */
-test('sense sessió, una nota normal: el Foraster sencer, nom i poble junts', () => {
-  expect(autoriaDeNota({ notaId: 'p' })).toEqual({ nom: FORASTER.name, avatar: null, poble: FORASTER.location });
-  expect(autoriaDeNota()).toEqual({ nom: FORASTER.name, avatar: null, poble: FORASTER.location });
+   còpia de la benvinguda que prova el Foraster ja no la signa el Foraster.
+   Gauntlet 261016_1530 (Bloc 3.9; ordre del Mestre: «Prohibit etiquetar
+   d'ofici com a "Foraster"») · Deroga T22 i esta prova, que el fixava: sense
+   sessió una nota normal ja no signa mai el Foraster. En el mode del padró
+   pilot (seed o local, explícit) signa la persona pilot; fora d'ell (remot, o
+   sense saber el mode), «Veí» sense poble, sense foto i sense pàgina. */
+test('Bloc 3.9 · sense sessió, una nota normal mai signa el Foraster: «Veí» fora del padró pilot', () => {
+  for (const params of [undefined, { notaId: 'p' }, { notaId: 'p', dataMode: 'remote' }, { notaId: 'p', dataMode: 'seedy' }]) {
+    expect(autoriaDeNota(params)).toEqual({ nom: NOM_SENSE_NOM, avatar: null, poble: '' });
+    expect(rutaDAutoriaDeNota(params)).toBeNull();
+  }
+  expect(NOM_SENSE_NOM).toBe('Veí');
+  expect(JSON.stringify(autoriaDeNota({ notaId: 'p' }))).not.toContain(FORASTER.name);
+  expect(JSON.stringify(autoriaDeNota({ notaId: 'p' }))).not.toContain(FORASTER.location);
+});
+
+test('Bloc 3.9 · sense sessió en seed o local (mode explícit): signa la persona pilot, amb la seua foto, el seu poble i la seua fitxa', () => {
+  expect(AUTORIA_PILOT).toEqual({ nom: PERSONA_PILOT.nom, avatar: PERSONA_PILOT.avatar, poble: POBLE_FUNDACIONAL });
+  expect(AUTORIA_PILOT).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar, poble: 'La Torre de les Maçanes' });
+  expect(PERSONA_PILOT.avatar).toMatch(/^\/assets\//);
+  expect(Object.isFrozen(AUTORIA_PILOT)).toBe(true);
+  /* Correcció de la revisió (261016; Bloc 3.5.1) · La seua adreça canònica
+     neta, la del xat i la del SEO (abans, /gent/<slug>, que és un àlies). */
+  expect(RUTA_PERSONA_PILOT).toBe(RUTES_CANONIQUES[PERSONA_PILOT.slug]);
+  for (const dataMode of ['seed', 'local']) {
+    // També amb l'actor convidat que IdentitatContext posa sense sessió.
+    for (const actor of [undefined, CONVIDAT]) {
+      const params = { notaId: 'p', actor, actorId: actor?.id, dataMode };
+      expect(autoriaDeNota(params), dataMode).toBe(AUTORIA_PILOT);
+      expect(rutaDAutoriaDeNota(params), dataMode).toBe(RUTA_PERSONA_PILOT);
+      expect(signaturaDeNota(params), dataMode).toEqual({ ...AUTORIA_PILOT, ruta: RUTA_PERSONA_PILOT });
+    }
+  }
+  // La benvinguda, l'entitat pilot i una entitat activa no canvien, també en seed.
+  expect(autoriaDeNota({ notaId: 'n1', dataMode: 'seed' })).toBe(AUTORIA_BENVINGUDA);
+  expect(autoriaDeNota({ notaId: ID_COPIA_PROVA, dataMode: 'seed' })).toBe(AUTORIA_BENVINGUDA);
+  expect(autoriaDeNota({ notaId: 'p', actor: { tipus: 'entitat', id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' }, actorId: ENTITAT_PILOT_ID, dataMode: 'seed' }))
+    .toBe(AUTORIA_BENVINGUDA);
+  expect(autoriaDeNota({ notaId: 'p', actor: { tipus: 'entitat', id: 'O', nom: 'Forn' }, actorId: 'O', dataMode: 'seed' }))
+    .toEqual({ nom: 'Forn', avatar: null, poble: '' });
+});
+
+/* L'auditoria adversarial del Bloc 3.9 · Una sessió que no és Javi no hereta
+   mai el seu nom, ni en seed: la via pilot amb sessió és només per àlies
+   declarat (mai pel nom). */
+test('Bloc 3.9 · amb sessió, la persona pilot només per àlies declarat; una altra sessió signa amb el seu nom, també en seed', () => {
+  for (const alies of PERSONA_PILOT.alies) {
+    const sessio = { id: alies, user_metadata: { name: 'Qualsevol nom' } };
+    expect(autoriaDeNota({ notaId: 'p', currentUser: sessio }), alies).toBe(AUTORIA_PILOT);
+    expect(rutaDAutoriaDeNota({ notaId: 'p', currentUser: sessio }), alies).toBe(RUTA_PERSONA_PILOT);
+    // L'actor persona de la sessió pilot, també.
+    expect(autoriaDeNota({ notaId: 'p', actor: { tipus: 'persona', id: alies, nom: 'Javi' }, currentUser: { id: 'uuid-x' } })).toBe(AUTORIA_PILOT);
+  }
+  const homonim = { id: 'U2', user_metadata: { name: PERSONA_PILOT.nom } };
+  expect(autoriaDeNota({ notaId: 'p', currentUser: homonim, dataMode: 'seed' })).toEqual({ nom: PERSONA_PILOT.nom, avatar: null, poble: '' });
+  expect(rutaDAutoriaDeNota({ notaId: 'p', currentUser: homonim, dataMode: 'seed' })).toBe('/gent/U2');
+  expect(autoriaDeNota({ notaId: 'p', actorId: 'U', currentUser: PEPA, dataMode: 'seed' }))
+    .toEqual({ nom: 'Pepa', avatar: 'https://exemple.org/pepa.png', poble: 'Benifallim' });
+  // Un convidat amb un id d'àlies però sense sessió, en remot: no és Javi.
+  expect(autoriaDeNota({ notaId: 'p', actor: { tipus: 'persona', id: 'javi', rol: 'convidat' }, dataMode: 'remote' }))
+    .toEqual({ nom: NOM_SENSE_NOM, avatar: null, poble: '' });
+});
+
+/* Bloc 3.9 · Amb sessió, la persona de l'actor d'IdentitatContext (el nom, la
+   foto i el poble que tria personaDeSessio amb la fila de profiles) mana
+   sobre les metadades; mai un correu ni el nom de reserva del compte. */
+test('Bloc 3.9 · amb sessió, l’actor persona (fila de profiles) mana; sense nom, «Veí» i cap poble', () => {
+  const actor = { tipus: 'persona', id: 'U', nom: 'Pepa Sanchis', avatar: 'sdp-media://perfils/pepa.webp', poble: 'Relleu', rol: 'persona' };
+  expect(autoriaDeNota({ notaId: 'p', actor, actorId: 'U', currentUser: PEPA }))
+    .toEqual({ nom: 'Pepa Sanchis', avatar: 'sdp-media://perfils/pepa.webp', poble: 'Relleu' });
+  const senseNom = { tipus: 'persona', id: 'U', nom: 'pepa@exemple.org', avatar: null, poble: null, rol: 'persona' };
+  expect(autoriaDeNota({ notaId: 'p', actor: senseNom, actorId: 'U', currentUser: { id: 'U', email: 'pepa@exemple.org' } }))
+    .toEqual({ nom: NOM_SENSE_NOM, avatar: null, poble: '' });
+  const reserva = { ...senseNom, nom: 'El meu compte' };
+  expect(autoriaDeNota({ notaId: 'p', actor: reserva, actorId: 'U', currentUser: { id: 'U' } }).nom).toBe(NOM_SENSE_NOM);
 });
 
 test('T65 · l’autoria de la benvinguda és Sóc de Poble amb el seu avatar oficial, la de les pàgines de sistema', () => {
@@ -93,12 +170,15 @@ test('T65 · la còpia de prova de la benvinguda la signa Sóc de Poble, la llij
   expect(autoriaDeNota({ notaId: ID_COPIA_PROVA, actorId: 'A1', agents, currentUser: PEPA })).toBe(AUTORIA_BENVINGUDA);
 });
 
-test('T65 · una nota normal continua signant qui l’escriu: el Foraster sense sessió, la persona amb sessió', () => {
-  expect(autoriaDeNota({ notaId: 'nota-del-foraster' }).nom).toBe(FORASTER.name);
+/* Bloc 3.9 (261016) · Sense sessió ja no és el Foraster: «Veí» fora del
+   padró pilot, la persona pilot en seed o local. */
+test('T65 · una nota normal continua signant qui l’escriu: «Veí» sense sessió (la persona pilot en seed), la persona amb sessió', () => {
+  expect(autoriaDeNota({ notaId: 'nota-sense-sessio' }).nom).toBe(NOM_SENSE_NOM);
+  expect(autoriaDeNota({ notaId: 'nota-sense-sessio', dataMode: 'seed' }).nom).toBe(PERSONA_PILOT.nom);
   expect(autoriaDeNota({ notaId: 'nota-de-pepa', actorId: 'U', currentUser: PEPA }))
     .toEqual({ nom: 'Pepa', avatar: 'https://exemple.org/pepa.png', poble: 'Benifallim' });
   // Un id que només s'hi assembla no és la benvinguda.
-  expect(autoriaDeNota({ notaId: 'prova-local-2' }).nom).toBe(FORASTER.name);
+  expect(autoriaDeNota({ notaId: 'prova-local-2' }).nom).toBe(NOM_SENSE_NOM);
   expect(autoriaDeNota({ notaId: 'n10', currentUser: PEPA }).nom).toBe('Pepa');
 });
 
@@ -124,12 +204,18 @@ test('261007 · una entitat activa porta a la seua fitxa (l’entitat pilot, al 
   expect(rutaDAutoriaDeNota({ notaId: 'p', actor: { tipus: 'entitat', id: 'O', nom: '' }, actorId: 'O', currentUser: PEPA })).toBe('/gent/U');
 });
 
-test('261007 · un agent IA actiu porta a la seua fitxa; la persona amb sessió, a la seua; el Foraster, enlloc', () => {
+/* Bloc 3.9 (261016) · Sense sessió en seed o local, la fitxa de la persona
+   pilot; fora del padró pilot, enlloc (com abans el Foraster). */
+test('261007 · un agent IA actiu porta a la seua fitxa; la persona amb sessió, a la seua; sense sessió, la persona pilot en seed i enlloc en remot', () => {
   const agents = [{ id: 'A1', name: 'IAIA', image_url: '/assets/iaia.webp', location: 'Benilloba' }];
   expect(rutaDAutoriaDeNota({ notaId: 'p', actorId: 'A1', agents, currentUser: PEPA })).toBe('/perfil/A1');
   expect(rutaDAutoriaDeNota({ notaId: 'p', actorId: 'U', currentUser: PEPA })).toBe('/gent/U');
+  expect(rutaDAutoriaDeNota({ notaId: 'p', dataMode: 'seed' })).toBe(RUTA_PERSONA_PILOT);
+  expect(RUTA_PERSONA_PILOT).toBe(`/${PERSONA_PILOT.slug}`);
+  expect(RUTA_PERSONA_PILOT).toBe('/javillinares');
   // Un nom sense identitat coneguda no s'endevina.
   expect(rutaDAutoriaDeNota({ notaId: 'p' })).toBeNull();
+  expect(rutaDAutoriaDeNota({ notaId: 'p', dataMode: 'remote' })).toBeNull();
   expect(rutaDAutoriaDeNota()).toBeNull();
   expect(rutaDAutoriaDeNota({ notaId: 'p', currentUser: { user_metadata: { name: 'Sense id' } } })).toBeNull();
 });
@@ -212,4 +298,37 @@ test('[DEFECTE] prompt 261014_0400 · per al pilot, el selector i el payload del
   }
   expect(autoriaDeLActor(senseLogoNiPoble, PEPA)).toEqual({ nom: 'Sóc de Poble', avatar: null, poble: '' });
   expect(autoriaDeLActor(senseNom, PEPA)).toEqual({ nom: ENTITAT_PILOT_SLUG, avatar: null, poble: 'Relleu' });
+});
+
+/* Correcció de la revisió adversarial (261016) · La via pilot decidix amb el
+   mode RESOLT (modeDeDadesResolt: normalizeBackendConfig, el criteri de
+   reglaDEntrada i d'App.jsx), no amb el cru del paquet. */
+test('modeDeDadesResolt · sense config, cap mode; el que demana el paquet si no s’ha triat res; una config invàlida, remot', () => {
+  expect(modeDeDadesResolt(undefined)).toBeUndefined();
+  expect(modeDeDadesResolt(null)).toBeUndefined();
+  expect(modeDeDadesResolt({ tenantId: '00000000-0000-4000-8000-0000000000d1', dataMode: 'seed' })).toBe('seed');
+  expect(modeDeDadesResolt({ tenantId: '00000000-0000-4000-8000-0000000000d2', dataMode: 'local' })).toBe('local');
+  expect(modeDeDadesResolt({ tenantId: '00000000-0000-4000-8000-0000000000d3', dataMode: 'remote' })).toBe('remote');
+  // Un tenant que no és un UUID: normalizeBackendConfig el rebutja, i mai la via pilot.
+  expect(modeDeDadesResolt({ tenantId: 'no-es-un-uuid', dataMode: 'seed' })).toBe('remote');
+});
+
+test('modeDeDadesResolt · un paquet seed que ja ha triat l’entrada real: en la càrrega següent és remot i, sense sessió, signa «Veí»', async () => {
+  const config = { tenantId: '00000000-0000-4000-8000-0000000000e1', dataMode: 'seed' };
+  const { enterRemoteMode } = await import('../../config/dataMode.js');
+  const { normalizeBackendConfig } = await import('../../config/backendConfig.js');
+  try {
+    // L'elecció es desa, però només entra en vigor en la pròxima càrrega del document.
+    enterRemoteMode(normalizeBackendConfig(config), () => {});
+    expect(modeDeDadesResolt(config)).toBe('seed');
+    vi.resetModules();
+    const recarregat = await import('./autoriaNota.js');
+    const mode = recarregat.modeDeDadesResolt(config);
+    expect(mode).toBe('remote');
+    expect(recarregat.signaturaDeNota({ notaId: 'p', dataMode: mode })).toEqual({ nom: NOM_SENSE_NOM, avatar: null, poble: '', ruta: null });
+    // El mode cru del paquet és el que obria la via pilot (el defecte que es corregix).
+    expect(recarregat.signaturaDeNota({ notaId: 'p', dataMode: config.dataMode }).nom).toBe(PERSONA_PILOT.nom);
+  } finally {
+    window.localStorage.clear();
+  }
 });

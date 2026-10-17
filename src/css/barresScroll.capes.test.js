@@ -6,11 +6,17 @@
    comproven les regles escrites, sense comentaris.
    El contracte: useBarresAmbScroll posa data-sdp-barres a l'arrel en
    compacte (dalt | totes). Sense l'atribut, res no canvia cap píxel; en
-   escriptori, mai (Llei del Píxel). */
+   escriptori, mai (Llei del Píxel).
+   Bloc 3.10 (pla 261016_1530) · També fora del compacte, en una tauleta
+   tàctil (data-sdp-tactil) o en una caixa baixa (data-sdp-curta), però només
+   «dalt»: la blava, la taronja i les peces enganxades passen a l'abast
+   AMPLI; la barra inferior, les pàgines «contingut» i «Tornar a dalt»
+   continuen sent del compacte. Les proves de selectors literals d'abans
+   nomenaven .sdp-root.is-compact i ara nomenen l'abast nou, a posta. */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { CLASSES_PEU_ANCORAT } from '../hooks/useBarresAmbScroll.js';
+import { ATRIBUT_CURTA, ATRIBUT_TACTIL, CLASSES_PEU_ANCORAT } from '../hooks/useBarresAmbScroll.js';
 
 const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -70,17 +76,37 @@ const valorDe = (llista, selector, propietat) => cosDe(llista, selector)
 const LAYOUT = regles(llig('src/css/layout.css'));
 const COMPONENTS = regles(llig('src/css/components.css'));
 const MODULES = regles(llig('src/css/modules.css'));
-const ABAST = '.sdp-root.is-compact[data-sdp-barres';
+/* El compacte, la tauleta tàctil o la caixa baixa: la mateixa especificitat
+   que .sdp-root.is-compact (un :is() val el seu argument més específic). */
+const AMPLI = `.sdp-root:is(.is-compact, [${ATRIBUT_TACTIL}], [${ATRIBUT_CURTA}])`;
+const ABAST_AMPLI = `${AMPLI}[data-sdp-barres`;
+const ABAST_COMPACTE = '.sdp-root.is-compact[data-sdp-barres';
 const AMB_ATRIBUT = LAYOUT.filter((r) => r.selectors.some((s) => s.includes('data-sdp-barres')));
 const RESERVA = 'calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px))';
+const senseWhere = (s) => s.replace(/^:where\(([^)]*)\)/, '$1');
+/* Les peces de la barra inferior i de la seua reserva: només del compacte. */
+const DEL_COMPACTE = /nav\.mobile-nav|--contained|sdp-tornar-dalt|app-main__content/;
 
 describe('barres que acompanyen el scroll · layout.css', () => {
-  test('els estats amagats només penjen de l’arrel compacta amb l’atribut i viuen a @layer components, sense @media', () => {
+  test('els estats amagats només penjen de l’arrel marcada amb l’atribut i viuen a @layer components, sense @media', () => {
     expect(AMB_ATRIBUT.length).toBeGreaterThanOrEqual(5);
     for (const r of AMB_ATRIBUT) {
-      for (const s of r.selectors) expect(s.replace(/^:where\(([^)]*)\)/, '$1').startsWith(ABAST), s).toBe(true);
+      for (const s of r.selectors) {
+        // La barra inferior i la seua reserva, compacte; la resta, l'abast ampli.
+        expect(senseWhere(s).startsWith(DEL_COMPACTE.test(s) ? ABAST_COMPACTE : ABAST_AMPLI), s).toBe(true);
+      }
       expect(r.context, r.selectors.join(', ')).toEqual(['@layer components']);
     }
+  });
+
+  test('Bloc 3.10 · fora del compacte només es mouen la blava, la taronja i les peces enganxades: cap barra inferior, reserva ni botó', () => {
+    const marcades = LAYOUT.filter((r) => r.selectors.some((s) => s.includes(ATRIBUT_TACTIL) || s.includes(ATRIBUT_CURTA)));
+    const selectors = marcades.flatMap((r) => r.selectors);
+    expect(selectors.length).toBe(8);
+    expect(selectors.every((s) => s.startsWith(AMPLI)), selectors.join('\n')).toBe(true);
+    expect(selectors.filter((s) => DEL_COMPACTE.test(s))).toEqual([]);
+    expect(selectors.filter((s) => s.includes('bar-black'))).toEqual([]);
+    for (const r of marcades) expect(r.context).toEqual(['@layer components']);
   });
 
   test('amagar no és llevar: cap display, visibility, opacity ni aria- als estats amagats', () => {
@@ -89,10 +115,12 @@ describe('barres que acompanyen el scroll · layout.css', () => {
   });
 
   test('la blava i la taronja: el `top` d’enganxament passa a negatiu (la pila puja sencera)', () => {
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > header.bar-blue', 'top'))
+    expect(valorDe(LAYOUT, `${AMPLI}[data-sdp-barres] .sdp-universal-page-container > header.bar-blue`, 'top'))
       .toBe('calc(var(--sdp-alt-accio) * -2)');
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > section.bar-orange', 'top'))
+    expect(valorDe(LAYOUT, `${AMPLI}[data-sdp-barres] .sdp-universal-page-container > section.bar-orange`, 'top'))
       .toBe('calc(var(--sdp-alt-accio) * -1)');
+    // L'abast vell ja no hi és: cap regla duplicada que es quedara en compacte.
+    expect(valorDe(LAYOUT, '.sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > header.bar-blue', 'top')).toBeUndefined();
     /* Cap transform a les barres de la pàgina: una barra en el flux (la
        taronja davall d'una portada) no s'ha de moure. */
     const transformades = LAYOUT.filter((r) => r.selectors.some((s) => /bar-(blue|orange)/.test(s)))
@@ -101,8 +129,8 @@ describe('barres que acompanyen el scroll · layout.css', () => {
   });
 
   test('les peces enganxades davall de les barres pugen al cim, sense forat', () => {
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact[data-sdp-barres] .sdp-editor-eines', 'top')).toBe('0');
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact[data-sdp-barres] .sdp-cal-setmana__capcal', 'inset-block-start')).toBe('0');
+    expect(valorDe(LAYOUT, `${AMPLI}[data-sdp-barres] .sdp-editor-eines`, 'top')).toBe('0');
+    expect(valorDe(LAYOUT, `${AMPLI}[data-sdp-barres] .sdp-cal-setmana__capcal`, 'inset-block-start')).toBe('0');
   });
 
   test('la barra negra no s’amaga mai: cap regla de l’atribut la nomena', () => {
@@ -120,13 +148,18 @@ describe('barres que acompanyen el scroll · layout.css', () => {
     expect(AMB_ATRIBUT.filter((r) => r.selectors.some((s) => s.includes('.app-main__content') && !s.includes('--contained')))).toEqual([]);
   });
 
-  test('les transicions: la del calaix (durada i corba de token), mai `all`, i declarades en repòs només en compacte', () => {
+  test('les transicions: la del calaix (durada i corba de token), mai `all`, i declarades en repòs només a l’arrel marcada', () => {
     const CALAIX = 'var(--sdp-durada-panell) var(--sdp-corba-calaix)';
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact .sdp-universal-page-container > header.bar-blue', 'transition')).toBe(`top ${CALAIX}`);
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact .sdp-universal-page-container > section.bar-orange', 'transition')).toBe(`top ${CALAIX}`);
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact .sdp-editor-eines', 'transition')).toBe(`top ${CALAIX}`);
-    expect(valorDe(LAYOUT, '.sdp-root.is-compact .sdp-cal-setmana__capcal', 'transition')).toBe(`inset-block-start ${CALAIX}`);
+    expect(valorDe(LAYOUT, `${AMPLI} .sdp-universal-page-container > header.bar-blue`, 'transition')).toBe(`top ${CALAIX}`);
+    expect(valorDe(LAYOUT, `${AMPLI} .sdp-universal-page-container > section.bar-orange`, 'transition')).toBe(`top ${CALAIX}`);
+    expect(valorDe(LAYOUT, `${AMPLI} .sdp-editor-eines`, 'transition')).toBe(`top ${CALAIX}`);
+    expect(valorDe(LAYOUT, `${AMPLI} .sdp-cal-setmana__capcal`, 'transition')).toBe(`inset-block-start ${CALAIX}`);
+    // La barra inferior només existix en compacte.
     expect(valorDe(LAYOUT, '.sdp-root.is-compact > nav.mobile-nav', 'transition')).toBe(`transform ${CALAIX}`);
+    // Cap transició de les barres sense marca: l'escriptori amb ratolí i alçada de sobra no en declara cap.
+    const senseMarca = LAYOUT.filter((r) => r.selectors.some((s) => /^\.sdp-root \.sdp-(universal-page-container|editor-eines|cal-setmana__capcal)/.test(s)))
+      .filter((r) => declaracions(r.cos).some(([p]) => p === 'transition'));
+    expect(senseMarca).toEqual([]);
     const totes = LAYOUT.flatMap((r) => declaracions(r.cos).filter(([p]) => p === 'transition').map(([, v]) => v));
     expect(totes.filter((v) => v.split(',').some((t) => t.trim().startsWith('all')))).toEqual([]);
   });
@@ -219,11 +252,18 @@ describe('peus ancorats que reserven la barra inferior (modules.css)', () => {
 });
 
 describe('la closca de la Gestoria (modules.css)', () => {
-  test('les barres continuen static en escriptori, i en compacte s’enganxen com les de tota pàgina', () => {
+  /* Bloc 3.10 · Revisió adversarial · L'excepció static era de tot el que no
+     és compacte, i deixava l'ERP sense autoamagat en una tauleta tàctil o en
+     una caixa baixa. Ara n'exclou les dues marques; la prova que fixava
+     l'abast vell s'ha canviat a posta. */
+  test('les barres continuen static en escriptori sense marques; en compacte, tauleta tàctil o caixa baixa s’enganxen com les de tota pàgina', () => {
+    const ABAST = `:where(.sdp-root:not(.is-compact):not([${ATRIBUT_TACTIL}]):not([${ATRIBUT_CURTA}]) > .app-main)`;
     const SELECTORS = [
-      ':where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue',
-      ':where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange'
+      `${ABAST} .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue`,
+      `${ABAST} .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange`
     ];
+    // L'abast vell (només «no compacte») ja no hi és.
+    expect(MODULES.some((r) => r.selectors.some((s) => s.startsWith(':where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca')))).toBe(false);
     const regla = MODULES.find((r) => r.selectors.includes(SELECTORS[0]));
     expect(regla?.selectors).toEqual(SELECTORS);
     expect(regla.cos).toBe('position: static;');

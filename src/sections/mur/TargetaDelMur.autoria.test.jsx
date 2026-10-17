@@ -34,6 +34,8 @@ import { MARKET_ITEMS } from '../mercat/marketContent.js';
 import { EVENTS } from './eventsContent.js';
 import { RUTA_PERFIL_PROJECTE, RUTA_PROJECTE } from '../../config/navigation.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 
 const MAC = MARKET_ITEMS.find((item) => item.id === 'mac-mini-m4');
 const SAMARRETA = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
@@ -79,9 +81,20 @@ describe('T6 · la boina del Mur porta a la pàgina de qui signa', () => {
     expect(boina({ id: 'm', type: 'market', title: 'Cistella', seller: 'Pepa' }).href).toBeNull();
   });
 
+  /* Gauntlet 261016 · diürn 1530 (Bloc -1; ordre del Mestre: la persona pilot
+     és «Javi Llinares» i el seu avatar és sempre la seua foto) · Derogat el
+     «Javi» d'esta prova: l'acte de la persona pilot es pinta amb el seu nom
+     sencer i la seua foto (signaturaDeQuiSigna, passats ja resolts a
+     EventCard), també quan l'acte diu «Javi» i no porta cap avatar. Abans hi
+     queia el quadrat verd de DEFAULT_AUTHOR. */
   test('un acte: la persona que el signa, al seu perfil; el sistema, al de Sóc de Poble', () => {
-    expect(boina({ id: 'e1', type: 'event', title: 'Ball', date: '2026-11-14', author_name: 'Javi', owner_user_id: 'javillinares' }))
-      .toMatchObject({ nom: 'Javi', href: '/gent/javillinares' });
+    const acteDeLaPilot = { id: 'e1', type: 'event', title: 'Ball', date: '2026-11-14', author_name: 'Javi', owner_user_id: 'javillinares' };
+    expect(boina(acteDeLaPilot)).toMatchObject({ nom: PERSONA_PILOT.nom, href: '/gent/javillinares' });
+    expect(PERSONA_PILOT.nom).toBe('Javi Llinares');
+    cleanup();
+    const avatar = render(<TargetaDelMur item={acteDeLaPilot} />).container.querySelector('header.sp-card-header img.sp-card-avatar');
+    expect(avatar?.getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+    expect(avatar?.getAttribute('src')).not.toBe(DEFAULT_AUTHOR.avatarUrl);
     cleanup();
     expect(boina({ id: 'e2', type: 'event', title: 'Festa', date: '2026-11-14', isSystem: true }))
       .toMatchObject({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });

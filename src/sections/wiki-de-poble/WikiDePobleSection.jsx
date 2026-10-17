@@ -12,11 +12,13 @@ import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
+import { esperaElRol, maquinariaALaVista } from './maquinaria.js';
 
 // La portada és una peça estructural: si la clau desapareix, la pàgina es
 // pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
@@ -396,10 +398,41 @@ export default function WikiDePobleSection() {
   /* 261001 · La llista i el detall lligen el mateix copy (copyDePortada). */
   const portada = copyDePortada(pageCopy, COVER_PAGE_KEYS.wiki);
   const consola = copyDePortada(pageCopy, COVER_PAGE_KEYS.consola);
+  /* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+     maquinària interna de desenvolupament de l'aside en pantalles d'usuari»)
+     · La carpeta «Maquinària de la IAIA», amb la Consola incrustada i les
+     eines locals, només en desenvolupament o per a qui és superadmin
+     (maquinariaALaVista), com la ruta /consola en producció. Abans la Wiki
+     pública la mostrava a qualsevol visitant. Sense la carpeta, una URL vella
+     amb ?item=consola_termodinamica cau com qualsevol ítem desconegut: la
+     portada. Sense proveïdor de sessió, ningú no és superadmin.
+     Revisió adversarial del carril D (261016, problema 2) · El rol arriba
+     tard i torna a comprovar-se a cada renovació del JWT: durant la renovació
+     es conserva l'últim rol resolt del mateix compte (useSuperadminEstable),
+     i la Consola no desapareix de davant d'un superadmin que hi treballa. */
+  const { esSuperadmin, rolPendent } = useSuperadminEstable();
+  const ambMaquinaria = maquinariaALaVista({ DEV: import.meta.env.DEV, esSuperadmin });
+
+  // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
+  const queryParams = new URLSearchParams(location.search);
+  const activeItemId = queryParams.get('item');
+  /* Revisió adversarial del carril D (261016, problema 2) · Mentre el rol és
+     pendent (la sessió es comprova i no hi ha cap rol resolt del mateix compte
+     per heretar), una URL que demana la Maquinària (la carpeta o la Consola;
+     les eines locals només existixen en desenvolupament, on la carpeta sempre
+     és a la vista) espera en 'loading'. Així el workspace no la dona per
+     absent ni reescriu la URL abans d'hora, i un superadmin que l'obri en fred
+     arriba a la Consola quan el rol es resol. Qualsevol altra URL es pinta de
+     seguida, com sempre. */
+  const esperaLaSessio = esperaElRol({
+    aLaVista: ambMaquinaria,
+    rolPendent,
+    demana: queryParams.get('categoria') === 'maquinaria_cat' || activeItemId === 'consola_termodinamica'
+  });
 
   const model = useMemo(() => {
     return {
-      status: 'ready',
+      status: esperaLaSessio ? 'loading' : 'ready',
       itemsComplete: true,
       workspaceKey: 'wikidepoble',
       /* Ordre del Mestre (pla 261007_0012, §0.7) · Cada entrada de l'arbre, el
@@ -408,7 +441,9 @@ export default function WikiDePobleSection() {
          emoji propi. Una carpeta nova del manifest sense emoji, Folder. */
       categories: [
         { id: '__intro_cat', label: 'Wiki de Poble', icon: glifDeCarpetaWiki('__intro_cat') },
-        { id: 'maquinaria_cat', label: 'Maquinària de la IAIA', icon: glifDeCarpetaWiki('maquinaria_cat') },
+        ...(ambMaquinaria ? [
+          { id: 'maquinaria_cat', label: 'Maquinària de la IAIA', icon: glifDeCarpetaWiki('maquinaria_cat') },
+        ] : []),
         ...MODULS_LOCALS.categories,
         ...wikiManifest.categories.map(c => ({
           id: c.id,
@@ -432,22 +467,24 @@ export default function WikiDePobleSection() {
           categoryIds: ['__intro_cat'],
           attributes: { type: 'Portada', date: portada?.date }
         },
-        {
-          id: 'consola_termodinamica',
-          /* 261006 · La Consola ja no té carpeta pròpia (consola_termodinamica_cat,
-             FileText). Sense glif propi, la seua fitxa heretaria la carpeta de
-             maquinaria_cat (regla del glif, 261004). Ordre del Mestre (261007):
-             el glif propi és el seu emoji, ⚙️, el de la Consola al catàleg. */
-          icon: ICONES_ITEMS_WIKI.consola_termodinamica,
-          title: consola?.title || 'Consola Termodinàmica',
-          subtitle: consola?.subtitle || 'Manteniment de la IAIA',
-          categoryId: 'maquinaria_cat',
-          categoryIds: ['maquinaria_cat'],
-          tags: ['consola', 'ia'],
-          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: consola?.date },
-          content: ''
-        },
-        ...MODULS_LOCALS.items,
+        ...(ambMaquinaria ? [
+          {
+            id: 'consola_termodinamica',
+            /* 261006 · La Consola ja no té carpeta pròpia (consola_termodinamica_cat,
+               FileText). Sense glif propi, la seua fitxa heretaria la carpeta de
+               maquinaria_cat (regla del glif, 261004). Ordre del Mestre (261007):
+               el glif propi és el seu emoji, ⚙️, el de la Consola al catàleg. */
+            icon: ICONES_ITEMS_WIKI.consola_termodinamica,
+            title: consola?.title || 'Consola Termodinàmica',
+            subtitle: consola?.subtitle || 'Manteniment de la IAIA',
+            categoryId: 'maquinaria_cat',
+            categoryIds: ['maquinaria_cat'],
+            tags: ['consola', 'ia'],
+            attributes: { type: 'Eina Interactiva', author: 'Sistema', date: consola?.date },
+            content: ''
+          },
+          ...MODULS_LOCALS.items,
+        ] : []),
         ...wikiManifest.items.map(i => ({
           id: i.id,
           /* Ordre del Mestre (261007) · L'emoji del document (iconesWiki.js): el
@@ -465,11 +502,8 @@ export default function WikiDePobleSection() {
         }))
       ]
     };
-  }, [portada, consola]);
+  }, [portada, consola, ambMaquinaria, esperaLaSessio]);
 
-  // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
-  const queryParams = new URLSearchParams(location.search);
-  const activeItemId = queryParams.get('item');
   // T26.2 (ordre del Mestre, 260927 nit): en entrar sense res a la URL, la
   // primera opció de l'arbre («Wiki de Poble», la portada) va seleccionada,
   // com a Disseny i al Xat. Obrir un document per URL sense carpeta continua

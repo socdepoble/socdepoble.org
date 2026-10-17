@@ -14,6 +14,7 @@ import { DialegCarpeta } from '../../components/universal/classificacio/DialegCa
 import { DialegValors } from '../../components/universal/classificacio/DialegValors.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
+import { carregaCatalegEmojis, useCanalEmojis } from './canalEmojis.js';
 import {
   CATEGORIA_GENERAL, classificacioDe, canvisDeClassificacio, cataleg, usos, reanomena, esborra
 } from '../../components/universal/classificacio/model.js';
@@ -23,15 +24,13 @@ import {
 } from './visibilitatNota.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
-import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, signaturaDeNota } from './autoriaNota.js';
-import { useNotaPreparadaDelBloc } from './notaPreparada.js';
+import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
+import { TITOL_NOTA_PREPARADA, useNotaPreparadaDelBloc } from './notaPreparada.js';
+import { LLAVORS_NOTA } from './llavorNota.js';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
-/* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat, al peu. */
-import { PublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
-import { potVeureHistoric, titolDeLHistoric } from '../mur/usePublicacionsDeLActor.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -151,11 +150,12 @@ function entradesDeTargetes({ publicacions, actes, productes, pobles, pagines })
    capçalera que no s'ha pogut pujar) van al missatge ràpid de l'app
    (useToast), i no a la consola. Abans cap muntatge (NotesDetail, el
    catàleg) el passava i la persona no veia l'error.
-   Esmena 2 del pla 261007_1645 · `seccio` (opcional, un text): la secció de
-   la carpeta triada al Bloc. Amb una secció que en té (Mur, Mercat o
-   Esdeveniments), el peu de la pàgina llista el que l'actor ja hi té publicat
-   (PublicacionsDeLActor). Sense, el DOM de sempre. */
-export default function NotesEditor({ activeNote, onToast = null, seccio = null }) {
+   Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Eliminar el bloc inferior
+   "Ja publicat al Mur" de la vista d'edició») · Fora la prop `seccio` i el peu
+   que en feia (PublicacionsDeLActor, Esmena 2 del pla 261007_1645): l'editor
+   no porta cap peu, tampoc a Mercat ni a Esdeveniments. La lectura d'una
+   publicació (PublicacioDetall) conserva el seu. */
+export default function NotesEditor({ activeNote, onToast = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
@@ -169,6 +169,10 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
   const ETIQUETES_BASE = etiquetesBase(taxonomia);
   const { showToast } = useToast();
   const mur = useMur();
+  /* Bloc 3.8 del Gauntlet (261016) · El canal de la graella d'emojis del Bloc
+     (NotesSection): l'editor s'hi registra per a escriure al cursor, i l'ordre
+     «/» Emoji l'obri. Fora del Bloc (sense canal), l'adaptador de sempre. */
+  const canalEmojis = useCanalEmojis();
 
   /* T7 · La font de les targetes incrustades (DocumentEditor · targetes). La
      funció és estable: notesAdapter es recalcula amb trenta dependències i
@@ -322,9 +326,10 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
   }, [notaEnEdicio, escriu]);
 
   const tancaDialeg = useCallback(() => setDialeg(null), []);
-  /* T51 · el botó de l'espai central de la barra taronja obri el mateix
-     DialegEmoticona que el quart botó de la botonera (que es conserva). */
-  const obriEmoticona = useCallback(() => setDialeg('emoticona'), []);
+  /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «eliminar la ploma blanca
+     central» de la barra taronja) · El DialegEmoticona (amb la graella del
+     catàleg) només s'obri des del quart botó de la botonera, «Emojis XL»,
+     dins de l'«Edició avançada»: la barra taronja queda en lectura. */
 
   /* ── Borrar (paperera, arxiu o definitiu) ────────────────────────────────
      Només si el backend té la capacitat 'cicleNotes' i la nota és pròpia: mai
@@ -359,36 +364,19 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
      pinta el text d'n1: la signa Sóc de Poble, no qui la llig.
      Ordre del Mestre (261007) · La signatura porta també la `ruta` de la
      pàgina de l'autor (signaturaDeNota): la benvinguda, al perfil de Sóc de
-     Poble (Onada 8, 261009; abans, a /projecte); el Foraster, cap. */
+     Poble (Onada 8, 261009; abans, a /projecte).
+     Gauntlet 261016 (Bloc 3.9; ordre del Mestre: prohibit «Foraster») · Amb
+     el mode de dades del Bloc: sense sessió en seed o local, i amb la sessió
+     de la persona pilot, signa Javi Llinares i porta a la seua fitxa.
+     Correcció de la revisió (261016) · El mode RESOLT (modeDeDadesResolt),
+     no el cru: un paquet seed que ja ha triat l'entrada real treballa en
+     remot, i sense sessió hi signa «Veí». */
   const idSignatura = notaEnEdicio ? notaEnEdicio.id : ID_NOTA_BENVINGUDA;
+  const dataMode = useMemo(() => modeDeDadesResolt(config), [config]);
   const signatura = useMemo(
-    () => signaturaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser }),
-    [idSignatura, actor, actorId, agents, currentUser]
+    () => signaturaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser, dataMode }),
+    [idSignatura, actor, actorId, agents, currentUser, dataMode]
   );
-
-  /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «En seleccionar
-     la carpeta 'Mur' o 'Mercat' i el perfil 'Sóc de Poble', la part inferior
-     de la nota hauria de llistar totes les notícies/productes ja publicades en
-     eixe context per al perfil actiu») · El peu de la pàgina de l'editor, per
-     la clau d'adaptador `peuDePagina` (DocumentEditor → UniversalEditorShell →
-     PageFrame). Es memoritza sobre textos: un JSX nou a cada pintada refaria
-     notesAdapter. Fora de la seua publicació: la nota publicada al Mur ja és
-     la peça que s'edita (D2), no s'hi repetix davall. Sense secció o en una
-     secció sense targeta canònica (Multimèdia, les altres carpetes), cap
-     clau: el DOM de sempre.
-     Decisió per defecte del Mestre (261007) · el Foraster no veu cap
-     històric. Revisió adversarial del 261007 · Sense sessió l'actor no és
-     null (IdentitatContext hi posa el convidat, amb id): la regla és
-     potVeureHistoric, la mateixa que aplica PublicacionsDeLActor, més
-     `foraster` (sense currentUser). Si l'editor posara el peu i el component
-     no pintara res, PageFrame deixaria una regió amb nom, buida. */
-  const ambHistoric = potVeureHistoric(actor, seccio) && !foraster;
-  const exclouDelPeu = notaEnEdicio?.publishedSubmissionId ?? null;
-  const peuDePagina = useMemo(
-    () => (ambHistoric ? <PublicacionsDeLActor seccio={seccio} exclouId={exclouDelPeu} /> : null),
-    [ambHistoric, seccio, exclouDelPeu]
-  );
-  const etiquetaPeuDePagina = ambHistoric ? titolDeLHistoric(seccio, t) : '';
 
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
@@ -449,22 +437,35 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
       labels: notaEnEdicio ? etiquetesDeNota(notaEnEdicio, noteFolders, SENSE_PARAMS) : [],
       emptyPlaceholder: t('section.notes.open', 'Obre un solc'),
       emptyDocument,
+      /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre) · El placeholder de l'H1
+         és exactament el títol de la targeta: «Nota sense títol». */
+      placeholderTitol: TITOL_NOTA_PREPARADA,
+      /* Bloc 3.9 · Les metadades (capçalera, logotip, botonera, drets i
+         vistes) van a l'«Edició avançada», plegada, just damunt de les eines. */
+      edicioAvancada: true,
+      /* Bloc 3.9 · La plantilla de format d'ara i la d'abans: totes dues
+         s'esvaeixen al primer focus del cos (llavorNota.js). */
+      seedContent: LLAVORS_NOTA,
       classificacio: classificacio ? (
         <BotoneraClassificacio
           carpeta={carpetes.find((c) => c.id === carpetaId)?.nom}
           categories={classificacio.categories}
           etiquetes={classificacio.tags}
           emoticona={notaEnEdicio?.icon || ''}
+          etiquetaEmoticona="Emojis XL"
           onObri={setDialeg}
         />
       ) : null,
       /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja:
          el camp CRU de la nota (mai la 🪶 per defecte del model de vista de la
-         llista, T34) i l'obertura del diàleg d'emoticona. Sense nota (estat
-         buit), cap botó. La data de la còpia de prova del Foraster, que no en
-         porta, la posa la closca: la d'ara (barres/dataHoraBarra.js). */
+         llista, T34). La data de la còpia de prova del Foraster, que no en
+         porta, la posa la closca: la d'ara (barres/dataHoraBarra.js).
+         Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «eliminar la ploma
+         blanca central») · Sempre en lectura: cap onObriEmoticona, i l'espai
+         central pinta l'emoticona triada o la cel·la buida. El Perfil
+         conserva el seu botó. */
       emoticona: notaEnEdicio?.icon || '',
-      onObriEmoticona: notaEnEdicio ? obriEmoticona : null,
+      onObriEmoticona: null,
       /* T23.1 (ordre del Mestre, 260927 nit) · la «i» d'informació de la barra
          taronja ja no es necessita: el botó d'estat torna a dir el que és
          (cadenat en esborrany, bola del món publicada), i l'editabilitat la
@@ -507,10 +508,11 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
         )
       } : {}),
       ...(estatDesament ? { estatDesament } : {}),
-      /* Esmena 2 (261007_1645) · el peu de la pàgina: el que l'actor ja té publicat. */
-      ...(peuDePagina ? { peuDePagina, etiquetaPeuDePagina } : {})
+      /* Bloc 3.8 (261016) · Inserir al cursor (la icona «Emojis» de NOTES) i
+         l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
+      ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, peuDePagina, etiquetaPeuDePagina]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -592,6 +594,10 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
           minim={0}
         />
       ) : null}
+      {/* Bloc 3.8 (261016) · La graella del catàleg Emojis XL en lloc de la
+          drecera de teclat de l'OS: un clic assigna l'emoticona a la nota
+          (desaEmoticona, pel canal de sempre: nota, còpia de prova o nota
+          preparada) i tanca. Les dades, a demanda. */}
       {dialeg === 'emoticona' && notaEnEdicio ? (
         <DialegEmoticona
           key={`emoticona:${notaEnEdicio.id}`}
@@ -599,6 +605,7 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
           onTanca={tancaDialeg}
           actual={notaEnEdicio.icon || ''}
           onDesa={desaEmoticona}
+          carregaCataleg={carregaCatalegEmojis}
         />
       ) : null}
       {dialeg === 'esborrar' && pucBorrar && notaEnEdicio && aBorrar === notaEnEdicio.id ? (

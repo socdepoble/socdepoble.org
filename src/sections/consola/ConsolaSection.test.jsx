@@ -32,6 +32,12 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
   ...(await importOriginal()),
   carregaConsola: () => Promise.resolve(fonts.consola)
 }));
+/* Onada 0.5 (pla 261016_1530) · La font del Govern del Mestre, com consola.json:
+   sense govern.json (null), la Consola diu que encara no hi ha cap matriu. */
+vi.mock('./govern/governContent.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  carregaGovern: () => Promise.resolve(null)
+}));
 import ConsolaSection, { ConsolaIncrustada } from './ConsolaSection.jsx';
 import { CLAU_PRIVACITAT, CLAU_VISTES } from './consolaPagines.js';
 import { PAGE_COPY } from '../text/pageContent.js';
@@ -155,9 +161,17 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
      la Consola (IndexConsola.jsx), també sense cap font.
      Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · I, tancant el
      tauler, el del Diagnòstic del Mas (DiagnosiConsola.jsx). Derogat EN PART:
-     l'Índex com a últim H2. */
+     l'Índex com a últim H2.
+     Pla 261016_1530, Onada 0.5 (Mandat Suprem) · I, damunt de les nou
+     targetes, el del Govern del Mestre (govern/GovernConsola.jsx), amb les
+     seues quatre targetes. Derogat EN PART: l'H2 d'«El Mas en xifres» com el
+     primer darrere del de la introducció.
+     Revisió adversarial del carril F1 (problemes 2 i 9) · I, darrere del
+     govern, el de la sala de màquines, damunt de les nou targetes: no pengen
+     de l'H2 del govern. Derogat EN PART: «El Mas en xifres» just darrere del
+     Govern del Mestre. */
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
-    .toEqual(['Manteniment de la IAIA', 'El Mas en xifres', 'Índex de la Consola', 'Diagnòstic del Mas']);
+    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'El Mas en xifres', 'Índex de la Consola', 'Diagnòstic del Mas']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 
@@ -834,7 +848,26 @@ test('/consola: una alerta al cim quan el Mapa porta un codi de vigilància, amb
   expect([...alerta.querySelectorAll('li > a')].map((a) => a.getAttribute('href'))).toEqual([
     '/consola/xifres/skills-fora-del-segell', '/consola/xifres/linies-ledger', '/consola/xifres/linies-ledger'
   ]);
-  // Va abans del tauler.
+  /* Va al cim del tauler, abans de tot.
+     Revisió adversarial del carril F1 (problema 10) · Des de l'Onada 0.5 el
+     Govern del Mestre es pinta damunt de les nou targetes: l'alerta continua
+     al cim, darrere de la introducció i damunt del govern (alertaFora de
+     ConsolaTauler). Derogat EN PART: «just davant de la nav de les nou
+     targetes». */
+  expect(document.querySelector('.page-intro').nextElementSibling).toBe(alerta);
+  expect(alerta.nextElementSibling).toBe(screen.getByRole('region', { name: 'Govern del Mestre' }));
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  expect(Boolean(alerta.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+  // Una sola alerta: el tauler no la torna a pintar.
+  expect(screen.getAllByText('La vigilància del cervell està trencada')).toHaveLength(1);
+});
+
+test('la Consola incrustada de la Wiki conserva l’alerta just davant de les nou targetes', async () => {
+  fonts.mapa = MAPA_VIGILANCIA_TRENCADA();
+  render(<ConsolaIncrustada />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const alerta = alertaDeVigilancia();
+  expect(alerta).not.toBeNull();
   expect(alerta.nextElementSibling).toBe(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
 });
 

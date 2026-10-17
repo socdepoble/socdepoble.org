@@ -29,8 +29,12 @@ const plain = value => String(value || '').replace(/<[^>]*>/g, '');
 /* Directiva de Dignitat Humana (pla 261015_1900) · Sense drets (la fitxa d'una
    persona), cap <footer>: un de buit deixava 10 mm (25 mm a la portada) de
    marge sense res. Amb drets, el document de sempre. */
-export function buildPrintDocument(doc, cover = false, author = '') {
-  const title = escape(plain(doc.title) || 'Sense títol');
+/* Gauntlet 261016 (Bloc 3.9) · `titolReserva`: el títol d'un document sense
+   títol. El Bloc de Notes hi passa «Nota sense títol», el mateix de l'H1 i
+   de la targeta; sense, el de sempre. */
+const TITOL_RESERVA_IMPRESSIO = 'Sense títol';
+export function buildPrintDocument(doc, cover = false, author = '', titolReserva = TITOL_RESERVA_IMPRESSIO) {
+  const title = escape(plain(doc.title) || titolReserva || TITOL_RESERVA_IMPRESSIO);
   const copyright = escape(doc.copyright);
   const peu = copyright ? `<footer>${copyright}</footer>` : '';
   const coverHtml = cover ? `<section class="cover"><p>Sóc de Poble · Edició personal</p><p class="cover-titol">${title}</p><p>${escape(plain(doc.subtitle))}</p><p>${escape(author)}</p>${peu}</section>` : '';
@@ -45,12 +49,12 @@ img,svg { max-width: 100%; max-height: 225mm; object-fit: contain; } figure,bloc
 </style></head><body><main>${coverHtml}<article><header class="page-title"><h1>${title}</h1></header>${doc.subtitle ? `<h2>${escape(plain(doc.subtitle))}</h2>` : ''}${sanitizeHtml(doc.lead || '')}${sanitizeHtml(doc.content || '')}${peu}</article></main></body></html>`;
 }
 
-export default function DocumentPrintPreview({ document: doc, author = '' }) {
+export default function DocumentPrintPreview({ document: doc, author = '', titolReserva = TITOL_RESERVA_IMPRESSIO }) {
   const [open, setOpen] = useState(false);
   const [cover, setCover] = useState(false);
   const [ready, setReady] = useState(false);
   const frame = useRef(null);
-  const html = useMemo(() => open ? buildPrintDocument(doc, cover, author) : '', [doc, cover, author, open]);
+  const html = useMemo(() => open ? buildPrintDocument(doc, cover, author, titolReserva) : '', [doc, cover, author, titolReserva, open]);
   const show = withCover => { setCover(withCover); setReady(false); setOpen(true); };
   return <>
     <button type="button" className="sdp-classificacio-pindola" onClick={() => show(false)}>

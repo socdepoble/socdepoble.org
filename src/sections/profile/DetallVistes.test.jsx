@@ -69,7 +69,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 import { DetallVistes } from './DetallVistes.jsx';
 import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
@@ -234,10 +234,14 @@ test('prompt 261014_0400 · la fitxa del pilot: la barra taronja i la «Vista ta
   ];
   for (const identitat of fitxes) {
     render(<DetallVistes identitat={identitat} />);
+    /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar
+       entitats sense poble») · Expectativa actualitzada a propòsit: la fitxa
+       del pilot per l'id de la llavor (l'última) i sense poble porta ara el
+       seu, POBLE_FUNDACIONAL (abans, ''). Les de l'UUID porten el desat. */
     expect(m.pagina.topBarData).toEqual({
       authorName: 'Sóc de Poble',
       authorAvatar: DEFAULT_AUTHOR.avatarUrl,
-      authorLocation: identitat.dades.town_name || '',
+      authorLocation: identitat.dades.town_name || (identitat.id === ENTITAT_PILOT_ID ? POBLE_FUNDACIONAL : ''),
       authorHref: RUTA_PERFIL_PROJECTE,
     });
     const avatar = avatarDeLaCarta();
@@ -245,6 +249,31 @@ test('prompt 261014_0400 · la fitxa del pilot: la barra taronja i la «Vista ta
     expect(avatar.getAttribute('src')).toBe(DEFAULT_AUTHOR.avatarUrl);
     expect(targeta().querySelector('.sp-card-avatar--fallback')).toBeNull();
     expect(targeta().querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+    cleanup();
+  }
+});
+
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+   sense poble»; «El Rentonar no pot aparèixer mai sense poble») · Sense poble
+   desat, les tres identitats del Mestre porten el seu a la barra taronja de
+   «Les vistes» (pobleDeFitxa → pobleDeReservaDeFitxa, la regla de la fitxa
+   pública: clauFundacional). Cap altra fitxa se n'inventa cap, i el poble
+   desat sempre mana. */
+test('Bloc 3.5.2 · les tres identitats del Mestre sense poble porten el seu; una altra fitxa o un UUID no declarat, cap; el desat mana', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  const casos = [
+    [{ ...forn, id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' }, POBLE_FUNDACIONAL],
+    [{ ...forn, id: ENTITAT_RENTONAR_SLUG, mena: 'grup', nom: 'Rentonar' }, POBLE_FUNDACIONAL],
+    [{ ...jo, dades: { ...jo.dades, town_name: '', slug: PERSONA_PILOT.slug } }, POBLE_FUNDACIONAL],
+    [{ ...forn, id: uuid, nom: 'Sóc de Poble', dades: { ...forn.dades, slug: ENTITAT_PILOT_SLUG } }, ''],
+    [{ ...forn, id: uuid, mena: 'grup', nom: 'Rentonar', dades: { ...forn.dades, slug: ENTITAT_RENTONAR_SLUG } }, ''],
+    [forn, ''],
+    [{ ...jo, dades: { ...jo.dades, town_name: '' } }, ''],
+    [{ ...forn, id: ENTITAT_RENTONAR_SLUG, mena: 'grup', nom: 'Rentonar', dades: { ...forn.dades, town_name: 'Benilloba' } }, 'Benilloba'],
+  ];
+  for (const [identitat, esperat] of casos) {
+    render(<DetallVistes identitat={identitat} />);
+    expect([identitat.id, identitat.nom, m.pagina.topBarData.authorLocation]).toEqual([identitat.id, identitat.nom, esperat]);
     cleanup();
   }
 });

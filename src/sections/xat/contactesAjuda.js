@@ -4,7 +4,12 @@
    mateixa de les files per defecte del xat i del xat de mostra
    (FakeChatOnboarding): un sol lloc per al nom, el tipus i la cara de «Sóc
    de Poble» i de la «IAIA MarIA». Derogada la llista pròpia CONTACTES_AJUDA,
-   que en repetia el nom i el tipus. */
+   que en repetia el nom i el tipus.
+   Gauntlet 261016_1530 (Bloc 3.6.1; relleu F59) · Revisat: «Sóc de Poble» es
+   queda ací. L'ordre retira la fila directa SINTÈTICA de la llista («Si més
+   endavant es genera un xat privat persona-empresa, ja apareixerà»): triar
+   l'entitat a «Nova conversa» és eixa via explícita, i el directe que naix
+   és de veres. La llista ja no en porta cap per defecte. */
 import { AJUDA, AJUDA_PER_CLAU, esLaIdentitatDAjuda } from '../../data/xatsPerDefecte.js';
 
 /* Primer per id o per slug declarat (doctrina de T6: mai pel nom) i, si no,

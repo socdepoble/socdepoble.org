@@ -13,6 +13,8 @@ import { paginaDeRuta } from '../text/paginaDeText.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
 import { RUTA_XAT_DE_LA_IAIA } from './useObriXatPerDefecte.js';
+import { RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
+import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
 
 const mocks = vi.hoisted(() => ({
   creaNota: vi.fn(),
@@ -982,12 +984,15 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   /* Onada 6 · Les files de conversa; el peu («Informa d'un error») no n'és cap.
      Gauntlet 261016 (Bloc 3.6) · Sense amfitrió, la fila de «Gent de la
      Torre» (POBLE_PER_DEFECTE) va primera: una fila més, i la comunitat baixa
-     un lloc. S'actualitza a posta. */
+     un lloc. S'actualitza a posta.
+     Gauntlet 261016_1530 (Bloc 3.6, ordre vigent) · La comunitat de Sóc de
+     Poble (el subjecte és l'entitat pilot) és el PRIMER actor: va la primera,
+     per damunt de «Gent de la Torre». S'actualitza a posta. */
   const files = within(llista).getAllByRole('button').filter((b) => !b.closest('.sdp-xat-llista__peu'));
   expect(files).toHaveLength(4);
-  expect(files[0].textContent).toContain('Gent de la Torre');
+  expect(files[1].textContent).toContain('Gent de la Torre');
   const fila = files.find((b) => b.textContent.includes('Sóc de Poble'));
-  expect(files.indexOf(fila)).toBe(2);
+  expect(files.indexOf(fila)).toBe(0);
   expect(within(fila).getByText(', Comunitat')).toBeTruthy();
   expect(within(fila).getByText('Avisos, General')).toBeTruthy();
   expect(within(fila).getByText('3 missatges no llegits')).toBeTruthy();
@@ -1011,7 +1016,7 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button')
     .filter((b) => !b.closest('.sdp-xat-llista__peu'))
     .map((b) => (b.textContent.includes('Gent de la Torre') ? 'poble' : b.textContent.includes('Sóc de Poble') || b.textContent.includes('Adeu'))))
-    .toEqual(['poble', true, true]);
+    .toEqual([true, 'poble', true]);
 });
 
 /* Captures 19.42.54 i 19.43.00: la fitxa de la comunitat viu a la columna de
@@ -1573,7 +1578,11 @@ test.each([
 });
 
 /* Lògica d'Usuari (T3, T4): l'altra part de la conversa té perfil i, si és la
-   IAIA, es diu. Als grups, el nom de l'autor també enllaça al seu perfil. */
+   IAIA, es diu. Als grups, el nom de l'autor també enllaça al seu perfil.
+   Gauntlet 261016_1530 (Bloc 3.6.2; relleu F63) · Ordre del Mestre: la
+   capçalera del xat de la IAIA (el fil 'iaia') porta a la seua fitxa, /iaia
+   (actorsDelXat.js · rutaCanonicaDelXat), no a /perfil/<id>. S'actualitza a
+   posta; la bombolla continua enllaçant al perfil de qui la signa. */
 test('la capçalera enllaça al perfil de l’altra part i diu quan és la IAIA', () => {
   mocks.threads = [{
     id: 'ia', tipus: 'iaia', name: 'IAIA MarIA', esIA: true, ultimText: 'Hola', ultimAl: fa(0), noLlegits: 0,
@@ -1584,7 +1593,7 @@ test('la capçalera enllaça al perfil de l’altra part i diu quan és la IAIA'
   render(<XatSection />);
   const capcalera = document.querySelector('.sdp-xat-capcalera');
   const enllac = within(capcalera).getByRole('link', { name: 'Obri el perfil de IAIA MarIA' });
-  expect(enllac.getAttribute('href')).toBe('/perfil/iaia-1');
+  expect(enllac.getAttribute('href')).toBe('/iaia');
   expect(within(capcalera).getByText('Intel·ligència artificial en proves')).toBeTruthy();
   /* La bombolla de la IAIA es signa com a IA i també enllaça al perfil. */
   const autor = within(document.querySelector('.sdp-xat-missatges')).getByRole('link', { name: 'Obri el perfil de IAIA MarIA' });
@@ -2173,38 +2182,50 @@ const textosDeLaLlista = () => within(screen.getByRole('list', { name: 'Converse
 /* Gauntlet 261016 (Bloc 3.6) · Les quatre converses de l'ordre del Mestre:
    «Gent de la Torre» al capdamunt (sense amfitrió, el poble de la llavor) i,
    a la cua, Sóc de Poble, Javi Llinares i la IAIA. Abans eren dues files a la
-   cua i cap fila de poble: s'actualitza a posta. */
-test('261007 · les files d’ajuda van a la cua, amb el seu nom i «Cap missatge.», sense marca de fixades', () => {
+   cua i cap fila de poble: s'actualitza a posta.
+   Gauntlet 261016_1530 (Bloc 3.6, ordre vigent) · Els quatre actors DALT DE
+   TOT i en este ordre: la comunitat de Sóc de Poble, Javi, Gent de la Torre i
+   la IAIA; la resta, darrere. Fora la fila directa sintètica de Sóc de Poble.
+   En remot la comunitat té una fila que hi porta quan el backend ja ha donat
+   l'id de l'entitat pilot (actorsDelXat.js); sense, cap. S'actualitza a posta. */
+test('261007 · les files d’ajuda (Javi i la IAIA) van amb els actors, al capdamunt, amb «Cap missatge.» i sense marca de fixades', () => {
   mocks.threadId = null;
   ambFilesPerDefecte();
   render(<XatSection />);
   const files = textosDeLaLlista();
-  expect(files).toHaveLength(6);
-  expect(files[0]).toContain('Gent de la Torre');
-  expect(files[1]).toContain('Hola');
-  expect(files[2]).toContain('Adeu');
-  expect(files[3]).toContain('Sóc de Poble');
-  expect(files[4]).toContain('Javi Llinares');
-  expect(files[5]).toContain('IAIA MarIA');
-  for (const text of files.slice(3)) {
+  expect(files).toHaveLength(5);
+  expect(files[0]).toContain('Javi Llinares');
+  expect(files[1]).toContain('Gent de la Torre');
+  expect(files[2]).toContain('IAIA MarIA');
+  expect(files[3]).toContain('Hola');
+  expect(files[4]).toContain('Adeu');
+  expect(files.some((text) => text.includes('Sóc de Poble'))).toBe(false);
+  for (const text of [files[0], files[2]]) {
     expect(text).toContain('Cap missatge.');
     expect(text).not.toContain('Fixada');
   }
 });
 
-test('261007 · prémer la fila de Sóc de Poble porta a la via «En privat», amb replace i sense obrir cap fil', () => {
-  mocks.threadId = null;
-  ambFilesPerDefecte();
-  const view = render(<XatSection />);
-  fireEvent.click(screen.getByText('Sóc de Poble').closest('button'));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/sdp-per-defecte%3Asocdepoble');
-  /* El router ja és a la ruta de pas: una consulta nova, com a cada navegació. */
-  mocks.threadId = 'sdp-per-defecte:socdepoble';
-  mocks.params = new URLSearchParams();
-  view.rerender(<XatSection />);
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble', { replace: true });
-  expect(mocks.openThread).not.toHaveBeenCalledWith('sdp-per-defecte:socdepoble');
-  expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+test('261016_1530 · amb l’id remot de l’entitat pilot, la fila que porta a la comunitat de Sóc de Poble va la primera i fa el camí del «Comentar», mai «En privat»', () => {
+  registraEntitatDelProjecte({ tipus: 'entitat', id: '7d1e5c2a-0000-4000-8000-0000000000aa', slug: 'socdepoble' });
+  try {
+    mocks.threadId = null;
+    ambFilesPerDefecte();
+    render(<XatSection />);
+    const files = textosDeLaLlista();
+    expect(files).toHaveLength(6);
+    expect(files[0]).toContain('Sóc de Poble, Comunitat');
+    expect(files[0]).toContain('Avisos, General');
+    expect(files[1]).toContain('Javi Llinares');
+    expect(files[2]).toContain('Gent de la Torre');
+    expect(files[3]).toContain('IAIA MarIA');
+    fireEvent.click(screen.getByText('Sóc de Poble').closest('button'));
+    expect(mocks.navigate).toHaveBeenLastCalledWith(RUTA_SOBRE_DE_SOC_DE_POBLE);
+    expect(mocks.navigate.mock.calls.some(([ruta]) => String(ruta).startsWith('/xat?amb='))).toBe(false);
+    expect(mocks.openThread).not.toHaveBeenCalledWith('sdp-per-defecte:socdepoble');
+  } finally {
+    oblidaEntitatDelProjecte();
+  }
 });
 
 test('261007 · /xat/sdp-per-defecte:iaia porta al xat públic de /iaia una sola vegada, també en StrictMode', () => {

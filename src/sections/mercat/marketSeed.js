@@ -1,4 +1,10 @@
 // Dades de mercat recuperades de la versió original.
+/* Gauntlet 261016 (Bloc -1) · La foto de la persona pilot es llig de la font
+   única (identitatsSeed.js · PERSONA_PILOT.avatar, que la pren del catàleg
+   d'agents): cap fitxer torna a escriure la ruta. Import amb extensió: el
+   generador de supabase/seed.sql carrega esta llavor amb node pla. */
+import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
+
 export const MOCK_MARKET_ITEMS = [{
   id: 'mac-mini-m4',
   type: 'product',
@@ -9,7 +15,7 @@ export const MOCK_MARKET_ITEMS = [{
   seller: 'Javi Llinares',
   /* T3 (261001) · L'autoria de la persona pilot (Javi Llinares) porta la seua
      foto personal de perfil, mai el logotip de l'entitat Sóc de Poble (Pedra Seca §11). */
-  avatar_url: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
+  avatar_url: PERSONA_PILOT.avatar,
   image_url: '/assets/uploads/brain/mac_mini_m4_1787721966622.jpg',
   author_name: 'Javi Llinares',
   population: 'La Torre de les Maçanes',

@@ -31,6 +31,9 @@
  *              immersiva (Lector.jsx), que en estret torna a la llista en
  *              tancar-la, també amb l'Arrere del sistema (encàrrec F del
  *              Gauntlet, 261016).
+ *   teclat     E1 del Gauntlet (261016) · les dreceres d'un sol caràcter de
+ *              Feedly (J/K, N/P, O, M, S, V, Maj+A, Maj+J/Maj+K: dreceres.js),
+ *              només amb el focus dins de la closca (WCAG 2.1.4). Cap píxel.
  * Mana la URL (navegacio.js): triar a l'arbre o a la llista navega (push); el
  * que l'espai reconcilia (una carpeta que ja no hi és), replace. La notícia
  * oberta es queda a la llista on s'ha vist fins que la persona navega (llevar
@@ -55,6 +58,7 @@ import {
 import { AvisLector, MarcaTotLlegit } from './comunes.jsx';
 import { useVistaLector } from './context.js';
 import { iconaDeCategoria } from './icones.js';
+import { DreceresDeNoticies } from './dreceres.js';
 import { CLOSCA, Lector, focusLliure } from './Lector.jsx';
 import {
   NOM_CARPETA_FIXA, carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, opcioDeLaSeleccio, rutaDeSeleccio, seleccioDeRuta
@@ -298,6 +302,13 @@ export function EspaiNoticies({ params = null, totes = false }) {
 
   const retorn = useRef(null);
 
+  /* E1 del Gauntlet (261016) · El que fan servir les dreceres de teclat (dreceres.js), sempre
+     l'última pintada: les dreceres viuen dins del detall i el llegixen en el moment de la tecla. */
+  const entorn = useRef(null);
+  useLayoutEffect(() => {
+    entorn.current = { lector, noticies, opcions, obert, enTriar, tanca };
+  });
+
   /* P2 de Codex (relleu 02:26) · Una altra carpeta o una altra font comença de dalt, com a Feedly
      i com les columnes del 261004, que es tornaven a muntar: l'espai conserva el node de la
      llista d'una carpeta a l'altra i el scroll s'hi quedava. Es posa a 0 sense tocar el focus
@@ -356,17 +367,21 @@ export function EspaiNoticies({ params = null, totes = false }) {
      URL amagada a la roda dentada («Carpetes a la vista»), l'espai la mostra des del seu «Tot»
      sense canviar la URL (seleccioALaVista), i el títol, el resum i «Marca-ho tot com a llegit»
      són de «Totes». TornaALaLlista va davant del detall, amb notícia i sense: així passa d'un a
-     l'altre sense desmuntar-se. */
+     l'altre sense desmuntar-se.
+     E1 del Gauntlet (261016) · Les dreceres de teclat a la manera de Feedly (dreceres.js), darrere,
+     pel mateix motiu: la llista que es veu (`visibleItemIds`) és la seua. No pinten res. */
   const renderDetail = useCallback(({ selection, visibleItemIds, filtered }) => {
     const id = selection?.itemId ?? null;
     const tornada = <TornaALaLlista obert={id} />;
-    if (id != null) return <>{tornada}<DetallDeNoticia key={id} id={String(id)} tanca={tanca} retorn={retorn} /></>;
+    const dreceres = <DreceresDeNoticies selection={selection} visibleItemIds={visibleItemIds} entorn={entorn} closca={closca} />;
+    if (id != null) return <>{tornada}{dreceres}<DetallDeNoticia key={id} id={String(id)} tanca={tanca} retorn={retorn} /></>;
     const vista = opcioDeLaSeleccio(selection?.categoryId);
     const ids = files.filter((fila) => vista == null || fila.categoryIds.includes(vista)).map((fila) => fila.id);
     const resultats = filtered && Array.isArray(visibleItemIds) ? visibleItemIds : null;
     return (
       <>
         {tornada}
+        {dreceres}
         <SenseNoticia titol={nomDeLaSeleccio(vista, noticies)} ids={ids} resultats={resultats} buit={buitDe(carpetaDeOpcio(vista))} ancora={ancora} />
       </>
     );

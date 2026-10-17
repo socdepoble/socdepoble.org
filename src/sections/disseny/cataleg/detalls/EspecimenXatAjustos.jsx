@@ -13,6 +13,10 @@ import { useMemo, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { CosAjustos } from '../../../xat/components/FullAjustos.jsx';
 import { mostraDelXat } from './EspecimenXatLlista.jsx';
+/* Identitat dual (Bloc -1) · El nom i la foto de la persona pilot, de la font
+   única (PERSONA_PILOT): cap fitxer torna a escriure la ruta. Mateix valor,
+   cap píxel nou: el canvi no és cap nota de versió del catàleg. */
+import { PERSONA_PILOT } from '../../../../data/identitatsSeed.js';
 
 /* Traductor mínim: les alternatives ja són el text en valencià. */
 const t = (clau, alternativa) => alternativa;
@@ -50,8 +54,8 @@ function Marc({ etiqueta, pilaInicial, setAvis, FilaEixida, preferits }) {
         t={t}
         pilaInicial={pilaInicial}
         joId="jo"
-        joNom="Javi Llinares"
-        joAvatar="/assets/fotos/javi-llinares-perfil-1200px.jpg"
+        joNom={PERSONA_PILOT.nom}
+        joAvatar={PERSONA_PILOT.avatar}
         preferits={preferits}
         correu="javi@exemple.org"
         ambSessio

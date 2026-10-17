@@ -55,7 +55,17 @@ const CODI = [
   'src/sections/consola/imatgesConsola.js',
   'src/sections/consola/indexConsola.js',
   'src/sections/consola/diagnosiConsola.js',
-  'src/sections/consola/DiagnosiConsola.jsx'
+  'src/sections/consola/DiagnosiConsola.jsx',
+  /* Pla 261016_1530, Onada 0.5 (Mandat Suprem) · el Govern del Mestre: cap classe nova,
+     cap estil en línia i zero avisos. */
+  'src/sections/consola/govern/matriuGovern.js',
+  'src/sections/consola/govern/governContent.js',
+  'src/sections/consola/govern/balancGovern.js',
+  'src/sections/consola/govern/certificacions.js',
+  'src/sections/consola/govern/comunicacioGovern.js',
+  'src/sections/consola/govern/governConsola.js',
+  'src/sections/consola/govern/useGovern.js',
+  'src/sections/consola/govern/GovernConsola.jsx'
 ];
 const PROVES = [
   'src/sections/consola/ConsolaSection.test.jsx',
@@ -84,7 +94,14 @@ const PROVES = [
   'src/sections/consola/diagnosiConsola.test.js',
   'src/sections/consola/ConsolaSection.diagnosi.test.jsx',
   'src/sections/consola/ConsolaSection.index.test.jsx',
-  'src/css/diagnosi.capes.test.js'
+  'src/css/diagnosi.capes.test.js',
+  // Pla 261016_1530, Onada 0.5 · les proves del Govern del Mestre.
+  'src/sections/consola/govern/matriuGovern.test.js',
+  'src/sections/consola/govern/governContent.test.js',
+  'src/sections/consola/govern/balancGovern.test.js',
+  'src/sections/consola/govern/certificacions.test.js',
+  'src/sections/consola/govern/comunicacioGovern.test.js',
+  'src/sections/consola/ConsolaSection.govern.test.jsx'
 ];
 const JSX = CODI.filter((f) => f.endsWith('.jsx'));
 const ESTIL_EN_LINIA = new RegExp(['\\ss', 'tyle=[{"]'].join(''));
@@ -125,7 +142,9 @@ describe('Pedra Seca al JSX tocat', () => {
     const NOVES = ['sdp-camp-fitxer', 'sdp-camp-fitxer__boto', 'sdp-camp-fitxer__estat',
       'sdp-consola__avis', 'sdp-consola__evidencies',
       // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · el Diagnòstic del Mas.
-      'sdp-consola__diagnosi', 'sdp-consola__acces', 'sdp-consola__diagnosi-text'];
+      'sdp-consola__diagnosi', 'sdp-consola__acces', 'sdp-consola__diagnosi-text',
+      // Pla 261016_1530, Onada 0.5 · la pastilla d'estat d'una fila del Govern del Mestre.
+      'sdp-consola__estat-fila'];
     for (const classe of NOVES) expect(CSS, classe).toMatch(new RegExp(`\\.${classe}(?![\\w-])`));
     const literals = JSX.flatMap((f) => [...llig(f).matchAll(/className="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)));
     expect(literals.filter((c) => !/^(?:sdp-|sp-)/.test(c))).toEqual([]);
@@ -133,7 +152,8 @@ describe('Pedra Seca al JSX tocat', () => {
 
   test('les regles noves són a @layer components, sense :has() ni colors crus', () => {
     for (const selector of ['.sdp-camp-fitxer {', '.sdp-consola__avis {', '.sdp-consola__evidencies {',
-      '.sdp-consola__diagnosi {', '.sdp-consola__acces > ul {', '.sdp-consola__diagnosi-text {']) {
+      '.sdp-consola__diagnosi {', '.sdp-consola__acces > ul {', '.sdp-consola__diagnosi-text {',
+      '.sdp-consola__estat-fila .sdp-insignia {']) {
       const index = CSS.indexOf(selector);
       expect(index, selector).toBeGreaterThan(-1);
       const obertura = CSS.lastIndexOf('@layer components {', index);

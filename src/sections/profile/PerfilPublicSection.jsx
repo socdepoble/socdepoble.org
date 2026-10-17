@@ -269,7 +269,10 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
      tres identitats del Mestre declara la seua URL canònica neta, s'obriga
      per la ruta canònica o per una d'abans (/gent/0001, /empresa/socdepoble,
      /grup/rentonar…): un sol perfil, una sola adreça per al SEO. La resta de
-     fitxes, la URL de sempre (useSEO, sense `canonical`). */
+     fitxes, la URL de sempre (useSEO, sense `canonical`).
+     Gauntlet 261016_1530 (Bloc 3.6.3) · La fitxa de la IAIA MarIA (pel seu
+     id, mai pel nom) declara /iaia, s'obriga per /iaia, /perfil/<id> o
+     /perfil/iaia-maria (rutaCanonicaDePerfil). */
   const rutaCanonica = rutaCanonicaDePerfil(perfil);
 
   useSEO({

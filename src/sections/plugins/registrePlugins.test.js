@@ -28,6 +28,7 @@ import fontApp from '../../app/App.jsx?raw';
 import { MANIFESTS_INTERNS, analitzaRuta } from '../../apps/plataforma/registreApps.js';
 import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { PRESSUPOST_PUJADA } from '../../utils/pujadaImatge.js';
 import { segmentPagina } from '../consola/consolaPagines.js';
 import {
   ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId, pluginsDeLEspai,
@@ -132,10 +133,13 @@ describe('registre de plugins', () => {
   /* Gauntlet 261016 (Bloc 1, Llei del Quadrat: capçalera i targeta, la
      mateixa imatge de 1.200 × 1.200 en WebP de menys de 80 KB) · La vinyeta
      del TPV es llig pels bytes: RIFF/WEBP de veres, quadrada de 1.200 i dins
-     del pressupost. El .jpg d'abans es conserva al disc (cap esborrat). */
+     del pressupost. El .jpg d'abans es conserva al disc (cap esborrat).
+     Gauntlet 261016 (MCR, Carril E · E3): el pressupost és el de la casa, PRESSUPOST_PUJADA (80.000 B,
+     utils/pujadaImatge.js), i no 80 × 1.024 (81.920 B), que deixava passar 1.920 B de més. */
   test('Llei del Quadrat · la vinyeta del TPV és un WebP de 1.200 × 1.200 de menys de 80 KB, i el .jpg es conserva', () => {
     const bytes = readFileSync(path.join(process.cwd(), 'public', pluginPerId('tpv').imatge));
-    expect(bytes.length).toBeLessThan(80 * 1024);
+    expect(PRESSUPOST_PUJADA).toBe(80000);
+    expect(bytes.length).toBeLessThan(PRESSUPOST_PUJADA);
     expect([bytes.toString('latin1', 0, 4), bytes.toString('latin1', 8, 12)]).toEqual(['RIFF', 'WEBP']);
     expect(midaWebp(bytes)).toEqual({ amplada: 1200, alcada: 1200 });
     expect(existsSync(path.join(process.cwd(), 'public/assets/ui/plugins/tpv_vinyeta.jpg'))).toBe(true);

@@ -41,9 +41,11 @@ describe('paginaDestacada · la tria de l’administrador', () => {
 });
 
 describe('rutaDeLaPaginaDestacada · la ruta que Connectar desa (P4)', () => {
-  test('xat → /page/xat; anima → /iaia; projecte → /projecte; la resta, /page/<clau> codificada', () => {
+  /* Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Actualitzada a posta: el
+     manifest és a /anima; /iaia és la fitxa de la IAIA. */
+  test('xat → /page/xat; anima → /anima; projecte → /projecte; la resta, /page/<clau> codificada', () => {
     expect(rutaDeLaPaginaDestacada('xat')).toBe('/page/xat');
-    expect(rutaDeLaPaginaDestacada('anima')).toBe('/iaia');
+    expect(rutaDeLaPaginaDestacada('anima')).toBe('/anima');
     expect(rutaDeLaPaginaDestacada('projecte')).toBe('/projecte');
     expect(rutaDeLaPaginaDestacada('una pàgina')).toBe('/page/una%20p%C3%A0gina');
   });

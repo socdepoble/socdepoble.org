@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
-import { NotebookPen, Folder } from 'lucide-react';
+import { NotebookPen, Folder, SmilePlus } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotes, etiquetesDeNota } from './NotesContext';
@@ -14,10 +14,10 @@ import { ConnexioFitxa } from './ConnexioFitxa.jsx';
 import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
 import { esConnexio, esExtern } from '../../data/origenNota.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
+import { EMOTICONA_PER_DEFECTE, emojiInicial, emojiSol } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
-import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
+import { LLAVOR_NOTA, LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { CARPETA_ALTRES, CARPETA_PER_SECCIO, esIdDePublicacio, itemsPublicatsDe, seccioDeCarpeta, seccioDePublicacio } from './masDeLUsuari.js';
@@ -30,6 +30,37 @@ import { SnippetCurador } from './SnippetCurador.jsx';
 import { NotaPreparadaContext, TITOL_NOTA_PREPARADA, useNotaPreparada } from './notaPreparada.js';
 import { reglaDEntrada } from '../connectar/contingutExtern.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
+import { Boto, Dialeg } from '../../components/PedraSeca/index.js';
+import { GraellaEmojis } from '../../components/universal/classificacio/GraellaEmojis.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
+import {
+  CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
+} from './canalEmojis.js';
+
+/* Correcció de la revisió adversarial (261016; encàrrec A1: l'avís per als
+   glifs que Safari 16 no pinta, amb la utilitat que ja existix) · La graella
+   del diàleg «Emojis» (mode cos). Un emoji que este navegador no reconeix
+   (emojiSol) no arriba a qui tria: el diàleg es queda obert i ho diu, com el
+   DialegEmoticona a la via d'assignar. Es munta només amb el diàleg obert:
+   l'avís no sobreviu a un tancament. */
+function GraellaDelCos({ onTria }) {
+  const [avis, setAvis] = useState(null);
+  const tria = useCallback((glif) => {
+    const reconegut = emojiSol(glif);
+    if (!reconegut) {
+      setAvis(textEmojiNoReconegut(glif));
+      return;
+    }
+    setAvis(null);
+    onTria(reconegut);
+  }, [onTria]);
+  return (
+    <>
+      {avis ? <p className="sdp-classificacio-dialeg__avis" role="status">{avis}</p> : null}
+      <GraellaEmojis carregaCataleg={carregaCatalegEmojis} onTria={tria} />
+    </>
+  );
+}
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
@@ -64,8 +95,14 @@ const TEXT_CARREGANT = 'Carregant…';
 const TEXT_ERROR_FONT = 'No s’han pogut carregar les dades.';
 
 const toWorkspaceNote = (note, noteFolders) => {
-  const isSeedContent = note.content === LLAVOR_NOTA || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
-  const title = extractPlainText(note.title || '', Infinity) || TEXTOS_LLAVOR.titol;
+  /* Gauntlet 261016 (Bloc 3.9) · La llavor es reconeix normalitzada (la d'ara
+     o la d'abans, escrita o tal com la torna TipTap): abans es comparava la
+     cadena exacta i un cos desat per l'editor no casava mai. */
+  const isSeedContent = esLlavorDeNota(note.content) || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
+  /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: el placeholder de l'H1 és
+     exactament «Nota sense títol», idèntic a la targeta) · La reserva de la
+     llista és la mateixa que la de l'H1 i la de la nota preparada. */
+  const title = extractPlainText(note.title || '', Infinity) || TITOL_NOTA_PREPARADA;
   /* T71 · una connexió es pinta a la llista amb ConnexioFitxa (la fitxa
      compacta amb l'autoria de l'original); el contingut de fora (origen
      'extern') és un clon teu i s'edita com una nota. D4 (260930) · la
@@ -120,35 +157,32 @@ const renderNota = ({ item, active, onSelect }) => {
   if (item?.kind === 'connexio') return <ConnexioFitxa item={item} active={active} onSelect={onSelect} />;
   return <NotaFitxa item={item} active={active} onSelect={onSelect} />;
 };
-/* Esmena 2 del pla 261007_1645 · `seccio`: la secció de la carpeta triada
-   (seccioDelPeu), per al peu de l'editor (el que l'actor ja hi té publicat).
-   Una publicació oberta en pren la seua (PublicacioDetall · item.data.seccio). */
-const renderDetall = ({ item }, seccio = null) => (
+/* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Eliminar el bloc inferior
+   "Ja publicat al Mur" de la vista d'edició») · El detall ja no rep la secció
+   de la carpeta: l'editor no pinta cap peu (deroga a l'editor l'Esmena 2 del
+   pla 261007_1645). Una publicació oberta (PublicacioDetall, lectura) en
+   conserva el seu. */
+const renderDetall = ({ item }) => (
   item?.kind === 'publicacio'
     ? <PublicacioDetall item={item} />
-    : <NotesDetail activeNote={item?.data} seccio={seccio} />
+    : <NotesDetail activeNote={item?.data} />
 );
 
-/* Llavor del cos d'una nota nova. Inclou Heading 3, 4, 5 i 6 perquè
-   la persona veja la jerarquia, i un text indicant com esborrar-ho tot en fer clic. */
-export const LLAVOR_NOTA = `
-<h3>Heading 3 (punxa ací per esborrar-ho tot)</h3>
-<p>Aquest és un paràgraf de prova sota un Heading 3.</p>
-<h4>Heading 4</h4>
-<p>Aquest és un paràgraf de prova sota un Heading 4.</p>
-<h5>Heading 5</h5>
-<p>Aquest és un paràgraf de prova sota un Heading 5.</p>
-<h6>Heading 6</h6>
-<p>Aquest és un paràgraf de prova sota un Heading 6.</p>
-`.trim();
+/* Llavor del cos d'una nota nova: la plantilla de format de Sóc de Poble.
+   Gauntlet 261016 (Bloc 3.9) · Viu a llavorNota.js (H3, H4, paràgrafs i dues
+   llistes); ací es reexporta perquè el DocumentEditor la hi llig. */
+export { LLAVOR_NOTA };
 
 /* L'entrada d'una nota nova segons on és la persona, la que CREAR NOTA
    enviava des de T39: una categoria o una etiqueta la porten; una carpeta,
-   el folderId; «Tot», la llavor del cos. */
+   el folderId. Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Injectar en
+   notes buides un template d'exemple canònic») · La llavor del cos va a TOTA
+   nota nova: abans només a la de «Tot», i una nota creada des d'una
+   carpeta, una categoria o una etiqueta naixia sense plantilla. */
 function entradaDeNotaNova(categoriaId, categoria) {
-  if (categoria?.groupId === 'categories') return { categories: [categoria.label] };
-  if (categoria?.groupId === 'tags') return { tags: [categoria.label] };
-  if (categoriaId != null && categoriaId !== ALL_CATEGORY_ID) return { folderId: categoriaId };
+  if (categoria?.groupId === 'categories') return { categories: [categoria.label], content: LLAVOR_NOTA };
+  if (categoria?.groupId === 'tags') return { tags: [categoria.label], content: LLAVOR_NOTA };
+  if (categoriaId != null && categoriaId !== ALL_CATEGORY_ID) return { folderId: categoriaId, content: LLAVOR_NOTA };
   return { content: LLAVOR_NOTA };
 }
 
@@ -435,7 +469,8 @@ export default function NotesSection() {
     setParams(escriuSeleccio(params, { item: idCreat }, CLAUS_URL), { replace: true });
   }, [params, setParams]);
   const preparada = useNotaPreparada({
-    clau: workspaceKey ?? null, base: basePreparada, llavor: LLAVOR_NOTA,
+    /* Bloc 3.9 · La llavor d'ara i la d'abans: cap de les dues no crea la nota. */
+    clau: workspaceKey ?? null, base: basePreparada, llavor: LLAVORS_NOTA,
     notes, creaNota, resolNota: resolveNote, setLocalNoteField, updateNote, informaError, adopta: adoptaNota
   });
   /* Revisió de P4 · CREAR NOTA la fixa a la llista (vegeu llistaParcial). */
@@ -543,16 +578,10 @@ export default function NotesSection() {
      cap element triat: el detall diu que carrega, o que ha fallat amb
      Reintentar (recarrega eixa font), no l'editor buit (que pinta la nota de
      benvinguda). El marcatge és el dels estats propis del detall. */
-  /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «En seleccionar la
-     carpeta 'Mur' o 'Mercat' i el perfil 'Sóc de Poble', la part inferior de
-     la nota hauria de llistar totes les notícies/productes ja publicades en
-     eixe context») · La secció de la carpeta triada (la mateixa que la nota
-     preparada, categoriaBase) va al detall, que en fa el peu de l'editor. Una
-     altra carpeta, una categoria o una etiqueta: null, i el DOM de sempre. Al
-     snippet (mode desa) no hi ha editor: cap secció. */
-  const seccioDelPeu = modeDesa ? null : seccioDeCarpeta(categoriaBase);
+  /* Gauntlet 261016 (Bloc 3.9) · Sense la secció del peu: l'editor ja no
+     llista el que l'actor té publicat (vegeu renderDetall). */
   const renderDetallBloc = useCallback((props) => {
-    if (!esperaCarpeta || props?.item) return renderDetall(props, seccioDelPeu);
+    if (!esperaCarpeta || props?.item) return renderDetall(props);
     if (estatEntrada !== 'error') return <p role="status">{TEXT_CARREGANT}</p>;
     return (
       <div role="alert">
@@ -560,7 +589,7 @@ export default function NotesSection() {
         {typeof refrescaEntrada === 'function' ? <> <button type="button" onClick={refrescaEntrada}>Reintentar</button></> : null}
       </div>
     );
-  }, [esperaCarpeta, estatEntrada, refrescaEntrada, seccioDelPeu]);
+  }, [esperaCarpeta, estatEntrada, refrescaEntrada]);
 
   const handleSelectionChange = useCallback(({ categoryId, itemId }, meta) => {
     // push si és acció de l'usuari directa (per poder tirar enrere)
@@ -620,6 +649,60 @@ export default function NotesSection() {
     return itemPreparadaBase;
   }, [itemPreparadaBase]);
 
+  /* ── Bloc 3.8 del Gauntlet (261016) · Emojis XL al Bloc ────────────────
+     «Crear un accés directe a la capçalera de la columna NOTES (entre el
+     títol NOTES i el botó [|<]) per obrir el catàleg d'emojis a mà mentre
+     s'edita.» La icona (SmilePlus) i l'ordre «/» Emoji de l'editor obrin el
+     mateix diàleg, amb la graella en mode cos (canalEmojis.js): si en obrir-lo
+     la nota oberta es pot escriure, l'emoji triat s'hi escriu al cursor quan
+     el diàleg ja s'ha tancat (el focus torna a l'editor); si no (cap nota,
+     una de lectura, o el detall tapat del mestre-detall en estret), es copia
+     dins del mateix clic (Safari 16 només ho deixa fer dins del gest) i el
+     toast ho diu, ja fora del <dialog> modal. Al Snippet (mode desa) no hi
+     ha ni la icona ni el diàleg.
+     Desviació declarada · El requeriment nomena usePantallaCompleta, però
+     les accions d'AppGridColumn no passen l'event ni l'id de l'obridor
+     (renderActions): és un Dialeg de Pedra Seca, que ja torna el focus a
+     qui l'ha obert. */
+  const emojis = useCanalEmojisDelBloc();
+  const { showToast } = useToast();
+  const emojiPendent = useRef(null);
+  const accionsLlista = useMemo(() => (modeDesa ? undefined : [{
+    id: 'emojis',
+    etiqueta: TEXTOS_EMOJIS.etiqueta,
+    icona: SmilePlus,
+    onAcciona: emojis.canal.obri
+  }]), [modeDesa, emojis.canal.obri]);
+  const avisaDeLaCopia = useCallback((copia, glif) => {
+    if (!copia) {
+      showToast(TEXTOS_EMOJIS.senseCopia, 'error');
+      return;
+    }
+    copia.then(() => showToast(textCopiat(glif), 'success'), () => showToast(TEXTOS_EMOJIS.noCopiat, 'error'));
+  }, [showToast]);
+  const { inserir: emojiAlCursor, tanca: tancaEmojis } = emojis;
+  const triaEmojiDelCos = useCallback((glif) => {
+    if (emojiAlCursor) {
+      emojiPendent.current = glif;
+      tancaEmojis();
+      return;
+    }
+    const copia = copiaAlPortaretalls(glif);
+    tancaEmojis();
+    avisaDeLaCopia(copia, glif);
+  }, [emojiAlCursor, tancaEmojis, avisaDeLaCopia]);
+  /* Ja tancat (el Dialeg, fill, ha tornat el focus i, en un encastament, ha
+     llevat l'inert dels germans): l'emoji, al cursor. Si l'editor ja no hi
+     és, la còpia de reserva (fora del gest: un navegador la pot rebutjar, i
+     el toast ho diu). */
+  const { obert: emojisOberts, inserix: inserixEmoji } = emojis;
+  useEffect(() => {
+    const glif = emojiPendent.current;
+    if (emojisOberts || glif == null) return;
+    emojiPendent.current = null;
+    if (!inserixEmoji(glif)) avisaDeLaCopia(copiaAlPortaretalls(glif), glif);
+  }, [emojisOberts, inserixEmoji, avisaDeLaCopia]);
+
   /* T7C · El Bloc i el snippet són dues vistes del mateix esquelet: la clau
      el remunta en canviar de mode (columnes, selecció i detall de cada un).
      Al snippet no es crea cap nota buida, i el detall és una Pàgina
@@ -630,6 +713,7 @@ export default function NotesSection() {
      original (SincronitzacioTargetes.jsx). */
   return (
     <NotaPreparadaContext.Provider value={contextPreparada}>
+      <CanalEmojisContext.Provider value={modeDesa ? null : emojis.canal}>
       <ProveidorSincronitzacioTargetes>
       <UniversalWorkspace
         key={modeDesa ? 'desa' : 'bloc'}
@@ -658,8 +742,26 @@ export default function NotesSection() {
         className="sdp-bloc"
         listClassName="sdp-bloc-list--notes"
         detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
+        accionsLlista={accionsLlista}
       />
       </ProveidorSincronitzacioTargetes>
+      {/* Bloc 3.8 · El diàleg «Emojis» (mode cos), germà de l'espai de treball:
+          la graella i el catàleg només es demanen en obrir-lo. */}
+      {modeDesa ? null : (
+        <Dialeg
+          obert={emojisOberts}
+          onTanca={tancaEmojis}
+          titol={TEXTOS_EMOJIS.titol}
+          descripcio={emojiAlCursor ? TEXTOS_EMOJIS.inserir : TEXTOS_EMOJIS.copiar}
+          mida="g"
+          /* El peu ja diu com eixir (i Escape tanca): cap segona X amb el mateix nom. */
+          ambTanca={false}
+          accions={<Boto varietat="secundari" onClick={() => tancaEmojis()}>{TEXTOS_EMOJIS.tancar}</Boto>}
+        >
+          {emojisOberts ? <GraellaDelCos onTria={triaEmojiDelCos} /> : null}
+        </Dialeg>
+      )}
+      </CanalEmojisContext.Provider>
     </NotaPreparadaContext.Provider>
   );
 }

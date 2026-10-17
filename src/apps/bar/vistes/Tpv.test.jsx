@@ -372,6 +372,48 @@ describe('el tiquet i «Cobra»', () => {
     await waitFor(() => expect(ubicacio()).toBe('/app/bar/tpv'));
   });
 
+  /* MCR o3_tpv_gestoria.1.4 (261016): «arrere» de la divisió ignorava ?torna=tpv i duia a la Caixa. */
+  test('TPV → «Cobra» → «Dividix» → «Torna al TPV»: la divisió torna al TPV, a la mateixa comanda (també a parts iguals)', async () => {
+    const magatzem = await magatzemDeProva();
+    await obriTpv('/app/bar/tpv', magatzem);
+    fireEvent.click(rajola('Cafè sol'));
+    await waitFor(() => expect(within(tiquet()).getByText('Cafè sol')).toBeTruthy());
+    const [comanda] = await comandesDe(magatzem);
+    await waitFor(() => expect(ubicacio()).toBe(`/app/bar/tpv/${comanda.id}`));
+    fireEvent.click(screen.getByRole('button', { name: /^Cobra 1,20/ }));
+    expect(ubicacio()).toBe(`/app/bar/caixa/${comanda.id}/cobrar?torna=tpv`);
+    fireEvent.click(await within(document.getElementById('app-grid-list')).findByRole('button', { name: 'Dividix' }));
+    expect(ubicacio()).toBe(`/app/bar/caixa/${comanda.id}/dividir?torna=tpv`);
+    const detall = within(document.getElementById('app-grid-main'));
+    /* La columna de la divisió ja és a la pantalla: el seu «arrere» diu on porta. */
+    await detall.findByRole('button', { name: 'A parts iguals' });
+    expect(detall.queryByRole('button', { name: 'Torna a la comanda' })).toBeNull();
+    fireEvent.click(detall.getByRole('button', { name: 'Torna al TPV' }));
+    expect(ubicacio()).toBe(`/app/bar/tpv/${comanda.id}`);
+    await waitFor(() => expect(within(tiquet()).getByText('Cafè sol')).toBeTruthy());
+
+    /* A parts iguals, el mateix: el mode va a la consulta i «arrere» no el perd ni duu a la Caixa. */
+    await ves(`/app/bar/caixa/${comanda.id}/dividir?torna=tpv&mode=parts`);
+    const parts = within(document.getElementById('app-grid-main'));
+    await parts.findByRole('group', { name: 'Parts' });
+    fireEvent.click(parts.getByRole('button', { name: 'Torna al TPV' }));
+    expect(ubicacio()).toBe(`/app/bar/tpv/${comanda.id}`);
+    /* Res no s'ha cobrat ni dividit: la comanda continua sencera i oberta. */
+    expect((await comandesDe(magatzem)).map((c) => [c.id, c.linies.length, c.pagaments.length])).toEqual([[comanda.id, 1, 0]]);
+  });
+
+  test('una divisió del TPV d’una comanda ja tancada: «Res a dividir» torna al TPV, no a la Caixa', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa/c-ja-tancada/dividir?torna=tpv', magatzem, DINS);
+    /* El cos de la columna del detall porta el títol de l'estat buit com a nom de la regió. */
+    const buit = await screen.findByRole('region', { name: 'Res a dividir' });
+    const detall = within(document.getElementById('app-grid-main'));
+    expect(buit.closest('#app-grid-main')).toBeTruthy();
+    expect(detall.queryByRole('button', { name: 'Torna a la caixa' })).toBeNull();
+    fireEvent.click(detall.getByRole('button', { name: 'Torna al TPV' }));
+    expect(ubicacio()).toBe('/app/bar/tpv');
+  });
+
   test('«Separa i cobra» de la divisió que ve del TPV porta al cobrament de la part amb la tornada', async () => {
     const magatzem = await magatzemDeProva();
     await obriTpv('/app/bar/tpv', magatzem);

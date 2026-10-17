@@ -2,7 +2,14 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   workspace: null, proveidor: null, dialeg: null, perfil: null, refresh: vi.fn(), toast: vi.fn(), caps: new Set(),
-  actor: null, params: new URLSearchParams(), ui: null,
+  actor: null, params: new URLSearchParams(), ui: null, sessio: null,
+}));
+/* Gauntlet 261016 (Bloc 3.4) · Qui és superadmin (useSessioOpcional): les
+   utilitats internes de l'aside només ixen per a ell. La resta del mòdul, el
+   de veres. */
+vi.mock('../../app/contexts/SessionContext.jsx', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useSessioOpcional: () => m.sessio,
 }));
 vi.mock('../../components/universal/workspace', () => ({ UniversalWorkspace: (props) => { m.workspace = props; return null; } }));
 vi.mock('./PerfilContext.jsx', () => ({
@@ -58,7 +65,7 @@ const item = (id) => m.workspace.model.items.find((i) => i.id === id);
 beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
   m.caps = new Set();
-  m.actor = null; m.params = new URLSearchParams();
+  m.actor = null; m.params = new URLSearchParams(); m.sessio = null;
   m.ui = { externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000' } };
   m.perfil = {
     identitats: [jo, forn, colla], carregant: false, error: null,
@@ -74,9 +81,13 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom, les organ
   expect(grups().map((g) => g.label)).toEqual([null, 'GRUPS I EMPRESES', 'APLICACIONS']);
   expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep']]);
   expect(grups()[1].options.map((o) => [o.id, o.label])).toEqual([['O', 'Forn'], ['G', 'Colla']]);
+  /* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+     maquinària interna de desenvolupament de l'aside en pantalles d'usuari»)
+     · Expectativa actualitzada a propòsit: sense superadmin, ni la Consola
+     de Mètriques ni el Cervell (intern: true). Amb superadmin, les cinc de
+     sempre (prova de davall). */
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    ['app-gestoria', 'Gestoria de Poble'], ['app-metriques', 'Consola de Mètriques'],
-    ['app-lector-rss', 'Curation AI (Lector RSS)'], ['app-cervell', 'Cervell (Node Graph)'], ['app-snippet', 'Snippet'],
+    ['app-gestoria', 'Gestoria de Poble'], ['app-lector-rss', 'Curation AI (Lector RSS)'], ['app-snippet', 'Snippet'],
   ]);
   for (const opcio of grups().flatMap((g) => g.options)) expect(opcio.icon).toBeTruthy();
   expect(grups()[1].options[0].icon).not.toBe(grups()[1].options[1].icon);
@@ -84,6 +95,21 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom, les organ
   expect(m.workspace.icons.categories).toBeTruthy();
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
   expect(m.workspace.model.itemsComplete).toBe(true);
+});
+
+test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriques i el Cervell, al seu lloc', () => {
+  m.sessio = { esSuperadmin: true };
+  render(<PerfilShell />);
+  expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
+    ['app-gestoria', 'Gestoria de Poble'], ['app-metriques', 'Consola de Mètriques'],
+    ['app-lector-rss', 'Curation AI (Lector RSS)'], ['app-cervell', 'Cervell (Node Graph)'], ['app-snippet', 'Snippet'],
+  ]);
+  for (const opcio of grups()[2].options) expect(opcio.icon).toBeTruthy();
+});
+
+test('Bloc 3.4 · una llista federada sense la marca `intern` no canvia: totes les seues utilitats, també sense superadmin', () => {
+  render(<PerfilShell aplicacions={[{ id: 'forn-comunal', nom: 'Forn comunal' }, { id: 'metriques', nom: 'Mètriques del forn' }]} />);
+  expect(grups()[2].options.map((o) => o.id)).toEqual(['app-forn-comunal', 'app-metriques']);
 });
 
 test('sense organitzacions el grup es mostra igualment, amb una opció que explica com crear-ne una', () => {
@@ -109,8 +135,12 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
-  for (const id of ['metriques', 'lector-rss', 'cervell', 'snippet']) {
+  for (const id of ['lector-rss', 'snippet']) {
     expect(filsDe(`app-${id}`)).toEqual([`app-${id}-sobre`]);
+  }
+  /* Gauntlet 261016 (Bloc 3.4) · Sense superadmin, la maquinària interna no té cap apartat. */
+  for (const id of ['metriques', 'cervell']) {
+    expect(filsDe(`app-${id}`)).toEqual([]);
   }
   expect(filsDe('sense-organitzacions')).toEqual([]);
   expect(item('jo-privacitat')).toMatchObject({ title: 'Privacitat i dades' });
@@ -179,6 +209,8 @@ test('tercera columna: l’editor per a la fitxa, El compte, i Privacitat i dade
    de Mètriques i el Cervell (`panell: null`) no pinten cap botó: no hi ha
    res a mostrar ni a ocultar, i un botó que no fa res està vetat. */
 test('una aplicació pendent: estat honest, la preferència del Panell només si hi té targeta, i cap enllaç d’obertura', () => {
+  /* Gauntlet 261016 (Bloc 3.4) · Amb superadmin, per a poder obrir també les dues internes. */
+  m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
   const aplicacions = [
     ['gestoria', 'Gestoria de Poble', true], ['metriques', 'Consola de Mètriques', false],

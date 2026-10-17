@@ -1,0 +1,370 @@
+{
+  "createdAt": "2026-10-16T14:32:36.802Z",
+  "sourceSha256Before": "b5c6f93447f25d233896678f044f3ee2f5d9ced51b71621e9a1d8c8e56b5f46f",
+  "syntheticOnly": true,
+  "probes": [
+    {
+      "name": "jpeg-original-exif-orientation-dimensions-spaces",
+      "pass": true,
+      "result": {
+        "entrada": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/foto amb espais.jpg",
+        "eixida": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/original amb espais.webp",
+        "mode": "original",
+        "amplada": 300,
+        "alcada": 600,
+        "bytes": 796,
+        "kb": 0.8,
+        "kib": 0.78,
+        "qualitatWebp": 84,
+        "radiDifuminat": 0,
+        "degradatPerPressupost": false,
+        "exifPreservat": true,
+        "gps": {
+          "lat": 38.5919,
+          "lng": -0.4184,
+          "altitud": 456.7
+        },
+        "dataCaptura": "2026-10-15T09:15:30+02:00"
+      },
+      "decoded": {
+        "size": [
+          300,
+          600
+        ],
+        "orientation": 1,
+        "make": "Synthetic camera",
+        "date": "2026:10:15 09:15:30",
+        "offset": "+02:00",
+        "makerNote": [
+          8,
+          2,
+          7,
+          4,
+          9,
+          1
+        ],
+        "gpsLatitude": [
+          38,
+          35,
+          30.84
+        ],
+        "gpsLongitude": [
+          0,
+          25,
+          6.24
+        ],
+        "pixels": [
+          [
+            254,
+            0,
+            0
+          ],
+          [
+            1,
+            128,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "jpeg-quadrat-exif-orientation-dimensions-spaces",
+      "pass": true,
+      "result": {
+        "entrada": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/foto amb espais.jpg",
+        "eixida": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/quadrat amb espais.webp",
+        "mode": "quadrat",
+        "amplada": 1200,
+        "alcada": 1200,
+        "bytes": 3456,
+        "kb": 3.46,
+        "kib": 3.38,
+        "qualitatWebp": 84,
+        "radiDifuminat": 0,
+        "degradatPerPressupost": false,
+        "exifPreservat": true,
+        "gps": {
+          "lat": 38.5919,
+          "lng": -0.4184,
+          "altitud": 456.7
+        },
+        "dataCaptura": "2026-10-15T09:15:30+02:00"
+      },
+      "decoded": {
+        "size": [
+          1200,
+          1200
+        ],
+        "orientation": 1,
+        "make": "Synthetic camera",
+        "date": "2026:10:15 09:15:30",
+        "offset": "+02:00",
+        "makerNote": [
+          8,
+          2,
+          7,
+          4,
+          9,
+          1
+        ],
+        "gpsLatitude": [
+          38,
+          35,
+          30.84
+        ],
+        "gpsLongitude": [
+          0,
+          25,
+          6.24
+        ],
+        "pixels": [
+          [
+            254,
+            0,
+            0
+          ],
+          [
+            1,
+            128,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "jpeg-avatar-exif-orientation-dimensions-spaces",
+      "pass": true,
+      "result": {
+        "entrada": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/foto amb espais.jpg",
+        "eixida": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/avatar amb espais.webp",
+        "mode": "avatar",
+        "amplada": 400,
+        "alcada": 400,
+        "bytes": 818,
+        "kb": 0.82,
+        "kib": 0.8,
+        "qualitatWebp": 84,
+        "radiDifuminat": 0,
+        "degradatPerPressupost": false,
+        "exifPreservat": true,
+        "gps": {
+          "lat": 38.5919,
+          "lng": -0.4184,
+          "altitud": 456.7
+        },
+        "dataCaptura": "2026-10-15T09:15:30+02:00"
+      },
+      "decoded": {
+        "size": [
+          400,
+          400
+        ],
+        "orientation": 1,
+        "make": "Synthetic camera",
+        "date": "2026:10:15 09:15:30",
+        "offset": "+02:00",
+        "makerNote": [
+          8,
+          2,
+          7,
+          4,
+          9,
+          1
+        ],
+        "gpsLatitude": [
+          38,
+          35,
+          30.84
+        ],
+        "gpsLongitude": [
+          0,
+          25,
+          6.24
+        ],
+        "pixels": [
+          [
+            254,
+            0,
+            0
+          ],
+          [
+            1,
+            128,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "png-metadata-preservation",
+      "pass": true,
+      "result": {
+        "entrada": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/foto amb espais.png",
+        "eixida": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/png-result.webp",
+        "mode": "original",
+        "amplada": 300,
+        "alcada": 600,
+        "bytes": 818,
+        "kb": 0.82,
+        "kib": 0.8,
+        "qualitatWebp": 84,
+        "radiDifuminat": 0,
+        "degradatPerPressupost": false,
+        "exifPreservat": true,
+        "gps": {
+          "lat": 38.5919,
+          "lng": -0.4184,
+          "altitud": 456.7
+        },
+        "dataCaptura": "2026-10-15T09:15:30+02:00"
+      },
+      "decoded": {
+        "size": [
+          300,
+          600
+        ],
+        "orientation": 1,
+        "make": "Synthetic camera",
+        "date": "2026:10:15 09:15:30",
+        "offset": "+02:00",
+        "makerNote": [
+          8,
+          2,
+          7,
+          4,
+          9,
+          1
+        ],
+        "gpsLatitude": [
+          38,
+          35,
+          30.84
+        ],
+        "gpsLongitude": [
+          0,
+          25,
+          6.24
+        ],
+        "pixels": [
+          [
+            255,
+            1,
+            0
+          ],
+          [
+            1,
+            128,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "tiff-metadata-preservation",
+      "pass": true,
+      "result": {
+        "entrada": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/foto amb espais.tiff",
+        "eixida": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-webp audit amb espais SPVpUb/tiff-result.webp",
+        "mode": "original",
+        "amplada": 300,
+        "alcada": 600,
+        "bytes": 946,
+        "kb": 0.95,
+        "kib": 0.92,
+        "qualitatWebp": 84,
+        "radiDifuminat": 0,
+        "degradatPerPressupost": false,
+        "exifPreservat": true,
+        "gps": {
+          "lat": 38.5919,
+          "lng": -0.4184,
+          "altitud": 456.7
+        },
+        "dataCaptura": "2026-10-15T09:15:30+02:00"
+      },
+      "decoded": {
+        "size": [
+          300,
+          600
+        ],
+        "orientation": 1,
+        "make": "Synthetic camera",
+        "date": "2026:10:15 09:15:30",
+        "offset": "+02:00",
+        "makerNote": [
+          8,
+          2,
+          7,
+          4,
+          9,
+          1
+        ],
+        "gpsLatitude": [
+          38,
+          35,
+          30.84
+        ],
+        "gpsLongitude": [
+          0,
+          25,
+          6.24
+        ],
+        "pixels": [
+          [
+            255,
+            1,
+            0
+          ],
+          [
+            1,
+            128,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "oversized-exif-rejected-without-changing-existing-files",
+      "pass": true,
+      "rejected": true,
+      "reason": "Les metadades EXIF (90039 B) superen el pressupost màxim permès (79999 B)."
+    },
+    {
+      "name": "explicit-small-budget-enforced-or-rejected-safely",
+      "pass": true,
+      "rejected": true,
+      "reason": "El WebP resultant (3068 B) supera el pressupost màxim permès (999 B)."
+    },
+    {
+      "name": "exactly-80000-bytes-rejected-before-publishing",
+      "pass": true,
+      "candidateBytes": 80000,
+      "encoderInvoked": true,
+      "rejected": true,
+      "reason": "Error: El WebP resultant (80000 B) supera el pressupost màxim permès (79999 B)."
+    },
+    {
+      "name": "encoder-failure-preserves-in-place-source-and-cleans-temporary",
+      "pass": true,
+      "failed": true,
+      "exitStatus": 1,
+      "encoderInvoked": true,
+      "sourceUnchanged": true,
+      "temporaryFiles": []
+    },
+    {
+      "name": "invalid-input-preserves-existing-destination",
+      "pass": true
+    }
+  ],
+  "status": "passed",
+  "environment": {
+    "python": "/usr/local/bin/python3",
+    "pillow": "12.2.0",
+    "webp": true
+  },
+  "sourceSha256After": "b5c6f93447f25d233896678f044f3ee2f5d9ced51b71621e9a1d8c8e56b5f46f",
+  "sourceUnchanged": true,
+  "syntheticFilesCleaned": true,
+  "failures": 0
+}

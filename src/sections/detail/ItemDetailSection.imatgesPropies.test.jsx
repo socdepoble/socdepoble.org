@@ -24,13 +24,15 @@ const mocks = vi.hoisted(() => ({
   sectionId: 'mur', itemId: null, navigate: vi.fn(), seo: vi.fn(), t: (_, alternativa) => alternativa,
   mur: { events: [], feedPosts: [], marketItems: [] },
   core: { towns: [] }, media: { mediaItems: [] },
-  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }
+  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }, redireccio: null
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId }),
   useNavigate: () => mocks.navigate,
-  useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.itemId}`, state: null }),
-  Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
+  useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.itemId}`, search: '', state: null }),
+  Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children),
+  /* Onada 0.3 (Gauntlet 261016) · /multimedia/:id redirigix al visor: el doble anota on. */
+  Navigate: ({ to, replace }) => { mocks.redireccio = { to, replace }; return null; }
 }));
 vi.mock('../../sections/mur/MurContext', () => ({ useMur: () => mocks.mur }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
@@ -272,12 +274,18 @@ describe('(d) og:image (useSEO)', () => {
     expect(ultimSeo().image).toBe('/assets/mercat/a.png');
   });
 
-  test('Pobles i Multimèdia, com abans: la imatge de l’element tal qual', () => {
+  /* Onada 0.3 (Gauntlet 261016) · Esta prova fixava també la pàgina de detall
+     de /multimedia/:id (la imatge tal qual a og:image). L'ordre nova la
+     retira: /multimedia/:id obri l'Arxiu amb el visor (?foto=), cap pàgina de
+     detall i cap useSEO del detall. Pobles, com abans. */
+  test('Pobles, com abans: la imatge de l’element tal qual; /multimedia/:id ja no és cap detall, redirigix al visor', () => {
     pinta('pobles', { id: 'sella', title: 'Sella', image_url: RASTREIG });
     expect(ultimSeo().image).toBe(RASTREIG);
     cleanup();
+    mocks.seo.mockClear();
     pinta('multimedia', { id: 'era', title: 'Era', src: RASTREIG });
-    expect(ultimSeo().image).toBe(RASTREIG);
+    expect(mocks.seo).not.toHaveBeenCalled();
+    expect(mocks.redireccio).toEqual({ to: '/multimedia?foto=era', replace: true });
   });
 
   test('un element no trobat: cap imatge, com abans', () => {

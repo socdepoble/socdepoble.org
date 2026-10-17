@@ -25,12 +25,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('../../data/identitat.js', () => ({ usuariDeSessio: () => null, getDefaultUserId: () => 'convidat-seed' }));
 
-import { ambLaIdentitatPropia, cercaEntrades, deAgent, deIdentitat, deMembre } from './indexCerca.js';
-import { rutaDePerfil } from '../../config/navigation.js';
+import { ambLaIdentitatPropia, cercaEntrades, deAgent, deIdentitat, deMembre, dePagina } from './indexCerca.js';
+import { PAGES_SEED } from '../../data/appSeed.js';
+import { RUTA_FITXA_IAIA, rutaDePerfil } from '../../config/navigation.js';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import {
-  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT, agentIASeed, aliesDeLActor
+  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, IAIA_ID, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, aliesDeLActor
 } from '../../data/identitatsSeed.js';
 import { localXat, reiniciaLocalXat } from '../../data/localXat.js';
 import { XAT_SEED_IDS } from '../../data/xatSeed.js';
@@ -67,10 +68,47 @@ describe('la IAIA MarIA', () => {
     expect(iaia.avatar).toEqual({ nom: 'IAIA MarIA', src: AGENTS_MAP.IAIA.avatar_url, llavor: IAIA_ID });
     expect(iaia.meta[0]).toBe(ETIQUETA_IA);
     expect(iaia.meta).toContain(AGENTS_MAP.IAIA.role);
-    expect(iaia.href).toBe(rutaDePerfil('ia', IAIA_ID));
-    expect(iaia.href).toBe(`/perfil/${IAIA_ID}`);
+    /* Gauntlet 261016_1530 (Bloc 3.6.3; F65; ordre del Mestre: /iaia «és on
+       s'ha d'accedir des del xat i des del cercador») · Actualitzada a posta:
+       abans fixava /perfil/<id>. La fitxa neta de la IAIA és /iaia
+       (RUTA_FITXA_IAIA); /perfil/<id> continua obrint la mateixa fitxa i
+       rutaDePerfil no canvia. */
+    expect(iaia.href).toBe(RUTA_FITXA_IAIA);
+    expect(iaia.href).toBe('/iaia');
+    expect(rutaDePerfil('ia', IAIA_ID)).toBe(`/perfil/${IAIA_ID}`);
     /* El perfil també s'obri pel seu slug declarat. */
     expect(agentIASeed('iaia-maria')?.id).toBe(IAIA_ID);
+  });
+
+  test('Bloc 3.6.3 · només la IAIA, pel seu id i amb el tipus d’IA, va a /iaia: cap altra IA ni cap homònim', () => {
+    const iaDelCataleg = deAgent({ id: 'gall', name: 'El Gall', type: 'AI' }, OPCIONS);
+    expect(iaDelCataleg.href).toBe('/perfil/gall');
+    const homonima = deMembre({ usuari_id: 'u-maria', nom: 'IAIA MarIA', tipus: 'persona' }, { ...OPCIONS, fitxesDePersones: true });
+    expect(homonima.href).toBe('/gent/u-maria');
+    const ambSonId = deMembre({ usuari_id: IAIA_ID, nom: 'IAIA MarIA', tipus: 'persona' }, { ...OPCIONS, fitxesDePersones: true });
+    expect(ambSonId.href).toBe(`/gent/${IAIA_ID}`);
+  });
+
+  test('Bloc 3.6.3 · la fila del padró de la IAIA enllaça a /iaia també sense fitxes de persones (la fitxa ix del paquet)', () => {
+    const fila = deMembre({ usuari_id: IAIA_ID, nom: 'IAIA MarIA', tipus: 'ia' }, OPCIONS);
+    expect([fila.href, fila.accio]).toEqual(['/iaia', { tipus: 'escriu', href: `/xat?amb=${IAIA_ID}` }]);
+    /* Una altra persona o IA del padró, com sempre: sense fitxesDePersones, cap enllaç. */
+    expect(deMembre({ usuari_id: 'u-pepa', nom: 'Pepa', tipus: 'persona' }, OPCIONS).href).toBeNull();
+    expect(deMembre({ usuari_id: 'gall', nom: 'El Gall', tipus: 'ia' }, OPCIONS).href).toBeNull();
+  });
+
+  /* Bloc 3.6.3 (F64 i F65) · Al Cercador, la IAIA (persones) porta a la seua
+     fitxa, /iaia, i el manifest «L'Ànima de la IAIA» (pàgines, la llavor de
+     PAGE_COPY que llig useCercaGlobal) a /anima: cap resultat no confon les dues. */
+  test('Bloc 3.6.3 · la IAIA ix a /iaia i el manifest, a les pàgines, a /anima', () => {
+    const pagines = PAGES_SEED.map(dePagina).filter(Boolean);
+    const manifest = cercaEntrades(pagines, 'còdex forense', 'pagines').llista;
+    expect(manifest.map((entrada) => [entrada.id, entrada.titol, entrada.href])).toEqual([['anima', PAGE_COPY.anima.title, '/anima']]);
+    expect(pagines.filter((entrada) => entrada.href === RUTA_FITXA_IAIA)).toEqual([]);
+    const tot = [...index, ...pagines];
+    const iaia = cercaEntrades(tot, 'iaia maria', 'persones').llista;
+    expect(iaia.map((entrada) => entrada.href)).toEqual([RUTA_FITXA_IAIA]);
+    expect(tot.filter((entrada) => entrada.href === '/anima').map((entrada) => entrada.clau)).toEqual(['pagines:anima']);
   });
 
   test('«Escriu-li» porta a la seua conversa de la llista del Xat, la mateixa del botó de /iaia', () => {
@@ -191,11 +229,75 @@ describe('en local, sense catàleg', () => {
       .map((membre) => deMembre(membre, { ...OPCIONS, fitxesDePersones: true }));
     const troba = (consulta, tipus) => cercaEntrades(padro, consulta, tipus).llista
       .map((entrada) => [entrada.titol, entrada.href, entrada.accio?.href]);
-    expect(troba('iaia', 'persones')).toEqual([['IAIA MarIA', `/perfil/${IAIA_ID}`, `/xat?amb=${IAIA_ID}`]]);
+    /* Bloc 3.6.3 (F65) · Actualitzada a posta: la IAIA, a la seua fitxa neta /iaia (abans /perfil/<id>). */
+    expect(troba('iaia', 'persones')).toEqual([['IAIA MarIA', RUTA_FITXA_IAIA, `/xat?amb=${IAIA_ID}`]]);
     expect(troba('sóc de poble', 'entitats')).toEqual([['Sóc de Poble', '/empresa/socdepoble', '/xat?amb=socdepoble']]);
     expect(troba('javi', 'persones')).toEqual([['Javi Llinares', '/gent/0001', '/xat?amb=0001']]);
     const [iaia] = cercaEntrades(padro, 'iaia', 'persones').llista;
     expect([iaia.meta, iaia.avatar.src]).toEqual([[ETIQUETA_IA], AGENTS_MAP.IAIA.avatar_url]);
+  });
+
+  /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+     sense poble») · En local el padró no porta cap poble i no hi ha catàleg:
+     abans «Sóc de Poble» eixia a /cerca sense poble. */
+  test('Bloc 3.5.2 · «Sóc de Poble» ix amb el seu poble i es troba per ell; la IAIA i la persona pilot, la meta de sempre', async () => {
+    const padro = (await localXat.carregaMembres(null, { dataMode: 'local' }))
+      .map((membre) => deMembre(membre, { ...OPCIONS, fitxesDePersones: true }));
+    const [entitat] = cercaEntrades(padro, 'sóc de poble', 'entitats').llista;
+    expect([entitat.id, entitat.meta]).toEqual([ENTITAT_PILOT_SLUG, [POBLE_FUNDACIONAL]]);
+    expect(cercaEntrades(padro, 'torre maçanes', 'entitats').llista.map((e) => e.id)).toEqual([ENTITAT_PILOT_SLUG]);
+    const [javi] = cercaEntrades(padro, 'javi', 'persones').llista;
+    expect(javi.meta).toEqual([]);
+  });
+});
+
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+   sense poble») · El poble d'una entitat del Cercador: el del servidor si n'hi
+   ha; si no, el de la llavor o, per a les entitats del Mestre, el seu
+   (POBLE_FUNDACIONAL). Cap altra entitat no se n'inventa cap, mai pel nom ni
+   pel slug de la fila. */
+describe('Bloc 3.5.2 · cap entitat sense poble al Cercador', () => {
+  const entitat = (extra) => deMembre({ tipus: 'entitat', nom: 'Sóc de Poble', ...extra }, OPCIONS);
+  const UUID = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+
+  test('una fila del padró de les entitats del Mestre (id o àlies declarat) sense poble porta el seu', () => {
+    for (const id of [ENTITAT_PILOT_SLUG, 'soc-de-poble_official', ENTITAT_RENTONAR_SLUG]) {
+      const fila = entitat({ usuari_id: id });
+      expect([id, fila.meta]).toEqual([id, [POBLE_FUNDACIONAL]]);
+      expect([id, cercaEntrades([fila], 'maçanes', 'entitats').total]).toEqual([id, 1]);
+    }
+  });
+
+  test('el poble que diu el servidor sempre mana', () => {
+    expect(entitat({ usuari_id: ENTITAT_PILOT_SLUG, town_name: 'Benilloba' }).meta).toEqual(['Benilloba']);
+    expect(entitat({ usuari_id: 'o-forn', nom: 'Forn de la Plaça', town_name: ' Penàguila ' }).meta).toEqual(['Penàguila']);
+  });
+
+  test('una altra entitat sense poble no se n’inventa cap: ni pel nom, ni amb un UUID no declarat', () => {
+    expect(entitat({ usuari_id: 'o-forn', nom: 'Forn de la Plaça' }).meta).toEqual([]);
+    expect(entitat({ usuari_id: UUID }).meta).toEqual([]);
+  });
+
+  test('una persona o una IA del padró no hi guanyen cap poble, encara que siguen de les identitats del Mestre', () => {
+    expect(deMembre({ usuari_id: AGENTS_MAP.JAVI.id, nom: 'Javi Llinares', tipus: 'persona', town_name: 'Benilloba' }, OPCIONS).meta).toEqual([]);
+    expect(deMembre({ usuari_id: IAIA_ID, nom: 'IAIA MarIA', tipus: 'ia' }, OPCIONS).meta).toEqual([ETIQUETA_IA]);
+  });
+
+  test('una entitat de la sessió (IdentitatContext) porta el poble de la pertinença o, si en falta, el de les del Mestre', () => {
+    const propia = (extra) => deIdentitat({ tipus: 'entitat', nom: 'Sóc de Poble', slug: ENTITAT_PILOT_SLUG, poble: '', ...extra }, OPCIONS);
+    expect(propia({ id: ENTITAT_PILOT_ID }).meta).toEqual([POBLE_FUNDACIONAL]);
+    expect(propia({ id: ENTITAT_PILOT_ID, poble: 'Benilloba' }).meta).toEqual(['Benilloba']);
+    /* El slug de la fila no prova res (revisió adversarial, encàrrec C). */
+    expect(propia({ id: UUID }).meta).toEqual([]);
+    expect(propia({ id: 'o-forn', nom: 'Forn', slug: 'forn' }).meta).toEqual([]);
+    /* La persona, la de sempre: el poble de la sessió. */
+    expect(deIdentitat({ tipus: 'persona', id: 'u-javi', nom: 'Javi Llinares' }, { ...OPCIONS, poble: 'La Vila' }).meta).toEqual(['La Vila']);
+  });
+
+  test('en llavor (padró i catàleg), «Sóc de Poble» porta el poble una sola vegada', () => {
+    const [sdp] = cercaEntrades(index, 'sóc de poble', 'entitats').llista;
+    expect(sdp.meta.filter((valor) => valor === POBLE_FUNDACIONAL)).toEqual([POBLE_FUNDACIONAL]);
+    expect(sdp.meta).toContain(AGENTS_MAP.SOCDEPOBLE.role);
   });
 });
 

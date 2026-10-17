@@ -18,13 +18,17 @@ vi.mock('../components/universal/UniversalPage', () => ({
   UniversalPage: ({ children }) => React.createElement('div', { 'data-pagina': '' }, children)
 }));
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   baseRecursos,
   fixaBaseRecursos,
   resolRecursPropi,
   resolRecursosDeHtml,
   resolveAsset,
-  resolveTownImageUrl
+  resolveTownImageUrl,
+  TOWN_FALLBACK_IMAGES
 } from './assetResolver.js';
 import { sanitizeHtml } from '../utils/sanitize.js';
 import { DEFAULT_AUTHOR } from '../components/universal/UniversalUtils.js';
@@ -37,6 +41,7 @@ import { PAGE_COPY } from '../sections/text/pageContent.js';
 /* Onada 8 (261009) · L'avatar de Sóc de Poble és el PNG (abans, l'SVG). */
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const PAQUET = 'https://wp.example/wp-content/plugins/socdepoble-enxufe/dist';
+const ARREL_PUBLIC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../public');
 
 afterEach(() => {
   cleanup();
@@ -113,7 +118,28 @@ test('resolveTownImageUrl hereta la base i, sense, torna el de sempre', () => {
   expect(resolveTownImageUrl('/assets/towns/tibi/1.jpg')).toBe('/assets/towns/tibi/1.jpg');
   fixaBaseRecursos(PAQUET);
   expect(resolveTownImageUrl('/assets/towns/tibi/1.jpg')).toBe(`${PAQUET}/assets/towns/tibi/1.jpg`);
-  expect(resolveTownImageUrl('', 'Sella')).toBe(`${PAQUET}/assets/img/nano_mercat_llaurador_1774197050578.png`);
+  expect(resolveTownImageUrl('', 'Sella')).toBe(`${PAQUET}/assets/uploads/brain/nano_mercat_llaurador_1774197050578.png`);
+});
+
+/* Gauntlet 261016 (I34) · Abans, les nou reserves apuntaven a /assets/img/,
+   on no n'hi havia cap, i esta prova només mirava la cadena. Ara cada reserva
+   ha d'existir de veres a public/ i ser una imatge decodificable. Algunes
+   porten l'extensió .png però són JPEG per dins: el navegador les pinta pel
+   contingut, i per això s'accepten les dues signatures. */
+const SIGNATURA_PNG = [0x89, 0x50, 0x4e, 0x47];
+const SIGNATURA_JPEG = [0xff, 0xd8, 0xff];
+const comencaPer = (bytes, signatura) => signatura.every((octet, i) => bytes[i] === octet);
+
+test('les reserves de pobles apunten a fitxers que existixen a public/', () => {
+  for (const ruta of TOWN_FALLBACK_IMAGES) {
+    const fitxer = path.join(ARREL_PUBLIC, ruta);
+    expect(fs.existsSync(fitxer), ruta).toBe(true);
+    const capcalera = fs.readFileSync(fitxer).subarray(0, 4);
+    expect(comencaPer(capcalera, SIGNATURA_PNG) || comencaPer(capcalera, SIGNATURA_JPEG), ruta).toBe(true);
+  }
+  for (const poble of ['Benifallim', 'Sella', 'Orxeta', 'Relleu', 'Alcoleja', 'Xixona', 'Tibi', 'Penàguila']) {
+    expect(TOWN_FALLBACK_IMAGES, poble).toContain(resolveTownImageUrl('', poble));
+  }
 });
 
 test('resolRecursosDeHtml: sense base, el mateix HTML; amb base, només els src="/assets/…"', () => {

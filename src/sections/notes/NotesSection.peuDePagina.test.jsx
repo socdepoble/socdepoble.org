@@ -1,11 +1,12 @@
-/* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «En seleccionar la
-   carpeta 'Mur' o 'Mercat' i el perfil 'Sóc de Poble', la part inferior de la
-   nota hauria de llistar totes les notícies/productes ja publicades en eixe
-   context per al perfil actiu») · El Bloc passa al detall la secció de la
-   carpeta triada (seccioDeCarpeta de categoriaBase, la mateixa de la nota
-   preparada): Mur, Mercat o Esdeveniments, i cap en una altra carpeta.
-   NotesEditor en fa el peu (NotesEditor.peuDePagina.test.jsx). Router en
-   memòria i espai de treball de veres; el detall, simulat. */
+/* Gauntlet 261016_1530 (Bloc 3.9, Onada 1.5; ordre del Mestre: «Eliminar el
+   bloc inferior "Ja publicat al Mur" de la vista d'edició») · Deroga a
+   l'editor l'Esmena 2 del pla 261007_1645: abans el Bloc passava al detall la
+   secció de la carpeta triada (Mur, Mercat o Esdeveniments) perquè NotesEditor
+   en fera el peu, i este fitxer ho fixava. Es reescriu a propòsit, no
+   s'esborra (qualitat.publicacionsActor.test.js el té al cens): ara comprova
+   que el detall d'una nota no rep cap secció en cap carpeta, tampoc en
+   canviar-ne. Router en memòria i espai de treball de veres; el detall,
+   simulat. */
 import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
@@ -59,22 +60,22 @@ const munta = (ruta) => render(<MemoryRouter rutaInicial={ruta}><NotesSection />
 const detall = () => screen.getByTestId('detall');
 const rail = () => screen.getByRole('navigation', { name: 'CARPETES' });
 
-test('carpeta Mercat: el detall rep la secció «mercat»', () => {
+test('Bloc 3.9 · carpeta Mercat: el detall de la nota no rep cap secció (cap peu a l’editor)', () => {
   munta('/notes?carpeta=f-mercat&nota=m1');
   expect(detall().textContent).toBe('m1');
-  expect(detall().dataset.seccio).toBe('mercat');
+  expect(detall().dataset.seccio).toBe('cap');
 });
 
-test('l’entrada nua de /notes (la primera carpeta, Mur): «mur»', () => {
+test('Bloc 3.9 · l’entrada nua de /notes (la primera carpeta, Mur): cap secció', () => {
   munta('/notes');
   expect(detall().textContent).toBe('n1');
-  expect(detall().dataset.seccio).toBe('mur');
+  expect(detall().dataset.seccio).toBe('cap');
 });
 
-test('una carpeta sense secció (Altres notes): cap secció, i canviar de carpeta la segueix', () => {
+test('Bloc 3.9 · d’una carpeta sense secció a Mercat: el detall continua sense secció', () => {
   munta('/notes?carpeta=f-notes&nota=a1');
   expect(detall().dataset.seccio).toBe('cap');
   fireEvent.click(within(rail()).getByRole('button', { name: 'Mercat' }));
   expect(detall().textContent).toBe('m1');
-  expect(detall().dataset.seccio).toBe('mercat');
+  expect(detall().dataset.seccio).toBe('cap');
 });

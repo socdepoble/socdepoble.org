@@ -27,7 +27,18 @@ const FITXERS = Object.freeze([
   'src/sections/notes/NotesEditor.jsx',
   'src/sections/notes/NotesEditor.test.jsx',
   'src/sections/notes/NotesDataContext.test.jsx',
-  'src/sections/notes/NotesDataContext.amfitrio.test.jsx'
+  'src/sections/notes/NotesDataContext.amfitrio.test.jsx',
+  /* Bloc 3.8 del Gauntlet (261016) · La graella del catàleg Emojis XL al
+     DialegEmoticona. */
+  'src/components/universal/classificacio/DialegEmoticona.jsx',
+  'src/components/universal/classificacio/GraellaEmojis.jsx',
+  'src/components/universal/classificacio/GraellaEmojis.test.jsx',
+  /* Bloc 3.9 del Gauntlet (261016) · L'«Edició avançada» de la closca i del
+     DocumentEditor, «Nota sense títol» i l'esvaïment de la plantilla. */
+  'src/components/universal/DocumentEditor.jsx',
+  'src/components/universal/DocumentEditor.edicioAvancada.test.jsx',
+  'src/components/universal/UniversalEditorShell.edicioAvancada.test.jsx',
+  'src/components/universal/richText/useUniversalRichText.js'
 ]);
 const esProva = (f) => /\.test\.jsx?$/.test(f);
 const JSX = FITXERS.filter((f) => f.endsWith('.jsx') && !esProva(f));

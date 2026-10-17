@@ -453,6 +453,13 @@ export function PageFrame({
   accionsInoperatives = false,
   onClickInoperatiu = null,
   avisAccions = null,
+  /* Gauntlet 261016 (Bloc 3.9) · Opcional, només amb accionsInoperatives:
+     Traduir també es pinta inoperatiu i el seu clic va a
+     onClickInoperatiu('traduir'). Només el passa l'editor
+     (UniversalEditorShell): en edició, Traduir portava a /traduccions i treia
+     la persona de l'editor. Sense la prop (la Gestoria, la lectura), Traduir
+     com sempre. */
+  traduirInoperatiu = false,
   /* T2 (ordre del Mestre, 260930) · últim nivell d'encapçalament que recull
      l'Índex (1-6). Sense la prop, h1-h6: tots. */
   nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
@@ -808,6 +815,7 @@ export function PageFrame({
           comentarPrivatAmb={comentarPrivatAmb}
           accionsInoperatives={accionsInoperatives}
           onClickInoperatiu={onClickInoperatiu}
+          {...(traduirInoperatiu === true ? { traduirInoperatiu: true } : null)}
           menuTraduir={menuTraduir}
         />
       )}

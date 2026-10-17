@@ -41,12 +41,14 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CircleX, Construction, Search } from 'lucide-react';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext';
+import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import { GLIF_DOCUMENT, NavGlyph } from '../../../components/universal/workspace/NavGlyph.jsx';
 import { SECTIONS } from '../../../config/sections.js';
 import { COVER_PAGE_KEYS, SYSTEM_PAGES } from '../../../config/systemPages.js';
 import { emojiSol } from '../../../utils/emoji.js';
 import { useNotes } from '../../notes/NotesContext.jsx';
 import { PAGE_COPY } from '../../text/pageContent.js';
+import { maquinariaALaVista } from '../../wiki-de-poble/maquinaria.js';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './manifest.js';
 import {
   GRUPS_DESTI, destinsDeCarpetesDelBloc, destinsDeLaWiki, destinsDeNotes, destinsDelDisseny, destinsDelSistema,
@@ -151,6 +153,11 @@ export function AssignacioEmoji({ emoji, nom, onFet }) {
   const notes = bloc?.notes ?? CAP;
   const hiHaBloc = Boolean(bloc);
   const carpetesDelBloc = bloc?.noteFolders;
+  /* Gauntlet 261016 (Bloc 3.4) · El grup de la Wiki és la Wiki que veu qui
+     mira: la Maquinària de la IAIA (i la Consola), només en desenvolupament o
+     per a qui és superadmin, la mateixa regla de la Wiki (maquinaria.js). */
+  const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
+  const ambMaquinaria = maquinariaALaVista({ DEV: import.meta.env.DEV, esSuperadmin });
   /* En cada grup, l'ordre de la seua secció: la portada, les carpetes i els
      documents. Les carpetes del Bloc, només si hi ha Bloc. */
   const destins = useMemo(() => {
@@ -158,11 +165,11 @@ export function AssignacioEmoji({ emoji, nom, onFet }) {
     return {
       notes: hiHaBloc ? [...destinsDeCarpetesDelBloc(carpetesDelBloc), ...destinsDeNotes(notes)] : CAP,
       wiki: destinsDeLaWiki(wiki.manifest, copyDe(COVER_PAGE_KEYS.wiki),
-        { consola: copyDe(COVER_PAGE_KEYS.consola), locals: wiki.locals }),
+        { consola: copyDe(COVER_PAGE_KEYS.consola), locals: wiki.locals, maquinaria: ambMaquinaria }),
       disseny: destinsDelDisseny(CATALOG_CATEGORIES, CATALOG_ITEMS, copyDe(COVER_PAGE_KEYS.disseny)),
       sistema: destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, JA_LLISTADES)
     };
-  }, [hiHaBloc, carpetesDelBloc, notes, wiki.manifest, wiki.locals, pageCopy]);
+  }, [hiHaBloc, carpetesDelBloc, notes, wiki.manifest, wiki.locals, pageCopy, ambMaquinaria]);
   const filtrats = useMemo(
     () => Object.fromEntries(GRUPS_DESTI.map((grup) => [grup.id, filtraDestins(destins[grup.id], terme)])),
     [destins, terme]

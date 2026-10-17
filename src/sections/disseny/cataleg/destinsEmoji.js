@@ -132,8 +132,13 @@ export function destinsDeCarpetesDelBloc(noteFolders) {
  * reserva) i `locals`, les eines locals (modulsLocalsActius de la Wiki: només
  * en desenvolupament). Sense el manifest (la Wiki encara no ha arribat), només
  * la portada.
+ * Gauntlet 261016 (Bloc 3.4) · `maquinaria` diu si la Wiki mostra la carpeta
+ * «Maquinària de la IAIA» a qui mira (wiki-de-poble/maquinaria.js: en
+ * desenvolupament o per a qui és superadmin). Amb false, ni la carpeta, ni la
+ * Consola, ni les eines locals: la llista és la de la Wiki que veu. Per
+ * defecte, true (el de sempre).
  */
-export function destinsDeLaWiki(manifest, portada, { consola = null, locals = CAP } = {}) {
+export function destinsDeLaWiki(manifest, portada, { consola = null, locals = CAP, maquinaria = true } = {}) {
   const destins = [];
   if (portada) {
     destins.push(destiDelCodi('wiki', 'wiki:portada', portada.title || 'Wiki de Poble', portada.subtitle,
@@ -142,15 +147,17 @@ export function destinsDeLaWiki(manifest, portada, { consola = null, locals = CA
   if (!manifest) return destins;
   /* Els mateixos títols de reserva que la Wiki, si el copy de la Consola falta. */
   const documents = [
-    {
-      id: 'consola_termodinamica', title: consola?.title || 'Consola Termodinàmica',
-      subtitle: consola?.subtitle || 'Manteniment de la IAIA', categoryId: CARPETA_MAQUINARIA.id,
-      glif: ICONES_ITEMS_WIKI.consola_termodinamica
-    },
-    ...(locals || CAP).filter((eina) => eina?.id).map((eina) => ({ ...eina, glif: eina.icon || ICONES_ITEMS_WIKI[eina.id] })),
+    ...(maquinaria ? [
+      {
+        id: 'consola_termodinamica', title: consola?.title || 'Consola Termodinàmica',
+        subtitle: consola?.subtitle || 'Manteniment de la IAIA', categoryId: CARPETA_MAQUINARIA.id,
+        glif: ICONES_ITEMS_WIKI.consola_termodinamica
+      },
+      ...(locals || CAP).filter((eina) => eina?.id).map((eina) => ({ ...eina, glif: eina.icon || ICONES_ITEMS_WIKI[eina.id] }))
+    ] : CAP),
     ...(manifest.items || CAP).filter((doc) => doc?.id).map((doc) => ({ ...doc, glif: iconaDeDocument(doc) }))
   ];
-  const carpetes = [CARPETA_MAQUINARIA, ...(manifest.categories || CAP)].filter((carpeta) => carpeta?.id);
+  const carpetes = [...(maquinaria ? [CARPETA_MAQUINARIA] : CAP), ...(manifest.categories || CAP)].filter((carpeta) => carpeta?.id);
   const etiquetes = new Map(carpetes.map((carpeta) => [carpeta.id, carpeta.label]));
   for (const carpeta of carpetes) {
     const dins = documents.filter((doc) => doc.categoryId === carpeta.id).length;

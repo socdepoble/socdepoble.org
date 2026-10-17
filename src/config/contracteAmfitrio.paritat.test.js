@@ -69,7 +69,8 @@ describe('l’element <soc-de-poble>', () => {
 describe('la ruta tapada', () => {
   test.each([
     ['/'], ['/xat'], ['/xat/'], ['/cerca?q=nom-sintetic'], ['/mur?filtre=tot#ancora'], ['/perfil/agent-sintetic-1'],
-    ['/perfil/agent-sintetic-1?x=1'], ['/pobles/sella/xat'], ['/?q=nom-sintetic'], ['/notes/n1#seccio']
+    ['/perfil/agent-sintetic-1?x=1'], ['/pobles/sella/xat'], ['/?q=nom-sintetic'], ['/notes/n1#seccio'],
+    ['/javillinares'], ['/socdepoble/'], ['/rentonar?x=1']
   ])('tapaRuta(%j) és la de la telemetria', (ruta) => {
     try {
       const intent = registraEsdeveniment('sonda-de-paritat', null, { ruta, cfg: { actiu: false } });

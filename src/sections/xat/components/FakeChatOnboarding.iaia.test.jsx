@@ -27,12 +27,15 @@ afterEach(cleanup);
 
 /* Gauntlet 261016 (Bloc 3.6) · Les converses directes de la mostra: sense
    poble declarat, la comunitat de «Gent de la Torre» (els fake-poble*) també
-   hi és, i Javi Llinares va a la cua. El nivell d'IA només toca la IAIA. */
-const directes = () => valor.chatThreads.map((f) => f.id).filter((id) => !id.startsWith('fake-poble'));
+   hi és, i Javi Llinares va a la cua. El nivell d'IA només toca la IAIA.
+   Gauntlet 261016_1530 (Bloc 3.6.1) · 'fake-sdp' ja no és cap directe: és
+   la comunitat de Sóc de Poble (els fake-sdp*), i tampoc no compta ací. */
+const esDeComunitat = (id) => id.startsWith('fake-poble') || id.startsWith('fake-sdp');
+const directes = () => valor.chatThreads.map((f) => f.id).filter((id) => !esDeComunitat(id));
 
 test('encesa: les dues entrades d’ajuda i dos no llegits', async () => {
   munta(false);
-  expect(directes()).toEqual(['fake-iaia', 'fake-sdp', 'fake-javi']);
+  expect(directes()).toEqual(['fake-iaia', 'fake-javi']);
   expect(valor.totalNoLlegits).toBe(2);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble', 'IAIA MarIA']);
   expect(valor.esFilAmagat('fake-iaia')).toBe(false);
@@ -40,7 +43,8 @@ test('encesa: les dues entrades d’ajuda i dos no llegits', async () => {
 
 test('apagada: només Sóc de Poble, un no llegit, i la IAIA no es pot obrir', async () => {
   munta(true);
-  expect(directes()).toEqual(['fake-sdp', 'fake-javi']);
+  expect(directes()).toEqual(['fake-javi']);
+  expect(valor.chatThreads.some((f) => f.id === 'fake-sdp' && f.tipus === 'comunitat')).toBe(true);
   expect(valor.totalNoLlegits).toBe(1);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble']);
   expect(await valor.creaFil('ajuda:ia')).toBe('fake-sdp');

@@ -223,6 +223,28 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
     expect(imatges(container)).toEqual({ llista: VELLA, barra: VELLA });
   });
 
+  /* Gauntlet 261016 (Bloc 3.5.4, verificació; ordre del Mestre: «És
+     inadmissible que a la mateixa pantalla es mostre una foto al centre i una
+     altra a la dreta») · Una persona que ha entrat amb Google i encara no té
+     cap avatar_url: la targeta del centre i la barra taronja ja pintaven la
+     foto de la sessió (identitat.avatar), i l'H1 de l'editor, a la dreta, la
+     ranura buida «Avatar». Ara l'avatar redó també la porta, i no hi ha cap
+     ranura ni «Llevar l'avatar». */
+  test('Javi Llinares · sense avatar_url i amb la foto de la sessió: la mateixa foto a l’editor, la barra, la targeta viva, «Les vistes», «El compte» i la fitxa compacta', () => {
+    const FOTO_SESSIO = 'https://proveidor.example/foto-de-sessio.jpg';
+    m.perfil = { ...m.perfil, identitats: [{ ...javi, avatar: FOTO_SESSIO, dades: { ...javi.dades, avatar_url: null } }, rentonar] };
+    const { container } = render(<PerfilShell />);
+    expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO, editor: FOTO_SESSIO });
+    const capcalera = detall(container).querySelector('.sdp-editor-document header.page-title');
+    expect(capcalera.querySelector('.page-title-logo-personalitzat')).toBeNull();
+    expect(within(capcalera).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+    expect(within(capcalera).queryByRole('button', { name: 'Llevar l’avatar' })).toBeNull();
+    fireEvent.click(apartat(container, 'Les vistes'));
+    expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO, targeta: FOTO_SESSIO });
+    fireEvent.click(apartat(container, 'El compte'));
+    expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO });
+  });
+
   test('El Rentonar · el logotip rebutjat: la mateixa imatge a l’editor, la targeta viva, «Les vistes», «El compte» i la fitxa compacta', async () => {
     m.params = new URLSearchParams({ organitzacio: 'R' });
     const { container } = render(<PerfilShell />);

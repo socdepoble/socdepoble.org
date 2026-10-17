@@ -1,0 +1,1743 @@
+{
+  "summary": {
+    "rasterCandidates": 202,
+    "decodedRaster": 202,
+    "byFormat": {
+      "JPEG": 173,
+      "PNG": 25,
+      "WEBP": 2,
+      "MPO": 2
+    },
+    "bytesByFormat": {
+      "JPEG": 107800528,
+      "PNG": 12299409,
+      "WEBP": 492228,
+      "MPO": 13310584
+    },
+    "totalRasterBytes": 133902749,
+    "topLevelFolders": [
+      "events",
+      "fotos",
+      "img",
+      "nano_cards",
+      "notes",
+      "pages",
+      "system",
+      "towns",
+      "ui",
+      "uploads"
+    ],
+    "proposedFolders": {
+      "sistema": false,
+      "pobles": false,
+      "usuaris": false,
+      "entitats": false,
+      "contingut": false
+    },
+    "universalSquareWebpUnder80000": 1,
+    "avatar400SquareWebp": 0,
+    "decodeErrors": [],
+    "largest": [
+      {
+        "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC00410.JPG",
+        "format": "MPO",
+        "width": 5184,
+        "height": 3888,
+        "bytes": 6881084,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC00320.JPG",
+        "format": "MPO",
+        "width": 5184,
+        "height": 3888,
+        "bytes": 6429500,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/0-container.png",
+        "format": "PNG",
+        "width": 1441,
+        "height": 1269,
+        "bytes": 3382563,
+        "extension": ".png"
+      },
+      {
+        "path": "public/assets/uploads/poble/la-torre-de-les-macanes/P_20161028_150735.jpg",
+        "format": "JPEG",
+        "width": 4096,
+        "height": 2304,
+        "bytes": 2120426,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/3-content.png",
+        "format": "PNG",
+        "width": 889,
+        "height": 1205,
+        "bytes": 2088497,
+        "extension": ".png"
+      },
+      {
+        "path": "public/assets/uploads/ajuntament/la-torre-de-les-macanes/avatar/IMG_20200904_143451.jpg",
+        "format": "JPEG",
+        "width": 4624,
+        "height": 3472,
+        "bytes": 1535065,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/nano_cards/mur_nano_card.jpg",
+        "format": "JPEG",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 1436565,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/uploads/brain/iaia_maria_portada.jpg",
+        "format": "JPEG",
+        "width": 1264,
+        "height": 848,
+        "bytes": 1419561,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/ui/plugins/treball_vinyeta.jpg",
+        "format": "JPEG",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 1393339,
+        "extension": ".jpg"
+      },
+      {
+        "path": "public/assets/soc_de_poble_ibanez.png",
+        "format": "JPEG",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 1391785,
+        "extension": ".png"
+      }
+    ],
+    "nonSquare": 57,
+    "pngExtensionActuallyJpeg": 95
+  },
+  "rasters": [
+    {
+      "path": "public/assets/events/aplec_2023_cartell.jpg",
+      "format": "JPEG",
+      "width": 723,
+      "height": 1024,
+      "bytes": 235376,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/events/aplec_2023_ponents.png",
+      "format": "PNG",
+      "width": 1024,
+      "height": 651,
+      "bytes": 282304,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/events/aplec_2023_reunio.png",
+      "format": "PNG",
+      "width": 1024,
+      "height": 651,
+      "bytes": 367767,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/events/nano_sessio_treball.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 987670,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/fotos/carla-soriano.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1173277,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/fotos/el-viatjant.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1113205,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/fotos/iaia-maria.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1106886,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/fotos/javi-llinares-perfil-1200px.jpg",
+      "format": "JPEG",
+      "width": 1200,
+      "height": 1200,
+      "bytes": 256046,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/fotos/sultan.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1175821,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/img/nano_porta_del_mas.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 119349,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/img/nano_porta_masia_roure_1774195469079.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 119976,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/img/pi-pla-verd.jpg",
+      "format": "JPEG",
+      "width": 771,
+      "height": 1024,
+      "bytes": 278878,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/img/que-es-socdepoble-1.jpg",
+      "format": "JPEG",
+      "width": 1241,
+      "height": 1754,
+      "bytes": 261753,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/img/que-es-socdepoble-2.jpg",
+      "format": "JPEG",
+      "width": 1241,
+      "height": 1754,
+      "bytes": 222462,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/img/que-es-socdepoble-3.jpg",
+      "format": "JPEG",
+      "width": 1241,
+      "height": 1754,
+      "bytes": 216932,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/img/que-es-socdepoble-4.jpg",
+      "format": "JPEG",
+      "width": 1241,
+      "height": 1754,
+      "bytes": 196037,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/animalets_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1374076,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/calendari_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1254610,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/cervell_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1297156,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/drets_autor_comic.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1029970,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/gestoria_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1186007,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/lector_rss_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1312262,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/mercat_nano_card.jpg",
+      "format": "JPEG",
+      "width": 896,
+      "height": 1200,
+      "bytes": 1127389,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/metriques_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1275696,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/mur_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1436565,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/snippet_nano_card.jpg",
+      "format": "JPEG",
+      "width": 972,
+      "height": 972,
+      "bytes": 580937,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/nano_cards/vehicle_nano_card.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1324010,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/notes/bloc_notes_vintage.jpg",
+      "format": "JPEG",
+      "width": 1376,
+      "height": 768,
+      "bytes": 764194,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/soc_de_poble_ibanez.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1391785,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png",
+      "format": "PNG",
+      "width": 256,
+      "height": 256,
+      "bytes": 20182,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png",
+      "format": "PNG",
+      "width": 985,
+      "height": 256,
+      "bytes": 39122,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/system/ui/logo-socdepoble-rect-negre-985x256.png",
+      "format": "PNG",
+      "width": 985,
+      "height": 256,
+      "bytes": 35043,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/system/ui/og-socdepoble-1200x630.png",
+      "format": "PNG",
+      "width": 1200,
+      "height": 630,
+      "bytes": 530885,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/system/ui/xat-bg-map-v2.jpg",
+      "format": "JPEG",
+      "width": 768,
+      "height": 1376,
+      "bytes": 1206537,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/alcoleja/1.jpg",
+      "format": "JPEG",
+      "width": 1200,
+      "height": 635,
+      "bytes": 316657,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/alcoleja/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 1707,
+      "bytes": 386019,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/benifallim/1.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 853,
+      "bytes": 394724,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/benifallim/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 718,
+      "bytes": 245802,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/la-torre-de-les-macanes/1.jpg",
+      "format": "JPEG",
+      "width": 600,
+      "height": 450,
+      "bytes": 104698,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/la-torre-de-les-macanes/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 851,
+      "bytes": 335611,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/orxeta/1.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 817,
+      "bytes": 296512,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/orxeta/2.jpg",
+      "format": "JPEG",
+      "width": 960,
+      "height": 1358,
+      "bytes": 317868,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/penaguila/1.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 960,
+      "bytes": 370903,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/penaguila/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 1517,
+      "bytes": 499529,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/relleu/1.jpg",
+      "format": "JPEG",
+      "width": 1964,
+      "height": 1210,
+      "bytes": 464749,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/relleu/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 851,
+      "bytes": 233755,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/sella/1.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 345,
+      "bytes": 222995,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/sella/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 851,
+      "bytes": 265240,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/tibi/1.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 959,
+      "bytes": 264055,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/tibi/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 960,
+      "bytes": 395057,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/xixona/1.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 960,
+      "bytes": 307578,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/towns/xixona/2.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 1114,
+      "bytes": 229805,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/animalets_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 169461,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/bascula_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 163642,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/cervell_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 169886,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/consola_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 163374,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/disseny_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 996,
+      "height": 998,
+      "bytes": 354581,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/fedivers_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 1376,
+      "height": 768,
+      "bytes": 1227551,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/gestoria_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 175623,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/habitatge_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 972,
+      "height": 972,
+      "bytes": 572718,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/mapa_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 172808,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/rebost_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 163482,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/rss_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 176642,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/salut_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 160244,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/tpv_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1013445,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/tpv_vinyeta.webp",
+      "format": "WEBP",
+      "width": 1200,
+      "height": 1200,
+      "bytes": 77746,
+      "extension": ".webp"
+    },
+    {
+      "path": "public/assets/ui/plugins/treball_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1393339,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/ui/plugins/vehicle_vinyeta.jpg",
+      "format": "JPEG",
+      "width": 480,
+      "height": 480,
+      "bytes": 170039,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/ajuntament/la-torre-de-les-macanes/avatar/IMG_20200904_143451.jpg",
+      "format": "JPEG",
+      "width": 4624,
+      "height": 3472,
+      "bytes": 1535065,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/ajuntament/la-torre-de-les-macanes/post/collita-poma-local.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 959177,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/andreu-soler-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 89576,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/avatar-marc-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 804109,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/avatar-ratoli-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1020845,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/avatar_samir_comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1070330,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/beatriz-ortega-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 67184,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/carla-soriano_comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 59062,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/el-viatjant.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1113205,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/elena-popova-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 86302,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/flash-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 500272,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/iaia_comic_matriarch.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1106886,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/javi-llinares-foto_perfil-01.jpg",
+      "format": "JPEG",
+      "width": 1200,
+      "height": 1200,
+      "bytes": 256046,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/avatars/joan-batiste-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 69399,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/mixa-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 557171,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/nano-banana-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1179490,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/nano_cita_metge.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1062998,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/nano_escola_comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 108915,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/nano_salut_comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 113086,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/nano_sessio_treball.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 987670,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/nano_simbiosi_sobirana.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1118479,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/pepica-vall-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 47523,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/avatars/vicent-ferris-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 64473,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/aplec_danses_1774952191348.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1169843,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/art_trellat_farmer_1774708525806.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 903054,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/art_trellat_v2_1774708257858.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1238443,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/avatar_ratoli_comic_1778960942888.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1020845,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/beatriz_somriure_1774195114538.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 74219,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/caricatura_socdepoble_portada.jpg",
+      "format": "JPEG",
+      "width": 1376,
+      "height": 768,
+      "bytes": 1131510,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/collita_pomes_valencia_1779774496548.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 959177,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/cuc-de-pi-poster.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1093663,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 981953,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/hero_panoramic_landscape_1774710654078.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1220054,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1054338,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/hero_serrella_comic_1774709602282.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1070330,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/iaia_maria_avatar.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1326999,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/iaia_maria_portada.jpg",
+      "format": "JPEG",
+      "width": 1264,
+      "height": 848,
+      "bytes": 1419561,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/ibanez_design_system_1780246898431.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1389876,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg",
+      "format": "JPEG",
+      "width": 768,
+      "height": 768,
+      "bytes": 366963,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1136492,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/llibre_anima_cover_1776032370908.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 935032,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/mac_mini_m4_1787721966622.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 670524,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/media__1775376768839.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 343242,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/media__1775516493101.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 786797,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano-banana_arxiver_1774284589999.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 578019,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_agricola_mas_1773539958988.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 166027,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp",
+      "format": "WEBP",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 414482,
+      "extension": ".webp"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1054338,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_mel_font_roja_1774216345755.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 99897,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_mercat_llaurador_1774197050578.png",
+      "format": "JPEG",
+      "width": 896,
+      "height": 1200,
+      "bytes": 1127389,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_mixa_socis_1774215027069.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 89879,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_oli_oliva_1774198089084.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 88739,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/nano_pedra_seca_1777089570387.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1207265,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1093663,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/brain/xat_portada.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 553181,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/companies/mercat/aitana.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 153074,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/companies/mercat/camiseta_portada.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 843480,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/companies/mercat/flowers_bouquet.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 949359,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/companies/mercat/generic_market.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 156954,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 782271,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/02-samarreta-socdepoble-roly-plom-oscur-1024px.png",
+      "format": "PNG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 512979,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/03-young-man-tshirt.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 924420,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/04-iaia-tshirt.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 734969,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/05-samarreta-socdepoble-muntanya.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 692103,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/06-group-tshirt.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 843480,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/07-rustic-detail.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 797342,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/08-javi-llinares-perfil-1024px.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 202999,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/samarreta-socdepoble-verd-638px.jpg",
+      "format": "JPEG",
+      "width": 638,
+      "height": 709,
+      "bytes": 143107,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/0-container.png",
+      "format": "PNG",
+      "width": 1441,
+      "height": 1269,
+      "bytes": 3382563,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/1-header.png",
+      "format": "PNG",
+      "width": 1129,
+      "height": 64,
+      "bytes": 11309,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/2-sidebar.png",
+      "format": "PNG",
+      "width": 240,
+      "height": 1205,
+      "bytes": 48414,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/3-content.png",
+      "format": "PNG",
+      "width": 889,
+      "height": 1205,
+      "bytes": 2088497,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/4-secction-header.png",
+      "format": "PNG",
+      "width": 889,
+      "height": 56,
+      "bytes": 9596,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/5-section-media.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 724884,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/6-section-capucha-identidad.png",
+      "format": "PNG",
+      "width": 1190,
+      "height": 64,
+      "bytes": 21862,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/disseny/7-section-title-decoration.png",
+      "format": "PNG",
+      "width": 1190,
+      "height": 420,
+      "bytes": 77354,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/antigravity-badge.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 665776,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-codig-v3.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 850389,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-iaia-v4.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1106886,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-sobirania-v2.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1078153,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-trellat-v3.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 903054,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/exemple-de-poble-001.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1054338,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/nano-banana.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1179490,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/presentacio.jpg",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 351297,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 957465,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/empresa/soc-de-poble/posts/iaies-mundials/portada_iaies.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1328056,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/andreu-soler-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 89576,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/avatar-marc-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 804109,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/avatar_samir_comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1070330,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/beatriz-ortega-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 67184,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/carla-soriano_comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 59062,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/el-viatjant.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1113205,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/elena-popova-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 86302,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/flash-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 500272,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/iaia_comic_matriarch.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1106886,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/joan-batiste-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 69399,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/mixa-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 557171,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/nano-banana-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1179490,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/nano_escola_comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 108915,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/nano_salut_comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 113086,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/pepica-vall-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 47523,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/avatars/vicent-ferris-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 64473,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg",
+      "format": "JPEG",
+      "width": 1200,
+      "height": 1200,
+      "bytes": 256046,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.jpg",
+      "format": "JPEG",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 446960,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.jpg",
+      "format": "JPEG",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 237462,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/ia/02-nano-banana-artiste/avatars/nano-banana-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1179490,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/03-vicent-ferris-agronom/avatars/vicent-ferris-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 64473,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/04-beatriz-ortega-mestra/avatars/beatriz-ortega-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 67184,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/05-carla-soriano-doctora/avatars/carla-soriano-ibanez.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 59062,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/05-carla-soriano-doctora/posts/post-carla-salut.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 113380,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/06-pepica-la-vall-cuinera/avatars/pepica-vall-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 47523,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/06-pepica-la-vall-cuinera/posts/post-pepica-cuina.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 133388,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/07-andreu-soler-capatas/avatars/andreu-soler-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 89576,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/08-elena-popova-music/avatars/elena-popova-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 86302,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/09-joan-batiste-arxiver/avatars/joan-batiste-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 69399,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/10-joanet-serra-xiquet/avatars/joanet-serra-comic.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 61397,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/11-tio-colau-viajant/avatars/tio-colau-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 566640,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/12-el-ratoli-informatic/avatars/avatar-ratoli-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 1020845,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/13-flash-carter/avatars/flash-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 500272,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/14-la-mixa-gestora/avatars/mixa-comic.png",
+      "format": "PNG",
+      "width": 640,
+      "height": 640,
+      "bytes": 557171,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/15-marc-el-gall-el-temps/avatars/avatar-marc-comic.png",
+      "format": "JPEG",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 804109,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/ia/15-marc-el-gall-el-temps/posts/post-gall-meteo.png",
+      "format": "JPEG",
+      "width": 640,
+      "height": 640,
+      "bytes": 104475,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/poble/benimassot/img-benimassot-main.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 1707,
+      "bytes": 529763,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC00320.JPG",
+      "format": "MPO",
+      "width": 5184,
+      "height": 3888,
+      "bytes": 6429500,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC00410.JPG",
+      "format": "MPO",
+      "width": 5184,
+      "height": 3888,
+      "bytes": 6881084,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC01197.JPG",
+      "format": "JPEG",
+      "width": 1440,
+      "height": 1080,
+      "bytes": 277052,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/P_20161028_150735.jpg",
+      "format": "JPEG",
+      "width": 4096,
+      "height": 2304,
+      "bytes": 2120426,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/P_20161028_153325_SRES.jpg",
+      "format": "JPEG",
+      "width": 5333,
+      "height": 3000,
+      "bytes": 1257481,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-q.png",
+      "format": "PNG",
+      "width": 2481,
+      "height": 2481,
+      "bytes": 317730,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r-trans.png",
+      "format": "PNG",
+      "width": 2056,
+      "height": 496,
+      "bytes": 105394,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r.png",
+      "format": "PNG",
+      "width": 2481,
+      "height": 874,
+      "bytes": 131420,
+      "extension": ".png"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/img-la-torre-de-les-ma-anes-main.jpg",
+      "format": "JPEG",
+      "width": 600,
+      "height": 450,
+      "bytes": 104698,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/toponim-la-torre-de-les-macanes-2048px.jpg",
+      "format": "JPEG",
+      "width": 2048,
+      "height": 1536,
+      "bytes": 279881,
+      "extension": ".jpg"
+    },
+    {
+      "path": "public/assets/uploads/poble/penaguila/img-pen-guila-main.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 960,
+      "bytes": 370903,
+      "extension": ".jpg"
+    }
+  ]
+}

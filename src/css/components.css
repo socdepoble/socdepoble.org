@@ -2601,6 +2601,122 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-emojis-xl__glif { font-size: 5rem; line-height: 1.2; }
 }
 
+/* ── Bloc 3.8 del Gauntlet (261016) · GRAELLA D'EMOJIS ───────────────────
+   El selector compacte del catàleg Emojis XL (GraellaEmojis.jsx): el
+   DialegEmoticona (la ranura d'emoticona del document) i el diàleg «Emojis»
+   del Bloc de notes. No és el catàleg de Disseny (glif de 5rem, el nom a la
+   vista): cada emoji és un botó quadrat de --sdp-touch amb el glif a la mida
+   d'un h5, i el nom és el seu nom accessible (i el title). Les famílies són
+   <details> natius amb el mateix summary que el catàleg. Sense :has(). */
+@layer components {
+  .sdp-graella-emojis {
+    display: grid;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-graella-emojis details {
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-graella-emojis summary {
+    min-block-size: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-graella-emojis summary:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-space-1);
+  }
+  .sdp-graella-emojis__graella {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--sdp-touch), 1fr));
+    gap: var(--sdp-space-1);
+    margin: 0 0 var(--sdp-space-3);
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-graella-emojis__graella li {
+    min-inline-size: 0;
+  }
+  .sdp-graella-emojis__boto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-h5);
+    line-height: 1;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-graella-emojis__boto:hover {
+      border-color: var(--sdp-vora-control);
+      background: var(--sdp-fons-subtil);
+    }
+  }
+  .sdp-graella-emojis__boto:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+  .sdp-graella-emojis__estat {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ── Bloc 3.9 del Gauntlet (261016) · EDICIÓ AVANÇADA ──────────────────────
+   El desplegable de l'editor del Bloc de Notes (UniversalEditorShell, prop
+   edicioAvancada), just damunt de la barra d'eines: un <details> natiu,
+   plegat per defecte, amb el mateix summary que els desplegables del catàleg
+   Emojis XL (sense tocar-ne el display: el triangle és el del navegador).
+   Dins, les dues ranures d'imatge (capçalera i logotip) amb la imatge desada
+   en miniatura (el seu lloc real és dalt i damunt de l'H1) i la ranura de
+   classificació de sempre (.page-title-classificacio), sense el seu marge de
+   capçalera. Sense :has(). */
+@layer components {
+  .sdp-edicio-avancada {
+    margin-block: var(--sdp-space-4);
+    border-block: 1px solid var(--sdp-vora);
+  }
+  .sdp-edicio-avancada__resum {
+    min-block-size: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-edicio-avancada__resum:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-space-1);
+  }
+  /* Una sola columna que no passa mai de l'amplada de l'article: sense el
+     minmax(0, …), el logotip editable (sdp-logo-personalitzat, amplada
+     100%) eixamplava la cel·la i desbordava la columna estreta. */
+  .sdp-edicio-avancada__cos {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-4);
+    padding-block: var(--sdp-space-2) var(--sdp-space-4);
+  }
+  .sdp-edicio-avancada__imatge img {
+    display: block;
+    max-inline-size: 100%;
+    block-size: auto;
+    max-block-size: calc(var(--sdp-touch) * 4);
+    margin-inline: auto;
+    object-fit: contain;
+  }
+  .sdp-edicio-avancada .page-title-classificacio { margin-block: 0; }
+}
+
 /* ── Ordre del Mestre (261007) · CARRUSEL D'IMATGES ──────────────────────
    La pell de CarruselImatges (PedraSeca/organismes), la portada amb més
    d'una foto de la Pàgina Universal (portadaDElement de detailSectionMeta.jsx,
@@ -2759,4 +2875,172 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     outline-offset: var(--sdp-focus-separacio);
   }
   .sdp-tornar-dalt:active { transform: scale(var(--sdp-escala-premut)); }
+}
+
+/* ── Onada 0.3 (Gauntlet 261016) · VISOR D'IMATGES ─────────────────────
+   La pell de VisorImatges (PedraSeca/organismes), el visor a pantalla
+   completa de l'Arxiu visual (/multimedia, ordre del pla 261016_1530: «visor
+   modal / Lightbox natiu a pantalla completa sobre fons fosc»). Va damunt del
+   Dialeg de mida 'completa' (bloc PANTALLA COMPLETA, més amunt) sense nomenar
+   cap de les seues classes: el visor porta les seues.
+     · Fons i text del crom (--sdp-crom-fons i --sdp-crom-text): fosc en clar
+       i en fosc, com Google Fotos. (0,3,0) i darrere del bloc de la pantalla
+       completa: guanya al fons de l'App del Dialeg complet.
+     · Els botons són el Boto secundari de la casa (fons de targeta, vora i
+       focus), redons i de --sdp-touch, com els del carrusel; l'anell de
+       focus, el del crom, que es veu sobre el fosc. Desplegat, el botó
+       d'Informació porta la vora de l'acció.
+     · El zoom: transform amb tres propietats pròpies (--sdp-visor-escala,
+       --sdp-visor-x i --sdp-visor-y) que l'organisme escriu des d'una ref
+       només amb la foto ampliada; sense, els valors de sèrie d'ací. Mentre
+       s'arrossega, sense transició.
+     · Llei de Scroll: només el panell desborda; l'escenari retalla.
+     · En mòbil (fins a 720px), el panell és un full de baix, damunt de la foto.
+   Prova: PedraSeca/organismes/VisorImatges.test.jsx i PedraSeca/qualitat.visor.test.js. */
+@layer components {
+  .sdp-dialeg.sdp-visor.sdp-dialeg--sense-marc {
+    background: var(--sdp-crom-fons);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-visor__marc {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sdp-visor__barra {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-pad-contenidor);
+    border-block-end: 1px solid var(--sdp-crom-vora-forta);
+  }
+  .sdp-visor__comptador {
+    margin: 0;
+    margin-inline: var(--sdp-space-2) auto;
+    color: var(--sdp-crom-text);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .sdp-visor__boto {
+    inline-size: var(--sdp-touch);
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    padding: 0;
+    gap: 0;
+    border-radius: var(--sdp-radi-pastilla);
+  }
+  .sdp-visor__boto:focus-visible { outline-color: var(--sdp-crom-focus); }
+  .sdp-visor__boto[aria-expanded="true"] { border-color: var(--sdp-accio-control); }
+  .sdp-visor__cos {
+    position: relative;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    display: flex;
+  }
+  .sdp-visor__escenari {
+    position: relative;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: zoom-in;
+  }
+  .sdp-visor__escenari--ampliat { cursor: grab; }
+  .sdp-visor__escenari--arrossega { cursor: grabbing; }
+  .sdp-visor__imatge {
+    --sdp-visor-escala: 1;
+    --sdp-visor-x: 0px;
+    --sdp-visor-y: 0px;
+    display: block;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    object-fit: contain;
+    transform: translate(var(--sdp-visor-x), var(--sdp-visor-y)) scale(var(--sdp-visor-escala));
+    transition: transform var(--sdp-durada-base) var(--sdp-corba-eixida);
+  }
+  .sdp-visor__escenari--arrossega .sdp-visor__imatge { transition: none; }
+  .sdp-visor__avis {
+    margin: 0;
+    padding: var(--sdp-space-4);
+    color: var(--sdp-crom-text-suau);
+    text-align: center;
+  }
+  /* Anterior i següent, damunt de la foto i centrats en vertical sense
+     transform (el :active del botó ja en porta un). El contenidor no rep el
+     dit: el gest arriba a l'escenari; els botons, sí. */
+  .sdp-visor__controls {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--sdp-space-3);
+    pointer-events: none;
+  }
+  .sdp-visor__controls .sdp-visor__boto { pointer-events: auto; }
+  .sdp-visor__panell {
+    flex: none;
+    inline-size: min(100%, 24rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--sdp-space-4) var(--sdp-space-5);
+    border-inline-start: 1px solid var(--sdp-crom-vora-forta);
+    background: var(--sdp-crom-subcapcalera-fosca);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-visor__titol {
+    margin: 0 0 var(--sdp-space-4);
+    color: var(--sdp-crom-text);
+    font-size: var(--sdp-text-base);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+  .sdp-visor__dades {
+    display: grid;
+    gap: var(--sdp-space-3);
+    margin: 0;
+  }
+  .sdp-visor__fila {
+    display: grid;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-visor__clau {
+    color: var(--sdp-crom-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+  .sdp-visor__valor {
+    margin: 0;
+    color: var(--sdp-crom-text);
+    overflow-wrap: anywhere;
+  }
+  /* Els enllaços interns del panell (el poble, l'article): el text del crom,
+     subratllat (la pista no és de color, WCAG 1.4.1). */
+  .sdp-visor__valor a {
+    color: var(--sdp-crom-text);
+    text-decoration: underline;
+  }
+  .sdp-visor__valor a:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-crom-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  @media (max-width: 720px) {
+    .sdp-visor__panell {
+      position: absolute;
+      inset: auto 0 0;
+      inline-size: auto;
+      max-block-size: 60%;
+      border-inline-start: 0;
+      border-block-start: 1px solid var(--sdp-crom-vora-forta);
+    }
+  }
 }

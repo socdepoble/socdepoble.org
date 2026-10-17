@@ -44,6 +44,37 @@ describe('l’ordre «/» Targeta', () => {
   });
 });
 
+/* Bloc 3.8 del Gauntlet (261016) · L'ordre «/» Emoji, amb opt-in (ambEmojis i
+   la funció obreEmojis): davant de «Targeta», que continua sent l'última. */
+describe('l’ordre «/» Emoji', () => {
+  test('sense ambEmojis o sense funció no hi és; amb tots dos, davant de «Targeta», i lleva la «/» abans d’obrir la graella', () => {
+    const base = creaOrdres().map((ordre) => ordre.id);
+    expect(creaOrdres({ ambEmojis: true }).map((ordre) => ordre.id)).toEqual(base);
+    expect(creaOrdres({ obreEmojis: () => {} }).map((ordre) => ordre.id)).toEqual(base);
+    const obreEmojis = vi.fn();
+    expect(creaOrdres({ ambEmojis: true, obreEmojis }).map((ordre) => ordre.id)).toEqual([...base, 'emoji']);
+    const ordres = creaOrdres({ ambTargetes: true, ambEmojis: true, obreEmojis });
+    expect(ordres.map((ordre) => ordre.id)).toEqual([...base, 'emoji', 'targeta']);
+    const emoji = ordres.find((ordre) => ordre.id === 'emoji');
+    expect(emoji).toMatchObject({ id: 'emoji', titol: 'Emoji' });
+    expect(emoji.paraules).toEqual(expect.arrayContaining(['emoji', 'emoticona']));
+    const passos = [];
+    const cadena = { focus: () => cadena, deleteRange: (range) => { passos.push(['deleteRange', range]); return cadena; }, run: () => passos.push(['run']) };
+    obreEmojis.mockImplementation(() => passos.push(['obreEmojis']));
+    emoji.executa({ editor: { chain: () => cadena }, range: { from: 3, to: 4 } });
+    expect(passos).toEqual([['deleteRange', { from: 3, to: 4 }], ['run'], ['obreEmojis']]);
+  });
+
+  test('extensionsRiques: amb obreEmojis, l’ordre és a l’SlashMenu i cap extensió nova entra', () => {
+    const noms = (extensions) => extensions.map((e) => e.name);
+    const ordresDe = (extensions) => extensions.find((e) => e.name === 'sdpSlashMenu').options.ordres.map((o) => o.id);
+    expect(noms(extensionsRiques({ obreEmojis: () => {} }))).toEqual(noms(extensionsRiques()));
+    expect(ordresDe(extensionsRiques())).not.toContain('emoji');
+    expect(ordresDe(extensionsRiques({ obreEmojis: () => {} })).at(-1)).toBe('emoji');
+    expect(ordresDe(extensionsRiques({ ambTargetes: true, obreEmojis: () => {} })).slice(-2)).toEqual(['emoji', 'targeta']);
+  });
+});
+
 describe('extensionsRiques', () => {
   test('l’extensió de targetes només entra amb ambTargetes', () => {
     expect(extensionsRiques().map((e) => e.name)).not.toContain(NOM_EXTENSIO_TARGETES);

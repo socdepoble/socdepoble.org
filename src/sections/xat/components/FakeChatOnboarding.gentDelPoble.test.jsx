@@ -45,7 +45,9 @@ test('xat de mostra: la comunitat del poble, el seu subjecte i l’autor dels Av
   const comunitat = xat.chatThreads.find((f) => f.id === 'fake-poble');
   expect([comunitat.name, comunitat.title, comunitat.subjecte.titol]).toEqual([TORRE.author, TORRE.author, TORRE.author]);
   expect(comunitat.subjecte).toMatchObject({ tipus: 'poble', id: TORRE.id, ruta: `/pobles/${TORRE.id}` });
-  expect(xat.comunitats[0].fil.name).toBe(TORRE.author);
+  /* Gauntlet 261016_1530 (Bloc 3.6.1) · La mostra també porta la comunitat
+     de Sóc de Poble: la del poble es busca pel seu id, no per la posició. */
+  expect(xat.comunitats.find((c) => c.fil.id === 'fake-poble').fil.name).toBe(TORRE.author);
   const [avis] = xat.getThreadMessages('fake-poble-avisos');
   expect(avis.author).toBe(TORRE.author);
   expect(avis.text).toContain(`Benvinguts al xat de ${TORRE.author}.`);

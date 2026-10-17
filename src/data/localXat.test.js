@@ -118,7 +118,8 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
     const fils = await localXat.loadFils(SEED);
     expect(fils).toHaveLength(5);
     expect(fils.find((f) => f.id === XAT_SEED_IDS.filBetaTesters)).toMatchObject({
-      tipus: 'grup', titol: 'Beta testers', comunitatId: XAT_SEED_IDS.filComunitat, subjecte: { tipus: 'entitat', id: XAT_SEED_IDS.entitat }
+      // Bloc 3.6.1 · el literal de l'ordre del Mestre (abans «Beta testers»).
+      tipus: 'grup', titol: 'Beta Testers', comunitatId: XAT_SEED_IDS.filComunitat, subjecte: { tipus: 'entitat', id: XAT_SEED_IDS.entitat }
     });
   });
 

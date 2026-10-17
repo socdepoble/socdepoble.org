@@ -63,7 +63,18 @@ const FITXERS = Object.freeze([
   'src/data/xatsPerDefecte.js',
   'src/data/xatsPerDefecte.test.js',
   'src/sections/xat/pobleAmfitrio.js',
-  'src/sections/xat/XatSection.actorsPermanents.test.jsx'
+  'src/sections/xat/XatSection.actorsPermanents.test.jsx',
+  /* Gauntlet 261016_1530 (Bloc 3.6, ordre vigent) · L'ordre estricte dels
+     quatre actors, la fila que porta a la comunitat de Sóc de Poble i les
+     rutes canòniques de les capçaleres. */
+  'src/sections/xat/actorsDelXat.js',
+  'src/sections/xat/actorsDelXat.test.js',
+  /* Gauntlet 261016_1530 (Bloc 3.6.3) · El nom de la IAIA a la bombolla porta
+     a la seua fitxa, /iaia. */
+  'src/sections/xat/components/Bombolla.autor.test.jsx',
+  /* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · Les rutes de la Wiki que
+     cita la IAIA local són enllaços interns a la seua bombolla. */
+  'src/sections/xat/components/Bombolla.wiki.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

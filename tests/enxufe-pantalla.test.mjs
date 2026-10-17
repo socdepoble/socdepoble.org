@@ -27,6 +27,9 @@ const CSS_CLASSIC = '.socdepoble-enxufe-pantalla{margin:0;padding:0}'
   + '.socdepoble-enxufe-pantalla .socdepoble-enxufe{min-height:0;margin:0}'
   + '.admin-bar .socdepoble-enxufe{height:calc(100vh - 32px);height:calc(100dvh - 32px)}'
   + '@media screen and (max-width:782px){.admin-bar .socdepoble-enxufe{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}';
+/* La caixa de qualsevol inserció (marcatge.php): el visor sencer, amb un
+   mínim de 32rem que mai passa del visor (Bloc 3.10, pla 261016_1530). */
+const CSS_CAIXA = '.socdepoble-enxufe{display:block;height:100vh;height:100dvh;min-height:min(32rem,100vh);min-height:min(32rem,100dvh)}';
 
 function cercaPhp() {
   if (process.env.PHP_BIN) return process.env.PHP_BIN;
@@ -127,7 +130,12 @@ test('pantalla completa: la caixa pot baixar de 32rem sense alterar les insercio
     assert.equal(parseFloat(getComputedStyle(document.body)[`padding${costat}`]), 0);
   }
   document.body.className = '';
-  assert.equal(getComputedStyle(caixa).minHeight, '32rem', 'l’override pertany només a la plantilla completa');
+  /* Bloc 3.10 (pla 261016_1530) · Fora de la plantilla completa el mínim
+     continua sent 32rem, però mai més alt que el visor: en un mòbil en
+     horitzontal la caixa ja no sobreïx. Abans esta prova fixava «32rem» sol;
+     ara fixa el mínim nou, a posta (jsdom resol l'última declaració). */
+  assert.equal(getComputedStyle(caixa).minHeight, 'min(32rem,100dvh)', 'l’override pertany només a la plantilla completa');
+  assert.ok(resultat.estils.includes(CSS_CAIXA), 'la caixa ordinària: vh primer per a la base canònica, després dvh');
 });
 
 test('pantalla completa clàssica: el CSS compartit és, caràcter a caràcter, el de sempre', OPCIONS, t => {

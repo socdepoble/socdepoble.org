@@ -26,6 +26,7 @@ import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 /* P4 (revisió, 261003) · El sanejador del canal viu a netejaCamp.js: la nota
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
+import { esLlavorDeNota } from './llavorNota.js';
 
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
   // La carpeta organitza el bloc; no és una categoria editorial. Els labels
@@ -279,7 +280,12 @@ export function NotesProvider({ children }) {
       const cosPerAlMur = esConnexio(activeNote) ? cosDeConnexioEditadaPerAlMur(netejaCamp('content', activeNote.content), activeNote.origen)
         : esExtern(activeNote) ? cosDeLExternPerAlMur(netejaCamp('content', activeNote.content), activeNote.origen)
           : activeNote.content;
-      let finalContent = netejaCamp('content', cosPerAlMur);
+      /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: la plantilla de format
+         «s'esvaeix al primer clic») · La plantilla verge (la d'ara o la
+         d'abans, en qualsevol forma: llavorNota.js) no és contingut de
+         ningú: no arriba mai al Mur. Una nota amb títol i la plantilla
+         intacta publica el títol amb el cos buit. */
+      let finalContent = esLlavorDeNota(cosPerAlMur) ? '' : netejaCamp('content', cosPerAlMur);
       /* D4 · Els drets d'una connexió són els de l'original (origen.drets,
          presos de l'element resolt en connectar), no els de la nota: una
          còpia no canvia la llicència de l'obra d'altri.

@@ -1018,8 +1018,16 @@ nav.mobile-nav { display: none; }
    useBarresAmbScroll (App.jsx) posa data-sdp-barres a l'arrel: «dalt» amaga
    la blava i la taronja; «totes», també la barra inferior. En repòs i en
    escriptori l'atribut no hi és i res d'açò canvia cap píxel: tot penja de
-   .sdp-root.is-compact (el tall d'App.jsx), sense cap @media. Capa
+   les marques que App.jsx posa a l'arrel, sense cap @media. Capa
    `components` i no `legacy`, que només pot encongir (index.css).
+   Bloc 3.10 (pla 261016_1530) · La blava, la taronja i les peces enganxades
+   penjen de .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta]):
+   el compacte, una tauleta tàctil (l'iPad horitzontal passa de 1023px) o
+   una caixa baixa. La mateixa especificitat que .sdp-root.is-compact. La
+   barra inferior, les pàgines «contingut» i «Tornar a dalt» continuen sent
+   només del compacte: fora d'ell no hi ha barra inferior, i el hook no
+   escriu mai «totes». Una tauleta en repòs només porta les transicions
+   declarades: cap píxel.
    · Blava i taronja: el seu `top` d'enganxament passa a negatiu. Una barra
      enganxada puja fins a eixir del visor, que la retalla; una que encara va
      en el flux (la taronja davall d'una portada) no es mou, perquè ja
@@ -1036,25 +1044,25 @@ nav.mobile-nav { display: none; }
      (PageFrame.capes.test.js). La barra negra no es toca.
    · La transició del calaix; amb moviment reduït, l'apagador de base.css. */
 @layer components {
-  .sdp-root.is-compact .sdp-universal-page-container > header.bar-blue,
-  .sdp-root.is-compact .sdp-universal-page-container > section.bar-orange,
-  .sdp-root.is-compact .sdp-editor-eines {
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta]) .sdp-universal-page-container > header.bar-blue,
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta]) .sdp-universal-page-container > section.bar-orange,
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta]) .sdp-editor-eines {
     transition: top var(--sdp-durada-panell) var(--sdp-corba-calaix);
   }
-  .sdp-root.is-compact .sdp-cal-setmana__capcal {
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta]) .sdp-cal-setmana__capcal {
     transition: inset-block-start var(--sdp-durada-panell) var(--sdp-corba-calaix);
   }
   .sdp-root.is-compact > nav.mobile-nav {
     transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix);
   }
-  .sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > header.bar-blue {
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta])[data-sdp-barres] .sdp-universal-page-container > header.bar-blue {
     top: calc(var(--sdp-alt-accio) * -2);
   }
-  .sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > section.bar-orange {
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta])[data-sdp-barres] .sdp-universal-page-container > section.bar-orange {
     top: calc(var(--sdp-alt-accio) * -1);
   }
-  .sdp-root.is-compact[data-sdp-barres] .sdp-editor-eines { top: 0; }
-  .sdp-root.is-compact[data-sdp-barres] .sdp-cal-setmana__capcal { inset-block-start: 0; }
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta])[data-sdp-barres] .sdp-editor-eines { top: 0; }
+  .sdp-root:is(.is-compact, [data-sdp-tactil], [data-sdp-curta])[data-sdp-barres] .sdp-cal-setmana__capcal { inset-block-start: 0; }
   .sdp-root.is-compact[data-sdp-barres="totes"] > nav.mobile-nav { transform: translateY(100%); }
 
   /* Les pàgines «contingut» fills del visor (el Mur, el Calendari, el perfil

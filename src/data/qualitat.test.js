@@ -82,7 +82,18 @@ const CENS = Object.freeze([
   'src/data/supabase/perfilUpdatePropi.migracio.test.js',
   'src/data/supabase/xat.test.js',
   'src/data/supabase/xat.iaia.test.js',
-  'src/data/supabase/xat.baixa.realtimejs.test.js'
+  'src/data/supabase/xat.baixa.realtimejs.test.js',
+  /* Gauntlet 261016 (Bloc -1; diürn 1530) · La guarda anti-regressió de la
+     identitat dual (el fantasma antic, l'única publicació de la persona pilot
+     i la seua foto). */
+  'src/data/identitatDual.guarda.test.js',
+  /* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · La IAIA local respon
+     amb la Wiki pública del paquet: el mòdul pur, la resposta asíncrona i
+     ordenada del magatzem local i les seues proves. */
+  'src/data/iaiaLocal.js',
+  'src/data/iaiaLocal.test.js',
+  'src/data/localXat.iaia.test.js',
+  'src/data/localXat.iaiaOrdre.test.js'
 ]);
 
 describe('el cens', () => {

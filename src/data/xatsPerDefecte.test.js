@@ -4,7 +4,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   ACTORS_PERMANENTS, AJUDA, AJUDA_PER_CLAU, CARA_DE_LA_IAIA, CONTACTE_HUMA, ID_FIL_DE_MOSTRA_DE_JAVI, MISSATGE_AUTOMATIC_DE_JAVI, PREFIX_PER_DEFECTE,
-  ambXatsPerDefecte, caraDeLaIAIA, esIdPerDefecte, esLaIdentitatDAjuda, esLaPersonaDeContacte,
+  ambXatsPerDefecte, caraDeLaIAIA, clauPerDefecteDe, esIdPerDefecte, esLaIdentitatDAjuda, esLaPersonaDeContacte,
   esXatDeLaIAIA, filDeMostraDeJavi, gestionaLEntitatPilot, jaTeElXat, missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA
 } from './xatsPerDefecte.js';
 import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
@@ -34,7 +34,12 @@ describe('AJUDA, la font única dels dos contactes', () => {
 });
 
 /* Gauntlet 261016 (prompt, Bloc 3.6; pla, Onada 1.2) · «Hi ha d'haver
-   permanentment 4 converses visibles». Tres són directes i viuen ací. */
+   permanentment 4 converses visibles». Tres són directes i viuen ací.
+   Gauntlet 261016_1530 (Bloc 3.6.1, ordre vigent) · «PROHIBIT duplicar Sóc
+   de Poble: S'ha d'eliminar la fila de xat directe sintètica». Ara en són
+   dues (Javi i la IAIA): el primer actor és la COMUNITAT de Sóc de Poble, que
+   la llista posa al capdamunt (sections/xat/actorsDelXat.js). Les proves que
+   fixaven la fila 'socdepoble' s'actualitzen a posta. */
 /* Un compte remot qualsevol: el frontend no sap quin és el de Javi (el
    servidor no en declara cap), i per això no pot ser mai Javi. */
 const UUID_HOMONIM = '5a5a5a5a-0000-4000-8000-00000000000a';
@@ -46,8 +51,20 @@ describe('Bloc 3.6 · els actors permanents', () => {
     expect(CONTACTE_HUMA.avatar).toBe(PERSONA_PILOT.avatar);
     expect(CONTACTE_HUMA.avatar).not.toBe(LOGO_QUADRAT);
     expect(AJUDA.map((c) => c.clau)).not.toContain('javi');
-    expect(ACTORS_PERMANENTS.map((c) => c.clau)).toEqual(['socdepoble', 'javi', 'iaia']);
+    expect(ACTORS_PERMANENTS.map((c) => c.clau)).toEqual(['javi', 'iaia']);
     expect(Object.isFrozen(ACTORS_PERMANENTS) && ACTORS_PERMANENTS.every(Object.isFrozen)).toBe(true);
+  });
+
+  /* Gauntlet 261016_1530 (Bloc 3.6; MCR b36_xat, proposta 1) · L'URL d'una
+     fila sintètica s'encamina per la seua clau encara que la fila no siga a
+     la llista: només les claus que encara tenen fila. */
+  test('clauPerDefecteDe: la clau de Javi i de la IAIA; ni la de Sóc de Poble (derogada), ni una inventada, ni un id de veres', () => {
+    expect(clauPerDefecteDe('sdp-per-defecte:javi')).toBe('javi');
+    expect(clauPerDefecteDe('sdp-per-defecte:iaia')).toBe('iaia');
+    expect(clauPerDefecteDe('sdp-per-defecte:socdepoble')).toBeNull();
+    expect(clauPerDefecteDe('sdp-per-defecte:qualsevol')).toBeNull();
+    expect(clauPerDefecteDe('sdp-per-defecte:')).toBeNull();
+    for (const id of [UUID_ENTITAT, 'fake-javi', 'javi', '', null, undefined, 7]) expect(clauPerDefecteDe(id)).toBeNull();
   });
 
   test('el missatge automàtic és el literal de l’ordre, amb les seues cometes', () => {
@@ -108,23 +125,32 @@ describe('Bloc 3.6 · els actors permanents', () => {
 });
 
 describe('ambXatsPerDefecte', () => {
-  /* Gauntlet 261016 (Bloc 3.6) · Abans «les dues files»: ara són tres, amb
-     Javi entre Sóc de Poble i la IAIA. Les proves que fixaven dues files
-     s'actualitzen a posta. */
-  test('una llista buida rep les tres files a la cua, en l’ordre dels actors i amb la cara exacta', () => {
+  /* Gauntlet 261016 (Bloc 3.6) · Abans «les dues files»: després tres, amb
+     Javi entre Sóc de Poble i la IAIA. Gauntlet 261016_1530 (Bloc 3.6.1) ·
+     Fora la de Sóc de Poble: dues, Javi i la IAIA. S'actualitza a posta. */
+  test('una llista buida rep les dues files a la cua, en l’ordre dels actors i amb la cara exacta; cap de Sóc de Poble', () => {
     const fils = ambXatsPerDefecte([]);
-    expect(claus(fils)).toEqual(['socdepoble', 'javi', 'iaia']);
+    expect(claus(fils)).toEqual(['javi', 'iaia']);
     expect(fils[0]).toEqual({
-      id: `${PREFIX_PER_DEFECTE}socdepoble`, tipus: 'directe', titol: 'Sóc de Poble', altresNoms: [], altres: [],
-      entitatId: null, entitatNom: null, comEntitat: false, imatgeUrl: LOGO_QUADRAT, actualitzatAl: null,
+      id: `${PREFIX_PER_DEFECTE}javi`, tipus: 'directe', titol: 'Javi Llinares', altresNoms: [], altres: [],
+      entitatId: null, entitatNom: null, comEntitat: false, imatgeUrl: JAVI_FOTO, actualitzatAl: null,
       ultimText: null, ultimAl: null, ultimAutorId: null, ultimSeq: 0, llegitFinsSeq: 0, rebutFinsSeq: 0,
       llegitPelsAltresFinsSeq: 0, noLlegits: 0, arxivatAl: null, fixatAl: null, silenciatFinsAl: null,
-      preferitAl: null, noLlegitManual: false, comunitatId: null, subjecte: null, perDefecte: 'socdepoble'
+      preferitAl: null, noLlegitManual: false, comunitatId: null, subjecte: null, perDefecte: 'javi'
     });
-    expect(fils[1]).toMatchObject({ id: 'sdp-per-defecte:javi', tipus: 'directe', titol: 'Javi Llinares', imatgeUrl: JAVI_FOTO, perDefecte: 'javi', altres: [] });
-    expect(fils[2]).toMatchObject({ id: 'sdp-per-defecte:iaia', titol: 'IAIA MarIA', imatgeUrl: AGENTS_IA_SEED[0].avatar_url, perDefecte: 'iaia' });
+    expect(fils[1]).toMatchObject({ id: 'sdp-per-defecte:iaia', titol: 'IAIA MarIA', imatgeUrl: AGENTS_IA_SEED[0].avatar_url, perDefecte: 'iaia' });
+    expect(fils.some((fil) => fil.imatgeUrl === LOGO_QUADRAT || fil.titol === 'Sóc de Poble')).toBe(false);
     /* Ni rol, ni participants, ni participant: no és cap fil del servidor. */
     for (const fil of fils) for (const clau of ['rol', 'participants', 'participant']) expect(fil).not.toHaveProperty(clau);
+  });
+
+  /* Gauntlet 261016_1530 (Bloc 3.6.1) · Una fila sintètica de Sóc de Poble
+     que arribe d'abans (un port vell, una llista en memòria) se'n va: la regla
+     ja no la reconeix, ni l'afig ni la conserva. */
+  test('la fila directa sintètica de Sóc de Poble que arriba d’abans se’n va, també amb afig: false', () => {
+    const vella = { ...ambXatsPerDefecte([])[0], id: `${PREFIX_PER_DEFECTE}socdepoble`, titol: 'Sóc de Poble', imatgeUrl: LOGO_QUADRAT, perDefecte: 'socdepoble' };
+    expect(claus(ambXatsPerDefecte([real(), vella]))).toEqual(['f-real', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([real(), vella], { afig: false }))).toEqual(['f-real']);
   });
 
   test('cap id sintètic passa el RE_UUID de l’adaptador i tots porten el prefix', () => {
@@ -139,19 +165,26 @@ describe('ambXatsPerDefecte', () => {
   test('les files reals conserven l’ordre i les sintètiques van darrere', () => {
     const a = real({ id: 'a' });
     const b = real({ id: 'b' });
-    expect(claus(ambXatsPerDefecte([a, b]))).toEqual(['a', 'b', 'socdepoble', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([a, b]))).toEqual(['a', 'b', 'javi', 'iaia']);
   });
 
-  test('el missatge directe amb l’entitat (per slug o per id) treu Sóc de Poble', () => {
+  /* Gauntlet 261016_1530 (Bloc 3.6.1) · «Si més endavant es genera un xat
+     privat persona-empresa, ja apareixerà»: el directe real amb l'entitat és
+     una conversa més, i jaTeElXat el continua reconeixent (per slug o per
+     id) per a «Nova conversa» i l'autoria. Abans retirava la fila sintètica,
+     que ja no existix. */
+  test('el missatge directe real amb l’entitat (per slug o per id) és una conversa més; cap fila de Sóc de Poble a la cua', () => {
     const perSlug = real({ altres: [{ id: UUID_ENTITAT, tipus: 'entitat', slug: 'socdepoble', nom: 'Sóc de Poble' }], entitatId: UUID_ENTITAT });
     expect(claus(ambXatsPerDefecte([perSlug]))).toEqual(['f-real', 'javi', 'iaia']);
+    expect(jaTeElXat(perSlug, 'socdepoble')).toBe(true);
     const perId = real({ altres: [{ id: ENTITAT_PILOT_ID, tipus: 'entitat', nom: 'Sóc de Poble' }] });
     expect(claus(ambXatsPerDefecte([perId]))).toEqual(['f-real', 'javi', 'iaia']);
+    expect(jaTeElXat(perId, 'socdepoble')).toBe(true);
   });
 
   test('Bloc 3.6 · el directe real amb Javi treu la seua fila, i només la seua', () => {
     const ambJavi = real({ id: 'j', altres: [{ id: '0001', tipus: 'persona', nom: 'Javi Llinares' }] });
-    expect(claus(ambXatsPerDefecte([ambJavi]))).toEqual(['j', 'socdepoble', 'iaia']);
+    expect(claus(ambXatsPerDefecte([ambJavi]))).toEqual(['j', 'iaia']);
   });
 
   /* Auditoria adversarial 261016 (P2, suplantació) · Qui es posa de nom
@@ -160,8 +193,8 @@ describe('ambXatsPerDefecte', () => {
      tria l'usuari. */
   test('un directe amb un homònim de Javi (un altre id, el mateix nom i la mateixa foto) no li pren la fila', () => {
     const impostor = real({ id: 'm', imatgeUrl: JAVI_FOTO, altres: [{ id: UUID_HOMONIM, tipus: 'persona', nom: 'Javi Llinares', avatarUrl: JAVI_FOTO }] });
-    expect(claus(ambXatsPerDefecte([impostor]))).toEqual(['m', 'socdepoble', 'javi', 'iaia']);
-    expect(claus(ambXatsPerDefecte([impostor, ...ambXatsPerDefecte([])], { afig: false }))).toEqual(['m', 'socdepoble', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([impostor]))).toEqual(['m', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([impostor, ...ambXatsPerDefecte([])], { afig: false }))).toEqual(['m', 'javi', 'iaia']);
   });
 
   /* Auditoria adversarial 261016 (P2) · En llavor i en local el xat públic de
@@ -173,15 +206,19 @@ describe('ambXatsPerDefecte', () => {
     const pagina = real({ id: 'p', tipus: 'grup', subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' } });
     const local = { paginaDeLaIAIA: false };
     expect(jaTeElXat(pagina, 'iaia', local)).toBe(false);
-    expect(claus(ambXatsPerDefecte([pagina], local))).toEqual(['p', 'socdepoble', 'javi', 'iaia']);
-    expect(claus(ambXatsPerDefecte([...ambXatsPerDefecte([]), pagina], { ...local, afig: false }))).toEqual(['p', 'socdepoble', 'javi', 'iaia']);
-    expect(claus(ambXatsPerDefecte([real({ tipus: 'iaia' })], local))).toEqual(['f-real', 'socdepoble', 'javi']);
-    expect(claus(ambXatsPerDefecte([real({ altres: [{ id: IAIA_ID, tipus: 'ia' }] })], local))).toEqual(['f-real', 'socdepoble', 'javi']);
+    expect(claus(ambXatsPerDefecte([pagina], local))).toEqual(['p', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([...ambXatsPerDefecte([]), pagina], { ...local, afig: false }))).toEqual(['p', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([real({ tipus: 'iaia' })], local))).toEqual(['f-real', 'javi']);
+    expect(claus(ambXatsPerDefecte([real({ altres: [{ id: IAIA_ID, tipus: 'ia' }] })], local))).toEqual(['f-real', 'javi']);
     expect(jaTeElXat(pagina, 'iaia')).toBe(true);
-    expect(claus(ambXatsPerDefecte([pagina]))).toEqual(['p', 'socdepoble', 'javi']);
+    expect(claus(ambXatsPerDefecte([pagina]))).toEqual(['p', 'javi']);
   });
 
-  test('entitatId de l’entitat pilot sense subjecte compta; la COMUNITAT de l’entitat (amb subjecte) no', () => {
+  /* Gauntlet 261016_1530 (Bloc 3.6.1) · jaTeElXat(·, socdepoble) continua
+     distingint el directe (sense subjecte) de la comunitat (amb subjecte),
+     però ja cap dels dos toca la cua: no hi ha fila de Sóc de Poble. */
+  test('entitatId de l’entitat pilot sense subjecte és el directe; la COMUNITAT de l’entitat (amb subjecte) no; cap toca la cua', () => {
+    expect(jaTeElXat(real({ tipus: 'entitat', entitatId: ENTITAT_PILOT_ID }), 'socdepoble')).toBe(true);
     expect(claus(ambXatsPerDefecte([real({ tipus: 'entitat', entitatId: ENTITAT_PILOT_ID })]))).toEqual(['f-real', 'javi', 'iaia']);
     const subjecte = { tipus: 'entitat', id: UUID_ENTITAT, ruta: '/empresa/socdepoble', titol: 'Sóc de Poble' };
     const comunitat = [
@@ -189,13 +226,15 @@ describe('ambXatsPerDefecte', () => {
       real({ id: 'av', tipus: 'canal', subjecte, comunitatId: 'c', altres: [{ id: UUID_ENTITAT, tipus: 'entitat', slug: 'socdepoble' }] }),
       real({ id: 'g', tipus: 'grup', subjecte, comunitatId: 'c', entitatId: ENTITAT_PILOT_ID })
     ];
-    expect(claus(ambXatsPerDefecte(comunitat))).toEqual(['c', 'av', 'g', 'socdepoble', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte(comunitat))).toEqual(['c', 'av', 'g', 'javi', 'iaia']);
+    expect(comunitat.some((fil) => jaTeElXat(fil, 'socdepoble'))).toBe(false);
   });
 
   test('una altra entitat, o una persona que es diu «Sóc de Poble», no compten (mai pel nom)', () => {
     const altra = real({ altres: [{ id: UUID_ENTITAT, tipus: 'entitat', slug: 'cooperativa', nom: 'Sóc de Poble' }] });
     const persona = real({ id: 'p', altres: [{ id: 'socdepoble', tipus: 'persona', nom: 'Sóc de Poble' }] });
-    expect(claus(ambXatsPerDefecte([altra, persona]))).toEqual(['f-real', 'p', 'socdepoble', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([altra, persona]))).toEqual(['f-real', 'p', 'javi', 'iaia']);
+    expect(jaTeElXat(altra, 'socdepoble') || jaTeElXat(persona, 'socdepoble')).toBe(false);
   });
 
   test('el fil de la llavor, la IAIA entre els altres o el xat públic de /iaia o /ia treuen la IAIA', () => {
@@ -205,9 +244,9 @@ describe('ambXatsPerDefecte', () => {
       real({ tipus: 'grup', subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' } }),
       real({ tipus: 'grup', subjecte: { tipus: 'pagina', id: '/ia', ruta: '/ia' } })
     ];
-    for (const fil of casos) expect(claus(ambXatsPerDefecte([fil]))).toEqual(['f-real', 'socdepoble', 'javi']);
+    for (const fil of casos) expect(claus(ambXatsPerDefecte([fil]))).toEqual(['f-real', 'javi']);
     /* Una altra pàgina no és el xat de la IAIA. */
-    expect(claus(ambXatsPerDefecte([real({ subjecte: { tipus: 'pagina', id: '/mur' } })]))).toEqual(['f-real', 'socdepoble', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte([real({ subjecte: { tipus: 'pagina', id: '/mur' } })]))).toEqual(['f-real', 'javi', 'iaia']);
   });
 
   /* Auditoria 261007 (B) · La clau de la pàgina de la IAIA es valida contra
@@ -244,10 +283,9 @@ describe('ambXatsPerDefecte', () => {
   test('quan arriba la conversa real, la fila sintètica se’n va', () => {
     const abans = ambXatsPerDefecte([]);
     const despres = ambXatsPerDefecte([real({ tipus: 'iaia', id: 'i' }), ...abans]);
-    expect(claus(despres)).toEqual(['i', 'socdepoble', 'javi']);
-    /* Les sintètiques que es queden són les mateixes (ni es dupliquen ni es refan). */
+    expect(claus(despres)).toEqual(['i', 'javi']);
+    /* La sintètica que es queda és la mateixa (ni es duplica ni es refà). */
     expect(despres[1]).toBe(abans[0]);
-    expect(despres[2]).toBe(abans[1]);
   });
 
   test('amb afig: false només lleva, mai afig', () => {
@@ -255,11 +293,11 @@ describe('ambXatsPerDefecte', () => {
     expect(ambXatsPerDefecte(fils, { afig: false })).toBe(fils);
     const ambSintetiques = ambXatsPerDefecte([]);
     const visitant = real({ id: 'v', tipus: 'grup', subjecte: { tipus: 'pagina', id: '/iaia' } });
-    expect(claus(ambXatsPerDefecte([...ambSintetiques, visitant], { afig: false }))).toEqual(['v', 'socdepoble', 'javi']);
+    expect(claus(ambXatsPerDefecte([...ambSintetiques, visitant], { afig: false }))).toEqual(['v', 'javi']);
   });
 
   test('una entrada que no és una llista es tracta com a buida', () => {
-    expect(claus(ambXatsPerDefecte(null))).toEqual(['socdepoble', 'javi', 'iaia']);
+    expect(claus(ambXatsPerDefecte(null))).toEqual(['javi', 'iaia']);
     expect(ambXatsPerDefecte(undefined, { afig: false })).toEqual([]);
   });
 });
@@ -288,10 +326,12 @@ describe('jaTeElXat i esLaIdentitatDAjuda', () => {
 describe('senseXatPerDefecte i gestionaLEntitatPilot', () => {
   test('lleva només la clau demanada i, si no n’hi ha, torna la mateixa referència', () => {
     const fils = ambXatsPerDefecte([real()]);
-    expect(claus(senseXatPerDefecte(fils, 'socdepoble'))).toEqual(['f-real', 'javi', 'iaia']);
-    expect(claus(senseXatPerDefecte(fils, 'javi'))).toEqual(['f-real', 'socdepoble', 'iaia']);
+    expect(claus(senseXatPerDefecte(fils, 'javi'))).toEqual(['f-real', 'iaia']);
+    expect(claus(senseXatPerDefecte(fils, 'iaia'))).toEqual(['f-real', 'javi']);
+    /* Gauntlet 261016_1530 · Ja no hi ha cap fila de Sóc de Poble que llevar: la mateixa referència. */
+    expect(senseXatPerDefecte(fils, 'socdepoble')).toBe(fils);
     const sense = [real()];
-    expect(senseXatPerDefecte(sense, 'socdepoble')).toBe(sense);
+    expect(senseXatPerDefecte(sense, 'javi')).toBe(sense);
   });
 
   test('només qui és propietària o administradora de l’entitat pilot (per slug o per id) la gestiona', () => {
@@ -359,9 +399,8 @@ describe('tasca 12 · el xat de la IAIA es diu «IAIA MarIA»', () => {
 
 describe('tasca 12 · amb el nivell d’IA a 0 la IAIA no apareix', () => {
   test('esXatDeLaIAIA: la fila per defecte, la llavor, el directe i el xat de /iaia; no un grup on és una més', () => {
-    const [sdp, javi, iaia] = ambXatsPerDefecte([]);
+    const [javi, iaia] = ambXatsPerDefecte([]);
     expect(esXatDeLaIAIA(iaia)).toBe(true);
-    expect(esXatDeLaIAIA(sdp)).toBe(false);
     expect(esXatDeLaIAIA(javi)).toBe(false);
     expect(esXatDeLaIAIA(real({ tipus: 'iaia' }))).toBe(true);
     expect(esXatDeLaIAIA(real({ altres: [{ id: IAIA_ID, tipus: 'ia' }] }))).toBe(true);
@@ -373,7 +412,7 @@ describe('tasca 12 · amb el nivell d’IA a 0 la IAIA no apareix', () => {
 
   test('senseLaIAIA lleva totes les seues files i, si no n’hi ha cap, torna la mateixa referència', () => {
     const fils = [real({ id: 'a' }), real({ id: 'i', tipus: 'iaia' }), real({ id: 'p', tipus: 'grup', subjecte: PAGINA_IAIA }), ...ambXatsPerDefecte([])];
-    expect(claus(senseLaIAIA(fils))).toEqual(['a', 'socdepoble', 'javi']);
+    expect(claus(senseLaIAIA(fils))).toEqual(['a', 'javi']);
     const sense = [real({ id: 'a' })];
     expect(senseLaIAIA(sense)).toBe(sense);
     expect(senseLaIAIA(null)).toBeNull();

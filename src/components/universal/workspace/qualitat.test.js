@@ -95,7 +95,10 @@ const FITXERS = Object.freeze([
      l'arbre (el Lector) i el focus diferit de l'espai: les dues proves noves
      del component, que cap porta d'ESLint no vigilava. */
   'src/components/universal/workspace/UniversalWorkspace.recompte.test.jsx',
-  'src/components/universal/workspace/UniversalWorkspace.focusDiferit.test.jsx'
+  'src/components/universal/workspace/UniversalWorkspace.focusDiferit.test.jsx',
+  /* Bloc 3.8 del Gauntlet (261016) · Les accions de la secció a la capçalera
+     de la llista (accionsLlista). */
+  'src/components/universal/workspace/UniversalWorkspace.accionsLlista.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

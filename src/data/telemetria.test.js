@@ -128,3 +128,22 @@ test('la secció és el primer segment de la ruta', () => {
   expect(seccioActual('/notes/n1')).toBe('notes');
   expect(seccioActual('/')).toBe('inici');
 });
+
+/* Gauntlet 261016 (F28, P1 de Codex) · Una fitxa canònica de primer nivell
+   porta el sobrenom al primer tram, que és el que viatjava sencer. */
+test('les fitxes canòniques de primer nivell es tapen com qualsevol fitxa', () => {
+  for (const ruta of ['/javillinares', '/socdepoble/', '/rentonar?x=1#y', '/JaviLlinares']) {
+    _reiniciaTelemetria();
+    window.fetch = vi.fn(() => Promise.resolve({ ok: true }));
+    registraVisita(ruta, { cfg });
+    registraEsdeveniment('connectar', { seccio: seccioActual(ruta) }, { cfg, ruta });
+    for (const crida of window.fetch.mock.calls) {
+      const text = JSON.stringify(cos(crida)).toLowerCase();
+      expect(cos(crida).payload.url).toBe('/perfil/*');
+      for (const sobrenom of ['javillinares', 'socdepoble', 'rentonar']) expect(text).not.toContain(sobrenom);
+    }
+    expect(seccioActual(ruta)).toBe('perfil');
+  }
+  // Una secció que només comença igual no és cap fitxa.
+  expect(seccioActual('/socdepoble-noticies')).toBe('socdepoble-noticies');
+});

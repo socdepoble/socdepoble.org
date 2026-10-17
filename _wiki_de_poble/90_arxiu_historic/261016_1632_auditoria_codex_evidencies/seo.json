@@ -1,0 +1,45 @@
+[
+  {
+    "site": "socdepoble",
+    "bytes": 7009,
+    "sha256": "6cadbaa5c08a572e35f07e2d29e8f2a1d6cf1d0b4b8c6a698fa518a76a479918",
+    "meta": []
+  },
+  {
+    "site": "gentdelatorre",
+    "bytes": 35579,
+    "sha256": "f59be3be54f4c811c81aa2d573f651d10e573349167a5c0419edccb14f12ae5c",
+    "meta": [
+      {
+        "property": "og:locale",
+        "content": "ca_ES"
+      },
+      {
+        "property": "og:type",
+        "content": "website"
+      },
+      {
+        "property": "og:title",
+        "content": "Sóc de Poble - Gent de La Torre"
+      },
+      {
+        "property": "og:url",
+        "content": "https://gentdelatorre.net/"
+      },
+      {
+        "property": "og:site_name",
+        "content": "Gent de La Torre"
+      },
+      {
+        "name": "twitter:card",
+        "content": "summary_large_image"
+      }
+    ]
+  },
+  {
+    "asset": "og-socdepoble-1200x630.png",
+    "isPNG": false,
+    "bytes": 7009,
+    "sha256": "6cadbaa5c08a572e35f07e2d29e8f2a1d6cf1d0b4b8c6a698fa518a76a479918"
+  }
+]

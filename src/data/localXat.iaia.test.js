@@ -9,12 +9,18 @@
  *  · en local, la primera vegada el crea i després el torna a trobar;
  *  · el xat públic de la pàgina /iaia hi és un ALTRE xat (un grup), i la IAIA
  *    no hi contesta: per això en estos modes el botó no hi porta.
+ * Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · En eixe fil la IAIA respon
+ * amb la Wiki de veres del paquet (iaiaLocal.js), o amb la frase de sempre si
+ * no hi troba res. L'ordre del fil amb respostes asíncrones es prova a
+ * localXat.iaiaOrdre.test.js.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
 import { IAIA_ID, RESPOSTA_IAIA } from './identitatsSeed.js';
-import { localXat, reiniciaLocalXat } from './localXat.js';
+import { ENCAPCALAMENT_DE_LA_WIKI } from './iaiaLocal.js';
+import { esperaLaIAIA, localXat, reiniciaLocalXat } from './localXat.js';
+import { wikiManifest } from './wikiManifest.js';
 import { XAT_SEED_IDS } from './xatSeed.js';
 import { esXatDeLaIAIA } from './xatsPerDefecte.js';
 
@@ -47,12 +53,33 @@ describe('el directe amb la IAIA és la fila «IAIA MarIA» de la llista', () =>
     expect(await localXat.creaFilDirecte(IAIA_ID, null, SEED)).toBe(XAT_SEED_IDS.filIaia);
   });
 
+  /* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · La resposta és asíncrona
+     (primer busca a la Wiki): es demana quan la IAIA ha acabat. Una salutació
+     no busca res, i la IAIA contesta la frase de sempre. */
   it('llavor · en eixe fil la IAIA contesta amb la seua frase «en proves»', async () => {
     const filId = await localXat.creaFilDirecte(IAIA_ID, null, SEED);
     await localXat.enviaMissatge(filId, { id: 'm-1', text: 'Bon dia, iaia' }, SEED);
+    await esperaLaIAIA();
     const missatges = await localXat.loadMissatges(filId, SEED);
     expect(missatges.at(-1)).toMatchObject({ usuariId: IAIA_ID, esIA: true, text: RESPOSTA_IAIA });
     expect(RESPOSTA_IAIA).toContain('en proves');
+  });
+
+  it.each([['llavor', SEED], ['local', LOCAL]])('%s · a una pregunta que la Wiki sap, la IAIA contesta amb els 3 documents més pròxims', async (mode, config) => {
+    const filId = await localXat.creaFilDirecte(IAIA_ID, null, config);
+    const pregunta = await localXat.enviaMissatge(filId, { id: `p-${mode}`, text: 'Què és Sollutia i el Model B?' }, config);
+    await esperaLaIAIA();
+    const missatges = await localXat.loadMissatges(filId, config);
+    const resposta = missatges.at(-1);
+    expect(resposta).toMatchObject({ usuariId: IAIA_ID, autorNom: 'IAIA MarIA', esIA: true, seq: pregunta.seq + 1, respostaA: null });
+    const [primera, ...documents] = resposta.text.split('\n');
+    expect(primera).toBe(ENCAPCALAMENT_DE_LA_WIKI);
+    expect(documents).toHaveLength(3);
+    const ids = new Set(wikiManifest.items.map((item) => item.id));
+    for (const linia of documents) {
+      const [, titol, slug] = /^· (.+) — \/wikidepoble\?item=(\S+)$/.exec(linia) || [];
+      expect([linia, Boolean(titol), ids.has(decodeURIComponent(slug))]).toEqual([linia, true, true]);
+    }
   });
 
   it('local · sense cap fila, el primer clic crea el fil ’iaia’ i el segon el torna a trobar', async () => {

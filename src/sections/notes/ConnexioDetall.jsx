@@ -56,7 +56,7 @@ import { DialegCarpeta } from '../../components/universal/classificacio/DialegCa
 import { rutaDePerfil } from '../../config/navigation.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
 import { paginaDElement, useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
-import { propsDePaginaDeText } from '../text/paginaDeText.js';
+import { propsDePaginaDeText, rutaVigentDePagina } from '../text/paginaDeText.js';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { ETIQUETA_OBJECTE } from '../connectar/abastConnexio.js';
@@ -90,8 +90,15 @@ export function ConnexioDetall({ nota }) {
   const [borrant, setBorrant] = useState(false);
 
   /* La ruta es validà en connectar; ací es torna a mirar perquè ve de dades
-     desades, amb la mateixa regla que el cos del Mur (connexions.js). */
-  const ruta = rutaSegura(origen);
+     desades, amb la mateixa regla que el cos del Mur (connexions.js).
+     Gauntlet 261016_1530 (Bloc 3.6.3) · Una connexió a una pàgina desada amb
+     una ruta vella del manifest (/iaia, /ia) es llig com /anima: «Obri
+     l'original» i «Compartir» porten a /anima, no a la fitxa de la IAIA que
+     ara viu a /iaia. Comentar continua amb la ruta desada (objecteDeConnexio):
+     el xat públic del manifest és el de '/iaia'. Un perfil no canvia. */
+  const rutaDesada = rutaSegura(origen);
+  const esPagina = !origen.objecte || origen.objecte === 'pagina';
+  const ruta = esPagina ? rutaVigentDePagina(rutaDesada) : rutaDesada;
   const titolOrigen = origen.titol || nota?.title || 'Element connectat';
   /* Resolt l'original, el seu títol; si no, el que recorda l'origen. */
   const titolCompartit = targeta?.titol || titolOrigen;

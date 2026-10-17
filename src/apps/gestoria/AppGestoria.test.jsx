@@ -444,7 +444,10 @@ describe('amb sessió, el pont passa el titular de la sessió', () => {
     expect(TITULAR_SENSE_CONFIGURAR).toBe(real.TITULAR_SENSE_CONFIGURAR);
     expect(autorDelPont(TITULAR, ENTRADA_AL_TAULER)).toEqual({ ...TITULAR, href: '/el-meu-perfil' });
     expect(autorDelPont(null, ENTRADA_AL_TAULER)).toEqual({ nom: 'Titular sense configurar', poble: '', avatar: null, href: ENTRADA_AL_TAULER });
-  });
+    /* Gauntlet 261016 (MCR o3_tpv_gestoria, proves 2 i 4): la importació real i en fred de la closca sencera
+       (ShellGestoria.jsx i tot el seu graf) tarda ~1,1 s sola i passava dels 5 s per defecte amb la màquina
+       carregada. Només el límit de temps, cap asserció. */
+  }, 20000);
 });
 
 describe('la porta dels Tractors', () => {

@@ -1,5 +1,5 @@
 import { useLocation } from '../app/contexts/RouterContext';
-import { RUTES_CANONIQUES } from '../config/navigation.js';
+import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from '../config/navigation.js';
 import { useSEO } from './useSEO';
 
 /* Títol de reserva per ruta (primer tram). Una pàgina amb useSEO propi mana
@@ -13,13 +13,16 @@ import { useSEO } from './useSEO';
    Gauntlet 261016 (Bloc 3.5.1) · Les tres rutes canòniques netes
    (/javillinares, /socdepoble i /rentonar) obrin la mateixa fitxa que /gent,
    /empresa i /grup: la mateixa reserva, «Perfil», amb el primer tram llegit
-   de RUTES_CANONIQUES (navigation.js), mai escrit ací. */
+   de RUTES_CANONIQUES (navigation.js), mai escrit ací.
+   Gauntlet 261016_1530 (Bloc 3.6.3) · /iaia és ara la fitxa de la IAIA
+   MarIA (RUTA_FITXA_IAIA): la mateixa reserva, «Perfil». El manifest, a
+   /anima, posa el seu títol (TextSection), com abans a /iaia. */
 const TITLES = { notes: 'Notes', xat: 'Xat', connectar: 'Connectar', registre: 'Entrar o crear compte',
   perfil: 'Perfil', admin: 'Administració', consola: 'Consola', control: 'Panell de Control', cerca: 'Cerca',
   traduccions: 'Traduccions i llengua', wikidepoble: 'Wiki de Poble', disseny: 'Disseny',
   realitat: 'Realitat', utilitats: 'Panell de Control', 'el-meu-perfil': 'El meu perfil', 'control-xat': 'Control del xat',
   gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers', app: 'Apps',
-  ...Object.fromEntries(Object.values(RUTES_CANONIQUES).map((ruta) => [ruta.slice(1), 'Perfil'])) };
+  ...Object.fromEntries([...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA].map((ruta) => [ruta.slice(1), 'Perfil'])) };
 const SENSE_INDEX = new Set(['app']);
 export function RouteSEO() {
   const { pathname } = useLocation();

@@ -27,6 +27,16 @@
  *   · GPS IFD (0x8825) › LatitudeRef, Latitude, LongitudeRef, Longitude,
  *     AltitudeRef i Altitude (1 a 6).
  *
+ * Onada 0.3 (Gauntlet 261016, visor de l'Arxiu visual) · Amb `ambCamera:
+ * true`, i només amb ella, també IFD0 › Make (0x010F), Model (0x0110), Artist
+ * (0x013B) i Copyright (0x8298): el panell del visor diu la càmera, l'autor i
+ * els drets que la foto declara. Les claus noves (camera, autor, copyright)
+ * només ixen amb l'opció: la sortida per defecte continua sent la de
+ * senseDades(), amb les tres claus de sempre. Els textos són ASCII imprimible
+ * (el tipus ASCII de l'EXIF), sense els espais del final que hi posen moltes
+ * càmeres, i fins a MAX_ASCII_TEXT caràcters; el Copyright en porta dos
+ * separats per NUL (fotògraf i editor) i se'n llig el primer.
+ *
  * LLEI: no llança mai. Un fitxer truncat, un desplaçament fora del buffer (o
  * del tros), un IFD que apunta a si mateix o un nombre d'entrades absurd
  * tornen «sense dades». Els límits són durs: cap bucle depén del que diga el
@@ -65,7 +75,13 @@ const TROS_EXIF_WEBP = 0x45584946; // «EXIF»
 const MAX_ENTRADES_IFD = 512;
 /** Caràcters d'un camp ASCII de data («AAAA:MM:DD hh:mm:ss» + NUL). */
 const MAX_ASCII = 64;
+/** Caràcters de la càmera, l'autor o els drets: un avís de copyright és més llarg que una data. */
+const MAX_ASCII_TEXT = 256;
 
+const TAG_MARCA = 0x010f;
+const TAG_MODEL = 0x0110;
+const TAG_AUTOR = 0x013b;
+const TAG_COPYRIGHT = 0x8298;
 const TAG_ORIENTACIO = 0x0112;
 const TAG_EXIF_IFD = 0x8769;
 const TAG_GPS_IFD = 0x8825;
@@ -90,6 +106,12 @@ const MIDA_TIPUS = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8, 13: 4 };
 /** Una còpia nova cada vegada: qui la rep la pot modificar sense tacar-ne cap altra. */
 export function senseDades() {
   return { orientacio: null, gps: null, dataCaptura: null };
+}
+
+/* Sense dades, amb la forma que demana l'opció: amb `ambCamera`, també les
+   tres claus de la càmera, l'autor i els drets, a null. */
+function buitPer(ambCamera) {
+  return ambCamera ? { ...senseDades(), camera: null, autor: null, copyright: null } : senseDades();
 }
 
 /** Coordenades possibles: finites, dins del rang i no el 0/0 d'un GPS sense senyal. */
@@ -153,8 +175,8 @@ function enter(t, e) {
   return null;
 }
 
-function text(t, e) {
-  if (!e || e.tipus !== TIPUS_ASCII || e.quantitat > MAX_ASCII) return null;
+function text(t, e, maxim = MAX_ASCII) {
+  if (!e || e.tipus !== TIPUS_ASCII || e.quantitat > maxim) return null;
   let s = '';
   for (let i = 0; i < e.quantitat; i += 1) {
     const c = t.u8(e.pos + i);
@@ -163,6 +185,22 @@ function text(t, e) {
     s += String.fromCharCode(c);
   }
   return s;
+}
+
+/* Un text descriptiu (càmera, autor, drets): sense els espais de farciment i,
+   buit, null. */
+function textNet(t, e) {
+  const s = text(t, e, MAX_ASCII_TEXT);
+  const net = s === null ? '' : s.trim();
+  return net === '' ? null : net;
+}
+
+/* La càmera: { marca, model } o null. Moltes càmeres repetixen la marca al
+   model («Canon» i «Canon EOS 5D»): es tornen tal com les escriu el fitxer. */
+function llegixCamera(t, ifd0) {
+  const marca = textNet(t, ifd0.get(TAG_MARCA));
+  const model = textNet(t, ifd0.get(TAG_MODEL));
+  return marca || model ? { marca, model } : null;
 }
 
 /** RATIONAL sense signe; un denominador 0 fa la lectura impossible (NaN). */
@@ -224,18 +262,24 @@ function llegixData(t, ifd) {
   return `${a}-${mes}-${d}T${h}:${min}:${s}${sufix}`;
 }
 
-function llegixTiff(v, inici, mida, { ambGps, ambData }) {
-  if (mida < 8) return senseDades();
+function llegixTiff(v, inici, mida, { ambGps, ambData, ambCamera = false }) {
+  if (mida < 8) return buitPer(ambCamera);
   const marca = v.getUint16(inici);
-  if (marca !== 0x4949 && marca !== 0x4d4d) return senseDades();
+  if (marca !== 0x4949 && marca !== 0x4d4d) return buitPer(ambCamera);
   const t = lectorTiff(v, inici, mida);
-  if (t.u16(2) !== 42) return senseDades();
+  if (t.u16(2) !== 42) return buitPer(ambCamera);
   const visitats = new Set();
-  const ifd0 = llegixIfd(t, t.u32(4), new Set([TAG_ORIENTACIO, TAG_EXIF_IFD, TAG_GPS_IFD]), visitats);
-  if (!ifd0) return senseDades();
-  const resultat = senseDades();
+  const tags0 = [TAG_ORIENTACIO, TAG_EXIF_IFD, TAG_GPS_IFD, ...(ambCamera ? [TAG_MARCA, TAG_MODEL, TAG_AUTOR, TAG_COPYRIGHT] : [])];
+  const ifd0 = llegixIfd(t, t.u32(4), new Set(tags0), visitats);
+  if (!ifd0) return buitPer(ambCamera);
+  const resultat = buitPer(ambCamera);
   const o = enter(t, ifd0.get(TAG_ORIENTACIO));
   resultat.orientacio = Number.isInteger(o) && o >= 1 && o <= 8 ? o : null;
+  if (ambCamera) {
+    resultat.camera = llegixCamera(t, ifd0);
+    resultat.autor = textNet(t, ifd0.get(TAG_AUTOR));
+    resultat.copyright = textNet(t, ifd0.get(TAG_COPYRIGHT));
+  }
   if (ambData) {
     const punter = enter(t, ifd0.get(TAG_EXIF_IFD));
     const exif = punter === null ? null : llegixIfd(t, punter, new Set([TAG_DATA_ORIGINAL, TAG_ZONA_ORIGINAL]), visitats);
@@ -338,16 +382,17 @@ function trobaTiff(v) {
  * (ArrayBuffer o vista). `ambGps: false` no toca el bloc GPS (l'orientació
  * sola, per a dibuixar).
  * Torna sempre { orientacio: 1..8|null, gps: { lat, lng, altitud|null }|null, dataCaptura: string|null }.
+ * Amb `ambCamera: true`, a més, { camera: { marca, model }|null, autor: string|null, copyright: string|null }.
  */
-export function llegixExif(buffer, { ambGps = true, ambData = true } = {}) {
+export function llegixExif(buffer, { ambGps = true, ambData = true, ambCamera = false } = {}) {
   try {
     const v = vistaDe(buffer);
-    if (!v) return senseDades();
+    if (!v) return buitPer(ambCamera);
     const tiff = trobaTiff(v);
-    if (!tiff) return senseDades();
-    return llegixTiff(v, tiff.inici, tiff.mida, { ambGps, ambData });
+    if (!tiff) return buitPer(ambCamera);
+    return llegixTiff(v, tiff.inici, tiff.mida, { ambGps, ambData, ambCamera });
   } catch {
-    return senseDades();
+    return buitPer(ambCamera);
   }
 }
 
@@ -424,13 +469,13 @@ async function localitzaTiff(fitxer) {
  * sense dades.
  */
 export async function llegixMetadadesImatge(fitxer, opcions) {
+  const { ambGps = true, ambData = true, ambCamera = false } = opcions || {};
   try {
-    if (typeof Blob === 'undefined' || !(fitxer instanceof Blob)) return senseDades();
-    const { ambGps = true, ambData = true } = opcions || {};
+    if (typeof Blob === 'undefined' || !(fitxer instanceof Blob)) return buitPer(ambCamera);
     const { v, tiff } = await localitzaTiff(fitxer);
-    return tiff ? llegixTiff(v, tiff.inici, tiff.mida, { ambGps, ambData }) : senseDades();
+    return tiff ? llegixTiff(v, tiff.inici, tiff.mida, { ambGps, ambData, ambCamera }) : buitPer(ambCamera);
   } catch {
-    return senseDades();
+    return buitPer(ambCamera);
   }
 }
 

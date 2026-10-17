@@ -1,4 +1,5 @@
 import { getPreferenciaLlegat, setPreferenciaLlegat } from '../config/storage.js';
+import { CLAUS_FUNDACIONALS } from './identitatsSeed.js';
 /**
  * Telemetria poca-solta: compta visites i actes conscients (Connectar) en un
  * Umami, sense carregar cap script de fora.
@@ -80,10 +81,20 @@ export function estableixTelemetriaApagada(apagada) {
   return setPreferenciaLlegat(CLAU_APAGADA, apagada ? '1' : null);
 }
 
+/* Gauntlet 261016 (F28) · Les fitxes canòniques de primer nivell
+   (/javillinares, /socdepoble, /rentonar; navigation.js · RUTES_CANONIQUES)
+   porten el sobrenom de la identitat en el PRIMER tram, que és el que viatja.
+   Es tapen com qualsevol altra fitxa: la secció és «perfil» i la ruta
+   «/perfil/*». La llista ix de la llavor, mai es copia ací. */
+const PRIMERS_TRAMS_PERSONALS = new Set(CLAUS_FUNDACIONALS.map((clau) => String(clau).toLowerCase()));
+const esTramPersonal = (tram) => PRIMERS_TRAMS_PERSONALS.has(String(tram).toLowerCase());
+
 /** Primer segment de la ruta: «notes», «mur»… Dada de secció, mai de persona. */
 export function seccioActual(pathname) {
   const ruta = pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
-  return String(ruta).split('/').filter(Boolean)[0] || 'inici';
+  const primer = String(ruta).split(/[?#]/)[0].split('/').filter(Boolean)[0];
+  if (!primer) return 'inici';
+  return esTramPersonal(primer) ? 'perfil' : primer;
 }
 
 /** L'app declara si viu dins d'una pàgina d'un altre (config de l'amfitrió). */
@@ -106,6 +117,7 @@ function rutaSenseQuery(ruta) {
 function rutaTapada(ruta) {
   const [primer, ...resta] = rutaSenseQuery(ruta).split('/').filter(Boolean);
   if (!primer) return '/';
+  if (esTramPersonal(primer)) return '/perfil/*';
   return resta.length ? `/${primer}/*` : `/${primer}`;
 }
 

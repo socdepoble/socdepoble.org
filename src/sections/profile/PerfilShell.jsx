@@ -3,6 +3,7 @@ import { SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace';
 import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
@@ -283,7 +284,24 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
     () => configContingut || externalConfig || {},
     [configContingut, externalConfig],
   );
-  const utilitats = useMemo(() => aplicacionsValides(aplicacions), [aplicacions]);
+  /* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+     maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
+     Les utilitats internes (aplicacions.js · `intern`: la Consola de
+     Mètriques i el Cervell) només ixen a l'aside APLICACIONS de qui és
+     superadmin, el mateix criteri que DetallCompte. Sense proveïdor de sessió
+     (una peça muntada sola), ningú no ho és. Una selecció que apuntava a una
+     utilitat que ja no es veu la reconcilia l'espai de treball (WorkspaceContext:
+     una categoria absent cau a la primera).
+     Revisió adversarial del carril D (261016, problema 2) · A cada renovació
+     del JWT la sessió torna a comprovar el rol i esSuperadmin val false un
+     moment: les internes desapareixien i un superadmin que treballava a les
+     Mètriques en queia a la persona. Ara es conserva l'últim rol resolt del
+     mateix compte mentre es comprova (useSuperadminEstable). */
+  const { esSuperadmin: superadmin } = useSuperadminEstable();
+  const utilitats = useMemo(
+    () => aplicacionsValides(aplicacions).filter((aplicacio) => !aplicacio.intern || superadmin),
+    [aplicacions, superadmin],
+  );
 
   return (
     <PerfilProvider config={config} onCanviOrganitzacions={refresh}>

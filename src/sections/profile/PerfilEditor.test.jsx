@@ -554,10 +554,19 @@ test('la pujada va a la carpeta de la identitat', async () => {
 /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el botó únic
    de T35: la capçalera té el seu botó, «Capçalera», que diu abans de triar què
    s'admet; la imatge pròpia, el seu («Avatar» o «Logotip»). Una persona sense
-   avatar (jo: avatar_url buit) té la ranura de damunt de l'H1. Les vistes no
-   van al centre de la fitxa (CONTRACTE-3). */
+   avatar té la ranura de damunt de l'H1. Les vistes no van al centre de la
+   fitxa (CONTRACTE-3).
+   Gauntlet 261016 (Bloc 3.5.4, verificació; ordre del Mestre: «És
+   inadmissible que a la mateixa pantalla es mostre una foto al centre i una
+   altra a la dreta») · Proves actualitzades a propòsit. Abans «sense avatar»
+   era `jo` (avatar_url buit, però amb la foto de la sessió a
+   identitat.avatar), i la ranura buida eixia damunt de l'H1 mentre la barra
+   i la targeta pintaven la foto. Ara l'avatar redó beu d'avatarDeLaFitxa: la
+   ranura és per a qui no té cap foto (senseFoto), i `jo` té la prova pròpia
+   (davall: «sense avatar_url i amb la foto de la sessió»). */
+const senseFoto = { ...jo, avatar: null };
 test('Onada 4 · dos botons separats: «Capçalera» (PNG, JPEG o WebP, fins a 10 MB) i, sense avatar, la ranura «Avatar»', () => {
-  render(<PerfilEditor identitat={jo} />);
+  render(<PerfilEditor identitat={senseFoto} />);
   expect(m.adapter).toMatchObject({
     heroEditLabel: 'Capçalera', heroEditHelp: 'PNG, JPEG o WebP, fins a 10 MB.', showLogoUpload: true, logoEditLabel: 'Avatar', ambVistes: false,
   });
@@ -571,7 +580,7 @@ test('Onada 4 · dos botons separats: «Capçalera» (PNG, JPEG o WebP, fins a 1
    (useImatgeDeFitxa): el Perfil li diu quan n'hi ha una pujant i quin límit
    s'ha de dir abans de triar, a la ranura i davall del botó amb imatge. */
 test('Línia I2 · la closca rep la guarda de pujada i el límit: heroPujant, ajudaAmbImatge i, amb la ranura, logoEditHelp i logoPujant', () => {
-  render(<PerfilEditor identitat={jo} />);
+  render(<PerfilEditor identitat={senseFoto} />);
   expect(m.adapter).toMatchObject({
     heroPujant: false, ajudaAmbImatge: 'PNG, JPEG o WebP, fins a 10 MB.',
     logoEditHelp: 'PNG, JPEG o WebP, fins a 10 MB.', logoPujant: false,
@@ -656,7 +665,7 @@ test('Onada 4 · una persona amb avatar: cap ranura; l’avatar redó porta onCa
 });
 
 test('Onada 4 · la ranura buida de la persona obri el selector de l’avatar; la capçalera, el seu', () => {
-  render(<PerfilEditor identitat={jo} />);
+  render(<PerfilEditor identitat={senseFoto} />);
   const avatar = vi.spyOn(selector('logoImage'), 'click');
   const capcalera = vi.spyOn(selector('heroImage'), 'click');
   act(() => m.adapter.onLogoEdit({ acaba: vi.fn() }));
@@ -667,6 +676,68 @@ test('Onada 4 · la ranura buida de la persona obri el selector de l’avatar; l
   expect(avatar).toHaveBeenCalledTimes(1);
   expect(selector('heroImage').getAttribute('accept')).toBe('image/png,image/jpeg,image/webp');
   expect(screen.queryByRole('dialog', { name: 'Capçalera i avatar' })).toBeNull();
+});
+
+/* Gauntlet 261016 (Bloc 3.5.4, verificació; ordre del Mestre) · Una persona
+   sense avatar_url (`jo`) que ha entrat amb una foto de la sessió (Google):
+   la targeta viva i la barra taronja ja la pintaven (avatarDeLaFitxa →
+   identitat.avatar), i damunt de l'H1 hi havia la ranura buida. Ara l'avatar
+   redó porta la MATEIXA foto. «Avatar» la canvia; «Llevar l'avatar» no hi és,
+   perquè la fitxa no té cap imatge pròpia que llevar (buidar un avatar_url ja
+   buit no faria res). */
+test('Bloc 3.5.4 · sense avatar_url i amb la foto de la sessió: l’avatar redó, la barra i la targeta viva porten la mateixa foto, sense ranura ni «Llevar l’avatar»', async () => {
+  const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
+  render(<PerfilEditor identitat={jo} />);
+  expect(jo.dades.avatar_url).toBeUndefined();
+  expect(m.adapter.avatarAutor).toEqual({
+    src: 'a.webp', alt: 'Avatar de Pep', onCanvia: expect.any(Function), etiquetaCanvia: 'Avatar',
+    ajuda: 'PNG, JPEG o WebP, fins a 10 MB.', pujant: false,
+  });
+  expect(m.adapter.avatarAutor).not.toHaveProperty('onLleva');
+  expect(m.adapter.showLogoUpload).toBe(false);
+  expect(m.adapter).not.toHaveProperty('onLogoEdit');
+  // La mateixa foto a les tres superfícies de la pantalla.
+  expect(m.adapter.barAuthorAvatar).toBe('a.webp');
+  expect(llegixDocumentViu('jo').autor.avatar).toBe('a.webp');
+  // «Avatar» obri el selector de l'avatar, com amb una foto pròpia.
+  const clic = vi.spyOn(selector('logoImage'), 'click');
+  act(() => m.adapter.avatarAutor.onCanvia({ type: 'click' }));
+  expect(clic).toHaveBeenCalledTimes(1);
+  // En lectura (una baixa en curs), la mateixa foto, sense cap botó.
+  cleanup();
+  render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } }} />);
+  expect(m.adapter.emptyDocument.avatarAutor).toEqual({ src: 'a.webp', alt: 'Avatar de Pep' });
+  expect(m.adapter.barAuthorAvatar).toBe('a.webp');
+});
+
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+   sense poble») · Sense poble desat, Sóc de Poble i Rentonar (per l'id de la
+   llavor) porten el seu a la barra taronja i a la targeta viva; una altra
+   organització, cap, i el desat sempre mana. */
+test('Bloc 3.5.2 · les entitats del Mestre sense poble el porten a la barra i a la targeta viva; una altra, cap', async () => {
+  const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
+  const { ENTITAT_PILOT_ID, ENTITAT_RENTONAR_SLUG, POBLE_FUNDACIONAL } = await import('../../data/identitatsSeed.js');
+  const casos = [
+    [{ ...org('owner'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' }, POBLE_FUNDACIONAL],
+    [{ ...org('owner'), id: ENTITAT_RENTONAR_SLUG, mena: 'grup', nom: 'Rentonar' }, POBLE_FUNDACIONAL],
+    [{ ...org('owner'), id: ENTITAT_RENTONAR_SLUG, mena: 'grup', nom: 'Rentonar', dades: { ...org('owner').dades, town_name: 'Benilloba' } }, 'Benilloba'],
+    [org('owner'), ''],
+  ];
+  for (const [identitat, esperat] of casos) {
+    render(<PerfilEditor identitat={identitat} />);
+    expect([identitat.id, m.adapter.barAuthorLocation, llegixDocumentViu(identitat.id).autor.poble]).toEqual([identitat.id, esperat, esperat]);
+    cleanup();
+  }
+});
+
+/* Bloc 3.5.4 (verificació) · Amb avatar propi i amb la foto de la sessió alhora, mana el propi a totes. */
+test('Bloc 3.5.4 · amb avatar propi, el propi a l’avatar redó, a la barra i a la targeta viva; «Llevar l’avatar» hi és', async () => {
+  const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
+  render(<PerfilEditor identitat={{ ...jo, avatar: 'https://poble.test/a.webp', dades: { ...jo.dades, avatar_url: 'https://poble.test/a.webp' } }} />);
+  expect(m.adapter.avatarAutor).toMatchObject({ src: 'https://poble.test/a.webp', etiquetaLleva: 'Llevar l’avatar' });
+  expect(typeof m.adapter.avatarAutor.onLleva).toBe('function');
+  expect(m.adapter.barAuthorAvatar).toBe('https://poble.test/a.webp');
+  expect(llegixDocumentViu('jo').autor.avatar).toBe('https://poble.test/a.webp');
 });
 
 test('Onada 4 · un agent IA té l’avatar redó com la persona; sense avatar, la ranura «Avatar»', () => {

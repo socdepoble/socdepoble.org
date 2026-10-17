@@ -74,9 +74,13 @@ describe('T6 · la barra taronja de PublicacioDetall porta a la pàgina de qui s
     expect(barra({ id: 'coca', title: 'Recepta de coca' })).toEqual({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
   });
 
+  /* Gauntlet 261016 · diürn 1530 (Bloc -1; ordre del Mestre: la persona pilot
+     és «Javi Llinares») · Derogat el «Javi» d'esta prova: la barra de la
+     persona pilot porta el seu nom sencer (signaturaDeQuiSigna), com la barra
+     de la seua pàgina, encara que l'element diga «Javi». */
   test('una persona, al seu perfil; l’entitat pilot, al projecte; una altra entitat, al seu perfil', () => {
     expect(barra({ id: 'mac', title: 'Mac', author_name: 'Javi', owner_user_id: 'javillinares' }, 'mercat'))
-      .toEqual({ nom: 'Javi', href: '/gent/javillinares' });
+      .toEqual({ nom: 'Javi Llinares', href: '/gent/javillinares' });
     cleanup();
     expect(barra({ id: 'samarreta', title: 'Samarreta', seller: 'Sóc de Poble', author_entity_id: 'socdepoble' }, 'mercat'))
       .toEqual({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });

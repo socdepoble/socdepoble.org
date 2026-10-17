@@ -221,6 +221,27 @@ test('sense sessió a un amfitrió (el cas del Mestre): les quatre files porten 
   capImatgeTrencada();
 });
 
+/* Gauntlet 261016_1530 (Bloc 3.6.1; revisió adversarial de B1) · El xat de
+   mostra sense sessió pinta els mateixos 4 actors en el mateix ordre que el
+   de veres: la comunitat de Sóc de Poble, Javi Llinares, la comunitat del
+   poble i la IAIA. Ho fixa la llista PINTADA amb el FakeChatOnboarding de
+   veres (no l'ordre dels fils del context, que no és el de la pantalla). I
+   cap fila directa «Sóc de Poble»: només la de la comunitat. */
+test('Bloc 3.6.1 · sense sessió, la mostra de veres pinta els quatre actors en l’ordre de l’ordre, sense cap directe «Sóc de Poble»', () => {
+  munta(senseSessio());
+  const files = [...llista().querySelectorAll(':scope > li[data-clau]')];
+  const nomDe = (li) => li.querySelector('.sdp-avatar')?.getAttribute('title') ?? null;
+  expect(files.length).toBeGreaterThanOrEqual(4);
+  expect(files.slice(0, 4).map((li) => [li.getAttribute('data-clau'), nomDe(li)])).toEqual([
+    ['comunitat:fake-sdp', 'Sóc de Poble'],
+    ['fake-javi', 'Javi Llinares'],
+    ['comunitat:fake-poble', POBLE.nom],
+    ['fake-iaia', 'IAIA MarIA']
+  ]);
+  expect(files.filter((li) => nomDe(li) === 'Sóc de Poble').map((li) => li.getAttribute('data-clau'))).toEqual(['comunitat:fake-sdp']);
+  expect(files.some((li) => li.getAttribute('data-clau') === 'fake-sdp')).toBe(false);
+});
+
 test('sense sessió i sense base (dev): les mateixes cares, amb la ruta de sempre', () => {
   munta(senseSessio());
   expect(caresDe(llista())).toEqual({ [POBLE.nom]: CARA, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO_PNG, 'Javi Llinares': FOTO_JAVI });

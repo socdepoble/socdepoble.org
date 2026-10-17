@@ -11,7 +11,13 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const bloc = vi.hoisted(() => ({ valor: null }));
 const eines = vi.hoisted(() => ({ crides: [] }));
+const sessio = vi.hoisted(() => ({ valor: null }));
 vi.mock('../../notes/NotesContext.jsx', () => ({ useNotes: () => bloc.valor }));
+/* Gauntlet 261016 (Bloc 3.4) · Qui és superadmin: la Maquinària de la IAIA només ix per a ell fora de DEV. */
+vi.mock('../../../app/contexts/SessionContext.jsx', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useSessioOpcional: () => sessio.valor,
+}));
 vi.mock('../../../data/wikiManifest.js', () => ({
   wikiManifest: {
     categories: [{ id: 'folder:01_ser', label: 'SER' }],
@@ -54,6 +60,7 @@ const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'vers
 beforeEach(() => {
   setLocalNoteField.mockReset();
   eines.crides.length = 0;
+  sessio.valor = null;
   bloc.valor = { notes: NOTES, noteFolders: CARPETES, status: 'ready', teSessio: true, setLocalNoteField };
 });
 afterEach(cleanup);
@@ -172,8 +179,25 @@ test('prémer una carpeta (de la Wiki o del Bloc) o una pàgina del sistema no e
   expect(onFet).not.toHaveBeenCalled();
 });
 
-test('en producció la Wiki no porta eines locals: ni es demanen, i Maquinària només té la Consola', async () => {
+/* Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+   maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
+   Prova actualitzada a propòsit. El grup de la Wiki és la Wiki que veu qui
+   mira: en producció, la Maquinària de la IAIA (i la Consola) només per a qui
+   és superadmin (wiki-de-poble/maquinaria.js), com a la Wiki i a /consola. */
+test('en producció la Wiki no porta eines locals: ni es demanen; sense superadmin, ni la Maquinària ni la Consola', async () => {
   vi.stubEnv('DEV', false);
+  try {
+    await munta();
+    expect(eines.crides).toEqual([]);
+    expect(files('Wiki de Poble')).toEqual([PAGE_COPY.wikidepoble.title, 'SER', 'Genoma', 'Crònica del mas']);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+
+test('Bloc 3.4 · en producció i amb superadmin, la Maquinària de la IAIA només té la Consola', async () => {
+  vi.stubEnv('DEV', false);
+  sessio.valor = { esSuperadmin: true };
   try {
     await munta();
     expect(eines.crides).toEqual([]);

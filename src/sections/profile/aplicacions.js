@@ -20,6 +20,9 @@ import { BookOpen, Landmark, Receipt } from 'lucide-react';
                    'snippet'. Sense, el mateix id (opcional). Un `null`
                    EXPLÍCIT vol dir que la utilitat no té targeta al Panell:
                    la seua fitxa no oferix cap preferència (Onada 10)
+     · intern      true: maquinària interna de desenvolupament; el Perfil
+                   només la mostra a qui és superadmin (opcional; sense,
+                   la veu tothom)
 
    Ordre del Mestre (261007, prompt 261007_1628, peça C) · El Perfil escrivia
    la preferència amb l'id de l'aplicació i el Panell l'amagava per l'id del
@@ -40,6 +43,14 @@ import { BookOpen, Landmark, Receipt } from 'lucide-react';
    «Maquinària i Sistema»). Les preferències que algú ja tinga desades amb
    'consola', 'cervell', 'disseny' o 'metriques' es queden al storage, sense
    efecte: no s'esborra res.
+
+   Gauntlet 261016 (Bloc 3.4; ordre del Mestre: «retirar definitivament la
+   maquinària interna de desenvolupament de l'aside en pantalles d'usuari») ·
+   La Consola de Mètriques («Monitorització i auditoria de la IA») i el
+   Cervell (el mateix codi l'anomena «maquinària interna del Mas») porten
+   `intern: true`: l'aside APLICACIONS del Perfil només les mostra a qui és
+   superadmin (PerfilShell.jsx), com la ruta /consola en producció. No
+   s'esborra cap preferència desada.
 
    Estes cinc utilitats encara no tenen una ruta connectada des del Perfil.
    Totes són 'pendent'. La fitxa de les tres que tenen targeta al Panell
@@ -69,6 +80,8 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     /* Onada 10 (261010) · Sense targeta al Panell: cap preferència. Abans, 'consola'. */
     panell: null,
+    /* Gauntlet 261016 (Bloc 3.4) · Maquinària interna: només superadmin. */
+    intern: true,
   }),
   Object.freeze({
     id: 'lector-rss',
@@ -86,6 +99,8 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
     /* Onada 10 (261010) · Sense targeta al Panell: cap preferència. Abans, el seu id. */
     panell: null,
+    /* Gauntlet 261016 (Bloc 3.4) · Maquinària interna: només superadmin. */
+    intern: true,
   }),
   Object.freeze({
     id: 'snippet',
@@ -112,6 +127,8 @@ const esComponent = (icona) => typeof icona === 'function' || (typeof icona === 
  * camp, o amb qualsevol altre valor que no siga un id vàlid (undefined, '',
  * majúscules), continua caient al mateix id, així una llista federada que
  * no el declara es comporta com abans.
+ * Gauntlet 261016 (Bloc 3.4) · `intern` només s'hi posa quan és true: una
+ * entrada sense la marca no porta cap clau nova (el mateix objecte de sempre).
  */
 export function aplicacionsValides(llista) {
   if (!Array.isArray(llista)) return [];
@@ -129,6 +146,7 @@ export function aplicacionsValides(llista) {
       estat: connectada ? 'connectada' : 'pendent',
       ruta: connectada ? entrada.ruta : null,
       panell: entrada.panell === null || ID_VALID.test(String(entrada.panell ?? '')) ? entrada.panell : entrada.id,
+      ...(entrada.intern === true ? { intern: true } : null),
     }));
   }
   return valides;

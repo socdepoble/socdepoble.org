@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
 import { AGENTS_MAP } from './agentsSeed.js';
-import { ENTITATS_SEED, PERSONA_PILOT, autoriaSeed } from './identitatsSeed.js';
+import { ENTITATS_SEED, PERSONA_PILOT, autoriaSeed, signaturaDeQuiSigna } from './identitatsSeed.js';
 import { PERSONES_SEED, createLocalPerfilsAdapter } from './localPerfils.js';
 import { XAT_SEED_IDS, XAT_SEED_MEMBRES } from './xatSeed.js';
 
@@ -102,4 +102,34 @@ test('una identitat que no és del padró pilot no es resol: l’element conserv
   expect(autoriaSeed(null)).toBeNull();
   // Una entitat buida no és cap entitat: signa la persona.
   expect(autoriaSeed({ author_entity_id: '', author_id: 'javi' }).avatar).toBe(FOTO);
+});
+
+/* Gauntlet 261016 · diürn 1530 (Bloc -1; ordre del Mestre: «Sempre és la
+   seua foto personal de perfil») · El resolutor únic de qui signa. */
+test('signaturaDeQuiSigna: la persona pilot porta SEMPRE el seu nom sencer i la seua foto', () => {
+  const declarats = [
+    {}, { nom: 'Javi', avatar: '' }, { nom: 'Javi', avatar: LOGO }, { avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' },
+    { avatar: '/assets/fotos/una-altra.webp' }, { avatar: 'sdp-media://mitjans/T/U/avatars/a.webp' }, { avatar: 23 }
+  ];
+  for (const id of PERSONA_PILOT.alies) {
+    for (const camp of ['author_id', 'owner_user_id', 'ownerUserId', 'author_user_id']) {
+      for (const declarat of declarats) {
+        expect(signaturaDeQuiSigna({ [camp]: id }, declarat)).toEqual({ nom: 'Javi Llinares', avatar: FOTO, personaPilot: true });
+      }
+    }
+  }
+});
+
+test('signaturaDeQuiSigna: una entitat signant, un altre autor o un homònim conserven el que declara qui pinta', () => {
+  const declarat = { nom: 'Declarat', avatar: '/assets/proves/declarat.webp' };
+  const conserva = { ...declarat, personaPilot: false };
+  // L'entitat té prioritat encara que la persona autora siga la pilot.
+  expect(signaturaDeQuiSigna({ author_entity_id: 'socdepoble', author_id: 'javillinares' }, declarat)).toEqual(conserva);
+  expect(signaturaDeQuiSigna({ author_org_id: 'entitat-remota', author_id: 'javillinares' }, declarat)).toEqual(conserva);
+  // Un altre id, encara que el nom siga el de la pilot: el nom no identifica ningú.
+  expect(signaturaDeQuiSigna({ author_id: 'persona-homonima', author_name: PERSONA_PILOT.nom }, declarat)).toEqual(conserva);
+  expect(signaturaDeQuiSigna({ author_name: PERSONA_PILOT.nom }, declarat)).toEqual(conserva);
+  // Sense declarat, undefined: qui pinta posa la seua reserva de sempre.
+  expect(signaturaDeQuiSigna({ author_id: 'pepa' })).toEqual({ nom: undefined, avatar: undefined, personaPilot: false });
+  expect(signaturaDeQuiSigna(null)).toEqual({ nom: undefined, avatar: undefined, personaPilot: false });
 });

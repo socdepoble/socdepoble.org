@@ -55,9 +55,12 @@ const ORIGEN_FICTICI = 'http://x.invalid';
 const EXTERNES_DECLARADES = Object.freeze(new Set());
 
 const REGISTRE_DE_LLAVORS = '/wikidepoble?item=00_full_de_ruta';
-/* Les dues llavors amb pàgina pròpia vigent; la resta van al registre. */
+/* Les dues llavors amb pàgina pròpia vigent; la resta van al registre.
+   Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Actualitzada a posta: la
+   Calculadora de Risc és una secció del manifest, que passa de /iaia a
+   /anima (/iaia és ara la fitxa de la IAIA MarIA). */
 const DESTINS_PROPIS = Object.freeze({
-  'Calculadora de Risc (Maduresa IA)': '/iaia',
+  'Calculadora de Risc (Maduresa IA)': '/anima',
   'Llei Orgull Rural Visual': '/wikidepoble?item=identitat_visual'
 });
 
@@ -139,11 +142,12 @@ test('el registre de llavors per defecte; pàgina pròpia només on n’hi ha un
 /* ── De punta a punta, amb l'app real ─────────────────────────────────────
    Cada destí distint, amb l'encapçalament que en justifica l'elecció (§2 del
    F2_LLAVORS.txt): el registre de llavors, la secció «3. Llei de l'Orgull
-   Rural» d'identitat_visual i «4. El Càlcul del Risc» de l'Ànima (/iaia). */
+   Rural» d'identitat_visual i «4. El Càlcul del Risc» de l'Ànima (/anima des
+   del Bloc 3.6.3; abans /iaia). */
 const PAGINA_DEL_DESTI = Object.freeze({
   [REGISTRE_DE_LLAVORS]: '🗺️ Full de ruta de Sóc de Poble',
   '/wikidepoble?item=identitat_visual': "3. Llei de l'Orgull Rural",
-  '/iaia': '4. El Càlcul del Risc (La Por Orgànica)'
+  '/anima': '4. El Càlcul del Risc (La Por Orgànica)'
 });
 /* Cada espera caduca abans que la prova: si falla, falla amb el missatge de
    l'asserció, no amb un «timed out» de vitest. */
@@ -228,11 +232,13 @@ test('amb una base declarada (/comunitat), una llavor porta a /comunitat/wikidep
 }, LIMIT_DE_PROVA);
 
 
-test.each(['/ia', '/ia?origen=full&item=prova'])('l’àlies històric %s conserva la consulta i obri la pàgina IAIA real', async (ruta) => {
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F64) · Actualitzada a posta: l'àlies
+   històric del manifest porta a /anima, no a /iaia (la fitxa de la IAIA). */
+test.each(['/ia', '/ia?origen=full&item=prova'])('l’àlies històric %s conserva la consulta i obri el manifest real, a /anima', async (ruta) => {
   window.history.replaceState(null, '', ruta);
   await muntaLApp({ routerType: 'browser' }, async () => {
     const sufix = ruta.slice('/ia'.length);
-    await waitFor(() => expect(window.location.pathname + window.location.search + window.location.hash).toBe('/iaia' + sufix), ESPERA);
-    await paginaPintada(PAGINA_DEL_DESTI['/iaia']);
+    await waitFor(() => expect(window.location.pathname + window.location.search + window.location.hash).toBe('/anima' + sufix), ESPERA);
+    await paginaPintada(PAGINA_DEL_DESTI['/anima']);
   });
 }, LIMIT_DE_PROVA);

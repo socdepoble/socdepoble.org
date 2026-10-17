@@ -8,13 +8,11 @@
  * del xat, de la cerca global, de l'historial o d'un enllaç) i crida esta
  * funció una sola vegada. Les dues vies naveguen amb `replace`: la ruta de pas
  * no queda a l'historial, i la fletxa enrere torna a la llista.
- *   · 'socdepoble' · la via «En privat» de Comentar (useComentaEnPrivat de
- *     Pedra Seca): el missatge directe amb l'entitat, /xat?amb=<id>, resolt
- *     una vegada per a tota l'app (en llavor, XAT_SOCDEPOBLE_DE_LLAVOR). En
- *     arribar, l'efecte ?amb= de XatSection crida creaFil, que obri (o troba:
- *     crea_fil_directe és idempotent) la conversa real abans de cap missatge,
- *     i porta a /xat/<filId>. Quan la llista la torna, la fila sintètica se
- *     n'ix (jaTeElXat, data/xatsPerDefecte.js).
+ *   · 'socdepoble' · Derogada (Gauntlet 261016_1530, Bloc 3.6.1: «PROHIBIT
+ *     duplicar Sóc de Poble»). Era la via «En privat» de Comentar, el directe
+ *     amb l'entitat. Ja no hi ha cap fila sintètica de Sóc de Poble: el seu
+ *     actor és la comunitat (sections/xat/actorsDelXat.js), i un directe amb
+ *     l'entitat només naix quan algú el demana («Nova conversa», «En privat»).
  *   · 'iaia' · el xat públic de la seua pàgina (/iaia), com el «Comentar» de
  *     la pàgina: /xat?sobre=pagina:%2Fiaia&titol=…&ruta=%2Fiaia. El primer
  *     missatge hi entra (xat_entra_al_fil_de_pagina).
@@ -33,16 +31,20 @@
  *     amb el missatge automàtic (XatContext en llavor i en local,
  *     FakeChatOnboarding en remot; data/xatsPerDefecte.js · filDeMostraDeJavi).
  *     Com es declara el compte remot de Javi és decisió del Mestre.
+ *     Gauntlet 261016_1530 (Bloc 3.6; MCR b36_xat, proposta 1) · Des que
+ *     /xat/sdp-per-defecte:<clau> s'encamina per la clau (XatSection), un
+ *     enllaç vell sí que hi pot portar qui no té sessió en remot: va al seu
+ *     xat de només lectura (fake-javi), com la fila del xat de mostra.
  * És l'ÚNIC punt que canvia si el Mestre tria una altra via per a la IAIA.
  */
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { useComentaEnPrivat } from '../../components/PedraSeca/hooks/useAccions.js';
 import { useTraductorOpcional, tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { objecteDePagina, rutaXatDePagina, rutaXatPrivat } from '../../config/objecteConnectable.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { PAGINES_AMB_XAT } from '../../data/contracte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
+import { ID_FIL_DE_MOSTRA_DE_JAVI } from '../../data/xatsPerDefecte.js';
 
 /** La ruta del xat públic de la pàgina de la IAIA, amb el títol del contracte. */
 export const RUTA_XAT_DE_LA_IAIA = rutaXatDePagina(objecteDePagina({ titol: PAGINES_AMB_XAT['/iaia'], ruta: '/iaia' }));
@@ -110,18 +112,21 @@ export const AVIS_JAVI_NO_DISPONIBLE = Object.freeze(['section.xat.padro.ajudaPe
 
 /**
  * (clau, { modeDades, senseSessio }) => void: obri el xat real de la fila
- * `clau` ('socdepoble' | 'javi' | 'iaia'). `modeDades` i `senseSessio` són
- * els de useXat(); sense, el remot amb sessió, com abans.
+ * `clau` ('javi' | 'iaia'; Gauntlet 261016_1530: ja cap 'socdepoble').
+ * `modeDades` i `senseSessio` són els de useXat(); sense, el remot amb
+ * sessió, com abans. Una clau desconeguda no fa res.
  */
 export default function useObriXatPerDefecte() {
   const navigate = useNavigate();
-  const comentaEnPrivat = useComentaEnPrivat();
   const { showToast } = useToast();
   const t = useTraductorOpcional();
   return (clau, { modeDades = 'remote', senseSessio = false } = {}) => {
-    if (clau === 'socdepoble') comentaEnPrivat({ replace: true });
-    else if (clau === 'iaia') navigate(rutaDelXatDeLaIAIA(modeDades, senseSessio), { replace: true });
+    if (clau === 'iaia') navigate(rutaDelXatDeLaIAIA(modeDades, senseSessio), { replace: true });
     else if (clau === 'javi') {
+      if (senseSessio) {
+        navigate(`/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}`, { replace: true });
+        return;
+      }
       const ruta = rutaDelXatDeJavi(modeDades);
       if (ruta) {
         navigate(ruta, { replace: true });

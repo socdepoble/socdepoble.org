@@ -123,8 +123,9 @@ describe('el kit veu una falla', () => {
   test('amb només files per defecte, loadFils és conforme i no deixa cap fil per als casos següents', async () => {
     const c = ctx();
     const sintetiques = ambXatsPerDefecte([]);
-    /* Gauntlet 261016 (Bloc 3.6) · Tres: Sóc de Poble, Javi Llinares i la IAIA. */
-    expect(sintetiques).toHaveLength(3);
+    /* Gauntlet 261016 (Bloc 3.6) · Tres: Sóc de Poble, Javi Llinares i la IAIA.
+       Gauntlet 261016_1530 (Bloc 3.6.1) · Dues: fora la directa sintètica de Sóc de Poble. */
+    expect(sintetiques).toHaveLength(2);
     expect(await executaCas(cas('loadFils'), { loadFils: async () => sintetiques }, c)).toMatchObject({ estat: 'ok', falles: [] });
     expect([c.filId, c.filEscrivible]).toEqual([null, null]);
     let cridat = false;

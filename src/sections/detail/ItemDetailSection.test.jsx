@@ -7,11 +7,13 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ pagina: null, item: null, itemId: null, sectionId: 'mur', navigate: vi.fn(), t: (_, alternativa) => alternativa,
-  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }, status: undefined, seo: vi.fn() }));
+  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }, status: undefined, seo: vi.fn(), search: '', redireccio: null }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId ?? mocks.item?.id }),
   useNavigate: () => mocks.navigate,
-  useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.item?.id}`, state: { preloadedItem: mocks.item } })
+  useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.item?.id}`, search: mocks.search, state: { preloadedItem: mocks.item } }),
+  /* Onada 0.3 (Gauntlet 261016) · /multimedia/:id redirigix: el doble anota on. */
+  Navigate: ({ to, replace }) => { mocks.redireccio = { to, replace }; return null; }
 }));
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: (props) => { mocks.pagina = props; return null; } }));
 /* Onada 5 (F1, hidratació) · Els quatre proveïdors porten el mateix `status`
@@ -48,6 +50,7 @@ import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
 
 beforeEach(() => {
   mocks.pagina = null; mocks.itemId = null; mocks.sectionId = 'mur'; mocks.status = undefined;
+  mocks.search = ''; mocks.redireccio = null;
   mocks.navigate.mockReset(); mocks.seo.mockReset(); window.scrollTo = vi.fn();
 });
 afterEach(cleanup);
@@ -176,8 +179,10 @@ test('Onada 6 · fora de Pobles, el xat continua portant el nom propi de l’ele
    'loading' i la llista buida. El detall espera amb l'àtom Carregant de Pedra
    Seca (role=status): cap «Element no trobat», cap píndola Error i, a useSEO,
    cap títol (el de sèrie) en lloc de «No trobat». */
+/* Onada 0.3 (Gauntlet 261016) · Multimèdia ja no és a la llista: /multimedia/:id
+   no espera cap càrrega, redirigix (proves de baix). */
 test('Onada 5 · en fred, mentre la font carrega: Carregant (role=status), sense «Element no trobat» ni el títol «No trobat»', () => {
-  for (const seccio of ['pobles', 'mur', 'mercat', 'events', 'multimedia', 'notes']) {
+  for (const seccio of ['pobles', 'mur', 'mercat', 'events', 'notes']) {
     mocks.sectionId = seccio;
     mocks.item = null;
     mocks.itemId = 'la-torre-de-les-macanes';
@@ -245,4 +250,42 @@ test('Onada 5 · la meta description és l’entradilla de la pàgina; sense, el
   render(<ItemDetailSection />);
   expect(mocks.pagina.lead).toBeFalsy();
   expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ description: 'Per a berenar.' }));
+});
+
+/* Onada 0.3 (Gauntlet 261016, M07 i M04; pla 261016_1530: «Eliminar la
+   duplicitat de pàgines com /multimedia/town-benifallim […] ha de redirigir a
+   /pobles/[slug]») · /multimedia/:id ja no pinta cap pàgina: redirigix, amb
+   replace i conservant la consulta, també en fred (sense esperar cap font). */
+test('Onada 0.3 · /multimedia/town-<slug> porta a /pobles/<slug> amb replace, i conserva la consulta', () => {
+  mocks.sectionId = 'multimedia';
+  mocks.item = null;
+  mocks.itemId = 'town-benifallim';
+  mocks.status = 'loading';
+  render(<ItemDetailSection />);
+  expect(mocks.redireccio).toEqual({ to: '/pobles/benifallim', replace: true });
+  expect(mocks.pagina).toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+  cleanup();
+  mocks.search = '?xat=obert&ruta=%2Fx';
+  mocks.itemId = 'town-la-torre-de-les-macanes';
+  render(<ItemDetailSection />);
+  expect(mocks.redireccio).toEqual({ to: '/pobles/la-torre-de-les-macanes?xat=obert&ruta=%2Fx', replace: true });
+});
+
+test('Onada 0.3 · /multimedia/<id> obri l’Arxiu amb el visor en eixa foto (?foto=<id>); cap altra secció redirigix', () => {
+  mocks.sectionId = 'multimedia';
+  mocks.item = null;
+  mocks.itemId = 'nano-mur';
+  mocks.search = '?origen=xat';
+  render(<ItemDetailSection />);
+  expect(mocks.redireccio).toEqual({ to: '/multimedia?origen=xat&foto=nano-mur', replace: true });
+  expect(mocks.seo).not.toHaveBeenCalled();
+  cleanup();
+  mocks.redireccio = null;
+  mocks.sectionId = 'pobles';
+  mocks.itemId = 'town-tibi';
+  mocks.status = 'ready';
+  render(<ItemDetailSection />);
+  expect(mocks.redireccio).toBeNull();
+  expect(mocks.pagina.title).toBe('Element no trobat');
 });

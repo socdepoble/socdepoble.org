@@ -119,6 +119,13 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       mestre-detall ({ clau } de `mestreDetall`: 'wiki',
  *                       'notes', 'disseny', 'perfil') i, si tampoc n'hi ha,
  *                       l'espai comú (ESPAI_COMU).
+ *   - `accionsLlista` → (opcional, Bloc 3.8 del Gauntlet, 261016) accions de
+ *                       la secció a la capçalera de la llista oberta (la de
+ *                       NOTES al Bloc), entre el títol i el [|<] de replegar:
+ *                       [{ id, etiqueta, icona, onAcciona, … }], la forma de
+ *                       les accions d'AppGridColumn (botó d'icona de 24 px,
+ *                       amb nom i title). Només a la columna oberta: el rail
+ *                       plegat no canvia. Sense, cap (el DOM de sempre).
  *
  * La roda dentada (⚙️) de la capçalera de la navegació és el lloc estàndard
  * de la personalització de l'espai de treball (Llei de la Roda Dentada): hi
@@ -459,7 +466,8 @@ export function UniversalWorkspace({
   compacte = false,
   mestreDetall = false,
   tornaDeLaLlista = null,
-  idEspai
+  idEspai,
+  accionsLlista = CAP
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
   /* Llei de la Roda Dentada · Qui és l'espai per a les seues preferències:
@@ -584,6 +592,7 @@ export function UniversalWorkspace({
         listClassName={listClassName}
         detailClassName={detailClassName}
         className={className}
+        accionsLlista={accionsLlista}
       />
     </WorkspaceProvider>
   );
@@ -591,7 +600,8 @@ export function UniversalWorkspace({
 
 function WorkspaceFrame({
   columnesRef, compacte, espai, grups, amagades, vigilaAmagada, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
-  labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
+  labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className,
+  accionsLlista
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -698,6 +708,7 @@ function WorkspaceFrame({
             listClassName={listClassName}
             collapseBtnRef={collapseMiddleRef}
             expandBtnRef={expandMiddleRef}
+            accionsLlista={accionsLlista}
           />
         </SlotErrorBoundary>
       }
@@ -1205,7 +1216,8 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
-  tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout
+  tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
+  accionsLlista = CAP
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
@@ -1454,6 +1466,10 @@ function ItemListColumn({
             </button>
           ) : null
         }
+        /* Bloc 3.8 (261016) · Les accions de la secció, entre el títol i el
+           [|<] (AppGridColumn les pinta a .app-grid-col-header__accions,
+           davant del Replegar). Sense, la llista buida de sempre. */
+        endActions={Array.isArray(accionsLlista) ? accionsLlista : CAP}
         collapseBtnRef={collapseBtnRef}
         replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
         replegaCompacte={llistaPlegable}

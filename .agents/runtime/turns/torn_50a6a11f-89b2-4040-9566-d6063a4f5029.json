@@ -3,10 +3,10 @@
   "turn_id": "torn_50a6a11f-89b2-4040-9566-d6063a4f5029",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 9,
+  "state": "planned",
+  "revision": 12,
   "createdAt": "2026-10-16T13:23:27.331Z",
-  "updatedAt": "2026-10-16T13:40:37.182Z",
+  "updatedAt": "2026-10-16T14:49:13.057Z",
   "expiresAt": "2026-10-17T13:23:27.331Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3840,7 +3840,10 @@
       }
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261016_1530_pla_implementacio_gauntlet_autonom.md",
+    "hash": "cdfd79e65287316075e896435bae1fea732c3ec102664d2af991f18566460a18"
+  },
   "verification": null,
   "history": [
     {
@@ -3898,6 +3901,21 @@
       "file": "_wiki_de_poble/10_actes/261016_1545_acta_marmota.md",
       "at": "2026-10-16T13:40:37.182Z",
       "hash": "693a02a14b46b78bb09b9f3d91121d37e136a7eb693f9f15d345c2d28260c31d"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-16T14:33:14.452Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-16T14:43:16.715Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-16T14:49:13.056Z"
     }
   ]
 }

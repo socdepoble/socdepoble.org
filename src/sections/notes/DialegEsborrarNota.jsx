@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { Dialeg, Boto } from '../../components/PedraSeca';
 import { extractPlainText } from '../../utils/contentAdapter.js';
+import { TITOL_NOTA_PREPARADA } from './notaPreparada.js';
 
 export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = false }) {
   const [segonPas, setSegonPas] = useState(false);
@@ -26,7 +27,9 @@ export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = fals
   // fora del diàleg. En tornar, el focus va a «Borrar definitivament».
   const [tornat, setTornat] = useState(false);
   const [triada, setTriada] = useState(null);
-  const titol = extractPlainText(nota?.title || '', Infinity).trim() || 'Sense títol';
+  /* Gauntlet 261016 (Bloc 3.9) · Una nota sense títol es diu igual que a l'H1
+     i a la targeta: «Nota sense títol». */
+  const titol = extractPlainText(nota?.title || '', Infinity).trim() || TITOL_NOTA_PREPARADA;
 
   const tria = (opcio) => {
     setTriada(opcio);

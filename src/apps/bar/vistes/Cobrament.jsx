@@ -15,8 +15,9 @@
  * LA TORNADA AL TPV (?torna=tpv, punt.js): quan el cobrament ve del TPV, la
  * nota del client la conserva (/tiquets/<id>?nota=1&torna=tpv) i «arrere»
  * torna al TPV. La divisió també la conserva: «Separa i cobra» porta al
- * cobrament de la part amb la tornada, i la part que tanca el compte, a la
- * nota amb la tornada. Sense el paràmetre, el de sempre (Llei del Píxel).
+ * cobrament de la part amb la tornada, la part que tanca el compte, a la
+ * nota amb la tornada, i «arrere» (també la del compte ja tancat) torna al
+ * TPV. Sense el paràmetre, el de sempre (Llei del Píxel).
  *
  * Sense permís d'escriptura (ProveidorBar, permis.potEscriure): el compte es
  * veu, però cap botó ni teclat que cobra respon. L'avís de la sessió ho diu.
@@ -163,8 +164,11 @@ function Divisio({ params }) {
   const mode = consulta.mode || 'linies';
   const { comanda } = punt;
   if (punt.perduda || !comanda) {
-    return <NoTrobat titol="Res a dividir" text="Esta comanda ja està tancada o encara és buida." torna={{ etiqueta: 'Torna a la caixa', trams: punt.trams }} />;
+    const tornaBuit = tornaTpv ? { etiqueta: 'Torna al TPV', trams: ['tpv'] } : { etiqueta: 'Torna a la caixa', trams: punt.trams };
+    return <NoTrobat titol="Res a dividir" text="Esta comanda ja està tancada o encara és buida." torna={tornaBuit} />;
   }
+  /* «Arrere» amb la tornada al TPV, el mateix criteri que el cobrament: al TPV, a la mateixa comanda. */
+  const torna = tornaTpv ? { etiqueta: 'Torna al TPV', trams: ['tpv', comanda.id] } : { etiqueta: 'Torna a la comanda', trams: punt.trams };
   const t = totals(comanda);
   const vives = comanda.linies.filter((l) => l.estat !== 'anullada');
   const canvia = (linia, pas) => setSeleccio((actual) => {
@@ -194,7 +198,7 @@ function Divisio({ params }) {
   if (parts < 2 || parts > MAX_PARTS) avisParts = `Tria entre 2 i ${MAX_PARTS} parts.`;
   else if (parts <= pagades) avisParts = `Ja s’han cobrat ${pagades} parts: en calen més de ${pagades}.`;
   return (
-    <Columna titol="Dividix el compte" torna={{ etiqueta: 'Torna a la comanda', trams: punt.trams }}>
+    <Columna titol="Dividix el compte" torna={torna}>
       <AvisOperacio />
       <PillToggle etiqueta="Com es dividix" valor={mode} onCanvi={(nou) => posaConsulta({ mode: nou === 'parts' ? 'parts' : null })}
         opcions={[{ valor: 'linies', text: 'Per línies' }, { valor: 'parts', text: 'A parts iguals' }]} />

@@ -5,7 +5,9 @@ import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo } from 'react';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 import { AVISOS_TARGETA_VIVA, TargetaViva } from '../../components/universal/TargetaViva.jsx';
-import { signaturaDeNota } from './autoriaNota.js';
+import { modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
+import { TITOL_NOTA_PREPARADA } from './notaPreparada.js';
+import { useNotesData } from './NotesDataContext.jsx';
 
 const EMPTY_AGENTS = Object.freeze([]);
 const CAP = Object.freeze([]);
@@ -24,6 +26,9 @@ const CAP = Object.freeze([]);
  * i la targeta exposa que és la fitxa triada (aria-current), com la compacta.
  * Onada 8 (261009) · La boina porta a la pàgina de qui signa, la mateixa de
  * la barra taronja (signaturaDeNota: { nom, avatar, poble, ruta }).
+ * Gauntlet 261016 (Bloc 3.9) · La signatura porta el mode de dades del Bloc
+ * (sense sessió en seed o local, Javi Llinares: mai el Foraster), i el títol
+ * de reserva és el de l'H1, «Nota sense títol» (TITOL_NOTA_PREPARADA).
  */
 export function NotaFitxa({ item, active, onSelect }) {
   const identitatCtx = useIdentitat();
@@ -35,17 +40,23 @@ export function NotaFitxa({ item, active, onSelect }) {
 
   const sessionCtx = useSession();
   const currentUser = sessionCtx ? sessionCtx.currentUser : null;
+  /* Correcció de la revisió (261016) · El mode RESOLT, com la barra taronja
+     (NotesEditor): un paquet seed que ja ha triat l'entrada real és remot. */
+  const configBloc = useNotesData()?.config;
+  const dataMode = useMemo(() => modeDeDadesResolt(configBloc), [configBloc]);
 
   const autor = useMemo(
-    () => signaturaDeNota({ notaId: item?.id, actor, actorId, agents, currentUser }),
-    [item?.id, actor, actorId, agents, currentUser]
+    () => signaturaDeNota({ notaId: item?.id, actor, actorId, agents, currentUser, dataMode }),
+    [item?.id, actor, actorId, agents, currentUser, dataMode]
   );
 
   /* La nota crua, amb la reserva del model de vista de la llista per al títol
-     i la imatge (toWorkspaceNote ja els ha resolt: coverImage || heroImage). */
+     i la imatge (toWorkspaceNote ja els ha resolt: coverImage || heroImage).
+     Bloc 3.9 · `||`: un títol buit (la persona l'ha esborrat) també pren la
+     reserva, «Nota sense títol»; abans `??` deixava passar la cadena buida. */
   const notaViva = useMemo(() => ({
     ...item?.data,
-    title: item?.data?.title ?? item?.title,
+    title: item?.data?.title || item?.title || TITOL_NOTA_PREPARADA,
     heroImage: item?.data?.heroImage || item?.image || undefined
   }), [item?.data, item?.title, item?.image]);
 
@@ -69,10 +80,10 @@ export function NotaFitxa({ item, active, onSelect }) {
       className="sdp-gestor-fitxa"
       onClick={onSelect}
     >
-      <ItemMedia item={item} titleFallback={TEXTOS_LLAVOR.titol} />
+      <ItemMedia item={item} titleFallback={TITOL_NOTA_PREPARADA} />
       <span className="sdp-gestor-fitxa__text">
         <span className="sdp-nota-fitxa__capcalera">
-          <span className="sdp-gestor-fitxa__titol">{item.title || TEXTOS_LLAVOR.titol}</span>
+          <span className="sdp-gestor-fitxa__titol">{item.title || TITOL_NOTA_PREPARADA}</span>
           {item.subtitle ? (
             <time className="sdp-nota-fitxa__data" dateTime={item.updatedAt || undefined}>
               {item.subtitle}

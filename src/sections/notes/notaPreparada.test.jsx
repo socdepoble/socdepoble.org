@@ -33,6 +33,27 @@ function munta({
 const tempsEsgotat = () => Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' });
 const ambEstat = (status, missatge) => Object.assign(new Error(missatge), { status });
 
+/* Gauntlet 261016 (Bloc 3.9; verificació de la MCR) · La llavor es compara
+   normalitzada: el cos que torna TipTap no porta els salts de línia de la
+   llavor escrita, i abans la cadena exacta no casava mai (la plantilla
+   intacta creava la nota). També accepta una llista (la d'ara i la d'abans), i
+   amb una llavor la plantilla del Bloc tampoc no compta. */
+test('Bloc 3.9 · teContingut: la plantilla verge normalitzada (llista de llavors, forma de TipTap) no crea la nota', async () => {
+  const { LLAVOR_NOTA, LLAVOR_NOTA_ANTIGA, LLAVORS_NOTA } = await import('./llavorNota.js');
+  const compacta = (html) => html.replace(/>\s+</g, '><');
+  for (const content of [LLAVOR_NOTA, compacta(LLAVOR_NOTA), LLAVOR_NOTA_ANTIGA, compacta(LLAVOR_NOTA_ANTIGA)]) {
+    expect(teContingut({ content }, LLAVORS_NOTA)).toBe(false);
+    // Amb una sola llavor (la de prova), la plantilla del Bloc tampoc compta.
+    expect(teContingut({ content }, LLAVOR)).toBe(false);
+  }
+  expect(teContingut({ content: '<h3>Llavor de prova</h3>' }, [LLAVOR])).toBe(false);
+  expect(teContingut({ content: '<h3>Llavor de prova</h3>\n' }, LLAVOR)).toBe(false);
+  // Un text propi, també barrejat amb la plantilla, sí que crea la nota.
+  expect(teContingut({ content: `${compacta(LLAVOR_NOTA)}<p>Ho he escrit jo</p>` }, LLAVORS_NOTA)).toBe(true);
+  // Sense cap llavor, el criteri de sempre: el text compta.
+  expect(teContingut({ content: LLAVOR_NOTA }, null)).toBe(true);
+});
+
 test('teContingut: text o imatge; la llavor, un cos buit i la classificació no compten', () => {
   expect(teContingut({}, LLAVOR)).toBe(false);
   expect(teContingut({ content: LLAVOR }, LLAVOR)).toBe(false);

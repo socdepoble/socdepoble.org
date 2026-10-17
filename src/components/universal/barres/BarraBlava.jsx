@@ -20,6 +20,9 @@
  *     Connectar es pinten igual però el clic va a onClickInoperatiu; T7 ·
  *     porten aria-disabled="true" i el clic diu quin botó és:
  *     onClickInoperatiu('comentar' | 'compartir' | 'connectar')) ·
+ *   traduirInoperatiu (Gauntlet 261016, Bloc 3.9: amb accionsInoperatives,
+ *     Traduir també, i el clic diu onClickInoperatiu('traduir'); sense, com
+ *     sempre) ·
  *   menuTraduir ({ obert, opcions, actual, onTria, onTanca } | null: el
  *     Traductor Sobirà, ordre del Mestre, 260930; el posa useAccions) ·
  *   indexControla (l'id del diàleg de l'Índex obert: ordre del Mestre,
@@ -75,6 +78,10 @@ export function BarraBlava({
   /* Onada 8 (261009) · el nom de l'autor de «En privat» (useAccions). */
   comentarPrivatAmb = null,
   accionsInoperatives = false, onClickInoperatiu = null,
+  /* Gauntlet 261016 (Bloc 3.9) · Amb accionsInoperatives, Traduir també
+     (l'editor): aria-disabled i el clic a onClickInoperatiu('traduir'). Sense,
+     Traduir com sempre, també a la Gestoria. */
+  traduirInoperatiu = false,
   menuTraduir = null,
   indexControla,
 }) {
@@ -101,6 +108,7 @@ export function BarraBlava({
     if (!accionsInoperatives) return viu;
     return onClickInoperatiu ? () => onClickInoperatiu(accio) : null;
   };
+  const traduirApagat = Boolean(accionsInoperatives && traduirInoperatiu);
   return (
     <header className="bar-blue">
       <div className="bar-blue-left">
@@ -121,14 +129,19 @@ export function BarraBlava({
         )}
       </div>
       <div className="sp-card-actions">
-        {traduirVisible && (
+        {traduirVisible && (traduirApagat ? (
+          <IconButton label="Traduir" onClick={clicDe('traduir', onTranslate)} className={inoperativa} presentation
+            refBoto={botoTraduir} ariaDisabled={ariaInoperatiu}>
+            <TranslateIcon className="icon" />
+          </IconButton>
+        ) : (
           <IconButton label="Traduir" onClick={onTranslate} presentation refBoto={botoTraduir}
             ariaHaspopup={menuTraduir ? 'menu' : undefined}
             ariaExpanded={menuTraduir ? Boolean(menuTraduir.obert) : undefined}>
             <TranslateIcon className="icon" />
           </IconButton>
-        )}
-        {traduirVisible && menuTraduir?.obert ? (
+        ))}
+        {traduirVisible && !traduirApagat && menuTraduir?.obert ? (
           <MenuTraduir opcions={menuTraduir.opcions} actual={menuTraduir.actual}
             onTria={menuTraduir.onTria} onTanca={menuTraduir.onTanca} botoRef={botoTraduir} />
         ) : null}

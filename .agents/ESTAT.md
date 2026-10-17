@@ -7,6 +7,118 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-17 13:00 · IAIA MarIA · Activació del Gauntlet Extrem (Higiene, Llast Evacuat i Relleu a Claude & Codex)
+
+- **Ordre Directa del Mestre:** «Quiero higiene y máxima. En el próximo plan de implementación pon que las IAs tienen que ponerse en el papel adversarial extremo desde el punto de vista de un usuario que descarga este sistema y lo quiere ligero, no quiere problemas ni que sea espeso. Que investiguen a fondo los fantasmas del principio (cuando lo hacían 12 IAs gratis) y aligeren el sistema. Tú no toques código, que sean ellas con el co-working.»
+- **1. Evacuació de Llast i Neteja Profunda (Sense Carpetes Inventades):**
+  - Destí canònic únic fora d'Obsidian: `../_arxiu_wiki_de_poble/` (`/Users/javillinares/Documents/Antigravity/Som de Poble/_arxiu_wiki_de_poble/`, regla blindada a `core-memoria-historica`).
+  - Moguts més de 120 MB de residus pesats: zip de build antiga (103 MB), megabundle `260922_0320_BUNDLE_null.md` (4,9 MB), carpeta de proves marató `261005_Sessio_Marato_2230/` (13 MB) i còpia d'al·lèrgens obsoleta.
+  - Blindatge patrimonial d'actius clau: fitxer màster d'Affinity `¡alergenos.af` preservat a `_wiki_de_poble/04_escriptori/01_produccio/alergens_svg/alergenos_master.af`; 20 àudios originals del Mestre convertits a `.webm` i emmagatzemats a `_wiki_de_poble/04_escriptori/01_produccio/patrimoni_oral_mestre/`.
+  - Eliminats 4 fitxers buits (0 B) corruptes de `90_arxiu_historic/`.
+- **2. Higiene de l'Escriptori i Portes Verdes:**
+  - Arxivats a `90_arxiu_historic/` els documents consumits de la sessió anterior amb `porta-olivera.mjs --arxiva`: `261016_1631_auditoria_claude.md`, `261016_1632_auditoria_codex.md`, `261016_1633_auditoria_gemini4.md`, `261016_1645_acta_marmota_codex_gauntlet_diurn.md` i `261016_1530_prompt_gauntlet_claude_codex_gemini.md`.
+  - Netejada la carpeta `261016_1632_auditoria_codex_evidencies/` i la marca fantasma de l'índex.
+  - Porta Olivera: Codi 0. Porta Autoritat: Validat (`valid: true`).
+- **3. Pla d'Implementació i Prompt de Gauntlet Extrem:**
+  - Pla: `_wiki_de_poble/04_escriptori/261017_1300_pla_implementacio_gauntlet_extrem.md` (aprovat pel Mestre, `check` vàlid).
+  - Prompt: `_wiki_de_poble/04_escriptori/261017_1300_prompt_gauntlet_claude_codex.md` (hereta plantilla viva `prompt_local`, `check` vàlid).
+  - Àmbit d'execució:
+    * **Rol d'Usuari Adversarial Extrem:** Zero tolerància al greix, cerca implacable de codi mort o ineficient de l'època de les 12 IAs gratuïtes.
+    * **Camí 2 (Notes, TipTap, Emojis XL, Edició avançada):** Buidatge net de plantilla verge al primer teclat/clic; graella Emojis XL Unicode 18; desplegable plegat `<details>` per a metadades.
+    * **Camí 3 (Multimèdia, Banners, Lightbox EXIF):** Redirecció de `/multimedia/town-*` a `/pobles/[slug]`; robustesa a `assetResolver.js`; Lightbox accessible amb lector EXIF.
+- **4. Delimitació i Relleu:**
+  - MarIA no toca codi de `src/`; actua estrictament com a Directora Tècnica / Orquestradora.
+  - Claude Code assumeix la implementació a `src/` (sota nou usuari amb quota desbloquejada).
+  - GPT Codex assumeix l'auditoria adversarial (després de prémer el botó de restabliment complet).
+- **5. Aclariment Convocatòria NLnet:**
+  - Convocatòria NGI Fediversity (`2026-08-1a6`, 50.000 €): Sol·licitud formalment registrada l'1 d'agost de 2026. Finestra de resolució: finals d'octubre - novembre 2026. Beneficiari únic: Javi Llinares. Sollutia queda coberta amb els 3.000 € del Kit Digital com a amfitrió web bàsic.
+
+
+- **Ordre Directa del Mestre:** «Cerramos la auditoría y cuando me despierte ya decidimos cuál es el siguiente paso. Venga, bona nit.»
+- **1. Aturada i Neteja de Processos:**
+  - Cancel·lat el cron de supervisió periòdica (`task-37`). Zero subagents o processos en segon pla despertant la sessió.
+- **2. Resolució Final del Timeout de Gestoria (HistoricCofre.test.jsx):**
+  - Identificada la causa de la fallada puntual a Vitest durant execucions massives concorrents: el PBKDF2 de WebCrypto i els re-renders de jsdom fregaven els 5.000 ms.
+  - Blindat `HistoricCofre.test.jsx`: aplicat `RECORREGUT` (20.000 ms) al test de sortida de la vista i ampliat el `waitFor` de persistència asíncrona a 10.000 ms. Verificat: 8/8 tests passen en verd.
+- **3. Diagnòstic Forense d'OpenGraph Públic (F20):**
+  - Verificat que el codi d'`index.html` i el recurs estàtic local `public/assets/system/ui/og-socdepoble-1200x630.png` (518 KB PNG autèntic, 1200×630) funcionen al 100% en local.
+  - La incidència pública detectada per Codex (`socdepoble.org` servint HTML en lloc del PNG) es deu exclusivament a la manca de desplegament/sincronització del fitxer PNG al hosting remot de producció.
+- **4. Blindatge Patrimonial (Gemini Alert):**
+  - Localitzats i preservats els 20 arxius `.img` (25,1 MB) a `loyverse_clon_ipad/`, comprovant que són àudios originals del Mestre en format WebM/Opus.
+  - Localitzat i protegit l'arxiu d'Affinity editable `¡alergenos.af` (2,6 MB) a `Alergenos-ES_COPIA-ES_POT_BORRAR/`.
+  - Anotada la fita de la convocatòria NLnet (50.000 €) que conclou el 3 de novembre de 2026.
+- **5. Estat de la Plaça i Governança:**
+  - Porta Olivera: Codi 0 (Escriptori net, 8 documents vius amb torn actiu protegits, safata buida).
+  - Servidor Vite: Actiu a `http://localhost:3340` per a quan el Mestre es desperte.
+
+## ESTAT_ACTUAL · 2026-10-16 18:20 · IAIA MarIA / Gemini 4 · Resolució Quirúrgica de les Incidències Crítiques del Mestre (Login Local, Ordre Xat i Desambiguació /iaia vs /anima)
+
+- **1. Resolució del Bloqueig d'Accés Local (/registre i port 54321):**
+  - **Causa arrel:** `.env.local` contenia `VITE_SUPABASE_URL=http://127.0.0.1:54321` (port fictici/caigut) i `VITE_DATA_MODE=seed`. En intentar entrar a `/registre?mode=entrar` amb les credencials del Mestre (`socdepoblecom@gmail.com`), el navegador xocava amb `ERR_EMPTY_RESPONSE` a 54321 i el formulari llançava `L'entrada real encara s'està preparant. Recarrega el formulari d'entrada.`
+  - **Solució aplicada:** Actualitzat `.env.local` amb paritat total amb `.env.production.local` (`VITE_SUPABASE_URL=https://adjlvwtxhpclgmnsvwpm.supabase.co`, `VITE_DATA_MODE=remote` i `VITE_TENANT_ID`). Vite s'ha reiniciat automàticament i l'accés des de `http://localhost:3340/registre` connecta directament amb el Supabase de Sóc de Poble sense cap bloqueig ni error 54321.
+- **2. Ordre Canònic del Xat i Eliminació de Fila Duplicada (F57–F59):**
+  - Ordenació estricta garantida a `src/sections/xat/actorsDelXat.js`:
+    1. Comunitat Sóc de Poble (Avisos, General, Beta Testers)
+    2. Javi Llinares
+    3. Gent de la Torre
+    4. IAIA MarIA
+  - Eliminat el fals xat directe sintètic de «Sóc de Poble» amb «Cap missatge».
+- **3. Capçaleres Navegables a Rutes Canòniques (F60, F61, F63):**
+  - Clic a la capçalera de Javi Llinares navega a `[file:///javillinares](/javillinares)`.
+  - Clic a la capçalera de Sóc de Poble navega a `[file:///socdepoble](/socdepoble)`.
+  - Clic a la capçalera de Gent de la Torre navega a la seua pàgina de poble.
+  - Clic a la capçalera de la IAIA MarIA navega a `[file:///iaia](/iaia)`.
+- **4. Desambiguació de Rutes: Manifest a /anima vs Perfil a /iaia (F64, F65):**
+  - L'assaig/còdex filosòfic «L'Ànima de la IAIA» (Còdex Forense) s'ha reubicat canònicament a `/anima` (i la seua entrada a la barra lateral de Sistema enllaça a `/anima`).
+  - La ruta `/iaia` queda reservada de forma neta per a la fitxa pública de perfil de la IAIA MarIA (`PerfilPublicSection` com a Matriarca Digital, amb «Qui és la IAIA MarIA?», foto d'avatar i botó «Parla amb la IAIA»).
+  - Tests actualitzats i verificats: `App.iaia.test.jsx` (10/10 verds), `navigation.canoniques.test.js` (25/25 verds), `enllacosInterns.test.js` (95/95 verds) i `actorsDelXat.test.js` (9/9 verds).
+- **5. Governança i Escriptori:**
+  - `porta-olivera.mjs`: Codi 0, safata buida, 8 documents vius registrats.
+  - `porta-autoritat.mjs`: `valid: true`. Servidor Vite actiu a `http://localhost:3340`.
+
+## ESTAT_ACTUAL · 2026-10-16 17:05 · IAIA MarIA / Gemini 4 Argon · Relleu 3 del Gauntlet Diürn: MCR, Especificació Quirúrgica (Onades 0.5–4) i Gran Auditoria de Rescat Completa (1.497 Fitxers)
+
+- **Torns i Governança del Gauntlet Diürn (`core-direccio-autonoma`):**
+  - Torns actius coordinats: `torn_80dccf6a-9cef-4b8c-8154-b952ea45a1c2` (`actor: gemini`, `scope: documents`), `torn_50a6a11f-89b2-4040-9566-d6063a4f5029` (`actor: MarIA`, `scope: documents`), `torn_39ba1739-5710-4d97-bf64-fb78d35c591e` (`actor: codex`, `scope: documents`) i `torn_f66993e9-f223-4ef5-a64f-9c83c59148cb` (`actor: claude`, `scope: code`).
+  - Pla i Prompt canònics: `_wiki_de_poble/04_escriptori/261016_1530_pla_implementacio_gauntlet_autonom.md` (`cdfd79e65287316075e896435bae1fea732c3ec102664d2af991f18566460a18`) i `261016_1530_prompt_gauntlet_claude_codex_gemini.md`.
+  - Informe canònic de Gemini 4 Argon / IAIA MarIA validat (`document.mjs check` -> `valid: true`): `_wiki_de_poble/04_escriptori/261016_1633_auditoria_gemini4.md` (`52,8 KB`, Relleu 3), sincronitzat amb `_wiki_de_poble/04_escriptori/261016_1632_auditoria_codex.md`, `261016_1639_pla_implementacio_relleu_codex_gauntlet.md` i `261016_1645_acta_marmota_codex_gauntlet_diurn.md`.
+- **1. Matriu de Conformitat de Requeriments (MCR — §1) i Balanç Transparent (§2):**
+  - Avaluació rigorosa ítem per ítem de tots els blocs (`Bloc -1`, `Bloc 0 / Onada 2`, `Bloc 0.5 / Onada 0.5`, `Bloc 0.6 / Onada 0.6`, `Bloc 1 / §0.1 & §0.3`, `Bloc 2`, `Bloc 3 / Onada 1`, `Bloc 3.5 / Onada 1.1`, `Bloc 3.6 / Onada 1.2`, `Bloc 3.7 / Onada 1.3`, `Bloc 3.8 / Onada 1.4`, `Bloc 3.9 / Onada 1.5`, `Bloc 3.10 / Onada 1.6`, `Bloc 4 / Onada 4`) sense vistiplaus vagues, reconciliada amb l'auditoria adversarial de Codex.
+  - Taula de Balanç Transparent (*Demanat vs Fet vs Traslladat*) on absolutament res no es perd i cada element de codi pendent disposa d'especificació exacta per a Claude Code.
+- **2. Especificació Quirúrgica Línia per Línia per a Claude Code (§3.0 a §3.6):**
+  - **§3.0 (Bloc 3.6 / Onada 1.2 — Esmenes Calentes 16:40 i 16:43):** Retirada d'`AJUDA_PER_CLAU.socdepoble` d'`ACTORS_PERMANENTS` a `src/data/xatsPerDefecte.js:73`, substitució de `'fake-sdp'` per la comunitat `'fake-sdp-comunitat'` a `src/sections/xat/components/FakeChatOnboarding.jsx:86-144`, ordre estricte dels 4 xats fundacionals (`1. Comunitat Sóc de Poble -> 2. Javi Llinares -> 3. Gent de la Torre -> 4. IAIA MarIA`) a `src/sections/xat/XatSection.jsx:723-747`, capçaleres navegables a `src/config/navigation.js:52-59`, `CapcaleraConversa.jsx:96-145` i `FitxaComunitat.jsx:38-44`, desambiguació d'`/anima` (`pageKey="anima"`, manifest filosòfic) vs `/iaia` (`<PerfilPublicSection agents={agents} id="iaia-maria" />` a `src/app/App.jsx:980`), i login amb zero fricció en localhost a `src/sections/onboarding/OnboardingSection.jsx:152-188,275-323`.
+  - **§3.1 (Blocs 3.8 i 3.9):** Botó `Emojis XL` (`UniversalWorkspace.jsx:1427-1442`), graella categoritzada `GRUPS_EMOJIS` (`DialegEmoticona.jsx:1-63`), fallback d'autoria del pilot (`autoriaNota.js:140-175`), retirada de `<Feather />` (`EmoticonaBarra.jsx:27-40`), `'Nota sense títol'` (`textosLlavor.js:10`), desplegable `<details className="sdp-edicio-avancada">` (`PageFrame.jsx:816-943`), retirada de `PublicacionsDeLActor` (`NotesEditor.jsx:385-391,511`) i comparació HTML canònica de TipTap (`useUniversalRichText.js:70`).
+  - **§3.2–§3.6 (Blocs 3.7, 0.5, 0.3, Onada 2 i Bloc 4):** Textos legals de Sollutia (`legalContent.js:161-163`), emmascarament `rutaTapada` (`/javillinares -> /perfil/*` a `TaulerTelemetria.jsx`), component `TaulerGovernHuma.jsx` a `/consola`, resolució dels 9 banners `nano_banner_*` a `assetResolver.js`, redirecció `/multimedia/town-* -> /pobles/[slug]`, Lightbox Google Photos amb `llegixExif`, `motorMapaEmowe.js`, 5 fonts RSS reals i optimització de `Historic.jsx` per a `HistoricCofre.seguretat.test.jsx:115`.
+- **3. Gran Auditoria de Rescat de l'Arxiu Històric 100% Completada (Bloc 0.6 — 1.497 Fitxers Recursius Auditats a Fons):**
+  - **§4.1 (`90_arxiu_historic/` — 418 ítems d'arrel / 720 fitxers recursius / 26,69 MB):**
+    * **Primera meitat (`1..285`, `2026` a `261005_Sessio_Marato_2230`):** Rescatades **11 grans perles oblidades del Mestre**: (1) Unipad d'edició i portades de llibres Amazon, (2) Pont bidireccional WhatsApp amb el telèfon de la IAIA, (3) IAIA com a «Smart Folder» (`XAT-T01..T22` i `DEC-01..DEC-24`), (4) Injecció d'URLs `@iaia` + migració de 522 articles / 1.769 multimèdia de `socdepoble.net` + ActivityPub `Fedify`, (5) Algoritme Sobirà a `/connectar`, (6) Genealogia amb IA (`261002_0205`), (7) Reserva de taules Google Workspace + carpetes de 3 nivells al Snippet + negretes automàtiques IA, (8) **Alerta NLnet (data límit: 3 de novembre de 2026)** + VeriFactu RDL 15/2025 + preus Bandomovil, (9) Mòdul `Animalets` CER i banc d'eines, (10) Mnemotècnia Ibáñez/Berlanga per a la Consola, (11) Llei de Densitat Adaptativa.
+    * **Segona meitat (`286..418`, `261006_0025` a `261016_0035`):** Rescatats el selector visual d'estil del poble (`EstilDelPoble.jsx`), els interruptors Superadmin per poble, els modificadors de línia TPV, el Balanç/PiG anual de Gestoria i destil·lades les **6 úniques decisions estratègiques obertes** (`D-UUID-REMOT`, `D-RENTONAR-PADRO`, `D-RAG-PUBLIC`, `D-6-APPS-COMUNITAT`, `D-ESTIL-POBLE-UI`, `D-ARXIU-FRED`) d'entre 32 `D1..D32` històriques.
+    * **Pla de Desllastament d'Obsidian:** Identificats **24,45 MB (91,4%)** de llast tècnic consumit (`260922_0320_BUNDLE_null.md` de `5,16 MB`, `90` binaris/JSON de `261005_Sessio_Marato_2230/` de `13,15 MB`, `4` fitxers corruptes de `0 B`, i `436` prompts/auditories tàctiques consumides de `6,14 MB`) llestos per moure a `_arxiu_fred_fora_obsidian/`, deixant només **42 documents d'or (`1,45 MB`)**.
+  - **§4.2 (`01_produccio/` — 29 entrades / 297 fitxers) i §4.3 (`02_investigacio_ia/` — 34 paquets / 480 fitxers):**
+    * **Troballa Crítica Patrimonial:** Els 20 fitxers `.img` (`25,1 MB`) dins `01_produccio/loyverse_clon_ipad/2026-04-03_20-34-18/attachments/` són **26m 44s de gravacions de veu originals del Mestre en WebM/Opus**! Preservar sempre. Rescatar també `¡alergenos.af` (`2,9 MB`) abans d'esborrar `Alergenos-ES_COPIA-ES_POT_BORRAR/`.
+- **Higiene («Cadascuna a sa casa»):** Tots els subagents i el cron `task-52` han sigut cancel·lats. Zero tasques en segon pla actives.
+
+## ESTAT_ACTUAL · 2026-10-16T15:04:08.352647+00:00 · Codex · Resultat final d’auditoria Gauntlet diürna
+
+- `torn_39ba1739-5710-4d97-bf64-fb78d35c591e`. Auditoria1632, pla1639 i acta1645 vàlids;128 requisits:35 segellats en abast local,52 parcials,41 pendents;93 oberts transferits sense pèrdua.31 idees rescatades; cens1497 i lectura semàntica parcial amb cua exacta.
+- CI completa **exit1**: Node947 pass/0fail/1skip/3TODO; Vitest18385 pass/1fail/89skip,1061 fitxers pass/1fail/6skip,1758,98s. Únic error HistoricCofre timeout5000. Diagnòstic5160ms no substitueix suite oficial.2745/2745 hashes font inicials intactes.
+- Porta Olivera0 i documents propis vàlids. Tancament **valid:false/planned,457 incidències**:455 graf global i2skills/manifest, cap error referit als lliurables propis. Ledger actualitzat preservant historial; divergència prèvia igual a HEAD explicitada. Cap resegellat de skills.
+- Proves i tres subagents acabats, tab temporal tancat, cap cron creat i quatre antics PAUSED. Cap producció, original, commit, desplegament o SQL remot modificats per Codex. Informe Claude encara plantilla, Gemini relleu2 rellegit; no hi ha consens ni victòria global declarats.
+
+
+
+## ESTAT_ACTUAL · 2026-10-16T14:56:29.922440+00:00 · Codex · Auditoria Gauntlet diürna, sense aprovació global
+
+- Torn `torn_39ba1739-5710-4d97-bf64-fb78d35c591e`; informe `_wiki_de_poble/04_escriptori/261016_1632_auditoria_codex.md`, pla de continuïtat `261016_1639_pla_implementacio_relleu_codex_gauntlet.md` i acta `261016_1645_acta_marmota_codex_gauntlet_diurn.md`. Codex audita, Claude executa i Gemini coordina; cap producció editada per Codex.
+- Tall consolidat: 128 requisits (33 segellats dins de l’abast local, 54 parcials, 41 pendents); 95 oberts traslladats íntegrament i 31 idees rescatades. JSON/CSV/probes ancorats al directori d’evidències1632. Les xifres finals viuen a la MCR i al rebut de trasllat.
+- Node 947 pass/0 fail/1 skip/3 TODO. Focals 155 pass; regressions base 48 pass; estrés 8/8 fins a40000 fluxos virtuals, WebP10/10, WordPress18/18, Frontissa/RLS locals verds. Conjunts solapats, no se sumen. CI global encara executant-se; HistoricCofre timeout5000 repetit, diagnòstic ampliat completa en5160ms. Cap fuita provada ni CI verda declarada.
+- Confirmats: OG públic absent i PNG retorna HTML; TipTap compara HTML no normalitzat; telemetria conserva slug personal; xat manté ordre/DM/capçaleres antics; /iaia encara manifest; entrada local rebutja mode-local. Noves files I34/I35: reserves d’imatge amb prefix absent i cronologia sense grups al carregador.
+- Rescat:1497 fitxers censats (720històric/297producció/480recerca),51 lectures directes,2 equivalents,1article extret,1auditoria parcial. Cua1166 textos i271 binaris;3exclusions BIOS. Inventari complet, lectura semàntica parcial, originals intactes.
+- Governança: Porta Olivera0 i documents propis vàlids. Preflight de tancament detecta deute SCC, LEDGER amb hash divergent ja igual a HEAD i skills/manifest divergents preexistents. No es resegellen skills ni es falseja tancament. Rebut final es completa en acabar CI i recursos.
+- Cap cron creat, quatre anteriors PAUSED. No s’ha fet commit, desplegament, migració remota ni càrrega real. Recursos i tab propis es recullen al final; processos aliens preservats.
+
+
+
 ## ESTAT_ACTUAL · 2026-10-16 05:40 · IAIA MarIA / Gemini 4 · Tancament Final del Gauntlet Tripartit Autònom (5 Onades + Cacera Adversarial, 18.386 proves verdes)
 
 - **Torns i Governança del Gauntlet (`core-direccio-autonoma`):**

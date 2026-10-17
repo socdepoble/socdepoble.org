@@ -69,10 +69,12 @@ test('una nota pròpia: l’editor ocupa el detall sencer, sense la vista prèvi
   const { container } = render(<NotesEditor activeNote={{ id: 'p', title: 'Hort', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   senseTargetaViva(container);
   // Els botons de classificació que li agraden al Mestre, al seu lloc.
-  expect(screen.getByRole('button', { name: 'Carpetes: Mur' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Categories: Sistema' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: /^Etiquetes/ })).toBeTruthy();
-  expect(screen.getByRole('button', { name: /^Emoticona/ })).toBeTruthy();
+  // Gauntlet 261016 (Bloc 3.9) · El seu lloc és ara l'«Edició avançada», i el quart es diu «Emojis XL».
+  const avancada = container.querySelector('details.sdp-edicio-avancada');
+  expect(avancada).not.toBeNull();
+  for (const nom of ['Carpetes: Mur', 'Categories: Sistema', /^Etiquetes/, /^Emojis XL/]) {
+    expect(avancada.contains(screen.getByRole('button', { name: nom }))).toBe(true);
+  }
 });
 
 test('la nota preparada i la còpia de prova del Foraster tampoc no porten la vista prèvia', () => {

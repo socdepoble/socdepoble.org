@@ -1,0 +1,1292 @@
+{
+  "at": "2026-10-16T15:02:56.740108+00:00",
+  "baseline_head": "7a1828ca779ef74284846c9e5a4122cd23945689",
+  "scope": "local-audit-with-explicit-remote-read-evidence",
+  "statuses": {
+    "[PARCIAL]": 52,
+    "[FET I SEGELLAT]": 35,
+    "[NO FET / PENDENT]": 41
+  },
+  "requirements": [
+    {
+      "id": "F01",
+      "source": "§0.4/B-1",
+      "requirement": "Erradicar `Mestre Poble` i `mestre-obres` de codi, proves, llavors i BD",
+      "status": "[PARCIAL]",
+      "evidence": "Cerca literal a `src`, `tests`, `supabase`, `tooling` sense coincidències operatives (exclòs manifest Wiki generat). No s'ha consultat la BD de producció; no es pot certificar el «100% del sistema».",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F02",
+      "source": "§0.4/B-1",
+      "requirement": "Mac Mini signat per Javi amb foto personal",
+      "status": "[PARCIAL]",
+      "evidence": "[src/sections/mercat/marketSeed.js:3](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/mercat/marketSeed.js:3>) declara seller/author_name Javi, author_id javillinares i jpg personal (línies 9–17); seed SQL concorda. Pendent comprovar targeta, Mur i detall reals amb dades remotes. La comprovació DOM i captura de /mercat a localhost:3340 confirma Javi, poble i la foto personal. Encara falta el conjunt de dades remot.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F03",
+      "source": "§0.4/B-1",
+      "requirement": "Mac Mini única publicació de Javi; totes les altres de Sóc de Poble",
+      "status": "[PARCIAL]",
+      "evidence": "La segona publicació de mercat és Sóc de Poble ([src/sections/mercat/marketSeed.js:29](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/mercat/marketSeed.js:29>)). No es pot extrapolar de dos registres locals a totes les publicacions de la BD.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F04",
+      "source": "O1.1",
+      "requirement": "Persona sense copyright/categories",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/sections/profile/PerfilEditor.jsx:821](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/PerfilEditor.jsx:821>) passa `ambDrets:false`; [src/components/PedraSeca/organismes/UniversalCard.jsx:499](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/PedraSeca/organismes/UniversalCard.jsx:499>) anul·la labels/copyright si objecte.tipus=persona. Suite real PerfilShell.targetaViva passada, incloent dignitat de persona.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F05",
+      "source": "O1.2",
+      "requirement": "Eliminar quarta columna/aside del perfil",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Eliminada capacitat redundant de DocumentEditor ([src/components/universal/DocumentEditor.jsx:109](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/DocumentEditor.jsx:109>)); PerfilShell.targetaViva i DocumentEditor passades, comprovació DOM sense aside ni xip.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F06",
+      "source": "O1.3",
+      "requirement": "Emojis 👁️ 🔐 🛡️ 🌐 en apartats",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/sections/profile/perfilModel.js:32](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/perfilModel.js:32>) defineix els quatre glifs; perfilModel.icones i PerfilShell.targetaViva passades.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F07",
+      "source": "O1.4",
+      "requirement": "Xat net tipus WhatsApp, adaptat a mòbil i escriptori",
+      "status": "[PARCIAL]",
+      "evidence": "Hi ha ClosCaXat i components específics, però no s'ha observat el renderitzat ni responsive en navegador; no s'ha certificat absència de buits/mapes.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F08",
+      "source": "O1.4",
+      "requirement": "Dissociació persona/organització al xat",
+      "status": "[PARCIAL]",
+      "evidence": "XatContext té àmbit/gestió d'actor, i xatsPerDefecte diferencia entitat/persona; el contacte humà remot encara no es pot obrir (F21). Pendent QA de canvi d'identitat amb sessió real.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F09",
+      "source": "O1.5",
+      "requirement": "Àlies `javi-llinares` i fallback pilot",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/data/identitatsSeed.js:98](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/identitatsSeed.js:98>) inclou àlies; [src/sections/profile/PerfilPublicSection.jsx:102](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/PerfilPublicSection.jsx:102>) fallback i línia 221 aplicació restringida. Suite fundacionals.remot passada. Acredita fallback local simulat, no paritat total amb una sessió real.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F10",
+      "source": "B3.1",
+      "requirement": "Selector llicència de notes a El compte",
+      "status": "[PARCIAL]",
+      "evidence": "Implementat com ajust `drets-notes`, tipus llicencia a [src/sections/profile/PerfilContext.jsx:149](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/PerfilContext.jsx:149>), consumit per DetallCompte. No s'ha fet prova focal del desat/lectura remots d'aquest selector; pendent comprovar herència a nova nota en producció.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F11",
+      "source": "B3.2",
+      "requirement": "ANIMAL classificats com IA, fitxa preservada",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/data/agentsSeed.js:459](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/agentsSeed.js:459>) mapa ANIMAL→ia; ProfileSection.poble passada comprova els quatre animals i conserva type d'origen ANIMAL.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F12",
+      "source": "B3.3",
+      "requirement": "Poble visible a directori de persones",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/sections/profile/ProfileSection.jsx:19](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/ProfileSection.jsx:19>) `boinaDelPoble`, consumit a línia 74; ProfileSection.poble passada. Sense poble a la dada no l'inventa.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F13",
+      "source": "B3.4",
+      "requirement": "Retirar maquinària interna de l'aside d'usuari",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "En l'abast de l'aside redundant de DocumentEditor, eliminat: test DocumentEditor verifica DOM i CSS de retirada. Cap aside trobat a PerfilEditor/PerfilShell/App. Altres pantalles fora d'aquest abast necessiten observació visual.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F14",
+      "source": "O1.1.1/B3.5.1",
+      "requirement": "Rutes netes /javillinares /socdepoble /rentonar",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/config/navigation.js:74](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/config/navigation.js:74>) ruta canònica fundacional; [src/sections/profile/PerfilPublicSection.jsx:281](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/PerfilPublicSection.jsx:281>) canonical SEO. Suites fundacionals.remot i imatges passades per a les identitats simulades.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F15",
+      "source": "O1.1.1/B3.5.1",
+      "requirement": "Un perfil real per identitat; fusionar duplicats remots",
+      "status": "[PARCIAL]",
+      "evidence": "[src/data/identitatsSeed.js:201](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/identitatsSeed.js:201>) té les tres llistes d'UUID remots buides. El fallback evita 404, però no fusiona ni identifica la fila remota del Mestre. No s'ha verificat el cens de BD.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F16",
+      "source": "O1.1.2/B3.5.2",
+      "requirement": "Entitats fundacionals sempre amb poble",
+      "status": "[PARCIAL]",
+      "evidence": "ENTITATS_SEED té town_name POBLE_FUNDACIONAL. [src/sections/profile/PerfilPublicSection.jsx:340](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/PerfilPublicSection.jsx:340>) només reposa poble si clauFundacional reconeguda; amb UUID remots no declarats (F15), una fila remota sense poble continua buida.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F17",
+      "source": "O1.1.2/B3.5.2",
+      "requirement": "Poble obligatori en crear qualsevol entitat",
+      "status": "[PARCIAL]",
+      "evidence": "[src/sections/profile/DialegNovaOrganitzacio.jsx:52](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/DialegNovaOrganitzacio.jsx:52>) valida poble abans d'enviar; línia 113 camp obligatori i domini pobleDOrganitzacio. Implementació trobada; falta prova focal de servidor i sanejament de files existents.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F18",
+      "source": "O1.1.3/B3.5.3",
+      "requirement": "Emetre SQL UPDATE propi de profiles i resoldre 403",
+      "status": "[PARCIAL]",
+      "evidence": "Migració [supabase/migrations/2610160250_perfil_update_propi.sql:128](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/supabase/migrations/2610160250_perfil_update_propi.sql:128>) crea policy own UPDATE amb controls. El lliurable SQL existeix; no s'ha executat ni acreditat aplicació a producció.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Aplicar primer diagnòstic de permisos/RLS; verificar UPDATE propi, rebuig d’altri i anon, SELECT de retorn i no elevació de columnes. Registrar entorn i resultat sense credencials."
+    },
+    {
+      "id": "F19",
+      "source": "O1.1.4/B3.5.4",
+      "requirement": "Mateixa font avatar/hero a targeta i editor",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/sections/profile/PerfilShell.jsx:76](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/profile/PerfilShell.jsx:76>) llig mateix esborrany; PerfilEditor:480 llig avatarDeLaFitxa; PerfilShell.avatarFontUnica i targetaViva passades, inclòs avatar rebutjat per 403. Falta QA visual per declarar aparença impecable.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F20",
+      "source": "O1.1.5/B3.5.5",
+      "requirement": "OpenGraph WhatsApp complet, imatge oficial correcta",
+      "status": "[PARCIAL]",
+      "evidence": "index.html:25–33 porta títol/descripció/imatge oficial/dimensions; useSEO.js:16 usa oficial. El pare verifica HTTP públic; cap afirmació de WhatsApp renderitzat des d'aquest subauditor. GET públic amb crawler: socdepoble.org retorna HTML7009B sense OG; la URL PNG retorna eixe mateix HTML, SHA idèntic. gentdelatorre.net sense og:image ni og:description. seo.json. Cap prova real del client WhatsApp.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "HTML públic accessible al crawler amb title/description/og:image canònics; URL de la imatge retorna image/png1200×630; comprovació del compartit amb memòria cau renovada."
+    },
+    {
+      "id": "F21",
+      "source": "O1.2.1/B3.6.1",
+      "requirement": "Quatre actors inicials visibles i operatius",
+      "status": "[PARCIAL]",
+      "evidence": "[src/data/xatsPerDefecte.js:73](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xatsPerDefecte.js:73>) afegeix tres contactes i Gent de la Torre ve del poble; suite actorsPermanents passada. [src/sections/xat/useObriXatPerDefecte.js:100](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/useObriXatPerDefecte.js:100>) retorna null per Javi remot i línia 136 mostra avís, sense xat. La visibilitat també s'adapta al gestor i nivell IA=0, de manera que «sempre quatre» no és literal.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F22",
+      "source": "O1.2.1/B3.6.1",
+      "requirement": "Missatge automàtic literal a anònim que obri Javi",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/data/xatsPerDefecte.js:76](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xatsPerDefecte.js:76>) literal, :111 fil només lectura i :130 missatge; actorsPermanents passada cobreix remot i local anònims.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F23",
+      "source": "O1.2.5/B3.6.5",
+      "requirement": "Reparar obertura IAIA en seed/local",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/sections/xat/useObriXatPerDefecte.js:90](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/useObriXatPerDefecte.js:90>) envia seed/local a directe IAIA; [src/data/supabase/xat.js:504](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/supabase/xat.js:504>) injecta actors també local; actorsPermanents passada. Navegador local: clicar IAIA obri conversa amb missatge inicial i compositor. No s’ha enviat cap missatge.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F24",
+      "source": "O1.2.5/B3.6.5",
+      "requirement": "Config/registre Supabase local equivalent a producció; resposta fluida",
+      "status": "[PARCIAL]",
+      "evidence": "No s'ha verificat 127.0.0.1:54321 ni registre real. LocalXat respon amb RESPOSTA_IAIA fixa ([src/data/localXat.js:348](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/localXat.js:348>)), declarada a [src/data/identitatsSeed.js:172](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/identitatsSeed.js:172>). Reparar navegació no acredita equivalència del motor amb producció. GET local sense credencials /auth/v1/health: curl52/resposta buida, HTTP000. No acredita registre aplicat ni absència de seed.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F25",
+      "source": "O1.2.6/B3.6.6",
+      "requirement": "Intel·ligència local de redacció, DCVB, cultura, botànica",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "El camí local inspeccionat retorna una sola frase fixa, sense RAG/recuperació cultural ni generació de redacció. Requeriment condicionat a marge, que s'ha de traslladar.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F26",
+      "source": "O1.3.2/B3.7.1",
+      "requirement": "Apartat 19 distingix node matriu de WordPress",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/sections/text/legalContent.js:161](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/text/legalContent.js:161>) encara «19. No fem servir galetes»; :162 declaració absoluta sense matís d'amfitrió. No declara política pròpia de gentdelatorre.net.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F27",
+      "source": "O1.3.2/B3.7.1",
+      "requirement": "Obligació governança dels nodes de declarar mètriques",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No apareix a l'apartat 19; només declaració absoluta de l'aplicació.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F28",
+      "source": "O1.3.3/B3.7.2",
+      "requirement": "Infraestructura de mètriques sobiranes agregades sense dades personals",
+      "status": "[PARCIAL]",
+      "evidence": "telemetria.js té Umami opcional, DNT/GPC, límit memòria de 20, queries descartades. **P2 reproduït:** [src/data/telemetria.js:113](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/telemetria.js:113>) preserva el primer segment i envia `/javillinares` íntegre, identificador de persona, contradient contracte del fitxer. Artefacte results.json; fetch simulat, cap xarxa real. No es pot acreditar desplegament d'Umami sobirà.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Proves de visita i esdeveniment per perfils de primer nivell i rutes dinàmiques: no ix cap slug, ID ni query personal. Mantindre DNT/GPC i agregació."
+    },
+    {
+      "id": "F29",
+      "source": "O1.4.2/B3.8.1",
+      "requirement": "Accés Emojis XL entre NOTES i plegat",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/sections/notes/NotesSection.jsx:634](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/notes/NotesSection.jsx:634>) munta UniversalWorkspace sense cap acció/catàleg emoji a header; no hi ha integració amb Emojis XL. Confirmat en DOM de /notes: només NOTES i plegat, sense botó XL.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F30",
+      "source": "O1.4.2/B3.8.1",
+      "requirement": "DialegEmoticona substituït per graella Unicode18 accessible",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/components/universal/classificacio/DialegEmoticona.jsx:19](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/classificacio/DialegEmoticona.jsx:19>) encara ajuda de teclat OS; :46 CampText per escriure/enganxar emoji, sense import de catàleg ni graella. Confirmat en navegador: diàleg d’emoticona encara amb instrucció de drecera OS.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F31",
+      "source": "O1.4.3/B3.8.2",
+      "requirement": "Clic al catàleg assigna icona activa i actualitza rail/barra",
+      "status": "[PARCIAL]",
+      "evidence": "Hi ha desat manual d'icon a NotesEditor:317 i diàleg :595; manca selector XL d'un clic. No confondre suport preexistent d'icon amb integració demanada.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F32",
+      "source": "O1.4.3/B3.8.2",
+      "requirement": "Inserció al cursor TipTap o còpia amb toast",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No hi ha canal de NotesSection/DialegEmoticona cap al cursor TipTap o Clipboard del catàleg XL.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F33",
+      "source": "O1.4.4",
+      "requirement": "Components Pedra Seca i cap dependència nova",
+      "status": "[PARCIAL]",
+      "evidence": "Diàleg antic usa Dialeg/Boto/Camp; manca implementació del selector per poder auditar el compliment de la nova peça.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F34",
+      "source": "B3.8.3",
+      "requirement": "Suite notes+emojis específica",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Hi ha NotesContext.emoticona i EspecimenEmojisXL de components preexistents, però no integració que provar de selector/inserció/assignació XL.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F35",
+      "source": "O1.5.2/B3.9.1",
+      "requirement": "Signatura persona/pilot correcta, poble i foto de la identitat activa",
+      "status": "[PARCIAL]",
+      "evidence": "NotesEditor:365 usa signaturaDeNota; [src/sections/notes/autoriaNota.js:148](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/notes/autoriaNota.js:148>) llig `agent.location`, però AGENTS_MAP.JAVI porta town_name; amb actorId='0001' seleccionat del catàleg cau al poble FORASTER. Persona sense match continua llegint user_metadata i no actor.avatar/poble. Revisió estàtica, no prova visual.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Sessió remota, pilot local explícit i entitat activa resolen foto/poble coherents; l’anònim remot no s’identifica com Javi."
+    },
+    {
+      "id": "F36",
+      "source": "O1.5.2/B3.9.1",
+      "requirement": "Cap selector arbitrari d'avatar en notes",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "NotesEditor passa autoria resolta (:472–477), sense control per canviar avatar. El carregador de logotip (:826 d'UniversalEditorShell) és del document, atribut diferent.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F37",
+      "source": "O1.5.3/B3.9.2",
+      "requirement": "Barra blava amb accions passives o avís de preview",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/components/universal/UniversalEditorShell.jsx:450](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/UniversalEditorShell.jsx:450>) força accionsInoperatives i :433 mostra toast pedagògic. DocumentEditor suite passada. Confirmat en navegador: controls de comentar/compartir de preview deshabilitats.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F38",
+      "source": "O1.5.3/B3.9.2",
+      "requirement": "Barra taronja immediata sota blava, sense caixa de capçalera entremig",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/components/universal/UniversalEditorShell.jsx:454](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/UniversalEditorShell.jsx:454>) manté heroComponent; :832 crea carregador en capçalera. No s'ha mogut a desplegable.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F39",
+      "source": "O1.5.3/B3.9.2",
+      "requirement": "Eliminar ploma/botó central de barra taronja",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/sections/notes/NotesEditor.jsx:466](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/notes/NotesEditor.jsx:466>) i :467 encara envien emoticona/onObriEmoticona, consumits a UniversalEditorShell:465–466.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F40",
+      "source": "O1.5.3/B3.9.2",
+      "requirement": "Placeholder H1 exacte «Nota sense títol» com targeta",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/components/universal/textosLlavor.js:10](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/textosLlavor.js:10>) manté «Sense títol», consumit com placeholder a UniversalEditorShell:473. notaPreparada:34 diu «Nota sense títol», divergència explícita.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F41",
+      "source": "O1.5.3/B3.9.2",
+      "requirement": "Subtítol i entradella immediats, mateixos textos guia",
+      "status": "[PARCIAL]",
+      "evidence": "UniversalEditorShell:478–497 crea camps en seqüència amb textos canònics. Encara hi ha logo/imatge/classificació en composició de pàgina; no s'ha certificat seqüència visual neta.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F42",
+      "source": "O1.5.3/B3.9.3",
+      "requirement": "Desplegable Edició avançada just sobre TipTap",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No apareix implementació d'«Edició avançada» en NotesEditor/DocumentEditor/UniversalEditorShell. posicioEines='davall-entradilla' (NotesEditor:479) mou barra, però no crea desplegable.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F43",
+      "source": "O1.5.3/B3.9.3",
+      "requirement": "Agrupar capçalera, logotip, carpeta, categories, etiquetes, emoji, drets, PDF/portada",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Càrregues continuen a topBarData (:826–838 UniversalEditorShell); classificació+drets+PDF a DocumentEditor:487–494 sense col·lapsable.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F44",
+      "source": "O1.5.3/B3.9.3",
+      "requirement": "Controls plegats permeten flux net; configurat apareix al lloc real",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Sense desplegable, no hi ha estat plegat/obert ni la nova col·locació exigida.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F45",
+      "source": "O1.5.4/B3.9.4",
+      "requirement": "Eliminar peu «Ja publicat al Mur»",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/sections/notes/NotesEditor.jsx:385](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/notes/NotesEditor.jsx:385>) activa historic; :388 crea PublicacionsDeLActor; :511 l'injecta al peu. NotesEditor.peuDePagina passa perquè exigeix el comportament antic que ara s'ha de retirar.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F46",
+      "source": "O1.5.4/B3.9.4",
+      "requirement": "Template verge H3/H4, paràgrafs i llistes",
+      "status": "[PARCIAL]",
+      "evidence": "[src/sections/notes/NotesSection.jsx:134](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/notes/NotesSection.jsx:134>) inclou H3/H4/H5/H6 i paràgrafs, cap `<ul>`/llista. S'injecta a notaPreparada.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F47",
+      "source": "O1.5.4/B3.9.4",
+      "requirement": "Template s'esvaeix al primer clic/pulsació",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "**P2 reproduït amb TipTap real**: [src/components/universal/richText/useUniversalRichText.js:70](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/richText/useUniversalRichText.js:70>) compara getHTML()===seedContent; getHTML normalitza els salts. Seed=335 caràcters, HTML=328, igualtat false. El cos no es buida en focus i s'edita sobre l'exemple. Script i JSON adjunts. La regex de blancs suggerida per Gemini també dona false; normalitzar amb el mateix esquema TipTap dona igualtat HTML/JSON true. results.json conserva reproducció.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "TipTap real: primer focus/tecla buida només la plantilla verge normalitzada; text real i edicions prèvies mai s’esborren; llista inclosa."
+    },
+    {
+      "id": "F48",
+      "source": "O1.6.2/B3.10.1",
+      "requirement": "Scroll down oculta dues barres en compacte",
+      "status": "[PARCIAL]",
+      "evidence": "useBarresAmbScroll i CSS existeixen, suite useBarresAmbScroll passada. [src/css/layout.css:1049](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/css/layout.css:1049>) canvia top de blava/taronja, no transform. No s'ha fet prova visual a gentdelatorre.net ni comprovació de tot el viewport.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F49",
+      "source": "O1.6.2/B3.10.1",
+      "requirement": "Scroll up reapareix immediatament",
+      "status": "[PARCIAL]",
+      "evidence": "[src/hooks/useBarresAmbScroll.js:103](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/hooks/useBarresAmbScroll.js:103>) exigeix acumulat negatiu >= llindar (--sdp-space-6), no qualsevol lleuger moviment. Tests del contracte existent passats, sense validar UX de immediatesa.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F50",
+      "source": "O1.6.1/B3.10.1",
+      "requirement": "Activació mòbil/tauleta i finestres de poca alçada",
+      "status": "[PARCIAL]",
+      "evidence": "[src/app/App.jsx:253](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/app/App.jsx:253>) defineix isCompact únicament amb amplària; :391 actiu=isCompact&&!immersiu. Una finestra ampla i baixa no l'activa.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F51",
+      "source": "O1.6.2/B3.10.2",
+      "requirement": "Transformacions i CLS=0 mesurat",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Blava/taronja animen top (layout.css:1039–1055), només nav inferior usa transform. No s'ha mesurat CLS en navegador. No es pot declarar 0 a partir de jsdom.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Mesura real de CLS en navegador durant scroll avall/amunt i canvis de mida, amb barres dins del viewport; moviment reduït i teclat respectats."
+    },
+    {
+      "id": "F52",
+      "source": "O4/B4.2",
+      "requirement": "ResizeObserver AppGridShell alliberat",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/components/layout/AppGridShell.jsx:244](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/layout/AppGridShell.jsx:244>) observa i :247 disconnect. gauntlet-codex-lifecycle passada: 100 cicles StrictMode, 0 observadors i subscriptors després de cada unmount.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F53",
+      "source": "O4/B4.2",
+      "requirement": "RAF focus UniversalWorkspace cancel·lat sense curses",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/components/universal/workspace/UniversalWorkspace.jsx:400](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/workspace/UniversalWorkspace.jsx:400>) guarda una petició; neteja :409, comprova vigència :416/:432, conserva focus interior :424. Tests 0/1 frames, nova navegació i shadow root tancat passats.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F54",
+      "source": "O4/B4.2",
+      "requirement": "Subscripcions de carpetes alliberades",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "UniversalWorkspace:480 usa useSyncExternalStore; test lifecycle compta Set de subscripcions, 0 a cada desmuntatge.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F55",
+      "source": "O4/B4.2",
+      "requirement": "Resolució asíncrona no injecta resultat obsolet",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/components/universal/workspace/WorkspaceContext.jsx:273](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/workspace/WorkspaceContext.jsx:273>) AbortController, :288 rebutja resultats avortats, :313 abort en neteja; test de canvi A→B/desmuntatge passat.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F56",
+      "source": "O4/B4.1–2",
+      "requirement": "Garantia sessions prolongades/heap i 1.000–40.000 usuaris",
+      "status": "[PARCIAL]",
+      "evidence": "La prova de 100 cicles compta recursos concrets, no mesura heap, render real, CPU, xarxa ni servidor. Root executa l'estrés; aquest subauditor no ha executat suite global ni concurrència massiva.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F57",
+      "source": "O1.2.1/B3.6.1",
+      "requirement": "Ordre estricte Comunitat Sóc → Javi → Gent de la Torre → IAIA",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/sections/xat/XatSection.jsx:738](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/XatSection.jsx:738>) ordena per fixat/activitat i :746 crida anteposaPoble. [src/sections/xat/pobleAmfitrio.js:168](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/pobleAmfitrio.js:168>) força poble al primer lloc. Reproducció pura: helper transforma ordre Comunitat/Javi/IAIA en **Gent/Comunitat/Javi/IAIA**. No existeix prioritat canònica nova.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F58",
+      "source": "O1.2.1/B3.6.1",
+      "requirement": "Comunitat Sóc permanent amb Avisos, General i Beta Testers",
+      "status": "[PARCIAL]",
+      "evidence": "[src/data/xatSeed.js:171](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xatSeed.js:171>) té comunitat i :174–176 els tres canals (verificat en runtime). Però només al seed; [src/sections/xat/components/FakeChatOnboarding.jsx:110](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/components/FakeChatOnboarding.jsx:110>) crea comunitat del poble, IAIA, DM Sóc i Javi, cap Comunitat Sóc ni els seus canals en visita anònima. Nom del seed és «Sóc de Poble», no «Comunitat Sóc de Poble».",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F59",
+      "source": "O1.2.1/B3.6.1",
+      "requirement": "Eliminar DM Sóc sintètic; conservar només DM explícit futur",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/data/xatsPerDefecte.js:73](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xatsPerDefecte.js:73>) conserva Sóc als actors sintètics. :258 afegeix DM quan no troba directe real; la comunitat amb subjecte no compta. Runtime amb comunitat seed produeix també `sdp-per-defecte:socdepoble` tipus directe. FakeChatOnboarding:125 també manté `fake-sdp`.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F60",
+      "source": "O1.2.2/B3.6.2",
+      "requirement": "Capçalera Javi → /javillinares",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/sections/xat/components/CapcaleraConversa.jsx:96](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/components/CapcaleraConversa.jsx:96>) necessita altres[0] o subjecte per enllaçar. filDeMostraDeJavi té participants, però ni altres ni subjecte: confirmat runtime, cap enllaç. En directe real, rutaDePerfil persona 0001 retorna `/gent/0001`, no la ruta neta exigida.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F61",
+      "source": "O1.2.2/B3.6.2",
+      "requirement": "Capçalera Sóc → /socdepoble",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/config/navigation.js:55](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/config/navigation.js:55>) retorna `/empresa/socdepoble`; seed subjecte usa aquesta ruta ([src/data/xatSeed.js:91](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xatSeed.js:91>)). FakeChatOnboarding:125–138 tampoc defineix altres/subjecte. No hi ha redirecció de la capçalera a /socdepoble.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F62",
+      "source": "O1.2.2/B3.6.2",
+      "requirement": "Capçalera Gent → /pobles/la-torre-de-les-macanes",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "[src/sections/xat/components/FakeChatOnboarding.jsx:74](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/components/FakeChatOnboarding.jsx:74>) usa subjecte del poble, creat per objecteDelPoble; [src/sections/xat/components/CapcaleraConversa.jsx:100](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/components/CapcaleraConversa.jsx:100>) enllaça rutaSubjecte a :138. El camí existent és el canònic del poble. Segell mecànic de ruta, sense observació visual.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F63",
+      "source": "O1.2.2/B3.6.2",
+      "requirement": "Capçalera IAIA → fitxa de la IAIA",
+      "status": "[PARCIAL]",
+      "evidence": "Directe seed amb contrapart ia pot anar a /perfil/ID, però fake-iaia no té altres/subjecte (FakeChatOnboarding:112–123), per tant capçalera inactiva. Fil de pàgina remot apunta /iaia, que encara és el manifest (F64–F65).",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F64",
+      "source": "O1.2.3/B3.6.3",
+      "requirement": "Manifest L'Ànima passa a /anima i menú Sistema corregit",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "[src/config/navigation.js:20](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/config/navigation.js:20>) encara anima:'/iaia'; [src/config/sections.js:43](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/config/sections.js:43>) menú L'ànima path '/iaia'; [src/app/App.jsx:980](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/app/App.jsx:980>) route iaia munta TextRoute pageKey anima. Runtime resolvePageSlugPath('anima')='/iaia'.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F65",
+      "source": "O1.2.3/B3.6.3",
+      "requirement": "/iaia o /perfil/iaia reservat a fitxa i accés des de xat/cercador",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "/iaia manté manifest. Ruta genèrica /perfil/:agentId sí existeix (App:960), però navegació i menú no estan desambiguats; el fil remot continua amb subjecte /iaia editorial. Cal separar article, perfil, xat i referències del cercador de forma coherent.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal i resoldre el límit descrit a l’evidència; prova del flux d’usuari, sobre el codi i mode de dades identificats."
+    },
+    {
+      "id": "F66",
+      "source": "O1.2.4/B3.6.4",
+      "requirement": "Entrada pilot local immediata sense backend disponible",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "**Reproducció local amb xarxa bloquejada:** loginWithPassword(dataMode:'local') i ('seed') rebutgen tots dos amb code `mode-local`, fetchCalls=0. [src/data/supabase/auth.js:443](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/supabase/auth.js:443>) aplica exigeixModeRemot(:152). Hi ha botó «Forçar entrada local (Mock)» a [src/sections/onboarding/OnboardingSection.jsx:399](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/onboarding/OnboardingSection.jsx:399>), però només posa simulaLocal=true: desbloqueja formulari (:481) i no injecta sessió; acaba en el mateix rebuig. La sonda automàtica continua depenent de /auth/v1/health. No és un mecanisme d'entrada operatiu.",
+      "owner": "Claude implementa; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Pilot només en mode local explícit, crea sessió de prova sense HTTP al54321; prova del flux UI complet. Mode remot continua exigint autenticació real i no obté identitat ni permisos de pilot."
+    },
+    {
+      "id": "I01",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Bloc 0: estudiar Feedly amb REA",
+      "status": "[PARCIAL]",
+      "evidence": "Estudi previ amb navegador integrat documentat a `90_arxiu_historic/261016_0022_auditoria_claude.md:115`; REA constava denegat a `:219`. Execució REA i comparativa reproduïble: **no acreditades en aquesta tanda**. No declarar feina prèvia inexistent.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I02",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Lector sobre UniversalWorkspace",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Composició explícita a `src/apps/lector/vistes/Noticies.jsx:379`, amb arbre/selecció/detall sobre el component canònic. Segell limitat a estructura de codi local.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I03",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Retirar notícies fictícies de la pantalla ordinària",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "`src/apps/lector/AppLector.jsx:77` activa llavor només amb `VITE_SDP_LECTOR_LLAVOR=1`; sense port mostra buit a `:169–179`. Les fixtures sintètiques continuen al repositori, deliberadament.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I04",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Fonts RSS reals Emowe/Mitjana/Hernández/etc.",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "`AppLector.jsx:82` només crea port de llavor; `:171` accepta font injectada o llavor. No existeix composició de producció amb aquestes fonts. L'informe històric `261016_0022_auditoria_claude.md:116` ja declarava aquest pendent.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Connector RSS aprovat amb fonts reals, captura de resposta, parser, fixture i persistència. No activar fake news per omplir el buit."
+    },
+    {
+      "id": "I05",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Bookmarklet amb tria Bloc/Lector",
+      "status": "[PARCIAL]",
+      "evidence": "`src/sections/notes/modeDesa.js:185` accepta `desti=lector`, però `AppLector.jsx:98–100` exporta destinació `null` sense llavor. La tria no s'ofereix per defecte.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I06",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Desar article directament al Lector",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "`src/sections/notes/SnippetCurador.jsx:95–116`: el destí desa una font RSS personal pendent del connector, no un article capturat.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Capturar una pàgina real com article al lector i com esborrany a Notes; no substituir l’article per una font RSS."
+    },
+    {
+      "id": "I07",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Hidratar títol, subtítol, entradeta, URL i OG",
+      "status": "[PARCIAL]",
+      "evidence": "`modeDesa.js:151` captura URL, `document.title` i selecció fins a 256 caràcters. No captura subtítol ni `og:image`; entradeta només si hi ha selecció.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I08",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Bloc 0.5: Consola separada del Control",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "`src/sections/consola/ConsolaSection.jsx:38` i `:204`: tauler propi amb pàgines, diagnosi i mètriques. Segell d'existència/composició local.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I09",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Matriu de requeriments en viu",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Consola actual amb pols, mapa, inventari i diagnosi; no localitzat model ni vista MCR de tasques amb FET/PARCIAL/PENDENT.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Consola llig registre viu amb IDs/evidències/dates; filtres i estat desconegut obsolet sense transformar-lo en verd."
+    },
+    {
+      "id": "I10",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Balanç demanat/executat i trasllat automàtic",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Cap implementació localitzada a `src/sections/consola/` o `tooling/vite/consola-iaia.mjs`.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Trasllat idempotent de tots els pendents entre sessions, amb historial i cap duplicat ni pèrdua; comparar conjunts d’IDs."
+    },
+    {
+      "id": "I11",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Botons validar/refutar tasques",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No hi ha flux de certificació humana de requeriments. Middleware actual GET local, `tooling/vite/consola-iaia.mjs:116–150`.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Validar/refutar des de la web amb permisos, persistència i registre d’actor; la certificació humana no falseja resultat automàtic."
+    },
+    {
+      "id": "I12",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Resums executius/diagnosi accessibles",
+      "status": "[PARCIAL]",
+      "evidence": "Existeix `DiagnosiConsola.jsx`; les fonts només viuen al servidor DEV local. `ConsolaSection.jsx:74–81`, `useFontDev.js:38–40`. No substitueix encara el canal humà-màquina demanat.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I13",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Bloc 1: regla 1200² WebP <80 KB universal",
+      "status": "[PARCIAL]",
+      "evidence": "Cadena de pujada i tractor amb mides/pressupost. Recursos actius encara JPEG: RSS 480²/176642 B, Gestoria 480²/175623 B, Rebost 480²/163482 B, Salut 480²/160244 B. `registrePlugins.js:150–164` usa `.jpg` per defecte.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I14",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Capçalera i targeta mateix recurs",
+      "status": "[PARCIAL]",
+      "evidence": "Plugins comparteixen camp `imatge`; no s'ha provat universalment tot el corpus ni totes les dades remotes.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I15",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Avatar 400² WebP universal",
+      "status": "[PARCIAL]",
+      "evidence": "`useEnquadramentImatge.jsx:79–82` imposa 400² a nova pujada. El retrat canònic existent `public/assets/fotos/javi-llinares-perfil-1200px.jpg` continua JPEG 1200²/256046 B. El pla mateix exigeix aquesta ruta JPEG a `:57`: cal harmonitzar aquesta exigència específica amb la migració general, no canviar-la cegament.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I16",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "WebP estricte a tots els navegadors",
+      "status": "[PARCIAL]",
+      "evidence": "`src/utils/pujadaImatge.js:215–218` recodifica a JPEG quan el navegador no produeix WebP. Fallback explícit, però no compleix literalment sempre `.webp`.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I17",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Social Share 1200×630 PNG",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Pillow confirma `public/assets/system/ui/og-socdepoble-1200x630.png`: 1200×630, PNG, 530885 B. Només acredita recurs local, no WhatsApp desplegat.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I18",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Preservació EXIF per defecte i opt-out",
+      "status": "[PARCIAL]",
+      "evidence": "Tractor supera prova sintètica independent de GPS, data, fus, càmera, MakerNote i orientació. La casella d'opt-out (`DialegEnquadrament.jsx:449–451`) està expressament autoritzada pel pla vigent `:70–73`; **no és per si mateixa un incompliment**. La cadena UI normalitza orientació, omet IFD1 i MakerNote que conté JPEG (`exifIncrustat.js:19–50`); no s'ha certificat integritat per qualsevol càmera/format o totes les vies d'ingestió. L'informe històric `261016_0022_auditoria_claude.md:223` identifica imatges enganxades com a via que conserva neteja.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I19",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Tractor `convertir_a_webp.mjs`",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Auditoria adversarial 10/10: JPEG original/quadrat/avatar, PNG/TIFF, EXIF massa gran, pressupost 1 KB, frontera estricta 80000 B, fallada encoder, entrada invàlida, conservació del destí i neteja temporal. SHA abans/després igual.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I20",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Tractor per migrar catàleg i connectar ingestió",
+      "status": "[PARCIAL]",
+      "evidence": "El CLI existeix i converteix fitxers explícits. No s'ha completat la migració de tot `public/assets/` (mostres JPEG anteriors) ni acreditat una canonada universal d'ingestió que el cride.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I21",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Nova vinyeta TPV integrada",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "`registrePlugins.js:304–314` usa WebP. Inspecció visual feta: cambrer al Bar Casino; Pillow: 1200², 77746 B. No constitueix dictamen jurídic sobre semblances.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I22",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Bloc 2: fallback WordPress literal",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "`wordpress-plugin/includes/marcatge.php:295`: `Carregant el mur...`. `tests/enxufe-plugin.test.mjs`: 18/18 verds, inclòs literal i guarda de `wptexturize`; la prova d'aquesta tanda és Node/inspecció de font, no execució PHP desplegada.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I23",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "FCP immediat i absència de salts",
+      "status": "[PARCIAL]",
+      "evidence": "Literal existent; sense mesura real de FCP/CLS mòbil en aquesta subauditoria.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I24",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Onada 3: TPV estructura Loyverse",
+      "status": "[PARCIAL]",
+      "evidence": "`src/apps/bar/vistes/Tpv.jsx:4–6`, `:190–228`: UniversalTPV, tiquet, catàleg, categories, cobrar i tiquets oberts. Comparació REA i homologació visual: no acreditades en aquesta tanda.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I25",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Mode Bar i Mode Rebost",
+      "status": "[PARCIAL]",
+      "evidence": "Bar implementat i consum d'ingredients (`nucli/consum.js`), però no localitzat selector/flux explícit Mode Rebost dins del TPV.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I26",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Torn, tiquets, categories, al·lèrgens",
+      "status": "[PARCIAL]",
+      "evidence": "`nucli/torn.js:32`, `nucli/tiquet.js:1`, `nucli/cataleg.js:18–34`, `Tpv.jsx:215–225`. Funcionalitat extensa local; manca validació operativa tàctil i desplegament. Bar és DEV i desactivat per defecte (`manifest.js:65–68`).",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I27",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Gestoria: llibre i tresoreria",
+      "status": "[PARCIAL]",
+      "evidence": "`src/sections/gestoria/facturar/LlibreFactures.jsx:40–117`; `tauler/nucli/resumTauler.js` calcula saldos/conciliació/tresoreria. App només desenvolupament (`src/apps/gestoria/manifest.js:79–82`).",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I28",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Gestoria: fidelitat ergonòmica Holded/FacturaDirecta/Odoo/GnuCash",
+      "status": "[PARCIAL]",
+      "evidence": "Hi ha Gestoria implementada; comparativa ergonòmica/reproducció REA: no acreditada en aquesta tanda. Aquesta etiqueta evita confondre manca d'evidència de l'auditor amb prova d'absència de feina prèvia.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I29",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Model B: port neutral i Frontissa GET acotada",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "`src/data/backendPort.js:8–56`; `creaFrontissa.js:11–105`: origen permès, catàleg, GET, omit credentials, redirects error, límits bytes/temps, DTO i neteja. `tractor-frontissa.mjs` verd sense xarxa.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I30",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Connexió efectiva amb Sollutia",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "`src/data/adaptadors/sollutia/client.js:4–7`: `apiOrigin:null`, orígens buits i recursos buits. Rebutja recursos, correctament tancat fins a captures reals.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Rebre endpoints de Sollutia, origen permés i captures; cada recurs amb traductor+fixture i prova GET sense credencials no autoritzades."
+    },
+    {
+      "id": "I31",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Bloc 4: simulació local 1000–40000",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Harness actual: 8/8, zero intents fetch de xarxa, resultats a continuació.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I32",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Capacitat real 40000 usuaris concurrents",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No s'ha exercitat backend, sockets reals, RLS, DB, sessions independents ni infraestructura Sollutia/Supabase.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Entorn i càrrega real autoritzats, sessions independents, mesura servidor/DB/RLS/sockets, errors, límits i recuperació; mai inferir-ho del simulador."
+    },
+    {
+      "id": "I33",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Zero leaks, immunitat i zero regressions",
+      "status": "[PARCIAL]",
+      "evidence": "Proves locals positives de neteja/cancel·lació/errors; no permeten garantia universal ni substitueixen suite global.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Completar el requisit literal en l’abast requerit; adjuntar prova reproduïble i resoldre el límit de la fila, sense extrapolar una simulació a producció."
+    },
+    {
+      "id": "I34",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Reserves d'imatges de pobles",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "`src/config/assetResolver.js:9-19,178-187`: 9 rutes úniques `/assets/img/…` inexistents; els 9 mateixos basenames existeixen en `public/assets/uploads/brain/`. L'afirmació sobre `nano_banner_*` és un error de nom: no n'hi ha cap al resolver ni al fons públic. C7 històric a `.../261011_0230_onada12_claude/AUTOCURACIO_I_MODS.txt:380-383` ja descrivia correctament el canvi de prefix.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Les 9 reserves resolen recursos reals i decodificables amb base arrel i base incrustada; revisar les branques nominals i la selecció determinista. Mantindre intacta la resolució d'URL externa i de fotos pròpies existents."
+    },
+    {
+      "id": "I35",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Cronologia de Multimèdia",
+      "status": "[PARCIAL]",
+      "evidence": "La vista existeix (`MultimediaSection.jsx:44-45,75-105`), però `loadMultimedia` només demana `[['mediaItems','multimedia']]` (`src/data/supabase/content.js:259-260`). `loadSections` retorna exclusivament eixes claus en seed/local/remot (`:150-153,180-184`); mai calcula grups. `MultimediaContext.jsx:43` transmet els grups si arriben i cau a `[]`: no els esborra. `MultimediaSection.jsx:76` mapeja eixe buit sense estat explicatiu. El contracte només exigix `mediaItems` (`conformitat/kit.js:179-182`) i la prova de vista injecta grups (`MultimediaSection.test.jsx:13,25`), de manera que no acredita la cadena real.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Derivar grups ordenats per mes/any dels mitjans carregats en l'àmbit vigent, sense ometre/duplicar ítems; política explícita per dates absents/invàlides i estat buit. Comprovar la cadena carregador→context→vista amb dades reals locals i canvi d'àmbit. No basta ampliar `mediaContent.js`: el remot llig app_content/submissions."
+    },
+    {
+      "id": "I36",
+      "source": "Blocs 0–4; fila explícita",
+      "requirement": "Publicació de les vinyetes Habitatge/Treball",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Ja són a `public/assets/ui/plugins/`, byte a byte iguals a `01_produccio/Targetes_Davinci_Llestes/`; ús a `src/sections/text/pageContent.js:371,381` i Treball també `src/sections/consola/imatgesConsola.js:63`. Per tant no són inèdites pendents de copiar.",
+      "owner": "Claude implementa; Gemini arquitectura; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Retirar el fals pendent de còpia; la conversió WebP és un requisit distint, encara pendent."
+    },
+    {
+      "id": "M01",
+      "source": "§0.3.1",
+      "requirement": "Arbre assets separat en sistema, pobles, usuaris, entitats i contingut",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Inventari real de public/assets: cap de les cinc carpetes literals existeix. Hi ha events, fotos, img, nano_cards, notes, pages, system, towns, ui i uploads. Vegeu assets.json.",
+      "owner": "Claude; Gemini revisa",
+      "priority": "P2",
+      "acceptance": "Manifest de migració complet, totes les referències actualitzades, redireccions si cal i zero recursos trencats."
+    },
+    {
+      "id": "M02",
+      "source": "§0.3.1",
+      "requirement": "Canvi d'actor assigna cada recurs al calaix correcte",
+      "status": "[PARCIAL]",
+      "evidence": "Hi ha separació parcial uploads/poble, empresa i ajuntament; no s'ha acreditat el flux persona→entitat amb permisos i l'arbre nou.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Prova d'ingestió amb persona i entitat; propietari, carpeta i permisos coherents, sense compartir dades privades."
+    },
+    {
+      "id": "M03",
+      "source": "§0.3.2",
+      "requirement": "Multimèdia reflecteix tot el cens real de 100–200 fotos",
+      "status": "[PARCIAL]",
+      "evidence": "MEDIA_ITEMS dona 26 elements i 26 URLs úniques; navegador TOTS (26). Inventari de disc: 202 rasters, inclosos originals i recursos no publicables automàticament.",
+      "owner": "Claude; Gemini revisa",
+      "priority": "P2",
+      "acceptance": "Cens editorial complet, deduplicat i amb drets/privacitat; galeria mostra tots els recursos aprovats, no un nombre artificial."
+    },
+    {
+      "id": "M04",
+      "source": "§0.3.2",
+      "requirement": "Clic en foto obri visor modal natiu amb fons fosc",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "MultimediaSection.jsx:57,88 enllaça al detall. Navegador: clic Benifallim navega a /multimedia/town-benifallim.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Obrir/tancar visor amb ratolí i teclat, focus restaurat, sense ruta externa i sense scroll del fons."
+    },
+    {
+      "id": "M05",
+      "source": "§0.3.2",
+      "requirement": "Visor amb anterior/següent i zoom fluid",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No s'ha localitzat el visor ni aquests controls en src/sections/multimedia.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Navegació amb límits coherents, teclat/tàctil i zoom sense perdre la imatge ni crear listeners residuals."
+    },
+    {
+      "id": "M06",
+      "source": "§0.3.2",
+      "requirement": "Panell EXIF: data/hora, GPS, càmera, autor, poble i drets",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No hi ha panell de visor. La vista town-benifallim mostra metadades genèriques d'Element, no EXIF de la foto.",
+      "owner": "Claude; Gemini revisa",
+      "priority": "P2",
+      "acceptance": "Casos amb metadades completes, parcials i privades; mostrar desconegut sense inventar informació."
+    },
+    {
+      "id": "M07",
+      "source": "§0.3.2",
+      "requirement": "Eliminar /multimedia/town-* i portar al poble canònic",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Reproduït al navegador: /multimedia/town-benifallim es conserva; no redirigix a /pobles/benifallim.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Enllaç i accés directe antics resolen la pàgina de poble canònica, també enrere/endavant."
+    },
+    {
+      "id": "M08",
+      "source": "§0.3.3",
+      "requirement": "Mapa fotogràfic llig GPS i temps EXIF",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "La referència plantilla-mapa.html es conserva al laboratori; no s'ha localitzat integració operativa a Multimèdia/Territori.",
+      "owner": "Claude; Gemini dissenya",
+      "priority": "P2",
+      "acceptance": "Importació de mostra amb EXIF verificat; punts i data correctes, errors i metadades absents tractats."
+    },
+    {
+      "id": "M09",
+      "source": "§0.3.3",
+      "requirement": "Mapa agrupa/desagrupa segons zoom",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No s'ha localitzat la integració de clustering fotogràfic al producte viu.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P2",
+      "acceptance": "Mostra de punts pròxims i separats, zoom de poble a carrer i rendiment mesurat."
+    },
+    {
+      "id": "M10",
+      "source": "§0.3.3",
+      "requirement": "Mapa amb cronologia lateral per dies, etapes i temes",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Hi ha cronologia simple de galeria, no la composició mapa/cronologia exigida.",
+      "owner": "Claude; Gemini revisa",
+      "priority": "P2",
+      "acceptance": "Selecció temporal/tema sincronitzada amb punts, fus horari correcte i navegació accessible."
+    },
+    {
+      "id": "M11",
+      "source": "§0.3.3",
+      "requirement": "Mapa processa fotos al dispositiu sense enviar-les a tercers",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "No hi ha implementació integrada per certificar. Conservar un HTML de referència no acredita privacitat efectiva.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Prova de xarxa interceptada: zero bytes de fotos/EXIF personal fora del dispositiu; documentar peticions de tessel·les si n'hi ha."
+    },
+    {
+      "id": "G01",
+      "source": "Regla d'or 1",
+      "requirement": "MCR granular de tot el pla i prompt",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Matriu present en aquest informe i mcr.json, amb IDs estables, tres estats exactes i evidència limitada per fila.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Reconciliar al següent tall amb el hash del pla vigent; cap fila sense evidència."
+    },
+    {
+      "id": "G02",
+      "source": "Regla d'or 2",
+      "requirement": "Balanç demanat, fet i traslladat sense perdre pendents",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Pla 261016_1639 generat amb totes les files no segellades; comprovació d'igualtat del conjunt d'IDs. És trasllat documental, no la funció web encara absent.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Mantindre IDs i historial quan canvie l'estat, sense eliminar requisits."
+    },
+    {
+      "id": "G03",
+      "source": "§0.6",
+      "requirement": "Cens exhaustiu d'històric, producció i laboratori",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "1497 fitxers inventariats: 720 històric, 297 producció, 480 laboratori. 418 són entrades del primer nivell històric. CSV/JSON amb estat per fitxer.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Reinventariar només deltes i conservar originals."
+    },
+    {
+      "id": "G04",
+      "source": "§0.6",
+      "requirement": "Lectura profunda i contrast exhaustiu de tot el corpus",
+      "status": "[PARCIAL]",
+      "evidence": "51 lectures semàntiques íntegres, 2 equivalents verificats, 1 article extret complet, 1 auditoria parcial i 4 buits addicionals. Cua1166 textos (1164 pendents + parcial + HTML envoltant),271 binaris sense inspecció i3 exclusions BIOS/bundle. Processar1223 textos no és llegir-los semànticament.",
+      "owner": "Gemini i Codex",
+      "priority": "P2",
+      "acceptance": "Completar cua per lots, contrast amb codi viu i estat per font; usar eines de cada format, sense executar artefactes antics ni tractar BIOS copiat com autoritat."
+    },
+    {
+      "id": "G05",
+      "source": "§0.6",
+      "requirement": "Informe extens de rescat amb idees i codi ja existent",
+      "status": "[PARCIAL]",
+      "evidence": "Annex íntegre de31 idees,8 coincidències exactes amb codi viu i58 candidats de mateix nom. Extens en el lot revisat; cobertura global encara parcial.",
+      "owner": "Gemini i Codex",
+      "priority": "P2",
+      "acceptance": "Completar contrast dels 58 candidats i de la cua, integrar tot en registre viu únic amb proves i vigència."
+    },
+    {
+      "id": "G06",
+      "source": "Verificació 1",
+      "requirement": "Perfil: suite i comprovació visual de tres columnes",
+      "status": "[PARCIAL]",
+      "evidence": "Suites focals de perfil passades dins de 155 proves; /mercat observat amb Javi/foto. Falta QA autenticada de /el-meu-perfil en mides i modes requerits.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Navegador amb identitat de prova, tres columnes, controls i persistència; registrar mida de pantalla."
+    },
+    {
+      "id": "G07",
+      "source": "Verificació 2",
+      "requirement": "Xat: suite i adaptació responsive",
+      "status": "[PARCIAL]",
+      "evidence": "Actors permanents passa i IAIA s'obri al navegador local. Manca matriu de mòbil/tauleta/escriptori, sessió remota i noves capçaleres.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Proves dels modes local/remot i recorregut visual responsive sense buits ni actors duplicats."
+    },
+    {
+      "id": "G08",
+      "source": "Verificació 3",
+      "requirement": "Lector rep dades reals",
+      "status": "[NO FET / PENDENT]",
+      "evidence": "Port real no connectat; només font injectada/llavor explícita. URLs escrites no equivalen a articles descarregats i persistits.",
+      "owner": "Claude; Codex verifica",
+      "priority": "P1",
+      "acceptance": "Rebut d'una font real amb URL, data, parseig, lectura i persistència; error/offline visibles sense notícia inventada."
+    },
+    {
+      "id": "G09",
+      "source": "Verificació 4",
+      "requirement": "Tractor WebP supera prova adversarial",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "10/10 de l'auditoria WebP, originals intactes i contrast amb Pillow; abast de formats/metadades explicitat.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Repetir després de qualsevol canvi del conversor."
+    },
+    {
+      "id": "G10",
+      "source": "Verificació 5",
+      "requirement": "Porta Olivera en codi 0",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Porta inicial codi 0; rebuts finals es registren a Verificació. Documents nous ancorats pel productor canònic.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Porta final codi 0 amb tots els lliurables vius ancorats."
+    },
+    {
+      "id": "G11",
+      "source": "Verificació 5",
+      "requirement": "npm run test:ci complet i verd",
+      "status": "[PARCIAL]",
+      "evidence": "CI final exit1: Node947 pass/0 fail/1skip/3TODO; Vitest18385 pass/1fail/89skip,1061 fitxers pass/1fail/6skip,1758,98s. Únic timeout HistoricCofre5000ms.2745/2745 fonts inicials intactes; diagnòstic ampliat5160ms no equival a verd oficial.",
+      "owner": "Claude corregeix; Codex verifica",
+      "priority": "P1",
+      "acceptance": "CI completa exit0 sobre tall identificat; explicar TODO/skip i repetir només proves afectades pels canvis posteriors."
+    },
+    {
+      "id": "G12",
+      "source": "Tancament BIOS",
+      "requirement": "ESTAT, Acta Marmota i porta de tancament",
+      "status": "[PARCIAL]",
+      "evidence": "ESTAT i LEDGER actualitzats preservant historial; Acta valida. Tancament valid:false/planned,457 incidències:455 graf global i2 divergències skills/manifest. Cap error referit als tres documents Codex o al seu directori d’evidència; no s’han resegellat skills.",
+      "owner": "Codex; Gemini deute global",
+      "priority": "P2",
+      "acceptance": "Actualitzar ESTAT i executar porta; si falla, registrar errors concrets, propietari i criteri sense declarar tancament vàlid."
+    },
+    {
+      "id": "G13",
+      "source": "Olivera i autonomia",
+      "requirement": "Lectura creuada dels documents actius i coordinació de rols",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "Llegits tots els documents actius del primer nivell, pla/prompt ampliats i Gemini relleu2; Claude encara plantilla sense resultats al tall. Relleus Codex1–7, refutacions contrastades amb codi i probes; hashes d’entrada preservats. Cap producció tocada per Codex.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Llegir relleus nous i reauditar fonts canviades abans de qualsevol segell posterior."
+    },
+    {
+      "id": "G14",
+      "source": "Model B",
+      "requirement": "Enxufabilitat desacoblada i font de veritat Supabase",
+      "status": "[PARCIAL]",
+      "evidence": "Port neutral i Frontissa GET acotada passen localment; endpoints Sollutia absents. No s'ha demostrat intercanvi complet amb amfitrió/sessió reals.",
+      "owner": "Claude; Gemini arquitectura",
+      "priority": "P1",
+      "acceptance": "Captura real→traductor→fixture→prova del recurs GET, sense tocar el port de backend ni enviar credencials a origen no permés."
+    },
+    {
+      "id": "G15",
+      "source": "Higiene",
+      "requirement": "Recursos propis recollits i crons finalitzats",
+      "status": "[FET I SEGELLAT]",
+      "evidence": "CI/focals i tres subagents acabats; tab temporal tancat; cap cron creat. Quatre automatitzacions del projecte reverificades PAUSED. Cap procés alié interromput.",
+      "owner": "Codex",
+      "priority": "P2",
+      "acceptance": "Sessions i subagents propis acabats, tab tancat, cap procés alié interromput ni automatització pròpia activa."
+    }
+  ]
+}

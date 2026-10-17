@@ -38,7 +38,11 @@ vi.mock('../../hooks/useResolvedAsset.js', () => ({
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: null, refresh: vi.fn() }) }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ agents: [] }) }));
-vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null, estat: 'fora', generacio: 1 }) }));
+/* Gauntlet 261016 (Bloc 3.4) · PerfilShell també llig useSessioOpcional (qui és superadmin). */
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({
+  useSession: () => ({ currentUser: null, estat: 'fora', generacio: 1 }),
+  useSessioOpcional: () => null,
+}));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/el-meu-perfil' } }),
   useNavigate: () => vi.fn(),

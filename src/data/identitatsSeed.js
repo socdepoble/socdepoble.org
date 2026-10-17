@@ -168,7 +168,10 @@ export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
   owner_org_id: ENTITAT_PILOT_ID
 })]);
 
-/* T3 (mock): la resposta fixa de la IAIA, literal del prompt del Mestre. */
+/* T3 (mock): la resposta fixa de la IAIA, literal del prompt del Mestre.
+   Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · En llavor i en local, la
+   IAIA primer busca a la Wiki pública del paquet (iaiaLocal.js); esta frase és
+   la reserva quan no hi troba res o la Wiki no es pot carregar. */
 export const RESPOSTA_IAIA = 'Ara estic en proves, només puc respondre preguntes molt simples i no estic per a tonteries, però poc a poc aniré aprenent.';
 export const BENVINGUDA_IAIA = 'Hola! Sóc la IAIA MarIA. Escriu-me el que vullgues i et diré fins on arribe.';
 
@@ -285,6 +288,34 @@ export function autoriaSeed(item) {
   const personaId = item.ownerUserId ?? item.owner_user_id ?? item.author_user_id ?? item.author_id ?? null;
   if (personaId == null || !PERSONA_PILOT.alies.includes(String(personaId))) return null;
   return { tipus: 'persona', nom: PERSONA_PILOT.nom, avatar: PERSONA_PILOT.avatar };
+}
+
+/**
+ * Gauntlet 261016 (Bloc -1; ordre del Mestre: «Avatar de la persona pilot:
+ * sempre la seua foto personal de perfil. TERMINANTMENT PROHIBIT que aparega
+ * el logotip verd de l'entitat associat a ella») · El resolutor únic del nom
+ * i de l'avatar de qui signa un element, per a totes les superfícies que el
+ * pinten: la targeta del Mercat (targetaDeProducte.js), la del Mur i la d'un
+ * acte (TargetaDelMur.jsx, que el passa ja resolt a EventCard: components/ no
+ * llig la llavor), la barra taronja i les targetes incrustades del detall
+ * (elementDeSeccio.js · paginaDElement), l'avatar redó de davant de l'H1
+ * (detailSectionMeta.jsx · avatarAutorDElement) i el lector del MAS
+ * (PublicacioDetall.jsx). Pur: cap React ni cap xarxa.
+ *   · Si el signa la persona pilot (per id o per àlies, i sense cap entitat
+ *     davant: autoriaSeed), el nom i la foto de PERSONA_PILOT, SEMPRE: també
+ *     davant d'una altra foto, del logotip verd, d'un avatar que no és text o
+ *     d'un nom curt ('Javi'). L'ordre diu «sempre».
+ *   · Si el signa una entitat (encara que la persona autora siga la pilot) o
+ *     qualsevol altra persona, els valors declarats que passa qui pinta
+ *     (`declarat`), intactes: cada superfície conserva la seua reserva i el
+ *     seu DOM (Llei del Píxel). Sense `declarat`, undefined.
+ * Un nom no identifica mai la persona pilot (D1): un homònim amb un altre id
+ * conserva el seu nom i la seua foto.
+ */
+export function signaturaDeQuiSigna(item, declarat = {}) {
+  const autoria = autoriaSeed(item);
+  if (autoria?.tipus === 'persona') return { nom: autoria.nom, avatar: autoria.avatar, personaPilot: true };
+  return { nom: declarat?.nom, avatar: declarat?.avatar, personaPilot: false };
 }
 
 /**

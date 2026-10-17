@@ -1,5 +1,5 @@
 import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
-import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, POBLE_FUNDACIONAL, clauFundacional } from '../../data/identitatsSeed.js';
 import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import { menaDeFitxa } from './perfilCamps.js';
 
@@ -153,17 +153,41 @@ export function potEditarFitxa(identitat) {
 }
 
 /**
+ * Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+ * sense poble») · El poble de reserva d'una fitxa sense poble propi: el de les
+ * tres identitats del Mestre (POBLE_FUNDACIONAL), si ho és (clauFundacional,
+ * la mateixa regla que la fitxa pública, PerfilPublicSection.jsx: per l'id o
+ * un àlies declarat, un id remot declarat o, per a la persona, el slug que
+ * posa la llavor; mai pel nom ni pel slug d'una organització); si no, ''.
+ *   · la persona, per la seua fila (dades.id i dades.slug): `identitat.id` és 'jo';
+ *   · una organització, pel seu id, com a entitat o com a grup (identitat.mena);
+ *   · un agent IA no és cap de les tres: ''.
+ * El poble desat sempre mana: qui crida només hi cau sense poble propi.
+ */
+export function pobleDeReservaDeFitxa(identitat) {
+  const mena = menaDeFitxa(identitat);
+  if (!identitat || mena === 'agent') return '';
+  const perfil = mena === 'persona'
+    ? { tipus: 'persona', id: identitat.dades?.id, slug: identitat.dades?.slug }
+    : { tipus: identitat.mena === 'grup' ? 'grup' : 'entitat', id: identitat.id };
+  return clauFundacional(perfil) ? POBLE_FUNDACIONAL : '';
+}
+
+/**
  * El poble de la barra taronja i de la targeta:
  *   · la persona, el seu (dades.town_name);
  *   · una organització, el seu (dades.town_name), o cap: mai el de la persona
  *     (decisió del Mestre, 261008: l'organització tria el seu poble);
  *   · un agent IA, el seu o, si no en té, el de la persona que l'administra
  *     (`identitats`, com fa l'editor).
+ * Gauntlet 261016 (Bloc 3.5.2) · Sense poble propi, la persona o
+ * l'organització que és una de les tres identitats del Mestre porta el seu
+ * (pobleDeReservaDeFitxa), com a la fitxa pública. La resta, com sempre.
  */
 export function pobleDeFitxa(identitat, identitats = []) {
   const propi = identitat?.dades?.town_name;
   const mena = menaDeFitxa(identitat);
-  if (mena !== 'agent') return propi ? String(propi) : '';
+  if (mena !== 'agent') return propi ? String(propi) : pobleDeReservaDeFitxa(identitat);
   return String(propi
     || (identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name
     || '');

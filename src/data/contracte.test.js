@@ -5,6 +5,7 @@ import {
   errorDeMembre, membreDOrganitzacio, rutaDeSubjecte, subjecteDeXat
 } from './contracte.js';
 import { SECTION_ORDER, SECTIONS } from '../config/sections.js';
+import { RUTA_FITXA_IAIA } from '../config/navigation.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
    tractor-enxufe no deixa importar-lo des d'ací, tampoc en una prova. */
 
@@ -149,16 +150,37 @@ describe('T63.2 · subjecteDeXat', () => {
     }
   });
 
+  /* Gauntlet 261016_1530 (Bloc 3.6.3; F64 i F65) · Actualitzada a posta. El
+     manifest «L'ànima de la iaia» (la secció 'ia') ha passat de /iaia a
+     /anima, i /iaia és la fitxa de la IAIA MarIA. La clau '/iaia' del xat
+     públic NO canvia (és el contracte del servidor, 2610042330, que
+     tests/migracio-xat-de-pagina.test.mjs contrasta): és l'única que ja no és
+     el path d'una secció, sinó la ruta de la fitxa de la IAIA, amb el títol
+     literal del servidor. Cap altra clau té excepció, i /anima no guanya cap
+     xat comú (seria una migració). */
   it('PAGINES_AMB_XAT són pàgines públiques de SECTION_ORDER, amb el seu nom, sense el Xat ni les Notes', () => {
     expect(Object.isFrozen(PAGINES_AMB_XAT)).toBe(true);
     /* Només en un sentit: una secció nova no té xat fins que el Mestre ho decidix. */
     for (const [ruta, titol] of Object.entries(PAGINES_AMB_XAT)) {
+      if (ruta === RUTA_FITXA_IAIA) continue;
       const seccio = SECTIONS.find((s) => s.path === ruta);
       expect(seccio, ruta).toBeTruthy();
       expect(SECTION_ORDER, ruta).toContain(seccio.id);
       expect(['xat', 'notes'], ruta).not.toContain(seccio.id);
       expect(titol, ruta).toBe(seccio.label);
     }
+  });
+
+  it('Bloc 3.6.3 · la clau /iaia és el xat públic de la IAIA, a la ruta de la seua fitxa; el manifest, a /anima, sense xat comú', () => {
+    expect(RUTA_FITXA_IAIA).toBe('/iaia');
+    expect(PAGINES_AMB_XAT[RUTA_FITXA_IAIA]).toBe("L'ànima de la iaia");
+    expect(SECTIONS.find((s) => s.path === RUTA_FITXA_IAIA)).toBeUndefined();
+    const manifest = SECTIONS.find((s) => s.pageKey === 'anima');
+    expect([manifest.id, manifest.path, manifest.label]).toEqual(['ia', '/anima', "L'ànima de la iaia"]);
+    expect(Object.hasOwn(PAGINES_AMB_XAT, manifest.path)).toBe(false);
+    /* El subjecte del xat de la IAIA es valida igual que abans. */
+    expect(subjecteDeXat({ tipus: 'pagina', id: RUTA_FITXA_IAIA, ruta: RUTA_FITXA_IAIA })).toMatchObject({ tipus: 'pagina', id: '/iaia' });
+    expect(subjecteDeXat({ tipus: 'pagina', id: '/anima', ruta: '/anima' })).toBeNull();
   });
 });
 

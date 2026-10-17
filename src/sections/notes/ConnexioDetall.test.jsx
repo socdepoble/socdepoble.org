@@ -241,8 +241,38 @@ test('T71 · una connexió a /ia es llig com /ia: títol, foto, autor i cos de l
   // La tira de recopilació va davall del cos de la pàgina.
   const tira = screen.getByRole('group', { name: 'Recopilació de la connexió' });
   expect(container.querySelector('article.content-wrapper').lastElementChild).toBe(tira);
+  /* Gauntlet 261016_1530 (Bloc 3.6.3) · Ordre nova: el manifest viu a /anima
+     i /iaia és la fitxa de la IAIA. «Obri l'original» porta a la pàgina que
+     es llig (/anima), no a la ruta vella desada. Abans: '/iaia'. */
   fireEvent.click(screen.getByRole('button', { name: 'Obri l’original' }));
-  expect(mocks.navigate).toHaveBeenCalledWith('/iaia');
+  expect(mocks.navigate).toHaveBeenCalledWith('/anima');
+  expect(mocks.navigate).not.toHaveBeenCalledWith('/iaia');
+});
+
+/* Bloc 3.6.3 · Les connexions desades a les rutes velles del manifest (/iaia,
+   /ia) obrin i compartixen /anima, amb la consulta i el fragment. Comentar
+   continua al xat públic de '/iaia' (provat més amunt), i un perfil continua a
+   la seua ruta. */
+test.each([
+  ['/iaia', '/anima'],
+  ['/ia', '/anima'],
+  ['/iaia#reflexions', '/anima#reflexions'],
+  ['/ia?origen=prova', '/anima?origen=prova']
+])('Bloc 3.6.3 · una connexió a la pàgina %s obri i compartix %s, mai la fitxa', async (desada, vigent) => {
+  const origen = { ...ORIGEN_ANIMA, itemId: desada, ruta: desada };
+  const { container } = render(<ConnexioDetall nota={nota(origen)} />);
+  expect(container.querySelector('header.page-title h1').textContent).toBe("L'Ànima de la IAIA");
+  fireEvent.click(screen.getByRole('button', { name: 'Obri l’original' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(vigent);
+  fireEvent.click(screen.getByRole('button', { name: 'Compartir' }));
+  await waitFor(() => expect(escriu).toHaveBeenCalledWith(new URL(vigent, window.location.origin).href));
+});
+
+test('Bloc 3.6.3 · una connexió sense tipus d’objecte (d’abans de T43) a /iaia també obri /anima', () => {
+  const senseObjecte = { ...ORIGEN_ANIMA, objecte: undefined };
+  render(<ConnexioDetall nota={nota(senseObjecte)} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Obri l’original' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/anima');
 });
 
 test('T71 · el cos d’una pàgina del core passa pel sanejador', () => {

@@ -105,6 +105,32 @@ test('T36 · amb accionsInoperatives, Comentar, Compartir i Connectar van a onCl
   expect(barra.querySelector('button[aria-label="Traduir"]').classList.contains('accio-inoperativa')).toBe(false);
 });
 
+/* Gauntlet 261016 (Bloc 3.9) · traduirInoperatiu (l'editor): amb
+   accionsInoperatives, Traduir també porta aria-disabled i el clic diu
+   'traduir'; sense accionsInoperatives no fa res, i sense la prop (la
+   Gestoria) Traduir com sempre (la prova de dalt). */
+test('Bloc 3.9 · amb traduirInoperatiu i accionsInoperatives, Traduir és inoperatiu, sense menú, i el clic diu «traduir»', () => {
+  const onClickInoperatiu = vi.fn();
+  const onTranslate = vi.fn();
+  const menu = { obert: true, opcions: [], actual: null, onTria: vi.fn(), onTanca: vi.fn() };
+  const barra = blava({ ...TOTES, onTranslate, accionsInoperatives: true, onClickInoperatiu, traduirInoperatiu: true, menuTraduir: menu });
+  const traduir = barra.querySelector('button[aria-label="Traduir"]');
+  expect(traduir.classList.contains('accio-inoperativa')).toBe(true);
+  expect(traduir.getAttribute('aria-disabled')).toBe('true');
+  expect(traduir.disabled).toBe(false);
+  expect(traduir.hasAttribute('aria-haspopup')).toBe(false);
+  expect(barra.querySelector('[role="menu"]')).toBeNull();
+  act(() => { fireEvent.click(traduir); });
+  expect(onClickInoperatiu).toHaveBeenCalledWith('traduir');
+  expect(onTranslate).not.toHaveBeenCalled();
+  cleanup();
+  // Sense accionsInoperatives, la prop sola no apaga res.
+  const viva = blava({ ...TOTES, onTranslate, traduirInoperatiu: true });
+  expect(viva.querySelector('button[aria-label="Traduir"]').hasAttribute('aria-disabled')).toBe(false);
+  act(() => { fireEvent.click(viva.querySelector('button[aria-label="Traduir"]')); });
+  expect(onTranslate).toHaveBeenCalledTimes(1);
+});
+
 /* T7 (P7) · Inoperatius però enfocables: aria-disabled="true", mai `disabled`,
    i el clic diu quin botó és perquè cada un tinga el seu missatge. */
 test('T7 · amb accionsInoperatives, els tres porten aria-disabled i el clic diu quin botó és', () => {

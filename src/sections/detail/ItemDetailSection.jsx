@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
+import { Navigate, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -12,6 +12,7 @@ import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/nav
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
+import { destiDeMultimedia } from '../multimedia/rutesMultimedia.js';
 
 function useSessioSegura() {
   try {
@@ -21,7 +22,22 @@ function useSessioSegura() {
   }
 }
 
+/* Onada 0.3 (Gauntlet 261016, M04 i M07; pla 261016_1530) · /multimedia/:id
+   ja no és cap pàgina de detall. La ruta continua viva (fils de xat de pàgina,
+   el servidor, enllaços copiats) i porta, amb replace i conservant la
+   consulta: town-<slug> a /pobles/<slug>, la pàgina canònica del poble, i la
+   resta a l'Arxiu amb el visor obert en eixa foto (/multimedia?foto=<id>).
+   Sense tocar App.jsx: la ruta `:sectionId/:itemId` arriba ací. És
+   determinista en fred (l'id naix a mediaContent.js): no espera cap càrrega. */
 export default function ItemDetailSection() {
+  const { sectionId, itemId } = useParams();
+  const { search } = useLocation();
+  const desti = sectionId === 'multimedia' ? destiDeMultimedia(itemId, search) : null;
+  if (desti) return <Navigate to={desti} replace />;
+  return <DetallDElement />;
+}
+
+function DetallDElement() {
   const { events, feedPosts, marketItems } = useMur();
   const { towns } = useCoreContent();
   const { notes, status: estatNotes } = useNotesData();

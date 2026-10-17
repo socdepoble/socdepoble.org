@@ -18,7 +18,9 @@
 /* Ordre del Mestre (261007) · Forma de loadFils()[], una Conversa del Xat:
    camp opcional `perDefecte` ('socdepoble' | 'javi' | 'iaia'; absent o null
    en una conversa de veres; 'javi', des del Gauntlet 261016, Bloc 3.6: Javi
-   Llinares, la persona humana de contacte, CONTACTE_HUMA). Marca una fila que
+   Llinares, la persona humana de contacte, CONTACTE_HUMA; des del Gauntlet
+   261016_1530, Bloc 3.6.1, ja cap 'socdepoble': el seu actor és la
+   comunitat, no cap directe sintètic). Marca una fila que
    el backend SINTETITZA perquè tota persona tinga amb qui parlar el primer
    dia (src/data/xatsPerDefecte.js · ACTORS_PERMANENTS):
    no és cap fil del servidor, no té missatges ni marques, el seu id porta el
@@ -335,7 +337,12 @@ const MAXIM_TITOL_FIL = 100;
    La mateixa llista, amb els mateixos títols, és a private.xat_subjecte
    (2609282100_xat_de_pagina.sql): tests/migracio-xat-de-pagina.test.mjs ho
    contrasta. PENDENT del Mestre (pregunta 4 del mapa T63-T67): quines
-   pàgines en tenen; fins aleshores, la resta diu que no n'hi ha. */
+   pàgines en tenen; fins aleshores, la resta diu que no n'hi ha.
+   Gauntlet 261016_1530 (Bloc 3.6.3) · La clau '/iaia' NO canvia: és el xat
+   públic de la IAIA MarIA, i des d'ara la ruta és la de la seua fitxa
+   (RUTA_FITXA_IAIA, config/navigation.js), no la d'una secció. El manifest
+   que hi vivia és a /anima, sense xat comú propi. El títol és el literal del
+   servidor (2610042330_xat_pagina_iaia.sql): canviar-lo és una migració. */
 export const PAGINES_AMB_XAT = Object.freeze({
   '/mur': 'Mur',
   '/mercat': 'Mercat',

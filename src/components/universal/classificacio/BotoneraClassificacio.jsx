@@ -75,8 +75,12 @@ function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
    document. La botonera només es pinta en edició: sense emoticona hi va una
    PLOMA (Feather), que diu «això és editable»; en eixir de l'edició la
    botonera desapareix i amb ella la ploma. Amb emoticona, la mateixa
-   emoticona ocupa el lloc de la icona, fixa i guardada al document. */
-export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', onObri }) {
+   emoticona ocupa el lloc de la icona, fixa i guardada al document.
+   Gauntlet 261016 (Bloc 3.9) · `etiquetaEmoticona` (opcional): el text del
+   quart botó. El Bloc de Notes hi posa «Emojis XL» (el diàleg porta la
+   graella del catàleg, i és l'únic camí per a obrir-lo: la barra taronja ja
+   no porta la ploma central). Sense, «Emoticona», el DOM de sempre. */
+export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = CAP, emoticona = '', etiquetaEmoticona = 'Emoticona', onObri }) {
   const valorsDe = (llista) => llista.filter(Boolean);
   const triatsCategories = valorsDe(categories);
   const triatsEtiquetes = valorsDe(etiquetes);
@@ -92,8 +96,8 @@ export function BotoneraClassificacio({ carpeta, categories = CAP, etiquetes = C
         ? <Pindoles tipus="etiquetes" valors={triatsEtiquetes} onObri={onObri} />
         : <BotoResum tipus="etiquetes" icona={Tags} text="Etiquetes" resum={0} onObri={onObri} />}
       {emoticona
-        ? <BotoResum tipus="emoticona" icona={null} glif={emoticona} text="Emoticona" resum={null} onObri={onObri} />
-        : <BotoResum tipus="emoticona" icona={Feather} text="Emoticona" resum="—" onObri={onObri} />}
+        ? <BotoResum tipus="emoticona" icona={null} glif={emoticona} text={etiquetaEmoticona} resum={null} onObri={onObri} />
+        : <BotoResum tipus="emoticona" icona={Feather} text={etiquetaEmoticona} resum="—" onObri={onObri} />}
     </div>
   );
 }

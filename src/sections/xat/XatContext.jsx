@@ -159,7 +159,7 @@ import {
 } from '../../data/backendPort.js';
 import { subjecteDeXat } from '../../data/contracte.js';
 import {
-  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi, gestionaLEntitatPilot,
+  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi,
   missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte
 } from '../../data/xatsPerDefecte.js';
 import useNivellIaia from '../realitat/useNivellIaia.js';
@@ -1364,8 +1364,13 @@ export function XatProvider({ children, config }) {
          visitant no retira la fila de la IAIA (paginaDeLaIAIA), com a
          l'adaptador: allí és un grup on la IAIA no contesta;
        · (P3) per al convidat, la fila sintètica de Javi és el seu xat de
-         només lectura (filDeMostra), al mateix lloc de la cua. */
-  const gestionaSocDePoble = gestionaLEntitatPilot(identitats);
+         només lectura (filDeMostra), al mateix lloc de la cua.
+     Gauntlet 261016_1530 (Bloc 3.6.1) · Derogada la regla «qui gestiona
+     l'entitat pilot no veu la fila de Sóc de Poble»: ja no hi ha cap fila
+     sintètica de Sóc de Poble (data/xatsPerDefecte.js · ACTORS_PERMANENTS), i
+     ambXatsPerDefecte ja lleva la que arribe d'abans. El seu actor és la
+     comunitat, i qui la gestiona també la veu. L'ordre dels quatre actors el
+     posa la llista (actorsDelXat.js). */
   const quiMiraEsJavi = esLaPersonaDeContacte({ id: joId });
   const paginaDeLaIAIA = modeDades === 'remote';
   /* Onada 6 (tasca 12) · Amb la IAIA apagada, cap xat seu (senseLaIAIA): la
@@ -1374,13 +1379,12 @@ export function XatProvider({ children, config }) {
     const ids = new Set(fils.map((f) => f.id));
     const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
     const ambAjuda = ambXatsPerDefecte(extra.length ? [...fils, ...extra] : fils, { afig: false, paginaDeLaIAIA });
-    const senseSdp = gestionaSocDePoble ? senseXatPerDefecte(ambAjuda, 'socdepoble') : ambAjuda;
-    const senseJavi = quiMiraEsJavi ? senseXatPerDefecte(senseSdp, 'javi') : senseSdp;
+    const senseJavi = quiMiraEsJavi ? senseXatPerDefecte(ambAjuda, 'javi') : ambAjuda;
     const llista = filDeMostra && senseJavi.some((f) => f.perDefecte === 'javi')
       ? senseJavi.map((f) => (f.perDefecte === 'javi' ? filDeMostra : f))
       : senseJavi;
     return iaiaApagada ? senseLaIAIA(llista) : llista;
-  }, [fils, visitants, paginaDeLaIAIA, gestionaSocDePoble, quiMiraEsJavi, filDeMostra, iaiaApagada]);
+  }, [fils, visitants, paginaDeLaIAIA, quiMiraEsJavi, filDeMostra, iaiaApagada]);
   /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4: «El fil de
      xat específic també es dirà 'Gent de la Torre'») · El xat d'un poble que
      és a les fitxes (useCoreContent) es diu com la seua gent a la llista, a

@@ -36,6 +36,9 @@ import { FluxosMapa } from './mapa/FluxosMapa.jsx';
 import { AgentsAtomics } from './mapa/AgentsAtomics.jsx';
 import { ActorsMapa } from './mapa/ActorsMapa.jsx';
 import { TEXTOS_AVIS } from './mapa/grafMapa.js';
+import { useGovern } from './govern/useGovern.js';
+import { PaginaDeGovern, SeccioGovern } from './govern/GovernConsola.jsx';
+import { TITOL_SALA_MAQUINES, paginaGovern, segmentGovern } from './govern/governConsola.js';
 
 /* La Consola és un tauler de nou targetes (/consola), una ruta per pàgina
    (/consola/<id>), una per panell del pols (/consola/pols/<id>) i una per
@@ -50,7 +53,13 @@ import { TEXTOS_AVIS } from './mapa/grafMapa.js';
    la seua (XifresMas.jsx). Derogat per l'ordre del Mestre del 261004 (xat:
    cap xifra solta): l'excepció de les xifres de dins dels panells i de les
    vistes del Mapa, que conservaven la targeta compacta del Panell de Control
-   (TargetaResum) sense boina ni pàgina. */
+   (TargetaResum) sense boina ni pàgina.
+   Pla 261016_1530, Onada 0.5 (Mandat Suprem: la Consola com a quadre de
+   comandament del Mestre) · Damunt de les nou targetes, el Govern del Mestre
+   (govern/GovernConsola.jsx): quatre targetes i una pàgina per a cada una,
+   /consola/govern/<id>. La matriu del govern també es llig una sola vegada
+   per a tota la secció (useGovern). La Consola incrustada de la Wiki no la
+   llig ni la pinta. */
 
 const ICONES = Object.freeze({
   pols: Activity, explorador: Network, fluxos: Workflow, calendari: CalendarClock,
@@ -191,13 +200,17 @@ const fontsDe = (consola, mapa) => ({
  * `ara` és el rellotge de la pintada: la coberta i l'etiqueta del pols diuen
  * el mateix dels rebuts, i el tauler de /consola el comparteix amb el
  * Diagnòstic del Mas (DiagnosiConsola.jsx). Sense, el d'ara.
+ * Revisió adversarial del carril F1 (problema 10) · Amb `alertaFora`, el
+ * tauler no pinta l'alerta de vigilància: la pinta qui el munta, dalt de tot
+ * (a /consola, damunt del Govern del Mestre). Sense la prop, el DOM de sempre:
+ * la Consola incrustada de la Wiki conserva els seus píxels.
  */
-export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, ara = Date.now() }) {
+export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alertaFora = false, ara = Date.now() }) {
   const fonts = fontsDe(consola, mapa);
   const [vistes] = useState(llegixVistes);
   return (
     <>
-      <AlertaVigilancia mapa={mapa.mapa} />
+      {alertaFora ? null : <AlertaVigilancia mapa={mapa.mapa} />}
       <nav className="sdp-card-grid sdp-consola__graella" aria-label="Pàgines de la Consola" ref={cimRef}>
         {paginesConsola().map((p) => {
           const delMapa = p.id !== 'pols';
@@ -289,7 +302,7 @@ function ContingutPagina({ id, consola, mapa, locale }) {
    seua pàgina (lliçó 261004 de sdp-universal-page). No en fa la portada
    (hero): la Llei Visual del quadrat no cobrix la portada de PageFrame i
    canviaria els píxels de nou pàgines sense l'ordre del Mestre. */
-function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, privat }) {
+function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, privat }) {
   if (slugXifra !== null) {
     // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
     if (!xifra && llegint) return { title: `El Mas en xifres · ${copy.title}`, description: copy.lead };
@@ -300,6 +313,11 @@ function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, priv
   if (idPanell !== null) {
     if (!panell) return { title: `Panell no trobat · ${copy.title}`, description: 'Esta adreça no correspon a cap panell del pols.', index: false };
     return { title: `${panell.titol} · ${copy.title}`, description: entradetaPlana(panell.entradilla) };
+  }
+  // Onada 0.5 (pla 261016_1530) · Les pàgines del Govern del Mestre: el que no existix no s'indexa.
+  if (idGovern !== null) {
+    if (!paginaDeGovern) return { title: `Pàgina no trobada · ${copy.title}`, description: 'Esta adreça no correspon a cap pàgina del govern del Mestre.', index: false };
+    return { title: `${paginaDeGovern.title} · ${copy.title}`, description: paginaDeGovern.lead };
   }
   if (pagina) return { title: `${pagina.title} · ${copy.title}`, description: pagina.lead, image: imatgeDePagina(pagina.id).imatge || undefined };
   return { title: copy.title, description: copy.lead };
@@ -314,11 +332,16 @@ export default function ConsolaSection() {
   const comodi = params['*'];
   const slugXifra = segmentXifra(comodi);
   const idPanell = slugXifra === null ? segmentPols(comodi) : null;
-  const id = slugXifra === null && idPanell === null ? segmentPagina(comodi) : '';
-  const pagina = slugXifra === null && idPanell === null && id ? paginaConsola(id) : null;
+  // Onada 0.5 (pla 261016_1530) · /consola/govern/<id>, la pàgina d'un mòdul del Govern del Mestre.
+  const idGovern = slugXifra === null && idPanell === null ? segmentGovern(comodi) : null;
+  const sensePropia = slugXifra === null && idPanell === null && idGovern === null;
+  const id = sensePropia ? segmentPagina(comodi) : '';
+  const pagina = sensePropia && id ? paginaConsola(id) : null;
+  const paginaDeGovern = idGovern === null ? null : paginaGovern(idGovern);
   const copy = copyConsola();
   const consola = useConsola();
   const mapa = useMapa();
+  const govern = useGovern();
   const [privat, setPrivatEstat] = useState(() => llegixPrivacitat());
   const setPrivat = useCallback((actiu) => { setPrivatEstat(actiu); desaPrivacitat(actiu); }, []);
   const cim = useRef(null);
@@ -327,11 +350,11 @@ export default function ConsolaSection() {
   const panell = idPanell === null ? null : panellPols(idPanell);
 
   const llegint = mapa.estat === 'loading' || consola.estat === 'loading';
-  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, privat }));
+  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, privat }));
 
   /* /consola/* és un sol element muntat: canviar de pàgina no desmunta res i
      el contenidor de scroll de l'aplicació es quedava on era. */
-  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell]);
+  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern]);
 
   /* Obrir una pàgina amb la seua font carregada la marca com a vista: el
      tauler només dirà «Canvis nous» si el resum canvia després. */
@@ -357,6 +380,10 @@ export default function ConsolaSection() {
     return <PaginaPanellPols id={idPanell} consola={consola} locale={locale} privat={privat} peu={peu('pols')} />;
   }
 
+  if (idGovern !== null) {
+    return <PaginaDeGovern id={idGovern} govern={govern} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />;
+  }
+
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
   if (!pagina) {
@@ -377,10 +404,22 @@ export default function ConsolaSection() {
          diagnòstic sencer en un <pre>, amb les mateixes fonts i el mateix rellotge que les
          targetes. Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
          front F): l'Índex de la Consola com a últim bloc del tauler (Onada 11). Tampoc a la
-         Consola incrustada. */
+         Consola incrustada.
+         Pla 261016_1530, Onada 0.5 (Mandat Suprem) · Damunt de les nou targetes, el Govern del
+         Mestre (SeccioGovern): el seu H2 i quatre targetes. Fora de ConsolaTauler: la Consola
+         incrustada de la Wiki conserva els seus píxels.
+         Revisió adversarial del carril F1 (problemes 2, 9 i 10) · La sala de màquines porta el
+         seu H2 (TITOL_SALA_MAQUINES), també fora de ConsolaTauler: l'Índex de secció i la
+         navegació per encapçalaments ja no posen les nou targetes davall del Govern del Mestre.
+         I l'alerta de vigilància continua al cim del tauler, damunt del govern (alertaFora).
+         Derogat EN PART: el separador (Divisor) entre el govern i la sala de màquines, i
+         l'alerta just davant de les nou targetes. */
       <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}>
         <PrivacitatConsola.Provider value={privat}>
-          <ConsolaTauler consola={consola} mapa={mapa} cimRef={cim} ambImatges ara={ara} />
+          <AlertaVigilancia mapa={mapa.mapa} />
+          <SeccioGovern govern={govern} ara={ara} />
+          <h2>{TITOL_SALA_MAQUINES}</h2>
+          <ConsolaTauler consola={consola} mapa={mapa} cimRef={cim} ambImatges alertaFora ara={ara} />
           <IndexConsola mapa={mapa.mapa} dades={consola.dades} locale={locale} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>

@@ -54,6 +54,7 @@ import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
+import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -84,14 +85,21 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
        T5 · la pastilla i la insígnia, del model de l'acte (el mateix
        del Calendari i del filtre ?date=).
        T6 (261004) · la pàgina de qui signa l'acte, si se sap; la reserva i
-       el sistema els resol EventCard (components/ no llig navigation.js). */
+       el sistema els resol EventCard (components/ no llig navigation.js).
+       Gauntlet 261016 (Bloc -1; ordre del Mestre: «sempre la seua foto») ·
+       El nom i l'avatar de la persona pilot, ja resolts (signaturaDeQuiSigna):
+       EventCard no llig la llavor. Per a qualsevol altre autor, undefined, i
+       l'acte es pinta com sempre. */
     const acte = objecteDe(item, 'events');
+    const quiSignaLActe = signaturaDeQuiSigna(item);
     return (
       <EventCard
         item={item}
         esdeveniment={esdeveniment}
         objecte={acte}
         authorHref={rutaDePerfilDAutor(item) || undefined}
+        authorName={quiSignaLActe.nom}
+        authorAvatar={quiSignaLActe.avatar}
         onConnect={() => navigate(rutaConnectarObjecte(acte))}
       />
     );
@@ -125,6 +133,16 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
      quan el producte no porta image_url ni image, i el Mur el pintava davant
      de la foto. Sense cap foto pròpia, la reserva de sempre. */
   const imatge = item.image_url || item.image || item.images?.[0] || item.imageSrc || '';
+  /* Gauntlet 261016 (Bloc -1; ordre del Mestre: «sempre la seua foto
+     personal de perfil», mai el logotip verd) · Qui signa, amb el resolutor
+     únic (signaturaDeQuiSigna): la persona pilot porta SEMPRE el seu nom i la
+     seua foto, també sense avatar (abans queia a DEFAULT_AUTHOR, el quadrat
+     verd) o amb el logotip a avatar_url. Qualsevol altre autor, els valors i
+     les reserves de sempre. */
+  const signatura = signaturaDeQuiSigna(item, {
+    nom: item.author_name || item.seller || "Sóc de Poble",
+    avatar: item.author_avatar || item.avatar_url || DEFAULT_AUTHOR.avatarUrl
+  });
 
   return (
     <UniversalCard
@@ -139,7 +157,7 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       imageUrl={fontImatgePropia(resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge))}
       imageAlt={item.imageAlt || item.title || ''}
       imatgePrivada
-      author={item.author_name || item.seller || "Sóc de Poble"}
+      author={signatura.nom}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, sinó a la pàgina de qui signa. */
       authorHref={rutaDeLaBoinaDelMur(item)}
@@ -150,7 +168,7 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
          avatar de Google) no cau al logotip de Sóc de Poble, que signaria la
          publicació d'un veí amb la marca: null i la silueta de sempre.
          Onada 8 (261009) · Sense cap avatar, el de Sóc de Poble (el PNG). */
-      avatarUrl={fontImatgePropia(resolveAsset(item.author_avatar || item.avatar_url || DEFAULT_AUTHOR.avatarUrl))}
+      avatarUrl={fontImatgePropia(resolveAsset(signatura.avatar))}
       location={item.author_location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}

@@ -231,3 +231,78 @@ describe('T3a · llegixMetadadesImatge (File o Blob)', () => {
     expect(await llegixMetadadesImatge(png)).toEqual(senseDades());
   });
 });
+
+/* Onada 0.3 (Gauntlet 261016) · El visor de l'Arxiu visual diu la càmera,
+   l'autor i els drets que declara la foto: Make, Model, Artist i Copyright de
+   l'IFD0, només amb l'opció ambCamera. Sense l'opció, la sortida de sempre. */
+const ascii = (tag, valors) => ({ tag, tipus: TIPUS.ASCII, valors });
+const CAMERA = [
+  orientacio(6),
+  ascii(0x010f, 'Canon'),
+  ascii(0x0110, 'Canon EOS 5D Mark IV'),
+  ascii(0x013b, 'Pepa Garcia'),
+  ascii(0x8298, '(c) Pepa Garcia, CC BY 4.0')
+];
+const AMB_CAMERA = { ifd0: CAMERA, exif: COMPLET.exif, gps: COMPLET.gps };
+
+describe('Onada 0.3 · ambCamera: càmera, autor i drets', () => {
+  test('sense l’opció, la sortida és la de sempre: les tres claus de senseDades(), encara que el fitxer porte càmera', () => {
+    for (const ordre of ['II', 'MM']) {
+      const r = llegixExif(jpegAmbExif({ ordre, ...AMB_CAMERA }));
+      expect(r).toEqual(ESPERAT);
+      expect(Object.keys(r).sort()).toEqual(Object.keys(senseDades()).sort());
+    }
+  });
+
+  test('amb l’opció, a més, la marca i el model, l’autor i els drets, en II i en MM', () => {
+    for (const ordre of ['II', 'MM']) {
+      expect(llegixExif(jpegAmbExif({ ordre, ...AMB_CAMERA }), { ambCamera: true })).toEqual({
+        ...ESPERAT,
+        camera: { marca: 'Canon', model: 'Canon EOS 5D Mark IV' },
+        autor: 'Pepa Garcia',
+        copyright: '(c) Pepa Garcia, CC BY 4.0'
+      });
+    }
+  });
+
+  test('es combina amb les altres opcions: sense GPS ni data, la càmera continua', () => {
+    const r = llegixExif(jpegAmbExif(AMB_CAMERA), { ambCamera: true, ambGps: false, ambData: false });
+    expect(r).toEqual({ orientacio: 6, gps: null, dataCaptura: null, camera: { marca: 'Canon', model: 'Canon EOS 5D Mark IV' }, autor: 'Pepa Garcia', copyright: '(c) Pepa Garcia, CC BY 4.0' });
+  });
+
+  test('els espais de farciment fora; un text buit és null; només el model fa càmera', () => {
+    const r = llegixExif(jpegAmbExif({ ifd0: [ascii(0x0110, 'DSC-RX100   '), ascii(0x013b, '    '), ascii(0x8298, '')] }), { ambCamera: true });
+    expect(r.camera).toEqual({ marca: null, model: 'DSC-RX100' });
+    expect(r.autor).toBeNull();
+    expect(r.copyright).toBeNull();
+  });
+
+  test('un text que no és ASCII imprimible no es torna (mai s’inventa); el Copyright amb fotògraf i editor dona el primer', () => {
+    const r = llegixExif(jpegAmbExif({ ifd0: [ascii(0x013b, 'Pepa Garcés'), ascii(0x8298, 'Fotògraf\0Editor')] }), { ambCamera: true });
+    expect(r.autor).toBeNull();
+    expect(r.copyright).toBeNull();
+    const dos = llegixExif(jpegAmbExif({ ifd0: [ascii(0x8298, 'Pepa\0Editorial')] }), { ambCamera: true });
+    expect(dos.copyright).toBe('Pepa');
+  });
+
+  test('un text de més de 256 caràcters no es llig; de 255, sí', () => {
+    const llarg = llegixExif(jpegAmbExif({ ifd0: [ascii(0x8298, 'x'.repeat(256))] }), { ambCamera: true });
+    expect(llarg.copyright).toBeNull();
+    const just = llegixExif(jpegAmbExif({ ifd0: [ascii(0x8298, 'x'.repeat(255))] }), { ambCamera: true });
+    expect(just.copyright).toBe('x'.repeat(255));
+  });
+
+  test('sense EXIF, o d’una cosa que no és un buffer: les sis claus, a null', () => {
+    const buit = { ...senseDades(), camera: null, autor: null, copyright: null };
+    expect(llegixExif(concatena(SOI, APP0_JFIF, IMATGE), { ambCamera: true })).toEqual(buit);
+    expect(llegixExif(null, { ambCamera: true })).toEqual(buit);
+    expect(llegixExif(jpegAmbExif({ ordre: 'XX', ...AMB_CAMERA }), { ambCamera: true })).toEqual(buit);
+  });
+
+  test('llegixMetadadesImatge passa l’opció; sense Blob, les sis claus a null', async () => {
+    const fitxer = new File([jpegAmbExif(AMB_CAMERA)], 'foto.jpg', { type: 'image/jpeg' });
+    expect((await llegixMetadadesImatge(fitxer, { ambCamera: true })).camera).toEqual({ marca: 'Canon', model: 'Canon EOS 5D Mark IV' });
+    expect(await llegixMetadadesImatge(fitxer)).toEqual(ESPERAT);
+    expect(await llegixMetadadesImatge('foto.jpg', { ambCamera: true })).toEqual({ ...senseDades(), camera: null, autor: null, copyright: null });
+  });
+});

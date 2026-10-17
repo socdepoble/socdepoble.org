@@ -10,7 +10,7 @@
  *   · la COMUNITAT «Sóc de Poble», que naix de la Pàgina Universal de
  *     l'entitat pilot (el camp `subjecte` la nomena), amb tres fills: el canal
  *     «Avisos», on només escriu l'entitat, el grup «General» i el grup «Beta
- *     testers» (FIL_BETA_TESTERS; Auditoria 261007 (B): la capçalera en
+ *     Testers» (FIL_BETA_TESTERS; Auditoria 261007 (B): la capçalera en
  *     comptava dos). La comunitat és un contenidor sense missatges propis
  *     (ultimSeq 0); els fills la porten a `comunitatId`.
  * Tots els fils porten `comunitatId` i `subjecte` (null si no en tenen), com
@@ -173,7 +173,9 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
     }),
     fil(FIL_AVISOS, 'canal', a(2, 10, 0), { titol: 'Avisos', orgId: ENTITAT, comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),
     fil(FIL_GENERAL, 'grup', a(2, 10, 0), { titol: 'General', comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),
-    fil(FIL_BETA_TESTERS, 'grup', a(2, 10, 0), { titol: 'Beta testers', comunitatId: FIL_COMUNITAT, subjecte: subjecte() })
+    /* Gauntlet 261016_1530 (prompt, Bloc 3.6.1) · El nom és el literal de
+       l'ordre del Mestre, «Beta Testers», com la benvinguda del canal. */
+    fil(FIL_BETA_TESTERS, 'grup', a(2, 10, 0), { titol: 'Beta Testers', comunitatId: FIL_COMUNITAT, subjecte: subjecte() })
   ];
 
   const participant = (filId, usuariId, llegitFinsSeq, extra = {}) => ({

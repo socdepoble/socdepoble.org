@@ -29,7 +29,11 @@ vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 const ara = '2026-10-09T01:00:00Z';
 const PAGINA_IAIA = { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" };
 /* La llista del servidor: una persona, el xat públic de /iaia (vestit), un
-   directe amb la IAIA i la fila sintètica de Sóc de Poble a la cua. */
+   directe amb la IAIA i la fila sintètica de Sóc de Poble a la cua.
+   Gauntlet 261016_1530 (Bloc 3.6.1) · Ja cap fila sintètica de Sóc de
+   Poble: a la cua només hi ha Javi (i la IAIA quan no té xat). Les llistes
+   d'estes proves s'actualitzen a posta; el nivell d'IA continua sense tocar
+   res més que la IAIA. */
 const fils = () => ambXatsPerDefecte([
   { id: 'f-pepa', tipus: 'directe', titol: 'Pepa', altres: [{ id: 'P', nom: 'Pepa', tipus: 'persona' }], ultimSeq: 2, llegitFinsSeq: 0, noLlegits: 2, ultimAutorId: 'P', ultimAl: ara },
   { id: 'p-iaia', tipus: 'grup', titol: 'IAIA MarIA', subjecte: PAGINA_IAIA, ultimSeq: 3, llegitFinsSeq: 0, noLlegits: 3, ultimAutorId: 'X', ultimAl: ara },
@@ -59,7 +63,7 @@ afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); });
 test('amb el nivell 1 (de sèrie) la IAIA hi és: llista, no llegits i contactes freqüents', async () => {
   munta();
   await waitFor(() => expect(value.status).toBe('ready'));
-  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'socdepoble', 'javi']);
+  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'javi']);
   expect(value.iaiaApagada).toBe(false);
   expect(value.totalNoLlegits).toBe(6);
   expect(value.contactesFrequents.map((c) => c.usuari_id)).toEqual(['P', IAIA_ID]);
@@ -71,14 +75,14 @@ test('amb el nivell 0 la IAIA desapareix de tot el que es veu, i torna en encend
   munta();
   await waitFor(() => expect(value.status).toBe('ready'));
   expect(value.iaiaApagada).toBe(true);
-  expect(ids()).toEqual(['f-pepa', 'socdepoble', 'javi']);
+  expect(ids()).toEqual(['f-pepa', 'javi']);
   expect(value.totalNoLlegits).toBe(2);
   expect(value.contactesFrequents.map((c) => c.usuari_id)).toEqual(['P']);
   expect([value.esFilAmagat('p-iaia'), value.esFilAmagat('d-iaia'), value.esFilAmagat('f-pepa'), value.esFilAmagat(null)]).toEqual([true, true, false, false]);
 
   canviaNivell(2);
   expect(value.iaiaApagada).toBe(false);
-  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'socdepoble', 'javi']);
+  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'javi']);
   expect(value.totalNoLlegits).toBe(6);
   /* Cap crida nova al servidor: les dades eren les mateixes. */
   expect(mock.loadFils).toHaveBeenCalledTimes(1);
@@ -88,9 +92,9 @@ test('la fila per defecte de la IAIA (remot, encara sense xat) també se’n va'
   mock.loadFils.mockResolvedValue(ambXatsPerDefecte([]));
   munta();
   await waitFor(() => expect(value.status).toBe('ready'));
-  expect(ids()).toEqual(['socdepoble', 'javi', 'iaia']);
+  expect(ids()).toEqual(['javi', 'iaia']);
   canviaNivell(0);
-  expect(ids()).toEqual(['socdepoble', 'javi']);
+  expect(ids()).toEqual(['javi']);
 });
 
 test('amb la IAIA apagada, un missatge nou al seu xat no avisa; el d’una persona, sí', async () => {

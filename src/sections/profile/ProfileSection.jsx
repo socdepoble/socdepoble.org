@@ -8,6 +8,15 @@ import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } f
    261016 (Bloc 3) · La font única viu a la capa de dades (agentsSeed.js), on
    un personatge ANIMAL és una IA; abans n'hi havia una còpia ací. */
 import { tipusDAgent } from '../../data/agentsSeed.js';
+import { ETIQUETA_IA } from './fitxaDePerfil.js';
+
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL i els
+   agents són IA «no com a humans», «preservant la seua fitxa») · L'etiqueta
+   de la targeta del directori: per a una IA (tipusDAgent 'ia': AI i ANIMAL),
+   la marca d'IA, ETIQUETA_IA, la de la seua fitxa pública; mai l'etiqueta
+   humana del catàleg (Súper Ratolí hi porta 'GENT'). La fitxa del catàleg no
+   es toca: només canvia el que pinta la targeta. La resta, el tag de sempre. */
+const etiquetaDeLaTargeta = (agent) => (tipusDAgent(agent) === 'ia' ? ETIQUETA_IA : agent?.tag);
 
 /* Gauntlet 261016 (Bloc 3; ordre del Mestre: «mostrar clarament el poble de
    cada persona a la targeta del directori») · El poble va a la boina de la
@@ -65,7 +74,7 @@ export default function ProfileSection({ agents = [] }) {
             title={agent.name}
             subtitle={agent.role}
             excerpt={agent.short_bio}
-            eyebrow={agent.tag}
+            eyebrow={etiquetaDeLaTargeta(agent)}
             meta={[agent.type]}
             buttonLabel={t('common.readMore', 'Llegir més')}
             onConnect={connecta(agent)}

@@ -34,6 +34,10 @@
  *     resum que diu què s'hi ha triat (mesOpcionsDe);
  *   · el pas 2 recollit diu en una línia què s'hi ha declarat (titolDelLlegat),
  *     i la «data de pas» és «el primer dia que factures ací».
+ * Gauntlet 261016, Onada 3 (el llibre net a l'estil Holded): cada fila del
+ * llibre porta la base, l'IVA, la retenció i el període, i resumDelLlibre en
+ * filtra un període amb els seus totals (les anul·lades fora i les
+ * rectificatives amb el seu signe).
  * Sense DOM, React ni xarxa.
  */
 import { ESQUEMA_CONFIG_EMPRESA, emissorDe, llegixConfigEmpresa, validaConfigEmpresa } from '../../facturacio/configEmpresa.js';
@@ -558,23 +562,144 @@ export const euros = (centims) => formatImport(centims);
 
 /* ── El llibre ─────────────────────────────────────────────────────────── */
 
+/* Un import en cèntims del registre, o 0 si no hi és (un registre sense el camp). */
+const centims = (valor) => (Number.isSafeInteger(valor) ? valor : 0);
+
+/* Els imports d'una alta, en cèntims crus: la base, l'IVA, la retenció d'IRPF i el total del registre. */
+const importsDe = (r) => ({
+  base: centims(r.factura?.baseTotal),
+  quota: centims(r.quotaTotal ?? r.factura?.quotaTotal),
+  retencio: centims(r.factura?.retencio?.import),
+  total: centims(r.importTotal)
+});
+const ZERO = Object.freeze({ base: 0, quota: 0, retencio: 0, total: 0 });
+
+/* Les factures que una altra substituïx sencera: els tiquets d'una F3 i les rectificades d'una
+   rectificativa per substitució (S). La rectificativa per diferències (I) no en substituïx cap: ja
+   porta només el que canvia, amb el seu signe. */
+function substituidesDe(r) {
+  const factura = r.factura ?? {};
+  if (r.tipusFactura === 'F3') return Array.isArray(factura.substituides) ? factura.substituides : [];
+  if (/^R[1-5]$/.test(r.tipusFactura ?? '') && factura.tipusRectificativa === 'S') {
+    return Array.isArray(factura.rectificades) ? factura.rectificades : [];
+  }
+  return [];
+}
+
+/* El trimestre (1-4) i l'any d'una data «aaaa-mm-dd»; null si no ho és. */
+function periodeDe(iso) {
+  const r = typeof iso === 'string' ? /^(\d{4})-(\d{2})-\d{2}$/.exec(iso) : null;
+  return r ? { any: Number(r[1]), trimestre: Math.ceil(Number(r[2]) / 3) } : { any: null, trimestre: null };
+}
+
 /**
  * Les altes d'una cadena, de la més nova a la més antiga, amb el seu estat.
+ * Onada 3 (Gauntlet 261016, el llibre net a l'estil Holded): cada fila porta
+ * també l'any i el trimestre de la data d'expedició, el NIF del client i els
+ * imports en cèntims crus (base, quota, retenció i el total del registre), i
+ * «efecte»: el que suma al període. Una anul·lada no suma res. Una
+ * rectificativa per diferències suma el que porta, amb el seu signe. Una
+ * factura que en substituïx d'altres (la F3, que substituïx tiquets, i la
+ * rectificativa per substitució) suma la diferència: el seu import menys el
+ * de les que substituïx que encara són vives al llibre. Així la mateixa venda
+ * no es compta dues vegades.
  * @param {ReadonlyArray<object>} registres la cadena d'un emissor, en ordre
- * @returns {{ registre: object, numSerie: string, data: string, tipus: string, client: string, total: string, anulada: boolean }[]}
+ * @returns {{ registre: object, numSerie: string, data: string, tipus: string, client: string, total: string, anulada: boolean,
+ *   tipusFactura: string, any: number|null, trimestre: number|null, nif: string, base: number, quota: number, retencio: number,
+ *   importTotal: number, efecte: { base: number, quota: number, retencio: number, total: number }, substituix: boolean }[]}
  */
 export function filesDelLlibre(registres) {
   const llista = Array.isArray(registres) ? registres : [];
   const anulades = new Set(llista.filter((r) => r.tipusRegistre === 'anulacio').map(clauDeFactura));
-  return llista.filter((r) => r.tipusRegistre === 'alta').reverse().map((r) => ({
-    registre: r,
-    numSerie: r.numSerie,
-    data: dataCurta(r.dataExpedicio),
-    tipus: NOM_TIPUS[r.tipusFactura] ?? r.tipusFactura,
-    client: r.factura?.destinatari?.nom ?? 'Sense client',
-    total: euros(r.importTotal),
-    anulada: anulades.has(clauDeFactura(r))
-  }));
+  const altes = llista.filter((r) => r.tipusRegistre === 'alta');
+  const vives = new Map(altes.filter((r) => !anulades.has(clauDeFactura(r))).map((r) => [clauDeFactura(r), r]));
+  return [...altes].reverse().map((r) => {
+    const anulada = anulades.has(clauDeFactura(r));
+    const propis = importsDe(r);
+    const substituides = [...new Set(substituidesDe(r).map(clauDeFactura))].map((clau) => vives.get(clau)).filter(Boolean).map(importsDe);
+    const resta = (camp) => propis[camp] - substituides.reduce((suma, s) => suma + s[camp], 0);
+    return {
+      registre: r,
+      numSerie: r.numSerie,
+      data: dataCurta(r.dataExpedicio),
+      tipus: NOM_TIPUS[r.tipusFactura] ?? r.tipusFactura,
+      client: r.factura?.destinatari?.nom ?? 'Sense client',
+      total: euros(r.importTotal),
+      anulada,
+      tipusFactura: r.tipusFactura,
+      ...periodeDe(r.dataExpedicio),
+      nif: nifNet(r.factura?.destinatari?.nif),
+      base: propis.base,
+      quota: propis.quota,
+      retencio: propis.retencio,
+      importTotal: propis.total,
+      efecte: anulada ? ZERO : { base: resta('base'), quota: resta('quota'), retencio: resta('retencio'), total: resta('total') },
+      substituix: substituides.length > 0
+    };
+  });
+}
+
+/** Els períodes del llibre (Onada 3, 261016): els quatre trimestres i l'any sencer. */
+export const OPCIONS_PERIODE = Object.freeze([
+  Object.freeze({ valor: '1', text: '1r trimestre' }),
+  Object.freeze({ valor: '2', text: '2n trimestre' }),
+  Object.freeze({ valor: '3', text: '3r trimestre' }),
+  Object.freeze({ valor: '4', text: '4t trimestre' }),
+  Object.freeze({ valor: 'any', text: 'Tot l’any' })
+]);
+
+/** Quines factures es veuen: totes, les vives (l'estat «Emesa»), les anul·lades o les rectificatives (R1-R5). */
+export const OPCIONS_ESTAT_LLIBRE = Object.freeze([
+  Object.freeze({ valor: 'totes', text: 'Totes' }),
+  Object.freeze({ valor: 'emeses', text: 'Emeses' }),
+  Object.freeze({ valor: 'anulades', text: 'Anul·lades' }),
+  Object.freeze({ valor: 'rectificatives', text: 'Rectificatives' })
+]);
+
+const FILTRES_ESTAT = Object.freeze({
+  totes: () => true,
+  emeses: (f) => !f.anulada,
+  anulades: (f) => f.anulada,
+  rectificatives: (f) => /^R[1-5]$/.test(f.tipusFactura ?? '')
+});
+
+/* Per a cercar: sense majúscules ni accents (els signes combinants, \p{M}, que deixa la descomposició NFD). */
+const perCercar = (text) => String(text ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+/**
+ * Els anys que té el llibre, del més nou al més antic.
+ * @param {ReadonlyArray<object>} files les de filesDelLlibre
+ * @returns {number[]}
+ */
+export function anysDelLlibre(files) {
+  return [...new Set((Array.isArray(files) ? files : []).map((f) => f.any).filter(Number.isSafeInteger))].sort((a, b) => b - a);
+}
+
+/**
+ * Les files d'un període amb els seus totals (Onada 3, 261016). Pur.
+ * Filtra per any, trimestre, estat i un text (número, client o NIF, sense
+ * majúscules ni accents), i suma l'«efecte» de les que no estan anul·lades.
+ * @param {ReadonlyArray<object>} files les de filesDelLlibre
+ * @param {{ any?: number|null, trimestre?: number|null, estat?: string, text?: string }} [filtre]
+ *   any i trimestre null: tots; estat: un dels valors d'OPCIONS_ESTAT_LLIBRE (per defecte, 'totes')
+ * @returns {{ files: object[], totals: { base: number, quota: number, retencio: number, total: number },
+ *   anulades: number, ambSubstitucions: boolean }}
+ */
+export function resumDelLlibre(files, { any = null, trimestre = null, estat = 'totes', text = '' } = {}) {
+  const cerca = perCercar(text).trim();
+  const deEstat = FILTRES_ESTAT[estat] ?? FILTRES_ESTAT.totes;
+  const triades = (Array.isArray(files) ? files : []).filter((f) => (any === null || f.any === any)
+    && (trimestre === null || f.trimestre === trimestre)
+    && deEstat(f)
+    && (!cerca || [f.numSerie, f.client, f.nif].some((camp) => perCercar(camp).includes(cerca))));
+  const sumen = triades.filter((f) => !f.anulada);
+  const suma = (camp) => sumen.reduce((total, f) => total + f.efecte[camp], 0);
+  return {
+    files: triades,
+    totals: { base: suma('base'), quota: suma('quota'), retencio: suma('retencio'), total: suma('total') },
+    anulades: triades.length - sumen.length,
+    ambSubstitucions: sumen.some((f) => f.substituix)
+  };
 }
 
 /**

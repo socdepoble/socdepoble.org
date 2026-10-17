@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, obriFilDePagina, subscribeToXat, unsubscribeFromXat } from './xat.js';
-import { reiniciaLocalXat } from '../localXat.js';
+import { esperaLaIAIA, reiniciaLocalXat } from '../localXat.js';
 import { AGENTS_MAP } from '../agentsSeed.js';
 import { PERSONA_PILOT } from '../identitatsSeed.js';
 import { XAT_SEED_IDS, XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from '../xatSeed.js';
@@ -267,33 +267,40 @@ describe('xats d’ajuda per defecte en remot', () => {
   const UUID_ENTITAT = '00000000-0000-4000-8000-0000000000aa';
   /* Gauntlet 261016 (Bloc 3.6) · Ordre del Mestre: quatre converses sempre.
      Les tres directes (Sóc de Poble, Javi Llinares i la IAIA) van a la cua;
-     abans n'eren dues. S'actualitza a posta: la regla vella era «dues». */
-  it('sense cap conversa, les tres files a la cua: Sóc de Poble amb el logo quadrat, Javi amb la seua foto', async () => {
+     abans n'eren dues. Gauntlet 261016_1530 (Bloc 3.6.1, ordre vigent) ·
+     «PROHIBIT duplicar Sóc de Poble»: fora la fila directa sintètica de
+     l'entitat. A la cua, Javi i la IAIA; el primer actor és la comunitat, que
+     posa la llista (sections/xat/actorsDelXat.js). S'actualitza a posta. */
+  it('sense cap conversa, les dues files a la cua: Javi amb la seua foto i la IAIA; cap de Sóc de Poble', async () => {
     query.data = [];
     const fils = await loadFils(REMOT);
     expect(fils.map(f => [f.id, f.perDefecte, f.imatgeUrl])).toEqual([
-      ['sdp-per-defecte:socdepoble', 'socdepoble', LOGO_QUADRAT],
       ['sdp-per-defecte:javi', 'javi', '/assets/fotos/javi-llinares-perfil-1200px.jpg'],
       ['sdp-per-defecte:iaia', 'iaia', AGENTS_MAP.IAIA.avatar_url]
     ]);
+    expect(fils.some(f => f.imatgeUrl === LOGO_QUADRAT)).toBe(false);
     expect(client.rpc).toHaveBeenCalledTimes(1);
   });
-  it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), només Javi i la IAIA', async () => {
+  it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), el directe i, a la cua, Javi i la IAIA', async () => {
     query.data = [{ id: 'f-real', tipus: 'directe', titol: null, org_id: UUID_ENTITAT, entitat_nom: 'Sóc de Poble', com_entitat: false,
       altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }], ultim_seq: 2 }];
     expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-real', 'javi', 'iaia']);
   });
-  it('la comunitat de l’entitat (amb subjecte) no és el xat privat: Sóc de Poble es queda', async () => {
+  it('la comunitat de l’entitat (amb subjecte) arriba tal qual, i cap fila sintètica de Sóc de Poble s’hi suma', async () => {
     query.data = [{ id: 'f-av', tipus: 'canal', org_id: UUID_ENTITAT, subjecte_tipus: 'entitat', subjecte_id: UUID_ENTITAT,
       altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }] }];
-    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-av', 'socdepoble', 'javi', 'iaia']);
+    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-av', 'javi', 'iaia']);
   });
   /* Gauntlet 261016 (Bloc 3.6, també la IAIA a localhost) · Derogat «en seed,
      cap fila sintètica»: la llavor rep les que li falten (Sóc de Poble i Javi;
-     la IAIA ja hi té el seu fil 'iaia'), sense tocar Supabase. */
-  it('en seed, les files que falten a la llavor: Sóc de Poble i Javi, no la IAIA', async () => {
+     la IAIA ja hi té el seu fil 'iaia'), sense tocar Supabase.
+     Gauntlet 261016_1530 (Bloc 3.6.1) · Era el duplicat visible de l'MCR (la
+     comunitat de la llavor més el directe sintètic): ara només Javi, i la
+     comunitat «Sóc de Poble» de la llavor és l'única. */
+  it('en seed, només la fila que falta a la llavor (Javi): ni Sóc de Poble, que ja hi és com a comunitat, ni la IAIA', async () => {
     const fils = await loadFils(SEED);
-    expect(fils.filter(f => f.perDefecte).map(f => f.perDefecte)).toEqual(['socdepoble', 'javi']);
+    expect(fils.filter(f => f.perDefecte).map(f => f.perDefecte)).toEqual(['javi']);
+    expect(fils.filter(f => f.titol === 'Sóc de Poble').map(f => f.tipus)).toEqual(['comunitat']);
     expect(mock.getClient).not.toHaveBeenCalled();
   });
   it('sense poble, cap llista ni cap fila sintètica', async () => {
@@ -507,7 +514,7 @@ describe('mode seed (localXat)', () => {
       .toEqual([expect.objectContaining({ usuariId: XAT_SEED_IDS.iaia, esIA: true, text: expect.stringMatching(/^Hola! Sóc la IAIA MarIA/) })]);
   });
 
-  it('T63.1 · la comunitat «Sóc de Poble» naix de la Pàgina Universal de l’entitat i porta Avisos, General i Beta testers', () => {
+  it('T63.1 · la comunitat «Sóc de Poble» naix de la Pàgina Universal de l’entitat i porta Avisos, General i Beta Testers', () => {
     const llavor = construeixLlavorXat('jo-proves', Date.UTC(2026, 8, 28, 12, 0));
     const fil = (id) => llavor.fils.find(f => f.id === id);
     /* Contracte del Xat §1: tot fil porta comunitatId i subjecte (null si no en té). */
@@ -523,8 +530,10 @@ describe('mode seed (localXat)', () => {
     expect(fil(XAT_SEED_IDS.filGeneral)).toMatchObject({
       tipus: 'grup', titol: 'General', orgId: null, comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 2
     });
+    /* Gauntlet 261016_1530 (Bloc 3.6.1) · El literal de l'ordre del Mestre,
+       «Beta Testers» (abans «Beta testers»): s'actualitza a posta. */
     expect(fil(XAT_SEED_IDS.filBetaTesters)).toMatchObject({
-      tipus: 'grup', titol: 'Beta testers', orgId: null, comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 2
+      tipus: 'grup', titol: 'Beta Testers', orgId: null, comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 2
     });
     /* Cada fil té la seua còpia del subjecte: tocar-ne una no en canvia cap altra. */
     expect(fil(XAT_SEED_IDS.filAvisos).subjecte).not.toBe(fil(XAT_SEED_IDS.filGeneral).subjecte);
@@ -553,10 +562,12 @@ describe('mode seed (localXat)', () => {
 
   it('serveix les cinc converses de la llavor sense tocar Supabase, amb dos avisos per llegir', async () => {
     /* Gauntlet 261016 (Bloc 3.6) · Les files sintètiques de la cua (Sóc de
-       Poble i Javi) no són de la llavor: les prova «xats d’ajuda per defecte». */
+       Poble i Javi) no són de la llavor: les prova «xats d’ajuda per defecte».
+       Gauntlet 261016_1530 (Bloc 3.6.1) · Només la de Javi: la de Sóc de
+       Poble s'ha retirat (la llavor ja en porta la comunitat). */
     const totes = await loadFils(SEED);
     const fils = totes.filter(f => !f.perDefecte);
-    expect(totes.length - fils.length).toBe(2);
+    expect(totes.length - fils.length).toBe(1);
     expect(mock.getClient).not.toHaveBeenCalled();
     expect(fils).toHaveLength(5);
     expect(fils.map(f => f.tipus).sort()).toEqual(TIPUS_DE_LA_LLAVOR);
@@ -596,16 +607,31 @@ describe('mode seed (localXat)', () => {
        manera que la prova passaria encara que la baixa no fera res. */
     const meu = await enviaMissatge(XAT_SEED_IDS.filIaia, { id: 'bon-dia-iaia', text: 'Bon dia, IAIA' }, SEED);
     expect(meu).toMatchObject({ usuariId: 'A', esIA: false, seq: 2 });
+    /* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · La resposta és
+       asíncrona (primer mira la Wiki; una salutació no hi busca res): es
+       demana quan la IAIA ha acabat. L'avís continua sent un de sol, amb el
+       seq de la resposta. */
+    await esperaLaIAIA();
     const missatges = await loadMissatges(XAT_SEED_IDS.filIaia, SEED);
     expect(missatges.map(m => m.seq)).toEqual([1, 2, 3]);
     expect(missatges[2]).toMatchObject({ usuariId: XAT_SEED_IDS.iaia, autorNom: 'IAIA MarIA', esIA: true });
     expect(missatges[2].text).toMatch(/^Ara estic en proves/);
     await Promise.resolve();
     expect(callback).toHaveBeenCalledWith(null, { tipus: 'nous', filId: XAT_SEED_IDS.filIaia, seq: 3 });
+    expect(callback).toHaveBeenCalledTimes(1);
     await unsubscribeFromXat(subscription);
     await enviaMissatge(XAT_SEED_IDS.filIaia, { id: 'segon-a-la-iaia', text: 'Segon' }, SEED);
+    await esperaLaIAIA();
     await Promise.resolve();
     expect(callback).toHaveBeenCalledTimes(1);
+  });
+  it('Gauntlet 261016_1530 (F25) · en remot el client no respon per la IAIA: només xat_envia, cap resposta local', async () => {
+    query.data = [{ id: 'remot-iaia', seq: 4, creat_al: '2026-10-16T08:00:00Z' }];
+    const enviat = await enviaMissatge(XAT_SEED_IDS.filIaia, { id: 'remot-iaia', text: 'Què és Sollutia?' }, REMOT);
+    expect(enviat).toMatchObject({ id: 'remot-iaia', seq: 4 });
+    expect(client.rpc.mock.calls.map(([nom]) => nom)).toEqual(['xat_envia']);
+    await esperaLaIAIA();
+    expect((await loadMissatges(XAT_SEED_IDS.filIaia, SEED)).map(m => m.seq)).toEqual([1]);
   });
   it('T48 · la baixa del canal local va al magatzem i no crea cap client de Supabase', async () => {
     const fil = XAT_SEED_IDS.filGeneral, callback = vi.fn();
@@ -704,10 +730,13 @@ describe('mode seed (localXat)', () => {
   });
   /* Gauntlet 261016 (Bloc 3.6.2, «la IAIA falla a localhost») · En local no
      hi ha converses de llavor, i la llista naixia BUIDA: ni la IAIA hi era.
-     Ara hi ha les tres files directes, la IAIA inclosa. S'actualitza a posta. */
-  it('en mode local no hi ha converses de llavor, però sí les tres files permanents, i el padró és el mateix de tres', async () => {
+     Ara hi ha les tres files directes, la IAIA inclosa. S'actualitza a posta.
+     Gauntlet 261016_1530 (Bloc 3.6.1) · Dues: fora la de Sóc de Poble. En
+     local la comunitat la porta la llista (actorsDelXat.js), amb la fila que
+     fa el camí del «Comentar» de /socdepoble. */
+  it('en mode local no hi ha converses de llavor, però sí les dues files permanents, i el padró és el mateix de tres', async () => {
     const LOCAL = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
-    expect((await loadFils(LOCAL)).map(f => f.id)).toEqual(['sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect((await loadFils(LOCAL)).map(f => f.id)).toEqual(['sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
     expect((await carregaMembres(null, LOCAL)).map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi Llinares', 'Sóc de Poble']);
     expect(mock.getClient).not.toHaveBeenCalled();
   });
@@ -721,7 +750,7 @@ describe('mode seed (localXat)', () => {
     const obert = await obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, LOCAL);
     expect(obert?.filId).toBeTruthy();
     const fils = await loadFils(LOCAL);
-    expect(fils.map(f => f.perDefecte ?? f.id)).toEqual([obert.filId, 'socdepoble', 'javi', 'iaia']);
+    expect(fils.map(f => f.perDefecte ?? f.id)).toEqual([obert.filId, 'javi', 'iaia']);
     expect(fils[0]).toMatchObject({ tipus: 'grup', titol: "L'ànima de la iaia", subjecte: expect.objectContaining({ tipus: 'pagina', id: '/iaia' }) });
     expect(mock.getClient).not.toHaveBeenCalled();
   });

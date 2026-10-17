@@ -10,7 +10,7 @@ export const legalContent = {
     { "text": "RGPD i LSSI-CE", "className": "sdp-badge-category" }
   ],
   "html": `
-    <p><em>Versió 2.0 · En vigor des del 9 de setembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
+    <p><em>Versió 2.1 · En vigor des del 16 d'octubre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
 
     <h3>0. Com llegir aquest document</h3>
     <p>Ací dins hi ha quatre coses, en aquest ordre. Primer, <strong>l'avís legal</strong>: qui hi ha darrere d'aquesta web i de què respon. Segon, la <strong>política de privacitat</strong>: què fem amb les teues dades i quins drets tens. Tercer, l'<strong>emmagatzematge al teu dispositiu</strong>: què deixem al teu navegador i per què. I quart, els <strong>reconeixements</strong>: les fonts, comunitats i divulgadors dels quals ens nodrim i aprenem.</p>
@@ -158,9 +158,14 @@ export const legalContent = {
 
     <h3>EMMAGATZEMATGE AL TEU DISPOSITIU (POLÍTICA DE GALETES)</h3>
 
-    <h4>19. No fem servir galetes</h4>
-    <p>Aquesta aplicació <strong>no instal·la galetes (cookies) al teu navegador</strong>. Ni de publicitat, ni d'analítica, ni pròpies. No hi ha Píxel de Meta, no hi ha Google Analytics, no hi ha cap eina que mesure quant de temps mires una pantalla per a vendre-ho després.</p>
-    <p>Per això no et fem passar per cap bàner molest d'acceptar galetes: no n'hi ha cap a acceptar. Si algun dia n'hi haguera, t'ho advertiríem abans i et demanaríem permís.</p>
+    <h4>19. Galetes i mètriques: el nucli i els portals amfitrions</h4>
+    <p>Sóc de Poble t'arriba per camins diferents, i no tots tenen les mateixes regles. T'ho expliquem per separat perquè no es confonguen.</p>
+    <p><strong>Al nucli: socdepoble.org (allotjat a Sollutia) i l'aplicació nativa.</strong> Ací l'aplicació <strong>no instal·la galetes (cookies) al teu navegador</strong>: ni de publicitat, ni d'analítica, ni pròpies. No hi ha Píxel de Meta, no hi ha Google Analytics ni cap altra analítica comercial, i cap eina mesura quant de temps mires una pantalla per a vendre-ho després. L'únic recompte és el comptador de visites sense galetes que t'expliquem a l'apartat «Telemetria: què comptem i com ho pots comprovar», al final d'aquesta pàgina: respecta els senyals Do Not Track i Global Privacy Control, i el pots apagar quan vulgues.</p>
+    <p>Per això, al nucli no et fem passar per cap bàner d'acceptar galetes: no n'hi ha cap a acceptar. Si algun dia n'hi haguera, t'ho advertiríem abans i et demanaríem permís.</p>
+    <p><strong>Als portals amfitrions.</strong> Sóc de Poble també funciona dins de webs que no administrem nosaltres: portals de WordPress com <strong>gentdelatorre.net</strong>, els portals dels pobles que s'hi enxufen i la plataforma de <strong>Sollutia</strong> quan hi integra l'aplicació. Cada titular administra el seu portal pel seu compte, i el portal <strong>pot tindre les seues pròpies galetes i mètriques</strong>, com Google Analytics, Google Site Kit o un comptador propi. Quan accedeixes a Sóc de Poble a través d'un portal amfitrió, el teu navegador queda subjecte a <strong>la política de galetes i de privacitat d'eixe portal</strong>, i és el seu titular qui en respon.</p>
+    <p><strong>Què compta Sóc de Poble dins d'un portal amfitrió.</strong> Dins d'un portal amfitrió, l'aplicació <strong>no envia cap visita ni cap acte al comptador de Sóc de Poble</strong>, llevat que el portal li cedisca la gestió de la capçalera de la pàgina (l'opció <code>manageDocumentHead</code>): en eixe cas, l'aplicació pot comptar com ho fa al nucli. Si el portal té el seu propi comptador Umami, l'aplicació li passa els actes de «Connectar» perquè els compte ell, amb les seues regles.</p>
+    <p><strong>Què pot veure el portal de la teua navegació.</strong> Cada vegada que canvies de secció, l'aplicació avisa la pàgina amfitriona amb l'esdeveniment <code>sdp-navega</code>, que porta la secció, sense el text que cerques ni quina fitxa obris. A més, a WordPress (de manera predeterminada) i a qualsevol portal que ho active, la ruta sencera de l'aplicació, amb el text del cercador i els identificadors de les fitxes, s'escriu a l'adreça de la pàgina, al fragment <code>#sdp=</code>, i queda a l'historial del navegador. El fragment no arriba al servidor del portal, però els programes de la pàgina, com les seues eines de mètriques, el poden llegir; si el titular tria el paràmetre <code>?sdp=</code>, també arriba al seu servidor. Per tant, el portal pot veure per quines seccions de Sóc de Poble navegues.</p>
+    <p><strong>Obligació dels portals amfitrions.</strong> Per la governança de Sóc de Poble, tot node o poble que s'hi enxufe ha de declarar amb transparència, a la seua pròpia web, quines galetes i quines mètriques fa servir amb les persones que el visiten. Si trobes un portal que no ho declara, escriu-nos a <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>.</p>
 
     <h4>20. Què guardem al teu navegador, exactament</h4>
     <p>El que sí que fem servir és l'<em>emmagatzematge web</em> del navegador, que és una tecnologia diferent de les galetes: no viatja a cap servidor en cada petició. Ací tens la llista completa, sense excepcions.</p>

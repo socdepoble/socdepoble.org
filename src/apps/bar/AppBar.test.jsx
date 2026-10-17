@@ -846,6 +846,23 @@ describe('la Caixa no canvia de destí sense ?torna=tpv (Llei del Píxel)', () =
     expect(ubicacio()).toBe('/app/bar/caixa');
   });
 
+  test('dividir a la Caixa: «Torna a la comanda» porta a la comanda de la Caixa, i una comanda tancada, «Torna a la caixa»', async () => {
+    const magatzem = await magatzemDeProva();
+    await ambUnProducte(magatzem, 'Cafè sol');
+    const [comanda] = await comandesDe(magatzem);
+    fireEvent.click(columna('app-grid-list').getByRole('button', { name: 'Dividix' }));
+    expect(ubicacio()).toBe(`/app/bar/caixa/${comanda.id}/dividir`);
+    await columna('app-grid-main').findByRole('button', { name: 'A parts iguals' });
+    expect(columna('app-grid-main').queryByRole('button', { name: 'Torna al TPV' })).toBeNull();
+    fireEvent.click(columna('app-grid-main').getByRole('button', { name: 'Torna a la comanda' }));
+    expect(ubicacio()).toBe(`/app/bar/caixa/${comanda.id}`);
+    await ves('/app/bar/caixa/c-ja-tancada/dividir?torna=caixa');
+    expect(await columna('app-grid-main').findByRole('region', { name: 'Res a dividir' })).toBeTruthy();
+    expect(columna('app-grid-main').queryByRole('button', { name: 'Torna al TPV' })).toBeNull();
+    fireEvent.click(columna('app-grid-main').getByRole('button', { name: 'Torna a la caixa' }));
+    expect(ubicacio()).toBe('/app/bar/caixa/c-ja-tancada');
+  });
+
   test('un ?torna que no és «tpv» no es llig: la Caixa fa el de sempre', async () => {
     const magatzem = await magatzemDeProva();
     await ambUnProducte(magatzem, 'Cafè sol');

@@ -99,8 +99,14 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    publicació (TargetaDelMur): el mode estricte (fontImatgePropia de
    utils/sanitize.js, cap servidor de tercers, tampoc els avatars OAuth) i
    sense referent (`imatgePrivada`). Una de fora no es demana: cap portada, i
-   la silueta de sempre en lloc de l'avatar. */
-export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref }) {
+   la silueta de sempre en lloc de l'avatar.
+   Gauntlet 261016 (Bloc -1; ordre del Mestre: l'avatar de la persona pilot
+   és «sempre» la seua foto, mai el logotip verd) · `authorName` i
+   `authorAvatar`, opcionals: el nom i l'avatar de qui signa ja resolts per
+   qui pinta la targeta (TargetaDelMur, amb signaturaDeQuiSigna de la llavor),
+   pel mateix motiu que `authorHref`. Hi passen davant de les dades de
+   l'acte. Sense elles, el DOM de sempre (Llei del Píxel). */
+export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar }) {
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime);
 
@@ -122,13 +128,13 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       imageUrl={fontImatgePropia(resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || ''))}
       imageAlt={item.imageAlt || item.title || item.name || ''}
       imatgePrivada
-      author={item.author_name || item.author || "Sóc de Poble"}
+      author={authorName || item.author_name || item.author || "Sóc de Poble"}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, i qui signa ja té enllaç. */
       authorHref={rutaDeLaBoinaDeLActe(item, authorHref)}
       /* Onada 8 (261009) · La reserva és l'avatar de Sóc de Poble (el PNG),
          no un literal: ja ve resolt i resolveAsset no el torna a tocar. */
-      avatarUrl={fontImatgePropia(resolveAsset((typeof item.author_avatar === 'string' ? item.author_avatar : null) || DEFAULT_AUTHOR.avatarUrl))}
+      avatarUrl={fontImatgePropia(resolveAsset((typeof authorAvatar === 'string' ? authorAvatar : null) || (typeof item.author_avatar === 'string' ? item.author_avatar : null) || DEFAULT_AUTHOR.avatarUrl))}
       location={item.author_location || item.location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}

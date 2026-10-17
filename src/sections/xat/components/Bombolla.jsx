@@ -42,16 +42,22 @@ import MarquesEstat from './MarquesEstat.jsx';
 import CitaResposta from './CitaResposta.jsx';
 import EnllacSegur from './EnllacSegur.jsx';
 import { etiquetaHora } from '../temps.js';
-import { segmentaEnllacos } from '../enllacos.js';
+import { segmentaEnllacos, segmentaRutesDeLaWiki } from '../enllacos.js';
 /* Onada 6 · Un codi SDP traduït (SDP-XAT-429, el límit de missatges) en lloc del text cru. */
 import { textDErrorDelXat } from '../errorsXat.js';
-import { rutaDePerfil } from '../../../config/navigation.js';
+import { rutaCanonicaDePerfil, rutaDePerfil } from '../../../config/navigation.js';
+import { esIAIA } from '../../../data/identitatsSeed.js';
 
 /**
  * Lògica d'Usuari (T3, T4): el nom de qui escriu es pinta als grups i, fora
  * d'ells, quan qui escriu és la IAIA o una entitat; i enllaça al seu perfil
  * públic quan se sap qui és. Una entitat signa amb el seu nom, no amb el de
  * la persona que ha teclejat.
+ * Gauntlet 261016_1530 (Bloc 3.6.3; relleu F65; ordre del Mestre: /iaia «és
+ * on s'ha d'accedir des del xat») · Quan qui signa és la IAIA MarIA (per id i
+ * amb el tipus d'IA, mai pel nom), el seu nom porta a la seua fitxa neta,
+ * /iaia (rutaCanonicaDePerfil), com la capçalera. La resta, el perfil de
+ * sempre: cap altre enllaç canvia.
  */
 function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
   const esIA = Boolean(missatge.is_ai);
@@ -60,7 +66,8 @@ function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
   const nom = missatge.author || missatge.author_name || t('section.xat.vei', 'Veí');
   const text = esIA ? `${nom} · ${t('section.xat.ia.etiqueta', 'IA')}` : nom;
   const tipus = esIA ? 'ia' : esEntitat ? 'entitat' : 'persona';
-  const ruta = !triable && !esEntitat ? rutaDePerfil(tipus, missatge.usuariId) : null;
+  const fitxaDeLaIA = esIA ? rutaCanonicaDePerfil({ tipus, id: missatge.usuariId }) : null;
+  const ruta = !triable && !esEntitat ? (fitxaDeLaIA || rutaDePerfil(tipus, missatge.usuariId)) : null;
   if (!ruta) return <span className="sdp-xat-bombolla__autor">{text}</span>;
   return (
     <Link className="sdp-xat-bombolla__autor" to={ruta} aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', nom)}>
@@ -70,10 +77,17 @@ function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
 }
 
 /* Torn 261004 (T5) · Cada enllaç és EnllacSegur, la peça que també pinta la
-   vista «Contingut multimèdia». El DOM no canvia. */
-function TextAmbEnllacos({ text, t }) {
-  const segments = segmentaEnllacos(text);
+   vista «Contingut multimèdia». El DOM no canvia.
+   Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · Amb `rutesDeLaWiki` (només
+   la bombolla de la IAIA MarIA, fora del mode de selecció), cada ruta
+   /wikidepoble?item=<slug> que cita la IAIA local és un enllaç intern de
+   l'app, amb la classe dels enllaços del xat. Sense la prop, els segments i el
+   DOM són els de sempre. */
+function TextAmbEnllacos({ text, t, rutesDeLaWiki = false }) {
+  const enllacos = segmentaEnllacos(text);
+  const segments = rutesDeLaWiki ? segmentaRutesDeLaWiki(enllacos) : enllacos;
   return segments.map((segment, i) => {
+    if (segment.tipus === 'ruta') return <Link key={i} className="sdp-xat-enllac" to={segment.ruta}>{segment.text}</Link>;
     if (segment.tipus !== 'enllac') return <span key={i}>{segment.text}</span>;
     return <EnllacSegur key={i} segment={segment} t={t} />;
   });
@@ -144,6 +158,9 @@ export default function Bombolla({
     && estat !== 'pendent' && !enError;
   const teMenu = !triable && !esborrat && (Boolean(text) || potRespondre);
   const respostaA = missatge.respostaA ?? null;
+  /* F25 · La IAIA MarIA, per id i signant com a IA (mai pel nom), i fora del
+     mode de selecció: els seus enllaços a la Wiki de Poble s'obrin a l'app. */
+  const rutesDeLaWiki = !meu && !triable && Boolean(missatge.is_ai) && esIAIA(missatge.usuariId);
 
   const propsSeleccio = triable ? {
     role: 'checkbox',
@@ -183,7 +200,7 @@ export default function Bombolla({
               {t('section.xat.missatge.esborrat', "S'ha esborrat este missatge")}
             </p>
           ) : (
-            <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} /></p>
+            <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p>
           )}
           <span className="sdp-xat-bombolla__meta">
             {hora ? <time dateTime={missatge.creatAl || undefined}>{hora}</time> : null}

@@ -26,6 +26,8 @@ import { verificaCadena } from '../facturacio/registre/cadena.js';
 import { ESQUEMA_LLIBRE, restauraCopia } from '../facturacio/registre/port.js';
 import { NOM_BD, creaPortIndexedDB } from '../facturacio/registre/portIndexedDB.js';
 import Facturacio from './Facturacio.jsx';
+import { euros } from './nucli/formulari.js';
+import { AVIS_SENSE_XIFRAR_LLIBRE } from './nucli/llibreCsv.js';
 
 const clona = (valor) => (valor === undefined ? undefined : JSON.parse(JSON.stringify(valor)));
 const perClau = ([a], [b]) => (a < b ? -1 : a > b ? 1 : 0);
@@ -232,6 +234,11 @@ const taula = () => within(screen.getByRole('region', { name: 'Factures emeses' 
 const pas = (titol) => within(screen.getByRole('region', { name: titol }));
 /* Un desplegable pel text del seu resum (PODERS 3, 4 i 5). */
 const desplegable = (resum) => screen.getByText(resum, { selector: 'summary' }).closest('details');
+/* Gauntlet 261016 (MCR o3_tpv_gestoria, proves 4 i 5): els recorreguts sencers (configurar, emetre, anul·lar,
+   copiar) tarden 0,5-3,6 s sols i passaven dels 5 s per defecte amb la màquina carregada, cada vegada uns altres
+   (5.018-10.674 ms observats). El límit va a cada describe d'estos recorreguts i Vitest l'hereta a cada prova
+   (@vitest/runner: «inherit repeats, retry, timeout from suite»). Només el límit de temps, cap asserció. */
+const RECORREGUT = Object.freeze({ timeout: 20000 });
 
 describe('sense allò que fa falta, no s’emet res', () => {
   test('sense IndexedDB: ho diu i no hi ha cap formulari (mai una reserva en memòria)', async () => {
@@ -249,7 +256,7 @@ describe('sense allò que fa falta, no s’emet res', () => {
   });
 });
 
-describe('el camí sencer, sense xarxa', () => {
+describe('el camí sencer, sense xarxa', RECORREGUT, () => {
   test('configurar, emetre, anul·lar i fer la còpia; i tot es queda en este ordinador', async () => {
     const { idb, descarrega, emmagatzematge } = munta();
     expect(screen.getByText('Obrint el llibre de factures…')).toBeTruthy();
@@ -444,7 +451,7 @@ describe('el camí sencer, sense xarxa', () => {
 });
 
 /* Onada 6 (261009, front «gestoria-facturació»): emetre de veres. */
-describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
+describe('emetre de veres: retenció, factura en paper i rectificativa', RECORREGUT, () => {
   test('una factura amb retenció del 15 %: el total a pagar, el full amb el QR i la impressió del mateix document', async () => {
     const imprimix = vi.fn();
     munta({ imprimix });
@@ -625,6 +632,83 @@ describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
     expect(xarxa).not.toHaveBeenCalled();
   });
 
+  /* Gauntlet 261016, Onada 3 (MCR o3_tpv_gestoria.2.1): el llibre net a l'estil Holded. Les columnes Base i
+     IVA, el peu «Total del període» sense les anul·lades, el període, l'estat i la cerca, i el CSV del
+     període per a la gestoria, amb l'avís que ix sense xifrar. Recorregut sencer: el límit, el del describe. */
+  test('el llibre net: Base i IVA, el total del període sense les anul·lades, els filtres i el CSV per a la gestoria', async () => {
+    const { descarrega } = munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0002'));
+    escriu('NIF del client (obligatori)', ['8765', '4321', 'X'].join(''));
+    escriu('Nom o raó social (obligatori)', 'Casino del Poble');
+    escriu('Adreça (obligatori)', 'Plaça Major, 9');
+    escriu('Codi postal (obligatori)', '46998');
+    escriu('Població (obligatori)', 'Poble de Prova');
+    omplLinia({ concepte: 'Coca', quantitat: '1', preu: '10,00', iva: '10' });
+    await emet('A2026-0002');
+    fireEvent.click(boto('Anul·la la factura A2026-0001'));
+    const confirma = await screen.findByRole('dialog', { name: 'Anul·les la factura A2026-0001?' });
+    fireEvent.click(within(confirma).getByRole('button', { name: 'Sí, anul·la-la' }));
+    expect(await screen.findByText('Factura A2026-0001 anul·lada')).toBeTruthy();
+
+    // Les columnes, i cada fila amb la seua base i el seu IVA.
+    const celles = (fila) => [...fila.closest('tr').children].map((cela) => cela.textContent);
+    expect(taula().getAllByRole('columnheader').map((th) => th.textContent)).toEqual(['Número', 'Data', 'Tipus', 'Client', 'Base', 'IVA', 'Total', 'Estat', 'Acció']);
+    expect(celles(taula().getByRole('rowheader', { name: 'A2026-0002' })).slice(0, 8))
+      .toEqual(['A2026-0002', '07/10/2026', 'Completa', 'Casino del Poble', euros(1000), euros(100), euros(1100), 'Emesa']);
+    expect(celles(taula().getByRole('rowheader', { name: 'A2026-0001' })).slice(4, 8)).toEqual([euros(500), euros(20), euros(520), 'Anul·lada']);
+    // El peu: l'anul·lada no suma.
+    const peu = () => celles(taula().getByRole('rowheader', { name: 'Total del període' }));
+    expect(peu()).toEqual(['Total del període', euros(1000), euros(100), euros(1100), 'Les anul·lades no sumen.']);
+
+    // El període: d'entrada, tot l'any; el 3r trimestre no en té cap, i el CSV no es pot fer.
+    const periode = within(screen.getByRole('group', { name: 'Període de 2026' }));
+    expect(periode.getByRole('button', { name: 'Tot l’any' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(periode.getByRole('button', { name: '3r trimestre' }));
+    expect(screen.getByText('Cap factura del període amb estos filtres.')).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Factures emeses' })).toBeNull();
+    expect(boto('Descarrega el llibre del 3r trimestre de 2026 (CSV)').disabled).toBe(true);
+    fireEvent.click(periode.getByRole('button', { name: '4t trimestre' }));
+    expect(taula().getAllByRole('rowheader').map((th) => th.textContent)).toEqual(['A2026-0002', 'A2026-0001', 'Total del període']);
+
+    // L'estat i la cerca només són per a mirar: el total és el de les que es veuen.
+    const estat = within(screen.getByRole('group', { name: 'Estat de les factures' }));
+    fireEvent.click(estat.getByRole('button', { name: 'Anul·lades' }));
+    expect(taula().getAllByRole('rowheader').map((th) => th.textContent)).toEqual(['A2026-0001', 'Total del període']);
+    expect(peu()).toEqual(['Total del període', euros(0), euros(0), euros(0), 'Les anul·lades no sumen.']);
+    fireEvent.click(estat.getByRole('button', { name: 'Totes' }));
+    const cerca = screen.getByRole('searchbox', { name: 'Cerca per número, client o NIF' });
+    fireEvent.change(cerca, { target: { value: 'CASINO' } });
+    expect(taula().getAllByRole('rowheader').map((th) => th.textContent)).toEqual(['A2026-0002', 'Total del període']);
+    expect(peu()).toEqual(['Total del període', euros(1000), euros(100), euros(1100), '']);
+
+    // El CSV porta el període sencer (també l'anul·lada), no només el que troba la cerca; abans, l'avís.
+    fireEvent.click(boto('Descarrega el llibre del 4t trimestre de 2026 (CSV)'));
+    const avis = await screen.findByRole('dialog', { name: 'Descarregar el llibre sense xifrar?' });
+    expect(within(avis).getByText(AVIS_SENSE_XIFRAR_LLIBRE)).toBeTruthy();
+    expect(descarrega).not.toHaveBeenCalled();
+    fireEvent.click(within(avis).getByRole('button', { name: 'Descarrega’l' }));
+    expect(await screen.findByText('Llibre descarregat')).toBeTruthy();
+    expect(screen.getByText('«llibre-factures-emeses-2026-4t.csv» porta 2 factures (les anul·lades hi són, marcades). Ix sense xifrar: guarda’l en un lloc segur.'))
+      .toBeTruthy();
+    expect(descarrega).toHaveBeenCalledTimes(1);
+    const [{ nom, tipus, dades }] = descarrega.mock.calls[0];
+    expect([nom, tipus]).toEqual(['llibre-factures-emeses-2026-4t.csv', 'text/csv;charset=utf-8']);
+    // La marca BOM d'UTF-8 al principi, perquè el full de càlcul llija els accents.
+    expect([...dades.slice(0, 3)]).toEqual([0xEF, 0xBB, 0xBF]);
+    const csv = new TextDecoder().decode(dades).split('\r\n');
+    /* Revisió adversarial del Carril E (261016): al final, el que suma cada factura al període (l'anul·lada,
+       0,00) i l'import rectificat (cap, ací). La columna del total suma 11,00, el «Total del període». */
+    expect(csv[1]).toBe(`A2026-0001;07/10/2026;;F1;Completa;;;${DNI_CLIENT};Bar de la Plaça;5,00;0,20;;;5,00;0,20;5,20;0,00;5,20;Anul·lada;0,00;0,00;0,00;;`);
+    expect(csv[2]).toMatch(/^A2026-0002;.*;Casino del Poble;;;10,00;1,00;10,00;1,00;11,00;0,00;11,00;Emesa;10,00;1,00;11,00;;$/);
+    expect(csv).toHaveLength(4);
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
   test('una factura triada per a rectificar que s’anul·la entremig: no s’emet, i es diu', async () => {
     munta();
     await configura();
@@ -648,7 +732,7 @@ describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
 
 /* Prompt 261014_1605, front G1: la Facturació en tres preguntes (qui factura, a qui i què, revisa i emet),
    amb el PDF en un clic i la part tècnica darrere de desplegables discrets, abans del 20 d'octubre. */
-describe('la factura en tres preguntes (Prompt 261014_1605, G1)', () => {
+describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, () => {
   test('PODER 1 · emesa, la factura s’obri sola amb «Imprimeix o desa en PDF»; una sola vista, i el focus torna on toca', async () => {
     const imprimix = vi.fn();
     munta({ imprimix });
@@ -889,7 +973,7 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', () => {
   });
 });
 
-describe('la cadena i la còpia', () => {
+describe('la cadena i la còpia', RECORREGUT, () => {
   test('una còpia que en sabia més: el llibre truncat es veu, amb el seu motiu', async () => {
     const idb = creaIdbFals();
     await creaMagatzemPerfil({ idb }).afegixCopia({ cadenes: [{ idEmisor: CIF_EMISSOR, ordre: 5, empremta: 'A'.repeat(64) }], nomFitxer: 'antiga.json' });

@@ -10,10 +10,10 @@ import { describe, expect, test } from 'vitest';
 import { ESQUEMA_CONFIG_EMPRESA, llegixConfigEmpresa } from '../../facturacio/configEmpresa.js';
 import { sembraLlegat } from '../../facturacio/llegat.js';
 import {
-  OPCIONS_CAUSA, OPCIONS_IVA, OPCIONS_RETENCIO, OPCIONS_TIPUS, avisDelClient, clauDelClient, clientBuit, clientDeDestinatari, clientsDelLlibre,
-  commutaRectificada, configDeFormulari, configDeJson, dadesDeFactura, dataCurta, errorsDeFactura,
+  OPCIONS_CAUSA, OPCIONS_ESTAT_LLIBRE, OPCIONS_IVA, OPCIONS_PERIODE, OPCIONS_RETENCIO, OPCIONS_TIPUS, anysDelLlibre, avisDelClient, clauDelClient,
+  clientBuit, clientDeDestinatari, clientsDelLlibre, commutaRectificada, configDeFormulari, configDeJson, dadesDeFactura, dataCurta, errorsDeFactura,
   errorsDelPerfil, estatDeLaCadena, euros, facturaBuida, filesDelLlibre, formulariDeConfig, formulariImportat, llegixQuantitat,
-  mesOpcionsDe, numerosDelText, rectificables, resumDelLlegat, tipusEfectiu, tiquetsSubstituibles, titolDelLlegat, totalsDeFactura
+  mesOpcionsDe, numerosDelText, rectificables, resumDelLlegat, resumDelLlibre, tipusEfectiu, tiquetsSubstituibles, titolDelLlegat, totalsDeFactura
 } from './formulari.js';
 
 const CIF_EMISSOR = 'B12345674';
@@ -388,5 +388,109 @@ describe('el llibre', () => {
     expect(dataCurta('2026-10-07')).toBe('07/10/2026');
     expect(dataCurta('7/10/2026')).toBe('');
     expect(euros(123456)).toBe('1.234,56 €');
+  });
+});
+
+/* Gauntlet 261016, Onada 3 (MCR o3_tpv_gestoria.2.1): el llibre net a l'estil Holded. Un llibre de
+   prova amb totes les menes: una completa amb retenció, una anul·lada, un tiquet i la F3 que el
+   substituïx, una rectificativa per diferències i una per substitució, i una factura de l'any d'abans. */
+describe('el llibre net: imports, període i totals', () => {
+  const ALTRE_NIF = ['8765', '4321', 'X'].join('');
+  const TERCER_NIF = ['1111', '2222', 'R'].join('');
+  const BAR = { nif: DNI_CLIENT, nom: 'Bar de la Plaça' };
+  const CASINO = { nif: ALTRE_NIF, nom: 'Casino del Poble' };
+  const CAFE = { nif: TERCER_NIF, nom: 'Cafè del Racó' };
+  const alta = (numSerie, tipusFactura, data, { base, quota, client = BAR, retencio = 0, ...factura }) => ({
+    tipusRegistre: 'alta', idEmisor: CIF_EMISSOR, numSerie, dataExpedicio: data, tipusFactura, quotaTotal: quota, importTotal: base + quota,
+    factura: {
+      destinatari: ['F2', 'R5'].includes(tipusFactura) ? null : client, baseTotal: base, quotaTotal: quota,
+      ...(retencio ? { retencio: { percentatge: 15, import: retencio } } : {}), ...factura
+    }
+  });
+  const ref = (numSerie, dataExpedicio) => ({ numSerie, dataExpedicio });
+  const LLIBRE = [
+    alta('A2025-0009', 'F1', '2025-12-30', { base: 100, quota: 21 }),
+    alta('A2026-0001', 'F1', '2026-02-10', { base: 1000, quota: 210, retencio: 150 }),
+    alta('A2026-0002', 'F1', '2026-05-03', { base: 500, quota: 20 }),
+    { tipusRegistre: 'anulacio', idEmisor: CIF_EMISSOR, numSerie: 'A2026-0002', dataExpedicio: '2026-05-03' },
+    alta('T2026-0001', 'F2', '2026-07-01', { base: 300, quota: 30 }),
+    alta('A2026-0003', 'F3', '2026-07-15', { base: 300, quota: 30, client: CASINO, substituides: [ref('T2026-0001', '2026-07-01')] }),
+    alta('A2026-0004', 'F1', '2026-07-20', { base: 200, quota: 42, client: CAFE }),
+    alta('R2026-0001', 'R1', '2026-08-01', { base: -100, quota: -21, client: CAFE, tipusRectificativa: 'I', rectificades: [ref('A2026-0004', '2026-07-20')] }),
+    alta('R2026-0002', 'R1', '2026-11-20', {
+      base: 1200, quota: 252, tipusRectificativa: 'S', rectificades: [ref('A2026-0001', '2026-02-10')], importRectificat: { base: 1000, quota: 210 }
+    })
+  ];
+  const files = filesDelLlibre(LLIBRE);
+  const fila = (numSerie) => files.find((f) => f.numSerie === numSerie);
+  const numeros = (resum) => resum.files.map((f) => f.numSerie);
+
+  test('cada fila porta el període, el NIF i els imports en cèntims crus, i el que suma al període', () => {
+    expect(fila('A2026-0001')).toMatchObject({
+      tipusFactura: 'F1', any: 2026, trimestre: 1, nif: DNI_CLIENT, base: 1000, quota: 210, retencio: 150, importTotal: 1210,
+      efecte: { base: 1000, quota: 210, retencio: 150, total: 1210 }, substituix: false
+    });
+    // La de l'any d'abans és del 4t trimestre del 2025; el tiquet no té client ni NIF.
+    expect(fila('A2025-0009')).toMatchObject({ any: 2025, trimestre: 4 });
+    expect(fila('T2026-0001')).toMatchObject({ client: 'Sense client', nif: '', trimestre: 3 });
+    // L'anul·lada no suma res, però es veu amb els seus imports.
+    expect(fila('A2026-0002')).toMatchObject({ anulada: true, base: 500, quota: 20, efecte: { base: 0, quota: 0, retencio: 0, total: 0 } });
+    // La rectificativa per diferències suma el que porta, amb el seu signe.
+    expect(fila('R2026-0001')).toMatchObject({ base: -100, quota: -21, efecte: { base: -100, quota: -21, retencio: 0, total: -121 }, substituix: false });
+    // La F3 substituïx el tiquet (la mateixa venda): suma la diferència, ací zero.
+    expect(fila('A2026-0003')).toMatchObject({ efecte: { base: 0, quota: 0, retencio: 0, total: 0 }, substituix: true });
+    // La rectificativa per substitució suma el que canvia: la seua menys la rectificada, també la retenció.
+    expect(fila('R2026-0002')).toMatchObject({ efecte: { base: 200, quota: 42, retencio: -150, total: 242 }, substituix: true });
+  });
+
+  test('una factura que en substituïx una d’anul·lada suma sencera: l’anul·lada ja no sumava', () => {
+    const llibre = [...LLIBRE, { tipusRegistre: 'anulacio', idEmisor: CIF_EMISSOR, numSerie: 'T2026-0001', dataExpedicio: '2026-07-01' }];
+    expect(filesDelLlibre(llibre).find((f) => f.numSerie === 'A2026-0003')).toMatchObject({ efecte: { base: 300, quota: 30, total: 330 }, substituix: false });
+  });
+
+  test('els anys, del més nou al més antic; les opcions de període i d’estat', () => {
+    expect(anysDelLlibre(files)).toEqual([2026, 2025]);
+    expect(anysDelLlibre(undefined)).toEqual([]);
+    expect(OPCIONS_PERIODE.map((o) => o.valor)).toEqual(['1', '2', '3', '4', 'any']);
+    expect(OPCIONS_ESTAT_LLIBRE.map((o) => o.valor)).toEqual(['totes', 'emeses', 'anulades', 'rectificatives']);
+  });
+
+  test('els totals de l’any: les anul·lades fora i les rectificatives amb el seu signe; la mateixa venda no es compta dues vegades', () => {
+    const any = resumDelLlibre(files, { any: 2026 });
+    expect(any.files).toHaveLength(7);
+    // El que s'ha venut de veres: A1 substituïda per R2 (1.200 + 252), el tiquet en la F3 (300 + 30) i A4 menys R1 (100 + 21).
+    expect(any.totals).toEqual({ base: 1600, quota: 303, retencio: 0, total: 1903 });
+    expect(any).toMatchObject({ anulades: 1, ambSubstitucions: true });
+    // Sense any, tot el llibre.
+    expect(resumDelLlibre(files).totals).toEqual({ base: 1700, quota: 324, retencio: 0, total: 2024 });
+    expect(resumDelLlibre(files, { any: 2025 })).toMatchObject({ totals: { base: 100, quota: 21, retencio: 0, total: 121 }, anulades: 0, ambSubstitucions: false });
+  });
+
+  test('un trimestre: només les seues factures i els seus totals', () => {
+    const t3 = resumDelLlibre(files, { any: 2026, trimestre: 3 });
+    expect(numeros(t3)).toEqual(['R2026-0001', 'A2026-0004', 'A2026-0003', 'T2026-0001']);
+    expect(t3.totals).toEqual({ base: 400, quota: 51, retencio: 0, total: 451 });
+    // El 2n trimestre només té l'anul·lada: no suma res.
+    expect(resumDelLlibre(files, { any: 2026, trimestre: 2 })).toMatchObject({ totals: { base: 0, quota: 0, retencio: 0, total: 0 }, anulades: 1 });
+    expect(resumDelLlibre(files, { any: 2026, trimestre: 4 }).totals).toEqual({ base: 200, quota: 42, retencio: -150, total: 242 });
+  });
+
+  test('l’estat: les vives, les anul·lades o les rectificatives; un estat desconegut les mostra totes', () => {
+    expect(numeros(resumDelLlibre(files, { any: 2026, estat: 'anulades' }))).toEqual(['A2026-0002']);
+    expect(numeros(resumDelLlibre(files, { any: 2026, estat: 'rectificatives' }))).toEqual(['R2026-0002', 'R2026-0001']);
+    expect(numeros(resumDelLlibre(files, { any: 2026, estat: 'emeses' }))).not.toContain('A2026-0002');
+    expect(resumDelLlibre(files, { any: 2026, estat: 'emeses' }).totals).toEqual(resumDelLlibre(files, { any: 2026 }).totals);
+    expect(resumDelLlibre(files, { any: 2026, estat: 'qualsevol' }).files).toHaveLength(7);
+  });
+
+  test('la cerca: pel número, el client o el NIF, sense majúscules ni accents', () => {
+    expect(numeros(resumDelLlibre(files, { text: '  CASINO ' }))).toEqual(['A2026-0003']);
+    expect(numeros(resumDelLlibre(files, { text: 'cafe del raco' }))).toEqual(['R2026-0001', 'A2026-0004']);
+    expect(numeros(resumDelLlibre(files, { text: 'r2026' }))).toEqual(['R2026-0002', 'R2026-0001']);
+    expect(numeros(resumDelLlibre(files, { text: DNI_CLIENT.toLowerCase() }))).toEqual(['R2026-0002', 'A2026-0002', 'A2026-0001', 'A2025-0009']);
+    // La cerca també es combina amb el període, i els totals són els de les trobades.
+    expect(resumDelLlibre(files, { any: 2026, trimestre: 3, text: 'racó' }).totals).toEqual({ base: 100, quota: 21, retencio: 0, total: 121 });
+    expect(resumDelLlibre(files, { text: 'cap client' }).files).toEqual([]);
+    expect(resumDelLlibre(undefined)).toEqual({ files: [], totals: { base: 0, quota: 0, retencio: 0, total: 0 }, anulades: 0, ambSubstitucions: false });
   });
 });

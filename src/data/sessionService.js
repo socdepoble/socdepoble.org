@@ -1,5 +1,5 @@
 // Servei únic de sessió: identitat, configuració i consultes segellades.
-import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable, reconciliaAmbRegistre, esClauDelRegistre, triaRefresc, configuraBackendSessio, nivellDAsseguranca } from './identitat.js';
+import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable, reconciliaAmbRegistre, esClauDelRegistre, triaRefresc, configuraBackendSessio, nivellDAsseguranca, esSessioPilot } from './identitat.js';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol } from './backendPort.js';
 
@@ -141,7 +141,9 @@ export function sincronitza() {
   /* Onada 11 (261010) · El nivell es llig del JWT desat, només amb usuari. */
   estatActual = { ...estatActual, usuari: user, estat: user ? 'dins' : 'fora', generacio, nivell: user ? nivellDAsseguranca() : null };
   if (!user) estatActual = { ...estatActual, rol: null };
-  else if (teCapacitat('sessio')) {
+  /* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · La sessió pilot local no té cap
+     servidor a qui preguntar el rol: és 'usuari', sense cap petició. */
+  else if (teCapacitat('sessio') && !esSessioPilot()) {
     const myGen = generacio;
     const config = currentConfig;
     const aplicaRol = rol => {

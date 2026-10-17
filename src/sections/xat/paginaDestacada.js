@@ -10,8 +10,9 @@
  * columna cau a 'anima', la de sempre (ordre del Mestre, 260927).
  *
  * Per a canviar-la, canvia només la constant: 'xat', 'anima', 'projecte',
- * 'constitucio', 'roadmap'… «L'Ànima de la IAIA» no es retira: /iaia, la
- * secció 'ia' i el seu xat de pàgina continuen com eren.
+ * 'constitucio', 'roadmap'… «L'Ànima de la IAIA» no es retira: la secció
+ * 'ia' continua com era, ara a /anima (Gauntlet 261016_1530, Bloc 3.6.3), i
+ * el xat públic de /iaia és el de la IAIA MarIA, la de la seua fitxa.
  *
  * Pur: sense React ni xarxa.
  */
@@ -45,7 +46,7 @@ export function paginaDestacada(pageCopy, clau = PAGINA_DESTACADA_DEL_XAT) {
 /**
  * Ordre del Mestre (261007), proposta P4 · La ruta d'una pàgina de text que el
  * lector de connexions sap resoldre (paginaDeText.js · paginaDeRuta): la
- * canònica si en té (resolvePageSlugPath: 'anima' → '/iaia') i, si no,
+ * canònica si en té (resolvePageSlugPath: 'anima' → '/anima') i, si no,
  * /page/<clau> ('xat' → '/page/xat'). Connectar, des del document destacat,
  * desa esta ruta i no /xat, que no és cap pàgina.
  */

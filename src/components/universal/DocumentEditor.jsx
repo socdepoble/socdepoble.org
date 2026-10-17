@@ -21,8 +21,15 @@ import { extensionsRiques } from './richText/extensions';
 import { DialegTriaTargeta } from './richText/extensions/targetes/DialegTriaTargeta.jsx';
 import { NOM_EXTENSIO_TARGETES, TargetesIncrustadesContext } from './richText/extensions/targetes/TargetesIncrustadesContext.js';
 import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
+/* Correcció de la revisió (261016) · També pel seu camí: la plantilla verge
+   s'esvaeix abans de qualsevol ordre que arriba de fora del cos. */
+import { buidaLlavorVerge } from './richText/useUniversalRichText.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
+
+/* Bloc 3.8 (261016) · On un cos d'editor no es veu ni rep el focus: la
+   mateixa regla que la guarda del focus de la closca (AppGridShell). */
+const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
 
 /**
  * Interfície Adapter requerida:
@@ -82,11 +89,20 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // la pàgina de qui signa: amb ella, l'avatar i el
  *                            // nom de la barra taronja són un enllaç (també a
  *                            // l'estat buit). Sense la clau, el DOM de sempre.
- *   seedContent: String|null // Opcional. Llavor del cos: mentre el cos és
- *                            // exactament esta llavor es pinta atenuat i es buida
- *                            // en rebre el focus. Sense la clau (undefined) val
- *                            // LLAVOR_NOTA, com sempre, i el Bloc de Notes no la
- *                            // passa; un valor explícit mana, també null (cap llavor).
+ *   seedContent: String|String[]|null // Opcional. Llavor del cos: mentre el
+ *                            // cos és exactament esta llavor es buida en rebre el
+ *                            // focus. Bloc 3.9 (261016) · Es compara amb el
+ *                            // document de l'editor (useUniversalRichText ·
+ *                            // esLlavorVerge), no amb la cadena, i pot ser una
+ *                            // llista: el Bloc de Notes hi passa la llavor d'ara i
+ *                            // la d'abans (llavorNota.js · LLAVORS_NOTA). Sense la
+ *                            // clau (undefined) val LLAVOR_NOTA, com sempre; un
+ *                            // valor explícit mana, també null (cap llavor).
+ *                            // Correcció de la revisió (261016) · Les ordres que
+ *                            // arriben de fora del cos (un botó de la barra, la
+ *                            // inserció de registraInsercio, una targeta triada)
+ *                            // la buiden ABANS de la cadena (buidaLlavorVerge):
+ *                            // també són el primer clic.
  *                            // La fitxa del Perfil (PerfilEditor) depén d'este null:
  *                            // no el convertiu en «sense clau».
  *                            // La dependència inversa cap a sections/notes és deute
@@ -100,6 +116,9 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *   onObriEmoticona: () => void // Opcional (T51). Amb ell, l'espai central és el
  *                            // botó que obri el diàleg d'emoticona del consumidor
  *                            // (ploma blanca sense emoticona). Sense, cel·la de lectura.
+ *                            // Bloc 3.9 (261016) · El Bloc de Notes ja no el passa:
+ *                            // la barra taronja queda en lectura i el diàleg s'obri
+ *                            // des del botó «Emojis XL» de la botonera.
  *   ambVistes: Boolean       // Opcional (CONTRACTE-3, pla 261008_1201; true). Amb
  *                            // false, davall del títol (.sdp-copyright-control) no es
  *                            // pinten «Vista A4 / PDF» i «Crear portada»
@@ -136,6 +155,37 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // memoritzat pel consumidor (NotesEditor ·
  *                            // useMemo): un JSX nou a cada pintada refaria
  *                            // l'adaptador. Sense la clau, el DOM de sempre.
+ *   registraInsercio: (inserix, { pot }) => (() => void)|void // Opcional (Bloc
+ *                            // 3.8 del Gauntlet, 261016). Quan l'editor és viu,
+ *                            // el registra: inserix(text) → Boolean escriu el
+ *                            // text (un node de text) al cursor del cos, amb
+ *                            // el focus de tornada, i torna true; pot() →
+ *                            // Boolean ho pregunta sense escriure. Tots dos
+ *                            // tornen false si no hi ha document, el cos no és
+ *                            // editable o és fora de la vista (dins d'un
+ *                            // [inert], un [aria-hidden="true"] o un [hidden], o
+ *                            // amb la vista de drets oberta), i qui crida
+ *                            // decidix què fer (el Bloc copia). La funció que
+ *                            // torna, si en torna, el desregistra en
+ *                            // desmuntar-se o en canviar d'editor. No passa
+ *                            // per ...rest.
+ *   obreEmojis: () => void   // Opcional (Bloc 3.8). Amb ella, l'ordre «/» Emoji
+ *                            // (extensions · creaOrdres ambEmojis) l'obri,
+ *                            // per una ref: les extensions no es refan si la
+ *                            // funció canvia. Sense la clau, les ordres i les
+ *                            // extensions de sempre. No passa per ...rest.
+ *   placeholderTitol: String|null // Opcional (Bloc 3.9 del Gauntlet, 261016).
+ *                            // El placeholder de l'H1 de la closca i el títol de
+ *                            // reserva de la Vista A4 / PDF. El Bloc de Notes hi
+ *                            // posa «Nota sense títol» (TITOL_NOTA_PREPARADA, el
+ *                            // mateix de la targeta). Sense la clau,
+ *                            // TEXTOS_LLAVOR.titol i el DOM de sempre.
+ *   edicioAvancada: Boolean  // Opcional (Bloc 3.9, 261016; false). Amb true, la
+ *                            // closca agrupa en un desplegable plegat «Edició
+ *                            // avançada», just damunt de la barra d'eines, la
+ *                            // capçalera, el logotip, la botonera, els drets i
+ *                            // les vistes (UniversalEditorShell). Sense la clau,
+ *                            // el DOM de sempre (Perfil i catàleg).
  *   ...rest // La resta (heroEditLabel, estatDesament…) passa a UniversalEditorShell.
  *           // Ordre del Mestre (261007, ordre E): també onLogoEdit i logoEditLabel
  *           // (la ranura del logotip, mirall d'onHeroEdit) i avatarAutor, que
@@ -250,10 +300,24 @@ export function DocumentEditor({ adapter, onToast }) {
     ambVistes = true,
     /* T7 · la font de les targetes incrustades (null: el cos de sempre). */
     targetes = null,
+    /* Bloc 3.8 (261016) · el canal d'inserció al cursor i l'ordre «/» Emoji. */
+    registraInsercio = null,
+    obreEmojis = null,
+    /* Bloc 3.9 (261016) · el placeholder de l'H1 (null: el de sempre). */
+    placeholderTitol = null,
+    /* Bloc 3.9 (261016) · el desplegable «Edició avançada» (false: el DOM de sempre). */
+    edicioAvancada = false,
     ...rest
   } = adapter;
 
   const ambTargetes = Boolean(targetes);
+  /* Bloc 3.8 · Per una ref, com onToast: l'extensió es fixa en crear l'editor. */
+  const ambEmojis = typeof obreEmojis === 'function';
+  const obreEmojisRef = useRef(obreEmojis);
+  obreEmojisRef.current = obreEmojis;
+  const obreEmojisDelCos = useCallback(() => {
+    if (typeof obreEmojisRef.current === 'function') obreEmojisRef.current();
+  }, []);
   /* Ordre del Mestre (261007, ordre E) · L'ordre «/» Imatge avisa pel mateix
      canal que la capçalera (onToast) quan la pujada es rebutja o el fitxer no
      és una imatge. Per una ref: les extensions han de ser CONSTANTS (useMemo,
@@ -267,9 +331,13 @@ export function DocumentEditor({ adapter, onToast }) {
     if (typeof onToastRef.current === 'function') onToastRef.current(missatge, tipus);
     else console.warn(`[slash] ${missatge}`);
   }, []);
+  /* Sense obreEmojis, la crida de sempre (cap clau nova). */
   const extensions = useMemo(
-    () => extensionsRiques({ onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos }),
-    [uploadMedia, ambTargetes, avisaDelCos],
+    () => extensionsRiques({
+      onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos,
+      ...(ambEmojis ? { obreEmojis: obreEmojisDelCos } : {}),
+    }),
+    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos],
   );
 
   const desaLocal = useCallback(
@@ -413,7 +481,9 @@ export function DocumentEditor({ adapter, onToast }) {
   const triaTargeta = useCallback((entrada) => {
     setSelectorTargetaObert(false);
     const attrs = attrsDeEntrada(entrada);
-    if (attrs && editor && !editor.isDestroyed) editor.chain().focus().inserirTargeta(attrs).run();
+    if (!attrs || !editor || editor.isDestroyed) return;
+    buidaLlavorVerge(editor);
+    editor.chain().focus().inserirTargeta(attrs).run();
   }, [editor]);
   const avisaTargeta = useCallback(() => setAvisTargetaObert(true), []);
   const tancaAvisTargeta = useCallback(() => setAvisTargetaObert(false), []);
@@ -421,6 +491,46 @@ export function DocumentEditor({ adapter, onToast }) {
     () => (ambTargetes ? { avisa: avisaTargeta, t } : null),
     [ambTargetes, avisaTargeta, t],
   );
+
+  /* Bloc 3.8 del Gauntlet (261016) · Inserir al cursor des de fora del cos
+     (la graella d'emojis del Bloc: la icona de NOTES i l'ordre «/» Emoji).
+     Un efecte, no les extensions (han de ser constants): registra l'editor
+     viu i el desregistra en desmuntar-se o en canviar d'editor. El document i
+     la vista de drets es lligen per una ref: el registre no es refà a cada
+     tecla. S'inserix un node de text, mai HTML. Si el cos no es pot escriure
+     o no es veu (el detall tapat i inert del mestre-detall en estret, la
+     closca amagada per la vista de drets), torna false i qui crida decidix.
+     Correcció de la revisió (261016) · Sobre una nota nova, l'emoji és el
+     primer gest: la plantilla verge s'esvaeix abans (buidaLlavorVerge) i
+     l'emoji queda sol al cos, també a Safari, on el focus de la cadena és
+     immediat. */
+  const insercioViva = useRef({ document: null, dretsOberts: false });
+  insercioViva.current = { document, dretsOberts };
+  useEffect(() => {
+    if (typeof registraInsercio !== 'function' || !editor) return undefined;
+    const pot = () => {
+      if (editor.isDestroyed || !editor.isEditable) return false;
+      const viu = insercioViva.current;
+      if (!viu.document || viu.dretsOberts) return false;
+      let cos = null;
+      try {
+        cos = editor.view.dom;
+      } catch {
+        cos = null;
+      }
+      return Boolean(cos?.isConnected) && !cos.closest(FORA_DE_LA_VISTA);
+    };
+    const inserix = (text) => {
+      const net = typeof text === 'string' ? text : '';
+      if (!net || !pot()) return false;
+      buidaLlavorVerge(editor);
+      return editor.chain().focus().insertContent({ type: 'text', text: net }).run();
+    };
+    const desregistra = registraInsercio(inserix, { pot });
+    return () => {
+      if (typeof desregistra === 'function') desregistra();
+    };
+  }, [registraInsercio, editor]);
 
   if (!document) {
     return (
@@ -490,7 +600,7 @@ export function DocumentEditor({ adapter, onToast }) {
       {copyrightSelector ? (
         <div className="sdp-copyright-control">
           {copyrightSelector}
-          {ambVistes ? <DocumentPrintPreview document={document} author={barAuthorName} /> : null}
+          {ambVistes ? <DocumentPrintPreview document={document} author={barAuthorName} {...(placeholderTitol ? { titolReserva: placeholderTitol } : null)} /> : null}
         </div>
       ) : null}
     </>
@@ -532,6 +642,9 @@ export function DocumentEditor({ adapter, onToast }) {
       onPublishDateChange={ambDataPublicacio ? triaDataPublicacio : null}
       avisDataPublicacio={ambDataPublicacio ? avisDataPublicacio : null}
       {...rest}
+      /* Bloc 3.9 (261016) · Opt-in: sense les claus, cap prop nova a la closca. */
+      {...(placeholderTitol ? { placeholderTitol } : null)}
+      {...(edicioAvancada ? { edicioAvancada: true } : null)}
       className={classeCloscat}
       classificacio={ranuraClassificacio}
       copyright={ambDrets ? copyrightValue : undefined}

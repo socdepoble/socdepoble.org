@@ -1,0 +1,176 @@
+
+
+77 comprobaciones para limpiar un WordPress infectado, en una hoja de cálculo (descarga gratis)
+
+Por 			
+
+				Fernando Tellado			
+
+		 /  28-09-2026 / Avanzado, Principiante, Vigilante / 8 minutos de lectura
+
+												Resumen generado con IA
+
+Se presenta una hoja de cálculo descargable gratuitamente con 77 comprobaciones distribuidas en 8 fases para facilitar el seguimiento sistemático durante la limpieza de un WordPress infectado, evitando que se olviden pasos en un proceso que puede durar varios días.
+
+La herramienta no sustituye a una guía completa de limpieza sino que la acompaña, permitiendo que el usuario sepa en qué punto del proceso se encuentra y ayudando a evitar los errores comunes que obligan a repetir la limpieza desde el principio.
+
+La hoja incluye ocho pestañas con funciones específicas como portada con contador de avance, información previa necesaria, checklist detallado con fechas y notas, diagnóstico de infecciones, escáneres online, gestión de avisos y patrones de código malicioso.
+
+Si te han infectado una web lo que te va a fallar no es saber qué hacer, que eso está escrito en mil sitios, también en este blog, sino acordarte de por dónde ibas y qué queda aún por hacer.
+
+Y es que una limpieza en condiciones son dos o tres días de trabajo, y puede que más, porque si toca, la de que Google quite el aviso de web peligrosa, y que los antivirus dejen de marcarla como infectada, se cuenta en semanas, y es fácil que se te pase algo.
+
+Así que he decidido compartir la hoja de seguimiento con la que llevo trabajando años y te la puedes descargar para tus cosas.
+
+Son, total nada, solo 77 comprobaciones repartidas en 8 fases, en una hoja de cálculo que rellenas y que te va diciendo en qué punto estás. 
+
+Gratis, sin registro y sin dejar el correo en ninguna parte, es una hoja de cálculo, la descargas en tu ordenador y la usas como y para lo que quieras.
+
+No sustituye a una guía de limpieza ni al trabajo que supone, la acompaña, es una ayuda. Ya mismo te cuento qué tiene dentro y, sobre todo, los cuatro errores que podrías cometer si te saltas el orden y lo que te ahorra, que son los típicos fallos bobos que hacen que una limpieza haya que repetirla entera.
+
+Índice de contenidos
+
+Toggle
+
+Esto no es otra guía de limpieza, es para que sepas por dónde vas
+
+Qué tiene dentro la hoja de seguimiento
+
+Los cuatro errores de orden que te va a evitar
+
+Si tu web guarda datos personales tienes 72 horas
+
+La descarga y los primeros cinco minutos
+
+Hasta dónde llega la hoja de seguimiento
+
+Para que no haya una segunda vez
+
+Esto no es otra guía de limpieza, es para que sepas por dónde vas
+
+La guía completa la tengo publicada desde hace años y la voy actualizando, la tienes en cómo limpiar y recuperar un WordPress hackeado o infectado. Ahí está el procedimiento entero, paso por paso.
+
+Lo que no cabe en un artículo, por largo que sea, es el seguimiento. Un tutorial te lo lees de una sentada, pero el trabajo dura días, y entre medias te llaman por teléfono, cierras el portátil, vuelves al día siguiente y ya no sabes si llegaste a mirar la carpeta mu-plugins o te quedaste en los drop-ins.
+
+La guía te explica como se hace, pero necesitas una lista de tareas para no entregar como limpia una web en la que te dejaste varios pasos sin terminar.
+
+Seguramente hay trabajos en web que no requieran este tipo de seguimiento, yo no los conozco, pero no dudo que tú sepas alguno, pero sí te aseguro que en seguridad no sobra ningún paso, y también tengo claro que el orden en tareas de limpieza de malware y virus importa y mucho.
+
+Qué tiene dentro la hoja de seguimiento
+
+Son 8 pestañas, cada una con su función:
+
+Portada: escribes tu dominio, tienes los avisos de lo que puede salir mal y un contador de avance por fases que se actualiza solo.
+
+Antes de empezar: los accesos y la información que conviene tener a mano antes de tocar nada, que si no acabas parando la limpieza a media faena para buscar una contraseña.
+
+Checklist: las 77 comprobaciones con su estado, su fecha y un hueco para notas.
+
+Diagnóstico: 27 comprobaciones de las que delatan una infección, cada una con cómo se mira desde fuera sin instalar nada.
+
+Comprobaciones online: 20 escáneres y servicios públicos, con el enlace de tu dominio si lo añadiste en la portada.
+
+Reputación y retiradas: dónde se mira cada aviso y, más importante, dónde se pide que te lo quiten.
+
+Patrones de código: 20 patrones que buscar en los ficheros y qué significa cada uno si aparece.
+
+No volver a pasar: las diez medidas de después, con el porqué de cada una.
+
+El detalle que vas a agradecer es el del dominio, lo escribes una vez en la portada y los enlaces de los escáneres salen construidos con tu web dentro, así que no tienes que ir copiando y pegando en veinte formularios distintos mientras estás a tope de tareas.
+
+Cada comprobación viene marcada con su nivel de riesgo, porque no es lo mismo mirar un archivo que borrarlo, y las que pueden dejarte la web fuera de servicio salen en rojo.
+
+Los cuatro errores de orden que te va a evitar
+
+Esto es lo que de verdad separa una limpieza que termina bien de una que hay que repetir, y sobre todo, la diferencia de entregar una web limpia a una que tirará por tierra tu reputación como profesional por haberte dejado cosas a medias o sin hacer.
+
+No son nunca errores de conocimiento, son errores de orden, y nos pasa a todos si no tenemos consistencia en los procesos, o una hoja de seguimiento.
+
+Pedir la revisión de seguridad a Google con la web aún no limpia del todo: Es lo primero que hace todo el mundo, porque el aviso rojo de Chrome aprieta, estamos todos deseando que desaparezca, tu cliente el primero. Si la pides antes de tiempo gastas el intento, Google vuelve a mirar, lo vuelve a encontrar y la siguiente revisión tarda más. En la hoja esa comprobación está en la fase 7, la última, y no por capricho. Lo tienes explicado en cómo quitar una web WordPress de la lista negra de Google.
+
+Pedir la salida de las listas negras de correo con el servidor todavía enviando spam: Mismo problema que con el punto anterior, pero además generas trabajo improductivo de marketing, con una newsletter que sigue fallando y emails que no llegan a nadie por apresurarte.
+
+Dar el trabajo por terminado el mismo día: Una web limpia el martes y reinfectada el jueves no estaba limpia, es que quedaba una puerta trasera o el agujero por el que entraron sigue abierto. Por eso hay una comprobación que consiste literalmente en esperar 72 horas y volver a mirar. En mi experiencia es casi el punto más importante de todo el listado, y además tiene connotaciones legales (lo detallo más abajo).
+
+Dejarte el modo mantenimiento puesto: Quitas la página de aviso, te olvidas de la regla del .htaccess y tu portada sigue devolviendo un 503 a Google durante una semana. La web está perfecta pero perdiendo posicionamiento sin enterarte. En serio, pasa.
+
+Si tu web guarda datos personales tienes 72 horas
+
+Esta parte se salta casi siempre y es la única que tiene plazo legal. Si en la web hay clientes, pedidos, suscriptores o formularios guardados, y alguien ha podido acceder a eso, hay 72 horas para notificar la brecha a la Agencia Española de Protección de Datos, contadas desde que te enteras, no desde que terminas de limpiar.
+
+Que una web sea pequeña, o tuya, no quita la obligación, porque el responsable del tratamiento ahora mismo eres tú. Eso sí, tampoco te vayas al otro extremo, porque en la mayoría de webs pequeñas la cosa se resuelve valorando el alcance y documentando la valoración, se notifique o no. Lo que no vale es no haber pensado en ello.
+
+En la hoja son tres comprobaciones y están en la fase 0, antes de tocar un solo fichero, precisamente porque el plazo corre mientras limpias.
+
+La descarga y los primeros cinco minutos
+
+Aquí la tienes para descargarla gratis, en formato .xlsx, que se abre en Excel, en Numbers, en LibreOffice y en Google Sheets:
+
+Descargar hoja de seguimiento (xlsx)
+
+Tres cosas para empezar con buen pie:
+
+Escribe tu dominio arriba del todo de la hoja de portada, sin www y sin https, que de ahí salen todos los enlaces de otras hojas.
+
+Filtra la columna «Aplica si» y marca «No aplica» en lo que no sea tu caso, que si no tienes tienda te sobran unas cuantas comprobaciones.
+
+No empieces la fase 3 sin haber terminado la copia de la fase 1. Esa copia es tu red de seguridad y es la que te permite equivocarte.
+
+Y guárdala aunque no la necesites hoy. El día que la necesites vas a tener otras cosas en la cabeza.
+
+Hasta dónde llega la hoja de seguimiento
+
+Para que no haya malentendidos, porque esto no es un folleto, la hoja no te encuentra por dónde te entraron a una web, eso lo tienes que averiguar tú, y sin saber por dónde entraron limpiar sirve solo de momento, porque volverán por el mismo sitio.
+
+Hay tres situaciones en las que yo no seguiría sin ayuda:
+
+Si es una tienda y ha podido haber captura de datos de pago.
+
+Si el hosting ya te ha suspendido la cuenta.
+
+Si vas por la segunda reinfección. Ahí ya no hablamos de seguir una lista, hablamos de un trabajo de varios días con herramientas que no se improvisan y con un informe detrás.
+
+Si estás en ese punto déjaselo a otros y tú sigue a tus tareas. Pero si prefieres intentarlo tú para eso tienes la hoja de seguimiento ¡a por ello!
+
+Para que no haya una segunda vez
+
+La última pestaña son diez medidas, pero si solo te llevas cuatro que sean estas: doble factor para todos los administradores, nada de plugins ni temas nulled, copias automáticas que hayas restaurado alguna vez de verdad, y vigilancia de cambios en archivos para enterarte tú antes que Google.
+
+Para lo último tienes Vigilante, que ya sabes que es un plugin gratuito y hace justo eso, avisarte cuando un fichero cambia y cuando aparece una vulnerabilidad en algo que tienes instalado. Si prefieres no volver a pensar en esto nunca más, pues para eso está el servicio de mantenimiento, que es literalmente esto mismo hecho cada mes por alguien que no se olvida.
+
+Y si ahora mismo solo quieres saber cómo está tu web, pásala por el análisis de seguridad, que tarda un minuto y no instala nada.
+
+Si quieres profundizar en la parte de prevención tienes 15 maneras de proteger WordPress contra el malware, y si lo que te está pasando es que Google te devuelve resultados raros en japonés o de venta de relojes, eso tiene nombre y lo cuento en este otro artículo sobre spam SEO inyectado.
+
+Úsala, rómpela y dime qué te ha faltado. La hoja la genero desde mi propio catálogo de comprobaciones, así que añadir lo que me digáis y sacar una versión nueva me cuesta cinco minutos. Me tienes ahí abajo, en la sección de comentarios.
+
+Compártelo en tus redes
+X (Twitter)LinkedInFacebookTelegramWhatsAppEmailRedditMastodonBlueskyPinterestCompartirResúmelo con tu IA
+ClaudeChatGPTGeminiGrokPerplexityMeta AIMistralCopilotDeepSeekQwenGoogle AI
+Compartir
+
+                ¿De cuánta utilidad te ha parecido este contenido?            
+
+                ¡Haz clic en las estrellas para valorarlo!            
+
+                            Enviar la valoración                
+
+                Promedio de puntuación 4.9 / 5. Total de votos: 10            
+
+                ¡Todavía no hay votos! Sé el primero en valorar este contenido.            
+
+    Ya que has encontrado útil este contenido...  
+
+    ¡Sígueme en las redes sociales!  
+
+Puede que también te interese…
+Multitienda en WooCommerce ¿es posible?
+
+Como limpiar y recuperar un WordPress hackeado o infectado
+
+¿Qué hay que hacer para posicionar en las vistas…
+
+Todo lo que deberías revisar si vas a auditar una…
+
+¿Te gustó este artículo? ¡Ni te imaginas lo que te estás perdiendo en YouTube!
+

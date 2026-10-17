@@ -48,6 +48,14 @@ import { useEffect, useState } from 'react';
  * contingut de davall del botó) i sense cap peu ancorat (el botó cauria
  * damunt de «Desar autoria» o del compositor); només avisa quan canvia. La
  * posició viu en memòria (WeakMap): res a localStorage ni a sessionStorage.
+ *
+ * Bloc 3.10 (pla 261016_1530) · Fora del compacte també s'activa en una
+ * tauleta tàctil (l'iPad en horitzontal passa de 1023px) i en una caixa
+ * baixa (useArrelTactil i esPantallaCurta, que App.jsx marca a l'arrel). Allà
+ * (compacte=false) no hi ha barra inferior ni botó: només «dalt», potPujar
+ * sempre fals, i una columna de la graella només compta si conté totes les
+ * peces que l'atribut mouria (lesConteTotes): el scroll d'una llista no amaga
+ * les barres del document del costat. En compacte, res d'açò canvia.
  */
 
 export const ATRIBUT_BARRES = 'data-sdp-barres';
@@ -80,6 +88,31 @@ const SELECTOR_ESPECIMEN = '.sdp-especimen';
 
 const SELECTOR_MENU_OBERT = SELECTOR_BARRES.split(', ').map((barra) => `${barra} [aria-expanded="true"]`).join(', ');
 const SELECTOR_DIALEG = 'dialog, [role="dialog"]';
+
+/* Bloc 3.10 · Les marques de l'arrel fora del compacte. Les escriu App.jsx i
+   layout.css («Barres que acompanyen el scroll») hi penja les transicions i
+   els estats amagats de la blava, la taronja i les peces enganxades. */
+export const ATRIBUT_TACTIL = 'data-sdp-tactil';
+export const ATRIBUT_CURTA = 'data-sdp-curta';
+/* El punter principal és un dit i no passa per damunt: la tauleta, no el
+   portàtil amb pantalla tàctil i ratolí. Avalua el dispositiu, no la caixa:
+   també encastat a WordPress. */
+export const CONSULTA_TACTIL = '(hover: none) and (pointer: coarse)';
+/* El tall de «pantalla curta» que ja fa servir modules.css (Correcció C20,
+   `(max-height: 760px)`), aplicat a l'alçada de la caixa de l'app. */
+export const ALCADA_MAXIMA_CURTA = 760;
+
+/** Cert si una caixa amb esta alçada (px) és curta. Sense mesura (0), no. */
+export function esPantallaCurta(alcada) {
+  return alcada > 0 && alcada <= ALCADA_MAXIMA_CURTA;
+}
+
+/* Les peces que l'atribut mou (layout.css). Les de pàgina només quan són
+   filles directes de .sdp-universal-page-container, com al full. Les d'un
+   espècimen, d'un diàleg o d'un node ocult no es veuen moure's. */
+const CLASSES_PECES_DE_PAGINA = Object.freeze(['bar-blue', 'bar-orange']);
+const CLASSES_PECES_ENGANXADES = Object.freeze(['sdp-editor-eines', 'sdp-cal-setmana__capcal']);
+const SELECTOR_PECA_QUIETA = `${SELECTOR_ESPECIMEN}, ${SELECTOR_DIALEG}, [hidden]`;
 
 export const ESTAT_INICIAL = Object.freeze({ amagades: false, pos: 0, acumulat: 0 });
 
@@ -145,11 +178,12 @@ function creaMagatzem() {
   };
 }
 
-export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta }) {
+export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta, compacte = true }) {
   const [magatzem] = useState(creaMagatzem);
 
   /* clauRuta: en canviar de ruta l'efecte es desfà i torna a començar, amb
-     les barres a la vista i les posicions oblidades. */
+     les barres a la vista i les posicions oblidades. compacte també: passar
+     de la tauleta al compacte (o al revés) reinicia l'estat i el botó. */
   useEffect(() => {
     const arrel = arrelRef.current;
     const visor = visorRef.current;
@@ -218,10 +252,28 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta }) {
     const peus = CLASSES_PEU_ANCORAT.map((classe) => visor.getElementsByClassName(classe));
     const hiHaPeuAncorat = () => peus.some((llista) => Array.prototype.some.call(llista, (peu) => !peu.closest(SELECTOR_ESPECIMEN)));
 
+    /* Bloc 3.10 · Fora del compacte (tauleta horitzontal, pantalla curta) la
+       graella pot portar columnes que fan scroll cadascuna, i l'atribut mou
+       les barres de totes les pàgines de l'arrel (FRACCIO_VISOR compara
+       alçades: una columna sencera hi passa). Un desplaçador només compta si
+       conté totes les peces que es mourien. Col·leccions vives de l'arrel,
+       el mateix abast que el full: poques peces i cap recorregut del DOM. */
+    const peces = [...CLASSES_PECES_DE_PAGINA, ...CLASSES_PECES_ENGANXADES]
+      .map((classe) => arrel.getElementsByClassName(classe));
+    const esMou = (peca) => !peca.closest(SELECTOR_PECA_QUIETA)
+      && (!CLASSES_PECES_DE_PAGINA.some((classe) => peca.classList.contains(classe))
+        || peca.parentElement?.classList.contains('sdp-universal-page-container') === true);
+    const lesConteTotes = (element) => peces.every((llista) => Array.prototype.every.call(llista,
+      (peca) => element.contains(peca) || !esMou(peca)));
+    const contePeca = (element) => peces.some((llista) => Array.prototype.some.call(llista,
+      (peca) => element.contains(peca) && esMou(peca)));
+
     /* El botó: més d'una pantalla avall, fora del final del recorregut (on
        ja no es pot baixar més per a traure el que queda davall del botó) i
-       sense cap peu ancorat a baix. Les barres, les mira qui crida. */
+       sense cap peu ancorat a baix. Les barres, les mira qui crida. Fora del
+       compacte no n'hi ha: el seu lloc fix és damunt de «Pobles». */
     const potPujar = (element, pos) => {
+      if (!compacte) return false;
       const m = mesura();
       const alcada = element.clientHeight;
       const max = Math.max(0, element.scrollHeight - alcada);
@@ -232,6 +284,17 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta }) {
       if (!element.isConnected || !visor.contains(element) || element.closest(SELECTOR_SENSE_AUTOAMAGAT)) return;
       const alcada = element.clientHeight;
       if (alcada < visor.clientHeight * FRACCIO_VISOR) return;
+      /* Un desplaçador que no les conté totes no les amaga. Si és una
+         columna amb peces pròpies i ja estaven amagades per una altra, les
+         torna: si no, les seues també s'amagarien en baixar-la. Un carrusel
+         o una taula de dins de la pàgina, sense cap peça, no les torna. */
+      if (!compacte && !lesConteTotes(element)) {
+        if (escrit != null && contePeca(element)) {
+          estat = { ...estat, amagades: false, acumulat: 0 };
+          escriu(null);
+        }
+        return;
+      }
       const m = mesura();
       if (!m) return;
       let registre = registres.get(element);
@@ -258,8 +321,9 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta }) {
       actual = element;
       estat = seguentEstat(previ, { pos, max, llindar: m.llindar, cim: m.cim });
       if (estat.amagades && retingudes()) estat = { ...estat, amagades: false, acumulat: 0 };
+      // Fora del compacte no hi ha barra inferior: mai «totes».
       escriu(estat.amagades
-        ? (arribaAlFons(element, registre) && !hiHaPeuAncorat() ? BARRES_TOTES : BARRES_DALT)
+        ? (compacte && arribaAlFons(element, registre) && !hiHaPeuAncorat() ? BARRES_TOTES : BARRES_DALT)
         : null);
       magatzem.posa(!estat.amagades && potPujar(element, pos));
     };
@@ -338,7 +402,56 @@ export function useBarresAmbScroll({ arrelRef, visorRef, actiu, clauRuta }) {
       magatzem.enllaca(null);
       magatzem.posa(false);
     };
-  }, [arrelRef, visorRef, actiu, clauRuta, magatzem]);
+  }, [arrelRef, visorRef, actiu, clauRuta, compacte, magatzem]);
 
   return magatzem.publica;
+}
+
+/* La consulta tàctil, si l'entorn en té (jsdom no porta matchMedia; el
+   mateix patró que theme.js · sistemaDemanaContrast). */
+function consultaTactil(vista) {
+  if (!vista || typeof vista.matchMedia !== 'function') return null;
+  try {
+    return vista.matchMedia(CONSULTA_TACTIL) || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * useArrelTactil — Bloc 3.10 · cert quan el dispositiu és una tauleta o un
+ * mòbil (CONSULTA_TACTIL), i ho marca a l'arrel (data-sdp-tactil) perquè el
+ * full hi penge les transicions de les barres. Escolta `change` (un iPad que
+ * connecta o desconnecta el ratolí); Safari < 14 només té addListener. Sense
+ * matchMedia, fals i cap atribut. En desmuntar, l'atribut se'n va.
+ */
+export function useArrelTactil(arrelRef) {
+  const [tactil, setTactil] = useState(() => consultaTactil(typeof window === 'undefined' ? null : window)?.matches === true);
+
+  useEffect(() => {
+    const arrel = arrelRef.current;
+    if (!arrel) return undefined;
+    const vista = arrel.ownerDocument?.defaultView || (typeof window === 'undefined' ? null : window);
+    const consulta = consultaTactil(vista);
+    const aplica = () => {
+      const ara = consulta?.matches === true;
+      arrel.toggleAttribute(ATRIBUT_TACTIL, ara);
+      setTactil(ara);
+    };
+    aplica();
+    let deixa = () => {};
+    if (consulta && typeof consulta.addEventListener === 'function') {
+      consulta.addEventListener('change', aplica);
+      deixa = () => consulta.removeEventListener('change', aplica);
+    } else if (consulta && typeof consulta.addListener === 'function') {
+      consulta.addListener(aplica);
+      deixa = () => consulta.removeListener(aplica);
+    }
+    return () => {
+      deixa();
+      arrel.removeAttribute(ATRIBUT_TACTIL);
+    };
+  }, [arrelRef]);
+
+  return tactil;
 }

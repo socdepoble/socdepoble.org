@@ -6,16 +6,20 @@ const normalizeText = (value) =>
     .replace(/\s+/g, ' ')
     .trim();
 
+/* Gauntlet 261016 (I34) · Les nou reserves viuen a uploads/brain/: a
+   /assets/img/ no n'hi ha cap (eixa carpeta de l'arrel no es servix) i un
+   poble sense imatge pintava una imatge trencada. Ho vigila la prova de
+   frescor d'assetResolver.test.js. */
 const TOWN_FALLBACK_IMAGES = [
-  '/assets/img/hero_panoramic_landscape_1774710654078.png',
-  '/assets/img/hero_panoramic_rural_view_1774720664221.png',
-  '/assets/img/art_trellat_farmer_1774708525806.png',
-  '/assets/img/nano_mercat_llaurador_1774197050578.png',
-  '/assets/img/aplec_danses_1774952191348.png',
-  '/assets/img/nano_mel_font_roja_1774216345755.png',
-  '/assets/img/art_trellat_v2_1774708257858.png',
-  '/assets/img/hero_serrella_comic_1774709602282.png',
-  '/assets/img/nano_oli_oliva_1774198089084.png'
+  '/assets/uploads/brain/hero_panoramic_landscape_1774710654078.png',
+  '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
+  '/assets/uploads/brain/art_trellat_farmer_1774708525806.png',
+  '/assets/uploads/brain/nano_mercat_llaurador_1774197050578.png',
+  '/assets/uploads/brain/aplec_danses_1774952191348.png',
+  '/assets/uploads/brain/nano_mel_font_roja_1774216345755.png',
+  '/assets/uploads/brain/art_trellat_v2_1774708257858.png',
+  '/assets/uploads/brain/hero_serrella_comic_1774709602282.png',
+  '/assets/uploads/brain/nano_oli_oliva_1774198089084.png'
 ];
 
 function pickDeterministicImage(seed, options) {
@@ -175,13 +179,13 @@ function resolveTownImageUrl(value, context = '', seed = '', basePath = '/', plu
     return resolveAsset(raw, basePath, pluginUrl, version);
   }
 
-  if (text.includes('benifallim')) return resolveAsset('/assets/img/hero_panoramic_landscape_1774710654078.png', basePath, pluginUrl, version);
-  if (text.includes('sella')) return resolveAsset('/assets/img/nano_mercat_llaurador_1774197050578.png', basePath, pluginUrl, version);
-  if (text.includes('orxeta')) return resolveAsset('/assets/img/aplec_danses_1774952191348.png', basePath, pluginUrl, version);
-  if (text.includes('relleu')) return resolveAsset('/assets/img/nano_mel_font_roja_1774216345755.png', basePath, pluginUrl, version);
-  if (text.includes('alcoleja')) return resolveAsset('/assets/img/art_trellat_v2_1774708257858.png', basePath, pluginUrl, version);
-  if (text.includes('xixona')) return resolveAsset('/assets/img/hero_serrella_comic_1774709602282.png', basePath, pluginUrl, version);
-  if (text.includes('tibi')) return resolveAsset('/assets/img/nano_oli_oliva_1774198089084.png', basePath, pluginUrl, version);
+  if (text.includes('benifallim')) return resolveAsset(TOWN_FALLBACK_IMAGES[0], basePath, pluginUrl, version);
+  if (text.includes('sella')) return resolveAsset(TOWN_FALLBACK_IMAGES[3], basePath, pluginUrl, version);
+  if (text.includes('orxeta')) return resolveAsset(TOWN_FALLBACK_IMAGES[4], basePath, pluginUrl, version);
+  if (text.includes('relleu')) return resolveAsset(TOWN_FALLBACK_IMAGES[5], basePath, pluginUrl, version);
+  if (text.includes('alcoleja')) return resolveAsset(TOWN_FALLBACK_IMAGES[6], basePath, pluginUrl, version);
+  if (text.includes('xixona')) return resolveAsset(TOWN_FALLBACK_IMAGES[7], basePath, pluginUrl, version);
+  if (text.includes('tibi')) return resolveAsset(TOWN_FALLBACK_IMAGES[8], basePath, pluginUrl, version);
   if (raw.startsWith('/assets/images/towns/')) return resolveAsset(pickDeterministicImage(seed || text, TOWN_FALLBACK_IMAGES), basePath, pluginUrl, version);
 
   return resolveAsset(pickDeterministicImage(seed || text, TOWN_FALLBACK_IMAGES), basePath, pluginUrl, version);

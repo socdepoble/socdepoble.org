@@ -97,6 +97,10 @@ async function llegit(opcions = {}) {
   return { ...vista, triat };
 }
 const textDe = (container) => container.textContent;
+/* Gauntlet 261016 (MCR o3_tpv_gestoria, proves 4 i 5): els recorreguts sencers (llegir el banc i treballar-hi)
+   tarden 0,8-1,9 s sols i passaven dels 5 s per defecte amb la màquina carregada, cada vegada uns altres.
+   Només el límit de temps, cap asserció: el component és font del tractor gestoria.historic i no es toca. */
+const RECORREGUT = 20000;
 
 describe('la porta', () => {
   test('sense l’aprovació del tractor: l’avís honest, cap selector, i el camí al panell de Tractors', async () => {
@@ -195,7 +199,7 @@ describe('revisar i regles', () => {
     await waitFor(() => expect(within(ia).getByRole('rowheader', { name: 'Google (sense producte)' })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: 'Desfés' }));
     await waitFor(() => expect(within(screen.getByRole('region', { name: 'La despesa en IA per proveïdor' })).queryByRole('rowheader', { name: 'Google (sense producte)' })).toBeNull());
-  });
+  }, RECORREGUT);
 
   test('el proveïdor d’un moviment es pot triar: Google reclassificat a IA com a Gemini', async () => {
     await llegit();
@@ -206,7 +210,7 @@ describe('revisar i regles', () => {
     const ia = await screen.findByRole('region', { name: 'La despesa en IA per proveïdor' });
     await waitFor(() => expect(within(ia).getByRole('rowheader', { name: 'Google Gemini' })).toBeTruthy());
     expect(within(ia).queryByRole('rowheader', { name: 'Google (sense producte)' })).toBeNull();
-  });
+  }, RECORREGUT);
 
   test('les entrades sense origen són per revisar i es poden confirmar totes com a cobraments de clients', async () => {
     await llegit();
@@ -233,7 +237,7 @@ describe('revisar i regles', () => {
     expect(screen.getByRole('button', { name: 'Torna a llegir amb les regles' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Lleva la regla «google *services»' }));
     await waitFor(() => expect(screen.queryByRole('list', { name: 'Les teues regles' })).toBeNull());
-  });
+  }, RECORREGUT);
 });
 
 describe('simulacions i llibre', () => {
@@ -248,7 +252,7 @@ describe('simulacions i llibre', () => {
     for (const xifra of XIFRES) expect(textDe(container), xifra).not.toContain(xifra);
     fireEvent.click(screen.getByRole('button', { name: 'Mostra les xifres' }));
     await waitFor(() => expect(textDe(container)).toContain('210,00 €'));
-  });
+  }, RECORREGUT);
 
   test('els trimestres sense extractes no tenen cap xifra al 130 ni al total (mai 0,00 €)', async () => {
     const { container } = await llegit();
@@ -283,7 +287,7 @@ describe('simulacions i llibre', () => {
     expect(screen.getByText(/fins a 12000 €: 10 %/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Torna als paràmetres per defecte de 2025' }));
     await waitFor(() => expect(screen.queryByText(/fins a 12000 €: 10 %/)).toBeNull());
-  });
+  }, RECORREGUT);
 
   test('el llibre: es prepara, avisa que ix sense xifrar amb l’empremta, i només es descarrega en confirmar', async () => {
     const { descarrega } = await llegit();
@@ -322,7 +326,7 @@ describe('la persistència injectable', () => {
     expect(Object.values(desat.reclassificacions)).toEqual([{ categoria: 'programari', proveidor: 'google' }]);
     const json = JSON.stringify(desat);
     for (const privat of [...PRIVATS, '-1200', '1882']) expect(json, privat).not.toContain(privat);
-  });
+  }, RECORREGUT);
 
   test('un canvi fet abans que arribe la configuració desada no es perd: s’hi torna a aplicar damunt i es desa', async () => {
     let resol;
@@ -338,14 +342,14 @@ describe('la persistència injectable', () => {
     expect(desat.regles).toEqual([{ patro: 'forn de prova', categoria: 'altres', proveidor: null }]);
     expect(Object.values(desat.reclassificacions)).toEqual([{ categoria: 'programari', proveidor: 'google' }]);
     expect(screen.getByLabelText('Categoria del moviment del 03/02/2025').value).toBe('programari');
-  });
+  }, RECORREGUT);
 
   test('si desar falla, ho diu; sense persistència, tot en memòria', async () => {
     const persistencia = { llig: async () => null, desa: async () => { throw new Error('el cofre està tancat'); } };
     await llegit({ persistencia });
     fireEvent.change(screen.getByLabelText('Categoria del moviment del 03/02/2025'), { target: { value: 'ia' } });
     expect(await screen.findByText('No s’ha pogut desar la configuració: el cofre està tancat')).toBeTruthy();
-  });
+  }, RECORREGUT);
 
   test('configuracioNeta: només el que és vàlid, i res d’una altra versió', () => {
     expect(configuracioNeta(null)).toBe(CONFIGURACIO_BUIDA);

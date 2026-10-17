@@ -46,7 +46,30 @@ const FITXERS = Object.freeze([
   /* SN (ordre del Mestre, 261003) · El snippet tria la destinació: el Bloc o
      el Lector. La plataforma i el Lector tenen les seues portes pròpies
      (plataforma/qualitat.test.js, lector/qualitat.test.js). */
-  'src/sections/notes/NotesSection.lector.test.jsx'
+  'src/sections/notes/NotesSection.lector.test.jsx',
+  /* Bloc 3.8 del Gauntlet (261016) · Emojis XL al Bloc: el canal entre la
+     graella i l'editor, la graella universal i les proves del bloc. */
+  'src/sections/notes/canalEmojis.js',
+  'src/components/universal/classificacio/GraellaEmojis.jsx',
+  'src/sections/notes/NotesSection.emojis.test.jsx',
+  'src/sections/notes/NotesSection.emojisRail.test.jsx',
+  'src/sections/notes/NotesEditor.emojis.test.jsx',
+  /* Bloc 3.9 del Gauntlet (261016) · Editor Universal de notes: la plantilla
+     canònica i el seu esvaïment (TipTap de veres), la signatura sense
+     Foraster, «Nota sense títol» i la publicació sense la plantilla verge. */
+  'src/sections/notes/llavorNota.js',
+  'src/sections/notes/llavorNota.tiptap.test.jsx',
+  'src/sections/notes/NotesContext.llavor.test.jsx',
+  'src/sections/notes/autoriaNota.js',
+  'src/sections/notes/autoriaNota.test.js',
+  'src/sections/notes/NotaFitxa.jsx',
+  'src/sections/notes/NotaFitxa.test.jsx',
+  'src/sections/notes/DialegEsborrarNota.jsx',
+  'src/sections/notes/NotesEditor.peuDePagina.test.jsx',
+  'src/sections/notes/NotesSection.peuDePagina.test.jsx',
+  /* Correccions de la revisió adversarial del Bloc 3.8/3.9 (261016): les
+     guardes d'esLlavorDeNota al camí calent. */
+  'src/sections/notes/llavorNota.test.js'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

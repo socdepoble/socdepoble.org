@@ -5,10 +5,13 @@
  *   · propsDePaginaDeText: les props que TextSection passa a la UniversalPage
  *     (títol, subtítol, entradilla, hero resolt, etiquetes, drets i data). Les
  *     comparteix el lector de connexions (notes/ConnexioDetall.jsx): una
- *     connexió a /iaia es llig igual que /iaia; /ia es conserva com a àlies.
+ *     connexió a /anima es llig igual que /anima; /iaia i /ia, les rutes
+ *     velles del manifest, es conserven com a àlies (Bloc 3.6.3).
  *   · pageKeyDeRuta i paginaDeRuta: de la ruta desada en connectar a la clau
  *     i a la pàgina, amb la mateixa precedència que les rutes de veres
  *     (TextRoute a App.jsx i PageDetailSection).
+ *   · rutaVigentDePagina: la ruta on viu hui eixa pàgina (/iaia i /ia del
+ *     manifest → /anima), per a obrir-la i compartir-la.
  *
  * Només es resol una ruta que és de veres una pàgina de text:
  *   · una secció de config/sections.js amb kind 'text' i pageKey propi. Les
@@ -72,6 +75,11 @@ function camiDe(ruta) {
   return cami || '/';
 }
 
+/* Gauntlet 261016_1530 (Bloc 3.6.3) · El manifest «L'Ànima de la IAIA»
+   (PAGE_ROUTE_MAP.anima, /anima) i les dues rutes per on ha passat abans. */
+const CLAU_DEL_MANIFEST = 'anima';
+const RUTES_VELLES_DEL_MANIFEST = Object.freeze(['/ia', '/iaia']);
+
 const propia = (taula, clau) => (taula && typeof taula === 'object' && Object.hasOwn(taula, clau) ? taula[clau] : null);
 
 /* El slug de /page/:slug, descodificat; '' si no ho és o no es pot llegir. */
@@ -89,8 +97,13 @@ function slugDe(cami) {
 function clauDeRuta(ruta) {
   const cami = camiDe(ruta);
   if (!cami || RUTES_SENSE_PAGINA_DE_TEXT.includes(cami)) return null;
-  // Les connexions desades abans de la ruta canònica continuen llegint la mateixa pàgina.
-  if (cami === '/ia') return clauDeRuta('/iaia');
+  /* Les connexions desades abans de la ruta canònica continuen llegint la
+     mateixa pàgina. Gauntlet 261016_1530 (Bloc 3.6.3) · El manifest ha anat
+     de /ia a /iaia i de /iaia a /anima: una connexió a una 'pagina' amb
+     qualsevol de les dues rutes velles és la d'eixe manifest, perquè la fitxa
+     de la IAIA que ara viu a /iaia es connecta com a perfil (objecteDePerfil:
+     /perfil/<id>), mai com a pàgina de text. */
+  if (RUTES_VELLES_DEL_MANIFEST.includes(cami)) return clauDeRuta(resolvePageSlugPath(CLAU_DEL_MANIFEST));
   const seccio = SECTIONS.find((s) => s.kind === 'text' && s.path === cami);
   if (seccio) return typeof seccio.pageKey === 'string' && seccio.pageKey ? { pageKey: seccio.pageKey, via: 'seccio' } : null;
   const slug = slugDe(cami);
@@ -104,6 +117,22 @@ function clauDeRuta(ruta) {
 /** La clau de la pàgina de text d'una ruta, o null si la ruta no n'és cap. */
 export function pageKeyDeRuta(ruta) {
   return clauDeRuta(ruta)?.pageKey ?? null;
+}
+
+/**
+ * La ruta on viu HUI la pàgina de text d'una ruta desada (Bloc 3.6.3). Una
+ * ruta vella del manifest (/iaia o /ia, que es llig com /anima) torna /anima
+ * amb la mateixa consulta i el mateix fragment: /iaia ara és la fitxa de la
+ * IAIA, i «Obri l'original» i «Compartir» han de portar a la pàgina que es
+ * llig. Qualsevol altra ruta torna tal qual. Només té sentit per a una
+ * 'pagina': un perfil es desa a /perfil/<id> (objecteDePerfil).
+ */
+export function rutaVigentDePagina(ruta) {
+  if (!RUTES_VELLES_DEL_MANIFEST.includes(camiDe(ruta)) || pageKeyDeRuta(ruta) !== CLAU_DEL_MANIFEST) return ruta;
+  const vigent = resolvePageSlugPath(CLAU_DEL_MANIFEST);
+  if (!vigent) return ruta;
+  const tall = ruta.search(/[?#]/);
+  return tall === -1 ? vigent : `${vigent}${ruta.slice(tall)}`;
 }
 
 /**

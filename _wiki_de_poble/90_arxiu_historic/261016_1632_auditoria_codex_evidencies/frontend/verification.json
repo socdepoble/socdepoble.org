@@ -1,0 +1,12 @@
+{
+  "command": "npx vitest run tests/gauntlet-codex-lifecycle.test.jsx src/sections/profile/PerfilShell.avatarFontUnica.test.jsx src/sections/profile/PerfilShell.targetaViva.test.jsx src/sections/profile/PerfilPublicSection.fundacionals.remot.test.jsx src/sections/profile/ProfileSection.poble.test.jsx src/sections/profile/perfilModel.icones.test.js src/sections/xat/XatSection.actorsPermanents.test.jsx src/hooks/useBarresAmbScroll.test.js src/sections/notes/NotesEditor.peuDePagina.test.jsx src/components/universal/DocumentEditor.test.jsx --reporter=dot",
+  "observed_start_local": "2026-10-16 16:32:22 Europe/Madrid",
+  "exit_code": 0,
+  "test_files_passed": 10,
+  "tests_passed": 155,
+  "duration_seconds": 20.34,
+  "warning": "NotesEditor.peuDePagina: indexedDB is not defined; test doubles and jsdom do not certify real IndexedDB persistence",
+  "raw_transcript_available_to_parent": true,
+  "raw_log_saved": false,
+  "visual_QA": false
+}

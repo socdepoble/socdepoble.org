@@ -275,3 +275,7 @@ REGISTRE.push({ nom: 'TargetaDelMercat', fitxer: 'sections/mercat/TargetaDelMerc
    No entra a la façana: la posa PaginaApp (rellotgeViu). Espècimen: EspecimenControlsBarra
    (fonaments/controls-barra). */
 REGISTRE.push({ nom: 'RellotgeViu', fitxer: 'PedraSeca/atoms/RellotgeViu.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Onada 0.3 (Gauntlet 261016; pla 261016_1530: «visor modal / Lightbox natiu a pantalla completa
+   sobre fons fosc») · el visor de fotos de l'Arxiu visual (/multimedia), sobre el Dialeg de mida
+   'completa'. Espècimen: EspecimenVisorImatges (superposicions/visor-imatges). */
+REGISTRE.push({ nom: 'VisorImatges', fitxer: 'PedraSeca/organismes/VisorImatges.jsx', pagina: 'superposicions', estat: 'viu' });

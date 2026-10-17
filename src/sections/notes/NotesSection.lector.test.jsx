@@ -357,12 +357,22 @@ describe('afegir al Lector', () => {
    `desti: 'lector'` (modeDesa.js) obri el snippet amb el Lector ja triat; sense desti, el Bloc de
    sempre; i sense Lector disponible, el Curador continua decidint: el Bloc (correcció SN-R1). */
 describe('el bookmarklet amb la destinació', () => {
-  /* La finestra que obri el bookmarklet, executat com ho faria el navegador en una web de fora. */
+  /* La finestra que obri el bookmarklet, executat com ho faria el navegador en una web de fora.
+     E1 del Gauntlet (261016) · Actualitzada a posta: el bookmarklet llig els meta d'OpenGraph amb
+     document.querySelector, i la pàgina de fora és un document de veres (jsdom) amb el seu títol
+     i el seu og:title i og:description, no un objecte amb només `title`. */
   function rutaDelBookmarklet(opcions) {
     const codi = bookmarkletDesa('https://poble.exemple.test', opcions);
+    const pagina = document.implementation.createHTMLDocument('Un article | El diari del poble');
+    for (const [nom, contingut] of [['og:title', 'Un article'], ['og:description', 'El resum de l’article.']]) {
+      const meta = pagina.createElement('meta');
+      meta.setAttribute('property', nom);
+      meta.setAttribute('content', contingut);
+      pagina.head.append(meta);
+    }
     let obert = null;
     const bookmarklet = new Function('location', 'document', 'getSelection', 'open', codi.slice('javascript:'.length));
-    bookmarklet({ href: URL_PROVA }, { title: 'Un article' }, () => null, (adreca) => { obert = new URL(adreca); });
+    bookmarklet({ href: URL_PROVA }, pagina, () => null, (adreca) => { obert = new URL(adreca); });
     expect(obert.origin).toBe('https://poble.exemple.test');
     return `${obert.pathname}${obert.search}`;
   }
@@ -370,10 +380,12 @@ describe('el bookmarklet amb la destinació', () => {
   test('amb «lector»: el Curador arriba amb el Lector triat, el nom proposat i «Afegir al Lector»', async () => {
     munta(rutaDelBookmarklet({ desti: 'lector' }));
     expect(screen.getByRole('heading', { level: 1, name: 'Afegir al Lector' })).toBeTruthy();
+    /* El nom proposat és l'og:title, no el títol de la pàgina amb el nom del diari. */
     expect((await nomFont()).value).toBe('Un article');
     expect(opcio('Lector de notícies').checked).toBe(true);
     expect(consulta().get('desti')).toBe('lector');
     expect(consulta().get('url')).toBe(URL_PROVA);
+    expect(consulta().get('subtitol')).toBe('El resum de l’article.');
     expect(screen.getByRole('button', { name: 'Afegir al Lector' }).disabled).toBe(false);
   });
 

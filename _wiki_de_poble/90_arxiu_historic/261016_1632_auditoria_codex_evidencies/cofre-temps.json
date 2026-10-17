@@ -1,0 +1,102 @@
+{
+  "diagnosticOnly": true,
+  "officialTimeoutMs": 5000,
+  "diagnosticTimeoutMs": 30000,
+  "marks": [
+    {
+      "label": "test-start",
+      "ms": 0.03
+    },
+    {
+      "label": "created-vault",
+      "ms": 26.28
+    },
+    {
+      "label": "initial-save",
+      "ms": 37.16
+    },
+    {
+      "label": "initial-lock",
+      "ms": 38.25
+    },
+    {
+      "label": "tractor-signed",
+      "ms": 44.59
+    },
+    {
+      "label": "rendered",
+      "ms": 111.49
+    },
+    {
+      "label": "passphrase-found",
+      "ms": 236.43
+    },
+    {
+      "label": "open-clicked",
+      "ms": 397.1
+    },
+    {
+      "label": "bank-selected",
+      "ms": 595.12
+    },
+    {
+      "label": "financial-heading-found",
+      "ms": 843.75
+    },
+    {
+      "label": "figures-visible",
+      "ms": 1747.97
+    },
+    {
+      "label": "rule-added",
+      "ms": 4401.58
+    },
+    {
+      "label": "rule-found",
+      "ms": 4432.69
+    },
+    {
+      "label": "rule-persisted",
+      "ms": 4449.2
+    },
+    {
+      "label": "before-prepare-book",
+      "ms": 4449.4
+    },
+    {
+      "label": "prepare-book-clicked",
+      "ms": 4966.04
+    },
+    {
+      "label": "book-dialog-found",
+      "ms": 5042.96
+    },
+    {
+      "label": "open-dom-checked",
+      "ms": 5070.54
+    },
+    {
+      "label": "autolock-done",
+      "ms": 5110.76
+    },
+    {
+      "label": "locked-dom-checked",
+      "ms": 5118.2
+    },
+    {
+      "label": "privacy-checked",
+      "ms": 5127.13
+    },
+    {
+      "label": "reopened",
+      "ms": 5144.33
+    },
+    {
+      "label": "test-done",
+      "ms": 5160.12
+    }
+  ],
+  "sourceUnchanged": true,
+  "sourceSha256": "4bbc3bd4f15e9813cc616f13a33ef28349c4ec5329b1d26cfca668bb8d23afbf",
+  "originalCiStillFailing": true
+}

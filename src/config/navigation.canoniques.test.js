@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { resolvePageSlugPath, RUTES_CANONIQUES, rutaCanonicaDePerfil, rutaDePerfil } from './navigation.js';
+import { resolvePageSlugPath, RUTA_FITXA_IAIA, RUTES_CANONIQUES, rutaCanonicaDePerfil, rutaDePerfil } from './navigation.js';
 import { SECTIONS } from './sections.js';
 import { SYSTEM_PAGES } from './systemPages.js';
 import { AGENTS_MAP } from '../data/agentsSeed.js';
@@ -79,6 +79,8 @@ describe('rutaCanonicaDePerfil', () => {
     [{ tipus: 'entitat', id: 'soc-de-poble_official', slug: null }, '/socdepoble'],
     /* Rentonar és un grup. */
     [{ tipus: 'grup', id: ENTITAT_RENTONAR_SLUG, slug: ENTITAT_RENTONAR_SLUG }, '/rentonar'],
+    /* La IAIA MarIA (Bloc 3.6.3; F65). */
+    [{ tipus: 'ia', id: IAIA_ID, slug: 'iaia-maria' }, '/iaia'],
   ])('%j → %s', (perfil, ruta) => {
     expect(rutaCanonicaDePerfil(perfil)).toBe(ruta);
   });
@@ -90,7 +92,6 @@ describe('rutaCanonicaDePerfil', () => {
     [{ tipus: 'persona', id: 'u-1', slug: ENTITAT_PILOT_SLUG }],
     [{ tipus: 'grup', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG }],
     [{ tipus: 'entitat', id: ENTITAT_RENTONAR_SLUG, slug: ENTITAT_RENTONAR_SLUG }],
-    [{ tipus: 'ia', id: IAIA_ID, slug: 'iaia-maria' }],
     [{ tipus: 'ia', id: 'javillinares', slug: null }],
     [{ tipus: 'entitat', id: 'forn', slug: 'forn' }],
     /* Revisió adversarial del Gauntlet 261016 (encàrrec C) · DEROGAT «en
@@ -110,5 +111,58 @@ describe('rutaCanonicaDePerfil', () => {
     expect(rutaDePerfil('persona', AGENTS_MAP.JAVI.id)).toBe('/gent/0001');
     expect(rutaDePerfil('entitat', ENTITAT_PILOT_SLUG)).toBe('/empresa/socdepoble');
     expect(rutaDePerfil('grup', ENTITAT_RENTONAR_SLUG)).toBe('/grup/rentonar');
+  });
+});
+
+/* Gauntlet 261016_1530 (Bloc 3.6.3; F64 i F65; ordre del Mestre) · /iaia és la
+   fitxa de la IAIA MarIA i el manifest «L'Ànima de la IAIA» passa a /anima. */
+describe('Bloc 3.6.3 · /iaia, la fitxa de la IAIA; /anima, el manifest', () => {
+  test('la IAIA només per id i amb el tipus d’IA: ni una persona amb el seu id, ni el seu slug amb un altre id', () => {
+    expect(RUTA_FITXA_IAIA).toBe('/iaia');
+    expect(rutaCanonicaDePerfil({ tipus: 'ia', id: IAIA_ID, slug: null })).toBe(RUTA_FITXA_IAIA);
+    for (const perfil of [
+      { tipus: 'persona', id: IAIA_ID, slug: null }, { tipus: 'entitat', id: IAIA_ID, slug: null },
+      { tipus: 'ia', id: UUID, slug: 'iaia-maria', nom: 'IAIA MarIA' }, { tipus: 'ia', id: 'iaia-maria', slug: null }
+    ]) {
+      expect([perfil, rutaCanonicaDePerfil(perfil)]).toEqual([perfil, null]);
+    }
+    /* rutaDePerfil no canvia: /perfil/<id> obri la mateixa fitxa. */
+    expect(rutaDePerfil('ia', IAIA_ID)).toBe(`/perfil/${IAIA_ID}`);
+  });
+
+  test('el manifest és a /anima (també per /page/anima i /page/ia); cap pàgina coneguda ni secció porta a /iaia', () => {
+    expect([resolvePageSlugPath('anima'), resolvePageSlugPath('ia')]).toEqual(['/anima', '/anima']);
+    expect(SECTIONS.find((s) => s.pageKey === 'anima')).toMatchObject({ id: 'ia', path: '/anima' });
+    expect(SECTIONS.filter((s) => s.path === RUTA_FITXA_IAIA)).toEqual([]);
+    expect(['iaia', 'iaia-maria', IAIA_ID].map(resolvePageSlugPath)).toEqual([null, null, null]);
+    expect(SYSTEM_PAGES.filter((p) => p.href === RUTA_FITXA_IAIA || p.href === '/anima')).toEqual([]);
+  });
+
+  test('Pobles s’encén a /iaia, com a /perfil, i cap altra secció la declara', () => {
+    const pobles = SECTIONS.find((s) => s.id === 'pobles');
+    expect(pobles.subrutes).toEqual(expect.arrayContaining(['/perfil', RUTA_FITXA_IAIA]));
+    const altres = SECTIONS.filter((s) => s.id !== 'pobles').flatMap((s) => [s.path, ...(s.subrutes || [])]);
+    expect(altres.filter((r) => r === RUTA_FITXA_IAIA)).toEqual([]);
+  });
+
+  test('App.jsx declara /anima amb TextRoute i /iaia amb la fitxa pública de la IAIA, abans del comodí', () => {
+    const codi = readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8');
+    const actor = codi.slice(codi.indexOf('function ActorRoutes'), codi.indexOf('const MobileNav'));
+    const comodi = actor.indexOf('<Route path=":sectionId/:itemId"');
+    const anima = actor.indexOf('<Route path="anima" element={<TextRoute pageKey="anima" />} />');
+    const fitxa = actor.indexOf('<Route path={RUTA_FITXA_IAIA.slice(1)} element={<PerfilPublicSection agents={agents} id={IAIA_ID} />} />');
+    expect([anima > 0, fitxa > 0]).toEqual([true, true]);
+    expect(Math.max(anima, fitxa)).toBeLessThan(comodi);
+    /* Una sola ruta per al manifest, i cap TextRoute a /iaia. */
+    expect(actor.match(/pageKey="anima"/g)).toHaveLength(1);
+    expect(actor).not.toMatch(/path="iaia"/);
+  });
+
+  test('public/sitemap.xml declara /iaia i /anima una sola vegada', () => {
+    const sitemap = readFileSync(path.join(process.cwd(), 'public/sitemap.xml'), 'utf8');
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, loc]) => loc);
+    for (const ruta of [RUTA_FITXA_IAIA, '/anima']) {
+      expect(locs.filter((loc) => loc === `https://socdepoble.org${ruta}`), ruta).toHaveLength(1);
+    }
   });
 });

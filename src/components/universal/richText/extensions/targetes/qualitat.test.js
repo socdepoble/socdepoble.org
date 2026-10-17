@@ -39,6 +39,8 @@ const FITXERS = Object.freeze([
   'src/components/universal/richText/tiptapToolbarAdapter.js',
   'src/components/universal/DocumentEditor.jsx',
   'src/components/universal/DocumentEditor.targetes.test.jsx',
+  /* Bloc 3.8 del Gauntlet (261016) · L'ordre «/» Emoji i la inserció al cursor. */
+  'src/components/universal/DocumentEditor.emojis.test.jsx',
   'src/components/universal/TargetaViva.jsx',
   'src/components/universal/traduccio/blocsTraduibles.js',
   'src/hooks/useImatgeTargeta.js',

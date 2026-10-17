@@ -28,6 +28,16 @@
  * (sections/xat/pobleAmfitrio.js · POBLE_PER_DEFECTE). L'adaptador les afig
  * ara en tots els modes, també la llavor i el local (supabase/xat.js).
  *
+ * Gauntlet 261016_1530 (prompt, Bloc 3.6.1; relleu F57-F59) · Ordre del
+ * Mestre, que mana sobre la del 261007: «PROHIBIT duplicar Sóc de Poble:
+ * S'ha d'eliminar la fila de xat directe sintètica». El primer actor és la
+ * COMUNITAT de Sóc de Poble (Avisos, General i Beta testers), no cap directe:
+ * la llavor ja la porta (xatSeed.js) i, quan no hi és, la fila que hi porta
+ * la posa la llista (sections/xat/actorsDelXat.js), mai este mòdul. Ací
+ * només queden dues files directes, Javi Llinares i la IAIA
+ * (ACTORS_PERMANENTS). Un directe real amb l'entitat apareix quan existix de
+ * veres (Nova conversa, «En privat»), com qualsevol altra conversa.
+ *
  * Model B: este mòdul és NEUTRE i pur. No sap res de React, de la xarxa ni
  * de cap proveïdor; només coneix el padró pilot (identitatsSeed.js), el
  * catàleg d'agents (agentsSeed.js) i la llista tancada de pàgines amb xat
@@ -44,7 +54,11 @@ export const PREFIX_PER_DEFECTE = 'sdp-per-defecte:';
 /**
  * Ordre del Mestre (261007) · La font ÚNICA dels dos contactes d'ajuda: la
  * llista del xat (les files per defecte), «Nova conversa» (contactesAjuda.js)
- * i el xat de mostra sense sessió (FakeChatOnboarding.jsx). L'avatar de Sóc
+ * i el xat de mostra sense sessió (FakeChatOnboarding.jsx).
+ * Gauntlet 261016_1530 (Bloc 3.6.1) · «Sóc de Poble» ja no és cap fila per
+ * defecte de la llista (vegeu la capçalera): continua sent un contacte de
+ * «Nova conversa», la via explícita d'un directe persona-entitat, i el nom i
+ * la cara de la seua comunitat a la llista i al xat de mostra. L'avatar de Sóc
  * de Poble és el logo quadrat que el Mestre ha fixat a foc
  * ('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png'; Onada 8,
  * 261009: abans, l'SVG): el del compte de la marca, el mateix de la llavor.
@@ -69,8 +83,9 @@ export const AJUDA_PER_CLAU = Object.freeze(Object.fromEntries(AJUDA.map((contac
  */
 export const CONTACTE_HUMA = Object.freeze({ clau: 'javi', nom: PERSONA_PILOT.nom, tipus: 'persona', avatar: PERSONA_PILOT.avatar });
 
-/** Les tres files directes que el Xat porta sempre, en l'ordre de l'ordre del Mestre. */
-export const ACTORS_PERMANENTS = Object.freeze([AJUDA_PER_CLAU.socdepoble, CONTACTE_HUMA, AJUDA_PER_CLAU.iaia]);
+/** Les dues files directes que el Xat porta sempre (Javi Llinares i la IAIA), en l'ordre de l'ordre del Mestre.
+    Gauntlet 261016_1530 (Bloc 3.6.1) · Fora «Sóc de Poble»: el seu actor és la comunitat, no cap directe. */
+export const ACTORS_PERMANENTS = Object.freeze([CONTACTE_HUMA, AJUDA_PER_CLAU.iaia]);
 
 /** Literal de l'ordre (Bloc 3.6), amb les seues cometes: el que veu qui no s'ha registrat en obrir el xat de Javi. */
 export const MISSATGE_AUTOMATIC_DE_JAVI = '«Este missatge és automàtic: per a poder parlar amb mi has de registrar-te.»';
@@ -146,6 +161,23 @@ const altresDe = (conversa) => (Array.isArray(conversa?.altres) ? conversa.altre
 
 /** Cert si `id` és el d'una fila sintètica. */
 export const esIdPerDefecte = (id) => typeof id === 'string' && id.startsWith(PREFIX_PER_DEFECTE);
+
+/* Les claus que encara tenen fila sintètica (ACTORS_PERMANENTS). */
+const CLAUS_PERMANENTS = new Set(ACTORS_PERMANENTS.map((contacte) => contacte.clau));
+
+/**
+ * Gauntlet 261016_1530 (Bloc 3.6; MCR b36_xat, proposta 1) · La clau d'un id
+ * sintètic ('sdp-per-defecte:javi' → 'javi'), o null si no ho és o si la
+ * clau ja no té fila (ACTORS_PERMANENTS: 'socdepoble' tampoc, des del
+ * 261016_1530). Servix perquè /xat/sdp-per-defecte:<clau> s'encamine per la
+ * seua clau encara que la fila no siga a la llista (un enllaç vell,
+ * l'historial, la llavor on la IAIA és el seu fil). Pura.
+ */
+export function clauPerDefecteDe(id) {
+  if (!esIdPerDefecte(id)) return null;
+  const clau = id.slice(PREFIX_PER_DEFECTE.length);
+  return CLAUS_PERMANENTS.has(clau) ? clau : null;
+}
 
 /**
  * Cert si `identitat` (un dels `altres` d'una conversa o una fila del padró:
@@ -244,7 +276,11 @@ function conversaPerDefecte({ clau, nom, avatar }) {
 /**
  * Les converses amb els xats d'ajuda que falten, a la CUA (Sóc de Poble i
  * després la IAIA; des del Gauntlet 261016, Bloc 3.6, Javi Llinares entre
- * els dos: ACTORS_PERMANENTS). Idempotent:
+ * els dos: ACTORS_PERMANENTS). Gauntlet 261016_1530 (Bloc 3.6.1) · Ara
+ * Javi Llinares i la IAIA: Sóc de Poble ja no hi és, i una fila sintètica
+ * seua que arribe d'abans (perDefecte 'socdepoble') se'n va com qualsevol
+ * fila que ja no toca. L'ordre de la PANTALLA el posa la llista
+ * (sections/xat/actorsDelXat.js). Idempotent:
  *   · lleva la fila sintètica d'un contacte que ja té la conversa real;
  *   · si `afig` (per defecte), afig la que falta; amb `afig: false` només
  *     lleva (el context del xat, quan s'hi sumen els fils que llegixes com a
