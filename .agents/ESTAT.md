@@ -7,6 +7,41 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-18T14:32:00+02:00 · Claude Code (Opus 5.5) · Sessió d'usuari, workspaces d'identitat, accés pilot, tractor WebP i harmonització del Perfil
+
+- **Torn** `torn_ef1ddff2-52e7-4d41-8a7e-57c945b7a579` (claude, code), vinculat al pla [[261018_1220_pla_implementacio_sessio_usuari_i_poda]]. Informe: [[261018_1251_auditoria_claude]]. Cap commit, cap desplegament, cap fitxer mogut ni arxivat; cap cron.
+- **Tasca 0 i 2 · Accés pilot:** en DEV i en remot, «Entra com a Javi Llinares» a `/registre` passa la pestanya al mode de proves (elecció efímera, caduca amb cada `npm run dev`) i hi entra amb un clic; Javi administra Rentonar a la llavor. `/registra` és àlies de `/registre`. Google, botó primari; títol del formulari per mode.
+- **Tasca 1 · Workspaces:** el calaix «Amb qui actues?» i l'avatar porten al workspace existent (`/el-meu-perfil`, `?organitzacio=ID`) i el Perfil es remunta a la identitat triada. Verificat des de `/notes`.
+- **Tasca 3 · Tractor WebP:** `npm run media:webp` (`tooling/media/optimitzar_webp.mjs`): cens d'orfes de `public/` (8 orfes, 127 candidates) i conversió no destructiva amb la maquinària del Mas (conserva l'EXIF) o Chrome sense capçal; cap dependència nova.
+- **Harmonització del Mestre:** catàleg d'APLICACIONS complet (Lector RSS), geometria única de la barra lateral i de la lupa (icona 16 px, text 56 px), fitxa neta amb «Edició avançada» prominent, botons i targeta centrats, estat del perfil amb targetes Públic/Privat.
+- **Relleu 4 (15:05):** les imatges del perfil del pilot es desen en mode de proves (data URL), verificat al navegador; barra «Edició avançada de la fitxa» amb accent i icona.
+- **Proves:** bateria completa 19.242 passades / 1 fallida prèvia (cens d'imatges per les OG noves sense seguiment) / 89 omeses. Revisió adversarial (8 agents): 15 troballes confirmades, corregides menys 3 de severitat baixa documentades.
+- **Bloquejos i decisions del Mestre:** el perfil NO és públic per defecte (`is_public` false a la base de dades; decidir i migrar, RGPD art. 25); canals de publicació del Bloc de notes (cal camp, migració i ADR); el 400 de la seua entrada és de credencials reals (provable amb Google o recuperant la contrasenya); la contrasenya es veu en una captura del xat: convé canviar-la.
+- **Següent acció:** Codex i Gemini auditen el diff (Tasca 5) i redacten la poda (Tasca 6); el Mestre revisa al navegador i decidix els punts de dalt; després, commit.
+
+## ESTAT_ACTUAL · 2026-10-17T23:50:00+02:00 · IAIA MarIA · Desplegament Social, Fix del Xat i Relleu d'Usabilitat d'Usuari
+
+- **Acta:** [[261017_2350_acta_marmota_desplegament_social_i_relleu_usabilitat]]. Sessió de tancament nocturn amb el Mestre Javi Llinares.
+- **Open Graph WhatsApp (Èxit absolut):** Generat banner gran duotone 1200x630 px d'alta resolució (`public/assets/towns/la-torre-de-les-macanes/og-la-torre-1200x630.jpg`). Configurat a Yoast SEO i verificat en viu a WhatsApp: el desplegament social és impecable, verd i impactant.
+- **Fons Blanc a Heros:** Canviat `.hero-image` de taronja a blanc (`var(--sdp-blanc-pur, #ffffff)`) a `src/css/layout.css:411`. Samarreta i capçaleres transparents ja es mostren sobre fons blanc net. 37/37 tests de consumidors en verd.
+- **Paquet WordPress v1.1.4 Integral:** Reintegrat tot `assets/uploads/` a `vite.standalone.config.js`. Generat `wordpress_enxufe_v1.1.4.zip` (132 MB) amb tots els mitjans estàtics. Zero 404s en producció.
+- **Fix Pantalla d'Entrada del Xat:** Desactivat el segrest d'`EntradaDelPoble.jsx` cap a `?comunitat=<id>`. En entrar a `/xat`, es manté la llista de converses sencera (Gent de la Torre, Sóc de Poble, Javi Llinares, IAIA MarIA) i la presentació Bruguera a la dreta (idèntic a la captura del Mestre). 774/774 tests de xat en verd.
+- **Relleu per a Demà (Claude Code, Gemini 4 i MarIA):**
+  1. Redisseny del flux de la Sessió d'Usuari (desvincular-lo del Bloc de notes i assegurar accés directe a compte/perfil des de «Amb qui actues?» i l'avatar).
+  2. Implementar tractor de conversió automàtica a `.webp` i cens de neteja de palla a mitjans.
+  3. L'escriptori serà netejat a l'inici del torn de demà.
+
+## ESTAT_ACTUAL · 2026-10-17T21:41:31.269330+02:00 · Codex · Reauditoria final de 4745112e, amb pendents explícits
+
+- Torn `torn_6d6d3e52-83e8-4e4b-a3fa-0fb417c22c50`; informe [[261017_2133_auditoria_codex_final_gauntlet]] i acta [[261017_2133_acta_tancament_codex_gauntlet]]. Revisió autoritzada; cap cron ni tasca periòdica.
+- **Veredicte:** set troballes resoltes localment (C03,C05,C06,C07,C08,C09,C12); cinc amb pendents (C01,C02,C04,C10,C11). C01/C02 conserven un P1: còpia voluntària exacta de llavor, desada i reoberta, s’esborra i també perd cos en publicar. No hi ha aprovació humana d’eixa excepció.
+- **Proves:** evidència Claude final comprovada: 19.228 pass/0 fail/89 skip; 19.164 era lot intermedi amb4 fallades. Vitest independent completat: 19.228 pass/0 fail/89 skip, 1.118 fitxers pass/6 skip, exit0 en643,35s. Regressió adversarial del P1 exit1; ESLint global exit0.
+- **Pes reproduït:** chunk d’entrada408.743→359.958B gzip (−11,94%); suma de chunksJS +0,56%. No és reducció del paquet complet ni mesura de primera visita.
+- **Llibre:** esborrany amb còpies idèntiques, SHA ce41e505…; no inclòs en4745112e. 34lots/617rutes verificats; lectura declarada amb desajust616/617 no del tot reproduïble. Cita/NLnet/hashC06/cens complementari pendents; 656 originals íntegres, cap evacuació.
+- **Relleu:** Claude corregix procedència de llavor, visor del cos i compatibilitat emojis; MarIA reconcilia els residuals del llibre i evidència durable. Javi aprova després versió concreta; no s’ha programat cap seguiment.
+- **Governança i recursos:** Autoritat/Frontissa/Contingut passen; tancament mecànic exit1/valid:false/planned, 428 incidències globals (426 de graf i2 de skills/segell), cap dels lliurables propis. 2.606 rutes de codi/eines/configuració intactes en este torn. Tres revisors i tab propis acabats, quatre monitors antics accessibles PAUSED; bateria única i compilacions pròpies acabades, cap procés propi persistent.
+
+
 ## ESTAT_ACTUAL · 2026-10-17T20:45:00+02:00 · Claude Code · Gauntlet Extrem implementat, revisat i verificat en local (sense commit)
 
 - **Torn:** `torn_aa2976e7-4e26-4bdc-89c4-424ccb316848` (actor claude, abast code). **Informe:** [[261017_1526_auditoria_claude]], `document.mjs check` vàlid. S'han llegit sencers els informes concurrents [[261017_1526_auditoria_codex]], [[261017_1529_auditoria_gemini4]] i [[261017_1542_acta_marmota_codex_gauntlet_extrem]].

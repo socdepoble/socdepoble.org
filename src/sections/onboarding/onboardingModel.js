@@ -149,6 +149,14 @@ export function missatgeDEntrada(error) {
    l'entrada automàtica. */
 export const MARCA_SENSE_ENTRADA_AUTOMATICA = 'registre-sense-entrada-automatica';
 
+/* Encàrrec 261018_1220 (Tasques 0 i 2, ordre del Mestre) · Marca d'un sol ús de
+   l'accés pilot de desenvolupament: «Entra com a Javi Llinares» des d'un node
+   remot passa al mode de proves i recarrega (config/dataMode.js ·
+   enterTestMode); la càrrega següent de /registre la consumix i hi entra com
+   a persona pilot sense cap altre clic. Va sempre amb la marca de dalt, perquè
+   la sonda no torne a passar el node a remot. */
+export const MARCA_ENTRADA_PILOT = 'registre-entrada-pilot';
+
 /** El to de l'Alerta d'un error d'entrada: 'avis' si no és culpa de la persona, 'error' si no. */
 export function toDeLErrorDEntrada(code) {
   return CODIS_AVIS.has(code) ? 'avis' : 'error';

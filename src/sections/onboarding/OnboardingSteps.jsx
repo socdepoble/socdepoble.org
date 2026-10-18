@@ -156,16 +156,28 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     );
   }
 
+  /* Encàrrec 261018_1220 (Tasca 2, ordre del Mestre: «el formulari ha de
+     distingir nítidament entre Entrar i Crear compte») · El títol i
+     l'explicació diuen el mode triat. En Entrar, l'explicació avisa del cas
+     que fa caure més entrades: un compte nascut amb Google no té contrasenya. */
+  const entrant = mode === 'login';
   return (
     <UniversalCard
       variant="onboarding"
-      title="Accés o nou registre"
+      title={entrant ? 'Entra al teu compte' : 'Crea el teu compte'}
       body={
         <>
-          <p className="onboarding-card__intro">
-            Primer entra una persona real. El teu perfil queda privat i separat de les
-            organitzacions que crearàs després.
-          </p>
+          {entrant ? (
+            <p className="onboarding-card__intro">
+              Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google,
+              no té contrasenya: entra amb Google.
+            </p>
+          ) : (
+            <p className="onboarding-card__intro">
+              Primer entra una persona real. El teu perfil queda privat i separat de les
+              organitzacions que crearàs després.
+            </p>
+          )}
 
           <div className="sdp-pindola--centrada onboarding-form__pindola">
             <PillToggle

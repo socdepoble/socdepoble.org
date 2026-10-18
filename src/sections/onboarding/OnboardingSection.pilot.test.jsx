@@ -14,6 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   navigate: vi.fn(), enterRemote: vi.fn(), exitRemote: vi.fn(), eleccio: vi.fn(() => false), toast: vi.fn(),
   comprova: vi.fn(), entra: vi.fn(), pilot: vi.fn(), quanLlest: vi.fn(), teCapacitat: undefined, user: null, config: null,
+  enterTest: vi.fn(),
   ambPilot: true
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate }));
@@ -22,6 +23,7 @@ vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () 
 vi.mock('../../app/contexts/SessionContext', () => ({
   useSession: () => ({
     currentUser: m.user, teCapacitat: m.teCapacitat, comprovaServidor: m.comprova, loginWithPassword: m.entra,
+    estat: m.estat,
     ...(m.ambPilot ? { entraComAPilot: m.pilot } : {})
   })
 }));
@@ -30,7 +32,8 @@ vi.mock('../../config/dataMode.js', () => ({
   resolveDataMode: config => config.dataMode || 'remote',
   enterRemoteMode: m.enterRemote,
   eleccioRemotaActiva: (...args) => m.eleccio(...args),
-  exitRemoteMode: (...args) => m.exitRemote(...args)
+  exitRemoteMode: (...args) => m.exitRemote(...args),
+  enterTestMode: (...args) => m.enterTest(...args)
 }));
 vi.mock('../../host.js', () => ({ quanLlest: (...args) => m.quanLlest(...args) }));
 import OnboardingSection from './OnboardingSection.jsx';
@@ -38,8 +41,8 @@ import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
 import { CODI_PILOT_NO_DISPONIBLE } from '../../data/sessioPilot.js';
 import { RUTA_DESPRES_D_ENTRAR } from '../../config/rutaEntrada.js';
-import { MARCA_SENSE_ENTRADA_AUTOMATICA } from './onboardingModel.js';
-import { delEfimer, setEfimer } from '../../config/storage.js';
+import { MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA } from './onboardingModel.js';
+import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 
 const TENANT = '00000000-0000-4000-8000-0000000000f6';
 /* El literal de l'encàrrec B3 (criteri de Codex), sencer i en un sol lloc
@@ -50,18 +53,21 @@ const BOTO = 'Entra com a persona pilot';
 beforeEach(() => {
   vi.clearAllMocks();
   m.enterRemote.mockReset(); m.exitRemote.mockReset(); m.comprova.mockReset(); m.entra.mockReset(); m.pilot.mockReset();
+  m.enterTest.mockReset();
   m.eleccio.mockReset().mockReturnValue(false);
   m.quanLlest.mockReset().mockResolvedValue(undefined);
   m.teCapacitat = (cap) => cap === 'salut';
-  m.user = null; m.ambPilot = true;
+  m.user = null; m.ambPilot = true; m.estat = undefined;
   m.config = { dataMode: 'seed', tenantId: TENANT };
   m.pilot.mockImplementation(() => ({ user: { id: '0001' } }));
   delEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA);
+  delEfimer(MARCA_ENTRADA_PILOT);
   window.history.replaceState(null, '', '/registre?mode=entrar');
 });
 afterEach(() => {
   cleanup();
   delEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA);
+  delEfimer(MARCA_ENTRADA_PILOT);
   window.history.replaceState(null, '', '/');
   vi.unstubAllEnvs();
 });
@@ -175,6 +181,94 @@ test('negativa · mentre sonda la primera vegada, encara no s’oferix', async (
   expect(blocPilot()).toBeNull();
   await act(async () => { sonda.resol({ ok: false }); });
   expect(blocPilot()).not.toBeNull();
+});
+
+/* ── Encàrrec 261018_1220 (Tasques 0 i 2) · L'accés pilot de desenvolupament en remot ── */
+
+const TITOL_DEV = 'Accés pilot de desenvolupament · només en aquest ordinador';
+const BOTO_DEV = `Entra com a ${PERSONA_PILOT.nom}`;
+const blocDev = () => screen.queryByText(TITOL_DEV)?.closest('.sdp-alerta') ?? null;
+
+test('261018 · remot en desenvolupament: l’accés pilot és visible, honest i amb el formulari real obert', async () => {
+  m.config = { dataMode: 'remote', tenantId: TENANT };
+  render(<OnboardingSection />);
+  const bloc = blocDev();
+  expect(bloc).not.toBeNull();
+  expect(bloc.getAttribute('role')).toBeNull();
+  expect(bloc.textContent).toContain('es recarrega en mode de proves (dades de mostra)');
+  expect(bloc.textContent).toContain('Només apareix en desenvolupament.');
+  expect(within(bloc).getByRole('button', { name: BOTO_DEV }).disabled).toBe(false);
+  // L'entrada pilot directa (la del mode de proves) no hi és, i el formulari real continua obert.
+  expect(blocPilot()).toBeNull();
+  expect(screen.getByLabelText('Contrasenya').disabled).toBe(false);
+  await buidaMicrotasques();
+  expect(m.comprova).not.toHaveBeenCalled();
+});
+
+test('261018 · el clic deixa les dues marques i passa al mode de proves; en remot no entra mai com a pilot', async () => {
+  m.config = { dataMode: 'remote', tenantId: TENANT };
+  render(<OnboardingSection />);
+  fireEvent.click(within(blocDev()).getByRole('button', { name: BOTO_DEV }));
+  expect(m.enterTest).toHaveBeenCalledTimes(1);
+  expect(m.enterTest).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'remote', tenantId: TENANT }));
+  expect(getEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA, null)).toBe(true);
+  expect(getEfimer(MARCA_ENTRADA_PILOT, null)).toBe(true);
+  expect(m.pilot).not.toHaveBeenCalled();
+  expect(m.navigate).not.toHaveBeenCalled();
+});
+
+test('261018 · si no es pot desar l’elecció, no queda cap marca i l’avís ho diu', async () => {
+  m.config = { dataMode: 'remote', tenantId: TENANT };
+  m.enterTest.mockImplementation(() => { throw new Error('No s’ha pogut guardar l’elecció.'); });
+  render(<OnboardingSection />);
+  fireEvent.click(within(blocDev()).getByRole('button', { name: BOTO_DEV }));
+  expect((await screen.findByRole('alert')).textContent).toContain('No s’ha pogut guardar l’elecció.');
+  expect(getEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA, null)).toBeNull();
+  expect(getEfimer(MARCA_ENTRADA_PILOT, null)).toBeNull();
+});
+
+test('261018 · la càrrega següent, ja en mode de proves, hi entra com a pilot sola, sense sondar ni passar a remot', async () => {
+  setEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA, true);
+  setEfimer(MARCA_ENTRADA_PILOT, true);
+  m.comprova.mockResolvedValue({ ok: true });
+  render(<OnboardingSection />);
+  await waitFor(() => expect(m.pilot).toHaveBeenCalledTimes(1));
+  expect(m.pilot).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed' }));
+  expect(m.navigate).toHaveBeenCalledWith(RUTA_DESPRES_D_ENTRAR, { replace: true });
+  expect(getEfimer(MARCA_ENTRADA_PILOT, null)).toBeNull();
+  await buidaMicrotasques();
+  expect(m.comprova).not.toHaveBeenCalled();
+  expect(m.enterRemote).not.toHaveBeenCalled();
+});
+
+test('261018 · sense la marca, el mode de proves no entra sol', async () => {
+  m.comprova.mockResolvedValue({ ok: false });
+  render(<OnboardingSection />);
+  await screen.findByRole('status');
+  await buidaMicrotasques();
+  expect(m.pilot).not.toHaveBeenCalled();
+});
+
+test('261018 · negativa · mentre una sessió recordada es comprova, no s’oferix (la buidaria)', () => {
+  m.config = { dataMode: 'remote', tenantId: TENANT };
+  m.estat = 'comprovant';
+  const { rerender } = render(<OnboardingSection />);
+  expect(blocDev()).toBeNull();
+  m.estat = 'fora';
+  rerender(<OnboardingSection />);
+  expect(blocDev()).not.toBeNull();
+});
+
+test('261018 · negativa · en producció, o amb una sessió oberta, no hi ha accés pilot en remot', () => {
+  m.config = { dataMode: 'remote', tenantId: TENANT };
+  vi.stubEnv('DEV', false);
+  const { unmount } = render(<OnboardingSection />);
+  expect(blocDev()).toBeNull();
+  unmount();
+  vi.unstubAllEnvs();
+  m.user = { id: 'u-real' };
+  render(<OnboardingSection />);
+  expect(blocDev()).toBeNull();
 });
 
 test('negativa · en remot, ni amb el servidor caigut ni amb una elecció desada: cal l’entrada real', async () => {

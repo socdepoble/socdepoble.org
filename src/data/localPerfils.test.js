@@ -313,8 +313,24 @@ test('Front 3 · la pilot continua sent la primera del padró i Rentonar, un gru
   expect(ENTITATS_SEED.map((entitat) => entitat.id)).toEqual([ENTITAT_PILOT_ID, ENTITAT_RENTONAR_SLUG]);
   expect(entitatSeed(ENTITAT_RENTONAR_SLUG)).toMatchObject({
     id: 'rentonar', slug: 'rentonar', kind: 'group', name: 'Rentonar', lema: 'Natura i Patrimoni',
-    description: BIO_RENTONAR, parent_organization_id: ENTITAT_PILOT_ID, visibility: 'public', membres: []
+    description: BIO_RENTONAR, parent_organization_id: ENTITAT_PILOT_ID, visibility: 'public',
+    membres: [{ usuariId: AGENTS_MAP.JAVI.id, role: 'admin' }]
   });
+});
+
+/* Encàrrec 261018_1220 (Tasca 0, ordre del Mestre) · La persona pilot, Javi
+   Llinares, entra amb les seues dues organitzacions: és propietària de la
+   pilot (regla de la llavor) i administra Rentonar (membre declarat). Una
+   altra persona amb sessió continua sense Rentonar (prova de baix). */
+test('261018 · la persona pilot administra Sóc de Poble i Rentonar sense connectar-s’hi', () => {
+  const PILOT = { id: AGENTS_MAP.JAVI.id, user_metadata: { full_name: 'Javi Llinares' } };
+  expect(rolALEntitat(ENTITAT_RENTONAR_SLUG, PILOT.id, { teSessio: true })).toBe('admin');
+  expect(adapter.listMyOrganizations(PILOT).map((org) => [org.id, org.role])).toEqual([
+    [ENTITAT_PILOT_ID, 'owner'], [ENTITAT_RENTONAR_SLUG, 'admin'],
+  ]);
+  /* Revisió adversarial (261018) · i la llista de membres de Rentonar el porta. */
+  expect(adapter.llistaMembresOrganitzacio(ENTITAT_RENTONAR_SLUG, PILOT).map((membre) => [membre.tipus, membre.id, membre.rol]))
+    .toEqual([['persona', AGENTS_MAP.JAVI.id, 'admin']]);
 });
 
 /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «El Rentonar no pot aparèixer

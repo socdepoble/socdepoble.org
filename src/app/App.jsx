@@ -672,15 +672,18 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
     window.addEventListener(EVENT_NIVELL_IAIA, escolta);
     return () => window.removeEventListener(EVENT_NIVELL_IAIA, escolta);
   }, []);
-  const navigateWithTransition = (path) => {
+  /* Encàrrec 261018_1220 (Tasca 1) · `options` (l'estat de l'historial que
+     porta la barra en anar a un workspace d'identitat) passa tal qual. */
+  const navigateWithTransition = (path, options) => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ves = () => (options ? navigate(path, options) : navigate(path));
     if (document.startViewTransition && !prefersReducedMotion) {
       /* Una transició que en talla una altra rebutja `ready` (InvalidStateError):
          és esperat i no ha d'eixir a la consola. Els errors de navegar van per `finished`. */
-      const transicio = document.startViewTransition(() => navigate(path));
+      const transicio = document.startViewTransition(ves);
       transicio?.ready?.catch(() => {});
     } else {
-      navigate(path);
+      ves();
     }
   };
   /* T43 (ordre del Mestre, 260928) · la identitat activa ha de ser evident:
@@ -938,11 +941,15 @@ function RedireccioMultimedia() {
    conserven la consulta rebuda. El ?tornar només passa si és intern i no
    torna a l'entrada (tornadaSegura, dins de rutaDEntrada); un ?mode rebut no
    mana sobre el de l'àlies. La ubicació és la del router propi, també en
-   memòria (incrustació). */
+   memòria (incrustació).
+   Encàrrec 261018_1220 (Tasca 2) · /registra, el nom amb què el pla i el prompt
+   de la IAIA MarIA citen l'entrada, ja no cau a la pàgina 404: és un àlies
+   sense mode propi, i per això hi passa el ?mode rebut (sense, Crear compte,
+   com /registre). */
 function RedireccioDEntrada({ mode }) {
   const { search } = useLocation();
   const rebuda = new URLSearchParams(search);
-  const desti = rutaDEntrada({ mode, tornar: rebuda.get('tornar') });
+  const desti = rutaDEntrada({ mode: mode === undefined ? rebuda.get('mode') : mode, tornar: rebuda.get('tornar') });
   rebuda.delete('mode');
   rebuda.delete('tornar');
   const resta = rebuda.toString();
@@ -975,6 +982,7 @@ function AppRoutes() {
         <Route path="/entrar" element={<RedireccioDEntrada mode="entrar" />} />
         <Route path="/registre" element={<OnboardingSection />} />
         <Route path="/crear-compte" element={<RedireccioDEntrada mode="crear" />} />
+        <Route path="/registra" element={<RedireccioDEntrada />} />
         
         <Route path="/control" element={<ControlSection />} />
         <Route path="/utilitats" element={<ControlSection />} />

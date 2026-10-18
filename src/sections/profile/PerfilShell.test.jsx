@@ -30,12 +30,14 @@ vi.mock('./DetallPrivacitat.jsx', () => ({
 vi.mock('./DialegNovaOrganitzacio.jsx', () => ({
   DialegNovaOrganitzacio: (props) => { m.dialeg = props; return props.obert ? <div role="dialog" aria-label="Nova organització" /> : null; },
 }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ refresh: m.refresh, actor: m.actor }) }));
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ refresh: m.refresh, actor: m.actor, error: m.errorIdentitats ?? null }) }));
 /* T9 · configurable: «Els nodes» llig externalConfig (nomPoble, dataMode) i status. */
 vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => m.ui }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children }) => <a href={to}>{children}</a>,
   useSearchParams: () => [m.params],
+  /* Encàrrec 261018_1220 · PerfilShell llig l'estat de l'historial (espaiIdentitat). */
+  useLocation: () => ({ pathname: '/el-meu-perfil', search: '', state: m.estatHistorial ?? null, hash: '' }),
 }));
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('../../components/universal/UniversalPage', () => ({
@@ -64,6 +66,8 @@ const item = (id) => m.workspace.model.items.find((i) => i.id === id);
 
 beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
+  m.estatHistorial = null;
+  m.errorIdentitats = null;
   m.caps = new Set();
   m.actor = null; m.params = new URLSearchParams(); m.sessio = null;
   m.ui = { externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000' } };
@@ -87,7 +91,9 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom, les organ
      de Mètriques ni el Cervell (intern: true). Amb superadmin, les cinc de
      sempre (prova de davall). */
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    ['app-gestoria', 'Gestoria de Poble'], ['app-lector-rss', 'Curation AI (Lector RSS)'], ['app-snippet', 'Snippet'],
+    /* Encàrrec d'harmonització (261018) · el catàleg complet del Panell, i «Lector RSS». */
+    ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
+    ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
   ]);
   for (const opcio of grups().flatMap((g) => g.options)) expect(opcio.icon).toBeTruthy();
   expect(grups()[1].options[0].icon).not.toBe(grups()[1].options[1].icon);
@@ -101,8 +107,9 @@ test('Bloc 3.4 · amb superadmin, APLICACIONS porta també la Consola de Mètriq
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    ['app-gestoria', 'Gestoria de Poble'], ['app-metriques', 'Consola de Mètriques'],
-    ['app-lector-rss', 'Curation AI (Lector RSS)'], ['app-cervell', 'Cervell (Node Graph)'], ['app-snippet', 'Snippet'],
+    ['app-gestoria', 'Gestoria de Poble'], ['app-rebost', 'Rebost Domèstic'], ['app-salut', 'Salut'],
+    ['app-lector-rss', 'Lector RSS'], ['app-tpv', 'TPV del Bar'], ['app-snippet', 'Snippet'],
+    ['app-metriques', 'Consola de Mètriques'], ['app-cervell', 'Cervell (Node Graph)'],
   ]);
   for (const opcio of grups()[2].options) expect(opcio.icon).toBeTruthy();
 });
@@ -135,7 +142,7 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
-  for (const id of ['lector-rss', 'snippet']) {
+  for (const id of ['rebost', 'salut', 'lector-rss', 'tpv', 'snippet']) {
     expect(filsDe(`app-${id}`)).toEqual([`app-${id}-sobre`]);
   }
   /* Gauntlet 261016 (Bloc 3.4) · Sense superadmin, la maquinària interna no té cap apartat. */
@@ -213,8 +220,9 @@ test('una aplicació pendent: estat honest, la preferència del Panell només si
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
   const aplicacions = [
-    ['gestoria', 'Gestoria de Poble', true], ['metriques', 'Consola de Mètriques', false],
-    ['lector-rss', 'Curation AI (Lector RSS)', true], ['cervell', 'Cervell (Node Graph)', false], ['snippet', 'Snippet', true],
+    ['gestoria', 'Gestoria de Poble', true], ['rebost', 'Rebost Domèstic', true], ['salut', 'Salut', true],
+    ['lector-rss', 'Lector RSS', true], ['tpv', 'TPV del Bar', true], ['snippet', 'Snippet', true],
+    ['metriques', 'Consola de Mètriques', false], ['cervell', 'Cervell (Node Graph)', false],
   ];
   for (const [id, nom, alPanell] of aplicacions) {
     const vista = render(m.workspace.renderDetail({ item: item(`app-${id}-sobre`) }));
@@ -355,6 +363,45 @@ test('T43 · «Edita la fitxa de {Org}» (?organitzacio=ID) mana sobre l’actor
   m.params = new URLSearchParams('organitzacio=G');
   render(<PerfilShell />);
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'G' });
+});
+
+/* Encàrrec 261018_1220 (Tasca 1) · El Workspace només llig initialSelection en
+   muntar-se: la clau (workspaceKey) és la identitat que s'ha d'obrir i el
+   número de l'anada des del calaix o l'avatar. Canviar d'actor amb el Perfil
+   obert, o tornar a triar la mateixa identitat, el remunta; repintar no. */
+/* Revisió adversarial (261018) · Una relectura fallida de les pertinences fa
+   caure l'actor a la persona: el Perfil conserva l'organització fins que torna. */
+test('261018 · si les pertinences fallen, el Perfil no salta de l’organització a la persona', () => {
+  m.actor = { tipus: 'entitat', id: 'O', nom: 'Forn' };
+  const { rerender } = render(<PerfilShell />);
+  const clau = m.workspace.model.workspaceKey;
+  m.actor = { tipus: 'persona', id: 'jo', nom: 'Pep' };
+  m.errorIdentitats = 'No s’han pogut carregar les organitzacions.';
+  rerender(<PerfilShell />);
+  expect(m.workspace.model.workspaceKey).toBe(clau);
+  m.errorIdentitats = null;
+  rerender(<PerfilShell />);
+  expect(JSON.parse(m.workspace.model.workspaceKey)).toEqual(['perfil', 'jo', null]);
+});
+
+test('261018 · la clau del Workspace segueix la identitat triada i el número de l’anada', () => {
+  m.actor = { tipus: 'persona', id: 'jo', nom: 'Pep' };
+  const { rerender } = render(<PerfilShell />);
+  const deLaPersona = m.workspace.model.workspaceKey;
+  expect(JSON.parse(deLaPersona)).toEqual(['perfil', 'jo', null]);
+  rerender(<PerfilShell />);
+  expect(m.workspace.model.workspaceKey).toBe(deLaPersona);
+  m.actor = { tipus: 'entitat', id: 'O', nom: 'Forn' };
+  rerender(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'O' });
+  expect(JSON.parse(m.workspace.model.workspaceKey)).toEqual(['perfil', 'O', null]);
+  m.actor = { tipus: 'persona', id: 'jo', nom: 'Pep' };
+  m.estatHistorial = { espaiIdentitat: 7 };
+  rerender(<PerfilShell />);
+  expect(JSON.parse(m.workspace.model.workspaceKey)).toEqual(['perfil', 'jo', 7]);
+  m.estatHistorial = { espaiIdentitat: 'no és un número' };
+  rerender(<PerfilShell />);
+  expect(JSON.parse(m.workspace.model.workspaceKey)).toEqual(['perfil', 'jo', null]);
 });
 
 test('T43 · «El compte» d’una organització rep el seu correu tal com l’ha llegit el context', () => {

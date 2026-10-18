@@ -17,6 +17,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   updateAgent: (...args) => m.updateAgent(...args),
 }));
 import { PerfilEditor, AVIS_SENSE_COLUMNA } from './PerfilEditor.jsx';
+import { AvatarDeCapcalera } from '../../components/universal/PageFrame.jsx';
 import { desaLlicenciaPerDefecte, llegixLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
@@ -574,6 +575,10 @@ test('Onada 4 · dos botons separats: «Capçalera» (PNG, JPEG o WebP, fins a 1
   expect(typeof m.adapter.onLogoEdit).toBe('function');
   expect(m.adapter.onHeroEdit).not.toBe(m.adapter.onLogoEdit);
   expect(m.adapter).not.toHaveProperty('avatarAutor');
+  /* Encàrrec d'harmonització (261018) · L'avatar redó ja no és avatarAutor sinó
+     identitatEdicioAvancada (dins d'«Edició avançada»): sense foto, tampoc n'hi ha. */
+  expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
+  expect(m.adapter).toMatchObject({ edicioAvancada: true, logoAlTitol: false, titolEdicioAvancada: 'Edició avançada de la fitxa', resumEdicioAvancada: 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades' });
 });
 
 /* Línia I2 (pla 261008_1201) · Les imatges pugen fora de la closca
@@ -644,6 +649,17 @@ const agentAmb = (avatar_url) => ({ id: 'A', mena: 'agent', nom: 'IAIA', rol: 'A
 /* Els selectors de fitxers amagats de les dues imatges (useImatgeDeFitxa). */
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 
+/* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant del
+   mig») · En edició, l'avatar redó ja no va a avatarAutor (damunt de l'H1): és
+   l'element identitatEdicioAvancada, l'AvatarDeCapcalera de PageFrame (el mateix
+   component, cap còpia) que la closca pinta dins del desplegable «Edició
+   avançada». Les seues props són el descriptor de sempre (CONTRACTE-1). */
+const avatarRedo = () => {
+  const node = m.adapter.identitatEdicioAvancada;
+  expect(node?.type).toBe(AvatarDeCapcalera);
+  return node.props;
+};
+
 /* Línia I2 (pla 261008_1201) · I les claus de la línia I1: `ajuda` (el límit,
    dit abans de triar) i `pujant` (false en repòs). */
 test('Onada 4 · una persona amb avatar: cap ranura; l’avatar redó porta onCanvia, «Avatar», onLleva, «Llevar l’avatar» (CONTRACTE-1), ajuda i pujant', () => {
@@ -652,14 +668,19 @@ test('Onada 4 · una persona amb avatar: cap ranura; l’avatar redó porta onCa
   expect(m.adapter).not.toHaveProperty('onLogoEdit');
   expect(m.adapter).not.toHaveProperty('logoEditHelp');
   expect(m.adapter).not.toHaveProperty('logoPujant');
-  expect(m.adapter.avatarAutor).toEqual({
+  /* Encàrrec d'harmonització (261018) · Damunt de l'H1 no queda res (cap
+     avatarAutor, logoAlTitol false): l'avatar va a la barra taronja i, amb els
+     seus botons, dins d'«Edició avançada» (identitatEdicioAvancada). */
+  expect(m.adapter).not.toHaveProperty('avatarAutor');
+  expect(m.adapter).toMatchObject({ edicioAvancada: true, logoAlTitol: false, titolEdicioAvancada: 'Edició avançada de la fitxa', resumEdicioAvancada: 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades' });
+  expect(avatarRedo()).toEqual({
     src: 'https://poble.test/a.webp', alt: 'Avatar de Pep',
     onCanvia: expect.any(Function), etiquetaCanvia: 'Avatar', onLleva: expect.any(Function), etiquetaLleva: 'Llevar l’avatar',
     ajuda: 'PNG, JPEG o WebP, fins a 10 MB.', pujant: false,
   });
   // PageFrame crida onCanvia amb l'esdeveniment del clic: obri el selector de l'avatar, cap diàleg intermedi.
   const clic = vi.spyOn(selector('logoImage'), 'click');
-  act(() => m.adapter.avatarAutor.onCanvia({ type: 'click', acaba: 'no' }));
+  act(() => avatarRedo().onCanvia({ type: 'click', acaba: 'no' }));
   expect(clic).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole('dialog')).toBeNull();
 });
@@ -689,11 +710,14 @@ test('Bloc 3.5.4 · sense avatar_url i amb la foto de la sessió: l’avatar red
   const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
   render(<PerfilEditor identitat={jo} />);
   expect(jo.dades.avatar_url).toBeUndefined();
-  expect(m.adapter.avatarAutor).toEqual({
+  /* Encàrrec d'harmonització (261018) · L'avatar redó, ara dins d'«Edició
+     avançada» (identitatEdicioAvancada); la font continua sent la mateixa. */
+  expect(m.adapter).not.toHaveProperty('avatarAutor');
+  expect(avatarRedo()).toEqual({
     src: 'a.webp', alt: 'Avatar de Pep', onCanvia: expect.any(Function), etiquetaCanvia: 'Avatar',
     ajuda: 'PNG, JPEG o WebP, fins a 10 MB.', pujant: false,
   });
-  expect(m.adapter.avatarAutor).not.toHaveProperty('onLleva');
+  expect(avatarRedo()).not.toHaveProperty('onLleva');
   expect(m.adapter.showLogoUpload).toBe(false);
   expect(m.adapter).not.toHaveProperty('onLogoEdit');
   // La mateixa foto a les tres superfícies de la pantalla.
@@ -701,12 +725,14 @@ test('Bloc 3.5.4 · sense avatar_url i amb la foto de la sessió: l’avatar red
   expect(llegixDocumentViu('jo').autor.avatar).toBe('a.webp');
   // «Avatar» obri el selector de l'avatar, com amb una foto pròpia.
   const clic = vi.spyOn(selector('logoImage'), 'click');
-  act(() => m.adapter.avatarAutor.onCanvia({ type: 'click' }));
+  act(() => avatarRedo().onCanvia({ type: 'click' }));
   expect(clic).toHaveBeenCalledTimes(1);
   // En lectura (una baixa en curs), la mateixa foto, sense cap botó.
   cleanup();
   render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } }} />);
   expect(m.adapter.emptyDocument.avatarAutor).toEqual({ src: 'a.webp', alt: 'Avatar de Pep' });
+  /* Encàrrec d'harmonització (261018) · En lectura, cap avatar amb botons al desplegable. */
+  expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
   expect(m.adapter.barAuthorAvatar).toBe('a.webp');
 });
 
@@ -734,8 +760,9 @@ test('Bloc 3.5.2 · les entitats del Mestre sense poble el porten a la barra i a
 test('Bloc 3.5.4 · amb avatar propi, el propi a l’avatar redó, a la barra i a la targeta viva; «Llevar l’avatar» hi és', async () => {
   const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
   render(<PerfilEditor identitat={{ ...jo, avatar: 'https://poble.test/a.webp', dades: { ...jo.dades, avatar_url: 'https://poble.test/a.webp' } }} />);
-  expect(m.adapter.avatarAutor).toMatchObject({ src: 'https://poble.test/a.webp', etiquetaLleva: 'Llevar l’avatar' });
-  expect(typeof m.adapter.avatarAutor.onLleva).toBe('function');
+  /* Encàrrec d'harmonització (261018) · L'avatar redó, dins d'«Edició avançada». */
+  expect(avatarRedo()).toMatchObject({ src: 'https://poble.test/a.webp', etiquetaLleva: 'Llevar l’avatar' });
+  expect(typeof avatarRedo().onLleva).toBe('function');
   expect(m.adapter.barAuthorAvatar).toBe('https://poble.test/a.webp');
   expect(llegixDocumentViu('jo').autor.avatar).toBe('https://poble.test/a.webp');
 });
@@ -743,10 +770,14 @@ test('Bloc 3.5.4 · amb avatar propi, el propi a l’avatar redó, a la barra i 
 test('Onada 4 · un agent IA té l’avatar redó com la persona; sense avatar, la ranura «Avatar»', () => {
   render(<PerfilEditor identitat={agentAmb('/assets/iaia.webp')} />);
   expect(m.adapter.showLogoUpload).toBe(false);
-  expect(m.adapter.avatarAutor).toMatchObject({ src: '/assets/iaia.webp', alt: 'Avatar de IAIA', etiquetaCanvia: 'Avatar' });
+  /* Encàrrec d'harmonització (261018) · Com la persona: l'avatar redó dins
+     d'«Edició avançada» i res damunt de l'H1. */
+  expect(m.adapter).toMatchObject({ edicioAvancada: true, logoAlTitol: false, titolEdicioAvancada: 'Edició avançada de la fitxa', resumEdicioAvancada: 'Canvia l’avatar, afig la foto de capçalera i gestiona els drets i les dades' });
+  expect(avatarRedo()).toMatchObject({ src: '/assets/iaia.webp', alt: 'Avatar de IAIA', etiquetaCanvia: 'Avatar' });
   cleanup();
   render(<PerfilEditor identitat={agentAmb('')} />);
   expect(m.adapter).toMatchObject({ showLogoUpload: true, logoEditLabel: 'Avatar' });
+  expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
 });
 
 test('Onada 4 · una organització que no és la pilot: la ranura «Logotip», que obri el seu selector i desa logo_url pel camí de sempre', async () => {
@@ -754,6 +785,10 @@ test('Onada 4 · una organització que no és la pilot: la ranura «Logotip», q
   expect(m.adapter.showLogoUpload).toBe(true);
   expect(m.adapter.logoEditLabel).toBe('Logotip');
   expect(m.adapter).not.toHaveProperty('avatarAutor');
+  /* Encàrrec d'harmonització (261018) · Una organització no té avatar redó; la
+     ranura va dins d'«Edició avançada» i el logotip desat, damunt de l'H1. */
+  expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
+  expect(m.adapter).toMatchObject({ edicioAvancada: true, logoAlTitol: true, titolEdicioAvancada: 'Edició avançada de la fitxa', resumEdicioAvancada: 'Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades' });
   const clic = vi.spyOn(selector('logoImage'), 'click');
   act(() => m.adapter.onLogoEdit({ acaba: vi.fn() }));
   expect(clic).toHaveBeenCalledTimes(1);
@@ -770,6 +805,8 @@ test('ordre E · l’entitat pilot (el seu perfil): cap ranura ni avatar; PageFr
   expect(m.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
   expect(m.adapter.showLogoUpload).toBe(false);
   expect(m.adapter).not.toHaveProperty('avatarAutor');
+  /* Encàrrec d'harmonització (261018) · Tampoc dins d'«Edició avançada». */
+  expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
 });
 
 test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logotip d’una entitat, res per a un grup, avatar sense onCanvia', () => {
@@ -810,15 +847,17 @@ test('Onada 4 · una foto de més de 10 MB avisa amb un toast (cap finestra la t
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-test('Onada 4 · «Llevar l’avatar» (avatarAutor.onLleva) confirma abans i buida avatar_url per la via de la fitxa; cancel·lar no toca res', async () => {
+/* Encàrrec d'harmonització (261018) · onLleva ja no ve d'avatarAutor: és la de
+   l'avatar redó d'«Edició avançada» (identitatEdicioAvancada). La mateixa. */
+test('Onada 4 · «Llevar l’avatar» (onLleva de l’avatar redó d’«Edició avançada») confirma abans i buida avatar_url per la via de la fitxa; cancel·lar no toca res', async () => {
   render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, avatar_url: 'https://poble.test/a.webp' } }} />);
   expect(screen.queryByRole('dialog')).toBeNull();
-  act(() => m.adapter.avatarAutor.onLleva());
+  act(() => avatarRedo().onLleva());
   let confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
   fireEvent.click(within(confirma).getByRole('button', { name: 'Cancel·lar' }));
   expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull();
   expect(m.updateProfile).not.toHaveBeenCalled();
-  act(() => m.adapter.avatarAutor.onLleva());
+  act(() => avatarRedo().onLleva());
   confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
   await act(async () => { fireEvent.click(within(confirma).getByRole('button', { name: 'Llevar l’avatar' })); });
   expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: null }, CONFIG);

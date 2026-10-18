@@ -1189,7 +1189,10 @@ function filaDeLAvatar({ onCanvia = null, etiquetaCanvia = null, onLleva = null,
    Correcció de la revisió de la línia I1 · Amb la línia d'ajuda pintada,
    l'avatar-botó (que també tria la foto) la cita amb aria-describedby, com
    la píndola «canvia». Sense ajuda, cap atribut nou. */
-function AvatarDeCapcalera({ src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = ETIQUETA_LLEVA_AVATAR, ajuda = null, pujant = false }) {
+/* Encàrrec d'harmonització (261018) · Exportat: el Perfil el pinta dins del
+   desplegable «Edició avançada» (UniversalEditorShell · identitatEdicioAvancada)
+   en lloc de damunt de l'H1. El mateix component, cap còpia. */
+export function AvatarDeCapcalera({ src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = ETIQUETA_LLEVA_AVATAR, ajuda = null, pujant = false }) {
   const idAjuda = `${useId()}-ajuda`;
   const delPort = esDelPort(src);
   const resolucio = useResolvedAssetState(delPort ? src : '');

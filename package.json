@@ -65,6 +65,7 @@
     "slugs:build": "node tooling/wiki/core/build_slug_index.mjs",
     "prebuild": "node tooling/wiki/compile-wiki-to-app.mjs && node tooling/gates/saneja-callback.mjs",
     "porta:sanejador": "node tooling/gates/saneja-callback.mjs",
+    "media:webp": "node tooling/media/optimitzar_webp.mjs",
     "build": "npm run build:tokens && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp && npm run build:seo",
     "build:tokens": "node tooling/scripts/build-tokens.mjs",
     "build:seo": "node tooling/gates/build-seo-manifest.mjs --escriu",

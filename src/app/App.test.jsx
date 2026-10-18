@@ -836,7 +836,10 @@ test.each([
   ['/entrar?tornar=%2Fpobles', { mode: 'entrar', tornar: '/pobles' }],
   ['/entrar', { mode: 'entrar' }],
   ['/crear-compte', { mode: 'crear' }],
-  ['/crear-compte?tornar=%2Fxat%3Fvista%3Dcomunitats', { mode: 'crear', tornar: '/xat?vista=comunitats' }]
+  ['/crear-compte?tornar=%2Fxat%3Fvista%3Dcomunitats', { mode: 'crear', tornar: '/xat?vista=comunitats' }],
+  /* Encàrrec 261018_1220 (Tasca 2) · /registra, sense mode propi: passa el rebut. */
+  ['/registra', {}],
+  ['/registra?mode=entrar&tornar=%2Fmur', { mode: 'entrar', tornar: '/mur' }]
 ])('T4 · %s porta a /registre amb el mode de l’àlies i el tornar intern', async (ruta, esperat) => {
   await muntaSenseSessio(ruta, async () => {
     await waitFor(() => expect(window.location.pathname).toBe('/registre'));

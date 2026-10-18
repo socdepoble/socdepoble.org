@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-const store = vi.hoisted(() => ({ values: new Map(), writable: true }));
+const store = vi.hoisted(() => ({ values: new Map(), efimers: new Map(), writable: true }));
 vi.mock('./storage.js', () => ({ getVal: (key, fallback) => store.values.get(key) ?? fallback, setVal: (key, value) => {
   if (!store.writable) return false;
   store.values.set(key, value);
@@ -8,13 +8,22 @@ vi.mock('./storage.js', () => ({ getVal: (key, fallback) => store.values.get(key
   if (!store.writable) return false;
   store.values.delete(key);
   return true;
+},
+/* Encàrrec 261018_1220 · La capa efímera (de la pestanya): l'elecció de proves. */
+getEfimer: (key, fallback) => store.efimers.get(key) ?? fallback, setEfimer: (key, value) => {
+  if (!store.writable) return false;
+  store.efimers.set(key, value);
+  return true;
+}, delEfimer: (key) => {
+  store.efimers.delete(key);
+  return true;
 } }));
 vi.mock('./runtimePolicy.js', () => ({ getRuntimePolicy: () => null }));
 const config = { backendId: 'custom', backendUrl: 'https://example.test/api', tenantId: '00000000-0000-0000-0000-000000000000', dataMode: 'seed' };
 const clau = `data-mode-choice:${JSON.stringify(['custom', 'https://example.test/api', '00000000-0000-0000-0000-000000000000'])}`;
 // T13 · Quin procés de `vite` simula cada prova; '' simula un build (DEV false).
 const servidor = (valor) => { vi.stubEnv('VITE_SDP_SERVIDOR_DEV', valor); vi.stubEnv('DEV', valor !== ''); };
-beforeEach(() => { vi.resetModules(); store.values.clear(); store.writable = true; servidor('dev-a'); });
+beforeEach(() => { vi.resetModules(); store.values.clear(); store.efimers.clear(); store.writable = true; servidor('dev-a'); });
 afterEach(() => { vi.unstubAllEnvs(); });
 
 test('el mode remot és explícit, es manté després de recarregar i no transporta credencials', async () => {
@@ -138,4 +147,78 @@ test('T13 · sense VITE_DATA_MODE (producció) el mode és remote encara que hi 
   const { resolveDataMode } = await import('./dataMode.js');
   expect(resolveDataMode({ ...config, dataMode: undefined })).toBe('remote');
   expect(resolveDataMode({ ...config, dataMode: 'remote' })).toBe('remote');
+});
+
+/* ── Encàrrec 261018_1220 (Tasques 0 i 2) · L'elecció de proves en desenvolupament ── */
+const remot = { ...config, dataMode: 'remote' };
+const clauProves = `data-mode-proves:${JSON.stringify(['custom', 'https://example.test/api', '00000000-0000-0000-0000-000000000000'])}`;
+
+test('261018 · en desenvolupament, un paquet remot passa al mode de proves en la càrrega següent d’esta pestanya', async () => {
+  const primer = await import('./dataMode.js');
+  const reload = vi.fn();
+  expect(primer.resolveDataMode(remot)).toBe('remote');
+  primer.enterTestMode({ ...remot, supabaseAnonKey: 'public-key' }, reload);
+  expect(reload).toHaveBeenCalledTimes(1);
+  expect(store.efimers.get(clauProves)).toEqual({ v: 1, mode: primer.MODE_DE_PROVES, servidor: 'dev-a' });
+  // Revisió adversarial · res al registre de tot el navegador: les altres pestanyes no canvien.
+  expect(store.values.size).toBe(0);
+  expect(JSON.stringify([...store.efimers])).not.toContain('public-key');
+  // El retrat del document no canvia fins a recarregar.
+  expect(primer.resolveDataMode(remot)).toBe('remote');
+  vi.resetModules();
+  const { normalizeBackendConfig } = await import('./backendConfig.js');
+  expect(normalizeBackendConfig(remot).dataMode).toBe('seed');
+  // Un paquet que ja demana un mode local el conserva.
+  expect(normalizeBackendConfig({ ...config, dataMode: 'local' }).dataMode).toBe('local');
+});
+
+test('261018 · una altra pestanya (sense l’elecció efímera) continua en remot', async () => {
+  (await import('./dataMode.js')).enterTestMode(remot, vi.fn());
+  store.efimers.clear();
+  vi.resetModules();
+  expect((await import('./dataMode.js')).resolveDataMode(remot)).toBe('remote');
+});
+
+test('261018 · dins de la pestanya mana sobre l’elecció remota, i entrar al servidor l’esborra', async () => {
+  const { enterRemoteMode, enterTestMode } = await import('./dataMode.js');
+  enterRemoteMode(config, vi.fn());
+  enterTestMode(remot, vi.fn());
+  vi.resetModules();
+  let mode = await import('./dataMode.js');
+  expect(mode.resolveDataMode(config)).toBe('seed');
+  expect(mode.resolveDataMode(remot)).toBe('seed');
+  expect(mode.eleccioRemotaActiva(config)).toBe(false);
+  mode.enterRemoteMode(config, vi.fn());
+  expect(store.efimers.has(clauProves)).toBe(false);
+  vi.resetModules();
+  mode = await import('./dataMode.js');
+  expect(mode.resolveDataMode(remot)).toBe('remote');
+  expect(mode.resolveDataMode(config)).toBe('remote');
+});
+
+test('261018 · un `npm run dev` nou torna al mode del paquet (T13)', async () => {
+  (await import('./dataMode.js')).enterTestMode(remot, vi.fn());
+  servidor('dev-b');
+  vi.resetModules();
+  expect((await import('./dataMode.js')).resolveDataMode(remot)).toBe('remote');
+});
+
+test('261018 · en un build no es pot triar i una elecció de proves desada no hi val', async () => {
+  servidor('');
+  const { enterTestMode } = await import('./dataMode.js');
+  const reload = vi.fn();
+  expect(() => enterTestMode(remot, reload)).toThrow('només es pot triar en desenvolupament');
+  expect(reload).not.toHaveBeenCalled();
+  expect(store.efimers.has(clauProves)).toBe(false);
+  store.efimers.set(clauProves, { v: 1, mode: 'seed', servidor: '' });
+  vi.resetModules();
+  expect((await import('./dataMode.js')).resolveDataMode(remot)).toBe('remote');
+});
+
+test('261018 · si el navegador no deixa desar, no recarrega', async () => {
+  store.writable = false;
+  const { enterTestMode } = await import('./dataMode.js');
+  const reload = vi.fn();
+  expect(() => enterTestMode(remot, reload)).toThrow('No s’ha pogut guardar l’elecció');
+  expect(reload).not.toHaveBeenCalled();
 });

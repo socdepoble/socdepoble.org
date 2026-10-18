@@ -600,3 +600,24 @@ it.each([
   await open();
   expect(value.identitats[0].avatar).toBe(esperat);
 });
+
+/* Encàrrec 261018 (ordre del Mestre: «desar la capçalera i l'avatar no pot
+   fallar») · En mode de proves la imatge es desa com a data URL dels mateixos
+   bytes i no passa mai per uploadToStorage (que exigix un usuari del servidor i
+   rebutjava la persona pilot, '0001'). En remot, el camí de sempre. */
+it('261018 · en mode de proves pujaMitja torna el data URL i no puja res; en remot puja', async () => {
+  await open({ tenantId: '00000000-0000-0000-0000-00000000000a', backendId: 'supabase', dataMode: 'seed' });
+  const foto = new File([new Uint8Array([137, 80, 78, 71])], 'capcalera.png', { type: 'image/png' });
+  let url;
+  await act(async () => { url = await value.pujaMitja(foto, 'capcaleres'); });
+  expect(url).toMatch(/^data:image\/png;base64,/);
+  expect(mock.uploadToStorage).not.toHaveBeenCalled();
+  const pdf = new File(['%PDF'], 'x.pdf', { type: 'application/pdf' });
+  await expect(value.pujaMitja(pdf)).rejects.toThrow('Tria una imatge PNG, JPEG, WebP, GIF o AVIF de menys de 10 MB.');
+  cleanup();
+  mock.uploadToStorage.mockResolvedValueOnce({ url: 'sdp-media://mitjans/t/u/avatars/x.png' });
+  await open({ tenantId: '00000000-0000-0000-0000-00000000000a', backendId: 'supabase', dataMode: 'remote' });
+  await act(async () => { url = await value.pujaMitja(foto); });
+  expect(url).toBe('sdp-media://mitjans/t/u/avatars/x.png');
+  expect(mock.uploadToStorage).toHaveBeenCalledTimes(1);
+});

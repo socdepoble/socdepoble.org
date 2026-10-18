@@ -24,6 +24,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => vi.fn(),
   /* T43 · PerfilShell llig ?organitzacio=ID per a triar què obri primer. */
   useSearchParams: () => [new URLSearchParams()],
+  /* Encàrrec 261018_1220 · PerfilShell llig l'estat de l'historial (espaiIdentitat). */
+  useLocation: () => ({ pathname: '/el-meu-perfil', search: '', state: null, hash: '' }),
   Link: ({ to, children }) => <a href={to}>{children}</a>,
 }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: {} }) }));
@@ -78,7 +80,7 @@ const detall = (container) => container.querySelector('.sdp-workspace-detail');
 test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i APLICACIONS, sense la maquinària interna', () => {
   const { container } = render(<PerfilShell />);
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Curation AI (Lector RSS)', 'Snippet',
+    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Lector RSS', 'TPV del Bar', 'Snippet',
   ]);
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
@@ -94,7 +96,7 @@ test('Bloc 3.4 · qui és superadmin hi veu també la Consola de Mètriques i el
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Consola de Mètriques', 'Curation AI (Lector RSS)', 'Cervell (Node Graph)', 'Snippet',
+    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Rebost Domèstic', 'Salut', 'Lector RSS', 'TPV del Bar', 'Snippet', 'Consola de Mètriques', 'Cervell (Node Graph)',
   ]);
   /* Una sessió que no és superadmin, o un valor que no és un sí, no les mostra. */
   for (const sessio of [{ esSuperadmin: false }, { rol: 'veí' }, {}]) {

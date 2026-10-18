@@ -4,7 +4,7 @@ import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
-import { useSearchParams } from '../../app/contexts/RouterContext';
+import { useLocation, useSearchParams } from '../../app/contexts/RouterContext';
 import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace';
 import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -86,7 +86,7 @@ function FitxaDePerfil({ item, active, onSelect }) {
 
 const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} active={active} onSelect={onSelect} />;
 
-function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
+function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = null, connexio }) {
   const { showToast } = useToast();
   const {
     identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error, ambMembres,
@@ -108,13 +108,34 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
   /* «Privacitat i dades» només si el backend sap fer algun dels drets. */
   const ambPrivacitat = teCapacitat('compte') || teCapacitat('consentiment');
 
+  /* T43 (ordre del Mestre, 260928) · En obrir-se, el Perfil mostra
+     l'organització demanada per la ruta («Edita la fitxa de {Org}») o la
+     que és l'actor actiu; si no és cap de les seues, la persona. */
+  const [preferidaRuta, preferidaActor] = preferides || [];
+  const initialSelection = useMemo(
+    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor]),
+    [identitats, preferidaRuta, preferidaActor],
+  );
+
+  /* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «recuperar fidelment el
+     Workspace de l'usuari i els de les organitzacions») · El Workspace només
+     llig initialSelection en muntar-se: canviar d'identitat amb el Perfil obert
+     (el calaix, «Actua com a…», una pertinença que arriba després) no hi
+     canviava res. La clau és la identitat que s'ha d'obrir i, quan ve del
+     calaix o de l'avatar, el número de l'anada (useIdentitatDeLaBarra ·
+     espaiIdentitat): triar la mateixa identitat la torna a obrir encara que la
+     persona n'haja mirat una altra a la primera columna. Recarregar les dades
+     (desar la fitxa, una organització nova) no la canvia. */
+  const workspaceKey = JSON.stringify(['perfil', initialSelection.categoryId, recuperacio]);
+
   /* Tots els hooks ABANS de cap return condicional (regla de hooks). */
   const model = useMemo(() => ({
     status: 'ready',
     itemsComplete: true,
+    workspaceKey,
     navigationGroups: navegacioDePerfil(identitats, aplicacions),
     items: [...itemsDePerfil(identitats, { ambPrivacitat }), ...itemsDAplicacions(aplicacions)],
-  }), [identitats, aplicacions, ambPrivacitat]);
+  }), [identitats, aplicacions, ambPrivacitat, workspaceKey]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
@@ -158,15 +179,6 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
       />
     );
   }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres]);
-
-  /* T43 (ordre del Mestre, 260928) · En obrir-se, el Perfil mostra
-     l'organització demanada per la ruta («Edita la fitxa de {Org}») o la
-     que és l'actor actiu; si no és cap de les seues, la persona. */
-  const [preferidaRuta, preferidaActor] = preferides || [];
-  const initialSelection = useMemo(
-    () => seleccioInicialDePerfil(identitats, [preferidaRuta, preferidaActor]),
-    [identitats, preferidaRuta, preferidaActor],
-  );
 
   const onCreate = useCallback(() => new Promise((resolve) => {
     setObertures((n) => n + 1);
@@ -271,13 +283,23 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
     etiqueta: etiquetaConnexio,
   }), [nomPoble, nodes, estatConnexio, etiquetaConnexio]);
   const contentContext = useContent();
-  const { refresh, actor } = useIdentitat();
+  const { refresh, actor, error: errorIdentitats } = useIdentitat();
   /* T43 · ?organitzacio=ID (rutaFitxaOrganitzacio) i l'actor actiu, per a
      triar què s'obri primer. */
   const [params] = useSearchParams();
   const preferidaRuta = params?.get?.(PARAM_FITXA_ORGANITZACIO) || null;
-  const preferidaActor = actor?.tipus === 'entitat' && actor?.id != null ? String(actor.id) : null;
+  /* Revisió adversarial (261018) · La clau del Workspace depén de l'actor: si
+     una relectura de les pertinences falla (IdentitatContext buida la llista i
+     l'actor cau a la persona), es conserva l'organització d'abans i el Perfil
+     no salta mentre s'escriu. Ajust en pintar, sense efecte. */
+  const actorEntitat = actor?.tipus === 'entitat' && actor?.id != null ? String(actor.id) : null;
+  const [preferidaActor, setPreferidaActor] = useState(actorEntitat);
+  if (!errorIdentitats && preferidaActor !== actorEntitat) setPreferidaActor(actorEntitat);
   const preferides = useMemo(() => [preferidaRuta, preferidaActor], [preferidaRuta, preferidaActor]);
+  /* Encàrrec 261018_1220 · El número de l'anada des del calaix o l'avatar
+     (useIdentitatDeLaBarra · CLAU_RECUPERACIO_ESPAI), o null. */
+  const { state: estatHistorial } = useLocation();
+  const recuperacio = Number.isFinite(estatHistorial?.espaiIdentitat) ? estatHistorial.espaiIdentitat : null;
   const configContingut = contentContext?.config;
   /* Memoitzada: una configuració nova a cada render tornaria a pintar el detall. */
   const config = useMemo(
@@ -305,7 +327,7 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
 
   return (
     <PerfilProvider config={config} onCanviOrganitzacions={refresh}>
-      <PerfilManagerInner config={config} aplicacions={utilitats} preferides={preferides} connexio={connexio} />
+      <PerfilManagerInner config={config} aplicacions={utilitats} preferides={preferides} recuperacio={recuperacio} connexio={connexio} />
     </PerfilProvider>
   );
 }

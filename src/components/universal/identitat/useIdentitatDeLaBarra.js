@@ -42,6 +42,7 @@ import { useIdentitatOpcional } from '../../../app/contexts/IdentitatContext.jsx
 import { useUbicacioApp } from '../../PedraSeca/hooks/useAccions.js';
 import { treuBase } from '../../../app/contexts/politicaRouter.js';
 import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
+import { RUTA_PERFIL_PROPI, rutaEspaiDIdentitat } from '../../../config/navigation.js';
 
 /* Correcció de la revisió T1–T4 (260930) · La ruta de l'app, camí i consulta
    SENCERS, llegida en el clic com rutaActual (useAccions.js): en memòria,
@@ -62,8 +63,23 @@ export function rutaSencera(router) {
   return cami === null ? '' : `${cami}${search}`;
 }
 
-/** La ruta del perfil propi (App.jsx: <Route path="el-meu-perfil">). */
-export const RUTA_PERFIL_PROPI = '/el-meu-perfil';
+/** La ruta del perfil propi (App.jsx: <Route path="el-meu-perfil">). Viu a config/navigation.js. */
+export { RUTA_PERFIL_PROPI };
+
+/* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «en clicar l'avatar o la
+   identitat personal, la interfície es queda atrapada al Bloc de notes») ·
+   Triar una identitat al calaix ja no deixa la persona on era: canvia l'actor
+   i porta al workspace d'eixa identitat, el que ja existix (el Perfil:
+   rutaEspaiDIdentitat). L'avatar directe i «La meua fitxa i ajustos» hi porten
+   igual. Cada anada porta a l'estat de l'historial un número nou
+   (`espaiIdentitat`): el Perfil el llig per a tornar a obrir la identitat
+   triada encara que la ruta no canvie (PerfilShell · workspaceKey). */
+export const CLAU_RECUPERACIO_ESPAI = 'espaiIdentitat';
+/* Revisió adversarial (261018) · Comença en l'instant de càrrega, no en 0:
+   l'estat de l'historial sobreviu a recarregar, i un número repetit no
+   tornaria a obrir la identitat. */
+let recuperacions = Date.now();
+const ambRecuperacio = () => ({ state: { [CLAU_RECUPERACIO_ESPAI]: ++recuperacions } });
 
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   const sessio = useSessioOpcional();
@@ -91,12 +107,17 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   useEffect(() => { if (!teSessio) setObert(false); }, [teSessio]);
 
   const tanca = useCallback(() => setObert(false), []);
-  const navega = useCallback((ruta) => { setObert(false); onNavega?.(ruta); }, [onNavega]);
+  const navega = useCallback((ruta, opcions) => {
+    setObert(false);
+    if (opcions) onNavega?.(ruta, opcions);
+    else onNavega?.(ruta);
+  }, [onNavega]);
   const tria = useCallback((tipus, id) => {
     const fet = setActor?.(tipus, id) ?? false;
     setObert(false);
+    if (fet) onNavega?.(rutaEspaiDIdentitat(tipus, id), ambRecuperacio());
     return fet;
-  }, [setActor]);
+  }, [setActor, onNavega]);
   const entra = () => {
     const ruta = rutaSencera(router);
     if (esRutaDEntrada(ruta)) return;
@@ -115,7 +136,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     obert,
     perfil: directe,
     etiquetaEntrar,
-    onClick: pendent ? undefined : !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI) : () => setObert(true)
+    onClick: pendent ? undefined : !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI, ambRecuperacio()) : () => setObert(true)
   };
 
   const calaix = teSessio ? {
@@ -127,7 +148,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
        padró i enllaça cada entitat a /empresa/:id. /perfil és el catàleg
        d'agents del contingut base, no el directori d'organitzacions. */
     onConnectar: () => navega('/cerca?tipus=entitats'),
-    onFitxa: () => navega(RUTA_PERFIL_PROPI)
+    onFitxa: () => navega(RUTA_PERFIL_PROPI, ambRecuperacio())
   } : null;
 
   return { boto, calaix };

@@ -38,9 +38,10 @@ export const ICONES_APARTATS = Object.freeze({
 
 /* T43 (ordre del Mestre, 260928) · «Edita la fitxa de {Org}» obri el Perfil
    a la fitxa d'eixa organització SENSE canviar d'identitat: canviar-la és
-   sempre una tria a part («Actua com a {Org}» o l'avatar de la barra). */
-export const PARAM_FITXA_ORGANITZACIO = 'organitzacio';
-export const rutaFitxaOrganitzacio = (id) => `/el-meu-perfil?${PARAM_FITXA_ORGANITZACIO}=${encodeURIComponent(String(id))}`;
+   sempre una tria a part («Actua com a {Org}» o l'avatar de la barra).
+   Encàrrec 261018_1220 (Tasca 1) · La ruta viu ara a config/navigation.js, la
+   font única que també llig la barra; ací es reexporta per als consumidors. */
+export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/navigation.js';
 
 /**
  * La primera categoria del Perfil: l'organització demanada per la ruta o,

@@ -104,6 +104,29 @@ afterEach(() => {
 });
 
 const capcalera = () => document.querySelector('.sdp-editor-document header.page-title');
+/* Encàrrec d'harmonització (261018) · Ordre del Mestre: «fitxa neta; tota la
+   gestió d'imatges va dins d'Edició avançada». L'avatar redó (amb «Avatar» i
+   «Llevar l’avatar»), la ranura «Avatar» o «Logotip» i el botó «Capçalera» ja
+   no van damunt de l'H1: viuen dins del <details> plegat de la closca
+   (UniversalEditorShell). Les proves l'obrin com ho faria la persona, amb un
+   clic al resum, abans de tocar-hi res. */
+const desplegable = () => document.querySelector('.sdp-editor-document details.sdp-edicio-avancada');
+const obriEdicioAvancada = () => {
+  const detalls = desplegable();
+  expect(detalls).not.toBeNull();
+  if (!detalls.open) fireEvent.click(detalls.querySelector('summary.sdp-edicio-avancada__resum'));
+  expect(detalls.open).toBe(true);
+  return detalls;
+};
+/* L'avatar redó de la persona o l'agent (identitatEdicioAvancada) i la ranura
+   del logotip o de l'avatar buit (logoComponent), dins del desplegable. */
+const identitatAvancada = () => desplegable()?.querySelector('.sdp-edicio-avancada__identitat') ?? null;
+const ranuraAvancada = () => desplegable()?.querySelector('.sdp-edicio-avancada__logotip') ?? null;
+/* Damunt de l'H1 de la persona ja no hi ha res d'imatge: ni l'avatar redó, ni
+   les seues píndoles, ni la ranura. */
+const capcaleraNeta = () => {
+  expect(capcalera().querySelector('.page-title-avatar, .page-title-avatar-accions, .page-title-logo-personalitzat')).toBeNull();
+};
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 /* Els noms dels botons d'imatge de tota la fitxa, en l'ordre del document. */
 const NOMS_IMATGE = new Set(['Capçalera', 'Avatar', 'Logotip', 'Editar capçalera i avatar', 'Editar logotip']);
@@ -130,8 +153,11 @@ async function triaIGuarda(camp, finestra, fitxer = new File(['x'], 'foto.png', 
 describe('els botons', () => {
   test('persona sense avatar: «Capçalera» i «Avatar», separats; el de «Capçalera» diu què s’admet abans de triar', () => {
     render(<PerfilEditor identitat={jo} />);
+    /* Encàrrec d'harmonització (261018) · La ranura «Avatar» viu dins d'«Edició avançada», no damunt de l'H1. */
+    obriEdicioAvancada();
     expect(botonsImatge().sort()).toEqual(['Avatar', 'Capçalera']);
-    expect(within(capcalera()).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+    expect(within(ranuraAvancada()).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+    capcaleraNeta();
     // Lligada al botó: la línia d'ajuda del seu camp (la de l'«Avatar», a «l’ajuda es diu abans de triar», davall).
     expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
     expect(AJUDA_FOTO).toBe('PNG, JPEG o WebP, fins a 10 MB.');
@@ -143,14 +169,20 @@ describe('els botons', () => {
 
   test('persona amb avatar: «Capçalera» i l’avatar redó, sense la ranura; la píndola «Avatar» (CONTRACTE-1) obri el selector', () => {
     render(<PerfilEditor identitat={ambAvatar} />);
+    /* Encàrrec d'harmonització (261018) · Fora l'avatar gegant del centre: el
+       redó, amb les seues píndoles, viu dins d'«Edició avançada» i és l'únic
+       de l'editor; damunt de l'H1 no queda res (ja va a la barra taronja). */
+    obriEdicioAvancada();
     expect(botonsImatge()).toContain('Capçalera');
-    expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
-    const avatar = capcalera().querySelector('button.page-title-avatar--canvia');
+    expect(ranuraAvancada()).toBeNull();
+    capcaleraNeta();
+    expect(document.querySelectorAll('.sdp-editor-document button.page-title-avatar--canvia')).toHaveLength(1);
+    const avatar = identitatAvancada().querySelector('button.page-title-avatar--canvia');
     expect(avatar).not.toBeNull();
     const obri = vi.spyOn(selector('logoImage'), 'click');
     fireEvent.click(avatar);
     expect(obri).toHaveBeenCalledTimes(1);
-    const pindola = within(capcalera()).getByRole('button', { name: 'Avatar' });
+    const pindola = within(identitatAvancada()).getByRole('button', { name: 'Avatar' });
     expect(pindola.closest('.page-title-avatar-accions')).not.toBeNull();
     fireEvent.click(pindola);
     expect(obri).toHaveBeenCalledTimes(2);
@@ -159,14 +191,18 @@ describe('els botons', () => {
 
   test('persona amb avatar: «Llevar l’avatar» confirma i, en llevar-lo, torna la ranura «Avatar»', async () => {
     render(<PerfilEditor identitat={ambAvatar} />);
-    const lleva = within(capcalera()).getByRole('button', { name: 'Llevar l’avatar' });
+    /* Encàrrec d'harmonització (261018) · L'avatar i la ranura que el substituïx, dins d'«Edició avançada». */
+    obriEdicioAvancada();
+    const lleva = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
     fireEvent.click(lleva);
     const confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
     fireEvent.click(within(confirma).getByRole('button', { name: 'Llevar l’avatar' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull());
     expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
-    expect(capcalera().querySelector('button.page-title-avatar--canvia')).toBeNull();
-    expect(within(capcalera()).getByRole('button', { name: 'Avatar' }).closest('.page-title-logo-personalitzat')).not.toBeNull();
+    expect(document.querySelector('.sdp-editor-document button.page-title-avatar--canvia')).toBeNull();
+    expect(identitatAvancada()).toBeNull();
+    expect(within(desplegable()).getByRole('button', { name: 'Avatar' }).closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+    capcaleraNeta();
   });
 
   test('agent IA sense avatar: «Capçalera» i «Avatar»', () => {
@@ -184,7 +220,11 @@ describe('els botons', () => {
 
   test('l’entitat pilot: només «Capçalera» (el logotip és fix)', () => {
     render(<PerfilEditor identitat={{ ...org('owner'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' }} />);
+    /* Encàrrec d'harmonització (261018) · La ranura del logotip viuria ara dins
+       d'«Edició avançada»: la pilot no en té ni allí ni damunt de l'H1. */
+    obriEdicioAvancada();
     expect(botonsImatge()).toEqual(['Capçalera']);
+    expect(ranuraAvancada()).toBeNull();
     expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
   });
 
@@ -194,6 +234,8 @@ describe('els botons', () => {
       expect(botonsImatge(), identitat.nom).toEqual([]);
       expect(document.querySelector('input[type="file"]'), identitat.nom).toBeNull();
       expect(document.querySelector('dialog'), identitat.nom).toBeNull();
+      /* Encàrrec d'harmonització (261018) · Ni el desplegable on ara viuen els controls d'imatge. */
+      expect(document.querySelector('details.sdp-edicio-avancada'), identitat.nom).toBeNull();
       cleanup();
     }
   });
@@ -202,7 +244,9 @@ describe('els botons', () => {
 describe('les finestres', () => {
   test('persona · «Avatar» → «Retalla la foto» en cercle → UNA pujada → l’avatar redó ix al lloc de la ranura', async () => {
     render(<PerfilEditor identitat={jo} />);
-    fireEvent.click(within(capcalera()).getByRole('button', { name: 'Avatar' }));
+    /* Encàrrec d'harmonització (261018) · La ranura i, després, l'avatar redó, dins d'«Edició avançada». */
+    obriEdicioAvancada();
+    fireEvent.click(within(ranuraAvancada()).getByRole('button', { name: 'Avatar' }));
     const { dialeg, guarda } = await triaIGuarda('logoImage', 'Retalla la foto');
     expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa--cercle')).not.toBeNull();
     expect([...dialeg.querySelectorAll('.sdp-dialeg__peu button')].map((b) => b.textContent)).toEqual(['Restablir', 'Cancel·lar', 'Guardar']);
@@ -210,12 +254,16 @@ describe('les finestres', () => {
     expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1);
     expect(m.perfil.pujaMitja.mock.calls[0][1]).toBe('avatars');
     expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: '/assets/nou.webp' }, CONFIG);
-    expect(capcalera().querySelector('button.page-title-avatar--canvia img').getAttribute('src')).toBe('/assets/nou.webp');
+    expect(identitatAvancada().querySelector('button.page-title-avatar--canvia img').getAttribute('src')).toBe('/assets/nou.webp');
+    expect(ranuraAvancada()).toBeNull();
+    capcaleraNeta();
   });
 
   test('organització · «Logotip» → «Retalla el logotip» en quadrat (sense cercle) → 600 × 600 exactes → logo_url', async () => {
     render(<PerfilEditor identitat={org('owner')} />);
-    fireEvent.click(within(capcalera()).getByRole('button', { name: 'Logotip' }));
+    /* Encàrrec d'harmonització (261018) · La ranura del logotip, dins d'«Edició avançada». */
+    obriEdicioAvancada();
+    fireEvent.click(within(ranuraAvancada()).getByRole('button', { name: 'Logotip' }));
     const { dialeg, guarda } = await triaIGuarda('logoImage', 'Retalla el logotip');
     expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa')).not.toBeNull();
     expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa--cercle')).toBeNull();
@@ -229,6 +277,8 @@ describe('les finestres', () => {
      (ordre 261008): la capçalera és ara la mateixa imatge que la targeta. */
   test('«Capçalera» → «Retalla la capçalera» en quadrat → 1.200 × 1.200 → hero_url; el botó torna a la imatge', async () => {
     render(<PerfilEditor identitat={jo} />);
+    /* Encàrrec d'harmonització (261018) · El botó «Capçalera» viu dins d'«Edició avançada». */
+    obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     const { guarda } = await triaIGuarda('heroImage', 'Retalla la capçalera');
     await guarda();
@@ -261,7 +311,10 @@ describe('la guarda de pujada', () => {
     expect(screen.queryByRole('dialog', { name: finestra })).toBeNull();
   }
   const ambLogotip = () => org('owner', { avatar: '/assets/forn.webp', dades: { logo_url: '/assets/forn.webp' } });
-  const ranura = () => capcalera().querySelector('.page-title-logo-personalitzat');
+  /* Encàrrec d'harmonització (261018) · La ranura del logotip i l'avatar redó
+     ja no són damunt de l'H1: viuen dins d'«Edició avançada», que cada prova
+     obri abans de triar res, com la persona. */
+  const ranura = ranuraAvancada;
 
   /* Línia I2 (pla 261008_1201) · Abans, el botó continuava actiu i el clic
      només ho deia amb un avís (AVIS_IMATGE_PUJANT). Ara la closca sap que la
@@ -269,6 +322,7 @@ describe('la guarda de pujada', () => {
   test('organització amb logotip: Escape a mitja pujada → «Logotip» desactivat (cap selector ni segona pujada); queda el primer i després es torna a poder canviar', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambLogotip()} />);
+    obriEdicioAvancada();
     fireEvent.click(within(ranura()).getByRole('button', { name: 'Logotip' }));
     await guardaIEscapa('logoImage', 'Retalla el logotip');
     const obri = vi.spyOn(selector('logoImage'), 'click');
@@ -291,6 +345,7 @@ describe('la guarda de pujada', () => {
   test('persona sense capçalera: Escape a mitja pujada → «Capçalera» desactivat i diu que s’està desant; en acabar, la imatge i el botó actiu', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={jo} />);
+    obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     await guardaIEscapa('heroImage', 'Retalla la capçalera');
     const boto = screen.getByRole('button', { name: 'Capçalera' });
@@ -308,10 +363,11 @@ describe('la guarda de pujada', () => {
   test('persona amb avatar: a mitja pujada, «Avatar» i «Llevar l’avatar» desactivades (aria-busy) i sense confirmació; la foto nova arriba i no s’esborra', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
-    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    obriEdicioAvancada();
+    fireEvent.click(identitatAvancada().querySelector('button.page-title-avatar--canvia'));
     await guardaIEscapa('logoImage', 'Retalla la foto');
-    const lleva = within(capcalera()).getByRole('button', { name: 'Llevar l’avatar' });
-    const canvia = within(capcalera()).getByRole('button', { name: 'Avatar' });
+    const lleva = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
+    const canvia = within(identitatAvancada()).getByRole('button', { name: 'Avatar' });
     for (const pindola of [lleva, canvia]) {
       expect(pindola.disabled, pindola.textContent).toBe(true);
       expect(pindola.getAttribute('aria-busy'), pindola.textContent).toBe('true');
@@ -322,8 +378,8 @@ describe('la guarda de pujada', () => {
     await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: '/assets/nou.webp' }, CONFIG));
     expect(m.updateProfile).not.toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
     // Acabada, les píndoles tornen a ser actives i «Llevar l’avatar» torna a demanar confirmació.
-    await waitFor(() => expect(within(capcalera()).getByRole('button', { name: 'Llevar l’avatar' }).disabled).toBe(false));
-    const despres = within(capcalera()).getByRole('button', { name: 'Llevar l’avatar' });
+    await waitFor(() => expect(within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' }).disabled).toBe(false));
+    const despres = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
     expect(despres.hasAttribute('aria-busy')).toBe(false);
     fireEvent.click(despres);
     expect(screen.getByRole('dialog', { name: 'Llevar l’avatar?' })).toBeTruthy();
@@ -334,6 +390,7 @@ describe('la guarda de pujada', () => {
   test('organització amb logotip: mentre puja, el panell de la closca té «Logotip» i «Esborrar» desactivats i diu que s’està desant (logoPujant)', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambLogotip()} />);
+    obriEdicioAvancada();
     fireEvent.click(within(ranura()).getByRole('button', { name: 'Logotip' }));
     await guardaIEscapa('logoImage', 'Retalla el logotip');
     fireEvent.click(ranura().querySelector('img[role="button"]'));
@@ -357,9 +414,10 @@ describe('la guarda de pujada', () => {
   test('persona amb avatar i capçalera: mentre puja l’avatar, la seua línia diu que s’està desant; la de «Capçalera» no en sap res', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={{ ...ambAvatar, dades: { ...ambAvatar.dades, hero_url: '/assets/h.webp' } }} />);
-    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    obriEdicioAvancada();
+    fireEvent.click(identitatAvancada().querySelector('button.page-title-avatar--canvia'));
     await guardaIEscapa('logoImage', 'Retalla la foto');
-    const ajudaAvatar = () => capcalera().querySelector('.page-title-avatar-accions > .sdp-camp__ajuda').textContent;
+    const ajudaAvatar = () => identitatAvancada().querySelector('.page-title-avatar-accions > .sdp-camp__ajuda').textContent;
     expect(ajudaAvatar()).toBe(AJUDA_IMATGE_PUJANT);
     expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
     await act(async () => { estat.resol('/assets/nou.webp'); });
@@ -369,6 +427,7 @@ describe('la guarda de pujada', () => {
   test('capçalera desada: mentre puja, la línia de davall de «Capçalera» diu que s’està desant', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, hero_url: '/assets/h.webp' } }} />);
+    obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     await guardaIEscapa('heroImage', 'Retalla la capçalera');
     expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_IMATGE_PUJANT);
@@ -416,24 +475,31 @@ describe('el focus després d’Escape a mitja pujada', () => {
     dinsDeLaFinestra.remove();
     expect(document.activeElement).toBe(document.body);
   }
-  const pindolaAvatar = () => within(capcalera().querySelector('.page-title-avatar-accions')).getByRole('button', { name: 'Avatar' });
-  const ranura = () => capcalera().querySelector('.page-title-logo-personalitzat');
+  /* Encàrrec d'harmonització (261018) · L'avatar redó, les seues píndoles i la
+     ranura del logotip viuen dins d'«Edició avançada» (cap ja damunt de
+     l'H1): el destí del focus és el mateix control, al seu lloc nou. */
+  const pindolaAvatar = () => within(identitatAvancada().querySelector('.page-title-avatar-accions')).getByRole('button', { name: 'Avatar' });
+  const avatarRedo = () => identitatAvancada()?.querySelector('button.page-title-avatar--canvia') ?? null;
+  const ranura = ranuraAvancada;
 
   test('píndola «Avatar», desada: el focus cau al body mentre puja i, en acabar, va a l’avatar redó', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
+    obriEdicioAvancada();
     await obriGuardaIEscapa(pindolaAvatar(), 'logoImage', 'Retalla la foto');
     // El defecte: la píndola és desactivada i focus() no hi ha pogut tornar.
     expect(pindolaAvatar().disabled).toBe(true);
     expect(document.activeElement).toBe(document.body);
     await act(async () => { estat.resol('/assets/nou.webp'); });
     await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: '/assets/nou.webp' }, CONFIG));
-    await waitFor(() => expect(document.activeElement).toBe(capcalera().querySelector('button.page-title-avatar--canvia')));
+    expect(avatarRedo()).not.toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(avatarRedo()));
   });
 
   test('píndola «Avatar», fallada: en acabar, el focus torna a la píndola, ja activa, i l’avís va fora', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
+    obriEdicioAvancada();
     await obriGuardaIEscapa(pindolaAvatar(), 'logoImage', 'Retalla la foto');
     expect(document.activeElement).toBe(document.body);
     await act(async () => { estat.rebutja(new Error('Sense xarxa')); });
@@ -446,6 +512,7 @@ describe('el focus després d’Escape a mitja pujada', () => {
   test('«Capçalera» sense imatge: en desar-se, el focus va al botó «Capçalera» (la closca, heroPujant)', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={jo} />);
+    obriEdicioAvancada();
     await obriGuardaIEscapa(screen.getByRole('button', { name: 'Capçalera' }), 'heroImage', 'Retalla la capçalera');
     expect(document.activeElement).toBe(document.body);
     await act(async () => { estat.resol('/assets/nou.webp'); });
@@ -456,6 +523,7 @@ describe('el focus després d’Escape a mitja pujada', () => {
   test('«Logotip» d’una organització amb logotip: en desar-se, el focus torna al botó «Logotip» de la ranura', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={org('owner', { avatar: '/assets/forn.webp', dades: { logo_url: '/assets/forn.webp' } })} />);
+    obriEdicioAvancada();
     await obriGuardaIEscapa(within(ranura()).getByRole('button', { name: 'Logotip' }), 'logoImage', 'Retalla el logotip');
     expect(document.activeElement).toBe(document.body);
     await act(async () => { estat.resol('/assets/nou.webp'); });
@@ -466,6 +534,7 @@ describe('el focus després d’Escape a mitja pujada', () => {
   test('si mentrestant la persona ha anat a un altre control, no se li roba el focus (i el pendent no reapareix després)', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
+    obriEdicioAvancada();
     await obriGuardaIEscapa(pindolaAvatar(), 'logoImage', 'Retalla la foto');
     const altre = screen.getByRole('button', { name: 'Capçalera' });
     altre.focus();
@@ -473,13 +542,14 @@ describe('el focus després d’Escape a mitja pujada', () => {
     await waitFor(() => expect(pindolaAvatar().disabled).toBe(false));
     expect(document.activeElement).toBe(altre);
     // «Llevar l’avatar?» obert i cancel·lat: el focus pendent d'abans no el porta a l'avatar.
-    const lleva = within(capcalera()).getByRole('button', { name: 'Llevar l’avatar' });
+    const lleva = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
     lleva.focus();
     fireEvent.click(lleva);
     const confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
     await act(async () => { fireEvent.click(within(confirma).getByRole('button', { name: 'Cancel·lar' })); });
     expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull();
-    expect(document.activeElement).not.toBe(capcalera().querySelector('button.page-title-avatar--canvia'));
+    expect(avatarRedo()).not.toBeNull();
+    expect(document.activeElement).not.toBe(avatarRedo());
   });
 });
 
@@ -488,26 +558,33 @@ describe('el focus després d’Escape a mitja pujada', () => {
    les dues proves [DEFECTE] que reproduïen el deute (la ranura deia el text
    de sèrie de la closca i, amb imatge, no es deia res). */
 describe('l’ajuda es diu abans de triar', () => {
+  /* Encàrrec d'harmonització (261018) · Les ranures, dins d'«Edició avançada»: l'ajuda les acompanya allí. */
   test('la ranura «Avatar» o «Logotip» diu AJUDA_FOTO, no el text de sèrie de la closca', () => {
     render(<PerfilEditor identitat={jo} />);
-    expect(ajudaDe(within(capcalera()).getByRole('button', { name: 'Avatar' }))).toBe(AJUDA_FOTO);
+    obriEdicioAvancada();
+    expect(ajudaDe(within(ranuraAvancada()).getByRole('button', { name: 'Avatar' }))).toBe(AJUDA_FOTO);
     cleanup();
     render(<PerfilEditor identitat={org('owner')} />);
-    expect(ajudaDe(within(capcalera()).getByRole('button', { name: 'Logotip' }))).toBe(AJUDA_FOTO);
+    obriEdicioAvancada();
+    expect(ajudaDe(within(ranuraAvancada()).getByRole('button', { name: 'Logotip' }))).toBe(AJUDA_FOTO);
     expect(screen.queryByText(AJUDA_DE_LA_RANURA)).toBeNull();
   });
 
   test('amb imatge, també: davall del botó «Capçalera» i davall de les píndoles de l’avatar redó, una línia per control', () => {
     render(<PerfilEditor identitat={{ ...ambAvatar, dades: { ...ambAvatar.dades, hero_url: '/assets/h.webp' } }} />);
+    /* Encàrrec d'harmonització (261018) · L'avatar redó i la seua línia, dins d'«Edició avançada». */
+    obriEdicioAvancada();
     expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
-    expect(capcalera().querySelector('button.page-title-avatar--canvia')).not.toBeNull();
-    expect(capcalera().querySelector('.page-title-avatar-accions > .sdp-camp__ajuda').textContent).toBe(AJUDA_FOTO);
+    expect(identitatAvancada().querySelector('button.page-title-avatar--canvia')).not.toBeNull();
+    expect(identitatAvancada().querySelector('.page-title-avatar-accions > .sdp-camp__ajuda').textContent).toBe(AJUDA_FOTO);
     expect(screen.queryAllByText(AJUDA_FOTO)).toHaveLength(2);
   });
 
   test('organització amb logotip: la ranura en repòs diu AJUDA_FOTO davall del botó «Logotip»', () => {
     render(<PerfilEditor identitat={org('owner', { avatar: '/assets/forn.webp', dades: { logo_url: '/assets/forn.webp' } })} />);
-    const ranura = capcalera().querySelector('.page-title-logo-personalitzat');
+    /* Encàrrec d'harmonització (261018) · La ranura en repòs, dins d'«Edició avançada». */
+    obriEdicioAvancada();
+    const ranura = ranuraAvancada();
     expect(ranura.querySelector('img[role="button"]')).not.toBeNull();
     expect(ajudaDe(within(ranura).getByRole('button', { name: 'Logotip' }))).toBe(AJUDA_FOTO);
   });
@@ -555,6 +632,12 @@ describe('Dignitat Humana · la capçalera de la fitxa de persona', () => {
     expect(cap.querySelector('.page-title-copyright')).toBeNull();
     expect(cap.querySelector('ul[aria-label="Categories"]')).toBeNull();
     expect(cap.textContent).not.toMatch(/©|CC BY|Persona|Drets d/);
+    /* Encàrrec d'harmonització (261018) · Els drets d'una organització es trien
+       ara dins d'«Edició avançada»: el de la persona tampoc no en porta cap allí. */
+    const avancada = obriEdicioAvancada();
+    expect(avancada.querySelector('[data-sdp-drets], .sdp-copyright-control')).toBeNull();
+    expect(within(avancada).queryByRole('button', { name: /Drets d'autor|Elegir drets d'autor/ })).toBeNull();
+    expect(avancada.textContent).not.toMatch(/©|CC BY|Persona|Drets d/);
   };
 
   test('sense llicència i amb «CC BY 4.0» desada: cap drets ni cap categoria', () => {
@@ -573,11 +656,20 @@ describe('Dignitat Humana · la capçalera de la fitxa de persona', () => {
     expect(cap.textContent).toContain('Baixa en curs');
   });
 
+  /* Encàrrec d'harmonització (261018, ordre del Mestre: «el copyright va dins
+     del desplegable Edició avançada») · En edició, la píndola dels drets de
+     l'organització viu dins d'«Edició avançada» i entre l'H1 i el Subtítol ja
+     no es pinta la línia (decisió del Bloc 3.9, la mateixa del Bloc de Notes);
+     en lectura, la línia de copyright continua a la capçalera, com sempre. */
   test('control: l’organització conserva la línia de copyright i la píndola dels drets', () => {
     render(<PerfilEditor identitat={org('owner', { dades: { copyright: 'CC BY 4.0' } })} />);
-    const cap = capcalera();
-    expect(cap.querySelector('.page-title-copyright')?.textContent).toBe('CC BY 4.0');
-    expect(screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" })).toBeTruthy();
+    expect(capcalera().querySelector('.page-title-copyright')).toBeNull();
+    const avancada = obriEdicioAvancada();
+    expect(within(avancada).getByRole('button', { name: "Drets d'autor: CC BY 4.0" }).closest('.page-title-classificacio')).not.toBeNull();
+    cleanup();
+    render(<PerfilEditor identitat={org('member', { dades: { copyright: 'CC BY 4.0' } })} />);
+    const deLectura = document.querySelector('header.page-title');
+    expect(deLectura.querySelector('.page-title-copyright')?.textContent).toBe('CC BY 4.0');
   });
 });
 
@@ -663,14 +755,24 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   const targeta = () => document.querySelector('article.sdp-targeta-viva-carta');
   const barraDeLEditor = () => [...document.querySelectorAll('section.bar-orange')].find((s) => !s.closest('.sdp-targeta-viva-carta'));
   /* La imatge pròpia a les tres superfícies: l'avatar redó (o la ranura del
-     logotip) damunt de l'H1, la barra taronja de l'editor i la targeta viva. */
+     logotip), la barra taronja de l'editor i la targeta viva.
+     Encàrrec d'harmonització (261018) · L'avatar redó i la ranura ja no són
+     damunt de l'H1: el control de l'editor viu dins d'«Edició avançada». */
   const imatgesPropies = () => ({
-    editor: srcDe(capcalera().querySelector('button.page-title-avatar--canvia img, .page-title-logo-personalitzat img[role="button"]')),
+    editor: srcDe(desplegable()?.querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, .sdp-edicio-avancada__logotip img[role="button"]')),
     barra: srcDe(barraDeLEditor()?.querySelector('img.sp-card-avatar')),
     targeta: srcDe(targeta()?.querySelector('img.sp-card-avatar')),
   });
+  /* Encàrrec d'harmonització (261018) · El que es configura es veu al seu lloc
+     real: el logotip desat d'una organització, damunt de l'H1 (logoEntitat);
+     la persona no hi porta res. */
+  const logoDelTitol = () => srcDe(capcalera().querySelector('img.page-title-logo'));
+  /* Encàrrec d'harmonització (261018) · El control «Capçalera» (img.sdp-hero__imatge)
+     viu dins d'«Edició avançada»; la capçalera desada es pinta, a més, dalt de
+     la pàgina (.hero-image). Les tres, la mateixa imatge. */
   const capcaleres = () => ({
-    editor: srcDe(document.querySelector('img.sdp-hero__imatge')),
+    editor: srcDe(desplegable()?.querySelector('.sdp-edicio-avancada__capcalera img.sdp-hero__imatge')),
+    pagina: srcDe(document.querySelector('.sdp-editor-document .hero-image img')),
     targeta: srcDe(targeta()?.querySelector('img.sp-card-media')),
   });
   const totes = (src) => ({ editor: src, barra: src, targeta: src });
@@ -688,7 +790,10 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
     munta(javi);
     expect(imatgesPropies()).toEqual(totes(VELLA));
-    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    // Encàrrec d'harmonització (261018) · Damunt de l'H1 de la persona, res: l'avatar és a la barra i dins d'«Edició avançada».
+    expect(logoDelTitol()).toBeNull();
+    capcaleraNeta();
+    fireEvent.click(obriEdicioAvancada().querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia'));
     await triaIGuardaSenseTancar('logoImage', 'Retalla la foto');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la foto')).toBe(AVIS_403));
     // El retallador no es tanca com si haguera desat: cap toast, cap recàrrega, un sol PATCH.
@@ -711,7 +816,8 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   test('Javi Llinares · avatar: Cancel·lar després del 403 no perd res; l’avís en línia ho diu i «Tornar a provar» envia el valor de la cua', async () => {
     m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
     munta(javi);
-    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    // Encàrrec d'harmonització (261018) · L'avatar redó, dins d'«Edició avançada».
+    fireEvent.click(obriEdicioAvancada().querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia'));
     await triaIGuardaSenseTancar('logoImage', 'Retalla la foto');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la foto')).toBe(AVIS_403));
     await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Cancel·lar' })); });
@@ -730,11 +836,13 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
   test('Javi Llinares · capçalera: les mateixes regles; el quadrat de l’editor i el de la targeta viva són la mateixa imatge', async () => {
     m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
     munta(javi);
-    expect(capcaleres()).toEqual({ editor: CAPCALERA_VELLA, targeta: CAPCALERA_VELLA });
+    // Encàrrec d'harmonització (261018) · També la capçalera de dalt de la pàgina (pagina), la mateixa imatge.
+    expect(capcaleres()).toEqual({ editor: CAPCALERA_VELLA, pagina: CAPCALERA_VELLA, targeta: CAPCALERA_VELLA });
+    obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
-    expect(capcaleres()).toEqual({ editor: NOVA, targeta: NOVA });
+    expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, targeta: NOVA });
     expect(cuaDesament.llig(refDe('jo', 'perfil')).camps.heroImage).toBe(NOVA);
     // L'avatar no s'ha mogut de cap banda.
     expect(imatgesPropies()).toEqual(totes(VELLA));
@@ -744,25 +852,31 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
     munta(rentonar);
     expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
-    fireEvent.click(within(capcalera().querySelector('.page-title-logo-personalitzat')).getByRole('button', { name: 'Logotip' }));
+    // Encàrrec d'harmonització (261018) · La ranura, dins d'«Edició avançada»; el logotip desat, també damunt de l'H1.
+    expect(logoDelTitol()).toBe('/assets/rentonar.webp');
+    fireEvent.click(within(obriEdicioAvancada().querySelector('.sdp-edicio-avancada__logotip')).getByRole('button', { name: 'Logotip' }));
     await triaIGuardaSenseTancar('logoImage', 'Retalla el logotip');
     await waitFor(() => expect(avisDeLaFinestra('Retalla el logotip')).toBe(AVIS_403));
     expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONFIG]]);
     expect(imatgesPropies()).toEqual(totes(NOVA));
+    expect(logoDelTitol()).toBe(NOVA);
     await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla el logotip' })).getByRole('button', { name: 'Cancel·lar' })); });
     const avis = document.querySelector('.sdp-avisos-camps');
     await act(async () => { fireEvent.click(within(avis).getByRole('button', { name: 'Tornar al que hi ha desat' })); });
     expect(cuaDesament.llig(refDe('R', 'organitzacio')).camps).toEqual({});
     expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
+    expect(logoDelTitol()).toBe('/assets/rentonar.webp');
   });
 
   test('Sóc de Poble · capçalera: 403, la finestra oberta; la barra i la targeta viva continuen amb el logotip oficial', async () => {
     m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
     munta(socDePoble);
+    obriEdicioAvancada();
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
     await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
-    expect(capcaleres()).toEqual({ editor: NOVA, targeta: NOVA });
+    // Encàrrec d'harmonització (261018) · També la capçalera de dalt de la pàgina (pagina).
+    expect(capcaleres()).toEqual({ editor: NOVA, pagina: NOVA, targeta: NOVA });
     const { barra, targeta: deLaTargeta } = imatgesPropies();
     expect([barra, deLaTargeta]).toEqual([DEFAULT_AUTHOR.avatarUrl, DEFAULT_AUTHOR.avatarUrl]);
   });
@@ -772,7 +886,8 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     m.perfil.pujaMitja = vi.fn(() => new Promise((resol) => { estat.resol = resol; }));
     m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
     munta(javi);
-    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    // Encàrrec d'harmonització (261018) · L'avatar redó, dins d'«Edició avançada».
+    fireEvent.click(obriEdicioAvancada().querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia'));
     const dialeg = await triaIGuardaSenseTancar('logoImage', 'Retalla la foto');
     await waitFor(() => expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1));
     await act(async () => { fireEvent(dialeg, new Event('cancel', { cancelable: true })); });

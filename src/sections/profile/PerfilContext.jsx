@@ -12,7 +12,8 @@ import { candidatsDeMembre } from './membresModel.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { triaAvatar } from '../../app/contexts/personaDeSessio.js';
-import { backendScope } from '../../config/backendConfig.js';
+import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
+import { imatgeLocalComDataUrl } from '../../utils/imageUtils.js';
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
@@ -106,8 +107,10 @@ export function usePerfilOpcional() {
    que una fila desactivada amb el motiu escrit.
 
    `tipus` diu QUIN giny pinta DetallAjust ('text' | 'area' |
-   'password' | 'imatge' | 'boolean' | 'correu' | 'selector' |
-   'llicencia' | 'accio'). La UI mai més endevina per l'id: afegir un
+   'password' | 'imatge' | 'boolean' | 'visibilitat' | 'correu' |
+   'selector' | 'llicencia' | 'accio'). 'visibilitat' (encàrrec
+   d'harmonització, 261018) és un booleà amb les dues eixides explicades:
+   true, perfil públic; false, privat. La UI mai més endevina per l'id: afegir un
    ajust nou d'un tipus que ja hi és no requereix tocar DetallAjust. Un
    'selector' porta les seues `opcions`; una 'llicencia' (pla 261016),
    el copyright desat, i DetallAjust hi obri CopyrightPage.
@@ -133,7 +136,7 @@ export function ajustosPersona(perfil = {}, { superadmin = false } = {}) {
       motiu: 'El correu identifica el compte. Es canvia des d’Accedir.' },
     /* Amb una baixa en curs el servidor té el perfil congelat (política
        «profiles sense baixa»), com la fitxa: cap desat arribaria. */
-    { id: 'privacitat', lloc: 'compte', titol: 'Estat del perfil', camp: 'is_public', tipus: 'boolean',
+    { id: 'privacitat', lloc: 'compte', titol: 'Estat del perfil', camp: 'is_public', tipus: 'visibilitat',
       casella: 'Perfil públic',
       valor: Boolean(perfil.is_public), obert: !perfil.baixa_demanada_at,
       motiu: perfil.baixa_demanada_at
@@ -605,6 +608,18 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
 
   const pujaMitja = useCallback(async (fitxer, carpeta = 'avatars') => {
     assertCurrent();
+    /* Encàrrec 261018 (ordre del Mestre: «desar la capçalera i l'avatar no pot
+       fallar») · En mode de proves (la persona pilot i tota sessió de la
+       llavor) la imatge no puja enlloc: es desa a la fitxa local com a data URL
+       dels mateixos bytes, com les imatges del Bloc (NotesEditor). Abans anava
+       a uploadToStorage, que exigix un usuari i un poble del servidor (UUID) i
+       rebutjava la persona pilot ('0001'): «Poble o usuari invàlid». La guarda
+       del servidor no s'afluixa: el pilot no hi envia mai res. */
+    if (normalizeBackendConfig(configRef.current).dataMode === 'seed') {
+      const dataUrl = await imatgeLocalComDataUrl(fitxer);
+      assertCurrent();
+      return dataUrl;
+    }
     if (!teCapacitat('mitjans')) return null;
     const res = await uploadToStorage(fitxer, { carpeta }, configRef.current);
     assertCurrent();

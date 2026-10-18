@@ -1,4 +1,4 @@
-import { BookOpen, Landmark, Receipt } from 'lucide-react';
+import { BookOpen, Coffee, HeartHandshake, Landmark, Receipt, ShoppingCart } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════════
    APLICACIONS DEL PERFIL · configuració pura (sense React)
@@ -52,11 +52,16 @@ import { BookOpen, Landmark, Receipt } from 'lucide-react';
    superadmin (PerfilShell.jsx), com la ruta /consola en producció. No
    s'esborra cap preferència desada.
 
-   Estes cinc utilitats encara no tenen una ruta connectada des del Perfil.
-   Totes són 'pendent'. La fitxa de les tres que tenen targeta al Panell
-   (Gestoria, Lector RSS i Snippet) permet triar si hi apareixen, sense
-   prometre que el servei estiga disponible; la de les altres dues només en
-   diu l'estat.
+   Encàrrec d'harmonització (261018, ordre del Mestre) · El catàleg és el
+   complet del Panell de Control, en este ordre: Gestoria de Poble, Rebost
+   Domèstic, Salut, Lector RSS (abans «Curation AI (Lector RSS)»: un nom llarg
+   que es tallava a la columna), TPV del Bar i Snippet. La Consola de Mètriques
+   i el Cervell, internes, van darrere i només per a superadmin.
+
+   Cap encara no té una ruta connectada des del Perfil: totes són 'pendent'.
+   La fitxa de les que tenen targeta al Panell permet triar si hi apareixen,
+   sense prometre que el servei estiga disponible; la de les dues internes
+   només en diu l'estat.
    ═══════════════════════════════════════════════════════════════════ */
 
 export const ESTATS_APLICACIO = Object.freeze({
@@ -71,6 +76,46 @@ export const APLICACIONS = Object.freeze([
     descripcio: 'Comptabilitat i facturació trimestral.',
     icona: Receipt,
     estat: 'pendent',
+    panell: 'gestoria',
+  }),
+  Object.freeze({
+    id: 'rebost',
+    nom: 'Rebost Domèstic',
+    descripcio: 'La nevera i el rebost de casa.',
+    icona: ShoppingCart,
+    estat: 'pendent',
+    panell: 'rebost',
+  }),
+  Object.freeze({
+    id: 'salut',
+    nom: 'Salut',
+    descripcio: 'Un quadern per a cuidar dels nostres.',
+    icona: HeartHandshake,
+    estat: 'pendent',
+    panell: 'salut',
+  }),
+  Object.freeze({
+    id: 'lector-rss',
+    nom: 'Lector RSS',
+    descripcio: 'Les notícies de les entitats del poble, juntes.',
+    icona: BookOpen,
+    estat: 'pendent',
+    panell: 'rss',
+  }),
+  Object.freeze({
+    id: 'tpv',
+    nom: 'TPV del Bar',
+    descripcio: 'La caixa del bar o del casino.',
+    icona: Coffee,
+    estat: 'pendent',
+    panell: 'tpv',
+  }),
+  Object.freeze({
+    id: 'snippet',
+    nom: 'Snippet',
+    descripcio: 'Extensió de Chrome per a desar webs al Bloc.',
+    icona: BookOpen,
+    estat: 'pendent',
   }),
   Object.freeze({
     id: 'metriques',
@@ -84,14 +129,6 @@ export const APLICACIONS = Object.freeze([
     intern: true,
   }),
   Object.freeze({
-    id: 'lector-rss',
-    nom: 'Curation AI (Lector RSS)',
-    descripcio: 'Agregador de notícies i resums intel·ligents.',
-    icona: BookOpen,
-    estat: 'pendent',
-    panell: 'rss',
-  }),
-  Object.freeze({
     id: 'cervell',
     nom: 'Cervell (Node Graph)',
     descripcio: 'Mapa visual de relacions i categories.',
@@ -101,13 +138,6 @@ export const APLICACIONS = Object.freeze([
     panell: null,
     /* Gauntlet 261016 (Bloc 3.4) · Maquinària interna: només superadmin. */
     intern: true,
-  }),
-  Object.freeze({
-    id: 'snippet',
-    nom: 'Snippet',
-    descripcio: 'Extensió de Chrome per a desar webs al Bloc.',
-    icona: BookOpen,
-    estat: 'pendent',
   }),
 ]);
 

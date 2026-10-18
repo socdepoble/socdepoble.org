@@ -308,7 +308,11 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 
 /* Element de navegació genèric (carpeta, categoria, etiqueta, àrea…).
    Cada secció pot recolorir-lo via la seua classe arrel (p. ex. .sdp-bloc). */
-.sdp-workspace-group-heading { padding: var(--sdp-space-3) var(--sdp-space-4) var(--sdp-space-2); }
+/* Encàrrec d'harmonització (261018) · Sense padding lateral propi: el del botó
+   (var(--sdp-space-4)) ja posa el rètol (GRUPS I EMPRESES, AGENTS IA…) a la
+   vertical on comencen les icones de les files. Abans, el doble padding el
+   duia a 32 px. */
+.sdp-workspace-group-heading { padding: var(--sdp-space-3) 0 var(--sdp-space-2); }
 .sdp-workspace-group-chevron { margin-inline-start: auto; display: flex; transition: transform var(--sdp-t); }
 [aria-expanded="true"] > .sdp-workspace-group-chevron { transform: rotate(180deg); }
 .sdp-workspace-groups { display: flex; flex-direction: column; min-height: 100%; color: var(--sdp-crom-text); background: var(--sdp-crom-capcalera); }
@@ -2747,6 +2751,33 @@ details[open] summary.accordion-header svg:last-child {
     box-sizing: content-box;
     padding-inline: calc((var(--sdp-touch-min) - 20px) / 2);
     flex: none;
+  }
+  /* Encàrrec d'harmonització (261018, ordre del Mestre: «el mateix marge
+     esquerre i la mateixa distància icona-text a tota la columna») · Una sola
+     geometria a les columnes del Workspace (Perfil, Bloc, Lector, Wiki,
+     Disseny…), la de l'arbre i del rail del Xat: icona de 24 px a 16 px de la
+     vora (el padding de la capçalera), separació var(--sdp-space-4) i text a
+     56 px. Abans: PERFIL 28→72, «Tot» 31→78, APARTATS 30→76 i l'arbre 16→56.
+     El Xat ja ho fa amb les seues regles (.sdp-xat …) i no es toca; l'abast
+     .sdp-workspace--universal queda per a la reserva de la barra mòbil
+     (UniversalWorkspace.reserva.capes.test.js). */
+  .sdp-workspace:not(.sdp-xat) .app-grid-col-header .app-grid-col-header__plegable {
+    gap: var(--sdp-space-4);
+  }
+  .sdp-workspace:not(.sdp-xat) .app-grid-col-header__plegable .sdp-workspace-nav-item__icon {
+    width: 24px;
+  }
+  .sdp-workspace:not(.sdp-xat) .app-grid-col-header__plec {
+    gap: var(--sdp-space-4);
+  }
+  .sdp-workspace:not(.sdp-xat) .app-grid-col-header__plec > svg {
+    padding-inline: 0;
+  }
+  .sdp-workspace:not(.sdp-xat) .app-grid-column--left .app-grid-col-header .app-grid-col-header__accio-text {
+    gap: var(--sdp-space-4);
+  }
+  .sdp-workspace:not(.sdp-xat) .app-grid-column--left .app-grid-col-header__accio-text > svg {
+    padding-inline: 0;
   }
   .sdp-workspace .app-grid-col-header__accio:disabled {
     background: var(--sdp-crom-hover);
@@ -5409,6 +5440,15 @@ details[open] summary.accordion-header svg:last-child {
 /* Controls centrals: espai lateral comú per a totes les seccions. */
 .sdp-workspace .app-grid-column--middle .app-grid-col-header:nth-child(2) {
   padding-inline: max(20px, var(--sdp-space-4));
+}
+/* Encàrrec d'harmonització (261018, ordre del Mestre: «la lupa ha quedat
+   despenjada») · Als Workspaces (no al Xat), la lupa de la fila de cerca a la
+   mateixa vertical que la icona d'APARTATS i la de totes les files: el botó
+   fa 48 px amb la icona de 24 centrada (12 de marge), i 4 px de padding la
+   posen a 16 px de la vora. A la dreta, el de sempre (NOVA ORG, CREAR NOTA).
+   Fora de capa, com la regla de dalt, perquè la puga corregir. */
+.sdp-workspace:not(.sdp-xat) .app-grid-column--middle .app-grid-col-header:nth-child(2) {
+  padding-inline: var(--sdp-space-1) var(--sdp-space-4);
 }
 
 /* Trasllat literal dels estils JSX: mateixa geometria i especificitat local. */

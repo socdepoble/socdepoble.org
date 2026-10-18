@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Globe, Lock } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { MIDA_AVATAR, esAvisDeLaFoto, fotoDinsDelPressupost } from '../../utils/pujadaImatge.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
-import { Boto, Camp, DialegConfirmacio, Selector } from '../../components/PedraSeca';
+import { Boto, Camp, DialegConfirmacio, GrupOpcions, Selector } from '../../components/PedraSeca';
 import { BotoDretsAutor } from '../../components/universal/CopyrightSelector.jsx';
 import { CopyrightPage } from '../../components/universal/drets/CopyrightPage.jsx';
 import { sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
@@ -171,7 +172,7 @@ export default function DetallAjust({
     const valorInicial =
       ajust?.tipus === 'password'
         ? ''
-        : ajust?.tipus === 'boolean'
+        : ajust?.tipus === 'boolean' || ajust?.tipus === 'visibilitat'
           ? Boolean(ajust?.valor)
           : ajust?.valor ?? '';
     setValorTemp(valorInicial);
@@ -503,8 +504,9 @@ export default function DetallAjust({
         {missatge.text}
       </p>
     );
+    /* Encàrrec d'harmonització (261018) · Guardar, centrat (PerfilShell.css). */
     const blocGuardar = (
-      <div className="sdp-alerta__accions">
+      <div className="sdp-alerta__accions perfil-compte__accions">
         <button type="submit" className="sdp-boto sdp-boto--primari" disabled={desant || pujant}>
           {desant ? 'Desant...' : 'Guardar'}
         </button>
@@ -512,6 +514,46 @@ export default function DetallAjust({
     );
 
     if (tipus === 'llicencia') return renderitzaDrets(blocMissatge);
+
+    /* Encàrrec d'harmonització (261018, ordre del Mestre: «l'estat del perfil,
+       visible i amigable») · En lloc de la casella «Privat», les dues eixides
+       explicades com a targetes de Pedra Seca (GrupOpcions, el model de
+       SelectorVisibilitat), amb el perfil públic primer. Es confirma amb
+       Guardar. Els textos diuen el que fa el servidor (perfil_public,
+       2610021520; text legal §13): públic, sencer per a tothom amb compte;
+       privat, només el nom, la foto i el poble, per a la gent del poble. */
+    if (tipus === 'visibilitat') {
+      const poble = identitat?.dades?.town_name || '';
+      const actual = Boolean(ajust.valor);
+      const opcio = (publica) => {
+        const Icona = publica ? Globe : Lock;
+        return {
+          valor: publica ? 'public' : 'privat',
+          antetitol: publica === actual ? 'Com està ara' : undefined,
+          etiqueta: publica ? 'Perfil públic' : 'Perfil privat',
+          ajuda: publica
+            ? `Tot el veïnat del Mas el pot llegir sencer i trobar-te${poble ? ` des de ${poble}` : ''}: el poble sap qui hi és i et pot escriure.`
+            : `Només el nom, la foto i el poble, i només per a la gent ${poble ? `de ${poble}` : 'del teu poble'}. La resta, per a tu.`,
+          icona: <Icona size={28} strokeWidth={1.5} aria-hidden="true" focusable="false" />,
+        };
+      };
+      return (
+        <form onSubmit={handleSubmit}>
+          <GrupOpcions
+            aspecte="targetes"
+            llegenda="Qui pot vore el teu perfil?"
+            nom={`ajust-${ajust.id}`}
+            valor={valorTemp ? 'public' : 'privat'}
+            onCanvi={(valor) => setValorTemp(valor === 'public')}
+            disabled={desant}
+            textTriada="Triat"
+            opcions={[opcio(true), opcio(false)]}
+          />
+          {blocMissatge}
+          {blocGuardar}
+        </form>
+      );
+    }
 
     /* Grup C (261008) · Un ajust amb opcions (el poble de l'organització):
        Camp i Selector de Pedra Seca, amb el mateix missatge i el mateix

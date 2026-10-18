@@ -151,24 +151,51 @@ const apartat = (container, nom) => within(llista(container)).getByRole('button'
      compacta de sempre (DefaultItemCard: el quadrat d'ItemMedia);
    · barra: la barra taronja de la pàgina del detall (fora de cap targeta);
    · editor: l'avatar redó o el logotip de la ranura, damunt de l'H1;
-   · targeta: la «Vista targeta» de «Les vistes» (l'avatar de l'autoria). */
+   · targeta: la «Vista targeta» de «Les vistes» (l'avatar de l'autoria).
+   Encàrrec d'harmonització (261018) · Ordre del Mestre: «fora l'avatar
+   gegant del centre; la gestió d'imatges, dins d'Edició avançada». Ara:
+   · editor: el control per a canviar-la, dins del desplegable «Edició
+     avançada» (l'avatar redó de la persona o el logotip de la ranura de
+     l'organització). Es llig del DOM, obert o plegat: la prova és de quina
+     foto hi ha, no de qui la pot tocar;
+   · titol: qualsevol imatge que quede al bloc del títol (header.page-title).
+     La persona no n'hi ha de tindre cap (l'avatar ja va a la barra taronja),
+     i l'organització hi porta el logotip desat (logoAlTitol), que també ha
+     de ser el de la mateixa font. La clau només hi és si hi ha imatge: un
+     avatar repintat damunt de l'H1 d'una persona trencaria el toEqual. */
 function imatges(container) {
   const arrel = llista(container);
   const viva = arrel.querySelector('article.sdp-targeta-viva-carta');
   const pagina = detall(container);
   const barra = [...pagina.querySelectorAll('section.bar-orange')].find((s) => !s.closest('.sdp-targeta-viva-carta'));
-  const editor = pagina.querySelector('.sdp-editor-document header.page-title');
+  const editor = pagina.querySelector('.sdp-editor-document');
+  const avancada = editor?.querySelector('details.sdp-edicio-avancada');
+  const titol = editor?.querySelector('header.page-title img');
   const vista = pagina.querySelector('.perfil-vistes__targeta article.sdp-targeta-viva-carta');
   return {
     llista: viva
       ? srcDe(viva.querySelector('.sp-card-author img.sp-card-avatar'))
       : srcDe(apartat(container, 'La fitxa').querySelector('img.sdp-gestor-fitxa__imatge')),
     barra: srcDe(barra?.querySelector('img.sp-card-avatar')),
-    ...(editor ? {
-      editor: srcDe(editor.querySelector('button.page-title-avatar--canvia img, .page-title-logo-personalitzat img[role="button"]')),
+    ...(avancada ? {
+      editor: srcDe(avancada.querySelector(
+        '.sdp-edicio-avancada__identitat button.page-title-avatar--canvia img, .sdp-edicio-avancada__logotip img[role="button"]',
+      )),
     } : null),
+    ...(titol ? { titol: srcDe(titol) } : null),
     ...(vista ? { targeta: srcDe(vista.querySelector('.sp-card-author img.sp-card-avatar')) } : null),
   };
+}
+
+/* Encàrrec d'harmonització (261018) · Els controls de la imatge viuen dins
+   del desplegable «Edició avançada», plegat de sèrie: s'obri com ho faria la
+   persona (un clic al resum) abans de tocar-los. */
+function obriEdicioAvancada(container) {
+  const avancada = detall(container).querySelector('.sdp-editor-document details.sdp-edicio-avancada');
+  expect(avancada.open).toBe(false);
+  fireEvent.click(avancada.querySelector('summary.sdp-edicio-avancada__resum'));
+  expect(avancada.open).toBe(true);
+  return avancada;
 }
 
 /* La imatge nova, pel camí de la persona: el botó obri el retallador, Guardar
@@ -193,8 +220,12 @@ async function pujaIRebutja(container, obri, finestra) {
 describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la imatge, la mateixa foto a totes les superfícies', () => {
   test('Javi Llinares · l’avatar rebutjat: l’editor, la targeta viva, «Les vistes», «El compte» i la fitxa compacta de la llista porten la foto nova de la cua', async () => {
     const { container } = render(<PerfilShell />);
+    /* Encàrrec d'harmonització (261018) · L'avatar redó (el botó amb la càmera)
+       és dins d'«Edició avançada», no damunt de l'H1: cap clau `titol`. */
     expect(imatges(container)).toEqual({ llista: VELLA, barra: VELLA, editor: VELLA });
-    await pujaIRebutja(container, detall(container).querySelector('button.page-title-avatar--canvia'), 'Retalla la foto');
+    const avancada = obriEdicioAvancada(container);
+    const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
+    await pujaIRebutja(container, within(identitat).getByRole('button', { name: 'Canvia la teua imatge' }), 'Retalla la foto');
     expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, CONFIG]]);
     const estat = cuaDesament.llig({ ambit: AMBIT, entitat: 'perfil', id: 'jo' });
     expect([estat.estat, estat.camps.logoImage, estat.errors.logoImage.tipus]).toEqual(['error', NOVA, 'servidor']);
@@ -211,7 +242,10 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
 
   test('Javi Llinares · «Tornar al que hi ha desat» (la cua neta) torna totes les superfícies a la foto del servidor', async () => {
     const { container } = render(<PerfilShell />);
-    await pujaIRebutja(container, detall(container).querySelector('button.page-title-avatar--canvia'), 'Retalla la foto');
+    /* Encàrrec d'harmonització (261018) · L'avatar redó, dins d'«Edició avançada». */
+    const avancada = obriEdicioAvancada(container);
+    const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
+    await pujaIRebutja(container, within(identitat).getByRole('button', { name: 'Canvia la teua imatge' }), 'Retalla la foto');
     const avis = detall(container).querySelector('.sdp-avisos-camps');
     await act(async () => { fireEvent.click(within(avis).getByRole('button', { name: 'Tornar al que hi ha desat' })); });
     expect(cuaDesament.llig({ ambit: AMBIT, entitat: 'perfil', id: 'jo' }).camps).toEqual({});
@@ -228,16 +262,24 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
      cap avatar_url: la targeta del centre i la barra taronja ja pintaven la
      foto de la sessió (identitat.avatar), i l'H1 de l'editor, a la dreta, la
      ranura buida «Avatar». Ara l'avatar redó també la porta, i no hi ha cap
-     ranura ni «Llevar l'avatar». */
+     ranura ni «Llevar l'avatar».
+     Encàrrec d'harmonització (261018) · L'avatar redó i la píndola «Avatar»
+     viuen dins d'«Edició avançada» (no damunt de l'H1, on ara no queda cap
+     imatge): el desplegable s'obri com ho faria la persona, i ni ell ni la
+     capçalera porten la ranura del logotip. */
   test('Javi Llinares · sense avatar_url i amb la foto de la sessió: la mateixa foto a l’editor, la barra, la targeta viva, «Les vistes», «El compte» i la fitxa compacta', () => {
     const FOTO_SESSIO = 'https://proveidor.example/foto-de-sessio.jpg';
     m.perfil = { ...m.perfil, identitats: [{ ...javi, avatar: FOTO_SESSIO, dades: { ...javi.dades, avatar_url: null } }, rentonar] };
     const { container } = render(<PerfilShell />);
     expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO, editor: FOTO_SESSIO });
     const capcalera = detall(container).querySelector('.sdp-editor-document header.page-title');
-    expect(capcalera.querySelector('.page-title-logo-personalitzat')).toBeNull();
-    expect(within(capcalera).getByRole('button', { name: 'Avatar' })).toBeTruthy();
-    expect(within(capcalera).queryByRole('button', { name: 'Llevar l’avatar' })).toBeNull();
+    expect(capcalera.querySelector('.page-title-logo-personalitzat, .page-title-avatar, img')).toBeNull();
+    expect(capcalera.firstElementChild.tagName).toBe('H1');
+    const avancada = obriEdicioAvancada(container);
+    expect(avancada.querySelector('.page-title-logo-personalitzat, .sdp-edicio-avancada__logotip')).toBeNull();
+    const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
+    expect(within(identitat).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+    expect(within(avancada).queryByRole('button', { name: 'Llevar l’avatar' })).toBeNull();
     fireEvent.click(apartat(container, 'Les vistes'));
     expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO, targeta: FOTO_SESSIO });
     fireEvent.click(apartat(container, 'El compte'));
@@ -247,12 +289,15 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
   test('El Rentonar · el logotip rebutjat: la mateixa imatge a l’editor, la targeta viva, «Les vistes», «El compte» i la fitxa compacta', async () => {
     m.params = new URLSearchParams({ organitzacio: 'R' });
     const { container } = render(<PerfilShell />);
-    expect(imatges(container)).toEqual({ llista: LOGO_VELL, barra: LOGO_VELL, editor: LOGO_VELL });
-    const ranura = detall(container).querySelector('.page-title-logo-personalitzat');
+    /* Encàrrec d'harmonització (261018) · La ranura del logotip (el control) va
+       dins d'«Edició avançada», i el logotip desat es veu al seu lloc real,
+       damunt de l'H1 (logoAlTitol): totes dues, la mateixa imatge. */
+    expect(imatges(container)).toEqual({ llista: LOGO_VELL, barra: LOGO_VELL, editor: LOGO_VELL, titol: LOGO_VELL });
+    const ranura = obriEdicioAvancada(container).querySelector('.sdp-edicio-avancada__logotip');
     await pujaIRebutja(container, within(ranura).getByRole('button', { name: 'Logotip' }), 'Retalla el logotip');
     expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONFIG]]);
     expect(cuaDesament.llig({ ambit: AMBIT, entitat: 'organitzacio', id: 'R' }).errors.logoImage.tipus).toBe('servidor');
-    expect(imatges(container)).toEqual({ llista: NOVA, barra: NOVA, editor: NOVA });
+    expect(imatges(container)).toEqual({ llista: NOVA, barra: NOVA, editor: NOVA, titol: NOVA });
     fireEvent.click(apartat(container, 'Les vistes'));
     expect(imatges(container)).toEqual({ llista: NOVA, barra: NOVA, targeta: NOVA });
     fireEvent.click(apartat(container, 'El compte'));

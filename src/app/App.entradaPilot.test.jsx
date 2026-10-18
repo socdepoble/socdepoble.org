@@ -109,13 +109,20 @@ describe('F66 · l’entrada pilot local, de punta a punta', () => {
     });
   }, 30000);
 
-  test('negativa · en remot la mateixa pàgina no oferix l’entrada pilot i el formulari real està obert', async () => {
+  /* Encàrrec 261018_1220 (Tasques 0 i 2) · En remot continua sense haver-hi
+     cap entrada pilot directa. En desenvolupament (Vitest ho és) hi ha l'accés
+     que passa la pestanya al mode de proves: el seu clic el prova
+     OnboardingSection.pilot.test.jsx, perquè recarrega el document. */
+  test('negativa · en remot la mateixa pàgina no oferix l’entrada pilot directa i el formulari real està obert', async () => {
     await muntaLApp('remote', async (xarxa) => {
       const contrasenya = await screen.findByLabelText('Contrasenya', undefined, ESPERA);
       await act(async () => { await new Promise((resol) => { setTimeout(resol, 50); }); });
       expect(contrasenya.disabled).toBe(false);
       expect(screen.queryByRole('button', { name: BOTO })).toBeNull();
-      expect(screen.queryByText(/només en aquest ordinador/)).toBeNull();
+      expect(screen.queryByText('Entra com a persona pilot · només en aquest ordinador')).toBeNull();
+      const acces = screen.getByRole('button', { name: `Entra com a ${PERSONA_PILOT.nom}` });
+      expect(acces.closest('.sdp-alerta').textContent).toContain('Accés pilot de desenvolupament');
+      expect(acces.closest('.sdp-alerta').textContent).toContain('es recarrega en mode de proves');
       expect(usuariDeSessio()).toBeNull();
       // En remot /registre no sonda ni entra sola: cap petició d'entrada.
       expect(peticionsAlServidor(xarxa).filter((ruta) => ruta.startsWith('/auth/v1/token'))).toEqual([]);

@@ -76,52 +76,102 @@ const abansDe = (el, despres) => Boolean(el.compareDocumentPosition(despres) & N
    (useImatgeDeFitxa), germans de l'editor; el de la ranura de la closca
    (dins de .page-title-logo-personalitzat) ja no s'obri. */
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
-const inputDeLaRanura = () => capcalera().querySelector('.page-title-logo-personalitzat input[type="file"]');
-/* Els botons d'imatge de damunt de l'H1, amb els noms d'abans i els de l'Onada 4. */
+/* Encàrrec d'harmonització (261018, ordre del Mestre: «la gestió d'imatges va
+   dins d'Edició avançada») · En edició, la ranura de la closca, l'avatar redó i
+   la capçalera viuen dins del desplegable PLEGAT «Edició avançada», no damunt
+   de l'H1. S'obri com ho faria la persona: clicant el resum. */
+const desplegable = () => document.querySelector('.sdp-editor-document details.sdp-edicio-avancada');
+function obriEdicioAvancada() {
+  const details = desplegable();
+  expect(details).not.toBeNull();
+  expect(details.open).toBe(false);
+  fireEvent.click(details.querySelector('summary.sdp-edicio-avancada__resum'));
+  expect(details.open).toBe(true);
+  return details;
+}
+const inputDeLaRanura = () => desplegable().querySelector('.sdp-edicio-avancada__logotip input[type="file"]');
+/* Els botons d'imatge (abans damunt de l'H1), amb els noms d'abans i els de l'Onada 4. */
 const BOTONS_IMATGE = /^(Logotip|Avatar|Editar logotip|Canvia la teua imatge)$/;
 
-test('Onada 4 · una organització que no és la pilot: «Logotip» damunt de l’H1, que obri el selector del logotip (cap diàleg intermedi)', () => {
+/* Encàrrec d'harmonització (261018) · «Logotip» ja no és damunt de l'H1: va
+   dins d'«Edició avançada» (.sdp-edicio-avancada__logotip). La intenció es
+   queda: obri el selector del logotip de la fitxa, cap diàleg intermedi. */
+test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«Edició avançada», que obri el selector del logotip (cap diàleg intermedi)', () => {
   render(<PerfilEditor identitat={org('owner')} />);
-  const boto = within(capcalera()).getByRole('button', { name: 'Logotip' });
-  expect(boto.closest('.page-title-logo-personalitzat')).not.toBeNull();
-  expect(abansDe(boto, titol())).toBe(true);
+  // Damunt de l'H1, cap ranura: la fitxa neta per a escriure.
+  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
+  const details = obriEdicioAvancada();
+  expect(details.querySelector('.sdp-edicio-avancada__titol').textContent).toBe('Edició avançada de la fitxa');
+  expect(details.querySelector('.sdp-edicio-avancada__subtitol').textContent).toBe('Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades');
+  const boto = within(details).getByRole('button', { name: 'Logotip' });
+  expect(boto.closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+  // Una organització no té avatar redó.
+  expect(details.querySelector('.sdp-edicio-avancada__identitat')).toBeNull();
   const ranura = vi.spyOn(inputDeLaRanura(), 'click');
   const obri = vi.spyOn(selector('logoImage'), 'click');
   fireEvent.click(boto);
   expect(obri).toHaveBeenCalledOnce();
   expect(ranura).not.toHaveBeenCalled();
   expect(screen.queryByRole('dialog', { name: 'Capçalera i avatar' })).toBeNull();
-  // La capçalera té el seu botó, a part.
-  expect(screen.getByRole('button', { name: 'Capçalera' })).toBeTruthy();
+  // La capçalera té el seu botó, a part, i va abans del logotip.
+  const botoCapcalera = within(details).getByRole('button', { name: 'Capçalera' });
+  expect(botoCapcalera.closest('.sdp-edicio-avancada__capcalera')).not.toBeNull();
+  expect(abansDe(botoCapcalera, boto)).toBe(true);
 });
 
-test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, abans de l’H1; el clic obri el selector de l’avatar', () => {
+/* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant de
+   300px del centre») · L'avatar redó amb la càmera ja no és abans de l'H1:
+   damunt del nom no queda res (l'avatar ja va a la barra taronja) i el control
+   viu, el primer, dins d'«Edició avançada», amb «Avatar», «Llevar l'avatar» i
+   la línia d'ajuda. El clic continua obrint el selector de l'avatar. */
+test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d’«Edició avançada» i res damunt de l’H1; el clic obri el selector de l’avatar', () => {
   render(<PerfilEditor identitat={ambAvatar} />);
-  const avatar = capcalera().querySelector('button.page-title-avatar--canvia');
+  expect(capcalera().querySelector('.page-title-avatar')).toBeNull();
+  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(capcalera().querySelector('img.page-title-logo')).toBeNull();
+  expect(abansDe(titol(), desplegable())).toBe(true);
+  // Un sol avatar gran a la pàgina, el del desplegable; el de la barra taronja és el discret.
+  expect(document.querySelectorAll('.sdp-editor-document .page-title-avatar')).toHaveLength(1);
+  expect(barraTaronja().querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/a.webp');
+  const details = obriEdicioAvancada();
+  expect(details.querySelector('.sdp-edicio-avancada__subtitol').textContent).toBe('Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades');
+  const identitat = details.querySelector('.sdp-edicio-avancada__identitat');
+  const avatar = identitat.querySelector('button.page-title-avatar--canvia');
   expect(avatar).not.toBeNull();
   // El nom el posa PageFrame: el d'abans o, amb el CONTRACTE-1, etiquetaCanvia.
   expect(['Canvia la teua imatge', 'Avatar']).toContain(avatar.getAttribute('aria-label'));
   expect(avatar.querySelector('img').getAttribute('src')).toBe('/assets/a.webp');
-  expect(abansDe(avatar, titol())).toBe(true);
-  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  // Les píndoles i l'ajuda de sempre (CONTRACTE-1 i línia I1), al costat de l'avatar.
+  expect(within(identitat).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+  expect(within(identitat).getByRole('button', { name: 'Llevar l’avatar' })).toBeTruthy();
+  expect(identitat.querySelector('.sdp-camp__ajuda').textContent).toBe('PNG, JPEG o WebP, fins a 10 MB.');
+  // L'avatar és el primer del desplegable, abans de la capçalera; cap ranura.
+  expect(abansDe(identitat, details.querySelector('.sdp-edicio-avancada__capcalera'))).toBe(true);
+  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
   const obri = vi.spyOn(selector('logoImage'), 'click');
   act(() => { fireEvent.click(avatar); });
   expect(obri).toHaveBeenCalledOnce();
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-test('Onada 4 · una persona sense avatar: la ranura «Avatar», que obri el selector de l’avatar; «Capçalera», el seu', () => {
+/* Encàrrec d'harmonització (261018) · La ranura «Avatar» de qui no té foto ja
+   no és damunt de l'H1: va dins d'«Edició avançada», després de «Capçalera». */
+test('Onada 4 · una persona sense avatar: la ranura «Avatar» dins d’«Edició avançada», que obri el selector de l’avatar; «Capçalera», el seu', () => {
   render(<PerfilEditor identitat={jo} />);
-  const boto = within(capcalera()).getByRole('button', { name: 'Avatar' });
-  expect(boto.closest('.page-title-logo-personalitzat')).not.toBeNull();
-  expect(abansDe(boto, titol())).toBe(true);
+  expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
+  expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
+  const details = obriEdicioAvancada();
+  const boto = within(details).getByRole('button', { name: 'Avatar' });
+  expect(boto.closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+  expect(details.querySelector('.sdp-edicio-avancada__identitat')).toBeNull();
   const ranura = vi.spyOn(inputDeLaRanura(), 'click');
   const avatar = vi.spyOn(selector('logoImage'), 'click');
   const hero = vi.spyOn(selector('heroImage'), 'click');
   act(() => { fireEvent.click(boto); });
   expect(ranura).not.toHaveBeenCalled();
   expect(avatar).toHaveBeenCalledOnce();
-  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Capçalera' })); });
+  act(() => { fireEvent.click(within(details).getByRole('button', { name: 'Capçalera' })); });
   expect(hero).toHaveBeenCalledOnce();
   expect(avatar).toHaveBeenCalledOnce();
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -134,8 +184,12 @@ test('ordre E · l’entitat pilot: el logotip fix de Sóc de Poble damunt de l�
   expect(abansDe(logos[0], titol())).toBe(true);
   expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
   expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
-  // Només «Capçalera».
-  expect(screen.getByRole('button', { name: 'Capçalera' })).toBeTruthy();
+  /* Encàrrec d'harmonització (261018) · Tampoc cap ranura dins d'«Edició
+     avançada», on ara viuria: només «Capçalera». */
+  const details = obriEdicioAvancada();
+  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(within(details).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
+  expect(within(details).getByRole('button', { name: 'Capçalera' })).toBeTruthy();
 });
 
 /* Auditoria 261007 (retocs de l'ordre E) · En remot, l'id de l'entitat pilot
@@ -156,19 +210,25 @@ test('Auditoria 261007 · l’entitat pilot amb un id UUID i el slug declarat: c
   const logos = capcalera().querySelectorAll('img.page-title-logo');
   expect([...logos].map((img) => img.className)).toEqual(['page-title-logo light-only', 'page-title-logo dark-only']);
   expect(abansDe(logos[0], titol())).toBe(true);
-  // La capçalera conserva el seu botó.
-  expect(screen.getByRole('button', { name: 'Capçalera' })).toBeTruthy();
+  /* Encàrrec d'harmonització (261018) · Cap ranura tampoc dins d'«Edició
+     avançada», on ara viuria; la capçalera conserva el seu botó, allí. */
+  const details = obriEdicioAvancada();
+  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(within(details).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
+  expect(within(details).getByRole('button', { name: 'Capçalera' })).toBeTruthy();
   // El registre (com a PerfilPublicSection): les boines del pilot ja porten al seu perfil (Onada 8).
   expect(rutaDAutoria({ tipus: 'entitat', id: uuid })).toBe(RUTA_PERFIL_PROJECTE);
 });
 
+/* Encàrrec d'harmonització (261018) · La ranura «Logotip» es conserva, ara
+   dins d'«Edició avançada». */
 test('Auditoria 261007 · el slug només val per a una entitat: un altre slug o un grup amb el del pilot conserven la ranura i no es registren', () => {
   const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
   render(<PerfilEditor identitat={org('owner', { id: uuid, dades: { slug: 'forn' } })} />);
-  expect(within(capcalera()).getByRole('button', { name: 'Logotip' })).toBeTruthy();
+  expect(within(obriEdicioAvancada()).getByRole('button', { name: 'Logotip' }).closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
   cleanup();
   render(<PerfilEditor identitat={org('owner', { id: uuid, mena: 'grup', nom: 'Colla', dades: { slug: ENTITAT_PILOT_SLUG, kind: 'group' } })} />);
-  expect(within(capcalera()).getByRole('button', { name: 'Logotip' })).toBeTruthy();
+  expect(within(obriEdicioAvancada()).getByRole('button', { name: 'Logotip' }).closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
   expect(capcalera().querySelector('img.page-title-logo')).toBeNull();
   expect(rutaDAutoria({ tipus: 'entitat', id: uuid })).toBe(`/empresa/${uuid}`);
 });
@@ -232,6 +292,14 @@ test('prompt 261014_0400 · la fitxa del pilot: la barra taronja i la targeta vi
     expect(llegixDocumentViu(identitat.id).autor.avatar).toBe(DEFAULT_AUTHOR.avatarUrl);
     // La boina continua portant al perfil del pilot.
     expect(llegixDocumentViu(identitat.id).autor.ruta).toBe(RUTA_PERFIL_PROJECTE);
+    /* Encàrrec d'harmonització (261018) · Amb «Edició avançada», el logotip
+       desat d'una organització es repinta damunt de l'H1 (logoAlTitol). El del
+       pilot no: damunt del nom, en edició com en lectura, sempre el logotip fix
+       de Sóc de Poble (ordre E; «l'editor del pilot no pinta el logo de la fila
+       enlloc», revisió del prompt 261014_0400), mai el de la seua fila. */
+    const logos = [...capcalera().querySelectorAll('img.page-title-logo')];
+    expect([identitat.dades.role, logos.map((img) => img.className)])
+      .toEqual([identitat.dades.role, ['page-title-logo light-only', 'page-title-logo dark-only']]);
     cleanup();
     oblidaEntitatDelProjecte();
   }

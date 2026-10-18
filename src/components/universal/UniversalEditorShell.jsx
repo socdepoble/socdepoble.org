@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Crop } from 'lucide-react';
+import { Image as ImageIcon, Crop, SlidersHorizontal } from 'lucide-react';
 import { DateTimeControl, Alerta, Boto, SelectorDataHora } from '../PedraSeca/index.js';
 import { BotoVisibilitat } from './barres/BotoVisibilitat.jsx';
 import { ETIQUETA_RESERVA_ARA, dataHoraEdicio } from './barres/dataHoraBarra.js';
@@ -109,7 +109,9 @@ const DESTINS_FOCUS = Object.freeze({
   lead: '.editor-lead-input',
   content: '.ProseMirror[contenteditable="true"]',
   heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled), .sdp-edicio-avancada__capcalera [role="button"], .sdp-edicio-avancada__capcalera button:not(:disabled)',
-  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__logotip [role="button"], .sdp-edicio-avancada__logotip button:not(:disabled)',
+  /* Encàrrec d'harmonització (261018) · L'avatar redó del Perfil també viu dins
+     del desplegable (.sdp-edicio-avancada__identitat). */
+  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia, .sdp-edicio-avancada__identitat .page-title-avatar--canvia, .sdp-edicio-avancada__logotip [role="button"], .sdp-edicio-avancada__logotip button:not(:disabled)',
   copyright: '[data-sdp-drets]',
   icon: '.bar-orange > button.sdp-emoticona-barra--boto, .sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child',
 });
@@ -324,6 +326,23 @@ export function UniversalEditorShell({
        dins del desplegable, i en lectura la línia continua igual. */
   placeholderTitol = null,
   edicioAvancada = false,
+  /* Encàrrec d'harmonització (261018, ordre del Mestre: «fitxa neta; la gestió
+     d'imatges va dins d'Edició avançada») · Opcionals, i sense elles el DOM de
+     sempre (el Bloc de Notes no en passa cap):
+     · `identitatEdicioAvancada`: un node que es pinta el primer dins del
+       desplegable (el Perfil hi posa l'avatar redó amb «Avatar» i «Llevar
+       l'avatar», que abans anaven damunt de l'H1);
+     · `logoAlTitol` (true): amb false, el logotip desat no es repinta damunt
+       de l'H1 (a la persona, el logotip és l'avatar, i ja va a la barra
+       taronja);
+     · `resumEdicioAvancada`: una línia davall del títol del desplegable que
+       diu què hi ha dins;
+     · `titolEdicioAvancada`: el títol del desplegable (per defecte, «Edició
+       avançada»). Amb títol o resum, la barra porta també la icona. */
+  identitatEdicioAvancada = null,
+  logoAlTitol = true,
+  resumEdicioAvancada = null,
+  titolEdicioAvancada = null,
   classificacio,
   copyright,
   onCanviaCopyright,
@@ -479,7 +498,7 @@ export function UniversalEditorShell({
      desats, i les categories i etiquetes assignades) al seu lloc de lectura.
      Sense, les props de sempre, també quan no hi són (cap clau nova). */
   const capcaleraDesada = edicioAvancada ? (heroImage || '') : null;
-  const logoDesat = edicioAvancada ? shellData.logoDeLectura : null;
+  const logoDesat = edicioAvancada && logoAlTitol ? shellData.logoDeLectura : null;
   const deLaRanura = edicioAvancada ? null : {
     ...(classificacio !== undefined ? { classificacio } : null),
     ...(copyright !== undefined ? { copyright } : null),
@@ -487,8 +506,21 @@ export function UniversalEditorShell({
   };
   const desplegable = edicioAvancada ? (
     <details className="sdp-edicio-avancada">
-      <summary className="sdp-edicio-avancada__resum">{ETIQUETA_EDICIO_AVANCADA}</summary>
+      <summary className="sdp-edicio-avancada__resum">
+        {resumEdicioAvancada || titolEdicioAvancada ? (
+          <>
+            <span className="sdp-edicio-avancada__icona" aria-hidden="true">
+              <SlidersHorizontal size={24} focusable="false" />
+            </span>
+            <span className="sdp-edicio-avancada__rotul">
+              <span className="sdp-edicio-avancada__titol">{titolEdicioAvancada || ETIQUETA_EDICIO_AVANCADA}</span>
+              {resumEdicioAvancada ? <span className="sdp-edicio-avancada__subtitol">{resumEdicioAvancada}</span> : null}
+            </span>
+          </>
+        ) : ETIQUETA_EDICIO_AVANCADA}
+      </summary>
       <div className="sdp-edicio-avancada__cos">
+        {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
         <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera">{shellData.topBarData.heroComponent}</div>
         {shellData.topBarData.logoComponent ? (
           <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip">{shellData.topBarData.logoComponent}</div>

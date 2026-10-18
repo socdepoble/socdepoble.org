@@ -9,6 +9,7 @@ import { usePerfil } from './PerfilContext.jsx';
 import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
+import { AvatarDeCapcalera } from '../../components/universal/PageFrame.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
 import { bloqueigDeFitxa, textosDeFitxa } from './visibilitatFitxa.js';
@@ -121,8 +122,20 @@ function detallDesament(desament) {
    Relleu 261007 (revisor de perfil-retocs, onada 3b) · Derivats de
    DESTINS_FOCUS.logoImage de la closca (avatar primer; sense la imatge
    role=button, que la persona no té). */
-const DESTI_FOCUS_AVATAR = '.sdp-editor-document .page-title .page-title-avatar--canvia';
-const DESTI_FOCUS_RANURA = '.sdp-editor-document .page-title-logo-personalitzat button:not(:disabled)';
+/* Encàrrec d'harmonització (261018) · L'avatar redó ja no és damunt de l'H1:
+   viu dins del desplegable «Edició avançada». */
+const DESTI_FOCUS_AVATAR = '.sdp-editor-document .sdp-edicio-avancada .page-title-avatar--canvia';
+/* Encàrrec d'harmonització (261018) · La ranura també és al desplegable. */
+/* Encàrrec 261018 (ordre del Mestre) · El títol i el resum de la barra
+   «Edició avançada» de la fitxa: la persona hi canvia l'avatar i la capçalera;
+   una organització o un agent, el seu logotip o avatar, la capçalera i els drets. */
+export const TITOL_EDICIO_AVANCADA = 'Edició avançada de la fitxa';
+export const resumEdicioAvancadaDe = (mena) => {
+  if (mena === 'persona') return 'Canvia el teu avatar, afig la teua foto de capçalera i gestiona les dades';
+  if (mena === 'organitzacio') return 'Canvia el logotip, afig la foto de capçalera i gestiona els drets i les dades';
+  return 'Canvia l’avatar, afig la foto de capçalera i gestiona els drets i les dades';
+};
+const DESTI_FOCUS_RANURA = '.sdp-editor-document .sdp-edicio-avancada__logotip button:not(:disabled), .sdp-editor-document .page-title-logo-personalitzat button:not(:disabled)';
 
 /* L'arrel on buscar-los: la del control que ha obert el diàleg, mentre és al
    DOM (dins del Web Component, el seu shadow root, que és tancat i cap
@@ -826,7 +839,23 @@ export function PerfilEditor({ identitat }) {
       ...(ranuraDelLogo ? {
         onLogoEdit: obriImatgePropia, logoEditLabel: etiquetaImatgePropia, logoEditHelp: AJUDA_FOTO, logoPujant: imatgePropiaPujant,
       } : null),
-      ...(potEditar && avatarDeCapcalera ? { avatarAutor: avatarDeCapcalera } : null),
+      /* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant
+         del mig; la gestió d'imatges, dins d'Edició avançada») · En edició, la
+         fitxa és la del Bloc de Notes: el desplegable plegat «Edició avançada»
+         porta l'avatar redó amb «Avatar» i «Llevar l'avatar» (la font única,
+         avatarDeCapcalera), la capçalera, la ranura del logotip i els retalls.
+         Damunt de l'H1 no queda res: l'avatar ja va, discret, a la barra
+         taronja (barAuthorAvatar). El logotip d'una organització continua
+         damunt de l'H1, com el de les notes. */
+      edicioAvancada: true,
+      /* Encàrrec 261018 (ordre del Mestre: «barra d'acció prominent, amb text
+         gran i explicatiu») · El títol i el resum diuen què s'hi fa. */
+      titolEdicioAvancada: TITOL_EDICIO_AVANCADA,
+      resumEdicioAvancada: resumEdicioAvancadaDe(mena),
+      /* L'entitat pilot no pinta mai el logo de la fila: damunt de l'H1 hi va la
+         marca fixa de Sóc de Poble (PageFrame), com en lectura. */
+      logoAlTitol: !ambAvatarRedo && !esPilot,
+      ...(potEditar && avatarDeCapcalera ? { identitatEdicioAvancada: <AvatarDeCapcalera {...avatarDeCapcalera} /> } : null),
       /* CONTRACTE-3 (Onada 4) · Les vistes (A4, portada, targeta) no van al
          centre de la fitxa: DocumentEditor les porta a «Les vistes». */
       ambVistes: false,
@@ -861,7 +890,7 @@ export function PerfilEditor({ identitat }) {
       emoticona: fitxa.icon || '',
       onObriEmoticona: ambEmoticona ? obriEmoticona : null,
     };
-  }, [mena, esAgent, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
+  }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
     obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera,
     logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona]);
 

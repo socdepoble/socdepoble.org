@@ -30,7 +30,12 @@
  *
  * REGLA DEL MODE SEED: la persona que ha entrat és la persona pilot («Javi»)
  * i és propietària de l'entitat pilot («Sóc de Poble»), i de cap altra
- * entitat del padró. És l'única manera de provar el canal compartit del xat,
+ * entitat del padró per esta regla. Encàrrec 261018_1220 (Tasca 0, ordre del
+ * Mestre: l'accés ha de carregar la identitat de la persona pilot i les seues
+ * dues organitzacions) · Rentonar declara la persona pilot com a membre que
+ * l'administra (`membres`, AGENTS_MAP.JAVI.id): no és cap persona inventada
+ * (T63.1) i la regla de «qui té sessió» no s'estén a Rentonar.
+ * És l'única manera de provar el canal compartit del xat,
  * el MAS de l'entitat i la fitxa sense una base de dades. En l'app autònoma
  * no s'hi arriba: en seed i local entrar i registrar-se tornen MODE_LOCAL
  * (supabase/auth.js · exigeixModeRemot) i /registre passa el node a remote
@@ -141,11 +146,15 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   visibility: 'public',
   town_name: POBLE_FUNDACIONAL,
   alies: Object.freeze([ENTITAT_RENTONAR_SLUG]),
-  /* Cap membre declarat i cap propietària implícita (regla del mode seed):
-     ningú no l'administra fins que algú s'hi connecta (localPerfils ·
-     reclamaOrganitzacio). El xat de la llavor no veu eixa connexió:
-     localXat només pregunta a rolALEntitat. */
-  membres: Object.freeze([])
+  /* Cap propietària implícita (regla del mode seed): qui té sessió no
+     l'administra per tindre-la, i qualsevol altra persona només hi entra
+     connectant-s'hi (localPerfils · reclamaOrganitzacio). El xat de la llavor
+     no veu eixa connexió: localXat només pregunta a rolALEntitat.
+     Encàrrec 261018_1220 (Tasca 0, ordre del Mestre) · La persona pilot sí que
+     l'administra: és un membre declarat amb l'id del padró
+     (AGENTS_MAP.JAVI.id), i així el calaix «Amb qui actues?» del pilot porta
+     les dues organitzacions fundacionals. */
+  membres: Object.freeze([Object.freeze({ usuariId: AGENTS_MAP.JAVI.id, role: 'admin' })])
 })]);
 
 export const AGENTS_IA_SEED = Object.freeze([Object.freeze({

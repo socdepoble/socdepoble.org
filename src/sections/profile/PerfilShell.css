@@ -138,8 +138,10 @@
 /* ── Les vistes (DetallVistes, ordre del Mestre 261008) ──
    Els dos botons de la vista A4 (les píndoles de sempre, .sdp-classificacio-
    pindola) en fila i, si no hi caben, en una altra; la targeta viva, amb
-   la seua amplària (--sdp-targeta-viva-ample, la de la columna del llistat),
-   arrambada a l'esquerra com la resta dels blocs. */
+   la seua amplària (--sdp-targeta-viva-ample, la de la columna del llistat).
+   Encàrrec d'harmonització (261018, ordre del Mestre) · La targeta va
+   centrada: arrambada a l'esquerra en una pàgina continguda i centrada
+   trencava l'equilibri. */
 .perfil-vistes__botons {
   display: flex;
   flex-wrap: wrap;
@@ -150,6 +152,22 @@
   width: 100%;
   max-width: var(--sdp-targeta-viva-ample);
   min-width: 0;
+}
+
+.perfil-vistes .perfil-vistes__targeta {
+  margin-inline: auto;
+}
+
+/* Encàrrec d'harmonització (261018, ordre del Mestre: «els botons d'acció
+   sempre centrats») · Els botons principals de les vistes contingudes del
+   Perfil (Guardar, Descarregar les meues dades, Ocultar del Panell…), al
+   centre. Classe pròpia del Perfil: .sdp-alerta__accions la comparteixen les
+   alertes, la taula de membres i l'editor, i allí no es toca. */
+.perfil-compte__accions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sdp-space-2);
 }
 
 /* Dins d'un bloc del compte, el formulari no porta marge propi. */

@@ -387,7 +387,8 @@ test('T4 · un altre ?mode amb el formulari muntat el canvia sense perdre el cor
 
 test('T4 · el divisor ja no promet «3 passos manuals»', () => {
   render(<OnboardingSection />);
-  expect(screen.getByText('O entra amb el teu correu')).toBeTruthy();
+  /* Revisió adversarial (261018) · Neutre entre Entrar i Crear compte. */
+  expect(screen.getByText('O amb el teu correu')).toBeTruthy();
   expect(screen.queryByText(/passos manuals/)).toBeNull();
 });
 

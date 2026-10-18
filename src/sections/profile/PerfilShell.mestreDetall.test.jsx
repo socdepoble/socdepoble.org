@@ -29,6 +29,8 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig:
 vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children }) => <a href={to}>{children}</a>,
   useSearchParams: () => [m.params],
+  /* Encàrrec 261018_1220 · PerfilShell llig l'estat de l'historial (espaiIdentitat). */
+  useLocation: () => ({ pathname: '/el-meu-perfil', search: '', state: null, hash: '' }),
 }));
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: () => {} }) }));

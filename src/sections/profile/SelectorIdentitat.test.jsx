@@ -58,7 +58,8 @@ test('amb una sola identitat el botó continua a la barra i porta al perfil, sen
   const boto = screen.getByRole('button', { name: 'El teu perfil: Pep' });
   expect(boto.closest('header.bar-black')).not.toBeNull();
   await act(async () => { fireEvent.click(boto); });
-  expect(onNavega).toHaveBeenCalledWith('/el-meu-perfil');
+  /* Encàrrec 261018_1220 (Tasca 1) · amb el número de l'anada, que el Perfil llig per a tornar a obrir la persona. */
+  expect(onNavega).toHaveBeenCalledWith('/el-meu-perfil', { state: { espaiIdentitat: expect.any(Number) } });
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 

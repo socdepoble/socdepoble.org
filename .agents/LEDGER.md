@@ -969,4 +969,24 @@ Reconciliació transparent del ledger: els bytes previs coincidixen amb HEAD. SH
 Informe 261017_1526_auditoria_claude (check vàlid). Blocs 0–3 a src/: C01–C10 de Codex i ADV-01–03 de Gemini corregits; identitat (relleu 3: logotip verd, Foraster, àlies heretats, foto pública) i SEC-01 corregits; tres rondes de revisió adversarial amb verificació doble. Bloc 4: Llibre d'Or 34/34 lots, 617/617 textos, 260 afirmacions contrastades, annex A per conciliar; cap trasllat. Vitest 19.228 verdes/0 roges/89 omeses; eslint global 0; node primari 0 fallades; Olivera 0; entrada 409→359 KB gzip. Sense commit. Pendents del Mestre a l'informe.
 
 
-<!-- HASH: 44af1e45d45ab381af4c671ce26c9e2463f502ca2e01d4fe7322537ce43d5e9e -->
+## 2026-10-17T21:41:31.269330+02:00 · Codex · Reauditoria final Gauntlet · torn_6d6d3e52-83e8-4e4b-a3fa-0fb417c22c50
+
+Tall de codi4745112e6ad9cd5d842913fb22f2f31dbfb8a795, branca backup-notes-publish; informe2133 i acta2133 canònics, pla1300 vinculat. Set C resolts localment; C01/C02 P1 de procedència guardada continua reproduït, C04 cos sense visor, C10 limitació motor i C11 residuals de conciliació. Evidència Claude19.228/0/89 comprovada; la xifra19.164 era intermèdia amb4fallades. Vitest independent en curs, resultat final a informe/acta. Dos builds independents donen entrada −11,94% gzip i sumaJS +0,56%; no es confon entrada amb paquet. Llibre esborrany SHAce41e505… fora del commit, originals656 intactes i cap evacuació. Sense edició de producte, dependències o remot; sense cron/monitor. ESTAT actualitzat; no s’afirma closed ni conformitat general.
+
+Cos anterior conservat literalment; segell previ verificat `44af1e45d45ab381af4c671ce26c9e2463f502ca2e01d4fe7322537ce43d5e9e`. El nou segell acredita integritat dels bytes amb este relleu, no elimina les troballes ni resegella skills.
+
+
+## 2026-10-17T21:42:58.683851+02:00 · Codex · Resultat definitiu de reauditoria · torn_6d6d3e52-83e8-4e4b-a3fa-0fb417c22c50
+
+Vitest independent complet: 19.228 passades, 0 fallides, 89 omeses; 1.118 fitxers aprovats/6 omesos, exit0, 643,35s. JSON SHA `6e7acc2012a0c304b5876a002e2e8b2cd959112963292c9e2b477de4dd33103c`. 2.606/2.606 hashes de fonts inicials intactes; llibre i informes concurrents estables. No es tanca conformitat: C01/C02 P1 residual reproduït, C04/C10/C11 parcials. Informe2133 i acta2133 definitius amb proves i límits. Tancament mecànic valid:false/planned, 428 incidències globals, cap dels lliurables propis; no --close ni resegellat de skills. Totes les execucions, tres subagents i tab propis acabats; cap cron ni tasca periòdica creats, quatre monitors antics accessibles PAUSED. Cap evacuació, commit o desplegament.
+
+
+## 2026-10-18T14:32:00+02:00 · Claude Code · Sessió d'usuari, workspaces, accés pilot, tractor WebP i harmonització · torn_ef1ddff2-52e7-4d41-8a7e-57c945b7a579
+
+Encàrrec 261018_1220 (Tasques 0–4) i encàrrecs d'harmonització del Mestre. Accés pilot d'un clic en DEV (mode de proves efímer per pestanya), Javi administra Rentonar a la llavor, calaix i avatar porten al workspace existent amb remuntatge del Perfil, `/registra`, Google primari, tractor `media:webp` sense dependències noves, catàleg d'APLICACIONS, geometria de la barra lateral i de la lupa, fitxa neta amb «Edició avançada», botons centrats i estat del perfil amb targetes. Bateria completa 19.241/1 prèvia (censImatges, OG sense seguiment)/89. Revisió adversarial: 15 confirmades, 12 corregides, 3 baixes documentades. Segell previ verificat abans d'afegir este relleu. Cap commit, desplegament, trasllat, cron ni resegellat de skills.
+
+## 2026-10-18T15:05:00+02:00 · Claude Code · Relleu 4: imatges del pilot i barra d'edició avançada · torn_ef1ddff2-52e7-4d41-8a7e-57c945b7a579
+
+Les imatges del perfil (capçalera i avatar) es desen en mode de proves com a data URL dels mateixos bytes (PerfilContext.pujaMitja, ajudant compartit amb el Bloc); la guarda UUID de storage.js no s'afluixa. Verificat al navegador amb la persona pilot. Barra «Edició avançada de la fitxa» amb accent --sdp-accio, icona i subtítol. Bateria 19.242/1 prèvia/89. Segell previ verificat. Cap commit encara.
+
+<!-- HASH: c1042d8d5bcb510c40328e20428c7ba2d68c8fc9a266bba4ebdaef8d921a57e7 -->

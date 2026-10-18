@@ -154,20 +154,31 @@ test('els drets tenen pàgina pròpia: ni amb les capacitats hi ha cap bloc de d
   expect(m.exporta).not.toHaveBeenCalled();
 });
 
-test('«Estat del perfil»: la casella té un nom estable, l’etiqueta visible hi apunta i el desat s’anuncia', async () => {
+/* Encàrrec d'harmonització (261018, ordre del Mestre) · Ja no és una casella
+   «Privat»: dues targetes (GrupOpcions) amb el perfil públic primer, el poble
+   a l'explicació, l'estat d'ara marcat, i Guardar centrat que confirma. */
+test('«Estat del perfil»: dues eixides explicades, la pública primer, i el desat s’anuncia', async () => {
   pinta();
   const bloc = seccio('Estat del perfil');
-  const casella = within(bloc).getByRole('checkbox', { name: 'Perfil públic' });
-  expect(casella.checked).toBe(false);
-  // L'etiqueta «Estat del perfil:» apunta a la casella (abans, a un id que no existia).
-  expect(within(bloc).getByLabelText('Estat del perfil:')).toBe(casella);
-  fireEvent.click(casella);
-  expect(within(bloc).getByRole('checkbox', { name: 'Perfil públic' }).checked).toBe(true);
-  await act(async () => { fireEvent.submit(casella.closest('form')); });
+  expect(within(bloc).queryByRole('checkbox')).toBeNull();
+  const grup = within(bloc).getByRole('group', { name: 'Qui pot vore el teu perfil?' });
+  const opcions = within(grup).getAllByRole('radio');
+  expect(opcions.map((o) => o.value)).toEqual(['public', 'privat']);
+  const [publica, privada] = opcions;
+  expect(privada.checked).toBe(true);
+  expect(publica.checked).toBe(false);
+  expect(grup.textContent).toContain('Com està ara');
+  expect(grup.textContent).toContain('trobar-te des de La Torre');
+  expect(grup.textContent).toContain('només per a la gent de La Torre');
+  const guardar = within(bloc).getByRole('button', { name: 'Guardar' });
+  expect(guardar.parentElement.classList.contains('perfil-compte__accions')).toBe(true);
+  fireEvent.click(publica);
+  expect(publica.checked).toBe(true);
+  await act(async () => { fireEvent.submit(publica.closest('form')); });
   expect(props.guardarAjust).toHaveBeenCalledWith('jo', 'privacitat', true);
   expect(within(bloc).getByRole('status').textContent).toBe('Desat correctament.');
   props.guardarAjust.mockRejectedValueOnce(new Error('Sense xarxa'));
-  await act(async () => { fireEvent.submit(casella.closest('form')); });
+  await act(async () => { fireEvent.submit(publica.closest('form')); });
   expect(within(bloc).getByRole('alert').textContent).toBe('Sense xarxa');
 });
 
@@ -175,6 +186,7 @@ test('amb una baixa en curs, «Estat del perfil» no es pot desar i diu per què
   pinta({ ...jo, dades: { ...jo.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } });
   const bloc = seccio('Estat del perfil');
   expect(within(bloc).queryByRole('checkbox')).toBeNull();
+  expect(within(bloc).queryByRole('radio')).toBeNull();
   expect(within(bloc).queryByRole('button', { name: 'Guardar' })).toBeNull();
   expect(within(bloc).getByText(/baixa en curs/)).toBeTruthy();
   expect(within(bloc).getByText(/Privacitat i dades/)).toBeTruthy();

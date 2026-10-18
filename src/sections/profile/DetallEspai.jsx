@@ -120,7 +120,8 @@ export function DetallAplicacio({ aplicacio }) {
             {/* Design Guard (marató del 261007, Llei del Píxel) · Fora l'estil en
                 línia: el token --sdp-gap-md no existix a cap full, el marge no
                 s'aplicava mai (0) i el bloc ja separa els fills amb el seu gap. */}
-            <div>
+            {/* Encàrrec d'harmonització (261018) · El botó, centrat (PerfilShell.css). */}
+            <div className="perfil-compte__accions">
               <button
                 type="button"
                 className={`sdp-boto ${activa ? 'sdp-boto--perill' : 'sdp-boto--primari'}`}

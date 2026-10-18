@@ -2679,20 +2679,81 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
    classificació de sempre (.page-title-classificacio), sense el seu marge de
    capçalera. Sense :has(). */
 @layer components {
+  /* Encàrrec d'harmonització (261018, ordres del Mestre: «el resum passa
+     desapercebut» i «una barra d'acció prominent, amb cos i clicable») · El
+     resum és un bloc de control de Pedra Seca que convida a obrir-lo: fons de
+     targeta, vora suau amb l'accent blau (--sdp-accio) a l'inici, cantons de
+     --sdp-radi-m, 64 px d'alçada mínima, icona destacada en una rajola blava,
+     títol gran i una línia que diu què hi ha dins; el xebró propi, al final,
+     gira (▶ plegat, ▼ obert; el triangle del navegador s'amaga també a Safari
+     16). Oberta, el cos és una safata emmarcada amb la mateixa vora. */
   .sdp-edicio-avancada {
     margin-block: var(--sdp-space-4);
-    border-block: 1px solid var(--sdp-vora);
   }
   .sdp-edicio-avancada__resum {
-    min-block-size: var(--sdp-touch);
-    padding-block: var(--sdp-space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-block-size: calc(var(--sdp-touch) + var(--sdp-space-4));
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-inline-start: var(--sdp-space-1) solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
     color: var(--sdp-text-titol);
     font-weight: 700;
     cursor: pointer;
+    list-style: none;
+  }
+  .sdp-edicio-avancada__resum::-webkit-details-marker { display: none; }
+  .sdp-edicio-avancada__resum::after {
+    content: '';
+    flex: none;
+    margin-inline-start: auto;
+    inline-size: var(--sdp-space-2);
+    block-size: var(--sdp-space-2);
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform var(--sdp-t);
+  }
+  .sdp-edicio-avancada[open] > .sdp-edicio-avancada__resum::after { transform: rotate(45deg); }
+  .sdp-edicio-avancada[open] > .sdp-edicio-avancada__resum {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-edicio-avancada__resum:hover { background: var(--sdp-fons-hover-subtil); }
   }
   .sdp-edicio-avancada__resum:focus-visible {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
     outline-offset: var(--sdp-space-1);
+  }
+  .sdp-edicio-avancada__icona {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-space-10);
+    block-size: var(--sdp-space-10);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-edicio-avancada__rotul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+  }
+  .sdp-edicio-avancada__titol {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h6);
+  }
+  .sdp-edicio-avancada__subtitol {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: 400;
   }
   /* Una sola columna que no passa mai de l'amplada de l'article: sense el
      minmax(0, …), el logotip editable (sdp-logo-personalitzat, amplada
@@ -2701,7 +2762,23 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--sdp-space-4);
-    padding-block: var(--sdp-space-2) var(--sdp-space-4);
+    padding: var(--sdp-space-4) var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    border-block-start: 0;
+    border-end-start-radius: var(--sdp-radi-m);
+    border-end-end-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  /* La identitat (l'avatar redó del Perfil i les seues píndoles), centrada i
+     a la mida de la safata. */
+  .sdp-edicio-avancada__identitat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-edicio-avancada__identitat .page-title-avatar {
+    inline-size: min(100%, calc(var(--sdp-touch) * 3));
   }
   .sdp-edicio-avancada__imatge img {
     display: block;

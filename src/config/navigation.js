@@ -87,6 +87,21 @@ export const RUTES_CANONIQUES = Object.freeze(Object.fromEntries(CLAUS_FUNDACION
    és ara a /anima (PAGE_ROUTE_MAP, damunt). */
 export const RUTA_FITXA_IAIA = '/iaia';
 
+/* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «enllaçar bé i recuperar
+   fidelment el Workspace de l'usuari i els de les organitzacions») · El
+   workspace privat de cada identitat ja existix i és un de sol, el Perfil
+   (/el-meu-perfil, PerfilShell): la persona hi obri la seua fitxa i una
+   organització la seua amb ?organitzacio=ID (T43, «Edita la fitxa de {Org}»).
+   Una sola font per a la barra (calaix i avatar) i per al Perfil: abans la
+   ruta de l'organització vivia a sections/profile/perfilModel.js, que ara la
+   reexporta, i components/ no importa de sections/. */
+export const RUTA_PERFIL_PROPI = '/el-meu-perfil';
+export const PARAM_FITXA_ORGANITZACIO = 'organitzacio';
+export const rutaFitxaOrganitzacio = (id) => `${RUTA_PERFIL_PROPI}?${PARAM_FITXA_ORGANITZACIO}=${encodeURIComponent(String(id))}`;
+/** El workspace d'una identitat del calaix: la persona, el seu Perfil; una organització, la seua fitxa dins del Perfil. */
+export const rutaEspaiDIdentitat = (tipus, id) => (tipus === 'entitat' && id != null && String(id) !== ''
+  ? rutaFitxaOrganitzacio(id) : RUTA_PERFIL_PROPI);
+
 /* La IAIA MarIA, per identificador i amb el tipus que toca: mai pel nom ni
    pel slug que torne un servidor (el seu id és el del paquet, IAIA_ID). */
 const esLaFitxaDeLaIAIA = (perfil) => perfil?.tipus === 'ia' && esIAIA(perfil.id);

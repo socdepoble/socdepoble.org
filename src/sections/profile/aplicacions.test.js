@@ -2,8 +2,9 @@ import { expect, test } from 'vitest';
 import { ALIES_DEL_PANELL, APLICACIONS, ESTATS_APLICACIO, aplicacionsValides } from './aplicacions.js';
 import { IDS_PLUGINS } from '../plugins/registrePlugins.js';
 
-test('les utilitats de sèrie: les cinc utilitats declarades, pendents i amb icona', () => {
-  expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'metriques', 'lector-rss', 'cervell', 'snippet']);
+/* Encàrrec d'harmonització (261018) · El catàleg complet del Panell: sis públiques i dues internes. */
+test('les utilitats de sèrie: les huit utilitats declarades, pendents i amb icona', () => {
+  expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'rebost', 'salut', 'lector-rss', 'tpv', 'snippet', 'metriques', 'cervell']);
   for (const aplicacio of APLICACIONS) {
     expect(aplicacio.estat).toBe('pendent');
     expect(aplicacio.icona).toBeTruthy();
@@ -11,7 +12,7 @@ test('les utilitats de sèrie: les cinc utilitats declarades, pendents i amb ico
     expect(aplicacio).not.toHaveProperty('ruta');
   }
   // La configuració de sèrie ja és vàlida: passar-la pel filtre no la canvia.
-  expect(aplicacionsValides(APLICACIONS).map((a) => a.id)).toEqual(['gestoria', 'metriques', 'lector-rss', 'cervell', 'snippet']);
+  expect(aplicacionsValides(APLICACIONS).map((a) => a.id)).toEqual(['gestoria', 'rebost', 'salut', 'lector-rss', 'tpv', 'snippet', 'metriques', 'cervell']);
   expect(Object.isFrozen(APLICACIONS)).toBe(true);
 });
 
@@ -46,7 +47,8 @@ test('peça C · Onada 10 · cada aplicació del Perfil apunta a una targeta del
     expect(delPanell.has(aplicacio.panell), `${aplicacio.id} → ${aplicacio.panell}`).toBe(true);
   }
   expect(valides.map((a) => [a.id, a.panell])).toEqual([
-    ['gestoria', 'gestoria'], ['metriques', null], ['lector-rss', 'rss'], ['cervell', null], ['snippet', 'snippet'],
+    ['gestoria', 'gestoria'], ['rebost', 'rebost'], ['salut', 'salut'], ['lector-rss', 'rss'], ['tpv', 'tpv'], ['snippet', 'snippet'],
+    ['metriques', null], ['cervell', null],
   ]);
   /* Cap utilitat apunta ja a la clau d'una de les tres pàgines que han eixit del Panell. */
   for (const clau of ['consola', 'cervell', 'disseny']) {

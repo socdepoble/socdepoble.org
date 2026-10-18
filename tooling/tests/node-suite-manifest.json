@@ -545,6 +545,11 @@
       "path": "tooling/gates/tractor-psicopatia.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/media/optimitzar_webp.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     }
   ]
 }

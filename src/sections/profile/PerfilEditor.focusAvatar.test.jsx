@@ -19,6 +19,9 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    fetch del data URL se simulen. DocumentEditor és el de veres, embolcallat
    per a llegir-ne l'adaptador (onLleva encara no té botó propi a PageFrame
    fins al CONTRACTE-1).
+   Encàrrec d'harmonització (261018) · L'avatar redó (amb «Llevar l'avatar»,
+   ja una píndola de veres) i la ranura viuen dins del desplegable «Edició
+   avançada», no damunt de l'H1: les proves l'obrin abans de tocar-hi res.
    ═══════════════════════════════════════════════════════════════════ */
 
 const m = vi.hoisted(() => ({ perfil: null, updateProfile: null, adapter: null }));
@@ -104,10 +107,23 @@ afterEach(() => {
 });
 
 const capcalera = () => document.querySelector('.sdp-editor-document header.page-title');
-const botoAvatar = () => capcalera().querySelector('button.page-title-avatar--canvia');
+/* Encàrrec d'harmonització (261018, ordre del Mestre: «la gestió d'imatges va
+   dins d'Edició avançada») · L'avatar redó i la ranura ja no són damunt de
+   l'H1: viuen dins del desplegable PLEGAT «Edició avançada» (l'avatar a
+   .sdp-edicio-avancada__identitat, la ranura a .sdp-edicio-avancada__logotip).
+   La persona l'obri clicant el resum abans de tocar-hi res. */
+const desplegable = () => document.querySelector('.sdp-editor-document details.sdp-edicio-avancada');
+const botoAvatar = () => desplegable().querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia');
 /* La ranura, pel seu contenidor (el nom l'escriu l'adaptador: «Avatar»). */
-const ranura = () => capcalera().querySelector('.page-title-logo-personalitzat button');
+const ranura = () => desplegable().querySelector('.sdp-edicio-avancada__logotip button');
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
+function obriEdicioAvancada() {
+  expect(desplegable().open).toBe(false);
+  fireEvent.click(desplegable().querySelector('summary'));
+  expect(desplegable().open).toBe(true);
+  // Damunt de l'H1 ja no hi ha ni l'avatar redó ni la ranura.
+  expect(capcalera().querySelector('.page-title-avatar, .page-title-logo-personalitzat')).toBeNull();
+}
 
 /* Clica el control amb el focus damunt, com a la finestra de veres, tria la
    foto i guarda; espera que la finestra es tanque. */
@@ -122,6 +138,8 @@ async function posaImatge(control, camp, finestra) {
 
 test('Auditoria 261007 · sense avatar: desar des de la ranura porta el focus a l’avatar redó que ix al seu lloc', async () => {
   render(<PerfilEditor identitat={jo} />);
+  /* Encàrrec d'harmonització (261018) · La ranura, dins d'«Edició avançada». */
+  obriEdicioAvancada();
   const boto = ranura();
   expect(boto.textContent).toContain('Avatar');
   await posaImatge(boto, 'logoImage', 'Retalla la foto');
@@ -132,10 +150,18 @@ test('Auditoria 261007 · sense avatar: desar des de la ranura porta el focus a 
   expect(m.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ avatar_url: '/assets/nou.webp' }), CONFIG);
 });
 
+/* Encàrrec d'harmonització (261018) · avatarAutor ja no és a l'adaptador
+   d'edició: «Llevar l'avatar» és la píndola de veres de l'avatar redó (el
+   CONTRACTE-1 ja la pinta), dins d'«Edició avançada», i es prem com ho faria la
+   persona. La ranura que ix al seu lloc és la del desplegable. */
 test('Auditoria 261007 · amb avatar: «Llevar l’avatar» (onLleva, confirmat) porta el focus a la ranura que ix al seu lloc', async () => {
   render(<PerfilEditor identitat={ambAvatar} />);
-  botoAvatar().focus();
-  act(() => { m.adapter.avatarAutor.onLleva({ currentTarget: botoAvatar() }); });
+  expect(m.adapter).not.toHaveProperty('avatarAutor');
+  obriEdicioAvancada();
+  expect(ranura()).toBeNull();
+  const lleva = within(desplegable().querySelector('.sdp-edicio-avancada__identitat')).getByRole('button', { name: 'Llevar l’avatar' });
+  lleva.focus();
+  act(() => { fireEvent.click(lleva); });
   const confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
   fireEvent.click(within(confirma).getByRole('button', { name: 'Llevar l’avatar' }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull());
@@ -144,9 +170,15 @@ test('Auditoria 261007 · amb avatar: «Llevar l’avatar» (onLleva, confirmat)
   expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
 });
 
+/* Encàrrec d'harmonització (261018) · «Capçalera» i la ranura, dins d'«Edició
+   avançada»: la ranura hi és (persona sense foto), i la comparació torna a
+   dir alguna cosa. */
 test('Auditoria 261007 · la capçalera desada no mou el focus a l’avatar ni a la ranura', async () => {
   render(<PerfilEditor identitat={jo} />);
-  await posaImatge(screen.getByRole('button', { name: 'Capçalera' }), 'heroImage', 'Retalla la capçalera');
+  obriEdicioAvancada();
+  expect(ranura()).not.toBeNull();
+  await posaImatge(within(desplegable()).getByRole('button', { name: 'Capçalera' }), 'heroImage', 'Retalla la capçalera');
+  expect(ranura()).not.toBeNull();
   expect(document.activeElement).not.toBe(ranura());
   expect(botoAvatar()).toBeNull();
   expect(m.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ hero_url: '/assets/nou.webp' }), CONFIG);

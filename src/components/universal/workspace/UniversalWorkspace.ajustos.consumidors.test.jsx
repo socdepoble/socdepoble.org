@@ -32,6 +32,8 @@ vi.mock('../../../app/contexts/RouterContext', () => ({
   useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/' } }),
   useNavigate: () => vi.fn(),
   useSearchParams: () => [new URLSearchParams()],
+  /* Encàrrec 261018_1220 · PerfilShell llig l'estat de l'historial (espaiIdentitat). */
+  useLocation: () => ({ pathname: '/', search: '', state: null, hash: '' }),
   Link: ({ to, children }) => <a href={to}>{children}</a>
 }));
 vi.mock('../../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: {} }) }));

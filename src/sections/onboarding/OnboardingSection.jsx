@@ -4,13 +4,13 @@ import { useNavigate, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Alerta, Boto, Divisor } from '../../components/PedraSeca/index.js';
-import { MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada } from './onboardingModel.js';
+import { MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada } from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
 import { ContrasenyaNovaStep, EnllacPerdutStep } from './RecuperacioSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
-import { eleccioRemotaActiva, enterRemoteMode, exitRemoteMode } from '../../config/dataMode.js';
+import { eleccioRemotaActiva, enterRemoteMode, enterTestMode, exitRemoteMode } from '../../config/dataMode.js';
 import { RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, modeDEntrada } from '../../config/rutaEntrada.js';
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
@@ -31,15 +31,16 @@ const quanPortLlest = () => import('../../host.js')
 
 /* Correcció de la revisió T1–T4 (260930) · La marca d'un sol ús de «Tornar al
    mode de proves» (onboardingModel.js): es llig i s'esborra alhora. */
-function consumixMarcaSenseEntrada() {
+function consumixMarca(marca) {
   try {
-    if (getEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA, null) == null) return false;
-    delEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA);
+    if (getEfimer(marca, null) == null) return false;
+    delEfimer(marca);
     return true;
   } catch {
     return false;
   }
 }
+const consumixMarcaSenseEntrada = () => consumixMarca(MARCA_SENSE_ENTRADA_AUTOMATICA);
 
 /* C5 · La consulta de l'app (on es demana ?mode=) quan el router és en
    MEMÒRIA, el de tota incrustació per defecte: la barra d'adreces és de la
@@ -81,7 +82,7 @@ export default function OnboardingSection() {
   const {
     currentUser, loginWithGoogle, loginWithPassword, registerWithPassword, teCapacitat, comprovaServidor,
     demanaRecuperacioContrasenya, definixContrasenyaNova, recuperacioPendent: recuperacioDeLaSessio, logout,
-    enllacDeRecuperacio, oblidaEnllacDeRecuperacio, entraComAPilot
+    enllacDeRecuperacio, oblidaEnllacDeRecuperacio, entraComAPilot, estat: estatSessio
   } = useSession();
   const { externalConfig } = useUIState();
   const normalizedConfig = normalizeBackendConfig(externalConfig);
@@ -93,6 +94,16 @@ export default function OnboardingSection() {
      producció no n'hi ha mai, i l'avís continua com abans. */
   const pilotDisponible = entradaPilotDisponible(externalConfig);
   const potEntrarComAPilot = pilotDisponible && typeof entraComAPilot === 'function' && !currentUser;
+  /* Encàrrec 261018_1220 (Tasques 0 i 2, ordre del Mestre: «en entorn DEV, fer
+     visible i accessible el botó Entra com a persona pilot») · En
+     desenvolupament i en un node remot (el de .env.local), el mateix botó passa
+     la pestanya al mode de proves i hi entra com a persona pilot amb un sol
+     clic (enterTestMode i MARCA_ENTRADA_PILOT). La sessió pilot continua naixent
+     només en mode de proves: en remot no s'hi entra mai. En un build no hi és. */
+  /* Revisió adversarial (261018) · Mai mentre una sessió recordada encara es
+     comprova: passar al mode de proves buidaria eixa sessió de veres. */
+  const potPassarAProves = import.meta.env.DEV === true && modeDades === 'remote'
+    && typeof entraComAPilot === 'function' && !currentUser && estatSessio !== 'comprovant';
 
   /* R (Onada 3, 261003) · Recuperació de contrasenya, només amb la capacitat
      opcional del port: sense ella (Sollutia) ni enllaç ni pantalla nova. Es
@@ -276,7 +287,10 @@ export default function OnboardingSection() {
   /* R2 · Les eixides de l'enllaç: deixar-lo i tornar al formulari, o
      demanar-ne un altre. */
   const oblidaEnllac = () => { if (typeof oblidaEnllacDeRecuperacio === 'function') oblidaEnllacDeRecuperacio(); };
-  const tornaAEntrar = () => { setObreRecuperacio(false); oblidaEnllac(); };
+  /* Revisió adversarial (261018) · «Torna a entrar» obri el formulari en Entrar,
+     encara que la ruta de tornada de l'enllaç no porte ?mode=entrar. */
+  const [modeForcat, setModeForcat] = useState(null);
+  const tornaAEntrar = () => { setModeForcat('entrar'); setObreRecuperacio(false); oblidaEnllac(); };
   const demanaUnAltre = () => { setObreRecuperacio(true); oblidaEnllac(); };
 
   const activeStep = 0;
@@ -328,6 +342,35 @@ export default function OnboardingSection() {
     }
     showToast(`Has entrat com a ${PERSONA_PILOT.nom}, la persona pilot. Esta sessió de prova només viu en aquest ordinador.`, 'success');
     navigate(aterratgeDespresDEntrar(tornar), { replace: true });
+  };
+
+  /* Encàrrec 261018_1220 · La càrrega que ve de «Entra com a Javi Llinares» en
+     remot: ja en mode de proves, s'hi entra com a persona pilot quan el port i
+     la sessió estan llestos (SessionProvider configura el backend en el seu
+     efecte, després del d'esta vista). Una sola vegada per document. */
+  const entradaPilotDemanada = useRef(false);
+  const entraPilotActual = useRef(entraPilot);
+  useEffect(() => { entraPilotActual.current = entraPilot; });
+  useEffect(() => {
+    if (entradaPilotDemanada.current) return;
+    entradaPilotDemanada.current = true;
+    if (!consumixMarca(MARCA_ENTRADA_PILOT) || !potEntrarComAPilot) return;
+    quanPortLlest().then(() => { if (montat.current) entraPilotActual.current(); });
+  }, [potEntrarComAPilot]);
+
+  /* Encàrrec 261018_1220 · Des d'un node remot en desenvolupament: les dues
+     marques i el mode de proves; la recàrrega fa la resta. Si no es pot desar
+     l'elecció, no queda cap marca i l'avís diu per què. */
+  const passaAProvesIEntra = () => {
+    setErrorEntrada(null);
+    try {
+      setEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA, true);
+      setEfimer(MARCA_ENTRADA_PILOT, true);
+      enterTestMode(normalizedConfig);
+    } catch (err) {
+      try { delEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA); delEfimer(MARCA_ENTRADA_PILOT); } catch { /* res més a fer */ }
+      mostraError(err);
+    }
   };
 
   const googleLogin = async () => {
@@ -456,6 +499,23 @@ export default function OnboardingSection() {
               </Alerta>
             ) : null}
 
+            {/* Encàrrec 261018_1220 · En desenvolupament i en remot: l'accés
+                pilot d'un sol clic (passa al mode de proves i hi entra). */}
+            {potPassarAProves ? (
+              <Alerta
+                to="info"
+                viva={false}
+                titol="Accés pilot de desenvolupament · només en aquest ordinador"
+                accions={(
+                  <Boto varietat="secundari" disabled={busyStep !== null} onClick={passaAProvesIEntra}>
+                    Entra com a {PERSONA_PILOT.nom}
+                  </Boto>
+                )}
+              >
+                Per a provar l’app per dins sense contrasenya, entra com a {PERSONA_PILOT.nom}, la persona pilot, amb les seues organitzacions. La pàgina es recarrega en mode de proves (dades de mostra): no passa pel servidor del poble ni dona cap permís real. Per a tornar al compte de veres, ix de la sessió i entra ací amb Google o amb el correu. Només apareix en desenvolupament.
+              </Alerta>
+            ) : null}
+
             <section className="sp-card sp-card--onboarding">
               <div className="sp-card-body">
                 <h3>Accés ràpid amb Google</h3>
@@ -479,11 +539,14 @@ export default function OnboardingSection() {
                     <p>
                       Crea o entra al teu compte amb un sol clic sense contrasenyes.
                     </p>
+                    {/* Encàrrec 261018_1220 (Tasca 2, ordre del Mestre: «destacar
+                        el botó Entrar amb Google com a via preferent d'un sol
+                        clic») · Primari: és l'acció principal de la pàgina. */}
                     <div className="onboarding-card__action--ple">
                       <button
                         ref={botoGoogle}
                         type="button"
-                        className="sdp-boto sdp-boto--secundari sdp-boto--ple"
+                        className="sdp-boto sdp-boto--primari sdp-boto--ple"
                         onClick={googleLogin}
                         disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
                         aria-busy={busyStep === 'google' ? 'true' : undefined}
@@ -510,13 +573,14 @@ export default function OnboardingSection() {
               </div>
             </section>
 
-            <Divisor text="O entra amb el teu correu" />
+            {/* Revisió adversarial (261018) · Neutre: davall hi ha Entrar i Crear compte. */}
+            <Divisor text="O amb el teu correu" />
           </>
         )}
 
         {activeStep === 0 ? (
           <RegistrationStep
-            modeInicial={obreRecuperacio ? 'recuperar' : modeInicial}
+            modeInicial={obreRecuperacio ? 'recuperar' : (modeForcat ?? modeInicial)}
             /* Correcció de la revisió T1–T4 (260930) · Gira només mentre sonda o
                envia; en mode de proves el formulari queda desactivat sense gir
                (no s'envien credencials en mode local). */

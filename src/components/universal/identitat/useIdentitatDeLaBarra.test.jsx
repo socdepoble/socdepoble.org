@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 /* T43 (ordre del Mestre, 260928) · la identitat de la barra negra amb el
@@ -90,6 +90,33 @@ test('el calaix és germà del header, sense estils en línia; triar crida setAc
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
+/* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «en clicar la identitat
+   personal a Amb qui actues? la interfície es queda atrapada al Bloc de notes»)
+   · Triar una identitat porta al seu workspace, el que ja existix: la persona,
+   el Perfil; l'organització, la seua fitxa dins del Perfil. Cada anada porta un
+   número nou a l'estat de l'historial; una tria que no s'aplica no navega. */
+test('261018 · triar una identitat porta al seu workspace, amb un número d’anada nou cada vegada', async () => {
+  const onNavega = vi.fn();
+  render(<Barra onNavega={onNavega} />);
+  const tria = async (nom) => {
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Identitat activa/ })); });
+    const dialeg = screen.getByRole('dialog', { name: 'Amb qui actues?' });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: nom })); });
+    return onNavega.mock.calls.at(-1);
+  };
+  const [rutaForn, opcionsForn] = await tria(/Forn de la Torre/);
+  expect(rutaForn).toBe('/el-meu-perfil?organitzacio=o-1');
+  const [rutaPersona, opcionsPersona] = await tria(/Pepa Soler/);
+  expect(m.identitat.setActor).toHaveBeenLastCalledWith('persona', 'u-1');
+  expect(rutaPersona).toBe('/el-meu-perfil');
+  expect(opcionsPersona.state.espaiIdentitat).toBeGreaterThan(opcionsForn.state.espaiIdentitat);
+  m.identitat.setActor.mockReturnValue(false);
+  onNavega.mockClear();
+  await tria(/Forn de la Torre/);
+  expect(onNavega).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
 /* T4 (ordre del Mestre, 260930) · Sense sessió el botó porta a /registre en
    mode Entrar i amb la ruta actual com a ?tornar (rutaDEntrada). Sense router
    llegible, la ruta és la de la barra d'adreces: '/' a jsdom. */
@@ -103,7 +130,8 @@ test('les accions del calaix tanquen i naveguen; sense sessió el botó porta a 
   expect(screen.queryByRole('dialog')).toBeNull();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Identitat activa/ })); });
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'La meua fitxa i ajustos' })); });
-  expect(onNavega).toHaveBeenLastCalledWith('/el-meu-perfil');
+  /* Encàrrec 261018_1220 (Tasca 1) · amb el número de l'anada (el Perfil el llig). */
+  expect(onNavega).toHaveBeenLastCalledWith('/el-meu-perfil', { state: { espaiIdentitat: expect.any(Number) } });
   vista.unmount();
   m.user = null;
   m.identitat = { actor: { tipus: 'persona', id: null, nom: null, avatar: null, rol: 'convidat' }, identitats: [], setActor: vi.fn(() => false) };
@@ -125,7 +153,7 @@ test('acta 261004_1027 · persona sola: l’avatar porta a /el-meu-perfil i no o
   expect(boto.querySelector('.sdp-avatar--lg img').getAttribute('src')).toBe('https://lh3.googleusercontent.com/a/pepa.png');
   await act(async () => { fireEvent.click(boto); });
   expect(onNavega).toHaveBeenCalledTimes(1);
-  expect(onNavega).toHaveBeenCalledWith('/el-meu-perfil');
+  expect(onNavega).toHaveBeenCalledWith('/el-meu-perfil', { state: { espaiIdentitat: expect.any(Number) } });
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
@@ -244,7 +272,7 @@ test('amb sessió però sense IdentitatProvider no llança i el botó porta un n
   expect(boto.querySelector('img')).toBeNull();
   expect(document.querySelector('dialog')?.open).toBe(false);
   await act(async () => { fireEvent.click(boto); });
-  expect(onNavega).toHaveBeenCalledWith(RUTA_PERFIL_PROPI);
+  expect(onNavega).toHaveBeenCalledWith(RUTA_PERFIL_PROPI, { state: { espaiIdentitat: expect.any(Number) } });
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 

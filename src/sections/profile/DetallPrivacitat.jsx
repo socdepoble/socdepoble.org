@@ -96,7 +96,7 @@ function BlocDades({ config }) {
       </p>
       {estat.fase === 'error' ? <Alerta to="error">{estat.text}</Alerta> : null}
       {estat.fase === 'fet' ? <Alerta to="exit">{`Ja tens el fitxer ${estat.nom} a les descàrregues.`}</Alerta> : null}
-      <div className="sdp-alerta__accions">
+      <div className="sdp-alerta__accions perfil-compte__accions">
         <Boto varietat="secundari" onClick={descarrega} carregant={estat.fase === 'treballant'}>
           Descarregar les meues dades
         </Boto>
@@ -195,7 +195,7 @@ function BlocConsentiment({ config }) {
             </Alerta>
           ) : null}
           {atorgat ? (
-            <div className="sdp-alerta__accions">
+            <div className="sdp-alerta__accions perfil-compte__accions">
               <Boto varietat="secundari" onClick={() => setConfirmaRetirada(true)} disabled={treballant}>
                 Retirar el consentiment
               </Boto>
@@ -307,7 +307,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
           <p className="perfil-compte__text">
             {`Si te’n vas, el perfil s’anonimitza en el moment i tens ${DIES_GRACIA} dies per a penedir-te’n. Passat eixe termini, el compte i les dades s’esborren per sempre.`}
           </p>
-          <div className="sdp-alerta__accions">
+          <div className="sdp-alerta__accions perfil-compte__accions">
             <Boto varietat="perill" onClick={() => setDialeg(true)}>Donar-me de baixa</Boto>
           </div>
         </>

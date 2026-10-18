@@ -119,3 +119,26 @@ export function compressImage(file, {
     reader.readAsDataURL(file);
   });
 }
+
+/* Gauntlet 261016 (Bloc 1 i 1.2, Llei del Quadrat i mandat de l'EXIF) · Els
+   bytes d'un fitxer com a data URL, sense tocar-los. Encàrrec 261018 · Viu
+   ací (abans, a NotesEditor.jsx) perquè el Perfil també el fa servir. */
+export function dataUrlDelFitxer(fitxer) {
+  return new Promise((resol, rebutja) => {
+    const lector = new FileReader();
+    lector.onload = () => resol(String(lector.result));
+    lector.onerror = () => rebutja(lector.error || new Error("No s'ha pogut llegir la imatge."));
+    lector.readAsDataURL(fitxer);
+  });
+}
+
+export const ERROR_IMATGE_LOCAL = 'Tria una imatge PNG, JPEG, WebP, GIF o AVIF de menys de 10 MB.';
+
+/** En mode de proves (seed, local), una imatge es desa al navegador com a data
+ * URL dels mateixos bytes, amb la mateixa validació per al Bloc i el Perfil. */
+export async function imatgeLocalComDataUrl(fitxer) {
+  if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(fitxer?.type || '') || !(fitxer.size <= 10 * 1024 * 1024)) {
+    throw new Error(ERROR_IMATGE_LOCAL);
+  }
+  return dataUrlDelFitxer(fitxer);
+}

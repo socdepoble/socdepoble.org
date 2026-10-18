@@ -359,13 +359,26 @@ test('R2 · recàrrega sense token: explica que cal tornar a obrir l’enllaç d
 
 test.each([
   ['Demana un enllaç nou', 'Recupera la contrasenya'],
-  ['Torna a entrar', 'Accés o nou registre']
+  /* Encàrrec 261018_1220 (Tasca 2) · El títol del formulari diu el mode: ací, Entrar. */
+  ['Torna a entrar', 'Entra al teu compte']
 ])('R2 · recàrrega sense token: «%s» oblida l’enllaç i obri «%s»', (boto, titol) => {
   ambEnllac('perdut');
   fireEvent.click(screen.getByRole('button', { name: boto }));
   expect(m.oblidaEnllac).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole('heading', { name: TITOL_PERDUT })).toBeNull();
   expect(screen.getByRole('heading', { name: titol })).toBeTruthy();
+});
+
+/* Revisió adversarial (261018) · La ruta de tornada de l'enllaç pot no portar
+   ?mode=entrar: «Torna a entrar» obri igualment el formulari en Entrar. */
+test('261018 · «Torna a entrar» sense ?mode a la ruta obri Entrar, no Crear compte', () => {
+  m.usuari.valor = null;
+  m.enllac.valor = 'perdut';
+  window.history.replaceState(null, '', '/registre');
+  render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a entrar' }));
+  expect(screen.getByRole('heading', { name: 'Entra al teu compte' })).toBeTruthy();
+  expect(screen.queryByLabelText('Nom i cognoms')).toBeNull();
 });
 
 test('R2 · sense la capacitat, l’enllaç no obri res: el formulari de sempre', () => {

@@ -1,4 +1,5 @@
 import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
+import { imatgeLocalComDataUrl } from '../../utils/imageUtils.js';
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -72,17 +73,6 @@ const TEXTOS_EXTERN = Object.freeze({
   descripcio: 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.'
 });
 
-/* Gauntlet 261016 (Bloc 1 i 1.2, Llei del Quadrat i mandat de l'EXIF) · Els
-   bytes d'un fitxer com a data URL, sense tocar-los. */
-function dataUrlDelFitxer(fitxer) {
-  return new Promise((resol, rebutja) => {
-    const lector = new FileReader();
-    lector.onload = () => resol(String(lector.result));
-    lector.onerror = () => rebutja(lector.error || new Error("No s'ha pogut llegir la imatge."));
-    lector.readAsDataURL(fitxer);
-  });
-}
-
 /* Lògica de pujada d'imatges pròpia de Notes.
    Gauntlet 261016 (Bloc 1 i 1.2) · El fitxer que arriba ací (uploadMedia) ja
    ve preparat: la closca (useHeroImageHandler: la foto a la seua mida exacta,
@@ -94,10 +84,8 @@ function dataUrlDelFitxer(fitxer) {
    traure la foto del pressupost. La validació no canvia. */
 async function pujarImatgeDeNota(fitxer, config) {
   if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
-    if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(fitxer.type) || fitxer.size > 10 * 1024 * 1024) {
-      throw new Error('Tria una imatge PNG, JPEG, WebP, GIF o AVIF de menys de 10 MB.');
-    }
-    return dataUrlDelFitxer(fitxer);
+    /* Encàrrec 261018 · La validació i la lectura viuen a imageUtils.js (també les fa servir el Perfil). */
+    return imatgeLocalComDataUrl(fitxer);
   }
   if (!teCapacitat('mitjans')) return null;
   const res = await uploadToStorage(fitxer, { carpeta: 'notes', tenantId: config?.tenantId }, config);

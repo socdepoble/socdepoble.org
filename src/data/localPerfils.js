@@ -385,6 +385,15 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       if (rolALEntitat(org.id, usuari.id, { teSessio: true }) === 'owner') {
         llista.push(membreDePersona(usuari.id, 'owner', estat.naixement, usuari));
       }
+      /* Revisió adversarial (261018) · Els membres que declara la llavor
+         (identitatsSeed · membres: la persona pilot a Rentonar) també hi són,
+         llevat que una connexió de Connectar ja els porte. */
+      const connectades = estat.connexions.get(String(org.id));
+      for (const declarat of entitatSeed(org.id)?.membres || []) {
+        const personaId = String(declarat.usuariId);
+        if (connectades?.has(personaId) || llista.some((m) => m.tipus === 'persona' && m.id === personaId)) continue;
+        llista.push(membreDePersona(personaId, declarat.role, estat.naixement, usuari));
+      }
       for (const [personaId, { rol, desDe }] of estat.connexions.get(String(org.id)) || []) {
         llista.push(membreDePersona(personaId, rol, desDe, usuari));
       }
