@@ -39,7 +39,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 ## Cervell i Agents
 
 1. [Constitució](../AGENTS.md) i [arrencada](../.agents/BOOTSTRAP.md).
-2. [[02_genotip]] i [[00_index_identitat]]: missió i mapa de les huit dimensions.
+2. [[02_genotip]], [[03_llibre_d_or_memoria_episodica]] i [[00_index_identitat]]: missió, memòria episòdica i mapa de les huit dimensions.
 3. [Estat actual](../.agents/ESTAT.md): objectiu, bloquejos i següent acció.
 4. [Workflow](../.agents/skills/sdp-workflow/SKILL.md) i [generació documental](../.agents/skills/wiki-documentacio-i-reflex/SKILL.md).
 5. [[successio_lazaro_execucio]]: assaig de continuïtat.

@@ -36,12 +36,12 @@ Abans de generar l'arxiu per a la IA:
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
-| Versió del document | 3.7.0 |
+| Versió del document | 3.9.0 |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v3.7.0) |
+| Plantilla | prompt_local.md (v3.9.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
@@ -52,6 +52,8 @@ Abans de generar l'arxiu per a la IA:
 
 ## Historial
 
+- **v3.9.0 (261018):** Directriu canònica d'Enginyeria Inversa i Reconstrucció amb REA (*Reverse Engineer Anything*). S'autoritza i encoratja formalment a totes les IAs (Claude, Codex, Gemini) a utilitzar les eines MCP de REA i la skill 'reverse-engineer-anything' quan es dispose d'un punt de comparació o aplicació de referència (com el patró WhatsApp, el TPV Loiverse, la Gestoria o el connector extern), per tal d'extreure lògica i fidelitat mil·limètrica sense inventar ni al·lucinar res.
+- **v3.8.0 (261017):** Incorporació canònica de l'Ecosistema Físic i Distribució de Carpetes ('Som de Poble' com a contenidor mare vs 'socdepoble.org' com a nucli Git/Node). Es fixa l'obligació d'executar comandes de consola i proves a 'socdepoble.org/' i es blinda la prohibició absoluta d'inventar carpetes noves fora dels satèl·lits oficials existents (_arxiu_wiki_de_poble, _gestoria_de_poble, etc.).
 - **v3.7.0 (261013):** Protocol de Desconvocatòria i Tall Tèrmic de Crons («Cadascuna a sa casa»). Prohibició estricta de crons infinits sense límit d'iteracions o sense parada explícita; en finalitzar l'encàrrec o tancar el torn, la IA ha de cancel·lar qualsevol tasca programada per evitar malbaratar tokens i quota del pla.
 - **v3.6.0 (261012):** Institucionalització del 'Canal Viu' per a entorns multi-agent en paral·lel (Nou Xat Lateral). S'indica explícitament als agents que un cron específic vigilarà els seus processos asíncrons i que han de coordinar-se sense xafar-se la memòria compartida.
 - **v3.5.0 (261012):** S'introdueix l'exigència de l'**Auditoria Adversarial (Gauntlet Prompt)** per defecte a la instrucció de torn. La IA està obligada a executar un *Àrbitre Intern* abans d'emetre l'informe per evitar donar codi a mitges o amb placeholders.
@@ -81,6 +83,17 @@ Llegiu obligatòriament els següents fitxers abans d'actuar: `AGENTS.md`, `_wik
 
 **🔥 DIRECTIVA SUPREMA (Llei de l'Enxufabilitat):**
 Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fonamental: **l'enxufabilitat instantània amb Sollutia**. És imminent que Sollutia ens lliure els punts d'accés (endpoints/dades) de la seua API: entraran per la Frontissa (`src/data/adaptadors/sollutia/`), només en lectura GET i cada recurs amb captura real, traductor i fixture, sense tocar el port de backend. Tot el sistema ha d'estar fortificat i absolutament preparat perquè les dades fluïsquen i s'enxufen de forma eficient i sense el més mínim problema. Aquesta és la prioritat absoluta rere cada refactorització o component.
+
+**🌍 Ecosistema Físic i Distribució de Carpetes (`Som de Poble` vs `socdepoble.org`):**
+- **Directori Mare (`Som de Poble`):** És l'entorn contenidor global de tot el projecte (`/Users/javillinares/Documents/Antigravity/Som de Poble/`). No conté `package.json` ni és un repositori git (està protegit per un `.gitignore` de seguretat).
+- **Nucli Operatiu i Git (`socdepoble.org`):** És l'aplicació web, la Wiki oficial (`_wiki_de_poble/`), el motor de regles i el repositori Git. Tota comanda de consola (`npm test`, `npm run dev`, `git status`, `node tooling/...`) **s'ha d'executar obligatòriament a `socdepoble.org`** (p. ex. `cd socdepoble.org && npm test`). Si s'editen fitxers des de l'arrel de `Som de Poble`, cal prefixar les rutes amb `socdepoble.org/`.
+- **Carpetes Satèl·lit Exteriors de `Som de Poble` (Ja Creades i Canòniques):**
+  * `_arxiu_wiki_de_poble/`: Únic destí oficial per a l'arxiu fred i la memòria històrica pesada que s'evacua d'Obsidian.
+  * `_comunicacio_de_poble/`, `_cultura_de_poble/`, `_gestoria_de_poble/`, `_investigacio_ia_de_poble/`, `_multimedia_de_poble/`, `_raw_de_poble/`, `_rebost_de_poble/`, `_recursos_de_poble/`, `_salut_de_poble/`.
+- **Prohibició Absoluta:** Està terminantment prohibit que qualsevol IA invente carpetes noves a `Som de Poble` o a `socdepoble.org`. La informació que calga preservar s'ubica exclusivament a les carpetes satèl·lit oficials ja establertes.
+
+**🔬 ENGINYERIA INVERSA I PARITAT AMB REA (Incentiu de Fidelitat):**
+Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'eines MCP de REA (*Reverse Engineer Anything*) i la skill 'reverse-engineer-anything'. Quan se us encomane replicar, millorar o auditar una funcionalitat basada en un sistema o aplicació de referència existent (ex. el clon/patró WhatsApp, el TPV Loiverse, la Gestoria autònoma o la Frontissa de Sollutia), teniu autorització expressa i encoratjament per a utilitzar REA per a disseccionar bundles, lògica i comportament del patró de referència. L'objectiu és capturar la saviesa i el funcionament real de les millors aplicacions i traslladar-les al patró de Pedra Seca de Sóc de Poble amb el màxim trellat i sense duplicar codi.
 
 ## Instrucció del torn
 

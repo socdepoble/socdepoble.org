@@ -33,6 +33,7 @@ El registre executable és `.agents/cervell.json`. No es reanomenen carpetes.
 
 - [[01_identitat]]
 - [[02_genotip]]
+- [[03_llibre_d_or_memoria_episodica]]
 - [[el_projecte]]
 - [[soci_sollutia]]
 - [[01_trellat]]

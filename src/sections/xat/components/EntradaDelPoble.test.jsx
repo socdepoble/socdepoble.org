@@ -48,22 +48,10 @@ afterEach(() => {
 
 const decidix = () => act(() => { vi.runAllTimers(); });
 
-test.each([['seed'], ['local'], ['remote']])('en ample (%s), amb la comunitat del poble, demana la seua fitxa i mai el General', (modeDades) => {
-  mocks.xat.modeDades = modeDades;
+test('en ample, amb la comunitat del poble, no segresta la vista i manté la llista de converses visible', () => {
   render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(onEntra).toHaveBeenCalledTimes(1);
-  expect(onEntra).toHaveBeenCalledWith('c-torre');
-});
-
-/* La ruta la fa XatSection amb la mateixa `consulta` que obriComunitat: ací
-   l'id no es toca, ni es codifica ni es convertix. */
-test.each([['c torre/1&a=b'], [42]])('passa l\'id del fil tal qual (%s)', (id) => {
-  const comunitat = { ...COMUNITAT, fil: { ...COMUNITAT.fil, id } };
-  render(<EntradaDelPoble poble={POBLE} comunitat={comunitat} aLaLlista onEntra={onEntra} />);
-  decidix();
-  expect(onEntra).toHaveBeenCalledTimes(1);
-  expect(onEntra.mock.calls[0][0]).toBe(id);
+  expect(onEntra).not.toHaveBeenCalled();
 });
 
 /* Crear la comunitat només per arribar a /xat era un efecte col·lateral: la
@@ -82,13 +70,15 @@ test('una comunitat sense id de fil no demana res', () => {
   expect(onEntra).not.toHaveBeenCalled();
 });
 
-test('una sola vegada: tornar a /xat (la fletxa de la fitxa) no la reobri', () => {
+test('una sola vegada: tornar a /xat no torna a consumir l\'entrada', () => {
   const { unmount } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
+  expect(mocks.xat.consumixEntrada).toHaveBeenCalledTimes(1);
   unmount();
   render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(onEntra).toHaveBeenCalledTimes(1);
+  expect(mocks.xat.consumixEntrada).toHaveBeenCalledTimes(2);
+  expect(onEntra).not.toHaveBeenCalled();
 });
 
 test('la comunitat que arriba després de consumir l\'entrada no la reobri', () => {
@@ -99,18 +89,18 @@ test('la comunitat que arriba després de consumir l\'entrada no la reobri', () 
   expect(onEntra).not.toHaveBeenCalled();
 });
 
-/* XatSection li passa una funció nova a cada render: es crida l'última, i
-   canviar-la no torna a decidir ni allarga l'espera. */
-test('un onEntra nou a cada render: es crida l\'últim, una sola vegada', () => {
+/* XatSection li passa una funció nova a cada render: onEntra no es crida mai
+   perquè la llista de converses es conserva sencera (Ordre 261017_2302). */
+test('un onEntra nou a cada render: no es crida mai i es consumix l\'entrada una sola vegada', () => {
   const primer = vi.fn();
   const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={primer} />);
   rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
   expect(primer).not.toHaveBeenCalled();
-  expect(onEntra).toHaveBeenCalledTimes(1);
+  expect(onEntra).not.toHaveBeenCalled();
   rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={vi.fn()} />);
   decidix();
-  expect(onEntra).toHaveBeenCalledTimes(1);
+  expect(onEntra).not.toHaveBeenCalled();
   expect(mocks.xat.consumixEntrada).toHaveBeenCalledTimes(1);
 });
 

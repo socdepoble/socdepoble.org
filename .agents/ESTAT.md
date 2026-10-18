@@ -7,6 +7,15 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-18T15:40:00+02:00 · IAIA MarIA · Tancament de Sessió, Poda Parcial, Purga d'Imatge Lletja i Release WordPress v1.1.5
+
+- **Acta:** [[261018_1535_acta_marmota_harmonitzacio_perfil_i_estudi_obsidian]].
+- **Purga Immediata de `iaia_maria_portada.jpg`:** Esborrats de `public/` i de `public/assets/uploads/brain/` els arxius de 1,4 MB de la caricatura ("Cyber-Granja"). Assignada la imatge canònica a `src/data/agentsSeed.js` i sanejat `censImatges.js`.
+- **Paquet WordPress v1.1.5 Generat i Signat:** Compilat i empaquetat `wordpress-plugin/builds/261018_1539_wordpress_enxufe_v1.1.5.zip` (135 MB net, amb clau Ed25519) llest per a pujar a `gentdelatorre.net`.
+- **Estat de la Neteja de Fitxers:** 150 fitxers històrics moguts a `_arxiu_wiki_de_poble/`. En queden 344 a `90_arxiu_historic/` i 45 carpetes a `02_investigacio_ia/` pendents del segon lot de poda. `01_produccio/` preservada.
+- **Canals del Bloc de Notes:** Pendent d'implementar per a Claude a la nova sessió: selector de canals (Mur, Mercat, Calendari, etc.) dins d'«Edició avançada de la publicació».
+- **Relleu a Conversa Nova:** Claude i Gemini continuen amb context viu a les seues finestres. Antigravity tanca torn per a alliberar els 76 artefactes i entrar fresc amb "Sóc de poble".
+
 ## ESTAT_ACTUAL · 2026-10-18T14:32:00+02:00 · Claude Code (Opus 5.5) · Sessió d'usuari, workspaces d'identitat, accés pilot, tractor WebP i harmonització del Perfil
 
 - **Torn** `torn_ef1ddff2-52e7-4d41-8a7e-57c945b7a579` (claude, code), vinculat al pla [[261018_1220_pla_implementacio_sessio_usuari_i_poda]]. Informe: [[261018_1251_auditoria_claude]]. Cap commit, cap desplegament, cap fitxer mogut ni arxivat; cap cron.

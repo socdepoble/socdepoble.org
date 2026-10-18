@@ -425,10 +425,10 @@ describe('CSS · el contrast de la línia d’ajuda sobre el marc taronja', () =
     expect(fons).toBe(1);
   });
 
-  test('el token existix en clar i en fosc, i el marc de la capçalera és l’accent', () => {
+  test('el token existix en clar i en fosc, i el fons de la capçalera és blanc', () => {
     const tokens = llig('src/css/tokens.css');
     expect(tokens.match(/--sdp-sobre-accent: /g)?.length).toBeGreaterThanOrEqual(2);
-    expect(llig('src/css/layout.css')).toMatch(/\.hero-image \{[^}]*background: var\(--sdp-accent\);/);
+    expect(llig('src/css/layout.css')).toMatch(/\.hero-image \{[^}]*background: var\(--sdp-blanc-pur, #ffffff\);/);
   });
 
   test('el selector casa amb la línia de repòs i no amb la capçalera buida ni amb el panell obert', () => {

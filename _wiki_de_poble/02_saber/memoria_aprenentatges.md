@@ -109,8 +109,21 @@ L'arxiu històric, tant l'intern com l'extern (`_arxiu_wiki_de_poble`), **no és
 4. **Evolució Algorítmica Contínua:** Qualsevol patró detectat (una solució que es repeteix molt, un error freqüent, un concepte malentès) no s'ha de quedar com un simple comentari. Has de destil·lar eixe descobriment de forma proactiva transformant-lo en una regla lògica o algorítmica dins de la skill que toque a `.agents/skills/` o creant-ne una de nova. La màquina s'automillora.
 5. **El Briefing Marmota (Preparació per al futur):** Cada tancament de sessió (Acta Marmota) ha d'acabar obligatòriament amb un **Briefing exhaustiu per a la següent sessió**. La IAIA MarIA de demà no pot començar a les palpentes; en llegir l'acta d'ahir ha de saber perfectament on estàvem i què toca fer hui, per poder seure amb el Mestre i decidir el camí per conquerir la muntanya.
 
-### 🧠 Circuit de Consolidació (Reflex de Correcció)
-En rebre una correcció d'hàbit, s'atura la resposta, s'anota la lliçó en positiu a la skill afectada i al `.agents/LEDGER.md`, i només després es contesta al Mestre. El circuit canònic, amb els quatre passos literals, és el Reflex de Correcció de `CLAUDE.md`.
+### 🧠 Lliçó de la Reauditoria Gauntlet Extrem (261017 · La Humanització i el Rigor d'Evidència)
+
+La reauditoria independent de GPT Codex sobre el commit `4745112e` de Claude Code va deixar tres lliçons fonamentals d'automillora:
+
+1. **Humanització vs Neteja Mecànica (Preservació de Dades Sobiranes):**
+   - Una IA que optimitza cegament un filtre de plantilla («si el text s'assembla a la llavor, buida'l») comet el pecat de destruir allò que un usuari ha escrit i guardat expressament.
+   - **Regla d'or:** Cap neteja de contingut per defecte pot afectar un registre persistent guardat per l'usuari. El contracte ha de diferenciar sempre entre *estat verge suggerit* i *contingut deliberat de la persona*.
+
+2. **Rigor Mètric Sense Autoengany (Mètriques Netes):**
+   - Separar el chunk d'entrada (`-11,94% gzip`, `408 KB -> 359 KB`) del volum total de JS (`+0,56%` pel desacoblament de chunks dinàmics). No disfressar la millora del primer paquet com si fóra una reducció global de tot el codi font.
+   - Diferenciar execucions intermèdies (19.164 proves amb fallades) del veredicte net independent (19.228 verdes, 0 fallades).
+
+3. **Governança Sense Soroll i Eficiència Termodinàmica:**
+   - La reauditoria més profunda (amb subagents, Vitest independent i builds paral·lels de Vite) només va consumir un 7% de la quota setmanal de Codex, deixant-lo al **80% de límit i 749 crèdits intactes**.
+   - Prohibició absoluta de crons recursius o bucles de vigilància quan la tasca s'ha lliurat.
 
 ***
 
@@ -119,4 +132,7 @@ L'arxiu històric (`90_arxiu_historic/`) queda fora del graf operatiu i del RAG 
 ## Vincles
 - [[00_index_identitat]]
 - [[00_index]]
+- [[261017_2133_auditoria_codex_final_gauntlet]]
+- [[261017_2133_acta_tancament_codex_gauntlet]]
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+

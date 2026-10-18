@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 8,
+  "revision": 15,
   "createdAt": "2026-10-17T10:50:10.345Z",
-  "updatedAt": "2026-10-17T11:49:51.081Z",
+  "updatedAt": "2026-10-17T20:00:55.195Z",
   "expiresAt": "2026-10-18T10:50:10.345Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3863,6 +3863,68 @@
         "committedAt": "2026-10-17T11:49:51.081Z",
         "documentHash": "376f539f1c86d6b96edeaf33bdc6578ee568bd0e28499c5cf427947ee1d71478"
       }
+    },
+    "24b6663f-acd4-4a9c-98c2-434aba5ca4e4": {
+      "id": "24b6663f-acd4-4a9c-98c2-434aba5ca4e4",
+      "route": "prompt.local",
+      "routeVersion": "3.8.0",
+      "file": "_wiki_de_poble/04_escriptori/261017_1300_prompt_gauntlet_claude_codex.md",
+      "contractSnapshot": "5af348cc8841ce362d4e6f7eaa47be433e72600f5ad25786ecf99cdb8f98187d",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "8da9309a8e74f2ce639a5fcf50c585d9c0bf95d77fc825e5add20852f99cf3a7",
+      "issuedAt": "2026-10-17T13:17:56.061Z"
+    },
+    "cfd2469c-cdaa-4fec-815c-0cccc27649dc": {
+      "id": "cfd2469c-cdaa-4fec-815c-0cccc27649dc",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261017_1529_auditoria_gemini4.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-17T13:28:34.179Z"
+    },
+    "ffd34958-01a6-4f69-9eb3-673a63a48a97": {
+      "id": "ffd34958-01a6-4f69-9eb3-673a63a48a97",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261017_1529_auditoria_gemini4.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-17T13:29:10.079Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-17T13:29:10.079Z",
+        "committedAt": "2026-10-17T13:29:10.114Z",
+        "documentHash": "382ad661e5916ed4c2f4529fdbec74e5fdfebefa328e0b208786429fc5572c8b"
+      }
+    },
+    "ee5f76d6-8796-43a1-b2f8-20b25ec6c6c9": {
+      "id": "ee5f76d6-8796-43a1-b2f8-20b25ec6c6c9",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem.md",
+      "contractSnapshot": "aab8e03cf41c231d86fcc60f2035a4e1d4540934c787699cd17e6c6d553870b7",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-17T20:00:44.423Z"
+    },
+    "f72824d1-7776-4b1d-b55f-6be7d4ecb6a3": {
+      "id": "f72824d1-7776-4b1d-b55f-6be7d4ecb6a3",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem.md",
+      "contractSnapshot": "aab8e03cf41c231d86fcc60f2035a4e1d4540934c787699cd17e6c6d553870b7",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-17T20:00:55.168Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-17T20:00:55.168Z",
+        "committedAt": "2026-10-17T20:00:55.195Z",
+        "documentHash": "7e66ea4085abf7b4349867894d005cc454e10aa959510446eab6e61852746b87"
+      }
     }
   },
   "plan": null,
@@ -3918,6 +3980,45 @@
       "file": "_wiki_de_poble/10_actes/261017_1350_acta_marmota_gauntlet_extrem_i_descans.md",
       "at": "2026-10-17T11:49:51.081Z",
       "hash": "376f539f1c86d6b96edeaf33bdc6578ee568bd0e28499c5cf427947ee1d71478"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-17T13:17:56.061Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-17T13:28:34.179Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-17T13:29:10.079Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "ffd34958-01a6-4f69-9eb3-673a63a48a97",
+      "file": "_wiki_de_poble/04_escriptori/261017_1529_auditoria_gemini4.md",
+      "at": "2026-10-17T13:29:10.114Z",
+      "hash": "382ad661e5916ed4c2f4529fdbec74e5fdfebefa328e0b208786429fc5572c8b"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-17T20:00:44.423Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-17T20:00:55.168Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "f72824d1-7776-4b1d-b55f-6be7d4ecb6a3",
+      "file": "_wiki_de_poble/10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem.md",
+      "at": "2026-10-17T20:00:55.195Z",
+      "hash": "7e66ea4085abf7b4349867894d005cc454e10aa959510446eab6e61852746b87"
     }
   ]
 }

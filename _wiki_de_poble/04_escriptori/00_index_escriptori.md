@@ -35,11 +35,11 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
-- [[261017_1526_auditoria_claude]]
-- [[261017_1300_prompt_gauntlet_claude_codex]]
-- [[261017_1300_pla_implementacio_gauntlet_extrem]]
-- [[261016_1639_pla_implementacio_relleu_codex_gauntlet]]
-- [[261016_1530_pla_implementacio_gauntlet_autonom]] · torn_50a6a11f-89b2-4040-9566-d6063a4f5029
+- [[261018_1405_estudi_obsidian_rea_gemini4_iaia]]
+- [[261018_1251_auditoria_claude]]
+- [[261018_1241_auditoria_gemini4]]
+- [[261018_1220_prompt_claude_codex_sessio_i_poda]]
+- [[261018_1220_pla_implementacio_sessio_usuari_i_poda]]
 - [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -768,6 +768,14 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_2133_auditoria_codex_final_gauntlet]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_2133_acta_tancament_codex_gauntlet]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1542_acta_marmota_codex_gauntlet_extrem]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1529_auditoria_gemini4]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1526_auditoria_codex]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1526_auditoria_claude]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1300_prompt_gauntlet_claude_codex]]
+- [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1300_pla_implementacio_gauntlet_extrem]]
 - [[../90_arxiu_historic/261016_1632_auditoria_codex]]
 - [[../90_arxiu_historic/261016_1530_prompt_gauntlet_claude_codex_gemini]]
 - [[../90_arxiu_historic/261016_1645_acta_marmota_codex_gauntlet_diurn]]
@@ -886,3 +894,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261016_0025_acta_marmota]]
 - [[../10_actes/261016_1545_acta_marmota]]
 - [[../10_actes/261017_1350_acta_marmota_gauntlet_extrem_i_descans]]
+- [[../10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem]]

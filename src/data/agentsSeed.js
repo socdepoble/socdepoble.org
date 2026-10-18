@@ -112,7 +112,7 @@ Llista d'Experts (usa sempre l'arroba @):
        l'antiga («Gestora suprema… Capaç de tot.»), que contradeia el text nou. */
     short_bio: 'La intel·ligència artificial que posa ordre al Mas de Sóc de Poble: guarda la memòria de casa i recorda que les coses es fan amb trellat.',
     avatar_url: '/assets/uploads/brain/iaia_maria_avatar.jpg',
-    hero_url: '/assets/uploads/brain/iaia_maria_portada.jpg',
+    hero_url: '/assets/towns/la-torre-de-les-macanes/og-la-torre-1200x630.jpg',
     presentacio_html: PRESENTACIO_DE_LA_IAIA,
     public_album: [{
       src: '/assets/uploads/brain/nano_agricola_mas_1773539958988.png',

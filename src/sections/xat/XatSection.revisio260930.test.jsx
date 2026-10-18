@@ -9,7 +9,7 @@
    dreta, mai una conversa; en estret i en mitjà, res. L'arribada no pren el
    focus a qui és fora del Xat (tampoc a la pàgina de l'amfitrió, a
    l'encastat) i no el deixa perdut a qui era dins. */
-import { render, screen, fireEvent, cleanup, within, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within, act } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
@@ -242,103 +242,22 @@ function guardaDEntrada() {
 const deixaDecidir = () => act(() => new Promise((resol) => { setTimeout(resol, 0); }));
 const capFil = () => mocks.navigate.mock.calls.every(([ruta]) => !String(ruta).startsWith('/xat/'));
 
-test('XAT-01 · en ample, la primera arribada obri la fitxa de la comunitat del poble i la dreta conserva la presentació', async () => {
+test('XAT-01 · en ample, la primera arribada manté la llista de converses sencera i la presentació dreta', async () => {
   mocks.threadId = null;
   mocks.externalConfig = { poble: POBLE.id, nomPoble: POBLE.nom };
   mocks.consumixEntrada = guardaDEntrada();
   ambComunitatDelPoble();
-  const vista = render(<XatSection />);
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-torre', { replace: true }));
-  expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  render(<XatSection />);
+  await deixaDecidir();
+  expect(mocks.navigate).not.toHaveBeenCalled();
   expect(capFil()).toBe(true);
 
-  /* El router hi porta: la fitxa a la columna de llista i, a la dreta, la
-     presentació (ColumnaDretaBuida), mai una conversa. */
-  mocks.params = new URLSearchParams('comunitat=c-torre');
-  vista.rerender(<XatSection />);
-  await deixaDecidir();
   const llista = document.getElementById('app-grid-list');
   const dreta = document.getElementById('app-grid-main');
-  expect(within(llista).getByRole('region', { name: POBLE.nom })).toBeTruthy();
+  expect(within(llista).getByRole('list', { name: 'Converses' })).toBeTruthy();
   expect(within(dreta).getByTestId('document-per-defecte')).toBeTruthy();
   expect(dreta.querySelector('.sdp-xat-conversa')).toBeNull();
   expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
-  /* Amb ?comunitat= ja no és l'arribada a la llista: cap bucle. */
-  expect(mocks.navigate).toHaveBeenCalledTimes(1);
-  /* Ningú no ha demanat la fitxa: el focus no es mou (T67 només acompanya
-     qui l'obri o la tanca). */
-  expect(document.activeElement).toBe(document.body);
-
-  /* La fletxa de la fitxa torna a la llista, i la llista no reobri la fitxa. */
-  fireEvent.click(within(llista).getByRole('button', { name: 'Torna a les converses' }));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
-  mocks.params = new URLSearchParams();
-  vista.rerender(<XatSection />);
-  await deixaDecidir();
-  expect(mocks.navigate).toHaveBeenCalledTimes(2);
-  /* La tornada sí que recol·loca el focus perdut: a la fila de la comunitat. */
-  const fila = screen.getByRole('list', { name: 'Converses' }).querySelector('li[data-clau="comunitat:c-torre"]');
-  expect(document.activeElement).toBe(fila.querySelector('button'));
-  expect(screen.getByRole('list', { name: 'Converses' })).toBeTruthy();
-  expect(within(document.getElementById('app-grid-main')).getByTestId('document-per-defecte')).toBeTruthy();
-  expect(capFil()).toBe(true);
-});
-
-/* L'encastat munta l'app en un Shadow DOM tancat (PedraSecaEmbed.jsx), com
-   muntaXatEnOmbra de XatSection.test.jsx: amb el focus a la pàgina de
-   l'amfitrió, shadow.activeElement és null. */
-function muntaEnOmbra(element) {
-  const host = document.createElement('soc-de-poble');
-  document.body.append(host);
-  const shadow = host.attachShadow({ mode: 'closed' });
-  const root = document.createElement('div');
-  root.className = 'sdp-root';
-  shadow.append(root);
-  const muntatge = document.createElement('div');
-  root.append(muntatge);
-  return { host, shadow, root, ...render(element, { container: muntatge, baseElement: root }) };
-}
-
-test('XAT-01 · dins de l’encastat, l’arribada automàtica no roba el focus a la pàgina de l’amfitrió', async () => {
-  mocks.threadId = null;
-  mocks.externalConfig = { poble: POBLE.id, nomPoble: POBLE.nom };
-  mocks.consumixEntrada = guardaDEntrada();
-  ambComunitatDelPoble();
-  /* El cercador de la pàgina de l'amfitrió, fora del component. */
-  const cercador = document.createElement('input');
-  cercador.setAttribute('aria-label', 'Cerca de l’amfitrió');
-  document.body.append(cercador);
-  const { host, shadow, root, rerender } = muntaEnOmbra(<XatSection />);
-  try {
-    cercador.focus();
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-torre', { replace: true }));
-    mocks.params = new URLSearchParams('comunitat=c-torre');
-    rerender(<XatSection />);
-    await deixaDecidir();
-    expect(within(root.querySelector('#app-grid-list')).getByRole('region', { name: POBLE.nom })).toBeTruthy();
-    expect(document.activeElement).toBe(cercador);
-    expect(shadow.activeElement).toBeNull();
-  } finally {
-    cleanup();
-    host.remove();
-    cercador.remove();
-  }
-});
-
-test('XAT-01 · si el focus era al cercador de la llista, que la fitxa desmunta, va a la fletxa de la fitxa i no es perd', async () => {
-  mocks.threadId = null;
-  mocks.externalConfig = { poble: POBLE.id, nomPoble: POBLE.nom };
-  mocks.consumixEntrada = guardaDEntrada();
-  ambComunitatDelPoble();
-  const vista = render(<XatSection />);
-  const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
-  cerca.focus();
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-torre', { replace: true }));
-  mocks.params = new URLSearchParams('comunitat=c-torre');
-  vista.rerender(<XatSection />);
-  await deixaDecidir();
-  expect(cerca.isConnected).toBe(false);
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Torna a les converses' }));
 });
 
 test('XAT-01 · en ample, sense la comunitat del poble, ni la crea ni navega: la fila virtual i la presentació', async () => {

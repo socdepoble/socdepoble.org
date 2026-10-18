@@ -129,7 +129,6 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png', 'Vista rural panoràmica', 'contingut', 'ia'),
   e('/assets/uploads/brain/hero_serrella_comic_1774709602282.png', 'La Serrella, en còmic', 'contingut', 'ia'),
   e('/assets/uploads/brain/iaia_maria_avatar.jpg', 'La IAIA MarIA', 'ia', 'ia'),
-  e('/assets/uploads/brain/iaia_maria_portada.jpg', 'Portada de la IAIA MarIA', 'ia', 'ia'),
   e('/assets/uploads/brain/ibanez_design_system_1780246898431.png', 'El sistema de disseny a l’estil Ibáñez', 'contingut', 'ia'),
   e('/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg', 'Pedra Seca a l’estil Ibáñez', 'contingut', 'ia'),
   e('/assets/uploads/brain/llibre_anima_cover_1776032370908.png', 'Portada del llibre de l’ànima', 'contingut', 'ia'),
