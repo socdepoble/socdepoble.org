@@ -7,10 +7,15 @@
        motiu: una foto nova que ningú no hi afig fa roja esta prova, i l'Arxiu
        no torna a quedar-se en una mostra;
      · res de la interfície (system/), cap SVG, cap logotip, cap còpia;
-     · àmbits i orígens del vocabulari, ids únics i aptes per a ?foto=. */
+     · àmbits i orígens del vocabulari, ids únics i aptes per a ?foto=.
+   Encàrrec 261019_1425 · Les bessones .webp que escriu el tractor de mitjans
+   al costat d'un original (src/config/politicaDeMitjans.js) no són imatges
+   noves: el cens nomena l'original i la bessona en seguix l'estat. Un .webp
+   que no és la bessona de cap original declarat continua fent roja la prova. */
 import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { bessonaDe, bessonesDe } from '../../config/politicaDeMitjans.js';
 import { ALIES_DEL_CENS, AMBITS, CENS_IMATGES, EXCLOSES, idDelCens, mitjansDelCens } from './censImatges.js';
 
 const PUBLIC = path.join(process.cwd(), 'public');
@@ -27,6 +32,15 @@ function fitxersDe(dir) {
 const DISC = fitxersDe(path.join(PUBLIC, 'assets'));
 const AL_DISC = new Set(DISC);
 
+/* Les bessones del disc ({ bessona: original }), amb la regla del paquet i
+   del resolutor. Una .webp que ja és al cens o a EXCLOSES (la vinyeta del
+   Bar) és una imatge amb nom propi, no la bessona de ningú. */
+const DECLARADA = (src) => CENS_IMATGES.some((entrada) => entrada.src === src) || Object.hasOwn(EXCLOSES, src);
+const BESSONES = new Map(bessonesDe(DISC.map((src) => src.slice(1)))
+  .map((original) => [`/${bessonaDe(original)}`, `/${original}`])
+  .filter(([bessona]) => !DECLARADA(bessona)));
+const esBessona = (src) => BESSONES.has(src);
+
 describe('el cens de l’Arxiu visual', () => {
   test('cada src existix al disc amb la caixa exacta', () => {
     expect(CENS_IMATGES.filter((entrada) => !AL_DISC.has(entrada.src)).map((entrada) => entrada.src)).toEqual([]);
@@ -36,9 +50,33 @@ describe('el cens de l’Arxiu visual', () => {
     const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
     const oblidades = DISC
       .filter((src) => RASTER.test(src) && !src.startsWith('/assets/system/'))
-      .filter((src) => !delCens.has(src) && !Object.hasOwn(EXCLOSES, src));
+      .filter((src) => !delCens.has(src) && !Object.hasOwn(EXCLOSES, src) && !esBessona(src));
     expect(oblidades, 'imatges noves sense entrada: afegiu-les a CENS_IMATGES o a EXCLOSES amb el motiu').toEqual([]);
     expect(CENS_IMATGES.length).toBeGreaterThan(100);
+  });
+
+  /* Encàrrec 261019_1425 · Una bessona només s'estalvia l'entrada si el seu
+     original és declarat; el cens nomena sempre l'original, mai la bessona
+     (idDelCens lleva l'extensió: dos entrades per a la mateixa foto
+     col·lidirien a ?foto=). */
+  test('les bessones .webp: l’original és al cens, a EXCLOSES o a system/, i el cens no nomena mai alhora una foto i la seua bessona', () => {
+    for (const [bessona, original] of BESSONES) {
+      expect(bessona, original).toMatch(/\.webp$/);
+      expect(AL_DISC.has(original), original).toBe(true);
+      expect(DECLARADA(original) || original.startsWith('/assets/system/'), `${bessona} → ${original}`).toBe(true);
+    }
+    const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
+    const parelles = CENS_IMATGES.map((entrada) => entrada.src).filter((src) => bessonaDe(src) && delCens.has(bessonaDe(src)));
+    expect(parelles, 'una foto i la seua bessona al cens alhora (idDelCens col·lidiria)').toEqual([]);
+    // Les dos .webp amb nom propi del cens no passen per bessones.
+    expect(esBessona('/assets/ui/plugins/tpv_vinyeta.webp')).toBe(false);
+    expect(esBessona('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp')).toBe(false);
+  });
+
+  test('un .webp que no és la bessona de cap original no s’estalvia l’entrada', () => {
+    const DISC_FICTICI = ['assets/a/sola.webp', 'assets/b/og.jpg', 'assets/b/og.png', 'assets/b/og.webp', 'assets/c/foto.jpg', 'assets/c/foto.webp'];
+    const bessones = new Set(bessonesDe(DISC_FICTICI).map(bessonaDe));
+    expect([...bessones]).toEqual(['assets/c/foto.webp']);
   });
 
   test('cada exclosa existix i porta el seu motiu; cap no és alhora al cens', () => {
@@ -113,7 +151,7 @@ describe('el cens de l’Arxiu visual', () => {
     expect(EXCLOSES[fossil]).toMatch(/fòssil/);
     expect(mitjansDelCens().some((m) => m.src === fossil)).toBe(false);
     // Les de system/ (la interfície) ja en queden fora sense nomenar-les.
-    const socials = DISC.filter((src) => /\/og[-_][^/]+$/.test(src) && !src.startsWith('/assets/system/'));
+    const socials = DISC.filter((src) => /\/og[-_][^/]+$/.test(src) && !src.startsWith('/assets/system/') && !esBessona(src));
     expect(socials).toHaveLength(9);
     for (const src of socials) {
       expect(EXCLOSES[src], src).toBe('targeta social (OpenGraph): no és cap foto de l’Arxiu');

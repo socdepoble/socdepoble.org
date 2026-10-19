@@ -32,7 +32,13 @@
  * Cercador ni la resta de l'app no el paguen. Mòdul de dades pures: cap
  * import, cap JSX.
  * Prova: censImatges.test.js (cada src existix al disc i cada imatge ràster de
- * public/assets és al cens o a EXCLOSES).
+ * public/assets és al cens, a EXCLOSES o n'és la bessona .webp).
+ * Bessones WebP (encàrrec 261019_1425) · tooling/media/optimitzar_webp.mjs
+ * escriu NOM.webp al costat de les fotos pesants i no toca mai l'original
+ * (regla a src/config/politicaDeMitjans.js). El cens continua nomenant
+ * l'original, una sola entrada per foto: l'id, els drets, l'origen i la fusió
+ * de l'Arxiu no canvien. Quin dels dos fitxers se servix ho decidix el
+ * resolutor de recursos (assetResolver.js) segons el paquet.
  */
 
 export const AMBITS = Object.freeze(['poble', 'persona', 'entitat', 'ia', 'contingut']);
