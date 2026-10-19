@@ -417,3 +417,133 @@ test('destinació: rebutja eixides i enllaços abans d’escriure cap paquet', (
     } finally { neteja(f); }
   }
 });
+
+/* ───────────── Encàrrec 261019_1425 · Mitjans externs del directori ───────────── */
+
+const MITJANS = Object.freeze({ origen: 'https://socdepoble.org', externs: ['assets/fotos/'], bessones: ['assets/ui/v.jpg'] });
+
+/** La fixture amb una vinyeta i la seua bessona; el directori declara els mitjans
+ *  i no porta ni la carpeta externa (fotos/) ni l'original substituït. */
+function fixtureAmbMitjans(opcions = {}) {
+  const { autonomAmbBessones = false, ...resta } = opcions;
+  const f = fixture(resta);
+  const vinyeta = crypto.randomBytes(2048);
+  const bessona = crypto.randomBytes(512);
+  const reescriu = (dist, fitxers, variant, mitjans) => {
+    for (const { cami, contingut } of fitxers) {
+      fs.mkdirSync(path.dirname(path.join(dist, cami)), { recursive: true });
+      fs.writeFileSync(path.join(dist, cami), contingut);
+    }
+    const r = manifestDeRelease({ versio: '0.2.0', node: NODE_BO, fitxers, generat: '2026-09-29T20:00:00.000Z', variant, mitjans });
+    fs.writeFileSync(path.join(dist, FITXER_RELEASE), r.manifestText);
+    fs.writeFileSync(path.join(dist, FITXER_INVENTARI), r.inventariText);
+  };
+  const llig = (dist, cami) => ({ cami, contingut: fs.readFileSync(path.join(dist, cami)) });
+  const comuns = ['fonts/noto-sans.css', 'rag-index.json'];
+  reescriu(f.dist, [llig(f.dist, ENTRADA), ...comuns.map((c) => llig(f.dist, c)), llig(f.dist, 'assets/fotos/àrea.png'),
+    ...(autonomAmbBessones ? [] : [{ cami: 'assets/ui/v.jpg', contingut: vinyeta }]), { cami: 'assets/ui/v.webp', contingut: bessona }], 'autonom',
+    autonomAmbBessones ? { origen: null, externs: [], bessones: MITJANS.bessones } : undefined);
+  if (autonomAmbBessones) fs.rmSync(path.join(f.dist, 'assets/ui/v.jpg'), { force: true });
+  fs.rmSync(path.join(f.directori, 'assets/fotos'), { recursive: true, force: true });
+  reescriu(f.directori, [llig(f.directori, ENTRADA), ...comuns.map((c) => llig(f.directori, c)),
+    { cami: 'assets/ui/v.webp', contingut: bessona }], 'wordpress', MITJANS);
+  return f;
+}
+
+test('verificaMitjans: l’autònom, com a molt les bessones i cap origen (D3); el directori només deixa fora externs i originals amb bessona', async () => {
+  const { verificaMitjans } = await import('../wordpress-plugin/eines/empaqueta.mjs');
+  const autonom = ['assets/fotos/a.png', 'assets/ui/v.jpg', 'assets/ui/v.webp', 'assets/ui/x.svg', ENTRADA];
+  const directori = ['assets/ui/v.webp', 'assets/ui/x.svg', ENTRADA];
+  const mitjans = { origen: 'https://socdepoble.org', externs: ['assets/fotos/'], bessones: 1 };
+  assert.deepEqual(verificaMitjans({}, {}, autonom, autonom), { externs: 0, substituits: 0 }, 'sense política, res a comprovar');
+  assert.deepEqual(verificaMitjans({}, { mitjans }, autonom, directori), { externs: 1, substituits: 1 });
+  assert.throws(() => verificaMitjans({ mitjans }, { mitjans }, autonom, directori), /autònom no pot declarar/);
+  // Decisió D3 del Mestre (261019) · L'autònom pot substituir les bessones, però mai sense declarar-ne les mateixes ni amb cap origen.
+  const autonomBessones = { origen: null, externs: [], bessones: 1 };
+  assert.deepEqual(verificaMitjans({ mitjans: autonomBessones }, { mitjans }, ['assets/fotos/a.png', 'assets/ui/v.webp', 'assets/ui/x.svg', ENTRADA], directori), { externs: 1, substituits: 0 });
+  assert.throws(() => verificaMitjans({ mitjans: { ...autonomBessones, bessones: 2 } }, { mitjans }, autonom, directori), /mateixes bessones \(2 i 1\)/);
+  for (const dolent of [{ ...autonomBessones, origen: 'https://socdepoble.org' }, { ...autonomBessones, externs: ['assets/fotos/'] }, { bessones: 1 }]) {
+    assert.throws(() => verificaMitjans({ mitjans: dolent }, { mitjans }, autonom, directori), /autònom no pot declarar/, JSON.stringify(dolent));
+  }
+  assert.throws(() => verificaMitjans({}, { mitjans }, autonom, [...directori, 'assets/fotos/a.png']), /porta un mitjà extern: assets\/fotos\/a\.png/);
+  assert.throws(() => verificaMitjans({}, { mitjans }, autonom, ['assets/ui/v.webp', ENTRADA]), /sense ser extern ni tindre la bessona: assets\/ui\/x\.svg/);
+  assert.throws(() => verificaMitjans({}, { mitjans }, autonom, ['assets/ui/x.svg', ENTRADA]), /sense ser extern ni tindre la bessona: assets\/ui\/v\.jpg/);
+  // La regla d'única font del build: amb un germà del mateix nom, l'original no té bessona i no pot faltar.
+  const ambGerma = [...autonom, 'assets/ui/v.png'];
+  assert.throws(() => verificaMitjans({}, { mitjans }, ambGerma, [...directori, 'assets/ui/v.png']), /sense ser extern ni tindre la bessona: assets\/ui\/v\.jpg/);
+  for (const origen of ['http://socdepoble.org', 'https://socdepoble.org/', 'socdepoble.org', '', 'https://x.org?a=1', 'https://localhost:3340', 'https://192.168.1.10', 'http://localhost:3340']) {
+    assert.throws(() => verificaMitjans({}, { mitjans: { ...mitjans, origen } }, autonom, directori), /origen dels mitjans/, origen);
+  }
+  // Amb --prova, un origen local (WordPress Studio contra el servidor de desenvolupament), com origenDeMitjans fora de les releases.
+  for (const origen of ['http://localhost:3340', 'https://localhost:3340']) {
+    assert.deepEqual(verificaMitjans({}, { mitjans: { ...mitjans, origen } }, autonom, directori, { prova: true }), { externs: 1, substituits: 1 }, origen);
+  }
+  assert.throws(() => verificaMitjans({}, { mitjans: { ...mitjans, origen: 'http://socdepoble.org' } }, autonom, directori, { prova: true }), /origen dels mitjans/);
+  for (const externs of [['assets/fotos'], ['fotos/'], ['assets/../x/'], 'assets/fotos/', null]) {
+    assert.throws(() => verificaMitjans({}, { mitjans: { ...mitjans, externs } }, autonom, directori), /carpetes d'assets/, JSON.stringify(externs));
+  }
+});
+
+test('el readme del directori declara el servidor de mitjans en lloc del canal propi; sense mitjans, com abans', () => {
+  const readme = fs.readFileSync(path.join(PLUGIN_REAL, 'readme.txt'), 'utf8');
+  const sense = variantDirectoriReadme(readme);
+  assert.doesNotMatch(sense, /media server/);
+  const amb = variantDirectoriReadme(readme, { origen: 'https://socdepoble.org', externs: ['assets/uploads/', 'assets/towns/'] });
+  assert.match(amb, /^6\. Sóc de Poble media server: .*: uploads, towns\) are not bundled\. The visitor's browser loads each one from https:\/\/socdepoble\.org\/assets\/ when a page shows it; .*IP address, browser user agent and the address of the page\. Terms and privacy information: https:\/\/socdepoble\.org\/legal$/m);
+  assert.doesNotMatch(amb, /no visitor data is sent|to keep this package small/, 'cap afirmació falsa ni cap motiu de mida');
+  assert.doesNotMatch(amb, /Update channel \(/);
+  assert.ok(amb.indexOf('6. Sóc de Poble media server') > amb.indexOf('== External services =='));
+  assert.ok(amb.indexOf('6. Sóc de Poble media server') < amb.indexOf('== Link previews per route =='));
+  // Un «$» de l'origen no es llig com a patró de replace().
+  assert.match(variantDirectoriReadme(readme, { origen: 'https://x.example/$1$&', externs: ['assets/uploads/'] }), /https:\/\/x\.example\/\$1\$&\/assets\//);
+  assert.ok(Buffer.byteLength(amb) < 20480, 'el readme del directori continua dins del límit');
+});
+
+test('empaqueta amb mitjans: el directori no porta els externs ni els originals substituïts; amb un autònom sense política (d’abans de D3), el canal propi i l’estàtic, tot', () => {
+  const f = fixtureAmbMitjans();
+  try {
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: 'http://localhost:8881/enxufe/', prova: true });
+    assert.deepEqual({ externs: r.mitjans.externs, substituits: r.mitjans.substituits, origen: r.mitjans.origen, bessones: r.mitjans.bessones, bessonesAutonom: r.mitjans.bessonesAutonom },
+      { externs: 1, substituits: 1, origen: 'https://socdepoble.org', bessones: 1, bessonesAutonom: 0 });
+    const zipDe = (prefix) => entradesDe(path.join(f.sortida, r.escrits.find((nom) => nom.includes(prefix))));
+    const propi = zipDe('_wordpress_enxufe_');
+    const estatic = zipDe('_estatic_spa_');
+    const directori = zipDe('_wordpress_directori_');
+    for (const cami of ['assets/fotos/àrea.png', 'assets/ui/v.jpg', 'assets/ui/v.webp']) {
+      assert.ok(propi.has(`${SLUG}/dist/${cami}`), `canal propi: ${cami}`);
+      assert.ok(estatic.has(`soc-de-poble/${cami}`), `estàtic: ${cami}`);
+    }
+    assert.ok(!directori.has(`${SLUG}/dist/assets/fotos/àrea.png`), 'l’extern no viatja');
+    assert.ok(!directori.has(`${SLUG}/dist/assets/ui/v.jpg`), 'l’original substituït no viatja');
+    assert.ok(directori.has(`${SLUG}/dist/assets/ui/v.webp`), 'la bessona sí');
+    const manifest = JSON.parse(directori.get(`${SLUG}/dist/${FITXER_RELEASE}`).toString('utf8'));
+    assert.deepEqual(manifest.mitjans, { origen: 'https://socdepoble.org', externs: ['assets/fotos/'], bessones: 1 });
+    assert.match(directori.get(`${SLUG}/readme.txt`).toString('utf8'), /6\. Sóc de Poble media server/);
+    assert.doesNotMatch(propi.get(`${SLUG}/readme.txt`).toString('utf8'), /media server/);
+    // La diferència entre el canal propi i el directori: l'actualitzador i el que la política declara.
+    assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)).sort(),
+      [`${SLUG}/${NOMES_CANAL_PROPI}`, `${SLUG}/dist/assets/fotos/àrea.png`, `${SLUG}/dist/assets/ui/v.jpg`].sort());
+  } finally { neteja(f); }
+});
+
+test('empaqueta amb l’autònom substituint també (D3): cap zip porta l’original amb bessona; només el directori deixa fora els externs', () => {
+  const f = fixtureAmbMitjans({ autonomAmbBessones: true });
+  try {
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: 'http://localhost:8881/enxufe/', prova: true });
+    const zipDe = (prefix) => entradesDe(path.join(f.sortida, r.escrits.find((nom) => nom.includes(prefix))));
+    const propi = zipDe('_wordpress_enxufe_');
+    const estatic = zipDe('_estatic_spa_');
+    const directori = zipDe('_wordpress_directori_');
+    for (const [zip, prefix] of [[propi, `${SLUG}/dist/`], [estatic, 'soc-de-poble/'], [directori, `${SLUG}/dist/`]]) {
+      assert.ok(!zip.has(`${prefix}assets/ui/v.jpg`) && zip.has(`${prefix}assets/ui/v.webp`), prefix);
+    }
+    assert.ok(propi.has(`${SLUG}/dist/assets/fotos/àrea.png`), 'l’autònom porta el contingut del servei');
+    assert.ok(!directori.has(`${SLUG}/dist/assets/fotos/àrea.png`), 'el directori, no');
+    const manifest = JSON.parse(propi.get(`${SLUG}/dist/${FITXER_RELEASE}`).toString('utf8'));
+    assert.deepEqual(manifest.mitjans, { origen: null, externs: [], bessones: 1 });
+    // El canal signat porta el manifest de l'autònom: la clau additiva hi va, sense cap origen extern.
+    assert.deepEqual(r.canal.mitjans, { origen: null, externs: [], bessones: 1 });
+    assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)).sort(),
+      [`${SLUG}/${NOMES_CANAL_PROPI}`, `${SLUG}/dist/assets/fotos/àrea.png`].sort());
+  } finally { neteja(f); }
+});

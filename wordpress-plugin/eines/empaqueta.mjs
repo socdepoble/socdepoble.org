@@ -35,6 +35,7 @@
  */
 import crypto from 'node:crypto';
 import { findDeepLSecrets } from '../../tooling/lib/dist-secrets.mjs';
+import { bessonaDe, bessonesDe, esExtern, esHostLocal } from '../../src/config/politicaDeMitjans.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -295,9 +296,19 @@ function minimWordPress(text) {
   return substituixUna(text, /^([ \t/*]*Requires at least:[ \t]*).*$/m, '$16.6', 'Mínim WordPress del runtime JSX');
 }
 
-/** El readme sense el paràgraf del canal propi (variant del directori). */
-export function variantDirectoriReadme(textReadme) {
-  return minimWordPress(substituixUna(textReadme, /^(?:Update channel|Canal d'actualització) \(.*\r?\n\r?\n/m, '', 'Paràgraf del canal del readme'));
+/**
+ * El readme sense el paràgraf del canal propi (variant del directori). Amb
+ * `mitjans` (el del manifest del directori, encàrrec 261019_1425), en el seu
+ * lloc va el servei extern que servix l'arxiu i el contingut: la guia del
+ * directori demana declarar tot servei extern, i el readme de la font no té
+ * marge (enxufe-plugin.test.mjs en limita la mida).
+ */
+export function variantDirectoriReadme(textReadme, mitjans = null) {
+  const servei = mitjans?.origen
+    ? `6. Sóc de Poble media server: the service's content images (the village archive and community photos and illustrations: ${mitjans.externs.map((prefix) => prefix.replace(/^assets\//, '').replace(/\/$/, '')).join(', ')}) are not bundled. The visitor's browser loads each one from ${mitjans.origen}/assets/ when a page shows it; like any image request, this sends the visitor's IP address, browser user agent and the address of the page. Terms and privacy information: https://socdepoble.org/legal\n\n`
+    : '';
+  // Una funció i no el text: cap «$» de l'origen no es llig com un patró de replace().
+  return minimWordPress(substituixUna(textReadme, /^(?:Update channel|Canal d'actualització) \(.*\r?\n\r?\n/m, () => servei, 'Paràgraf del canal del readme'));
 }
 
 /**
@@ -424,6 +435,60 @@ export function verificaPaquet(dist, release, camins) {
   return { format: 'trossos', trossos: deTrossos.length };
 }
 
+/**
+ * Encàrrec 261019_1425 · La política de mitjans entre les dues variants, a
+ * partir dels manifests i dels camins de cada inventari:
+ *   · l'autònom (canal propi, Sollutia) ho porta tot dins del paquet: com a
+ *     molt hi declara les bessones (D3), mai cap origen extern; si les dos
+ *     variants en declaren, n'han de declarar les mateixes (el mateix public/);
+ *   · el directori en pot declarar una (`mitjans`: { origen https, externs }),
+ *     i llavors no porta cap fitxer d'una carpeta externa, i cada recurs
+ *     d'assets/ de l'autònom que no hi viatja és extern o hi viatja la seua
+ *     bessona .webp. Res no desapareix del directori sense motiu.
+ * L'origen, amb el criteri del build (origenDeMitjans): https i un host
+ * públic; amb `prova`, també un host local (http o https), per a WordPress
+ * Studio. Torna { externs, substituits } (quants camins de l'autònom se'n
+ * queden fora).
+ */
+export function verificaMitjans(release, releaseDirectori, caminsAutonom, caminsDirectori, { prova = false } = {}) {
+  const autonom = release?.mitjans;
+  if (autonom !== undefined && (autonom?.origen !== null || !Array.isArray(autonom?.externs) || autonom.externs.length > 0)) {
+    throw new Error('El paquet autònom no pot declarar mitjans externs: ho porta tot (com a molt, la bessona en lloc de l\'original).');
+  }
+  const mitjans = releaseDirectori?.mitjans;
+  if (autonom !== undefined && mitjans !== undefined && autonom.bessones !== mitjans.bessones) {
+    throw new Error(`Les dues variants no substituïxen les mateixes bessones (${autonom.bessones} i ${mitjans.bessones}): compileu-les des del mateix public/.`);
+  }
+  if (mitjans === undefined) return { externs: 0, substituits: 0 };
+  let url = null;
+  try { url = new URL(mitjans?.origen); } catch { /* no és cap URL */ }
+  const forma = url && !url.username && !url.password && !url.search && !url.hash && !/\/$/.test(mitjans.origen)
+    && `${url.origin}${url.pathname}`.replace(/\/+$/, '') === mitjans.origen;
+  const local = Boolean(url) && esHostLocal(url.hostname);
+  const admes = forma && ((url.protocol === 'https:' && !local) || (prova && local && ['http:', 'https:'].includes(url.protocol)));
+  if (!admes) {
+    throw new Error(`L'origen dels mitjans del directori no és una adreça https pública${prova ? ' ni local' : ''}: ${mitjans?.origen}`);
+  }
+  const prefixos = mitjans.externs;
+  if (!Array.isArray(prefixos) || !prefixos.every((prefix) => typeof prefix === 'string' && /^assets\/(?:[^/.][^/]*\/)+$/.test(prefix))) {
+    throw new Error('Els mitjans externs del directori han de ser carpetes d\'assets/ amb la barra final.');
+  }
+  const dinsDelDirectori = new Set(caminsDirectori);
+  const dinsExterna = caminsDirectori.find((cami) => esExtern(cami, prefixos));
+  if (dinsExterna) throw new Error(`El directori porta un mitjà extern: ${dinsExterna}`);
+  let externs = 0;
+  let substituits = 0;
+  // La mateixa regla d'única font que el build: un original amb germà del mateix nom no en té.
+  const ambBessona = new Set(bessonesDe(caminsAutonom));
+  for (const cami of caminsAutonom) {
+    if (!cami.startsWith('assets/') || dinsDelDirectori.has(cami)) continue;
+    if (esExtern(cami, prefixos)) externs += 1;
+    else if (ambBessona.has(cami) && dinsDelDirectori.has(bessonaDe(cami))) substituits += 1;
+    else throw new Error(`Falta al directori sense ser extern ni tindre la bessona: ${cami}`);
+  }
+  return { externs, substituits };
+}
+
 /** Fitxers de l'adaptador (llista blanca), sense ocults. */
 export function fitxersAdaptador(arrelPlugin = ARREL_PLUGIN) {
   const rels = [...ADAPTADOR.fitxers];
@@ -505,6 +570,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     throw new Error('La variant del directori ha de ser monolítica: SDP_VARIANT=wordpress no trosseja.');
   }
   verificaPaquet(distDirectori, releaseDirectori, inventariDirectori.camins);
+  const mitjansDirectori = verificaMitjans(release, releaseDirectori, camins, inventariDirectori.camins, { prova });
 
   if (!urlBase) throw new Error('Cal --url-base: la URL des d’on es podran baixar els zips.');
   validaUrlBase(urlBase, { prova });
@@ -520,7 +586,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   const phpEstampat = estampaVersio(text('socdepoble-enxufe.php'), versio);
   const readmeEstampat = estampaReadme(text('readme.txt'), versio);
   const phpDirectori = variantDirectori(phpEstampat);
-  const readmeDirectori = variantDirectoriReadme(readmeEstampat);
+  const readmeDirectori = variantDirectoriReadme(readmeEstampat, releaseDirectori.mitjans);
   const requisitsDirectori = requisitsDe(phpDirectori, readmeDirectori);
 
   const incrustada = clauIncrustada(text(NOMES_CANAL_PROPI));
@@ -628,7 +694,10 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     escriu(nom, textCanal);
     if (signatura) escriu(`${nom}.sig`, signatura);
   }
-  return { versio, desti, escrits, signat: Boolean(signatura), restes, avisos, entrada: release.entrada.sha256, canal };
+  return { versio, desti, escrits, signat: Boolean(signatura), restes, avisos, entrada: release.entrada.sha256, canal,
+    restesDirectori: inventariDirectori.restes,
+    mitjans: { ...mitjansDirectori, origen: releaseDirectori.mitjans?.origen ?? null, bessones: releaseDirectori.mitjans?.bessones ?? 0,
+      bessonesAutonom: release.mitjans?.bessones ?? 0, directori: zips.directori.length } };
 }
 
 /** Hora termodinàmica del build, estable encara que s'empaquete un altre dia o fus. */
@@ -742,6 +811,11 @@ export function executa(argv, registre = console) {
   registre.log(`Bundle autònom (sha256, canal propi i estàtic): ${resultat.entrada}`);
   if (!resultat.signat) registre.log('SENSE SIGNATURA (--prova): cap lloc amb clau configurada no acceptarà este canal.');
   if (resultat.restes.length) registre.log(`${resultat.restes.length} fitxer(s) de dist/ fora de l'inventari (restes velles): no s'han empaquetat.`);
+  if (resultat.mitjans.origen) {
+    registre.log(`Directori (${resultat.mitjans.directori} B): ${resultat.mitjans.externs} mitjans externs des de ${resultat.mitjans.origen} i ${resultat.mitjans.bessones} originals substituïts per la seua bessona .webp. Abans de publicar el zip, l'origen ha de servir cada mitjà extern i la seua bessona com a imatge (content-type image/*, no una pàgina de reserva) i amb CORS (Access-Control-Allow-Origin i Access-Control-Expose-Headers: Content-Range, ETag) per a l'EXIF i el reenquadrament.`);
+  }
+  if (resultat.mitjans.bessonesAutonom) registre.log(`Autònom: ${resultat.mitjans.bessonesAutonom} originals substituïts per la seua bessona .webp, sense cap origen extern.`);
+  if (resultat.restesDirectori.length) registre.log(`${resultat.restesDirectori.length} fitxer(s) de builds/directori/dist fora de l'inventari (restes velles): no s'han empaquetat.`);
   for (const avis of resultat.avisos) registre.log(`AVÍS: ${avis}`);
   registre.log('Publica primer els zips i després el canal (stable.json i la .sig).');
   return 0;

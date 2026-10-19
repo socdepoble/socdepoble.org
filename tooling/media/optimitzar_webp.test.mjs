@@ -156,12 +156,16 @@ test('cens: inventari d\'una arrel sintètica, sense tocar cap fitxer', () => {
     const abans = fs.readdirSync(path.join(arrel, 'public/assets/fotos')).sort();
     const { resum, imatges } = cens(arrel, { max: 1600, llindarKb: 300 });
     assert.equal(resum.total, 3);
-    assert.equal(resum.perEstat.orfe, 2, 'la bessona .webp i la imatge citada només des de 90_arxiu_historic');
+    assert.equal(resum.perEstat.orfe, 1, 'només la imatge citada des de 90_arxiu_historic');
     assert.equal(imatges.find((i) => i.cami === 'assets/fotos/oblidada.png').estat, 'orfe', '90_arxiu_historic no compta com a referència');
     const gran = imatges.find((i) => i.cami === 'assets/fotos/gran.jpg');
     assert.equal(gran.estat, 'codi');
     assert.equal(gran.candidataWebp, true);
     assert.equal(gran.teWebp, true);
+    // Encàrrec 261019_1425 · La bessona sense cap cita hereta l'estat del seu original.
+    const bessona = imatges.find((i) => i.cami === 'assets/fotos/gran.webp');
+    assert.equal(bessona.estat, 'codi');
+    assert.equal(bessona.bessonaDe, 'assets/fotos/gran.jpg');
     assert.equal(imatges.find((i) => i.cami === 'assets/fotos/oblidada.png').candidataWebp, false);
     assert.ok(imatges.every((i) => !('abs' in i)), 'el JSON no exposa camins absoluts');
     assert.deepEqual(fs.readdirSync(path.join(arrel, 'public/assets/fotos')).sort(), abans);
@@ -327,4 +331,96 @@ test('classifica: una base sense barra final, una adreça absoluta i una extensi
   ].join('\n');
   const estats = classifica(imatges, { codi, wiki: '' }).map((i) => i.estat);
   assert.deepEqual(estats, ['dinamic', 'dinamic', 'dinamic']);
+});
+
+/* ── Encàrrec 261019_1425 (alliberament multimèdia) ── */
+
+test('esCandidata i --nomes-candidates: el mateix criteri que el cens (pes o costat llarg)', async () => {
+  const { esCandidata, nomesCandidates } = await import('./optimitzar_webp.mjs');
+  const opts = { max: 1600, llindarKb: 300 };
+  assert.equal(esCandidata({ ext: '.jpg', bytes: 301 * 1024, mides: { amplada: 10, alcada: 10 } }, opts), true);
+  assert.equal(esCandidata({ ext: '.PNG', bytes: 10, mides: { amplada: 1601, alcada: 10 } }, opts), true);
+  assert.equal(esCandidata({ ext: '.png', bytes: 300 * 1024, mides: { amplada: 1600, alcada: 1600 } }, opts), false);
+  assert.equal(esCandidata({ ext: '.webp', bytes: 900 * 1024, mides: null }, opts), false);
+  assert.equal(opcions(['converteix', 'x', '--nomes-candidates']).nomesCandidates, true);
+  assert.equal(opcions(['converteix', 'x']).nomesCandidates, false);
+  const arrel = temporal();
+  try {
+    const gran = escriu(arrel, 'in/gran.jpg', jpeg(4000, 3000));
+    const pesada = escriu(arrel, 'in/pesada.png', Buffer.concat([png(100, 100), Buffer.alloc(400 * 1024)]));
+    const petita = escriu(arrel, 'in/petita.png', png(100, 100));
+    assert.deepEqual(nomesCandidates([gran, pesada, petita], opts), { candidates: [gran, pesada], descartades: 1 });
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('main converteix --nomes-candidates: les no candidates no entren al pla', async () => {
+  const arrel = temporal();
+  const linies = [];
+  const sortida = { log: (t) => linies.push(t), error: (t) => linies.push(t) };
+  try {
+    escriu(arrel, 'in/gran.jpg', jpeg(4000, 3000));
+    escriu(arrel, 'in/petita.png', png(100, 100));
+    const codi = await main(['converteix', path.join(arrel, 'in'), '--nomes-candidates', '--json'], { arrel, sortida });
+    // Sense codificador en esta màquina el tractor ix amb 2 abans del pla: llavors no hi ha res a comprovar.
+    if (codi === 2) return;
+    const json = JSON.parse(linies.at(-1));
+    assert.equal(json.descartades, 1);
+    assert.deepEqual(json.passos.map((p) => path.basename(p.orig)), ['gran.jpg']);
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('executa: escriu en un temporal i el canvia de nom; si falla, no queda cap .webp ni cap temporal', async () => {
+  const arrel = temporal();
+  try {
+    const orig = escriu(arrel, 'in/foto.png', Buffer.concat([png(2000, 1000), Buffer.alloc(2048)]));
+    const opts = { max: 1600, qualitat: 80, aplica: true };
+    const [bo] = await executa(pla([orig], opts), { nom: 'prova' }, opts, async () => webpVp8x(1600, 800));
+    assert.equal(bo.escrit, true);
+    assert.deepEqual(fs.readdirSync(path.join(arrel, 'in')).sort(), ['foto.png', 'foto.webp']);
+    fs.rmSync(bo.desti);
+    // Un temporal que ja hi és (una altra passada a mitges) fa fallar l'escriptura sense tocar res.
+    const temporal = path.join(arrel, 'in', `.foto.webp.${process.pid}.tmp`);
+    fs.writeFileSync(temporal, 'a mitges');
+    const [mal] = await executa(pla([orig], opts), { nom: 'prova' }, opts, async () => webpVp8x(1600, 800));
+    assert.match(mal.error, /EEXIST/);
+    assert.equal(mal.escrit, undefined);
+    assert.equal(fs.existsSync(mal.desti), false, 'cap .webp a mitges');
+    assert.equal(fs.existsSync(temporal), false, 'el temporal no es queda');
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('cens: una bessona citada conserva el seu estat; una .webp amb dos originals no és bessona de ningú', () => {
+  const arrel = temporal();
+  try {
+    escriu(arrel, 'public/assets/a/foto.jpg', jpeg(100, 100));
+    escriu(arrel, 'public/assets/a/foto.webp', webpVp8x(100, 100));
+    escriu(arrel, 'public/assets/b/og.jpg', jpeg(100, 100));
+    escriu(arrel, 'public/assets/b/og.png', png(100, 100));
+    escriu(arrel, 'public/assets/b/og.webp', webpVp8x(100, 100));
+    escriu(arrel, 'src/App.jsx', "const a = '/assets/a/foto.webp'; const b = 'og.jpg';\n");
+    const { imatges } = cens(arrel, { max: 1600, llindarKb: 300 });
+    const per = Object.fromEntries(imatges.map((i) => [i.cami, i]));
+    assert.equal(per['assets/a/foto.webp'].estat, 'codi');
+    assert.equal(per['assets/a/foto.webp'].bessonaDe, 'assets/a/foto.jpg');
+    assert.equal(per['assets/a/foto.jpg'].teWebp, true);
+    assert.equal(per['assets/b/og.webp'].bessonaDe, undefined);
+    assert.equal(per['assets/b/og.webp'].estat, 'orfe');
+    assert.equal(per['assets/b/og.jpg'].teWebp, false);
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('pla: un original sol del pla amb un germà al disc (foto.png i foto.jpg) no té bessona', () => {
+  const arrel = temporal();
+  try {
+    const sol = escriu(arrel, 'in/og.png', Buffer.concat([png(1200, 630), Buffer.alloc(400 * 1024)]));
+    escriu(arrel, 'in/og.jpg', jpeg(1200, 630));
+    const unic = escriu(arrel, 'in/unic.png', png(100, 100));
+    const per = Object.fromEntries(pla([sol, unic], { max: 1600 }).map((p) => [path.basename(p.orig), p.salta]));
+    assert.match(per['og.png'], /mateix \.webp/);
+    assert.equal(per['unic.png'], null);
+    // Amb --eixida compta la carpeta de destí: buida, cap problema; amb un altre og.jpg, col·lisió.
+    assert.equal(pla([sol], { max: 1600, eixida: 'fora', base: arrel })[0].salta, null);
+    escriu(arrel, 'fora/og.jpg', jpeg(10, 10));
+    assert.match(pla([sol], { max: 1600, eixida: 'fora', base: arrel })[0].salta, /mateix \.webp/);
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
 });

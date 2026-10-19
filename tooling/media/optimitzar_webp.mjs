@@ -14,6 +14,9 @@
  *                              com a prefix ('/assets/towns/');
  *                   · wiki     només la citen documents de _wiki_de_poble (mai 90_arxiu_historic);
  *                   · orfe     ningú no la cita ni la pot construir.
+ *                 La bessona .webp d'un original (src/config/politicaDeMitjans.js) que ningú no
+ *                 cita hereta l'estat del seu original: els paquets (l'autònom i el
+ *                 directori) la demanen en lloc d'ell.
  *                 El cens només llista: no mou ni esborra res. Una orfe és candidata a revisió
  *                 humana, no a la paperera: el cens no veu qui la usa des de fora del repositori
  *                 (Yoast, xarxes socials, enllaços publicats).
@@ -21,9 +24,12 @@
  *   converteix    Converteix imatges entrants (PNG i JPEG) a .webp amb el costat llarg limitat
  *                 (--max, 1600 px per defecte; la franja de l'encàrrec és 1200-1600) i sense
  *                 ampliar-les mai. Sense --aplica calcula el resultat en memòria i no escriu res.
- *                 Amb --aplica escriu NOM.webp al costat de l'original (o dins de --eixida).
- *                 L'original no es toca mai, cap .webp existent se sobreescriu sense
- *                 --sobreescriu, i si el .webp no pesa menys que l'original no s'escriu.
+ *                 Amb --aplica escriu NOM.webp al costat de l'original (o dins de --eixida),
+ *                 primer en un temporal i després amb un canvi de nom: una conversió tallada no
+ *                 deixa mai un .webp a mitges. L'original no es toca mai, cap .webp existent se
+ *                 sobreescriu sense --sobreescriu, i si el .webp no pesa menys que l'original no
+ *                 s'escriu. Amb --nomes-candidates (encàrrec 261019_1425) només entren les
+ *                 candidates del cens: PNG/JPEG de més de --llindar-kb o de més de --max px.
  *
  *   codificadors  Diu quins codificadors WebP hi ha en aquesta màquina.
  *
@@ -40,7 +46,7 @@
  *   node tooling/media/optimitzar_webp.mjs [cens] [--llindar-kb 300] [--max 1600] [--json]
  *   node tooling/media/optimitzar_webp.mjs converteix CAMÍ... [--max 1600] [--qualitat 80]
  *        [--eixida DIR] [--codificador auto|maquinaria|sharp|cwebp|magick|chrome] [--aplica]
- *        [--sobreescriu] [--json]
+ *        [--sobreescriu] [--nomes-candidates [--llindar-kb 300]] [--json]
  *   node tooling/media/optimitzar_webp.mjs codificadors [--json]
  *
  * Eixida: 0 bé; 1 alguna conversió ha fallat; 2 ús incorrecte o cap codificador disponible.
@@ -51,6 +57,7 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { PROJECT_DIR, WIKI_DIR } from '../wiki/lib/project_paths.mjs';
+import { bessonaDe, bessonesDe } from '../../src/config/politicaDeMitjans.js';
 
 export const MAX_PER_DEFECTE = 1600;
 export const QUALITAT_PER_DEFECTE = 80;
@@ -79,7 +86,7 @@ const DIRECTORIS_IGNORATS = new Set(['node_modules', 'dist', '.git', 'builds', '
 const EXTENSIONS_TEXT = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.json', '.html', '.css', '.md',
   '.php', '.sql', '.yml', '.yaml', '.txt', '.webmanifest', '.xml', '.svg']);
 const MAX_BYTES_TEXT = 4 * 1024 * 1024;
-const US = 'Ús: optimitzar_webp.mjs [cens|converteix CAMÍ...|codificadors] [--max N] [--qualitat N] [--eixida DIR] [--codificador NOM] [--aplica] [--sobreescriu] [--llindar-kb N] [--json]';
+const US = 'Ús: optimitzar_webp.mjs [cens|converteix CAMÍ...|codificadors] [--max N] [--qualitat N] [--eixida DIR] [--codificador NOM] [--aplica] [--sobreescriu] [--nomes-candidates] [--llindar-kb N] [--json]';
 
 const posix = (rel) => rel.split(path.sep).join('/');
 const kb = (bytes) => Math.round(bytes / 1024);
@@ -89,7 +96,8 @@ const kb = (bytes) => Math.round(bytes / 1024);
 /** Llig l'ordre i les opcions. Llança Error amb missatge d'ús si alguna cosa no quadra. */
 export function opcions(argv) {
   const o = { ordre: 'cens', camins: [], max: MAX_PER_DEFECTE, qualitat: QUALITAT_PER_DEFECTE,
-    llindarKb: LLINDAR_KB_PER_DEFECTE, codificador: 'auto', eixida: null, aplica: false, sobreescriu: false, json: false };
+    llindarKb: LLINDAR_KB_PER_DEFECTE, codificador: 'auto', eixida: null, aplica: false, sobreescriu: false,
+    nomesCandidates: false, json: false };
   const valor = (i, nom) => {
     if (i >= argv.length || argv[i].startsWith('--')) throw new Error(`${nom} necessita un valor. ${US}`);
     return argv[i];
@@ -106,6 +114,7 @@ export function opcions(argv) {
     const a = argv[i];
     if (a === '--aplica') o.aplica = true;
     else if (a === '--sobreescriu') o.sobreescriu = true;
+    else if (a === '--nomes-candidates') o.nomesCandidates = true;
     else if (a === '--json') o.json = true;
     else if (a === '--max') o.max = enter(valor(++i, a), a, 320, 4096);
     else if (a === '--qualitat') o.qualitat = enter(valor(++i, a), a, 1, 100);
@@ -313,22 +322,39 @@ export function classifica(imatges, { codi, wiki, patrons = patronsDinamics(codi
   });
 }
 
+/**
+ * Cert si una imatge és candidata a WebP: un PNG o JPEG de més de `llindarKb` o amb
+ * el costat llarg de més de `max` px. El mateix criteri per al cens i per a
+ * `converteix --nomes-candidates`.
+ */
+export function esCandidata({ ext, bytes, mides: m }, { max = MAX_PER_DEFECTE, llindarKb = LLINDAR_KB_PER_DEFECTE } = {}) {
+  if (!EXTENSIONS_CONVERTIBLES.includes(String(ext).toLowerCase())) return false;
+  return bytes > llindarKb * 1024 || (Boolean(m) && Math.max(m.amplada, m.alcada) > max);
+}
+
 /** Cens complet de public/: classificació, mides i candidates a WebP. */
 export function cens(arrel, { max = MAX_PER_DEFECTE, llindarKb = LLINDAR_KB_PER_DEFECTE } = {}) {
   const imatges = imatgesPubliques(arrel);
   const codi = corpus(arrel, ARRELS_CODI);
   const wiki = corpus(arrel, ARRELS_WIKI);
-  const existents = new Set(imatges.map((i) => i.cami));
+  /* Encàrrec 261019_1425 · La regla de les bessones és la de l'app i del paquet
+     (politicaDeMitjans.js): una bessona sense cap cita no és cap orfe, és el
+     fitxer que els paquets (l'autònom i el directori) demanen en lloc del seu
+     original; socdepoble.org i el natiu continuen demanant l'original. */
+  const ambBessona = new Set(bessonesDe(imatges.map((i) => i.cami)));
+  const originalDe = new Map([...ambBessona].map((original) => [bessonaDe(original), original]));
+  const perCami = new Map();
   const classificades = classifica(imatges, { codi, wiki }).map((img) => {
     const m = img.ext === '.svg' ? null : (() => { try { return midesDeFitxer(img.abs); } catch { return null; } })();
-    const bessona = img.cami.replace(/\.[^./]+$/, '.webp');
-    const convertible = EXTENSIONS_CONVERTIBLES.includes(img.ext);
-    const pesada = img.bytes > llindarKb * 1024;
-    const gran = Boolean(m) && Math.max(m.amplada, m.alcada) > max;
-    const net = { ...img, mides: m, teWebp: convertible && existents.has(bessona), candidataWebp: convertible && (pesada || gran) };
+    const net = { ...img, mides: m, teWebp: ambBessona.has(img.cami), candidataWebp: esCandidata({ ...img, mides: m }, { max, llindarKb }) };
+    if (originalDe.has(img.cami)) net.bessonaDe = originalDe.get(img.cami);
     delete net.abs;
+    perCami.set(net.cami, net);
     return net;
   });
+  for (const img of classificades) {
+    if (img.bessonaDe && img.estat === 'orfe') img.estat = perCami.get(img.bessonaDe)?.estat ?? 'orfe';
+  }
   const resum = { total: classificades.length, bytes: 0, perEstat: { codi: 0, dinamic: 0, wiki: 0, orfe: 0 }, bytesOrfes: 0,
     candidatesWebp: 0, bytesCandidates: 0 };
   for (const img of classificades) {
@@ -489,10 +515,38 @@ export function entrades(camins, base = process.cwd()) {
 }
 
 /**
+ * Les candidates d'una llista de fitxers (esCandidata, el criteri del cens) i quantes
+ * se'n queden fora. Llig només el cap de cada fitxer.
+ */
+export function nomesCandidates(fitxers, { max = MAX_PER_DEFECTE, llindarKb = LLINDAR_KB_PER_DEFECTE } = {}) {
+  const candidates = fitxers.filter((abs) => {
+    let m = null;
+    try { m = midesDeFitxer(abs); } catch { /* il·legible: el pla ja ho dirà */ }
+    return esCandidata({ ext: path.extname(abs), bytes: fs.statSync(abs).size, mides: m }, { max, llindarKb });
+  });
+  return { candidates, descartades: fitxers.length - candidates.length };
+}
+
+/**
  * Pla de conversió, sense escriure res: destí, mides i, si n'hi ha, per què es salta.
- * Dos originals que donarien el mateix .webp (foto.jpg i foto.png) se salten tots dos.
+ * Dos originals que donarien el mateix .webp (foto.jpg i foto.png) se salten tots dos,
+ * també si només un dels dos entra al pla: la carpeta de l'original mana.
  */
 export function pla(fitxers, { max = MAX_PER_DEFECTE, eixida = null, sobreescriu = false, base = process.cwd() } = {}) {
+  /* Encàrrec 261019_1425 · Amb --nomes-candidates (o un sol fitxer) el germà
+     petit no entra al pla, i el .webp seria d'un original o de l'altre segons
+     qui el demanara. Es mira la carpeta: si hi ha un altre PNG/JPEG amb el
+     mateix nom, sense distingir majúscules, ningú no té bessona. */
+  /* Amb --eixida la bessona viu a una altra carpeta: hi compten els seus
+     PNG/JPEG del mateix nom que no són este original. */
+  const germans = (orig, desti) => {
+    const nom = path.basename(orig, path.extname(orig)).toLowerCase();
+    const carpeta = path.dirname(desti);
+    try {
+      return fs.readdirSync(carpeta).filter((fill) => EXTENSIONS_CONVERTIBLES.includes(path.extname(fill).toLowerCase())
+        && path.basename(fill, path.extname(fill)).toLowerCase() === nom && path.join(carpeta, fill) !== orig).length;
+    } catch { return 0; }
+  };
   const passos = fitxers.map((orig) => {
     const nom = `${path.basename(orig, path.extname(orig))}.webp`;
     const desti = eixida ? path.resolve(base, eixida, nom) : path.join(path.dirname(orig), nom);
@@ -502,6 +556,7 @@ export function pla(fitxers, { max = MAX_PER_DEFECTE, eixida = null, sobreescriu
     const pas = { orig, desti, bytes, mides: m, midesDesti: m ? midaDesti(m, max) : null, salta: null };
     if (!m || !['png', 'jpeg'].includes(m.format)) pas.salta = 'capçalera no reconeguda com a PNG o JPEG';
     else if (fs.existsSync(desti) && !sobreescriu) pas.salta = 'ja existix el .webp (useu --sobreescriu)';
+    else if (germans(orig, desti) > 0) pas.salta = 'dos originals donarien el mateix .webp';
     return pas;
   });
   /* Revisió adversarial (261018) · Sense distingir majúscules: el disc d'un Mac
@@ -536,7 +591,19 @@ export async function executa(passos, codificador, { max, qualitat, aplica }, co
       if (webp.length >= p.bytes) { p.salta = `el .webp (${kb(webp.length)} KB) no pesa menys que l'original`; continue; }
       if (aplica) {
         fs.mkdirSync(path.dirname(p.desti), { recursive: true });
-        fs.writeFileSync(p.desti, webp);
+        /* Encàrrec 261019_1425 · Temporal i canvi de nom: si la conversió es talla a
+           mitges, no queda cap NOM.webp trencat que la passada següent saltaria
+           («ja existix») i l'app serviria. */
+        /* Ocult (amb punt): si mai en quedara un, ni el tractor ni el paquet
+           (PROPIS_DEL_LLOC.prefixOcult) no el prenen per cap imatge. */
+        const temporal = path.join(path.dirname(p.desti), `.${path.basename(p.desti)}.${process.pid}.tmp`);
+        try {
+          fs.writeFileSync(temporal, webp, { flag: 'wx' });
+          fs.renameSync(temporal, p.desti);
+        } catch (e) {
+          fs.rmSync(temporal, { force: true });
+          throw e;
+        }
         p.escrit = true;
       }
     } catch (e) {
@@ -574,10 +641,11 @@ function informeCens({ resum, imatges }, { max, llindarKb }, arrel) {
   return linies.join('\n');
 }
 
-function informeConversio(passos, { aplica, max, qualitat }) {
+function informeConversio(passos, { aplica, max, qualitat, nomesCandidates = false, llindarKb, descartades = 0 }) {
   const usats = [...new Set(passos.map((p) => p.codificador).filter(Boolean))];
   const etiquetaQualitat = usats.includes('maquinaria') ? `qualitat ${qualitat} (la maquinària tria la seua: 84)` : `qualitat ${qualitat}`;
   const linies = [`[media:webp] ${aplica ? 'Conversió' : 'Pla (sense --aplica no s\'escriu res)'} · codificador ${usats.join(' i ') || 'cap'} · màx. ${max} px · ${etiquetaQualitat}`];
+  if (nomesCandidates) linies.push(`   Només candidates (més de ${llindarKb} KB o de ${max} px): ${passos.length}; ${descartades} imatges no candidates fora del pla.`);
   let abans = 0;
   let despres = 0;
   for (const p of passos) {
@@ -616,6 +684,8 @@ export async function main(argv = process.argv.slice(2), { arrel = null, sortida
   }
   let fitxers;
   try { fitxers = entrades(o.camins); } catch (e) { sortida.error(e.message); return 2; }
+  let descartades = 0;
+  if (o.nomesCandidates) ({ candidates: fitxers, descartades } = nomesCandidates(fitxers, o));
   const passos = pla(fitxers, o);
   if (!triaCodificador(disponibles, o.codificador)) {
     sortida.error(o.codificador === 'auto'
@@ -625,7 +695,8 @@ export async function main(argv = process.argv.slice(2), { arrel = null, sortida
   }
   /* Cada imatge, amb el primer codificador que en sap el format (o el demanat, si en sap). */
   await executa(passos, (format) => triaCodificador(disponibles, o.codificador, format), o);
-  sortida.log(o.json ? JSON.stringify({ disponibles, passos }, null, 2) : informeConversio(passos, o));
+  sortida.log(o.json ? JSON.stringify({ disponibles, passos, ...(o.nomesCandidates ? { descartades } : {}) }, null, 2)
+    : informeConversio(passos, { ...o, descartades }));
   return passos.some((p) => p.error) ? 1 : 0;
 }
 

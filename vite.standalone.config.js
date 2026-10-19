@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
 import { CONTRACTE_AMFITRIO_V1 } from './src/config/contracteAmfitrio.js';
+import { MITJANS_EXTERNS_DEL_DIRECTORI, bessonesDe, esHostLocal, separaRecursos } from './src/config/politicaDeMitjans.js';
 
 /**
  * El que hi ha a public/ i és del SERVIDOR de socdepoble.org, no de l'app.
@@ -115,19 +116,78 @@ export function retiraPropisDelLloc(directori) {
   return esborrats.sort();
 }
 
+/* ─────────── Política de mitjans (encàrrec 261019_1425) ───────────
+   El directori de WordPress.org no admet un zip de més de 10 MB
+   (LIMIT_DIRECTORI d'empaqueta.mjs) i public/ en fa més de 130. La variant
+   del directori (SDP_VARIANT=wordpress) porta l'estructura de la interfície
+   i deixa fora:
+     · els EXTERNS: les carpetes de contingut de
+       MITJANS_EXTERNS_DEL_DIRECTORI (src/config/politicaDeMitjans.js), que
+       el bundle demana a un origen extern (per defecte https://socdepoble.org,
+       que desplega public/; SDP_ORIGEN_MITJANS el canvia, p. ex. per un
+       bucket públic de Supabase Storage que replique assets/);
+     · els SUBSTITUÏTS: els originals que tenen bessona .webp, que hi viatja
+       en el seu lloc.
+   La mateixa política se segella al bundle (define), perquè el resolutor
+   (assetResolver.js) demane la bessona i l'origen extern: el que viatja i el
+   que es demana ixen del mateix càlcul sobre el mateix public/.
+   L'autònom (el canal propi, gentdelatorre.net i Sollutia) porta només els
+   SUBSTITUÏTS, sense cap origen extern: tot viatja dins del paquet, però la
+   bessona en lloc de l'original (decisió D3 del Mestre, 261019: el LCP de
+   9,9 s de gentdelatorre.net). El natiu no en porta cap: tot com abans. */
+
+/**
+ * L'origen dels mitjans externs: https i un host públic (en una release), sense
+ * credencials, consulta ni fragment; torna l'origen i el camí sense barra final.
+ * Fora d'una release també admet http cap a un host local (el servidor de
+ * desenvolupament, per a provar el directori a WordPress Studio).
+ */
+export function origenDeMitjans(valor, { release = false } = {}) {
+  let url;
+  try { url = new URL(String(valor ?? '').trim()); } catch { throw new Error(`SDP_ORIGEN_MITJANS no és una URL: «${valor}».`); }
+  const local = esHostLocal(url.hostname);
+  if (url.username || url.password || url.search || url.hash) throw new Error('SDP_ORIGEN_MITJANS no pot portar credencials, consulta ni fragment.');
+  if (url.protocol === 'https:' && !(release && local)) return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+  if (url.protocol === 'http:' && local && !release) return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+  throw new Error(`SDP_ORIGEN_MITJANS ha de ser https i d'un host públic${release ? '' : ' (http només cap a un host local, fora de les releases)'}: «${valor}».`);
+}
+
+/**
+ * La política de mitjans d'una variant, o null. `directori` és el public/ que
+ * s'emetrà: les bessones es calculen sobre els recursos que hi viatjarien.
+ *   · wordpress (el directori): l'origen extern, les carpetes externes i les bessones;
+ *   · autonom: només les bessones, sense origen (D3); sense cap bessona, null.
+ */
+export function politicaDeMitjans(variant = 'autonom', { env = {}, directori, release = false } = {}) {
+  if (variant !== 'autonom' && variant !== 'wordpress') throw new Error(`SDP_VARIANT desconeguda: ${variant}`);
+  /* Només sota assets/: és el que el resolutor sap demanar (els recursos de
+     l'arrel, com apple-touch-icon.png, els nomena l'HTML de l'amfitrió). */
+  const bessones = Object.freeze(bessonesDe(recursosDelPlugin(directori)).filter((cami) => cami.startsWith('assets/')));
+  if (variant === 'autonom') {
+    return bessones.length ? Object.freeze({ origen: null, externs: Object.freeze([]), bessones }) : null;
+  }
+  return Object.freeze({
+    origen: origenDeMitjans(env.SDP_ORIGEN_MITJANS || MITJANS_EXTERNS_DEL_DIRECTORI.origen, { release }),
+    externs: MITJANS_EXTERNS_DEL_DIRECTORI.prefixos,
+    bessones
+  });
+}
+
 /**
  * Substitut de `build.copyPublicDir`: el de Vite copia public/ sencer i no
  * admet exclusions. Ací cada recurs s'emet com a asset de Rollup, sense `name`,
  * de manera que no entra al manifest (tractor-build-previ hi busca l'entrada).
  * Sense `directori`, el de la config resolta: la mateixa carpeta que el
- * servidor de desenvolupament continua servint.
+ * servidor de desenvolupament continua servint. Amb `politica` (la del
+ * directori o la de l'autònom, D3), no s'emeten els externs (només en té el
+ * directori) ni els originals substituïts.
  *
  * Després d'escriure (writeBundle), retira de l'outDir les còpies que
  * builds anteriors hi deixaren (retiraPropisDelLloc). Només si l'outDir és
  * estrictament dins de l'arrel del projecte, el mateix criteri de Vite per a
  * buidar-lo: un outDir que conté el projecte no es neteja mai.
  */
-export function recursosPublicsDelPlugin({ directori } = {}) {
+export function recursosPublicsDelPlugin({ directori, politica = null } = {}) {
   let arrel = directori;
   let arrelProjecte;
   let outDir;
@@ -142,7 +202,7 @@ export function recursosPublicsDelPlugin({ directori } = {}) {
       if (config.logger) registre = config.logger;
     },
     generateBundle() {
-      for (const fileName of recursosDelPlugin(arrel)) {
+      for (const fileName of separaRecursos(recursosDelPlugin(arrel), politica).viatgen) {
         this.emitFile({ type: 'asset', fileName, source: fs.readFileSync(path.join(arrel, fileName)) });
       }
     },
@@ -237,13 +297,9 @@ const MODES_DE_DADES = Object.freeze(['remote', 'seed', 'local']);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?$/;
 
-/** Cert si el host no és d'Internet: localhost, loopback, xarxa privada, enllaç local o .local. */
-export function esHostLocal(host) {
-  const h = String(host).replace(/^\[|\]$/g, '').toLowerCase();
-  return h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h === '0.0.0.0' || h === '::1'
-    || /^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)
-    || /^169\.254\./.test(h) || /^f[cd][0-9a-f]{2}:/.test(h) || /^fe80:/.test(h);
-}
+/* esHostLocal viu a src/config/politicaDeMitjans.js (pur): l'empaquetador la
+   necessita sense carregar Vite. Es reexporta ací per als seus usuaris. */
+export { esHostLocal };
 
 /**
  * El node de dades que el build segella (Model B): origen públic, mode i tenant.
@@ -297,8 +353,11 @@ const sri384 = (dades) => `sha384-${createHash('sha384').update(dades).digest('b
  * (descripcioDelPaquet), que el manifest publica com a `formatDelPaquet`.
  * Sense ella, el manifest és idèntic al d'abans. No va dins de `contracte`,
  * que l'empaquetador exigix igual en les dues variants.
+ * `mitjans` (encàrrec 261019_1425): la política de mitjans de la variant
+ * (politicaDeMitjans), que el manifest publica com a clau additiva `mitjans`
+ * ({ origen, externs, bessones: quantes }), fora de `contracte` i de `node`.
  */
-export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'autonom', paquet }) {
+export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'autonom', paquet, mitjans }) {
   const ordenats = [...fitxers].sort((a, b) => (a.cami < b.cami ? -1 : a.cami > b.cami ? 1 : 0));
   const entrada = ordenats.find((f) => f.cami === ENTRADA_DEL_PAQUET);
   if (!entrada) throw new Error(`[sdp-manifest-release] El build no ha emés ${ENTRADA_DEL_PAQUET}.`);
@@ -321,7 +380,8 @@ export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'a
     },
     ...(fonts ? { fonts: { cami: FONTS_DEL_PAQUET, integrity: sri384(fonts.contingut) } } : {}),
     inventari: { cami: FITXER_INVENTARI, fitxers: inventari.length, sha256: sha256(inventariText) },
-    ...(paquet ? { formatDelPaquet: paquet } : {})
+    ...(paquet ? { formatDelPaquet: paquet } : {}),
+    ...(mitjans ? { mitjans: { origen: mitjans.origen, externs: [...mitjans.externs], bessones: mitjans.bessones.length } } : {})
   };
   return { manifest, manifestText: `${JSON.stringify(manifest, null, 2)}\n`, inventariText };
 }
@@ -336,7 +396,7 @@ export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'a
  * porta la clau `formatDelPaquet`, deduïda del mateix `bundle` (el mòdul
  * d'entrada i els trossos que s'han emés de veritat).
  */
-export function manifestDeReleasePlugin({ versio, node, generat, variant = 'autonom', format } = {}) {
+export function manifestDeReleasePlugin({ versio, node, generat, variant = 'autonom', format, mitjans } = {}) {
   let outDir;
   let registre = console;
   return {
@@ -355,7 +415,7 @@ export function manifestDeReleasePlugin({ versio, node, generat, variant = 'auto
         .map((f) => ({ cami: f.fileName, contingut: Buffer.from(f.type === 'chunk' ? f.code : f.source) }));
       const { manifest, manifestText, inventariText } = manifestDeRelease({
         versio, node, fitxers, variant, generat: generat ?? new Date().toISOString(),
-        paquet: descripcioDelPaquet(format, paquet)
+        paquet: descripcioDelPaquet(format, paquet), mitjans
       });
       fs.writeFileSync(path.join(eixida, FITXER_INVENTARI), inventariText);
       fs.writeFileSync(path.join(eixida, FITXER_RELEASE), manifestText);
@@ -532,12 +592,17 @@ export default defineConfig(({ mode }) => {
     if (errors.length) throw new Error(`[sdp-release] Este build no es pot publicar:\n- ${errors.join('\n- ')}`);
   }
   const generat = env.SOURCE_DATE_EPOCH ? new Date(Number(env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined;
+  /* Encàrrec 261019_1425 · En porten el directori (origen extern i bessones) i
+     l'autònom (només les bessones, D3); el natiu no. Valida l'origen del
+     directori abans de compilar i calcula les bessones sobre el public/ que
+     s'emetrà. */
+  const mitjans = politicaDeMitjans(variant, { env, directori: path.resolve(__dirname, 'public'), release });
 
   return {
     plugins: [
     react(),
-    recursosPublicsDelPlugin(),
-    manifestDeReleasePlugin({ versio, node, generat, variant, format }),
+    recursosPublicsDelPlugin({ politica: mitjans }),
+    manifestDeReleasePlugin({ versio, node, generat, variant, format, mitjans }),
     ...(perWordPress ? [senseReactIncrustat()] : []),
     ...(trossejat ? [carregadorDelPaquetPlugin(), espaisDelPaquetPlugin()] : []),
     {
@@ -588,7 +653,16 @@ export default defineConfig(({ mode }) => {
      development). Només un NODE_ENV posat per un .env.[mode] s'aplica després
      i el deixaria desquadrat: el projecte no en té cap. */
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV === 'production' ? 'production' : 'development')
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV === 'production' ? 'production' : 'development'),
+    /* Encàrrec 261019_1425 · La política de mitjans, segellada: assetResolver.js
+       la llig en avaluar-se, abans que townsContent.js i marketContent.js
+       resolguen cap imatge. Una clau de l'entorn i no una global de la
+       pàgina: als builds que no la porten (el natiu, el web) Vite la deixa en
+       undefined i cap amfitrió no la pot posar. Vite en copia el valor als
+       objectes import.meta.env sencers del bundle (un, ~10 KB, a cada paquet
+       que la porta: el directori i l'autònom). Sense política (un public/
+       sense bessones), la clau no hi és. */
+    ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {})
   },
   resolve: {
     alias: {

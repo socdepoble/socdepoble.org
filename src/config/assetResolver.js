@@ -117,6 +117,98 @@ function baseDeLScriptActual() {
 
 fixaBaseRecursos(baseDeLScriptActual());
 
+/* ── Política de mitjans del paquet (encàrrec 261019_1425) ─────────────
+   El paquet del directori de WordPress.org no porta l'arxiu ni el contingut
+   pesant, i el de l'autònom porta les bessones en lloc dels originals (D3):
+   vite.standalone.config.js segella ací (define de
+   import.meta.env.SDP_POLITICA_DE_MITJANS) quines carpetes es demanen a un
+   origen extern i quins originals tenen bessona .webp, que viatja en el seu
+   lloc. resolveAsset() n'és l'únic punt d'aplicació: la bessona en lloc de
+   l'original i, per a una carpeta externa, l'origen extern en lloc de la base
+   del paquet. Les dades no canvien mai (el cens, les llavors i les files del
+   port continuen nomenant l'original); només el que es demana.
+   Sense política (socdepoble.org, el natiu, les proves) tot resol com sempre
+   (Llei del Píxel); l'autònom en porta una sense origen extern, només amb
+   les bessones (D3). Una política mal formada no s'aplica. */
+let politicaActual = null;
+
+const RE_ORIGINAL = /^assets\/(?:[^/]+\/)*[^/]+\.(?:jpe?g|png)$/i;
+const RE_PREFIX_EXTERN = /^assets\/(?:[^/.][^/]*\/)+$/;
+
+function normalitzaPolitica(valor) {
+  let dades = valor;
+  if (typeof dades === 'string') {
+    try { dades = JSON.parse(dades); } catch { return null; }
+  }
+  if (!dades || typeof dades !== 'object') return null;
+  const bessones = Array.isArray(dades.bessones)
+    ? dades.bessones.filter((cami) => typeof cami === 'string' && RE_ORIGINAL.test(cami) && !cami.split('/').includes('..'))
+    : [];
+  const externs = Array.isArray(dades.externs)
+    ? dades.externs.filter((prefix) => typeof prefix === 'string' && RE_PREFIX_EXTERN.test(prefix))
+    : [];
+  const origen = normalitzaBaseRecursos(dades.origen);
+  // L'origen extern és una adreça absoluta: un camí el faria penjar de l'amfitrió.
+  const origenValid = origen && /^https?:\/\//i.test(origen) ? origen : '';
+  if (!bessones.length && !(origenValid && externs.length)) return null;
+  return Object.freeze({
+    origen: origenValid,
+    externs: Object.freeze(origenValid ? externs : []),
+    bessones: new Set(bessones),
+    // La bessona → el seu original, per al recurs de pintat (fallbackBessones.js).
+    originals: new Map(bessones.map((cami) => [cami.replace(/\.[^./]+$/, '.webp'), cami]))
+  });
+}
+
+/**
+ * Fixa la política de mitjans: { origen, externs: ['assets/…/'], bessones:
+ * ['assets/…/x.jpg'] }, com a objecte o JSON. null, o un valor mal format,
+ * la retira. Torna la vigent.
+ */
+export function fixaPoliticaDeMitjans(valor) {
+  politicaActual = normalitzaPolitica(valor);
+  return politicaActual;
+}
+
+/** L'origen extern de la política vigent ('' si no n'hi ha cap). */
+export function origenDeMitjansExterns() {
+  return politicaActual?.origen || '';
+}
+
+/** Cert si hi ha una política de mitjans vigent (el paquet del directori o l'autònom). */
+export function hiHaPoliticaDeMitjans() {
+  return politicaActual !== null;
+}
+
+/**
+ * L'adreça de l'original d'una bessona que s'ha demanat (absoluta o relativa,
+ * amb consulta o fragment), o '' si no és cap bessona de la política vigent.
+ * El recurs de pintat la demana quan la bessona no arriba (un origen extern
+ * encara sense desplegar): mateixa base o origen, mateixa consulta.
+ */
+export function recursOriginalDeBessona(url) {
+  if (!politicaActual || typeof url !== 'string') return '';
+  const fi = url.search(/[?#]/);
+  const cami = fi === -1 ? url : url.slice(0, fi);
+  const resta = fi === -1 ? '' : url.slice(fi);
+  for (let pos = cami.indexOf('assets/'); pos !== -1; pos = cami.indexOf('assets/', pos + 1)) {
+    if (pos > 0 && cami[pos - 1] !== '/') continue;
+    const original = politicaActual.originals.get(cami.slice(pos));
+    if (original) return `${cami.slice(0, pos)}${original}${resta}`;
+  }
+  return '';
+}
+
+/* Revisió adversarial (261019) · La clau de l'entorn i no una global: Vite
+   la substituïx pel valor segellat als builds del directori i de l'autònom
+   i, als que no en porten (el natiu, socdepoble.org), per undefined. Cap
+   amfitrió no pot instal·lar una política des de la pàgina (Model B: els
+   orígens els tria i els segella Sóc de Poble). Fora de Vite (node --test)
+   import.meta.env no existix: llavors tampoc no hi ha política. */
+let politicaSegellada;
+try { politicaSegellada = import.meta.env.SDP_POLITICA_DE_MITJANS; } catch { politicaSegellada = undefined; }
+fixaPoliticaDeMitjans(politicaSegellada);
+
 /* Gauntlet 261017 (I34) · El principi d'un camí propi que no és cap
    carpeta: barres (també la inversa, que el navegador llig com a barra) i
    segments de punts ('./', '../', '.', '..'). Es lleva sencer abans de posar
@@ -164,6 +256,18 @@ export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '')
   const fragment = posFragment === -1 ? '' : cami.slice(posFragment);
   const query = version ? `${senseFragment.includes('?') ? '&' : '?'}v=${version}` : '';
 
+  if (politicaActual) {
+    /* Encàrrec 261019_1425 · La política mira el fitxer, sense la consulta: la
+       bessona en lloc de l'original i, per a una carpeta externa, l'origen
+       extern en lloc de qualsevol base (el paquet no la porta). */
+    const posConsulta = senseFragment.indexOf('?');
+    let fitxer = posConsulta === -1 ? senseFragment : senseFragment.slice(0, posConsulta);
+    const consulta = posConsulta === -1 ? '' : senseFragment.slice(posConsulta);
+    if (politicaActual.bessones.has(fitxer)) fitxer = fitxer.replace(/\.[^./]+$/, '.webp');
+    if (politicaActual.externs.some((prefix) => fitxer.startsWith(prefix))) base = politicaActual.origen;
+    return `${base}/${fitxer}${consulta}${query}${fragment}`;
+  }
+
   return `${base}/${senseFragment}${query}${fragment}`;
 }
 
@@ -175,7 +279,7 @@ export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '')
 const RE_SRC_RECURS = /(\ssrc\s*=\s*)(["'])(\/assets\/[^"'<>\s]*)\2/gi;
 
 export function resolRecursosDeHtml(html) {
-  if (!baseActual || typeof html !== 'string') return html;
+  if ((!baseActual && !politicaActual) || typeof html !== 'string') return html;
   return html.replace(RE_SRC_RECURS, (_, atribut, cometa, ruta) => `${atribut}${cometa}${resolveAsset(ruta)}${cometa}`);
 }
 
@@ -185,7 +289,7 @@ export function resolRecursosDeHtml(html) {
    camí relatiu o qualsevol cosa que no siga text. Mai es reescriuen les dades
    guardades, només el que es pinta. Sense base, el mateix valor. */
 export function resolRecursPropi(valor) {
-  if (!baseActual || typeof valor !== 'string' || !valor.startsWith('/assets/')) return valor;
+  if ((!baseActual && !politicaActual) || typeof valor !== 'string' || !valor.startsWith('/assets/')) return valor;
   return resolveAsset(valor);
 }
 

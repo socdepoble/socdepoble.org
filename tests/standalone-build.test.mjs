@@ -6,7 +6,8 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { gzipSync as zlibGzip } from 'node:zlib';
+import { deflateRawSync, gzipSync as zlibGzip } from 'node:zlib';
+const zlibDeflateRaw = (dades) => deflateRawSync(dades, { level: 9 });
 import { parseAst } from 'rollup/parseAst';
 import { build } from 'vite';
 import { JSDOM, VirtualConsole } from 'jsdom';
@@ -33,6 +34,8 @@ import configStandalone, {
   manifestDeRelease,
   manifestDeReleasePlugin,
   nodeSegellat,
+  origenDeMitjans,
+  politicaDeMitjans,
   recursosDelPlugin,
   recursosPublicsDelPlugin,
   retiraPropisDelLloc,
@@ -40,7 +43,8 @@ import configStandalone, {
 } from '../vite.standalone.config.js';
 import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
 import { MARCA_DEL_CARREGADOR } from '../src/config/carregadorDelPaquet.js';
-import { ADAPTADOR, empaqueta, llegixZip, verificaInventari, verificaPaquet } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { ADAPTADOR, LIMIT_DIRECTORI, empaqueta, llegixZip, verificaInventari, verificaPaquet } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { MITJANS_EXTERNS_DEL_DIRECTORI, bessonaDe, bessonesDe, separaRecursos } from '../src/config/politicaDeMitjans.js';
 
 /* public/ de mostra: el que viatja i el que és propi del servidor del lloc. */
 const VIATGEN = [
@@ -1214,4 +1218,118 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   const segonaOnada = entrada.moduleIds.filter((id) => /@tiptap|prosemirror-|src\/data\/wikiManifest\.js|sections\/consola/.test(id.split(path.sep).join('/')));
   // Troballa per a la segona onada (React.lazy sobre peces estàtiques), no un error d'esta prova.
   t.diagnostic(`segona onada: ${segonaOnada.length ? `${segonaOnada.length} mòduls pesants encara a l'entrada (p. ex. ${path.relative(ARREL, segonaOnada[0])})` : 'cap mòdul de TipTap, ProseMirror, la Wiki ni la Consola a l\'entrada'}`);
+});
+
+/* ───────────── Encàrrec 261019_1425 · Política de mitjans (directori i autònom, D3) ───────────── */
+
+test('origenDeMitjans: https i un host públic; http només cap a un host local i fora de les releases', () => {
+  assert.equal(origenDeMitjans('https://socdepoble.org'), 'https://socdepoble.org');
+  assert.equal(origenDeMitjans('https://socdepoble.org/'), 'https://socdepoble.org');
+  assert.equal(origenDeMitjans('https://abc.supabase.co/storage/v1/object/public/mitjans/', { release: true }),
+    'https://abc.supabase.co/storage/v1/object/public/mitjans');
+  assert.equal(origenDeMitjans('http://localhost:3340'), 'http://localhost:3340', 'per a provar el directori a WordPress Studio');
+  for (const [valor, release] of [['http://localhost:3340', true], ['http://socdepoble.org', false], ['https://localhost:3340', true],
+    ['https://u:p@socdepoble.org', false], ['https://socdepoble.org/?a=1', false], ['https://socdepoble.org/#x', false],
+    ['ftp://socdepoble.org', false], ['socdepoble.org', false], ['', false], [undefined, false]]) {
+    assert.throws(() => origenDeMitjans(valor, { release }), /SDP_ORIGEN_MITJANS/, `${valor} (release ${release})`);
+  }
+});
+
+test('politicaDeMitjans: l’autònom, només les bessones (D3); el directori, els prefixos externs i les bessones del public/ que s’emetrà', () => {
+  assert.equal(politicaDeMitjans('autonom'), null, 'sense public/ (cap bessona) no hi ha política');
+  assert.throws(() => politicaDeMitjans('joomla'), /SDP_VARIANT desconeguda/);
+  const arrel = publicDeMostra(['assets/ui/v.jpg', 'assets/ui/v.webp', 'assets/towns/a/1.webp', 'assets/b/og.jpg', 'assets/b/og.png', 'assets/b/og.webp']);
+  try {
+    const politica = politicaDeMitjans('wordpress', { directori: arrel });
+    assert.ok(Object.isFrozen(politica));
+    assert.equal(politica.origen, MITJANS_EXTERNS_DEL_DIRECTORI.origen);
+    assert.deepEqual(politica.externs, MITJANS_EXTERNS_DEL_DIRECTORI.prefixos);
+    assert.deepEqual(politica.bessones, ['assets/towns/a/1.jpg', 'assets/ui/v.jpg'], 'og.jpg i og.png col·lidixen: cap no en té');
+    // Decisió D3 del Mestre (261019) · L'autònom substituïx les mateixes bessones i no té cap origen extern.
+    const autonom = politicaDeMitjans('autonom', { directori: arrel });
+    assert.ok(Object.isFrozen(autonom));
+    assert.deepEqual(autonom, { origen: null, externs: [], bessones: politica.bessones });
+    const altre = politicaDeMitjans('wordpress', { directori: arrel, env: { SDP_ORIGEN_MITJANS: 'https://abc.supabase.co/storage/v1/object/public/mitjans' }, release: true });
+    assert.equal(altre.origen, 'https://abc.supabase.co/storage/v1/object/public/mitjans');
+    assert.throws(() => politicaDeMitjans('wordpress', { directori: arrel, env: { SDP_ORIGEN_MITJANS: 'http://localhost:3340' }, release: true }), /SDP_ORIGEN_MITJANS/);
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('el plugin amb política no emet els externs ni els originals substituïts; sense, com sempre', () => {
+  const arrel = publicDeMostra(['assets/ui/v.jpg', 'assets/ui/v.webp', 'assets/towns/a/1.webp']);
+  try {
+    const politica = politicaDeMitjans('wordpress', { directori: arrel });
+    const emesos = emet(recursosPublicsDelPlugin({ directori: arrel, politica })).map((f) => f.fileName).sort();
+    assert.ok(!emesos.some((cami) => cami.startsWith('assets/towns/')), 'cap extern');
+    assert.ok(!emesos.includes('assets/ui/v.jpg') && emesos.includes('assets/ui/v.webp'), 'la bessona en lloc de l’original');
+    assert.ok(emesos.includes('assets/system/ui/logo.svg') && emesos.includes('rag-index.json'), 'l’estructura viatja');
+    assert.deepEqual(emet(recursosPublicsDelPlugin({ directori: arrel })).map((f) => f.fileName).sort(),
+      [...VIATGEN, 'assets/towns/a/1.webp', 'assets/ui/v.jpg', 'assets/ui/v.webp'].sort());
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('manifestDeRelease amb `mitjans`: clau additiva amb l’origen, els externs i quantes bessones; fora de contracte i node', () => {
+  const fitxers = [{ cami: ENTRADA_DEL_PAQUET, contingut: Buffer.from('x') }];
+  const node = { origen: 'https://abc.supabase.co', mode: 'remote', tenant: null, desenvolupament: false };
+  const sense = manifestDeRelease({ versio: '1.2.3', node, fitxers, generat: '2026-10-19T12:00:00.000Z' }).manifest;
+  assert.ok(!('mitjans' in sense));
+  const mitjans = { origen: 'https://socdepoble.org', externs: ['assets/uploads/'], bessones: ['assets/a/x.jpg', 'assets/b/y.png'] };
+  const amb = manifestDeRelease({ versio: '1.2.3', node, fitxers, generat: '2026-10-19T12:00:00.000Z', variant: 'wordpress', mitjans }).manifest;
+  assert.deepEqual(amb.mitjans, { origen: 'https://socdepoble.org', externs: ['assets/uploads/'], bessones: 2 });
+  assert.deepEqual(amb.contracte, sense.contracte);
+  assert.deepEqual(amb.node, sense.node);
+});
+
+test('la config: el directori segella l’origen extern i les bessones; l’autònom, només les bessones; un origen dolent falla abans de compilar', () => {
+  const base = { SDP_RELEASE: '', SDP_VERSIO: '', SDP_PAQUET: '', SDP_ORIGEN_MITJANS: undefined, VITE_SUPABASE_URL: 'http://localhost:54321', VITE_SUPABASE_ANON_KEY: CLAU_DE_PROVA };
+  const config = () => configStandalone({ mode: 'production', command: 'build' });
+  ambEntorn({ ...base, SDP_VARIANT: '' }, () => {
+    // Decisió D3 del Mestre (261019) · L'autònom ho porta tot, però la bessona en lloc de l'original.
+    const autonom = JSON.parse(config().define['import.meta.env.SDP_POLITICA_DE_MITJANS']);
+    assert.equal(autonom.origen, null);
+    assert.deepEqual(autonom.externs, []);
+    assert.deepEqual(autonom.bessones, bessonesDe(recursosDelPlugin(path.resolve('public'))).filter((c) => c.startsWith('assets/')));
+  });
+  ambEntorn({ ...base, SDP_VARIANT: 'wordpress' }, () => {
+    const segellada = JSON.parse(config().define['import.meta.env.SDP_POLITICA_DE_MITJANS']);
+    assert.equal(segellada.origen, 'https://socdepoble.org');
+    assert.deepEqual(segellada.externs, [...MITJANS_EXTERNS_DEL_DIRECTORI.prefixos]);
+    assert.deepEqual(segellada.bessones, bessonesDe(recursosDelPlugin(path.resolve('public'))).filter((c) => c.startsWith('assets/')), 'les bessones del public/ real, sota assets/');
+  });
+  ambEntorn({ ...base, SDP_VARIANT: 'wordpress', SDP_ORIGEN_MITJANS: 'http://socdepoble.org' }, () => {
+    assert.throws(config, /SDP_ORIGEN_MITJANS/);
+  });
+});
+
+/* El límit només avisa a empaqueta.mjs (el zip s'escriu igual); ací la porta:
+   el que la variant del directori porta de public/ ha de deixar lloc per al
+   bundle (1,34 MiB comprimit el 261019) dins de LIMIT_DIRECTORI. */
+const RESERVA_DEL_BUNDLE = 2 * 1024 * 1024;
+
+test('sobre el public/ real: el que porta el directori cap dins del límit de WordPress.org amb lloc per al bundle', (t) => {
+  const arrel = path.resolve('public');
+  if (!fs.existsSync(arrel)) { t.skip('sense public/ en aquest arbre'); return; }
+  const rels = recursosDelPlugin(arrel);
+  const politica = { externs: MITJANS_EXTERNS_DEL_DIRECTORI.prefixos, bessones: bessonesDe(rels) };
+  const { viatgen, substituits } = separaRecursos(rels, politica);
+  for (const original of substituits) assert.ok(viatgen.includes(bessonaDe(original)), original);
+  // La mateixa estimació que creaZip: deflate de nivell 9 o emmagatzemat, més les capçaleres.
+  const zip = viatgen.reduce((suma, rel) => {
+    const dades = fs.readFileSync(path.join(arrel, rel));
+    return suma + Math.min(zlibDeflateRaw(dades).length, dades.length) + 76 + 2 * Buffer.byteLength(rel);
+  }, 0);
+  assert.ok(zip + RESERVA_DEL_BUNDLE < LIMIT_DIRECTORI,
+    `public/ del directori: ${zip} B comprimits; amb la reserva del bundle passa de ${LIMIT_DIRECTORI} B. Moveu contingut a una carpeta externa (politicaDeMitjans.js) o convertiu-lo a WebP.`);
+});
+
+/* Revisió adversarial (261019, R1/F3) · L'origen dels mitjans del directori
+   servix public/: el visor hi llig l'EXIF amb Range i el reenquadrament hi
+   descarrega la foto des d'un altre origen (el WordPress que l'incrusta). */
+test('la configuració d’allotjament del repositori servix /assets/ amb CORS i exposa Content-Range i ETag', () => {
+  const { headers } = JSON.parse(fs.readFileSync(path.resolve('vercel.json'), 'utf8'));
+  const deAssets = headers.find((h) => h.source === '/assets/(.*)');
+  assert.ok(deAssets, 'cap regla per a /assets/');
+  const valor = (clau) => deAssets.headers.find((h) => h.key === clau)?.value;
+  assert.equal(valor('Access-Control-Allow-Origin'), '*');
+  assert.deepEqual(valor('Access-Control-Expose-Headers').split(',').map((s) => s.trim()).sort(), ['Content-Range', 'ETag']);
 });

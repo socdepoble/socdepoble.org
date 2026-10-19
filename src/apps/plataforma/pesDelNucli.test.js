@@ -173,8 +173,11 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
 
   /* [DEFECTE] Deute conegut: recursosDelPlugin (vite.standalone.config.js)
      copia tot public/, també els mitjans de la Gestoria. Quan la fase 2 els
-     excloga del paquet del nucli, esta prova s'ha de girar. */
+     excloga del paquet del nucli, esta prova s'ha de girar.
+     Decisió D3 del Mestre (261019) · Un original amb bessona .webp viatja com
+     a bessona: el mitjà continua dins del paquet, en l'un format o en l'altre. */
   test('[DEFECTE] els mitjans de la Gestoria encara viatgen dins del paquet del nucli', () => {
-    for (const cami of MITJANS_DE_LA_GESTORIA) expect(midaDe(cami), cami).toBeGreaterThan(0);
+    const bessona = (cami) => cami.replace(/\.[^./]+$/, '.webp');
+    for (const cami of MITJANS_DE_LA_GESTORIA) expect(midaDe(cami) ?? midaDe(bessona(cami)), cami).toBeGreaterThan(0);
   });
 });

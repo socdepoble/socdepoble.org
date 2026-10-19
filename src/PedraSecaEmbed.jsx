@@ -112,7 +112,8 @@ import { normalizeBackendConfig } from './config/backendConfig.js';
 import { getRuntimePolicy } from './config/runtimePolicy.js';
 import { normalitzaBase, triaRouter } from './app/contexts/politicaRouter.js';
 import { llegeixConfigAmfitrio, sanejaEtiqueta, sanejaIdentificador, sanejaRuta } from './config/configAmfitrio.js';
-import { baseRecursos, fixaBaseRecursos, resolveAsset } from './config/assetResolver.js';
+import { baseRecursos, fixaBaseRecursos, hiHaPoliticaDeMitjans, origenDeMitjansExterns, resolveAsset } from './config/assetResolver.js';
+import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
 import { esLlenguaSuportada } from './config/i18n.js';
 import { ORIGENS_BACKEND } from './config/origensSollutia.js';
@@ -815,6 +816,11 @@ class SocDePobleElement extends BaseElement {
 
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
     if (!this._closedRoot) this._closedRoot = this.attachShadow({ mode: 'closed' });
+    /* Encàrrec 261019_1425 · Amb política de mitjans (el directori o l'autònom),
+       una bessona que no arriba torna a l'original una vegada. Una per shadow root. */
+    if (!this._retiraFallbackBessones && hiHaPoliticaDeMitjans()) {
+      this._retiraFallbackBessones = instalaFallbackDeBessones(this._closedRoot);
+    }
 
     const arrel = this._closedRoot;
     const full = obtenirFull();
@@ -953,6 +959,12 @@ class SocDePobleElement extends BaseElement {
   _aplicaBaseRecursos() {
     const pluginUrl = typeof this._config?.pluginUrl === 'string' ? this._config.pluginUrl.trim() : '';
     if (pluginUrl && pluginUrl !== '/') fixaBaseRecursos(pluginUrl);
+
+    /* Encàrrec 261019_1425 · El paquet del directori demana l'arxiu i el
+       contingut a l'origen extern que va segellar el build: és nostre, i
+       sense registrar-lo sanitize.js en bloquejaria les imatges. */
+    const externs = origenDeMitjansExterns();
+    if (externs && typeof window !== 'undefined' && origenAbsolut(externs) !== window.location.origin) permetOrigenMitjans(externs);
 
     const base = baseRecursos();
     if (!base) return;
