@@ -11,15 +11,18 @@ import configNatiu, {
   ENTRADA_NATIVA,
   FONTS_LOCALS,
   MODE_NATIU,
+  ORIGINALS_CITATS_SENSE_RESOLUTOR,
   SUBSTITUCIONS_NATIVES,
   cspNativa,
   errorsEntornNatiu,
   heretadesDelLloc,
   indexNatiuPlugin,
   nomsDeclarats,
+  politicaDeMitjansNativa,
   transformaIndexNatiu
 } from '../vite.natiu.config.js';
-import { PROPIS_DEL_LLOC, esHostLocal, recursosDelPlugin } from '../vite.standalone.config.js';
+import { PROPIS_DEL_LLOC, esHostLocal, politicaDeMitjans, recursosDelPlugin } from '../vite.standalone.config.js';
+import { bessonaDe } from '../src/config/politicaDeMitjans.js';
 
 /* El build de l'app nativa (ARQUITECTURA.txt §4.4 i §5, 261003) es prova amb
    FIXTURES, com tests/standalone-build.test.mjs: les peces pures sobre
@@ -29,6 +32,8 @@ import { PROPIS_DEL_LLOC, esHostLocal, recursosDelPlugin } from '../vite.standal
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX = fs.readFileSync(path.join(ARREL, 'index.html'), 'utf8');
+const PUBLIC = path.join(ARREL, 'public');
+const CLAU_POLITICA = 'import.meta.env.SDP_POLITICA_DE_MITJANS';
 const ORIGEN = 'https://abcdefghijklmnop.supabase.co';
 const WSS = 'wss://abcdefghijklmnop.supabase.co';
 const CLAU = 'sb_publishable_' + 'fixturesintetica';
@@ -358,6 +363,95 @@ test('els recursos de public/ que viatgen a l\'app: els del connector, sense wor
   if (fs.existsSync(path.join(publicReal, 'fonts', 'noto-sans.css'))) assert.ok(rels.includes('fonts/noto-sans.css'), 'les fonts locals hi van');
 });
 
+/* ─────────────────── La política de mitjans de l'app ───────────────────
+   Fase C (261019_2115, tasca 2) · la de l'autònom (D3), sense origen extern
+   i sense els originals que l'app cita sense resolutor. */
+
+test('politicaDeMitjansNativa: la de l\'autònom, sense origen ni carpetes externes i sense els exclosos; pura', () => {
+  const [exclos] = ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original);
+  const autonom = Object.freeze({ origen: null, externs: Object.freeze([]), bessones: Object.freeze(['assets/a/u.jpg', exclos, 'assets/b/d.PNG']) });
+  const nativa = politicaDeMitjansNativa(autonom);
+  assert.deepEqual(nativa, { origen: null, externs: [], bessones: ['assets/a/u.jpg', 'assets/b/d.PNG'] });
+  assert.ok(Object.isFrozen(nativa) && Object.isFrozen(nativa.externs) && Object.isFrozen(nativa.bessones));
+  assert.deepEqual(autonom.bessones, ['assets/a/u.jpg', exclos, 'assets/b/d.PNG'], 'no toca la rebuda');
+  // Dins de l'app tot és local: una política amb origen extern (la del directori) hi arriba sense ell.
+  const directori = { origen: 'https://socdepoble.org', externs: ['assets/uploads/'], bessones: ['assets/uploads/x.jpg'] };
+  assert.deepEqual(politicaDeMitjansNativa(directori), { origen: null, externs: [], bessones: ['assets/uploads/x.jpg'] });
+  // Sense cap bessona que quede, null, com politicaDeMitjans; `excloses` es pot donar.
+  assert.equal(politicaDeMitjansNativa({ origen: null, externs: [], bessones: [exclos] }), null);
+  assert.equal(politicaDeMitjansNativa(null), null);
+  assert.equal(politicaDeMitjansNativa(undefined), null);
+  assert.equal(politicaDeMitjansNativa({}), null);
+  assert.deepEqual(politicaDeMitjansNativa(autonom, []).bessones, autonom.bessones);
+  assert.deepEqual(politicaDeMitjansNativa(autonom, new Set(['assets/a/u.jpg'])).bessones, [exclos, 'assets/b/d.PNG']);
+});
+
+test('ORIGINALS_CITATS_SENSE_RESOLUTOR: cada cita continua on diu, i cada original té bessona a public/ (si no, l\'excepció sobra)', (t) => {
+  assert.ok(Object.isFrozen(ORIGINALS_CITATS_SENSE_RESOLUTOR) && ORIGINALS_CITATS_SENSE_RESOLUTOR.every(Object.isFrozen));
+  assert.deepEqual(ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original),
+    ['assets/system/ui/xat-bg-map-v2.jpg', 'assets/notes/bloc_notes_vintage.jpg']);
+  for (const { original, que, fitxer, cites } of ORIGINALS_CITATS_SENSE_RESOLUTOR) {
+    assert.match(original, /^assets\/(?:[^/]+\/)*[^/]+\.(?:jpe?g|png)$/i, original);
+    assert.ok(que && cites.length, original);
+    const text = fs.readFileSync(path.join(ARREL, fitxer), 'utf8');
+    for (const cita of cites) {
+      assert.ok(text.includes(cita), `${fitxer} ja no porta «${cita}»: si la cita passa pel resolutor, lleva ${original} de ORIGINALS_CITATS_SENSE_RESOLUTOR`);
+    }
+  }
+  if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
+  const autonom = politicaDeMitjans('autonom', { directori: PUBLIC });
+  for (const { original } of ORIGINALS_CITATS_SENSE_RESOLUTOR) {
+    assert.ok(autonom?.bessones.includes(original), `${original} ja no té bessona a public/: l'excepció sobra`);
+  }
+});
+
+test('cap url() dels CSS de src/ no cita un original amb bessona que l\'app substituïsca', (t) => {
+  if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
+  const ambBessona = new Set(politicaDeMitjans('autonom', { directori: PUBLIC })?.bessones ?? []);
+  const exclosos = new Set(ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original));
+  const citats = fitxersAmb(path.join(ARREL, 'src'), ['.css']).flatMap((f) =>
+    [...fs.readFileSync(f, 'utf8').matchAll(/url\(\s*(['"]?)\/?(assets\/[^'")\s]+?\.(?:jpe?g|png))\1\s*\)/gi)]
+      .map((m) => ({ fitxer: path.relative(ARREL, f), original: m[2] })));
+  assert.ok(citats.some(({ original }) => exclosos.has(original)), 'la prova veu el fons del Xat de tokens.css');
+  const perduts = citats.filter(({ original }) => ambBessona.has(original) && !exclosos.has(original));
+  assert.deepEqual(perduts, [], 'dins de l\'app, eixos url() demanarien un original que no hi viatja: afig-los a ORIGINALS_CITATS_SENSE_RESOLUTOR');
+});
+
+test('la config porta la política nativa als dos llocs: el connector de recursos no emet els substituïts i el define la segella', (t) => {
+  ambEntornNatiu({ VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU }, () => {
+    const cfg = configNatiu({ mode: MODE_NATIU, command: 'build' });
+    const esperada = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: PUBLIC }));
+    if (!esperada) {
+      assert.deepEqual(cfg.define, {}, 'sense bessones a public/, cap política');
+      t.skip('sense bessones a public/ en este arbre');
+      return;
+    }
+    // El define: la mateixa política, sense origen ni carpetes externes i sense els exclosos.
+    const segellada = JSON.parse(cfg.define[CLAU_POLITICA]);
+    assert.deepEqual(segellada, esperada);
+    assert.equal(segellada.origen, null);
+    assert.deepEqual(segellada.externs, []);
+    for (const { original } of ORIGINALS_CITATS_SENSE_RESOLUTOR) assert.ok(!segellada.bessones.includes(original), original);
+    // El connector: sobre un public/ de mostra, la bessona en lloc d'un substituït; un exclòs viatja amb la seua.
+    const [substituit] = esperada.bessones;
+    const exclos = ORIGINALS_CITATS_SENSE_RESOLUTOR[0].original;
+    const mostra = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-natiu-public-'));
+    try {
+      for (const rel of [substituit, bessonaDe(substituit), exclos, bessonaDe(exclos), 'assets/sense-bessona.jpg', 'favicon.svg']) {
+        fs.mkdirSync(path.dirname(path.join(mostra, rel)), { recursive: true });
+        fs.writeFileSync(path.join(mostra, rel), rel);
+      }
+      const connector = cfg.plugins.flat(Infinity).find((p) => p && p.name === 'sdp-recursos-publics');
+      connector.configResolved({ publicDir: mostra });
+      const emesos = [];
+      connector.generateBundle.call({ emitFile: ({ fileName }) => emesos.push(fileName) });
+      assert.deepEqual(emesos.sort(), [bessonaDe(substituit), exclos, bessonaDe(exclos), 'assets/sense-bessona.jpg', 'favicon.svg'].sort());
+    } finally {
+      fs.rmSync(mostra, { recursive: true, force: true });
+    }
+  });
+});
+
 test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot avaluar abans de la lease', () => {
   const codi = fs.readFileSync(path.join(ARREL, 'vite.natiu.config.js'), 'utf8');
   assert.ok(!codi.includes(CAP), 'cap Capacitor');
@@ -386,6 +480,26 @@ test('eixida real de dist-natiu/: sense worker, manifest ni servidor del lloc, i
   const js = fitxersAmb(dir, ['.js']);
   assert.ok(js.length > 0, 'el build ha emés JS');
   assert.ok(js.some((f) => fs.readFileSync(f, 'utf8').includes(origens[0])), `cap .js porta ${origens[0]}`);
+});
+
+test('eixida real de dist-natiu/: les bessones en lloc dels originals substituïts, els exclosos amb la seua, i la política segellada al JS', (t) => {
+  const dir = path.join(ARREL, DIRECTORI_NATIU);
+  if (!fs.existsSync(dir)) { t.skip('cal npm run build:natiu: dist-natiu/ no existix en este arbre'); return; }
+  if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
+  const politica = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: PUBLIC }));
+  if (!politica) { t.skip('sense bessones a public/ en este arbre'); return; }
+  const presents = politica.bessones.filter((original) => fs.existsSync(path.join(dir, original)));
+  assert.deepEqual(presents, [], 'cap original substituït viatja a l\'app');
+  const senseBessona = politica.bessones.filter((original) => !fs.existsSync(path.join(dir, bessonaDe(original))));
+  assert.deepEqual(senseBessona, [], 'cada substituït hi té la bessona');
+  for (const { original } of ORIGINALS_CITATS_SENSE_RESOLUTOR) {
+    assert.ok(fs.existsSync(path.join(dir, original)), `${original}: l'app el cita sense resolutor i hi ha de viatjar`);
+  }
+  // El define, dins del JS: l'objecte literal amb les mateixes bessones, en el mateix ordre.
+  const segellades = fitxersAmb(dir, ['.js']).flatMap((f) =>
+    [...fs.readFileSync(f, 'utf8').matchAll(/\{origen:null,externs:\[\],bessones:(\[[^\]]*\])\}/g)].map((m) => JSON.parse(m[1])));
+  assert.ok(segellades.length > 0, 'cap .js porta la política segellada');
+  for (const bessones of segellades) assert.deepEqual(bessones, politica.bessones);
 });
 
 test('eixida real del connector (wordpress-plugin/dist/): cap rastre de Capacitor', (t) => {

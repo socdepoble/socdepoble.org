@@ -13,7 +13,7 @@ contracte.llig:
 contracte.escriu:
   - src/components/layout/AppGridShell.jsx
 ---
-\n# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
+# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
 
 Aquesta skill documenta la lògica de disseny i comportament de la interfície principal de gestió a Sóc de Poble (`AppGridShell`), així com la seua integració a través de `UniversalWorkspace`.
 

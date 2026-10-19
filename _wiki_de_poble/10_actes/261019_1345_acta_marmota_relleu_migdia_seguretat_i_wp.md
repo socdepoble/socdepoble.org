@@ -79,15 +79,24 @@ En resposta a la reflexió del Mestre sobre la lleugeresa del paquet:
 - **F01 (SQL de permisos d'email a organitzacions):** Es manté a `pegats/` pendent de ser provat en staging abans d'executar-lo a producció, atés l'avís de Codex que `grant select (contact_email, public_email)` a usuaris anònims suposa una exposició innecessària.
 - **F10 (Flux d'adopció de compte):** Pendent d'implementar amb confirmació segura d'identitat.
 
+### 4. Diagnosi de la Prova Real a `gentdelatorre.net` (Avatares i Lighthouse)
+
+El Mestre Javi ha instal·lat la release v1.1.7 a producció de proves (`gentdelatorre.net`) i ha realitzat una auditoria visual i de Lighthouse (#sdp=/xat):
+
+1. **Mètriques de Càrrega (Lighthouse 13.4.1):**
+   - **FCP (First Contentful Paint): 0.8 s.** El motor de Sóc de Poble arrenca a l'instant, confirmant la lleugeresa de l'arquitectura JS/CSS.
+   - **LCP (Largest Contentful Paint): 9.9 s.** Està lligat directament a la descàrrega i descodificació d'actius multimèdia de gran resolució presents a `public/assets/uploads/`. Confirma la necessitat d'externalitzar el contingut multimèdia pesant fora del paquet del connector.
+
+2. **Diagnosi dels Avatares (Per què "JL" a la barra i "SD" a comunitats?):**
+   - **Barra Superior ("JL" vs Foto de Perfil):** `BotoIdentitatActiva.jsx` obté l'avatar de `useIdentitatDeLaBarra.js`, que depèn de `personaDeSessio.js`. Aquesta funció exigeix que el perfil estiga resolt i amb la firma validada (`perfil.firma === firmaDePersona(usuari)`). Si el perfil de Supabase es troba en estat asíncron de càrrega o no hi ha avatar al JWT d'auth, la barra superior fa fallback ràpid a les inicials ("JL"). En canvi, el detall de perfil i les notes consulten directament la taula `profiles` de Supabase Storage on la URL de la foto està guardada.
+   - **Comunitat "Sóc de Poble" ("SD" connectat vs Logotip Verd en Incògnit):** En mode incògnit (sense sessió), el client carrega el catàleg canònic de la llavor pública estàtica on el logotip de la comunitat té la ruta local directa (`assets/...`). En canvi, amb sessió activa, l'aplicació intenta sincronitzar la pertinença de l'actor via API/Supabase; si la URL de la comunitat a la base de dades no està informada o pendent de signatura, cau al placeholder per defecte d'inicials ("SD").
+
 <!-- SDP:SECTION acta.s5 -->
 ## Relleu per a la Represa (Vesprada del 19-10-2026)
 
 Quan el Mestre encenga l'ordinador després de dinar, la Colmena reprendrà les tasques en el següent ordre d'execució:
 
-1. **Auditoria Visual a `gentdelatorre.net`:**
-   - Pujar `wordpress-plugin/builds/261019_1344_wordpress_enxufe_v1.1.7.zip` al WordPress de proves.
-   - Verificar la càrrega del Web Component, el renderitzat de targetes de perfil i el selector de multimèdia.
-2. **Implementació del Panell de Superadministració i Commutador de 3 Rols:**
+1. **Panell de Superadministració i Commutador de 3 Rols:**
    - Ubicació acordada: Dins de «El compte» / `DetallAjust.jsx`.
    - Component UI: `GrupOpcions.jsx` amb aspecte de targetes accessibles.
    - Opcions:
@@ -95,10 +104,15 @@ Quan el Mestre encenga l'ordinador després de dinar, la Colmena reprendrà les 
      2. **Editor de Poble:** Gestió de continguts i comerços locals.
      3. **Superadministrador (Sóc de Poble):** Control de nodes, tenants i paràmetres globals.
    - Govern: Separar `rolReal` (verificat per sessió/servidor) de `rolSimulat` (degradació temporal en memòria per provar la interfície des dels ulls d'un veí).
+2. **Ajust d'Avatares a la Barra Superior:**
+   - Assegurar que `useIdentitatDeLaBarra` i `personaDeSessio` reben l'avatar de `profiles` de Supabase sense esperar a la reconciliació de la firma d'auth.
 3. **Arrencada de Capacitor (Botigues Mòbils):**
    - Configurar `vite.natiu.config.js`.
    - Compilar a `dist-natiu`.
    - Executar `npx cap add ios` i `npx cap add android` per preparar els binaris d'Apple TestFlight i Google Play Console segons les fitxes redactades a `FITXES_BOTIGUES.txt`.
+4. **Optimització de Càrrega i LCP:**
+   - Treure el contingut d'imatges pesants del ZIP del connector perquè viatgen via CDN/Supabase Storage.
 
 ---
 *Acta registrada amb honor per la IAIA MarIA. Bon profit i bon descans tèrmic, Mestre Javi!*
+

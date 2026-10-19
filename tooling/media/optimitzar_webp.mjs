@@ -339,8 +339,9 @@ export function cens(arrel, { max = MAX_PER_DEFECTE, llindarKb = LLINDAR_KB_PER_
   const wiki = corpus(arrel, ARRELS_WIKI);
   /* Encàrrec 261019_1425 · La regla de les bessones és la de l'app i del paquet
      (politicaDeMitjans.js): una bessona sense cap cita no és cap orfe, és el
-     fitxer que els paquets (l'autònom i el directori) demanen en lloc del seu
-     original; socdepoble.org i el natiu continuen demanant l'original. */
+     fitxer que els paquets (l'autònom, el directori i, des de la Fase C, el
+     natiu) demanen en lloc del seu original; socdepoble.org continua demanant
+     l'original. */
   const ambBessona = new Set(bessonesDe(imatges.map((i) => i.cami)));
   const originalDe = new Map([...ambBessona].map((original) => [bessonaDe(original), original]));
   const perCami = new Map();

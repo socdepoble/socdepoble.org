@@ -72,6 +72,13 @@
     "build:web": "vite build",
     "build:wp": "vite build -c vite.standalone.config.js",
     "build:wp:directori": "SDP_VARIANT=wordpress vite build -c vite.standalone.config.js",
+    "build:natiu": "npm run build:tokens && npm run rag:build && npm run slugs:build && node tooling/wiki/compile-wiki-to-app.mjs && vite build -c vite.natiu.config.js --mode natiu",
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android",
+    "cap:ios": "cap open ios",
+    "botigues:preflight": "node scripts/botigues/preflight.mjs --plataforma totes",
+    "botigues:ios": "node scripts/botigues/puja-ios.mjs",
+    "botigues:android": "node scripts/botigues/puja-android.mjs",
     "prepare": "husky",
     "preview": "vite preview --host 0.0.0.0",
     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",
@@ -104,6 +111,9 @@
     "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all"
   },
   "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@supabase/supabase-js": "^2.112.4",
     "@tiptap/core": "^3.31.3",
     "@tiptap/extension-image": "^3.31.3",
@@ -117,6 +127,7 @@
   },
   "devDependencies": {
     "@babel/parser": "^8.0.4",
+    "@capacitor/cli": "8.5.3",
     "@eslint/js": "^9.39.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",

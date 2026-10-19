@@ -67,6 +67,10 @@ const botiga = { id: 'B', mena: 'empresa', nom: 'Botiga', dades: { role: 'member
 const grups = () => m.workspace.model.navigationGroups;
 const filsDe = (categoria) => m.workspace.model.items.filter((i) => i.categoryIds.includes(categoria)).map((i) => i.id);
 const item = (id) => m.workspace.model.items.find((i) => i.id === id);
+/* Fase C (punt 9, ordre del Mestre 19-10-2026) · renderDetail porta «Veure
+   fitxa pública» (AccesFitxaPublica) damunt de cada apartat d'una identitat:
+   l'apartat és el segon fill del fragment. */
+const apartatDe = (detall) => detall.props.children[1];
 
 beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
@@ -368,7 +372,8 @@ test('261008 · el diàleg de NOVA ORG ja no rep empresesMare, i PerfilShell ja 
    ambMembres del context del Perfil; sense declarar-ho (undefined), false. */
 test('261008 · «El compte» rep ambMembres del context; sense, false', () => {
   render(<PerfilShell />);
-  expect(m.workspace.renderDetail({ item: item('O-compte') }).props.ambMembres).toBe(false);
+  // Expectativa actualitzada a propòsit: Fase C, punt 9 (l'apartat, dins del fragment, apartatDe).
+  expect(apartatDe(m.workspace.renderDetail({ item: item('O-compte') })).props.ambMembres).toBe(false);
   cleanup();
   m.perfil = { ...m.perfil, ambMembres: true };
   render(<PerfilShell />);
@@ -479,9 +484,10 @@ test('T43 · «El compte» d’una organització rep el seu correu tal com l’h
   const contacte = { estat: 'llest', correu: 'forn@x.cat', public: false, perDefecte: { origen: 'cap', correu: null } };
   m.perfil = { ...m.perfil, contactes: { O: contacte } };
   render(<PerfilShell />);
-  const detall = m.workspace.renderDetail({ item: item('O-compte') });
+  // Expectativa actualitzada a propòsit: Fase C, punt 9 (l'apartat, dins del fragment, apartatDe).
+  const detall = apartatDe(m.workspace.renderDetail({ item: item('O-compte') }));
   expect(detall.props.contacte).toBe(contacte);
-  expect(m.workspace.renderDetail({ item: item('G-compte') }).props.contacte).toBeNull();
+  expect(apartatDe(m.workspace.renderDetail({ item: item('G-compte') })).props.contacte).toBeNull();
 });
 
 test('mentre carrega o si falla, ho diu', () => {

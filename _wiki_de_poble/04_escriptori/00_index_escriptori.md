@@ -35,8 +35,13 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
-- [[261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
-- [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
+- [[261019_2155_auditoria_claude_capacitor_mobil]]
+- [[261019_2145_auditoria_gemini_botigues_i_alletjament_core]]
+- [[261019_2115_prompt_gemini_auditoria_botigues_mobil]]
+- [[261019_2115_prompt_claude_capacitor_mobil]]
+- [[261019_2115_pla_implementacio_capacitor_mobil]]
+- [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
+- [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2105_correccio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -764,6 +769,19 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_auditoria_gemini_skills_i_multimedia]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_pla_implementacio_alliberament_multimedia_i_conversio_webp]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_prompt_alliberament_multimedia_i_conversio_webp]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_prompt_auditoria_skills_i_contrast_gemini]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1447_auditoria_claude_multimedia_webp]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1715_auditoria_claude_infraestructura]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1715_pla_implementacio_infraestructura_skills_i_mobil]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1715_prompt_claude_infraestructura_i_mobil]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1715_prompt_gemini_auditoria_skills_i_laboratori]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1730_auditoria_gemini_skills_i_laboratori]]
+- [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1825_auditoria_gemini_editorial_i_skills]]
+- [[../90_arxiu_historic/261019_1430_prompt_alliberament_multimedia_i_conversio_webp]]
+- [[../90_arxiu_historic/261019_1425_pla_alliberament_multimedia_i_conversio_webp]]
 - [[../90_arxiu_historic/261019_Sessio_Gauntlet_i_WP/261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]]
 - [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_1605_pla_implementacio_perfil_public_multimedia_i_poble]]
 - [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_1605_prompt_claude_gemini_perfil_public_i_multimedia]]
@@ -898,6 +916,7 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Àncores sense destí (Porta Olivera)
 
+- 261019 · `261019_1715_prompt_gemini_auditoria_skills_i_laboratori`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261013 · `261013_1415_prompt_chatgpt_auditor`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261011 · `Claude`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - [[../10_actes/261014_1315_acta_marmota]]
@@ -910,3 +929,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261018_2105_acta_marmota_auditoria_trio_i_relleu_implementacio]]
 - [[../10_actes/261018_2330_acta_marmota_seguretat_claude_i_tancament]]
 - [[../10_actes/261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]
+- [[../10_actes/261019_2145_acta_marmota_relleu_vesprada_fase_c_i_mobil]]

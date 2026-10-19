@@ -64,3 +64,28 @@ docker.env
 # Quarantenes del circuit (cron_higiene.mjs i neteja_brossa_arrel.mjs): el que s'hi mou no torna a
 # entrar a git per una altra ruta. Les quarantenes que ja són a l'índex hi continuen (INVENTARI §3.5).
 /.sdp-paperera/quarantena-*/
+# App nativa (Fase C, Capacitor 8): eixides de build i claus, mai al repositori.
+# Proposta de FASE_PRELEASE_FETA.txt §6 (laboratori 261003_1330_empaquetat_mobil_claude).
+/dist-natiu/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+ios/App/Pods/
+ios/App/build/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/DerivedData/
+*.jks
+*.keystore
+keystore.properties
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist

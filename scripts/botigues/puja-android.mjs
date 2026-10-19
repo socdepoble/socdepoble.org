@@ -1,0 +1,170 @@
+/**
+ * scripts/botigues/puja-android.mjs — AAB de publicació, verificació de la signatura i pujada a la
+ * prova interna de Google Play (RUNBOOK_BOTIGUES_IA.txt, A4-A5). 261003.
+ *
+ * Instal·lat el 261019 (Fase C) des de nous/botigues/puja-android.mjs.txt del laboratori
+ * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs.
+ *
+ *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7                     en sec
+ *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --compila           bundleRelease i verificació
+ *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7  verifica i PUJA (esborrany intern)
+ *
+ * Per defecte no fa res: preflight, versió de build.gradle, pla. La signatura és del Mestre
+ * (RUNBOOK A4, opció A: Android Studio o el seu gradlew, amb les contrasenyes que posa ell). Si el
+ * Mestre decidix que la signe el script, --compila llig la keystore per RUTA i les dues
+ * contrasenyes del fitxer d'entorn, i les passa NOMÉS a l'entorn del procés de Gradle (amb
+ * --no-daemon, perquè cap dimoni se les quede); mai a la línia d'ordres ni a la pantalla.
+ * La pujada va per fastlane supply amb el JSON del compte de servei per RUTA; sense fastlane,
+ * el script imprimix els passos per a fer-la a mà. No hi ha cap signatura JWT feta a mà.
+ * Només --confirma=VERSIO+BUILD puja, i deixa la versió en ESBORRANY a la pista interna:
+ * promoure-la o publicar-la és del Mestre (RUNBOOK P9).
+ *
+ * [NO VERIFICAT] les opcions de fastlane supply: el 261019 fastlane no és instal·lat en este Mac. El
+ * script les busca a l'ajuda abans de pujar i, si en falta alguna, para (eixida 6).
+ * Gradle compila amb el JDK que tria el preflight (del JDK_MINIM al JDK_MAXIM, 21-24, a entorn.mjs), passat per JAVA_HOME
+ * només al procés de Gradle: el java del PATH d'este Mac és un 17 i Capacitor 8 compila amb Java 21
+ * [VERIFICAT 261019].
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import {
+  BUILD, EIXIDA, VERSIO, analitzaArguments, commitCurt, confirmacioEsperada, empremtaDeKeytool,
+  REBUTS, executa, llegixAjuda, mostraCami, mostraOrdre, normalitzaEmpremta, opcionsQueFalten, plega,
+  rutaDe, sha256DeFitxer, versioDeGradle
+} from './entorn.mjs';
+import { arrelComprovada, preflight } from './preflight.mjs';
+
+const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, ajuda: false });
+export const AAB = Object.freeze(['android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab']);
+export const OPCIONS_SUPPLY = Object.freeze(['--aab', '--track', '--release_status', '--package_name', '--json_key',
+  '--skip_upload_metadata', '--skip_upload_images', '--skip_upload_screenshots', '--skip_upload_changelogs', '--validate_only']);
+
+/** El pla d'A4-A5. Pur: no toca el disc. */
+export function planAndroid({ arrel, valors }) {
+  const aab = path.join(arrel, ...AAB);
+  const supply = (nomesValida) => ['fastlane', ['supply', '--aab', aab, '--track', 'internal', '--release_status', 'draft',
+    '--package_name', valors.SDP_APP_ID.trim(), '--json_key', rutaDe(arrel, valors, 'SDP_PLAY_JSON_KEY_PATH'),
+    '--skip_upload_metadata', 'true', '--skip_upload_images', 'true', '--skip_upload_screenshots', 'true',
+    '--skip_upload_changelogs', 'true', '--validate_only', nomesValida ? 'true' : 'false']];
+  // Les quatre variables les llig la signingConfig de release d'android/app/build.gradle (LLEGIU.txt §4).
+  const entornDeSignatura = () => ({
+    SDP_ANDROID_KEYSTORE_PATH: rutaDe(arrel, valors, 'SDP_ANDROID_KEYSTORE_PATH'),
+    SDP_ANDROID_KEY_ALIAS: valors.SDP_ANDROID_KEY_ALIAS,
+    SDP_ANDROID_KEYSTORE_PASSWORD: valors.SDP_ANDROID_KEYSTORE_PASSWORD,
+    SDP_ANDROID_KEY_PASSWORD: valors.SDP_ANDROID_KEY_PASSWORD
+  });
+  return {
+    aab,
+    compila: [path.join(arrel, 'android', 'gradlew'), ['--no-daemon', 'bundleRelease']],
+    entornDeSignatura,
+    // Tot el que rep el procés de Gradle a més del seu entorn: el JDK que ha triat el preflight i la signatura.
+    entornDeGradle: (jdkHome) => ({ JAVA_HOME: jdkHome, ...entornDeSignatura() }),
+    certificat: ['keytool', ['-printcert', '-jarfile', aab]],
+    valida: supply(true),
+    puja: supply(false),
+    entornFastlane: { FASTLANE_SKIP_UPDATE_CHECK: '1', FASTLANE_OPT_OUT_USAGE: '1' }
+  };
+}
+
+export const PASSOS_A_MA = Object.freeze([
+  'Play Console › Sóc de Poble › Test and release › Testing › Internal testing › Create new release [NO VERIFICAT el camí].',
+  'Pujar android/app/build/outputs/bundle/release/app-release.aab (el mateix fitxer que diu el rebut, amb el mateix sha256).',
+  'Nom de la versió: VERSIO (BUILD). Notes: les del laboratori, sense dades personals.',
+  'Desar com a esborrany. Revisar-lo i desplegar-lo a la prova interna és del Mestre (RUNBOOK P9).',
+  'Si és el PRIMER AAB d\'esta app, l\'API no el pot crear: este pas a mà és obligatori (RUNBOOK H-G5).'
+]);
+
+function rebut({ arrel, versio, build, aab, pujat }) {
+  return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_android.txt; cap secret, cap adreça):`,
+    `  commit: ${commitCurt(arrel) ?? 'desconegut'}`, `  versio: ${versio}  build (versionCode): ${build}`,
+    `  sha256 de l'AAB: ${fs.existsSync(aab) ? sha256DeFitxer(aab) : 'sense AAB'}`, `  hora: ${new Date().toISOString()}`,
+    `  pujat a Google Play (esborrany, pista interna): ${pujat ? 'sí' : 'no'}`, '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
+}
+
+export async function main(argv) {
+  const { opcions, errors } = analitzaArguments(argv, ADMESOS);
+  if (opcions.ajuda) {
+    process.stdout.write('node scripts/botigues/puja-android.mjs --versio X.Y.Z --build N [--compila] [--confirma=X.Y.Z+N]\n');
+    return EIXIDA.BE;
+  }
+  const { versio, build } = opcions;
+  if (errors.length || !VERSIO.test(versio ?? '') || !BUILD.test(build ?? '')) {
+    return plega(EIXIDA.US, 'Ús: --versio X.Y.Z --build N [--compila] [--confirma=X.Y.Z+N]', errors);
+  }
+  if (opcions.confirma !== undefined && opcions.confirma !== confirmacioEsperada(versio, build)) {
+    return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build)}: un «sí» val per a una sola pujada`);
+  }
+  const arrel = arrelComprovada();
+  if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
+
+  const pre = preflight({ arrel, plataformes: ['android'], signa: Boolean(opcions.compila) });
+  process.stdout.write(`${pre.linies.join('\n')}\n`);
+  if (pre.codi !== EIXIDA.BE) return plega(pre.codi, 'Preflight amb problemes: no es fa res.');
+  const valors = pre.valors;
+
+  // El versionCode i el versionName que es compilen han de ser els que es confirmen.
+  const gradle = path.join(arrel, 'android', 'app', 'build.gradle');
+  const deGradle = fs.existsSync(gradle) ? versioDeGradle(fs.readFileSync(gradle, 'utf8')) : { versio: null, build: null };
+  if (deGradle.versio !== versio || deGradle.build !== build) {
+    return plega(EIXIDA.ARBRE, `android/app/build.gradle diu versionName ${deGradle.versio} i versionCode ${deGradle.build}, no ${versio} i ${build} (RUNBOOK A1)`);
+  }
+
+  const pla = planAndroid({ arrel, valors });
+  process.stdout.write(['', 'PLA (cada valor del fitxer d\'entorn es mostra com a <NOM>):',
+    opcions.compila
+      ? `  A4 JAVA_HOME=${mostraOrdre(mostraCami(arrel, pre.jdk.home), [], valors, arrel)} SDP_ANDROID_KEYSTORE_PATH SDP_ANDROID_KEY_ALIAS SDP_ANDROID_KEYSTORE_PASSWORD SDP_ANDROID_KEY_PASSWORD (només a l'entorn de Gradle) ${mostraOrdre(...pla.compila, valors, arrel)}`
+      : '  A4 (el Mestre signa l\'AAB: Android Studio › Generate Signed Bundle, o el seu gradlew; o bé --compila)',
+    `  V  ${mostraOrdre(...pla.certificat, valors, arrel)} → SHA-256 = <SDP_ANDROID_UPLOAD_CERT_SHA256>`,
+    pre.fastlane ? `  A5 ${mostraOrdre(...pla.valida, valors, arrel)}` : '  A5 sense fastlane: pujada a mà (els passos ixen en confirmar)',
+    pre.fastlane ? `  A5 ${mostraOrdre(...pla.puja, valors, arrel)}` : '', ''].filter((l, i, tot) => l || i === tot.length - 1).join('\n'));
+
+  if (!opcions.compila && opcions.confirma === undefined) {
+    process.stdout.write(`En sec: no s'ha fet res. Per a compilar i signar amb les claus del fitxer: --compila. Per a pujar, amb el «sí» del Mestre per a ESTA pujada: --confirma=${confirmacioEsperada(versio, build)}\n`);
+    return EIXIDA.BE;
+  }
+
+  if (opcions.compila) {
+    const resultat = await executa(...pla.compila, { cwd: path.join(arrel, 'android'), valors, arrel, entornExtra: pla.entornDeGradle(pre.jdk.home) });
+    if (resultat.codi !== 0) return plega(EIXIDA.EXTERNA, 'gradlew bundleRelease ha fallat');
+  }
+
+  // Verificació local: l'AAB existix i el signa la clau de pujada que coneix Play.
+  if (!fs.existsSync(pla.aab)) return plega(EIXIDA.ARBRE, 'no hi ha app-release.aab: signa\'l tu (Android Studio) o fes --compila');
+  const certificat = await executa(...pla.certificat, { valors, arrel, mostra: false });
+  const empremta = empremtaDeKeytool(certificat.crua);
+  if (certificat.codi !== 0 || !empremta) return plega(EIXIDA.EXTERNA, 'keytool -printcert no ha donat cap empremta SHA-256 (l\'AAB no està signat?)');
+  if (empremta !== normalitzaEmpremta(valors.SDP_ANDROID_UPLOAD_CERT_SHA256)) {
+    return plega(EIXIDA.VERIFICACIO, 'l\'AAB està signat amb una altra clau que la de pujada (SDP_ANDROID_UPLOAD_CERT_SHA256): no es puja');
+  }
+  process.stdout.write('✓ signat amb la clau de pujada de SDP_ANDROID_UPLOAD_CERT_SHA256\n');
+
+  if (opcions.confirma === undefined) {
+    process.stdout.write(rebut({ arrel, versio, build, aab: pla.aab, pujat: false }));
+    return EIXIDA.BE;
+  }
+
+  if (!pre.fastlane) {
+    process.stdout.write(`\nNo hi ha fastlane: la pujada la fa el Mestre a mà.\n${PASSOS_A_MA.map((p, i) => `  ${i + 1}. ${p}`).join('\n').replace(/VERSIO/g, versio).replace(/BUILD/g, build)}\n`);
+    process.stdout.write(rebut({ arrel, versio, build, aab: pla.aab, pujat: false }));
+    return EIXIDA.EINA;
+  }
+  const falten = opcionsQueFalten(llegixAjuda('fastlane', ['supply', '--help']), OPCIONS_SUPPLY);
+  if (falten.length) {
+    return plega(EIXIDA.EINA, 'fastlane supply no té les opcions del pla (Fusible: consulta la documentació oficial i esmena el script):', falten);
+  }
+  if ((await executa(...pla.valida, { cwd: arrel, valors, arrel, entornExtra: pla.entornFastlane })).codi !== 0) {
+    return plega(EIXIDA.EXTERNA, 'fastlane supply --validate_only ha fallat: no es puja res (permisos del compte de servei? RUNBOOK H-G4; primer AAB? H-G5)');
+  }
+  if ((await executa(...pla.puja, { cwd: arrel, valors, arrel, entornExtra: pla.entornFastlane })).codi !== 0) {
+    return plega(EIXIDA.EXTERNA, 'fastlane supply ha fallat');
+  }
+  process.stdout.write('✓ pujat com a ESBORRANY a la prova interna. Revisar-lo i desplegar-lo és del Mestre (RUNBOOK P9).\n');
+  process.stdout.write(rebut({ arrel, versio, build, aab: pla.aab, pujat: true }));
+  return EIXIDA.BE;
+}
+
+const principal = (() => {
+  try { return process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href; } catch { return false; }
+})();
+if (principal) main(process.argv.slice(2)).then((codi) => { process.exitCode = codi; });

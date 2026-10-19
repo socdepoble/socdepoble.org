@@ -33,6 +33,8 @@ const FITXERS = Object.freeze([
   'src/components/universal/classificacio/DialegEmoticona.jsx',
   'src/components/universal/classificacio/GraellaEmojis.jsx',
   'src/components/universal/classificacio/GraellaEmojis.test.jsx',
+  'src/components/universal/classificacio/PaginaEmojis.jsx',
+  'src/components/universal/classificacio/PaginaEmojis.test.jsx',
   /* Bloc 3.9 del Gauntlet (261016) · L'«Edició avançada» de la closca i del
      DocumentEditor, «Nota sense títol» i l'esvaïment de la plantilla. */
   'src/components/universal/DocumentEditor.jsx',

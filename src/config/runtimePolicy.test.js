@@ -55,6 +55,18 @@ test('esOrigenParePermes: localhost només als ports coneguts i només si l’ap
   vi.stubGlobal('window', { location: { hostname: 'socdepoble.org' } });
   expect(p.esOrigenParePermes('http://localhost:3340')).toBe(false);
 });
+/* Fase C (261019) · L'app nativa viu a localhost però no és el servidor de
+   desenvolupament: https://localhost (Android) i capacitor://localhost (iOS). */
+test('esOrigenParePermes: a l’app nativa, localhost no obri els ports de desenvolupament', async () => {
+  const p = await fresca();
+  for (const protocol of ['https:', 'capacitor:']) {
+    vi.stubGlobal('window', { location: { protocol, hostname: 'localhost' } });
+    expect(p.esOrigenParePermes('http://localhost:3340'), protocol).toBe(false);
+    expect(p.esOrigenParePermes('https://socdepoble.org'), protocol).toBe(true);
+  }
+  vi.stubGlobal('window', { location: { protocol: 'http:', hostname: 'localhost' } });
+  expect(p.esOrigenParePermes('http://localhost:3340')).toBe(true);
+});
 /* P1 (261003) · Model B. La tornada d'OAuth és la pàgina de l'amfitrió i la valida
    GoTrue: la política ja no porta cap llista d'orígens de tornada, ni cap domini
    del relé retirat. Un `callbackOrigins` de l'amfitrió s'ignora com qualsevol

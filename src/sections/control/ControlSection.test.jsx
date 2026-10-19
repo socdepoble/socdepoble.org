@@ -847,7 +847,7 @@ test('P5 · T8 · la imatge de cada targeta és el hero de la seua pàgina, amb 
   const targetes = targetesDeDalt();
   const esperades = [
     ['mur', '/assets/nano_cards/mur_nano_card.jpg'],
-    ['mercat', '/assets/nano_cards/mercat_nano_card.jpg'],
+    ['mercat', '/assets/nano_cards/mercat_nano_card.webp'],
     ['calendari', '/assets/nano_cards/calendari_nano_card.jpg'],
     ['mapa', '/assets/ui/plugins/mapa_vinyeta.jpg'],
     ['vehicle', '/assets/nano_cards/vehicle_nano_card.jpg'],

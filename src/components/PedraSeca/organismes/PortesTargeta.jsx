@@ -64,6 +64,9 @@ const text = (valor) => (typeof valor === 'string' ? valor.trim() : '');
  *   · resolRuta (app/contexts/politicaRouter.js), la del router: el camí es
  *     resol sobre una base interna fixa i només val si l'origen no canvia.
  * isSafeUrl no es toca: continua sent la regla de les adreces externes.
+ * Fase C (Capacitor 8; ordre del Mestre, 261019) · isSafeUrl admet ara també
+ * l'esquema de l'app nativa d'iOS, només del seu host; les portes continuen
+ * amb la seua frontera de rutes.
  */
 export const esRutaDeLaPorta = (desti) => esRutaInterna(desti) && resolRuta(desti) !== null;
 

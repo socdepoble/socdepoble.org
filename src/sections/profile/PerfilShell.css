@@ -89,6 +89,80 @@
   isolation: isolate;
 }
 
+/* ── «Veure fitxa pública» (AccesFitxaPublica, PerfilShell.jsx) ──
+   Ordre del Mestre (19-10-2026, Fase C, punt 9) · La fila 1 de la tercera
+   columna quan s'hi veu una identitat: el gris i l'alçada de la fila 1 de
+   tots els espais de treball (modules.css · .sdp-workspace
+   .sdp-workspace-column > .app-grid-col-header, --sdp-workspace-fila1-fons,
+   el mateix de les capçaleres de PERFIL i APARTATS i de .sdp-xat-capcalera),
+   perquè la barra de dalt siga contínua (skill sdp-app-grid-shell §2), i la
+   blava de l'apartat baixa a la fila 2. És fora del contenidor que fa scroll
+   (flex: none): sempre a la vista. El botó és el del Perfil
+   (:where(.perfil-pagina) .sdp-boto, més avall), a la dreta.
+   Privada, a l'esquerra el candau (el taronja de les icones de capçalera) i
+   «Fitxa privada» en lletra del crom. Si el motiu i el botó no caben en una
+   línia (un mòbil: 319 px a 375), el motiu no es retalla: la fila es partix
+   (flex-wrap), el motiu dalt i el botó baix, a la dreta. Cada línia fa
+   l'alçada tàctil (--sdp-touch) i el farciment completa la fila 1: en una
+   sola línia, --sdp-alt-accio justa. */
+.perfil-fitxa-publica {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0 var(--sdp-space-3);
+  min-height: var(--sdp-alt-accio);
+  min-width: 0;
+  padding: calc((var(--sdp-alt-accio) - var(--sdp-touch)) / 2) var(--sdp-space-4);
+  background: var(--sdp-workspace-fila1-fons);
+  color: var(--sdp-crom-actiu-fons);
+}
+
+.perfil-fitxa-publica__avis {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  min-width: 0;
+  min-height: var(--sdp-touch);
+  margin: 0;
+}
+
+.perfil-fitxa-publica__avis > svg {
+  flex: none;
+}
+
+.perfil-fitxa-publica__estat {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sdp-crom-text);
+  font: var(--sdp-font-barra);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perfil-fitxa-publica__boto {
+  flex: none;
+}
+
+/* Privada d'una organització: la porta inerta de la casa (PortesTargeta;
+   components.css · .sdp-boto[aria-disabled="true"]): aria-disabled i no
+   `disabled`, perquè es puga enfocar i el lector en llija el motiu, i en
+   prémer-la el toast l'explica. La pell, la de :disabled del Perfil (més
+   avall). */
+.perfil-fitxa-publica__boto[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* L'anell de focus del crom, com el de les accions de capçalera. */
+.perfil-fitxa-publica__boto:focus-visible {
+  outline: 2px solid var(--sdp-crom-focus);
+  outline-offset: 2px;
+}
+
 /* ── Detall ── */
 .perfil-detall {
   padding: var(--sdp-space-6) var(--sdp-space-4);

@@ -12,6 +12,7 @@ export const FORMATS = Object.freeze({
   TITOL: 'titol',
   SUBTITOL: 'subtitol',
   LLISTA: 'llista',
+  LLISTA_NUMERADA: 'llistaNumerada',
   NEGRETA: 'negreta',
   CURSIVA: 'cursiva',
   RATLLAT: 'ratllat',
@@ -32,13 +33,14 @@ export const FORMATS = Object.freeze({
  * avançat i no la pinta. Mentrestant, l'ordre «/» del cos fa el mateix.
  */
 export const TOOLBAR_SCHEMA = Object.freeze([
-  { id: FORMATS.TITOL,    clauI18n: 'editor.format.titol',    etiqueta: 'Títol',    commutable: true,  slot: { estat: 'isHeading', accio: 'toggleHeading' } },
-  { id: FORMATS.LLISTA,   clauI18n: 'editor.format.llista',   etiqueta: 'Llista',   commutable: true,  slot: { estat: 'isList',    accio: 'toggleList' } },
-  { id: FORMATS.NEGRETA,  clauI18n: 'editor.format.negreta',  etiqueta: 'Negreta',  commutable: true,  slot: { estat: 'isBold',    accio: 'toggleBold' } },
-  { id: FORMATS.CURSIVA,  clauI18n: 'editor.format.cursiva',  etiqueta: 'Cursiva',  commutable: true,  slot: { estat: 'isItalic',  accio: 'toggleItalic' } },
-  { id: FORMATS.RATLLAT,  clauI18n: 'editor.format.ratllat',  etiqueta: 'Ratllat',  commutable: true,  slot: { estat: 'isStrike',  accio: 'toggleStrike' } },
-  { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Subtítol', commutable: true,  slot: { estat: 'isSubheading', accio: 'toggleSubheading' } },
-  { id: FORMATS.CITACIO,  clauI18n: 'editor.format.citacio',  etiqueta: 'Citació',  commutable: true,  slot: null },
+  { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Subtítol (H3)', commutable: true, slot: { estat: 'isSubheading', accio: 'toggleSubheading' } },
+  { id: FORMATS.TITOL,    clauI18n: 'editor.format.titol',    etiqueta: 'Títol (H2)',    commutable: true, slot: { estat: 'isHeading', accio: 'toggleHeading' } },
+  { id: FORMATS.NEGRETA,  clauI18n: 'editor.format.negreta',  etiqueta: 'Negreta',  commutable: true, slot: { estat: 'isBold',    accio: 'toggleBold' } },
+  { id: FORMATS.CURSIVA,  clauI18n: 'editor.format.cursiva',  etiqueta: 'Cursiva',  commutable: true, slot: { estat: 'isItalic',  accio: 'toggleItalic' } },
+  { id: FORMATS.RATLLAT,  clauI18n: 'editor.format.ratllat',  etiqueta: 'Ratllat',  commutable: true, slot: { estat: 'isStrike',  accio: 'toggleStrike' } },
+  { id: FORMATS.LLISTA,   clauI18n: 'editor.format.llista',   etiqueta: 'Llista amb vinyetes', commutable: true, slot: { estat: 'isList', accio: 'toggleList' } },
+  { id: FORMATS.LLISTA_NUMERADA, clauI18n: 'editor.format.llistaNumerada', etiqueta: 'Llista numerada', commutable: true, slot: { estat: 'isOrderedList', accio: 'toggleOrderedList' } },
+  { id: FORMATS.CITACIO,  clauI18n: 'editor.format.citacio',  etiqueta: 'Citació',  commutable: true, slot: null },
   { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, slot: null },
   { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, slot: null, nivell: 'avancat' }
 ]);

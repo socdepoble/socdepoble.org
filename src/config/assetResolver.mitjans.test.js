@@ -37,7 +37,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-test('sense política (proves, socdepoble.org, el natiu) tot resol com sempre', () => {
+test('sense política (proves, socdepoble.org) tot resol com sempre', () => {
   expect(fixaPoliticaDeMitjans(null)).toBeNull();
   expect(origenDeMitjansExterns()).toBe('');
   expect(resolveAsset('/assets/ui/plugins/mapa_vinyeta.jpg')).toBe('/assets/ui/plugins/mapa_vinyeta.jpg');

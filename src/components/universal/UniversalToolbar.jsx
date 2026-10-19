@@ -1,4 +1,4 @@
-import { ArrowLeft, List, Heading2, Heading3, Bold, Italic, Strikethrough } from 'lucide-react';
+import { ArrowLeft, List, ListOrdered, Heading2, Heading3, Bold, Italic, Strikethrough } from 'lucide-react';
 import { useContext, useState, useRef, useEffect, useId, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 import { PUNTS_DE_TALL } from '../layout/graella.js';
@@ -98,8 +98,8 @@ export default function UniversalToolbar({
      l'oferix (mestre-detall en estret); si no, la d'abans. */
   const handleBack = onBack || gridCtx?.tornaDelDetall || (() => gridCtx?.setPanellObert('middle'));
 
-  const { isHeading, isSubheading, isList, isBold, isItalic, isStrike } = formatState;
-  const { toggleHeading, toggleSubheading, toggleList, toggleBold, toggleItalic, toggleStrike } = formatActions;
+  const { isHeading, isSubheading, isList, isOrderedList, isBold, isItalic, isStrike } = formatState;
+  const { toggleHeading, toggleSubheading, toggleList, toggleOrderedList, toggleBold, toggleItalic, toggleStrike } = formatActions;
 
   return (
     <div 
@@ -126,18 +126,18 @@ export default function UniversalToolbar({
         <div id={formatId} className="sdp-editor-tools__group sdp-editor-tools__format-options"
           hidden={compact && !formatOpen} role="group" aria-label="Opcions de format del text">
           <BlocIcon 
-            icon={Heading2} 
-            active={isHeading} 
-            label="Alternar títol" 
-            onClick={toggleHeading} 
-            disabled={!toggleHeading} 
-          />
-          <BlocIcon 
             icon={Heading3} 
             active={isSubheading} 
-            label="Alternar subtítol" 
+            label="Alternar subtítol (H3)" 
             onClick={toggleSubheading} 
             disabled={!toggleSubheading} 
+          />
+          <BlocIcon 
+            icon={Heading2} 
+            active={isHeading} 
+            label="Alternar títol (H2)" 
+            onClick={toggleHeading} 
+            disabled={!toggleHeading} 
           />
           <BlocIcon 
             icon={Bold} 
@@ -166,6 +166,13 @@ export default function UniversalToolbar({
             label={t('section.notes.format.list', 'Llista')} 
             onClick={toggleList} 
             disabled={!toggleList} 
+          />
+          <BlocIcon 
+            icon={ListOrdered} 
+            active={isOrderedList} 
+            label={t('section.notes.format.orderedList', 'Llista numerada')} 
+            onClick={toggleOrderedList} 
+            disabled={!toggleOrderedList} 
           />
         </div>
 

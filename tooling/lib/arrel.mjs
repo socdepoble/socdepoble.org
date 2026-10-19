@@ -97,10 +97,15 @@ export const CAMINS = Object.freeze({
   dist: 'dist',
 });
 
-/** Directoris que cap recorregut del tooling ha de trepitjar mai. */
+/** Directoris que cap recorregut del tooling ha de trepitjar mai.
+ *  Fase C (Capacitor 8): dist-natiu és l'eixida del build natiu, i android i
+ *  ios els projectes natius amb les còpies minificades que hi deixa `cap sync`.
+ *  Es comparen pel NOM a qualsevol fondària: cap carpeta del codi no es dirà
+ *  android ni ios (FASES_1_I_2.txt §6, opció a). */
 export const EXCLOSOS = Object.freeze(new Set([
   'node_modules', '.git', 'dist', 'build', '.next', 'vendor', 'coverage',
-  '.sdp-paperera', '.sdp-reflex', '.brain-reports', '.gemini', '.obsidian', '90_arxiu_historic'
+  '.sdp-paperera', '.sdp-reflex', '.brain-reports', '.gemini', '.obsidian', '90_arxiu_historic',
+  'dist-natiu', 'android', 'ios'
 ]));
 
 /* ══════════════════════ Error diagnòstic ══════════════════════ */

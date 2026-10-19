@@ -196,7 +196,11 @@ for (const [nom, origen] of Object.entries(ORIGENS)) {
   test(`T6 · origen ${nom}: una ruta de l’app enllaça l’autoria; una contrabarra o un esquema, no`, () => {
     vi.stubGlobal('location', origen);
     try {
-      expect(isSafeUrl('/projecte')).toBe(nom !== 'capacitor');
+      /* Fase C (Capacitor 8; ordre del Mestre, 261019) · Un camí propi passa
+         també a l'app nativa; una adreça capacitor:// del host de l'app, només
+         a l'app nativa d'iOS (la finestra és de veres eixe origen). */
+      expect(isSafeUrl('/projecte')).toBe(true);
+      expect(isSafeUrl('capacitor://localhost/projecte')).toBe(nom === 'capacitor');
       for (const ruta of [DEFAULT_AUTHOR.href, '/gent/javillinares', '/empresa/forn?x=1']) {
         expect([ruta, rutaDAutorSegura(ruta)]).toEqual([ruta, ruta]);
         const autor = barra({ authorHref: ruta }).firstElementChild;
@@ -213,9 +217,11 @@ for (const [nom, origen] of Object.entries(ORIGENS)) {
         expect(barra({ authorHref: dolenta }).firstElementChild.tagName).toBe('DIV');
         cleanup();
       }
-      /* Una adreça absoluta continua amb isSafeUrl: http(s) sí, un altre esquema no. */
+      /* Una adreça absoluta continua amb isSafeUrl: http(s) sí, un altre esquema no.
+         Fase C (261019) · A l'app nativa d'iOS, també la del seu host; mai la d'un altre. */
       expect(rutaDAutorSegura('https://exemple.org/autora')).toBe('https://exemple.org/autora');
-      expect(rutaDAutorSegura('capacitor://localhost/mur')).toBeNull();
+      expect(rutaDAutorSegura('capacitor://localhost/mur')).toBe(nom === 'capacitor' ? 'capacitor://localhost/mur' : null);
+      expect(rutaDAutorSegura('capacitor://altra.example/mur')).toBeNull();
     } finally {
       vi.unstubAllGlobals();
     }

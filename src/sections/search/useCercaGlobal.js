@@ -22,13 +22,14 @@
  * abans, `asseguraMetode` llançaria), el contingut base ja no carrega i la
  * sessió ja no es comprova.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
-import { aliesDeLActor } from '../../data/identitatsSeed.js';
+import { esEntitatDelProjecte, subscriuEntitatDelProjecte } from '../../config/navigation.js';
+import { PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { useMur } from '../mur/MurContext';
 import { useMultimedia } from '../multimedia/MultimediaContext';
 import { useNotes } from '../notes/NotesContext';
@@ -85,7 +86,18 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
   const nomCompte = t('section.search.elTeuCompte', 'El teu compte');
   const correu = currentUser?.email || null;
   const poble = currentUser?.user_metadata?.town_name || '';
-  const opcionsIdentitat = useMemo(() => ({ ...opcions, correu, nomCompte, poble }), [opcions, correu, nomCompte, poble]);
+  /* Poliment T45 · Seed i local saben obrir la fitxa d'una altra persona.
+     Ordre del Mestre (261002) · En remot també, quan el port té la capacitat
+     'directori' (loadPerfilPublic, que crida la RPC perfil_public): la persona
+     del padró ix al cercador amb la seua fitxa. Sense la capacitat, el títol
+     no hi enllaça i l'acció és «Escriu-li», com abans. L'adaptador de Supabase
+     la declara sempre: la migració 2610021520 va ABANS de publicar el client.
+     Revisió adversarial (261019) · La mateixa regla per a la persona pròpia
+     (deIdentitat): sense fitxa que s'òbriga, cap enllaç. */
+  const directori = teLaCapacitat(teCapacitat, 'directori');
+  const fitxesDePersones = modeDades !== 'remote' || directori;
+  const opcionsIdentitat = useMemo(() => ({ ...opcions, correu, nomCompte, poble, fitxesDePersones }),
+    [opcions, correu, nomCompte, poble, fitxesDePersones]);
 
   /* ── El padró: una llista per àmbit del xat, més la consulta al servidor si cal ── */
   const { cercaMembres, ambitEstable: ambitXat = '', status: estatXat } = xat;
@@ -153,15 +165,8 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
 
   /* ── L'índex, font per font ── */
   const deIdentitats = useMemo(() => mapa(identitats, deIdentitat, opcionsIdentitat), [identitats, opcionsIdentitat]);
-  /* Poliment T45 · Seed i local saben obrir la fitxa d'una altra persona.
-     Ordre del Mestre (261002) · En remot també, quan el port té la capacitat
-     'directori' (loadPerfilPublic, que crida la RPC perfil_public): la persona
-     del padró ix al cercador amb la seua fitxa. Sense la capacitat, el títol
-     no hi enllaça i l'acció és «Escriu-li», com abans. L'adaptador de Supabase
-     la declara sempre: la migració 2610021520 va ABANS de publicar el client. */
-  const directori = teLaCapacitat(teCapacitat, 'directori');
-  const opcionsPadro = useMemo(() => ({ ...opcions, fitxesDePersones: modeDades !== 'remote' || directori }),
-    [opcions, modeDades, directori]);
+  /* Les fitxes de persones del padró: la regla de `fitxesDePersones` (dalt). */
+  const opcionsPadro = useMemo(() => ({ ...opcions, fitxesDePersones }), [opcions, fitxesDePersones]);
   const dePadro = useMemo(() => mapa([...llistaPadro, ...llistaServidor], deMembre, opcionsPadro), [llistaPadro, llistaServidor, opcionsPadro]);
   const deAgents = useMemo(() => mapa(core.agents, deAgent, opcions), [core.agents, opcions]);
   const dePobles = useMemo(() => mapa(core.towns, dePoble, opcions), [core.towns, opcions]);
@@ -176,19 +181,41 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
   /* Gauntlet 261016 (Bloc 3.5.1) · Els àlies declarats de la persona de la
      sessió (aliesDeLActor, la regla del MAS): en llavor, els de la persona
      pilot; en remot, només el seu id. Amb ells, la seua fitxa del padró i del
-     catàleg es fusiona amb la pròpia (ambLaIdentitatPropia), mai pel nom. */
+     catàleg es fusiona amb la pròpia (ambLaIdentitatPropia), mai pel nom.
+     Ordre del Mestre (261019 21:34, punt 9: «una sola fitxa canònica») · En
+     remot, el compte de la persona pilot també porta els seus àlies quan la
+     sessió ho acredita (esComptePersonaPilot: un id declarat o el correu
+     confirmat del seu compte, pla 261018_1605, D7; mai pel nom): el Mestre ja
+     no es troba dues vegades, la fitxa pròpia i el '0001' del catàleg. */
+  const pilotDeLaSessio = esComptePersonaPilot(currentUser);
   const aliesPropis = useMemo(() => {
     const persona = llistaDe(identitats).find((identitat) => identitat?.tipus === 'persona');
-    return persona ? [...aliesDeLActor(persona, { dataMode: modeDades })] : CAP;
-  }, [identitats, modeDades]);
+    if (!persona) return CAP;
+    const alies = aliesDeLActor(persona, { dataMode: modeDades });
+    if (pilotDeLaSessio && String(persona.id) === String(currentUser?.id)) PERSONA_PILOT.alies.forEach((a) => alies.add(a));
+    return [...alies];
+  }, [identitats, modeDades, pilotDeLaSessio, currentUser?.id]);
+
+  /* Ordre del Mestre (261019 21:34, punt 9) · En remot, l'entitat pilot porta
+     l'id del servidor, que la llavor no sap: el reconeix la resolució de
+     l'app (registraEntitatDelProjecte, pel slug declarat i dins del poble
+     actiu; App.jsx · useEntitatDelProjecte) i el llig esEntitatDelProjecte.
+     Ací, els ids de les entitats de l'índex que ja ho són, en un text estable
+     (useSyncExternalStore el compara pel valor): quan arriba l'id, l'índex es
+     refà i l'entitat pròpia, la del padró i la del catàleg són una fitxa. */
+  const idsDEntitats = useMemo(() => [...deIdentitats, ...dePadro, ...deAgents]
+    .filter((entrada) => entrada.tipus === 'entitats').map((entrada) => entrada.id), [deIdentitats, dePadro, deAgents]);
+  const textDelProjecte = useSyncExternalStore(subscriuEntitatDelProjecte,
+    () => idsDEntitats.filter((id) => esEntitatDelProjecte({ tipus: 'entitat', id })).join('\n'));
+  const delProjecte = useMemo(() => (textDelProjecte ? textDelProjecte.split('\n') : CAP), [textDelProjecte]);
 
   /* L'ordre decidix qui es pinta en una clau repetida (el text de totes compta,
      vegeu fusionaPerClau): la identitat pròpia primer, el padró abans del catàleg. */
   const index = useMemo(() => ambLaIdentitatPropia([
     ...deIdentitats, ...dePadro, ...deAgents, ...dePobles, ...dePublicacions, ...deActes,
     ...deProductes, ...deMedies, ...deNotes, ...deConverses, ...dePagines
-  ], aliesPropis), [deIdentitats, dePadro, deAgents, dePobles, dePublicacions, deActes, deProductes, deMedies, deNotes,
-    deConverses, dePagines, aliesPropis]);
+  ], aliesPropis, { delProjecte }), [deIdentitats, dePadro, deAgents, dePobles, dePublicacions, deActes, deProductes, deMedies,
+    deNotes, deConverses, dePagines, aliesPropis, delProjecte]);
 
   const resultats = useMemo(() => cercaEntrades(index, qNet, filtre), [index, qNet, filtre]);
 

@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { SlidersHorizontal, UserRound } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { Eye, Lock, SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
-import { useLocation, useSearchParams } from '../../app/contexts/RouterContext';
+import { Link, useLocation, useSearchParams } from '../../app/contexts/RouterContext';
+import { rutaCanonicaDePerfil } from '../../config/navigation.js';
+import { Boto } from '../../components/PedraSeca/index.js';
 import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace';
 import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -26,9 +28,10 @@ import {
   PARAM_FITXA_ORGANITZACIO, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
-import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
+import { documentDeFitxa, fitxaPublicada, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
-import { avatarDeLaFitxa, potEditarFitxa } from './fitxaDePerfil.js';
+import { avatarDeLaFitxa, potEditarFitxa, rutaDeFitxaPublica } from './fitxaDePerfil.js';
+import { textosDeFitxa } from './visibilitatFitxa.js';
 
 /* Els consumidors d'abans l'importaven d'ací. Ordre del Mestre (261008) · un
    grup ja no necessita cap empresa mare: el diàleg de NOVA ORG no la demana,
@@ -88,7 +91,105 @@ function FitxaDePerfil({ item, active, onSelect }) {
 
 const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} active={active} onSelect={onSelect} />;
 
-function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = null, connexio }) {
+/* Ordre del Mestre (19-10-2026, Fase C, punt 9: «Botó d'accés al perfil
+   públic des de l'editor (/el-meu-perfil) […] que permeta a l'usuari anar
+   directament a la seua fitxa pública sense haver d'escriure la URL a mà a la
+   barra del navegador») · El nom del botó, el que va escriure el Mestre. */
+export const ETIQUETA_FITXA_PUBLICA = 'Veure fitxa pública';
+
+/* El que diu el botó quan la fitxa encara és privada, darrere de
+   l'explicació de sempre del selector de visibilitat (visibilitatFitxa.js). */
+const PREVIA_PERSONA = 'La pots obrir igualment per a vore com quedarà.';
+const SENSE_PAGINA_ORGANITZACIO = 'La pàgina pública s’obrirà quan la fitxa siga pública.';
+
+/**
+ * On porta «Veure fitxa pública» des de l'espai de treball d'una identitat, i
+ * si s'hi pot anar. Pura.
+ *   · La ruta: la canònica neta (rutaCanonicaDePerfil: /javillinares,
+ *     /socdepoble, /rentonar o /iaia) i, si no n'és cap, la de la barra
+ *     taronja (rutaDeFitxaPublica: la persona per l'id de la seua fila, mai
+ *     'jo'). El descriptor és el de pobleDeReservaDeFitxa (fitxaDePerfil.js):
+ *     per l'id o un àlies declarat, mai pel nom ni pel correu. Sense ruta, null
+ *     (cap botó mort).
+ *   · Una fitxa privada (fitxaPublicada, perfilCamps.js) ho diu (`avis`). La
+ *     de la persona s'obri igual: la seua fila la llig ella (supabase/perfils.js,
+ *     «profiles read own») i la pàgina la marca «La teua fitxa». La d'una
+ *     organització no (`oberta` false): el directori del servidor només porta
+ *     les públiques (organization_directory) i la pàgina diria «Perfil no
+ *     trobat». Un agent IA sempre és públic.
+ */
+export function accesAFitxaPublica(identitat) {
+  if (!identitat) return null;
+  const mena = menaDeFitxa(identitat);
+  const perfil = mena === 'persona'
+    ? { tipus: 'persona', id: identitat.dades?.id, slug: identitat.dades?.slug }
+    : mena === 'agent'
+      ? { tipus: 'ia', id: identitat.id }
+      : { tipus: identitat.mena === 'grup' ? 'grup' : 'entitat', id: identitat.id };
+  const ruta = rutaCanonicaDePerfil(perfil) || rutaDeFitxaPublica(identitat);
+  if (!ruta) return null;
+  if (fitxaPublicada(identitat)) return { ruta, oberta: true, avis: null };
+  const { etiqueta, explicacio } = textosDeFitxa(mena).privada;
+  const persona = mena === 'persona';
+  return {
+    ruta,
+    oberta: persona,
+    avis: { etiqueta, explicacio: `${explicacio} ${persona ? PREVIA_PERSONA : SENSE_PAGINA_ORGANITZACIO}` },
+  };
+}
+
+/**
+ * La fila de dalt de la tercera columna quan s'hi veu una identitat: el botó
+ * «Veure fitxa pública». Fora del contenidor que fa scroll: sempre a la vista,
+ * a «La fitxa» i a la resta d'apartats. És la fila 1 de la columna, amb el gris
+ * de la fila 1 de l'espai de treball, el de les capçaleres de PERFIL i APARTATS
+ * (skill sdp-app-grid-shell §2: una barra contínua; la blava passa a la fila 2,
+ * com al Bloc de Notes).
+ * Un enllaç de veres (Link: l'adreça es pot obrir en una altra pestanya), amb
+ * la pell del botó de Pedra Seca, com «Edita la fitxa» de la pàgina pública.
+ * Privada, el candau i «Fitxa privada» a l'esquerra, amb l'explicació per al
+ * lector de pantalla. La d'una organització no porta enlloc: és la porta inerta
+ * de la casa (PortesTargeta) · aria-disabled i no `disabled`, perquè es puga
+ * enfocar i el lector en llija el motiu, i en prémer-la el toast l'explica
+ * (a una pantalla tàctil no hi ha `title`). Cap control fa com si.
+ */
+export function AccesFitxaPublica({ identitat, etiqueta = ETIQUETA_FITXA_PUBLICA }) {
+  const id = useId();
+  const { showToast } = useToast();
+  const acces = accesAFitxaPublica(identitat);
+  if (!acces) return null;
+  const idAvis = acces.avis ? `${id}-avis` : undefined;
+  return (
+    <div className="perfil-fitxa-publica">
+      {acces.avis ? (
+        <p className="perfil-fitxa-publica__avis" id={idAvis} title={acces.avis.explicacio}>
+          <Lock size={20} aria-hidden="true" focusable="false" />
+          <span className="perfil-fitxa-publica__estat">{acces.avis.etiqueta}</span>
+          <span className="sdp-sr-only">{`: ${acces.avis.explicacio}`}</span>
+        </p>
+      ) : null}
+      {acces.oberta ? (
+        <Link className="sdp-boto sdp-boto--secundari perfil-fitxa-publica__boto" to={acces.ruta} aria-describedby={idAvis}>
+          <Eye size={20} aria-hidden="true" focusable="false" />
+          <span>{etiqueta}</span>
+        </Link>
+      ) : (
+        <Boto
+          varietat="secundari"
+          icona={Eye}
+          className="perfil-fitxa-publica__boto"
+          aria-disabled="true"
+          aria-describedby={idAvis}
+          onClick={() => showToast(acces.avis?.explicacio)}
+        >
+          {etiqueta}
+        </Boto>
+      )}
+    </div>
+  );
+}
+
+function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = null, connexio, etiquetaFitxaPublica }) {
   const { showToast } = useToast();
   const {
     identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error, ambMembres,
@@ -152,32 +253,40 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
     }
     const identitat = identitats.find((i) => i.id === item?.data?.identitatId);
     if (!identitat) return null;
-    if (vista === 'fitxa') return <PerfilEditor key={identitat.id} identitat={identitat} />;
+    /* Ordre del Mestre (19-10-2026, Fase C, punt 9) · Damunt de cada apartat
+       d'una identitat, «Veure fitxa pública» (AccesFitxaPublica). */
+    const ambFitxaPublica = (detall) => (
+      <>
+        <AccesFitxaPublica identitat={identitat} etiqueta={etiquetaFitxaPublica} />
+        {detall}
+      </>
+    );
+    if (vista === 'fitxa') return ambFitxaPublica(<PerfilEditor key={identitat.id} identitat={identitat} />);
     /* Ordre del Mestre (261008) · la vista A4, la portada i la targeta, fora de l'editor. */
-    if (vista === 'vistes') return <DetallVistes key={identitat.id} identitat={identitat} />;
+    if (vista === 'vistes') return ambFitxaPublica(<DetallVistes key={identitat.id} identitat={identitat} />);
     /* T9 (261001) · on està connectada la persona: nodes i estat de la connexió. */
     if (vista === 'nodes') {
-      return (
+      return ambFitxaPublica(
         <DetallNodes
           key={identitat.id}
           persona={identitat}
           nodes={connexio.nodes}
           estat={connexio.estat}
           etiquetaEstat={connexio.etiqueta}
-        />
+        />,
       );
     }
     if (vista === 'privacitat') {
-      return <DetallPrivacitat key={identitat.id} identitat={identitat} config={config} onPerfilCanviat={recarrega} />;
+      return ambFitxaPublica(<DetallPrivacitat key={identitat.id} identitat={identitat} config={config} onPerfilCanviat={recarrega} />);
     }
     /* Pla 261018_1605 (Tasca 4, D8) · Les fotos de la persona: la llista i
        l'esborrat van pel port amb la configuració del Perfil.
        Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · I les de
        cada actor: una organització (empresa o grup) i un agent IA, també. */
     if (vista === 'multimedia') {
-      return <DetallMultimedia key={identitat.id} identitat={identitat} config={config} />;
+      return ambFitxaPublica(<DetallMultimedia key={identitat.id} identitat={identitat} config={config} />);
     }
-    return (
+    return ambFitxaPublica(
       <DetallCompte
         key={identitat.id}
         identitat={identitat}
@@ -185,9 +294,9 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
         pujaMitja={pujaMitja}
         contacte={contactes?.[String(identitat.id)] || null}
         ambMembres={gestionaMembres}
-      />
+      />,
     );
-  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres]);
+  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres, etiquetaFitxaPublica]);
 
   const onCreate = useCallback(() => new Promise((resolve) => {
     setObertures((n) => n + 1);
@@ -286,6 +395,11 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
   const nomPoble = externalConfig?.nomPoble;
   const estatConnexio = estatDeConnexio({ modeRemot, status, enLinia });
   const etiquetaConnexio = etiquetaDeConnexio(t, estatConnexio);
+  /* Fase C (punt 9) · El nom de «Veure fitxa pública», per l'i18n; sense
+     traductor (una peça muntada sola), el del Mestre. */
+  const etiquetaFitxaPublica = typeof t === 'function'
+    ? t('section.perfil.fitxaPublica', ETIQUETA_FITXA_PUBLICA)
+    : ETIQUETA_FITXA_PUBLICA;
   const connexio = useMemo(() => ({
     nodes: nodesDelPerfil({ nomPoble, extra: nodes }),
     estat: estatConnexio,
@@ -336,7 +450,14 @@ export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_N
 
   return (
     <PerfilProvider config={config} onCanviOrganitzacions={refresh}>
-      <PerfilManagerInner config={config} aplicacions={utilitats} preferides={preferides} recuperacio={recuperacio} connexio={connexio} />
+      <PerfilManagerInner
+        config={config}
+        aplicacions={utilitats}
+        preferides={preferides}
+        recuperacio={recuperacio}
+        connexio={connexio}
+        etiquetaFitxaPublica={etiquetaFitxaPublica}
+      />
     </PerfilProvider>
   );
 }

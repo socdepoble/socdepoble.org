@@ -1,8 +1,0 @@
-DESTÍ: .husky/pre-commit (una línia nova abans de l'exec final)
-
-#!/bin/sh
-# SDP-REFLEX-HOOK:v2:pre-commit
-node tooling/gates/frontissa-contingut.mjs || exit 1
-node tooling/gates/porta-taxonomia.mjs --staged || exit 1
-node tooling/gates/porta-plantilla-viva.mjs --staged || exit 1
-exec node tooling/gates/git-staged.mjs

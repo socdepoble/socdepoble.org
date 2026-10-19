@@ -18,7 +18,7 @@ contracte.llig:
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
 ---
-\n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
+# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 
 Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionalitats vitals, de gran impacte social al poble, que el Mestre ha ideat. Qualsevol IA o humà que desenvolupe l'esquema de base de dades, els menús de navegació o les "Cards" del Mur ha de tindre en compte aquests escenaris.
 

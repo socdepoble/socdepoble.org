@@ -52,7 +52,7 @@ export const LEGACY_MEDIA = [
   nano('nano-cervell', 'Cervell', 'cervell_nano_card.jpg'),
   nano('nano-gestoria', 'Gestoria', 'gestoria_nano_card.jpg'),
   nano('nano-lector', 'Lector RSS', 'lector_rss_nano_card.jpg'),
-  nano('nano-mercat', 'Mercat', 'mercat_nano_card.jpg'),
+  nano('nano-mercat', 'Mercat', 'mercat_nano_card.webp'),
   nano('nano-metriques', 'Mètriques', 'metriques_nano_card.jpg'),
   nano('nano-mur', 'Mur', 'mur_nano_card.jpg'),
   nano('nano-snippet', 'Snippet', 'snippet_nano_card.jpg'),

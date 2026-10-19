@@ -9,17 +9,28 @@
  *
  * Estats: inicial (sense consulta), carregant (esquelet només si encara no hi
  * ha res), buit, error per font (la resta de resultats continua visible).
+ *
+ * Ordre del Mestre (261019 21:34, punt 9) ·
+ *  · La caixa de cerca puja davall de l'H1 («Busca dins del contingut»), dins
+ *    del bloc del títol: la ranura `accioPrincipal` de la Pàgina Universal
+ *    (PageFrame, div.page-title-accio), davant del subtítol, dels filtres i
+ *    dels resultats. Així es veu en el primer plec sense cap scroll. Continua
+ *    sent l'única caixa (form role=search amb el seu nom).
+ *  · Doble vista per a Persones, Entitats, Pobles i Mercat: la llista de
+ *    sempre (per defecte) o targetes (?vista=graella, push com els filtres;
+ *    targetaDeResultat.js), amb les mateixes dades i el mateix enllaç.
  */
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Search } from 'lucide-react';
+import { LayoutGrid, List, Search } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import {
-  Alerta, Boto, Carregant, EstatBuit, Esquelet, PillToggle, ResultatCerca, UniversalSearch
+  Alerta, Boto, Carregant, Centre, EstatBuit, Esquelet, GraellaTargetes, PillToggle, ResultatCerca, UniversalCard, UniversalSearch
 } from '../../components/PedraSeca/index.js';
 import { Link, useSearchParams } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { TIPUS_CERCA, extracteDeResultat, partsRessaltades, tipusValid } from './indexCerca.js';
+import { propsDeTargetaDeResultat, teVistaDeTargetes, vistaValida } from './targetaDeResultat.js';
 import { useCercaGlobal } from './useCercaGlobal.js';
 
 const MS_ESCRIPTURA = 250;
@@ -42,6 +53,12 @@ export default function SearchSection() {
   const qURL = params.get('q') || '';
   const q = qURL.trim();
   const tipus = tipusValid(params.get('tipus'));
+  /* La vista dels resultats d'un tipus que en té dues (targetaDeResultat.js):
+     ?vista=graella, les targetes; si no, la llista. En els altres tipus i a
+     la vista Tot, sempre la llista. */
+  const vista = vistaValida(params.get('vista'));
+  const ambVistes = teVistaDeTargetes(tipus);
+  const enTargetes = ambVistes && vista === 'graella';
   const idBase = useId();
 
   /* El text de la caixa va per davant de l'URL mentre s'escriu. `escrita`
@@ -85,6 +102,16 @@ export default function SearchSection() {
     (capcaleraRef.current || estatRef.current)?.focus();
   }, [tipus]);
 
+  /* Canviar de vista fa push, com els filtres (arrere torna a la d'abans).
+     Només s'escriu ?vista=: la consulta i el filtre de la URL es queden. La
+     per defecte (la llista) no s'escriu. El selector no desapareix amb el
+     canvi: el focus es queda on és. */
+  const canviaVista = useCallback((valor) => {
+    const nova = vistaValida(valor);
+    if (nova === vista) return;
+    setParams({ vista: nova === 'llista' ? null : nova }, { replace: false });
+  }, [setParams, vista]);
+
   /* En mòbil els filtres són una fila que es desplaça: el filtre actiu (p. ex.
      un ?tipus= que arriba per enllaç) ha de quedar a la vista. Només es mou
      la fila, mai la pàgina (el focus de «Vore'ls tots» ja la porta on toca). */
@@ -113,11 +140,16 @@ export default function SearchSection() {
     primerNou.current = visibles;
     setPagina({ clau: clauVista, n: visibles + PER_PAGINA });
   };
+  /* El focus va al primer resultat nou: a la llista, el seu enllaç; a les
+     targetes, l'enllaç de la targeta (data-element) o, si no n'hi ha, el
+     primer enllaç que porta. */
   useEffect(() => {
     if (primerNou.current == null) return;
     const index = primerNou.current;
     primerNou.current = null;
-    llistaRef.current?.children[index]?.querySelector('a')?.focus();
+    const contenidor = llistaRef.current;
+    const nou = contenidor?.tagName === 'OL' ? contenidor.children[index] : contenidor?.querySelectorAll('.sp-card')[index];
+    (nou?.querySelector('[data-element]') || nou?.querySelector('a'))?.focus();
   }, [visibles]);
 
   /* Els grups de la vista Tot i el ressaltat (extracte i <mark>) de cada
@@ -168,30 +200,57 @@ export default function SearchSection() {
     </Link>
   );
 
-  const pintaResultat = (e) => {
+  /* La meta i l'acció d'un resultat, les mateixes a la fila i a la targeta. */
+  const metaDe = (e) => {
     const propia = e.propia === 'persona'
       ? t('section.search.elTeuPerfil', 'El teu perfil')
       : e.propia === 'entitat' ? t('section.search.laGestiones', 'La gestiones tu') : null;
+    return propia ? [propia, ...e.meta] : e.meta;
+  };
+  const accioDe = (e) => (e.accio?.tipus === 'escriu' ? (
+    <Link className="sdp-boto sdp-boto--secundari" to={e.accio.href}
+      aria-label={plantilla(t('section.search.escriuliA', 'Escriu-li a {nom}'), { nom: e.titol })}>
+      {t('section.search.escriuli', 'Escriu-li')}
+    </Link>
+  ) : null);
+
+  const pintaResultat = (e) => {
     const { titol, extracte } = ressaltats.get(e.clau);
     return (
       <ResultatCerca
         titol={<Ressaltat parts={titol} />}
         href={e.href}
-        meta={propia ? [propia, ...e.meta] : e.meta}
+        meta={metaDe(e)}
         avis={e.privada ? t('section.search.privada', 'Privada: només la veus tu') : null}
         extracte={extracte ? <Ressaltat parts={extracte} /> : null}
         imatge={e.imatge}
         avatar={e.avatar}
         headingLevel={4}
-        accio={e.accio?.tipus === 'escriu' ? (
-          <Link className="sdp-boto sdp-boto--secundari" to={e.accio.href}
-            aria-label={plantilla(t('section.search.escriuliA', 'Escriu-li a {nom}'), { nom: e.titol })}>
-            {t('section.search.escriuli', 'Escriu-li')}
-          </Link>
-        ) : null}
+        accio={accioDe(e)}
       />
     );
   };
+
+  /* La vista «Targetes» (ordre del Mestre, 261019 21:34, punt 9): la
+     UniversalCard de cada resultat dins de la graella canònica
+     (GraellaTargetes), amb l'extracte ressaltat com a la fila. El títol de la
+     targeta és text (també és el nom de l'enllaç de tota la targeta). */
+  const pintaTargeta = ({ id, entrada: e }) => {
+    const { extracte } = ressaltats.get(e.clau);
+    return (
+      <UniversalCard
+        key={id}
+        {...propsDeTargetaDeResultat(e, { meta: metaDe(e) })}
+        headingLevel="h4"
+        body={extracte ? <Ressaltat parts={extracte} /> : undefined}
+        accio={accioDe(e)}
+      />
+    );
+  };
+  const opcionsVista = [
+    { valor: 'llista', text: t('section.search.vistaLlista', 'Llista'), icona: <List size={20} aria-hidden="true" focusable="false" /> },
+    { valor: 'graella', text: t('section.search.vistaTargetes', 'Targetes'), icona: <LayoutGrid size={20} aria-hidden="true" focusable="false" /> }
+  ];
 
   let cos = null;
   if (!q) {
@@ -240,9 +299,26 @@ export default function SearchSection() {
         <h3 id={idTitol} ref={capcaleraRef} tabIndex={-1} className="sdp-cerca__grup-titol">
           {etiquetaDe(tipus)} <span className="sdp-cerca__grup-recompte">({total})</span>
         </h3>
-        <ol ref={llistaRef} className="sdp-cerca__llista">
-          {llista.slice(0, visibles).map((e) => <li key={e.clau}>{pintaResultat(e)}</li>)}
-        </ol>
+        {ambVistes ? (
+          <PillToggle
+            className="sdp-pindola--centrada"
+            etiqueta={t('section.search.vista', 'Vista dels resultats')}
+            opcions={opcionsVista}
+            valor={vista}
+            onCanvi={canviaVista}
+          />
+        ) : null}
+        {enTargetes ? (
+          <div ref={llistaRef}>
+            <GraellaTargetes elements={llista.slice(0, visibles).map((e) => ({ id: e.clau, entrada: e }))}>
+              {pintaTargeta}
+            </GraellaTargetes>
+          </div>
+        ) : (
+          <ol ref={llistaRef} className="sdp-cerca__llista">
+            {llista.slice(0, visibles).map((e) => <li key={e.clau}>{pintaResultat(e)}</li>)}
+          </ol>
+        )}
         {total > visibles ? (
           <Boto className="sdp-cerca__mes" onClick={mostraMes}>{t('section.search.mostraMes', "Mostra'n més")}</Boto>
         ) : null}
@@ -250,28 +326,43 @@ export default function SearchSection() {
     );
   }
 
+  /* Ordre del Mestre (261019 21:34, punt 9: «elevar-lo directament davall de
+     l'H1 … en el primer plec visual sense cap scroll») · La caixa va a la
+     ranura del bloc del títol (accioPrincipal: davall de l'H1, dins de
+     div.page-title-accio), no al cos: abans quedava davall del subtítol.
+     Revisió adversarial (Llei del Píxel) · Dins del bloc del títol la caixa
+     prenia tota l'amplada del bloc (861 px a 1280, desalineada de la columna
+     dels filtres i dels resultats, 622 px). Centre (la primitiva de
+     composició, .sdp-centre: la mesura de lectura i centrada) li torna
+     l'amplada i el lloc de la columna de .sdp-cerca. En mòbil el bloc ja és
+     més estret que la mesura: no hi canvia res. */
+  const formulari = (
+    <Centre>
+      <form
+        role="search"
+        className="sdp-cerca__formulari"
+        aria-label={t('section.search.formulari', 'Cerca a Sóc de Poble')}
+        onSubmit={(event) => { event.preventDefault(); aplica(text, { replace: true }); }}
+      >
+        <UniversalSearch
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
+          ariaLabel={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
+        />
+      </form>
+    </Centre>
+  );
+
   return (
     <UniversalPage
       title={t('section.search.title', 'Cercador Universal')}
       subtitle={t('section.search.subtitle', 'Busca persones, pobles, publicacions i pàgines en un sol lloc')}
       chrome="system"
       showLogos
+      accioPrincipal={formulari}
     >
       <div className="sdp-cerca">
-        <form
-          role="search"
-          className="sdp-cerca__formulari"
-          aria-label={t('section.search.formulari', 'Cerca a Sóc de Poble')}
-          onSubmit={(event) => { event.preventDefault(); aplica(text, { replace: true }); }}
-        >
-          <UniversalSearch
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
-            ariaLabel={t('section.search.searchPlaceholder', 'Cerca persones, pobles, posts...')}
-          />
-        </form>
-
         <div ref={filtresRef}>
           <PillToggle
             className="sdp-cerca__filtres"

@@ -3168,6 +3168,33 @@ details[open] summary.accordion-header svg:last-child {
      (209px, 317px d'eines) no basta: caldria mesurar-les (ResizeObserver).
      Els mateixos nivells que recull l'Índex (PageFrame): de h1 a h6. */
   .sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--sdp-alt-accio) * 3); }
+
+  /* ── Llenç Continu de l'Editor Universal (Google Docs / Obsidian Style) ──
+     L'àrea editable omple la vertical del frame, és 100% clicable i oferix
+     scroll continu d'espai generós perquè la persona puga redactar un llibre
+     o nota sencera sense cap sensació d'engabiament en una capsa curta. */
+  .sdp-editor-full-canvas {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 55vh;
+    cursor: text;
+    width: 100%;
+  }
+
+  .sdp-editor-full-canvas .tiptap.ProseMirror {
+    flex: 1 1 auto;
+    min-height: 480px;
+    outline: none;
+    border: none;
+    box-shadow: none;
+    cursor: text;
+    padding-bottom: 30vh;
+  }
+
+  .sdp-editor-full-canvas .tiptap.ProseMirror:focus {
+    outline: none;
+  }
 }
 
 /* ═══ XAT (F0 · pla 260927_0055 §4.D) ═══════════════════════════════════

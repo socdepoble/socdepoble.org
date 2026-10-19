@@ -117,42 +117,128 @@ const DATA_2245 = ['22:45', '03/10/26', '2026-10-03T22:45:00+02:00'];
 const DATA_261004 = ['01:10', '04/10/26', '2026-10-04T01:10:00+02:00'];
 const dataDe = (id) => (Object.hasOwn(TEXTOS_261004, id) ? DATA_261004 : DATA_2245);
 
-/* El cos de cada pàgina: els tres H5 de 2245 i les negretes, en ordre. */
+/* El cos de cada pàgina: els H5 i les negretes, en ordre. */
 const COS_2245 = {
   mur: [
-    ['La plaça major en obert', 'Exigència de respecte', 'Contingut persistent'],
-    ['Mur principal', 'to constructiu i respectuós', 'contingut de valor']
+    ['La plaça major en obert', 'Com publicar pas a pas, sense por', 'Exigència de respecte', 'Contingut persistent'],
+    [
+      'Mur principal',
+      'plaça del poble',
+      'fotografia de la nevada',
+      'donar els bons dies',
+      'conversa oberta i propera',
+      '«Publicar al Mur»',
+      'estudi d\'escriptura',
+      'afegir fotos des del mòbil',
+      'desa l\'esborrany tot sol',
+      'to constructiu i respectuós',
+      'cara a cara a la porta del forn',
+      'l\'arxiu històric i la memòria viva',
+      'contingut de valor',
+      'històries xicotetes del dia a dia'
+    ]
   ],
   mercat: [
-    ['Molt més que vendre', 'Acords entre persones', 'Responsabilitat comunitària'],
-    ['Mercat del poble', 'intercanviar eines', 'tauler d\'anuncis digital', 'no fa d\'intermediària', 'trellat']
+    ['Molt més que vendre', 'Com posar un anunci i parlar pel Xat', 'Acords entre persones', 'Responsabilitat comunitària'],
+    [
+      'Mercat del poble',
+      'donar una segona vida',
+      'intercanviar eines',
+      'fruita i verdura de l\'horta',
+      'mobles de segona mà',
+      'suport mutu entre veïns',
+      'fotografia ben clara',
+      'vens, el canvies o el regales',
+      'escriure\'t directament pel Xat',
+      'cap comissió ni intermediari',
+      'tauler d\'anuncis digital',
+      'prenent un café al bar',
+      'a la porta del Mas',
+      'descripcions honestes i tractes justos',
+      'no fa d\'intermediària',
+      'trellat',
+      'bona fe de tot el veïnat'
+    ]
   ],
   calendari: [
     ['L\'agenda que ens unix', 'Visibilitat i difusió', 'Convocatòries legítimes'],
-    ['calendari comunitari', 'pública per a tota la xarxa', 'tens l\'autoritat']
+    [
+      'comunitat de regants',
+      'calendari comunitari',
+      'lletra clara i fàcil de consultar',
+      'gent gran',
+      'dia, hora i lloc exacte',
+      'pública per a tota la xarxa',
+      'guardar-se la cita al mòbil',
+      'sense dependre dels cartells de paper',
+      'tens l\'autoritat',
+      'neta d\'anuncis enganyosos',
+      'fiar-se de les dates'
+    ]
   ],
   /* Gauntlet 261016 (§0.1.3) · La negreta del segon paràgraf diu ara que la foto
      conserva l'EXIF; els tres H5 i els tres paràgrafs continuen sent els de 2245. */
   mapa: [
     ['Un espai per a situar-nos al territori', 'La privacitat sempre per davant', 'Visibilitat oberta'],
-    ['mapa de la comarca', 'les conserva dins de la foto', 'visible i geolocalitzable']
+    [
+      'mapa de la comarca',
+      'camins, fonts, assuts o llocs d\'interès',
+      'petjada digital sobre el terreny',
+      'les conserva dins de la foto',
+      '«Conserva la ubicació i la data de la foto»',
+      'es netegen sempre de manera automàtica',
+      'visible i geolocalitzable',
+      'prudència i estima per la terra',
+      'cuidar el nostre terme'
+    ]
   ],
   vehicle: [
     ['Moviment eficient i solidari', 'Privacitat en les rutes', 'Sense intermediaris'],
-    ['oferir els seients buits', 'rutina de desplaçaments', 'acord privat']
+    [
+      'metge, a l\'hospital o a fer encàrrecs',
+      'oferir els seients buits',
+      'buscar algun veí de confiança',
+      'més companyia, més estalvi i menys fum',
+      'rutina de desplaçaments',
+      'poble d\'eixida, el destí i l\'hora aproximada',
+      'punt exacte de recollida per missatge privat',
+      'no cobrem cap taxa ni comissió',
+      'acord privat',
+      'fer comboi i enfortir els llaços'
+    ]
   ],
   animalets: [
     ['Una xarxa de rescat i adopció', 'Avisos d\'emergència', 'Compromís amb la fauna'],
-    ['benestar animal', 'telèfon o contacte', 'respecte als animals']
+    [
+      'benestar animal',
+      'un animalet desorientat pel camí',
+      'mobilitzar tota la comunitat ràpidament',
+      'foto clara i l\'últim lloc on s\'ha vist',
+      'telèfon o contacte',
+      'Xat de Sóc de Poble',
+      'adopcions responsables',
+      'respecte als animals',
+      'qualitat humana com a poble'
+    ]
   ]
 };
-/* W4-08 · El cos de les dues pàgines de MarIA: un H5, cap negreta i un paràgraf. */
+/* W4-08 · El cos de les dues pàgines de MarIA: un H5, negretes estratègiques i un paràgraf. */
 const COS_261004 = {
-  treball: [['Connectem talent local'], []],
-  habitatge: [['Obrir portes tancades'], []]
+  treball: [
+    ['Connectem talent local'],
+    ['feina digna o professionals d\'ofici', 'obrer, electricista, fontaner o cuidadora', 'acord directe entre persones']
+  ],
+  habitatge: [
+    ['Obrir portes tancades'],
+    ['cases o pisos tancats', 'lloguer o compra directa al municipi', 'confiança veïnal i sense comissions']
+  ]
 };
 const COS = { ...COS_2245, ...COS_261004 };
-const PARAGRAFS = (id) => (Object.hasOwn(COS_261004, id) ? 1 : 3);
+const PARAGRAFS = (id) => {
+  if (Object.hasOwn(COS_261004, id)) return 1;
+  if (id === 'mur' || id === 'mercat') return 4;
+  return 3;
+};
 
 describe('destinsControl · les targetes i on porta cada porta', () => {
   test('huit destins, en l’ordre de la graella, sense cap repetit, cadascun amb la seua pàgina', () => {

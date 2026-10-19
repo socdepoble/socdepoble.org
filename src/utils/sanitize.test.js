@@ -115,7 +115,8 @@ describe('sanitize.js', () => {
        un camí absolut del mateix lloc es resolia contra un origen 'capacitor:'
        i es rebutjava. La regla és la del trigger del servidor: UNA barra
        seguida d'un caràcter que no siga barra ni barra inversa, sense
-       caràcters de control ni barres inverses. El filtre de sempre no canvia. */
+       caràcters de control ni barres inverses. Des de la Fase C (261019), també
+       al filtre de sempre. */
     it('a l’app nativa (capacitor://localhost), un camí propi continua sent propi; cap altre origen', () => {
       vi.stubGlobal('location', { origin: 'capacitor://localhost', protocol: 'capacitor:', host: 'localhost', hostname: 'localhost',
         href: 'capacitor://localhost/mur', pathname: '/mur', search: '', hash: '' });
@@ -125,8 +126,16 @@ describe('sanitize.js', () => {
         '/a\u0000b.png', 'https://lh3.googleusercontent.com/a/pepa.png', 'capacitor://fora/x.png', 'assets/x.png', '/']) {
         expect(esFontImatgePropia(url), JSON.stringify(url)).toBe(false);
       }
-      // El filtre dels altres consumidors (sanejador, Notes, Perfil), com abans.
-      expect(esFontImatgeSegura('/assets/mur/festa.webp')).toBe(false);
+      /* Fase C (Capacitor 8; ordre del Mestre, 261019) · El filtre dels altres
+         consumidors (sanejador, Notes, Perfil) admet el mateix camí propi; una
+         adreça d'un altre lloc, ni l'absoluta de l'app nativa, no. */
+      expect(esFontImatgeSegura('/assets/mur/festa.webp')).toBe(true);
+      expect(esFontImatgeSegura(' /assets/mur/festa.webp ')).toBe(true);
+      for (const url of ['//fora.example/x.png', '/\\fora.example/x.png', '/\t/fora.example/x.png', '/assets\\..\\x.png',
+        '/a\u0000b.png', 'capacitor://fora/x.png', 'capacitor://localhost/x.png']) {
+        expect(esFontImatgeSegura(url), JSON.stringify(url)).toBe(false);
+      }
+      expect(sanitizeHtml('<p><img src="/assets/mur/festa.webp" alt="Festa"></p>')).toContain('src="/assets/mur/festa.webp"');
     });
 
     it('fontImatgePropia torna la mateixa font si és pròpia; si no, null', () => {

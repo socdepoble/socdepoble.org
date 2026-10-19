@@ -2691,7 +2691,7 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     background: transparent;
     color: var(--sdp-text-cos);
     font: inherit;
-    font-size: var(--sdp-text-h5);
+    font-size: 1.625rem;
     line-height: 1;
     cursor: pointer;
   }
@@ -2710,6 +2710,70 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
     overflow-wrap: anywhere;
+  }
+
+  /* ── Selector d'Emojis en Pàgina de Workspace (PaginaEmojis.jsx) ─────────
+     Substitució de finestres flotants per subvista de columna dedicada. */
+  .sdp-pagina-emojis {
+    display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 0;
+    background: var(--sdp-fons-targeta);
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    overflow-y: auto;
+    padding: var(--sdp-space-4);
+    box-sizing: border-box;
+  }
+
+  .sdp-pagina-emojis__capcalera {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-4);
+    padding-block-end: var(--sdp-space-3);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-pagina-emojis__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-pagina-emojis__boto-tornar {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    font-weight: 600;
+  }
+
+  .sdp-pagina-emojis__titols {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+
+  .sdp-pagina-emojis__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h3);
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-pagina-emojis__descripcio {
+    margin: 0;
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-pagina-emojis__cos {
+    flex: 1 1 auto;
+    min-block-size: 0;
   }
 }
 

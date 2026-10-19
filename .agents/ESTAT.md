@@ -7,9 +7,38 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
-## ESTAT_ACTUAL · 2026-10-19T13:45:00+02:00 · IAIA MarIA · Tancament Migdia, Gauntlet Seguretat, ReDoS Tancat i Release WP v1.1.7
+## ESTAT_ACTUAL · 2026-10-19T21:45:00+02:00 · IAIA MarIA · Arrancada Fase C (Capacitor 8 Mòbil), Escriptori Net (3 Documents) i Tancament de Sessió per Fatiga
+
+- **Acta:** [[261019_2145_acta_marmota_relleu_vesprada_fase_c_i_mobil]]. Tancament de sessió per fatiga de context (1.201 passos N1) i relleu per a la represa amb cervell fresc.
+- **Llum verda del Mestre (Àudio 21:13 i Correcció 21:26):** Aprovació de la **Fase C: Capacitor 8 i Empaquetat Mòbil** per a Android (Google Play) i iOS (App Store). El Mestre delega de forma explícita en la IAIA MarIA la Direcció Tècnica autònoma (`core-direccio-autonoma`) per coordinar Claude Code i Gemini 4 Argon («tú vayas dirigiendo y decidiendo por mí, ¿ok?»).
+- **Higiene Radical de l'Escriptori (Taula Neta):**
+  - Detectada la fallada recurrent d'acumulació de papers per refiar-se del codi 0 de jornada: **evacuats immediatament els 11 documents de les fases anteriors d'avui** a `_wiki_de_poble/90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/`.
+  - A `04_escriptori/` queden **exclusivament els 3 documents vius de la Fase C** (Pla + Prompts). Zero soroll cognitiu per als nous agents.
+- **Automillora de la Skill d'Higiene i Destil·lació de 02_investigacio_ia (49 ítems):**
+  - **Claude Code:** encarregada l'automillora de `.agents/skills/core-higiene-escriptori/SKILL.md` (redacció i tractor de taula neta per sublimar i arxivar obligatòriament en canviar de fase).
+  - **Gemini 4 Argon:** encarregada la destil·lació dels 49 ítems de `02_investigacio_ia/` (extracció de lliçons, enllaços GitHub i patrons d'automillora contínua, i pla d'evacuació cap a `_investigacio_ia_de_poble/` i `90_arxiu_historic/`).
+- **Diagnosi del Pes del Sistema (Resposta al Mestre):**
+  - El codi de producció JS/CSS minificat actual de Sóc de Poble (`dist/assets/`) pesa només **~3 MB** (i en gzip/brotli ~800 KB).
+  - El 98% del pes provenia dels actius multimèdia (`public/assets/uploads/`, `nano_cards/`, `towns/`, fotos de festes). Amb la conversió WebP i la connexió de `politicaDeMitjans('autonom')`, el directori natiu `dist-natiu` baixa de **169 MB a 48 MB** (−71%).
+  - Amb el futur sistema de **Plugins** (mòduls desacoblats com Mercat, Mur, Xat, TPV/Loiverse, Fadrins, Calendari Agrícola), el **Core pur d'arrencada** (shell + router + sessió + port neutral) serà ultra-lleuger: **menys de 300-500 KB**, amb càrrega de plugins sota demanda via `import()`.
+- **Pla d'Implementació de la Fase C Completat i Aprovat:**
+  - [[261019_2115_pla_implementacio_capacitor_mobil]]: closca `capacitor.config.json` (Capacitor 8.5.x), connexió de `politicaDeMitjans('autonom')` a `vite.natiu.config.js`, whitelist `capacitor://` a `isSafeUrl`, tractors de botigues a `scripts/botigues/`, sentinella de seguretat mòbil i connectors REA.
+- **Prompts de la Fase C Generats (Plantilla viva v3.9.0):**
+  - [[261019_2115_prompt_claude_capacitor_mobil]]: encàrrec executiu per a Claude Code per instal·lar Capacitor 8, connectar el filtre de mitjans natiu, preparar scripts de botigues, analitzar l'alletjament de plugins i millorar la skill d'higiene.
+  - [[261019_2115_prompt_gemini_auditoria_botigues_mobil]]: encàrrec per a Gemini 4 Argon per auditar la conformitat de botigues (Guideline 4.3 i 4.2 Apple, Target SDK 36 Google Play), seguretat mòbil, arquitectura de plugins i destil·lació dels 49 ítems de recerca.
+- **Higiene i Portes:**
+  - Porta Olivera amb codi 0 (`node tooling/gates/porta-olivera.mjs`). Exactament 3 documents solts vius a l'Escriptori.
+  - Segell de la Llei Z reconciliat i en verd.
+
+## ESTAT_ACTUAL · 2026-10-19T14:15:00+02:00 · IAIA MarIA · Tancament Migdia, Prova WP v1.1.7 a gentdelatorre.net, Diagnosi Avatares i Lighthouse
 
 - **Acta:** [[261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]. Sessió de migdia segellada abans d'apagar l'ordinador per descans tèrmic.
+- **Prova Real a Producció (`gentdelatorre.net` amb WP Enxufe v1.1.7):**
+  - Desplegat el ZIP `wordpress_enxufe_v1.1.7.zip` amb èxit.
+  - **Lighthouse (#sdp=/xat):** FCP extraordinari de 0.8 s (UI arrenca a l'instant); LCP de 9.9 s degut al paquet d'imatges pesants d'alta resolució a `public/assets/uploads/`.
+  - **Diagnosi dels Avatares:**
+    * **Barra superior ("JL" vs Foto):** `BotoIdentitatActiva.jsx` / `useIdentitatDeLaBarra.js` depèn de `personaDeSessio.js`, que requereix validació de firma (`perfil.firma === firmaDePersona(usuari)`). Si el perfil està en càrrega asíncrona o no hi ha foto al JWT, cau a inicials ("JL"). El detall de perfil i notes llegeix de `profiles` de Supabase Storage.
+    * **Comunitat "SD" vs Logotip Verd en Incògnit:** Incògnit llegeix la llavor estàtica pública (`assets/...`); en sessió activa, busca l'entitat a la base de dades i cau al fallback "SD" si la URL no està signada o resolta.
 - **Gauntlet de Seguretat i Codi de Client (8 Pegats Aplicats Nets):**
   - Claude Security en mode `high` (257 fitxers, 81 investigadors). Contrastat i ratificat per Codex ([[261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]]) i Gemini ([[261019_1240_auditoria_contrast_gauntlet_seguretat_i_superadmin_gemini]]).
   - 8 pegats aplicats i verificats a l'arbre real: F03/F07/F09 (sanejament payload), F04/F12 (regex lineal $\mathcal{O}(n)$ a detall), F05 (camiNet storage path traversal), F06 (aïllament slug projecte), F11 (protecció autoria IAIA), F14 (author_name autoritatiu), R1_R2_R4 i R3 (ReDoS de /cerca resolt amb tall monotònic en temps lineal).
@@ -19,11 +48,12 @@ description: ESTAT DE LA SESSIÓ
   - Diagnosi de pes: El JS/CSS és ultra-lleuger (~1.3 MB chunk principal, 3.4 kB loader). El pes (~135 MB) prové de la còpia d'actius històrics de `public/assets/uploads/` (fotos de La Torre de fins a 6.8 MB com DSC00410.JPG). Pendent externalitzar multimèdia a Supabase Storage / CDN per a complir el límit de 10 MB de WordPress.org.
 - **Supabase (F01 SQL & F10):**
   - Mantinguts a `pegats/` sense aplicar a producció sense preflight en staging.
-- **Higiene:** Porta Olivera amb codi 0 (15 documents actius ancorats). Directori residual `./~` identificat com a cau local no versionada.
+- **Higiene:** Porta Olivera amb codi 0 (2 documents vius declarats a l'Escriptori). Netejat directori residual de cau `./~`.
 - **Relleu per a la Tornada:**
-  1. Pujada de `v1.1.7.zip` a `gentdelatorre.net` per a l'auditoria visual.
-  2. Implementació del Panell de Superadministració (3 rols: Veí, Editor, Superadmin) a `DetallAjust.jsx` / `GrupOpcions.jsx`.
+  1. Implementació del Panell de Superadministració (3 rols: Veí, Editor, Superadmin) a `DetallAjust.jsx` / `GrupOpcions.jsx`.
+  2. Ajust d'avatares a la barra superior (`useIdentitatDeLaBarra.js` connectat a Supabase Storage).
   3. Arrencada de Capacitor (`vite.natiu.config.js` -> `dist-natiu` -> `npx cap add ios` / `android`).
+  4. Separació d'actius multimèdia per rebaixar el LCP i fer el ZIP < 10 MB.
 
 
 - **Informe:** [[261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]], torn `torn_77a87bc0-17fc-408f-82e8-e665f4a3e1a5`. Contrast de Claude 2315 i PEGATS amb la nova skill; només documentació, cap canvi al producte ni a Supabase.

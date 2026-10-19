@@ -12,9 +12,13 @@
  */
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { llevaEtiquetes, llevaScriptsIEstils, normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
-import { getSectionItemPath, resolveItemPath, resolvePageSlugPath, RUTA_FITXA_IAIA, rutaDePerfil } from '../../config/navigation.js';
+import {
+  getSectionItemPath, resolveItemPath, resolvePageSlugPath, RUTA_FITXA_IAIA, RUTES_CANONIQUES, rutaDePerfil
+} from '../../config/navigation.js';
 import { tipusDAgent } from '../../data/agentsSeed.js';
-import { PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau } from '../../data/identitatsSeed.js';
+import {
+  ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau
+} from '../../data/identitatsSeed.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
@@ -203,13 +207,15 @@ const primeraImatge = (...valors) => {
 
 /**
  * Entrada { clau: 'tipus:id', tipus, id, titol, meta[], extracte, detall, imatge,
- * avatar, href, accio, data, privada, propia, titolPlegat, text }. Sense id no
- * n'hi ha: la clau és la que deduplica. Sense títol ni extracte tampoc (no es
- * podria pintar). `detall` és el text llarg (cos de la pàgina, de la nota…):
- * d'ací ix l'extracte quan la coincidència no és a l'entradilla.
+ * avatar, href, accio, data, privada, propia, canonica, titolPlegat, text }.
+ * Sense id no n'hi ha: la clau és la que deduplica. Sense títol ni extracte
+ * tampoc (no es podria pintar). `detall` és el text llarg (cos de la pàgina,
+ * de la nota…): d'ací ix l'extracte quan la coincidència no és a l'entradilla.
+ * `canonica` és la clau de la identitat d'una persona o d'una entitat
+ * (clauCanonica), o null: amb ella, ambLaIdentitatPropia en deixa una fitxa.
  */
 function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], imatge = null, avatar = null,
-  href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null }) {
+  href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null, canonica = null }) {
   if (id == null || String(id) === '') return null;
   const textExtracte = textPla(extracte);
   const textTitol = textPla(titol).slice(0, 200) || textExtracte.slice(0, 80);
@@ -233,6 +239,7 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     propia,
     /* La clau de l'article del qual esta entrada és la foto (deMedia), o null. */
     fotoDe,
+    canonica,
     titolPlegat: plega(textTitol),
     text: plega([textTitol, textExtracte, textDetall, ...cos.map((valor) => textPla(valor))].join(' '))
   };
@@ -262,10 +269,39 @@ export function extracteDeResultat(resultat, llistaFitxes = [], max = 200) {
    /iaia queda reservada per a la pròpia IAIA MarIA […], que és on s'ha
    d'accedir des del xat i des del cercador») · La IAIA, per identificador i
    amb el tipus 'ia' (mai pel nom), porta a la seua fitxa neta
-   (RUTA_FITXA_IAIA). La resta, la ruta de perfil de sempre (rutaDePerfil):
-   cap altra fitxa canvia d'enllaç. */
+   (RUTA_FITXA_IAIA). La resta, la ruta de perfil de sempre (rutaDePerfil).
+   Ordre del Mestre (261019 21:34, punt 9: «la cerca pública ha d'enllaçar
+   sempre a la fitxa pública (/javillinares o /gent/:id), mai a l'editor
+   privat») · Les tres identitats del Mestre porten a la seua ruta canònica
+   neta (RUTES_CANONIQUES: /javillinares, /socdepoble, /rentonar), per la seua
+   clau canònica (clauCanonica). /gent/0001 i /empresa/socdepoble obrin la
+   mateixa fitxa: la canònica és l'adreça neta. Cap altra fitxa canvia. */
 const esLaIAIA = (perfil, id) => perfil === 'ia' && esIAIA(id);
-const rutaDeLaFitxa = (perfil, id) => (esLaIAIA(perfil, id) ? RUTA_FITXA_IAIA : rutaDePerfil(perfil, id));
+const rutaDeLaFitxa = (perfil, id) => RUTES_CANONIQUES[clauCanonica(perfil, id)]
+  || (esLaIAIA(perfil, id) ? RUTA_FITXA_IAIA : rutaDePerfil(perfil, id));
+
+/**
+ * Ordre del Mestre (261019 21:34, punt 9: «una sola fitxa canònica al graf
+ * sense entrades duplicades», per a persones i per a organitzacions) · La clau
+ * de la identitat d'una fitxa del Cercador: la fundacional d'una de les tres
+ * identitats del Mestre (CLAUS_FUNDACIONALS), o null. Per identificador
+ * declarat i amb el tipus que toca, mai pel nom ni pel slug d'una fila:
+ *   · una persona, per clauFundacional (un àlies seu o un id remot declarat);
+ *   · una entitat (empresa o grup: a la cerca totes són 'entitats'), per
+ *     fundacionalDeLaClau, la regla de pobleDEntitat (la clau de la persona
+ *     pilot no és mai d'una entitat), o perquè el seu id és a `delProjecte`:
+ *     els ids que el backend ja ha reconegut com l'entitat pilot
+ *     (esEntitatDelProjecte; els passa useCercaGlobal);
+ *   · una IA o qualsevol altra, null: la seua clau és el seu id.
+ */
+export function clauCanonica(perfil, id, { delProjecte = [] } = {}) {
+  if (id == null || String(id) === '') return null;
+  if (perfil === 'persona') return clauFundacional({ tipus: 'persona', id });
+  if (perfil !== 'entitat') return null;
+  const fundacional = fundacionalDeLaClau(id);
+  if (fundacional && fundacional !== PERSONA_PILOT.slug) return fundacional;
+  return llistaDe(delProjecte).includes(String(id)) ? ENTITAT_PILOT_SLUG : null;
+}
 
 /** Catàleg d'agents del contingut base (seed o app_content.agents). */
 export function deAgent(agent, opcions = {}) {
@@ -282,7 +318,8 @@ export function deAgent(agent, opcions = {}) {
     extracte: primerText(agent?.short_bio, agent?.lema),
     cos: [agent?.role, agent?.town_name, agent?.tag, agent?.lema],
     avatar: { src: agent?.avatar_url, llavor: agent?.id },
-    href: rutaDeLaFitxa(perfil, agent?.id)
+    href: rutaDeLaFitxa(perfil, agent?.id),
+    canonica: clauCanonica(perfil, agent?.id)
   });
 }
 
@@ -319,6 +356,9 @@ function pobleDEntitat(id, ...delServidor) {
  * Gauntlet 261016_1530 (Bloc 3.6.3) · La IAIA MarIA (per id) sempre enllaça a
  * la seua fitxa, /iaia: la fitxa es pinta del paquet en tots els modes, també
  * en remot sense 'directori' (PerfilPublicSection.jsx, D12).
+ * Ordre del Mestre (261019 21:34, punt 9) · El mateix per a la persona pilot
+ * (per un àlies seu, clauCanonica): la seua fitxa també cau al paquet
+ * (perfilFundacionalDelPaquet) i porta a /javillinares.
  */
 export function deMembre(membre, opcions = {}) {
   const id = membre?.usuari_id ?? membre?.usuariId ?? null;
@@ -326,7 +366,8 @@ export function deMembre(membre, opcions = {}) {
   if (esCorreu(nom)) return null;
   const perfil = membre?.tipus === 'entitat' ? 'entitat' : membre?.tipus === 'ia' ? 'ia' : 'persona';
   const filId = membre?.fil_id ?? membre?.filId ?? null;
-  const fitxaOberta = perfil === 'entitat' || opcions.fitxesDePersones === true || esLaIAIA(perfil, id);
+  const canonica = clauCanonica(perfil, id);
+  const fitxaOberta = perfil === 'entitat' || opcions.fitxesDePersones === true || esLaIAIA(perfil, id) || Boolean(canonica);
   const poble = perfil === 'entitat' ? pobleDEntitat(id, membre?.town_name, membre?.townName) : '';
   return entrada({
     tipus: perfil === 'entitat' ? 'entitats' : 'persones',
@@ -339,7 +380,8 @@ export function deMembre(membre, opcions = {}) {
     accio: id == null ? null : {
       tipus: 'escriu',
       href: filId ? getSectionItemPath('xat', filId) : `/xat?amb=${encodeURIComponent(String(id))}`
-    }
+    },
+    canonica
   });
 }
 
@@ -350,10 +392,26 @@ export function deMembre(membre, opcions = {}) {
  * Gauntlet 261016 (Bloc 3.5.2) · Una entitat porta el seu poble a la meta i al
  * cos: el de la pertinença (IdentitatContext · poble) o el de la fila, si n'hi
  * ha; si no, el de pobleDEntitat. La persona, el de sempre (`opcions.poble`).
+ * Ordre del Mestre (261019 21:34, punt 9: «la cerca pública ha d'enllaçar
+ * sempre a la fitxa pública (/javillinares o /gent/:id), mai a l'editor
+ * privat») · La persona pròpia porta a la seua fitxa pública (rutaDeLaFitxa:
+ * /gent/<id> o la canònica), com qualsevol altra: abans portava a
+ * /el-meu-perfil, l'editor privat. L'entitat, igual (/empresa/<id> o la
+ * canònica). Editar la fitxa és cosa de la mateixa fitxa (el seu botó
+ * d'editar, PerfilPublicSection), no del Cercador.
+ * Revisió adversarial · La persona pròpia seguix la regla del padró
+ * (deMembre): en remot sense la capacitat 'directori' la fitxa d'una persona
+ * no s'obri, i `opcions.fitxesDePersones === false` (useCercaGlobal) li lleva
+ * l'enllaç en lloc de portar-la a «Perfil no trobat». Mai torna a
+ * /el-meu-perfil. Sense l'opció, l'enllaç de sempre; una identitat del Mestre
+ * (clau canònica) i una entitat, sempre.
  */
 export function deIdentitat(identitat, opcions = {}) {
   if (!identitat) return null;
   const esEntitat = identitat.tipus === 'entitat';
+  const perfil = esEntitat ? 'entitat' : 'persona';
+  const canonica = clauCanonica(perfil, identitat.id);
+  const fitxaOberta = esEntitat || opcions.fitxesDePersones !== false || Boolean(canonica);
   const nomBrut = typeof identitat.nom === 'string' ? identitat.nom.trim() : '';
   const correu = typeof opcions.correu === 'string' ? opcions.correu.trim().toLowerCase() : '';
   const amagat = !nomBrut || esCorreu(nomBrut) || (correu && nomBrut.toLowerCase() === correu);
@@ -368,8 +426,9 @@ export function deIdentitat(identitat, opcions = {}) {
     meta: esEntitat ? [pobleDeLEntitat] : [opcions.poble],
     cos: esEntitat ? [identitat.slug, pobleDeLEntitat] : [opcions.poble],
     avatar: { src: identitat.avatar, llavor: identitat.id },
-    href: esEntitat ? rutaDePerfil('entitat', identitat.id) : '/el-meu-perfil',
-    propia: esEntitat ? 'entitat' : 'persona'
+    href: fitxaOberta ? rutaDeLaFitxa(perfil, identitat.id) : null,
+    propia: perfil,
+    canonica
   });
 }
 
@@ -578,16 +637,20 @@ function fusiona(primera, altra) {
  * Una entrada per clau, en l'ordre de la primera aparició. Una mateixa
  * persona pot arribar de més d'una font: la IAIA és al padró (només el nom)
  * i al catàleg d'agents (rol, lema, bio). La primera és la que mana (la
- * identitat pròpia porta /el-meu-perfil; el padró, «Escriu-li»), però el
- * text de les altres també compta: si no, «matriarca» deixaria de trobar-la
- * quan arriba el padró.
+ * identitat pròpia, «El teu perfil» sense «Escriu-li»; el padró, «Escriu-li»),
+ * però el text de les altres també compta: si no, «matriarca» deixaria de
+ * trobar-la quan arriba el padró.
+ * Ordre del Mestre (261019 21:34, punt 9) · Si la que arriba després és la
+ * pròpia (ambLaIdentitatPropia li ha donat la clau d'una altra), mana ella,
+ * en el lloc de la primera aparició.
  */
 export function fusionaPerClau(entrades) {
   const perClau = new Map();
   for (const actual of llistaDe(entrades)) {
     if (!actual?.clau) continue;
     const previa = perClau.get(actual.clau);
-    perClau.set(actual.clau, previa ? fusiona(previa, actual) : actual);
+    if (!previa) perClau.set(actual.clau, actual);
+    else perClau.set(actual.clau, actual.propia && !previa.propia ? fusiona(actual, previa) : fusiona(previa, actual));
   }
   return [...perClau.values()];
 }
@@ -601,21 +664,63 @@ export function fusionaPerClau(entrades) {
  * remot, només el seu id, D12). Si algun és d'una identitat fundacional
  * (clauFundacional), l'entrada de persona amb eixa mateixa clau fundacional
  * (el '0001' del catàleg i del padró) passa a portar la clau de la pròpia, i
- * fusionaPerClau en fa una sola fitxa: mana la pròpia (/el-meu-perfil) i el
- * text de l'altra també es busca. Sense «Escriu-li»: ningú no s'escriu a si
- * mateix (el padró ja deixa fora qui busca).
+ * fusionaPerClau en fa una sola fitxa: mana la pròpia i el text de l'altra
+ * també es busca. Sense «Escriu-li»: ningú no s'escriu a si mateix (el padró
+ * ja deixa fora qui busca).
  * La regla del Bloc -1 es manté per als homònims: una persona amb un altre id
  * i el mateix nom continua sent una altra fitxa, amb el seu enllaç.
+ *
+ * Ordre del Mestre (261019 21:34, punt 9: «una sola fitxa canònica al graf
+ * sense entrades duplicades», per a persones i per a organitzacions) · La
+ * regla val per a TOTA fitxa amb clau canònica (clauCanonica), amb sessió o
+ * sense: el '0001' del catàleg i un àlies seu del padró ('javi-llinares'), o
+ * l'entitat pilot del catàleg ('socdepoble') i la mateixa entitat amb l'id del
+ * servidor (`delProjecte`: els ids que el backend ja ha reconegut com
+ * l'entitat pilot), són una sola fitxa. Mana la pròpia, si n'hi ha (la
+ * persona de la sessió o una entitat que gestiona); si no, la primera que
+ * arriba. La fitxa porta la ruta canònica neta (RUTES_CANONIQUES:
+ * /javillinares, /socdepoble, /rentonar). Una fitxa sense clau canònica no es
+ * toca: la seua clau continua sent el seu id.
  */
-export function ambLaIdentitatPropia(entrades, alies = []) {
+export function ambLaIdentitatPropia(entrades, alies = [], { delProjecte = [] } = {}) {
   const llista = llistaDe(entrades);
-  const propia = llista.find((actual) => actual?.propia === 'persona');
-  if (!propia) return llista;
-  const clauDe = (id) => clauFundacional({ tipus: 'persona', id });
-  const fundacional = [propia.id, ...llistaDe(alies)].map(clauDe).find(Boolean);
-  if (!fundacional) return llista;
-  return llista.map((actual) => (actual && actual !== propia && !actual.propia && actual.tipus === propia.tipus
-    && clauDe(actual.id) === fundacional ? { ...actual, clau: propia.clau, accio: null } : actual));
+  const projecte = llistaDe(delProjecte).map(String);
+  const canonicaDe = (actual) => {
+    if (actual.propia === 'persona') {
+      return [actual.id, ...llistaDe(alies)].map((id) => clauCanonica('persona', id)).find(Boolean) || null;
+    }
+    if (actual.canonica) return actual.canonica;
+    return actual.tipus === 'entitats' ? clauCanonica('entitat', actual.id, { delProjecte: projecte }) : null;
+  };
+  const canoniques = new Map();
+  for (const actual of llista) {
+    const canonica = actual?.clau ? canonicaDe(actual) : null;
+    if (canonica) canoniques.set(actual, canonica);
+  }
+  if (!canoniques.size) return llista;
+  /* La primera fitxa de cada identitat (tipus i clau canònica): les pròpies
+     primer, siga quin siga l'ordre de les fonts; després, la primera que arriba. */
+  const identitatDe = (actual) => `${actual.tipus}:${canoniques.get(actual)}`;
+  const primeres = new Map();
+  for (const propies of [true, false]) {
+    for (const actual of canoniques.keys()) {
+      if (Boolean(actual.propia) === propies && !primeres.has(identitatDe(actual))) primeres.set(identitatDe(actual), actual);
+    }
+  }
+  return llista.map((actual) => {
+    if (!canoniques.has(actual)) return actual;
+    const canonica = canoniques.get(actual);
+    const primera = primeres.get(identitatDe(actual));
+    const canvis = {};
+    if (actual.clau !== primera.clau) canvis.clau = primera.clau;
+    if (actual.canonica !== canonica) canvis.canonica = canonica;
+    if (actual.href !== RUTES_CANONIQUES[canonica]) canvis.href = RUTES_CANONIQUES[canonica];
+    /* «Ningú no s'escriu a si mateix» és de la PERSONA de la sessió. Una
+       entitat que gestiones conserva l'«Escriu-li» del padró, com quan es
+       fusiona per la seua clau (fusionaPerClau): la mateixa regla per a totes. */
+    if (actual !== primera && primera.propia === 'persona' && actual.accio) canvis.accio = null;
+    return Object.keys(canvis).length ? { ...actual, ...canvis } : actual;
+  });
 }
 
 /**

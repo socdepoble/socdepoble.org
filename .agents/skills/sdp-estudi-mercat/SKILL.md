@@ -15,7 +15,7 @@ contracte.llig:
 contracte.escriu:
   - _wiki_de_poble/04_escriptori
 ---
-\n# SKILL: Estudi de Mercat (Anàlisi de la Competència)
+# SKILL: Estudi de Mercat (Anàlisi de la Competència)
 
 Aquesta habilitat defineix el protocol estàndard i l'arquitectura mental que la IAIA MarIA ha de seguir quan se li sol·licita investigar un competidor, una app similar o realitzar un estudi de mercat general, especialment en l'àmbit de les xarxes socials rurals i el *govtech* per a pobles.
 
@@ -49,17 +49,13 @@ Fes un desglossament clar del que ofereix l'app a cada segment d'usuari:
 - **Institucions / Ajuntaments:** (bàndols, tràmits, incidències)
 
 ### E. Destil·lació del Trellat (Accionables per Sóc de Poble)
-Aquesta és la part més important. Què significa tot açò per al nostre codi i per al backend de Sollutia?
+Aquesta és la part més important. Què significa tot açò per al nostre codi, el port neutral `src/data/backendPort.js` (Supabase) i la Frontissa de lectura amb Sollutia?
 1. Quines funcionalitats resolen necessitats reals i haurien de planificar-se per al nostre *backend*? (ex. Vehicle compartit).
 2. Quines pràctiques descartem totalment perquè xoquen amb la nostra ètica, rendiment o independència?
 3. Quins canvis de rumb hem de prendre en la nostra comunicació per diferenciar-nos?
 
 ## 3. Format de Sortida
 L'informe es redacta en valencià a l'Escriptori mitjançant el contracte documental vigent. Consulta `.agents/protocolledge.json` per obtindre ruta, plantilla i rebut. La carpeta `01_produccio` és zona humana; no és la destinació automàtica dels informes de l'agent.
-
-## Ancoratge de la Wiki
-- Aquesta skill penja de: [[00_INDEX_SKILLS]]
-
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

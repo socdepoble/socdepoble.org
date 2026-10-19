@@ -31,8 +31,7 @@ import { SnippetCurador } from './SnippetCurador.jsx';
 import { NotaPreparadaContext, TITOL_NOTA_PREPARADA, useNotaPreparada } from './notaPreparada.js';
 import { reglaDEntrada } from '../connectar/contingutExtern.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
-import { Boto, Dialeg } from '../../components/PedraSeca/index.js';
-import { GraellaEmojis } from '../../components/universal/classificacio/GraellaEmojis.jsx';
+import { PaginaEmojis } from '../../components/universal/classificacio/PaginaEmojis.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import {
   CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
@@ -740,29 +739,20 @@ export default function NotesSection() {
         accionsLlista={accionsLlista}
       />
       </ProveidorSincronitzacioTargetes>
-      {/* Bloc 3.8 · El diàleg «Emojis» (mode cos), germà de l'espai de treball:
-          la graella i el catàleg només es demanen en obrir-lo.
-          Correcció de la revisió adversarial (261016; encàrrec A1) · Un emoji
-          que este navegador no reconeix (emojiSol) no arriba a qui tria: el
-          diàleg es queda obert i ho diu, com el DialegEmoticona a la via
-          d'assignar. La graella es munta només amb el diàleg obert: l'avís no
-          sobreviu a un tancament. Gauntlet 261017 · La comprovació, una sola,
-          dins de GraellaEmojis (textNoReconegut). */}
+      {/* Selector d'emojis com a subvista / pàgina dedicada de columna (PaginaEmojis),
+          substituint la finestra flotant modal: accés fluid i net. */}
       {modeDesa ? null : (
-        <Dialeg
-          obert={emojisOberts}
-          onTanca={tancaEmojis}
-          titol={TEXTOS_EMOJIS.titol}
-          descripcio={emojiAlCursor ? TEXTOS_EMOJIS.inserir : TEXTOS_EMOJIS.copiar}
-          mida="g"
-          /* El peu ja diu com eixir (i Escape tanca): cap segona X amb el mateix nom. */
-          ambTanca={false}
-          accions={<Boto varietat="secundari" onClick={() => tancaEmojis()}>{TEXTOS_EMOJIS.tancar}</Boto>}
-        >
-          {emojisOberts ? (
-            <GraellaEmojis carregaCataleg={carregaCatalegEmojis} onTria={triaEmojiDelCos} textNoReconegut={textEmojiNoReconegut} />
-          ) : null}
-        </Dialeg>
+        emojisOberts ? (
+          <PaginaEmojis
+            onTornar={tancaEmojis}
+            onTria={triaEmojiDelCos}
+            carregaCataleg={carregaCatalegEmojis}
+            emojiAlCursor={emojiAlCursor}
+            textNoReconegut={textEmojiNoReconegut}
+            titol={TEXTOS_EMOJIS.titol}
+            descripcio={emojiAlCursor ? TEXTOS_EMOJIS.inserir : TEXTOS_EMOJIS.copiar}
+          />
+        ) : null
       )}
       </CanalEmojisContext.Provider>
     </NotaPreparadaContext.Provider>

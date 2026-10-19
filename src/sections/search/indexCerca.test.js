@@ -170,14 +170,19 @@ test('amb la llavor de veres: a «tot», el Mac Mini, la Samarreta i cada poble 
   expect(cercaEntrades(index, 'nano banana').perTipus.tot).toBe(cercaEntrades(index, 'nano banana').perTipus.multimedia);
 });
 
+/* Ordre del Mestre (261019 21:34, punt 9) · Actualitzada a posta: abans fixava
+   /gent/0001 i /empresa/socdepoble. Les identitats del Mestre porten a la seua
+   ruta canònica neta; qualsevol altra persona o entitat, a la de sempre. */
 test('agents PERSON, COMPANY i AI van al tipus i a la ruta que toquen', () => {
   const persona = deAgent({ id: '0001', name: 'Javi', type: 'PERSON' });
   const entitat = deAgent({ id: 'socdepoble', name: 'Sóc de Poble', type: 'COMPANY' });
   const ia = deAgent({ id: 'iaia', name: 'IAIA MarIA', type: 'AI' }, { etiquetes: { ia: 'Intel·ligència artificial' } });
-  expect([persona.tipus, persona.href]).toEqual(['persones', '/gent/0001']);
-  expect([entitat.tipus, entitat.href]).toEqual(['entitats', '/empresa/socdepoble']);
-  expect([ia.tipus, ia.href]).toEqual(['persones', '/perfil/iaia']);
+  expect([persona.tipus, persona.href, persona.canonica]).toEqual(['persones', '/javillinares', 'javillinares']);
+  expect([entitat.tipus, entitat.href, entitat.canonica]).toEqual(['entitats', '/socdepoble', 'socdepoble']);
+  expect([ia.tipus, ia.href, ia.canonica]).toEqual(['persones', '/perfil/iaia', null]);
   expect(ia.meta[0]).toBe('Intel·ligència artificial');
+  expect(deAgent({ id: 'u7', name: 'Pepa', type: 'PERSON' }).href).toBe('/gent/u7');
+  expect(deAgent({ id: 'coop', name: 'Cooperativa', type: 'COMPANY' }).href).toBe('/empresa/coop');
 });
 
 /* Gauntlet 261016 (Bloc 3; ordre del Mestre) · Un personatge ANIMAL del
@@ -233,9 +238,35 @@ test('mai s’indexa ni es mostra un correu', () => {
   expect(deMembre(membre('u1', 'pepa@exemple.org'))).toBeNull();
   const jo = deIdentitat({ tipus: 'persona', id: 'jo', nom: 'jo@exemple.org' }, { correu: 'jo@exemple.org', nomCompte: 'El teu compte' });
   expect(jo.titol).toBe('El teu compte');
-  expect(jo.href).toBe('/el-meu-perfil');
+  expect(jo.href).toBe('/gent/jo');
   expect(jo.text).not.toContain('exemple');
   expect(cercaEntrades([jo], 'exemple').total).toBe(0);
+});
+
+/* Ordre del Mestre (261019 21:34, punt 9: «la cerca pública ha d'enllaçar
+   sempre a la fitxa pública (/javillinares o /gent/:id), mai a l'editor
+   privat») · Abans la persona pròpia portava a /el-meu-perfil. */
+test('261019 · la identitat pròpia porta a la seua fitxa pública, mai a l’editor privat', () => {
+  const persona = deIdentitat({ tipus: 'persona', id: 'u 1', nom: 'Pepa' });
+  expect([persona.href, persona.propia]).toEqual(['/gent/u%201', 'persona']);
+  const entitat = deIdentitat({ tipus: 'entitat', id: 'coop', nom: 'Cooperativa', slug: 'coop', kind: 'company' });
+  expect([entitat.href, entitat.propia]).toEqual(['/empresa/coop', 'entitat']);
+  /* Les del Mestre, a la seua ruta canònica (per l'id o un àlies declarat, mai pel nom ni pel slug). */
+  expect(deIdentitat({ tipus: 'persona', id: '0001', nom: 'Javi Llinares' }).href).toBe('/javillinares');
+  expect(deIdentitat({ tipus: 'entitat', id: 'rentonar', nom: 'Rentonar', kind: 'group' }).href).toBe('/rentonar');
+  expect(deIdentitat({ tipus: 'entitat', id: 'u-forn', nom: 'Sóc de Poble', slug: 'socdepoble' }).href).toBe('/empresa/u-forn');
+  for (const ruta of [persona.href, entitat.href]) expect(ruta).not.toMatch(/el-meu-perfil|organitzacio=/);
+});
+
+/* Revisió adversarial (261019) · En remot sense 'directori' la fitxa d'una
+   persona no s'obri (PerfilPublicSection): la pròpia seguix la regla del padró
+   i no hi enllaça, en lloc de portar a «Perfil no trobat». Mai a l'editor. */
+test('261019 · sense fitxes de persones (remot sense directori), la persona pròpia no enllaça; les del Mestre i les entitats, sí', () => {
+  const SENSE = { fitxesDePersones: false };
+  expect(deIdentitat({ tipus: 'persona', id: 'jo', nom: 'Pepa' }, SENSE).href).toBeNull();
+  expect(deIdentitat({ tipus: 'persona', id: 'jo', nom: 'Pepa' }, { fitxesDePersones: true }).href).toBe('/gent/jo');
+  expect(deIdentitat({ tipus: 'persona', id: '0001', nom: 'Javi Llinares' }, SENSE).href).toBe('/javillinares');
+  expect(deIdentitat({ tipus: 'entitat', id: 'coop', nom: 'Cooperativa', kind: 'company' }, SENSE).href).toBe('/empresa/coop');
 });
 
 test('les notes enllacen a /notes?nota= i les pàgines a la seua ruta', () => {

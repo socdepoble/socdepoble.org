@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
-import { esHostLocal, recursosPublicsDelPlugin } from './vite.standalone.config.js';
+import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin } from './vite.standalone.config.js';
 
 /**
  * Build de l'app nativa (Fases 1 i 2 de l'empaquetat mòbil, 261003).
@@ -21,6 +21,10 @@ import { esHostLocal, recursosPublicsDelPlugin } from './vite.standalone.config.
  * index.html del lloc, amb substitucions EXACTES (transformaIndexNatiu): si
  * algú canvia index.html i un text esperat ja no hi és, el build falla. Res de
  * substitucions a cegues.
+ *
+ * Fase C (261019_2115, tasca 2) · L'app porta la política de mitjans de
+ * l'autònom: les bessones .webp en lloc dels originals pesants de
+ * public/assets/ (politicaDeMitjansNativa, més avall).
  *
  * Este fitxer no importa res de Capacitor: es pot escriure i provar abans de
  * la lease de package.json (FASES_1_I_2.txt §1). Les peces pures s'exporten,
@@ -255,6 +259,59 @@ export function errorsEntornNatiu(env = {}) {
   return errors;
 }
 
+/* ─────────────────── La política de mitjans de l'app ───────────────────
+   Fase C (261019_2115, tasca 2) · L'app porta la política de l'autònom
+   (decisió D3 del Mestre, politicaDeMitjans de vite.standalone.config.js):
+   viatja la bessona .webp en lloc de cada original PNG/JPEG que en té, i
+   cap origen extern, perquè dins de l'app tot és local (capacitor://localhost
+   a iOS, https://localhost a Android). S'aplica als mateixos dos llocs que a
+   l'autònom, o les imatges es trenquen: recursosPublicsDelPlugin no emet els
+   originals substituïts, i el define la segella perquè resolveAsset
+   (assetResolver.js) hi demane la bessona.
+   El recurs de fallbackBessones.js no s'hi instal·la: només el munta
+   <soc-de-poble>, i l'app munta PedraSecaEmbed sense l'element. Està bé
+   així: l'original no hi viatja, i un segon intent seria un altre fitxer que
+   no hi és. Les bessones, sí: les tria el mateix càlcul sobre el mateix
+   public/. */
+
+/* Els originals que l'app demana TAL QUAL, sense passar pel resolutor. Dins
+   de l'app un fitxer local que falta és una imatge trencada: estos no se
+   substituïxen, i hi viatgen com al lloc (l'original, i la bessona al
+   costat). `fitxer` és on viu la cita i `cites`, els textos que la fan; una
+   prova comprova que hi continuen (si algú la fa passar pel resolutor,
+   l'excepció sobra i la prova ho diu) i que cap url() dels CSS de src/ no
+   cita cap altre original amb bessona. */
+export const ORIGINALS_CITATS_SENSE_RESOLUTOR = Object.freeze([
+  Object.freeze({
+    original: 'assets/system/ui/xat-bg-map-v2.jpg',
+    que: "el fons del Xat (--sdp-xat-fons-imatge): només el resol <soc-de-poble> quan té base (PedraSecaEmbed.jsx, _aplicaBaseRecursos), i l'app no munta l'element",
+    fitxer: 'src/css/tokens.css',
+    cites: Object.freeze(["url('/assets/system/ui/xat-bg-map-v2.jpg')"])
+  }),
+  Object.freeze({
+    original: 'assets/notes/bloc_notes_vintage.jpg',
+    que: "la foto de mostra de l'Enquadrament al catàleg de Disseny: arriba crua a DialegEnquadrament, que la baixa amb fetch()",
+    fitxer: 'src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx',
+    cites: Object.freeze(["const MOSTRA = '/assets/notes/bloc_notes_vintage.jpg';", 'setFont(MOSTRA)'])
+  })
+]);
+
+/**
+ * La política de mitjans de l'app a partir de la de l'autònom
+ * (politicaDeMitjans('autonom')): cap origen ni cap carpeta externa, encara
+ * que la rebuda en portara, i les bessones menys els originals `excloses`.
+ * Sense cap bessona, null, com politicaDeMitjans. Pura.
+ * @param {{ bessones?: string[] } | null} politica
+ * @param {Iterable<string>} excloses
+ * @returns {{ origen: null, externs: string[], bessones: string[] } | null}
+ */
+export function politicaDeMitjansNativa(politica, excloses = ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original)) {
+  if (!politica) return null;
+  const fora = new Set(excloses);
+  const bessones = Object.freeze((politica.bessones || []).filter((cami) => !fora.has(cami)));
+  return bessones.length ? Object.freeze({ origen: null, externs: Object.freeze([]), bessones }) : null;
+}
+
 /** Connector de Vite: aplica transformaIndexNatiu abans que Vite busque l'entrada a l'HTML. */
 export function indexNatiuPlugin({ origenBackend } = {}) {
   cspNativa(origenBackend); // Valida en crear el connector, abans de compilar res.
@@ -291,6 +348,9 @@ export default defineConfig(({ mode, command, isPreview }) => {
   if (errors.length) throw new Error(`[sdp-natiu] Este build natiu no es pot fer:\n- ${errors.join('\n- ')}`);
   validatePublicCredentials(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
   const origenBackend = new URL(env.VITE_SUPABASE_URL).origin;
+  /* Fase C (tasca 2) · La de l'autònom, calculada sobre el public/ que
+     s'emetrà, sense els originals que l'app cita sense resolutor. */
+  const mitjans = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: path.resolve(__dirname, 'public') }));
 
   return {
     mode: MODE_NATIU,
@@ -301,10 +361,18 @@ export default defineConfig(({ mode, command, isPreview }) => {
     plugins: [
       react(),
       /* Els recursos de public/ sense els propis del lloc (PROPIS_DEL_LLOC):
-         ni sw.js ni manifest.webmanifest, ni auth/, ni robots.txt. */
-      recursosPublicsDelPlugin(),
+         ni sw.js ni manifest.webmanifest, ni auth/, ni robots.txt. I, amb la
+         política, sense els originals que tenen bessona (Fase C, tasca 2). */
+      recursosPublicsDelPlugin({ politica: mitjans }),
       indexNatiuPlugin({ origenBackend })
     ],
+    /* Fase C (tasca 2) · La política, segellada com a l'autònom
+       (vite.standalone.config.js): assetResolver.js la llig en avaluar-se,
+       abans que cap mòdul resolga cap imatge. Sense política (un public/
+       sense bessones), la clau no hi és i tot resol com al lloc. */
+    define: {
+      ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {})
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src')

@@ -2,13 +2,42 @@ import { resolveAsset } from '../../config/assetResolver';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
 
+/* Fase C (Capacitor 8; ordre del Mestre, 261019) · L'esquema de l'app nativa
+   d'iOS (iosScheme de capacitor.config.json). Android servix l'app des de
+   https://localhost i no el necessita. */
+const ESQUEMA_NATIU = 'capacitor:';
+
+/**
+ * Fase C (Capacitor 8; ordre del Mestre, 261019) · Cert si `u` és un fitxer o
+ * una ruta de la mateixa app nativa. A iOS la pàgina viu a
+ * capacitor://localhost i tot camí propi ('/assets/x.webp', '/gent/1') es
+ * resol a l'esquema 'capacitor:': isSafeUrl el rebutjava i la imatge o
+ * l'enllaç propis es perdien. L'esquema natiu només val si la pàgina mateixa
+ * hi corre i l'adreça és del seu host, sense credencials: a la web (i a
+ * Android) un capacitor:// continua fora, i un altre host també. Es compara
+ * protocol i host, no l'origen: el parser d'URL dona 'null' com a origen
+ * d'un esquema que no és especial.
+ */
+const esDeLAppNativa = (u) => {
+  const pagina = window.location;
+  return u.protocol === ESQUEMA_NATIU && pagina.protocol === ESQUEMA_NATIU
+    && Boolean(pagina.host) && u.host === pagina.host && !u.username && !u.password;
+};
+
+/* Fase C (Capacitor 8; ordre del Mestre, 261019) · La base d'un camí relatiu:
+   l'origen de la finestra, com sempre. A l'app nativa d'iOS, l'adreça sencera
+   de la pàgina: si el WebView donara 'null' com a origen de l'esquema natiu
+   (és el que diu el parser d'URL), tot camí propi tornaria a caure. El
+   protocol i el host que es miren són els mateixos. */
+const baseDeLaFinestra = () => (window.location.protocol === ESQUEMA_NATIU ? window.location.href : window.location.origin);
+
 export function isSafeUrl(url) {
   if (typeof url !== 'string' || !url) return false;
   const cleanUrl = url.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
   if (cleanUrl.startsWith('//')) return false;
   try {
-    const u = new URL(cleanUrl, window.location.origin);
-    return (u.protocol === 'http:' || u.protocol === 'https:') && !cleanUrl.toLowerCase().startsWith('javascript:');
+    const u = new URL(cleanUrl, baseDeLaFinestra());
+    return (u.protocol === 'http:' || u.protocol === 'https:' || esDeLAppNativa(u)) && !cleanUrl.toLowerCase().startsWith('javascript:');
   } catch {
     return false;
   }

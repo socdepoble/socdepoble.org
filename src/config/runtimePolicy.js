@@ -6,7 +6,11 @@ const DEFAULT_PARENTS = Object.freeze(['https://socdepoble.org', 'https://sollut
    la pàgina de l'amfitrió (data/oauthRelay.js, urlDeTornada) i la valida GoTrue
    amb les Redirect URLs del projecte. */
 const LOCAL_ORIGINS = Object.freeze([5173, 3000, 3340, 8080, 54321].map(port => `http://localhost:${port}`));
-const local = () => typeof window !== 'undefined' && window.location.hostname === 'localhost';
+/* Fase C (Capacitor 8; ordre del Mestre, 261019) · Només el servidor de
+   desenvolupament, que va per http. L'app nativa també viu a localhost
+   (https://localhost a Android, capacitor://localhost a iOS) i no és cap
+   entorn de desenvolupament: no admet els ports locals com a pares. */
+const local = () => typeof window !== 'undefined' && window.location.protocol === 'http:' && window.location.hostname === 'localhost';
 function originExacte(value) {
   if (typeof value !== 'string') return null;
   try {

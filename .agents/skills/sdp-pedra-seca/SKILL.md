@@ -86,10 +86,11 @@ L'equivalent a l'Spec-driven per al disseny:
 - **Res existeix fins que no està al manual:** Abans d'afegir un component nou a producció, t'has de preguntar: Existix el component a `src/sections/disseny/DesignSection.jsx`?
 - **NO POTS PROGRAMAR LA FUNCIÓ:** Si no existix el referent visual allà, tens prohibit programar la funció lògica. Primer dissenyes el component de UI i ho afermes a `DesignSection`. Només quan l'esquelet matemàtic aprova l'auditoria, pots connectar les funcions (APIs).
 
-## 10. La Barra Taronja (regles del Mestre, 28-09-2026)
+## 10. La Barra Taronja i el Selector d'Emojis `PaginaEmojis` (regles del Mestre)
 - La pastilla de data és sempre present i plena. Lectura: data de creació o de l'última versió si és posterior. Edició: la data triada al calendari o, si no n'hi ha, la d'ara. Mai la data de l'última edició, mai guionets. Una font de només dia es pinta sense hora.
 - L'espai central és l'emoticona del document: en edició, sempre un botó (ploma blanca si no n'hi ha cap); en lectura o targeta, buit si no s'ha triat.
-- La ploma només vol dir «tria una emoticona». L'autodesament fa servir el núvol (CloudUpload).
+- La ploma només vol dir «tria una emoticona». L'autodesament fa servir el núvol (`CloudUpload`).
+- **Selector d'Emojis (`PaginaEmojis` — Prohibit `<Dialeg>` Flotant):** En prémer el botó de l'emoticona o la ploma a la Barra Taronja, s'obri sempre la subvista integrada a columna completa **`PaginaEmojis`** (`src/components/universal/classificacio/PaginaEmojis.jsx` i `GraellaEmojis.jsx`) amb un botó prominent **«Tornar»** (mínim `44px` de diana tàctil) i graella categoritzada Unicode 18. Està terminantment prohibit obrir un `<Dialeg>` flotant per a triar emoticones.
 - Totes les icones de la barra són blanques dins del cercle de vel fosc.
 - El component pare és `src/components/universal/barres/BarraTaronja.jsx`; PageFrame i els espècimens el munten.
 
@@ -101,10 +102,7 @@ L'equivalent a l'Spec-driven per al disseny:
 
 - En mòbil, els menús emergents i calaixos de navegació s'adapten al contingut i tenen un màxim de 300px d'amplària. Han de deixar visible espai tàctil de la vista anterior perquè es puga tancar el menú tocant fora.
 - Les etiquetes llargues usen `text-overflow: ellipsis`; el nom complet continua disponible com a nom accessible de l'acció. El truncament visual no elimina la identificació per a lectors de pantalla.
-- Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor o el visor, és legítima quan conserva una eixida o tornada arrere visible i accessible; no és una prohibició general d'ocupar el 100% de la pantalla.
-
-## Ancoratge de Seguretat
-- [[00_INDEX_SKILLS]]
+- Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor, el visor o `PaginaEmojis`, és legítima quan conserva una eixida o tornada arrere («Tornar» >= `44px`) visible i accessible; no és una prohibició general d'ocupar el 100% de la columna.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

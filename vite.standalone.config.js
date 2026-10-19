@@ -134,7 +134,9 @@ export function retiraPropisDelLloc(directori) {
    L'autònom (el canal propi, gentdelatorre.net i Sollutia) porta només els
    SUBSTITUÏTS, sense cap origen extern: tot viatja dins del paquet, però la
    bessona en lloc de l'original (decisió D3 del Mestre, 261019: el LCP de
-   9,9 s de gentdelatorre.net). El natiu no en porta cap: tot com abans. */
+   9,9 s de gentdelatorre.net). L'app nativa (vite.natiu.config.js, Fase C
+   261019_2115) porta la de l'autònom, sense els originals que cita sense
+   resolutor (politicaDeMitjansNativa). */
 
 /**
  * L'origen dels mitjans externs: https i un host públic (en una release), sense
@@ -593,7 +595,8 @@ export default defineConfig(({ mode }) => {
   }
   const generat = env.SOURCE_DATE_EPOCH ? new Date(Number(env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined;
   /* Encàrrec 261019_1425 · En porten el directori (origen extern i bessones) i
-     l'autònom (només les bessones, D3); el natiu no. Valida l'origen del
+     l'autònom (només les bessones, D3); el natiu porta la de l'autònom, des
+     de vite.natiu.config.js. Valida l'origen del
      directori abans de compilar i calcula les bessones sobre el public/ que
      s'emetrà. */
   const mitjans = politicaDeMitjans(variant, { env, directori: path.resolve(__dirname, 'public'), release });
@@ -657,10 +660,11 @@ export default defineConfig(({ mode }) => {
     /* Encàrrec 261019_1425 · La política de mitjans, segellada: assetResolver.js
        la llig en avaluar-se, abans que townsContent.js i marketContent.js
        resolguen cap imatge. Una clau de l'entorn i no una global de la
-       pàgina: als builds que no la porten (el natiu, el web) Vite la deixa en
+       pàgina: als builds que no la porten (el web) Vite la deixa en
        undefined i cap amfitrió no la pot posar. Vite en copia el valor als
        objectes import.meta.env sencers del bundle (un, ~10 KB, a cada paquet
-       que la porta: el directori i l'autònom). Sense política (un public/
+       que la porta: el directori i l'autònom; a l'app nativa, que també la
+       porta, n'hi ha dos). Sense política (un public/
        sense bessones), la clau no hi és. */
     ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {})
   },

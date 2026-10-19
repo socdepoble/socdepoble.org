@@ -1,0 +1,753 @@
+diff --git a/tests/porta-olivera-taula-neta.test.mjs b/tests/porta-olivera-taula-neta.test.mjs
+new file mode 100644
+index 0000000..ae5edbc
+--- /dev/null
++++ b/tests/porta-olivera-taula-neta.test.mjs
+@@ -0,0 +1,388 @@
++/** Proves de la taula neta de fase de la porta Olivera (261019, ordre del Mestre de les 21:26).
++ *
++ *  Fixen la fallada observada el 261019: en canviar de fase, els documents de torn ja
++ *  consumits es quedaven a l'Escriptori perquè la porta ix amb 0 quan són del mateix dia,
++ *  estan declarats a «## Activitat en curs» (ho fa `document.mjs create`) i els sosté 24 h
++ *  el rebut del seu torn. `--taula-neta` jutja per fase: la trinitat del pla més recent, el
++ *  que ha nascut després del pla i el que la fase ha adoptat pels seus Vincles. Cap rebut no
++ *  adopta (el pla d'un torn es pot tornar a vincular). `--convoca` només deixa la trinitat.
++ *  Totes les fixtures viuen a os.tmpdir(): cap prova toca l'Escriptori real.
++ */
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { randomUUID } from 'node:crypto';
++import { spawnSync } from 'node:child_process';
++import { fileURLToPath } from 'node:url';
++import { avui, checkEscriptori, checkTaulaNeta, taulaDeFase } from '../tooling/gates/porta-olivera.mjs';
++import { checkLocal } from '../tooling/gates/hooks-local.mjs';
++import { SOURCES } from '../tooling/brain/context-local.mjs';
++
++const REPO = fileURLToPath(new URL('..', import.meta.url));
++const PORTA = fileURLToPath(new URL('../tooling/gates/porta-olivera.mjs', import.meta.url));
++const DESK = '_wiki_de_poble/04_escriptori';
++const ARXIU = '_wiki_de_poble/90_arxiu_historic';
++const TORNS = '.agents/runtime/turns';
++const DIA = avui();
++const FASE = `${DIA}_2115`;
++const PLA = `${FASE}_pla_implementacio_capacitor.md`;
++const PROMPT_C = `${FASE}_prompt_claude_capacitor.md`;
++const PROMPT_G = `${FASE}_prompt_gemini_botigues.md`;
++const SESSIO = `${DIA}_sublimacio_2115`;
++const sense = (nom) => nom.replace(/\.md$/, '');
++const arxiva = (...noms) => `node tooling/gates/porta-olivera.mjs --arxiva ${noms.map((n) => `--nom ${n}`).join(' ')} --sessio ${SESSIO}`;
++/** Els Vincles amb què naix un informe de `document.mjs create` (draft): només l'índex general i el de l'Escriptori. */
++const VINCLES_PLANTILLA = '## Vincles\n\n- [[00_index]]\n- [[00_index_escriptori]]';
++const vincles = (...refs) => `${VINCLES_PLANTILLA}\n${refs.map((r) => `- [[${r}]]`).join('\n')}`;
++
++function mas(t) {
++  const arrel = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-olivera-taula-neta-')));
++  fs.mkdirSync(path.join(arrel, DESK, '00_bandeja_d_entrada'), { recursive: true });
++  t.after(() => fs.rmSync(arrel, { recursive: true, force: true }));
++  return arrel;
++}
++const posa = (arrel, rel, text = '# prova\n') => {
++  fs.mkdirSync(path.dirname(path.join(arrel, rel)), { recursive: true });
++  fs.writeFileSync(path.join(arrel, rel), text);
++};
++const doc = (cos = '', reflex = null) => `---\ntype: informe\n${reflex ? `reflex: sdp:${reflex}\n` : ''}---\n# Document\n\n${cos}\n`;
++/** Taula amb els documents donats, tots declarats a «## Activitat en curs» (com fa document.mjs create). */
++function taula(arrel, docs, { motius = {} } = {}) {
++  for (const [nom, text] of Object.entries(docs)) posa(arrel, `${DESK}/${nom}`, text);
++  const linies = Object.keys(docs).map((nom) => `- [[${sense(nom)}]]${motius[nom] ? ` · ${motius[nom]}` : ''}`);
++  posa(arrel, `${DESK}/00_index_escriptori.md`, `# Índex\n\n## Activitat en curs\n\n${linies.join('\n')}\n`);
++}
++const trinitat = () => ({ [PLA]: doc(VINCLES_PLANTILLA), [PROMPT_C]: doc(vincles(sense(PLA))), [PROMPT_G]: doc(VINCLES_PLANTILLA) });
++/**
++ * Registre de torn mínim que lligen la porta (estatTorn, rebutDe) i el reflex d'un rebut seu:
++ * obert 24 h, amb pla vinculat o no. Amb `fitxer`, el rebut és al registre i és d'eixe
++ * document (creació consolidada, o en l'estat `creacio`); sense, el rebut no hi és.
++ */
++function torn(arrel, { pla = null, fitxer = null, creacio = 'committed' } = {}) {
++  const id = `torn_${randomUUID()}`;
++  const rebut = randomUUID();
++  const ara = new Date().toISOString();
++  const receipts = fitxer ? { [rebut]: { id: rebut, route: 'auditoria', file: `${DESK}/${fitxer}`, creation: { state: creacio, preparedAt: ara, ...(creacio === 'committed' && { committedAt: ara, documentHash: 'a'.repeat(64) }) } } } : {};
++  posa(arrel, `${TORNS}/${id}.json`, JSON.stringify({ schema: 'sdp.turn.v1', turn_id: id, state: 'context_loaded', createdAt: ara, expiresAt: new Date(Date.now() + 86400000).toISOString(), receipts, plan: pla ? { file: `${DESK}/${pla}`, hash: 'x' } : null }));
++  return `${id}:${rebut}`;
++}
++const porta = (arrel, args) => spawnSync(process.execPath, [PORTA, ...args], { cwd: arrel, env: { ...process.env, SDP_ARREL: arrel }, encoding: 'utf8', timeout: 10000 });
++const instantania = (arrel) => fs.readdirSync(path.join(arrel, DESK)).sort().map((n) => [n, fs.statSync(path.join(arrel, DESK, n)).isFile() ? fs.readFileSync(path.join(arrel, DESK, n), 'utf8') : '<dir>']);
++const motius = (r) => Object.fromEntries([...r.dins, ...r.fora].map((d) => [d.nom, d.motiu]));
++const ordresDe = (stdout) => stdout.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('node tooling/gates/porta-olivera.mjs --arxiva ') && !l.includes(' --sec '));
++
++test('[diagnosi 261019] un informe consumit d’una fase anterior del mateix dia, declarat, retingut i amb rebut obert, passa la porta però no la taula neta', (t) => {
++  const arrel = mas(t);
++  const vell = `${DIA}_1700_auditoria_fase_b.md`;
++  taula(arrel, { ...trinitat(), [vell]: doc(VINCLES_PLANTILLA, torn(arrel)) }, { motius: { [vell]: `Mestre ${DIA}: referència de la fase B` } });
++
++  const olivera = checkEscriptori(arrel);
++  assert.equal(olivera.valid, true, 'la porta de sempre jutja per jornada: el document d’avui hi passa');
++  assert.equal(olivera.convocatoria.vida.find((v) => v.nom === vell)?.valid, true, 'i la convocatòria v4 el veu viu (retenció i rebut)');
++
++  const r = checkTaulaNeta(arrel);
++  assert.equal(r.valid, false);
++  assert.equal(r.taula.fase, FASE);
++  assert.deepEqual(r.taula.fora.map((d) => d.nom), [vell]);
++  assert.match(r.taula.fora[0].motiu, new RegExp(`^nascut a ${DIA}_1700, abans de la fase ${FASE}, i els seus Vincles no citen el pla ni cap prompt de la fase \\(el seu rebut no acredita res: el rebut no és al registre de torn_`));
++  assert.equal(r.taula.fora[0].declarat, true);
++  assert.equal(r.taula.fora[0].tornObert, null, 'un rebut que el registre no coneix no acredita cap torn obert');
++  assert.equal(r.taula.fora[0].ordre, arxiva(vell));
++  assert.match(r.errors.join('\n'), new RegExp(`Fora de la fase ${FASE}: ${vell}`));
++});
++
++test('la trinitat sola (pla i prompts amb el mateix segell) és una taula neta i apta per a convocar, i la CLI ho diu amb 0', (t) => {
++  const arrel = mas(t);
++  taula(arrel, trinitat());
++  const r = taulaDeFase(arrel);
++  assert.equal(r.valid, true);
++  assert.deepEqual(r.pla, [PLA]);
++  assert.deepEqual(r.dins.map((d) => d.nom).sort(), [PLA, PROMPT_C, PROMPT_G].sort());
++  assert.equal(r.dins.every((d) => d.trinitat), true);
++  assert.deepEqual(r.ordres, []);
++  const cli = porta(arrel, ['--taula-neta']);
++  assert.equal(cli.status, 0, cli.stdout + cli.stderr);
++  assert.match(cli.stdout, new RegExp(`Fase en curs: ${FASE} \\(pla: ${PLA}\\)`));
++  assert.match(cli.stdout, new RegExp(`✅ Taula neta de fase: 3 document\\(s\\) de la fase ${FASE} \\(1 pla, 2 prompt\\(s\\) o bundle\\(s\\), 0 rèplica/ques, 0 adoptat\\(s\\)\\)`));
++  const convoca = porta(arrel, ['--taula-neta', '--convoca']);
++  assert.equal(convoca.status, 0, convoca.stdout + convoca.stderr);
++  assert.match(convoca.stdout, new RegExp(`✅ Taula a punt per a convocar: només la trinitat de la fase ${FASE} \\(1 pla, 2 prompt\\(s\\) o bundle\\(s\\)\\)`));
++});
++
++test('cap fals positiu: un informe nascut després del pla amb els Vincles de la plantilla és de la fase, i la CLI no proposa arxivar-lo', (t) => {
++  const arrel = mas(t);
++  const claude = `${DIA}_2155_auditoria_claude_capacitor.md`;
++  const gemini = `${DIA}_2145_auditoria_gemini_botigues.md`;
++  const mateixSegell = `${FASE}_auditoria_codex_inicial.md`;
++  taula(arrel, {
++    ...trinitat(),
++    [claude]: doc(VINCLES_PLANTILLA, torn(arrel, { fitxer: claude })),
++    [gemini]: doc(vincles(sense(PLA), `${sense(PROMPT_G)}|prompt de Gemini`)),
++    [mateixSegell]: doc(VINCLES_PLANTILLA),
++  });
++  const r = taulaDeFase(arrel);
++  assert.equal(r.valid, true, JSON.stringify(r.fora));
++  const m = motius(r);
++  assert.equal(m[claude], `rèplica: nascut a ${DIA}_2155, després del pla de la fase`);
++  assert.equal(m[gemini], `rèplica: nascut a ${DIA}_2145, després del pla de la fase`);
++  assert.equal(m[mateixSegell], `rèplica: nascut a ${FASE}, amb el pla de la fase, però «auditoria» no és pla ni prompt`);
++  const cli = porta(arrel, ['--taula-neta']);
++  assert.equal(cli.status, 0, cli.stdout + cli.stderr);
++  assert.doesNotMatch(cli.stdout, /--arxiva/);
++  assert.match(cli.stdout, /3 rèplica\/ques, 0 adoptat\(s\)/);
++});
++
++test('un document anterior al pla hi entra adoptat pels seus Vincles; una menció al cos, en una altra secció, en un comentari o en codi no l’adopta', (t) => {
++  const arrel = mas(t);
++  const adoptat = `${DIA}_2100_auditoria_claude_en_curs.md`;
++  const perPrompt = `${DIA}_2050_informe_gemini_previ.md`;
++  const crlf = `${DIA}_2055_auditoria_codex_crlf.md`;
++  const alCos = `${DIA}_2000_auditoria_esmenta_el_pla.md`;
++  const altraSeccio = `${DIA}_2010_auditoria_annex.md`;
++  const codi = `${DIA}_2020_auditoria_en_codi.md`;
++  taula(arrel, {
++    ...trinitat(),
++    [adoptat]: doc(vincles(sense(PLA))),
++    [perPrompt]: doc(vincles(`${DESK}/${sense(PROMPT_G)}|el prompt de Gemini`)),
++    [crlf]: doc(vincles(sense(PLA))).replace(/\n/g, '\r\n'),
++    [alCos]: doc(`Respon a [[${sense(PLA)}]] i a [[${sense(PROMPT_C)}]].\n\n${VINCLES_PLANTILLA}`),
++    [altraSeccio]: doc(`${VINCLES_PLANTILLA}\n\n## Annex\n\n- [[${sense(PLA)}]]`),
++    [codi]: doc(`## Vincles\n\n- \`[[${sense(PLA)}]]\`\n<!-- - [[${sense(PROMPT_C)}]] -->\n\`\`\`\n- [[${sense(PLA)}]]\n\`\`\``),
++  });
++  const r = taulaDeFase(arrel);
++  const m = motius(r);
++  assert.equal(m[adoptat], `adoptat: nascut a ${DIA}_2100, abans de la fase, i els seus Vincles citen [[${sense(PLA)}]]`);
++  assert.equal(m[perPrompt], `adoptat: nascut a ${DIA}_2050, abans de la fase, i els seus Vincles citen [[${sense(PROMPT_G)}]]`);
++  assert.equal(m[crlf], `adoptat: nascut a ${DIA}_2055, abans de la fase, i els seus Vincles citen [[${sense(PLA)}]]`, 'també amb salts de línia CRLF');
++  assert.deepEqual(r.fora.map((d) => d.nom), [alCos, altraSeccio, codi]);
++  const base = (s) => `nascut a ${DIA}_${s}, abans de la fase ${FASE}, i els seus Vincles no citen el pla ni cap prompt de la fase`;
++  assert.equal(m[alCos], `${base('2000')} (esmenta [[${sense(PLA)}]] fora de «## Vincles», i només compten els Vincles)`);
++  assert.equal(m[altraSeccio], `${base('2010')} (esmenta [[${sense(PLA)}]] fora de «## Vincles», i només compten els Vincles)`);
++  assert.equal(m[codi], base('2020'), 'comentaris i codi no citen res, ni dins ni fora dels Vincles');
++  const cli = porta(arrel, ['--taula-neta']);
++  assert.equal(cli.status, 1, cli.stdout + cli.stderr);
++  assert.match(cli.stdout, new RegExp(`✅ ${sense(adoptat)} ← adoptat: nascut a ${DIA}_2100`));
++  assert.match(cli.stdout, new RegExp(`❌ Taula bruta per a agents nous: 3 document\\(s\\) fora de la fase ${FASE}`));
++});
++
++test('un document anterior al pla sense Vincles a la fase cau, amb l’ordre --arxiva --nom exacta', (t) => {
++  const arrel = mas(t);
++  const vell = `${DIA}_1900_auditoria_fase_b.md`;
++  taula(arrel, { ...trinitat(), [vell]: doc(VINCLES_PLANTILLA) });
++  const r = taulaDeFase(arrel);
++  assert.equal(r.valid, false);
++  assert.deepEqual(r.fora.map((d) => [d.nom, d.motiu, d.ordre]), [[vell, `nascut a ${DIA}_1900, abans de la fase ${FASE}, i els seus Vincles no citen el pla ni cap prompt de la fase`, arxiva(vell)]]);
++  assert.deepEqual(r.ordres, [arxiva(vell).replace(' --arxiva ', ' --arxiva --sec '), arxiva(vell)]);
++  const cli = porta(arrel, ['--taula-neta']);
++  assert.equal(cli.status, 1, cli.stdout + cli.stderr);
++  assert.ok(cli.stdout.split('\n').map((l) => l.trim()).includes(arxiva(vell)), cli.stdout);
++});
++
++test('--convoca: només la trinitat; una rèplica, un adoptat o un document amb el segell que no és pla ni prompt ixen amb la seua ordre', (t) => {
++  const arrel = mas(t);
++  const replica = `${DIA}_2155_auditoria_claude_capacitor.md`;
++  const adoptat = `${DIA}_2100_auditoria_claude_previa.md`;
++  const mateixSegell = `${FASE}_auditoria_codex_inicial.md`;
++  const bundle = `${FASE}_bundle_consell_botigues.md`;
++  taula(arrel, {
++    ...trinitat(),
++    [bundle]: doc(),
++    [replica]: doc(VINCLES_PLANTILLA, torn(arrel, { fitxer: replica })),
++    [adoptat]: doc(vincles(sense(PLA))),
++    [mateixSegell]: doc(VINCLES_PLANTILLA),
++  });
++  assert.equal(taulaDeFase(arrel).valid, true, 'en la fase de treball, tots són de la fase');
++
++  const r = taulaDeFase(arrel, { convoca: true });
++  assert.equal(r.valid, false);
++  assert.deepEqual(r.dins.map((d) => d.nom).sort(), [PLA, PROMPT_C, PROMPT_G, bundle].sort(), 'el bundle d’un prompt del Consell comparteix l’hora (AGENTS §6)');
++  assert.deepEqual(r.fora.map((d) => d.nom), [adoptat, mateixSegell, replica]);
++  const fora = Object.fromEntries(r.fora.map((d) => [d.nom, d]));
++  const convocar = `; en convocar, la taula només té la trinitat ${FASE} (el pla i els seus prompts)`;
++  assert.equal(fora[replica].motiu, `rèplica: nascut a ${DIA}_2155, després del pla de la fase${convocar}`);
++  assert.equal(fora[adoptat].motiu, `adoptat: nascut a ${DIA}_2100, abans de la fase, i els seus Vincles citen [[${sense(PLA)}]]${convocar}`);
++  assert.equal(fora[mateixSegell].motiu, `rèplica: nascut a ${FASE}, amb el pla de la fase, però «auditoria» no és pla ni prompt${convocar}`);
++  for (const nom of [adoptat, mateixSegell, replica]) assert.equal(fora[nom].ordre, arxiva(nom));
++  assert.match(fora[replica].tornObert?.torn ?? '', /^torn_/, 'Acte Reflex: el torn del seu rebut és obert');
++  assert.equal(fora[adoptat].tornObert, null);
++
++  const cli = porta(arrel, ['--taula-neta', '--convoca']);
++  assert.equal(cli.status, 1, cli.stdout + cli.stderr);
++  assert.match(cli.stdout, new RegExp(`❌ Taula no apta per a convocar: 3 document\\(s\\) fora de la trinitat ${FASE}`));
++  assert.match(cli.stdout, /⚠️ El torn del seu rebut, torn_[0-9a-f]{8}, és obert fins a .*: Acte Reflex Pre-Arxivament abans d'arxivar-lo\./);
++  const ordres = ordresDe(cli.stdout);
++  assert.deepEqual(ordres.slice(0, 3), [adoptat, mateixSegell, replica].map((n) => arxiva(n)));
++  const fet = porta(arrel, ordres.at(-1).split(' ').slice(2));
++  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
++  const net = porta(arrel, ['--taula-neta', '--convoca']);
++  assert.equal(net.status, 0, net.stdout + net.stderr);
++
++  const buida = mas(t);
++  taula(buida, {});
++  assert.equal(taulaDeFase(buida).valid, true, 'sense pla, la taula buida és neta');
++  assert.match(taulaDeFase(buida, { convoca: true }).errors.join('\n'), /Cap Pla d'Implementació a la taula: la convocatòria naix amb el seu pla/);
++});
++
++test('cap rebut fa pertànyer: ni el vàlid d’un torn que ha vinculat el pla de la fase (el pla del torn es pot tornar a vincular), ni un de copiat, inventat o sense consolidar', (t) => {
++  const arrel = mas(t);
++  const lligat = `${DIA}_2030_auditoria_lligada.md`;
++  const copiat = `${DIA}_2035_auditoria_copiada.md`;
++  const inventat = `${DIA}_2040_auditoria_inventada.md`;
++  const senseConsolidar = `${DIA}_2042_auditoria_a_mitges.md`;
++  const sensePla = `${DIA}_2045_auditoria_sense_pla.md`;
++  const reflex = torn(arrel, { pla: PLA, fitxer: lligat });
++  const tornId = reflex.split(':')[0];
++  taula(arrel, {
++    ...trinitat(),
++    [lligat]: doc(VINCLES_PLANTILLA, reflex),
++    [copiat]: doc(VINCLES_PLANTILLA, reflex),
++    [inventat]: doc(VINCLES_PLANTILLA, `${tornId}:${randomUUID()}`),
++    [senseConsolidar]: doc(VINCLES_PLANTILLA, torn(arrel, { pla: PLA, fitxer: senseConsolidar, creacio: 'prepared' })),
++    [sensePla]: doc(VINCLES_PLANTILLA, torn(arrel, { fitxer: sensePla })),
++  });
++  const r = taulaDeFase(arrel);
++  const m = motius(r);
++  const curt = tornId.slice(0, 13);
++  /* Regressió trobada en la verificació (261020): `turn.plan` és un camp únic que bindPlan
++     sobreescriu. Un torn que va crear documents en una fase anterior i després vincula el
++     pla nou faria passar el pla vell, els seus prompts i els seus informes. */
++  assert.deepEqual(r.fora.map((d) => d.nom), [lligat, copiat, inventat, senseConsolidar, sensePla]);
++  const base = (s) => `nascut a ${DIA}_${s}, abans de la fase ${FASE}, i els seus Vincles no citen el pla ni cap prompt de la fase`;
++  assert.equal(m[lligat], base('2030'), 'el rebut vàlid d’un torn amb el pla vinculat no adopta');
++  assert.equal(m[copiat], `${base('2035')} (el seu rebut no acredita res: el rebut de ${curt} és de ${DESK}/${lligat})`);
++  assert.equal(m[inventat], `${base('2040')} (el seu rebut no acredita res: el rebut no és al registre de ${curt})`);
++  assert.match(m[senseConsolidar], /\(el seu rebut no acredita res: el rebut de torn_[0-9a-f]{8} és d'una creació sense consolidar\)$/);
++  assert.equal(m[sensePla], base('2045'), 'un rebut vàlid d’un torn sense pla vinculat no adopta ningú');
++  const fora = Object.fromEntries(r.fora.map((d) => [d.nom, d]));
++  assert.match(fora[lligat].tornObert?.torn ?? '', /^torn_/, 'el rebut vàlid només acredita el torn obert: Acte Reflex abans d’arxivar');
++  assert.equal(fora[copiat].tornObert, null, 'un reflex copiat tampoc acredita el torn obert de l’altre');
++  assert.equal(fora[inventat].tornObert, null);
++  assert.match(fora[sensePla].tornObert?.torn ?? '', /^torn_/);
++});
++
++test('un pla nou fa fase nova: el pla vell, el seu prompt i les seues rèpliques ixen amb una sola ordre agrupada', (t) => {
++  const arrel = mas(t);
++  const plaVell = `${DIA}_1530_pla_implementacio_webp.md`;
++  const promptVell = `${DIA}_1530_prompt_claude_webp.md`;
++  const replicaVella = `${DIA}_1600_auditoria_claude_webp.md`;
++  taula(arrel, { ...trinitat(), [plaVell]: doc(), [promptVell]: doc(), [replicaVella]: doc(vincles(sense(plaVell))) });
++  const r = taulaDeFase(arrel);
++  assert.equal(r.fase, FASE, 'la fase en curs és la del pla més recent');
++  assert.equal(r.seguent, null);
++  assert.deepEqual(r.fora.map((d) => d.nom), [plaVell, promptVell, replicaVella]);
++  const noms = `--nom ${plaVell} --nom ${promptVell} --nom ${replicaVella}`;
++  assert.deepEqual(r.ordres, [
++    `node tooling/gates/porta-olivera.mjs --arxiva --sec ${noms} --sessio ${SESSIO}`,
++    `node tooling/gates/porta-olivera.mjs --arxiva ${noms} --sessio ${SESSIO}`,
++  ]);
++  // Amb --fase es pot jutjar la fase vella: dura fins al pla següent, i la trinitat nova ja és d'una altra fase.
++  const vella = taulaDeFase(arrel, { fase: `${DIA}_1530` });
++  assert.equal(vella.seguent, FASE);
++  assert.deepEqual(vella.dins.map((d) => d.nom), [plaVell, promptVell, replicaVella]);
++  assert.deepEqual(vella.fora.map((d) => d.nom).sort(), [PLA, PROMPT_C, PROMPT_G].sort());
++  assert.equal(motius(vella)[PLA], `nascut a ${FASE}, ja dins de la fase ${FASE}`);
++});
++
++test('sense cap pla no hi ha fase: la taula buida és neta i qualsevol document solt queda fora', (t) => {
++  const buida = mas(t);
++  taula(buida, {});
++  assert.equal(taulaDeFase(buida).valid, true);
++  assert.equal(checkTaulaNeta(buida).valid, true, 'net no vol dir buit, però buit és net');
++
++  const arrel = mas(t);
++  const prompt = `${DIA}_1200_prompt_orfe.md`;
++  taula(arrel, { [prompt]: doc() });
++  const r = taulaDeFase(arrel, { ara: new Date(2026, 9, 19, 9, 5).getTime() });
++  assert.equal(r.fase, null);
++  assert.match(r.fora[0].motiu, /cap Pla d'Implementació a la taula/);
++  assert.equal(r.fora[0].ordre, `node tooling/gates/porta-olivera.mjs --arxiva --nom ${prompt} --sessio 261019_sublimacio_0905`);
++});
++
++test('el que no ix per nom ho diu i remet al Mestre; --sessio canvia la carpeta de les ordres', (t) => {
++  const arrel = mas(t);
++  const estudi = `${DIA}_1000_estudi_referencia.md`;
++  taula(arrel, { ...trinitat(), [estudi]: doc(), 'notes.txt': 'x' });
++  const r = taulaDeFase(arrel, { sessio: `${DIA}_fase_c_capacitor` });
++  const fora = Object.fromEntries(r.fora.map((d) => [d.nom, d]));
++  assert.equal(fora['notes.txt'].motiu, 'sense nom aammdd_hhmm_categoria_titol en minúscules: no és de cap fase');
++  assert.equal(fora['notes.txt'].ordre, null);
++  assert.match(fora['notes.txt'].senseOrdre, /no ix per nom, pregunta al Mestre$/);
++  assert.match(fora[estudi].senseOrdre, /la categoria «estudi» no és de torn.*no ix per nom, pregunta al Mestre$/);
++  assert.deepEqual(r.ordres, [], 'cap ordre agrupada per a documents que no ixen per nom');
++  assert.throws(() => taulaDeFase(arrel, { sessio: '../fora' }), /--sessio \.\.\/fora: ha de ser aammdd_Nom/);
++  assert.throws(() => taulaDeFase(arrel, { fase: '2115' }), /--fase 2115: ha de ser aammdd_hhmm/);
++  assert.match(taulaDeFase(arrel, { fase: `${DIA}_0001` }).errors[0], new RegExp(`Cap Pla d'Implementació amb el segell ${DIA}_0001`));
++});
++
++test('la taula neta inclou la porta de sempre: un document de la fase sense àncora a l’índex la fa caure', (t) => {
++  const arrel = mas(t);
++  taula(arrel, trinitat());
++  posa(arrel, `${DESK}/${FASE}_prompt_codex_sense_ancora.md`, doc());
++  const r = checkTaulaNeta(arrel);
++  assert.equal(r.valid, false);
++  assert.deepEqual(r.taula.fora, [], 'és de la fase');
++  assert.match(r.errors.join('\n'), /Sense àncora a l’índex: .*prompt_codex_sense_ancora/);
++});
++
++test('CLI: --taula-neta no mou res, ix amb 1 i les ordres que imprimix deixen la taula neta', (t) => {
++  const arrel = mas(t);
++  const vell = `${DIA}_1700_auditoria_fase_b.md`;
++  taula(arrel, { ...trinitat(), [vell]: doc(VINCLES_PLANTILLA) }, { motius: { [vell]: `Mestre ${DIA}: referència de la fase B` } });
++  const abans = instantania(arrel);
++  const brut = porta(arrel, ['--taula-neta']);
++  assert.equal(brut.status, 1, brut.stdout + brut.stderr);
++  assert.deepEqual(instantania(arrel), abans, '--taula-neta només llig');
++  assert.match(brut.stdout, new RegExp(`❌ ${sense(vell)} ← nascut a ${DIA}_1700, abans de la fase ${FASE}, i els seus Vincles no citen el pla ni cap prompt de la fase; declarat a «Activitat en curs» \\(Mestre ${DIA}: referència de la fase B\\), i la declaració no el fa de la fase`));
++  assert.match(brut.stdout, /❌ Taula bruta per a agents nous: 1 document\(s\) fora de la fase/);
++  const ordres = ordresDe(brut.stdout);
++  assert.deepEqual(ordres, [arxiva(vell), arxiva(vell)], 'l’ordre del document i l’agrupada');
++  const fet = porta(arrel, ordres[1].split(' ').slice(2));
++  assert.equal(fet.status, 0, fet.stdout + fet.stderr);
++  assert.equal(fs.existsSync(path.join(arrel, ARXIU, SESSIO, vell)), true);
++  const net = porta(arrel, ['--taula-neta']);
++  assert.equal(net.status, 0, net.stdout + net.stderr);
++  assert.doesNotMatch(fs.readFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), 'utf8'), /auditoria_fase_b/);
++});
++
++test('CLI: l’informe avisa de la taula de fase sense canviar el seu codi d’eixida, i les banderes noves no es barregen', (t) => {
++  const arrel = mas(t);
++  const vell = `${DIA}_1700_auditoria_fase_b.md`;
++  taula(arrel, { ...trinitat(), [vell]: doc() });
++  const informe = porta(arrel, []);
++  assert.equal(informe.status, 0, informe.stdout + informe.stderr);
++  assert.match(informe.stdout, new RegExp(`⚠️ Taula de fase ${FASE}: 1 document\\(s\\) fora de la fase en curs \\(${sense(vell)}\\)\\. Esta porta els deixa passar; per a agents nous la taula no és neta: node tooling/gates/porta-olivera.mjs --taula-neta`));
++
++  assert.equal(porta(arrel, ['--taula-neta', '--fase', `${DIA}_1700`]).status, 1, 'una fase sense pla no és neta');
++  for (const [args, re] of [
++    [['--fase', FASE], /--fase només val amb --taula-neta/],
++    [['--convoca'], /--convoca només val amb --taula-neta/],
++    [['--taula-neta', '--sec'], /només valen amb --arxiva/],
++    [['--taula-neta', '--informe'], /Tria un sol mode/],
++    [['--taula-neta', '--fase', 'ahir'], /--fase ahir: ha de ser aammdd_hhmm/],
++  ]) {
++    const r = porta(arrel, args);
++    assert.equal(r.status, 2, `${args.join(' ')}: ${r.stdout}${r.stderr}`);
++    assert.match(r.stderr, re);
++  }
++  assert.equal(porta(arrel, ['--taula-neta', '--sessio', `${DIA}_fase_c`]).stdout.includes(`--sessio ${DIA}_fase_c`), true);
++});
++
++test('hooks-local: Claude i Codex poden llegir la taula neta amb les ordres exactes, i res més s’hi cola', (t) => {
++  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-olivera-taula-neta-hook-')));
++  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
++  for (const file of SOURCES) {
++    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
++    fs.copyFileSync(path.join(REPO, file), path.join(root, file));
++  }
++  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: { 'porta:olivera': 'node tooling/gates/porta-olivera.mjs --informe' } }));
++  posa(root, `${DESK}/00_index_escriptori.md`, '# Índex\n');
++  const bash = (command) => checkLocal({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command } }, root).code;
++  assert.equal(bash('node tooling/gates/porta-olivera.mjs --taula-neta'), 0, 'lectura auditada: no escriu res');
++  assert.equal(bash('node tooling/gates/porta-olivera.mjs --taula-neta --convoca'), 0, 'la de convocar també');
++  assert.equal(bash('node tooling/gates/porta-olivera.mjs --taula-neta; rm -rf _wiki_de_poble'), 2);
++  assert.equal(bash('node tooling/gates/porta-olivera.mjs --convoca --taula-neta'), 2, 'només la forma exacta és lectura coneguda');
++  assert.equal(bash(`node tooling/gates/porta-olivera.mjs --taula-neta --sessio ${DIA}_x`), 2);
++  assert.equal(bash(`node tooling/gates/porta-olivera.mjs --arxiva --nom ${PLA}`), 2, 'arxivar continua sent de MarIA o del Mestre');
++});
+diff --git a/tooling/gates/mutation-policy.mjs b/tooling/gates/mutation-policy.mjs
+index d413d97..9b372d9 100644
+--- a/tooling/gates/mutation-policy.mjs
++++ b/tooling/gates/mutation-policy.mjs
+@@ -135,6 +135,8 @@ const READ_NODE_COMMANDS = new Set([
+   'node tooling/gates/segella.mjs',
+   'node tooling/gates/design_guard.mjs --arrel=src',
+   'node tooling/gates/porta-olivera.mjs --informe',
++  'node tooling/gates/porta-olivera.mjs --taula-neta',
++  'node tooling/gates/porta-olivera.mjs --taula-neta --convoca',
+   'node tooling/gates/porta-documents.mjs',
+   'node tooling/gates/porta-plantilles.mjs',
+   'node tooling/gates/tractor-enxufe.mjs',
+diff --git a/tooling/gates/porta-olivera.mjs b/tooling/gates/porta-olivera.mjs
+index a9c7d57..042af89 100644
+--- a/tooling/gates/porta-olivera.mjs
++++ b/tooling/gates/porta-olivera.mjs
+@@ -65,6 +65,20 @@
+  *  tornen els avisos i `document.mjs` els escriu per stderr), `checkOlivera` (els hooks)
+  *  i `--tancament [--torn ID]` (tancament.mjs, environmentChecks).
+  *
++ *  Taula neta de fase (261019, ordre del Mestre de les 21:26). Verd no vol dir net per a
++ *  qui entra: la porta jutja per jornada (`ranci()` només mira `data < hui`), i els
++ *  documents d'una fase consumida el mateix dia hi passen, ancorats, declarats per
++ *  `document.mjs create` i sostinguts 24 h pel rebut del seu torn. `--taula-neta` jutja per
++ *  fase: la fase és el segell `aammdd_hhmm` del Pla d'Implementació més recent de la taula
++ *  (o el de `--fase`), i cada document solt hi ha de pertànyer: la trinitat (el pla i els
++ *  prompts amb el seu segell), el que ha nascut després del pla (segell igual o posterior),
++ *  o un document anterior que la fase ha adoptat, perquè la seua secció «## Vincles» cita el
++ *  pla, un prompt o un bundle de la trinitat. Amb `--convoca` (en convocar agents nous) només
++ *  hi cap la trinitat. Les
++ *  declaracions, les retencions i els rebuts oberts no fan pertànyer ningú. Cada document
++ *  de fora ix amb l'ordre `--arxiva --nom` exacta. No mou res; l'informe en mostra un avís,
++ *  sense canviar el seu codi d'eixida.
++ *
+  *  Ús:
+  *    porta-olivera.mjs [--informe]          # auditoria de l'Escriptori (eixida 1 si brut); mai llig stdin
+  *    porta-olivera.mjs --hook               # hook: llig el payload per stdin
+@@ -74,6 +88,9 @@
+  *    porta-olivera.mjs --repara [--sec]     # reapunta les àncores fantasma amb destí únic
+  *    porta-olivera.mjs --renomena VELL --a NOU [--sec]
+  *                                           # reanomena un document solt i reescriu les seues àncores
++ *    porta-olivera.mjs --taula-neta [--convoca] [--fase aammdd_hhmm] [--sessio aammdd_Nom]
++ *                                           # taula neta per a agents nous: només la fase en curs (eixida 1 si no);
++ *                                           # amb --convoca, només la trinitat de la fase
+  *
+  *  El mode hook és explícit: sense bandera, `readFileSync(0)` esperava un EOF que
+  *  un terminal (o un pipe que ningú tanca) no envia mai, i la porta es penjava
+@@ -778,6 +795,227 @@ function informeTancament(arrel, torn) {
+   return r.valid ? 0 : 1;
+ }
+ 
++/* ── Taula neta de fase (261019, ordre del Mestre de les 21:26) ───────────── */
++
++/** Segell d'una fase: el `aammdd_hhmm` del Pla d'Implementació que la convoca. */
++const SEGELL_FASE = /^\d{6}_\d{4}$/;
++const segellDe = (d) => `${d.data}_${d.hora}`;
++const esPla = (d) => /^pla_implementacio(?:_|$)/.test(d.resta);
++/** El que es convoca amb el pla i porta el seu segell: els prompts i, per al Consell, el bundle de cada prompt (AGENTS §6). */
++const CONVOCATS = /^(prompt|macro_prompt|micro_prompt|petorreta|bundle|macro_bundle|micro_bundle)$/;
++/** Capçalera Markdown, amb la tancada opcional: la mateixa lectura que la porta de frontmatter (validaVincles). */
++const CAPCALERA = /^ {0,3}(#{1,6})[\t ]+(.+?)(?:[\t ]+#+)?[\t ]*$/;
++
++/**
++ * Documents del primer nivell que un Markdown cita amb `[[…]]`, en dos grups: `vincles`, els de
++ * les seues seccions «## Vincles» (cada secció acaba a la capçalera següent de nivell 1 o 2), i
++ * `cos`, els de la resta del text, que només els esmenta. El frontmatter no compta, i els
++ * comentaris i el codi tampoc, com a l'índex (prosaIndex).
++ */
++function citesDe(abs, presents) {
++  const vincles = new Set();
++  const cos = new Set();
++  const text = llegeixSiPots(abs);
++  if (typeof text !== 'string') return { vincles, cos };
++  const fm = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/.exec(text);
++  let dins = false;
++  for (const linia of prosaIndex(fm ? text.slice(fm[0].length) : text).split(/\r?\n/)) {
++    const h = CAPCALERA.exec(linia);
++    if (h && h[1].length <= 2) { dins = h[1].length === 2 && h[2] === 'Vincles'; continue; }
++    for (const a of linia.matchAll(ANCORA)) {
++      const nom = resolAncora(a[2], presents);
++      if (nom) (dins ? vincles : cos).add(nom);
++    }
++  }
++  return { vincles, cos };
++}
++
++/**
++ * Rebut del frontmatter d'un document solt, validat contra el registre del seu torn: compta
++ * només si el registre és vàlid, el rebut hi és amb el mateix id, el seu `file` és este
++ * document i, si naix amb fase de creació, està consolidat (les guardes de `relleu`). Un
++ * `reflex` copiat d'un altre document o inventat no acredita res. No mira si el torn és obert:
++ * el rebut diu d'on ve el document; qui el necessita ho diu la convocatòria v4 (vidaDe).
++ */
++function rebutDe(arrel, rel) {
++  const reflex = reflexDe(path.join(arrel, rel));
++  if (!reflex) return null;
++  let registre;
++  try { registre = JSON.parse(fs.readFileSync(path.join(arrel, TORNS, `${reflex.torn}.json`), 'utf8')); }
++  catch { return { ...reflex, valid: false, motiu: `el registre de ${curt(reflex.torn)} no és a ${TORNS}/` }; }
++  const rebut = registre?.receipts?.[reflex.rebut];
++  const motiu = registre?.turn_id !== reflex.torn || registre.schema !== 'sdp.turn.v1' ? `el registre de ${curt(reflex.torn)} no és vàlid`
++    : rebut?.id !== reflex.rebut || typeof rebut.file !== 'string' ? `el rebut no és al registre de ${curt(reflex.torn)}`
++      : rebut.file !== rel ? `el rebut de ${curt(reflex.torn)} és de ${rebut.file}`
++        : Object.hasOwn(rebut, 'creation') && rebut.creation?.state !== 'committed' ? `el rebut de ${curt(reflex.torn)} és d'una creació sense consolidar`
++          : null;
++  return motiu ? { ...reflex, valid: false, motiu } : { ...reflex, valid: true, registre };
++}
++
++/** Carpeta de sessió per defecte de la sublimació: `aammdd_sublimacio_hhmm` amb el segell de la fase. */
++function sessioDeSublimacio(fase, ara) {
++  if (fase) return `${fase.slice(0, 6)}_sublimacio_${fase.slice(7)}`;
++  const d = new Date(ara);
++  return `${avui(d)}_sublimacio_${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
++}
++
++/**
++ * Taula de la fase en curs. La fase és `fase` o el segell `aammdd_hhmm` del Pla
++ * d'Implementació més recent de la taula, i dura fins al segell del pla següent, si n'hi ha.
++ * La trinitat són el pla i els prompts (i el bundle de cada prompt del Consell) que porten el
++ * segell de la fase. Un document solt pertany a la fase si:
++ *   · és de la trinitat; o
++ *   · va nàixer dins de la fase: el segell del seu nom és igual o posterior al del pla (i
++ *     anterior al del pla següent). La fase comença quan naix el seu pla (el pla naix primer),
++ *     i tot el que naix després és feina d'esta fase per construcció. Un informe creat amb
++ *     `document.mjs create` naix amb els Vincles de la plantilla, [[00_index]] i
++ *     [[00_index_escriptori]], fins que l'autor el completa: demanar-li el vincle al pla
++ *     convidaria a arxivar un informe en curs (lliçó 260930, l'Acte Reflex); o
++ *   · va nàixer abans i la fase l'ha adoptat: les seues seccions «## Vincles» citen amb `[[…]]`
++ *     el pla, un prompt o un bundle de la trinitat. Una menció al cos del document no l'adopta.
++ *     Cap rebut no adopta: el pla d'un torn (`document.mjs plan`) és un camp únic que es pot
++ *     tornar a vincular a un pla més nou, i faria passar els documents d'una fase anterior.
++ *     El rebut validat (rebutDe) només diu si el seu torn és obert (Acte Reflex).
++ * Amb `convoca` (el moment de convocar agents nous), només hi cap la trinitat: les rèpliques i
++ * els adoptats també ixen. Una declaració d'«Activitat en curs», una retenció del Mestre o un
++ * rebut obert no fan pertànyer cap document: diuen qui el necessita, no de quina fase és. Cada
++ * document de fora porta el motiu, la seua declaració (si en té), el torn obert del seu rebut
++ * validat (si en té: Acte Reflex abans d'arxivar) i l'ordre d'arxivat que el resol, o per què no
++ * ix per nom. Només llig noms, el text dels Markdown solts i els registres de torn.
++ */
++export function taulaDeFase(arrel = arrelPerDefecte(), { fase = null, sessio = null, convoca = false, ara = Date.now() } = {}) {
++  if (fase !== null && !SEGELL_FASE.test(String(fase))) throw new Error(`--fase ${fase}: ha de ser aammdd_hhmm, el segell del Pla d'Implementació de la fase`);
++  if (sessio !== null && !SESSIO.test(String(sessio))) throw new Error(`--sessio ${sessio}: ha de ser aammdd_Nom, un sol segment dins de ${ARXIU}/`);
++  const solts = fitxersSolts(arrel).filter((f) => f.nom !== '00_index_escriptori.md').map((f) => f.nom).sort();
++  const presents = new Set(solts);
++  const arts = new Map(artefactes(arrel).map((a) => [a.nom, a]));
++  const plans = inventari(arrel).filter(esPla);
++  const segells = [...new Set(plans.map(segellDe))].sort();
++  const actual = fase ?? segells.at(-1) ?? null;
++  const seguent = actual ? segells.find((s) => s > actual) ?? null : null;
++  const errors = [];
++  if (fase !== null && !segells.includes(fase)) errors.push(`Cap Pla d'Implementació amb el segell ${fase} a la taula: la fase naix amb el seu pla (document.mjs context --route pla.implementacio).`);
++  if (convoca && !actual) errors.push("Cap Pla d'Implementació a la taula: la convocatòria naix amb el seu pla (la Trinitat), i el pla naix primer.");
++
++  const deLaTrinitat = new Set(actual ? solts.filter((nom) => {
++    const a = arts.get(nom);
++    return a && segellDe(a) === actual && (esPla(a) || CONVOCATS.test(a.categoria));
++  }) : []);
++  const plaFase = new Set([...deLaTrinitat].filter((nom) => esPla(arts.get(nom))));
++  const rebuts = new Map();
++  /** Rebut validat d'un Markdown solt (rebutDe), llegit una sola vegada; null si no és Markdown o no en porta. */
++  const rebutDeNom = (nom) => {
++    if (!rebuts.has(nom)) rebuts.set(nom, arts.get(nom)?.ext === '.md' ? rebutDe(arrel, `${ESCRIPTORI}/${nom}`) : null);
++    return rebuts.get(nom);
++  };
++
++  /** On és un document respecte de la fase: `dins`, `trinitat` i el motiu, sense el mode convocatòria. */
++  const classifica = (nom) => {
++    const a = arts.get(nom);
++    if (!a) return { dins: false, motiu: 'sense nom aammdd_hhmm_categoria_titol en minúscules: no és de cap fase' };
++    if (!actual) return { dins: false, motiu: "cap Pla d'Implementació a la taula: no hi ha cap fase en curs" };
++    const s = segellDe(a);
++    if (deLaTrinitat.has(nom)) return { dins: true, trinitat: true, motiu: esPla(a) ? 'pla de la fase' : `trinitat: ${a.categoria} amb el segell de la fase` };
++    if (seguent && s >= seguent) return { dins: false, motiu: `nascut a ${s}, ja dins de la fase ${seguent}` };
++    if (s >= actual) return { dins: true, motiu: s === actual ? `rèplica: nascut a ${s}, amb el pla de la fase, però «${a.categoria}» no és pla ni prompt` : `rèplica: nascut a ${s}, després del pla de la fase` };
++    // Nascut abans de la fase: només hi entra adoptat, pels seus Vincles. Cap rebut no adopta (vegeu dalt).
++    const md = a.ext === '.md';
++    const cites = md ? citesDe(path.join(arrel, a.rel), presents) : null;
++    const via = cites ? [...cites.vincles].sort().find((n) => deLaTrinitat.has(n)) : null;
++    if (via) return { dins: true, motiu: `adoptat: nascut a ${s}, abans de la fase, i els seus Vincles citen [[${senseMd(via)}]]` };
++    const rebut = rebutDeNom(nom);
++    const notes = [];
++    const alCos = cites ? [...cites.cos].sort().find((n) => deLaTrinitat.has(n)) : null;
++    if (alCos) notes.push(`esmenta [[${senseMd(alCos)}]] fora de «## Vincles», i només compten els Vincles`);
++    if (rebut && !rebut.valid) notes.push(`el seu rebut no acredita res: ${rebut.motiu}`);
++    return { dins: false, motiu: `nascut a ${s}, abans de la fase ${actual}${md ? ', i els seus Vincles no citen el pla ni cap prompt de la fase' : ''}${notes.length ? ` (${notes.join('; ')})` : ''}` };
++  };
++
++  const perNom = perNomDe(arrel);
++  const desti = sessio ?? sessioDeSublimacio(actual, ara);
++  const dins = [];
++  const fora = [];
++  for (const nom of solts) {
++    const c = classifica(nom);
++    if (c.dins && (!convoca || c.trinitat)) { dins.push({ nom, motiu: c.motiu, trinitat: Boolean(c.trinitat) }); continue; }
++    const motiu = c.dins ? `${c.motiu}; en convocar, la taula només té la trinitat ${actual} (el pla i els seus prompts)` : c.motiu;
++    const declaracio = (perNom.get(nom) ?? []).flatMap((d) => d.motius.map((m) => m.text)).join(' · ');
++    // Acte Reflex (lliçó 260930): un torn obert, acreditat per un rebut vàlid, pot estar llegint-lo encara.
++    const rebut = rebutDeNom(nom);
++    const estat = rebut?.valid ? estatTorn(arrel, rebut.torn, ara) : null;
++    let ordre = null;
++    let senseOrdre = null;
++    try { arxivables(arrel, { noms: [nom] }); ordre = `${VIA_PORTA} --arxiva --nom ${nom} --sessio ${desti}`; }
++    catch (error) { senseOrdre = `${error.message.split('\n')[0]}: no ix per nom, pregunta al Mestre`; }
++    fora.push({ nom, motiu, declarat: perNom.has(nom), declaracio, tornObert: estat?.valid ? { torn: estat.torn, expiresAt: estat.expiresAt } : null, ordre, senseOrdre });
++  }
++  const arxivadors = fora.filter((d) => d.ordre).map((d) => `--nom ${d.nom}`).join(' ');
++  return {
++    valid: errors.length === 0 && fora.length === 0,
++    fase: actual,
++    seguent,
++    convoca,
++    pla: [...plaFase],
++    dins,
++    fora,
++    errors,
++    sessio: desti,
++    ordres: arxivadors ? [`${VIA_PORTA} --arxiva --sec ${arxivadors} --sessio ${desti}`, `${VIA_PORTA} --arxiva ${arxivadors} --sessio ${desti}`] : [],
++  };
++}
++
++/**
++ * Taula neta per a agents nous: l'Escriptori net (checkEscriptori: Safata, àncores, jornades
++ * anteriors i, en fase «bloqueig», la convocatòria v4) i cap document solt fora de la fase en
++ * curs; amb `convoca`, cap document fora de la trinitat. És més estricta que l'informe: un
++ * document d'una fase consumida hui, declarat viu o retingut, la fa caure igual.
++ */
++export function checkTaulaNeta(arrel = arrelPerDefecte(), { fase = null, sessio = null, convoca = false, dia = avui(), ara = Date.now() } = {}) {
++  const escriptori = checkEscriptori(arrel, { dia, ara });
++  if (escriptori.errors.some((e) => e.startsWith("Estructura de l'Escriptori"))) return { valid: false, errors: escriptori.errors, avisos: [], taula: null };
++  const taula = taulaDeFase(arrel, { fase, sessio, convoca, ara });
++  const errors = [...escriptori.errors, ...taula.errors,
++    ...taula.fora.map((d) => `Fora de la ${convoca ? 'trinitat' : 'fase'} ${taula.fase ?? '(cap)'}: ${d.nom} (${d.motiu})`)];
++  return { valid: errors.length === 0, errors, avisos: escriptori.avisos, taula };
++}
++
++function informeTaulaNeta(arrel, { fase = null, sessio = null, convoca = false } = {}) {
++  const r = checkTaulaNeta(arrel, { fase, sessio, convoca });
++  const P = `[Porta Olivera · taula neta${convoca ? ' · convocatòria' : ''}]`;
++  if (!r.taula) {
++    for (const e of r.errors) console.error(`${P} ${e}`);
++    return 1;
++  }
++  const t = r.taula;
++  console.log(t.fase
++    ? `${P} Fase en curs: ${t.fase}${t.pla.length ? ` (pla: ${t.pla.join(', ')})` : ''}${t.seguent ? `, fins a la fase ${t.seguent}` : ''}.${convoca ? ' En convocar, només hi cap la trinitat.' : ''}`
++    : `${P} Cap Pla d'Implementació a la taula: no hi ha cap fase en curs.`);
++  for (const d of t.dins) console.log(`   ✅ ${senseMd(d.nom)} ← ${d.motiu}`);
++  for (const d of t.fora) {
++    console.log(`   ❌ ${senseMd(d.nom)} ← ${d.motiu}${d.declarat ? `; declarat a «Activitat en curs»${d.declaracio ? ` (${tall(d.declaracio)})` : ''}, i la declaració no el fa de la ${convoca ? 'trinitat' : 'fase'}` : ''}`);
++    if (d.tornObert) console.log(`      ⚠️ El torn del seu rebut, ${curt(d.tornObert.torn)}, és obert fins a ${d.tornObert.expiresAt}: Acte Reflex Pre-Arxivament abans d'arxivar-lo.`);
++    console.log(`      ${d.ordre ?? d.senseOrdre}`);
++  }
++  for (const e of t.errors) console.log(`❌ ${e}`);
++  const altres = r.errors.filter((e) => !e.startsWith('Fora de la ') && !t.errors.includes(e));
++  for (const e of altres) console.log(`❌ ${e}`);
++  if (r.avisos.length) console.log(`ℹ️ ${r.avisos.length} avís(os) de la convocatòria v4: npm run porta:olivera els detalla.`);
++  if (t.fora.length) {
++    console.log(convoca
++      ? `❌ Taula no apta per a convocar: ${t.fora.length} document(s) fora de la trinitat${t.fase ? ` ${t.fase}` : ''}. Sublima'ls al pla de la fase nova (Protocol de Sublimació de Torn) i arxiva'ls; primer amb --sec:`
++      : `❌ Taula bruta per a agents nous: ${t.fora.length} document(s) fora de la fase${t.fase ? ` ${t.fase}` : ''}. Sublima'ls al pla de la fase (Protocol de Sublimació de Torn) i arxiva'ls; primer amb --sec:`);
++    for (const o of t.ordres) console.log(`   ${o}`);
++  }
++  if (r.valid) {
++    const plans = t.dins.filter((d) => d.motiu === 'pla de la fase').length;
++    const trinitat = t.dins.filter((d) => d.trinitat).length;
++    console.log(convoca
++      ? `✅ Taula a punt per a convocar: només la trinitat${t.fase ? ` de la fase ${t.fase}` : ''} (${plans} pla, ${trinitat - plans} prompt(s) o bundle(s)).`
++      : `✅ Taula neta de fase: ${t.dins.length} document(s)${t.fase ? ` de la fase ${t.fase}` : ''} (${plans} pla, ${trinitat - plans} prompt(s) o bundle(s), ${t.dins.filter((d) => d.motiu.startsWith('rèplica')).length} rèplica/ques, ${t.dins.filter((d) => d.motiu.startsWith('adoptat')).length} adoptat(s)).`);
++  }
++  return r.valid ? 0 : 1;
++}
++
+ /** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0.
+  *  Amb `fitxer` (la ruta de la petorreta), també val el pla de la jornada que porta
+  *  el seu nom. Ordre del Mestre (261007), defecte de mitjanit: el prompt
+@@ -1284,11 +1522,11 @@ export function renomena(arrel = arrelPerDefecte(), { vell, nou, sec = false } =
+ 
+ /* ── CLI ──────────────────────────────────────────────────────────────────── */
+ 
+-const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
++const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID] | --taula-neta [--convoca] [--fase aammdd_hhmm] [--sessio aammdd_Nom]';
+ 
+ /** Banderes de la línia d'ordres. Una bandera desconeguda no es llig com a informe: falla. */
+ function opcions(argv) {
+-  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [], tancament: false, torn: null };
++  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [], tancament: false, torn: null, taulaNeta: false, convoca: false, fase: null };
+   const valor = (i, nom, que) => {
+     const a = argv[i];
+     const v = a === nom ? argv[i + 1] : a.slice(nom.length + 1);
+@@ -1304,6 +1542,9 @@ function opcions(argv) {
+     else if (a === '--arxiva') o.arxiva = true;
+     else if (a === '--repara') o.repara = true;
+     else if (a === '--tancament') o.tancament = true;
++    else if (a === '--taula-neta') o.taulaNeta = true;
++    else if (a === '--convoca') o.convoca = true;
++    else if (amb('--fase')) { una(o.fase, '--fase'); o.fase = valor(i, '--fase', 'el segell aammdd_hhmm del Pla de la fase'); if (a === '--fase') i++; }
+     else if (amb('--torn')) { una(o.torn, '--torn'); o.torn = valor(i, '--torn', "l'identificador del torn"); if (a === '--torn') i++; }
+     else if (a === '--sec') o.sec = true;
+     else if (a === '--reapunta') o.reapunta = true;
+@@ -1313,10 +1554,12 @@ function opcions(argv) {
+     else if (amb('--a')) { una(o.a, '--a'); o.a = valor(i, '--a', 'el nom nou del document'); if (a === '--a') i++; }
+     else throw new Error(`Argument desconegut: ${a}. ${US}`);
+   }
+-  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
++  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament, o.taulaNeta].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
+   if (o.torn !== null && !o.tancament) throw new Error(`--torn només val amb --tancament. ${US}`);
++  if (o.fase !== null && !o.taulaNeta) throw new Error(`--fase només val amb --taula-neta. ${US}`);
++  if (o.convoca && !o.taulaNeta) throw new Error(`--convoca només val amb --taula-neta. ${US}`);
+   const mal = 'només valen amb --arxiva; --sec també amb --repara i --renomena';
+-  if ((o.noms.length || o.sessio !== null || o.reapunta) && !o.arxiva) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
++  if ((o.noms.length || (o.sessio !== null && !o.taulaNeta) || o.reapunta) && !o.arxiva) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
+   if (o.sec && !o.arxiva && !o.repara && o.renomena === null) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
+   if ((o.renomena === null) !== (o.a === null)) throw new Error(`--renomena i --a van junts: --renomena VELL --a NOU. ${US}`);
+   return o;
+@@ -1353,6 +1596,11 @@ function informe(arrel, dia = avui()) {
+   console.log(pla.length
+     ? `ℹ️ Pla d'Implementació de hui: ${pla.map((d) => d.nom).join(', ')}`
+     : "ℹ️ Cap Pla d'Implementació de hui: el demana l'escriptura d'una petorreta, no l'Escriptori net.");
++  // 261019: el verd d'esta porta no diu si la taula és neta per a qui entra. Avís, sense canviar l'eixida.
++  try {
++    const fase = taulaDeFase(arrel);
++    if (fase.fora.length) console.log(`⚠️ Taula de fase ${fase.fase ?? '(cap pla a la taula)'}: ${fase.fora.length} document(s) fora de la fase en curs (${fase.fora.slice(0, 5).map((d) => senseMd(d.nom)).join(', ')}${fase.fora.length > 5 ? '…' : ''}). Esta porta els deixa passar; per a agents nous la taula no és neta: ${VIA_PORTA} --taula-neta`);
++  } catch (error) { console.log(`⚠️ Taula de fase sense comprovar (${error.message.split('\n')[0]}).`); }
+   // Convocatòria v4 (261009): el motiu de cada viu, les troballes i el sediment de l'índex.
+   const conv = checkConvocatoria(arrel, { dia });
+   console.log(`[Porta Olivera] Convocatòria v4 · fase «${conv.fase}» (${BANDERA_FASE}).`);
+@@ -1411,6 +1659,7 @@ function main(argv = process.argv.slice(2)) {
+   }
+ 
+   if (o.tancament) { process.exitCode = informeTancament(arrel, o.torn); return; }
++  if (o.taulaNeta) { process.exitCode = informeTaulaNeta(arrel, { fase: o.fase, sessio: o.sessio, convoca: o.convoca }); return; }
+   if (!o.hook) { process.exitCode = informe(arrel); return; }
+ 
+   // Mode hook: sense payload no hi ha res a jutjar, i no es pot fingir un verd.
+diff --git a/tooling/tests/node-suite-manifest.json b/tooling/tests/node-suite-manifest.json
+index aff1287..d209ce0 100644
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -31,6 +31,7 @@
+     "tests/migracio-xat-de-pagina.test.mjs",
+     "tests/node-suite-policy.test.mjs",
+     "tests/plantilla-viva-escriptori.test.mjs",
++    "tests/porta-olivera-taula-neta.test.mjs",
+     "tests/porta-olivera-v3.test.mjs",
+     "tests/porta-reflex.test.mjs",
+     "tests/public_exports.test.mjs",
+@@ -421,6 +422,11 @@
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+     },
++    {
++      "path": "tests/porta-olivera-taula-neta.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable de la taula neta de fase de la porta Olivera (261019): fixtures a os.tmpdir(), cap lectura de la taula real."
++    },
+     {
+       "path": "tests/porta-olivera-v2.test.mjs",
+       "suite": "laboratory",

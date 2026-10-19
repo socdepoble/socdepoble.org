@@ -86,7 +86,7 @@ describe('la barra: fila «targeta» de nivell avançat', () => {
   test('és al contracte sense ranura: la barra d’ara pinta els mateixos botons', () => {
     const fila = TOOLBAR_SCHEMA.find((boto) => boto.id === FORMATS.TARGETA);
     expect(fila).toEqual({ id: 'targeta', clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta', commutable: false, slot: null, nivell: 'avancat' });
-    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['titol', 'llista', 'negreta', 'cursiva', 'ratllat', 'subtitol']);
+    expect(SCHEMA_VISIBLE.map((boto) => boto.id)).toEqual(['subtitol', 'titol', 'negreta', 'cursiva', 'ratllat', 'llista', 'llistaNumerada']);
   });
 
   test('sense l’extensió, la fila ix apagada i no peta', () => {

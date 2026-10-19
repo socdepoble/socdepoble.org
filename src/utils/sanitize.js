@@ -194,8 +194,14 @@ function admetFont(url, admetOrigen) {
   }
 }
 
-/** Font d'imatge admissible: data-URI d'imatge, ruta pròpia o http(s). '' = esborrat legítim. */
+/** Font d'imatge admissible: data-URI d'imatge, ruta pròpia o http(s). '' = esborrat legítim.
+ *  Fase C (Capacitor 8; ordre del Mestre, 261019) · El camí propi ('/assets/…')
+ *  passa per la mateixa regla que a esFontImatgePropia (esCamiPropi): a l'app
+ *  nativa d'iOS (capacitor://localhost) admetFont el rebutjava, i el sanejador,
+ *  les Notes i el Perfil perdien la imatge pròpia. A una pàgina http(s) ja
+ *  passava: el mateix origen. */
 export function esFontImatgeSegura(url) {
+  if (esCamiPropi(url)) return true;
   return admetFont(url, (origen) => origensPropis.includes(origen) || ORIGENS_OAUTH.includes(origen));
 }
 
@@ -220,14 +226,18 @@ export function esFontImatgeSegura(url) {
  * seguida d'un caràcter que no siga barra ni barra inversa, i cap caràcter de
  * control ni barra inversa enlloc (el navegador lleva els uns i llig l'altra
  * com a barra: '/\t/fora.example' i '/\fora.example' són un altre origen).
- * Només ací: esFontImatgeSegura, el filtre dels altres consumidors, no canvia.
+ * Fase C (261019) · La mateixa regla val ara per a esFontImatgeSegura.
  */
 const CAMI_PROPI = /^\/[^/\\]/;
 const CARACTER_DE_FORA = /[\u0000-\u001F\u007F\\]/;
 
-export function esFontImatgePropia(url) {
+function esCamiPropi(url) {
   const net = typeof url === 'string' ? url.trim() : '';
-  if (CAMI_PROPI.test(net) && !CARACTER_DE_FORA.test(net)) return true;
+  return CAMI_PROPI.test(net) && !CARACTER_DE_FORA.test(net);
+}
+
+export function esFontImatgePropia(url) {
+  if (esCamiPropi(url)) return true;
   return admetFont(url, (origen) => origensPropis.includes(origen));
 }
 

@@ -364,11 +364,12 @@ describe('La targeta de doble acció: la UniversalCard estàndard amb dues porte
 });
 
 /* ── W4-07 · La frontera de rutes de les portes ─────────────────────────
-   Abans la porta validava amb isSafeUrl, que resol contra
-   window.location.origin i només admet http(s): amb capacitor://localhost
+   Abans la porta validava amb isSafeUrl, que resolia contra
+   window.location.origin i només admetia http(s): amb capacitor://localhost
    (l'app nativa) la porta /mur quedava inerta. La finestra es fixa amb
    vi.stubGlobal, i isSafeUrl, que la llig, confirma en cada cas que la
-   finestra és de veres eixe origen. */
+   finestra és de veres eixe origen: des de la Fase C (261019) admet també
+   una adreça capacitor:// del host de l'app, però només a l'app nativa. */
 const ORIGENS = Object.freeze({
   https: { origin: 'https://socdepoble.org', protocol: 'https:', host: 'socdepoble.org', hostname: 'socdepoble.org', href: 'https://socdepoble.org/control', pathname: '/control', search: '', hash: '' },
   http: { origin: 'http://localhost:3340', protocol: 'http:', host: 'localhost:3340', hostname: 'localhost', href: 'http://localhost:3340/control', pathname: '/control', search: '', hash: '' },
@@ -385,8 +386,10 @@ describe.each(Object.keys(ORIGENS))('W4-07 · origen %s', (nom) => {
   beforeEach(() => { vi.stubGlobal('location', ORIGENS[nom]); });
 
   test('/mur?x=1#punt és una porta oberta i el clic normal navega amb el router', () => {
-    /* La finestra és eixe origen: isSafeUrl, que la llig, només admet http(s). */
-    expect(isSafeUrl('/mur')).toBe(nom !== 'capacitor');
+    /* La finestra és eixe origen: un camí propi passa a totes, i una adreça
+       capacitor:// del host de l'app, només a l'app nativa d'iOS. */
+    expect(isSafeUrl('/mur')).toBe(true);
+    expect(isSafeUrl('capacitor://localhost/mur')).toBe(nom === 'capacitor');
     expect(esRutaDeLaPorta('/mur?x=1#punt')).toBe(true);
     expect(normalitzaPortes([PORTA_AMB_PUNT])[0].desti).toBe('/mur?x=1#punt');
     pintaTargeta({ portes: [PORTA_AMB_PUNT] });

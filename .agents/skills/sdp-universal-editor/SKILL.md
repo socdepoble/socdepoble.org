@@ -22,45 +22,53 @@ contracte.escriu:
 
 Aquest manual defineix el comportament interactiu i la disposició de la interfície d'edició (Universal Editor) utilitzada a Notes, Pobles, Persones, Grups i Empreses. La visió és que aquest editor tinga la potència i la puresa visual suficients per publicar un llibre o un ePub, garantint una experiència d'usuari neta i lliure de distraccions.
 
-## 1. Iconografia i Estat d'Edició (Autoguardat)
-L'editor prescindeix d'un botó clàssic de "Guardar", apostant per una experiència més fluida i recolzada per un sistema d'autoguardat visual:
-- **Icona d'Edició / Canvis Pendents (La Ploma):** Mentre l'usuari està redactant o el document té canvis pendents de guardar, es mostra l'icona d'una **ploma** a la barra superior (on solia estar la "i" d'informació).
-- **Desaparició per Autoguardat (Feedback Visual):** En el moment en què el sistema guarda automàticament els canvis en segon pla, la ploma **desapareix**. Això comunica a l'usuari que l'última versió ja està assegurada al disc, estalviant-nos el botó "Guardar".
-- **Reaparició Reactiva:** Només que l'usuari torne a teclejar, la ploma torna a aparèixer per indicar que la sessió d'edició s'ha reprès.
-- **Absència en Mode Lectura / Targeta:** Quan el document es presenta en mode lectura o renderitzat com a Targeta (Card), la ploma no hi apareix mai, ja que no hi ha edició en curs.
+## 1. Iconografia, Autoguardat (`CloudUpload`) i Emoticona (`La Ploma`)
 
-## 2. Botons de Metadades (Zona del Títol)
-Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament, l'editor ha d'oferir accions clares (botons) per a classificar i datar la publicació:
-1. **Selector d'Etiquetes i Categories:** Un botó explícit que, en ser clicat, òbriga una vista/pàgina nova (dins del mateix *frame* o columna d'edició) per triar quines etiquetes i categories s'aplicaran a l'element.
-2. **Selector de Copyright:** Un botó per establir els drets d'autor (per defecte predefinit a "Sóc de Poble" o al nom de la persona registrada).
-3. **Data i Hora:** Comandament per establir i visualitzar la data i l'hora de publicació (aquest valor es sincronitza i envia cap al calendari intern).
+L'editor prescindeix d'un botó clàssic de «Guardar», apostant per una experiència fluida i sense fricció a la Barra Taronja (`src/components/universal/barres/BarraTaronja.jsx`):
 
-## 3. La Barra d'Eines (Toolbar) i Jerarquia Semàntica
+- **Autoguardat Silenciós (`CloudUpload`):** Quan hi ha canvis pendents o s'estan desant automàticament en segon pla, es mostra la icona del **núvol (`CloudUpload`)**. Un cop l'última versió ha quedat assegurada, l'indicador desapareix suaument (als `1,2 s`), comunicant a l'usuari que el document ja està protegit sense necessitat de prémer cap botó.
+- **L'Emoticona del Document i «La Ploma» (`Feather`):** L'espai central de la Barra Taronja representa l'emoticona del document. En mode edició, si la nota encara no té cap emoji triat, mostra la icona d'una **ploma blanca (`Feather`)** que vol dir exclusivament **«tria una emoticona»**. En mode lectura o targeta, si no s'ha triat cap emoji, l'espai queda net.
 
-L'experiència d'edició de text ha de ser tan pura com la d'un processador de text professional (tipus Google Docs), respectant la jerarquia SEO de la pàgina.
+## 2. Subvistes de Metadades i Selector d'Emojis (`PaginaEmojis`)
 
-- **Ubicació Estratègica i Sticky:** La barra d'edició negra (amb botons de negreta, cursiva, etc.) **NO ha d'estar a la capçalera blava de l'aplicació**. S'ha de moure a l'interior de la finestra d'edició, col·locada exactament **a sota de l'Entradilla**. Això marca visualment la frontera: dalt està la Targeta (Card) i baix comença el cos del document. A més, quan l'usuari faça scroll pel text, **aquesta barra ha de quedar fixada (sticky)** a dalt perquè les eines d'edició estiguen sempre accessibles.
-- **Doble Estat (Bàsic i Desplegat):**
-  - **Estat Bàsic (Replegat):** La barra mostra només els botons més bàsics per no atabalar: `H3`, Negreta (`B`), Cursiva (`I`), Ratllat (`S`) i Llistes. *Atenció: En aquest estat bàsic NO hi haurà cap botó per inserir H1 o H2*, ja que l'H1 és el títol i l'H2 és el subtítol.
-  - **Estat Avançat (Desplegat "Google Docs Style"):** L'usuari podrà desplegar la barra (ocupant una segona o tercera fila, alineant-se a la part inferior de la capçalera). En aquest mode complet, apareixeran absolutament totes les eines d'edició avançada per publicar ePubs/llibres, incloent-hi opcions per a inserir `H2` o targetes incrustades.
-- **Tipografia:** Cal evitar les lletres per defecte i mancades de disseny. El text de l'editor s'ha de nodrir de les fonts i mides "Premium" del sistema de disseny de Sóc de Poble per assegurar una lectura orgànica.
+Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament i la Barra Taronja, l'editor ofereix accions clares per a classificar, il·lustrar amb una emoticona i datar la publicació:
+
+1. **Selector d'Emojis (`PaginaEmojis` — Prohibit `<Dialeg>` Flotant):** En prémer la Ploma (o l'emoji actual) a la Barra Taronja en mode edició, **MAI s'obri un modal flotant (`<Dialeg>`)**. S'obri la subvista integrada a columna completa **`PaginaEmojis`** (`src/components/universal/classificacio/PaginaEmojis.jsx` i `GraellaEmojis.jsx`) dins del mateix espai de treball, amb un botó prominent **«Tornar»** (`ArrowLeft`, diana tàctil mínima de `44px`) a la capçalera, cercador en viu i graella categoritzada d'acord amb l'estàndard Unicode 18 (`src/sections/notes/familiesEmojis.js`).
+2. **Selector d'Etiquetes i Categories:** Un botó explícit que, en ser clicat, obri la subvista de classificació dins de la mateixa columna d'edició (amb botó «Tornar» de `44px`) per triar quines etiquetes i categories s'aplicaran a l'element.
+3. **Selector de Drets d'Autor (Copyright):** La píndola i la línia de copyright sota el títol obrin el selector de llicències (`CC BY-NC-SA 4.0` de sèrie) fins que l'usuari prem «Desar autoria».
+4. **Data i Hora:** Comandament a la Barra Taronja per establir i visualitzar la data i l'hora de publicació, sincronitzada amb el calendari intern.
+
+## 3. La Barra d'Eines (`UniversalToolbar`), Jerarquia Semàntica i Llenç Complet
+
+L'experiència d'edició de text ha de ser tan pura com la d'un processador de text editorial (`src/components/universal/editor/UniversalToolbar.jsx` i `UniversalEditor.css`), respectant la jerarquia SEO de la pàgina:
+
+- **Ubicació Estratègica i Sticky:** La barra d'edició negra **NO està a la capçalera blava de l'aplicació**. Viu a l'interior de la finestra d'edició, col·locada exactament **a sota de l'Entradilla**, marcant la frontera entre la capçalera i el cos del document, i queda fixada (`sticky`) en fer scroll.
+- **Jerarquia de Capçaleres i Llistes (`H3 -> H2`, `List` i `ListOrdered`):**
+  - El títol del document és l'`H1` i el subtítol és l'`H2`. Per tant, al cos de l'editor l'encapçalament natural de secció és **`H3` (`Heading3`)**, que se situa en primer lloc abans d'`H2` (`Heading2`).
+  - Els controls de llista ofereixen de manera explícita tant la **llista de pics (`List` / `toggleBulletList`)** com la **llista numerada (`ListOrdered` / `toggleOrderedList`)**.
+- **Llenç Complet Interactiu (`.sdp-editor-full-canvas`):** El contenidor d'escriptura ocupa tota l'alçada útil disponible (`min-height: 480px`, `padding-bottom: 25vh`, `cursor: text`) i qualsevol clic a la zona buida inferior enfoca automàticament el cursor al final del document (`editor.commands.focus('end')`).
+- **Tipografia:** El text de l'editor es nodreix exclusivament de la família local **Noto Sans** i de les escales de Pedra Seca per assegurar una lectura orgànica.
 
 ## 4. La Plantilla Interactiva (Contingut Inicial "One-Click")
+
 Quan es crea un document nou (per exemple, una Nota Buida), l'editor mai mostra un full en blanc total. En canvi, ofereix una plantilla d'exemple didàctica que demostra totes les capacitats jeràrquiques de l'eina.
 
-**Estructura de la mostra inicial:**
+### Estructura de la mostra inicial
+
 1. **Títol (H1):** Fictici, dissenyat per ocupar fins a 2 línies si és llarg per demostrar l'ajustament.
 2. **Subtítol (H2):** 1 línia explicativa o inspiracional.
 3. **Entradilla (Lead):** 2 línies de text de presentació.
 4. **Catàleg de Paràgrafs (Cos del text):**
-   - Text d'encapçalament **H3** (ex: "Heading 3") seguit d'un paràgraf de prova.
+   - Text d'encapçalament **H3** seguit d'un paràgraf de prova.
    - Text d'encapçalament **H4** seguit d'un paràgraf de prova.
    - Text d'encapçalament **H5** seguit d'un paràgraf de prova.
    - Text d'encapçalament **H6** seguit d'un paràgraf de prova.
 
-**Interacció d'esborrat automàtic:**
-En el moment exacte en què l'usuari clica sobre qualsevol part del cos d'aquesta plantilla d'exemple (per exemple, a sobre de l'H3 per començar a escriure el seu llibre), **tot el contingut formatiu d'exemple desapareix immediatament**. Aquesta neteja reactiva dóna pas al full en blanc preparat per redactar, sense obligar l'usuari a seleccionar i esborrar text de farciment manualment.
+### Interacció d'esborrat automàtic
 
+En el moment exacte en què l'usuari clica sobre qualsevol part del cos d'aquesta plantilla d'exemple, **tot el contingut formatiu d'exemple desapareix immediatament**, donant pas al full en blanc preparat per redactar sense obligar l'usuari a seleccionar i esborrar text manualment.
 
 ## Vincles
+
 - [[00_INDEX_SKILLS]]
+- [[sdp-pedra-seca/SKILL]]

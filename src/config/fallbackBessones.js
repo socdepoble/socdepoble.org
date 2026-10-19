@@ -13,7 +13,9 @@
  * vegada, l'original al mateix lloc i atura l'error perquè el component no
  * amague la imatge mentrestant. Si l'original tampoc no arriba, el segon
  * error seguix el seu camí de sempre.
- * Sense política no s'instal·la res (Llei del Píxel).
+ * Sense política no s'instal·la res (Llei del Píxel). L'app nativa també
+ * demana la bessona (vite.natiu.config.js), però no hi munta este recurs: ni
+ * hi ha <soc-de-poble> ni hi viatja l'original d'una bessona.
  */
 import { recursOriginalDeBessona } from './assetResolver.js';
 

@@ -127,9 +127,10 @@ fixaBaseRecursos(baseDeLScriptActual());
    l'original i, per a una carpeta externa, l'origen extern en lloc de la base
    del paquet. Les dades no canvien mai (el cens, les llavors i les files del
    port continuen nomenant l'original); només el que es demana.
-   Sense política (socdepoble.org, el natiu, les proves) tot resol com sempre
-   (Llei del Píxel); l'autònom en porta una sense origen extern, només amb
-   les bessones (D3). Una política mal formada no s'aplica. */
+   Sense política (socdepoble.org, les proves) tot resol com sempre (Llei
+   del Píxel); l'autònom en porta una sense origen extern, només amb les
+   bessones (D3), i l'app nativa, la de l'autònom (vite.natiu.config.js,
+   Fase C 261019_2115). Una política mal formada no s'aplica. */
 let politicaActual = null;
 
 const RE_ORIGINAL = /^assets\/(?:[^/]+\/)*[^/]+\.(?:jpe?g|png)$/i;
@@ -175,7 +176,7 @@ export function origenDeMitjansExterns() {
   return politicaActual?.origen || '';
 }
 
-/** Cert si hi ha una política de mitjans vigent (el paquet del directori o l'autònom). */
+/** Cert si hi ha una política de mitjans vigent (el paquet del directori, l'autònom o l'app nativa). */
 export function hiHaPoliticaDeMitjans() {
   return politicaActual !== null;
 }
@@ -200,8 +201,8 @@ export function recursOriginalDeBessona(url) {
 }
 
 /* Revisió adversarial (261019) · La clau de l'entorn i no una global: Vite
-   la substituïx pel valor segellat als builds del directori i de l'autònom
-   i, als que no en porten (el natiu, socdepoble.org), per undefined. Cap
+   la substituïx pel valor segellat als builds del directori, de l'autònom i
+   del natiu i, als que no en porten (socdepoble.org), per undefined. Cap
    amfitrió no pot instal·lar una política des de la pàgina (Model B: els
    orígens els tria i els segella Sóc de Poble). Fora de Vite (node --test)
    import.meta.env no existix: llavors tampoc no hi ha política. */

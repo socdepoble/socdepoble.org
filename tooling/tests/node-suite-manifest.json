@@ -62,6 +62,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/botigues.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable dels scripts de pujada a les botigues (scripts/botigues/): peces pures, fitxers temporals fora del repositori i git de només lectura; cap compilació, signatura ni pujada, i cap crida a xcodebuild, altool, gradle, keytool ni fastlane (el preflight rep consultes fingides)."
+    },
+    {
       "path": "tests/canonada-generats.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
