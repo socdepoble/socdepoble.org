@@ -35,19 +35,6 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
-- [[261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]]
-- [[261019_1240_auditoria_contrast_gauntlet_seguretat_i_superadmin_gemini]]
-- [[261018_2315_auditoria_claude]]
-- [[261018_2300_auditoria_creuada_claude_i_superadmin_gemini]]
-- [[261018_2256_auditoria_codex_creuada_claude_i_superadministracio]]
-- [[261018_2045_auditoria_claude]]
-- [[261018_2030_auditoria_gemini]]
-- [[261018_2030_auditoria_codex]]
-- [[261018_2000_prompt_claude_gemini_capacitats_matrix_i_poda]]
-- [[261018_2000_pla_implementacio_capacitats_matrix_i_poda_wiki]]
-- [[261018_1718_auditoria_perfil_public_multimedia_i_poble]]
-- [[261018_1605_prompt_claude_gemini_perfil_public_i_multimedia]]
-- [[261018_1605_pla_implementacio_perfil_public_multimedia_i_poble]]
 - [[261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -777,6 +764,18 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261019_Sessio_Gauntlet_i_WP/261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_1605_pla_implementacio_perfil_public_multimedia_i_poble]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_1605_prompt_claude_gemini_perfil_public_i_multimedia]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_1718_auditoria_perfil_public_multimedia_i_poble]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2000_pla_implementacio_capacitats_matrix_i_poda_wiki]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2000_prompt_claude_gemini_capacitats_matrix_i_poda]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2030_auditoria_codex]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2030_auditoria_gemini]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2045_auditoria_claude]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2256_auditoria_codex_creuada_claude_i_superadministracio]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2300_auditoria_creuada_claude_i_superadmin_gemini]]
+- [[../90_arxiu_historic/261018_Sessio_Perfil_i_Gauntlet/261018_2315_auditoria_claude]]
 - [[../90_arxiu_historic/261018_1220_pla_implementacio_sessio_usuari_i_poda]]
 - [[../90_arxiu_historic/261018_1220_prompt_claude_codex_sessio_i_poda]]
 - [[../90_arxiu_historic/261018_1241_auditoria_gemini4]]
