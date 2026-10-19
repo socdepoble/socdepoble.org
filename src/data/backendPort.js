@@ -136,6 +136,13 @@ export const getPublicUrl = asseguraMetode('getPublicUrl');
 export const resolveAsset = asseguraMetode('resolveAsset');
 export const promoteToPublic = asseguraMetode('promoteToPublic');
 
+/* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · La biblioteca
+   de fotos pròpies (capacitat 'mitjansPropis'). No és nucli ni part de
+   'mitjans': «Multimèdia» pregunta abans amb teCapacitat i, sense ella, només
+   pinta les fotos actives de la fitxa. */
+export const llistaElsMeusMitjans = asseguraMetode('llistaElsMeusMitjans');
+export const esborraElMeuMitja = asseguraMetode('esborraElMeuMitja');
+
 /* Fase 5 · Agenda */
 export const loadActesAgenda = asseguraMetode('loadActesAgenda');
 

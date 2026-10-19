@@ -122,6 +122,31 @@ export const CAPACITATS = Object.freeze({
     'resolveAsset',
     'promoteToPublic'
   ]),
+  /* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · La
+     biblioteca de fotos pròpies de l'apartat «Multimèdia» del Perfil.
+     Capacitat a banda a posta, i no dins de 'mitjans': el control de
+     capacitat parcial (backendPort.js) tombaria tot 'mitjans' en un backend
+     que només sap pujar, i la pujada d'avatars deixaria de funcionar.
+     Opcional: sense ella, «Multimèdia» només pinta les fotos actives de la
+     fitxa. La interfície ho pregunta amb teCapacitat('mitjansPropis').
+     Formes (config sempre l'últim):
+       llistaElsMeusMitjans(config) → Promise<Mitja[]>
+         Només les imatges de la persona de la sessió al bucket públic, de
+         més nova a més vella. [] sense sessió i en seed o local.
+       esborraElMeuMitja(ref, config) → Promise<void>
+         Esborra de veritat una foto de la biblioteca del Perfil i només
+         eixa: una ref 'sdp-media://mitjans/<poble>/<uid>/avatars/<fitxer>'
+         del poble resolt i de la persona de la sessió (Mitja.esborrable).
+     Mitja: { ref, ruta, nom, carpeta, creat (ISO o null), mida (bytes o
+     null), etag (sense cometes, o null), tipus (MIME o null), esborrable }.
+     Els errors porten `codi` (i el mateix a `code`) de CODI_MITJANS o
+     CODI_BACKEND_INABASTABLE (errorsBackend.js), o 'no-disponible' en seed
+     o local; el missatge, en valencià, mai porta la ruta ni el text cru del
+     proveïdor. */
+  mitjansPropis: Object.freeze([
+    'llistaElsMeusMitjans',
+    'esborraElMeuMitja'
+  ]),
   agenda: Object.freeze([
     'loadActesAgenda'
   ]),

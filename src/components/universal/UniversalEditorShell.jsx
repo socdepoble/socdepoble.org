@@ -268,11 +268,20 @@ export function UniversalEditorShell({
        onHeroEdit o onLogoEdit, una línia .sdp-camp__ajuda davall del botó en
        repòs, dins del seu mateix camp (el límit, dit abans de triar), i
        lligada al botó (aria-describedby). Mentre puja, AJUDA_IMATGE_PUJANT.
-       Sense la prop, res. */
+       Sense la prop, res.
+     · `ajudaNomesEnPujada` (ordre del Mestre, 18-10-2026, relleu del Pla
+       2000, punt 2: «lleva la línia dels 10 MB de davall del cercle») · Amb
+       la prop, cap ranura d'imatge no pinta cap línia d'ajuda VISIBLE en
+       repòs (ni `heroEditHelp`/`logoEditHelp` ni `ajudaAmbImatge`): el mateix
+       text queda només per al lector de pantalla (.sdp-nomes-lector), lligat
+       al botó (aria-describedby), perquè el límit es continue dient abans de
+       triar. Mentre la seua imatge puja, la línia visible de sempre,
+       AJUDA_IMATGE_PUJANT. Per defecte, false: el DOM de sempre, literal. */
   logoPujant = false,
   heroPujant = false,
   logoEditHelp = AJUDA_IMATGE_PER_DEFECTE,
   ajudaAmbImatge = null,
+  ajudaNomesEnPujada = false,
   statusIcon = null,
   /* T41 (ordre del Mestre, 260928) · La bola del món (o el cadenat) de la
      barra taronja és un <button> que obri el selector de visibilitat del
@@ -454,6 +463,7 @@ export function UniversalEditorShell({
     heroPujant,
     logoEditHelp,
     ajudaAmbImatge,
+    ajudaNomesEnPujada,
     statusIcon,
     onObriVisibilitat,
     etiquetaVisibilitat,
@@ -675,7 +685,7 @@ function ImageUploaderUI({
   image, handler, resolvedImage, isLogo,
   editLabel, editHelp, imgRef, potEnquadrar,
   triaFitxer, pujant = false, fontExistent, obriEnquadrament, onEdit,
-  ajudaAmbImatge = null, botoRef = null
+  ajudaAmbImatge = null, ajudaNomesEnPujada = false, botoRef = null
 }) {
   const idBase = useId();
   const altText = isLogo ? "Logotip" : "Capçalera";
@@ -685,6 +695,10 @@ function ImageUploaderUI({
   const uploadText = pujant ? AJUDA_IMATGE_PUJANT : editHelp;
   const ajudaEnRepos = onEdit && typeof ajudaAmbImatge === 'string' && ajudaAmbImatge.trim()
     ? (pujant ? AJUDA_IMATGE_PUJANT : ajudaAmbImatge) : null;
+  /* `ajudaNomesEnPujada` (el Perfil d'una persona o d'un agent: davall del
+     cercle de l'avatar) · en repòs, la línia només per al lector de pantalla;
+     mentre puja, la visible de sempre. Sense la prop, la classe de sempre. */
+  const classeAjuda = ajudaNomesEnPujada && !pujant ? 'sdp-nomes-lector' : 'sdp-camp__ajuda';
   const idAjuda = onEdit ? `${idBase}-ajuda` : undefined;
   /* Un fitxer triat mentre l'anterior encara puja no es processa: l'input es
      buida i el desat en curs continua sent l'únic. La capçalera amb
@@ -719,7 +733,7 @@ function ImageUploaderUI({
             onClick={onEdit ? () => onEdit({ acaba: handler.cancelEdit }) : handler.startEdit}>
             <ImageIcon size={16} aria-hidden="true" /> {editLabel}
           </button>
-          {ajudaEnRepos ? <p id={idAjuda} className="sdp-camp__ajuda">{ajudaEnRepos}</p> : null}
+          {ajudaEnRepos ? <p id={idAjuda} className={classeAjuda}>{ajudaEnRepos}</p> : null}
         </div>
       </>
     );
@@ -732,7 +746,7 @@ function ImageUploaderUI({
         onClick={() => (onEdit ? onEdit({ acaba: handler.cancelEdit }) : handler.fileInputRef.current?.click())}>
         <ImageIcon size={16} /> {editLabel}
       </button>
-      <p id={idAjuda} className="sdp-camp__ajuda">{uploadText}</p>
+      <p id={idAjuda} className={classeAjuda}>{uploadText}</p>
       {image && (
         <div className="sdp-alerta__accions">
           {/* T46 · Sense una font que es puga llegir (sdp-media sense resoldre), cap botó. */}
@@ -795,6 +809,7 @@ function useEditorShell({
   heroPujant = false,
   logoEditHelp = AJUDA_IMATGE_PER_DEFECTE,
   ajudaAmbImatge = null,
+  ajudaNomesEnPujada = false,
   statusIcon = null,
   onObriVisibilitat = null,
   etiquetaVisibilitat = '',
@@ -953,14 +968,14 @@ function useEditorShell({
         image={logoImage} handler={logoHandler} resolvedImage={resolvedLogoImage}
         isLogo={true} editLabel={logoEditLabel} editHelp={logoEditHelp}
         pujant={logoHandler.isUploading || Boolean(logoPujant)} onEdit={onLogoEdit}
-        ajudaAmbImatge={ajudaAmbImatge} botoRef={logoBotoRef}
+        ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={logoBotoRef}
       /> : null,
       heroComponent: <ImageUploaderUI
         image={heroImage} handler={heroHandler} resolvedImage={resolvedHeroImage}
         isLogo={false} editLabel={heroEditLabel} editHelp={heroEditHelp} imgRef={heroImgRef}
         potEnquadrar={potEnquadrar} triaFitxer={triaHero} pujant={pujant}
         fontExistent={fontExistent} obriEnquadrament={obriEnquadrament} onEdit={onHeroEdit}
-        ajudaAmbImatge={ajudaAmbImatge} botoRef={heroBotoRef}
+        ajudaAmbImatge={ajudaAmbImatge} ajudaNomesEnPujada={ajudaNomesEnPujada} botoRef={heroBotoRef}
       />,
       barActions: (
         <>

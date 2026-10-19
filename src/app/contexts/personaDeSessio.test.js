@@ -228,6 +228,27 @@ describe('front B · personaDeSessio pinta la pujada abans que la de Google', ()
     /* I la fila rellegida, ja sense foto, tampoc en porta cap. */
     expect(personaDeSessio(esborrat, perfilDe(esborrat, { ...FILA, avatar_url: '' })).avatar).toBeNull();
   });
+
+  /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu
+     del Pla 2000, punt 4) · la capçalera no fa mai d'avatar: llevar l'avatar
+     deixa la persona sense foto de la fila, encara que tinga capçalera. */
+  test('fila amb avatar_url buit però amb hero_url → cap avatar: la capçalera no en fa', () => {
+    const FOTO_HERO = '/assets/fotos/javi-llinares-samarreta-verda.jpg';
+    const filaAmbHero = { ...FILA, avatar_url: '', hero_url: FOTO_HERO };
+    const perfil = perfilDe(SENSE_METADADES, filaAmbHero);
+    expect(perfil.avatar).toBe('');
+    expect(personaDeSessio(SENSE_METADADES, perfil).avatar).toBeNull();
+  });
+
+  test('avatarDePersona amb Google identity_data quan no hi ha user_metadata → pren la foto de Google', () => {
+    const FOTO_GOOGLE = 'https://lh3.googleusercontent.com/avatar-javi';
+    const usuariGoogle = {
+      ...SENSE_METADADES,
+      user_metadata: {},
+      identities: [{ provider: 'google', identity_data: { picture: FOTO_GOOGLE } }]
+    };
+    expect(avatarDePersona(usuariGoogle)).toBe(FOTO_GOOGLE);
+  });
 });
 
 describe('mateixPerfil i pobleDeLaPertinenca', () => {

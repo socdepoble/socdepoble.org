@@ -1,7 +1,9 @@
 import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG, POBLE_FUNDACIONAL, clauFundacional } from '../../data/identitatsSeed.js';
 import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
+import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { menaDeFitxa } from './perfilCamps.js';
+import { formataPoble, llistaDePobles, poblePrincipal } from '../pobles/nomsDelPoble.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LA FITXA D'UNA IDENTITAT DEL PERFIL · funcions pures
@@ -112,6 +114,10 @@ export function avatarDeLaBarraDeFitxa(identitat, avatarResolt) {
  *     imatge de la fitxa tal qual, també el buit de «Llevar l'avatar»;
  *   · si no, la de la fitxa o, sense cap, la reserva de la identitat (per a
  *     la persona, la foto de la sessió: pla 261014_1450, front B).
+ * Pla 261018_1605 (Tasca 3, D6; ordre del Mestre, 18-10-2026) · Per a la
+ * persona, una foto pròpia guanya: si la de la fitxa no és pròpia (la de
+ * Google, p. ex.) i la de la identitat sí que ho és, la de la identitat. Un
+ * sol classificador, esFontImatgePropia (utils/sanitize.js).
  * `fitxa` és el document de la fitxa amb l'esborrany (documentDeFitxa);
  * `camps`, l'esborrany de la cua (useAutodesament). Torna la font crua: una
  * referència opaca (sdp-media://) la resol cada superfície pel port, i el PNG
@@ -120,6 +126,14 @@ export function avatarDeLaBarraDeFitxa(identitat, avatarResolt) {
 export function avatarDeLaFitxa(fitxa, camps, identitat) {
   const imatge = fitxa?.logoImage || '';
   if (Object.hasOwn(camps || {}, 'logoImage')) return imatge;
+  if (
+    menaDeFitxa(identitat) === 'persona'
+    && imatge
+    && !esFontImatgePropia(imatge)
+    && esFontImatgePropia(identitat?.avatar)
+  ) {
+    return identitat.avatar;
+  }
   return imatge || identitat?.avatar || '';
 }
 
@@ -163,6 +177,12 @@ export function potEditarFitxa(identitat) {
  *   · una organització, pel seu id, com a entitat o com a grup (identitat.mena);
  *   · un agent IA no és cap de les tres: ''.
  * El poble desat sempre mana: qui crida només hi cau sense poble propi.
+ * Pla 261018_1605 (Tasca 0, D7; integració) · Ací no entra el correu: el de
+ * `dades.email` el copia PerfilContext de la sessió sense dir si GoTrue l'ha
+ * confirmat, i un DTO sense les claus de GoTrue saltaria la regla de
+ * confirmació (esComptePersonaPilot). El compte remot de la persona pilot ja
+ * porta el poble canònic a la fila (hidrataPerfilPersonaPilot, amb l'usuari
+ * de sessió sencer).
  */
 export function pobleDeReservaDeFitxa(identitat) {
   const mena = menaDeFitxa(identitat);
@@ -173,9 +193,19 @@ export function pobleDeReservaDeFitxa(identitat) {
   return clauFundacional(perfil) ? POBLE_FUNDACIONAL : '';
 }
 
+/* Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Diversos
+   pobles d'una persona viuen a la mateixa columna de text de sempre
+   (profiles.town_name), com la cadena canònica 'A · B': el PRIMER és el poble
+   principal. Cap columna nova (D10). Correcció de la revisió · llistaDePobles,
+   formataPoble i poblePrincipal viuen a sections/pobles/nomsDelPoble.js (purs,
+   sense el Perfil: també els lligen les notes i la pestanya «Gent de …»), i
+   ací es tornen a exportar perquè cap importació del Perfil no canvie. */
+export { formataPoble, llistaDePobles, poblePrincipal };
+
 /**
  * El poble de la barra taronja i de la targeta:
- *   · la persona, el seu (dades.town_name);
+ *   · la persona, el seu (dades.town_name, en la forma canònica: 'A · B' si
+ *     en té més d'un);
  *   · una organització, el seu (dades.town_name), o cap: mai el de la persona
  *     (decisió del Mestre, 261008: l'organització tria el seu poble);
  *   · un agent IA, el seu o, si no en té, el de la persona que l'administra
@@ -185,12 +215,13 @@ export function pobleDeReservaDeFitxa(identitat) {
  * (pobleDeReservaDeFitxa), com a la fitxa pública. La resta, com sempre.
  */
 export function pobleDeFitxa(identitat, identitats = []) {
-  const propi = identitat?.dades?.town_name;
+  const propi = formataPoble(identitat?.dades?.town_name);
   const mena = menaDeFitxa(identitat);
-  if (mena !== 'agent') return propi ? String(propi) : pobleDeReservaDeFitxa(identitat);
-  return String(propi
-    || (identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name
-    || '');
+  if (mena === 'agent') {
+    const persona = (identitats || []).find((i) => i?.mena === 'persona');
+    return propi || formataPoble(persona?.dades?.town_name);
+  }
+  return propi || pobleDeReservaDeFitxa(identitat);
 }
 
 /**

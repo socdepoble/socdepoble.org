@@ -48,9 +48,11 @@ import {
 } from '../../config/navigation.js';
 import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import {
-  PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau
+  ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esIAIA,
+  fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
 /* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
    és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
@@ -168,6 +170,12 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const { senseSessio } = useXat();
   const modeDades = normalizeBackendConfig(externalConfig).dataMode;
   const [estat, setEstat] = useState({ id: null, status: 'loading', perfil: null });
+  /* Auditoria de seguretat 261019 (F6) · La fitxa del projecte oberta per id
+     (/empresa/<uuid>) ja no es registra sola (vegeu la càrrega, davall): la
+     reconeix la resolució de l'app, pel slug i dins del poble actiu, i esta
+     subscripció la torna a pintar quan l'id arriba, com la boina del Mur
+     (TargetaDelMur) i el lector del MAS (PublicacioDetall). */
+  useEntitatDelProjecte();
 
   useEffect(() => {
     let viu = true;
@@ -228,8 +236,16 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
          quadrat en lloc del logotip rectangular. La fitxa registra ella
          mateixa el perfil que ha llegit, abans de pintar-lo: és
          idempotent i reconeix el projecte pel slug declarat, mai pel nom. Un
-         perfil del catàleg no porta slug i no hi fa res. */
-      registraEntitatDelProjecte(perfil);
+         perfil del catàleg no porta slug i no hi fa res.
+         Auditoria de seguretat 261019 (F6) · Només quan la fitxa s'ha demanat
+         pel slug declarat: eixa cerca, l'adaptador la limita al poble actiu
+         (supabase/perfils.js), com la resolució de l'app
+         (resolEntitatDelProjecte). Una fitxa demanada per id travessa pobles,
+         i el slug només és únic dins d'un poble: una empresa d'un altre poble
+         amb el slug «socdepoble», oberta per /empresa/<uuid>, es registrava
+         com el projecte i se'n duia la marca i la identitat oficial. Per id,
+         el projecte el registra la resolució de l'app. */
+      if (viu && clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(perfil);
       if (viu) setEstat({ id: clau, status: 'ready', perfil });
     })();
     return () => { viu = false; };
@@ -242,8 +258,9 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
      d'una entitat porta dalt el seu logotip. L'entitat del projecte es
      reconeix per l'identificador (rutaDAutoria torna la seua ruta,
      esRutaDelProjecte; des de l'Onada 8, el seu perfil; l'id remot
-     el registra la mateixa càrrega d'esta fitxa, a més de l'AppDataLoader),
-     mai pel nom: el seu logotip
+     el registra la resolució de l'app, pel slug i dins del poble actiu, i la
+     càrrega d'esta fitxa quan es demana pel slug: auditoria de seguretat
+     261019, F6), mai pel nom: el seu logotip
      rectangular, clar i fosc. Una altra entitat, el seu logo_url (l'avatar
      del perfil) resolt ací, que pot ser un sdp-media://: una sola imatge per
      als dos temes. Un grup no en porta (com abans).

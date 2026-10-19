@@ -22,6 +22,7 @@
  * i dibuixaDreta, orientacio.js): el retall ix sempre d'un raster ja dret, i
  * l'EXIF que hi torna la pujada porta l'orientació 1.
  */
+import { esFontImatgePropia } from '../../../utils/sanitize.js';
 import { llegixOrientacioImatge } from './exif.js';
 import { ErrorImatge, comprovaDimensions, comprovaPes, esHeic } from './limits.js';
 import {
@@ -31,9 +32,17 @@ import {
 const esBlob = (valor) => typeof Blob !== 'undefined' && valor instanceof Blob;
 const cancellada = () => new DOMException('Càrrega cancel·lada.', 'AbortError');
 
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2; correcció de la
+   revisió, «sense referent») · Re-enquadrar la foto que ja hi ha pot demanar
+   una adreça de fora (la foto del compte de Google de la sessió): com
+   AvatarDeCapcalera i Miniatura, que la pinten sense referent, es demana sense
+   referent (referrerPolicy 'no-referrer'). Una font pròpia (esFontImatgePropia:
+   un camí de casa, el nostre servidor de fitxers) es demana com sempre. */
 async function blobDe(font, signal) {
   if (esBlob(font)) return font;
-  const resposta = await fetch(font, { mode: 'cors', credentials: 'omit', signal });
+  const peticio = { mode: 'cors', credentials: 'omit', signal };
+  if (!esFontImatgePropia(font)) peticio.referrerPolicy = 'no-referrer';
+  const resposta = await fetch(font, peticio);
   if (!resposta.ok) throw new Error(`No s'ha pogut descarregar la imatge (${resposta.status}).`);
   return resposta.blob();
 }

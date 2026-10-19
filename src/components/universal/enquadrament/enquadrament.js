@@ -111,6 +111,13 @@ export function midaSortida(rect, maxim = MIDA_SORTIDA) {
 /** Onada 4, T3a · El format de sèrie quan el pare demana `sortida` (RETALLADOR §1). */
 export const FORMAT_SORTIDA = 'image/webp';
 const FORMATS_SORTIDA = Object.freeze(['image/webp', 'image/jpeg', 'image/png']);
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2; correcció F3 de
+   la revisió) · `sortida.format` = FORMAT_DE_LA_FONT: el format el diu la
+   imatge carregada (el tipus del blob baixat), amb el criteri de
+   tipusDeSortida. Re-enquadrar la foto que ja hi ha (una adreça, que no diu el
+   seu tipus abans de carregar-se) conserva així la transparència d'un PNG o
+   d'un WebP en lloc d'eixir en JPEG amb fons blanc. Cap altre format canvia. */
+export const FORMAT_DE_LA_FONT = 'origen';
 
 /* Onada 4 (retallador senzill, 261008) · Una mida exacta vàlida (dos enters
    positius) o null: una mida a mitges no s'aplica a mitges. */
@@ -143,7 +150,8 @@ export function opcionsSortida(rect, tipusOriginal, sortida = null) {
   const opcions = {
     amplada: exacta ? exacta.amplada : Math.max(1, Math.round(rect.w * k)),
     alcada: exacta ? exacta.alcada : Math.max(1, Math.round(rect.h * k)),
-    tipus: FORMATS_SORTIDA.includes(sortida.format) ? sortida.format : FORMAT_SORTIDA,
+    tipus: sortida.format === FORMAT_DE_LA_FONT ? tipusDeSortida(tipusOriginal)
+      : FORMATS_SORTIDA.includes(sortida.format) ? sortida.format : FORMAT_SORTIDA,
   };
   if (Number.isFinite(sortida.qualitat) && sortida.qualitat > 0 && sortida.qualitat <= 1) opcions.qualitat = sortida.qualitat;
   return opcions;

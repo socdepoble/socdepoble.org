@@ -62,7 +62,13 @@ const CAMPS_DE_TEXT_DE_VARIACIO = Object.freeze(['name', 'price', 'description',
    descarta la referència opaca sdp-media:// (REFERENCIA_OPACA) abans
    d'esImatgePropiaDelDetall: una variació amb sdp-media:// es pinta com sense
    foto. Ningú no la resol encara pel port de mitjans; fer-ho demana un
-   component nou amb espècimen i és una pregunta oberta al Mestre (Decisió 3). */
+   component nou amb espècimen i és una pregunta oberta al Mestre (Decisió 3).
+   Derogat en part per l'ordre del Mestre (18-10-2026, relleu del Pla 2000,
+   punt 1; auditoria Codex 2030, §3.2) · El selector de variacions del detall
+   (detailSectionMeta.jsx · FotoDeLaVariacio) ja la resol pel port
+   (useResolvedAsset) abans del filtre d'imatges pròpies, i només pinta la URL
+   que en torna; mai l'esquema opac cru. Este mapejador no canvia: la
+   conserva igual. */
 const REFERENCIA_DE_MITJANS = /^sdp-media:\/\/(?:mitjans_privats|mitjans)\//i;
 
 function imatgeDeVariacio(image) {
@@ -89,15 +95,55 @@ function avatarDeLaPublicacio(avatar) {
   return fotoDelBucketPublic(s) || validaUrl(s);
 }
 
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1; auditoria Codex
+   2030, R6 i §3.2) · Una variació es tria pel seu id ESTABLE, mai per la
+   posició ni pel nom: reordenar o reanomenar les variacions no canvia quina
+   està triada. L'id s'assigna una vegada (la llavor, l'editor) i este
+   mapejador no l'inventa ni el recalcula: només el conserva si és curt i
+   segur, amb la forma d'un id de poble (minúscules ASCII i xifres separades
+   per guions, SLUG_DE_POBLE) i com a molt MAXIM_ID_DE_VARIACIO caràcters.
+   Qualsevol altra cosa no viatja i la variació queda com una de llegat (sense
+   id). La mateixa regla la llig el detall del Mercat
+   (mercat/variacionsDeProducte.js) per a les files que no passen per ací
+   (app_content). */
+const MAXIM_ID_DE_VARIACIO = 64;
+
+/** L'id estable d'una variació en la seua forma canònica, o null si no és un id net. */
+export function idDeVariacio(valor) {
+  if (typeof valor !== 'string') return null;
+  const id = valor.trim().toLowerCase();
+  return id.length <= MAXIM_ID_DE_VARIACIO && SLUG_DE_POBLE.test(id) ? id : null;
+}
+
 function netejaVariacio(variacio) {
   if (typeof variacio === 'string') return netejaText(variacio);
   if (!variacio || typeof variacio !== 'object' || Array.isArray(variacio)) return null;
   const neta = {};
+  const id = idDeVariacio(variacio.id);
+  if (id) neta.id = id;
   for (const camp of CAMPS_DE_TEXT_DE_VARIACIO) {
     if (variacio[camp] != null) neta[camp] = netejaText(variacio[camp]);
   }
   if (variacio.image != null) neta.image = imatgeDeVariacio(variacio.image);
   return neta;
+}
+
+/* Pla 2000 (punt 1) · L'id és únic dins del producte: si dos variacions
+   porten el mateix, la primera el conserva i la segona viatja sense (de
+   llegat). Cap variació es perd. */
+function netejaVariacions(variacions) {
+  if (!Array.isArray(variacions)) return [];
+  const ids = new Set();
+  return variacions.map((v) => netejaVariacio(v)).filter((v) => v !== null).map((v) => {
+    if (typeof v !== 'object' || !v.id) return v;
+    if (ids.has(v.id)) {
+      const senseId = { ...v };
+      delete senseId.id;
+      return senseId;
+    }
+    ids.add(v.id);
+    return v;
+  });
 }
 
 export function mapSectionSubmissionToItem(submission) {
@@ -175,7 +221,7 @@ export function mapSectionSubmissionToItem(submission) {
       image: validaUrl(baseItem.image || imageSrc),
       category_slug: netejaText(baseItem.category_slug || 'connectat'),
       tag: netejaText(baseItem.tag || 'Connectat'),
-      variations: Array.isArray(baseItem.variations) ? baseItem.variations.map((v) => netejaVariacio(v)).filter((v) => v !== null) : [],
+      variations: netejaVariacions(baseItem.variations),
       searchText: netejaText(baseItem.searchText || buildSearchText([
         baseItem.title, baseItem.description, baseItem.seller, baseItem.tag, baseItem.sectionId
       ]))
@@ -261,11 +307,34 @@ export function mapSectionSubmissionToItem(submission) {
    el llig per a no repetir un article (indexCerca.js · cercaEntrades): amb
    ell al payload, un veí lligaria la seua publicació a un producte o a un
    poble d'altri i la faria desaparéixer de la vista «tot». Cap escriptor
-   legítim de publicacions n'escriu. */
+   legítim de publicacions n'escriu.
+   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3; auditoria Codex
+   2030, §1.5; correcció F1 de la revisió) · `author_agent_id` i
+   `authorAgentId` (l'agent IA titular d'una foto, que llig «Multimèdia» del
+   Perfil · titularDelMitja) tampoc: cap columna del servidor no els valida, i
+   amb ells al payload un veí posava la seua foto a la galeria de IAIA MarIA
+   (i la traia de la seua). Només l'administració (app_content) el pot dir.
+   Sense cap null explícit (una publicació legítima arriba igual que abans):
+   si una fila d'un veí reprén l'id d'un element de l'administració, mergeById
+   n'hereta l'agent, però la fila porta sempre la seua propietària
+   (owner_user_id és NOT NULL i l'RLS l'iguala a auth.uid()), i titularDelMitja
+   (profile/DetallMultimedia.jsx) no reconeix cap agent en un element amb
+   persona propietària.
+   Auditoria de seguretat 261019 (F11) · `autor` i `source` (qui va fer la
+   foto, que el visor de l'Arxiu pinta com a «Autor»: panellDeLaFoto.js ·
+   autorDeclarat) tampoc: amb ells un veí signava la seua foto com «IAIA
+   MarIA», un ajuntament o un altre veí. Cap escriptor legítim de
+   publicacions no n'escriu (publishNote no en porta; el servidor ja lleva
+   `author`, trg_force_submission_author), i sense ells el visor diu
+   «Desconegut», que és el que se'n sap. Revisió adversarial · Tampoc
+   `srcDelPort`: és la URL que el port torna per a una referència opaca, i la
+   posa el sistema en memòria (VisorDePublicacio, DetallMultimedia). Al
+   payload, el visor de l'Arxiu la pintava abans que `src`: un veí hi mostrava
+   la seua foto sobre una imatge del paquet classificada com a d'IA. */
 const CLAUS_D_AUTORITAT = Object.freeze([
   'author_org_id', 'authorOrgId', 'author_entity_id', 'author_id', 'author_user_id',
-  'owner_user_id', 'ownerUserId', 'isSystem', 'isAvis', 'is_pinned', 'pinned_position',
-  'mainHref', 'slug', 'article'
+  'owner_user_id', 'ownerUserId', 'author_agent_id', 'authorAgentId', 'isSystem', 'isAvis',
+  'is_pinned', 'pinned_position', 'mainHref', 'slug', 'article', 'autor', 'source', 'srcDelPort'
 ]);
 
 /* La insígnia «Sistema» (sdp-badge-system) és de les pàgines del sistema i de
@@ -286,9 +355,114 @@ function classeDEtiqueta(className) {
    (un enllaç a fora amb aparença d'etiqueta oficial). Un text pla es queda
    igual. Sense classe admesa, la targeta hi posa la de sèrie (sdp-badge-tag). */
 function etiquetaDePublicacio(label) {
-  if (!label || typeof label !== 'object') return label;
+  /* Auditoria de seguretat 261019 (F3) · Una etiqueta és un text pla (que es
+     queda igual; un número, el seu text) o un objecte amb un text de cadena
+     (textDelPayload, baix). La que no en porta cap (null, un booleà, un text
+     que és un objecte) no viatja: abans, un null tombava la targeta
+     (UniversalCard · Etiqueta, label.text) i un text que no era cadena, el
+     filtre ?category= del Mur (MurSection · perCategoria). */
+  if (typeof label === 'string') return label;
+  if (!label || typeof label !== 'object') return textDelPayload(label);
+  const text = textDelPayload(label.text);
+  if (text === null) return null;
   const classe = classeDEtiqueta(label.className);
-  return { text: label.text, ...(classe ? { className: classe } : {}) };
+  return { text, ...(classe ? { className: classe } : {}) };
+}
+
+/* Auditoria de seguretat 261019 (F3, F7 i F9) · Les claus que les vistes
+   pinten o tracten com a text (un fill de React, String(), un join, un
+   toLowerCase, una ruta) només viatgen com a text. El payload és un jsonb que
+   el veí escriu directament per l'API: un objecte o una llista on toca una
+   cadena tombava la llista del Mercat (UniversalCard: «Objects are not valid
+   as a React child»), /multimedia (Cella) i, des de MultimediaProvider, que és
+   damunt de la frontera d'error de la ruta, l'aplicació sencera; un objecte
+   sense conversió a primitiu ({"toString":0}) ho feia fins i tot dins d'un
+   String(); un `sectionId` objecte, /cerca (getSectionItemPath), i un títol
+   numèric, la targeta d'un acte (EventCard, title.toLowerCase()). Un número
+   finit es queda com el seu text; un objecte, una llista o un booleà no
+   viatgen, i la vista hi posa la reserva de quan falta. El preu admet també
+   un número tal qual, i `revision` (mergeById la compara) només un número.
+   L'únic escriptor legítim (NotesContext · publishNote, per
+   mapSectionSubmissionToItem) hi escriu sempre cadenes: el contingut real
+   arriba igual que abans.
+   Les claus d'imatge admeten també una llista (firstAsset, getFirstImage): un
+   element que no és primitiu hi queda com a null, que les vistes ja lligen
+   com a «sense foto». Les etiquetes, les variacions i les etiquetes de nota
+   (tags) que no són una llista no viatgen (les vistes en fan map o en compten
+   la llargària), i una etiqueta de nota que no és primitiva tampoc. La
+   geolocalització només porta lat, lng i altitud primitius (formataGps en fa
+   Number()). L'origen d'una connexió compartida passa per origenPublic
+   (origenNota.js), la mateixa regla de l'escriptura: un origen ja net no
+   canvia, i un que la regla no reconeix (o que no es deixa llegir) no
+   viatja. */
+const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
+  'title', 'name', 'subtitle', 'post_subtitle', 'lead', 'excerpt', 'description', 'summary', 'content',
+  'plainText', 'body', 'entradilla', 'author', 'author_name', 'seller', 'price', 'author_location',
+  'location', 'population', 'town_name', 'provincia', 'comarca', 'tag', 'category_slug', 'category',
+  'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
+  'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId'
+]);
+const CLAUS_D_IMATGE_DEL_PAYLOAD = Object.freeze([
+  'image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image'
+]);
+const CLAUS_DE_LLISTA_DEL_PAYLOAD = Object.freeze(['labels', 'variations', 'tags']);
+const CAMPS_DE_GEOLOCALITZACIO = Object.freeze(['lat', 'lng', 'altitud']);
+
+function esObjecte(valor) {
+  return valor !== null && typeof valor === 'object';
+}
+
+const esNumeroFinit = (valor) => typeof valor === 'number' && Number.isFinite(valor);
+
+/* El text d'un valor del payload: una cadena, tal qual; un número finit, el
+   seu text; qualsevol altra cosa, null. */
+function textDelPayload(valor) {
+  if (typeof valor === 'string') return valor;
+  return esNumeroFinit(valor) ? String(valor) : null;
+}
+
+function origenLlegible(origen) {
+  try {
+    return origenPublic(origen);
+  } catch {
+    return null;
+  }
+}
+
+function netejaTipusDelPayload(dades) {
+  for (const clau of CLAUS_DE_TEXT_DEL_PAYLOAD) {
+    const valor = dades[clau];
+    if (valor == null || typeof valor === 'string') continue;
+    if (clau === 'price' && esNumeroFinit(valor)) continue;
+    const text = textDelPayload(valor);
+    if (text === null) delete dades[clau];
+    else dades[clau] = text;
+  }
+  if (Object.hasOwn(dades, 'revision') && !esNumeroFinit(dades.revision)) delete dades.revision;
+  for (const clau of CLAUS_D_IMATGE_DEL_PAYLOAD) {
+    const valor = dades[clau];
+    if (Array.isArray(valor)) dades[clau] = valor.map((element) => (esObjecte(element) ? null : element));
+    else if (esObjecte(valor)) delete dades[clau];
+  }
+  for (const clau of CLAUS_DE_LLISTA_DEL_PAYLOAD) {
+    if (Object.hasOwn(dades, clau) && dades[clau] != null && !Array.isArray(dades[clau])) delete dades[clau];
+  }
+  if (Array.isArray(dades.tags)) dades.tags = dades.tags.filter((etiqueta) => !esObjecte(etiqueta));
+  if (Object.hasOwn(dades, 'geolocalitzacio')) {
+    const geo = dades.geolocalitzacio;
+    if (esObjecte(geo) && !Array.isArray(geo)) {
+      dades.geolocalitzacio = Object.fromEntries(CAMPS_DE_GEOLOCALITZACIO
+        .filter((camp) => geo[camp] != null && !esObjecte(geo[camp]))
+        .map((camp) => [camp, geo[camp]]));
+    } else if (geo != null) {
+      delete dades.geolocalitzacio;
+    }
+  }
+  if (Object.hasOwn(dades, 'origen') && dades.origen != null) {
+    const origen = origenLlegible(dades.origen);
+    if (origen) dades.origen = origen;
+    else delete dades.origen;
+  }
 }
 
 /**
@@ -307,7 +481,8 @@ export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedA
   const dades = payload && typeof payload === 'object' && !Array.isArray(payload) ? { ...payload } : {};
   for (const clau of CLAUS_D_AUTORITAT) delete dades[clau];
   if (dades.type === 'sistema') delete dades.type;
-  if (Array.isArray(dades.labels)) dades.labels = dades.labels.map(etiquetaDePublicacio);
+  netejaTipusDelPayload(dades);
+  if (Array.isArray(dades.labels)) dades.labels = dades.labels.map(etiquetaDePublicacio).filter(Boolean);
   return {
     ...dades,
     id,

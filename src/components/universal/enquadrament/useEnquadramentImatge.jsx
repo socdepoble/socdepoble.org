@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { DialegEnquadrament } from './DialegEnquadrament.jsx';
-import { tipusDeSortida } from './enquadrament.js';
+import { FORMAT_DE_LA_FONT, tipusDeSortida } from './enquadrament.js';
 import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujadaImatge.js';
 
 /**
@@ -42,6 +42,19 @@ import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujada
  *     (useEnquadramentAvatar conserva així el retallador T46 de l'avatar).
  *   Torna { obri(font) → boolean, obert, tanca, dialeg }. `font` és un File o
  *   una adreça ja resolta (l'espècimen del catàleg): una adreça no es valida.
+ *
+ * Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Dues peces
+ * opcionals; sense elles, el de sempre:
+ *   extres · les props opcionals noves del diàleg (onCanviaFoto, ajudaFoto,
+ *     onLleva, etiquetaLleva, etiquetaDesa: DialegEnquadrament), tal qual.
+ *   canvia(font) → missatge | null (també tornat) · una foto nova en la
+ *     MATEIXA finestra oberta (validada com la d'obri; una adreça no es
+ *     valida): null si s'hi obri; si no, el missatge, i la finestra continua
+ *     amb la d'abans. Sense finestra oberta no fa res (null).
+ *   obri(font, { formatDeLaFont: true }) (correcció F3 de la revisió) · per a
+ *     la imatge que ja hi ha (una adreça): el retall ix en el format de la
+ *     imatge carregada (FORMAT_DE_LA_FONT), no en JPEG, i un PNG o un WebP
+ *     amb transparència no torna amb fons blanc. Sense l'opció, el de sempre.
  */
 
 /** Pes màxim de la foto que es tria per a una fitxa (el retall que ix és molt més menut). */
@@ -135,7 +148,7 @@ export function configDeForma(forma) {
   };
 }
 
-export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnquadrat, onError } = {}) {
+export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnquadrat, onError, extres = null } = {}) {
   const cfg = config || configDeForma(forma);
   const cfgRef = useRef(cfg);
   cfgRef.current = cfg;
@@ -147,24 +160,38 @@ export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnqua
   const errorRef = useRef(onError);
   errorRef.current = onError;
 
-  const obri = useCallback((font) => {
+  const obri = useCallback((font, { formatDeLaFont = false } = {}) => {
     const avis = typeof font === 'string' && font ? null : cfgRef.current.valida(font);
     if (avis) {
       errorRef.current?.(avis);
       return false;
     }
-    setSessio({ font });
+    setSessio(formatDeLaFont && typeof font === 'string' ? { font, formatDeLaFont: true } : { font });
     return true;
   }, []);
 
   const tanca = useCallback(() => setSessio(null), []);
 
+  /* Pla 2000 (punt 2) · Una sessió nova amb la foto nova: el diàleg és el
+     mateix (cap remuntatge: el focus de tornada i el modal es queden), i un
+     desat que acabara tard no tancaria la de després. */
+  const obertaRef = useRef(false);
+  obertaRef.current = Boolean(sessio);
+  const canvia = useCallback((font) => {
+    if (!obertaRef.current) return null;
+    const avis = typeof font === 'string' && font ? null : cfgRef.current.valida(font);
+    if (avis) return avis;
+    setSessio((actual) => (actual ? { font } : actual));
+    return null;
+  }, []);
+
   const dialeg = sessio ? (
     <DialegEnquadrament
+      {...extres}
       font={sessio.font}
       formatInicial={cfg.formatInicial}
       formats={cfg.formats}
-      sortida={cfg.sortida(sessio.font)}
+      sortida={sessio.formatDeLaFont ? { ...cfg.sortida(sessio.font), format: FORMAT_DE_LA_FONT } : cfg.sortida(sessio.font)}
       permetGeolocalitzacio={false}
       senzill={cfg.senzill}
       mascara={cfg.mascara}
@@ -181,7 +208,7 @@ export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnqua
     />
   ) : null;
 
-  return { obri, obert: Boolean(sessio), tanca, dialeg };
+  return { obri, obert: Boolean(sessio), tanca, canvia, dialeg };
 }
 
 export default useEnquadramentImatge;

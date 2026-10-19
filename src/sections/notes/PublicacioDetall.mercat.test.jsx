@@ -105,16 +105,24 @@ describe('Esmena 3 · la Samarreta al lector del MAS, com la seua pàgina', () =
     expect(srcs).not.toContain(QUADRAT_VERD_PNG);
   });
 
-  test('les variacions, amb el seu preu, davall de «Obri al Mercat»; la descripció una vegada', () => {
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · Expectativa
+     actualitzada a propòsit: cap targeta per variació (.note-card); les
+     variacions són les píndoles del selector (radiogroup, per l'id estable) i
+     una sola caixa de compra amb la variant triada i el seu preu. */
+  test('les variacions, al selector de la caixa de compra, davall de «Obri al Mercat»; la descripció una vegada', () => {
     const element = samarreta();
     const container = pinta(element);
-    const targetes = [...container.querySelectorAll('.note-card')];
-    expect(targetes.map((targeta) => targeta.querySelector('h3').textContent)).toEqual(['Edició Gris Plom', 'Edició Verda']);
-    for (const targeta of targetes) expect(targeta.querySelector('.sp-card-price').textContent).toBe('15.00€');
+    expect(container.querySelector('.note-card')).toBeNull();
+    const grup = within(container).getByRole('radiogroup', { name: 'Tria la variant' });
+    const radios = within(grup).getAllByRole('radio');
+    expect(radios.map((radio) => radio.value)).toEqual(['gris-plom', 'verda-pi']);
+    expect(radios.map((radio) => radio.labels[0].textContent)).toEqual(['Edició Gris Plom', 'Edició Verda Esgotat']);
+    expect(container.querySelectorAll('.sdp-compra .sp-card-price')).toHaveLength(1);
+    expect(container.querySelector('.sdp-compra .sp-card-price').textContent).toBe('15.00€');
     expect(vegades(container.textContent, element.description)).toBe(1);
     // El cos va darrere del botó que porta a la publicació.
     const boto = screen.getByRole('button', { name: 'Obri al Mercat' });
-    expect(boto.compareDocumentPosition(targetes[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(boto.compareDocumentPosition(grup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test('el subtítol es llig una sola vegada: l’entradilla ja no el repetix', () => {

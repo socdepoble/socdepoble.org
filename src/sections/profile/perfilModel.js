@@ -1,6 +1,6 @@
 import { Bot, Building2, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
-import { avatarDeLaFitxa, potEditarFitxa } from './fitxaDePerfil.js';
+import { avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 import { documentDeFitxa } from './perfilCamps.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -28,12 +28,24 @@ export const idAplicacio = (id) => `app-${id}`;
    quadrat de la fitxa (sdp-fitxa-emoji-xl) i el rail plegat, menut
    (NavGlyph). «La fitxa» es queda amb l'avatar de qui és (sdp-pedra-seca
    §11). 👁️ i 🛡️ porten el selector U+FE0F: sense, emojiSol els rebutja i es
-   pintarien com a text menut. Tots quatre són d'Unicode 6-7 (Safari 16). */
+   pintarien com a text menut. Tots quatre són d'Unicode 6-7 (Safari 16).
+   Pla 261018_1605 (Tasca 4) · 🖼️ «Multimèdia» (Unicode 7), també amb U+FE0F. */
 export const ICONES_APARTATS = Object.freeze({
   vistes: '\u{1F441}\u{FE0F}', // 👁️
   compte: '\u{1F510}', // 🔐
   privacitat: '\u{1F6E1}\u{FE0F}', // 🛡️
   nodes: '\u{1F310}', // 🌐
+  multimedia: '\u{1F5BC}\u{FE0F}', // 🖼️
+});
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · El subtítol
+   de «Multimèdia» per a cada actor: la persona, en segona persona; una
+   organització, amb el seu logotip (el nom de la casa, PerfilEditor ·
+   ETIQUETA_LOGOTIP); un agent IA, amb el seu avatar. */
+const SUBTITOLS_MULTIMEDIA = Object.freeze({
+  persona: 'Les teues fotos, avatar i capçalera',
+  organitzacio: 'Les seues fotos, logotip i capçalera',
+  agent: 'Les seues fotos, avatar i capçalera',
 });
 
 /* T43 (ordre del Mestre, 260928) · «Edita la fitxa de {Org}» obri el Perfil
@@ -109,10 +121,19 @@ export function navegacioDePerfil(identitats, aplicacions = []) {
 
 /**
  * Segona columna, identitats. Persona: «La fitxa», «Les vistes», «El
- * compte», si el backend declara algun dels drets «Privacitat i dades» i,
- * l'últim, «Els nodes» (T9, 261001: on està connectada). Organització: «La
- * fitxa», «Les vistes» i «El compte». Agent IA: «La fitxa» i «Les vistes».
- * «Les vistes», només per a qui pot editar la fitxa (potEditarFitxa).
+ * compte», si el backend declara algun dels drets «Privacitat i dades»,
+ * «Els nodes» (T9, 261001: on està connectada) i «Multimèdia» (Pla
+ * 261018_1605, Tasca 4: les seues fotos). Organització: «La fitxa», «Les
+ * vistes», «El compte» i «Multimèdia». Agent IA: «La fitxa», «Les vistes» i
+ * «Multimèdia». Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) ·
+ * «Multimèdia» per a cada actor que la persona pot editar (persona, empresa o
+ * grup i agent IA), l'últim apartat de cadascun.
+ * «Les vistes» i «Multimèdia», només per a qui pot editar la fitxa
+ * (potEditarFitxa): ni amb una baixa en curs ni amb la fila de reserva, ni
+ * un membre d'una organització que no la pot editar.
+ * Pla 261018_1605 (Tasca 2, D4) · El subtítol de «La fitxa» és «Nom · Poble»
+ * (pobleDeFitxa, amb la reserva fundacional); sense poble, el nom. L'agent
+ * IA continua amb «Intel·ligència artificial».
  */
 export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
   const items = identitats.flatMap((identitat) => {
@@ -124,12 +145,15 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
        «Les vistes» i «El compte»; abans, identitat.avatar. Este model és pur
        i no veu la cua: l'esborrany el posa qui pinta la fila (FitxaDePerfil,
        PerfilShell.jsx). */
+    const doc = documentDeFitxa(identitat);
     const fitxa = {
       id: `${identitat.id}-fitxa`,
       categoryIds,
       title: 'La fitxa',
-      subtitle: esAgent(identitat) ? 'Intel·ligència artificial' : nom,
-      image: avatarDeLaFitxa(documentDeFitxa(identitat), null, identitat) || undefined,
+      subtitle: esAgent(identitat)
+        ? 'Intel·ligència artificial'
+        : [nom, pobleDeFitxa(identitat, identitats)].filter(Boolean).join(' · '),
+      image: doc.heroImage || avatarDeLaFitxa(doc, null, identitat) || undefined,
       icon: iconaDe(identitat),
       searchText: `fitxa ${nom}`,
       data: { vista: 'fitxa', identitatId: identitat.id },
@@ -147,8 +171,23 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
       searchText: `vistes vista a4 pdf imprimir portada targeta ${nom}`,
       data: { vista: 'vistes', identitatId: identitat.id },
     }] : [];
-    /* Un agent IA només té fitxa (i les seues vistes): ni compte ni privacitat que administrar. */
-    if (esAgent(identitat)) return [fitxa, ...vistes];
+    /* Pla 261018_1605 (Tasca 4, D8) · Com «Les vistes»: qui no pot editar la
+       fitxa no hi pot canviar ni eliminar cap foto.
+       Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · Ara per a
+       cada actor: la persona, l'organització i l'agent IA (DetallMultimedia
+       hi mostra les fotos amb titularitat explícita de cadascun). */
+    const actor = persona ? 'persona' : esAgent(identitat) ? 'agent' : 'organitzacio';
+    const multimedia = potEditarFitxa(identitat) ? [{
+      id: `${identitat.id}-multimedia`,
+      categoryIds,
+      title: 'Multimèdia',
+      subtitle: SUBTITOLS_MULTIMEDIA[actor],
+      icon: ICONES_APARTATS.multimedia,
+      searchText: `multimedia fotos imatges galeria avatar ${actor === 'organitzacio' ? 'logotip ' : ''}capcalera ${nom}`,
+      data: { vista: 'multimedia', identitatId: identitat.id },
+    }] : [];
+    /* Un agent IA només té fitxa (i les seues vistes i fotos): ni compte ni privacitat que administrar. */
+    if (esAgent(identitat)) return [fitxa, ...vistes, ...multimedia];
     const fills = [
       fitxa,
       ...vistes,
@@ -185,6 +224,9 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         data: { vista: 'nodes', identitatId: identitat.id },
       });
     }
+    /* «Multimèdia», l'últim: per a la persona, darrere d'«Els nodes»; per a
+       l'organització, d'«El compte». */
+    fills.push(...multimedia);
     return fills;
   });
 

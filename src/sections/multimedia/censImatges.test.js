@@ -102,6 +102,26 @@ describe('el cens de l’Arxiu visual', () => {
     expect(Object.isFrozen(ALIES_DEL_CENS)).toBe(true);
   });
 
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 5; Gemini 2030,
+     A3.1) · La captura fòssil de la barra lateral i les targetes socials
+     (OpenGraph) de La Torre no són fotos de l'Arxiu: fora del cens, amb el
+     motiu, i cap no passa per còpia d'una altra (cap àlies). */
+  test('la captura fòssil de la barra lateral i les targetes socials de La Torre, fora del cens', () => {
+    const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
+    const fossil = '/assets/uploads/empresa/soc-de-poble/posts/disseny/2-sidebar.png';
+    expect(delCens.has(fossil)).toBe(false);
+    expect(EXCLOSES[fossil]).toMatch(/fòssil/);
+    expect(mitjansDelCens().some((m) => m.src === fossil)).toBe(false);
+    // Les de system/ (la interfície) ja en queden fora sense nomenar-les.
+    const socials = DISC.filter((src) => /\/og[-_][^/]+$/.test(src) && !src.startsWith('/assets/system/'));
+    expect(socials).toHaveLength(9);
+    for (const src of socials) {
+      expect(EXCLOSES[src], src).toBe('targeta social (OpenGraph): no és cap foto de l’Arxiu');
+      expect(delCens.has(src), src).toBe(false);
+      expect(ALIES_DEL_CENS, src).not.toHaveProperty([src]);
+    }
+  });
+
   test('ids únics i aptes per a ?foto=; la forma d’un mitjà de l’Arxiu', () => {
     const mitjans = mitjansDelCens();
     const ids = mitjans.map((m) => m.id);

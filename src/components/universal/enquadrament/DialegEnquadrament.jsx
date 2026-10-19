@@ -87,9 +87,27 @@
  *         casella, no es desa; la casella apareix, marcada, amb AVIS_REVISA_EXIF,
  *         i és el segon clic el que desa. Si no porta res, es desa com abans.
  *   lectorExif: injectable per a les proves.
+ *
+ * ORDRE DEL MESTRE (18-10-2026, relleu del Pla 2000, punt 2) · «Agrupa
+ * "Canviar foto", "Llevar avatar" i "Guardar enquadre" dins del propi
+ * diàleg». Props opcionals noves, només per al mode senzill; sense elles, el
+ * DOM i el comportament són exactament els d'abans (Llei del Píxel):
+ *   onCanviaFoto (null) · (fitxer) → missatge | null. Amb ella, davall del
+ *     visor, el botó «Canviar foto» (etiquetaCanviaFoto) i un selector de
+ *     fitxers DINS del diàleg (acceptFoto): fora, el modal el deixaria inert.
+ *     El pare valida el fitxer i, si l'accepta, canvia `font`: la foto nova
+ *     s'obri en el mateix diàleg, centrada i sense zoom. Si torna un missatge,
+ *     l'avís ix dins (el modal tapa qualsevol toast) i la foto d'abans es
+ *     queda. Tancar el selector sense triar no tanca el diàleg.
+ *   ajudaFoto (null) · el text dels formats admesos, davall d'eixos botons,
+ *     lligat a «Canviar foto» (aria-describedby).
+ *   onLleva (null) · amb ella, el botó etiquetaLleva al costat: el pare fa el
+ *     que ja feia (la seua confirmació); mentre desa, desactivat.
+ *   etiquetaDesa (null) · el nom del botó principal (per defecte, «Guardar»
+ *     en el mode senzill i «Desar l’enquadrament» en el T46).
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { Camera, Minus, Plus, Trash2 } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, Carregant, Casella, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
 import {
   FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambRoda, ambTecla, arrossega, esSencera, estatInicial, limita, lliscador,
@@ -143,6 +161,14 @@ const EPSILON_ZOOM = 1e-6;
 const esFitxer = (font) => typeof Blob !== 'undefined' && font instanceof Blob;
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
+/* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · Els noms de sèrie dels
+   botons nous: la persona els llig tal com els va escriure el Mestre. */
+export const ETIQUETA_CANVIA_FOTO = 'Canviar foto';
+export const ETIQUETA_LLEVA_FOTO = 'Llevar la foto';
+/* Tancar el selector de fitxers sense triar dispara `cancel` a l'input, i
+   puja: el <dialog> el prendria per un Escape i es tancaria. Es para a l'input. */
+const paraCancel = (e) => e.stopPropagation();
+
 /* Onada 4, T3a · Un límit o un HEIC tenen el seu avís; la resta, el de sempre. */
 const missatgeCarrega = (err, font) => missatgeLimit(err?.codi)
   || (esHeic(font) ? ERROR_HEIC : (esFitxer(font) ? ERROR_CARREGA_FITXER : ERROR_CARREGA_URL));
@@ -168,6 +194,13 @@ export function DialegEnquadrament({
   senzill = false,
   mascara = null,
   ofereixConservarExif = false,
+  onCanviaFoto = null,
+  etiquetaCanviaFoto = ETIQUETA_CANVIA_FOTO,
+  acceptFoto = 'image/*',
+  ajudaFoto = null,
+  onLleva = null,
+  etiquetaLleva = ETIQUETA_LLEVA_FOTO,
+  etiquetaDesa = null,
   carregador = carregaImatge,
   exportador = exportaRetall,
   dibuixant = dibuixaVisor,
@@ -216,6 +249,15 @@ export function DialegEnquadrament({
      adreça anterior). */
   const [blobCarregat, setBlobCarregat] = useState(null);
   const origenExif = esFitxer(font) ? font : (blobCarregat?.font === font && esFitxer(blobCarregat.blob) ? blobCarregat.blob : null);
+  /* Pla 2000 (punt 2) · «Canviar foto»: el selector de dins del diàleg, la
+     foto que s'hi havia obert (una de nova torna a començar centrada i sense
+     zoom) i el pare viu en un ref (no reengega cap càrrega). */
+  const entradaFotoRef = useRef(null);
+  const fontObertaRef = useRef(font);
+  const canviaFotoRef = useRef(onCanviaFoto);
+  canviaFotoRef.current = onCanviaFoto;
+  const ambCanviaFoto = senzill && typeof onCanviaFoto === 'function';
+  const ambLleva = senzill && typeof onLleva === 'function';
 
   const actualitza = useCallback((nou) => {
     estatRef.current = nou;
@@ -257,6 +299,12 @@ export function DialegEnquadrament({
     setErrorDesat(null);
     setGeo(GEO_INICIAL);
     lecturaGeo.current = null;
+    /* Pla 2000 (punt 2) · Amb «Canviar foto», una foto nova en el mateix
+       diàleg comença centrada i sense zoom: l'enquadrament d'abans era d'una
+       altra foto. Sense la prop, com sempre (el zoom d'abans, dins dels
+       límits nous). */
+    if (canviaFotoRef.current && fontObertaRef.current !== font) actualitza(estatInicial(estatRef.current.format));
+    fontObertaRef.current = font;
     // Onada 4, T3a · Una foto massa pesada no es descodifica: l'avís arriba abans.
     if (esFitxer(font) && comprovaPes(font)) {
       setErrorCarrega(missatgeLimit(comprovaPes(font)));
@@ -443,6 +491,43 @@ export function DialegEnquadrament({
   const potAllunyar = !quiet && estat.zoom > 1 + EPSILON_ZOOM;
   const potApropar = !quiet && estat.zoom < zMax - EPSILON_ZOOM;
 
+  /* Pla 2000 (punt 2) · La foto triada amb «Canviar foto». La decidix el
+     pare: si la rebutja (no és PNG, JPEG o WebP, massa pesada, una pujada en
+     curs), l'avís ix ací dins i la foto d'abans es queda; si l'accepta, canvia
+     `font` i l'efecte de càrrega l'obri (i esborra els avisos). Un ref de
+     funció: l'escoltador de `cancel` va amb el node. */
+  const refEntradaFoto = useCallback((node) => {
+    entradaFotoRef.current?.removeEventListener('cancel', paraCancel);
+    entradaFotoRef.current = node;
+    node?.addEventListener('cancel', paraCancel);
+  }, []);
+  const triaFoto = (ev) => {
+    const fitxer = ev.target.files?.[0];
+    ev.target.value = '';
+    if (!fitxer || desant) return;
+    const avis = canviaFotoRef.current?.(fitxer);
+    if (typeof avis === 'string' && avis) fallaDesat(avis);
+  };
+  const idAjudaFoto = `${id}-foto`;
+  /* Els botons de la foto i els formats, també sense imatge (una adreça que
+     no s'ha pogut obrir): «Canviar foto» n'és l'eixida. */
+  const accionsFoto = ambCanviaFoto || ambLleva ? (
+    <div className="sdp-enquadrament__foto">
+      {ambCanviaFoto ? (
+        <input ref={refEntradaFoto} type="file" accept={acceptFoto} onChange={triaFoto} className="sdp-nomes-lector"
+          tabIndex={-1} aria-hidden="true" data-enquadrament-foto="" />
+      ) : null}
+      <div className="sdp-enquadrament__foto-accions">
+        {ambCanviaFoto ? (
+          <Boto varietat="secundari" icona={Camera} onClick={() => entradaFotoRef.current?.click()} disabled={desant}
+            aria-describedby={ajudaFoto ? idAjudaFoto : undefined}>{etiquetaCanviaFoto}</Boto>
+        ) : null}
+        {ambLleva ? <Boto varietat="secundari" icona={Trash2} onClick={onLleva} disabled={desant}>{etiquetaLleva}</Boto> : null}
+      </div>
+      {ajudaFoto ? <p id={idAjudaFoto} className="sdp-camp__ajuda">{ajudaFoto}</p> : null}
+    </div>
+  ) : null;
+
   /* Gauntlet 261016 (Bloc 1.2) · La casella de Pedra Seca (la mateixa de
      «Vull geolocalitzar aquesta imatge»), només si hi ha EXIF; l'etiqueta i
      l'avís diuen el que porta (Codex, 02:26). */
@@ -574,7 +659,7 @@ export function DialegEnquadrament({
             {/* Fantasma (botó de text) amb la seua pell al peu: bloc T46 de modules.css. */}
             <Boto varietat="fantasma" className="sdp-enquadrament__restablir" onClick={centra} disabled={quiet}>Restablir</Boto>
             <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>Cancel·lar</Boto>
-            <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge}>Guardar</Boto>
+            <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge}>{etiquetaDesa || 'Guardar'}</Boto>
           </>
         )}
       >
@@ -620,6 +705,7 @@ export function DialegEnquadrament({
               {casellaExif}
             </>
           ) : null}
+          {accionsFoto}
         </div>
       </Dialeg>
     );
@@ -640,7 +726,7 @@ export function DialegEnquadrament({
           {/* Secundari i no fantasma: al peu del diàleg només es restituïxen
               secundari i perill (components.css, trampa de PerfilShell.css). */}
           <Boto varietat="secundari" onClick={centra} disabled={quiet}>Centrar</Boto>
-          <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge || (geo.actiu && geo.llegint)}>Desar l’enquadrament</Boto>
+          <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge || (geo.actiu && geo.llegint)}>{etiquetaDesa || 'Desar l’enquadrament'}</Boto>
         </>
       )}
     >

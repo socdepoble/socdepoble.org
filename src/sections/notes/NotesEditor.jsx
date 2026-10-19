@@ -130,7 +130,12 @@ function entradesDeTargetes({ publicacions, actes, productes, pobles, pagines })
   }));
   afig(productes, deProducte, (producte) => ({
     subtitol: textDe(producte?.subtitle),
-    autor: textDe(producte?.seller, producte?.author_name),
+    /* Auditoria de seguretat 261019 (F14) · L'author_name que força el
+       servidor, com la fitxa del producte; el `seller`, només fora d'una
+       publicació d'un veí. */
+    autor: producte?.ownerUserId != null
+      ? textDe(producte?.author_name)
+      : textDe(producte?.author_name, producte?.seller),
     autorRuta: autoriaDe(producte),
     poble: textDe(producte?.population, producte?.author_location)
   }));

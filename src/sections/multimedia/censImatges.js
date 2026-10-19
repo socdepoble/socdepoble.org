@@ -162,7 +162,6 @@ export const CENS_IMATGES = Object.freeze([
 
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/0-container.png', 'Anatomia de Pedra Seca: el contenidor', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/1-header.png', 'Anatomia de Pedra Seca: la capçalera', 'entitat', 'sistema'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/2-sidebar.png', 'Anatomia de Pedra Seca: la barra lateral', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/3-content.png', 'Anatomia de Pedra Seca: el contingut', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/4-secction-header.png', 'Anatomia de Pedra Seca: la capçalera de secció', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/5-section-media.jpg', 'Anatomia de Pedra Seca: el mitjà', 'entitat', 'sistema'),
@@ -233,7 +232,19 @@ export const EXCLOSES = Object.freeze({
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-q.png': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r-trans.png': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r.png': 'logotip',
-  '/assets/uploads/empresa/soc-de-poble/posts/el-projecte/antigravity-badge.png': 'insígnia d’una eina (logotip)'
+  '/assets/uploads/empresa/soc-de-poble/posts/el-projecte/antigravity-badge.png': 'insígnia d’una eina (logotip)',
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 5; Gemini 2030,
+     A3.1) · La captura fòssil de la barra lateral antiga (v10.38.20, amb el
+     botó «+ CONNECTAR» d'abans): cap article no la fa servir i l'Arxiu la
+     pintava com una foto «de l'arxiu». El fitxer es queda a public/. */
+  '/assets/uploads/empresa/soc-de-poble/posts/disseny/2-sidebar.png': 'captura fòssil de la barra lateral antiga: ja no ensenya la interfície vigent',
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 5) · Les imatges
+     d'OpenGraph de La Torre: targetes socials, no fotos de l'Arxiu. */
+  ...Object.fromEntries([
+    '/assets/towns/la-torre-de-les-macanes/og-la-torre-1200x630.jpg',
+    ...['apaisat.jpg', 'classic.jpg', 'foto.jpg', 'mapa_apaisat.jpg', 'mapa_cuadrat_blanc.jpg', 'mapa_cuadrat_halo.jpg',
+      'mapa_cuadrat_halo.png', 'verd_net.jpg'].map((nom) => `/assets/uploads/poble/la-torre-de-les-macanes/og_gentdelatorre_${nom}`)
+  ].map((src) => [src, 'targeta social (OpenGraph): no és cap foto de l’Arxiu']))
 });
 
 /* El camí de l'original que nomena el motiu d'una còpia: «còpia de /assets/…»

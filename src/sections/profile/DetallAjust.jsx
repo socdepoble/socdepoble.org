@@ -5,13 +5,15 @@ import { MIDA_AVATAR, esAvisDeLaFoto, fotoDinsDelPressupost } from '../../utils/
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
-import { Boto, Camp, DialegConfirmacio, GrupOpcions, Selector } from '../../components/PedraSeca';
+import { Alerta, Boto, Camp, DialegConfirmacio, GrupOpcions, Insignia, Selector } from '../../components/PedraSeca';
 import { BotoDretsAutor } from '../../components/universal/CopyrightSelector.jsx';
 import { CopyrightPage } from '../../components/universal/drets/CopyrightPage.jsx';
 import { sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { classificaError } from '../../data/autodesament/errors.js';
 import { ERROR_CORREU_INVALID, validaCorreu } from './contacteOrganitzacio.js';
 import { fitxaDeLectura } from './perfilCamps.js';
+import { formataPoble, llistaDePobles, poblePrincipal } from './fitxaDePerfil.js';
+import { AVIS_FITXA_PUBLICA } from './visibilitatFitxa.js';
 import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
 import { SegonFactor } from '../admin/SegonFactor.jsx';
@@ -52,6 +54,14 @@ const ERROR_SENSE_PUJADA = 'El servidor no admet pujada d\'imatges.';
 const ERROR_PUJADA = 'No s\'ha pogut pujar la imatge al servidor.';
 const ERROR_CONNEXIO = 'S\'ha produït un error al pujar la imatge. Comprova la teua connexió.';
 
+/* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · El catàleg de
+   pobles d'un ajust de pobles (una opció = un sol poble) i els que encara no
+   s'han triat. Pures: les comparteixen el formulari i el seu desat. */
+const catalegDePobles = (ajust) => (Array.isArray(ajust?.opcions) ? ajust.opcions : []).filter((opcio) => (
+  typeof opcio?.valor === 'string' && opcio.valor && llistaDePobles(opcio.valor).length === 1
+));
+const poblesDisponibles = (ajust, triats) => catalegDePobles(ajust).filter((opcio) => !triats.includes(opcio.valor));
+
 /**
  * El formulari d'un ajust del catàleg. Ja no porta la closca de l'editor
  * (I8): la fitxa l'edita PerfilEditor i ací només queden els formularis
@@ -83,6 +93,7 @@ export default function DetallAjust({
   const eixida = useEixidaSegura({ despres: despresDEixir });
 
   const [valorTemp, setValorTemp] = useState('');
+  const [pobleExtra, setPobleExtra] = useState('');
   const [desant, setDesant] = useState(false);
   const [pujant, setPujant] = useState(false);
   const [missatge, setMissatge] = useState(null);
@@ -139,6 +150,15 @@ export default function DetallAjust({
      muntada, com a l'editor (DocumentEditor): «Tornar al compte», Escape o un
      desat que el servidor rebutja no el perden; «Cancel·lar» i un desat bo,
      sí. La casella de CC0 no hi va mai. */
+  /* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Els pobles de la
+     persona: «Llevar», «Fer principal» i «Afegir poble» canvien la llista, i
+     el botó premut desapareix o es desactiva. El focus va a un lloc estable
+     (el «Llevar» del costat, el del poble que ara és principal, el Selector o
+     la llista) i una regió viva diu el canvi i que encara cal «Guardar». */
+  const contenidorPobles = useRef(null);
+  const focusPobles = useRef(null);
+  const [avisPobles, setAvisPobles] = useState('');
+
   const [dretsOberts, setDretsOberts] = useState(false);
   const esborranyDrets = useRef(null);
   const pindolaDrets = useRef(null);
@@ -148,6 +168,17 @@ export default function DetallAjust({
     tornaFocusDrets.current = false;
     pindolaDrets.current?.querySelector('[data-sdp-drets]')?.focus();
   }, [dretsOberts]);
+
+  useEffect(() => {
+    const objectiu = focusPobles.current;
+    const arrel = contenidorPobles.current;
+    if (!objectiu || !arrel) return;
+    focusPobles.current = null;
+    const boto = objectiu.etiqueta
+      ? [...arrel.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === objectiu.etiqueta && !b.disabled)
+      : null;
+    (boto || arrel.querySelector(objectiu.selector || 'ul') || arrel.querySelector('select'))?.focus?.();
+  }, [valorTemp, pobleExtra]);
 
   /* Pla 261016 (Bloc 3.1) · Els drets que el servidor té desats són els de
      sèrie de les notes noves també en este dispositiu: el mirall que la fitxa
@@ -176,6 +207,8 @@ export default function DetallAjust({
           ? Boolean(ajust?.valor)
           : ajust?.valor ?? '';
     setValorTemp(valorInicial);
+    setPobleExtra('');
+    setAvisPobles('');
     if (acabaDeDesar.current) return;
     clearTimeout(timeoutMissatge.current);
     setMissatge(null);
@@ -273,6 +306,20 @@ export default function DetallAjust({
       return;
     }
 
+    /* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Un poble triat
+       al Selector i encara no afegit («Afegir poble») entra en el desat: abans
+       es desava sense ell i es deia «Desat correctament.». */
+    if (ajust.tipus === 'selector' && ajust.multiple && pobleExtra) {
+      const triats = llistaDePobles(valorTemp);
+      if (poblesDisponibles(ajust, triats).some((opcio) => opcio.valor === pobleExtra)) {
+        const ambElPendent = formataPoble([...triats, pobleExtra]);
+        setValorTemp(ambElPendent);
+        setPobleExtra('');
+        await desaValor(ambElPendent);
+        return;
+      }
+    }
+
     await desaValor(valorTemp);
   }
 
@@ -289,6 +336,11 @@ export default function DetallAjust({
       /* Identitat EXPLÍCITA: este era el forat que escrivia a
          l'entitat equivocada. */
       await guardarAjust(identitat.id, ajust.id, valor);
+      /* Un poble triat al Selector que no s'ha desat no es queda a la vista
+         com si ho estiguera (el valor desat pot ser el mateix i l'efecte de
+         reinici no torna a córrer). */
+      setPobleExtra('');
+      setAvisPobles('');
       setMissatge({ tipus: 'exit', text: 'Desat correctament.' });
       clearTimeout(timeoutMissatge.current);
       timeoutMissatge.current = setTimeout(() => {
@@ -395,10 +447,10 @@ export default function DetallAjust({
     }
     if (ajust.accio === 'obrir-fitxa') {
       return (
-        <div className="sdp-buit">
-          <button type="button" className="sdp-boto" onClick={obriFitxa}>
+        <div className="sdp-buit perfil-compte__accions">
+          <Boto varietat="primari" onClick={obriFitxa}>
             Veure la fitxa pública
-          </button>
+          </Boto>
         </div>
       );
     }
@@ -472,6 +524,94 @@ export default function DetallAjust({
     );
   }
 
+  /* Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Els pobles
+     de la persona (`ajust.multiple`). La columna és una sola (town_name) i hi
+     va la cadena canònica 'A · B' (formataPoble): el primer és el principal.
+     Els triats, una llista amb «Llevar» per a cada un (mai l'últim: una
+     persona no es queda sense poble). Afegir-ne, NOMÉS del catàleg
+     («El poble és innegociable»): el Selector porta les opcions del catàleg
+     que encara no hi són, mai text lliure, i una opció que ja porta més d'un
+     poble no hi entra. Res no es desa fins a «Guardar». Tot de Pedra Seca.
+     Correcció de la revisió · Un poble triat al Selector i no afegit també
+     entra en «Guardar» (handleSubmit). El focus no es perd quan el botó premut
+     desapareix (efecte de focusPobles), i una regió viva, només per al
+     lector, diu el canvi. Sense cap poble al catàleg (encara no s'ha pogut
+     llegir), el Selector ho diu: no és que no en quede cap. */
+  function renderitzaPobles(blocMissatge, blocGuardar) {
+    const triats = llistaDePobles(valorTemp);
+    const cataleg = catalegDePobles(ajust);
+    const disponibles = poblesDisponibles(ajust, triats);
+    const afig = () => {
+      if (!disponibles.some((opcio) => opcio.valor === pobleExtra)) return;
+      setValorTemp(formataPoble([...triats, pobleExtra]));
+      setAvisPobles(`S’ha afegit ${pobleExtra}: prem «Guardar» per a desar-ho.`);
+      setPobleExtra('');
+      focusPobles.current = { selector: 'select' };
+    };
+    const lleva = (nom) => {
+      if (triats.length < 2) return;
+      const index = triats.indexOf(nom);
+      const queden = triats.filter((poble) => poble !== nom);
+      setValorTemp(formataPoble(queden));
+      setAvisPobles(`S’ha llevat ${nom}: prem «Guardar» per a desar-ho.`);
+      focusPobles.current = queden.length > 1
+        ? { etiqueta: `Llevar ${queden[Math.min(index, queden.length - 1)]}` }
+        : { selector: 'ul' };
+    };
+    const fesPrincipal = (nom) => {
+      setValorTemp(formataPoble([nom, ...triats.filter((poble) => poble !== nom)]));
+      setAvisPobles(`${nom} és ara el poble principal: prem «Guardar» per a desar-ho.`);
+      focusPobles.current = { etiqueta: `Llevar ${nom}` };
+    };
+    const textSenseOpcions = cataleg.length ? 'No en queda cap més al catàleg' : 'Encara no s’ha pogut llegir el catàleg de pobles';
+    return (
+      <form onSubmit={handleSubmit}>
+        <div className="perfil-pobles-multi" ref={contenidorPobles}>
+          <p className="sdp-nomes-lector" aria-live="polite">{avisPobles}</p>
+          {triats.length > 0 ? (
+            <ul className="perfil-pobles-multi__llista" aria-label="Els teus pobles" tabIndex={-1}>
+              {triats.map((nom, index) => (
+                <li key={nom} className="perfil-pobles-multi__poble">
+                  <span>{nom}</span>
+                  {index === 0 ? <Insignia to="info">Principal</Insignia> : (
+                    <Boto varietat="fantasma" aria-label={`Fer principal ${nom}`} onClick={() => fesPrincipal(nom)} disabled={desant}>
+                      Fer principal
+                    </Boto>
+                  )}
+                  {triats.length > 1 ? (
+                    <Boto varietat="fantasma" aria-label={`Llevar ${nom}`} onClick={() => lleva(nom)} disabled={desant}>
+                      Llevar
+                    </Boto>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="perfil-compte__text">Encara no has triat cap poble.</p>
+          )}
+          <Camp etiqueta="Afegir un poble:" ajuda={ajust.ajuda}>
+            <Selector
+              value={pobleExtra}
+              onChange={(e) => setPobleExtra(e.target.value)}
+              opcions={[
+                { valor: '', etiqueta: disponibles.length ? 'Tria un poble…' : textSenseOpcions },
+                ...disponibles,
+              ]}
+              disabled={desant || disponibles.length === 0}
+            />
+          </Camp>
+          <div className="perfil-pobles-multi__afegir">
+            <Boto varietat="secundari" onClick={afig} disabled={desant || !pobleExtra}>
+              Afegir poble
+            </Boto>
+          </div>
+        </div>
+        {blocMissatge}
+        {blocGuardar}
+      </form>
+    );
+  }
+
   function renderitzaFormulari() {
     if (!ajust.obert) {
       /* Un ajust tancat amb valor (el correu, l'identificador) el mostra:
@@ -523,7 +663,8 @@ export default function DetallAjust({
        2610021520; text legal §13): públic, sencer per a tothom amb compte;
        privat, només el nom, la foto i el poble, per a la gent del poble. */
     if (tipus === 'visibilitat') {
-      const poble = identitat?.dades?.town_name || '';
+      /* Pla 261018_1605 (Tasca 2, D5) · Amb diversos pobles, el principal. */
+      const poble = poblePrincipal(identitat?.dades?.town_name);
       const actual = Boolean(ajust.valor);
       const opcio = (publica) => {
         const Icona = publica ? Globe : Lock;
@@ -539,6 +680,10 @@ export default function DetallAjust({
       };
       return (
         <form onSubmit={handleSubmit}>
+          {/* Pla 261018_1605 (Tasca 1, D3; ordre del Mestre, 18-10-2026) · L'avís
+              només quan el valor DESAT és públic (amb el privat, mentiria).
+              Sense regió viva: el missatge del desat és l'únic rol status del bloc. */}
+          {actual ? <Alerta to="info" viva={false}>{AVIS_FITXA_PUBLICA}</Alerta> : null}
           <GrupOpcions
             aspecte="targetes"
             llegenda="Qui pot vore el teu perfil?"
@@ -557,7 +702,10 @@ export default function DetallAjust({
 
     /* Grup C (261008) · Un ajust amb opcions (el poble de l'organització):
        Camp i Selector de Pedra Seca, amb el mateix missatge i el mateix
-       Guardar. Camp ja porta l'etiqueta, l'ajuda i l'aria-describedby. */
+       Guardar. Camp ja porta l'etiqueta, l'ajuda i l'aria-describedby.
+       Pla 261018_1605 (Tasca 2, D5) · Amb `ajust.multiple` (els pobles de la
+       persona), la seua llista: renderitzaPobles. */
+    if (tipus === 'selector' && ajust.multiple) return renderitzaPobles(blocMissatge, blocGuardar);
     if (tipus === 'selector') {
       return (
         <form onSubmit={handleSubmit}>

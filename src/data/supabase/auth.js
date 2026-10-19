@@ -14,6 +14,8 @@ import { resetClient } from './config.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { CODI_ENTRADA, ambCodi, esBackendInabastable } from '../errorsBackend.js';
 import { ErrorColumnaAbsent, columnaAbsent } from '../autodesament/errors.js';
+import { hidrataPerfilPersonaPilot } from '../identitatsSeed.js';
+import { esFontImatgePropia } from '../../utils/sanitize.js';
 
 let renovacioEnCurs = null;
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Exportat: el verify del
@@ -163,6 +165,8 @@ async function perfilsLocals() {
    de getProfile en este document: com a molt UNA crida per compte, encara que el
    perfil es torne a llegir (sdp:refresh-data, una altra vista). Sense bucles. */
 const altesReparades = new Set();
+/* Un text sense espais; qualsevol altra cosa, ''. */
+const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 
 export async function getProfile(config = {}) {
   const user = getCurrentUser();
@@ -171,7 +175,10 @@ export async function getProfile(config = {}) {
   const ruta = `/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`;
   try {
     const rows = await request(ruta, config);
-    if (rows?.[0]) return rows[0];
+    /* Pla 261018_1605 (Tasca 0, D7; ordre del Mestre, 18-10-2026) · La fila de
+       la persona pilot porta les dades canòniques on no en porta cap
+       (hidrataPerfilPersonaPilot només omple buits); qualsevol altra, tal qual. */
+    if (rows?.[0]) return hidrataPerfilPersonaPilot(rows[0], user);
     /* Ordre del Mestre (261002) · SENSE FILA no és cap error: és una persona
        orfe (el trigger d'alta no la va poder crear, o l'alta per correu no ha
        passat mai per una entrada explícita) i el cercador no la troba. Es
@@ -184,7 +191,7 @@ export async function getProfile(config = {}) {
         .then(() => true, (error) => { avisaAlta(error); return false; });
       if (reparada && getCurrentUser()?.id === user.id) {
         const reparades = await request(ruta, config);
-        if (reparades?.[0]) return reparades[0];
+        if (reparades?.[0]) return hidrataPerfilPersonaPilot(reparades[0], user);
       }
     }
   } catch (error) { console.warn('[supabase] Avís consultant profiles:', error?.message); }
@@ -193,12 +200,59 @@ export async function getProfile(config = {}) {
      Només per als errors (també una reparació que falla o que no deixa fila).
      Onada 6 (decisió 2 de la nit del 261009) · El poble és el de la sessió o
      cap: abans s'hi inventava «La Torre de les Maçanes», un poble que la
-     persona no havia triat i que un editor podia acabar desant. */
-  return { reserva: true, id: user.id, full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
-    avatar_url: user.user_metadata?.avatar_url || user.avatar_url || '',
-    visibility: user.user_metadata?.visibility || 'private',
-    town_name: user.user_metadata?.town_name || '' };
+     persona no havia triat i que un editor podia acabar desant.
+     Pla 261018_1605 (Tasca 1 i 3, D1 i D6; ordre del Mestre, 18-10-2026) ·
+     La fitxa d'una persona naix pública (is_public, si la sessió no diu el
+     contrari) i sempre 'private' de visibility: és l'única que admet el CHECK
+     de profiles (2609080000). La foto, la pròpia primer (esFontImatgePropia)
+     entre la de la sessió que ha escrit l'app i la de les metadades; si cap no
+     ho és, la primera que hi haja (la del proveïdor). */
+  const meta = user.user_metadata || {};
+  const fotos = [user.avatar_url, meta.avatar_url].map(textNet).filter(Boolean);
+  const reserva = {
+    reserva: true,
+    id: user.id,
+    full_name: meta.full_name || meta.name || '',
+    avatar_url: fotos.find((foto) => esFontImatgePropia(foto)) || fotos[0] || '',
+    visibility: 'private',
+    is_public: meta.is_public ?? true,
+    town_name: meta.town_name || ''
+  };
+  return hidrataPerfilPersonaPilot(reserva, user);
 }
+
+/* Pla 261018_1605 (Tasca 3, D6; ordre del Mestre, 18-10-2026) · GoTrue
+   reescriu user_metadata amb la foto de Google a cada entrada amb Google, i
+   els consumidors que lligen la metadada (personaDeSessio · avatarDePersona)
+   tornarien a la de Google encara que la fitxa en tinga una de pròpia. Després
+   d'un retorn OAuth amb sessió, de millor esforç i sense esperar-lo: es llig
+   la foto de la fila pròpia i, si és pròpia (esFontImatgePropia) i no és la de
+   les metadades, es torna a escriure a GoTrue (PUT /auth/v1/user, només
+   `avatar_url`: `picture` no es toca) i a la sessió (actualitzaUsuariSessio).
+   Cap RPC. Mai llança: qualsevol error, resposta sense forma o canvi de sessió
+   pel camí (capturaSessio, mirat després de cada espera) el deixa com estava. */
+async function reafirmaAvatarPropi(config = {}) {
+  try {
+    const current = capturaSessio();
+    const user = getCurrentUser();
+    if (!user?.id) return false;
+    const files = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=avatar_url`, config, { method: 'GET' });
+    current();
+    const propia = textNet(Array.isArray(files) ? files[0]?.avatar_url : '');
+    if (!propia || !esFontImatgePropia(propia)) return false;
+    const ara = getCurrentUser();
+    if (!ara?.id || String(ara.id) !== String(user.id)) return false;
+    if (textNet(ara.user_metadata?.avatar_url) === propia) return false;
+    await request('/auth/v1/user', config, { method: 'PUT', body: { data: { avatar_url: propia } } });
+    current();
+    actualitzaUsuariSessio({ avatar_url: propia });
+    return true;
+  } catch {
+    return false;
+  }
+}
+/* Sense esperar-lo, com completaAlta: l'entrada no depén d'este pas. */
+const reafirmaSenseEsperar = (config) => { void reafirmaAvatarPropi({ ...config }); };
 
 /* Fase 1 · Perfil (D2). Columnes de profiles que el PATCH pot escriure (i que la RLS admet).
    T66 · `icon` (migració 2609282035): l'emoticona de la fitxa, mai a user_metadata. */
@@ -516,7 +570,7 @@ export const loginWithGoogle = async (config = {}) => {
   recorda(config);
   configuraBackendSessio(config);
   const result = await entraAmbGoogle(config, getResolvedConfig);
-  if (result?.access_token) completaAlta(config);
+  if (result?.access_token) { completaAlta(config); reafirmaSenseEsperar(config); }
   return result;
 };
 
@@ -824,7 +878,7 @@ export const recullTornadaOAuth = async (config = {}) => {
   const recuperacio = recullTornadaDeRecuperacio();
   if (recuperacio) return recuperacio;
   const result = await gestionaTornada(config, getResolvedConfig);
-  if (result?.access_token) completaAlta(config);
+  if (result?.access_token) { completaAlta(config); reafirmaSenseEsperar(config); }
   return result;
 };
 

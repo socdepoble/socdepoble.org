@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
-  FORMATS, FORMAT_PER_DEFECTE, FORMAT_SORTIDA, PAS_TECLAT, ZOOM_MAX, ambLliscador, ambTecla, arrossega, esSencera,
+  FORMATS, FORMAT_DE_LA_FONT, FORMAT_PER_DEFECTE, FORMAT_SORTIDA, PAS_TECLAT, ZOOM_MAX, ambLliscador, ambTecla, arrossega, esSencera,
   estatInicial, limita, lliscador, marcBase, marges, midaSortida, midaVisor, opcionsSortida, pessic, proporcio,
   rectDeRetall, textAmpliacio, tipusDeSortida, zoomMaxim,
 } from './enquadrament.js';
@@ -155,6 +155,16 @@ describe('T3a · opcionsSortida', () => {
   test('amb `sortida`: mai s’amplia; format o qualitat desconeguts, els de sèrie', () => {
     expect(opcionsSortida({ w: 400, h: 300 }, 'image/jpeg', { ampladaMaxima: 600 })).toEqual({ amplada: 400, alcada: 300, tipus: 'image/webp' });
     expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg', { format: 'image/gif', qualitat: 7 })).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/webp' });
+  });
+
+  /* Pla 2000 (punt 2; correcció F3 de la revisió) · El format de la imatge
+     carregada: la transparència d'un PNG o d'un WebP no es perd. */
+  test('amb `format: FORMAT_DE_LA_FONT`: el tipus intermedi de la imatge carregada', () => {
+    const sortida = { ampladaMaxima: 400, format: FORMAT_DE_LA_FONT, exacta: { amplada: 400, alcada: 400 } };
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/webp', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/png' });
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/png', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/png' });
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
+    expect(opcionsSortida({ w: 2000, h: 2000 }, '', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
   });
 });
 

@@ -160,6 +160,20 @@ test('ID3 i ID2 · una persona publica amb el poble i la foto pujada que diu la 
   });
 });
 
+/* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Una persona amb
+   diversos pobles ('A · B', el primer el principal): la nota és del PRINCIPAL.
+   Abans, 'A · B' fet slug donava un poble_id que no casava amb cap poble i la
+   nota no eixia a cap pestanya «Gent de …». */
+test('261018 · una persona amb dos pobles publica amb el poble_id del principal', async () => {
+  mocks.user = { id: 'u-1', email: 'pepa@exemple.org', user_metadata: {} };
+  mocks.actor = { tipus: 'persona', id: 'u-1', nom: 'Pepa Soler', avatar: null, poble: 'La Torre de les Maçanes · Xixona', rol: 'persona' };
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'pepa-dos-pobles', title: 'Hola', content: '', revision: 1 }); });
+  const payload = payloadEnviat();
+  expect(payload.poble_id).toBe('la-torre-de-les-macanes');
+  expect(payload.author_location).toBe('La Torre de les Maçanes · Xixona');
+});
+
 /* Revisió del Gauntlet 261017 (ID2) · Abans d'escriure la fila,
    appendSectionSubmissionNetworkOnly (data/supabase/content.js) passa el
    payload per mapSectionSubmissionToItem. Fins ara el seu validaUrl

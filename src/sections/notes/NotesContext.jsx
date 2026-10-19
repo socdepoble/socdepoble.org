@@ -17,7 +17,7 @@ import { pertanyALActor } from './masDeLUsuari.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
-import { slugDelPoble } from '../pobles/nomsDelPoble.js';
+import { poblePrincipal, slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
@@ -334,9 +334,14 @@ export function NotesProvider({ children }) {
       const dataTriada = dataIsoONull(activeNote.publishDate);
       /* Onada 6 · El poble des d'on es publica (vegeu author_location, baix):
          el de qui signa; si no, el poble que declara l'amfitrió (el seu id,
-         pobleDeConfig, el mateix que llig el Xat), sense inventar-ne el nom. */
+         pobleDeConfig, el mateix que llig el Xat), sense inventar-ne el nom.
+         Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Una persona
+         pot tindre diversos pobles ('A · B', el primer el principal): la clau
+         és la del PRINCIPAL (poblePrincipal), perquè 'A · B' fet slug no és
+         cap poble i la nota no eixiria a cap pestanya «Gent de …». El lloc
+         escrit (author_location) es queda com el diu qui signa. */
       const llocDePublicacio = String(autoria?.poble || externalConfig?.appLocation || '').trim();
-      const pobleDePublicacio = slugDelPoble(llocDePublicacio) || pobleDeConfig(externalConfig)?.id || null;
+      const pobleDePublicacio = slugDelPoble(poblePrincipal(llocDePublicacio)) || pobleDeConfig(externalConfig)?.id || null;
       const payload = {
         sectionId: 'mur',
         type: compartir ? 'compartit' : 'feed',

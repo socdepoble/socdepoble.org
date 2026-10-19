@@ -7,8 +7,10 @@ import {
   llistaMembresOrganitzacio, desaMembreOrganitzacio, llevaMembreOrganitzacio, carregaMembres,
 } from '../../data/backendPort.js';
 import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organizations.js';
-import { pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
+import { ERROR_POBLE_MASSA_LLARG, MAXIM_NOM_POBLE, pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
+import { hidrataPerfilPersonaPilot } from '../../data/identitatsSeed.js';
 import { candidatsDeMembre } from './membresModel.js';
+import { formataPoble } from './fitxaDePerfil.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { triaAvatar } from '../../app/contexts/personaDeSessio.js';
@@ -77,6 +79,18 @@ const ambSenyal = (config, signal) => (signal ? { ...config, signal } : config);
    clar, abans de cap crida. */
 const valorDePoble = pobleDOrganitzacio;
 
+/* Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · El poble (o
+   els pobles) d'una persona: la cadena canònica 'A · B' (formataPoble), mai
+   buida i amb el límit de sempre (MAXIM_NOM_POBLE caràcters de veres, la
+   columna sencera). Llança abans de cap crida. */
+export const ERROR_SENSE_POBLE_PERSONA = 'Cal indicar almenys un poble: tria’n un.';
+export function valorDePoblePersona(valor) {
+  const nom = formataPoble(valor);
+  if (!nom) throw new Error(ERROR_SENSE_POBLE_PERSONA);
+  if ([...nom].length > MAXIM_NOM_POBLE) throw new Error(ERROR_POBLE_MASSA_LLARG);
+  return nom;
+}
+
 /* L'estat del correu d'una organització quan la lectura falla. Un esquema
    absent (NO-DISPONIBLE) es diu amb el motiu de l'adaptador, mai l'error cru. */
 function contacteFallat(error) {
@@ -127,21 +141,48 @@ export function usePerfilOpcional() {
  * qui ho és, dos ajustos més al compte: el segon factor (TOTP) i l'entrada al
  * Tauler. Van DINS d'«El compte» (PerfilShell.test.jsx fixa els apartats del
  * Perfil: cap de nou). Sense superadmin, el catàleg és el d'abans, fila a fila.
+ *
+ * Pla 261018_1605 (Tasques 1 i 2, D3 i D5; ordre del Mestre, 18-10-2026) ·
+ * La persona tria els seus pobles a l'ajust `poble` (`multiple`): un o més,
+ * NOMÉS del catàleg (`towns` del contingut core: «El poble és innegociable»),
+ * desats a la columna de sempre com la cadena canònica 'A · B' (formataPoble;
+ * el primer és el principal). Les `opcions` són el catàleg sense el valor
+ * desat: els pobles triats es pinten a part (DetallAjust) i un poble de fora
+ * del catàleg no s'hi pot tornar a afegir. I naix amb el perfil públic
+ * (`is_public == null ? true : Boolean(is_public)`, D1).
  */
-export function ajustosPersona(perfil = {}, { superadmin = false } = {}) {
+export function ajustosPersona(perfil = {}, { superadmin = false, pobles = [] } = {}) {
+  const pobleActual = formataPoble(perfil.town_name);
   return [
     { id: 'nom', lloc: 'fitxa', titol: 'Nom', camp: 'full_name', tipus: 'text', valor: perfil.full_name || '', obert: true },
     { id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: perfil.avatar_url || '', obert: true },
+    { id: 'poble', lloc: 'compte', titol: 'Poble', camp: 'town_name', tipus: 'selector', multiple: true,
+      valor: pobleActual,
+      opcions: opcionsDePoble(pobles),
+      ajuda: 'Només els pobles del Mas. El primer de la llista és el teu poble principal.',
+      obert: !perfil.baixa_demanada_at && perfil.reserva !== true,
+      motiu: perfil.baixa_demanada_at
+        ? 'Tens una baixa en curs: el perfil està congelat. Es desfà cancel·lant-la a «Privacitat i dades».'
+        : perfil.reserva === true
+          ? 'No s’ha pogut llegir el compte del servidor: el poble es pot canviar quan es torne a llegir.'
+          : undefined },
     { id: 'correu', lloc: 'compte', titol: 'Correu electrònic', tipus: 'text', valor: perfil.email || '', obert: false,
       motiu: 'El correu identifica el compte. Es canvia des d’Accedir.' },
     /* Amb una baixa en curs el servidor té el perfil congelat (política
-       «profiles sense baixa»), com la fitxa: cap desat arribaria. */
+       «profiles sense baixa»), com la fitxa: cap desat arribaria.
+       Pla 261018_1605 (Tasca 1, D3) · Sense `is_public`, pública (D1). Amb la
+       fila de reserva (getProfile: el servidor no s'ha pogut llegir), tancat
+       com els drets de sèrie: una tria a cegues trepitjaria la de veres.
+       L'avís de la fitxa pública el pinta DetallAjust (AVIS_FITXA_PUBLICA). */
     { id: 'privacitat', lloc: 'compte', titol: 'Estat del perfil', camp: 'is_public', tipus: 'visibilitat',
       casella: 'Perfil públic',
-      valor: Boolean(perfil.is_public), obert: !perfil.baixa_demanada_at,
+      valor: perfil.is_public == null ? true : Boolean(perfil.is_public),
+      obert: !perfil.baixa_demanada_at && perfil.reserva !== true,
       motiu: perfil.baixa_demanada_at
         ? 'Tens una baixa en curs: el perfil està congelat. Es desfà cancel·lant-la a «Privacitat i dades».'
-        : 'Tria si vols ser visible a la gent del poble o mantindre el compte privat.' },
+        : perfil.reserva === true
+          ? 'No s’ha pogut llegir el compte del servidor: l’estat es podrà canviar quan es torne a llegir.'
+          : undefined },
     /* Pla 261016 (Bloc 3.1; ordre del Mestre) · Els drets de sèrie de les notes
        de la persona: la fitxa ja no en tria (Directiva de Dignitat Humana, pla
        261015_1900), i es trien ací. La columna de sempre (profiles.copyright,
@@ -345,7 +386,8 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     const confirmades = new Map();
     confirmadesRef.current = confirmades;
     const tancaCaptura = () => { if (confirmadesRef.current === confirmades) confirmadesRef.current = null; };
-    setUsuari(getCurrentUser() ?? usuariSessioRef.current ?? null);
+    const usuariInicial = getCurrentUser() ?? usuariSessioRef.current ?? null;
+    setUsuari(usuariInicial);
 
     /* Els agents són una capacitat opcional: sense ella, cap crida i cap grup.
        Una fallada seua no tomba el perfil (llista buida i avís a la consola). */
@@ -369,9 +411,14 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
         if (!viu) return;
         assertCurrent();
         tancaCaptura();
+        /* Pla 261018_1605 (Tasca 0, D7) · La fila de la persona pilot, amb les
+           dades canòniques on no en porta (hidrataPerfilPersonaPilot ja diu si
+           ho és: per l'id, el slug o el correu acreditat, mai pel nom). La
+           resta de files, tal qual. */
+        const perfilBase = hidrataPerfilPersonaPilot(perfil, usuariInicial);
         setOrganitzacions(Array.isArray(orgs) ? orgs.map((o) => ambConfirmades(confirmades, ENTITATS_FITXA.organitzacio, o)) : []);
         setAgents(Array.isArray(llistaAgents) ? llistaAgents.map((a) => ambConfirmades(confirmades, ENTITATS_FITXA.agent, a)) : []);
-        setDadesPerfil(ambConfirmades(confirmades, ENTITATS_FITXA.persona, perfil));
+        setDadesPerfil(ambConfirmades(confirmades, ENTITATS_FITXA.persona, perfilBase));
         setError(null);
         /* El que va quedar pendent (una eixida sense xarxa, una pestanya
            tancada) torna a eixir ara, amb la sessió d'esta persona. */
@@ -523,9 +570,10 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     }
 
     if (objectiu.mena === 'persona') {
-      await updateProfile({ [camp]: valor }, configRef.current);
+      const desat = camp === 'town_name' ? valorDePoblePersona(valor) : valor;
+      await updateProfile({ [camp]: desat }, configRef.current);
       assertCurrent();
-      aplicaColumnes(ENTITATS_FITXA.persona, objectiu.id, { [camp]: valor });
+      aplicaColumnes(ENTITATS_FITXA.persona, objectiu.id, { [camp]: desat });
     } else if (objectiu.mena === 'agent') {
       await updateAgent(objectiu.id, { [camp]: valor }, configRef.current);
       assertCurrent();
@@ -579,10 +627,12 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     if (!ajust.camp) {
       throw new Error(`L'ajust "${ajust.id}" no té camp associat al catàleg.`);
     }
-    /* Grup C (261008) · El poble d'una organització es desa pel nom.
+    /* Grup C (261008) · El poble d'una organització o d'una persona es desa pel nom.
        Gauntlet 261016 (Bloc 3.5.2) · L'opció buida ja no és «sense poble»:
-       és un error amb missatge clar (valorDePoble), i no es crida res. */
-    const valorDesat = objectiu.mena !== 'persona' && ajust.id === 'poble' ? valorDePoble(valor) : valor;
+       és un error amb missatge clar, i no es crida res. */
+    const valorDesat = ajust.id === 'poble'
+      ? (objectiu.mena === 'persona' ? valorDePoblePersona(valor) : valorDePoble(valor))
+      : valor;
     await guardarCampPerfil(ajust.camp, valorDesat, objectiu.id);
     /* Pla 261016 (Bloc 3.1) · Els drets de sèrie de les notes, ja desats al
        servidor: també la preferència d'este dispositiu, la que llig «CREAR

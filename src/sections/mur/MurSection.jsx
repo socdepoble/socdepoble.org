@@ -45,7 +45,14 @@ function perCategoria(items, categoria) {
   if (!categoria) return items;
   return items.filter(i => {
     const labels = i.labels || [{ text: i.isSystem ? 'Sistema' : (i.type || 'Publicació') }];
-    return labels.some(l => l.text.toLowerCase() === categoria.toLowerCase());
+    /* Auditoria de seguretat 261019 (F3) · Una etiqueta de text pla (la
+       targeta també les pinta, UniversalCard · Etiqueta) o una sense text de
+       cadena no tomba el filtre: abans, l.text.toLowerCase() llançava i
+       /mur?category= deixava la pestanya en error per a tot el poble. */
+    return labels.some((l) => {
+      const text = typeof l === 'string' ? l : l?.text;
+      return typeof text === 'string' && text.toLowerCase() === categoria.toLowerCase();
+    });
   });
 }
 

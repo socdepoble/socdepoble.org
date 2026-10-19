@@ -61,9 +61,25 @@ const paraCancel = (e) => e.stopPropagation();
  *   res més que dir-ho (onError(AVIS_IMATGE_PUJANT, 'info')): cap segona
  *   pujada trepitja la primera ni el seu control. Si la pujada falla amb la
  *   finestra ja tancada, l'avís va fora (onError), perquè dins ja no hi és.
+ *
+ * Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «en fer clic
+ * directament sobre el cercle de l'avatar, obri directament DialegEnquadrament
+ * carregant la imatge que ja hi ha») · Opcional, i sense ella el de sempre:
+ *   finestra ({ canviaFoto?, ajudaFoto?, onLleva?, etiquetaLleva?, etiquetaDesa? })
+ *     · el que la finestra de retall porta de més (DialegEnquadrament). Amb
+ *     `canviaFoto: true`, «Canviar foto» dins de la finestra: la foto triada
+ *     passa la mateixa validació (10 MB, PNG, JPEG o WebP) i la mateixa
+ *     guarda de pujada, i s'obri en la mateixa finestra; si no s'admet, l'avís
+ *     ix dins. La resta passa tal qual.
+ *   I el que torna, a més: ajusta(font, control?) → boolean, que obri la
+ *   finestra amb una adreça JA RESOLTA (la imatge que ja hi ha) sense passar
+ *   pel selector, amb la guarda de pujada d'obri; i tanca(), que la tanca
+ *   (després de «Llevar avatar»). Guardar puja el retall pel camí de sempre
+ *   (processaFitxer i onDesaCamp): la persona no torna a triar cap fitxer, i
+ *   una adreça desada sencera no té res a desar (DialegEnquadrament, T46).
  */
 export function useImatgeDeFitxa({
-  camp = 'heroImage', forma = 'capcalera', onImageUpload = null, onDesaCamp, onError, onDesat,
+  camp = 'heroImage', forma = 'capcalera', onImageUpload = null, onDesaCamp, onError, onDesat, finestra = null,
 } = {}) {
   const inputRef = useRef(null);
   const controlRef = useRef(null);
@@ -98,8 +114,20 @@ export function useImatgeDeFitxa({
   const handlerRef = useRef(handler);
   handlerRef.current = handler;
 
+  /* Pla 2000 (punt 2) · «Canviar foto» dins de la finestra: la mateixa guarda
+     de pujada que el selector de fora i la validació de la forma (canvia).
+     El missatge, si n'hi ha, el diu la finestra. */
+  const canviaRef = useRef(null);
+  const canviaFoto = useCallback((fitxer) => {
+    if (pujantRef.current) return AVIS_IMATGE_PUJANT;
+    return canviaRef.current?.(fitxer) ?? null;
+  }, []);
+  const { canviaFoto: ambCanviaFoto = false, ...restaFinestra } = finestra || {};
+  const extres = finestra ? { ...restaFinestra, ...(ambCanviaFoto ? { onCanviaFoto: canviaFoto, acceptFoto: ACCEPT_FOTO } : null) } : null;
+
   const enquadrament = useEnquadramentImatge({
     forma,
+    extres,
     onError: (missatge) => errorRef.current?.(missatge),
     onEnquadrat: async (fitxer, info, exif) => {
       // Un sol desat alhora: els refs (desat, errorPujada, controlRef) són d'ell.
@@ -136,6 +164,7 @@ export function useImatgeDeFitxa({
     },
   });
   obertRef.current = enquadrament.obert;
+  canviaRef.current = enquadrament.canvia;
   const obriFinestra = enquadrament.obri;
 
   const obri = useCallback((control) => {
@@ -146,6 +175,21 @@ export function useImatgeDeFitxa({
     controlRef.current = typeof control?.acaba === 'function' ? control : null;
     inputRef.current?.click();
   }, []);
+
+  /* Pla 2000 (punt 2) · La imatge que ja hi ha, directa a la finestra (una
+     adreça ja resolta: obriFinestra no la valida). Mateixa guarda que obri.
+     Correcció F3 de la revisió · El retall ix en el format de la imatge
+     carregada (formatDeLaFont): un avatar PNG amb transparència no torna
+     amb fons blanc. */
+  const ajusta = useCallback((font, control) => {
+    if (pujantRef.current) {
+      errorRef.current?.(AVIS_IMATGE_PUJANT, 'info');
+      return false;
+    }
+    if (typeof font !== 'string' || !font) return false;
+    controlRef.current = typeof control?.acaba === 'function' ? control : null;
+    return obriFinestra(font, { formatDeLaFont: true });
+  }, [obriFinestra]);
 
   const enTria = (e) => {
     const fitxer = e.target.files?.[0];
@@ -170,7 +214,9 @@ export function useImatgeDeFitxa({
       tabIndex={-1} aria-hidden="true" data-imatge-de-fitxa={camp} />
   );
 
-  return { obri, input, dialeg: enquadrament.dialeg, pujant, obert: enquadrament.obert };
+  return {
+    obri, ajusta, tanca: enquadrament.tanca, input, dialeg: enquadrament.dialeg, pujant, obert: enquadrament.obert,
+  };
 }
 
 export default useImatgeDeFitxa;

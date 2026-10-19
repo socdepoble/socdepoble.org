@@ -97,7 +97,17 @@ const CENS = Object.freeze([
   /* Gauntlet 261017 (WP7b, P2) · Les carpetes de sèrie del Bloc, soles, perquè
      el tros d'entrada no arrossegue appSeed.js ni PAGE_COPY (appSeed les
      reexporta). */
-  'src/data/carpetesSeed.js'
+  'src/data/carpetesSeed.js',
+  /* Pla 261018_1605 (Tasques 0, 1 i 3; ordre del Mestre, 18-10-2026) · La
+     foto pròpia de la sessió (identitat.js i la seua prova), la persona pilot
+     canònica (la prova nova d'identitatsSeed.js), la reserva de getProfile i el
+     pas que reafirma la foto pròpia després d'OAuth (auth.js, la seua prova),
+     i la prova estàtica de la migració del perfil públic per defecte. */
+  'src/data/identitat.js',
+  'src/data/identitat.avatarPropi.test.js',
+  'src/data/identitatsSeed.pilot.test.js',
+  'src/data/supabase/auth.avatarPropi.test.js',
+  'src/data/supabase/perfilPublicPerDefecte.migracio.test.js'
 ]);
 
 describe('el cens', () => {

@@ -1003,6 +1003,13 @@
   margin-right: var(--sdp-space-1);
 }
 
+/* Pla 261018_1605 (Tasca 2) · Ordre del Mestre (18-10-2026, 20:5x) · Dins del
+   Perfil, l'autoria de la barra taronja i de la targeta és la de sempre: el
+   nom a la primera línia i el poble net i directe davall
+   («Javi Llinares / La Torre de les Maçanes»), sense cap punt ni espai davant
+   i amb tota l'amplada per a cadascun. Per això el Perfil no hi porta cap
+   regla pròpia: manen .sp-card-author-info, -name i -location d'ací dalt. */
+
 .sp-card-meta {
   display: flex;
   align-items: center;
@@ -2301,6 +2308,43 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     flex-basis: 100%;
     margin: 0;
     text-align: center;
+  }
+}
+
+/* ── Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · LA FOTO
+   DINS DE LA FINESTRA DE RETALL ───────────────────────────────────────────
+   Davall del visor de la finestra senzilla (DialegEnquadrament amb
+   onCanviaFoto o onLleva: l'avatar del Perfil), una fila centrada amb
+   «Canviar foto» i «Llevar avatar» i, davall, la línia dels formats. Sense
+   eixes props el contenidor no es pinta (el logotip, la capçalera i les Notes
+   no canvien). Dins del Perfil, :where(.perfil-pagina) .sdp-boto (PerfilShell.css,
+   en la mateixa capa i després d'este full) pintaria de blau el secundari:
+   es restituïx ací, com al peu del diàleg (.sdp-dialeg__peu), també el hover
+   (el de Perfil és (0,3,0)). */
+@layer components {
+  .sdp-enquadrament__foto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-enquadrament__foto-accions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-enquadrament__foto > .sdp-camp__ajuda {
+    margin: 0;
+    text-align: center;
+  }
+  .sdp-enquadrament__foto .sdp-boto--secundari {
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    border: 2px solid var(--sdp-vora-control);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-enquadrament__foto .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   }
 }
 

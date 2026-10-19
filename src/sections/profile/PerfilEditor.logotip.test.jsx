@@ -123,9 +123,12 @@ test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«E
 /* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant de
    300px del centre») · L'avatar redó amb la càmera ja no és abans de l'H1:
    damunt del nom no queda res (l'avatar ja va a la barra taronja) i el control
-   viu, el primer, dins d'«Edició avançada», amb «Avatar», «Llevar l'avatar» i
-   la línia d'ajuda. El clic continua obrint el selector de l'avatar. */
-test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d’«Edició avançada» i res damunt de l’H1; el clic obri el selector de l’avatar', () => {
+   viu, el primer, dins d'«Edició avançada».
+   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectativa
+   actualitzada a propòsit: davall del cercle ja no hi ha ni «Avatar», ni
+   «Llevar l'avatar», ni la línia d'ajuda; el clic obri directament la
+   finestra de retall amb la imatge que ja hi ha, no el selector. */
+test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d’«Edició avançada» i res damunt de l’H1; el clic obri el retall de la imatge que ja hi ha', async () => {
   render(<PerfilEditor identitat={ambAvatar} />);
   expect(capcalera().querySelector('.page-title-avatar')).toBeNull();
   expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
@@ -139,37 +142,43 @@ test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d
   const identitat = details.querySelector('.sdp-edicio-avancada__identitat');
   const avatar = identitat.querySelector('button.page-title-avatar--canvia');
   expect(avatar).not.toBeNull();
-  // El nom el posa PageFrame: el d'abans o, amb el CONTRACTE-1, etiquetaCanvia.
-  expect(['Canvia la teua imatge', 'Avatar']).toContain(avatar.getAttribute('aria-label'));
+  // El nom diu el que fa (Pla 2000): ajustar la imatge que hi ha o canviar-la.
+  expect(avatar.getAttribute('aria-label')).toBe('Ajusta o canvia l’avatar');
+  expect(avatar.getAttribute('aria-haspopup')).toBe('dialog');
   expect(avatar.querySelector('img').getAttribute('src')).toBe('/assets/a.webp');
-  // Les píndoles i l'ajuda de sempre (CONTRACTE-1 i línia I1), al costat de l'avatar.
-  expect(within(identitat).getByRole('button', { name: 'Avatar' })).toBeTruthy();
-  expect(within(identitat).getByRole('button', { name: 'Llevar l’avatar' })).toBeTruthy();
-  expect(identitat.querySelector('.sdp-camp__ajuda').textContent).toBe('PNG, JPEG o WebP, fins a 10 MB.');
+  // Neteja total davall del cercle: cap píndola ni cap línia d'ajuda.
+  expect(within(identitat).getAllByRole('button')).toEqual([avatar]);
+  expect(identitat.querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
+  expect(identitat.textContent).not.toContain('10 MB');
   // L'avatar és el primer del desplegable, abans de la capçalera; cap ranura.
   expect(abansDe(identitat, details.querySelector('.sdp-edicio-avancada__capcalera'))).toBe(true);
   expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
   const obri = vi.spyOn(selector('logoImage'), 'click');
-  act(() => { fireEvent.click(avatar); });
-  expect(obri).toHaveBeenCalledOnce();
-  expect(screen.queryByRole('dialog')).toBeNull();
+  await act(async () => { fireEvent.click(avatar); });
+  expect(obri).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog', { name: 'Retalla la foto' })).toBeTruthy();
 });
 
 /* Encàrrec d'harmonització (261018) · La ranura «Avatar» de qui no té foto ja
-   no és damunt de l'H1: va dins d'«Edició avançada», després de «Capçalera». */
-test('Onada 4 · una persona sense avatar: la ranura «Avatar» dins d’«Edició avançada», que obri el selector de l’avatar; «Capçalera», el seu', () => {
+   no és damunt de l'H1: va dins d'«Edició avançada», després de «Capçalera».
+   Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: ja no és cap
+   ranura (amb el seu text dels 10 MB), és el cercle buit amb la càmera, el
+   primer del desplegable, que obri el mateix selector de l'avatar. */
+test('Onada 4 · una persona sense avatar: el cercle buit dins d’«Edició avançada», que obri el selector de l’avatar; «Capçalera», el seu', () => {
   render(<PerfilEditor identitat={jo} />);
   expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
   expect(within(capcalera()).queryByRole('button', { name: BOTONS_IMATGE })).toBeNull();
   const details = obriEdicioAvancada();
-  const boto = within(details).getByRole('button', { name: 'Avatar' });
-  expect(boto.closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
-  expect(details.querySelector('.sdp-edicio-avancada__identitat')).toBeNull();
-  const ranura = vi.spyOn(inputDeLaRanura(), 'click');
+  const boto = within(details).getByRole('button', { name: 'Posa un avatar' });
+  expect(boto.closest('.sdp-edicio-avancada__identitat')).not.toBeNull();
+  expect(boto.querySelector('img')).toBeNull();
+  expect(boto.querySelector('.page-title-avatar__marca')).not.toBeNull();
+  expect(boto.hasAttribute('aria-haspopup')).toBe(false);
+  expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
+  expect(within(details).queryByRole('button', { name: 'Avatar' })).toBeNull();
   const avatar = vi.spyOn(selector('logoImage'), 'click');
   const hero = vi.spyOn(selector('heroImage'), 'click');
   act(() => { fireEvent.click(boto); });
-  expect(ranura).not.toHaveBeenCalled();
   expect(avatar).toHaveBeenCalledOnce();
   act(() => { fireEvent.click(within(details).getByRole('button', { name: 'Capçalera' })); });
   expect(hero).toHaveBeenCalledOnce();

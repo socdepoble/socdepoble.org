@@ -34,8 +34,9 @@
  *
  * Pur: sense React ni port (la mateixa capa que politicaRouter.js). Des del
  * front B importa utils/sanitize.js pel classificador de fonts pròpies; eixe
- * mòdul arma DOMPurify en carregar-se i necessita un DOM (el navegador, o
- * jsdom a les proves). IdentitatContext ja el portava al graf
+ * mòdul arma DOMPurify en carregar-se quan hi ha un DOM (el navegador, o
+ * jsdom a les proves; sense DOM, des del pla 261018_1605, carrega sense
+ * ganxo i el sanejador no funciona). IdentitatContext ja el portava al graf
  * (sessionService → data/identitat.js).
  */
 import { esFontImatgePropia } from '../../utils/sanitize.js';
@@ -73,7 +74,11 @@ export function nomDePersona(usuari) {
    reserva: un sol camí per a la foto de la sessió en este mòdul. */
 export function avatarDePersona(usuari) {
   const meta = metadadesDe(usuari);
-  return triaAvatar(meta.avatar_url, meta.picture, usuari?.avatar_url);
+  const google = Array.isArray(usuari?.identities)
+    ? usuari.identities.find((i) => i.provider === 'google')
+    : null;
+  const googleAvatar = google?.identity_data?.avatar_url || google?.identity_data?.picture;
+  return triaAvatar(meta.avatar_url, meta.picture, usuari?.avatar_url, googleAvatar);
 }
 
 /**
@@ -94,6 +99,10 @@ export function firmaDePersona(usuari) {
  * El perfil d'una fila de public.profiles, congelat, o null si la fila no és
  * de veres (cap, de reserva o d'un altre compte). `firma` és la de la sessió
  * amb què s'ha demanat: personaDeSessio la torna a mirar en pintar.
+ * Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 4) · L'avatar és
+ * només avatar_url: la capçalera (hero_url) és panoràmica i mai fa d'avatar.
+ * Sense avatar_url, la persona es queda sense foto de la fila (en «Llevar
+ * l'avatar», inicials), no amb la capçalera.
  */
 export function perfilDeFila(fila, usuariId, firma) {
   if (!fila || typeof fila !== 'object' || fila.reserva === true) return null;

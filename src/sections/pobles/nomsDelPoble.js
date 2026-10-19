@@ -73,3 +73,64 @@ export function slugDelPoble(nom) {
   const slug = slugDeSeccio(text);
   return SLUG_DE_POBLE.test(slug) ? slug : null;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ELS POBLES D'UNA PERSONA · Pla 261018_1605 (Tasca 2, D5; ordre del Mestre,
+   18-10-2026; correcció de la revisió) · Diversos pobles viuen a la mateixa
+   columna de text de sempre (profiles.town_name), com la cadena canònica
+   'A · B': el PRIMER és el poble principal. Viuen ací, purs i sense cap
+   dependència del Perfil, perquè també els lligen les notes (el poble_id
+   d'una publicació) i la pestanya «Gent de …» (clauDelPoble.js);
+   fitxaDePerfil.js els torna a exportar.
+   La ela geminada (l·l) porta el MATEIX punt volat (U+00B7) que separa els
+   pobles: entre dues eles i sense cap espai és de la paraula ('Bel·lús',
+   'Vil·la Nova') i no parteix res. Es protegix abans de partir, sense
+   lookbehind (Baseline Safari 16). Amb un espai a un costat, o entre lletres
+   que no són eles ('Sella·Relleu'), és el separador.
+   ═══════════════════════════════════════════════════════════════════ */
+const SEPARADOR_DE_POBLES = /\s*·\s*/;
+const SEPARADOR_CANONIC = ' · ';
+const ELA_GEMINADA = /([lL])·(?=[lL])/g;
+/* Un caràcter d'ús privat, que cap nom de poble porta. */
+const MARCA_ELA = '';
+
+const trossosDePoble = (text) => String(text)
+  .replace(ELA_GEMINADA, `$1${MARCA_ELA}`)
+  .split(SEPARADOR_DE_POBLES)
+  .map((tros) => tros.split(MARCA_ELA).join('·'));
+
+/**
+ * Els pobles d'un valor de poble, nets i sense repetits, en l'ordre en què
+ * es van triar: una cadena 'A · B', una llista ['A', 'B'] o res ([]). Pura.
+ */
+export function llistaDePobles(valor) {
+  const trossos = Array.isArray(valor)
+    ? valor.map((v) => String(v ?? ''))
+    : valor == null ? [] : trossosDePoble(valor);
+  const vistos = new Set();
+  const pobles = [];
+  for (const tros of trossos) {
+    const nom = tros.trim();
+    if (nom && !vistos.has(nom)) {
+      vistos.add(nom);
+      pobles.push(nom);
+    }
+  }
+  return pobles;
+}
+
+/** La cadena canònica d'un valor de poble ('A · B'), o ''. Pura. */
+export function formataPoble(valor) {
+  return llistaDePobles(valor).join(SEPARADOR_CANONIC);
+}
+
+/**
+ * El poble principal (el primer de formataPoble), o ''. Qui en deriva una
+ * sola clau (el poble_id d'una nota, el poble d'una publicació a la pestanya
+ * «Gent de …») o el compara per igualtat (el preompliment d'una organització
+ * nova, el text de la visibilitat) ho fa amb este, mai amb la cadena sencera:
+ * 'A · B' fet slug no és cap poble. Pura.
+ */
+export function poblePrincipal(valor) {
+  return llistaDePobles(valor)[0] || '';
+}

@@ -84,7 +84,7 @@ import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js
  * ══════════════════════════════════════════════════════════════════════════
  */
 import { getVal, setVal, delVal, getEfimer, setEfimer, delEfimer, desaGrupEfimer, STORAGE_PREFIX } from '../config/storage.js';
-import { esFontImatgeSegura } from '../utils/sanitize.js';
+import { esFontImatgePropia, esFontImatgeSegura } from '../utils/sanitize.js';
 
 /**
  * LES CLAUS VIUEN ACÍ I NOMÉS ACÍ.
@@ -338,7 +338,8 @@ export function desaSessio(sessio, { renovacio = false, restauracio = null, orig
   /* F66 · El testimoni pilot només es desa com a entrada nova, en desenvolupament
      i dins d'un backend en mode de proves. */
   if (sessio.access_token === TESTIMONI_PILOT && (renovacio || restauracio || !backendDelPilot())) return false;
-  if (renovacio && sessio.user.id !== getEfimer(CLAU_USUARI, null)?.id) return false;
+  const usuariPrevi = getEfimer(CLAU_USUARI, null);
+  if (renovacio && sessio.user.id !== usuariPrevi?.id) return false;
   if (restauracio && String(sessio.user.id) !== restauracio.sub) return false;
   const sub = String(sessio.user.id);
   const rt = typeof sessio.refresh_token === 'string' && sessio.refresh_token ? sessio.refresh_token : null;
@@ -353,6 +354,13 @@ export function desaSessio(sessio, { renovacio = false, restauracio = null, orig
   }
   /* 'amfitrio' es conserva en renovar: la sessió continua sent de l'amfitrió i no es revoca en eixir. */
   const deLAmfitrio = entradaNova ? origen === 'amfitrio' : getEfimer(CLAU_ORIGEN, null) === 'amfitrio';
+  /* Pla 261018_1605 (Tasca 3; revisió adversarial, 18-10-2026) · Renovar el
+     token desa l'usuari tal com el torna GoTrue, com sempre. Conservar ací la
+     foto pròpia anterior no distingia la reescriptura de Google d'una tria feta
+     en un altre dispositiu (esborrar-la o posar la de Google): la ressuscitava
+     fins a una entrada nova. La prioritat de la pròpia la tornen la fila de
+     profiles (triaAvatar) i, després de cada entrada amb Google,
+     reafirmaAvatarPropi (auth.js), que la reescriu a GoTrue. */
   versioSessio++;
   if (!renovacio) generacioEntrada++;
   const ok = desaGrupEfimer({
@@ -394,7 +402,18 @@ export function actualitzaUsuariSessio(novesDades = {}) {
      `picture` de Google: si no, la barra i el selector hi tornarien a caure. */
   const esborraAvatar = Object.hasOwn(novesDades, 'avatar_url') && !novesDades.avatar_url;
   const metadades = { ...(usuari.user_metadata || {}) };
-  if (esborraAvatar) { delete metadades.avatar_url; delete metadades.picture; }
+  if (esborraAvatar) {
+    delete metadades.avatar_url;
+    delete metadades.picture;
+  } else if (avatar_url && esFontImatgePropia(avatar_url)) {
+    /* Tasca 3 (ordre del Mestre, 261018) · Quan l'usuari tria un avatar propi,
+       la foto de Google es conserva a `picture` per a la seua biblioteca pròpia,
+       però `avatar_url` passa a ser l'avatar propi amb prioritat absoluta. */
+    const anterior = metadades.avatar_url;
+    if (anterior && !esFontImatgePropia(anterior) && !metadades.picture) {
+      metadades.picture = anterior;
+    }
+  }
 
   const actualitzat = {
     ...usuari,

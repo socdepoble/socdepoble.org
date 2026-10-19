@@ -141,7 +141,8 @@ test('T50 · la fitxa activa de la llista és la targeta viva; la resta d’apar
   expect(targeta.querySelector('.sp-card-labels')).toBeNull();
   expect(targeta.querySelector('.sp-card-copyright')).toBeNull();
   // El compte (i, des de T9, «Els nodes»; des del 261008, «Les vistes») continuen sent fitxes compactes.
-  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['Les vistes', 'El compte', 'Els nodes']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['Les vistes', 'El compte', 'Els nodes', 'Multimèdia']);
   // Pla 261015 · L'editor ja no porta la targeta a la seua dreta: ni l'embolcall ni l'aside.
   expect(detall(container).querySelector('.sdp-editor-shell-atomic')).not.toBeNull();
   expect(detall(container).querySelector('.sdp-editor-amb-targeta')).toBeNull();
@@ -183,7 +184,8 @@ test('T50 · canviar d’apartat desmunta l’editor: l’entrada viva es retira
   expect(within(detall(container)).getByText('compte de Javi Llinares')).toBeTruthy();
   expect(llegixDocumentViu('jo')).toBeNull();
   expect(llista(container).querySelector('.sp-card')).toBeNull();
-  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes', 'Multimèdia']);
   // I en tornar a la fitxa, torna la targeta viva.
   fireEvent.click(within(llista(container)).getByRole('button', { name: /La fitxa/ }));
   expect(llista(container).querySelector('.sp-card-title').textContent).toBe('Javi Llinares');
@@ -321,8 +323,10 @@ test('Bloc 3.5.4 · després d’un 403 al desat de l’avatar, la targeta de la
     const selector = container.ownerDocument.querySelector('input[type="file"][data-imatge-de-fitxa="logoImage"]');
     await act(async () => { fireEvent.change(selector, { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
     await act(async () => {});
+    /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu
+       del Pla 2000, punt 2) · la finestra de l'avatar desa amb «Guardar enquadre». */
     await act(async () => {
-      fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar' }));
+      fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar enquadre' }));
     });
     await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('alert').textContent)
       .toContain('El servidor no ha acceptat la imatge (falta un permís al servidor per a desar este camp'));

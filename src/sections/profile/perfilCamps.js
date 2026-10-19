@@ -103,13 +103,19 @@ export function fitxaDeLectura(identitat) {
   };
 }
 
-/** Si la fitxa ja és pública: `is_public` per a la persona, `visibility` per a l'organització. */
+/**
+ * Si la fitxa ja és pública: `is_public` per a la persona, `visibility` per a l'organització.
+ * Pla 261018_1605 (Tasca 1, D1; ordre del Mestre, 18-10-2026) · La persona
+ * naix pública: sense `is_public` (null o absent), pública. La seua
+ * `visibility` no hi diu res (el CHECK de 2609080000 la fixa a 'private').
+ */
 export function fitxaPublicada(identitat) {
   const dades = identitat?.dades || {};
   const mena = menaDeFitxa(identitat);
   /* La fitxa d'un agent IA sempre és pública: no hi ha res a amagar d'una màquina. */
   if (mena === 'agent') return true;
-  return mena === 'persona' ? Boolean(dades.is_public) : dades.visibility === 'public';
+  if (mena === 'persona') return dades.is_public == null ? true : Boolean(dades.is_public);
+  return dades.visibility === 'public';
 }
 
 /**

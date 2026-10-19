@@ -474,3 +474,68 @@ describe('Notes · estatPerAlEditor → closca → check a la barra taronja', ()
     expect(desat(vista.container)).toBeNull();
   });
 });
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «lleva la línia
+   dels 10 MB de davall del cercle, amb una prop opcional a
+   UniversalEditorShell que conserve l'avís de pujada») · `ajudaNomesEnPujada`:
+   cap línia d'ajuda en repòs a cap ranura, amb imatge o sense; mentre la seua
+   imatge puja, AJUDA_IMATGE_PUJANT. Sense la prop, el DOM de sempre. */
+describe('ajudaNomesEnPujada · cap línia visible en repòs, només l’avís de la pujada', () => {
+  /* Revisió adversarial · Sense la prop, el DOM literal d'abans al camí del
+     Perfil (onEdit amb ajuda): el botó, la línia .sdp-camp__ajuda amb el text
+     del consumidor i l'aria-describedby que la cita. També amb una ajuda buida
+     (la <p> buida de sempre). */
+  test('sense la prop: la línia de sempre, literal, sense imatge i amb imatge', () => {
+    const sense = closca({ onHeroEdit: vi.fn(), heroEditLabel: 'Capçalera', heroEditHelp: AJUDA });
+    const boto = sense.getByRole('button', { name: 'Capçalera' });
+    expect(fills(boto.parentElement)).toEqual(['INPUT.sdp-nomes-lector', 'BUTTON.sdp-boto sdp-boto--secundari', 'P.sdp-camp__ajuda']);
+    expect(document.getElementById(boto.getAttribute('aria-describedby')).textContent).toBe(AJUDA);
+    cleanup();
+    const buida = closca({ onHeroEdit: vi.fn(), heroEditLabel: 'Capçalera', heroEditHelp: '' });
+    const ambBuida = buida.getByRole('button', { name: 'Capçalera' });
+    expect(fills(ambBuida.parentElement)).toEqual(['INPUT.sdp-nomes-lector', 'BUTTON.sdp-boto sdp-boto--secundari', 'P.sdp-camp__ajuda']);
+    expect(document.getElementById(ambBuida.getAttribute('aria-describedby')).textContent).toBe('');
+    cleanup();
+    const amb = closca({ heroImage: '/assets/h.webp', onHeroEdit: vi.fn(), heroEditLabel: 'Capçalera', ajudaAmbImatge: AJUDA });
+    const botoAmb = amb.getByRole('button', { name: 'Capçalera' });
+    expect(fills(botoAmb.parentElement)).toEqual(['BUTTON.sdp-boto sdp-boto--secundari', 'P.sdp-camp__ajuda']);
+    expect(document.getElementById(botoAmb.getAttribute('aria-describedby')).textContent).toBe(AJUDA);
+  });
+
+  test('sense imatge: en repòs, el límit només per al lector (lligat al botó); mentre puja, l’avís visible', () => {
+    const props = { onHeroEdit: vi.fn(), heroEditLabel: 'Capçalera', heroEditHelp: AJUDA, ajudaAmbImatge: AJUDA, ajudaNomesEnPujada: true };
+    const vista = closca(props);
+    const boto = vista.getByRole('button', { name: 'Capçalera' });
+    expect(ajudaDe(boto)).toBeNull();
+    const descripcio = document.getElementById(boto.getAttribute('aria-describedby'));
+    expect([descripcio.className, descripcio.textContent]).toEqual(['sdp-nomes-lector', AJUDA]);
+    vista.rerender(arbre({ ...props, heroPujant: true }));
+    const pujant = vista.getByRole('button', { name: 'Capçalera' });
+    expect(pujant.disabled).toBe(true);
+    expect(ajudaDe(pujant)).toBe(AJUDA_IMATGE_PUJANT);
+    expect(document.getElementById(pujant.getAttribute('aria-describedby')).textContent).toBe(AJUDA_IMATGE_PUJANT);
+    vista.rerender(arbre({ ...props, heroPujant: false }));
+    expect(ajudaDe(vista.getByRole('button', { name: 'Capçalera' }))).toBeNull();
+  });
+
+  test('amb imatge: cap línia visible en repòs; mentre puja cada ranura, el seu avís visible', () => {
+    const props = {
+      heroImage: '/assets/h.webp', onHeroEdit: vi.fn(), heroEditLabel: 'Capçalera',
+      logoImage: '/assets/l.webp', onLogoEdit: vi.fn(), logoEditLabel: 'Logotip',
+      ajudaAmbImatge: AJUDA, ajudaNomesEnPujada: true,
+    };
+    const vista = closca(props);
+    for (const nom of ['Capçalera', 'Logotip']) {
+      const boto = vista.getByRole('button', { name: nom });
+      expect(ajudaDe(boto)).toBeNull();
+      expect(document.getElementById(boto.getAttribute('aria-describedby')).className).toBe('sdp-nomes-lector');
+    }
+    vista.rerender(arbre({ ...props, heroPujant: true }));
+    expect(ajudaDe(vista.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_IMATGE_PUJANT);
+    expect(ajudaDe(vista.getByRole('button', { name: 'Logotip' }))).toBeNull();
+    vista.rerender(arbre({ ...props, heroPujant: false, logoPujant: true }));
+    const logo = vista.getByRole('button', { name: 'Logotip' });
+    expect(ajudaDe(logo)).toBe(AJUDA_IMATGE_PUJANT);
+    expect(document.getElementById(logo.getAttribute('aria-describedby')).textContent).toBe(AJUDA_IMATGE_PUJANT);
+  });
+});

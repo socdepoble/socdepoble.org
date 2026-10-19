@@ -17,6 +17,13 @@
 
 const REVERSIBLE = 'Si la fas pública, la pots tornar a fer privada quan vulgues, des d’ací mateix.';
 
+/* Pla 261018_1605 (Tasca 1, D3; ordre del Mestre, 18-10-2026) · L'avís de
+   l'ajust «Estat del perfil» d'«El compte» (DetallAjust, tipus 'visibilitat'),
+   només quan el valor DESAT de la persona és públic. Font única: cap altre
+   mòdul no en porta còpia. PERSONA.avisPublica (l'editor) no canvia: el seu
+   text és pendent de la decisió del Mestre. */
+export const AVIS_FITXA_PUBLICA = 'La teua fitxa és pública perquè el veïnat et puga trobar. Pots canviar-la a privada quan vulgues.';
+
 const PERSONA = Object.freeze({
   titol: 'Qui pot vore la teua fitxa?',
   descripcio: 'Tria com vols estar al poble. No és per a sempre: ho pots canviar quan vulgues.',

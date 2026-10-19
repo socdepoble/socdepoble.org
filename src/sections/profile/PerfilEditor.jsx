@@ -8,7 +8,6 @@ import { Alerta, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { usePerfil } from './PerfilContext.jsx';
 import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
-import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 import { AvatarDeCapcalera } from '../../components/universal/PageFrame.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
@@ -22,9 +21,9 @@ import { cuaDesament } from '../../data/autodesament/cua.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { registraEntitatDelProjecte } from '../../config/navigation.js';
-import { esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
+import { esMarcaDeLEntitat, esRutaDelProjecte, isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeReservaDeFitxa, potEditarFitxa,
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, formataPoble, pobleDeReservaDeFitxa, potEditarFitxa,
   rutaDeFitxaPublica, slugDEntitat,
 } from './fitxaDePerfil.js';
 
@@ -186,6 +185,16 @@ export const ETIQUETA_AVATAR = 'Avatar';
 export const ETIQUETA_LOGOTIP = 'Logotip';
 export const ETIQUETA_LLEVA_AVATAR = 'Llevar l’avatar';
 
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · «Neteja visual
+   total sota l'avatar»: el cercle sol és el botó. El seu nom diu el que fa:
+   amb una imatge que s'hi pot obrir, la finestra de retall amb eixa imatge;
+   sense, el selector de fitxers. Dins de la finestra, els tres botons amb els
+   noms que va escriure el Mestre («Canviar foto» és el de sèrie del diàleg). */
+export const ETIQUETA_AJUSTA_AVATAR = 'Ajusta o canvia l’avatar';
+export const ETIQUETA_POSA_AVATAR = 'Posa un avatar';
+export const ETIQUETA_LLEVA_AVATAR_FINESTRA = 'Llevar avatar';
+export const ETIQUETA_GUARDA_ENQUADRE = 'Guardar enquadre';
+
 /* Lògica d'Usuari (T4): la fitxa d'un agent IA es diu clarament el que és
    (ETIQUETA_IA ve de fitxaDePerfil.js, la mateixa de la seua píndola). */
 export const AVIS_FITXA_IA = 'Esta fitxa és d’una intel·ligència artificial de Sóc de Poble. La mantenen les persones que administren l’entitat; el que hi escrigues és el que veurà tot el poble.';
@@ -227,9 +236,12 @@ export function PerfilEditor({ identitat }) {
      pobleDeFitxa i la fitxa pública: clauFundacional, mai pel nom). La barra
      taronja i la targeta viva ja no pinten Sóc de Poble ni Rentonar sense
      poble. El poble desat sempre mana; cap altra fitxa se n'inventa cap. */
+  /* Pla 261018_1605 (Tasca 2, D5) · La mateixa columna de sempre
+     (town_name), en la forma canònica 'A · B' (formataPoble). */
   const poble = (mena === 'organitzacio'
-    ? (dades.town_name || '')
-    : (dades.town_name || (identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name || ''))
+    ? formataPoble(dades.town_name)
+    : (formataPoble(dades.town_name)
+      || formataPoble((identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name)))
     || pobleDeReservaDeFitxa(identitat);
 
   /* T39 (ordre del Mestre, 260928) · L'id amb què les notes noves hereten els
@@ -455,15 +467,25 @@ export function PerfilEditor({ identitat }) {
      no el commuta: persona → is_public; organització → visibility
      ('public' | 'members'). Sense canvi, o per a un agent (sempre pública),
      no toca res. Sense toast d'èxit: es veu en la icona i en la finestra que
-     es tanca. Un error es llança perquè el selector el pinte en línia. */
+     es tanca. Un error es llança perquè el selector el pinte en línia.
+     Pla 261018_1605 (Tasca 1, D1; correcció de la revisió) · Per a la
+     persona, «sense canvi» es compara amb el valor DESAT (is_public), no amb
+     el que es pinta: un is_public absent o null es pinta públic (D1), però
+     el servidor el llig privat (perfil_public: coalesce(…, false)). Triar
+     «pública» amb un valor així l'envia explícit; en una base sense la
+     columna, el desat diu l'error de la columna absent, com abans. */
+  const isPublicDesat = mena === 'persona' ? dades.is_public : undefined;
   const triaVisibilitat = useCallback(async (publica) => {
-    if (esAgent || publica === Boolean(fitxa.isPublished)) return true;
+    const senseCanvi = mena === 'persona'
+      ? typeof isPublicDesat === 'boolean' && isPublicDesat === publica
+      : publica === Boolean(fitxa.isPublished);
+    if (esAgent || senseCanvi) return true;
     /* T47 · Canviar la visibilitat salta la pausa: el que s'acaba d'escriure ix abans. */
     if (ref) await cuaDesament.desaAra(ref);
     if (mena === 'persona') await guardarCampPerfil('is_public', publica, identitat.id);
     else await guardarCampPerfil('visibility', publica ? 'public' : 'members', identitat.id);
     return true;
-  }, [esAgent, fitxa.isPublished, mena, guardarCampPerfil, identitat.id, ref]);
+  }, [esAgent, fitxa.isPublished, isPublicDesat, mena, guardarCampPerfil, identitat.id, ref]);
   const visibilitat = useMemo(() => ({
     textos: textosDeFitxa(mena),
     bloqueig: bloqueigDeFitxa(mena),
@@ -513,6 +535,17 @@ export function PerfilEditor({ identitat }) {
   const avatarDesat = avatarDeLaFitxa(fitxa, campsDeLaImatge, identitat);
   const avatarResolt = useResolvedAsset(esFitxaDelPilot(identitat) ? '' : avatarDesat);
   const avatarBarra = avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat;
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «en fer clic
+     directament sobre el cercle de l'avatar, obri directament
+     DialegEnquadrament carregant la imatge que ja hi ha») · La imatge que la
+     finestra de retall pot obrir: l'adreça JA RESOLTA de la mateixa que pinta
+     el cercle (avatarDeLaFitxa; un sdp-media://, pel port; un camí propi, amb
+     la base), i només si el cercle també la pintaria (isSafeAsset, mai la
+     marca de l'entitat: AvatarDeCapcalera). Mai l'esquema opac cru. Sense
+     (cap avatar, o encara s'està resolent), el clic obri el selector. */
+  const fontDelAvatar = avatarResolt && isSafeAsset(avatarResolt) && !esMarcaDeLEntitat(avatarResolt) ? avatarResolt : '';
+  /* La persona i l'agent porten l'avatar redó; l'organització, el logotip. */
+  const ambAvatarRedo = mena !== 'organitzacio';
 
   /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Dos botons clars
      i separats, sense el diàleg intermedi (DialegCapcaleraAvatar ja no es
@@ -558,12 +591,29 @@ export function PerfilEditor({ identitat }) {
   const capcalera = useImatgeDeFitxa({
     camp: 'heroImage', forma: 'capcalera', onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge,
   });
+  /* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · La finestra de retall
+     de l'avatar (persona i agent) agrupa el que abans eren les píndoles de
+     davall del cercle: «Canviar foto» (amb els formats admesos, AJUDA_FOTO),
+     «Llevar avatar» (només si la fitxa té una imatge pròpia, com abans; obri
+     la mateixa confirmació de sempre, damunt de la finestra) i «Guardar
+     enquadre». El logotip d'una organització i la capçalera, com sempre.
+     «Llevar avatar» crida obriLleva, que es definix més avall (depén de la
+     pujada d'esta mateixa imatge): un trampolí estable. */
+  const llevaDesDeLaFinestraRef = useRef(null);
+  const llevaDesDeLaFinestra = useCallback((e) => llevaDesDeLaFinestraRef.current?.(e), []);
+  const finestraAvatar = useMemo(() => (ambAvatarRedo ? {
+    canviaFoto: true, ajudaFoto: AJUDA_FOTO, etiquetaDesa: ETIQUETA_GUARDA_ENQUADRE,
+    ...(imatgeDeLaFitxa ? { onLleva: llevaDesDeLaFinestra, etiquetaLleva: ETIQUETA_LLEVA_AVATAR_FINESTRA } : null),
+  } : null), [ambAvatarRedo, imatgeDeLaFitxa, llevaDesDeLaFinestra]);
   const imatgePropia = useImatgeDeFitxa({
     camp: 'logoImage', forma: mena === 'organitzacio' ? 'logotip' : 'avatar',
     onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge, onDesat: apuntaFocusAvatar,
+    finestra: finestraAvatar,
   });
   const { obri: obriCapcalera, pujant: capcaleraPujant } = capcalera;
-  const { obri: obriFitxerPropi, obert: imatgePropiaOberta, pujant: imatgePropiaPujant } = imatgePropia;
+  const {
+    obri: obriFitxerPropi, ajusta: ajustaFitxerPropi, tanca: tancaImatgePropia, obert: imatgePropiaOberta, pujant: imatgePropiaPujant,
+  } = imatgePropia;
   /* La ranura crida amb el control de la closca ({ acaba }); l'avatar redó
      (PageFrame), amb l'esdeveniment del clic, que dona l'arrel.
      Correcció de la revisió de la línia I2 · I el control mateix (l'avatar
@@ -577,6 +627,27 @@ export function PerfilEditor({ identitat }) {
     controlImatgePropia.current = typeof element?.focus === 'function' ? element : null;
     obriFitxerPropi(control);
   }, [obriFitxerPropi]);
+  /* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · El clic al cercle de
+     l'avatar: la finestra de retall amb la imatge que ja hi ha (fontDelAvatar)
+     o, sense cap, el selector de fitxers. La mateixa arrel i el mateix
+     control per al focus que obriImatgePropia (en tancar, la finestra el
+     torna al cercle). Safari no enfoca un botó en clicar-lo: el cercle es
+     queda el focus abans d'obrir, perquè la finestra el trobe com a qui l'ha
+     oberta i l'hi torne en tancar (Escape, Cancel·lar).
+     Correcció F4 de la revisió · També quan el cercle és buit i obri el
+     selector: la finestra s'obri després de triar el fitxer i, sense el
+     focus al cercle, en Safari es quedava el body com a qui l'havia oberta. */
+  const ajustaAvatar = useCallback((e) => {
+    const element = e?.currentTarget ?? null;
+    arrelImatgePropia.current = arrelDe(element);
+    controlImatgePropia.current = typeof element?.focus === 'function' ? element : null;
+    controlImatgePropia.current?.focus({ preventScroll: true });
+    if (!fontDelAvatar) {
+      obriFitxerPropi(e);
+      return;
+    }
+    ajustaFitxerPropi(fontDelAvatar);
+  }, [fontDelAvatar, ajustaFitxerPropi, obriFitxerPropi]);
 
   /* «Llevar l'avatar» (CONTRACTE-1 de l'avatar redó): després de confirmar,
      el camp buit per la cua de la fitxa, com feia el diàleg intermedi.
@@ -596,10 +667,15 @@ export function PerfilEditor({ identitat }) {
     arrelImatgePropia.current = arrelDe(e?.currentTarget ?? null);
     setConfirmaLleva(true);
   }, [imatgePropiaPujant, avisImatge]);
+  llevaDesDeLaFinestraRef.current = obriLleva;
   /* Escape s'accepta sempre (el navegador pot tancar el <dialog> pel seu compte). */
   const tancaLleva = useCallback((motiu) => {
     if (!llevant || motiu === 'esc') setConfirmaLleva(false);
   }, [llevant]);
+  /* Pla 2000 (punt 2) · «Llevar avatar» ve de dins de la finestra de retall:
+     confirmat, es tanquen les dues (la foto que s'hi ajustava ja no és de
+     ningú) i el focus va al cercle, ja buit. Cancel·lat, la confirmació torna
+     el focus al botó de la finestra, que continua oberta. */
   const llevaAvatar = useCallback(async () => {
     setLlevant(true);
     try {
@@ -609,7 +685,8 @@ export function PerfilEditor({ identitat }) {
     }
     apuntaFocusAvatar();
     setConfirmaLleva(false);
-  }, [desaImatge, apuntaFocusAvatar]);
+    tancaImatgePropia();
+  }, [desaImatge, apuntaFocusAvatar, tancaImatgePropia]);
 
   /* Després del commit que tanca la finestra: els efectes dels fills (el que
      retorna el focus al control que l'havia obert) ja han corregut. */
@@ -761,19 +838,38 @@ export function PerfilEditor({ identitat }) {
      amb un esborrany a la cua, el mateix valor que abans (cap píxel canvia).
      «Llevar l'avatar» només hi és quan la fitxa té una imatge pròpia
      (imatgeDeLaFitxa): la foto de la sessió no és cap camp de la fitxa, i
-     buidar avatar_url, que ja és buit, no faria res. */
-  const ambAvatarRedo = mena !== 'organitzacio';
-  const ranuraDelLogo = potEditar && !esPilot && (!ambAvatarRedo || !avatarDesat);
-  const etiquetaImatgePropia = ambAvatarRedo ? ETIQUETA_AVATAR : ETIQUETA_LOGOTIP;
-  const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && avatarDesat ? {
+     buidar avatar_url, que ja és buit, no faria res.
+     Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «neteja visual
+     total sota l'avatar: elimina la llista de botons repetitius ([Avatar],
+     [Llevar avatar]) i el text dels 10 MB») · En edició, el cercle és sol:
+     ni les píndoles «Avatar» i «Llevar l’avatar» ni la línia AJUDA_FOTO
+     (CONTRACTE-1 i línia I1, derogats ací; a PageFrame continuen per a qui
+     els passe). El cercle és el botó (ajustaAvatar: la finestra de retall
+     amb la imatge que ja hi ha, i dins, «Canviar foto», els formats, «Llevar
+     avatar» i «Guardar enquadre»; sense imatge, el selector). Sense cap foto,
+     el cercle es pinta buit amb la càmera (botoBuit), i la ranura «Avatar»
+     de la persona i de l'agent ja no hi és: la ranura queda per al logotip
+     d'una organització. En lectura, l'avatar redó de sempre, sense botó.
+     Mentre la foto nova puja, el cercle ho diu (ocupat → aria-busy) i el clic
+     ho avisa (la guarda d'useImatgeDeFitxa). Correcció de la revisió · I es
+     veu i s'anuncia: el carregador al lloc de la càmera i, amagat,
+     l'AVIS_IMATGE_PUJANT de sempre en una regió d'estat (textOcupat). */
+  const ranuraDelLogo = potEditar && !esPilot && !ambAvatarRedo;
+  const etiquetaImatgePropia = ETIQUETA_LOGOTIP;
+  const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && avatarDesat && !potEditar ? {
     src: avatarDesat,
     alt: `Avatar de ${identitat.nom}`,
-    ...(potEditar ? {
-      onCanvia: obriImatgePropia, etiquetaCanvia: ETIQUETA_AVATAR,
-      ...(imatgeDeLaFitxa ? { onLleva: obriLleva, etiquetaLleva: ETIQUETA_LLEVA_AVATAR } : null),
-      ajuda: imatgePropiaPujant ? AJUDA_IMATGE_PUJANT : AJUDA_FOTO, pujant: imatgePropiaPujant,
-    } : null),
-  } : null), [ambAvatarRedo, avatarDesat, imatgeDeLaFitxa, identitat.nom, potEditar, obriImatgePropia, obriLleva, imatgePropiaPujant]);
+  } : null), [ambAvatarRedo, avatarDesat, identitat.nom, potEditar]);
+  const avatarDeLEdicio = useMemo(() => (ambAvatarRedo && potEditar ? {
+    src: avatarDesat,
+    alt: `Avatar de ${identitat.nom}`,
+    onCanvia: ajustaAvatar,
+    nomBoto: fontDelAvatar ? ETIQUETA_AJUSTA_AVATAR : ETIQUETA_POSA_AVATAR,
+    botoBuit: true,
+    obriFinestra: Boolean(fontDelAvatar),
+    ocupat: imatgePropiaPujant,
+    textOcupat: AVIS_IMATGE_PUJANT,
+  } : null), [ambAvatarRedo, potEditar, avatarDesat, identitat.nom, ajustaAvatar, fontDelAvatar, imatgePropiaPujant]);
   /* El logo_url ja resolt (avatarBarra): PageFrame no resol cap sdp-media://
      del logotip d'una entitat. */
   const logoDeLectura = useMemo(() => (
@@ -827,6 +923,8 @@ export function PerfilEditor({ identitat }) {
          abans de triar a tots els botons d'imatge: a la ranura
          (`logoEditHelp`), davall del botó quan ja hi ha imatge
          (`ajudaAmbImatge`) i a l'avatar redó (avatarAutor.ajuda, a dalt).
+         Relleu del Pla 2000 (punt 2) · Amb el cercle de l'avatar, el de la
+         «Capçalera» només per al lector de pantalla (ajudaNomesEnPujada, davall).
          Correcció de la revisió de la línia I2 · Mentre puja, la closca hi
          diu AJUDA_IMATGE_PUJANT i, quan acaba, torna el focus al seu botó si
          s'havia perdut (Escape a mitja pujada, amb el botó desactivat). */
@@ -835,6 +933,17 @@ export function PerfilEditor({ identitat }) {
       onHeroEdit: obriCapcalera,
       heroPujant: capcaleraPujant,
       ajudaAmbImatge: AJUDA_FOTO,
+      /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «lleva la
+         línia dels 10 MB de davall del cercle, amb una prop opcional a
+         UniversalEditorShell que conserve l'avís de pujada») · Amb el cercle
+         de l'avatar (persona i agent IA), la píndola «Capçalera» que hi ha
+         just davall ja no pinta la línia dels formats (heroEditHelp,
+         ajudaAmbImatge): el text queda només per al lector de pantalla,
+         lligat al botó, i mentre la capçalera puja torna l'avís visible de
+         sempre. Els de l'avatar els diu, visibles, la seua finestra de retall
+         («Canviar foto»). L'organització, amb la ranura del logotip, com
+         sempre. */
+      ...(ambAvatarRedo ? { ajudaNomesEnPujada: true } : null),
       showLogoUpload: ranuraDelLogo,
       ...(ranuraDelLogo ? {
         onLogoEdit: obriImatgePropia, logoEditLabel: etiquetaImatgePropia, logoEditHelp: AJUDA_FOTO, logoPujant: imatgePropiaPujant,
@@ -855,7 +964,8 @@ export function PerfilEditor({ identitat }) {
       /* L'entitat pilot no pinta mai el logo de la fila: damunt de l'H1 hi va la
          marca fixa de Sóc de Poble (PageFrame), com en lectura. */
       logoAlTitol: !ambAvatarRedo && !esPilot,
-      ...(potEditar && avatarDeCapcalera ? { identitatEdicioAvancada: <AvatarDeCapcalera {...avatarDeCapcalera} /> } : null),
+      /* Pla 2000 (punt 2) · El cercle sol (avatarDeLEdicio), també sense foto. */
+      ...(avatarDeLEdicio ? { identitatEdicioAvancada: <AvatarDeCapcalera {...avatarDeLEdicio} /> } : null),
       /* CONTRACTE-3 (Onada 4) · Les vistes (A4, portada, targeta) no van al
          centre de la fitxa: DocumentEditor les porta a «Les vistes». */
       ambVistes: false,
@@ -891,7 +1001,7 @@ export function PerfilEditor({ identitat }) {
       onObriEmoticona: ambEmoticona ? obriEmoticona : null,
     };
   }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
-    obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera,
+    obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,
     logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona]);
 
   /* Només qui pot editar la fitxa té els selectors i les finestres de retall.

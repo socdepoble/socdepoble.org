@@ -7,6 +7,99 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-19T13:45:00+02:00 · IAIA MarIA · Tancament Migdia, Gauntlet Seguretat, ReDoS Tancat i Release WP v1.1.7
+
+- **Acta:** [[261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]. Sessió de migdia segellada abans d'apagar l'ordinador per descans tèrmic.
+- **Gauntlet de Seguretat i Codi de Client (8 Pegats Aplicats Nets):**
+  - Claude Security en mode `high` (257 fitxers, 81 investigadors). Contrastat i ratificat per Codex ([[261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]]) i Gemini ([[261019_1240_auditoria_contrast_gauntlet_seguretat_i_superadmin_gemini]]).
+  - 8 pegats aplicats i verificats a l'arbre real: F03/F07/F09 (sanejament payload), F04/F12 (regex lineal $\mathcal{O}(n)$ a detall), F05 (camiNet storage path traversal), F06 (aïllament slug projecte), F11 (protecció autoria IAIA), F14 (author_name autoritatiu), R1_R2_R4 i R3 (ReDoS de /cerca resolt amb tall monotònic en temps lineal).
+  - Proves: **19.658 proves en verd (1.148 fitxers)**, 0 fallades. ESLint 0 errors i 0 avisos.
+- **Connector de WordPress (Release v1.1.7 Compilada i Signada):**
+  - Generat canònicament amb `empaqueta.mjs` i signat amb Ed25519: `wordpress-plugin/builds/261019_1344_wordpress_enxufe_v1.1.7.zip` i fitxers de canal `stable.json` / `1.1.7.json`.
+  - Diagnosi de pes: El JS/CSS és ultra-lleuger (~1.3 MB chunk principal, 3.4 kB loader). El pes (~135 MB) prové de la còpia d'actius històrics de `public/assets/uploads/` (fotos de La Torre de fins a 6.8 MB com DSC00410.JPG). Pendent externalitzar multimèdia a Supabase Storage / CDN per a complir el límit de 10 MB de WordPress.org.
+- **Supabase (F01 SQL & F10):**
+  - Mantinguts a `pegats/` sense aplicar a producció sense preflight en staging.
+- **Higiene:** Porta Olivera amb codi 0 (15 documents actius ancorats). Directori residual `./~` identificat com a cau local no versionada.
+- **Relleu per a la Tornada:**
+  1. Pujada de `v1.1.7.zip` a `gentdelatorre.net` per a l'auditoria visual.
+  2. Implementació del Panell de Superadministració (3 rols: Veí, Editor, Superadmin) a `DetallAjust.jsx` / `GrupOpcions.jsx`.
+  3. Arrencada de Capacitor (`vite.natiu.config.js` -> `dist-natiu` -> `npx cap add ios` / `android`).
+
+
+- **Informe:** [[261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]], torn `torn_77a87bc0-17fc-408f-82e8-e665f4a3e1a5`. Contrast de Claude 2315 i PEGATS amb la nova skill; només documentació, cap canvi al producte ni a Supabase.
+- **Pegats:** F03/F04/F05/F14 passen l’abast focal; cap regressió nova demostrada. F11 parcial: les fotos derivades perden ownerUserId i `?ibanez` força etiqueta/drets IAIA, reproduït fins a dades del panell. F06 parcial: Set global d’identitats entre àmbits, precondició UI no demostrada; resoldre abans del canvi de poble.
+- **SQL:** dues migracions coherents estàticament; cap vistiplau de producció sense staging/preflight ampliat anon + authenticated, totes les policies i versió de Storage. URL públiques i integritat d’esborrat continuen obertes.
+- **F10:** reproduïda adopció del compte de l’enllaç amb/sense sessió prèvia; canvia la contrasenya d’eixe compte, no la del compte previ de la víctima. Proposta de confirmació d’identitat i tornada a entrada normal, preservant Safe Links.
+- **Rols:** ratificada 2256: mode Veí real exigeix restricció de servidor, context revocable, concessió territorial, actor/poble atòmics i AAL2. El commutador visual no ho implementa.
+- **Verificació:** 144 + 109 proves focals de client; 43 de recuperació/sonda temporal; 9 estàtiques del SQL en còpia temporal. Document vàlid. No s’ha repetit la suite global de 19.638 declarada per Claude.
+- **Tancament:** exit 1, 408 errors de segell/skills/SCC i relleu propi al LEDGER pendent; cap error del nou informe. Olivera/plantilles/autoritat/ledger/wiki passen; torn planned, sense forçar segell. Incorporar a la pròxima Acta Marmota, sense declarar nou consens ni desplegament.
+
+
+## ESTAT_ACTUAL · 2026-10-18T23:30:00+02:00 · IAIA MarIA · Adopció de Claude Security, Tractor de Ciberseguretat i Tancament de Jornada
+
+- **Acta:** [[261018_2330_acta_marmota_seguretat_claude_i_tancament]]. Jornada segellada.
+- **Ciberseguretat Canònica (`core-seguretat-audit`):**
+  - Creat el Tractor canònic a `.agents/skills/core-seguretat-audit/SKILL.md` i enllaçat a `00_INDEX_SKILLS.md`.
+  - Inspira el funcionament en el plugin oficial d'Anthropic `claude-security@claude-plugins-official`.
+  - Estableix que Claude Code utilitzarà `/claude-security` per a l'escaneig natiu, mentre que MarIA, Codex i Gemini executaran el mateix estàndard (threat modeling, SAST, informes SARIF/Markdown i pegats `.patch` verificats independentment amb la suite de tests).
+- **Frontend i Perfil Polits (Pedra Seca):**
+  - Retirat el punt volat (`· `) davant del poble a la targeta de perfil (`components.css`).
+  - Retirada la línia de text «fins a 10 MB» davall de l'avatar a `PerfilEditor.jsx`.
+  - 100% de la suite de tests en verd (109 fitxers, 1.596 proves de mercat, perfil i multimèdia aprovades).
+- **Relleu per a Demà (19-10-2026):**
+  1. Claude Code està executant en segon pla l'escaneig oficial `claude-security` en mode `high` (arrencat a les 00:05). Demà recollir l'informe i pegats a `02_investigacio_ia/`.
+  2. Implementar el panell de Superadministració i commutador de 3 rols a `PerfilShell.jsx` / `DetallAjust.jsx`.
+  3. Inicialitzar contenidor Capacitor (`npx cap add ios`, `npx cap add android`) amb els comptes de desenvolupador d'Apple i Google ja operatius.
+  4. Crear la skill canònica `sdp-apple-design` a partir de les conclusions d'Emil Kowalski.
+
+## ESTAT_ACTUAL · 2026-10-18T23:04:50+02:00 · Codex · Auditoria creuada Claude i proposta de Superadministració
+
+- **Informe per al 19-10-2026:** [[261018_2256_auditoria_codex_creuada_claude_i_superadministracio]], torn `torn_3a8edb7f-14e0-4192-a6cf-4486815d21fc`. F1–F12 contrastades amb codi/migracions actuals i artefacte WP; proposta documental, sense canvis de producte ni dades remotes.
+- **Privacitat:** ajornar DEFAULT no arregla totes les promeses vigents. RPC pública per a qualsevol compte autenticat; privada amb identitat mínima al poble compartit. UI/BD discrepen amb NULL; política i flux d’alta per decidir abans de desplegar.
+- **Mitjans/release:** F3 tanca UI però no Storage directe; activar només la capacitat reobriria eliminació sense consulta. REA confirma que ZIP estable local v1.1.6 no inclou integritatMitjans, encara que la signatura és vàlida. Distribució remota no comprovada.
+- **Rectificacions:** UUID no resol tot sol /javillinares; hidratació encara substituïx tries reals. Capçalera→avatar corregit, però Google pot reaparéixer després de retirar-lo. town_memberships ja existix; town_name no atorga permisos ni canvia tenant real.
+- **Panell:** reutilitzar El compte/Tauler/MFA. Un subjecte autenticat, actor, àmbit i mode efectiu separats. Veí real requerix restricció al servidor; editor/administrador de poble amb concessió territorial; superadmin amb UUID i AAL2. Javi, Damián i Torsten són destinataris indicats, no concessions remotes verificades.
+- **Validació:** 496 proves focals passades i sondes adversarials; document validat. Tancament exit 1 per segell/skills/SCC i relleu LEDGER pendent; cap error del nou informe, torn no tancat mecànicament. L’acta 2105 no acredita consens absolut ni producció globalment verda; contrast explícit en l’informe.
+- **Relleu:** privacitat → integritat de mitjans → convergència d’identitat → permisos/context servidor → panell → nova release verificada. Cap cron, cap missatge a altres xats, cap commit/desplegament. Acta de jornada amb este relleu pendent de coordinació.
+
+
+## ESTAT_ACTUAL · 2026-10-18T21:05:00+02:00 · IAIA MarIA · Conclusió Auditoria Trio d'IAs, Relleu d'Implementació i Salt PageSpeed Mòbil (87)
+
+- **Acta:** [[261018_2105_acta_marmota_auditoria_trio_i_relleu_implementacio]]. Torn `torn_2ca7d6d7-2a6a-4678-9e29-541976629b27`.
+- **Consens Trio d'IAs Assolit:**
+  1. `261018_2030_auditoria_codex`: Auditoria de backend Supabase, protecció relacional de mitjans (`comprovaUsImatge`), diagnòstic del paquet WP (39,44 MB només traient uploads, cal CDN i WebP complet).
+  2. `261018_2030_auditoria_gemini`: Component `<MercatProductBody />` amb selector de variants en píndoles accessibles (`role="radiogroup"`), enginyeria inversa REA, fitxes 1-pàgina de `20_capacitats` (`gws` i `rea`), i fix de fallback d'avatar a `personaDeSessio.js:112`.
+  3. `261018_2045_auditoria_claude`: Blindatge de `DetallMultimedia.jsx` amb `teCapacitat('integritatMitjans')` (fals per defecte), 714 proves en verd (51 fitxers).
+- **Relleu Executiu:** Transmés a Claude Code per a implementar Fase 5 (Multimèdia per actor), Fase 6 (Mercat unificat) i Fase 7 (Enquadrament avatar a `PerfilEditor.jsx`). Gemini i Codex queden en reserva per a l'auditoria adversarial posterior.
+- **Rendiment Web Mòbil:** PageSpeed Insights a `gentdelatorre.net`: salt de 68 a 87 punts (+19 punts). LCP reduït de 9.9s a 2.3s, FCP 0.3s, TBT 70ms, CLS 0.001. 100/100 en SEO, A11y, Bones Pràctiques i Agentic Browsing.
+- **Tancament Cognitiu:** 75 artefactes d'imatge acumulats a la sessió. Es tanca torn amb Acta Marmota neta per obrir un nanoxat fresc amb el context impecable.
+
+## ESTAT_ACTUAL · 2026-10-18T20:40:04+02:00 · Codex · Auditoria Backend, Supabase i integritat de dades
+
+- **Informe:** [[261018_2030_auditoria_codex]], torn `torn_9c42437b-2615-43f5-8256-7e4cef2f84ce`, només documental. Prompt/pla 2000 llegits, inclosa ampliació 20:34 d’àlbums per actor. Sense canvis de producte, migracions, uploads, esborrats, commit ni desplegament.
+- **Integritat:** dissenyat `comprovaUsImatge` sobre fonts reals (`app_content`, `section_submissions`, perfils, organitzacions, notes i contingut restaurable). El codi encara esborra directament Storage; proposta de registre, referències tipades, bloqueig transaccional i ampliació de la cua existent. No s’ha implementat.
+- **WebP/WP:** conversió en sec de DSC00410.JPG −95,67%; excloure només uploads deixa ZIP estimat de 39,44 MB. Cal manifest verificat, CDN i tractar altres mitjans; 2–4 MB no demostrat. EXIF depén del motor.
+- **Mercat:** una Samarreta canònica amb dos variants/huit fotos; falta id estable de variant i preservar-lo al mapejador. La compartició pública pot fragmentar el subjecte de conversa.
+- **Validació:** 282 proves focals passades (100 + 103 Vitest, 29 + 50 Node). Document validat. Sense consulta de Supabase remot ni suite global. Tancament exit 1: segell/skills/SCC, canvi concurrent d’un test i relleu LEDGER no formalitzat; pla ja vinculat. No es declara torn mecànicament tancat.
+- **Relleu:** integrar contractes i criteris d’acceptació en el pla; Claude implementa UI i Gemini reaudita. Cap cron creat ni procés propi de seguiment. Acta Marmota de jornada pendent de coordinació.
+
+
+## ESTAT_ACTUAL · 2026-10-18T19:41:00+02:00 · IAIA MarIA · Migracions de Supabase, Millores de Perfil, Poble Principal i Release WordPress v1.1.6
+
+- **Migracions Supabase Confirmades (Success. No rows returned):**
+  1. `profiles`: Afegides columnes `town_name`, `is_public`, `visibility` amb polítiques RLS actualitzades.
+  2. `organizations`: Afegida columna `town_name` i permisos concedits.
+  3. `organization_member_organizations`: Taula i RPCs de gestió de membres (`membres_organitzacio`, `desa_membre_organitzacio`, `lleva_membre_organitzacio`) actives.
+  4. Email corporatiu organitzacions: Columnes `contact_email` i `public_email` afegides a `public.organizations` amb RPCs `contacte_organitzacio` i `desa_contacte_organitzacio`.
+- **Frontend i Experiència de Perfil:**
+  1. Multi-Poble i Poble Principal: Botó de Pedra Seca `[ Fer principal ]` actiu a «El compte» per commutar el poble actiu de publicació i de la barra taronja amb un sol clic.
+  2. Miniatures de la llista (columna 2): Corregida la prioritat a `perfilModel.js` i `PerfilShell.jsx` per tal que `heroImage` (pomes vermelles de portada) represente la fitxa en lloc del logotip verd. 100% testat.
+  3. Tipografia i centrat: Centrats l'identificador (`slug`) i el text explicatiu a «El compte», amb espaiat i mides llegibles (`--sdp-text-base`).
+  4. Proves de Perfil: 51 fitxers i 687 tests passant en verd (100%).
+- **Release WordPress v1.1.6 Signada:**
+  - Compilat i signat amb clau Ed25519: `wordpress-plugin/builds/261018_1939_wordpress_enxufe_v1.1.6.zip` i `stable.json` / `1.1.6.json` llestos per a desplegar a `gentdelatorre.net`.
+- **Higiene:** Porta Olivera amb codi 0 (netejat i verificat).
+
 ## ESTAT_ACTUAL · 2026-10-18T15:40:00+02:00 · IAIA MarIA · Tancament de Sessió, Poda Parcial, Purga d'Imatge Lletja i Release WordPress v1.1.5
 
 - **Acta:** [[261018_1535_acta_marmota_harmonitzacio_perfil_i_estudi_obsidian]].

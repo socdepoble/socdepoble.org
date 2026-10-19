@@ -397,3 +397,148 @@ describe('Escape a mitja pujada', () => {
     expect(screen.getByRole('status').textContent).toBe('quiet');
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════
+   ORDRE DEL MESTRE (18-10-2026, RELLEU DEL PLA 2000, PUNT 2) · «En fer clic
+   directament sobre el cercle de l'avatar, obri directament
+   DialegEnquadrament carregant la imatge que ja hi ha … i agrupa "Canviar
+   foto", "Llevar avatar" i "Guardar enquadre" dins del propi diàleg.»
+   L'opció `finestra` i les eixides `ajusta` i `tanca` del hook. Sense
+   `finestra`, la finestra de sempre (les proves de dalt).
+   ═══════════════════════════════════════════════════════════════════ */
+describe('Pla 2000 · ajusta, finestra i tanca', () => {
+  const ADRECA = 'https://mitjans.test/avatar.webp';
+  const FINESTRA = Object.freeze({ canviaFoto: true, ajudaFoto: 'PNG, JPEG o WebP, fins a 10 MB.', etiquetaDesa: 'Guardar enquadre' });
+
+  /* El consumidor de dalt, amb els dos botons nous: «Ajustar» (l'adreça ja
+     resolta) i «Tancar» (tanca). */
+  function ProvaAjust({ font = ADRECA, ...opcions }) {
+    const imatge = useImatgeDeFitxa(opcions);
+    return (
+      <>
+        <button type="button" onClick={() => imatge.ajusta(font)}>Ajustar</button>
+        <button type="button" onClick={() => imatge.obri()}>Obrir</button>
+        <button type="button" onClick={() => imatge.tanca()}>Tancar</button>
+        <output>{imatge.pujant ? 'pujant' : 'quiet'}</output>
+        {imatge.input}
+        {imatge.dialeg}
+      </>
+    );
+  }
+  function muntaAjust({ finestra = FINESTRA, font = ADRECA, ...resta } = {}) {
+    const p = {
+      onImageUpload: vi.fn(async () => URL_MITJA), onDesaCamp: vi.fn(async () => true), onError: vi.fn(), onDesat: vi.fn(), ...resta,
+    };
+    const vista = render(<ProvaAjust camp="logoImage" forma="avatar" font={font} finestra={finestra} {...p} />);
+    return { ...vista, ...p, input: vista.container.querySelector('input[data-imatge-de-fitxa="logoImage"]') };
+  }
+  const finestraOberta = () => screen.getByRole('dialog', { name: 'Retalla la foto' });
+
+  test('ajusta(adreça) obri la finestra amb eixa imatge, sense passar pel selector ni validar-la', async () => {
+    const vista = muntaAjust();
+    const clic = vi.spyOn(vista.input, 'click');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    expect(clic).not.toHaveBeenCalled();
+    expect(dobles.carregaImatge.mock.calls.map(([font]) => font)).toEqual([ADRECA]);
+    expect(finestraOberta().querySelector('.sdp-enquadrament__visor-caixa--cercle')).not.toBeNull();
+    expect(vista.onError).not.toHaveBeenCalled();
+  });
+
+  test('ajusta sense adreça no obri res (qui crida obri el selector)', async () => {
+    muntaAjust({ font: '' });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(dobles.carregaImatge).not.toHaveBeenCalled();
+  });
+
+  test('la finestra porta «Canviar foto», els formats i «Guardar enquadre»; sense `finestra`, la de sempre', async () => {
+    muntaAjust();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    const d = finestraOberta();
+    expect(within(d).getByRole('button', { name: 'Canviar foto', description: FINESTRA.ajudaFoto })).toBeTruthy();
+    expect(d.querySelector('input[type="file"][data-enquadrament-foto]').getAttribute('accept')).toBe(ACCEPT_FOTO);
+    expect([...d.querySelectorAll('.sdp-dialeg__peu button')].map((b) => b.textContent)).toEqual(['Restablir', 'Cancel·lar', 'Guardar enquadre']);
+    cleanup();
+    muntaAjust({ finestra: null });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    expect(finestraOberta().querySelector('.sdp-enquadrament__foto')).toBeNull();
+    expect(within(finestraOberta()).getByRole('button', { name: 'Guardar' })).toBeTruthy();
+  });
+
+  test('«Canviar foto» obri la foto nova en la mateixa finestra; una que no s’admet ho diu dins i no la canvia', async () => {
+    const vista = muntaAjust();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    const d = finestraOberta();
+    const dins = d.querySelector('input[type="file"][data-enquadrament-foto]');
+    await act(async () => { fireEvent.change(dins, { target: { files: [foto(1, 'gif.gif', 'image/gif')] } }); });
+    expect(within(d).getByRole('alert').textContent).toBe(ERROR_TIPUS_FOTO);
+    await act(async () => { fireEvent.change(dins, { target: { files: [foto(11)] } }); });
+    expect(within(d).getByRole('alert').textContent).toBe(ERROR_PES_FOTO);
+    expect(dobles.carregaImatge).toHaveBeenCalledTimes(1);
+    // Cap toast: el modal el taparia.
+    expect(vista.onError).not.toHaveBeenCalled();
+    const nova = foto(2, 'nova.jpg');
+    await act(async () => { fireEvent.change(dins, { target: { files: [nova] } }); });
+    expect(dobles.carregaImatge).toHaveBeenLastCalledWith(nova, expect.anything());
+    expect(finestraOberta()).toBe(d);
+    expect(within(d).queryByRole('alert')).toBeNull();
+  });
+
+  test('Guardar enquadre puja el retall pel camí de sempre i desa el camp: la persona no torna a triar cap fitxer', async () => {
+    const vista = muntaAjust();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    // 4000 × 2000 en cercle: el quadrat central de 2000, a 400 × 400.
+    await act(async () => { fireEvent.click(within(finestraOberta()).getByRole('button', { name: 'Guardar enquadre' })); });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 1000, y: 0, w: 2000, h: 2000 }, { amplada: 400, alcada: 400, tipus: 'image/jpeg' }]);
+    expect(vista.onImageUpload).toHaveBeenCalledTimes(1);
+    expect(vista.onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA]]);
+    expect(vista.onDesat).toHaveBeenCalledWith('logoImage');
+  });
+
+  /* Correcció F3 de la revisió · La imatge que ja hi ha (una adreça) ix en el
+     format de la que s'ha carregat: un PNG o un WebP amb transparència no
+     torna amb fons blanc. Una foto nova de «Canviar foto», pel seu tipus. */
+  test('re-enquadrar la que ja hi ha conserva el format de la imatge carregada (WebP o PNG → PNG, JPEG → JPEG)', async () => {
+    dobles.carregaImatge.mockResolvedValue({ amplada: 4000, alcada: 2000, tipus: 'image/webp', element: {}, allibera: vi.fn() });
+    muntaAjust();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    await act(async () => { fireEvent.click(within(finestraOberta()).getByRole('button', { name: 'Guardar enquadre' })); });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 400, alcada: 400, tipus: 'image/png' });
+    cleanup();
+    dobles.carregaImatge.mockResolvedValue({ amplada: 4000, alcada: 2000, tipus: 'image/png', element: {}, allibera: vi.fn() });
+    muntaAjust();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    // «Canviar foto» amb una foto JPEG nova: pel tipus del fitxer, com sempre.
+    const dins = finestraOberta().querySelector('input[type="file"][data-enquadrament-foto]');
+    await act(async () => { fireEvent.change(dins, { target: { files: [foto(1, 'nova.jpg', 'image/jpeg')] } }); });
+    await act(async () => {});
+    await act(async () => { fireEvent.click(within(finestraOberta()).getByRole('button', { name: 'Guardar enquadre' })); });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(dobles.exportaRetall.mock.calls[1][2]).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
+  });
+
+  test('mentre puja, «Canviar foto» és desactivat i ajusta no fa res més que dir-ho; tanca tanca la finestra', async () => {
+    let resol;
+    const onImageUpload = vi.fn(() => new Promise((r) => { resol = r; }));
+    const vista = muntaAjust({ onImageUpload });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    const d = finestraOberta();
+    await act(async () => { fireEvent.click(within(d).getByRole('button', { name: 'Guardar enquadre' })); });
+    await waitFor(() => expect(onImageUpload).toHaveBeenCalledTimes(1));
+    // Dins, mentre desa, «Canviar foto» està desactivat.
+    expect(within(d).getByRole('button', { name: 'Canviar foto' }).disabled).toBe(true);
+    await act(async () => { fireEvent(d, new Event('cancel', { cancelable: true })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(vista.onError).toHaveBeenCalledWith(AVIS_IMATGE_PUJANT, 'info');
+    await act(async () => { resol(URL_MITJA); });
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('quiet'));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    expect(finestraOberta()).toBeTruthy();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Tancar' })); });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});

@@ -10,7 +10,7 @@ import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
-import { avatarDeLaBarraDeFitxa, avatarDeLaFitxa, potEditarFitxa } from './fitxaDePerfil.js';
+import { avatarDeLaBarraDeFitxa, avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    EL COMPTE · el que no és la fitxa pública
@@ -111,7 +111,7 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
 
   const ajustos = useMemo(() => {
     const cataleg = persona
-      ? ajustosPersona(dades || {}, { superadmin })
+      ? ajustosPersona(dades || {}, { superadmin, pobles: towns })
       : ajustosOrganitzacio(dades || {}, contacte, { pobles: towns, ambMembres: Boolean(membres) });
     return cataleg.filter((ajust) => ajust.lloc === 'compte');
   }, [persona, dades, contacte, towns, membres, superadmin]);
@@ -132,7 +132,7 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
       topBarData={{
         authorName: identitat.nom,
         authorAvatar: avatarDeLaBarraDeFitxa(identitat, avatarDeLaFila),
-        authorLocation: dades?.town_name || '',
+        authorLocation: pobleDeFitxa(identitat, perfil?.identitats),
         authorHref: rutaDeLaFitxa(identitat),
       }}
     >

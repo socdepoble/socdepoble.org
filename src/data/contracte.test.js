@@ -351,6 +351,38 @@ test('Onada 11 · un backend sense personalitzacio continua sent vàlid i no la 
   expect(port.adminHistorialPersonalitzacio('estil', {})).toBe('adminHistorialPersonalitzacio');
 });
 
+/* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · La biblioteca
+   de fotos pròpies de «Multimèdia». Capacitat a banda: dins de 'mitjans', el
+   control de capacitat parcial tombaria la pujada d'avatars d'un backend que
+   només sap pujar. */
+test('Pla 261018_1605 · mitjansPropis és una capacitat opcional de dos mètodes, fora del nucli i de mitjans, i congelada', () => {
+  expect(CAPACITATS.mitjansPropis).toEqual(['llistaElsMeusMitjans', 'esborraElMeuMitja']);
+  expect(Object.isFrozen(CAPACITATS.mitjansPropis)).toBe(true);
+  expect(CAPACITATS.mitjans).toEqual(['uploadToStorage', 'getPublicUrl', 'resolveAsset', 'promoteToPublic']);
+  for (const nom of CAPACITATS.mitjansPropis) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CAPACITATS.mitjans).not.toContain(nom);
+    expect(CONTRACTE_BACKEND).toContain(nom);
+  }
+  /* El nucli no creix. */
+  expect(CONTRACTE_NUCLI).toHaveLength(32);
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('mitjansPropis', 1) }))
+    .toThrow('Capacitat parcial: mitjansPropis');
+});
+
+test('Pla 261018_1605 · un backend que només sap pujar continua tenint mitjans i no pot llistar ni esborrar', () => {
+  port.setBackendImplementation({ ...nucli(), ...capacitat('mitjans') });
+  expect(port.teCapacitat('mitjans')).toBe(true);
+  expect(port.teCapacitat('mitjansPropis')).toBe(false);
+  expect(() => port.llistaElsMeusMitjans({})).toThrow('no està implementat');
+  expect(() => port.esborraElMeuMitja('sdp-media://mitjans/x.webp', {})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('mitjans'), ...capacitat('mitjansPropis') });
+  expect(port.teCapacitat('mitjans')).toBe(true);
+  expect(port.teCapacitat('mitjansPropis')).toBe(true);
+  expect(port.llistaElsMeusMitjans({})).toBe('llistaElsMeusMitjans');
+  expect(port.esborraElMeuMitja('sdp-media://mitjans/x.webp', {})).toBe('esborraElMeuMitja');
+});
+
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {
   port.setBackendImplementation(nucli());
   expect(port.teCapacitat('compte')).toBe(false);

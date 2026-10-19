@@ -38,6 +38,11 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(teCapacitat('segonFactor')).toBe(true);
   expect(teCapacitat('personalitzacio')).toBe(true);
   for (const nom of [...CAPACITATS.segonFactor, ...CAPACITATS.personalitzacio]) expect(typeof supabase[nom], nom).toBe('function');
+  /* Pla 261018_1605 (Tasca 4, D8) · la biblioteca de fotos pròpies, sense tombar la pujada ('mitjans'). */
+  expect(presents).toEqual(expect.arrayContaining(['mitjans', 'mitjansPropis']));
+  expect(teCapacitat('mitjansPropis')).toBe(true);
+  expect(teCapacitat('mitjans')).toBe(true);
+  for (const nom of CAPACITATS.mitjansPropis) expect(typeof supabase[nom], nom).toBe('function');
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

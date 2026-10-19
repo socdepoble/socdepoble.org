@@ -450,6 +450,30 @@ export const CASOS = Object.freeze([
     titol: "adminHistorialPersonalitzacio('taxonomia', config) sense el segon factor rebutja amb code cal-segon-factor o sense-sessio",
     arguments: (ctx) => ['taxonomia', ctx.config],
     comprova: rebuigSenseSegonFactor
+  }),
+  /* Pla 261018_1605 (Tasca 4, D8; correcció de la revisió) · La biblioteca de
+     fotos del Perfil (capacitat 'mitjansPropis'). La llista és sempre una
+     llista (buida en llavor, en local o sense sessió), i cada foto porta la
+     seua referència opaca del bucket públic. Esborrar una referència que no
+     és de qui crida (ni del seu poble ni de la seua carpeta) rebutja amb code
+     sense tocar el servidor: el kit mai esborra res de veres. */
+  cas({
+    metode: 'llistaElsMeusMitjans', capacitat: 'mitjansPropis',
+    titol: "llistaElsMeusMitjans(config) → Mitja[] amb ref 'sdp-media://mitjans/…' ([] sense servidor ni sessió)",
+    arguments: (ctx) => [ctx.config],
+    comprova: (llista) => {
+      if (!Array.isArray(llista)) return [`havia de ser una llista i és ${tipusDe(llista)}`];
+      return llista.every((mitja) => esObjecte(mitja) && typeof mitja.ref === 'string' && mitja.ref.startsWith('sdp-media://mitjans/')
+        && typeof mitja.esborrable === 'boolean')
+        ? []
+        : ['cada foto havia de portar una ref sdp-media://mitjans/… i esborrable boolean'];
+    }
+  }),
+  cas({
+    metode: 'esborraElMeuMitja', capacitat: 'mitjansPropis', espera: 'rebutja',
+    titol: 'esborraElMeuMitja(ref, config) d’una foto que no és de qui crida rebutja amb un code',
+    arguments: (ctx) => ['sdp-media://mitjans/conformitat/no-es-meua/avatars/conformitat.webp', ctx.config],
+    comprova: rebuigAmbCode
   })
 ]);
 

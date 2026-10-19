@@ -327,6 +327,23 @@ description: "Documentació canònica de Sóc de Poble."
   `anon`), i la segona esborra sobrecàrregues de `create_organization`, fora
   d'esta reparació.
 
+- `migrations/2610181800_perfil_public_per_defecte.sql`
+  Pla 261018_1605 (Tasca 1, D2; ordre del Mestre, 18-10-2026): la fitxa d'una
+  persona naix pública. Només `alter table public.profiles alter column
+  is_public set default true`: les funcions que alcen la fila pròpia (el
+  trigger d'alta, la reparació `completa_la_meua_alta` i l'RPC que crea una
+  organització) no hi escriuen `is_public` i prenen el default. Cap backfill:
+  les fitxes que ja existixen es queden com estan. `visibility` no es toca: el
+  seu CHECK continua exigint `'private'` (2609080000), i la publicació d'una
+  persona la diu `is_public`. Cap dada, funció, política, permís ni
+  restricció. Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  No depén de cap altra pendent d'esta llista: només necessita la columna
+  `is_public`, que crea 2609110600 (2610042350 l'assegura en una base
+  desfasada); sense la columna, falla i no canvia res. Abans d'aplicar-la, el
+  Mestre executa la consulta de només lectura de la capçalera (el default
+  vigent de la columna) i en guarda el resultat; per a desfer-la, `alter
+  column is_public set default false`.
+
 - `seed.sql`
   Contingut inicial del portal.
 

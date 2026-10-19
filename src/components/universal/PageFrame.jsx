@@ -2,7 +2,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
-import { Camera, Trash2 } from 'lucide-react';
+import { Camera, LoaderCircle, Trash2 } from 'lucide-react';
 import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHROME_MODES, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from './UniversalUtils';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
@@ -1191,8 +1191,29 @@ function filaDeLAvatar({ onCanvia = null, etiquetaCanvia = null, onLleva = null,
    la píndola «canvia». Sense ajuda, cap atribut nou. */
 /* Encàrrec d'harmonització (261018) · Exportat: el Perfil el pinta dins del
    desplegable «Edició avançada» (UniversalEditorShell · identitatEdicioAvancada)
-   en lloc de damunt de l'H1. El mateix component, cap còpia. */
-export function AvatarDeCapcalera({ src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = ETIQUETA_LLEVA_AVATAR, ajuda = null, pujant = false }) {
+   en lloc de damunt de l'H1. El mateix component, cap còpia.
+   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2: «neteja visual
+   total sota l'avatar»; el clic al cercle obri el retall de la imatge que ja
+   hi ha) · Claus opcionals noves; sense elles, el DOM de sempre:
+     · `nomBoto` (text): el nom accessible del cercle-botó (per defecte,
+       ETIQUETA_CANVIA_AVATAR);
+     · `botoBuit` (només true, i amb onCanvia): sense cap imatge que es puga
+       pintar, el cercle-botó es pinta igual, buit i amb la càmera (el Perfil
+       hi tria la primera foto), en lloc de no pintar res;
+     · `obriFinestra` (només true): el clic obri una finestra (aria-haspopup);
+     · `ocupat` (només true): la imatge puja (aria-busy). El botó no es
+       desactiva: la guarda de la pujada continua sent del consumidor.
+       Correcció de la revisió (Pla 2000) · I es veu: la marca de la càmera
+       passa a ser el carregador que gira (LoaderCircle, com Boto i
+       Carregant), la foto s'esmorteïx i el cursor diu que espera;
+     · `textOcupat` (text, amb onCanvia): una regió d'estat amagada
+       (.sdp-sr-only, role="status"), germana del cercle, que diu el text
+       mentre `ocupat` i queda buida si no. aria-busy en un botó gairebé no
+       s'anuncia. Sense, cap node nou. */
+export function AvatarDeCapcalera({
+  src, alt, onCanvia, etiquetaCanvia = null, onLleva = null, etiquetaLleva = ETIQUETA_LLEVA_AVATAR, ajuda = null, pujant = false,
+  nomBoto = null, botoBuit = false, obriFinestra = false, ocupat = false, textOcupat = null,
+}) {
   const idAjuda = `${useId()}-ajuda`;
   const delPort = esDelPort(src);
   const resolucio = useResolvedAssetState(delPort ? src : '');
@@ -1201,22 +1222,31 @@ export function AvatarDeCapcalera({ src, alt, onCanvia, etiquetaCanvia = null, o
   const imatge = url && isSafeAsset(url) && !esMarcaDeLEntitat(url)
     ? <img className="page-title-avatar__imatge" src={url} alt={alt} decoding="async" referrerPolicy="no-referrer" />
     : null;
-  if (!imatge && !(delPort && resolucio.isLoading)) return filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva, etiquetaLleva, ajuda, pujant, idAjuda });
+  const buit = botoBuit === true && typeof onCanvia === 'function';
+  if (!imatge && !(delPort && resolucio.isLoading) && !buit) return filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva, etiquetaLleva, ajuda, pujant, idAjuda });
   const accions = filaDeLAvatar({ onCanvia, etiquetaCanvia, onLleva: imatge ? onLleva : null, etiquetaLleva, ajuda, pujant, idAjuda });
   const avatar = onCanvia ? (
-    <button type="button" className="page-title-avatar page-title-avatar--canvia" aria-label={ETIQUETA_CANVIA_AVATAR}
+    <button type="button" className="page-title-avatar page-title-avatar--canvia" aria-label={srcDeLogo(nomBoto) || ETIQUETA_CANVIA_AVATAR}
+      aria-haspopup={obriFinestra === true ? 'dialog' : undefined} aria-busy={ocupat === true ? 'true' : undefined}
       aria-describedby={accions && ajuda ? idAjuda : undefined} onClick={onCanvia}>
       {imatge}
       <span className="page-title-avatar__marca" aria-hidden="true">
-        <Camera size={24} focusable="false" />
+        {ocupat === true
+          ? <LoaderCircle className="page-title-avatar__gir" size={24} focusable="false" />
+          : <Camera size={24} focusable="false" />}
       </span>
     </button>
   ) : <div className="page-title-avatar">{imatge}</div>;
-  if (!accions) return avatar;
+  const textDeLaPujada = onCanvia ? srcDeLogo(textOcupat) : '';
+  const estat = textDeLaPujada
+    ? <span className="sdp-sr-only" role="status">{ocupat === true ? textDeLaPujada : ''}</span>
+    : null;
+  if (!accions && !estat) return avatar;
   return (
     <>
       {avatar}
       {accions}
+      {estat}
     </>
   );
 }

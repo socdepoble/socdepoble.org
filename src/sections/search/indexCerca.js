@@ -11,7 +11,7 @@
  * dins del títol > dins del cos), amb desempat per data i per ordre alfabètic.
  */
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
-import { normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
+import { llevaEtiquetes, llevaScriptsIEstils, normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
 import { getSectionItemPath, resolveItemPath, resolvePageSlugPath, RUTA_FITXA_IAIA, rutaDePerfil } from '../../config/navigation.js';
 import { tipusDAgent } from '../../data/agentsSeed.js';
 import { PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau } from '../../data/identitatsSeed.js';
@@ -148,12 +148,15 @@ export function extracteAmbContext(text, llistaFitxes = [], max = 200) {
 
 const ENTITATS = Object.freeze({ '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&apos;': "'" });
 
-/** Text pla d'un camp que pot portar HTML o Markdown. Mai passa per innerHTML. */
+/** Text pla d'un camp que pot portar HTML o Markdown. Mai passa per innerHTML.
+ *  Auditoria de seguretat 261019 (R1) · Els blocs <script> i <style> i les
+ *  etiquetes, en temps lineal (contentHelpers.js · llevaScriptsIEstils i llevaEtiquetes), amb
+ *  el mateix resultat que /<(script|style)[\s\S]*?<\/\1>/gi i /<[^>]*>/g.
+ *  Eren quadràtiques amb un cos de molts '<' o '<script' sense tancar, i /cerca
+ *  les passa per a tothom sobre cada publicació i cada producte. */
 export function textPla(valor) {
   if (valor == null || typeof valor === 'object') return '';
-  return stripMarkdownImages(String(valor))
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<[^>]*>/g, ' ')
+  return llevaEtiquetes(llevaScriptsIEstils(stripMarkdownImages(String(valor))))
     .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (entitat) => ENTITATS[entitat] || ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -422,7 +425,13 @@ export function deActe(acte, opcions = {}) {
 }
 
 export function deProducte(producte) {
-  const venedor = primerText(producte?.seller, producte?.author_name);
+  /* Auditoria de seguretat 261019 (F14) · Qui ven, com la fitxa
+     (detailSectionMeta.jsx · CompraDelProducte): l'author_name que força el
+     servidor; el `seller` del payload, només per a un producte que no és
+     d'un veí (sense ownerUserId) i no en porta cap. */
+  const venedor = producte?.ownerUserId != null
+    ? primerText(producte?.author_name)
+    : primerText(producte?.author_name, producte?.seller);
   return entrada({
     tipus: 'mercat',
     id: producte?.id,

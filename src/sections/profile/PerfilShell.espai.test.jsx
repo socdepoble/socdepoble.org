@@ -85,9 +85,10 @@ test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i A
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
   expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
-  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona.
+  /* T9 (261001) · «Els nodes», abans l'últim apartat de la persona.
+     Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
      Ordre del Mestre (261008) · «Les vistes», just després de «La fitxa». */
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes', 'Multimèdia']);
   expect(within(detall(container)).getByText('fitxa de Javi Llinares')).toBeTruthy();
   expect(container.querySelector('.perfil-espai .perfil-espai__detall')).toBe(detall(container));
 });
@@ -117,7 +118,8 @@ test('Bloc 3.4 · una selecció que apuntava a una utilitat interna no peta quan
   rerender(<PerfilShell />);
   expect(etiquetesDe(navegacio())).not.toContain('Consola de Mètriques');
   expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes', 'Multimèdia']);
   expect(within(detall(container)).queryByRole('heading', { level: 1, name: 'Consola de Mètriques' })).toBeNull();
 });
 
@@ -160,7 +162,8 @@ test('Bloc 3.4 · si en tornar el rol ja no és superadmin, les internes se’n 
 test('cada element de l’esquerra obri els seus apartats i el primer al detall', () => {
   m.caps = new Set(['compte']);
   const { container } = render(<PerfilShell />);
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Privacitat i dades', 'Els nodes']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Privacitat i dades', 'Els nodes', 'Multimèdia']);
   fireEvent.click(within(container).getByRole('button', { name: /Privacitat i dades/ }));
   expect(within(detall(container)).getByText('privacitat de Javi Llinares')).toBeTruthy();
 
@@ -177,7 +180,8 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
   expect(within(nodes).queryAllByRole('button')).toEqual([]);
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Forn' }));
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte']);
+  // Expectativa actualitzada a propòsit: relleu del Pla 2000, punt 3 («Multimèdia», l'últim apartat de l'organització).
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Multimèdia']);
   expect(within(detall(container)).getByText('fitxa de Forn')).toBeTruthy();
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Gestoria de Poble' }));

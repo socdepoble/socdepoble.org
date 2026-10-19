@@ -22,6 +22,22 @@
  *     pobles, porta l'enllaç a la seua pàgina, com el de l'Arxiu.
  *   · VisorImatges, pel camí directe de l'organisme: les publicacions no
  *     arrosseguen el barril de Pedra Seca (Esmena 3 del pla 261007_1645).
+ *
+ * Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · També el munta
+ * «Multimèdia» del Perfil (profile/DetallMultimedia.jsx), amb tres props
+ * OPCIONALS; sense elles, el visor de sempre, fila per fila:
+ *   · filesInicials · files { clau, etiqueta, valor } de més, DAVANT de les del
+ *     panell (les accions del Perfil: «Posa com a avatar», «Posa com a
+ *     capçalera», «Elimina»);
+ *   · ometFiles · les claus de les files del panell que no hi van (el poble i
+ *     «Publicat a» d'una foto que no és de cap article ni de cap poble);
+ *   · infoInicial · el panell, desplegat en obrir-lo (VisorImatges).
+ * I, per a qualsevol qui el munta (auditoria Codex 2030, §4.1: «no imprimir
+ * mai l'esquema opac en un img») · una referència opaca (sdp-media://) sense
+ * la URL del port (srcDelPort) no es pinta mai crua: la foto es queda sense
+ * src i el visor ho diu, fins que el port la resol. Correcció F2 de la
+ * revisió · Tampoc un srcDelPort que encara és opac (el port que no la sap
+ * resoldre la torna tal qual, storage.js): la garantia és per a tots.
  */
 import { useMemo, useState } from 'react';
 import { Link, useLocation } from '../../app/contexts/RouterContext';
@@ -29,6 +45,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { VisorImatges } from '../../components/PedraSeca/organismes/VisorImatges.jsx';
 import { resolRecursPropi } from '../../config/assetResolver.js';
+import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { esFotoDePersona } from './origenImatges.js';
 import { filesDelPanell, pobleDe } from './panellDeLaFoto.js';
 import { useMetadadesFoto } from './useMetadadesFoto.js';
@@ -37,7 +54,9 @@ const CAP = Object.freeze([]);
 
 const nomNet = (valor) => (typeof valor === 'string' ? valor.trim().toLowerCase() : '');
 
-export function VisorDeLArxiu({ llista = CAP, index = -1, cens = null, onTanca, onCanvi }) {
+export function VisorDeLArxiu({
+  llista = CAP, index = -1, cens = null, onTanca, onCanvi, filesInicials = CAP, ometFiles = CAP, infoInicial = false
+}) {
   const { t } = useUIActions();
   const { towns = CAP } = useCoreContent();
   const { pathname } = useLocation();
@@ -57,8 +76,8 @@ export function VisorDeLArxiu({ llista = CAP, index = -1, cens = null, onTanca, 
      src, la referència, i useMetadadesFoto no en llig mai cap: cap petició més
      a una mitja privada. */
   const imatges = useMemo(() => llista.map((mitja) => ({
-    src: typeof mitja?.srcDelPort === 'string' && mitja.srcDelPort ? mitja.srcDelPort
-      : typeof mitja?.src === 'string' && mitja.src ? resolRecursPropi(mitja.src) : '',
+    src: typeof mitja?.srcDelPort === 'string' && mitja.srcDelPort && !esMitjaOpac(mitja.srcDelPort) ? mitja.srcDelPort
+      : typeof mitja?.src === 'string' && mitja.src && !esMitjaOpac(mitja.src) ? resolRecursPropi(mitja.src) : '',
     alt: mitja?.title || mitja?.tag || '',
     titol: mitja?.title || ''
   })), [llista]);
@@ -83,13 +102,18 @@ export function VisorDeLArxiu({ llista = CAP, index = -1, cens = null, onTanca, 
   }), [t]);
 
   const nomDelPoble = (slug) => towns.find((town) => String(town?.id) === slug)?.title || null;
-  const metadades = filesDelPanell(item, {
-    exif, estatExif: estat, mides: midesObert?.valor || null, estatMides, persona, cens, nomDelPoble, t
-  }).map((fila) => (fila.ruta && fila.ruta !== pathname ? { ...fila, valor: <Link to={fila.ruta}>{fila.valor}</Link> } : fila));
+  const omeses = Array.isArray(ometFiles) ? ometFiles : CAP;
+  const metadades = [
+    ...(item && Array.isArray(filesInicials) ? filesInicials : CAP),
+    ...filesDelPanell(item, {
+      exif, estatExif: estat, mides: midesObert?.valor || null, estatMides, persona, cens, nomDelPoble, t
+    }).filter((fila) => !omeses.includes(fila.clau))
+      .map((fila) => (fila.ruta && fila.ruta !== pathname ? { ...fila, valor: <Link to={fila.ruta}>{fila.valor}</Link> } : fila))
+  ];
 
   return (
     <VisorImatges obert={Boolean(item)} imatges={imatges} index={item ? index : 0} onCanvi={onCanvi} onTanca={onTanca}
       titol={t('section.multimedia.visor.titol', 'Visor d’imatges')} etiquetes={etiquetes} metadades={metadades}
-      onCarrega={enCarregar} />
+      infoInicial={infoInicial} onCarrega={enCarregar} />
   );
 }

@@ -22,6 +22,11 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    Encàrrec d'harmonització (261018) · L'avatar redó (amb «Llevar l'avatar»,
    ja una píndola de veres) i la ranura viuen dins del desplegable «Edició
    avançada», no damunt de l'H1: les proves l'obrin abans de tocar-hi res.
+   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectatives
+   actualitzades a propòsit: la persona ja no té ranura ni píndoles. El cercle
+   és sempre el botó (buit, sense foto: el selector; amb foto, la finestra de
+   retall amb eixa foto), «Llevar avatar» és dins de la finestra, i el focus
+   torna sempre al cercle.
    ═══════════════════════════════════════════════════════════════════ */
 
 const m = vi.hoisted(() => ({ perfil: null, updateProfile: null, adapter: null }));
@@ -114,7 +119,8 @@ const capcalera = () => document.querySelector('.sdp-editor-document header.page
    La persona l'obri clicant el resum abans de tocar-hi res. */
 const desplegable = () => document.querySelector('.sdp-editor-document details.sdp-edicio-avancada');
 const botoAvatar = () => desplegable().querySelector('.sdp-edicio-avancada__identitat button.page-title-avatar--canvia');
-/* La ranura, pel seu contenidor (el nom l'escriu l'adaptador: «Avatar»). */
+/* La ranura, pel seu contenidor (el nom l'escriu l'adaptador: «Avatar»).
+   Pla 2000 (punt 2) · La persona ja no en té: ha de ser sempre null. */
 const ranura = () => desplegable().querySelector('.sdp-edicio-avancada__logotip button');
 const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
 function obriEdicioAvancada() {
@@ -126,60 +132,76 @@ function obriEdicioAvancada() {
 }
 
 /* Clica el control amb el focus damunt, com a la finestra de veres, tria la
-   foto i guarda; espera que la finestra es tanque. */
+   foto i guarda; espera que la finestra es tanque.
+   Pla 2000 (punt 2) · La finestra de l'avatar desa amb «Guardar enquadre». */
 async function posaImatge(control, camp, finestra) {
   control.focus();
   act(() => { fireEvent.click(control); });
   await act(async () => { fireEvent.change(selector(camp), { target: { files: [new File(['x'], 'foto.jpg', { type: 'image/jpeg' })] } }); });
   await act(async () => {});
-  fireEvent.click(within(screen.getByRole('dialog', { name: finestra })).getByRole('button', { name: 'Guardar' }));
+  const desa = finestra === 'Retalla la foto' ? 'Guardar enquadre' : 'Guardar';
+  fireEvent.click(within(screen.getByRole('dialog', { name: finestra })).getByRole('button', { name: desa }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: finestra })).toBeNull());
 }
 
-test('Auditoria 261007 · sense avatar: desar des de la ranura porta el focus a l’avatar redó que ix al seu lloc', async () => {
+/* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: sense avatar, el
+   control és el cercle buit (ja no la ranura «Avatar»); desat, el mateix
+   cercle porta la foto nova i el focus. */
+test('Auditoria 261007 · sense avatar: desar des del cercle buit porta el focus al cercle, ja amb la foto nova', async () => {
   render(<PerfilEditor identitat={jo} />);
-  /* Encàrrec d'harmonització (261018) · La ranura, dins d'«Edició avançada». */
+  /* Encàrrec d'harmonització (261018) · El control, dins d'«Edició avançada». */
   obriEdicioAvancada();
-  const boto = ranura();
-  expect(boto.textContent).toContain('Avatar');
+  expect(ranura()).toBeNull();
+  const boto = botoAvatar();
+  expect(boto.getAttribute('aria-label')).toBe('Posa un avatar');
+  expect(boto.querySelector('img')).toBeNull();
   await posaImatge(boto, 'logoImage', 'Retalla la foto');
-  // La ranura ja no hi és: al seu lloc, l'avatar redó amb la imatge nova, i el focus damunt.
   expect(ranura()).toBeNull();
   expect(botoAvatar().querySelector('img').getAttribute('src')).toBe('/assets/nou.webp');
+  expect(botoAvatar().getAttribute('aria-label')).toBe('Ajusta o canvia l’avatar');
   expect(document.activeElement).toBe(botoAvatar());
   expect(m.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ avatar_url: '/assets/nou.webp' }), CONFIG);
 });
 
 /* Encàrrec d'harmonització (261018) · avatarAutor ja no és a l'adaptador
-   d'edició: «Llevar l'avatar» és la píndola de veres de l'avatar redó (el
-   CONTRACTE-1 ja la pinta), dins d'«Edició avançada», i es prem com ho faria la
-   persona. La ranura que ix al seu lloc és la del desplegable. */
-test('Auditoria 261007 · amb avatar: «Llevar l’avatar» (onLleva, confirmat) porta el focus a la ranura que ix al seu lloc', async () => {
+   d'edició. Pla 2000 (punt 2) · Expectativa actualitzada a propòsit:
+   «Llevar avatar» és dins de la finestra de retall que obri el cercle;
+   confirmat, les dues finestres es tanquen i el focus va al cercle, ara buit
+   (cap ranura al seu lloc). */
+test('Auditoria 261007 · amb avatar: «Llevar avatar» (dins de la finestra, confirmat) porta el focus al cercle, ara buit', async () => {
   render(<PerfilEditor identitat={ambAvatar} />);
   expect(m.adapter).not.toHaveProperty('avatarAutor');
   obriEdicioAvancada();
   expect(ranura()).toBeNull();
-  const lleva = within(desplegable().querySelector('.sdp-edicio-avancada__identitat')).getByRole('button', { name: 'Llevar l’avatar' });
+  // Davall del cercle, res: ni píndoles ni la línia dels 10 MB.
+  expect(desplegable().querySelector('.sdp-edicio-avancada__identitat .page-title-avatar-accions')).toBeNull();
+  botoAvatar().focus();
+  await act(async () => { fireEvent.click(botoAvatar()); });
+  const finestra = screen.getByRole('dialog', { name: 'Retalla la foto' });
+  const lleva = within(finestra).getByRole('button', { name: 'Llevar avatar' });
   lleva.focus();
   act(() => { fireEvent.click(lleva); });
   const confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
   fireEvent.click(within(confirma).getByRole('button', { name: 'Llevar l’avatar' }));
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull());
-  expect(botoAvatar()).toBeNull();
-  expect(document.activeElement).toBe(ranura());
+  expect(screen.queryByRole('dialog', { name: 'Retalla la foto' })).toBeNull();
+  expect(botoAvatar().querySelector('img')).toBeNull();
+  expect(botoAvatar().getAttribute('aria-label')).toBe('Posa un avatar');
+  expect(ranura()).toBeNull();
+  expect(document.activeElement).toBe(botoAvatar());
   expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
 });
 
-/* Encàrrec d'harmonització (261018) · «Capçalera» i la ranura, dins d'«Edició
-   avançada»: la ranura hi és (persona sense foto), i la comparació torna a
-   dir alguna cosa. */
+/* Encàrrec d'harmonització (261018) · «Capçalera» i el control de l'avatar,
+   dins d'«Edició avançada». Pla 2000 (punt 2) · Expectativa actualitzada a
+   propòsit: el control de la persona sense foto és el cercle buit. */
 test('Auditoria 261007 · la capçalera desada no mou el focus a l’avatar ni a la ranura', async () => {
   render(<PerfilEditor identitat={jo} />);
   obriEdicioAvancada();
-  expect(ranura()).not.toBeNull();
+  expect(botoAvatar()).not.toBeNull();
   await posaImatge(within(desplegable()).getByRole('button', { name: 'Capçalera' }), 'heroImage', 'Retalla la capçalera');
-  expect(ranura()).not.toBeNull();
-  expect(document.activeElement).not.toBe(ranura());
-  expect(botoAvatar()).toBeNull();
+  expect(botoAvatar()).not.toBeNull();
+  expect(document.activeElement).not.toBe(botoAvatar());
+  expect(ranura()).toBeNull();
   expect(m.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ hero_url: '/assets/nou.webp' }), CONFIG);
 });

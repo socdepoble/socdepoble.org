@@ -200,14 +200,28 @@ function obriEdicioAvancada(container) {
 
 /* La imatge nova, pel camí de la persona: el botó obri el retallador, Guardar
    puja (pujaMitja) i la cua la desa; el port torna 403, la finestra es queda
-   oberta amb el motiu i la persona la tanca (Cancel·lar). La cua la conserva. */
+   oberta amb el motiu i la persona la tanca (Cancel·lar). La cua la conserva.
+   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectativa
+   actualitzada a propòsit: el cercle de l'avatar obri directament la finestra
+   de retall amb la foto que ja hi ha; la foto nova es tria DINS, amb «Canviar
+   foto» (el selector de la finestra), i es desa amb «Guardar enquadre». El
+   logotip d'una organització, com sempre: el selector de fora i «Guardar». */
 async function pujaIRebutja(container, obri, finestra) {
+  const avatar = finestra === 'Retalla la foto';
   fireEvent.click(obri);
-  const selector = container.ownerDocument.querySelector('input[type="file"][data-imatge-de-fitxa="logoImage"]');
+  let selector;
+  if (avatar) {
+    const dialeg = screen.getByRole('dialog', { name: finestra });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Canviar foto' }));
+    selector = dialeg.querySelector('input[type="file"][data-enquadrament-foto]');
+  } else {
+    selector = container.ownerDocument.querySelector('input[type="file"][data-imatge-de-fitxa="logoImage"]');
+  }
   await act(async () => { fireEvent.change(selector, { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
   await act(async () => {});
   await act(async () => {
-    fireEvent.click(within(screen.getByRole('dialog', { name: finestra })).getByRole('button', { name: 'Guardar' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: finestra }))
+      .getByRole('button', { name: avatar ? 'Guardar enquadre' : 'Guardar' }));
   });
   await waitFor(() => expect(within(screen.getByRole('dialog', { name: finestra })).getByRole('alert').textContent)
     .toContain('El servidor no ha acceptat la imatge'));
@@ -225,7 +239,7 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
     expect(imatges(container)).toEqual({ llista: VELLA, barra: VELLA, editor: VELLA });
     const avancada = obriEdicioAvancada(container);
     const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
-    await pujaIRebutja(container, within(identitat).getByRole('button', { name: 'Canvia la teua imatge' }), 'Retalla la foto');
+    await pujaIRebutja(container, within(identitat).getByRole('button', { name: 'Ajusta o canvia l’avatar' }), 'Retalla la foto');
     expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, CONFIG]]);
     const estat = cuaDesament.llig({ ambit: AMBIT, entitat: 'perfil', id: 'jo' });
     expect([estat.estat, estat.camps.logoImage, estat.errors.logoImage.tipus]).toEqual(['error', NOVA, 'servidor']);
@@ -245,7 +259,7 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
     /* Encàrrec d'harmonització (261018) · L'avatar redó, dins d'«Edició avançada». */
     const avancada = obriEdicioAvancada(container);
     const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
-    await pujaIRebutja(container, within(identitat).getByRole('button', { name: 'Canvia la teua imatge' }), 'Retalla la foto');
+    await pujaIRebutja(container, within(identitat).getByRole('button', { name: 'Ajusta o canvia l’avatar' }), 'Retalla la foto');
     const avis = detall(container).querySelector('.sdp-avisos-camps');
     await act(async () => { fireEvent.click(within(avis).getByRole('button', { name: 'Tornar al que hi ha desat' })); });
     expect(cuaDesament.llig({ ambit: AMBIT, entitat: 'perfil', id: 'jo' }).camps).toEqual({});
@@ -278,7 +292,11 @@ describe('Gauntlet 261016 (encàrrec D) · després d’un 403 al desat de la im
     const avancada = obriEdicioAvancada(container);
     expect(avancada.querySelector('.page-title-logo-personalitzat, .sdp-edicio-avancada__logotip')).toBeNull();
     const identitat = avancada.querySelector('.sdp-edicio-avancada__identitat');
-    expect(within(identitat).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+    /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectativa
+       actualitzada a propòsit: sota el cercle no queda cap píndola; el cercle
+       mateix és el botó i obri la finestra de retall amb la foto de la sessió. */
+    expect(within(identitat).getByRole('button', { name: 'Ajusta o canvia l’avatar' })).toBeTruthy();
+    expect(within(identitat).queryByRole('button', { name: 'Avatar' })).toBeNull();
     expect(within(avancada).queryByRole('button', { name: 'Llevar l’avatar' })).toBeNull();
     fireEvent.click(apartat(container, 'Les vistes'));
     expect(imatges(container)).toEqual({ llista: FOTO_SESSIO, barra: FOTO_SESSIO, targeta: FOTO_SESSIO });

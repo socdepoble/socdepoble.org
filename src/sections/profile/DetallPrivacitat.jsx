@@ -11,6 +11,7 @@ import {
 import { readableBackendError } from '../onboarding/onboardingModel.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { rutaDePerfil } from '../../config/navigation.js';
+import { pobleDeFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -378,7 +379,7 @@ export function DetallPrivacitat({
       topBarData={{
         authorName: identitat.nom,
         authorAvatar: identitat.avatar || '',
-        authorLocation: dades?.town_name || '',
+        authorLocation: pobleDeFitxa(identitat),
         authorHref: rutaDePerfil('persona', dades?.id),
       }}
     >

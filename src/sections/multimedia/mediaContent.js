@@ -77,15 +77,21 @@ export const fotosDelMercat = (productes) => productes
       .map(firstMediaSource)
       .find((candidat) => candidat && !deQuiVen.includes(candidat));
     if (!src) return null;
+    /* Auditoria de seguretat 261019 (F11, revisió) · Qui signa la foto és
+       l'author_name que força el servidor (trg_force_submission_author), com
+       la targeta del producte; el `seller` del payload el tria qui publica, i
+       el visor el pintava com a «Autor». Només és la reserva sense
+       author_name (a la llavor coincidixen). */
+    const quiVen = item.author_name || item.seller;
     return {
       id: `market-${idDeLArticle(item, index)}`,
       title: item.title || 'Mercat',
-      subtitle: item.seller || item.author_name || 'Mercat',
+      subtitle: quiVen || 'Mercat',
       description: toMediaDescription(item.subtitle),
       src,
       kind: 'image',
       tag: 'Mercat',
-      ...fontDeclarada(item.seller || item.author_name),
+      ...fontDeclarada(quiVen),
       created_at: item.created_at,
       sectionId: 'multimedia',
       article: { sectionId: 'mercat', id: item.id },

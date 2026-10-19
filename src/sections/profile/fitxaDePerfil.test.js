@@ -4,8 +4,8 @@ import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, PERSONA_PI
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, pobleDeReservaDeFitxa, potEditarFitxa,
-  rutaDeFitxaPublica, slugDEntitat,
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, formataPoble, llistaDePobles, pobleDeFitxa,
+  pobleDeReservaDeFitxa, poblePrincipal, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat,
 } from './fitxaDePerfil.js';
 import { documentDeFitxa } from './perfilCamps.js';
 
@@ -112,6 +112,16 @@ describe('pobleDeFitxa', () => {
     for (const fitxa of alienes) {
       expect([fitxa?.id, fitxa?.mena, pobleDeReservaDeFitxa(fitxa)]).toEqual([fitxa?.id, fitxa?.mena, '']);
     }
+  });
+
+  /* Pla 261018_1605 (Tasca 0, D7; integració) · El correu de `dades.email` el
+     copia PerfilContext de la sessió sense dir si GoTrue l'ha confirmat: sol, no
+     fa de la fila la de la persona pilot (la hidratació, amb l'usuari sencer,
+     ja li posa el poble canònic). */
+  test('el correu de la persona pilot a dades.email, sense l’id ni el slug: cap poble de reserva', () => {
+    const fitxa = { ...jo, dades: { id: '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6', email: PERSONA_PILOT.correu } };
+    expect(pobleDeReservaDeFitxa(fitxa)).toBe('');
+    expect(pobleDeFitxa(fitxa)).toBe('');
   });
 });
 
@@ -233,5 +243,42 @@ describe('avatarDeLaFitxa', () => {
     expect(avatarDeLaFitxa(null, { logoImage: '' }, { ...jo, avatar: SESSIO })).toBe('');
     expect(avatarDeLaFitxa(null, null, null)).toBe('');
     expect(avatarDeLaFitxa(undefined, undefined, undefined)).toBe('');
+  });
+});
+
+/* Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Diversos pobles
+   a la mateixa columna (town_name), com la cadena canònica 'A · B'. */
+describe('els pobles d’una persona', () => {
+  test('llistaDePobles, formataPoble i poblePrincipal: nets, sense repetits, en l’ordre triat', () => {
+    expect(llistaDePobles(' La Torre de les Maçanes ·Xixona · · La Torre de les Maçanes ')).toEqual(['La Torre de les Maçanes', 'Xixona']);
+    expect(llistaDePobles(['Sella', ' ', 'Relleu'])).toEqual(['Sella', 'Relleu']);
+    expect(llistaDePobles(null)).toEqual([]);
+    expect(formataPoble(['La Torre de les Maçanes', 'Xixona'])).toBe('La Torre de les Maçanes · Xixona');
+    expect(formataPoble(undefined)).toBe('');
+    expect(poblePrincipal('La Torre de les Maçanes · Xixona')).toBe('La Torre de les Maçanes');
+    expect(poblePrincipal('Sella')).toBe('Sella');
+    expect(poblePrincipal('')).toBe('');
+    expect(poblePrincipal(undefined)).toBe('');
+  });
+
+  test('pobleDeFitxa porta la cadena canònica de town_name, sense cap altra columna', () => {
+    expect(pobleDeFitxa({ ...jo, dades: { town_name: 'La Torre de les Maçanes ·  Xixona' } })).toBe('La Torre de les Maçanes · Xixona');
+    expect(pobleDeFitxa({ ...jo, dades: { pobles: ['Xixona'], poble: 'Sella' } })).toBe('');
+  });
+});
+
+/* Pla 261018_1605 (Tasca 3, D6) · Una foto pròpia guanya (esFontImatgePropia). */
+describe('avatarDeLaFitxa · la foto pròpia guanya a la de fora', () => {
+  const GOOGLE = 'https://lh3.googleusercontent.com/a/foto-google';
+  test('la persona amb la foto de Google a la fitxa i una de pròpia a la identitat: la pròpia', () => {
+    const pep = { ...jo, avatar: '/assets/fotos/pep.jpg', dades: { avatar_url: GOOGLE } };
+    expect(avatarDeLaFitxa(documentDeFitxa(pep), {}, pep)).toBe('/assets/fotos/pep.jpg');
+    // Amb l'esborrany de la cua, la de la fitxa tal qual.
+    expect(avatarDeLaFitxa({ logoImage: GOOGLE }, { logoImage: GOOGLE }, pep)).toBe(GOOGLE);
+    // Sense cap pròpia a la identitat, la de la fitxa.
+    expect(avatarDeLaFitxa(documentDeFitxa(pep), {}, { ...pep, avatar: GOOGLE })).toBe(GOOGLE);
+    // Una organització no hi entra.
+    const forn = org('owner', { logo_url: GOOGLE });
+    expect(avatarDeLaFitxa(documentDeFitxa(forn), {}, { ...forn, avatar: '/assets/fotos/forn.jpg' })).toBe(GOOGLE);
   });
 });

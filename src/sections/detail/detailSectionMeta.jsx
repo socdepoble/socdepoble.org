@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { CalendarDays, MapPin, UserRound, MessageCircle } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
-import { getFirstImage } from './detailHelpers.jsx';
+import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
 import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
@@ -33,6 +33,16 @@ import { Pestanyes } from '../../components/PedraSeca/organismes/Pestanyes.jsx';
 import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { poblesAmbNaixement } from '../pobles/clauDelPoble.js';
 import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · El producte
+   del Mercat en un sol node: el selector de variants (píndoles amb
+   role="radiogroup"), la fitxa de la variant triada i un sol botó del cabàs
+   (CompraDelProducte, més avall). Pedra Seca pel camí directe, com dalt. */
+import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
+import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
+import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
+import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
+import { SelectorDeVariacions } from '../mercat/SelectorDeVariacions.jsx';
+import { variacioActiva, variacionsDelProducte } from '../mercat/variacionsDeProducte.js';
 
 const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPoble.jsx'));
 
@@ -122,15 +132,17 @@ export function imatgePropiaDelDetall(seccio, valor) {
    llig com a HTML (la seua mateixa detecció), torna intacte: el mateix camí,
    byte a byte (Llei del Píxel). Només el criden les metas del Mur, el Mercat
    i l'agenda, i el lector del MAS per a eixes seccions: Pobles, Multimèdia i
-   Notes, com abans. */
-const ES_HTML = /<[a-z][\s\S]*>/i;
+   Notes, com abans.
+   Auditoria de seguretat 261019 (F12) · La detecció és la de renderRichText,
+   lineal (detailHelpers.jsx · semblaHtml): /<[a-z][\s\S]*>/i era quadràtica
+   amb un cos de molts '<a' i cap '>'. */
 const PORTA_IMATGE = /<img\b/i;
 
 /** Decisió 3 (261007) · El cos del Mur sense cap imatge de tercers: ni una
  *  <img> ni la instantània d'una targeta incrustada. */
 export function cosAmbImatgesPropies(text) {
   const raw = String(text || '').trim();
-  if (!ES_HTML.test(raw) || !(PORTA_IMATGE.test(raw) || raw.includes(MARCA_GRUP))) return text;
+  if (!semblaHtml(raw) || !(PORTA_IMATGE.test(raw) || raw.includes(MARCA_GRUP))) return text;
   return sanitizeHtml(resolRecursosDeHtml(raw), { imatgesPropies: true });
 }
 
@@ -266,10 +278,154 @@ export function avatarAutorDElement(item, nom, seccio) {
    referència opaca d'una pujada pròpia (sdp-media://, storage.js). El mode
    estricte l'admet, però a les variacions del Mercat no la resol ningú i
    pintaria una imatge trencada: s'exclou per la forma, sense resoldre res
-   contra l'origen de la finestra. */
+   contra l'origen de la finestra.
+   Pla 2000 (punt 1) · Ara la resol el port (FotoDeLaVariacio), però mai
+   tal qual: la forma continua excloent-la del camí directe. */
 const REFERENCIA_OPACA = /^sdp-media:/i;
 
-export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
+/* Decisió 3 (261007) · El Mercat és del Mur: la foto d'una variació, només si
+   és pròpia; una de fora no es demana i la variació es pinta com sense foto.
+   Revisió adversarial del 261008 i Relleu 261007 (verificació final) · Un
+   sdp-media:// cru passa el mode estricte però no es pot pintar tal qual:
+   s'exclou per la forma (REFERENCIA_OPACA), no amb isSafeAsset, que resol un
+   camí '/…' contra l'origen de la finestra i a l'app nativa
+   (capacitor://localhost) rebutjava la foto PRÒPIA de la variació. Un valor
+   que no és text, com sense foto.
+   Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1; auditoria Codex
+   2030, §3.2) · Esta és la foto que es pinta sense el port (el valor tal
+   qual); la referència opaca la resol FotoDeLaVariacio pel port abans del
+   mateix filtre. */
+export function fotoDirectaDeVariacio(variation) {
+  return variation && typeof variation.image === 'string' && !REFERENCIA_OPACA.test(variation.image.trim()) && esImatgePropiaDelDetall(variation.image)
+    ? variation.image
+    : null;
+}
+
+/* La forma canònica que reconeix el port (esquema en minúscules, sense
+   espais), com refDelPort de VisorDePublicacio.jsx; sense referència, ''.
+   Correcció F5 de la revisió (Pla 2000) · Només una foto del bucket PÚBLIC
+   amb el camí net (fotoDelBucketPublic, la regla única d'ID2 per a una
+   referència que viatja dins d'una publicació que tothom llig): una del bucket
+   privat del venedor, o un camí amb '..', no es demana mai al port i la
+   variant es pinta sense foto. És més estricta que la dels germans
+   (ImatgeDePortada de PageFrame, VisorDePublicacio, UniversalCard i
+   refDelPort de PaginaApp, que encara admeten els dos buckets): unificar-les
+   és una passada a banda. */
+const refDeVariacio = (variation) => fotoDelBucketPublic(variation?.image) || '';
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · «sdp-media://
+   es resol pel port (useResolvedAsset) ABANS del filtre d'imatges pròpies;
+   mai es pinta l'esquema opac cru en un <img>.» La foto de la variant triada:
+   la directa (fotoDirectaDeVariacio, amb la base dels recursos,
+   resolRecursPropi) o, si és una pujada, la URL que torna el port, només si
+   ja no és opaca i passa el mateix mode estricte (esImatgePropiaDelDetall).
+   Mentre es resol, o sense la capacitat 'mitjans', cap <img>: la fitxa es
+   pinta sense foto, com abans. Sense referència, cap petició al port. */
+function FotoDeLaVariacio({ variation, alt }) {
+  const directa = fotoDirectaDeVariacio(variation);
+  const ref = directa ? '' : refDeVariacio(variation);
+  const { url } = useResolvedAssetState(ref);
+  const delPort = ref && url && !esMitjaOpac(url) && esImatgePropiaDelDetall(url) ? url : '';
+  const src = directa ? resolRecursPropi(directa) : delPort;
+  if (!src) return null;
+  return <img className="sdp-compra__foto" src={src} alt={alt} width={120} height={120} loading="lazy" decoding="async" />;
+}
+
+const textNetDe = (valor) => {
+  if (typeof valor === 'number' && Number.isFinite(valor)) return String(valor);
+  return typeof valor === 'string' ? valor.trim() : '';
+};
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · «Unifica el
+   producte en un únic node canònic […] Elimina la llista vertical de targetes
+   duplicades. Aplica el selector compacte de variants en píndoles
+   (role="radiogroup" accessible) […], amb un sol botó «Afegeix al cabàs» i
+   estat d'estoc («Esgotat»).» Abans, cada variació era una .note-card sencera
+   (foto, h3, descripció, «VENEDOR», preu i el seu botó): el producte es
+   llegia com N productes. Ara, després del cos editorial del producte (la
+   seua descripció, una vegada), una sola caixa de compra:
+     1. el selector (SelectorDeVariacions), que tria per la clau ESTABLE de la
+        variació (variacionsDeProducte.js: l'id; mai la posició ni el nom);
+     2. la fitxa de la variant triada: la seua foto pròpia (FotoDeLaVariacio),
+        el nom, la descripció i, si ho declara el seu stock_status, «Esgotat»;
+        canvia amb la tria. Correcció de la revisió · El que canvia (el nom,
+        el preu, l'estat i la descripció) ho diu una regió viva amagada
+        (polite), buida fins que la persona tria: també el preu, que viu al
+        peu, fora de la fitxa;
+     3. el preu (el de la variant; si no en porta, el del producte), qui ven
+        (una vegada; sense venedor declarat, cap línia: el detall ja no signa
+        amb la marca de Sóc de Poble un producte d'un veí) i UN botó.
+   La d'entrada és la primera que no està esgotada. Una esgotada es pot triar
+   i el botó es desactiva amb el text explícit. El botó fa el que feia el de
+   cada targeta: res, perquè cap backend de cabàs no existix i no se n'inventa
+   cap. Només si qui munta la meta passa onAfegeixAlCabas (opcional, ningú no
+   el passa encara), el crida amb la variant triada: { productId, variantId
+   (l'id estable; null en una variació de llegat), quantitat: 1 }. La ruta,
+   Compartir i el xat continuen sent els del producte, mai els d'una variant.
+   La clau és el producte: un altre comença per la seua variant d'entrada. */
+function CompraDelProducte({ item, t, onAfegeixAlCabas }) {
+  const variacions = useMemo(() => variacionsDelProducte(item), [item]);
+  const [triada, setTriada] = useState(null);
+  const activa = variacioActiva(variacions, triada);
+  if (!activa) return null;
+  const textEsgotat = t('section.mercat.esgotat', 'Esgotat');
+  const etiquetaDe = (variacio) => variacio.nom || t('section.mercat.variant', 'Variant');
+  const preu = activa.preu || textNetDe(item.price);
+  /* Auditoria de seguretat 261019 (F14) · Qui ven és primer l'author_name, el
+     que el servidor força (trg_force_submission_author), com la targeta
+     (targetaDeProducte.js) i autorDe (navigation.js). `seller` l'escriu qui
+     publica i ningú no el força: només és la reserva d'un producte sense
+     author_name (la llavor, on tots dos coincidixen). Una publicació d'un veí
+     (porta ownerUserId, elementDeFilaPublicada) no en fa servir mai cap
+     altre: un nom que el servidor deixa en blanc (un espai dur al perfil) no
+     torna a donar pas al `seller`. */
+  const venedor = item.ownerUserId != null
+    ? textNetDe(item.author_name)
+    : textNetDe(item.author_name) || textNetDe(item.seller);
+  const afegix = onAfegeixAlCabas
+    ? () => onAfegeixAlCabas({ productId: item.id ?? null, variantId: activa.id, quantitat: 1 })
+    : undefined;
+  /* Només després d'una tria de la persona (triada) i mentre és l'activa: a
+     l'entrada la regió és buida i no es llig dues vegades. */
+  const anunci = triada != null && triada === activa.clau
+    ? `${[etiquetaDe(activa), preu, activa.esgotada ? textEsgotat : ''].filter(Boolean).join(', ')}${activa.descripcio ? `. ${activa.descripcio}` : ''}`
+    : '';
+  return (
+    <section className="sdp-compra">
+      <SelectorDeVariacions
+        llegenda={t('section.mercat.triaVariant', 'Tria la variant')}
+        opcions={variacions.map((variacio) => ({ valor: variacio.clau, etiqueta: etiquetaDe(variacio), esgotada: variacio.esgotada }))}
+        valor={activa.clau}
+        onCanvi={setTriada}
+        textEsgotat={textEsgotat}
+      />
+      <div className="sdp-compra__activa">
+        <FotoDeLaVariacio key={activa.clau} variation={activa.variacio} alt={activa.nom || textNetDe(item.title)} />
+        <div className="sdp-compra__text">
+          <p className="sdp-compra__nom">{etiquetaDe(activa)}</p>
+          {activa.descripcio ? <p className="sdp-compra__descripcio">{activa.descripcio}</p> : null}
+          {activa.esgotada ? <Insignia to="avis">{textEsgotat}</Insignia> : null}
+        </div>
+      </div>
+      {preu || venedor ? (
+        <div className="sdp-compra__peu">
+          {preu ? <p className="sp-card-price">{preu}</p> : null}
+          {venedor ? <p className="detail-seller">{t('section.mercat.venedor', 'Venedor')}: {venedor}</p> : null}
+        </div>
+      ) : null}
+      <Boto varietat="primari" ple disabled={activa.esgotada} onClick={afegix}>
+        {activa.esgotada
+          ? t('section.mercat.esgotatBoto', 'Esgotat · no es pot afegir al cabàs')
+          : t('section.mercat.afegeixAlCabas', 'Afegeix al cabàs')}
+      </Boto>
+      <p className="sdp-sr-only" aria-live="polite" aria-atomic="true">{anunci}</p>
+    </section>
+  );
+}
+
+/* Pla 2000 (punt 1) · `onAfegeixAlCabas` és opcional: sense, el botó del
+   cabàs no fa res, com abans (CompraDelProducte). */
+export function buildMercatDetailSectionMeta({ marketItems = [], t, onAfegeixAlCabas }) {
   return {
     title: t('section.detail.mercat.title', 'Mercat'),
     label: t('section.detail.mercat.label', 'Producte'),
@@ -295,49 +451,10 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
             {renderRichText(cosAmbImatgesPropies(item.description))}
           </div>
         )}
+        {/* Pla 2000 (punt 1) · Un sol node: una caixa de compra amb el
+            selector, cap targeta per variació. */}
         {Array.isArray(item.variations) && item.variations.length > 0 ? (
-          <div className="stack-grid ">
-            {item.variations.map((variation) => (
-              <div key={variation.name} className="note-card stack-grid">
-                {/* Decisió 3 (261007) · El Mercat és del Mur: la foto d'una
-                    variació, només si és pròpia; una de fora no es demana i
-                    la variació es pinta com sense foto. La pròpia, com abans.
-                    Revisió adversarial del 261008 · Un sdp-media:// cru passa
-                    el mode estricte, però ací no el resol ningú i pintaria una
-                    imatge trencada. Ara que el mapejador conserva eixa forma,
-                    la variació es pinta com sense foto.
-                    Relleu 261007 · Verificació final · S'exclou per la forma
-                    (REFERENCIA_OPACA), no amb isSafeAsset: isSafeAsset resol un
-                    camí '/…' contra l'origen de la finestra i només admet
-                    http(s), i a l'app nativa (capacitor://localhost) la foto
-                    PRÒPIA de la variació desapareixia (la Samarreta de la
-                    llavor). Un valor que no és text, com sense foto. */}
-                {typeof variation.image === 'string' && !REFERENCIA_OPACA.test(variation.image.trim()) && esImatgePropiaDelDetall(variation.image) && (
-                  <img 
-                    src={resolRecursPropi(variation.image)}
-                    alt={variation.name} 
-                    
-                    width={120}
-                  />
-                )}
-                <h3>
-                  {variation.name}
-                </h3>
-                <p className="card__text ">
-                  {variation.description}
-                </p>
-                <p className="detail-seller">
-                  VENEDOR: {item.seller || 'SÓC DE POBLE'}
-                </p>
-                <div className="sp-card-price">
-                  {variation.price}
-                </div>
-                <button className="btn btn-secondary sdp-boto--ple">
-                  Afegeix al cabàs
-                </button>
-              </div>
-            ))}
-          </div>
+          <CompraDelProducte key={String(item.id ?? '')} item={item} t={t} onAfegeixAlCabas={onAfegeixAlCabas} />
         ) : null}
       </>
     )

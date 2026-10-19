@@ -22,6 +22,10 @@ vi.mock('./DetallCompte.jsx', () => ({
 }));
 /* Ordre del Mestre (261008) · «Les vistes»: la seua pàgina té proves pròpies (DetallVistes.test.jsx). */
 vi.mock('./DetallVistes.jsx', () => ({ DetallVistes: ({ identitat }) => <p>{`vistes de ${identitat.nom}`}</p> }));
+/* Pla 261018_1605 (Tasca 4) · «Multimèdia»: la seua pàgina té proves pròpies (DetallMultimedia.test.jsx). */
+vi.mock('./DetallMultimedia.jsx', () => ({
+  DetallMultimedia: ({ identitat, config }) => <p data-tenant={config?.tenantId}>{`multimèdia de ${identitat.nom}`}</p>,
+}));
 vi.mock('./DetallPrivacitat.jsx', () => ({
   DetallPrivacitat: ({ identitat, config, onPerfilCanviat }) => (
     <p data-recarrega={String(onPerfilCanviat === m.perfil.recarrega)} data-tenant={config?.tenantId}>{`privacitat de ${identitat.nom}`}</p>
@@ -138,8 +142,12 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   /* T9 (261001) · «Els nodes» és l'últim apartat de la persona; una organització no en té.
      Ordre del Mestre (261008) · «Les vistes» just després de «La fitxa», només
      per a qui la pot editar: la Colla (membre) no en té. */
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-privacitat', 'jo-nodes']);
-  expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-privacitat', 'jo-nodes', 'jo-multimedia']);
+  /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu del
+     Pla 2000, punt 3) · «Multimèdia» també és l'últim apartat de l'organització
+     que la persona pot editar; la Colla (membre), no. */
+  expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-multimedia']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
   for (const id of ['rebost', 'salut', 'lector-rss', 'tpv', 'snippet']) {
@@ -170,22 +178,85 @@ test('261008 · «Les vistes»: l’apartat, la icona de l’ull i la seua pàgi
   render(m.workspace.renderDetail({ item: item('O-vistes') }));
   expect(screen.getByText('vistes de Pep')).toBeTruthy();
   expect(screen.getByText('vistes de Forn')).toBeTruthy();
-  // Un agent IA només té fitxa i les seues vistes.
+  /* Un agent IA només té fitxa, les seues vistes i (expectativa actualitzada a
+     propòsit: relleu del Pla 2000, punt 3) les seues fotos. */
   const agent = { id: 'A', mena: 'agent', nom: 'IAIA', dades: {} };
-  expect(itemsDePerfil([jo, agent]).filter((i) => i.categoryIds.includes('A')).map((i) => i.id)).toEqual(['A-fitxa', 'A-vistes']);
+  expect(itemsDePerfil([jo, agent]).filter((i) => i.categoryIds.includes('A')).map((i) => i.id)).toEqual(['A-fitxa', 'A-vistes', 'A-multimedia']);
 });
 
 test('261008 · «Les vistes» no hi és per a qui no pot editar la fitxa: un membre, una baixa en curs o la fila de reserva', () => {
   const ids = (identitats) => itemsDePerfil(identitats).map((i) => i.id);
   expect(ids([colla, botiga])).toEqual(['G-fitxa', 'G-compte', 'B-fitxa', 'B-compte']);
-  expect(ids([{ ...forn, dades: { role: 'admin' } }])).toEqual(['O-fitxa', 'O-vistes', 'O-compte']);
+  // Expectativa actualitzada a propòsit: relleu del Pla 2000, punt 3 («Multimèdia», l'últim de l'organització).
+  expect(ids([{ ...forn, dades: { role: 'admin' } }])).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-multimedia']);
   expect(ids([{ ...jo, dades: { baixa_demanada_at: '2026-09-26T10:00:00Z' } }])).not.toContain('jo-vistes');
   expect(ids([{ ...jo, dades: { reserva: true } }])).not.toContain('jo-vistes');
 });
 
+/* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · «Multimèdia»:
+   l'apartat de la persona, només per a qui pot editar la fitxa (com «Les
+   vistes»), i la seua pàgina, mai la de reserva (DetallCompte). */
+test('261018 · «Multimèdia»: l’apartat de la persona i la seua pàgina, amb la configuració del Perfil; no «El compte»', () => {
+  render(<PerfilShell />);
+  expect(item('jo-multimedia')).toMatchObject({
+    title: 'Multimèdia', categoryIds: ['jo'], data: { vista: 'multimedia', identitatId: 'jo' },
+  });
+  render(m.workspace.renderDetail({ item: item('jo-multimedia') }));
+  const pagina = screen.getByText('multimèdia de Pep');
+  expect(pagina.getAttribute('data-tenant')).toBe('00000000-0000-4000-8000-000000000000');
+  expect(screen.queryByText('compte de Pep')).toBeNull();
+  /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu del
+     Pla 2000, punt 3) · ara una organització que la persona pot editar també en
+     té (la Colla, membre, no). */
+  expect(filsDe('O')).toContain('O-multimedia');
+  expect(filsDe('G')).not.toContain('G-multimedia');
+});
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · «Multimèdia» per
+   a cada actor: la pàgina d'una organització i la d'un agent IA, també amb la
+   configuració del Perfil; el subtítol diu el logotip de l'organització. */
+test('Pla 2000 · «Multimèdia» d’una organització i d’un agent IA: l’apartat i la seua pàgina', () => {
+  const agent = { id: 'A', mena: 'agent', nom: 'IAIA', dades: {} };
+  m.perfil = { ...m.perfil, identitats: [jo, forn, colla, agent] };
+  render(<PerfilShell />);
+  expect(item('O-multimedia')).toMatchObject({
+    title: 'Multimèdia', subtitle: 'Les seues fotos, logotip i capçalera', categoryIds: ['O'],
+    data: { vista: 'multimedia', identitatId: 'O' },
+  });
+  expect(item('O-multimedia').searchText).toContain('logotip');
+  expect(item('A-multimedia')).toMatchObject({ subtitle: 'Les seues fotos, avatar i capçalera', data: { vista: 'multimedia', identitatId: 'A' } });
+  expect(item('jo-multimedia').subtitle).toBe('Les teues fotos, avatar i capçalera');
+  render(m.workspace.renderDetail({ item: item('O-multimedia') }));
+  render(m.workspace.renderDetail({ item: item('A-multimedia') }));
+  expect(screen.getByText('multimèdia de Forn').getAttribute('data-tenant')).toBe('00000000-0000-4000-8000-000000000000');
+  expect(screen.getByText('multimèdia de IAIA')).toBeTruthy();
+  expect(screen.queryByText('compte de Forn')).toBeNull();
+});
+
+test('261018 · «Multimèdia» no hi és amb una baixa en curs ni amb la fila de reserva', () => {
+  const ids = (identitats) => itemsDePerfil(identitats).map((i) => i.id);
+  expect(ids([jo])).toContain('jo-multimedia');
+  expect(ids([{ ...jo, dades: { baixa_demanada_at: '2026-09-26T10:00:00Z' } }])).not.toContain('jo-multimedia');
+  expect(ids([{ ...jo, dades: { reserva: true } }])).not.toContain('jo-multimedia');
+});
+
+/* Pla 261018_1605 (Tasca 2, D4) · El subtítol de «La fitxa» és «Nom · Poble»
+   (pobleDeFitxa); sense poble, el nom; l'agent IA, «Intel·ligència artificial». */
+test('261018 · el subtítol de «La fitxa» és «Nom · Poble» per a la persona i l’organització', () => {
+  const fitxaDe = (identitats, id) => itemsDePerfil(identitats).find((i) => i.id === `${id}-fitxa`);
+  expect(fitxaDe([{ ...jo, dades: { town_name: 'La Torre de les Maçanes' } }], 'jo').subtitle).toBe('Pep · La Torre de les Maçanes');
+  expect(fitxaDe([{ ...jo, dades: { town_name: 'La Torre de les Maçanes · Xixona' } }], 'jo').subtitle)
+    .toBe('Pep · La Torre de les Maçanes · Xixona');
+  expect(fitxaDe([{ ...forn, dades: { role: 'owner', town_name: 'Benilloba' } }], 'O').subtitle).toBe('Forn · Benilloba');
+  expect(fitxaDe([jo], 'jo').subtitle).toBe('Pep');
+  const agent = { id: 'A', mena: 'agent', nom: 'IAIA', dades: { town_name: 'Sella' } };
+  expect(fitxaDe([jo, agent], 'A').subtitle).toBe('Intel·ligència artificial');
+});
+
 test('«Privacitat i dades» només apareix si el backend declara «compte» o «consentiment»', () => {
   const vista = render(<PerfilShell />);
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-nodes']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-nodes', 'jo-multimedia']);
   m.caps = new Set(['consentiment']);
   vista.rerender(<PerfilShell />);
   expect(filsDe('jo')).toContain('jo-privacitat');

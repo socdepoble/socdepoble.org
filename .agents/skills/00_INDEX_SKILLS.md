@@ -30,6 +30,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-neteja-brossa/SKILL|core-neteja-brossa]]: Tractor de neteja d'arrels. Retira de l'arrel de socdepoble.org la brossa solta (logs, pegats, sondes) sense tocar mai la configuració de les eines, l'estat local ni res versionat.
 - [[core-portaveu-institucional/SKILL|core-portaveu-institucional]]: Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Core skill per a restauració segura
+- [[core-seguretat-audit/SKILL|core-seguretat-audit]]: Protocol integral de ciberseguretat i auditoria de vulnerabilitats per a tota la Colmena, inspirat en Claude Security (threat modeling, SAST, verificació independent de pegats i informes SARIF).
 - [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]]: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
 - [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.
 - [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.

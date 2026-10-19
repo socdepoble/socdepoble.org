@@ -63,6 +63,22 @@ describe('D2 · mapatge de la fitxa (opció A)', () => {
     expect(doc.lead).toBe('Del Mas');
   });
 
+  /* Pla 261018_1605 (Tasca 1, D1; ordre del Mestre, 18-10-2026) · La persona
+     naix pública: sense is_public, pública; només és privada amb is_public
+     false. La seua visibility (sempre 'private', CHECK de 2609080000) no hi diu res. */
+  it('la persona sense is_public (null o absent) és pública; amb false, privada; la visibility no hi compta', () => {
+    const ambDades = (dades) => ({ id: 'jo', mena: 'persona', nom: 'Pep', dades });
+    expect(fitxaPublicada(ambDades({}))).toBe(true);
+    expect(fitxaPublicada(ambDades({ is_public: null }))).toBe(true);
+    expect(fitxaPublicada(ambDades({ is_public: undefined }))).toBe(true);
+    expect(fitxaPublicada(ambDades(null))).toBe(true);
+    expect(fitxaPublicada(ambDades({ is_public: true, visibility: 'private' }))).toBe(true);
+    expect(fitxaPublicada(ambDades({ is_public: false }))).toBe(false);
+    expect(fitxaPublicada(ambDades({ is_public: null, visibility: 'private' }))).toBe(true);
+    expect(fitxaPublicada(ambDades({ is_public: false, visibility: 'public' }))).toBe(false);
+    expect(documentDeFitxa(ambDades({ full_name: 'Pep' })).isPublished).toBe(true);
+  });
+
   it('l’organització és pública només amb visibility «public»', () => {
     expect(documentDeFitxa(empresa).isPublished).toBe(false);
     expect(fitxaPublicada({ ...empresa, dades: { ...empresa.dades, visibility: 'public' } })).toBe(true);

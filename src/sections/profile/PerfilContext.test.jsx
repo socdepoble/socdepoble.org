@@ -1,7 +1,9 @@
 import React, { StrictMode, useLayoutEffect } from 'react';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { PerfilProvider, usePerfil, ajustosPersona, ajustosOrganitzacio, opcionsDePoble } from './PerfilContext.jsx';
+import {
+  ERROR_SENSE_POBLE_PERSONA, PerfilProvider, usePerfil, ajustosPersona, ajustosOrganitzacio, opcionsDePoble, valorDePoblePersona,
+} from './PerfilContext.jsx';
 const mock = vi.hoisted(() => ({ user: { id: 'A' }, epoch: 1, generation: 1, entrada: 1,
   getProfile: vi.fn(), listMyOrganizations: vi.fn(), updateProfile: vi.fn(), updateOrganization: vi.fn(),
   updateUserPassword: vi.fn(), createOrganization: vi.fn(), uploadToStorage: vi.fn(),
@@ -148,10 +150,10 @@ it('T47 · l’àmbit dels esborranys és el de la sessió de React encara que e
 /* ── Catàleg per llocs, creació d'organitzacions i avís al selector ── */
 
 it('cada ajust del catàleg diu si viu a la fitxa o al compte', () => {
-  /* Pla 261016 (Bloc 3.1; ordre del Mestre) · Canvi deliberat: els drets de
-     sèrie de les notes ('drets-notes') entren al compte, després de l'estat. */
+  /* Pla 261016 (Bloc 3.1) i Pla 261018 (Tasca 2) · Canvis deliberats: poble i drets de sèrie de les notes al compte.
+     Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte). */
   expect(ajustosPersona().map(a => [a.id, a.lloc])).toEqual([['nom', 'fitxa'], ['avatar', 'fitxa'],
-    ['correu', 'compte'], ['privacitat', 'compte'], ['drets-notes', 'compte'], ['contrasenya', 'compte'], ['sessio', 'compte']]);
+    ['poble', 'compte'], ['correu', 'compte'], ['privacitat', 'compte'], ['drets-notes', 'compte'], ['contrasenya', 'compte'], ['sessio', 'compte']]);
   const org = ajustosOrganitzacio({ role: 'owner', slug: 'forn' });
   expect(org.filter(a => a.lloc === 'fitxa').map(a => a.id)).toEqual(['nom', 'avatar', 'lema', 'descripcio']);
   /* T43 (ordre del Mestre, 260928) · el correu opcional va al compte; grup C
@@ -167,8 +169,9 @@ it('Onada 11 · ajustosPersona amb superadmin afig «Segon factor» i «Panell d
   expect(ajustosPersona({}, { superadmin: false })).toEqual(ajustosPersona());
   const amb = ajustosPersona({ full_name: 'Pep' }, { superadmin: true });
   expect(amb.filter(a => a.lloc === 'fitxa').map(a => a.id)).toEqual(['nom', 'avatar']);
-  /* Pla 261016 (Bloc 3.1) · Canvi deliberat: 'drets-notes' després de l'estat. */
-  expect(amb.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['correu', 'privacitat', 'drets-notes', 'contrasenya', 'segon-factor', 'panell-superadmin', 'sessio']);
+  /* Pla 261016 (Bloc 3.1) i Pla 261018 (Tasca 2) · Canvis deliberats: 'poble' i 'drets-notes' al compte.
+     Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte). */
+  expect(amb.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['poble', 'correu', 'privacitat', 'drets-notes', 'contrasenya', 'segon-factor', 'panell-superadmin', 'sessio']);
   expect(amb.find(a => a.id === 'segon-factor')).toEqual({ id: 'segon-factor', lloc: 'compte', titol: 'Segon factor', tipus: 'accio', accio: 'segon-factor', obert: true });
   expect(amb.find(a => a.id === 'panell-superadmin')).toEqual({ id: 'panell-superadmin', lloc: 'compte', titol: 'Panell de superadministració', tipus: 'accio', accio: 'obrir-admin', obert: true });
   /* La resta de files són idèntiques a les d'abans. */
@@ -303,6 +306,46 @@ it('grup C · desar el poble envia el NOM a town_name; buit no es desa (Gauntlet
   expect(mock.updateOrganization).toHaveBeenLastCalledWith('O', { town_name: 'Alcoi' }, expect.any(Object));
   await act(async () => value.guardarCampPerfil('lema', '', 'O'));
   expect(mock.updateOrganization).toHaveBeenLastCalledWith('O', { lema: '' }, expect.any(Object));
+});
+
+/* Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Els pobles de
+   la persona: la cadena canònica 'A · B' a la columna de sempre (town_name),
+   mai buida i amb el límit de 120 caràcters de la columna. */
+it('261018 · valorDePoblePersona: buit és un error, més de 120 caràcters també, i diversos pobles es normalitzen', () => {
+  for (const buit of ['', '   ', ' · ', null, undefined, []]) {
+    expect(() => valorDePoblePersona(buit)).toThrow(ERROR_SENSE_POBLE_PERSONA);
+  }
+  expect(() => valorDePoblePersona('x'.repeat(121))).toThrow('com a màxim 120 caràcters');
+  expect(() => valorDePoblePersona(['x'.repeat(60), 'y'.repeat(60)])).toThrow('com a màxim 120 caràcters');
+  expect(valorDePoblePersona('x'.repeat(120))).toBe('x'.repeat(120));
+  expect(valorDePoblePersona('  La Torre de les Maçanes ·Xixona  · ')).toBe('La Torre de les Maçanes · Xixona');
+  expect(valorDePoblePersona(['La Torre de les Maçanes', ' Xixona ', 'La Torre de les Maçanes'])).toBe('La Torre de les Maçanes · Xixona');
+});
+
+it('261018 · guardarAjust de la persona desa el poble normalitzat a town_name; buit no arriba al servidor', async () => {
+  mock.updateProfile.mockImplementation(async (canvis) => ({ id: 'A', ...canvis }));
+  await open();
+  await act(async () => value.guardarAjust('jo', 'poble', ' La Torre de les Maçanes ·  Xixona '));
+  expect(mock.updateProfile).toHaveBeenLastCalledWith({ town_name: 'La Torre de les Maçanes · Xixona' }, expect.any(Object));
+  expect(value.identitats.find(i => i.id === 'jo').dades.town_name).toBe('La Torre de les Maçanes · Xixona');
+  await expect(value.guardarAjust('jo', 'poble', ' · ')).rejects.toThrow(ERROR_SENSE_POBLE_PERSONA);
+  await expect(value.guardarCampPerfil('town_name', '', 'jo')).rejects.toThrow(ERROR_SENSE_POBLE_PERSONA);
+  expect(mock.updateProfile).toHaveBeenCalledTimes(1);
+  expect(value.identitats.find(i => i.id === 'jo').dades.town_name).toBe('La Torre de les Maçanes · Xixona');
+});
+
+it('261018 · el catàleg de la persona: el poble del catàleg sense el desat, l’estat públic sense is_public i, amb la fila de reserva, tancats', () => {
+  const pobles = [{ title: 'Xixona' }, { title: 'La Torre de les Maçanes' }];
+  const poble = ajustosPersona({ town_name: 'La Torre de les Maçanes · Sella' }, { pobles }).find(a => a.id === 'poble');
+  expect(poble).toMatchObject({ tipus: 'selector', multiple: true, valor: 'La Torre de les Maçanes · Sella', obert: true });
+  expect(poble.opcions.map(o => o.valor)).toEqual(['', 'La Torre de les Maçanes', 'Xixona']);
+  expect(ajustosPersona({}).find(a => a.id === 'privacitat')).toMatchObject({ valor: true, obert: true });
+  expect(ajustosPersona({ is_public: false }).find(a => a.id === 'privacitat')).toMatchObject({ valor: false, obert: true });
+  const deReserva = ajustosPersona({ reserva: true, is_public: true });
+  expect(deReserva.find(a => a.id === 'privacitat')).toMatchObject({
+    obert: false, motiu: 'No s’ha pogut llegir el compte del servidor: l’estat es podrà canviar quan es torne a llegir.',
+  });
+  expect(deReserva.find(a => a.id === 'poble').obert).toBe(false);
 });
 
 it('grup C · amb la capacitat, ambMembres i les accions criden el port amb la configuració (i el senyal)', async () => {

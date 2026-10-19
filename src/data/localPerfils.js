@@ -149,10 +149,16 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
     if (!usuari?.id) return null;
     if (!estat.perfils.has(usuari.id)) {
       const naix = moment();
+      /* Pla 261018_1605 (Tasca 0 i 1, D1 i D7; ordre del Mestre, 18-10-2026) ·
+         La fitxa de qui entra és la de la persona pilot (regla del mode seed),
+         amb els camps canònics de PERSONA_PILOT, la font única: el poble és
+         PERSONA_PILOT.poble (POBLE_FUNDACIONAL), no cap cadena escrita ací. Naix
+         pública (is_public) i 'private' de visibility, com al servidor: és
+         l'única visibility que admet el CHECK de profiles (2609080000). */
       estat.perfils.set(usuari.id, {
         id: usuari.id, full_name: nomDeSessio(usuari), avatar_url: avatarDeSessio(usuari),
-        visibility: 'private', is_public: false, town_name: 'La Torre de les Maçanes',
-        bio: AGENTS_MAP.JAVI.role, lema: AGENTS_MAP.JAVI.lema, presentacio_html: '', hero_url: '', copyright: '',
+        visibility: 'private', is_public: true, town_name: PERSONA_PILOT.poble,
+        bio: PERSONA_PILOT.bio, lema: PERSONA_PILOT.lema, presentacio_html: '', hero_url: PERSONA_PILOT.hero_url, copyright: '',
         /* T66 · Com la columna nova del servidor: null fins que se'n tria una. */
         icon: null,
         baixa_demanada_at: null, slug: PERSONA_PILOT.slug, alies: [...PERSONA_PILOT.alies],

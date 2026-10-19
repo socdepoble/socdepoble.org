@@ -5,10 +5,11 @@
  * el que appendSectionSubmissionNetworkOnly escriu a section_submissions.
  */
 import { describe, expect, test } from 'vitest';
-import { elementDeFilaPublicada, mapSectionSubmissionToItem } from './mapejadorSeccions.js';
+import { elementDeFilaPublicada, mapSectionSubmissionToItem, mergeById } from './mapejadorSeccions.js';
 import { acteAEsdeveniment } from '../sections/mur/agendaMur.js';
 import { autorDe } from '../config/navigation.js';
 import { trobaElement } from '../sections/detail/elementDeSeccio.js';
+import { variacionsDelProducte } from '../sections/mercat/variacionsDeProducte.js';
 
 /* Les 00:30 de l'1-10-2026 a València: en UTC encara és el 30-09. */
 const PUBLICAT = '2026-09-30T22:30:00.000Z';
@@ -91,6 +92,47 @@ describe('mapSectionSubmissionToItem · variacions del Mercat i etiquetes de Not
     expect(altre).toEqual({ name: 'Blanca', image: null });
   });
 
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1; auditoria
+     Codex 2030, R6 i §3.2) · L'id estable d'una variació (el selector del
+     detall la tria per ell) es conserva en escriure, net i únic dins del
+     producte; el mapejador no n'inventa cap. */
+  test('l’id estable d’una variació es conserva, en forma canònica', () => {
+    const [gris, verda] = producte([
+      { id: 'gris-plom', name: 'Edició Gris Plom', price: '15.00€' },
+      { id: ' Verda-Pi ', name: 'Edició Verda', stock_status: 'Esgotat' }
+    ]).variations;
+    expect(gris).toEqual({ id: 'gris-plom', name: 'Edició Gris Plom', price: '15.00€' });
+    expect(verda).toEqual({ id: 'verda-pi', name: 'Edició Verda', stock_status: 'Esgotat' });
+  });
+
+  test('un id que no és curt i segur no viatja, i el mapejador no n’inventa cap', () => {
+    const variacions = producte([
+      { id: '../mitjans_privats', name: 'A' }, { id: 'a b', name: 'B' }, { id: '<b>x</b>', name: 'C' },
+      { id: 7, name: 'D' }, { id: { x: 1 }, name: 'E' }, { id: 'x'.repeat(65), name: 'F' }, { id: 'òliva', name: 'G' },
+      { name: 'H' }, { id: 'x'.repeat(64), name: 'I' }
+    ]).variations;
+    expect(variacions.map((v) => v.id)).toEqual([undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'x'.repeat(64)]);
+    expect(variacions.map((v) => v.name)).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']);
+  });
+
+  test('un id repetit dins del producte: la primera el conserva, la segona viatja sense; cap variació es perd', () => {
+    const variacions = producte([{ id: 'gris', name: 'A' }, { id: 'GRIS', name: 'B' }, { id: 'verda', name: 'C' }]).variations;
+    expect(variacions).toEqual([{ id: 'gris', name: 'A' }, { name: 'B' }, { id: 'verda', name: 'C' }]);
+  });
+
+  test('escriure i tornar a llegir: l’id arriba igual al selector del detall', () => {
+    const escrit = producte([
+      { id: 'gris-plom', name: 'Edició Gris Plom', image: '/assets/uploads/gris.png' },
+      { id: 'verda-pi', name: 'Edició Verda', stock_status: 'Esgotat' }
+    ]);
+    const llegit = elementDeFilaPublicada({ id: 'm1', payload: JSON.parse(JSON.stringify(escrit)), titol: 'Samarreta', createdAt: PUBLICAT });
+    expect(llegit.variations).toEqual(escrit.variations);
+    expect(variacionsDelProducte(llegit).map((v) => [v.clau, v.id, v.esgotada])).toEqual([
+      ['gris-plom', 'gris-plom', false],
+      ['verda-pi', 'verda-pi', true]
+    ]);
+  });
+
   test('una variació en cadena es conserva neta; el que no és variació no viatja', () => {
     expect(producte([' Gris ', 'Verda', null, 7, ['x']]).variations).toEqual(['Gris', 'Verda']);
     expect(producte('Gris').variations).toEqual([]);
@@ -125,6 +167,20 @@ describe('elementDeFilaPublicada · el payload d’un veí no és autoritat', ()
     expect(element).not.toHaveProperty('owner_user_id');
     expect(element).not.toHaveProperty('author_user_id');
     expect(element).not.toHaveProperty('author_id');
+  });
+
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3; correcció F1
+     de la revisió) · L'agent IA titular d'una foto no el diu el payload d'un
+     veí: cap columna del servidor no el valida. Fusionada amb un element de
+     l'administració amb el mateix id, la fila porta la seua propietària
+     (titularDelMitja ja no hi veu cap agent: DetallMultimedia.test.jsx). */
+  test('un agent titular del payload no viatja; fusionada, la fila porta la seua propietària', () => {
+    const element = fila({ src: '/assets/uploads/x.jpg', kind: 'image', author_agent_id: 'iaia-maria', authorAgentId: 'iaia-maria' });
+    expect(element).not.toHaveProperty('author_agent_id');
+    expect(element).not.toHaveProperty('authorAgentId');
+    expect(element).toMatchObject({ ownerUserId: 'U', src: '/assets/uploads/x.jpg' });
+    const [fusionat] = mergeById([{ id: 'p1', src: '/assets/iaia/a.jpg', author_agent_id: 'iaia-maria' }], [element]);
+    expect(fusionat).toMatchObject({ ownerUserId: 'U', src: '/assets/uploads/x.jpg' });
   });
 
   test('sense insígnia de sistema, ni fixació, ni enllaç de fora', () => {

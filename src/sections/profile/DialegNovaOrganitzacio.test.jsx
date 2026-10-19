@@ -138,6 +138,19 @@ test('Gauntlet 261016 · el selector porta els pobles del node i naix amb el de 
   expect(within(poble).getAllByRole('option')[0].textContent).toBe('Tria un poble…');
 });
 
+/* Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Una persona de
+   més d'un poble ('A · B'): l'organització nova naix només amb el principal. */
+test('261018 · amb diversos pobles, el selector naix només amb el principal i l’alta l’envia sol', async () => {
+  mocks.perfil = ambPersonaDe(`${POBLE} · Benilloba`);
+  const { onCrea } = obri();
+  const poble = screen.getByLabelText(/^Poble/);
+  expect(poble.value).toBe(POBLE);
+  expect(within(poble).getAllByRole('option').map((opcio) => opcio.value)).toEqual(['', 'Benilloba', POBLE]);
+  escriu(/^Nom/, 'Forn');
+  await crea();
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Forn', slug: 'forn', kind: 'company', town_name: POBLE });
+});
+
 test('Cancel·lar tanca amb el motiu «boto»', () => {
   const { onTanca } = obri();
   fireEvent.click(screen.getByRole('button', { name: 'Cancel·lar' }));

@@ -37,6 +37,23 @@ describe('pobleDeLaPublicacio · la clau del poble d’una publicació', () => {
   });
 });
 
+/* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · El lloc d'una
+   persona amb diversos pobles ('A · B'): la publicació és del principal, a la
+   seua pestanya «Gent de …» i a cap altra. */
+describe('pobleDeLaPublicacio · una persona amb diversos pobles', () => {
+  test('el lloc «A · B» és del poble principal; una ela geminada no parteix el nom', () => {
+    expect(pobleDeLaPublicacio({ author_location: 'La Torre de les Maçanes · Xixona' })).toBe('la-torre-de-les-macanes');
+    expect(pobleDeLaPublicacio({ town_name: 'Xixona · La Torre de les Maçanes' })).toBe('xixona');
+    expect(pobleDeLaPublicacio({ author_location: 'Bel·lús · Xixona' })).toBe('bellus');
+    const torre = MOCK_TOWNS.find((town) => town.id === 'la-torre-de-les-macanes');
+    const xixona = MOCK_TOWNS.find((town) => town.id === 'xixona');
+    expect(esDelPoble({ author_location: 'La Torre de les Maçanes · Xixona' }, torre)).toBe(true);
+    expect(esDelPoble({ author_location: 'La Torre de les Maçanes · Xixona' }, xixona)).toBe(false);
+    // Mana el poble_id, si en porta.
+    expect(pobleDeLaPublicacio({ poble_id: 'xixona', author_location: 'La Torre de les Maçanes · Xixona' })).toBe('xixona');
+  });
+});
+
 describe('esDelPoble · per a cada fitxa de la llavor, sense casos a mà', () => {
   test('una publicació amb el nom del poble hi cau, i en cap altre', () => {
     for (const town of MOCK_TOWNS) {

@@ -141,8 +141,11 @@ export default function MultimediaSection() {
 
       {viewMode !== 'timeline' ? (
         <div className="photo-grid">
-          {graella.map((item, index) => (
-            <Cella key={`${item.id}-${index}`} item={item} onObri={obri} />
+          {/* Ordre del Mestre (18-10-2026, relleu del Pla 2000; Gemini 2030, A3.2) ·
+              La clau és l'id de la foto (únic: fusionaMitjans no en repetix cap),
+              mai la posició: filtrar no torna a crear les cel·les que es queden. */}
+          {graella.map((item) => (
+            <Cella key={item.id} item={item} onObri={obri} />
           ))}
         </div>
       ) : (
@@ -155,8 +158,8 @@ export default function MultimediaSection() {
                   <span className="pill">{group.items.length} {t('section.multimedia.elements', 'elements')}</span>
                 </div>
                 <div className="photo-grid">
-                  {group.items.map((item, idx) => (
-                    <Cella key={`${item.id}-${idx}`} item={item} onObri={obri} />
+                  {group.items.map((item) => (
+                    <Cella key={item.id} item={item} onObri={obri} />
                   ))}
                 </div>
               </div>

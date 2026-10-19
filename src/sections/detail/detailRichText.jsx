@@ -2,6 +2,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
+import { semblaHtml } from './detailHelpers.jsx';
 
 export function renderRichText(text) {
   const raw = String(text || '').trim();
@@ -9,7 +10,8 @@ export function renderRichText(text) {
 
   // SPEC G · els src="/assets/…" prenen la base de l'amfitrió en pintar-se,
   // ABANS del sanejador; sense base, el mateix HTML.
-  if (/<[a-z][\s\S]*>/i.test(raw)) {
+  // Auditoria de seguretat 261019 (F12) · La detecció, lineal (semblaHtml).
+  if (semblaHtml(raw)) {
     // T7 (ordre del Mestre, 261004) · Un cos amb targetes incrustades (un grup
     // de primer nivell) es pinta hidratat: cada targeta és la del Mur. Sense
     // cap grup, el camí de sempre, byte a byte (Llei del Píxel).

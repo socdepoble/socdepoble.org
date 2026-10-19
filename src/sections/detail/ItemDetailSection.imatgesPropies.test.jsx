@@ -17,7 +17,7 @@
  * amb la UniversalPage i el PageFrame de veres.
  */
 import React from 'react';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -183,27 +183,40 @@ describe('(b) el carrusel de la portada', () => {
   });
 });
 
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · Expectativa
+   actualitzada a propòsit: les variacions ja no són una .note-card cadascuna
+   (foto, h3, preu i botó) sinó les píndoles d'un selector (radiogroup) i la
+   fitxa de la variant TRIADA, amb la seua foto (.sdp-compra__foto). La regla
+   de les fotos no canvia: es comprova variant per variant, triant-les. */
 describe('(c) les fotos de les variacions del Mercat', () => {
   const variacions = [
     { name: 'Gran', image: GOOGLE, price: '20 €' },
     { name: 'Xica', image: '/assets/mercat/xica.png', price: '8 €' },
     { name: 'Mitjana', image: RASTREIG, price: '12 €' }
   ];
+  const noms = (container) => within(container).getAllByRole('radio').map((radio) => radio.labels[0].textContent);
+  const fotoActiva = (container) => container.querySelector('.sdp-compra__foto')?.getAttribute('src') ?? null;
+  /** La foto de la fitxa de cada variant, triant-les una per una pel seu nom. */
+  const fotoDeCada = (container, ...nomsATriar) => nomsATriar.map((nom) => {
+    fireEvent.click(within(container).getByRole('radio', { name: nom }));
+    return fotoActiva(container);
+  });
 
   test('una de fora no es demana i la variació es pinta com sense foto; la pròpia, com abans', () => {
     const container = pinta('mercat', producte({ images: ['/assets/mercat/a.png'], variations: variacions }));
-    const targetes = [...container.querySelectorAll('.note-card')];
-    expect(targetes.map((targeta) => targeta.querySelector('h3').textContent)).toEqual(['Gran', 'Xica', 'Mitjana']);
-    expect(targetes.map((targeta) => targeta.querySelector('img')?.getAttribute('src') ?? null)).toEqual([null, '/assets/mercat/xica.png', null]);
+    expect(noms(container)).toEqual(['Gran', 'Xica', 'Mitjana']);
+    expect(container.querySelectorAll('.note-card')).toHaveLength(0);
+    expect(fotoDeCada(container, 'Gran', 'Xica', 'Mitjana')).toEqual([null, '/assets/mercat/xica.png', null]);
     expect(fonts(container)).not.toContain(GOOGLE);
     expect(fonts(container)).not.toContain(RASTREIG);
   });
 
   /* Revisió adversarial del 261008 · Les pròpies de totes les formes. El
      Storage registrat, com abans. Un sdp-media:// cru passa el mode estricte
-     però ací no el resol ningú: la variació es pinta com sense foto, mai amb
-     una imatge trencada (Relleu 261007 · Verificació final: exclòs per la
-     forma, REFERENCIA_OPACA de detailSectionMeta.jsx). */
+     però no es pinta mai tal qual: sense la capacitat 'mitjans' (estes proves)
+     el port no el resol i la variació es pinta com sense foto, mai amb una
+     imatge trencada. Pla 2000 (punt 1) · Amb el port, la URL que en torna
+     (detailSectionMeta.mercat.test.jsx). */
   test('el Storage registrat es pinta com abans; un sdp-media:// cru, com sense foto', () => {
     permetOrigenMitjans(STORAGE);
     const foto = `${STORAGE}/storage/v1/object/public/mitjans/poble/u/mercat/gran.webp`;
@@ -211,8 +224,7 @@ describe('(c) les fotos de les variacions del Mercat', () => {
       { name: 'Gran', image: foto, price: '20 €' },
       { name: 'Xica', image: SDP_MEDIA, price: '8 €' }
     ] }));
-    const targetes = [...container.querySelectorAll('.note-card')];
-    expect(targetes.map((targeta) => targeta.querySelector('img')?.getAttribute('src') ?? null)).toEqual([foto, null]);
+    expect(fotoDeCada(container, 'Gran', 'Xica')).toEqual([foto, null]);
     expect(fonts(container).some((font) => font?.includes('sdp-media:'))).toBe(false);
   });
 
@@ -223,7 +235,8 @@ describe('(c) les fotos de les variacions del Mercat', () => {
 
   test('el cos del Mercat, fora de la pàgina (el lector del MAS el crida igual), filtra igual', () => {
     const { container } = render(buildMercatDetailSectionMeta({ t }).renderBody({ variations: variacions }));
-    expect(fonts(container)).toEqual(['/assets/mercat/xica.png']);
+    expect(fotoDeCada(container, 'Gran', 'Xica', 'Mitjana')).toEqual([null, '/assets/mercat/xica.png', null]);
+    expect(fonts(container).every((font) => font === '/assets/mercat/xica.png')).toBe(true);
   });
 
   /* Relleu 261007 · Verificació final de la peça «imatges-detall» · A l'app
@@ -245,9 +258,8 @@ describe('(c) les fotos de les variacions del Mercat', () => {
         { name: 'Mitjana', image: '//rastreig.example/p.gif', price: '12 €' },
         { name: 'Sense', price: '5 €' }
       ] }));
-      const targetes = [...container.querySelectorAll('.note-card')];
-      expect(targetes.map((targeta) => targeta.querySelector('h3').textContent)).toEqual(['Verd', 'Opaca', 'Gran', 'Mitjana', 'Sense']);
-      expect(targetes.map((targeta) => targeta.querySelector('img')?.getAttribute('src') ?? null)).toEqual([SAMARRETA, null, null, null, null]);
+      expect(noms(container)).toEqual(['Verd', 'Opaca', 'Gran', 'Mitjana', 'Sense']);
+      expect(fotoDeCada(container, 'Verd', 'Opaca', 'Gran', 'Mitjana', 'Sense')).toEqual([SAMARRETA, null, null, null, null]);
     } finally {
       vi.unstubAllGlobals();
     }
@@ -437,7 +449,11 @@ describe('data:image/svg+xml al detall del Mur', () => {
       variations: [{ name: 'Gran', image: SVG, price: '20 €' }]
     }));
     expect([...portada(container).querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual(['/assets/mercat/a.png', '/assets/mercat/b.png']);
-    expect(container.querySelector('.note-card img')).toBeNull();
+    /* Pla 2000 (punt 1) · Expectativa actualitzada a propòsit: la foto de la
+       variant triada viu a la caixa de compra (.sdp-compra), no en una
+       .note-card. */
+    expect(container.querySelector('.sdp-compra')).not.toBeNull();
+    expect(container.querySelector('.sdp-compra img')).toBeNull();
     expect(fonts(container)).not.toContain(SVG);
   });
 });

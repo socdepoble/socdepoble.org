@@ -43,7 +43,7 @@
  */
 import { dataDeDocument } from '../../components/universal/editorial.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
-import { slugDelPoble } from './nomsDelPoble.js';
+import { poblePrincipal, slugDelPoble } from './nomsDelPoble.js';
 
 const CAP = Object.freeze([]);
 
@@ -64,14 +64,22 @@ const esDeSistema = (item) => item.isSystem === true || item.type === 'sistema';
 /* La clau que la publicació DECLARA (poble_id, fet slug), o null. */
 const pobleDeclaratDe = (item) => slugDelPoble(textDe(item.poble_id)) || null;
 
+/* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Els camps de lloc
+   que escriu qui signa amb el poble de la seua fitxa: el d'una persona pot
+   portar-ne diversos ('A · B', el primer el principal), i la publicació és
+   del principal (poblePrincipal). 'A · B' fet slug no casa amb cap poble. */
+const CAMPS_AMB_POBLES = new Set(['author_location', 'town_name']);
+
 /** La clau (slug) del poble des d'on s'ha publicat `item`, o null si no se sap. */
 export function pobleDeLaPublicacio(item) {
   if (!item || typeof item !== 'object') return null;
   if (esDeSistema(item)) return slugDelPoble(textDe(DEFAULT_AUTHOR.location)) || null;
   const declarat = pobleDeclaratDe(item);
   if (declarat) return declarat;
-  const lloc = CAMPS_DE_LLOC.map((camp) => textDe(item[camp])).find(Boolean);
-  return lloc ? slugDelPoble(lloc) : null;
+  const camp = CAMPS_DE_LLOC.find((nom) => textDe(item[nom]));
+  if (!camp) return null;
+  const lloc = textDe(item[camp]);
+  return slugDelPoble(CAMPS_AMB_POBLES.has(camp) ? poblePrincipal(lloc) : lloc);
 }
 
 /** Les claus amb què es reconeix un poble: el seu id, el seu slug i el seu nom fet slug. */

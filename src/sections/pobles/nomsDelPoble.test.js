@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { nomDeLaGent, nomDeLaGentDelPoble, slugDelPoble } from './nomsDelPoble.js';
+import { formataPoble, llistaDePobles, nomDeLaGent, nomDeLaGentDelPoble, poblePrincipal, slugDelPoble } from './nomsDelPoble.js';
 import { MOCK_TOWNS } from './townsSeed.js';
 import { rutaDeSubjecte } from '../../data/contracte.js';
 
@@ -88,5 +88,38 @@ describe('slugDelPoble · l’id de la fitxa i la clau de /pobles/<id>', () => {
     expect(slugDelPoble('—·—')).toBeNull();
     expect(slugDelPoble(null)).toBeNull();
     expect(slugDelPoble('Αθήνα')).toBeNull();
+  });
+});
+
+/* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Els pobles d'una
+   persona ('A · B', el primer el principal). La ela geminada (l·l) porta el
+   mateix punt volat que el separador i no ha de partir el nom; el separador
+   amb un espai a un sol costat, o entre lletres que no són eles, sí. */
+describe('llistaDePobles, formataPoble i poblePrincipal · els pobles d’una persona', () => {
+  test('la ela geminada no parteix el nom del poble', () => {
+    expect(llistaDePobles('Bel·lús')).toEqual(['Bel·lús']);
+    expect(llistaDePobles('Vil·la Nova')).toEqual(['Vil·la Nova']);
+    expect(llistaDePobles('COL·LEGI')).toEqual(['COL·LEGI']);
+    expect(formataPoble('Bel·lús ·Xixona')).toBe('Bel·lús · Xixona');
+    expect(formataPoble(['Bel·lús', 'Xixona'])).toBe('Bel·lús · Xixona');
+    expect(llistaDePobles(formataPoble(['Bel·lús', 'Xixona']))).toEqual(['Bel·lús', 'Xixona']);
+    expect(llistaDePobles('Xixona· Bel·lús')).toEqual(['Xixona', 'Bel·lús']);
+    expect(poblePrincipal('Vil·la Nova · Sella')).toBe('Vil·la Nova');
+    expect(poblePrincipal('Bel·lús')).toBe('Bel·lús');
+  });
+
+  test('el separador tolerant, els repetits i els buits, com sempre', () => {
+    expect(llistaDePobles(' La Torre de les Maçanes ·Xixona · · La Torre de les Maçanes ')).toEqual(['La Torre de les Maçanes', 'Xixona']);
+    expect(llistaDePobles('Sella·Relleu')).toEqual(['Sella', 'Relleu']);
+    expect(formataPoble('Relleu · Sella')).toBe('Relleu · Sella');
+    expect(llistaDePobles(null)).toEqual([]);
+    expect(formataPoble('')).toBe('');
+    expect(poblePrincipal('Xixona · La Torre de les Maçanes')).toBe('Xixona');
+    expect(poblePrincipal(undefined)).toBe('');
+  });
+
+  test('el principal fet slug és un poble; la cadena sencera no', () => {
+    expect(slugDelPoble(poblePrincipal('La Torre de les Maçanes · Xixona'))).toBe('la-torre-de-les-macanes');
+    expect(slugDelPoble('La Torre de les Maçanes · Xixona')).toBe('la-torre-de-les-macanes-xixona');
   });
 });

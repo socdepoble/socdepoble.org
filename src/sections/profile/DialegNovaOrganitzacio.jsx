@@ -4,6 +4,7 @@ import { normalizeSlug, validateOrganization, readableBackendError } from '../on
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
 import { opcionsDePoble, usePerfilOpcional } from './PerfilContext.jsx';
+import { poblePrincipal } from './fitxaDePerfil.js';
 
 const TIPUS = Object.freeze([
   { valor: 'company', etiqueta: 'Empresa o negoci', ajuda: 'Una botiga, un taller, una cooperativa…' },
@@ -30,6 +31,10 @@ const TIPUS = Object.freeze([
  * poble no s'envia res; el domini i l'adaptador també l'exigixen
  * (data/pobleOrganitzacio.js).
  *
+ * Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Una persona
+ * pot ser de més d'un poble ('A · B', el primer el principal): l'organització
+ * nova naix NOMÉS amb el principal (poblePrincipal), mai amb la cadena sencera.
+ *
  * `onCrea(dades)` és una promesa: si falla, el diàleg continua obert.
  */
 export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
@@ -38,7 +43,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
   const [nom, setNom] = useState('');
   const [slug, setSlug] = useState(null); // null = derivat del nom
   const [kind, setKind] = useState('company');
-  const [poble, setPoble] = useState(() => (typeof pobleDeLaPersona === 'string' ? pobleDeLaPersona.trim() : ''));
+  const [poble, setPoble] = useState(() => poblePrincipal(pobleDeLaPersona));
   const [errors, setErrors] = useState({});
   const [desant, setDesant] = useState(false);
   const enviant = useRef(false);

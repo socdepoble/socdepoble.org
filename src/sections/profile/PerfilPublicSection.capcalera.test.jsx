@@ -96,8 +96,9 @@ test('una persona passa el seu avatar a PageFrame (avatarAutor), sense logotip',
 /* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
    Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
    oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · La
-   fitxa pública del pilot (esElProjecte: el slug declarat, que la càrrega
-   registra, o l'id de la llavor) porta el PNG verd a la barra taronja, com
+   fitxa pública del pilot (esElProjecte: el slug declarat, que registra la
+   resolució de l'app dins del poble actiu, auditoria de seguretat 261019 F6,
+   o l'id de la llavor) porta el PNG verd a la barra taronja, com
    l'editor, «Les vistes» i «El compte». El nom, el poble i l'enllaç no canvien.
    Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
    sense poble») · El poble desat continua manant (Alcoi es queda Alcoi);
@@ -118,10 +119,10 @@ test('prompt 261014_0400 · la barra taronja de la fitxa pública del pilot port
     mocks.load.mockResolvedValue(pilot);
     render(<PerfilPublicSection />);
     await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
-    const { topBarData } = rendersDe('Sóc de Poble').at(-1);
-    expect(topBarData).toMatchObject({
+    /* Per id, la marca arriba quan la resolució de l'app el confirma (F6). */
+    await vi.waitFor(() => expect(rendersDe('Sóc de Poble').at(-1).topBarData).toMatchObject({
       authorName: 'Sóc de Poble', authorAvatar: DEFAULT_AUTHOR.avatarUrl, authorLocation: pilot.poble || POBLE_FUNDACIONAL, authorHref: RUTA_PERFIL_PROJECTE,
-    });
+    }));
     cleanup();
     oblidaEntitatDelProjecte();
   }

@@ -12,6 +12,11 @@ import { itemsDePerfil } from './perfilModel.js';
 const fitxaDe = (identitat) => itemsDePerfil([identitat]).find((item) => item.id === `${identitat.id}-fitxa`);
 
 describe('Gauntlet 261016 (encàrrec D) · la imatge de «La fitxa» a la llista central', () => {
+  test('la imatge de portada (heroImage) té prioritat màxima a la miniatura', () => {
+    const org = { id: 'O', mena: 'empresa', nom: 'El Rentonar', avatar: '/assets/vell.webp', dades: { role: 'owner', logo_url: '/assets/logo_forn.webp', hero_url: '/assets/pomes_vermelles.webp' } };
+    expect(fitxaDe(org).image).toBe('/assets/pomes_vermelles.webp');
+  });
+
   test('la columna de la fila guanya a la reserva de la identitat (la foto de la sessió)', () => {
     const jo = { id: 'jo', mena: 'persona', nom: 'Pep', avatar: 'https://proveidor.example/foto.jpg', dades: { avatar_url: '/assets/pep.webp' } };
     expect(fitxaDe(jo).image).toBe('/assets/pep.webp');
@@ -31,9 +36,16 @@ describe('Gauntlet 261016 (encàrrec D) · la imatge de «La fitxa» a la llista
   test('cap altre apartat porta imatge', () => {
     const jo = { id: 'jo', mena: 'persona', nom: 'Pep', avatar: 'a.webp', dades: { avatar_url: 'a.webp' } };
     const altres = itemsDePerfil([jo], { ambPrivacitat: true }).filter((item) => item.id !== 'jo-fitxa');
+    // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 («Multimèdia», l’últim apartat de la persona).
     expect(altres.map((item) => [item.id, item.image])).toEqual([
-      ['jo-vistes', undefined], ['jo-compte', undefined], ['jo-privacitat', undefined], ['jo-nodes', undefined],
+      ['jo-vistes', undefined], ['jo-compte', undefined], ['jo-privacitat', undefined], ['jo-nodes', undefined], ['jo-multimedia', undefined],
       ['sense-organitzacions-crear', undefined],
     ]);
+    /* Relleu del Pla 2000, punt 3 · «Multimèdia» d'una organització i d'un agent
+       tampoc no porta imatge: la del logotip és de «La fitxa». */
+    const forn = { id: 'O', mena: 'empresa', nom: 'Forn', avatar: '/assets/forn.webp', dades: { role: 'owner', logo_url: '/assets/forn.webp' } };
+    const agent = { id: 'A', mena: 'agent', nom: 'IAIA', avatar: '/assets/iaia.webp', dades: { avatar_url: '/assets/iaia.webp' } };
+    const multimedia = itemsDePerfil([forn, agent]).filter((item) => item.id.endsWith('-multimedia'));
+    expect(multimedia.map((item) => [item.id, item.image])).toEqual([['O-multimedia', undefined], ['A-multimedia', undefined]]);
   });
 });

@@ -196,7 +196,18 @@ function clientFals() {
       const canal = { nom, on() { return canal; }, subscribe(avisa) { avisa?.('SUBSCRIBED'); return canal; } };
       return canal;
     },
-    async removeChannel(canal) { estat.canalsTancats.push(canal.nom); return 'ok'; }
+    async removeChannel(canal) { estat.canalsTancats.push(canal.nom); return 'ok'; },
+    /* Pla 261018_1605 (Tasca 4, D8) · La biblioteca del Perfil: el bucket
+       públic, buit. El kit no esborra mai res: un remove() seria una ruta
+       desconeguda. */
+    storage: {
+      from(cubell) {
+        return {
+          async list() { return cubell === 'mitjans' ? { data: [], error: null } : { data: null, error: { message: `bucket ${cubell}` } }; },
+          async remove(rutes) { estat.rutesDesconegudes.push(`remove ${cubell} ${rutes}`); return { data: [], error: null }; }
+        };
+      }
+    }
   };
 }
 

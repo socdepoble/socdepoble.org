@@ -35,11 +35,20 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
-- [[261018_1405_estudi_obsidian_rea_gemini4_iaia]]
-- [[261018_1251_auditoria_claude]]
-- [[261018_1241_auditoria_gemini4]]
-- [[261018_1220_prompt_claude_codex_sessio_i_poda]]
-- [[261018_1220_pla_implementacio_sessio_usuari_i_poda]]
+- [[261019_1236_auditoria_codex_gauntlet_seguretat_i_rols]]
+- [[261019_1240_auditoria_contrast_gauntlet_seguretat_i_superadmin_gemini]]
+- [[261018_2315_auditoria_claude]]
+- [[261018_2300_auditoria_creuada_claude_i_superadmin_gemini]]
+- [[261018_2256_auditoria_codex_creuada_claude_i_superadministracio]]
+- [[261018_2045_auditoria_claude]]
+- [[261018_2030_auditoria_gemini]]
+- [[261018_2030_auditoria_codex]]
+- [[261018_2000_prompt_claude_gemini_capacitats_matrix_i_poda]]
+- [[261018_2000_pla_implementacio_capacitats_matrix_i_poda_wiki]]
+- [[261018_1718_auditoria_perfil_public_multimedia_i_poble]]
+- [[261018_1605_prompt_claude_gemini_perfil_public_i_multimedia]]
+- [[261018_1605_pla_implementacio_perfil_public_multimedia_i_poble]]
+- [[261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -768,6 +777,10 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261018_1220_pla_implementacio_sessio_usuari_i_poda]]
+- [[../90_arxiu_historic/261018_1220_prompt_claude_codex_sessio_i_poda]]
+- [[../90_arxiu_historic/261018_1241_auditoria_gemini4]]
+- [[../90_arxiu_historic/261018_1251_auditoria_claude]]
 - [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_2133_auditoria_codex_final_gauntlet]]
 - [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_2133_acta_tancament_codex_gauntlet]]
 - [[../90_arxiu_historic/261017_Gauntlet_Extrem/261017_1542_acta_marmota_codex_gauntlet_extrem]]
@@ -895,3 +908,6 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261016_1545_acta_marmota]]
 - [[../10_actes/261017_1350_acta_marmota_gauntlet_extrem_i_descans]]
 - [[../10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem]]
+- [[../10_actes/261018_2105_acta_marmota_auditoria_trio_i_relleu_implementacio]]
+- [[../10_actes/261018_2330_acta_marmota_seguretat_claude_i_tancament]]
+- [[../10_actes/261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]

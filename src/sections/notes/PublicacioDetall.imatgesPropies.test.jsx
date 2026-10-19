@@ -11,7 +11,7 @@
  * prova amb la UniversalPage i el PageFrame de veres.
  */
 import React from 'react';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -107,8 +107,15 @@ describe('Decisió 3 · el lector d’una publicació del Mur, del Mercat o de l
       variations: [{ name: 'Gran', image: RASTREIG, price: '20 €' }, { name: 'Xica', image: '/assets/mercat/xica.png', price: '8 €' }]
     }, 'mercat');
     expect([...portada(container).querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual(['/assets/mercat/a.png', '/assets/mercat/b.png']);
-    expect([...container.querySelectorAll('.note-card')].map((targeta) => targeta.querySelector('img')?.getAttribute('src') ?? null))
-      .toEqual([null, '/assets/mercat/xica.png']);
+    /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · Expectativa
+       actualitzada a propòsit: cap .note-card per variació; la foto és la de
+       la variant triada (.sdp-compra__foto), i es comprova triant-les. */
+    const fotoDe = (nom) => {
+      fireEvent.click(within(container).getByRole('radio', { name: nom }));
+      return container.querySelector('.sdp-compra__foto')?.getAttribute('src') ?? null;
+    };
+    expect(container.querySelector('.note-card')).toBeNull();
+    expect([fotoDe('Gran'), fotoDe('Xica')]).toEqual([null, '/assets/mercat/xica.png']);
     expect(fonts(container)).not.toContain(GOOGLE);
     expect(fonts(container)).not.toContain(RASTREIG);
   });

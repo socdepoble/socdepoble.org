@@ -9,17 +9,22 @@
  *   - getPublicUrl(bucket, path)
  *   - resolveAsset(ref)
  *   - promoteToPublic(ref)
+ *   - llistaElsMeusMitjans(config)        (capacitat 'mitjansPropis')
+ *   - esborraElMeuMitja(ref, config)      (capacitat 'mitjansPropis')
  */
 
 import { getResolvedConfig } from './runtime.js';
 import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
 import { handleError } from './utils.js';
-import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../errorsBackend.js';
+import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../errorsBackend.js';
 
 /* Límits per fitxer (ARQ-G07): 25 MiB al bucket privat, 5 MiB al públic. */
 const MIDA_MAX_PRIVADA = 26214400;
 const MIDA_MAX_PUBLICA = 5242880;
+
+/* Un UUID de poble o d'usuari (uploadToStorage i la biblioteca de fotos pròpies). */
+const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /* F2 (ordre del Mestre, 261004; pla 2045, Marató 2230) · El rebuig d'una pujada.
    Abans es llegia `handleError(error)?.message`, que no existix mai: handleError
@@ -155,13 +160,20 @@ function codiDePujada(error) {
  * @returns {Error}
  */
 export function errorDePujada(error) {
+  return errorDeStorage(error, PREFIX_PUJADA, TEXTOS_PUJADA);
+}
+
+/* Pla 261018_1605 (Tasca 4, D8) · La mateixa traducció per a la pujada, el
+   llistat i l'esborrat de la biblioteca: només canvien el prefix i, si n'hi ha,
+   la frase d'algun codi (si no, la de la pujada, que és genèrica). */
+function errorDeStorage(error, prefix, textos) {
   const codi = codiDePujada(error);
   // L'estat de la resposta primer i, si no n'hi ha, el del cos; mai un text que no siga un estat.
   const status = estatHttp(error?.status) ?? estatHttp(error?.statusCode);
   const detall = codi === CODI_MITJANS.DESCONEGUT
     ? `error inesperat${status ? ` del servidor (HTTP ${status})` : ''}.`
-    : TEXTOS_PUJADA[codi];
-  return Object.assign(new Error(`${PREFIX_PUJADA} ${detall}`, { cause: error }), { codi, status });
+    : (textos[codi] ?? TEXTOS_PUJADA[codi]);
+  return Object.assign(new Error(`${prefix} ${detall}`, { cause: error }), { codi, status });
 }
 
 /* F2 · Privacitat de la consola (Relleus 21 i 24 de Codex; proposta
@@ -275,8 +287,7 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
   const resolvedTenant = getResolvedConfig(config).tenantId;
   if (tenantId && resolvedTenant && tenantId !== resolvedTenant) throw new Error('Poble inconsistent');
   const selectedTenant = tenantId || resolvedTenant;
-  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuid.test(selectedTenant || '') || !uuid.test(user.id)) throw new Error('Poble o usuari invàlid');
+  if (!RE_UUID.test(selectedTenant || '') || !RE_UUID.test(user.id)) throw new Error('Poble o usuari invàlid');
   if (!/^[a-z0-9_-]{1,40}$/.test(carpeta)) throw new Error('Carpeta invàlida');
   const extensions = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/avif': 'avif', 'application/pdf': 'pdf' };
   const isPrivate = carpeta === 'notes';
@@ -300,6 +311,23 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
   return { url: `sdp-media://${bucket}/${ruta}`, ruta };
 };
 
+/* Auditoria de seguretat 261019 (F5) · El bucket i el camí d'una referència
+   opaca només arriben a Storage si cap segment no pot moure la URL. storage-js
+   ajunta el camí sense codificar a /object/sign/<bucket>/<camí> i hi fa un
+   POST amb el token de qui mira; un avatar_url d'un altre veí amb segments de
+   punts (o '%2e', o un tabulador que l'analitzador d'URL esborra) eixia de la
+   ruta de signatura cap a un altre punt de l'origen de Supabase, i la promoció
+   (promoteToPublic) feia el mateix amb la baixada i la pujada. Un segment buit,
+   '.', '..', o amb '%', '?', '#', barra inversa o un caràcter de control no
+   passa; tampoc un camí que acaba en espai: el camí és el final de la URL, i
+   l'analitzador lleva els espais del final ('.. ' hi arribava com '..'). La
+   resta de noms (també els de pujades antigues) es resolen igual que abans.
+   Una referència que no passa es torna tal qual, com quan la signatura falla:
+   les peces que la pinten descarten el que torna encara opac. */
+const CARACTER_QUE_MOU_LA_URL = /[%?#\\\u0000-\u001f\u007f]/;
+const segmentNet = (segment) => segment !== '' && segment !== '.' && segment !== '..' && !CARACTER_QUE_MOU_LA_URL.test(segment);
+const camiNet = (cami) => !cami.endsWith(' ') && cami.split('/').every(segmentNet);
+
 /**
  * Resol un actiu (asset) a la seua URL real (pública o firmada temporal).
  * @param {string} ref - Referència opaca, ex. sdp-media://mitjans_privats/tenant_id/user_id/...
@@ -308,14 +336,15 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
 export const resolveAsset = async (ref, config = {}) => {
   if (!ref || typeof ref !== 'string') return ref;
   if (!ref.startsWith('sdp-media://')) return ref; // Backwards compatibility
-  
+
   const pathPart = ref.replace('sdp-media://', '');
   const slashIndex = pathPart.indexOf('/');
   if (slashIndex === -1) return ref;
-  
+
   const bucket = pathPart.substring(0, slashIndex);
   const path = pathPart.substring(slashIndex + 1);
-  
+  if (!segmentNet(bucket) || !camiNet(path)) return ref;
+
   const supabase = await getClient(config);
   
   if (bucket === 'mitjans_privats') {
@@ -343,7 +372,9 @@ export const promoteToPublic = async (ref, config = {}) => {
   if (!ref.startsWith('sdp-media://mitjans_privats/')) return ref; 
   
   const path = ref.replace('sdp-media://mitjans_privats/', '');
-  
+  // F5 · El mateix camí net que resolveAsset, abans de baixar i de pujar.
+  if (!camiNet(path)) return ref;
+
   // 1. Descarreguem l'arxiu des del bucket privat
   const { data: fileData, error: downloadError } = await downloadFile('mitjans_privats', path, config);
   if (downloadError) {
@@ -374,4 +405,207 @@ export const promoteToPublic = async (ref, config = {}) => {
   // await deleteFile('mitjans_privats', path, config);
 
   return `sdp-media://mitjans/${path}`;
+};
+
+/* ═══ Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) ═══
+   LA BIBLIOTECA DE FOTOS PRÒPIES (capacitat 'mitjansPropis', contracte.js).
+   «Multimèdia» del Perfil llista les imatges que la persona de la sessió ha
+   pujat al bucket públic i esborra de veritat les de la seua biblioteca.
+   · Llistat: només davall del prefix propi `<poble>/<uid>/`, amb les carpetes
+     descobertes (el llistat de Storage les torna com a entrades amb id null),
+     i el llegat `<uid>/<carpeta>/` d'abans que la ruta portara el poble
+     (2609200300_blindatge_storage_i_contingut.sql,
+     es_ruta_mitjans_publics_propia). El bucket és de lectura pública
+     (2609130500_bucket_mitjans.sql, «mitjans llegir»): «només el propi» és
+     una guarda d'ací, no del servidor.
+   · Esborrat: només `<poble>/<uid>/avatars/<fitxer>`, del poble resolt i de
+     la persona de la sessió. Les altres carpetes són d'altres publicacions
+     (una organització, un agent) i el llegat no s'esborra des d'ací.
+   · Consola: només diagnosiDeStorage (F2). Els rebutjos de la guarda no hi
+     escriuen res. */
+const CUBELL_PUBLIC = 'mitjans';
+const PREFIX_REF_PUBLICA = `sdp-media://${CUBELL_PUBLIC}/`;
+const CARPETA_ESBORRABLE = 'avatars';
+const MODES_LOCALS = new Set(['seed', 'local']);
+const PAGINA_LLISTAT = 100;
+const MAX_PAGINES_LLISTAT = 10;
+// Una carpeta com les que admet uploadToStorage.
+const RE_CARPETA = /^[a-z0-9_-]{1,40}$/;
+/* Un segment net, la regla de fotoDelBucketPublic (utils/mitjaOpac.js): cap
+   punt davant, cap '%', espai, barra ni caràcter de control. */
+const RE_NOM_NET = /^[a-z0-9_-][a-z0-9._-]{0,254}$/i;
+const RE_EXTENSIO_IMATGE = /\.(?:jpe?g|png|webp|gif|avif)$/i;
+const TIPUS_IMATGE = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
+/* CODI_MITJANS no té cap «no disponible»: és el valor comú del port per a «este
+   mode no té eixe servidor» (el de CODI_SEGON_FACTOR i CODI_PERSONALITZACIO). */
+const CODI_NO_DISPONIBLE = CODI_SEGON_FACTOR.NO_DISPONIBLE;
+const PREFIX_LLISTAT = 'No s’ha pogut llegir la teua biblioteca de fotos:';
+const PREFIX_ESBORRAT = 'No s’ha pogut esborrar la foto:';
+const TEXTOS_BIBLIOTECA = Object.freeze({
+  [CODI_MITJANS.SENSE_PERMIS]: 'el servidor no t’ho ha permés.'
+});
+
+const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
+
+/* El codi neutral va a `codi`, com a la pujada, i també a `code`, com el
+   'no-disponible' de la resta del port: la vista en mira un i no ha d'endevinar quin. */
+const ambCode = (error) => Object.assign(error, { code: error.codi });
+const rebuigDEsborrat = (codi, detall) => ambCode(Object.assign(new Error(`${PREFIX_ESBORRAT} ${detall}`), { codi }));
+
+/* La persona i el poble d'esta sessió, en minúscules com les rutes que escriu
+   uploadToStorage; null si no són UUID. */
+function propietariDeSessio(config) {
+  const id = usuariDeSessio()?.id;
+  const poble = getResolvedConfig(config).tenantId;
+  return {
+    sessio: Boolean(id),
+    uid: typeof id === 'string' && RE_UUID.test(id) ? id.toLowerCase() : null,
+    poble: typeof poble === 'string' && RE_UUID.test(poble) ? poble.toLowerCase() : null
+  };
+}
+
+/* La ruta dins del bucket públic d'una ref que esta sessió pot esborrar, o null.
+   Una sola regla per a esborraElMeuMitja i per a Mitja.esborrable. */
+function rutaEsborrable(ref, { uid, poble }) {
+  if (!uid || !poble || typeof ref !== 'string' || !ref.startsWith(PREFIX_REF_PUBLICA)) return null;
+  const ruta = ref.slice(PREFIX_REF_PUBLICA.length);
+  const [segPoble, segUsuari, carpeta, nom, ...resta] = ruta.split('/');
+  if (resta.length || segPoble !== poble || segUsuari !== uid || carpeta !== CARPETA_ESBORRABLE) return null;
+  return typeof nom === 'string' && RE_NOM_NET.test(nom) && RE_EXTENSIO_IMATGE.test(nom) ? ruta : null;
+}
+
+/* Tot el que hi ha davall d'un prefix, pàgina a pàgina (Storage en torna 100
+   per defecte), i com a molt MAX_PAGINES_LLISTAT pàgines. */
+async function llistaSencera(cubell, prefix) {
+  const entrades = [];
+  for (let pagina = 0; pagina < MAX_PAGINES_LLISTAT; pagina += 1) {
+    const { data, error } = await cubell.list(prefix, {
+      limit: PAGINA_LLISTAT, offset: pagina * PAGINA_LLISTAT, sortBy: { column: 'name', order: 'asc' }
+    });
+    if (error) throw error;
+    const lot = Array.isArray(data) ? data : [];
+    entrades.push(...lot);
+    if (lot.length < PAGINA_LLISTAT) break;
+  }
+  return entrades;
+}
+
+const esCarpeta = (entrada) => entrada?.id === null || entrada?.id === undefined;
+
+/* Els fitxers de cada carpeta d'una arrel (`<poble>/<uid>` o el llegat `<uid>`). */
+async function fitxersDeLArrel(cubell, arrel) {
+  const carpetes = (await llistaSencera(cubell, arrel))
+    .filter((entrada) => esCarpeta(entrada) && typeof entrada?.name === 'string' && RE_CARPETA.test(entrada.name))
+    .map((entrada) => entrada.name);
+  const perCarpeta = await Promise.all(carpetes.map(async (carpeta) =>
+    (await llistaSencera(cubell, `${arrel}/${carpeta}`))
+      .filter((entrada) => entrada && !esCarpeta(entrada))
+      .map((fitxer) => ({ arrel, carpeta, fitxer }))));
+  return perCarpeta.flat();
+}
+
+/* Un instant ISO, o null: mai una data inventada. */
+function instantIso(valor) {
+  if (typeof valor !== 'string' || !valor.trim()) return null;
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime()) ? null : data.toISOString();
+}
+
+const midaDe = (metadata) => [metadata.size, metadata.contentLength]
+  .find((valor) => Number.isInteger(valor) && valor >= 0) ?? null;
+
+// L'eTag de Storage ve entre cometes ("…"): sense elles, o null.
+const etagDe = (valor) => (typeof valor === 'string' && valor.replace(/"/g, '').trim()) || null;
+
+/* Una entrada del llistat com a Mitja, o null si no és una imatge amb un nom
+   net. El MIME del servidor mana; sense MIME, l'extensió. */
+function mitjaDeFitxer({ arrel, carpeta, fitxer }, propietari) {
+  const nom = fitxer.name;
+  if (typeof nom !== 'string' || !RE_NOM_NET.test(nom)) return null;
+  const metadata = fitxer.metadata && typeof fitxer.metadata === 'object' ? fitxer.metadata : {};
+  const mime = typeof metadata.mimetype === 'string' ? metadata.mimetype.trim().toLowerCase() : '';
+  if (mime ? !TIPUS_IMATGE.has(mime) : !RE_EXTENSIO_IMATGE.test(nom)) return null;
+  const ruta = `${arrel}/${carpeta}/${nom}`;
+  const ref = `${PREFIX_REF_PUBLICA}${ruta}`;
+  return {
+    ref,
+    ruta,
+    nom,
+    carpeta,
+    creat: instantIso(fitxer.created_at) ?? instantIso(fitxer.updated_at) ?? instantIso(metadata.lastModified),
+    mida: midaDe(metadata),
+    etag: etagDe(metadata.eTag),
+    tipus: mime || null,
+    esborrable: rutaEsborrable(ref, propietari) !== null
+  };
+}
+
+/* De més nova a més vella; les que no tenen data, al final; els empats, per ruta. */
+function perMesNova(a, b) {
+  if (a.creat !== b.creat) {
+    if (a.creat === null) return 1;
+    if (b.creat === null) return -1;
+    return a.creat < b.creat ? 1 : -1;
+  }
+  if (a.ruta === b.ruta) return 0;
+  return a.ruta < b.ruta ? -1 : 1;
+}
+
+/**
+ * Les imatges que la persona de la sessió ha pujat al bucket públic, de més
+ * nova a més vella (capacitat 'mitjansPropis').
+ * @param {object} config
+ * @returns {Promise<Array<{ ref: string, ruta: string, nom: string, carpeta: string, creat: string|null,
+ *   mida: number|null, etag: string|null, tipus: string|null, esborrable: boolean }>>}
+ *   [] en seed o local, sense sessió o amb un usuari que no és UUID. Rebutja
+ *   amb `codi` (i `code`) de CODI_MITJANS o CODI_BACKEND_INABASTABLE.
+ */
+export const llistaElsMeusMitjans = async (config = {}) => {
+  if (esModeLocal(config)) return [];
+  const propietari = propietariDeSessio(config);
+  if (!propietari.uid) return [];
+  // El llegat es llista sempre: és una petició més i ningú l'esborra des d'ací.
+  const arrels = propietari.poble ? [`${propietari.poble}/${propietari.uid}`, propietari.uid] : [propietari.uid];
+  try {
+    const cubell = (await getClient(config)).storage.from(CUBELL_PUBLIC);
+    const fitxers = (await Promise.all(arrels.map((arrel) => fitxersDeLArrel(cubell, arrel)))).flat();
+    return fitxers.map((entrada) => mitjaDeFitxer(entrada, propietari)).filter(Boolean).sort(perMesNova);
+  } catch (error) {
+    console.warn('[Storage] llistat de la biblioteca rebutjat', diagnosiDeStorage(error));
+    throw ambCode(errorDeStorage(error, PREFIX_LLISTAT, TEXTOS_BIBLIOTECA));
+  }
+};
+
+/**
+ * Esborra de veritat una foto de la biblioteca del Perfil (capacitat
+ * 'mitjansPropis'): només 'sdp-media://mitjans/<poble>/<uid>/avatars/<fitxer>'
+ * del poble resolt i de la persona de la sessió (Mitja.esborrable).
+ * @param {string} ref
+ * @param {object} config
+ * @returns {Promise<void>} Rebutja amb `codi` (i `code`): 'no-disponible' en seed
+ *   o local; CODI_MITJANS.SESSIO sense sessió; CODI_MITJANS.SENSE_PERMIS si la ref
+ *   no és esborrable o el servidor no n'ha esborrat res; la resta, com la pujada.
+ */
+export const esborraElMeuMitja = async (ref, config = {}) => {
+  if (esModeLocal(config)) throw rebuigDEsborrat(CODI_NO_DISPONIBLE, 'en este mode no hi ha cap servidor de fitxers.');
+  const propietari = propietariDeSessio(config);
+  if (!propietari.sessio) throw rebuigDEsborrat(CODI_MITJANS.SESSIO, 'cal iniciar sessió.');
+  const ruta = rutaEsborrable(ref, propietari);
+  if (!ruta) throw rebuigDEsborrat(CODI_MITJANS.SENSE_PERMIS, 'només es poden esborrar les fotos que has pujat al teu perfil.');
+  let data;
+  let error;
+  try {
+    ({ data, error } = await (await getClient(config)).storage.from(CUBELL_PUBLIC).remove([ruta]));
+  } catch (excepcio) {
+    error = excepcio;
+  }
+  if (error) {
+    console.warn('[Storage] esborrat rebutjat', diagnosiDeStorage(error));
+    throw ambCode(errorDeStorage(error, PREFIX_ESBORRAT, TEXTOS_BIBLIOTECA));
+  }
+  /* Storage respon amb la llista del que ha esborrat: buida vol dir que no n'ha
+     esborrat res (ja no hi era, o una política l'ha filtrada). No és cap èxit. */
+  if (Array.isArray(data) && data.length === 0) {
+    throw rebuigDEsborrat(CODI_MITJANS.SENSE_PERMIS, 'el servidor no l’ha esborrada: potser ja no hi era o no tens permís.');
+  }
 };

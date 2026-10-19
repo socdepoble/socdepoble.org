@@ -54,7 +54,13 @@ const FITXERS = Object.freeze([
      el prepara i l'incrusta, la seua prova i la de la casella del diàleg. */
   'src/components/universal/enquadrament/exifIncrustat.js',
   'src/components/universal/enquadrament/exifIncrustat.test.js',
-  'src/components/universal/enquadrament/DialegEnquadrament.exif.test.jsx'
+  'src/components/universal/enquadrament/DialegEnquadrament.exif.test.jsx',
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · El cercle de
+     l'avatar que obri la finestra de retall amb la imatge que ja hi ha, i les
+     proves de la finestra («Canviar foto», «Llevar avatar») i del cercle. */
+  'src/sections/profile/PerfilEditor.ajustAvatar.test.jsx',
+  'src/components/universal/enquadrament/DialegEnquadrament.foto.test.jsx',
+  'src/components/universal/PageFrame.avatarAjust.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

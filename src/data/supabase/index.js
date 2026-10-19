@@ -31,5 +31,8 @@ export { getCurrentUser } from './runtime.js';
 /* T2 i T4 · Capacitat 'salut'. Explícita a posta: dos `export *` amb el mateix
    nom s'anul·len en silenci i la capacitat desapareixeria sense avís. */
 export { comprovaServidor } from './auth.js';
+/* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · Capacitat
+   'mitjansPropis', la biblioteca de fotos pròpies. Explícita pel mateix motiu. */
+export { llistaElsMeusMitjans, esborraElMeuMitja } from './storage.js';
 
 

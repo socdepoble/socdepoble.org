@@ -17,6 +17,7 @@ import { PerfilEditor } from './PerfilEditor.jsx';
 import { DetallCompte } from './DetallCompte.jsx';
 import { DetallPrivacitat } from './DetallPrivacitat.jsx';
 import { DetallVistes } from './DetallVistes.jsx';
+import { DetallMultimedia } from './DetallMultimedia.jsx';
 import { DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
 import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
@@ -77,7 +78,8 @@ function FitxaDePerfil({ item, active, onSelect }) {
   const esborrany = useAutodesament(ref).camps;
   const compacta = useMemo(() => {
     if (!identitat) return item;
-    const image = avatarDeLaFitxa(documentDeFitxa(identitat, esborrany), esborrany, identitat) || undefined;
+    const doc = documentDeFitxa(identitat, esborrany);
+    const image = doc.heroImage || avatarDeLaFitxa(doc, esborrany, identitat) || undefined;
     return image === item.image ? item : { ...item, image };
   }, [item, identitat, esborrany]);
   if (viu) return <TargetaViva {...viu} onMainClick={onSelect} avis={AVISOS_TARGETA_VIVA.perfil} actual />;
@@ -167,6 +169,13 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
     }
     if (vista === 'privacitat') {
       return <DetallPrivacitat key={identitat.id} identitat={identitat} config={config} onPerfilCanviat={recarrega} />;
+    }
+    /* Pla 261018_1605 (Tasca 4, D8) · Les fotos de la persona: la llista i
+       l'esborrat van pel port amb la configuració del Perfil.
+       Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · I les de
+       cada actor: una organització (empresa o grup) i un agent IA, també. */
+    if (vista === 'multimedia') {
+      return <DetallMultimedia key={identitat.id} identitat={identitat} config={config} />;
     }
     return (
       <DetallCompte

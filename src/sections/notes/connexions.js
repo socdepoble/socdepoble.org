@@ -26,6 +26,7 @@
  */
 import { desDe } from '../connectar/abastConnexio.js';
 import { esRutaInterna, TIPUS_OBJECTE, tipusDeSeccio } from '../../config/objecteConnectable.js';
+import { llevaEtiquetes } from '../../config/contentHelpers.js';
 
 /* Text pla → HTML que la closca pinta tal qual (el sanejador ho torna a passar).
    T71 · també el fa servir el contingut de fora (connectar/contingutExtern.js). */
@@ -139,10 +140,12 @@ export function cosDeConnexioPerAlMur(origen) {
 
 /* Revisió de D4 (260930) · El text que es llig d'un HTML: sense etiquetes ni
    atributs (un nom dins d'un href no el cita), amb els espais durs i les
-   entitats desfets, els espais plegats i en minúscules per a comparar. */
+   entitats desfets, els espais plegats i en minúscules per a comparar.
+   Auditoria de seguretat 261019 (R4) · Les etiquetes, en temps lineal
+   (contentHelpers.js · llevaEtiquetes), amb el mateix resultat que
+   /<[^>]*>/g, que era quadràtica amb un cos de molts '<' i cap '>'. */
 const plega = (text) => String(text ?? '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('ca');
-const textVisible = (html) => plega(desentitza(String(html ?? '')
-  .replace(/<[^>]*>/g, ' ')
+const textVisible = (html) => plega(desentitza(llevaEtiquetes(String(html ?? ''))
   .replace(/&(?:nbsp|#0*160|#x0*a0);/gi, ' ')));
 
 /* El cos ja nomena qui signa l'original? Sense autor a l'origen, no hi ha

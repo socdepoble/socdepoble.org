@@ -42,6 +42,7 @@ vi.mock('../../data/backendPort.js', () => ({
   updateOrganization: (...args) => m.updateOrganization(...args),
 }));
 import { DetallCompte } from './DetallCompte.jsx';
+import { AVIS_FITXA_PUBLICA } from './visibilitatFitxa.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 
@@ -71,8 +72,9 @@ test('Onada 11 · el superadmin veu «Segon factor» (en línia) i «Panell de s
   m.sessio = { esSuperadmin: true, nivell: 'aal1', calSegonFactor: true };
   pinta();
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  // Pla 261016 (Bloc 3.1) · Canvi deliberat: els drets de sèrie de les notes, després de l'estat.
-  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Segon factor', 'Panell de superadministració', 'Tancar sessió']);
+  // Pla 261016 (Bloc 3.1) · Els drets de sèrie de les notes, després de l'estat.
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte).
+  expect(titols).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Segon factor', 'Panell de superadministració', 'Tancar sessió']);
   expect(within(seccio('Segon factor')).getByText('el segon factor, en línia')).toBeTruthy();
   const boto = within(seccio('Panell de superadministració')).getByRole('button', { name: 'Panell de superadministració' });
   expect(boto.disabled).toBe(false);
@@ -85,7 +87,8 @@ test('Onada 11 · el superadmin veu «Segon factor» (en línia) i «Panell de s
 test('Onada 11 · sense ser superadmin, o sense sessió, el compte és el d’abans; i una organització no porta els dos ajustos ni amb superadmin', () => {
   m.sessio = { esSuperadmin: false, nivell: 'aal1', calSegonFactor: false };
   pinta();
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte).
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
   expect(screen.queryByText('el segon factor, en línia')).toBeNull();
   cleanup();
   m.sessio = { esSuperadmin: true, nivell: 'aal2', calSegonFactor: false };
@@ -98,8 +101,9 @@ test('la persona veu els ajustos del compte i no els de la fitxa', () => {
   pinta();
   expect(screen.getByRole('heading', { level: 1, name: 'El compte' })).toBeTruthy();
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  // Pla 261016 (Bloc 3.1) · Canvi deliberat: el bloc nou dels drets de sèrie de les notes.
-  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
+  // Pla 261016 (Bloc 3.1) · Els drets de sèrie de les notes, després de l'estat.
+  // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte).
+  expect(titols).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
   expect(within(seccio('Correu electrònic')).getByText('pep@poble.test')).toBeTruthy();
 });
 
@@ -190,6 +194,60 @@ test('amb una baixa en curs, «Estat del perfil» no es pot desar i diu per què
   expect(within(bloc).queryByRole('button', { name: 'Guardar' })).toBeNull();
   expect(within(bloc).getByText(/baixa en curs/)).toBeTruthy();
   expect(within(bloc).getByText(/Privacitat i dades/)).toBeTruthy();
+});
+
+/* Pla 261018_1605 (Tasca 1, D3; ordre del Mestre, 18-10-2026) · L'avís de la
+   fitxa pública (AVIS_FITXA_PUBLICA, visibilitatFitxa.js), només quan el valor
+   DESAT és públic, sense regió viva; la privada continua triant-se i desant-se;
+   i amb la fila de reserva l'estat no es desa a cegues. */
+describe('Pla 261018_1605 · Tasca 1 · l’avís de la fitxa pública a «Estat del perfil»', () => {
+  test('desada pública: l’avís es veu (sense rol), i triar la privada la desa amb false', async () => {
+    pinta({ ...jo, dades: { ...jo.dades, is_public: true } });
+    const bloc = seccio('Estat del perfil');
+    const avis = within(bloc).getByText(AVIS_FITXA_PUBLICA);
+    expect(avis.closest('.sdp-alerta').getAttribute('role')).toBeNull();
+    expect(within(bloc).queryByRole('status')).toBeNull();
+    const [publica, privada] = within(bloc).getAllByRole('radio');
+    expect(publica.checked).toBe(true);
+    fireEvent.click(privada);
+    expect(privada.checked).toBe(true);
+    await act(async () => { fireEvent.submit(privada.closest('form')); });
+    expect(props.guardarAjust).toHaveBeenCalledWith('jo', 'privacitat', false);
+    expect(within(bloc).getByRole('status').textContent).toBe('Desat correctament.');
+  });
+
+  test('sense is_public (null), pública: l’avís també; desada privada, cap avís', () => {
+    pinta({ ...jo, dades: { ...jo.dades, is_public: null } });
+    expect(within(seccio('Estat del perfil')).getByText(AVIS_FITXA_PUBLICA)).toBeTruthy();
+    cleanup();
+    pinta();
+    expect(within(seccio('Estat del perfil')).queryByText(AVIS_FITXA_PUBLICA)).toBeNull();
+    expect(screen.queryByText(AVIS_FITXA_PUBLICA)).toBeNull();
+  });
+
+  test('amb la fila de reserva, «Estat del perfil» es veu tancat i diu per què', () => {
+    pinta({ ...jo, dades: { ...jo.dades, is_public: true, reserva: true } });
+    const bloc = seccio('Estat del perfil');
+    expect(within(bloc).queryByRole('radio')).toBeNull();
+    expect(within(bloc).queryByRole('button', { name: 'Guardar' })).toBeNull();
+    expect(within(bloc).getByText('No s’ha pogut llegir el compte del servidor: l’estat es podrà canviar quan es torne a llegir.')).toBeTruthy();
+  });
+});
+
+/* Pla 261018_1605 (Tasca 2, D5) · Els pobles de la persona, des del catàleg
+   del node: la llista dels seus i l'afegit. */
+test('261018 · la persona veu els seus pobles i n’afig un del catàleg; es desa la cadena canònica', async () => {
+  m.towns = [{ id: 't', title: 'La Torre' }, { id: 'x', title: 'Xixona' }, { id: 'b', title: 'Benilloba' }];
+  pinta();
+  const bloc = seccio('Poble');
+  const llista = within(bloc).getByRole('list', { name: 'Els teus pobles' });
+  expect(within(llista).getAllByRole('listitem').map((li) => li.firstChild.textContent)).toEqual(['La Torre']);
+  const selector = within(bloc).getByLabelText('Afegir un poble:');
+  expect([...selector.options].map((o) => o.value)).toEqual(['', 'Benilloba', 'Xixona']);
+  fireEvent.change(selector, { target: { value: 'Xixona' } });
+  fireEvent.click(within(bloc).getByRole('button', { name: 'Afegir poble' }));
+  await act(async () => { fireEvent.submit(selector.closest('form')); });
+  expect(props.guardarAjust).toHaveBeenCalledWith('jo', 'poble', 'La Torre · Xixona');
 });
 
 test('una organització mostra el poble, el correu, l’identificador i les accions pendents', () => {

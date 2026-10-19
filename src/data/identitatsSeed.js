@@ -48,6 +48,9 @@
  * l'entitat pilot amb el contingut que la llavor signa (aliesDeLActor, F4).
  */
 import { AGENTS_MAP } from './agentsSeed.js';
+/* Pla 261018_1605 (Tasca 0, D6 i D7; ordre del Mestre, 18-10-2026) · El
+   classificador únic de fonts pròpies (hidrataPerfilPersonaPilot). */
+import { esFontImatgePropia } from '../utils/sanitize.js';
 
 /* Un sol identificador per a la IAIA: el d'agentsSeed, que és el que arriba
    al catàleg d'agents i al perfil. xatSeed l'importa d'ací. */
@@ -62,14 +65,27 @@ export const ENTITAT_RENTONAR_SLUG = 'rentonar';
    pilot i Rentonar): La Torre de les Maçanes. Es llig del catàleg, la font
    única, com el nom i el lema de l'entitat pilot. */
 export const POBLE_FUNDACIONAL = AGENTS_MAP.SOCDEPOBLE.town_name;
+/* Pla 261018_1605 (Tasca 0, D7; ordre del Mestre, 18-10-2026, que el va
+   escriure) · El correu del compte remot de la persona pilot. Reconeix el
+   compte mentre IDS_REMOTS_FUNDACIONALS no en declara l'UUID (esComptePersonaPilot). */
+export const CORREU_PERSONA_PILOT = 'socdepoblecom@gmail.com';
 
+/* Pla 261018_1605 (Tasca 0, D7) · PERSONA_PILOT és la FONT ÚNICA canònica de
+   la fitxa de la persona pilot: nom, foto (avatar i avatar_url, el mateix
+   valor), bio, lema, poble (POBLE_FUNDACIONAL) i capçalera (cap). La fitxa
+   local (localPerfils.js), la hidratació de la remota
+   (hidrataPerfilPersonaPilot) i l'alineació del servidor
+   (supabase/snippets/2610181800_alinea_perfil_javi_llinares.sql) diuen el
+   mateix que estos camps. */
 export const PERSONA_PILOT = Object.freeze({
+  id: AGENTS_MAP.JAVI.id,
   /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: les rutes canòniques
      /javillinares, /socdepoble i /rentonar) · El slug declarat de la persona
      pilot és el de la seua ruta neta, 'javillinares', el mateix text que
      l'autoria del Mac Mini (marketSeed.js · author_id). Abans era 'javi', que
      continua sent un àlies: cap enllaç vell no es perd. */
   slug: 'javillinares',
+  correu: CORREU_PERSONA_PILOT,
   nom: AGENTS_MAP.JAVI.avatarName,
   /* T3 (ordre del Mestre, 261001) · La foto del perfil de la persona pilot
      (public/assets/fotos; el paquet del connector copia public/). L'autoria
@@ -84,6 +100,11 @@ export const PERSONA_PILOT = Object.freeze({
      padró local de persones (localPerfils.js · PERSONES_SEED) la prenen
      d'este camp: cap fitxer torna a escriure la ruta de la foto. */
   avatar: AGENTS_MAP.JAVI.avatar_url,
+  avatar_url: AGENTS_MAP.JAVI.avatar_url,
+  bio: AGENTS_MAP.JAVI.role,
+  lema: AGENTS_MAP.JAVI.lema,
+  poble: POBLE_FUNDACIONAL,
+  hero_url: '',
   /* Identificadors amb què la llavor signa contingut de la persona pilot.
      Gauntlet 261016 (pla aprovat, Onada 1.5) · 'javi-llinares', perquè
      /gent/javi-llinares resolga la persona pilot: en llavor i en local, el
@@ -263,6 +284,11 @@ export function fundacionalDeLaClau(clau, { idsRemots = IDS_REMOTS_FUNDACIONALS 
  *     esta branca s'ha de revisar.
  * Un grup, una persona o una IA amb l'id d'una altra identitat no ho és.
  * `idsRemots` és per a les proves; per defecte, els declarats.
+ * Pla 261018_1605 (Tasca 0, D7; correcció de la revisió) · Ací NO entra el
+ * correu: un DTO de perfil no porta les claus de GoTrue i saltaria la regla de
+ * confirmació (correuPilotAcreditat), i cap qui crida no en necessita (la
+ * fitxa pública, la ruta canònica i el poble de reserva passen {tipus, id,
+ * slug}). L'usuari de sessió sencer el reconeix esComptePersonaPilot.
  */
 export function clauFundacional(perfil, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
   if (!perfil) return null;
@@ -277,6 +303,94 @@ export function clauFundacional(perfil, { idsRemots = IDS_REMOTS_FUNDACIONALS } 
   const entitat = ENTITATS_SEED.find((e) => TIPUS_DE_KIND[e.kind] === perfil.tipus
     && (e.id === id || e.alies.includes(id) || esIdRemotDe(e.slug, id, idsRemots)));
   return entitat ? entitat.slug : null;
+}
+
+/* Pla 261018_1605 (Tasca 0, D7; ordre del Mestre, 18-10-2026) · El compte
+   remot de la persona pilot. Mentre IDS_REMOTS_FUNDACIONALS no en declara cap
+   UUID (el dona el Mestre), el reconeix el correu que el Mestre va escriure,
+   CORREU_PERSONA_PILOT, sense distingir majúscules. Mai pel nom. */
+export function esCorreuPersonaPilot(correu) {
+  return typeof correu === 'string' && correu.trim().toLowerCase() === CORREU_PERSONA_PILOT;
+}
+
+/* El correu només compta si GoTrue l'ha confirmat o si hi ha una identitat
+   de Google (Google ja l'ha verificat) que no en diu cap altre: una alta amb
+   contrasenya i el correu de la persona pilot, sense confirmar, no ho és. I
+   només el correu de primer nivell, el que escriu GoTrue: user_metadata
+   l'escriu la persona (PUT /auth/v1/user).
+   Revisió adversarial (18-10-2026) · Un objecte sense eixes proves (un perfil,
+   un DTO, una sessió adoptada de l'amfitrió que només porta el correu) no
+   s'acredita mai pel correu: si no, un altre compte amb el correu de Javi en
+   rebria les dades canòniques. */
+const teIdentitatGooglePilot = (usuari) => Array.isArray(usuari.identities) && usuari.identities.some((identitat) => {
+  if (identitat?.provider !== 'google') return false;
+  const correu = identitat.identity_data?.email ?? identitat.email;
+  return correu == null || esCorreuPersonaPilot(correu);
+});
+
+function correuPilotAcreditat(objecte) {
+  if (!esCorreuPersonaPilot(objecte.email)) return false;
+  return Boolean(objecte.email_confirmed_at || objecte.confirmed_at) || teIdentitatGooglePilot(objecte);
+}
+
+/**
+ * Pla 261018_1605 (Tasca 0, D7) · Un usuari de sessió o una fila de perfil
+ * són de la persona pilot: per l'id d'un àlies seu o un id remot declarat
+ * (IDS_REMOTS_FUNDACIONALS), pel slug d'un àlies seu (la fitxa de la llavor) o
+ * pel correu acreditat del seu compte remot (correuPilotAcreditat). Mai pel nom.
+ * `idsRemots` és per a les proves; per defecte, els declarats.
+ */
+export function esComptePersonaPilot(usuariOPerfil, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
+  if (!usuariOPerfil || typeof usuariOPerfil !== 'object') return false;
+  const id = usuariOPerfil.id == null ? '' : String(usuariOPerfil.id);
+  const slug = usuariOPerfil.slug == null ? '' : String(usuariOPerfil.slug);
+  return Boolean((id && (PERSONA_PILOT.alies.includes(id) || esIdRemotDe(PERSONA_PILOT.slug, id, idsRemots)))
+    || (slug && PERSONA_PILOT.alies.includes(slug))
+    || correuPilotAcreditat(usuariOPerfil));
+}
+
+/* Els camps de text que la hidratació omple quan la fila els porta buits, amb
+   el valor canònic de PERSONA_PILOT. Un canònic buit (hero_url: sense
+   capçalera) no omple res. */
+const CAMPS_CANONICS_PILOT = Object.freeze([
+  ['full_name', PERSONA_PILOT.nom],
+  ['town_name', PERSONA_PILOT.poble],
+  ['bio', PERSONA_PILOT.bio],
+  ['lema', PERSONA_PILOT.lema],
+  ['hero_url', PERSONA_PILOT.hero_url]
+]);
+const ambText = (valor) => (typeof valor === 'string' ? valor.trim() : '');
+
+/**
+ * Pla 261018_1605 (Tasca 0, D7; ordre del Mestre, 18-10-2026) · La fila de
+ * perfil (o la de reserva) de la persona pilot, amb les dades canòniques de
+ * PERSONA_PILOT on la fila no en porta: la mateixa fitxa en local i en remot.
+ *   · Només omple buits (CAMPS_CANONICS_PILOT): una dada pròpia de la fila no
+ *     es xafa mai, ni tan sols per a netejar-ne els espais.
+ *   · avatar_url: la foto canònica només si la fila no en porta cap o la que
+ *     porta no és pròpia (esFontImatgePropia: la de Google, p. ex.).
+ *   · is_public: el de la fila; si no en porta, pública (D1).
+ *   · visibility: mai. Una persona és sempre 'private' (CHECK de
+ *     2609080000) i la publicació la diu is_public.
+ * Si no és de la persona pilot (esComptePersonaPilot de la sessió o de la
+ * fila), o la sessió és de la pilot però la fila és d'un altre compte, la
+ * fila tal qual.
+ */
+export function hidrataPerfilPersonaPilot(fila, usuari = null) {
+  if (!fila || typeof fila !== 'object') return fila;
+  const perLaFila = esComptePersonaPilot(fila);
+  if (!perLaFila) {
+    if (!esComptePersonaPilot(usuari)) return fila;
+    if (fila.id != null && usuari.id != null && String(fila.id) !== String(usuari.id)) return fila;
+  }
+  const hidratada = { ...fila };
+  for (const [camp, canonic] of CAMPS_CANONICS_PILOT) {
+    if (!ambText(fila[camp]) && canonic) hidratada[camp] = canonic;
+  }
+  const avatar = ambText(fila.avatar_url);
+  if (!avatar || !esFontImatgePropia(avatar)) hidratada.avatar_url = PERSONA_PILOT.avatar;
+  hidratada.is_public = fila.is_public ?? true;
+  return hidratada;
 }
 
 /**

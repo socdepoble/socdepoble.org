@@ -6464,6 +6464,16 @@ details[open] summary.accordion-header svg:last-child {
   @media (hover: hover) and (pointer: fine) {
     .page-title-avatar--canvia:hover .page-title-avatar__marca { background: var(--sdp-accio-hover); }
   }
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2; correcció de
+     la revisió) · Sota el cercle ja no hi ha cap línia «Encara s’està desant
+     la imatge…»: mentre la foto nova puja (aria-busy, AvatarDeCapcalera ·
+     ocupat), el cercle mateix ho diu. El cursor espera i la marca de la
+     càmera és el carregador que gira (`spin`, el carregador d'este full, un
+     dels exempts del sostre de temps; el moviment reduït l'apaga a
+     base.css). La foto no s'esmorteïx: cap opacitat per davall d'1 fora dels
+     estats desactivats (AAA, modules.abast.capes.test.js). */
+  .page-title-avatar--canvia[aria-busy="true"] { cursor: progress; }
+  .page-title-avatar__gir { animation: spin 1s linear infinite; }
 }
 
 /* ── Ordres del Mestre, 260927 nit (T31, T32) ─────────────────────────── */
@@ -10719,4 +10729,173 @@ details[open] summary.accordion-header svg:last-child {
   @media (hover: hover) and (pointer: fine) {
     .photo-grid__boto:hover { color: var(--sdp-accent-text-hover); }
   }
+}
+
+/* ── Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3; correcció de
+   la revisió) · ELS BOTONS DEL VISOR, TAMBÉ DINS DEL PERFIL ──────────────────
+   «Multimèdia» del Perfil munta el visor (VisorImatges) dins de .perfil-pagina,
+   i :where(.perfil-pagina) .sdp-boto (PerfilShell.css, en la mateixa capa i
+   després d'este full) pintava de blau «Posa com a capçalera» (secundari) i
+   «Elimina» (perill) del panell, i els botons del crom. Es restituïxen dins
+   del visor, com al peu del diàleg (.sdp-dialeg__peu, components.css): els
+   mateixos valors que les varietats de Pedra Seca, i per això a /multimedia res
+   no canvia. Ací i no al bloc del visor de components.css, que no nomena cap
+   .sdp-boto (el carrusel va darrere de totes: qualitat.carrusel i
+   qualitat.visor). Este full carrega després de components.css: el botó
+   d'Informació desplegat torna a dir la vora de l'acció
+   (.sdp-visor__boto[aria-expanded="true"]), amb un pes més. El :hover, només
+   amb ratolí (Fase B), i guanya al de Perfil (0,3,0); el de perill en fosc,
+   la lletra de la regla general (components.css).
+   Comprovació al navegador (18-10-2026) · El farcit del Perfil
+   (var(--sdp-space-2) var(--sdp-space-6)) també arribava als botons d'icona
+   del crom del visor (.sdp-visor__boto, 44 px): la icona hi quedava amb 0 px
+   d'ample i no es veia. Torna el farcit del visor (0, components.css), amb un
+   pes més (0,2,0). */
+@layer components {
+  .sdp-visor .sdp-visor__boto { padding: 0; }
+  .sdp-visor .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
+  .sdp-visor .sdp-boto--secundari[aria-expanded="true"] { border-color: var(--sdp-accio-control); }
+  .sdp-visor .sdp-boto--perill { background: var(--sdp-error); color: var(--sdp-sobre-color); border: 2px solid transparent; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-visor .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+    .sdp-visor .sdp-boto--perill:hover:not(:disabled) { background: var(--sdp-error-text); }
+  }
+}
+
+/* ── Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · EL PRODUCTE
+   DEL MERCAT EN UN SOL NODE ───────────────────────────────────────────────
+   detailSectionMeta.jsx (CompraDelProducte) i mercat/SelectorDeVariacions.jsx.
+   Abans, una .note-card per variació (foto, h3, venedor, preu i botó): ara,
+   davall del cos editorial, una sola caixa de compra.
+   · .sdp-variants: el fieldset amb role="radiogroup", sense vora ni coixí
+     (la caixa ja en porta); les píndoles, en un div (un fieldset en flex dona
+     problemes als navegadors, com .sdp-grup__targetes).
+   · .sdp-variant__pindola: el label del ràdio natiu (amagat amb .sdp-sr-only,
+     però enfocable). Mai menys de --sdp-touch d'alt; text de 16px (sòl de
+     lectura). La triada, des del :checked del ràdio (sense :has(), Safari
+     16), amb el blau ple de la píndola de Pedra Seca (.sdp-pindola__opcio:
+     --sdp-accio-control amb --sdp-sobre-accio, 9,21:1, AAA). L'enfocament,
+     l'anell de sempre (--sdp-focus) a la píndola.
+   · .sdp-variant--esgotada: vora discontínua i la Insignia «Esgotat» dins de
+     la píndola (a 16px); es pot triar igual.
+   · .sdp-compra__foto: la foto de la variant triada, quadrada (120px, l'ample
+     d'abans), retallada sense deformar-la.
+   Només tokens, sense fallback; el :hover, només amb ratolí. */
+@layer components {
+  .sdp-compra {
+    display: grid;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+    margin-block-start: var(--sdp-space-6);
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-variants {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .sdp-variants__llegenda {
+    padding: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+  }
+  .sdp-variants__pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    margin-block-start: var(--sdp-space-3);
+  }
+  .sdp-variant { position: relative; display: flex; min-width: 0; }
+  .sdp-variant__pindola {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-5);
+    border: 2px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    line-height: var(--sdp-leading-tight);
+    cursor: pointer;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t);
+  }
+  .sdp-variant__nom { min-width: 0; overflow-wrap: anywhere; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-variant__pindola:hover { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-variant--esgotada .sdp-variant__pindola { border-style: dashed; }
+  .sdp-variant__control:checked + .sdp-variant__pindola {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-variant__control:focus-visible + .sdp-variant__pindola {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-variant__pindola .sdp-variant__estat { font-size: var(--sdp-text-small); line-height: var(--sdp-leading-tight); }
+  /* Correcció de la revisió · «Esgotat» de la fitxa de la variant, també a
+     16px (sòl de lectura): la Insignia de sèrie va a --sdp-text-meta. */
+  .sdp-compra__text .sdp-insignia { font-size: var(--sdp-text-small); }
+  /* Correcció de la revisió · Colors forçats (contrast alt del sistema): el
+     sistema repinta el fons i la vora, i la triada es confonia amb les altres.
+     Amb els colors del sistema per a la selecció (els que l'autor posa en
+     colors de sistema es respecten), la triada continua sent la triada. Sense
+     forced-color-adjust: none, que també apagaria els colors forçats de la
+     Insignia «Esgotat». */
+  @media (forced-colors: active) {
+    .sdp-variant__control:checked + .sdp-variant__pindola {
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+  .sdp-compra__activa {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+  }
+  .sdp-compra__foto {
+    flex: none;
+    inline-size: calc(var(--sdp-space-20) + var(--sdp-space-10));
+    block-size: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-compra__text {
+    display: grid;
+    justify-items: start;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
+  .sdp-compra__nom {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+  }
+  .sdp-compra__descripcio { margin: 0; color: var(--sdp-text-cos); }
+  .sdp-compra__peu {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-compra__peu > .sp-card-price,
+  .sdp-compra__peu > .detail-seller { margin: 0; }
 }

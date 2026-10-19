@@ -1,6 +1,6 @@
 /** T5 · Les imatges del cos dels detalls (variacions del Mercat i element de
  *  Multimèdia) amb la base dels recursos. Sense base, el src de sempre. */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import { buildDetailSectionMeta, buildMercatDetailSectionMeta, buildMultimediaDetailSectionMeta } from './detailSectionMeta.jsx';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
@@ -32,6 +32,20 @@ const srcsDe = (node) => {
   return resultat;
 };
 
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · Expectativa
+   actualitzada a propòsit: el Mercat ja no pinta una targeta per variació,
+   sinó el selector i la foto de la variant triada. Les fotos de les
+   variacions es recullen triant-les una per una, en l'ordre de les dades. */
+const srcsDeLesVariacions = (node) => {
+  const { container } = render(<>{node}</>);
+  const resultat = within(container).getAllByRole('radio').map((radio) => {
+    fireEvent.click(radio);
+    return container.querySelector('.sdp-compra__foto')?.getAttribute('src') ?? null;
+  });
+  cleanup();
+  return resultat;
+};
+
 /* Decisió 3 del Mestre (261007, confirmada: «Imatges externes al Mur:
    PROHIBIDES (PRIVACITAT)») · Relleu 261007 (peça «imatges-detall») · Les
    variacions són del Mercat, una secció del Mur: la foto d'una variació d'un
@@ -43,7 +57,7 @@ const srcsDe = (node) => {
    ItemDetailSection.imatgesPropies.test.jsx. */
 test('sense base, les variacions del Mercat i l’element de Multimèdia porten el src de sempre', () => {
   permetOrigenMitjans(PAQUET);
-  expect(srcsDe(buildMercatDetailSectionMeta({ t }).renderBody(PRODUCTE)))
+  expect(srcsDeLesVariacions(buildMercatDetailSectionMeta({ t }).renderBody(PRODUCTE)))
     .toEqual([LOGO, `${PAQUET}/assets/mercat/ampolla.jpg`]);
   expect(srcsDe(buildMultimediaDetailSectionMeta({ t }).renderBody(ELEMENT))).toEqual(['/assets/towns/tibi/1.jpg']);
 });
@@ -51,7 +65,7 @@ test('sense base, les variacions del Mercat i l’element de Multimèdia porten 
 test('amb base, els /assets/ pengen del paquet i un valor ja resolt no es duplica', () => {
   fixaBaseRecursos(PAQUET);
   permetOrigenMitjans(PAQUET);
-  expect(srcsDe(buildMercatDetailSectionMeta({ t }).renderBody(PRODUCTE)))
+  expect(srcsDeLesVariacions(buildMercatDetailSectionMeta({ t }).renderBody(PRODUCTE)))
     .toEqual([`${PAQUET}${LOGO}`, `${PAQUET}/assets/mercat/ampolla.jpg`]);
   expect(srcsDe(buildMultimediaDetailSectionMeta({ t }).renderBody(ELEMENT)))
     .toEqual([`${PAQUET}/assets/towns/tibi/1.jpg`]);

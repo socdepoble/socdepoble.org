@@ -80,6 +80,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+261019 | integracio | iaia_maria | Gauntlet seguretat (8 pegats F03-F14 aplicats), ReDoS tancat (R1-R4), 19.658 proves verdes, release WP v1.1.7 signada i acta marmota 261019_1345.
 261016 | correccio | core-temps-termodinamic | Relleu obligatori de sessió: arxivat de la sessió de la matinada (0015-0035) amb Porta Olivera, commit de 290 fitxers a Git, i obertura del torn diürn 1530 amb nou Pla i Prompt.
 261008 | implementacio | claude | Onada 4 finalitzada: Perfil (retall calc), Notes (publicar al Mur), Organitzacions (membres, comptes), Xat (privacitat) i Botigues.
 261008 | auditoria | claude | Onada 3 completada a fons: decisions UX (carrega mes, imatges externes), historic de l'actor, paquet trossejat i neteja de menors. Tests en verd (14.210 proves).

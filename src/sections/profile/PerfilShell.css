@@ -178,9 +178,18 @@
 /* Valor d'un ajust tancat (el correu, l'identificador). */
 .perfil-ajust__valor {
   margin: 0;
+  font-size: var(--sdp-text-base);
   font-weight: 600;
   color: var(--sdp-text-titol);
   overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.perfil-compte .sdp-buit {
+  padding: var(--sdp-space-2) 0;
+  text-align: center;
+  font-size: var(--sdp-text-small);
+  color: var(--sdp-text-suau);
 }
 
 /* ── Formularis del Detall (Trellat) ── */
@@ -250,4 +259,114 @@
 :where(.perfil-pagina) .sdp-boto:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Els pobles de la persona ──
+   Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · L'ajust
+   «Poble» de la persona (DetallAjust, `multiple`): la llista dels pobles
+   triats, cadascun amb el seu «Llevar», i l'afegit des del catàleg. Els
+   controls són de Pedra Seca (Camp, Selector, Boto): ací només la disposició. */
+.perfil-pobles-multi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-3);
+}
+
+.perfil-pobles-multi__llista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.perfil-pobles-multi__poble {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  min-height: var(--sdp-touch);
+  padding: var(--sdp-space-1) var(--sdp-space-1) var(--sdp-space-1) var(--sdp-space-4);
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-boto);
+  background: var(--sdp-fons-targeta);
+  color: var(--sdp-text-titol);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.perfil-pobles-multi__afegir {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
+}
+
+/* ── Multimèdia ──
+   Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · La graella
+   de fotos de la persona (DetallMultimedia): una targeta per foto, amb la
+   miniatura quadrada, el títol, les insígnies i els botons de Pedra Seca. */
+.perfil-multimedia__graella {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--sdp-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.perfil-multimedia__targeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-3);
+  min-width: 0;
+  padding: var(--sdp-space-3);
+  background: var(--sdp-fons-superficie);
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-m);
+}
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · Dins del
+   disparador del visor (.sdp-visor__obridor, components.css) el marc és un
+   <span>: en bloc, com el <div> de sempre, perquè l'aspect-ratio hi valga. */
+.perfil-multimedia__marc {
+  display: block;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--sdp-radi-s);
+  background: var(--sdp-fons-subtil);
+}
+
+.perfil-multimedia__imatge {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.perfil-multimedia__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-2);
+}
+
+.perfil-multimedia__titol {
+  margin: 0;
+  font-weight: 600;
+  color: var(--sdp-text-titol);
+  overflow-wrap: anywhere;
+}
+
+.perfil-multimedia__etiquetes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
+}
+
+.perfil-multimedia__accions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-2);
+  margin-block-start: auto;
 }

@@ -29,17 +29,33 @@ test('qui ha entrat és propietari de l’entitat pilot i administra la IAIA; se
   expect(adapter.listMyOrganizations({ id: RETIRADES[2] })[0].role).toBe('owner');
 });
 
-test('la fitxa naix de la sessió i els canvis es queden en memòria, només els camps del contracte', () => {
-  expect(adapter.getProfile(USUARI)).toMatchObject({ id: USUARI.id, full_name: 'Javi Pilot', avatar_url: 'https://x.test/j.png', is_public: false });
+/* Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 1 (D1) · La fitxa
+   naix pública (is_public: true) i 'private' de visibility, l'única que admet el
+   CHECK de profiles (2609080000); abans naixia amb is_public: false. */
+test('la fitxa naix de la sessió (pública per defecte) i els canvis es queden en memòria, només els camps del contracte', () => {
+  expect(adapter.getProfile(USUARI)).toMatchObject({ id: USUARI.id, full_name: 'Javi Pilot', avatar_url: 'https://x.test/j.png', is_public: true, visibility: 'private' });
   expect(adapter.getProfile(null)).toBeNull();
-  adapter.updateProfile(USUARI, { lema: 'Del Comtat', is_public: true, rol: 'superadmin' });
+  adapter.updateProfile(USUARI, { lema: 'Del Comtat', is_public: false, rol: 'superadmin' });
   const perfil = adapter.getProfile(USUARI);
-  expect(perfil).toMatchObject({ lema: 'Del Comtat', is_public: true });
+  expect(perfil).toMatchObject({ lema: 'Del Comtat', is_public: false });
   expect(perfil).not.toHaveProperty('rol');
   expect(() => adapter.updateProfile(null, { lema: 'x' })).toThrow('Cal iniciar sessió');
   adapter.updateOrganization(ENTITAT_PILOT_ID, { lema: 'Fem xarxa', visibility: 'members' });
   expect(adapter.listMyOrganizations(USUARI)[0]).toMatchObject({ lema: 'Fem xarxa', visibility: 'members' });
   expect(() => adapter.updateOrganization('cap', { lema: 'x' })).toThrow();
+});
+
+/* Pla 261018_1605 (Tasca 0, D7) · La fitxa local de la persona pilot porta els
+   camps canònics de PERSONA_PILOT, la font única, i cap persona porta mai una
+   visibility que no siga 'private'. */
+test('Pla 261018_1605 · la fitxa local de la pilot porta el poble, la bio, el lema i la capçalera de PERSONA_PILOT', () => {
+  const perfil = adapter.getProfile(USUARI);
+  expect(perfil).toMatchObject({
+    town_name: PERSONA_PILOT.poble, bio: PERSONA_PILOT.bio, lema: PERSONA_PILOT.lema, hero_url: PERSONA_PILOT.hero_url
+  });
+  expect(PERSONA_PILOT.poble).toBe('La Torre de les Maçanes');
+  /* Sense foto a la sessió, la canònica. */
+  expect(adapter.getProfile({ id: VEI })).toMatchObject({ avatar_url: PERSONA_PILOT.avatar, full_name: PERSONA_PILOT.nom, visibility: 'private', is_public: true });
 });
 
 /* T66 · L'emoticona de la fitxa (profiles.icon): la mateixa llista blanca que auth.js. */

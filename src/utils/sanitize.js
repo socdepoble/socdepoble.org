@@ -59,6 +59,14 @@ export function permetOrigenMitjans(url) {
 
 function posaGanxos() {
   if (ganxosPosats) return;
+  /* Pla 261018_1605 (Tasca 0 i 3; ordre del Mestre, 18-10-2026) · Sense DOM
+     (Node pla: build-seo-manifest.mjs, les proves amb l'entorn node) DOMPurify
+     no porta ni addHook ni sanitize, i este mòdul cauria en carregar-se:
+     identitatsSeed.js l'importa ara pel classificador únic de fonts pròpies.
+     Sense DOM no hi ha cap ganxo a posar, i sanitizeHtml continua fallant
+     tancada (DOMPurify.sanitize no hi és). En el navegador i en jsdom, res no
+     canvia: el ganxo s'arma en carregar el mòdul, com sempre. */
+  if (typeof DOMPurify.addHook !== 'function') return;
   ganxosPosats = true;
 
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
@@ -227,4 +235,30 @@ export function esFontImatgePropia(url) {
  *  no, null: la imatge no es demana i qui la pinta hi posa el seu substitut. */
 export function fontImatgePropia(url) {
   return esFontImatgePropia(url) ? url : null;
+}
+
+/* Pla 261018_1605 (Tasca 3, D6; ordre del Mestre, 18-10-2026) · La foto que
+   posa el proveïdor d'entrada (Google, Facebook, GitHub, Gravatar). No és cap
+   filtre: esFontImatgeSegura i esFontImatgePropia no canvien, i ORIGENS_OAUTH
+   tampoc. Només diu de qui és una foto que no és pròpia, per a no confondre-la
+   amb una qualsevol de fora. Només https al port per defecte: un origen
+   d'ORIGENS_OAUTH, un d'estos hosts exactes o un subdomini (o el domini mateix)
+   dels CDN de foto dels proveïdors. Retira les dues còpies de la primera passada
+   (personaDeSessio.js i identitatsSeed.js). */
+const HOSTS_AVATAR_OAUTH = Object.freeze(['platform-lookaside.fbsbx.com', 'graph.facebook.com', 'avatars.githubusercontent.com']);
+const DOMINIS_AVATAR_OAUTH = Object.freeze(['googleusercontent.com', 'ggpht.com', 'gravatar.com']);
+
+export function esAvatarDeProveidorOAuth(url) {
+  const net = typeof url === 'string' ? url.trim() : '';
+  if (!net) return false;
+  try {
+    const u = new URL(net);
+    if (u.protocol !== 'https:' || u.port !== '') return false;
+    if (ORIGENS_OAUTH.includes(u.origin)) return true;
+    const host = u.hostname.toLowerCase();
+    return HOSTS_AVATAR_OAUTH.includes(host)
+      || DOMINIS_AVATAR_OAUTH.some((domini) => host === domini || host.endsWith(`.${domini}`));
+  } catch {
+    return false;
+  }
 }

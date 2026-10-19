@@ -5,6 +5,7 @@ import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { RUTA_PERFIL_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
+import { pobleDeFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
@@ -33,7 +34,7 @@ const AUTORIA_NODE = Object.freeze({
 const autoriaDeLaPersona = (persona) => ({
   authorName: persona?.nom || 'El meu compte',
   authorAvatar: persona?.avatar || '',
-  authorLocation: persona?.dades?.town_name || '',
+  authorLocation: pobleDeFitxa(persona),
   authorHref: rutaDePerfil('persona', persona?.dades?.id),
 });
 

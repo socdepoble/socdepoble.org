@@ -47,12 +47,19 @@ export const MOCK_MARKET_ITEMS = [{
   author_entity_id: 'socdepoble',
   official: true,
   pinned: true,
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1; auditoria
+     Codex 2030, §3.2) · Cada variació porta el seu id estable, assignat una
+     vegada i únic dins del producte: el selector del detall la tria per l'id,
+     mai per la posició ni pel nom. «Esgotat» és el stock_status declarat, cap
+     quantitat inventada. */
   variations: [{
+    id: 'gris-plom',
     name: 'Edició Gris Plom',
     price: '15.00€',
     description: 'Cotó Roly Gris. Discreta i elegant.',
     image: '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/02-samarreta-socdepoble-roly-plom-oscur-1024px.png'
   }, {
+    id: 'verda-pi',
     name: 'Edició Verda',
     price: '15.00€',
     description: 'Edició especial en color verd pi.',

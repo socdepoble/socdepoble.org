@@ -137,6 +137,14 @@ const ajudaDe = (boto) => boto.closest('.sdp-camp')?.querySelector('.sdp-camp__a
 /* El text que la ranura de la closca diu de sèrie (UniversalEditorShell). */
 const AJUDA_DE_LA_RANURA = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.";
 
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · La finestra de
+   l'avatar desa amb «Guardar enquadre»; la capçalera i el logotip, amb
+   «Guardar», com sempre. */
+const nomDeGuardar = (finestra) => (finestra === 'Retalla la foto' ? 'Guardar enquadre' : 'Guardar');
+/* Pla 2000 (punt 2) · El cercle de l'avatar (identitatEdicioAvancada): sol, el
+   botó; sense foto, buit amb la càmera. */
+const cercle = () => identitatAvancada()?.querySelector('button.page-title-avatar--canvia') ?? null;
+
 async function triaIGuarda(camp, finestra, fitxer = new File(['x'], 'foto.png', { type: 'image/png' })) {
   await act(async () => { fireEvent.change(selector(camp), { target: { files: [fitxer] } }); });
   await act(async () => {});
@@ -144,70 +152,96 @@ async function triaIGuarda(camp, finestra, fitxer = new File(['x'], 'foto.png', 
   return {
     dialeg,
     guarda: async () => {
-      fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' }));
+      fireEvent.click(within(dialeg).getByRole('button', { name: nomDeGuardar(finestra) }));
       await waitFor(() => expect(screen.queryByRole('dialog', { name: finestra })).toBeNull());
     },
   };
 }
 
 describe('els botons', () => {
-  test('persona sense avatar: «Capçalera» i «Avatar», separats; el de «Capçalera» diu què s’admet abans de triar', () => {
+  /* Pla 2000 (punt 2: «neteja visual total sota l'avatar») · Expectativa
+     actualitzada a propòsit: la ranura «Avatar» (amb el text dels 10 MB) ja
+     no hi és; la persona sense foto té el cercle buit amb la càmera. */
+  /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu
+     del Pla 2000, punt 2: «lleva la línia dels 10 MB de davall del cercle, amb
+     una prop opcional a UniversalEditorShell que conserve l'avís de pujada») ·
+     Amb el cercle de l'avatar, la píndola «Capçalera» ja no porta cap línia en
+     repòs (ajudaNomesEnPujada); mentre la capçalera puja, l'avís de sempre. */
+  test('persona sense avatar: «Capçalera» i el cercle buit, separats; cap línia dels 10 MB davall', () => {
     render(<PerfilEditor identitat={jo} />);
-    /* Encàrrec d'harmonització (261018) · La ranura «Avatar» viu dins d'«Edició avançada», no damunt de l'H1. */
+    /* Encàrrec d'harmonització (261018) · El control de l'avatar viu dins d'«Edició avançada», no damunt de l'H1. */
     obriEdicioAvancada();
-    expect(botonsImatge().sort()).toEqual(['Avatar', 'Capçalera']);
-    expect(within(ranuraAvancada()).getByRole('button', { name: 'Avatar' })).toBeTruthy();
+    expect(botonsImatge()).toEqual(['Capçalera']);
+    expect(ranuraAvancada()).toBeNull();
+    expect(cercle().getAttribute('aria-label')).toBe('Posa un avatar');
+    expect(cercle().querySelector('img')).toBeNull();
+    expect(identitatAvancada().textContent).not.toContain('10 MB');
     capcaleraNeta();
-    // Lligada al botó: la línia d'ajuda del seu camp (la de l'«Avatar», a «l’ajuda es diu abans de triar», davall).
-    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
-    expect(AJUDA_FOTO).toBe('PNG, JPEG o WebP, fins a 10 MB.');
+    // Cap línia visible: el límit, només per al lector de pantalla, lligat al botó.
+    const capcalera = screen.getByRole('button', { name: 'Capçalera' });
+    expect(ajudaDe(capcalera)).toBeNull();
+    const descripcio = document.getElementById(capcalera.getAttribute('aria-describedby'));
+    expect(descripcio.className).toBe('sdp-nomes-lector');
+    expect(descripcio.textContent).toBe(AJUDA_FOTO);
+    expect([...document.querySelectorAll('.sdp-camp__ajuda')].map((p) => p.textContent)).not.toContain(AJUDA_FOTO);
     // Cap diàleg «Capçalera i avatar» ni ràdios de destí.
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.queryByRole('radio')).toBeNull();
     expect(document.querySelector('input[type="file"][accept="image/png,image/jpeg,image/webp"]')).not.toBeNull();
   });
 
-  test('persona amb avatar: «Capçalera» i l’avatar redó, sense la ranura; la píndola «Avatar» (CONTRACTE-1) obri el selector', () => {
+  /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: fora les
+     píndoles «Avatar» i «Llevar l’avatar» i la línia dels 10 MB. El cercle sol
+     és el botó, i el clic obri directament la finestra de retall amb la
+     imatge que ja hi ha (cap selector de fitxers). */
+  test('persona amb avatar: «Capçalera» i l’avatar redó, sense la ranura ni píndoles; el cercle obri el retall de la imatge que ja hi ha', async () => {
     render(<PerfilEditor identitat={ambAvatar} />);
     /* Encàrrec d'harmonització (261018) · Fora l'avatar gegant del centre: el
-       redó, amb les seues píndoles, viu dins d'«Edició avançada» i és l'únic
-       de l'editor; damunt de l'H1 no queda res (ja va a la barra taronja). */
+       redó viu dins d'«Edició avançada» i és l'únic de l'editor; damunt de
+       l'H1 no queda res (ja va a la barra taronja). */
     obriEdicioAvancada();
-    expect(botonsImatge()).toContain('Capçalera');
+    expect(botonsImatge()).toEqual(['Capçalera']);
     expect(ranuraAvancada()).toBeNull();
     capcaleraNeta();
     expect(document.querySelectorAll('.sdp-editor-document button.page-title-avatar--canvia')).toHaveLength(1);
-    const avatar = identitatAvancada().querySelector('button.page-title-avatar--canvia');
-    expect(avatar).not.toBeNull();
+    expect(within(identitatAvancada()).getAllByRole('button')).toEqual([cercle()]);
+    expect(identitatAvancada().querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
     const obri = vi.spyOn(selector('logoImage'), 'click');
-    fireEvent.click(avatar);
-    expect(obri).toHaveBeenCalledTimes(1);
-    const pindola = within(identitatAvancada()).getByRole('button', { name: 'Avatar' });
-    expect(pindola.closest('.page-title-avatar-accions')).not.toBeNull();
-    fireEvent.click(pindola);
-    expect(obri).toHaveBeenCalledTimes(2);
-    expect(screen.queryByRole('dialog')).toBeNull();
+    await act(async () => { fireEvent.click(cercle()); });
+    expect(obri).not.toHaveBeenCalled();
+    const dialeg = screen.getByRole('dialog', { name: 'Retalla la foto' });
+    expect(dobles.carregaImatge.mock.calls.map(([font]) => font)).toEqual(['/assets/a.webp']);
+    expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa--cercle canvas')).not.toBeNull();
   });
 
-  test('persona amb avatar: «Llevar l’avatar» confirma i, en llevar-lo, torna la ranura «Avatar»', async () => {
+  /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: «Llevar avatar»
+     és dins de la finestra; llevat, el cercle es queda buit al seu lloc (cap
+     ranura «Avatar»). */
+  test('persona amb avatar: «Llevar avatar» (dins de la finestra) confirma i, en llevar-lo, el cercle es queda buit', async () => {
     render(<PerfilEditor identitat={ambAvatar} />);
-    /* Encàrrec d'harmonització (261018) · L'avatar i la ranura que el substituïx, dins d'«Edició avançada». */
+    /* Encàrrec d'harmonització (261018) · L'avatar, dins d'«Edició avançada». */
     obriEdicioAvancada();
-    const lleva = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
-    fireEvent.click(lleva);
+    await act(async () => { fireEvent.click(cercle()); });
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Llevar avatar' }));
     const confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
     fireEvent.click(within(confirma).getByRole('button', { name: 'Llevar l’avatar' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull());
+    expect(screen.queryByRole('dialog', { name: 'Retalla la foto' })).toBeNull();
     expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
-    expect(document.querySelector('.sdp-editor-document button.page-title-avatar--canvia')).toBeNull();
-    expect(identitatAvancada()).toBeNull();
-    expect(within(desplegable()).getByRole('button', { name: 'Avatar' }).closest('.sdp-edicio-avancada__logotip')).not.toBeNull();
+    expect(cercle().querySelector('img')).toBeNull();
+    expect(cercle().getAttribute('aria-label')).toBe('Posa un avatar');
+    expect(ranuraAvancada()).toBeNull();
+    expect(within(desplegable()).queryByRole('button', { name: 'Avatar' })).toBeNull();
     capcaleraNeta();
   });
 
-  test('agent IA sense avatar: «Capçalera» i «Avatar»', () => {
+  /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: com la persona,
+     el cercle buit en lloc de la ranura «Avatar». */
+  test('agent IA sense avatar: «Capçalera» i el cercle buit', () => {
     render(<PerfilEditor identitat={agent} />);
-    expect(botonsImatge().sort()).toEqual(['Avatar', 'Capçalera']);
+    expect(botonsImatge()).toEqual(['Capçalera']);
+    obriEdicioAvancada();
+    expect(cercle().getAttribute('aria-label')).toBe('Posa un avatar');
   });
 
   test('organització (també un grup): «Capçalera» i «Logotip»', () => {
@@ -242,19 +276,25 @@ describe('els botons', () => {
 });
 
 describe('les finestres', () => {
-  test('persona · «Avatar» → «Retalla la foto» en cercle → UNA pujada → l’avatar redó ix al lloc de la ranura', async () => {
+  /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: el cercle buit
+     (no la ranura) obri el selector; el peu de la finestra diu «Guardar
+     enquadre»; desada, la foto nova al mateix cercle. */
+  test('persona · el cercle buit → «Retalla la foto» en cercle → UNA pujada → la foto nova al cercle', async () => {
     render(<PerfilEditor identitat={jo} />);
-    /* Encàrrec d'harmonització (261018) · La ranura i, després, l'avatar redó, dins d'«Edició avançada». */
+    /* Encàrrec d'harmonització (261018) · El cercle, dins d'«Edició avançada». */
     obriEdicioAvancada();
-    fireEvent.click(within(ranuraAvancada()).getByRole('button', { name: 'Avatar' }));
+    fireEvent.click(cercle());
     const { dialeg, guarda } = await triaIGuarda('logoImage', 'Retalla la foto');
     expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa--cercle')).not.toBeNull();
-    expect([...dialeg.querySelectorAll('.sdp-dialeg__peu button')].map((b) => b.textContent)).toEqual(['Restablir', 'Cancel·lar', 'Guardar']);
+    expect([...dialeg.querySelectorAll('.sdp-dialeg__peu button')].map((b) => b.textContent)).toEqual(['Restablir', 'Cancel·lar', 'Guardar enquadre']);
+    // Sense cap imatge pròpia, res a llevar: només «Canviar foto» i els formats.
+    expect(within(dialeg).queryByRole('button', { name: 'Llevar avatar' })).toBeNull();
+    expect(within(dialeg).getByRole('button', { name: 'Canviar foto', description: AJUDA_FOTO })).toBeTruthy();
     await guarda();
     expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1);
     expect(m.perfil.pujaMitja.mock.calls[0][1]).toBe('avatars');
     expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: '/assets/nou.webp' }, CONFIG);
-    expect(identitatAvancada().querySelector('button.page-title-avatar--canvia img').getAttribute('src')).toBe('/assets/nou.webp');
+    expect(cercle().querySelector('img').getAttribute('src')).toBe('/assets/nou.webp');
     expect(ranuraAvancada()).toBeNull();
     capcaleraNeta();
   });
@@ -305,7 +345,7 @@ describe('la guarda de pujada', () => {
     await act(async () => { fireEvent.change(selector(camp), { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
     await act(async () => {});
     const dialeg = screen.getByRole('dialog', { name: finestra });
-    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: nomDeGuardar(finestra) })); });
     await waitFor(() => expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1));
     await act(async () => { fireEvent(dialeg, new Event('cancel', { cancelable: true })); });
     expect(screen.queryByRole('dialog', { name: finestra })).toBeNull();
@@ -355,33 +395,34 @@ describe('la guarda de pujada', () => {
     await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp' }, CONFIG));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Capçalera' }).disabled).toBe(false));
     expect(document.querySelector('img.sdp-hero__imatge').getAttribute('src')).toBe('/assets/nou.webp');
-    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
+    // Expectativa actualitzada a propòsit (Pla 2000, punt 2) · acabada la pujada, cap línia en repòs.
+    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBeNull();
   });
 
   /* Línia I2 · Les dues píndoles de l'avatar redó porten avatarAutor.pujant:
-     desactivades i aria-busy mentre puja (PageFrame). */
-  test('persona amb avatar: a mitja pujada, «Avatar» i «Llevar l’avatar» desactivades (aria-busy) i sense confirmació; la foto nova arriba i no s’esborra', async () => {
+     desactivades i aria-busy mentre puja (PageFrame).
+     Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: ja no hi ha
+     píndoles. Mentre puja, el cercle ho diu (aria-busy) i el clic només ho
+     avisa (cap finestra ni confirmació, cap segona pujada); acabada, torna a
+     obrir la finestra, amb «Llevar avatar» i la seua confirmació. */
+  test('persona amb avatar: a mitja pujada, el cercle diu que puja (aria-busy) i no obri res; la foto nova arriba i no s’esborra', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
     obriEdicioAvancada();
-    fireEvent.click(identitatAvancada().querySelector('button.page-title-avatar--canvia'));
+    await act(async () => { fireEvent.click(cercle()); });
     await guardaIEscapa('logoImage', 'Retalla la foto');
-    const lleva = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
-    const canvia = within(identitatAvancada()).getByRole('button', { name: 'Avatar' });
-    for (const pindola of [lleva, canvia]) {
-      expect(pindola.disabled, pindola.textContent).toBe(true);
-      expect(pindola.getAttribute('aria-busy'), pindola.textContent).toBe('true');
-    }
-    fireEvent.click(lleva);
-    expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull();
+    expect(cercle().getAttribute('aria-busy')).toBe('true');
+    await act(async () => { fireEvent.click(cercle()); });
+    expect(m.showToast).toHaveBeenCalledWith(AVIS_IMATGE_PUJANT, 'info');
+    expect(screen.queryByRole('dialog')).toBeNull();
     await act(async () => { estat.resol('/assets/nou.webp'); });
     await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: '/assets/nou.webp' }, CONFIG));
     expect(m.updateProfile).not.toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
-    // Acabada, les píndoles tornen a ser actives i «Llevar l’avatar» torna a demanar confirmació.
-    await waitFor(() => expect(within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' }).disabled).toBe(false));
-    const despres = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
-    expect(despres.hasAttribute('aria-busy')).toBe(false);
-    fireEvent.click(despres);
+    expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1);
+    // Acabada, el cercle ja no puja i torna a obrir la finestra, amb «Llevar avatar» i la seua confirmació.
+    await waitFor(() => expect(cercle().hasAttribute('aria-busy')).toBe(false));
+    await act(async () => { fireEvent.click(cercle()); });
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Llevar avatar' }));
     expect(screen.getByRole('dialog', { name: 'Llevar l’avatar?' })).toBeTruthy();
   });
 
@@ -410,18 +451,23 @@ describe('la guarda de pujada', () => {
 
   /* Correcció de la revisió de les línies I1 i I2 (prova 3) · Mentre puja,
      les línies d'ajuda diuen per què els controls no fan res; en acabar,
-     tornen a dir el límit. */
-  test('persona amb avatar i capçalera: mentre puja l’avatar, la seua línia diu que s’està desant; la de «Capçalera» no en sap res', async () => {
+     tornen a dir el límit.
+     Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: davall del
+     cercle ja no hi ha cap línia; el que diu que puja és el cercle mateix
+     (aria-busy). La de «Capçalera» continua sense saber-ne res. */
+  test('persona amb avatar i capçalera: mentre puja l’avatar, el cercle diu que puja; la línia de «Capçalera» no en sap res', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={{ ...ambAvatar, dades: { ...ambAvatar.dades, hero_url: '/assets/h.webp' } }} />);
     obriEdicioAvancada();
-    fireEvent.click(identitatAvancada().querySelector('button.page-title-avatar--canvia'));
+    await act(async () => { fireEvent.click(cercle()); });
     await guardaIEscapa('logoImage', 'Retalla la foto');
-    const ajudaAvatar = () => identitatAvancada().querySelector('.page-title-avatar-accions > .sdp-camp__ajuda').textContent;
-    expect(ajudaAvatar()).toBe(AJUDA_IMATGE_PUJANT);
-    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
+    expect(cercle().getAttribute('aria-busy')).toBe('true');
+    expect(identitatAvancada().querySelector('.sdp-camp__ajuda')).toBeNull();
+    // Expectativa actualitzada a propòsit (Pla 2000, punt 2) · la «Capçalera» no puja: cap línia.
+    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBeNull();
     await act(async () => { estat.resol('/assets/nou.webp'); });
-    await waitFor(() => expect(ajudaAvatar()).toBe(AJUDA_FOTO));
+    await waitFor(() => expect(cercle().hasAttribute('aria-busy')).toBe(false));
+    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBeNull();
   });
 
   test('capçalera desada: mentre puja, la línia de davall de «Capçalera» diu que s’està desant', async () => {
@@ -432,7 +478,8 @@ describe('la guarda de pujada', () => {
     await guardaIEscapa('heroImage', 'Retalla la capçalera');
     expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_IMATGE_PUJANT);
     await act(async () => { estat.resol('/assets/nou.webp'); });
-    await waitFor(() => expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO));
+    // Expectativa actualitzada a propòsit (Pla 2000, punt 2) · acabada la pujada, cap línia en repòs.
+    await waitFor(() => expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBeNull());
   });
 });
 
@@ -442,6 +489,19 @@ describe('la guarda de pujada', () => {
    body. Quan la pujada acaba, i només si continua perdut, torna a un
    control viu: desada, al mateix destí que el camí de sempre (l'avatar
    redó, o el botó que l'ha oberta); fallada, al control que l'ha oberta. */
+/* Relleu del Pla 2000 (punt 2; revisió adversarial) · L'organització no té el
+   cercle de l'avatar: la píndola «Capçalera» conserva la seua línia visible. */
+describe('l’organització, com sempre', () => {
+  test('la «Capçalera» d’una organització diu el límit en una línia visible, amb capçalera o sense', () => {
+    for (const hero_url of ['', '/assets/h.webp']) {
+      render(<PerfilEditor identitat={{ ...org('owner'), dades: { ...org('owner').dades, hero_url } }} />);
+      obriEdicioAvancada();
+      expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
+      cleanup();
+    }
+  });
+});
+
 describe('el focus després d’Escape a mitja pujada', () => {
   function pujadaPendent() {
     const estat = {};
@@ -450,14 +510,16 @@ describe('el focus després d’Escape a mitja pujada', () => {
       .mockResolvedValue('/assets/segona.webp');
     return estat;
   }
-  async function obriGuardaIEscapa(control, camp, finestra) {
+  /* Pla 2000 (punt 2) · El cercle de l'avatar no es desactiva mentre puja (la
+     guarda és d'useImatgeDeFitxa): `desactivat` diu si el control ho fa. */
+  async function obriGuardaIEscapa(control, camp, finestra, { desactivat = true } = {}) {
     control.focus();
     expect(document.activeElement).toBe(control);
-    fireEvent.click(control);
+    await act(async () => { fireEvent.click(control); });
     await act(async () => { fireEvent.change(selector(camp), { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
     await act(async () => {});
     const dialeg = screen.getByRole('dialog', { name: finestra });
-    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: nomDeGuardar(finestra) })); });
     await waitFor(() => expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1));
     await act(async () => { fireEvent(dialeg, new Event('cancel', { cancelable: true })); });
     expect(screen.queryByRole('dialog', { name: finestra })).toBeNull();
@@ -468,7 +530,7 @@ describe('el focus després d’Escape a mitja pujada', () => {
        body. jsdom no mou el focus a la finestra ni el trau d'un control que
        s'ha desactivat (i blur() d'un control desactivat tampoc no fa res):
        es reprodueix amb un element de la finestra que desapareix. */
-    expect(control.disabled).toBe(true);
+    expect(control.disabled).toBe(desactivat);
     const dinsDeLaFinestra = document.createElement('button');
     document.body.append(dinsDeLaFinestra);
     dinsDeLaFinestra.focus();
@@ -477,18 +539,19 @@ describe('el focus després d’Escape a mitja pujada', () => {
   }
   /* Encàrrec d'harmonització (261018) · L'avatar redó, les seues píndoles i la
      ranura del logotip viuen dins d'«Edició avançada» (cap ja damunt de
-     l'H1): el destí del focus és el mateix control, al seu lloc nou. */
-  const pindolaAvatar = () => within(identitatAvancada().querySelector('.page-title-avatar-accions')).getByRole('button', { name: 'Avatar' });
+     l'H1): el destí del focus és el mateix control, al seu lloc nou.
+     Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: la píndola
+     «Avatar» ja no hi és; el control és el cercle, que obri la finestra amb
+     la foto que ja hi ha (i el selector de fora la canvia, com «Canviar
+     foto»). No es desactiva: el focus perdut es reprodueix igual. */
   const avatarRedo = () => identitatAvancada()?.querySelector('button.page-title-avatar--canvia') ?? null;
   const ranura = ranuraAvancada;
 
-  test('píndola «Avatar», desada: el focus cau al body mentre puja i, en acabar, va a l’avatar redó', async () => {
+  test('el cercle, desada: si el focus cau al body mentre puja, en acabar va a l’avatar redó', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
     obriEdicioAvancada();
-    await obriGuardaIEscapa(pindolaAvatar(), 'logoImage', 'Retalla la foto');
-    // El defecte: la píndola és desactivada i focus() no hi ha pogut tornar.
-    expect(pindolaAvatar().disabled).toBe(true);
+    await obriGuardaIEscapa(avatarRedo(), 'logoImage', 'Retalla la foto', { desactivat: false });
     expect(document.activeElement).toBe(document.body);
     await act(async () => { estat.resol('/assets/nou.webp'); });
     await waitFor(() => expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: '/assets/nou.webp' }, CONFIG));
@@ -496,15 +559,15 @@ describe('el focus després d’Escape a mitja pujada', () => {
     await waitFor(() => expect(document.activeElement).toBe(avatarRedo()));
   });
 
-  test('píndola «Avatar», fallada: en acabar, el focus torna a la píndola, ja activa, i l’avís va fora', async () => {
+  test('el cercle, fallada: en acabar, el focus torna al cercle i l’avís va fora', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
     obriEdicioAvancada();
-    await obriGuardaIEscapa(pindolaAvatar(), 'logoImage', 'Retalla la foto');
+    await obriGuardaIEscapa(avatarRedo(), 'logoImage', 'Retalla la foto', { desactivat: false });
     expect(document.activeElement).toBe(document.body);
     await act(async () => { estat.rebutja(new Error('Sense xarxa')); });
-    await waitFor(() => expect(pindolaAvatar().disabled).toBe(false));
-    expect(document.activeElement).toBe(pindolaAvatar());
+    await waitFor(() => expect(avatarRedo().hasAttribute('aria-busy')).toBe(false));
+    expect(document.activeElement).toBe(avatarRedo());
     expect(m.showToast).toHaveBeenCalled();
     expect(m.updateProfile).not.toHaveBeenCalled();
   });
@@ -531,25 +594,37 @@ describe('el focus després d’Escape a mitja pujada', () => {
     await waitFor(() => expect(document.activeElement).toBe(within(ranura()).getByRole('button', { name: 'Logotip' })));
   });
 
+  /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: «Llevar avatar»
+     és dins de la finestra. Cancel·lar la confirmació torna el focus al botó
+     de la finestra (que continua oberta), no al cercle: el focus pendent
+     d'abans no reapareix. Tancada la finestra, el focus torna al cercle que
+     l'ha oberta. */
   test('si mentrestant la persona ha anat a un altre control, no se li roba el focus (i el pendent no reapareix després)', async () => {
     const estat = pujadaPendent();
     render(<PerfilEditor identitat={ambAvatar} />);
     obriEdicioAvancada();
-    await obriGuardaIEscapa(pindolaAvatar(), 'logoImage', 'Retalla la foto');
+    await obriGuardaIEscapa(avatarRedo(), 'logoImage', 'Retalla la foto', { desactivat: false });
     const altre = screen.getByRole('button', { name: 'Capçalera' });
     altre.focus();
     await act(async () => { estat.resol('/assets/nou.webp'); });
-    await waitFor(() => expect(pindolaAvatar().disabled).toBe(false));
+    await waitFor(() => expect(avatarRedo().hasAttribute('aria-busy')).toBe(false));
     expect(document.activeElement).toBe(altre);
     // «Llevar l’avatar?» obert i cancel·lat: el focus pendent d'abans no el porta a l'avatar.
-    const lleva = within(identitatAvancada()).getByRole('button', { name: 'Llevar l’avatar' });
+    avatarRedo().focus();
+    await act(async () => { fireEvent.click(avatarRedo()); });
+    const finestra = screen.getByRole('dialog', { name: 'Retalla la foto' });
+    const lleva = within(finestra).getByRole('button', { name: 'Llevar avatar' });
     lleva.focus();
     fireEvent.click(lleva);
     const confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
     await act(async () => { fireEvent.click(within(confirma).getByRole('button', { name: 'Cancel·lar' })); });
     expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull();
-    expect(avatarRedo()).not.toBeNull();
-    expect(document.activeElement).not.toBe(avatarRedo());
+    expect(screen.getByRole('dialog', { name: 'Retalla la foto' })).toBe(finestra);
+    expect(document.activeElement).toBe(lleva);
+    await act(async () => { fireEvent.click(within(finestra).getByRole('button', { name: 'Cancel·lar' })); });
+    expect(screen.queryByRole('dialog', { name: 'Retalla la foto' })).toBeNull();
+    expect(document.activeElement).toBe(avatarRedo());
+    expect(m.updateProfile).not.toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
   });
 });
 
@@ -559,10 +634,17 @@ describe('el focus després d’Escape a mitja pujada', () => {
    de sèrie de la closca i, amb imatge, no es deia res). */
 describe('l’ajuda es diu abans de triar', () => {
   /* Encàrrec d'harmonització (261018) · Les ranures, dins d'«Edició avançada»: l'ajuda les acompanya allí. */
-  test('la ranura «Avatar» o «Logotip» diu AJUDA_FOTO, no el text de sèrie de la closca', () => {
+  /* Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: la persona ja no
+     té ranura; el límit de la seua foto el diu la finestra de retall, davall
+     de «Canviar foto», abans de triar-ne cap altra. */
+  test('la ranura «Logotip» diu AJUDA_FOTO, no el text de sèrie de la closca; la de l’avatar, dins de la finestra', async () => {
     render(<PerfilEditor identitat={jo} />);
     obriEdicioAvancada();
-    expect(ajudaDe(within(ranuraAvancada()).getByRole('button', { name: 'Avatar' }))).toBe(AJUDA_FOTO);
+    expect(ranuraAvancada()).toBeNull();
+    expect(identitatAvancada().querySelector('.sdp-camp__ajuda')).toBeNull();
+    fireEvent.click(cercle());
+    const { dialeg } = await triaIGuarda('logoImage', 'Retalla la foto');
+    expect(within(dialeg).getByRole('button', { name: 'Canviar foto', description: AJUDA_FOTO })).toBeTruthy();
     cleanup();
     render(<PerfilEditor identitat={org('owner')} />);
     obriEdicioAvancada();
@@ -570,14 +652,27 @@ describe('l’ajuda es diu abans de triar', () => {
     expect(screen.queryByText(AJUDA_DE_LA_RANURA)).toBeNull();
   });
 
-  test('amb imatge, també: davall del botó «Capçalera» i davall de les píndoles de l’avatar redó, una línia per control', () => {
+  /* Pla 2000 (punt 2: «elimina … el text dels 10 MB» de sota l'avatar) ·
+     Expectativa actualitzada a propòsit: amb imatge, davall del botó
+     «Capçalera», una línia; davall del cercle, cap. La de l'avatar ix a la
+     finestra de retall, que s'obri amb la foto que ja hi ha. */
+  /* Expectativa actualitzada a propòsit (ordre del Mestre, 18-10-2026: «lleva
+     la línia dels 10 MB de davall del cercle») · Ja tampoc davall del botó
+     «Capçalera»: l'única línia de formats és la de la finestra de retall. */
+  test('amb imatge, també: cap línia dels 10 MB davall de «Capçalera» ni del cercle (la diu la finestra)', async () => {
     render(<PerfilEditor identitat={{ ...ambAvatar, dades: { ...ambAvatar.dades, hero_url: '/assets/h.webp' } }} />);
-    /* Encàrrec d'harmonització (261018) · L'avatar redó i la seua línia, dins d'«Edició avançada». */
+    /* Encàrrec d'harmonització (261018) · L'avatar redó, dins d'«Edició avançada». */
     obriEdicioAvancada();
-    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBe(AJUDA_FOTO);
-    expect(identitatAvancada().querySelector('button.page-title-avatar--canvia')).not.toBeNull();
-    expect(identitatAvancada().querySelector('.page-title-avatar-accions > .sdp-camp__ajuda').textContent).toBe(AJUDA_FOTO);
-    expect(screen.queryAllByText(AJUDA_FOTO)).toHaveLength(2);
+    expect(ajudaDe(screen.getByRole('button', { name: 'Capçalera' }))).toBeNull();
+    expect(cercle()).not.toBeNull();
+    expect(identitatAvancada().querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
+    // Cap línia visible amb el límit; la de la «Capçalera», només per al lector.
+    expect([...document.querySelectorAll('.sdp-camp__ajuda')].map((p) => p.textContent)).not.toContain(AJUDA_FOTO);
+    const capcalera = screen.getByRole('button', { name: 'Capçalera' });
+    expect(document.getElementById(capcalera.getAttribute('aria-describedby')).className).toBe('sdp-nomes-lector');
+    await act(async () => { fireEvent.click(cercle()); });
+    const dialeg = screen.getByRole('dialog', { name: 'Retalla la foto' });
+    expect(within(dialeg).getByText(AJUDA_FOTO).id).toBe(within(dialeg).getByRole('button', { name: 'Canviar foto' }).getAttribute('aria-describedby'));
   });
 
   test('organització amb logotip: la ranura en repòs diu AJUDA_FOTO davall del botó «Logotip»', () => {
@@ -781,7 +876,7 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     await act(async () => { fireEvent.change(selector(camp), { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
     await act(async () => {});
     const dialeg = screen.getByRole('dialog', { name: finestra });
-    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: nomDeGuardar(finestra) })); });
     return dialeg;
   }
   const avisDeLaFinestra = (finestra) => within(screen.getByRole('dialog', { name: finestra })).queryByRole('alert')?.textContent ?? null;
@@ -806,7 +901,7 @@ describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
     expect([estat.estat, estat.camps.logoImage, estat.errors.logoImage.tipus]).toEqual(['error', NOVA, 'servidor']);
     // El servidor ja l'accepta: tornar a Guardar la desa, tanca la finestra i la cua queda neta.
     m.updateProfile = vi.fn(async (canvis) => ({ id: 'U', ...canvis }));
-    await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar' })); });
+    await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar enquadre' })); });
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Retalla la foto' })).toBeNull());
     expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: NOVA }, CONFIG);
     expect(cuaDesament.llig(refDe('jo', 'perfil')).camps).toEqual({});

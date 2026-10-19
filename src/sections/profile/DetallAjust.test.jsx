@@ -169,6 +169,164 @@ test('grup C · canviar d’identitat després de desar no hi deixa el «Desat c
   expect(screen.getByLabelText('Nou valor per a poble:').value).toBe('Benilloba');
 });
 
+/* ── Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · els pobles de la persona ── */
+
+const CATALEG = Object.freeze([
+  { valor: '', etiqueta: 'Tria un poble…' },
+  { valor: 'Benilloba', etiqueta: 'Benilloba' },
+  { valor: 'La Torre de les Maçanes', etiqueta: 'La Torre de les Maçanes' },
+  { valor: 'Xixona', etiqueta: 'Xixona' },
+]);
+const POBLES = Object.freeze({
+  id: 'poble', lloc: 'compte', titol: 'Poble', camp: 'town_name', tipus: 'selector', multiple: true,
+  valor: 'La Torre de les Maçanes', obert: true, opcions: CATALEG, ajuda: 'Només els pobles del Mas.',
+});
+const pobles = () => within(screen.getByRole('list', { name: 'Els teus pobles' })).getAllByRole('listitem')
+  .map((li) => li.firstChild.textContent);
+const afegix = (nom) => {
+  fireEvent.change(screen.getByLabelText('Afegir un poble:'), { target: { value: nom } });
+  fireEvent.click(screen.getByRole('button', { name: 'Afegir poble' }));
+};
+
+test('261018 · els pobles de la persona: n’afig un del catàleg, el desa com «A · B» i el primer és el principal', async () => {
+  const guardarAjust = vi.fn(async () => undefined);
+  render(<DetallAjust ajust={POBLES} identitat={jo} guardarAjust={guardarAjust} />);
+  expect(pobles()).toEqual(['La Torre de les Maçanes']);
+  expect(within(screen.getByRole('list', { name: 'Els teus pobles' })).getByText('Principal')).toBeTruthy();
+  // Amb un sol poble, no es pot llevar: una persona no es queda sense poble.
+  expect(screen.queryByRole('button', { name: /^Llevar/ })).toBeNull();
+  const selector = screen.getByLabelText('Afegir un poble:');
+  expect(selector.className).toContain('sdp-control--selector');
+  expect(selector.getAttribute('aria-describedby')).toBe(screen.getByText('Només els pobles del Mas.').id);
+  // «Afegir poble» només amb un poble triat.
+  expect(screen.getByRole('button', { name: 'Afegir poble' }).disabled).toBe(true);
+  afegix('Xixona');
+  expect(pobles()).toEqual(['La Torre de les Maçanes', 'Xixona']);
+  expect(guardarAjust).not.toHaveBeenCalled();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Guardar' })); });
+  expect(guardarAjust).toHaveBeenCalledWith('jo', 'poble', 'La Torre de les Maçanes · Xixona');
+  expect(screen.getByRole('status').textContent).toBe('Desat correctament.');
+});
+
+test('261018 · només del catàleg i sense repetits: el selector no porta els triats ni cap opció de més d’un poble', () => {
+  const ajust = { ...POBLES, valor: 'La Torre de les Maçanes · Xixona', opcions: [...CATALEG, { valor: 'La Torre de les Maçanes · Xixona', etiqueta: 'La Torre de les Maçanes · Xixona' }] };
+  const { rerender } = render(<DetallAjust ajust={ajust} identitat={jo} guardarAjust={vi.fn()} />);
+  expect(pobles()).toEqual(['La Torre de les Maçanes', 'Xixona']);
+  const selector = screen.getByLabelText('Afegir un poble:');
+  expect([...selector.options].map((o) => o.value)).toEqual(['', 'Benilloba']);
+  // Cap camp de text lliure: només el selector del catàleg.
+  expect(screen.queryByRole('textbox')).toBeNull();
+  /* Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (correcció de
+     la revisió) · Un <select> no pren un valor que no té: la guarda d'«Afegir
+     poble» es prova amb un poble triat que, després, ix del catàleg. */
+  fireEvent.change(selector, { target: { value: 'Poble inventat' } });
+  expect(selector.value).toBe('');
+  expect(screen.getByRole('button', { name: 'Afegir poble' }).disabled).toBe(true);
+  fireEvent.change(selector, { target: { value: 'Benilloba' } });
+  rerender(<DetallAjust ajust={{ ...ajust, opcions: CATALEG.filter((o) => o.valor !== 'Benilloba') }} identitat={jo} guardarAjust={vi.fn()} />);
+  expect(screen.getByRole('button', { name: 'Afegir poble' }).disabled).toBe(false);
+  fireEvent.click(screen.getByRole('button', { name: 'Afegir poble' }));
+  expect(pobles()).toEqual(['La Torre de les Maçanes', 'Xixona']);
+  rerender(<DetallAjust ajust={ajust} identitat={jo} guardarAjust={vi.fn()} />);
+  afegix('Benilloba');
+  expect(pobles()).toEqual(['La Torre de les Maçanes', 'Xixona', 'Benilloba']);
+  // Sense cap més al catàleg, el selector ho diu i no es pot afegir res.
+  expect([...screen.getByLabelText('Afegir un poble:').options].map((o) => o.textContent)).toEqual(['No en queda cap més al catàleg']);
+  expect(screen.getByLabelText('Afegir un poble:').disabled).toBe(true);
+});
+
+test('261018 · llevar un poble: el «Llevar» de cada un, que desapareix quan només en queda un', async () => {
+  const guardarAjust = vi.fn(async () => undefined);
+  render(<DetallAjust ajust={{ ...POBLES, valor: 'La Torre de les Maçanes · Xixona' }} identitat={jo} guardarAjust={guardarAjust} />);
+  const lleva = screen.getByRole('button', { name: 'Llevar La Torre de les Maçanes' });
+  expect(lleva.className).toContain('sdp-boto');
+  expect(screen.getByRole('button', { name: 'Llevar Xixona' })).toBeTruthy();
+  fireEvent.click(lleva);
+  // El que queda passa a ser el principal, i ja no es pot llevar.
+  expect(pobles()).toEqual(['Xixona']);
+  expect(screen.queryByRole('button', { name: /^Llevar/ })).toBeNull();
+  // El llevat torna a ser del catàleg disponible.
+  expect([...screen.getByLabelText('Afegir un poble:').options].map((o) => o.value)).toEqual(['', 'Benilloba', 'La Torre de les Maçanes']);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Guardar' })); });
+  expect(guardarAjust).toHaveBeenCalledWith('jo', 'poble', 'Xixona');
+});
+
+/* Pla 261018_1605 (Tasca 2, D5; correcció de la revisió) · Els camins que
+   faltaven: el poble triat i no afegit, «Fer principal», un poble que no és
+   del catàleg, el catàleg que encara no s'ha llegit, i el focus. */
+test('261018 · un poble triat al Selector i no afegit entra en «Guardar», i el Selector torna a buit', async () => {
+  const guardarAjust = vi.fn(async () => undefined);
+  render(<DetallAjust ajust={POBLES} identitat={jo} guardarAjust={guardarAjust} />);
+  fireEvent.change(screen.getByLabelText('Afegir un poble:'), { target: { value: 'Xixona' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Guardar' })); });
+  expect(guardarAjust).toHaveBeenCalledWith('jo', 'poble', 'La Torre de les Maçanes · Xixona');
+  expect(pobles()).toEqual(['La Torre de les Maçanes', 'Xixona']);
+  expect(screen.getByLabelText('Afegir un poble:').value).toBe('');
+  expect(screen.getByRole('status').textContent).toBe('Desat correctament.');
+});
+
+test('261018 · «Fer principal»: el poble passa primer, el desat diu «B · A» i el focus va al seu «Llevar»', async () => {
+  const guardarAjust = vi.fn(async () => undefined);
+  render(<DetallAjust ajust={{ ...POBLES, valor: 'La Torre de les Maçanes · Xixona' }} identitat={jo} guardarAjust={guardarAjust} />);
+  const llista = screen.getByRole('list', { name: 'Els teus pobles' });
+  expect(within(llista).getAllByRole('listitem')[0].textContent).toContain('Principal');
+  expect(screen.queryByRole('button', { name: 'Fer principal La Torre de les Maçanes' })).toBeNull();
+  const boto = screen.getByRole('button', { name: 'Fer principal Xixona' });
+  boto.focus();
+  fireEvent.click(boto);
+  expect(pobles()).toEqual(['Xixona', 'La Torre de les Maçanes']);
+  expect(within(within(llista).getAllByRole('listitem')[0]).getByText('Principal')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Fer principal La Torre de les Maçanes' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Fer principal Xixona' })).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Llevar Xixona' }));
+  expect(screen.getByText('Xixona és ara el poble principal: prem «Guardar» per a desar-ho.').getAttribute('aria-live')).toBe('polite');
+  expect(guardarAjust).not.toHaveBeenCalled();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Guardar' })); });
+  expect(guardarAjust).toHaveBeenCalledWith('jo', 'poble', 'Xixona · La Torre de les Maçanes');
+});
+
+test('261018 · el focus no es perd: «Llevar» va al del costat (o a la llista) i «Afegir poble», al Selector', () => {
+  render(<DetallAjust ajust={{ ...POBLES, valor: 'La Torre de les Maçanes · Xixona · Benilloba' }} identitat={jo} guardarAjust={vi.fn()} />);
+  const llevaXixona = screen.getByRole('button', { name: 'Llevar Xixona' });
+  llevaXixona.focus();
+  fireEvent.click(llevaXixona);
+  expect(pobles()).toEqual(['La Torre de les Maçanes', 'Benilloba']);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Llevar Benilloba' }));
+  expect(screen.getByText('S’ha llevat Xixona: prem «Guardar» per a desar-ho.')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar Benilloba' }));
+  // Només en queda un: cap «Llevar», el focus a la llista.
+  expect(document.activeElement).toBe(screen.getByRole('list', { name: 'Els teus pobles' }));
+  afegix('Xixona');
+  expect(document.activeElement).toBe(screen.getByLabelText('Afegir un poble:'));
+  expect(screen.getByText('S’ha afegit Xixona: prem «Guardar» per a desar-ho.')).toBeTruthy();
+});
+
+test('261018 · un poble que no és del catàleg (d’abans): es veu, no es pot llevar si és l’únic i, llevat, no es pot tornar a afegir', () => {
+  render(<DetallAjust ajust={{ ...POBLES, valor: 'Poble antic' }} identitat={jo} guardarAjust={vi.fn()} />);
+  expect(pobles()).toEqual(['Poble antic']);
+  expect(screen.queryByRole('button', { name: /^Llevar/ })).toBeNull();
+  afegix('Xixona');
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar Poble antic' }));
+  expect(pobles()).toEqual(['Xixona']);
+  expect([...screen.getByLabelText('Afegir un poble:').options].map((o) => o.value)).toEqual(['', 'Benilloba', 'La Torre de les Maçanes']);
+});
+
+test('261018 · amb el catàleg sense llegir, el Selector ho diu (no que no en quede cap) i no es pot afegir res', () => {
+  render(<DetallAjust ajust={{ ...POBLES, opcions: [{ valor: '', etiqueta: 'Tria un poble…' }] }} identitat={jo} guardarAjust={vi.fn()} />);
+  const selector = screen.getByLabelText('Afegir un poble:');
+  expect([...selector.options].map((o) => o.textContent)).toEqual(['Encara no s’ha pogut llegir el catàleg de pobles']);
+  expect(selector.disabled).toBe(true);
+  expect(screen.getByRole('button', { name: 'Afegir poble' }).disabled).toBe(true);
+});
+
+test('261018 · tancat (p. ex. amb la fila de reserva), els pobles es veuen i el motiu, sense controls', () => {
+  render(<DetallAjust ajust={{ ...POBLES, valor: 'La Torre de les Maçanes · Xixona', obert: false, motiu: 'No s’ha pogut llegir el compte del servidor.' }} identitat={jo} />);
+  expect(screen.getByText('La Torre de les Maçanes · Xixona')).toBeTruthy();
+  expect(screen.getByText('No s’ha pogut llegir el compte del servidor.')).toBeTruthy();
+  expect(screen.queryByRole('combobox')).toBeNull();
+  expect(screen.queryByRole('button')).toBeNull();
+});
+
 test('grup C · un «selector» tancat mostra el valor i el motiu, sense control', () => {
   render(<DetallAjust ajust={{ ...POBLE, obert: false, motiu: 'Només qui administra aquesta organització ho pot canviar.' }} identitat={forn} />);
   expect(screen.queryByRole('combobox')).toBeNull();

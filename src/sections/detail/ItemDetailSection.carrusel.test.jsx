@@ -15,7 +15,7 @@
 import React from 'react';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { cleanup, render, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -150,6 +150,54 @@ describe('/mercat/samarreta-socdepoble: la portada és un carrusel de huit fotos
     } finally {
       mocks.t = abans;
     }
+  });
+});
+
+/* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 1) · «Unifica el
+   producte en un únic node canònic amb carrusel complet (8 fotos), H2
+   editorial i entradilla. Elimina la llista vertical de targetes duplicades.
+   Aplica el selector compacte de variants en píndoles (role="radiogroup") […],
+   amb un sol botó «Afegeix al cabàs» i estat d'estoc («Esgotat»).» La pàgina
+   de la llavor, sencera. */
+describe('/mercat/samarreta-socdepoble: un sol node amb el selector de variants', () => {
+  const VERDA = `${CARPETA}/samarreta-socdepoble-verd-638px.jpg`;
+
+  test('el carrusel porta les huit fotos, cap text fix que les compte; l’H2 és el subtítol i la descripció hi és una vegada', () => {
+    const samarreta = llavor('samarreta-socdepoble');
+    const container = pinta(samarreta);
+    expect(portada(container).querySelectorAll('img')).toHaveLength(8);
+    const intro = container.querySelector('.page-intro');
+    expect(intro.querySelector('h2').textContent).toBe(samarreta.subtitle);
+    expect(container.textContent.split(samarreta.description)).toHaveLength(2);
+    const cos = container.querySelector('article.content-wrapper');
+    expect(cos.textContent).not.toMatch(/\b(?:\d+|una|dos|tres|quatre|cinc|sis|set|huit) fotos\b/i);
+  });
+
+  test('cap targeta per variació: un radiogroup amb les dues edicions per l’id i un sol botó del cabàs', () => {
+    const container = pinta(llavor('samarreta-socdepoble'));
+    expect(container.querySelector('.note-card')).toBeNull();
+    expect(container.querySelectorAll('.sdp-compra')).toHaveLength(1);
+    const grup = within(container).getByRole('radiogroup', { name: 'Tria la variant' });
+    const radios = within(grup).getAllByRole('radio');
+    expect(radios.map((radio) => radio.value)).toEqual(['gris-plom', 'verda-pi']);
+    expect(radios.map((radio) => radio.labels[0].textContent)).toEqual(['Edició Gris Plom', 'Edició Verda Esgotat']);
+    expect(radios.map((radio) => radio.checked)).toEqual([true, false]);
+    const botons = within(container).getAllByRole('button').filter((boto) => /cabàs/.test(boto.textContent));
+    expect(botons).toHaveLength(1);
+    expect(botons[0].disabled).toBe(false);
+  });
+
+  test('la Verda (esgotada) es pot triar: la seua foto, que no és al carrusel, i el botó desactivat amb el text explícit', () => {
+    const container = pinta(llavor('samarreta-socdepoble'));
+    expect(container.querySelector('.sdp-compra__foto').getAttribute('src')).toBe(HUIT[1]);
+    fireEvent.click(within(container).getByRole('radio', { name: 'Edició Verda Esgotat' }));
+    expect(container.querySelector('.sdp-compra__foto').getAttribute('src')).toBe(VERDA);
+    expect(HUIT).not.toContain(VERDA);
+    const [boto] = within(container).getAllByRole('button').filter((b) => /cabàs/.test(b.textContent));
+    expect(boto.disabled).toBe(true);
+    expect(boto.textContent).toBe('Esgotat · no es pot afegir al cabàs');
+    // El carrusel no canvia: continua amb les huit.
+    expect([...portada(container).querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual(HUIT);
   });
 });
 

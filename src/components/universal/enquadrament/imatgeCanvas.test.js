@@ -233,6 +233,19 @@ describe('Bloc B · carregaImatge torna el blob que ha obert', () => {
     expect((await carregaImatge('blob:pagina/2')).blob).toBeNull();
   });
 
+  /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2; correcció de
+     la revisió) · Una adreça de fora (la foto de Google de la sessió) es
+     demana sense referent; una de casa, com sempre. */
+  test('una adreça de fora es demana sense referent; una pròpia, sense canvis', async () => {
+    vi.stubGlobal('Image', imatgeFalsa({ amplada: 400, alcada: 300 }));
+    const fetch = vi.fn(async () => ({ ok: true, blob: async () => new Blob([SORTIDA_CANVAS], { type: 'image/jpeg' }) }));
+    vi.stubGlobal('fetch', fetch);
+    await carregaImatge('https://lh3.googleusercontent.com/a/foto=s96-c', { orienta: async () => true });
+    expect(fetch.mock.calls[0][1]).toMatchObject({ mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
+    await carregaImatge('/assets/uploads/h.webp', { orienta: async () => true });
+    expect(fetch.mock.calls[1][1]).not.toHaveProperty('referrerPolicy');
+  });
+
   test('girada sobre un canvas, el blob continua sent el de l’original', async () => {
     vi.stubGlobal('Image', imatgeFalsa({ amplada: 4000, alcada: 3000 }));
     const foto = fotoAmb(6);
