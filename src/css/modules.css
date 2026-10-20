@@ -4598,12 +4598,32 @@ details[open] summary.accordion-header svg:last-child {
     position: relative;
     z-index: 1;
   }
-  .sdp-xat-compositor--avis {
+  .sdp-xat-compositor-barra-avis {
+    display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    background: var(--sdp-fons-subtil);
+    border-top: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-compositor--avis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
     margin: 0;
     color: var(--sdp-text-suau);
     text-align: center;
+  }
+  .sdp-xat-compositor__boto-registre {
+    min-height: 36px;
+    height: 36px;
+    padding: 0 var(--sdp-space-4);
+    font-size: var(--sdp-text-sm, 0.85rem);
+    white-space: nowrap;
+    text-decoration: none;
   }
 
   /* Amb la barra mòbil a la vista (.sdp-root.is-compact; torn 260930, com la

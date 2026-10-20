@@ -79,15 +79,28 @@ export default function Compositor({
     /* Gauntlet 261016 (Bloc 3.6.1) · Un fil de només lectura que no és uns
        Avisos (el xat de Javi Llinares per a qui no s'ha registrat, al xat de
        mostra) porta el seu avís ja traduït (`avisNomesLectura`): la mateixa
-       línia i la mateixa classe, amb la icona de persona. */
+       línia i la mateixa classe, amb la icona de persona.
+       Ordre del Mestre (261020, 23:30) · Botó blau clar «Registra't» per a
+       facilitar l'accés directe a la pàgina de registre des del peu del xat. */
     const avisPropi = typeof fil.avisNomesLectura === 'string' && fil.avisNomesLectura ? fil.avisNomesLectura : null;
+    const esDeMostra = Boolean(fil?.id?.startsWith('fake-') || avisPropi);
     return (
-      <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
-        {avisPropi
-          ? <UserRound size={20} aria-hidden="true" focusable="false" />
-          : <Megaphone size={20} aria-hidden="true" focusable="false" />}
-        <span>{avisPropi || t('section.xat.canal.nomesAdmins', 'En Avisos només escriuen els administradors.')}</span>
-      </p>
+      <div className="sdp-xat-compositor-barra-avis">
+        <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
+          {avisPropi
+            ? <UserRound size={20} aria-hidden="true" focusable="false" />
+            : <Megaphone size={20} aria-hidden="true" focusable="false" />}
+          <span>{avisPropi || t('section.xat.canal.nomesAdmins', 'En Avisos només escriuen els administradors.')}</span>
+        </p>
+        {esDeMostra ? (
+          <a
+            href="/registre?mode=entrar&tornar=%2Fxat"
+            className="sdp-boto sdp-boto--primari sdp-xat-compositor__boto-registre"
+          >
+            {t('section.xat.fake.botoRegistrat', "Registra't")}
+          </a>
+        ) : null}
+      </div>
     );
   }
   const titolPublic = fil?.subjecte ? (fil.subjecte.titol || fil.name || fil.title || '') : '';

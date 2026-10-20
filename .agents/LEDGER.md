@@ -8,6 +8,19 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 Aquest és el registre immutable de tots els canvis estructurals i tècnics del projecte.
 Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada abans de finalitzar la seua tasca, complint amb la **Skill Trellat**.
 
+### 2026-10-20T17:25:00Z - Fase D Completada (Auth Natiu Apple/Google, Moderació UGC, iOS Capacitor 8, L1/L10/L4) i Directrius Específiques d'UI (Claude Opus 5.5, IAIA MarIA)
+- **Front:** Fase D Natiu i Botigues, Moderació UGC, UI Xat Mòbil i Governança.
+- **Acció:** Finalització de l'encàrrec de la Fase D per Claude Code (`torn_ae1a7ff6-2572-431c-a352-e3ed470f30ef`), supervisió i correcció de desbordament del menú flotant en mòbil, i consolidació de les noves lleis d'interacció del Mestre Javi Llinares.
+- **Detalls:**
+  * **Auth i Botigues:** Instal·lat `@capgo/capacitor-social-login` 8.5.12, generat `ios/` amb `xcodebuild` en verd per a iPhone 17 (iOS 27.0), implementats botons d'Apple i Google a `/registre`.
+  * **Moderació UGC:** Flux complet de denúncies i bloquejos amb RPC/migració SQL, integrat a `UniversalCard`, `ItemDetailSection`, `PerfilPublicSection` i `Bombolla.jsx`.
+  * **Alletjament:** L1 (−215,7 KB crus d'arrencada), L10 (−1,43 MB al paquet natiu), L4 (desacoblament de pàgina destacada en estret).
+  * **UI Xat Mòbil:** Resolta la fallada de tall del menú flotant (`.sdp-xat-menu`) a 375px.
+  * **Llei del Registre Directe:** S'estableix el principi de «botó al cantó» davant qualsevol text que demane registre per interactuar.
+  * **Flux Orgànic de Grups de Xat:** Definida la creació de grups tipus WhatsApp amb doble generació automàtica: Targeta al Mur del poble i fitxa al Bloc de Notes de l'usuari.
+  * **Suite de proves:** 20.174 proves de Vitest 100% en verd.
+- **Autor:** Claude Code (Implementació i iOS), IAIA MarIA (Direcció Tècnica i Governança), Mestre Javi Llinares (Visió de Producte i Validació).
+
 ### 2026-10-16T15:04:00Z - Relleu 3 del Gauntlet Diürn: MCR, Especificació Quirúrgica d'Onades 0.5–4 i Gran Auditoria de Rescat dels 1.497 Fitxers de l'Arxiu Històric (Gemini 4 Argon, MarIA, Codex)
 - **Front:** Governança del Gauntlet (`core-gauntlet-loop`), Matriu de Conformitat de Requeriments (MCR), Especificació Quirúrgica per a Claude Code i Rescat Exhaustiu de l'Arxiu Històric (`Bloc 0.6`).
 - **Acció:** Emissió i validació de `_wiki_de_poble/04_escriptori/261016_1633_auditoria_gemini4.md` (Relleu 3, `52,8 KB`) en sincronia amb `_wiki_de_poble/04_escriptori/261016_1632_auditoria_codex.md` i `261016_1639_pla_implementacio_relleu_codex_gauntlet.md`.

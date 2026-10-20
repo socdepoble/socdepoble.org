@@ -68,7 +68,6 @@ export default function MultimediaSection() {
     () => (delCens.length && status !== 'loading' ? fusionaMitjans(mediaItems, delCens, { alies }) : mediaItems),
     [mediaItems, delCens, alies, status]
   );
-  const featured = totes[0] || null;
   /* Onada 0.3 (I35) · La Cronologia del proveïdor (cronologia.js) i, amb el
      cens, la mateixa regla sobre tot el que es pinta: les imatges sense data
      van al grup «Sense data», l'últim. */
@@ -109,6 +108,13 @@ export default function MultimediaSection() {
   });
 
   const graella = viewMode === 'iaia' ? deLaIaia : totes;
+  const etiquetaFiltre = viewMode === 'iaia'
+    ? `IAIA (${deLaIaia.length})`
+    : viewMode === 'timeline'
+      ? `${t('section.multimedia.timeline', 'CRONOLOGIA').toUpperCase()} (${totes.length})`
+      : `${t('section.multimedia.all', 'TOTS')} (${totes.length})`;
+  const elementDestacat = viewMode === 'iaia' ? deLaIaia[0] : totes[0];
+  const mesDestacat = elementDestacat?.created_at ? new Date(elementDestacat.created_at).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' }) : '';
 
   return (
     <UniversalPage
@@ -118,7 +124,7 @@ export default function MultimediaSection() {
       showLogos={true}
     >
       <header className="notes-list-header">
-        <strong className="univ-manager-facet-header">{t('section.multimedia.all', 'TOTS')} ({totes.length}) - {featured?.created_at ? new Date(featured.created_at).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' }) : ''}</strong>
+        <strong className="univ-manager-facet-header">{etiquetaFiltre}{mesDestacat ? ` - ${mesDestacat}` : ''}</strong>
         <div className="univ-manager-toolbar">
           {/* T64 · Centrada amb el modificador canònic (el de l'Onboarding): com a
               fill flex de la toolbar, margin-inline:auto la porta al mig. La

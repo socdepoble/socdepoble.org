@@ -74,6 +74,48 @@ describe('parseMarkdown · callouts (U09 · U10b)', () => {
   });
 });
 
+describe('parseMarkdown · llistes (agrupació i autonumeració)', () => {
+  it('una llista ordenada de 4 elements és un sol <ol> amb 4 <li> i sense <p>', () => {
+    const md = '1. Primer\n2. Segon\n3. Tercer\n4. Quart';
+    const arrel = pinta(md);
+    expect(arrel.querySelectorAll('ol')).toHaveLength(1);
+    expect(arrel.querySelectorAll('ol > li')).toHaveLength(4);
+    expect(arrel.querySelector('p')).toBeNull();
+    expect(textos(arrel.querySelectorAll('ol > li'))).toEqual(['Primer', 'Segon', 'Tercer', 'Quart']);
+  });
+
+  it('una llista no ordenada de diversos elements és un sol <ul> amb els seus <li>', () => {
+    const md = '- Alfa\n- Beta\n- Gamma';
+    const arrel = pinta(md);
+    expect(arrel.querySelectorAll('ul')).toHaveLength(1);
+    expect(arrel.querySelectorAll('ul > li')).toHaveLength(3);
+    expect(arrel.querySelector('p')).toBeNull();
+    expect(textos(arrel.querySelectorAll('ul > li'))).toEqual(['Alfa', 'Beta', 'Gamma']);
+  });
+
+  it('dues llistes separades per paràgraf generen cadascuna el seu contenidor propi', () => {
+    const md = '1. A\n2. B\n\nParàgraf entremig.\n\n- X\n- Y';
+    const arrel = pinta(md);
+    expect(arrel.querySelectorAll('ol')).toHaveLength(1);
+    expect(arrel.querySelectorAll('ol > li')).toHaveLength(2);
+    expect(arrel.querySelectorAll('ul')).toHaveLength(1);
+    expect(arrel.querySelectorAll('ul > li')).toHaveLength(2);
+    expect(arrel.querySelectorAll(':scope > p')).toHaveLength(1);
+    expect(arrel.querySelector(':scope > p').textContent).toBe('Paràgraf entremig.');
+  });
+});
+
+describe('parseMarkdown · diagrames mermaid', () => {
+  it('un bloc mermaid es convertix en targeta de diagrama d’arquitectura', () => {
+    const md = '```mermaid\nflowchart LR\n  A --> B\n```';
+    const arrel = pinta(md);
+    const targeta = arrel.querySelector('.sdp-diagrama-card');
+    expect(targeta).not.toBeNull();
+    expect(targeta.querySelector('.sdp-diagrama-capcalera').textContent).toContain('Diagrama d’arquitectura');
+    expect(targeta.querySelector('pre.sdp-diagrama-cos > code.language-mermaid').textContent).toContain('flowchart LR');
+  });
+});
+
 describe('parseMarkdown · sanejament conservat', () => {
   it('l’eixida continua passant pel sanejador', () => {
     const arrel = pinta('[x](javascript:alert(1))\n\n<img src="x" onerror="alert(1)">');

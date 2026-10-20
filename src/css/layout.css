@@ -178,10 +178,10 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   align-items: center;
   justify-content: flex-start;
   padding-top: env(safe-area-inset-top, 0px) !important;
-  padding-left: 28px !important;
+  padding-left: var(--sdp-space-4) !important;
   border-bottom: 1px solid var(--sdp-crom-vora);
 }
-.brand img { width: 180px; flex: none; max-width: 180px; height: auto; object-fit: contain; }
+.brand img { width: 130px; flex: none; max-width: 130px; height: auto; object-fit: contain; }
 
 /* ── BOTÓ DEL PANELL DE CONTROL ──
    El Mestre ha demanat expressament tornar al disseny clàssic de bloc sencer
@@ -350,7 +350,7 @@ header.bar-black {
 
 /* Botó logo: només visible en mòbil (obri la sidebar) o en escriptori tancat */
 .mobile-logo-wrapper { display: none; cursor: pointer; }
-.mobile-logo-wrapper img { width: 180px; height: auto; object-fit: contain; }
+.mobile-logo-wrapper img { width: 130px; height: auto; max-width: 130px; object-fit: contain; }
 
 
 /* T20 (ordre del Mestre, 260927 nit) · Dos packs i un botó, no tres grups a
@@ -552,7 +552,7 @@ nav.mobile-nav { display: none; }
   }
 
   /* El logo actua com a botó (sense hamburguesa addicional) */
-  :where(.sdp-root.is-compact) .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: 28px !important; }
+  :where(.sdp-root.is-compact) .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: var(--sdp-space-4) !important; }
 
   /* El visor deixa espai per a la barra inferior fixa (a l'interior del scroll) */
   :where(.sdp-root.is-compact) .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
@@ -712,7 +712,7 @@ nav.mobile-nav { display: none; }
   /* Densitat de les barres */
   :where(.sdp-root.is-compact) header.bar-blue, :where(.sdp-root.is-compact) section.bar-orange { padding: 0 var(--sdp-space-4); }
   :where(.sdp-root.is-compact) header.bar-black { padding: env(safe-area-inset-top, 0px) var(--sdp-space-4) 0; }
-  :where(.sdp-root.is-compact) .brand { padding: 0 var(--sdp-space-5); }
+  :where(.sdp-root.is-compact) .brand { padding: 0 var(--sdp-space-4); }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
 @container sdp-arrel (max-width: 720px) {
@@ -783,13 +783,13 @@ nav.mobile-nav { display: none; }
     min-width: 0;
     width: auto;
     height: var(--sdp-touch);
-    padding: 0 0 0 6px !important;
+    padding: 0 0 0 var(--sdp-space-4) !important;
     justify-content: flex-start;
   }
   .mobile-logo-wrapper img {
     width: auto;
     height: auto;
-    max-height: var(--sdp-space-8);
+    max-height: 26px;
     max-width: 100%;
     object-fit: contain;
   }
@@ -833,13 +833,13 @@ nav.mobile-nav { display: none; }
     min-width: 0;
     width: auto;
     height: var(--sdp-touch);
-    padding: 0 0 0 6px !important;
+    padding: 0 0 0 var(--sdp-space-4) !important;
     justify-content: flex-start;
   }
   .mobile-logo-wrapper img {
     width: auto;
     height: auto;
-    max-height: var(--sdp-space-8);
+    max-height: 26px;
     max-width: 100%;
     object-fit: contain;
   }

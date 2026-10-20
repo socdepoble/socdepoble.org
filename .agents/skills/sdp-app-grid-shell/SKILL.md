@@ -43,9 +43,20 @@ Quan l'usuari clica als icones d'ocultar les columnes (per amagar la barra later
 - **Ocultació de Notes:** Quan es replega la columna de notes (cap a l'esquerra), el botó de "Crear Nota" **desapareix**. Només queda visible l'icona d'obrir la columna i la "Lupa".
 - **Resum:** Només es poden crear notes si la columna de notes està desplegada (oberta). Aquesta és la distribució inicial i obligatòria.
 
-## 4. Deute Tècnic Restringit
-- Està estrictament prohibit l'ús de l'atribut `style=` directament sobre els components React per no trencar les regles de la `design-guard`. Les mides dinàmiques s'injectaran preferiblement a través de classes dinàmiques o `<style>` tags inserits localment si és inevitable.
-- No s'ha de fer ús del pseudo-selector `:has()` en els estils com `src/components/layout/AppGridShell.css`, per mantenir l'estàndard del *Baseline 2022*. Les ocultacions es controlaran a través de classes de React (ex: `has-left-collapsed`).
+## 5. Llei de la Barra Negra Immutable i Safe-Area Natiu (Mòbil i Escriptori)
+
+- **Topologia de la Barra Negra (`header.bar-black`):** La Barra Negra de Sóc de Poble és el portal d'identitat institucional i arrel universal de navegació (logo Sóc de Poble, traductor, IAIA MarIA, cerca, mode dia/nit i accés d'usuari).
+- **Immutabilitat i Permanència Absoluta:** La Barra Negra **MAI es pot amagar ni fer desaparèixer** sota cap concepte (`display: none` està terminantment prohibit per a la barra negra global). És permanentment fixa (`position: sticky; top: 0;`), no s'amaga en fer scroll, ni en entrar al Xat (`/xat`), ni en cap vista mòbil.
+- **Respecte Estricte del Safe-Area Superior (Dynamic Island / Barra d'Estat iOS):**
+  - La Barra Negra MAI s'ha de dibuixar encavallada darrere de la barra d'estat del sistema (Dynamic Island, rellotge, wifi, bateria).
+  - Ha d'incorporar `padding-top: env(safe-area-inset-top, 0px);` i una alçada adaptativa `calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))` amb `box-sizing: border-box`.
+  - La barra d'estat nativa ocupa el coixí superior fosc, i el contingut de la Barra Negra (el logotip i els botons) se situa netament per davall de la Dynamic Island.
+- **Jerarquia Vertical d'App i Subcapçaleres:**
+  1. Dalt de tot: Barra d'estat del sistema / Dynamic Island (`safe-area-inset-top`).
+  2. Just a sota: **Barra Negra de Sóc de Poble** (`header.bar-black`) — FIXA i IMMUTABLE.
+  3. A sota de la Barra Negra: Les capçaleres de secció o subbarres (com la barra de `Converses` amb el commutador, menú i botó `+`).
+  4. La barra de `Converses` o subbarres podran en un futur adaptar-se o ocultar-se si faltés espai extrem, però la Barra Negra de Sóc de Poble mai.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]
+

@@ -501,4 +501,12 @@ describe('el compositor d’un fil de només lectura que no és uns Avisos', () 
     pinta({ id: 'avisos', tipus: 'canal', potEscriure: false });
     expect(screen.getByRole('status').textContent).toBe('En Avisos només escriuen els administradors.');
   });
+
+  test('un fil de mostra porta el botó blau Registra’t cap a la pàgina de registre', () => {
+    pinta({ id: 'fake-javi', tipus: 'persona', potEscriure: false, avisNomesLectura: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!" });
+    const boto = screen.getByRole('link', { name: "Registra't" });
+    expect(boto).not.toBeNull();
+    expect(boto.getAttribute('href')).toBe('/registre?mode=entrar&tornar=%2Fxat');
+    expect(boto.className).toContain('sdp-boto--primari');
+  });
 });

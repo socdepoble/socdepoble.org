@@ -78,6 +78,22 @@ Tota escriptura o revisió de codi en `src/`, `tooling/` o `supabase/migrations/
 - **Prohibició de `SELECT` Obert sobre `storage.objects` en Buckets Públics:** En Supabase Storage, els fitxers d'un bucket amb `public = true` ja es serveixen per URL directa sense necessitat de cap política `SELECT` a `storage.objects`. Crear una política `FOR SELECT TO anon, authenticated USING (bucket_id = 'mitjans')` habilita l'endpoint `POST /storage/v1/object/list/mitjans` i permet enumerar totes les carpetes i fitxers de tots els pobles i usuaris. El `SELECT` sobre `storage.objects` s'ha de restringir a l'usuari autenticat sobre el seu propi prefix (`persones/<auth.uid()>/...`).
 - **Auditoria de Funcions `SECURITY DEFINER`:** Cap funció `SECURITY DEFINER` pot exposar `auth.users.email` a altres co-administradors d'una entitat si l'usuari no és el mateix `owner_user_id`.
 
+### E. Llei de Concessió Explícita de Privilegis (`GRANT` Obligatori en Noves Taules — Mandat Supabase 30-Oct-2026)
+
+- **Avís Oficial de Supabase:** A partir del 30 d'octubre de 2026, Supabase deixa d'atorgar accés automàtic de Data API a les noves taules de l'esquema `public`. Tota taula creada a partir d'aquesta data exigeix un `GRANT` explícit en la mateixa migració abans que `supabase-js`, PostgREST o GraphQL puguen accedir-hi (en cas contrari, PostgREST retorna `permission denied`).
+- **Plantilla de Concessió Canònica:** Tota creació de taula a `supabase/migrations/` ha d'incloure obligatòriament els `GRANT` pertinents:
+  ```sql
+  -- 1. Lectura anònima pública (només si la taula admet consulta per visitants no registrats)
+  grant select on public.<nom_taula> to anon;
+
+  -- 2. Lectura i escriptura per a usuaris autenticats (sempre governat per RLS)
+  grant select, insert, update, delete on public.<nom_taula> to authenticated;
+
+  -- 3. Accés administratiu i processos en segon pla (servei intern)
+  grant select, insert, update, delete on public.<nom_taula> to service_role;
+  ```
+- **RLS és Innegociable:** Els `GRANT` només obrin el conducte de xarxa de l'API; `ALTER TABLE public.<nom_taula> ENABLE ROW LEVEL SECURITY;` i les polítiques `CREATE POLICY` continuen sent el sentinella obligatori que decideix fila per fila qui pot veure o modificar cada registre.
+
 ## 4. Execució de Claude Security i Protocol d'Arbre Brut (*Clean Shadow Copy*)
 
 Per a l'agent de consola **Claude Code**, el procediment oficial s'executa amb el plugin `/claude-security`:
@@ -114,6 +130,7 @@ Abans de donar el vistiplau a qualsevol commit de funcionalitat, migració SQL, 
 - [ ] **Zero Spread JSONB sense Coacció Primitiva:** Tots els camps de `payload` o DTOs externs es coaccionen a tipus primitius (`string`, `number`, `boolean`) abans d'entrar a React.
 - [ ] **Zero Regex amb Backtracking sobre Entrades d'Usuari:** Tota neteja o extracció sobre HTML/text d'usuari usa escàners lineals $O(n)$.
 - [ ] **Polítiques RLS per Columna i Storage sense Llistat Anònim:** `Row Level Security` actiu a totes les taules, columnes privades revocades per a `anon` i cap política `SELECT` oberta a `anon` sobre `storage.objects`.
+- [ ] **`GRANT` Explícit en Tota Taula Nova de Supabase:** Cap taula nova es crea a `supabase/migrations/` sense concessions explícites a `anon`, `authenticated` i `service_role` (Mandat Supabase 30-Oct-2026).
 - [ ] **Purga de Claus d'Autoritat i Rutes `sdp-media://` Validated:** Cap submission veïnal pot injectar `origen`/`autor`/`seller` i cap ruta d'Storage admet `..` ni caràcters de control.
 - [ ] **Frontissa Sollutia en Lectura Pura (GET):** Tota petició a l'amfitrió és estrictament `GET` amb traductor i fixture, sense executar codi arbitrari.
 

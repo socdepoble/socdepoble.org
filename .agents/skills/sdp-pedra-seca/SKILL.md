@@ -104,5 +104,11 @@ L'equivalent a l'Spec-driven per al disseny:
 - Les etiquetes llargues usen `text-overflow: ellipsis`; el nom complet continua disponible com a nom accessible de l'acció. El truncament visual no elimina la identificació per a lectors de pantalla.
 - Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor, el visor o `PaginaEmojis`, és legítima quan conserva una eixida o tornada arrere («Tornar» >= `44px`) visible i accessible; no és una prohibició general d'ocupar el 100% de la columna.
 
+## 13. Llei de la Barra Negra Immutable i Safe-Area Natiu (Mobile First)
+
+- **Supremacia i Immutabilitat:** La Barra Negra (`header.bar-black`) és la capçalera suprema de la plataforma i conté la identitat de Sóc de Poble, l'accés d'usuari, la IAIA MarIA i les eines universals. **Està absolutament prohibit ocultar-la** (`display: none` prohibit) o fer que s'esvaïsca en fer scroll. És permanentment sticky/fixa a la part superior de la pantalla.
+- **Topologia Natiu i Dynamic Island:** Ha de respectar estrictament el `safe-area-inset-top` d'iOS i Android mitjançant `padding-top: env(safe-area-inset-top, 0px)` i alçada calculada `calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))` amb `box-sizing: border-box`. Els controls (logo, icones) mai xoquen ni queden ocults darrere de la Dynamic Island o la barra d'estat nativa.
+- **Jerarquia Vertical:** Totes les subcapçaleres de secció (com la barra de `Converses`, taulers o filtres) se situen necessàriament per davall de la Barra Negra de Sóc de Poble, mai per damunt ni al seu mateix nivell visual.
+
 ## Vincles
 - [[00_INDEX_SKILLS]]

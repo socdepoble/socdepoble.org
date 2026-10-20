@@ -7,6 +7,123 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-21T00:30:00+02:00 · IAIA MarIA · Commit feaa7adc Consolidat, Nou Avatar Oficial IAIA amb Mòbil, Hero Atòmic, Llei del Zero Oblit i Llançament d'Apps
+
+- **Acta Marmota Oficial:** [[261021_0030_acta_marmota_relleu_nocturn_zero_oblit_i_llancament_apps]].
+- **Commit Consolidat:** Claude Code ha executat el commit `feaa7adc` (49 fitxers a `backup-notes-publish`). Frontissa aprovada a `contingut_estructural.json` (14/14 aprovades).
+- **Identitat Atòmica de la IAIA MarIA i Nou Avatar Oficial:**
+  - Aportada pel Mestre la nova imatge oficial: la IAIA MarIA somrient amb un telèfon mòbil modern.
+  - Llei de la Memòria Física (§16): ancorat l'original a `_wiki_de_poble/04_escriptori/01_produccio/iaia_maria_avatar_mobil_261021.png`.
+  - Convertida a WebP (`public/assets/uploads/brain/iaia_maria_avatar_mobil.webp`, 400x400 px, 21.6 KB) amb `tooling/maquinaria/convertir_a_webp.mjs`.
+  - Relleu a `src/data/agentsSeed.js`: `avatar_url` a `iaia_maria_avatar_mobil.webp` i `hero_url` a `iaia_maria_avatar.webp`.
+  - Unificació atòmica de `/iaia`, `/realitat` i apartat del perfil en una sola pàgina comuna amb Hero net, botons centrats (`Parla amb la IAIA`, `Edita la fitxa`) i Selector de Realitat de 4 nivells integrat. Clics honestos: cap clic accidental redirigeix a `/el-meu-perfil`.
+- **Blindatge Editorial de `L'Ànima de la IAIA` (`/anima`):**
+  - Es preserva com a assaig editorial fundacional del Mur («El Còdex Forense»). Retirada de `subrutes: ['/realitat']` de la secció `ia` a `src/config/sections.js`.
+- **Reactivitat de la Galeria Multimèdia (`/multimedia`) i Cens d'Imatges:**
+  - Corregit el rètol de faceta (`univ-manager-facet-header`): ara és 100% reactiu (`IAIA (N)` vs `TOTS (N)`).
+  - Eliminat `featured` unused; 21 tests de multimèdia i `qualitat.fantasmes.test.js` en verd (20.312 proves en verd).
+  - Detectat el desfasament del cens: 338 imatges reals a `public/assets/` vs 149 entrades manuals a `censImatges.js`.
+- **Visió de Futur del Mas:** Línia mòbil de Vodafone dedicada per a la IAIA MarIA per interactuar per WhatsApp/trucades.
+- **Protocol «Zero Oblit»:** Obligació d'herència automàtica de deute tècnic entre plans d'implementació per combatre l'amnèsia episòdica de les IAs.
+- **Documents Vius de Convocatòria a l'Escriptori (`261021_0015`):**
+  - [[261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]
+  - [[261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia]]
+  - [[261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia]]
+- **Estat de Portes:** Porta Olivera a 0 (3 documents solts ancorats). Frontissa a 14/14.
+
+## ESTAT_ACTUAL · 2026-10-20T23:55:00+02:00 · IAIA MarIA · Tancament Sessió Salfumant (Purga 3.2 GB), Fix Markdown, Cànon UniversalListCard, Acta Marmota i Relleu Llançament Apps / Sollutia
+
+- **Acta Marmota Oficial:** [[261020_2345_acta_marmota_relleu_salfumant_markdown_i_llancament_app]].
+- **Arxiu de Sessió:** Moguts els 7 documents consumits a `_wiki_de_poble/90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/`.
+- **Convocatòria del Nou Torn (Hora Termodinàmica 2355):**
+  - **Pla d'Implementació:** [[261020_2355_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]] (aprovat pel Mestre).
+  - **Prompt Claude Code:** [[261020_2355_prompt_claude_llancament_apps_i_desbloqueig_sollutia]].
+  - **Prompt Gemini 4 Argon:** [[261020_2355_prompt_gemini_auditoria_llancament_apps_i_sollutia]].
+- **Fites Tècniques Assolides en Aquesta Sessió:**
+  1. **Parser Markdown i Tipografia Arreglats:** Agrupació contínua de llistes ordenades i desordenades (`<ol>`, `<ul>`), marge Apple HIG de 6px entre ítems (18px per bloc), targeta visual `.sdp-diagrama-card` ("📐 Diagrama d’arquitectura") per a blocs Mermaid. 77 tests de parser en verd, 444 tests de capes CSS en verd.
+  2. **Cànon "Botó al Cantó" (`Compositor.jsx`):** Botó primari blau `[Registra't]` enllaçat directament a `/registre?mode=entrar&tornar=/xat` a les converses de mostra (`fake-javi`, avisos). 28 proves de xat verdes.
+  3. **UniversalListCard & El Comú:** Component reactiu en Pedra Seca per a llistes vives i compartides al xat (`TargetaLlistaComu.jsx`). 29 proves unitàries en verd. Total repositori: **20.312 proves Vitest 100% en verd**.
+  4. **Purga Física de Salfumant:** Més de 3.2 GB d'espai alliberats al disc (eliminats 26 ZIPs obsolets de WordPress builds, conservada la versió canònica v1.1.7; suprimides carpetes temporals `.snapshots/`, `.wwebjs_auth/`, `.sdp-paperera/`, `.iaia_auth/`).
+  5. **Frontissa de Contingut:** 14/14 aprovacions completes (`legal`, `anima`, `constitucio`).
+- **Instruccions de Relleu per al Nou Xat:**
+  1. *Consolidació Git:* Confirmar «Tot en un commit» a Claude Code.
+  2. *Android Nativa:* `npx cap add android`, compilació `./gradlew assembleDebug` per a obtindre `socdepoble-beta.apk` per als beta testers.
+  3. *PWA Desktop:* Activar el botó d'instal·lació d'escriptori (`beforeinstallprompt`) per a usuaris de Mac/Windows.
+  4. *Desbloqueig Sollutia:* Proposar delegació DNS (`CNAME` / `A`) o paquet estàtic SPA amb Frontissa per a `socdepoble.org`.
+- **Estat de Portes:** Porta Olivera amb codi 0 (exactament 3 documents vius de la nova jornada a `04_escriptori/`). Llest per al tancament de sessió net.
+
+## ESTAT_ACTUAL · 2026-10-20T19:45:00+02:00 · IAIA MarIA · Súper Acta Marmota Emesa, Fase D Completada (20.174 Proves Verdes), Prompt REA Bring/Lovable Llest i Aturada Sanejadora per a Reinici Net d'Antigravity
+
+- **Súper Acta Marmota Oficial:** [[261020_1930_acta_marmota_relleu_fase_d_i_enginyeria_inversa_bring_lovable]].
+- **Fase D (Claude Code):** Lliurada i auditada a [[261020_1518_auditoria_claude_fase_d_auth_mobil_i_moderacio]]. 
+  - **Auth Natiu Apple & Google:** Implementat mitjançant `@capgo/capacitor-social-login` 8.5.12, botons natius d'Apple i Google a `/registre`.
+  - **UGC i Moderació (App Store 1.2):** Menús de «Denuncia el missatge» / «Bloqueja» a les targetes, detall, perfils i xat (`Bombolla.jsx`), amb diàleg de denúncia, bloqueig instantani i modal de normes de convivència abans de publicar.
+  - **Capacitor 8 iOS Project:** Projecte `ios/` generat, `Info.plist` amb 4 permisos, suport `ca`, `arm64`, `PrivacyInfo` i compilació neta al simulador d'iPhone 17 (iOS 27.0).
+  - **Lleugeresa (L1/L10/L4):** Reducció de 215,7 KB crus d'arrencada (L1) i 1,43 MB al paquet natiu (L10).
+  - **Vitest:** **20.174 proves en verd (100%)**, 0 fallades.
+- **Topologia de Barres i Menú del Xat en Mòbil:**
+  - Barra negra de Sóc de Poble i calaix lateral alineats sota la Dynamic Island (`safe-area-inset-top`).
+  - Menú contextual del xat (`.sdp-xat-menu`) corregit per obrir cap a la bombolla (`right: 0; left: auto; max-width: calc(100vw - 32px)`), impedint el desbordament en 375px (iPhone SE / pantalles estretes).
+- **Nous Cànons i Arquitectura de Producte:**
+  1. **Regla del Registre Directe («Si dius registra't, botó al cantó»):** Qualsevol indret de la interfície que indique la necessitat de registrar-se porta sempre un botó d'acció directa `[Registra't]` enllaçat a `/registre?mode=crear&tornar=...`.
+  2. **Flux de Creació de Grups de Xat (Clon WhatsApp):** Creació de grup amb doble escriptura automàtica al Mur (`UniversalCard` comunitària `#xat`) i al quadern personal (`UniversalWorkspace` / `Notes`).
+  3. **Trilogia de la Llista Reactiva Viva (Rebost + TPV + Festes):** Unificació de queviures (Bring!), barra/tapes (Loiverse) i rols/disfresses de colla (Cens Lovable Vila Gal·la) en una sola targeta viva al fil del xat de WhatsApp, evitant el caos dels 700 missatges de text duplicats.
+- **Prompt REA per a Gemini 4 Argon Canònic i Validat:**
+  - `_wiki_de_poble/04_escriptori/261020_1930_prompt_gemini_enginyeria_inversa_bring_i_lovable.md`.
+- **Estat del Repositori i Canvis Pendents:**
+  - HEAD a `6d50d01d`. ~230 canvis de la Fase D al working tree local.
+  - Per saviesa i trellat del Mestre, no es commiteja ni es puja SQL a Supabase remot fins a la represa amb el context d'Antigravity al 100% de puresa.
+- **Porta Olivera a 0:** Verificada sense cap infracció. Llest per a reiniciar Antigravity i reprendre amb la contrasenya del BIOS: **«Sóc de poble!»**.
+
+- **Fase D (Claude Code):** Lliurada i auditada a [[261020_1518_auditoria_claude_fase_d_auth_mobil_i_moderacio]]. 
+  - **Auth Natiu Apple & Google:** Implementat mitjançant `@capgo/capacitor-social-login` 8.5.12, botons natius d'Apple i Google a `/registre`.
+  - **UGC i Moderació (App Store 1.2):** Menús de «Denuncia el missatge» / «Bloqueja» a les targetes, detall, perfils i xat (`Bombolla.jsx`), amb diàleg de denúncia, bloqueig instantani i modal de normes de convivència abans de publicar.
+  - **Capacitor 8 iOS Project:** Projecte `ios/` generat, `Info.plist` amb 4 permisos, suport `ca`, `arm64`, `PrivacyInfo` i compilació neta al simulador d'iPhone 17 (iOS 27.0).
+  - **Lleugeresa (L1/L10/L4):** Reducció de 215,7 KB crus d'arrencada (L1) i 1,43 MB al paquet natiu (L10).
+  - **Vitest:** 20.174 proves en verd (100%).
+- **Correcció d'Emergència UI: Menú Flotant del Xat en Mòbil:**
+  - Detectat pel Mestre Javi en captura de pantalla: el menú contextual de bombolla d'altres persones (`.sdp-xat-item--altre .sdp-xat-menu`) s'obria cap a la dreta i sobrepassava la vora física de la pantalla (375px), tallant «Copia el text» i «Denuncia el missatge».
+  - Corregit per obrir cap a l'interior (`right: 0; left: auto; transform-origin: top right`) en pantalla estreta i blindat amb `max-width: calc(100vw - 32px)`.
+- **Noves Directrius de Disseny del Mestre Javi Llinares:**
+  1. **Llei del Registre Directe («Si dius registra't, botó al cantó»):** Tot lloc de l'aplicació on es demane autenticació o registre per interactuar (com al peu del xat de mostra o en comentar al mur) ha de portar obligatòriament un botó d'acció directa `[Registra't]` cap a `/registre?mode=crear&tornar=...`, mai un text mort que obligue a l'usuari a buscar la icona de la capçalera.
+  2. **Flux Orgànic de Creació de Grups de Xat (Clon WhatsApp):** La creació de grups manté la simplicitat familiar de WhatsApp (Nom, Descripció, Foto opcional). En prémer «Crear grup», el sistema desencadena automàticament la creació del xat viu, la generació d'una `UniversalCard` al Mur de poble (amb etiqueta `#xat` per a unir-s'hi), i el desat d'una fitxa al Bloc de Notes personal de l'usuari (Workspace) sota la secció «Xats / Els meus grups».
+
+## ESTAT_ACTUAL · 2026-10-20T13:40:00+02:00 · IAIA MarIA · Acta Marmota Emesa, Fase D Convocada, Estudi Doctoral Tellado i Reinici del Mac
+
+- **Acta Marmota Oficial:** [[261020_1340_acta_marmota_relleu_fase_d_estudi_tellado_i_reboot]].
+- **Convocatòria Oficial de la Fase D:**
+  - **Pla d'Implementació:** [[261020_1300_pla_implementacio_botigues_i_auth_mobil]] aprovat amb certificat canònic v4.
+  - **Prompt Executiu Claude Code:** [[261020_1300_prompt_claude_botigues_i_auth_mobil]] enriquida amb el manament de reunió entre iguals i contrast creuat amb Gemini.
+  - **Prompt Gemini 4 Argon:** [[261020_1300_prompt_gemini_auditoria_adversarial_fase_d]] incorporant l'estudi doctoral sobre Fernando Tellado i l'auditoria adversarial de la Fase D.
+- **L'Esperit de la Taula Redona (Reunió Humana de la Colmena):**
+  - El Mestre ha ordenat crear una autèntica deliberació d'equip: Claude Code i Gemini 4 Argon deixaran les seues conclusions i rèpliques a l'Escriptori (`04_escriptori/`), no conformant-se mai amb la primera solució fàcil, sinó buscant la segona i tercera millor alternativa per elevar el codi a l'excel·lència.
+- **Estudi Doctoral de Fernando Tellado (`ai-skills`, `DietPress`, `Vigilante`, `AyudaWP`):**
+  - Gemini 4 Argon té l'encàrrec formal d'analitzar el repositori `fernandotellado/ai-skills` (`wp-plugin-security`, `wp-plugin-performance`, `wp-plugin-development`), els seus scripts de control i la seua suite de plugins a `tellado.es/#plugins`.
+  - Objectiu: transferir l'estàndard d'elit de WordPress VIP al nostre connector `wordpress_enxufe` i enriquir les nostres pròpies skills a `.agents/skills/`.
+- **Estat de Portes i Taula Neta:**
+  - Porta Olivera amb codi **0** (`node tooling/gates/porta-olivera.mjs`). Exactament 3 documents vius a l'Escriptori.
+  - 19.735 proves de Vitest 100% en verd. Branca `backup-notes-publish` a `6d50d01d`.
+  - Llest per a reinici de màquina (apagar tot, reiniciar el Mac per buidar la RAM i reprendre amb un xat net dient «Sóc de poble!»).
+
+## ESTAT_ACTUAL · 2026-10-20T12:45:00+02:00 · IAIA MarIA · Fase C Segellada (Capacitor 8.5.3, Pes -71%, Botigues, UX Cerca/Perfil), 41 Elements d'Investigació Evacuats i 19.735 Proves Verdes
+
+- **Commits Canònics Consolidats a Git:**
+  1. `1d45fb1a`: `feat(natiu): closca Capacitor 8.5, reducció de pes (-71%), botigues, UX cerca/perfil i neteja d'investigació IA` (489 fitxers assegurats).
+  2. `6d50d01d`: `fix(proves): indexConsola amb la bessona .webp de mercat i fora les regles òrfenes .avatar-sm, .detail-hero i .split-grid` (3 fitxers polits).
+- **Fase C: Empaquetat Mòbil Completada:**
+  - **Pes reduït un 70,7%:** De 167,5 MB a 49,0 MB a `dist-natiu/` mitjançant `politicaDeMitjans('autonom')`.
+  - **Core ultralleuger:** Core d'arrencada de només 363 KB gzip (285 KB brotli). Codi complet JS/CSS 1,6 MB comprimit.
+  - **Compilacions natives provades:** APK d'Android generat amb èxit en 2m 5s (`./gradlew assembleDebug`). App d'iOS compilada amb èxit en 7,7s (`xcodebuild`).
+  - **Simulador d'iOS operatiu:** Xcode 27.1 i simulador d'iPhone 17 descarregats, iniciats i connectats a Claude per a proves visuals i d'accessibilitat.
+  - **Millores d'UX aplicades:** Cercador elevat sota l'H1 (ja no cal scroll a mòbil), enllaç canònic a `/javillinares` des de la cerca pública, nou botó «Veure fitxa pública» a `/el-meu-perfil` i selector de Targetes / Llista a la cerca.
+- **Neteja d'Investigació IA (`02_investigacio_ia`):**
+  - Evacuats 41 elements històrics de la Wiki cap al magatzem satèl·lit de disc `_investigacio_ia_de_poble/`.
+  - Queden només 8 elements vius estrictament necessaris a `02_investigacio_ia/`.
+  - Sanejat el token secret JWT a `Bóveda Comunidad — Revolutia IA.webloc`.
+- **Estat de Proves i Portes:**
+  - **19.735 proves de Vitest en verd (100%)**, 0 errors d'ESLint.
+  - Porta Olivera amb codi **0**. Arbre de treball net (`working tree clean`).
+
 ## ESTAT_ACTUAL · 2026-10-19T21:45:00+02:00 · IAIA MarIA · Arrancada Fase C (Capacitor 8 Mòbil), Escriptori Net (3 Documents) i Tancament de Sessió per Fatiga
 
 - **Acta:** [[261019_2145_acta_marmota_relleu_vesprada_fase_c_i_mobil]]. Tancament de sessió per fatiga de context (1.201 passos N1) i relleu per a la represa amb cervell fresc.

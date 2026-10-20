@@ -1,7 +1,0 @@
-{
-  "monolits": [
-    "UniversalComponents.jsx",
-    "DesignSection.jsx"
-  ],
-  "regla": "CONGELAT. Cap component nou pot ser exportat des d'aquests fitxers. Tot component nou ha de nàixer en el seu propi fitxer. Desfragmentació post-GO segons el pla de Kimi en l'acta §7.3."
-}

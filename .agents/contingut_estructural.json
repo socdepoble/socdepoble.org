@@ -2,10 +2,10 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anima": {
-      "sha256": "c74e787ba601c7d691cafd12a30ad2dfdb2b87f8bfd2fa475ceb92a8d6ac45d8",
-      "html": 10515,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-13"
+      "sha256": "45e64d859c135a49f3f5db9555dae9b2c7b79493da15a2b0ae6b2bea661da866",
+      "html": 10319,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-20"
     },
     "cervell": {
       "sha256": "851b3742533b81cdc557c2499537f82b8da0c3e87dd98937d789588cc3f450e4",
@@ -20,10 +20,10 @@
       "data": "2026-10-10"
     },
     "constitucio": {
-      "sha256": "73b9be6c99ca64b9c8f84c2f28e5d3b9d3b3768325e78b050ef48173ab4ac30c",
-      "html": 9851,
-      "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "sha256": "6941a40e0d2bcd5716580aeac3385740af5d7eb92b336062da3b0707257818b3",
+      "html": 10390,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-20"
     },
     "disseny": {
       "sha256": "c0e017aa52ea60c8922faf8936aa41afa05c97c6c7ad965d900e787ad96723f5",
@@ -44,10 +44,10 @@
       "data": "2026-10-14"
     },
     "legal": {
-      "sha256": "da0371b82cf1b912af13fdb9817bb4a4be7432ffaa0e92877cf3fc69b6b4990b",
-      "html": 29242,
+      "sha256": "483b28e0e4e03312a8f9270055f2d208666d5d69323bdc3b5b8b6d00f61d8299",
+      "html": 32591,
       "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-17"
+      "data": "2026-10-20"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",

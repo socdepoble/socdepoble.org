@@ -96,8 +96,13 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
   //      paràgrafs els tracte com a bloc propi i no els fique dins d'un <p>.
   const blocs = [];
   html = html.replace(/^[ \t]*(`{3,}|~{3,})[ \t]*([\w+-]*)[^\n]*\n([\s\S]*?)^[ \t]*\1[ \t]*$/gm, (_m, _tanca, llengua, codi) => {
-    const classe = llengua ? ` class="language-${llengua}"` : '';
-    blocs.push(`<pre><code${classe}>${escapaHtml(codi.replace(/\n$/, ''))}</code></pre>`);
+    const lang = llengua ? llengua.toLowerCase().trim() : '';
+    if (lang === 'mermaid') {
+      blocs.push(`<div class="sdp-diagrama-card"><div class="sdp-diagrama-capcalera"><span class="sdp-diagrama-icona">📐</span> Diagrama d’arquitectura</div><pre class="sdp-diagrama-cos"><code class="language-mermaid">${escapaHtml(codi.replace(/\n$/, ''))}</code></pre></div>`);
+    } else {
+      const classe = llengua ? ` class="language-${llengua}"` : '';
+      blocs.push(`<pre><code${classe}>${escapaHtml(codi.replace(/\n$/, ''))}</code></pre>`);
+    }
     return `\n\n${marcador('BLOC', blocs.length - 1)}\n\n`;
   });
 
@@ -146,12 +151,12 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
   html = html.replace(/<\/li>\n<li class="ul">/gim, '</li><li class="ul">');
   html = html.replace(/<\/li>\n<li class="ol">/gim, '</li><li class="ol">');
 
-  // Wrap them in ul/ol
-  html = html.replace(/(<li class="ul">.*?<\/li>)/gim, '<ul>$1</ul>');
-  html = html.replace(/(<li class="ol">.*?<\/li>)/gim, '<ol>$1</ol>');
+  // Wrap entire sequences of consecutive li tags into a single ul or ol
+  html = html.replace(/((?:<li class="ul">[\s\S]*?<\/li>)+)/gi, '<ul>$1</ul>');
+  html = html.replace(/((?:<li class="ol">[\s\S]*?<\/li>)+)/gi, '<ol>$1</ol>');
 
-  // Clean up the temporary classes
-  html = html.replace(/ class="[uo]l"/g, '');
+  // Clean up the temporary classes on li tags only
+  html = html.replace(/<li class="[uo]l">/g, '<li>');
 
   // Tables
   html = html.replace(/^\|(.+)\|[ \t]*\n\|([-: |]+)\|[ \t]*\n((\|.*\|[ \t]*(?:\n|$))+)/gm, (match, head, sep, body) => {
@@ -172,7 +177,7 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
     // comentaris, mana el que ve darrere. Ara que el títol és un bloc propi
     // (6), «### X\n<!-- nota -->\n- a» deixava un <p> buit davant de la llista.
     const senseComentaris = net.replace(/^(?:<!--[\s\S]*?-->\s*)+/, '');
-    if (senseComentaris === '' || senseComentaris.match(/^(<h|<u|<l|<a|<hr|<div|<blockquote|\u0000BLOC)/)) return block;
+    if (senseComentaris === '' || senseComentaris.match(/^(<h|<u|<o|<l|<a|<hr|<div|<blockquote|\u0000BLOC)/)) return block;
     // Text net: ajuntem les línies amb un espai
     return `<p>${net.replace(/\n/g, ' ')}</p>`;
   }).join('\n\n');

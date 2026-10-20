@@ -29,17 +29,16 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/260911_0645_propostes_manifest_panell_control]]
 - [[01_produccio/contracte_graella]]
 - [[01_produccio/checklist-limpieza-wp-ayudawp-complet.csv]]
+- [[01_produccio/checklist-limpieza-wp-ayudawp]]
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
 
 
 
-- [[261019_2155_auditoria_claude_capacitor_mobil]]
-- [[261019_2145_auditoria_gemini_botigues_i_alletjament_core]]
-- [[261019_2115_prompt_gemini_auditoria_botigues_mobil]]
-- [[261019_2115_prompt_claude_capacitor_mobil]]
-- [[261019_2115_pla_implementacio_capacitor_mobil]]
+- [[261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia]]
+- [[261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia]]
+- [[261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -769,6 +768,24 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2030_auditoria_gemini_enginyeria_inversa_bring_i_lovable]]
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2030_prompt_gemini_enginyeria_inversa_bring_i_lovable]]
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2045_pla_implementacio_el_comu_i_llistes_reactives]]
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2100_auditoria_gemini_skills_i_textos_publics]]
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2110_auditoria_claude_el_comu_universal_list_card]]
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2235_auditoria_gemini_salfumant_sistema_i_android]]
+- [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2235_prompt_gemini_auditoria_salfumant_sistema_i_android]]
+- [[../90_arxiu_historic/261020_2100_prompt_gemini_auditoria_extrema_skills_i_textos]]
+- [[../90_arxiu_historic/261020_1300_pla_implementacio_botigues_i_auth_mobil]]
+- [[../90_arxiu_historic/261020_1518_auditoria_claude_fase_d_auth_mobil_i_moderacio]]
+- [[../90_arxiu_historic/261020_1400_auditoria_gemini_fase_d_i_estudi_tellado]]
+- [[../90_arxiu_historic/261020_1300_prompt_gemini_auditoria_adversarial_fase_d]]
+- [[../90_arxiu_historic/261020_1300_prompt_claude_botigues_i_auth_mobil]]
+- [[../90_arxiu_historic/261019_2155_auditoria_claude_capacitor_mobil]]
+- [[../90_arxiu_historic/261019_2145_auditoria_gemini_botigues_i_alletjament_core]]
+- [[../90_arxiu_historic/261019_2115_prompt_gemini_auditoria_botigues_mobil]]
+- [[../90_arxiu_historic/261019_2115_prompt_claude_capacitor_mobil]]
+- [[../90_arxiu_historic/261019_2115_pla_implementacio_capacitor_mobil]]
 - [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_auditoria_gemini_skills_i_multimedia]]
 - [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_pla_implementacio_alliberament_multimedia_i_conversio_webp]]
 - [[../90_arxiu_historic/261019_fases_a_i_b_webp_i_skills/261019_1425_prompt_alliberament_multimedia_i_conversio_webp]]
@@ -916,6 +933,8 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Àncores sense destí (Porta Olivera)
 
+- 261020 · `261020_2355_prompt_gemini_auditoria_llancament_apps_i_sollutia`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
+- 261020 · `261020_2235_prompt_gemini_auditoria_salfumant_sistema_i_android`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261019 · `261019_1715_prompt_gemini_auditoria_skills_i_laboratori`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261013 · `261013_1415_prompt_chatgpt_auditor`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261011 · `Claude`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
@@ -930,3 +949,7 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261018_2330_acta_marmota_seguretat_claude_i_tancament]]
 - [[../10_actes/261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]
 - [[../10_actes/261019_2145_acta_marmota_relleu_vesprada_fase_c_i_mobil]]
+- [[../10_actes/261020_1340_acta_marmota_relleu_fase_d_estudi_tellado_i_reboot]]
+- [[../10_actes/261020_1930_acta_marmota_relleu_fase_d_i_enginyeria_inversa_bring_lovable]]
+- [[../10_actes/261020_2345_acta_marmota_relleu_salfumant_markdown_i_llancament_app]]
+- [[../10_actes/261021_0030_acta_marmota_relleu_nocturn_zero_oblit_i_llancament_apps]]
