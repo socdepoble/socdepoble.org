@@ -7,11 +7,12 @@
  * L'app nativa no és cap amfitrió: és Sóc de Poble mateix, com socdepoble.org.
  * Per això entra com main.jsx i fixa la capa del paquet per la via interna.
  *
- * VERSIÓ MÍNIMA, d'abans de la lease de Capacitor: no importa cap paquet de
- * Capacitor. Fa els passos 2, 3 i 4b del §1.2 amb el tenant del build
- * (FASES_1_I_2.txt §2.1c, dia 1). Arribaran després de la lease, i en este
- * ordre: el pas 0 (adaptadors natius), l'1 (tria del poble i sessió duradora),
- * el 4a (selector de poble) i el 5 (escoltes natives).
+ * Fa els passos 0, 2, 3 i 4b del §1.2 amb el tenant del build (FASES_1_I_2.txt
+ * §2.1c, dia 1). Fase D (261020, tasca 1) · El pas 0 ja hi és: l'adaptador de
+ * l'entrada amb Apple i Google (natiu/entradaSocial.js), que és l'únic que
+ * nomena un paquet natiu i només el carrega al primer toc. Encara arribaran, i
+ * en este ordre: l'1 (tria del poble i sessió duradora), el 4a (selector de
+ * poble) i el 5 (escoltes natives).
  *
  * Diferències amb main.jsx, totes del §1.2:
  *   · el mode de dades és sempre 'remote';
@@ -24,6 +25,9 @@ import { createRoot } from 'react-dom/client';
 import PedraSecaEmbed from '../PedraSecaEmbed.jsx';
 import { configura, arrenca } from '../host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from '../config/capaDelPaquet.js';
+import { registraEntradaNativa } from '../config/entradaNativa.js';
+import { creaEntradaSocial, entradaSenseProveidors, plataformaDelDispositiu } from './entradaSocial.js';
+import { pintaAmbDiccionari } from '../config/i18n.js';
 
 const styleNode = document.createElement('style');
 styleNode.textContent = styles;
@@ -39,6 +43,27 @@ const DEL_LLOC = Object.freeze({
 const init = () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
+
+    /* Pas 0 del §1.2 (Fase D, 261020, tasca 1): els adaptadors natius, abans de
+       la capa i del primer pintat (/registre llig el registre de manera síncrona).
+       Mai tomba l'arrencada: sense ells, el correu continua. Els dos clients de
+       Google són públics i només viuen a .env.natiu.local (vite.natiu.config.js). */
+    try {
+      registraEntradaNativa(creaEntradaSocial({
+        plataforma: plataformaDelDispositiu(),
+        clients: {
+          googleWeb: import.meta.env.VITE_NATIU_GOOGLE_WEB_CLIENT_ID,
+          googleIos: import.meta.env.VITE_NATIU_GOOGLE_IOS_CLIENT_ID
+        }
+      }));
+    } catch (e) {
+      console.error('[natiu] Entrada nativa no registrada:', e);
+      /* Fase D (261020, revisió) · Ni així /registre torna al Google web, que dins
+         de l'app no pot acabar: la plataforma queda registrada sense cap botó, i
+         només hi ha el correu. */
+      try { registraEntradaNativa(entradaSenseProveidors(plataformaDelDispositiu())); }
+      catch (e2) { console.error('[natiu] Ni tan sols la plataforma de l’entrada nativa:', e2); }
+    }
 
     /* Pas 2 del §1.2: la capa, abans de res més. El backend segellat al build
        (errorsEntornNatiu el vol https i públic) i el tenant del build, fins que
@@ -65,7 +90,12 @@ const init = () => {
     arrenca().catch((e) => console.error('[natiu] Arrencada fallida:', e));
 
     // Pas 4b: la capa del paquet per davall de la del lloc, com main.jsx.
-    createRoot(arrel).render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...DEL_LLOC }} isFirstInstance={true} targetNode={arrel} />);
+    /* Fase D (261020, tasca 4.1) · L1 · Com main.jsx: amb una tria desada que
+       no és el valencià, el primer pintat espera el seu diccionari (un tros
+       local, capacitor:// o https://localhost), com a molt
+       ESPERA_DEL_PRIMER_PINTAT ms. Cap fotograma en valencià en obrir l'app. */
+    const root = createRoot(arrel);
+    pintaAmbDiccionari(() => root.render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...DEL_LLOC }} isFirstInstance={true} targetNode={arrel} />));
   }
 };
 

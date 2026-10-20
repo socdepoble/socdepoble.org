@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import { validatePublicCredentials } from './src/config/publicCredentials.js';
+import { esquemaInvertitDeGoogleIos, validatePublicCredentials } from './src/config/publicCredentials.js';
 import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin } from './vite.standalone.config.js';
 
 /**
@@ -43,6 +43,9 @@ export const ENLLAC_FONTS_LOCALS = `<link rel="stylesheet" href="${FONTS_LOCALS}
 
 /* La mateixa forma que exigix backendConfig.js:normalizeBackendConfig. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/* Fase D (261020, tasca 1) · La forma d'un client OAuth de Google (web o iOS). */
+const CLIENT_GOOGLE = /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/;
+const errorDeFormaGoogle = (clau) => `${clau} no té la forma d’un client OAuth de Google (número-id.apps.googleusercontent.com).`;
 
 /* ─────────────────────────── La CSP de l'app ───────────────────────────
    ARQUITECTURA §4.4. Dins de l'app només compta la meta (no hi ha cap
@@ -232,6 +235,8 @@ function declaradesPelNatiu(arrel) {
  * · VITE_UMAMI_* i VITE_GOOGLE_OAUTH_CLIENT_ID: buides (D10 i BOTIGUES B5).
  * · VITE_TENANT_ID: opcional, perquè el poble el tria la persona; si hi és,
  *   ha de ser un UUID (si no, la capa el descartaria en silenci).
+ * · VITE_NATIU_GOOGLE_WEB_CLIENT_ID i VITE_NATIU_GOOGLE_IOS_CLIENT_ID: opcionals,
+ *   amb la forma d'un client de Google, l'iOS amb el web i diferents (Fase D).
  * @param {Record<string, string|undefined>} env
  * @returns {string[]}
  */
@@ -252,11 +257,51 @@ export function errorsEntornNatiu(env = {}) {
   if (textNet(env.VITE_GOOGLE_OAUTH_CLIENT_ID)) {
     errors.push('VITE_GOOGLE_OAUTH_CLIENT_ID ha d\'estar buida: Google Calendar no funciona dins de l\'app (BOTIGUES B5).');
   }
+  /* Fase D (261020, tasca 1) · Els dos clients OAuth de Google de l'entrada nativa
+     (src/natiu/entrada.jsx). Públics i opcionals; si hi són, amb la forma d'un client,
+     l'iOS mai sense el web (el testimoni naix amb l'audiència del web) i mai el mateix. */
+  const googleWeb = textNet(env.VITE_NATIU_GOOGLE_WEB_CLIENT_ID);
+  const googleIos = textNet(env.VITE_NATIU_GOOGLE_IOS_CLIENT_ID);
+  for (const [clau, valor] of [['VITE_NATIU_GOOGLE_WEB_CLIENT_ID', googleWeb], ['VITE_NATIU_GOOGLE_IOS_CLIENT_ID', googleIos]]) {
+    if (valor && !CLIENT_GOOGLE.test(valor)) errors.push(errorDeFormaGoogle(clau));
+  }
+  if (googleIos && !googleWeb) errors.push('VITE_NATIU_GOOGLE_IOS_CLIENT_ID sense VITE_NATIU_GOOGLE_WEB_CLIENT_ID: el testimoni naix amb l’audiència del client web i Supabase el rebutjaria.');
+  if (googleWeb && googleWeb === googleIos) errors.push('El client web i el client iOS de Google han de ser dos clients diferents.');
   const tenant = textNet(env.VITE_TENANT_ID);
   if (tenant && !UUID.test(tenant)) {
     errors.push('VITE_TENANT_ID és opcional, però si hi és ha de ser l’UUID d’un poble (public.towns).');
   }
   return errors;
+}
+
+/* Fase D (261020, tasca 5) · El projecte d'iOS (ios/, de `cap add ios`) porta a
+   Info.plist este esquema de reserva fins que el Mestre dona el client d'iOS de
+   Google (públic): GoogleSignIn fa petar l'app si l'esquema invertit del client no
+   hi és registrat, i amb la reserva Google no s'oferix a iOS. */
+export const ESQUEMA_GOOGLE_PENDENT = 'com.googleusercontent.apps.pendent';
+
+/**
+ * Per què el client d'iOS de Google i l'Info.plist del projecte no casen. Buit si
+ * casen, si no hi ha client (Google no s'oferix a iOS) o si no hi ha projecte
+ * d'iOS (`infoPlist` null). Mai imprimix el client. Pura.
+ * @param {{ clientId?: string, infoPlist?: string|null }} entrada
+ * @returns {string[]}
+ */
+export function errorsGoogleIos({ clientId, infoPlist = null } = {}) {
+  const client = textNet(clientId);
+  if (!client) return [];
+  const esquema = esquemaInvertitDeGoogleIos(client);
+  if (!esquema) return [errorDeFormaGoogle('VITE_NATIU_GOOGLE_IOS_CLIENT_ID')];
+  if (infoPlist === null || infoPlist === undefined) return [];
+  return String(infoPlist).includes(`<string>${esquema}</string>`) ? [] : [
+    'ios/App/App/Info.plist no registra a CFBundleURLTypes l\'esquema invertit de VITE_NATIU_GOOGLE_IOS_CLIENT_ID: GoogleSignIn faria petar l\'app en tocar «Continua amb Google».'
+  ];
+}
+
+/** L'Info.plist del projecte d'iOS d'`arrel`, o null si no n'hi ha. */
+function infoPlistDe(arrel) {
+  const cami = path.join(arrel, 'ios', 'App', 'App', 'Info.plist');
+  return fs.existsSync(cami) ? fs.readFileSync(cami, 'utf8') : null;
 }
 
 /* ─────────────────── La política de mitjans de l'app ───────────────────
@@ -295,6 +340,12 @@ export const ORIGINALS_CITATS_SENSE_RESOLUTOR = Object.freeze([
     cites: Object.freeze(["const MOSTRA = '/assets/notes/bloc_notes_vintage.jpg';", 'setFont(MOSTRA)'])
   })
 ]);
+
+/* Fase D (261020, L10) · Els índexs de la Wiki que el connector porta per transparència
+   radical i que l'app no llig mai (cap fitxer de src/ els demana; la IAIA local llig
+   wikiManifest.js amb import(), iaiaLocal.js:217). −1.432.575 B crus.
+   seo-routes.json no hi és: build:seo l'escriu a wordpress-plugin/dist/. */
+export const RECURSOS_QUE_L_APP_NO_LLIG = Object.freeze(['rag-index.json', 'slugIndex.json']);
 
 /**
  * La política de mitjans de l'app a partir de la de l'autònom
@@ -341,8 +392,11 @@ export default defineConfig(({ mode, command, isPreview }) => {
     declarades: declaradesPelNatiu(arrel),
     delProces: process.env
   });
+  /* Fase D (tasca 5) · Sense l'esquema invertit a Info.plist, el client d'iOS faria
+     petar l'app; un client mal format ja el diu errorsEntornNatiu, i no es repetix. */
+  const errorsGoogle = errorsGoogleIos({ clientId: env.VITE_NATIU_GOOGLE_IOS_CLIENT_ID, infoPlist: infoPlistDe(arrel) });
   const errors = [
-    ...errorsEntornNatiu(env),
+    ...new Set([...errorsEntornNatiu(env), ...errorsGoogle]),
     ...(heretades.length ? [`Només arriben de .env o .env.local: ${heretades.join(', ')}. El binari no hereta l'entorn de desenvolupament; declara cadascuna a .env.natiu.local (buida, si no ha d'entrar).`] : [])
   ];
   if (errors.length) throw new Error(`[sdp-natiu] Este build natiu no es pot fer:\n- ${errors.join('\n- ')}`);
@@ -361,9 +415,10 @@ export default defineConfig(({ mode, command, isPreview }) => {
     plugins: [
       react(),
       /* Els recursos de public/ sense els propis del lloc (PROPIS_DEL_LLOC):
-         ni sw.js ni manifest.webmanifest, ni auth/, ni robots.txt. I, amb la
-         política, sense els originals que tenen bessona (Fase C, tasca 2). */
-      recursosPublicsDelPlugin({ politica: mitjans }),
+         ni sw.js ni manifest.webmanifest, ni auth/, ni robots.txt. Amb la
+         política, sense els originals que tenen bessona (Fase C, tasca 2), i
+         sense els índexs de la Wiki que l'app no llig (Fase D, L10). */
+      recursosPublicsDelPlugin({ politica: mitjans, exclosos: RECURSOS_QUE_L_APP_NO_LLIG }),
       indexNatiuPlugin({ origenBackend })
     ],
     /* Fase C (tasca 2) · La política, segellada com a l'autònom

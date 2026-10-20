@@ -4,7 +4,7 @@ import { useNavigate, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Alerta, Boto, Divisor } from '../../components/PedraSeca/index.js';
-import { MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada } from './onboardingModel.js';
+import { MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada, toDeLErrorDEntrada } from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
@@ -19,6 +19,15 @@ import { cancelAuthAttempts } from '../../data/authAttempt.js';
 import { CODI_ENTRADA_EN_MARC, googleEnMarcAlie, urlPerAObrirFora } from '../../data/oauthRelay.js';
 import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
 import { entradaPilotDisponible } from '../../data/sessioPilot.js';
+import { createTranslator } from '../../config/i18n.js';
+import { CODI_ENTRADA_NATIVA, abandonaCredencialNativa, botonsNatius, esSilenciNatiu, plataformaNativa } from '../../config/entradaNativa.js';
+import { EntradaNativa } from './EntradaNativa.jsx';
+import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
+
+/* Fase D (261020, tasca 1) · Les proves que simulen useUIState sense `t`
+   continuen pintant: el traductor de reserva és el valencià. */
+const TRADUCTOR_DE_RESERVA = createTranslator('ca');
+const SENSE_PROVEIDORS = Object.freeze([]);
 
 /* Correcció de la revisió T1–T4 (260930) · host.arrenca() no s'espera abans del
    primer pintat i, fins que l'adaptador no s'instal·la, teCapacitat torna false
@@ -82,9 +91,10 @@ export default function OnboardingSection() {
   const {
     currentUser, loginWithGoogle, loginWithPassword, registerWithPassword, teCapacitat, comprovaServidor,
     demanaRecuperacioContrasenya, definixContrasenyaNova, recuperacioPendent: recuperacioDeLaSessio, logout,
-    enllacDeRecuperacio, oblidaEnllacDeRecuperacio, entraComAPilot, estat: estatSessio
+    enllacDeRecuperacio, oblidaEnllacDeRecuperacio, entraComAPilot, estat: estatSessio, entraAmbTokenDeProveidor
   } = useSession();
-  const { externalConfig } = useUIState();
+  const { externalConfig, t } = useUIState();
+  const tr = typeof t === 'function' ? t : TRADUCTOR_DE_RESERVA;
   const normalizedConfig = normalizeBackendConfig(externalConfig);
   const modeDades = normalizedConfig.dataMode;
   /* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · L'entrada pilot local
@@ -169,6 +179,36 @@ export default function OnboardingSection() {
      marca de «Tornar al mode de proves»: només el botó manual connecta. */
   const [entradaSuspesa, setEntradaSuspesa] = useState(false);
   const intentSonda = useRef(0);
+
+  /* Fase D (261020, tasca 1; ordre del Mestre) · A l'app nativa, el registre diu
+     la plataforma i els botons (síncron: natiu/entrada.jsx el fixa abans de
+     pintar). El Google web no hi és mai (ARQUITECTURA §3.2): en el seu lloc, el
+     full natiu d'Apple (només a iOS) i de Google. A la web, res no canvia. */
+  const plataforma = plataformaNativa();
+  const esNatiu = plataforma !== 'web';
+  const potEntrarNatiu = esNatiu && teLaCapacitat(teCapacitat, 'entradaAmbToken') && typeof entraAmbTokenDeProveidor === 'function';
+  const [portNatiuLlest, setPortNatiuLlest] = useState(false);
+  useEffect(() => {
+    if (!esNatiu) return undefined;
+    let viu = true;
+    quanPortLlest().then(() => { if (viu) setPortNatiuLlest(true); });
+    return () => { viu = false; };
+  }, [esNatiu]);
+  /* Fins que el port és llest, els botons es pinten desactivats (cap salt de la
+     pàgina); llest i sense la capacitat, fora. Com Google web, mai en mode de proves. */
+  const proveidorsNatius = esNatiu && (potEntrarNatiu || !portNatiuLlest) ? botonsNatius() : SENSE_PROVEIDORS;
+  const natiuBloquejat = !potEntrarNatiu || (canviDeModePendent && !simulaLocal) || busyStep !== null;
+  /* Fase D (261020, revisió) · L2 · Amb els botons natius a la vista, «Entra al
+     teu compte» nomena el botó de dalt (Apple o Google), no el Google web. */
+  const introEntradaNativa = proveidorsNatius.length
+    ? tr(plataforma === 'ios' ? 'section.login.nativa.introEntradaIos' : 'section.login.nativa.introEntradaAndroid')
+    : null;
+  const [errorNatiu, setErrorNatiu] = useState(null);
+  const botonsNatiusRef = useRef({});
+  /* Estat i no ref: un full que es tanca de seguida pot no arribar a pintar
+     l'espera, i el focus ha de tornar igualment al botó. */
+  const [focusNatiu, setFocusNatiu] = useState(null);
+  const desaBotoNatiu = useCallback((p, node) => { botonsNatiusRef.current[p] = node; }, []);
   const sondaIEntra = useCallback(() => {
     const id = ++intentSonda.current;
     setSondant(true);
@@ -409,6 +449,70 @@ export default function OnboardingSection() {
     botoGoogle.current?.focus();
   }, [busyStep]);
 
+  /* Fase D (261020, tasca 1) · Apple o Google des del full natiu: el full (fase 1)
+     i el port (fase 2, entraAmbTokenDeProveidor), amb l'intent de sempre. Tancar
+     el full no diu res; el text propi de l'adaptador (una sessió que no s'ha
+     pogut desar…) es conserva tal qual. Fase D (261020, revisió) · Un altre
+     proveïdor amb un full encara obert (EN_CURS) ja no és un botó mort: l'avís
+     diu que cal acabar o tancar el que hi ha al telèfon. */
+  const entraNatiu = async (proveidor) => {
+    const op = obriIntent(`natiu:${proveidor}`);
+    setErrorNatiu(null);
+    try {
+      await entraAmbProveidorNatiu(proveidor, entraAmbTokenDeProveidor, externalConfig, { viu: op.viu });
+      if (!op.viu()) return;
+      showToast(tr('section.login.success.login'), 'success');
+      window.dispatchEvent(new CustomEvent('sdp:auth-change'));
+    } catch (err) {
+      if (!op.viu()) return;
+      setFocusNatiu(proveidor);
+      if (esSilenciNatiu(err) || err?.name === 'AbortError') return;
+      if (err?.code === CODI_ENTRADA_NATIVA.EN_CURS) {
+        setErrorNatiu({ to: 'avis', text: tr('section.login.nativa.enCurs') });
+      } else if (err?.code === CODI_ENTRADA_NATIVA.FALLIDA || err?.code === CODI_ENTRADA_NATIVA.NO_DISPONIBLE) {
+        setErrorNatiu({
+          to: 'error',
+          text: tr(err.code === CODI_ENTRADA_NATIVA.NO_DISPONIBLE ? 'section.login.nativa.noDisponible' : 'section.login.nativa.error')
+        });
+      } else {
+        const codi = codiDEntrada(err);
+        setErrorNatiu({ to: codi ? toDeLErrorDEntrada(codi) : 'error', text: missatgeDEntrada(err) });
+      }
+    } finally {
+      op.tanca();
+    }
+  };
+  /* Eixida explícita, com cancelaGoogle: la resposta tardana del full ja no és de
+     ningú (fluxEntradaNativa la descarta i l'oblida) i el focus torna al botó.
+     Fase D (261020, revisió) · El registre també ho sap (abandonaCredencialNativa):
+     un full que encara no s'ha obert ja no s'obri, l'altre proveïdor queda lliure
+     i tornar a tocar el mateix s'afig al full que ja ve. */
+  const cancelaNatiu = () => {
+    cancelAuthAttempts();
+    abandonaCredencialNativa();
+    setFocusNatiu(busyStep?.startsWith('natiu:') ? busyStep.slice(6) : null);
+    intent.current += 1;
+    setBusyStep(null);
+  };
+  useEffect(() => {
+    if (busyStep !== null || !focusNatiu) return;
+    botonsNatiusRef.current[focusNatiu]?.focus();
+    setFocusNatiu(null);
+  }, [busyStep, focusNatiu]);
+
+  /* Fase D (261020, revisió) · L1 · A l'app nativa, «Continua amb Apple» s'ha de
+     vore sense desplaçar (HIG, App Store 4.8): damunt de la targeta, ni les
+     etiquetes ni l'entradeta. El logotip es queda: llevar-lo (senseLogo) només
+     es fa per ordre del Mestre (PageFrame.logo.test.jsx, via d'excepció), i en
+     un iPhone xicotet (SE) la decisió és seua. A la web, la capçalera de sempre. */
+  const capcalera = esNatiu
+    ? { showLogos: true }
+    : {
+      lead: "Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses.",
+      labels: ['Online-First', 'Perfil privat', 'RGPD Segur'],
+      showLogos: true
+    };
+
   if (recuperacioEnCurs) {
     let pas;
     if (enllac === ESTAT_ENLLAC.PENDENT) {
@@ -428,34 +532,36 @@ export default function OnboardingSection() {
     return (
       <UniversalPage
         title="Benvinguda al Mas Electrònic"
-        lead="Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses."
-        labels={['Online-First', 'Perfil privat', 'RGPD Segur']}
+        {...capcalera}
         chrome="system"
-        showLogos={true}
       >
         <div className="content-wrapper">{pas}</div>
       </UniversalPage>
     );
   }
 
+  /* Fase D (261020, tasca 1; decisió D2) · A l'app nativa, la benvinguda va
+     davall del formulari: els botons d'Apple i Google, a la vista sense desplaçar. */
+  const benvinguda = (
+    <div className="onboarding-benvinguda">
+      <h3>Benvinguda a la Beta de Sóc de Poble</h3>
+      <p className="onboarding-card__intro onboarding-card__intro--espaiada">
+        L'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05).
+        Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!
+      </p>
+    </div>
+  );
+
   return (
     <UniversalPage
       title="Benvinguda al Mas Electrònic"
-      lead="Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses."
-      labels={['Online-First', 'Perfil privat', 'RGPD Segur']}
+      {...capcalera}
       chrome="system"
-      showLogos={true}
     >
       <div className="content-wrapper">
         {activeStep === 0 && (
           <>
-            <div className="onboarding-benvinguda">
-              <h3>Benvinguda a la Beta de Sóc de Poble</h3>
-              <p className="onboarding-card__intro onboarding-card__intro--espaiada">
-                L'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05).
-                Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!
-              </p>
-            </div>
+            {esNatiu ? null : benvinguda}
 
             {servidorCaigut && !simulaLocal ? (
               <Alerta
@@ -516,6 +622,25 @@ export default function OnboardingSection() {
               </Alerta>
             ) : null}
 
+            {/* Fase D (261020, tasca 1) · A l'app nativa, el full d'Apple i de
+                Google en lloc del Google web; sense cap botó, ni targeta ni divisor. */}
+            {esNatiu && proveidorsNatius.length ? (
+              <>
+                <EntradaNativa
+                  proveidors={proveidorsNatius}
+                  t={tr}
+                  enCurs={busyStep?.startsWith('natiu:') ? busyStep.slice(6) : null}
+                  bloquejat={natiuBloquejat}
+                  error={errorNatiu}
+                  onEntra={entraNatiu}
+                  onCancela={cancelaNatiu}
+                  refBoto={desaBotoNatiu}
+                />
+                <Divisor text={tr('section.login.nativa.divisor')} />
+              </>
+            ) : null}
+
+            {esNatiu ? null : (
             <section className="sp-card sp-card--onboarding">
               <div className="sp-card-body">
                 <h3>Accés ràpid amb Google</h3>
@@ -572,9 +697,10 @@ export default function OnboardingSection() {
                 )}
               </div>
             </section>
+            )}
 
             {/* Revisió adversarial (261018) · Neutre: davall hi ha Entrar i Crear compte. */}
-            <Divisor text="O amb el teu correu" />
+            {esNatiu ? null : <Divisor text="O amb el teu correu" />}
           </>
         )}
 
@@ -597,8 +723,10 @@ export default function OnboardingSection() {
             onClearError={() => setErrorEntrada(null)}
             onTornar={() => setConfirmationEmail('')}
             onRecupera={potRecuperar ? demanaRecuperacio : null}
+            introEntrada={introEntradaNativa}
           />
         ) : null}
+        {activeStep === 0 && esNatiu ? benvinguda : null}
       </div>
     </UniversalPage>
   );

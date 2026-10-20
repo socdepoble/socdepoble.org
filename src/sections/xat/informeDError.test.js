@@ -3,6 +3,7 @@
    persona (ruta sense identificadors ni consulta, versió del paquet,
    navegador i pantalla). */
 import { afterEach, describe, expect, it } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import {
   CORREU_DE_RESERVA, PLANTILLA_INFORME, afigInforme, composaInforme, enllacDeCorreu, midaDePantalla, navegadorDe,
   oblidaRutaForaDelXat, recordaRutaForaDelXat, rutaSenseDades, versioDelPaquet

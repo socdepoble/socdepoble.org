@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { CLAUS_ERROR_SDP, textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 

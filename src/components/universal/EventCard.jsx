@@ -109,8 +109,10 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    Revisió del Gauntlet 261017 (ID1, actes) · `authorAvatar` null, a
    propòsit: signa una persona i no té foto. Cap logotip de reserva al costat
    del seu nom (vegeu avatarUrl). components/ no llig qui signa (autorDe és de
-   navigation.js): ho diu qui pinta la targeta (TargetaDelMur). */
-export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar }) {
+   navigation.js): ho diu qui pinta la targeta (TargetaDelMur).
+   Fase D (261020, tasca 2) · `ambModeracio` (false), explícita: «Més
+   opcions» a la caputxa (UniversalCard). Sense, el DOM de sempre. */
+export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar, ambModeracio = false }) {
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime);
 
@@ -163,6 +165,7 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       showConnect={true}
       onConnect={onConnect}
       objecte={objecte}
+      ambModeracio={ambModeracio}
     />
   );
 }

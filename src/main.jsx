@@ -8,6 +8,7 @@ import PedraSecaEmbed from './PedraSecaEmbed.jsx';
 import { configura, arrenca, exposaGlobal } from './host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from './config/capaDelPaquet.js';
 import { registraServiceWorker } from './pwa/registre.js';
+import { pintaAmbDiccionari } from './config/i18n.js';
 
 const init = () => {
   const arrel = document.getElementById('root');
@@ -52,7 +53,10 @@ const init = () => {
     const root = createRoot(arrel);
 
     // La capa del paquet per davall, com fa l'element amb composaCapes().
-    root.render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...delLloc }} isFirstInstance={true} targetNode={arrel} />);
+    /* Fase D (261020, tasca 4.1) · L1 · Amb una llengua d'arrencada que no és
+       el valencià (la tria desada), el primer pintat espera el seu diccionari,
+       com a molt ESPERA_DEL_PRIMER_PINTAT ms: cap fotograma en valencià. */
+    pintaAmbDiccionari(() => root.render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...delLloc }} isFirstInstance={true} targetNode={arrel} />));
   }
 };
 

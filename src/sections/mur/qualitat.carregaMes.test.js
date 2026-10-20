@@ -114,7 +114,8 @@ describe('Pedra Seca i maquinària existent', () => {
       expect(codi, pagina).not.toMatch(/<button\b/);
     }
     // La clau ja era al diccionari en les cinc llengües: la peça no n'afig cap.
-    expect(llig('src/config/i18n.js').match(/'section\.mur\.loadMore':/g)).toHaveLength(5);
+    const diccionaris = ['ca', 'es', 'en', 'eu', 'gl'].map((codi) => llig(`src/config/idiomes/${codi}.js`)).join('\n');
+    expect(diccionaris.match(/'section\.mur\.loadMore':/g)).toHaveLength(5);
     // Les classes del bloc del botó ja són al full de components.
     expect(llig('src/css/components.css')).toContain('.sdp-camp--centrat { align-items: center; }');
   });

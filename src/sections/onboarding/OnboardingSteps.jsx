@@ -35,8 +35,12 @@ const modeDelFormulari = (modeInicial, potRecuperar = false) => {
  * reinicie; en tornar, el focus va al correu.
  * R2 (261003) · `modeInicial` 'recuperar' obri directament eixa vista: és el
  * «Demana un enllaç nou» de la pantalla d'un enllaç caducat o perdut.
+ *
+ * Fase D (261020, revisió) · L2 · `introEntrada` (opcional): a l'app nativa,
+ * l'explicació d'«Entra al teu compte», que nomena el botó de dalt (Apple o
+ * Google) en lloc del Google web. Sense, el text de sempre.
  */
-export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null }) {
+export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null }) {
   const potRecuperar = typeof onRecupera === 'function';
   const [mode, setMode] = useState(() => modeDelFormulari(modeInicial, potRecuperar));
   const [modeRebut, setModeRebut] = useState(modeInicial);
@@ -169,8 +173,12 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
         <>
           {entrant ? (
             <p className="onboarding-card__intro">
-              Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google,
-              no té contrasenya: entra amb Google.
+              {introEntrada || (
+                <>
+                  Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google,
+                  no té contrasenya: entra amb Google.
+                </>
+              )}
             </p>
           ) : (
             <p className="onboarding-card__intro">

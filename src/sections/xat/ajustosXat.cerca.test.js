@@ -5,6 +5,7 @@
    l'ajust hi era. Ara la capçalera i les paraules clau del grup també es
    busquen, en la llengua de la interfície i en valencià. */
 import { describe, expect, test } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { createTranslator } from '../../config/i18n.js';
 import { cercaAjustos, etiquetaDeFila, pilaDeResultat } from './ajustosXat.js';
 

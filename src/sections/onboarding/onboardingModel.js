@@ -108,11 +108,17 @@ const MISSATGES_ENTRADA = Object.freeze({
   [CODI_ENTRADA.MODE_LOCAL]: 'L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.',
   [CODI_ENTRADA.ENLLAC_CADUCAT]: 'L’enllaç per a restablir la contrasenya ja no val: ha caducat o ja s’ha fet servir. Demana’n un altre.',
   [CODI_ENTRADA.MATEIXA_CONTRASENYA]: 'La contrasenya nova ha de ser diferent de l’anterior.',
+  /* Fase D (261020, tasca 1) · L'entrada amb Apple o Google des del full natiu.
+     Només en valencià, com la resta d'esta taula (decisió D4 del Mestre). */
+  [CODI_ENTRADA.TOKEN_REBUTJAT]: 'El servidor del poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.',
+  [CODI_ENTRADA.PROVEIDOR_INACTIU]: 'Esta manera d’entrar encara no està activada al servidor del poble. Entra amb el correu.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 
-/* Un error que no s'ha de llegir en veu alta com a urgència: la persona no ha fet res mal. */
-const CODIS_AVIS = new Set([CODI_ENTRADA.SERVIDOR_INABASTABLE, CODI_ENTRADA.MASSA_INTENTS, CODI_ENTRADA.CORREU_PENDENT, CODI_ENTRADA.ENLLAC_CADUCAT]);
+/* Un error que no s'ha de llegir en veu alta com a urgència: la persona no ha fet res mal.
+   Fase D · Tampoc un testimoni rebutjat ni un proveïdor apagat al servidor. */
+const CODIS_AVIS = new Set([CODI_ENTRADA.SERVIDOR_INABASTABLE, CODI_ENTRADA.MASSA_INTENTS, CODI_ENTRADA.CORREU_PENDENT, CODI_ENTRADA.ENLLAC_CADUCAT,
+  CODI_ENTRADA.TOKEN_REBUTJAT, CODI_ENTRADA.PROVEIDOR_INACTIU]);
 
 /**
  * El codi d'entrada d'un error, o null. Un error sense codi però que diu que

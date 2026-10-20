@@ -1,7 +1,8 @@
-import { StrictMode, useState } from 'react';
+import { Component, StrictMode, Suspense, useState } from 'react';
 import { render, screen, fireEvent, waitFor, cleanup, act, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import XatSection, { objecteDeSobre, rutaAmbConsulta } from './XatSection';
+import XatSection, { BarreraDelDocumentDestacat, objecteDeSobre, rutaAmbConsulta } from './XatSection';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import XatControlSection from './XatControlSection';
 import { construeixRetall } from './retall';
@@ -46,7 +47,9 @@ const mocks = vi.hoisted(() => ({
   joNom: 'Javi',
   senseSessio: false,
   totalNoLlegits: 0,
-  amplada: 1280
+  amplada: 1280,
+  /* Fase D (261020, L4) · Cada muntatge del document destacat (diferit). */
+  documentMuntat: vi.fn()
 }));
 
 vi.mock('../../app/contexts/RouterContext', async () => {
@@ -71,6 +74,7 @@ vi.mock('../text/TextSection', async () => {
   /* Ordre del Mestre (261007) · El Connectar propi del document (proposta
      P4), com un botó germà: el text de la marca continua sent la clau. */
   function DocumentPerDefecte({ page, pageKey, onConnect, accioPrincipal, objecte }) {
+    mocks.documentMuntat(pageKey);
     useSEO({ title: page.title, description: page.subtitle || page.lead || 'Sóc de Poble' });
     /* Revisió del 261007 (M3-10) · el descriptor que rep, per a Comentar. */
     return createElement(Fragment, null,
@@ -444,12 +448,13 @@ test('la capçalera no promet trucades i la línia secundària només ix als gru
    el xat, i en tornar a /xat torna el document.
    Ordre del Mestre (261007) · El document és la pàgina destacada que tria
    l'administrador a paginaDestacada.js: «El Xat» ('xat'). */
-test('sense conversa la dreta mostra el document per defecte; amb conversa, només el xat', () => {
+test('sense conversa la dreta mostra el document per defecte; amb conversa, només el xat', async () => {
   mocks.threadId = null;
   render(<XatSection />);
   const dreta = () => document.getElementById('app-grid-main');
   expect(PAGINA_DESTACADA_DEL_XAT).toBe('xat');
-  expect(dreta().querySelector('[data-testid="document-per-defecte"]').textContent).toBe(PAGINA_DESTACADA_DEL_XAT);
+  /* Fase D (L4) · El document arriba en diferit. */
+  expect((await within(dreta()).findByTestId('document-per-defecte')).textContent).toBe(PAGINA_DESTACADA_DEL_XAT);
   expect(dreta().querySelector('.sdp-xat-conversa')).toBeNull();
   cleanup();
 
@@ -467,11 +472,11 @@ test('sense conversa la dreta mostra el document per defecte; amb conversa, nom�
     · cap acció gran «Anar al xat» (ja s'és al Xat);
     · Connectar desa la ruta de la pàgina que el lector de connexions sap
       resoldre (/page/xat), mai /xat, que no és cap pàgina (proposta P4). */
-test('261007 · el document destacat: sense «Anar al xat», i Connectar porta la ruta /page/xat', () => {
+test('261007 · el document destacat: sense «Anar al xat», i Connectar porta la ruta /page/xat', async () => {
   mocks.threadId = null;
   render(<XatSection />);
   const dreta = document.getElementById('app-grid-main');
-  expect(dreta.querySelector('[data-testid="document-per-defecte"]').getAttribute('data-accio')).toBe('no');
+  expect((await within(dreta).findByTestId('document-per-defecte')).getAttribute('data-accio')).toBe('no');
   mocks.navigate.mockClear();
   fireEvent.click(dreta.querySelector('[data-testid="connectar-del-document"]'));
   expect(mocks.navigate).toHaveBeenCalledTimes(1);
@@ -487,11 +492,11 @@ test('261007 · el document destacat: sense «Anar al xat», i Connectar porta l
    al xat de la mateixa pàgina que Connectar: el document rep el descriptor de
    la pàgina destacada (/page/xat), no es queda amb la ruta on està la
    persona (/xat, que no té cap xat públic). */
-test('M3-10 · el document destacat rep el descriptor de la seua pàgina: Comentar i Connectar, el mateix destí', () => {
+test('M3-10 · el document destacat rep el descriptor de la seua pàgina: Comentar i Connectar, el mateix destí', async () => {
   mocks.threadId = null;
   render(<XatSection />);
   const dreta = document.getElementById('app-grid-main');
-  const objecte = JSON.parse(dreta.querySelector('[data-testid="document-per-defecte"]').getAttribute('data-objecte'));
+  const objecte = JSON.parse((await within(dreta).findByTestId('document-per-defecte')).getAttribute('data-objecte'));
   expect(objecte).toMatchObject({ tipus: 'pagina', ruta: '/page/xat', titol: 'El Xat' });
   mocks.navigate.mockClear();
   fireEvent.click(dreta.querySelector('[data-testid="connectar-del-document"]'));
@@ -509,13 +514,66 @@ test('en mode estret, sense conversa, la dreta no carrega cap document', async (
   expect(dreta.querySelector('.sdp-xat-buit--avis').textContent).toContain('Selecciona una conversa');
 });
 
+/* Fase D (261020, L4) · En mòbil, /xat no munta el document destacat ni al
+   primer commit, quan la closca encara no ha mesurat (comença en 'ample'):
+   abans, eixe commit el pintava i en baixava el tros (−72 KB a /xat). */
+test('L4 · a 375 px el document destacat no es munta mai, tampoc al primer commit', async () => {
+  /* Fase D (261020, revisió) · El tros diferit és un lazy del mòdul: amb la
+     memòria freda, el primer commit sense mesurar només el demanaria, i la
+     sonda (documentMuntat) no podria saltar faça el que faça la guarda. La
+     prova l'escalfa ella mateixa, a 1280 px, i no depén de l'ordre del
+     fitxer ni de -t: si la guarda deixa passar eixe commit, ara sí que munta. */
+  mocks.amplada = 1280;
+  mocks.threadId = null;
+  render(<XatSection />);
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
+  cleanup();
+  mocks.documentMuntat.mockClear();
+
+  mocks.amplada = 375;
+  mocks.threadId = null;
+  render(<XatSection />);
+  await waitFor(() => expect(document.querySelector('.app-grid-shell').getAttribute('data-layout')).toBe('estret'));
+  await act(async () => { await Promise.resolve(); });
+  expect(mocks.documentMuntat).not.toHaveBeenCalled();
+  expect(document.getElementById('app-grid-main').querySelector('.sdp-xat-buit--avis')).toBeTruthy();
+});
+
+test('L4 · la barrera: un tros que no arriba deixa l’avís; qualsevol altre error puja', async () => {
+  const NoArriba = lazyRoute(() => Promise.reject(new TypeError('Failed to fetch dynamically imported module')));
+  render(
+    <BarreraDelDocumentDestacat fallback={<p>avís</p>}>
+      <Suspense fallback={null}><NoArriba /></Suspense>
+    </BarreraDelDocumentDestacat>
+  );
+  expect(await screen.findByText('avís')).toBeTruthy();
+  cleanup();
+
+  class BarreraDeFora extends Component {
+    constructor(props) { super(props); this.state = { error: null }; }
+    static getDerivedStateFromError(error) { return { error }; }
+    render() { return this.state.error ? <p>de fora: {this.state.error.message}</p> : this.props.children; }
+  }
+  const Peta = () => { throw new Error('x'); };
+  const silenci = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    render(
+      <BarreraDeFora>
+        <BarreraDelDocumentDestacat fallback={<p>avís</p>}><Peta /></BarreraDelDocumentDestacat>
+      </BarreraDeFora>
+    );
+  } finally { silenci.mockRestore(); }
+  expect(screen.getByText('de fora: x')).toBeTruthy();
+  expect(screen.queryByText('avís')).toBeNull();
+});
+
 /* El document per defecte no roba la pestanya: ni muntat alhora que el Xat
    ni muntat després (tornar d'una conversa, passar d'estret a ample). */
-test('amb el document per defecte muntat, la pestanya continua sent la del Xat', () => {
+test('amb el document per defecte muntat, la pestanya continua sent la del Xat', async () => {
   mocks.totalNoLlegits = 5;
   mocks.threadId = null;
   render(<XatSection />);
-  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
   expect(document.title).toBe('(5) Xat | Sóc de Poble');
   cleanup();
 
@@ -525,7 +583,7 @@ test('amb el document per defecte muntat, la pestanya continua sent la del Xat',
   mocks.seo.mockClear();
   mocks.threadId = null;
   view.rerender(<XatSection />);
-  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
   expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: '(5) Xat' }));
   expect(document.title).toBe('(5) Xat | Sóc de Poble');
 });
@@ -1768,7 +1826,7 @@ test('3B · amb la fitxa oberta, la comunitat del rail marca la pàgina i «Xats
   expect(mocks.navigate).not.toHaveBeenCalled();
 }));
 
-test('3B · ?vista=comunitats: títol amb «+» honest, cada comunitat amb Avisos primer, els grups i «Veure-ho tot»', () => {
+test('3B · ?vista=comunitats: títol amb «+» honest, cada comunitat amb Avisos primer, els grups i «Veure-ho tot»', async () => {
   mocks.threadId = null;
   ambComunitat();
   mocks.params = new URLSearchParams({ vista: 'comunitats' });
@@ -1798,8 +1856,8 @@ test('3B · ?vista=comunitats: títol amb «+» honest, cada comunitat amb Aviso
   fireEvent.click(within(columna).getByRole('button', { name: 'Nova comunitat' }));
   expect(mocks.showToast).toHaveBeenLastCalledWith(expect.stringContaining("naixen de la Pàgina Universal d'una entitat o d'un poble"), 'info');
 
-  /* La dreta, l'estat buit de sempre. */
-  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  /* La dreta, l'estat buit de sempre (el document, en diferit: Fase D, L4). */
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
   /* I el rail marca «Comunitats». */
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Comunitats' }).getAttribute('aria-current')).toBe('page');
 });
@@ -1833,7 +1891,7 @@ const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està previs
 test.each([
   ['telefonades', 'Telefonades', 'lucide-phone', AVIS_D17, AVIS_D17],
   ['destacats', 'Destacats', 'lucide-star', 'Encara no està disponible', 'En construcció']
-])('3B · ?vista=%s: fila de títol de la captura, controls inerts que avisen i la dreta buida', (vista, titol, icona, avis, toast) => {
+])('3B · ?vista=%s: fila de títol de la captura, controls inerts que avisen i la dreta buida', async (vista, titol, icona, avis, toast) => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ vista });
   render(<XatSection />);
@@ -1852,7 +1910,7 @@ test.each([
     expect(mocks.showToast).toHaveBeenCalledWith(toast, 'info');
   }
   expect(mocks.navigate).not.toHaveBeenCalled();
-  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: titol }).getAttribute('aria-current')).toBe('page');
 });
 
@@ -1911,7 +1969,7 @@ test('3B · cada vista porta els controls de la seua captura', () => {
    botó germà obri la conversa i conserva la vista, la fletxa hi torna, i
    Fitxers diu que els adjunts arriben amb F1. La lupa, Ordena i Selecciona
    continuen dient «En construcció». */
-test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conversa conserva la vista', () => {
+test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conversa conserva la vista', async () => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ vista: 'multimedia' });
   mocks.threads = [filsDeMostra()[0]];
@@ -1952,7 +2010,7 @@ test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conve
   fireEvent.click(within(columna.querySelector('.app-grid-col-header')).getByRole('button', { name: 'Cerca' }));
   expect(mocks.showToast).toHaveBeenLastCalledWith('En construcció', 'info');
   /* La dreta, el document per defecte; el rail marca la vista. */
-  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Contingut multimèdia' }).getAttribute('aria-current')).toBe('page');
 });
 

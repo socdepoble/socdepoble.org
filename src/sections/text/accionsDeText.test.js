@@ -16,6 +16,7 @@
  *    la Consola i el Cervell (accioAlFinal de systemPages.js).
  */
 import { describe, expect, test } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { esRutaDeLaPorta } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { createTranslator } from '../../config/i18n.js';
 import { RUTA_FITXA_IAIA } from '../../config/navigation.js';

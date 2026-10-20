@@ -1,4 +1,5 @@
-import { Navigate, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
+import { useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -12,7 +13,16 @@ import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/nav
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
+import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 import { destiDeMultimedia } from '../multimedia/rutesMultimedia.js';
+
+/* Fase D (261020, tasca 2; pla 261020_1300) · Les seccions on la barra
+   taronja del detall porta «Més opcions» (denunciar i bloquejar): el
+   contingut de la gent. Pobles, Multimèdia i Notes, no. */
+const SECCIONS_AMB_MODERACIO = new Set(['mur', 'mercat', 'events']);
 
 function useSessioSegura() {
   try {
@@ -56,6 +66,19 @@ function DetallDElement() {
   /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
   const fallbackItem = trobaElement(section, itemId);
   const item = location.state?.preloadedItem || fallbackItem;
+  /* Fase D (261020, tasca 2; crítica 261020, 5) · Bloquejar des d'esta
+     mateixa pàgina lleva l'element de useMur (MurContext filtra el que has
+     bloquejat), i el detall pintava «Element no trobat» amb la píndola
+     Error. L'últim element resolt per a este id es recorda (un ajust durant
+     el pintat, una vegada per id: una llista que torna objectes nous no el
+     fa repetir): si qui el signa està bloquejat, un avís neutre i el camí de
+     tornada. Un element arribat per location.state (preloadedItem), que
+     MurContext no filtra, també. */
+  const moderacio = useModeracio();
+  const [darrer, setDarrer] = useState(null);
+  if (item && darrer?.itemId !== itemId) setDarrer({ itemId, item });
+  const candidatBloquejat = item || (darrer?.itemId === itemId ? darrer.item : null);
+  const bloquejat = SECCIONS_AMB_MODERACIO.has(sectionId) && moderacio?.esElementBloquejat?.(candidatBloquejat) === true;
   /* Onada 5 (F1, hidratació) · En entrar en fred a /pobles/<slug>, /mur/<id>,
      /mercat/<id>… els proveïdors encara carreguen amb les llistes buides, i el
      detall pintava «Element no trobat» amb la píndola Error. Ara espera amb la
@@ -81,8 +104,10 @@ function DetallDElement() {
 
   /* T54 · títol, foto, drets (T39), autoria (T4) i data (T40): les mateixes
      props que pinta el lector de connexions del MAS (elementDeSeccio.js).
-     Pura: es calcula abans del retorn anticipat perquè també la llig useSEO. */
-  const pagina = section && item ? paginaDElement(section, item) : null;
+     Pura: es calcula abans del retorn anticipat perquè també la llig useSEO.
+     Fase D (261020, tasca 2) · Del que has bloquejat, cap: ni la portada
+     arriba al <head> (useSEO, més avall). */
+  const pagina = section && item && !bloquejat ? paginaDElement(section, item) : null;
 
   /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
      PROHIBIDES (PRIVACITAT).» Relleu 261007 (peça «imatges-detall») · og:image
@@ -95,13 +120,28 @@ function DetallDElement() {
      la font ha acabat. La descripció és l'entradilla que pinta la pàgina
      (pagina.lead: la de Viquipèdia d'un poble, que el getSubtitle de Pobles ja
      no porta) i, sense, el subtítol. */
+  /* Fase D (261020, tasca 2) · Del que has bloquejat, ni el títol ni la
+     descripció no arriben al <head>: el de sèrie. */
   useSEO({
-    title: item ? section?.getTitle?.(item) : (esperant ? null : 'No trobat'),
-    description: item ? (pagina?.lead || section?.getSubtitle?.(item)) : '',
+    title: bloquejat ? null : item ? section?.getTitle?.(item) : (esperant ? null : 'No trobat'),
+    description: !bloquejat && item ? (pagina?.lead || section?.getSubtitle?.(item)) : '',
     image: pagina ? pagina.heroImage : null
   });
 
   if (esperant) return <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />;
+
+  if (bloquejat) {
+    return (
+      <UniversalPage title={tradueix(t, TEXTOS_MODERACIO.bloquejatTitol)} chrome="system" objecte={null}>
+        <div className="content-wrapper">
+          <Alerta to="info">{tradueix(t, TEXTOS_MODERACIO.bloquejatDetall)}</Alerta>
+          <Link className="sdp-boto sdp-boto--primari" to={section?.listPath || `/${sectionId}`}>
+            {tradueix(t, TEXTOS_MODERACIO.bloquejatTornar)}
+          </Link>
+        </div>
+      </UniversalPage>
+    );
+  }
 
   if (!section || !item) {
     /* T63.2 · Sense element no hi ha xat públic (ni el de la ruta, que
@@ -166,6 +206,9 @@ function DetallDElement() {
          avatar: la capçalera no pinta una identitat que el logotip llevarà en
          arribar. Si no es resol, l'avatar torna (la capçalera de sempre). */
       avatarAutor={logoEnCami ? null : avatarAutor}
+      /* Fase D (261020, tasca 2) · «Més opcions» a la barra taronja del
+         contingut de la gent (SECCIONS_AMB_MODERACIO). */
+      ambModeracio={SECCIONS_AMB_MODERACIO.has(sectionId)}
       chrome="full"
     >
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes

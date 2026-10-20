@@ -34,9 +34,19 @@
  * focus hi entra en obrir-lo i torna al «⋯» amb Escape o «Copia el text»,
  * i l'Escape queda consumit), i el <li> és enfocable amb tabIndex -1 perquè
  * la cita hi porte el focus.
+ *
+ * Fase D (261020, tasca 2; pla 261020_1300 · App Store 1.2 i Google Play
+ * UGC) · Amb `onDenuncia` (Conversa, amb la moderació de l'app), el menú
+ * porta «Denuncia el missatge» darrere de «Copia el text»; amb `onBloqueja`
+ * i el nom de l'autor (`nomAutor`), també «Bloqueja {nom}». Cada una torna
+ * el focus al «⋯» i li'l passa: el diàleg el pren per obridor. Sense les
+ * props, el menú de sempre. Un missatge d'una persona bloquejada
+ * (`missatge.bloquejat`, XatContext) es pinta com un avís neutre, sense text,
+ * sense nom i sense menú, però amb data-vist i data-missatge: la lectura,
+ * les marques i les cites continuen.
  */
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Circle, Copy, MoreVertical, Reply } from 'lucide-react';
+import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import MarquesEstat from './MarquesEstat.jsx';
 import CitaResposta from './CitaResposta.jsx';
@@ -106,7 +116,8 @@ function textDeSistema(missatge, t) {
 export default function Bombolla({
   missatge, esGrup = false, locale, t,
   seleccio = null, onReintenta, onDescarta, onCopia,
-  primerDelGrup = true, citat = null, onVesACita = null, onRespon = null, ressaltat = false
+  primerDelGrup = true, citat = null, onVesACita = null, onRespon = null, ressaltat = false,
+  onDenuncia = null, onBloqueja = null, nomAutor = ''
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -144,6 +155,20 @@ export default function Bombolla({
     );
   }
 
+  /* Fase D (261020, tasca 2) · De qui has bloquejat: l'avís, mai el text. */
+  if (missatge.bloquejat) {
+    return (
+      <li
+        className="sdp-xat-item sdp-xat-item--altre"
+        data-vist={missatge.seq ?? undefined}
+        data-missatge={missatge.id ?? undefined}
+        tabIndex={-1}
+      >
+        <p className="sdp-xat-bloquejat">{t('section.moderacio.bloquejat.missatge', 'Missatge amagat: has bloquejat esta persona.')}</p>
+      </li>
+    );
+  }
+
   const meu = missatge.sender === 'me';
   const esborrat = Boolean(missatge.esborrat) || Boolean(missatge.esborratAl);
   const estat = missatge.estatEnviament || 'enviat';
@@ -156,7 +181,17 @@ export default function Bombolla({
      ni en error, i mai a una làpida (T1). */
   const potRespondre = typeof onRespon === 'function' && !esborrat && missatge.id != null
     && estat !== 'pendent' && !enError;
-  const teMenu = !triable && !esborrat && (Boolean(text) || potRespondre);
+  /* Fase D (261020, tasca 2) · «Bloqueja {nom}» només amb un nom que dir. */
+  const potDenunciar = typeof onDenuncia === 'function';
+  const nomBloqueig = String(nomAutor || '').trim();
+  const potBloquejar = typeof onBloqueja === 'function' && Boolean(nomBloqueig);
+  const teMenu = !triable && !esborrat && (Boolean(text) || potRespondre || potDenunciar || potBloquejar);
+  /* Tanca el menú, torna el focus al «⋯» i li'l passa (l'obridor del diàleg). */
+  const triaDelMenu = (accio) => {
+    setMenuObert(false);
+    botoRef.current?.focus();
+    accio(botoRef.current);
+  };
   const respostaA = missatge.respostaA ?? null;
   /* F25 · La IAIA MarIA, per id i signant com a IA (mai pel nom), i fora del
      mode de selecció: els seus enllaços a la Wiki de Poble s'obrin a l'app. */
@@ -254,6 +289,18 @@ export default function Bombolla({
                   >
                     <Copy size={18} aria-hidden="true" focusable="false" />
                     {t('section.xat.missatge.copia', 'Copia el text')}
+                  </button>
+                ) : null}
+                {potDenunciar ? (
+                  <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(onDenuncia)}>
+                    <Flag size={18} aria-hidden="true" focusable="false" />
+                    {t('section.moderacio.denunciaMissatge', 'Denuncia el missatge')}
+                  </button>
+                ) : null}
+                {potBloquejar ? (
+                  <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(onBloqueja)}>
+                    <Ban size={18} aria-hidden="true" focusable="false" />
+                    {t('section.moderacio.bloqueja', 'Bloqueja {nom}').replace('{nom}', () => nomBloqueig)}
                   </button>
                 ) : null}
               </div>

@@ -22,6 +22,7 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { MemoryRouter, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
 import { createTranslator } from '../../config/i18n';
 

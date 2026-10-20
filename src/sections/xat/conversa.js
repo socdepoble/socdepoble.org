@@ -246,17 +246,25 @@ export function autorDeCita(msg, t) {
   return msg?.author || msg?.author_name || t('section.xat.vei', 'Veí');
 }
 
-/** El text del missatge citat: la làpida si s'ha esborrat, i el text tal qual si no. */
+/**
+ * El text del missatge citat: «Missatge amagat» si és d'algú que has
+ * bloquejat (Fase D, 261020, tasca 2: XatContext l'anota sense text), la
+ * làpida si s'ha esborrat, i el text tal qual si no.
+ */
 export function textDeCita(msg, t) {
+  if (msg?.bloquejat) return t('section.moderacio.bloquejat.previa', 'Missatge amagat');
   if (msg?.esborrat || msg?.esborratAl) return t('section.xat.missatge.esborrat', "S'ha esborrat este missatge");
   return String(msg?.text ?? msg?.content ?? '');
 }
 
 /* ─────────────────────────────── Anunci ─────────────────────────────── */
 
-/** Dels nous, els que s'anuncien: els dels altres que no són de sistema. */
+/**
+ * Dels nous, els que s'anuncien: els dels altres que no són de sistema ni
+ * d'algú que has bloquejat (Fase D, 261020, tasca 2).
+ */
 export function nousAnunciables(nous) {
-  return (nous || []).filter((m) => m && m.sender !== 'me' && m.tipus !== 'sistema');
+  return (nous || []).filter((m) => m && m.sender !== 'me' && m.tipus !== 'sistema' && !m.bloquejat);
 }
 
 /**

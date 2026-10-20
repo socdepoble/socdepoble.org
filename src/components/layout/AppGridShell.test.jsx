@@ -548,3 +548,24 @@ test('el ResizeObserver de la closca es desconnecta en desmuntar-la: 50 muntatge
   expect(creats).toHaveLength(100);
   expect(creats.filter((observador) => vius.has(observador))).toEqual([]);
 });
+
+/* Fase D (261020, L4) · `mesurada` diu als fills si el render ja porta la mida
+   mesurada: el primer commit és 'ample' sense mesurar, i un fill que només
+   viu en ample (el document destacat del Xat) no s'hi ha de muntar. */
+test('L4 · mesurada: false només al primer render, sense mesurar; després, true amb la mida de veres', () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
+  for (const [amplada, mida] of [[375, 'estret'], [1400, 'ample']]) {
+    ambAmplada(amplada);
+    const vistos = [];
+    const Sonda = () => {
+      const { mida: ara, mesurada } = useAppGrid();
+      vistos.push([ara, mesurada]);
+      return null;
+    };
+    render(<AppGridShell><Sonda /></AppGridShell>);
+    expect(vistos[0], String(amplada)).toEqual(['ample', false]);
+    expect(vistos.at(-1), String(amplada)).toEqual([mida, true]);
+    expect(vistos.filter(([, mesurada]) => mesurada === false), String(amplada)).toHaveLength(1);
+    cleanup();
+  }
+});

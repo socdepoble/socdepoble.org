@@ -210,11 +210,25 @@ function arbre(rel, filtre) {
       [...i18n.matchAll(/code:\s*'([a-z]{2})'/g)].map((m) => m[1])
     );
     const blocs = {};
+    /* Fase D (261020, tasca 4.1) · Lectura doble mentre conviuen les dos
+       formes: primer el diccionari propi de cada llengua
+       (src/config/idiomes/<codi>.js, L1); el bloc antic de TRANSLATIONS a
+       i18n.js només compta per a una llengua que encara no en té. Una
+       llengua del selector sense cap de les dos falla. */
+    for (const codi of IDIOMES) {
+      const propi = llig(`src/config/idiomes/${codi}.js`);
+      if (propi !== null) blocs[codi] = new Set([...propi.matchAll(/'([\w.]+)'\s*:/g)].map((x) => x[1]));
+    }
     for (const m of i18n.matchAll(/^ {2}([a-z]{2}): \{/gm)) {
-      if (!IDIOMES.has(m[1])) continue;
+      if (!IDIOMES.has(m[1]) || blocs[m[1]]) continue;
       let d = 1, j = m.index + m[0].length;
       while (j < i18n.length && d) { d += i18n[j] === '{' ? 1 : i18n[j] === '}' ? -1 : 0; j++; }
       blocs[m[1]] = new Set([...i18n.slice(m.index, j).matchAll(/'([\w.]+)'\s*:/g)].map((x) => x[1]));
+    }
+    for (const codi of IDIOMES) {
+      if (blocs[codi]) continue;
+      net = false;
+      falla(LLEI, `src/config/idiomes/${codi}.js`, 0, `La llengua '${codi}' del selector no té diccionari.`);
     }
     const base = blocs.ca || new Set();
     for (const [codi, joc] of Object.entries(blocs)) {
@@ -227,7 +241,7 @@ function arbre(rel, filtre) {
     }
     const usades = new Set();
     for (const f of arbre('src', /\.(js|jsx)$/)) {
-      if (f.endsWith('i18n.js')) continue;
+      if (f.endsWith('i18n.js') || f.split(path.sep).join('/').includes('/src/config/idiomes/')) continue;
       for (const m of readFileSync(f, 'utf8').matchAll(/\bt\(\s*['"]([\w.]+)['"]/g)) usades.add(m[1]);
     }
     const orfes = [...usades].filter((k) => !base.has(k));

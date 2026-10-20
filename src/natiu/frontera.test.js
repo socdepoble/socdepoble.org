@@ -16,6 +16,13 @@ import { describe, expect, test } from 'vitest';
 const ARREL = process.cwd();
 const NATIU = 'src/natiu';
 const CAP = ['@capa', 'citor'].join('');
+/* Fase D (261020, tasca 1) · Un paquet natiu no és només @capacitor/*: els
+   connectors de la comunitat viuen en altres àmbits (@capgo, @capawesome…) i
+   porten el nom al paquet (@codetrix-studio/capacitor-google-auth). Sense
+   això, @capgo/capacitor-social-login passava la frontera. */
+const AMBITS_NATIUS = Object.freeze([CAP, ['@cap', 'go'].join(''), ['@capa', 'wesome'].join('')]);
+const PAQUET_NATIU = new RegExp(['capa', 'citor'].join(''), 'i');
+const CAPGO_SOCIAL = `${['@cap', 'go'].join('')}/${['capa', 'citor-social-login'].join('')}`;
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const esProva = (ruta) => /\.test\.[cm]?jsx?$/.test(ruta) || ruta.includes('/__fixtures__/');
 
@@ -106,7 +113,11 @@ function resol(fitxer, especificador) {
   return path.posix.normalize(path.posix.join(path.posix.dirname(fitxer), especificador));
 }
 
-const esCapacitor = (especificador) => especificador === CAP || especificador.startsWith(`${CAP}/`);
+/* Un paquet (ni relatiu, ni de l'arrel, ni un glob, ni l'àlies @/) d'un àmbit
+   natiu o amb el nom del pont natiu dins. */
+const esPaquet = (e) => !/^[./*]/.test(e) && !e.startsWith('@/');
+const esCapacitor = (especificador) => esPaquet(especificador)
+  && (AMBITS_NATIUS.some((ambit) => especificador === ambit || especificador.startsWith(`${ambit}/`)) || PAQUET_NATIU.test(especificador));
 
 /* Una consulta de Vite al final (?raw, ?url, ?inline, ?worker…) tria com es
    carrega el fitxer, no és un comodí de glob: es lleva abans de resoldre. */
@@ -145,7 +156,12 @@ describe('les sondes: el detector veu cada forma d’arribar al natiu', () => {
       "import x from '@/natiu/obridorOAuth.js';",
       "const f = import.meta.glob('../natiu/*.js');",
       "const f = import.meta.glob('/src/natiu/*.js');",
-      "const f = import.meta.glob(['../**/*.js', '!**/*.test.*']);"
+      "const f = import.meta.glob(['../**/*.js', '!**/*.test.*']);",
+      // Fase D (261020) · Els connectors natius d'altres àmbits, estàtics i dinàmics.
+      `import { SocialLogin } from '${CAPGO_SOCIAL}';`,
+      `const m = await import('${CAPGO_SOCIAL}');`,
+      `import { GoogleAuth } from '${['@codetrix-studio/capa', 'citor-google-auth'].join('')}';`,
+      `const m = await import('${['@capa', 'wesome'].join('')}/capacitor-file-picker');`
     ]) {
       expect(especificadors(codi).some((e) => arribaAlNatiu(DE, e)), codi).toBe(true);
     }
@@ -208,6 +224,9 @@ describe('les sondes: el detector veu cada forma d’arribar al natiu', () => {
     }
     expect(FORA_DEL_NATIU.filter((ruta) => ruta.startsWith('src/data/')).length).toBeGreaterThan(20);
     expect(DEL_NATIU).toContain(`${NATIU}/entrada.jsx`);
+    // Fase D (261020, tasca 1) · L'adaptador de l'entrada amb Apple i Google i el seu resum.
+    expect(DEL_NATIU).toContain(`${NATIU}/entradaSocial.js`);
+    expect(DEL_NATIU).toContain(`${NATIU}/resum.js`);
   });
 });
 
@@ -239,11 +258,36 @@ describe('la frontera', () => {
   });
 });
 
-describe('el natiu d’abans de la lease', () => {
-  test('cap fitxer de producció de src/natiu/ importa Capacitor encara: no hi ha cap dependència instal·lada', () => {
-    /* Després de la lease, esta prova canvia: només els adaptadors natius
-       (obridorOAuth, sessioDuradora, duradorMagatzem…) en podran importar. */
-    expect(DEL_NATIU.flatMap((ruta) => especificadors(llig(ruta)).filter(esCapacitor).map((e) => `${ruta}: ${e}`))).toEqual([]);
+describe('els adaptadors natius', () => {
+  /* Fase D (261020, tasca 1) · El canvi que esta prova tenia previst des de la
+     lease: només els adaptadors natius importen paquets natius, i només els
+     seus. De moment n'hi ha un, l'entrada amb Apple i Google, i el seu connector
+     (decisió D0 del Mestre) només per un import() dinàmic: el seu JS d'entrada
+     carrega de seguida els proveïdors web i llig l'emmagatzematge. El nucli del
+     pont (@capacitor/core) no l'importa ningú: la plataforma es llig del global
+     que injecta l'app. */
+  const ADAPTADORS_NATIUS = Object.freeze({ [`${NATIU}/entradaSocial.js`]: [CAPGO_SOCIAL] });
+
+  test('només els adaptadors natius importen paquets natius, i només els seus', () => {
+    const natius = Object.fromEntries(DEL_NATIU
+      .map((ruta) => [ruta, [...new Set(especificadors(llig(ruta)).filter(esCapacitor))]])
+      .filter(([, paquets]) => paquets.length));
+    expect(natius).toEqual(ADAPTADORS_NATIUS);
+  });
+
+  test('el connector de l’entrada social només arriba per import() dinàmic', () => {
+    const codi = llig(`${NATIU}/entradaSocial.js`);
+    for (const forma of [FORMES[0], FORMES[1], FORMES[3]]) {
+      expect([...codi.matchAll(forma)].map(textDe).filter(esCapacitor), String(forma)).toEqual([]);
+    }
+    expect([...codi.matchAll(FORMES[2])].map(textDe).filter(esCapacitor)).toEqual([CAPGO_SOCIAL]);
+    expect(codi.includes(`${CAP}/core`)).toBe(false);
+  });
+
+  test('el registre de l’entrada nativa (src/config/entradaNativa.js) no importa res i no nomena el pont', () => {
+    const registre = llig('src/config/entradaNativa.js');
+    expect(especificadors(registre)).toEqual([]);
+    expect(PAQUET_NATIU.test(registre)).toBe(false);
   });
 
   test('l’entrada nativa no exposa cap global, no registra cap worker ni toca l’emmagatzematge directe', () => {

@@ -18,14 +18,15 @@ import { iconaDe } from './iconesApp.js';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 
 export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = false, toggleSidebar, onTorna }) {
-  const { language } = useUIState();
-  const titol = titolDe(app.titol, language);
+  /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
+  const { language, llenguaDelText = language } = useUIState();
+  const titol = titolDe(app.titol, llenguaDelText);
   const IconaApp = iconaDe(app.icona);
   const tancaSiCompacte = () => { if (isCompact) toggleSidebar?.(); };
 
   const enllac = (entrada) => {
     const Icona = iconaDe(entrada.icona);
-    const etiqueta = titolDe(entrada.titol, language);
+    const etiqueta = titolDe(entrada.titol, llenguaDelText);
     return (
       <NavLink key={entrada.slug} to={rutaDeApp(app.id, entrada.slug)} className="nav-item" aria-label={etiqueta} onClick={tancaSiCompacte}>
         <Icona className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
@@ -67,9 +68,9 @@ export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = fals
         <div className="app-sidebar-nav__llista" role="group" aria-label={titol}>
           {app.entrades.filter((entrada) => !entrada.grup).map(enllac)}
           {app.grups.map((grup) => (
-            <div key={grup.id} role="group" aria-label={titolDe(grup.titol, language)}>
+            <div key={grup.id} role="group" aria-label={titolDe(grup.titol, llenguaDelText)}>
               <hr className="app-sidebar-divider" />
-              <p className="sdp-app-barra__grup"><span className="nav-item__text">{titolDe(grup.titol, language)}</span></p>
+              <p className="sdp-app-barra__grup"><span className="nav-item__text">{titolDe(grup.titol, llenguaDelText)}</span></p>
               {app.entrades.filter((entrada) => entrada.grup === grup.id).map(enllac)}
             </div>
           ))}

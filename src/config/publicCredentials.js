@@ -18,3 +18,15 @@ export function validatePublicCredentials(supabaseUrl, anonKey) {
   } catch { throw new Error('Clau JWT il·legible'); }
   if (payload.role !== 'anon') throw new Error('El navegador només admet la clau anon o publishable');
 }
+
+/* Fase D (261020, tasca 5) · L'esquema d'URL invertit d'un client OAuth d'iOS de Google
+   (com.googleusercontent.apps.<número>-<id>), o null si el client no en té la forma.
+   El client és públic. GoogleSignIn fa petar l'app si Info.plist no registra este
+   esquema a CFBundleURLTypes: el build natiu el contrasta (vite.natiu.config.js) i
+   l'entrada nativa només oferix Google a iOS quan n'hi ha. Ningú de src/data/supabase
+   no l'ha d'importar (runtime.test.js simula este mòdul només amb la funció de dalt). */
+const RE_CLIENT_IOS_DE_GOOGLE = /^([0-9]+-[a-z0-9]+)\.apps\.googleusercontent\.com$/;
+export function esquemaInvertitDeGoogleIos(clientId) {
+  const m = RE_CLIENT_IOS_DE_GOOGLE.exec(typeof clientId === 'string' ? clientId.trim() : '');
+  return m ? `com.googleusercontent.apps.${m[1]}` : null;
+}

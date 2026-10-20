@@ -26,7 +26,18 @@ const CENS = Object.freeze([
   'src/data/sessioPilot.test.js',
   'src/data/sessionService.pilot.test.js',
   'src/data/identitat.js',
-  'src/data/sessionService.js'
+  'src/data/sessionService.js',
+  /* Fase D (261020, tasca 1) · L'entrada amb Apple i Google a l'app nativa. */
+  'src/sections/onboarding/EntradaNativa.jsx',
+  'src/sections/onboarding/LogotipsDeMarca.jsx',
+  'src/sections/onboarding/fluxEntradaNativa.js',
+  'src/sections/onboarding/fluxEntradaNativa.test.js',
+  'src/sections/onboarding/OnboardingSection.nativa.test.jsx',
+  /* Fase D (261020, revisió) · El pany de la fase 1 amb el registre de veres. */
+  'src/sections/onboarding/OnboardingSection.nativa.registre.test.jsx',
+  'src/config/entradaNativa.js',
+  'src/config/entradaNativa.test.js',
+  'src/data/supabase/auth.testimoni.test.js'
 ]);
 
 describe('el cens', () => {

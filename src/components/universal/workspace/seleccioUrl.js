@@ -8,9 +8,11 @@
  * Cada secció en pot reanomenar alguna (el Bloc de Notes fa servir 'nota'
  * per a l'element) sense que este mòdul ho sàpia.
  *
- * La secció va a la consulta (?seccio=) i no al fragment (#): en mode memòria
- * l'enllaç per compartir només porta camí i consulta (useAccions,
- * urlPerCompartir), i un fragment es perdria.
+ * La secció s'escriu a la consulta (?seccio=) i no al fragment (#): en mode
+ * memòria l'enllaç per compartir només porta camí i consulta (useAccions,
+ * urlPerCompartir), i un fragment es perdria. Fase D (261020) · Per a llegir,
+ * un fragment de document també val com a entrada (seccioDelFragment): és
+ * l'adreça pública que la Play Console demana (/legal#esborra-compte).
  */
 
 export const CLAUS_SELECCIO = Object.freeze({ carpeta: 'carpeta', item: 'item', seccio: 'seccio' });
@@ -122,4 +124,15 @@ export function escriuSeccio(params, slug, clau = CLAUS_SELECCIO.seccio) {
 export function rutaAmbConsulta(cami, params) {
   const consulta = comParams(params).toString();
   return consulta ? `${cami}?${consulta}` : cami;
+}
+
+/* Fase D (261020, tasca 3.2) · Un fragment de document (#esborra-compte) com a secció. Només
+   paraules i guions: un fragment de paràmetres (#access_token=…&…, #sdp-ruta=…) no és cap secció. */
+const RE_FRAGMENT_DE_SECCIO = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u;
+export function seccioDelFragment(hash) {
+  const cru = String(hash ?? '').replace(/^#/, '');
+  if (!cru || cru.length > LLARGARIA_SLUG * 3) return null;
+  let text;
+  try { text = decodeURIComponent(cru); } catch { return null; }
+  return text.length <= LLARGARIA_SLUG && RE_FRAGMENT_DE_SECCIO.test(text) ? netejaSlug(text, LLARGARIA_SLUG) : null;
 }

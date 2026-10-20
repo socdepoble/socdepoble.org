@@ -22,7 +22,7 @@ import { MenuTraduir } from '../traduccio/MenuTraduir.jsx';
 import { UniversalPage } from '../UniversalPage.jsx';
 import { UIProvider } from '../../../app/contexts/UIContext';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../../config/i18n.js';
-import fontI18n from '../../../config/i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../../tests/helpers/diccionaris.js';
 import { XAT_SOCDEPOBLE_DE_LLAVOR, XatSocDePobleContext } from '../../PedraSeca/hooks/xatSocDePoble.js';
 
 /* L'enllaç del xat de la llavor, en literal: el de XAT_SOCDEPOBLE_DE_LLAVOR

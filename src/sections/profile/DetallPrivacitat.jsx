@@ -12,6 +12,10 @@ import { readableBackendError } from '../onboarding/onboardingModel.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
+import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx';
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -326,7 +330,8 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
         {error ? <Alerta to="error">{error}</Alerta> : null}
         <ul className="perfil-compte__llista">
           <li>Ara mateix el perfil s’anonimitza: el teu nom es canvia per un d’anònim, la fitxa deixa de ser pública i les teues publicacions deixen de mostrar el teu nom i la teua foto.</li>
-          <li>{`Durant ${DIES_GRACIA} dies pots cancel·lar-la: entra de nou amb el teu correu i torna a «Privacitat i dades».`}</li>
+          {/* Fase D (261020, tasca 1) · Qui va entrar amb Apple o Google no té contrasenya: torna a entrar com sempre. */}
+          <li>{`Durant ${DIES_GRACIA} dies pots cancel·lar-la: entra de nou com sempre (amb el correu, Apple o Google), torna a «Privacitat i dades» i prem «Cancel·lar la baixa».`}</li>
           <li>{`Passats els ${DIES_GRACIA} dies, el compte i totes les dades s’esborren definitivament.`}</li>
           <li>Es tancarà la sessió en tots els teus dispositius.</li>
         </ul>
@@ -358,12 +363,18 @@ export function DetallPrivacitat({
     () => (onSessioTancada ? onSessioTancada() : recarregaSenseSessio(navigate)),
     [onSessioTancada, navigate],
   );
+  /* Fase D (261020, tasca 2; crítica 261020, 18) · Les persones i entitats
+     bloquejades, amb «Desbloqueja»: la mateixa llista que el Control del
+     xat, darrere del consentiment. Sense la moderació, el DOM de sempre. */
+  const moderacio = useModeracio();
+  const t = useTraductorOpcional();
 
   /* Els drets són de la persona: una organització no en té cap pàgina. */
   if (identitat?.mena !== 'persona') return null;
 
   const ambCompte = teCapacitat('compte');
   const ambConsentiment = teCapacitat('consentiment');
+  const ambBloquejos = moderacio?.disponible === true;
   const dades = identitat.dades;
 
   return (
@@ -386,10 +397,15 @@ export function DetallPrivacitat({
       <div className="perfil-compte">
         {ambCompte ? <BlocDades config={config} /> : null}
         {ambConsentiment ? <BlocConsentiment config={config} /> : null}
+        {ambBloquejos ? (
+          <Bloc titol={tradueix(t, TEXTOS_MODERACIO.bloquejosTitol)}>
+            <LlistaBloquejos moderacio={moderacio} ambTitol={false} />
+          </Bloc>
+        ) : null}
         {ambCompte ? (
           <BlocBaixa config={config} onSessioTancada={tancaSessio} onPerfilCanviat={onPerfilCanviat} />
         ) : null}
-        {!ambCompte && !ambConsentiment ? (
+        {!ambCompte && !ambConsentiment && !ambBloquejos ? (
           <p className="perfil-compte__text">Este node encara no oferix cap d’estes opcions.</p>
         ) : null}
       </div>

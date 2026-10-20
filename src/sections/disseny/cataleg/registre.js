@@ -262,6 +262,12 @@ REGISTRE.push({ nom: 'PortaDePagina', fitxer: 'PedraSeca/organismes/PortesTarget
    (fonaments/controls-barra). */
 REGISTRE.push({ nom: 'BotoComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'MenuComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Fase D (261020, tasca 2; pla 261020_1300 · App Store 1.2 i Google Play UGC) · «Més opcions»
+   (⋮) de la caputxa de la targeta i de la barra taronja, i el seu menú («Denuncia el
+   contingut», «Bloqueja {nom}»), amb el comportament únic dels menús emergents. Espècimen:
+   EspecimenControlsBarra (fonaments/controls-barra). */
+REGISTRE.push({ nom: 'BotoModeracio', fitxer: 'PedraSeca/organismes/Moderacio.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'MenuModeracio', fitxer: 'PedraSeca/organismes/Moderacio.jsx', pagina: 'fonaments', estat: 'viu' });
 /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «Esta lògica de llistar elements de
    la categoria per a l'avatar actiu ha d'estar disponible per tot el sistema») · el que l'actor
    ja té publicat, i la targeta del Mercat extreta de MercatSection (la mateixa a /mercat i a

@@ -439,6 +439,13 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
         authorHref: rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })
       }}
       onConnect={rutaConnectarPerfil(perfil) ? () => navigate(rutaConnectarPerfil(perfil)) : false}
+      /* Fase D (261020, tasca 2; crítica 261020, 6) · Des de 2610181800 els
+         perfils són públics per defecte: nom, avatar i presentació són
+         contingut de la gent, i Google Play demana poder-los denunciar i
+         bloquejar. «Més opcions» a la barra taronja, mai a la fitxa pròpia
+         (ni a la del pilot, la IAIA o una entitat que representes:
+         objectiuDeTargeta). */
+      ambModeracio={!perfil.propietari}
       /* T63.2 (doctrina del Mestre, 260928) · Comentar d'una persona o d'una IA
          és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un
          grup, el xat comú de la seua pàgina (la Comunitat). «Escriu-li al xat»

@@ -162,8 +162,14 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
         </span>
         <span className="sdp-xat-fila__peu">
           <span className="sdp-xat-fila__previa">
-            {fil.ultimText ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
-            {fil.ultimText || t('section.xat.capMissatge', 'Cap missatge.')}
+            {/* Fase D (261020, tasca 2) · L'últim és d'algú que has bloquejat
+                (XatContext, anotaFilsBloquejats): ni qui ni què. */}
+            {fil.ultimAmagat ? t('section.moderacio.bloquejat.previa', 'Missatge amagat') : (
+              <>
+                {fil.ultimText ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
+                {fil.ultimText || t('section.xat.capMissatge', 'Cap missatge.')}
+              </>
+            )}
           </span>
           {silenciat || fil.fixat ? (
             <span className="sdp-xat-fila__icones">

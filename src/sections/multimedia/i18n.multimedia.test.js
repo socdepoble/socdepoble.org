@@ -5,7 +5,7 @@
    (la guarda de paritat d'i18n.claus.test.js, sobre estes claus). */
 import { describe, expect, test } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
-import fontI18n from '../../config/i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../tests/helpers/diccionaris.js';
 import fontSeccio from './MultimediaSection.jsx?raw';
 import fontVisor from './VisorDeLArxiu.jsx?raw';
 import fontPanell from './panellDeLaFoto.js?raw';

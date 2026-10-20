@@ -74,6 +74,8 @@ export function TargetaDelMercat({ item }) {
       imatgePrivada
       objecte={producte}
       onConnect={() => navigate(rutaConnectarObjecte(producte))}
+      /* Fase D (261020, tasca 2) · «Més opcions»: denunciar i bloquejar. */
+      ambModeracio
       hasFooter={true}
       showTranslate={true}
       showComment={true}

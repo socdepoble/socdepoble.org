@@ -77,6 +77,10 @@ import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
 import { NotesProvider } from '../sections/notes/NotesContext';
 import { XatProvider } from '../sections/xat/XatContext';
+import { ProveidorModeracio } from './contexts/ModeracioContext.jsx';
+/* Fase D (261020, tasca 2) · Els tres diàlegs de la moderació (denúncia,
+   bloqueig i normes), que el proveïdor pinta en este ordre. */
+import { DialegsModeracio } from '../components/universal/DialegsModeracio.jsx';
 const XatControlSection = lazyRoute(() => import('../sections/xat/XatControlSection'));
 import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
 import { useUIActions, useUIState } from './contexts/UIContext';
@@ -189,13 +193,13 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
             ensenya una fletxa sinó la roda de CONTROL, la mateixa del botó
             que amaga (layout.css: .sidebar-closed .sidebar-control-btn):
             així es llig que eixe botó obri la barra de control. */}
-        {!isCompact && <button type="button" className="sidebar-rail-toggle"
-          aria-label={isDesktopSidebarClosed ? 'Desplegar barra lateral' : 'Plegar barra lateral'}
-          aria-expanded={!isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-          {isDesktopSidebarClosed
+        <button type="button" className="sidebar-rail-toggle"
+          aria-label={isDesktopSidebarClosed ? 'Desplegar barra lateral' : (isCompact ? 'Tancar menú' : 'Plegar barra lateral')}
+          aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+          {!isCompact && isDesktopSidebarClosed
             ? <Settings className="icona-linia" strokeWidth={2.1} aria-hidden="true" focusable="false" />
             : <PanelLeftClose size={24} />}
-        </button>}
+        </button>
         </div>
 
         {/* Sense peu: la llista sencera fa scroll (layout.css § SIDEBAR · SCROLL).
@@ -290,7 +294,10 @@ function AppShell({ children, mobileNav }) {
      useState, mai en un efecte. */
 
   const { showToast } = useToast();
-  const { language, status, themeMode, contrastMode, externalConfig } = useUIState();
+  /* Fase D (261020, tasca 4.1) · L1 · El lang i la barra lateral seguixen la
+     llengua del text (la que té el diccionari carregat), no la demanada. El
+     valor per defecte manté les proves que simulen UIContext. */
+  const { language, llenguaDelText = language, status, themeMode, contrastMode, externalConfig } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
   const { basename, memoria } = useRouter();
@@ -560,8 +567,8 @@ function AppShell({ children, mobileNav }) {
      reclamaAtribut el torna en desmuntar. Cap full casa amb [lang] ni :lang(). */
   useEffect(() => {
     const arrel = arrelDePresentacio(rootRef.current, { amaDelDocument });
-    return reclamaAtribut(arrel, 'lang', language || 'ca');
-  }, [language, amaDelDocument]);
+    return reclamaAtribut(arrel, 'lang', llenguaDelText || 'ca');
+  }, [llenguaDelText, amaDelDocument]);
 
   return (
     <ProveidorModeImmersiu value={demanaImmersiu}>
@@ -584,7 +591,7 @@ function AppShell({ children, mobileNav }) {
                 isCompact={isCompact}
                 isDesktopSidebarClosed={isDesktopSidebarClosed}
                 toggleSidebar={toggleSidebar}
-                language={language}
+                language={llenguaDelText}
                 navigate={navigate}
              />
             </BarraLateral>
@@ -597,7 +604,7 @@ function AppShell({ children, mobileNav }) {
               isCompact={isCompact}
               isDesktopSidebarClosed={isDesktopSidebarClosed}
               toggleSidebar={toggleSidebar}
-              language={language}
+              language={llenguaDelText}
               navigate={navigate}
            />
           </BarraLateral>
@@ -841,17 +848,22 @@ function AppContent({ config, targetNode }) {
           sobre la .sdp-root de la instància: dins del shadow root (targetNode)
           o al document. Sense estil desat no pinta ni toca res. */}
       <EstilDelPoble targetNode={targetNode} />
-      <MurProvider config={config}>
-        <NotesDataProvider config={config}>
-          <NotesProvider>
-            <XatProvider config={config}>
-              <MultimediaProvider config={config}>
-                <AppDataLoader />
-              </MultimediaProvider>
-            </XatProvider>
-          </NotesProvider>
-        </NotesDataProvider>
-      </MurProvider>
+      {/* Fase D (261020, tasca 2) · La moderació (denunciar, bloquejar i les
+          normes de convivència), una sola vegada i per damunt del Mur i del
+          Xat: tots dos amaguen el que has bloquejat (ModeracioContext.jsx). */}
+      <ProveidorModeracio config={config} Dialegs={DialegsModeracio}>
+        <MurProvider config={config}>
+          <NotesDataProvider config={config}>
+            <NotesProvider>
+              <XatProvider config={config}>
+                <MultimediaProvider config={config}>
+                  <AppDataLoader />
+                </MultimediaProvider>
+              </XatProvider>
+            </NotesProvider>
+          </NotesDataProvider>
+        </MurProvider>
+      </ProveidorModeracio>
     </CoreContentProvider>
   );
 }
@@ -1072,7 +1084,7 @@ function ActorRoutes({ agents }) {
 }
 
 const MobileNav = memo(function MobileNav() {
-  const { language } = useUIState();
+  const { language, llenguaDelText = language } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
 
@@ -1080,7 +1092,7 @@ const MobileNav = memo(function MobileNav() {
     const Icon = section.icon;
     const labels = section.kind === 'gestoria'
       ? { label: section.label, shortLabel: section.shortLabel }
-      : getSectionLabels(section.id, language);
+      : getSectionLabels(section.id, llenguaDelText);
     return (
       <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
         <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />

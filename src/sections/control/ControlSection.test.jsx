@@ -27,6 +27,7 @@
    conserven les seues assercions. */
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
 import { XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';

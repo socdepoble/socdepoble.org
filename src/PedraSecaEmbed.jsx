@@ -115,7 +115,7 @@ import { llegeixConfigAmfitrio, sanejaEtiqueta, sanejaIdentificador, sanejaRuta 
 import { baseRecursos, fixaBaseRecursos, hiHaPoliticaDeMitjans, origenDeMitjansExterns, resolveAsset } from './config/assetResolver.js';
 import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
-import { esLlenguaSuportada } from './config/i18n.js';
+import { esLlenguaSuportada, precarregaIdioma } from './config/i18n.js';
 import { ORIGENS_BACKEND } from './config/origensSollutia.js';
 import { CONTRACTE_AMFITRIO_V1, tapaRuta } from './config/contracteAmfitrio.js';
 import { CAPA_DE_COMPILACIO, avisaClausDescartades, capaDelPaquet, nomesDeLAmfitrio, separaClausDelPaquet } from './config/capaDelPaquet.js';
@@ -998,6 +998,11 @@ class SocDePobleElement extends BaseElement {
   _render() {
     if (!this._root) return;
     const isFirstInstance = Array.from(activeElements)[0] === this;
+    /* Fase D (261020, tasca 4.1) · L1 · El diccionari de la llengua que es
+       pintarà (tria desada > amfitrió > ca, com uiConfig) comença a baixar
+       ara. L'element no espera: dins d'una pàgina amfitriona no es retarda
+       cap muntatge, i el canvi arriba sol per UIContext. */
+    precarregaIdioma({ amfitrio: this._manualLanguage || this._config?.language });
     this._root.render(
       <PedraSecaEmbed 
         config={this._config} 

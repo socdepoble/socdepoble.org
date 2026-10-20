@@ -9,7 +9,7 @@
  */
 import { describe, expect, test } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from './i18n.js';
-import fontI18n from './i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../tests/helpers/diccionaris.js';
 import fontNotesEditor from '../sections/notes/NotesEditor.jsx?raw';
 import fontDestinsControl from '../sections/control/destinsControl.js?raw';
 import fontEstatError from '../sections/mur/EstatErrorDades.jsx?raw';
@@ -634,6 +634,60 @@ const CLAUS = {
   },
   'section.cervell.obrir': {
     ca: 'Obrir el Cervell', es: 'Abrir el Cerebro', en: 'Open the Brain', eu: 'Ireki Garuna', gl: 'Abrir o Cerebro'
+  },
+  /* Fase D (261020, tasca 1) · L'accés ràpid de l'app nativa (EntradaNativa.jsx).
+     Les d'eu i gl són proposta a revisar per algú que les parle; avisDades,
+     pendent de la validació legal del Mestre (D8). */
+  'section.login.nativa.titol': {
+    ca: 'Accés ràpid', es: 'Acceso rápido', en: 'Quick access', eu: 'Sarbide azkarra', gl: 'Acceso rápido'
+  },
+  'section.login.nativa.entradilla': {
+    ca: 'Crea o entra al teu compte amb un sol toc, sense contrasenyes.',
+    es: 'Crea tu cuenta o entra con un solo toque, sin contraseñas.',
+    en: 'Create your account or sign in with one tap, no passwords.',
+    eu: 'Sortu kontua edo sartu ukitu bakarrarekin, pasahitzik gabe.',
+    gl: 'Crea a túa conta ou entra cun só toque, sen contrasinais.'
+  },
+  'section.login.nativa.apple': {
+    ca: 'Continua amb Apple', es: 'Continuar con Apple', en: 'Continue with Apple', eu: 'Jarraitu Apple-rekin', gl: 'Continuar con Apple'
+  },
+  'section.login.nativa.google': {
+    ca: 'Continua amb Google', es: 'Continuar con Google', en: 'Continue with Google', eu: 'Jarraitu Google-rekin', gl: 'Continuar con Google'
+  },
+  'section.login.nativa.esperant': {
+    ca: 'Esperant la confirmació del telèfon…',
+    es: 'Esperando la confirmación del teléfono…',
+    en: 'Waiting for your phone to confirm…',
+    eu: 'Telefonoaren baieztapenaren zain…',
+    gl: 'Agardando a confirmación do teléfono…'
+  },
+  'section.login.nativa.error': {
+    ca: 'No s’ha pogut completar l’entrada des del telèfon. Torna-ho a provar o entra amb el correu.',
+    es: 'No se ha podido completar el acceso desde el teléfono. Vuelve a intentarlo o entra con tu correo.',
+    en: 'Signing in from your phone didn’t work. Try again or use your email.',
+    eu: 'Ezin izan da telefonotik sartu. Saiatu berriro edo erabili posta elektronikoa.',
+    gl: 'Non se puido completar o acceso desde o teléfono. Téntao de novo ou entra co teu correo.'
+  },
+  'section.login.nativa.noDisponible': {
+    ca: 'Esta manera d’entrar no està disponible en este dispositiu.',
+    es: 'Este modo de acceso no está disponible en este dispositivo.',
+    en: 'This sign-in option isn’t available on this device.',
+    eu: 'Sartzeko modu hau ez dago erabilgarri gailu honetan.',
+    gl: 'Este modo de acceso non está dispoñible neste dispositivo.'
+  },
+  'section.login.nativa.divisor': {
+    ca: 'O amb el teu correu electrònic', es: 'O con tu correo electrónico', en: 'Or with your email',
+    eu: 'Edo zure posta elektronikoarekin', gl: 'Ou co teu correo electrónico'
+  },
+  'section.login.nativa.cancela': {
+    ca: 'Cancel·la l’entrada', es: 'Cancela el acceso', en: 'Cancel sign-in', eu: 'Utzi sarbidea bertan behera', gl: 'Cancela o acceso'
+  },
+  'section.login.nativa.avisDades': {
+    ca: 'En continuar, acceptes les condicions d’ús i la política de privacitat de Sóc de Poble.',
+    es: 'Al continuar, aceptas las condiciones de uso y la política de privacidad de Sóc de Poble.',
+    en: 'By continuing, you accept Sóc de Poble’s terms of use and privacy policy.',
+    eu: 'Jarraituz gero, Sóc de Poble-ren erabilera-baldintzak eta pribatutasun-politika onartzen dituzu.',
+    gl: 'Ao continuar, aceptas as condicións de uso e a política de privacidade de Sóc de Poble.'
   },
   /* Pla 261014_1450 (front C) · El peu del rail amb una entitat activa i la
      línia del compositor que diu qui signa. Les d'eu i gl són proposta a

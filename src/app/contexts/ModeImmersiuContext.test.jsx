@@ -52,10 +52,13 @@ test('dues vistes alhora (fitxa i conversa): el mode dura fins que l’allibera 
 
 /* Contracte CSS: el token es declara fora de capa (tokens.css), així que la
    reserva només es pot posar a zero allí; les barres s'amaguen a layout.css. */
-test('l’arrel immersiva posa a zero la reserva de la barra inferior i amaga les tres barres', () => {
+test('l’arrel immersiva posa a zero la reserva de la barra inferior i amaga la franja i la barra inferior, mai la negra', () => {
   const tokens = readFileSync('src/css/tokens.css', 'utf8');
   const layout = readFileSync('src/css/layout.css', 'utf8');
   expect(tokens).toMatch(/\.sdp-root\[data-sdp-immersiu\]\s*\{\s*--sdp-alt-nav-mobil:\s*0px;\s*\}/);
-  const regla = /\.sdp-root\[data-sdp-immersiu\] header\.bar-black,\s*\.sdp-root\[data-sdp-immersiu\] \.sdp-amfitrio-franja,\s*\.sdp-root\[data-sdp-immersiu\] nav\.mobile-nav\s*\{\s*display:\s*none;\s*\}/;
+  const regla = /\.sdp-root\[data-sdp-immersiu\] \.sdp-amfitrio-franja,\s*\.sdp-root\[data-sdp-immersiu\] nav\.mobile-nav\s*\{\s*display:\s*none;\s*\}/;
   expect(layout).toMatch(regla);
+  /* Ordre del Mestre (261020; sdp-app-grid-shell §5) · la barra negra no
+     s'amaga mai, tampoc en mode immersiu. */
+  expect(layout).not.toMatch(/data-sdp-immersiu\][^{]*header\.bar-black/);
 });

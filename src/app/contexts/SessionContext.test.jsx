@@ -17,6 +17,8 @@ vi.mock('../../data/backendPort.js', () => ({
   /* R (Onada 3, 261003) · la capacitat 'recuperacioContrasenya', tal qual. */
   demanaRecuperacioContrasenya: (...args) => m.demana(...args),
   definixContrasenyaNova: (...args) => m.definix(...args),
+  /* Fase D (261020, tasca 1) · la capacitat 'entradaAmbToken', tal qual. */
+  entraAmbTokenDeProveidor: (...args) => m.entra('token', ...args),
   /* La sessió viva del port, per a la cua d'autodesament (ambitActual). */
   getCurrentUser: () => ({ id: 'U' })
 }));
@@ -262,7 +264,8 @@ test('R · eixir esborra la marca quan ha anat bé; buidar només la pestanya, n
 test.each([
   ['loginWithPassword', 'contrasenya'],
   ['loginWithGoogle', 'google'],
-  ['registerWithPassword', 'alta']
+  ['registerWithPassword', 'alta'],
+  ['entraAmbTokenDeProveidor', 'token']
 ])('R · una entrada explícita (%s) oblida la recuperació d’abans (la marca i l’enllaç) i arriba al port tal qual', async (metode, via) => {
   marcaRecuperacioPendent('U');
   anunciaEnllacDeRecuperacio();

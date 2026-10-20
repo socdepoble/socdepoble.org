@@ -2,12 +2,13 @@
  * Mode immersiu de la closca (ordre del Mestre, 261007).
  *
  * Una vista pot demanar la pantalla sencera: la closca (AppShell) marca la seua
- * arrel amb `data-sdp-immersiu` i layout.css amaga la barra negra, la franja de
- * l'amfitrió i la barra inferior mòbil, i posa a zero la reserva d'alçada de la
- * barra inferior. El primer cas és la conversa del Xat en mòbil, amb el patró
- * estàndard de missatgeria: entrar en una conversa dona el 100% de la
- * pantalla a la conversa, i la fletxa de la seua capçalera torna a la llista
- * (Pedra Seca §12).
+ * arrel amb `data-sdp-immersiu` i layout.css amaga la franja de l'amfitrió i la
+ * barra inferior mòbil, i posa a zero la reserva d'alçada de la barra inferior.
+ * La barra negra es queda sempre (ordre del Mestre, 261020; sdp-app-grid-shell
+ * §5). El primer cas és la conversa del Xat en mòbil, amb el patró estàndard
+ * de missatgeria: entrar en una conversa dona a la conversa tota la pantalla
+ * de davall de la barra negra, i la fletxa de la seua capçalera torna a la
+ * llista (Pedra Seca §12).
  *
  * Les peticions es compten: dues vistes poden demanar-ho alhora i el mode no
  * s'apaga fins que no l'allibera l'última. Sense proveïdor (proves, catàleg,

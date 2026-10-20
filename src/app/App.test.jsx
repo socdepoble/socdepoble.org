@@ -1,4 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
+import '../../tests/helpers/diccionaris.js';
 import { render, screen, waitFor, cleanup, fireEvent, within, act } from '@testing-library/react';
 import PedraSecaEmbed from '../PedraSecaEmbed';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';

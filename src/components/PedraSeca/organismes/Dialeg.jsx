@@ -98,6 +98,12 @@ function ContingutDialeg({
       const arrel = d.getRootNode();
       retorn.current = arrel.activeElement || document.activeElement;
       if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+      /* Fase D (261020, revisió) · L'autoFocus de React corre en el commit,
+         amb el <dialog> encara tancat (display:none), i no fa res; React no
+         escriu cap atribut autofocus, i showModal() enfocava la X. Com
+         modalLocal: el focus inicial que el contingut demana, i onObert,
+         després, encara té l'última paraula. */
+      d.querySelector('[autofocus],[data-sdp-focus-inicial]')?.focus();
       alObrirRef.current?.();
     } else if (!obert && d.open) {
       if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');

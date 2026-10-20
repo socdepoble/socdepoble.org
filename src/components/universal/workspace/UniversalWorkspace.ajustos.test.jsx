@@ -14,7 +14,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 import { FileText, Folder, Newspaper, Store } from 'lucide-react';
 import { delVal, getVal, setVal } from '../../../config/storage.js';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../../config/i18n.js';
-import fontI18n from '../../../config/i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../../tests/helpers/diccionaris.js';
 import fontWorkspace from './UniversalWorkspace.jsx?raw';
 import { CLAU_CARPETES_VISIBLES, _reiniciaCarpetesVisibles } from './carpetesVisibles.js';
 import { UniversalWorkspace } from './UniversalWorkspace.jsx';

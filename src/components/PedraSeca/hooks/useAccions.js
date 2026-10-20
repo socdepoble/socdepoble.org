@@ -7,6 +7,7 @@ import {
   esPrivat, esRutaInterna, interlocutorDe, modeXat, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, rutaXatPrivat
 } from '../../../config/objecteConnectable.js';
 import { useXatSocDePoble } from './xatSocDePoble.js';
+import { useModeracio } from './moderacioDePoble.js';
 
 /* T63.2 · La via pública de Comentar cridada on no hi ha cap xat públic (una
    pàgina sense xat comú, un element que no s'ha trobat): ho diu, no navega
@@ -318,6 +319,16 @@ export async function compartix(titol, url, showToast) {
  * servei, el clic ho diu (AVIS_SENSE_TRADUCTOR) i no s'obri cap menú. Un
  * onTranslate propi mana com sempre, i aleshores no hi ha menú. Sense
  * `traduccio` (les targetes i l'editor), el de sempre: /traduccions.
+ *
+ * Fase D (261020, tasca 2; pla 261020_1300 · App Store 1.2 i Google Play
+ * UGC) · `ambModeracio` (false): la targeta o la barra oferix «Més opcions»
+ * (Moderacio.jsx: denunciar i bloquejar). Tres interruptors independents: la
+ * prop, el proveïdor (useModeracio, null fora de l'app) i la capacitat
+ * 'moderacio' del backend (`disponible`); i, damunt, que l'objecte es puga
+ * denunciar (objectiuDeTargeta: ni el pilot, ni la IAIA, ni qui mira).
+ * Sense tots quatre, `moderacio` és null i cap píxel canvia. Amb ells,
+ * { objectiu, potBloquejar, onTria(via, obridor) }: 'bloqueja' obri la
+ * confirmació del bloqueig i qualsevol altra via, la denúncia.
  */
 export function useAccions({
   title,
@@ -333,7 +344,8 @@ export function useAccions({
   showShare,
   hasFooter,
   telemetria,
-  traduccio
+  traduccio,
+  ambModeracio = false
 }) {
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -395,6 +407,20 @@ export function useAccions({
      de T63.2 ('directe'): ara les vies les diu el menú. */
   const comentarXat = (onComment || privat) ? null : (rutaXatPublic() ? 'comu' : 'privat');
 
+  /* Fase D (261020, tasca 2) · «Més opcions»: es crida sempre (l'ordre dels
+     hooks no canvia mai); sense proveïdor és null. */
+  const moderacioDePoble = useModeracio();
+  const objectiu = ambModeracio === true && moderacioDePoble?.disponible === true
+    ? moderacioDePoble.objectiuDeTargeta?.(objecte) ?? null
+    : null;
+  const moderacio = objectiu ? {
+    objectiu,
+    potBloquejar: moderacioDePoble.potBloquejar === true && objectiu.bloquejable === true,
+    onTria: (via, obridor) => (via === 'bloqueja'
+      ? moderacioDePoble.demanaBloqueig(objectiu, obridor)
+      : moderacioDePoble.demanaDenuncia(objectiu, obridor))
+  } : null;
+
   return {
     handleConnect,
     handleTranslate,
@@ -408,6 +434,8 @@ export function useAccions({
     /* Onada 8 (261009) · El nom de l'interlocutor de «En privat», o null:
        el menú diu «Un xat només entre tu i Sóc de Poble», el de sempre. */
     comentarPrivatAmb: ambQui ? ambQui.nom : null,
-    menuTraduir
+    menuTraduir,
+    /* Fase D (261020, tasca 2) · { objectiu, potBloquejar, onTria } o null. */
+    moderacio
   };
 }

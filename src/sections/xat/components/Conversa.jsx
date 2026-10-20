@@ -89,10 +89,16 @@ function coixiDalt(ol) {
    d'useXat per XatSection) baixa per props al Compositor, que diu qui signa.
    Per props i no per IdentitatContext: la UI de la conversa no llig cap
    context d'identitat (Conversa.antics.test.jsx el simula sense actor). */
+/* Fase D (261020, tasca 2; pla 261020_1300) · `moderacio`: el valor de
+   useModeracio, només amb la capacitat i una sessió (XatSection; mai el xat
+   de mostra). Amb ell, cada bombolla d'una altra persona porta «Denuncia el
+   missatge» i, si es pot, «Bloqueja {nom}» (objectiuDeMissatge), i la
+   capçalera d'un directe 1:1, «Denuncia {nom}» i «Bloqueja {nom}» o
+   «Desbloqueja {nom}» (objectiuDeContrapart). Sense, el DOM de sempre. */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null
+  entitatActiva = null, moderacio = null
 }) {
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
@@ -223,7 +229,8 @@ export default function Conversa({
           ol.scrollTop = ol.scrollHeight;
           actualitzaFons();
         } else {
-          const aliens = canvi.nous.filter((m) => m?.sender !== 'me').length;
+          /* Fase D (261020, tasca 2) · Els de qui has bloquejat no compten. */
+          const aliens = canvi.nous.filter((m) => m?.sender !== 'me' && !m?.bloquejat).length;
           if (aliens) setNousAvall((n) => n + aliens);
         }
         /* Només després del salt inicial: la càrrega d'obrir no s'anuncia. */
@@ -436,6 +443,19 @@ export default function Conversa({
     return mapa;
   }, [messages]);
 
+  /* Fase D (261020, tasca 2) · L'altra part d'un directe 1:1 amb una persona
+     (ni grups, ni la IAIA, ni canals d'entitat, ni fils de pàgina). */
+  const contrapart = moderacio?.objectiuDeContrapart?.(fil) ?? null;
+  const contrapartBloquejada = Boolean(contrapart) && moderacio.esPersonaBloquejada?.(contrapart.id) === true;
+  const accionsDeLaContrapart = contrapart ? {
+    onDenunciaPersona: (obridor) => moderacio.demanaDenuncia(contrapart, obridor),
+    onBloqueja: moderacio.potBloquejar && !contrapartBloquejada ? (obridor) => moderacio.demanaBloqueig(contrapart, obridor) : null,
+    onDesbloqueja: contrapartBloquejada
+      ? () => moderacio.desbloqueja?.({ tipus: contrapart.tipus, id: contrapart.id, nom: contrapart.autor?.nom })?.catch?.(() => {})
+      : null,
+    nomContrapart: contrapart.autor?.nom || ''
+  } : null;
+
   return (
     <div className="sdp-xat-conversa">
       <CapcaleraConversa
@@ -444,6 +464,7 @@ export default function Conversa({
         onSeleccionar={() => setModeSeleccio(true)}
         seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
         t={t}
+        {...accionsDeLaContrapart}
       />
 
       {/* La llista no és una regió en viu: s'hi inserixen la càrrega d'obrir,
@@ -478,10 +499,15 @@ export default function Conversa({
           if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
           if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
           const msg = fila.msg;
+          /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
+          const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
           return (
             <Bombolla
               key={fila.clau}
               missatge={msg}
+              onDenuncia={objectiu ? (obridor) => moderacio.demanaDenuncia(objectiu, obridor) : null}
+              onBloqueja={objectiu?.bloquejable && moderacio.potBloquejar ? (obridor) => moderacio.demanaBloqueig(objectiu, obridor) : null}
+              nomAutor={objectiu?.autor?.nom ?? ''}
               esGrup={esGrup}
               primerDelGrup={fila.primerDelGrup}
               citat={msg.respostaA != null ? perId.get(String(msg.respostaA)) ?? null : null}

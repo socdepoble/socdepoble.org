@@ -15,7 +15,14 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenIdentitat.jsx, 2026-10-17T19:28:57+02:00, Revisió del Gauntlet
+ * Darrera posada al dia: EspecimenControlsBarra.jsx, 2026-10-20T17:07:16+02:00, Fase D (261020,
+ * tasca 2; pla 261020_1300 · App Store 1.2 i Google Play UGC): «Més opcions» (⋮) de la boina,
+ * l'organisme nou Moderacio.jsx (BotoModeracio i MenuModeracio, denunciar i bloquejar), registrat a
+ * registre.js (17:05:48) i mostrat a EspecimenControlsBarra.jsx (el menú obert i quiet, només
+ * denunciar i denunciar i bloquejar, i el ⋮ a la barra taronja, amb les files BotoModeracio,
+ * MenuModeracio i BarraTaronja.accioModeracio al contracte), i la fila ambModeracio (boolean, false)
+ * al contracte d'EspecimenUniversalCard.jsx (17:05:57). Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenIdentitat.jsx, 2026-10-17T19:28:57+02:00, Revisió del Gauntlet
  * 261017 (ID4; relleu 3: mai «Foraster» mentre la sessió és vàlida): la fila
  * BotoIdentitatActiva.pendent (bool, false) al contracte de l'espècimen, la prop nova que, sense
  * sessió i mentre la sessió recordada es comprova, pinta només un estat ocupat per al lector de
@@ -161,4 +168,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-17T19:28:57+02:00';
+export const VERSIO_CATALEG = '2026-10-20T17:07:16+02:00';

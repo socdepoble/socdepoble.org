@@ -17,6 +17,7 @@
  * tests/fixtures/xat-entitats/regression.sql, no un doble de l'RPC.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 
 const mock = vi.hoisted(() => ({ getClient: vi.fn() }));
 vi.mock('./config.js', () => ({ getClient: mock.getClient }));

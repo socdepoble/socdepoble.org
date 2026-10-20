@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   CLAUS_SELECCIO, LLARGARIA_SLUG, SLUG_SENSE_TEXT, escriuSeccio, escriuSeleccio, llegixSeccio,
-  llegixSeleccio, rutaAmbConsulta, slugDeSeccio, slugsDeSeccions
+  llegixSeleccio, rutaAmbConsulta, seccioDelFragment, slugDeSeccio, slugsDeSeccions
 } from './seleccioUrl.js';
 
 const NOTES = Object.freeze({ item: 'nota' });
@@ -113,5 +113,25 @@ describe('anada i tornada URL → estat → URL', () => {
   test('les claus per defecte són les del contracte', () => {
     expect(CLAUS_SELECCIO).toEqual({ carpeta: 'carpeta', item: 'item', seccio: 'seccio' });
     expect(Object.isFrozen(CLAUS_SELECCIO)).toBe(true);
+  });
+});
+
+/* Fase D (261020, tasca 3.2) · /legal#esborra-compte: el fragment del document
+   com a secció, només si són paraules i guions. */
+describe('seccioDelFragment', () => {
+  test('un fragment de paraules i guions és una secció, normalitzada com un slug', () => {
+    expect(seccioDelFragment('#esborra-compte')).toBe('esborra-compte');
+    expect(seccioDelFragment('esborra-compte')).toBe('esborra-compte');
+    expect(seccioDelFragment('#16-els-teus-drets')).toBe('16-els-teus-drets');
+    expect(seccioDelFragment('#Esborra-Compte')).toBe('esborra-compte');
+    expect(seccioDelFragment('#pl%C3%A0tan')).toBe('platan');
+  });
+
+  test('null per a res, per a fragments de paràmetres, mal codificats, amb guions dobles o massa llargs', () => {
+    for (const dolent of [undefined, null, '', '#', '#access_token=a&refresh_token=b', '#sdp-ruta=%2Fxat', '#%E0%A4%A',
+      '#a--b', '#-a', '#a-', '#a b', '#a%20b', `#${'a'.repeat(LLARGARIA_SLUG + 1)}`, `#${'%C3%A0'.repeat(LLARGARIA_SLUG)}`]) {
+      expect(seccioDelFragment(dolent), String(dolent)).toBeNull();
+    }
+    expect(seccioDelFragment(`#${'a'.repeat(LLARGARIA_SLUG)}`)).toBe('a'.repeat(LLARGARIA_SLUG));
   });
 });

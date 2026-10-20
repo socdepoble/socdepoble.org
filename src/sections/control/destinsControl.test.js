@@ -33,7 +33,7 @@ import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import fontApp from '../../app/App.jsx?raw';
-import fontI18n from '../../config/i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../tests/helpers/diccionaris.js';
 import {
   AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, destiDePagina, enObres, portesDe, rutaDePagina
 } from './destinsControl.js';

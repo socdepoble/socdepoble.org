@@ -1,6 +1,7 @@
 // B03 · El text d'una fallada en obrir un directe: SDP-XAT-016 es diu en la
 // llengua de la interfície (mai el codi cru); la resta d'errors, com sempre.
 import { describe, expect, it } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { textDeFalladaDirecte } from './XatSection.jsx';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 

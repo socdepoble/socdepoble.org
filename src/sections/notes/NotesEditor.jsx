@@ -32,6 +32,9 @@ import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -167,6 +170,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const ETIQUETES_BASE = etiquetesBase(taxonomia);
   const { showToast } = useToast();
   const mur = useMur();
+  /* Fase D (261020, tasca 2) · La porta de les normes de convivència abans de
+     publicar (onTria, més avall). Estable: no torna a fer l'adaptador. */
+  const { asseguraNormes = null } = useModeracio() ?? {};
   /* Bloc 3.8 del Gauntlet (261016) · El canal de la graella d'emojis del Bloc
      (NotesSection): l'editor s'hi registra per a escriure al cursor, i l'ordre
      «/» Emoji l'obri. Fora del Bloc (sense canal), l'adaptador de sempre. */
@@ -419,6 +425,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          la de visibilitatNota.js (publicaAmbMotiu), la mateixa del lector. */
       onTria: async (publica, doc) => {
         if (!publica || bloqueig?.opcio === 'publica') return true;
+        /* Fase D (261020, tasca 2; pla 261020_1300 · Google Play UGC) · Abans
+           de la primera publicació, les normes de convivència
+           (ModeracioContext · asseguraNormes, estable). Declinar deixa el
+           selector obert i diu per què, en línia (crítica 261020, 10). Ací
+           s'hi podrà endollar el filtre previ que demana Apple 1.2. */
+        if (asseguraNormes && !(await asseguraNormes())) throw new Error(tradueix(t, TEXTOS_MODERACIO.calAcceptar));
         return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota : publishNote)(doc));
       },
     };
@@ -521,7 +533,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis, asseguraNormes]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

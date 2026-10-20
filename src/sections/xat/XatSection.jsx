@@ -64,19 +64,21 @@
  * camp (--sdp-focus). Ara el focus pinta la llista de filtres del patró de
  * missatgeria.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CircleX, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
 import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
-import TextSection from '../text/TextSection';
+/* Fase D (261020, L4) · El document destacat (TextSection i PAGE_COPY) arriba en diferit. */
+import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { esperaDeLaLlista, useXat } from './XatContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { subjecteDeXat } from '../../data/contracte.js';
 import { construeixRetall } from './retall.js';
 import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
@@ -361,6 +363,14 @@ function XatWorkspace() {
        Javi depén del mode de dades (useObriXatPerDefecte). */
     modeDades = 'remote'
   } = useXat();
+  /* Fase D (261020, tasca 2; pla 261020_1300) · Denunciar i bloquejar des de
+     la conversa: només amb la capacitat i una sessió (el xat de mostra, mai).
+     La porta de les normes no és ací: viu a XatContext (sendChatMessage). */
+  const moderacioDePoble = useModeracio();
+  const moderacioDelXat = useMemo(
+    () => (moderacioDePoble?.disponible === true && !senseSessio ? moderacioDePoble : null),
+    [moderacioDePoble, senseSessio]
+  );
   /* Gauntlet 261016_1530 (Bloc 3.6) · En remot, la comunitat de Sóc de Poble
      es reconeix per l'id que el backend dona a l'entitat pilot: el Xat torna
      a pintar quan arriba (useEntitatDelProjecte, la mateixa resolució única
@@ -1408,6 +1418,7 @@ function XatWorkspace() {
           initialText={connectionContext}
           fil={activeThread}
           entitatActiva={entitatActiva}
+          moderacio={moderacioDelXat}
           messages={messages}
           onSendMessage={sendChatMessage}
           onBack={handleBackToList}
@@ -1582,27 +1593,65 @@ function ConversaAPantallaCompleta() {
    descriptor (revisió del 261007, M3-10): la ruta de la pàgina que el lector
    de connexions sap resoldre (/page/xat, /iaia…), mai /xat, que no és cap
    pàgina (proposta P4). */
-function ColumnaDretaBuida({ t, seo }) {
-  const { mida } = useAppGrid();
-  const navigate = useNavigate();
-  const { pageCopy } = useCoreContent();
-  const destacada = paginaDestacada(pageCopy);
-  if (mida !== 'estret' && destacada) {
+
+/* Fase D (261020, L4) · El document destacat, en diferit amb la seua còpia local
+   (el precedent de TextRouteAmbCopiaLocal, App.jsx). En estret no es munta mai,
+   tampoc al primer commit sense mesura (AppGridShell comença en 'ample'): /xat
+   en mòbil no baixa TextSection ni PAGE_COPY. */
+const DocumentDestacatDiferit = lazyRoute(() => Promise.all([
+  import('../text/pageContent.js'),
+  import('../text/TextSection')
+]).then(([{ PAGE_COPY }, { default: TextSection }]) => ({
+  default: function DocumentDestacat({ pageCopy, navigate, seo, avis }) {
+    const destacada = paginaDestacada(pageCopy, undefined, PAGE_COPY);
+    if (!destacada) return avis;
     const { clau, pagina } = destacada;
     const objecte = objecteDePagina({ titol: pagina.title, ruta: rutaDeLaPaginaDestacada(clau) });
-    const connecta = () => navigate(rutaConnectarObjecte(objecte));
     return (
       <div className="sdp-xat-buit">
-        <TextSection page={{ ...pagina, chrome: 'context' }} pageKey={clau} onConnect={connecta} objecte={objecte} />
+        <TextSection page={{ ...pagina, chrome: 'context' }} pageKey={clau}
+          onConnect={() => navigate(rutaConnectarObjecte(objecte))} objecte={objecte} />
         <SeoDelXat key={`${pagina.title}\n${pagina.subtitle || pagina.lead || ''}`} {...seo} />
       </div>
     );
   }
+})));
+
+/* Un tros que no arriba (connexió rural) deixa a la columna dreta l'avís de
+   sempre fins a recarregar (lazyRoute: la fallada queda en memòria); qualsevol
+   altre error puja (precedent: BarreraDelPanellDelPoble, detailSectionMeta.jsx). */
+export class BarreraDelDocumentDestacat extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (!this.state.error) return this.props.children;
+    if (!esErrorLazy(this.state.error)) throw this.state.error;
+    return this.props.fallback;
+  }
+}
+
+function AvisSenseConversa({ t }) {
   return (
     <div className="sdp-xat-buit sdp-xat-buit--avis">
       <MessageCircle size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
       <p className="sdp-xat-buit__titol">{t('section.xat.selectConversation', 'Selecciona una conversa')}</p>
     </div>
+  );
+}
+
+function ColumnaDretaBuida({ t, seo }) {
+  const { mida, mesurada } = useAppGrid();
+  const navigate = useNavigate();
+  const { pageCopy } = useCoreContent();
+  const avis = <AvisSenseConversa t={t} />;
+  /* `=== false`: un context sense la clau (proves antigues) es pren per mesurat. */
+  if (mida === 'estret' || mesurada === false) return avis;
+  return (
+    <BarreraDelDocumentDestacat fallback={avis}>
+      <Suspense fallback={<div className="sdp-xat-buit" />}>
+        <DocumentDestacatDiferit pageCopy={pageCopy} navigate={navigate} seo={seo} avis={avis} />
+      </Suspense>
+    </BarreraDelDocumentDestacat>
   );
 }
 

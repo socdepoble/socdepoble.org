@@ -14,7 +14,7 @@
    amb un fetch de mentida que servisca les seues captures reals.
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */
-import { CAPACITATS, CONTRACTE_NUCLI, SECCIONS_PAGINABLES } from '../contracte.js';
+import { CAPACITATS, CODI_MODERACIO, CONTRACTE_NUCLI, SECCIONS_PAGINABLES, TIPUS_BLOQUEJAT } from '../contracte.js';
 
 /* ── Ajudants de forma: cada un torna la llista de falles (buida = conforme). ── */
 
@@ -97,6 +97,11 @@ function fallesDePersonalitzacio(personalitzacio) {
 const rebuigAmbCode = (error) => (error instanceof Error && esTextNoBuit(error.code)
   ? []
   : [`havia de rebutjar amb un Error amb code: ${tipusDe(error)} ${JSON.stringify(error?.code ?? null)}`]);
+/* Fase D (261020, tasca 2) · Un rebuig amb un code concret (CODI_MODERACIO). */
+const rebuigAmbCodi = (esperat) => (error) => [
+  ...rebuigAmbCode(error),
+  ...(error?.code === undefined || error.code === esperat ? [] : [`el code havia de ser ${esperat} i és ${JSON.stringify(error.code)}`])
+];
 const CODIS_SENSE_SEGON_FACTOR = ['cal-segon-factor', 'sense-sessio'];
 const rebuigSenseSegonFactor = (error) => [
   ...rebuigAmbCode(error),
@@ -354,6 +359,14 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => [ctx.config],
     comprova: (valor) => (typeof valor?.ok === 'boolean' ? [] : [`havia de ser { ok: boolean }: ${JSON.stringify(valor)}`])
   }),
+  /* Fase D (261020, tasca 1) · Un proveïdor desconegut es rebutja amb un code
+     abans de cap petició i sense tocar la sessió: el kit no té cap testimoni de veres. */
+  cas({
+    metode: 'entraAmbTokenDeProveidor', capacitat: 'entradaAmbToken', espera: 'rebutja',
+    titol: "entraAmbTokenDeProveidor('desconegut', credencial, config) rebutja amb un code sense xarxa ni sessió",
+    arguments: (ctx) => ['desconegut', { testimoni: 'a.b.c', nonce: null, testimoniAcces: null, nom: null }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
   cas({
     metode: 'obriFilDePagina', capacitat: 'xatDePagina',
     titol: 'obriFilDePagina(objecte, config) → null per a un subjecte sense xat (una nota)',
@@ -474,6 +487,61 @@ export const CASOS = Object.freeze([
     titol: 'esborraElMeuMitja(ref, config) d’una foto que no és de qui crida rebutja amb un code',
     arguments: (ctx) => ['sdp-media://mitjans/conformitat/no-es-meua/avatars/conformitat.webp', ctx.config],
     comprova: rebuigAmbCode
+  }),
+  /* Fase D (261020, tasca 2; pla 261020_1300) · La moderació (capacitats
+     'moderacio' i 'normesConvivencia'). Cap cas no escriu: la llista i
+     l'estat de les normes només es lligen, i els rebuigs ixen de la regla
+     d'entrada del contracte (denunciaDelContracte, autorDelContracte i la
+     versió vigent), abans de cap xarxa. */
+  cas({
+    metode: 'llistaBloquejos', capacitat: 'moderacio',
+    titol: "llistaBloquejos(config) → Bloqueig[] ({ tipus: 'persona' | 'entitat', id, nom: text | null, creatAl: ISO | null }); buida sense sessió",
+    arguments: (ctx) => [ctx.config],
+    comprova: (llista) => {
+      if (!Array.isArray(llista)) return [`havia de ser una llista i és ${tipusDe(llista)}`];
+      return llista.flatMap((b) => [
+        ...(TIPUS_BLOQUEJAT.includes(b?.tipus) ? [] : [`un bloqueig té tipus ${JSON.stringify(b?.tipus)}`]),
+        ...(esTextNoBuit(b?.id) ? [] : ['un bloqueig sense id de text']),
+        ...(b?.nom === null || typeof b?.nom === 'string' ? [] : [`el bloqueig ${b?.id} té un nom que no és text ni null`]),
+        ...(b?.creatAl === null || esTextNoBuit(b?.creatAl) ? [] : [`el bloqueig ${b?.id} té un creatAl que no és text ni null`])
+      ]);
+    }
+  }),
+  cas({
+    metode: 'denunciaContingut', capacitat: 'moderacio', espera: 'rebutja',
+    titol: "denunciaContingut({ objecte, motiu: 'inventat' }, config) rebutja amb code motiu-invalid sense xarxa",
+    arguments: (ctx) => [{ objecte: { tipus: 'publicacio', id: 'conformitat-sense-objecte' }, motiu: 'inventat' }, ctx.config],
+    comprova: rebuigAmbCodi(CODI_MODERACIO.MOTIU_INVALID)
+  }),
+  cas({
+    metode: 'bloquejaAutor', capacitat: 'moderacio', espera: 'rebutja',
+    titol: "bloquejaAutor({ tipus: 'persona', id: '' }, config) rebutja amb code objectiu-invalid sense xarxa",
+    arguments: (ctx) => [{ tipus: 'persona', id: '' }, ctx.config],
+    comprova: rebuigAmbCodi(CODI_MODERACIO.OBJECTIU_INVALID)
+  }),
+  cas({
+    metode: 'desbloquejaAutor', capacitat: 'moderacio', espera: 'rebutja',
+    titol: "desbloquejaAutor({ tipus: 'inventat', id }, config) rebutja amb code objectiu-invalid sense xarxa",
+    arguments: (ctx) => [{ tipus: 'inventat', id: 'conformitat' }, ctx.config],
+    comprova: rebuigAmbCodi(CODI_MODERACIO.OBJECTIU_INVALID)
+  }),
+  cas({
+    metode: 'estatNormes', capacitat: 'normesConvivencia',
+    titol: 'estatNormes(config) → { versio: text | null, acceptadaAl: ISO | null }',
+    arguments: (ctx) => [ctx.config],
+    comprova: (estat) => {
+      if (!esObjecte(estat)) return [`havia de ser un objecte i és ${tipusDe(estat)}`];
+      return [
+        ...(estat.versio === null || esTextNoBuit(estat.versio) ? [] : [`versio havia de ser text o null i és ${tipusDe(estat.versio)}`]),
+        ...(estat.acceptadaAl === null || esTextNoBuit(estat.acceptadaAl) ? [] : [`acceptadaAl havia de ser text o null i és ${tipusDe(estat.acceptadaAl)}`])
+      ];
+    }
+  }),
+  cas({
+    metode: 'acceptaNormes', capacitat: 'normesConvivencia', espera: 'rebutja',
+    titol: "acceptaNormes('no-es-cap-versio', config) rebutja amb code versio-invalida sense xarxa",
+    arguments: (ctx) => ['no-es-cap-versio', ctx.config],
+    comprova: rebuigAmbCodi(CODI_MODERACIO.VERSIO_INVALIDA)
   })
 ]);
 

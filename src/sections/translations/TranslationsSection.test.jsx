@@ -8,7 +8,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n';
 /* El diccionari no s'exporta: es compta sobre el text de la font. */
-import fontI18n from '../../config/i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../tests/helpers/diccionaris.js';
 
 const m = vi.hoisted(() => ({ language: 'ca', setLanguage: vi.fn(), navigate: vi.fn(), pagina: null }));
 

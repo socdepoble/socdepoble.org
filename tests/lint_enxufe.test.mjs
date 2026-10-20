@@ -6,7 +6,9 @@
  *  a text tres regles més:
  *   · tota classe nova de la marca de l'amfitrió (MarcaAmfitrio.jsx, App.jsx)
  *     té una regla als fulls canònics de src/css;
- *   · la clau i18n `amfitrio.servidor` és als cinc blocs de src/config/i18n.js;
+ *   · la clau i18n `amfitrio.servidor` és als cinc diccionaris de
+ *     src/config/idiomes/ (Fase D, 261020, tasca 4.1 · L1: abans, cinc blocs
+ *     de src/config/i18n.js);
  *   · cap fitxer del torn porta en cru caràcters de control, invisibles ni de
  *     control bidi (el conjunt es construïx amb String.fromCodePoint: ací no
  *     n'hi ha cap en cru).
@@ -347,25 +349,20 @@ const CLAUS_AMB_NOM = ['amfitrio.node', 'amfitrio.nodeConnectant', 'amfitrio.nod
 const CLAUS_SENSE_NOM = ['amfitrio.mesInfo', 'amfitrio.tanca'];
 const FAMILIA = [...CLAUS_AMB_NOM, ...CLAUS_SENSE_NOM].sort();
 
-/** Per llengua: clau `amfitrio.*` → valors (més d'un vol dir duplicada). */
+/** Per llengua: clau `amfitrio.*` → valors (més d'un vol dir duplicada).
+ *  Fase D (261020, tasca 4.1) · L1 · Cada llengua es llig del seu diccionari,
+ *  src/config/idiomes/<codi>.js; un fitxer absent tomba la prova. */
 function valorsAmfitrio() {
-  const text = llig('src/config/i18n.js');
-  const inici = text.indexOf('const TRANSLATIONS = {');
-  assert.ok(inici >= 0, 'No trobe TRANSLATIONS a i18n.js');
-  const cos = text.slice(inici);
-  const posicions = LLENGUES.map((l) => ({ l, i: cos.search(new RegExp(`\\n  ${l}: \\{`)) }));
-  for (const p of posicions) assert.ok(p.i >= 0, `No trobe el bloc ${p.l} a i18n.js`);
-  const ordenades = [...posicions].sort((a, b) => a.i - b.i);
   const resultat = {};
-  ordenades.forEach((p, idx) => {
-    const fi = idx + 1 < ordenades.length ? ordenades[idx + 1].i : cos.length;
-    const bloc = cos.slice(p.i, fi);
+  for (const l of LLENGUES) {
+    const ruta = `src/config/idiomes/${l}.js`;
+    assert.ok(existix(ruta), `No trobe el diccionari ${l} (${ruta})`);
     const valors = new Map();
-    for (const m of bloc.matchAll(/^\s*'(amfitrio\.[^']+)'\s*:\s*(['"])(.*)\2,?\s*$/gm)) {
+    for (const m of llig(ruta).matchAll(/^\s*'(amfitrio\.[^']+)'\s*:\s*(['"])(.*)\2,?\s*$/gm)) {
       valors.set(m[1], [...(valors.get(m[1]) || []), m[3]]);
     }
-    resultat[p.l] = valors;
-  });
+    resultat[l] = valors;
+  }
   return resultat;
 }
 

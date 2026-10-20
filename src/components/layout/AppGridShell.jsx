@@ -447,6 +447,9 @@ export default function AppGridShell({
 
   const ctxValue = useMemo(() => ({
     mida,
+    /* Fase D (261020, L4) · `mesurada` diu si ja hi ha un render amb la mida
+       mesurada; només és false al primer commit, sense pintar. */
+    mesurada,
     panellObert,
     setPanellObert: demanaPanell,
     tancaPanells,
@@ -459,7 +462,7 @@ export default function AppGridShell({
     navegacioEnRail,
     columnWidths,
     applyPreset
-  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, llistaEnRail, ambRailEstret, nodeRail, esquerraEnRail, navegacioEnRail, applyPreset]);
+  }), [mida, mesurada, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, llistaEnRail, ambRailEstret, nodeRail, esquerraEnRail, navegacioEnRail, applyPreset]);
 
   return (
     <AppGridContext.Provider value={ctxValue}>

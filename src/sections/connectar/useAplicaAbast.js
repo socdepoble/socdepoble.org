@@ -14,14 +14,24 @@
  *
  * Model B: parla amb useXat i useNotesData, mai amb Supabase. Cap capacitat
  * nova: creaFil i sendChatMessage ja són del nucli del xat.
+ *
+ * Fase D (261020, tasca 2; pla 261020_1300 · Google Play UGC; crítica
+ * 261020, 1) · Abans de cap enviament, les normes de convivència UNA sola
+ * vegada (useModeracio · asseguraNormes): si la persona les declina, no ix
+ * res i cada destinatari queda «pendent», amb el motiu. Sense això, la porta
+ * de XatContext obriria el diàleg una vegada per destinatari.
  */
 import { useCallback } from 'react';
 import { useXat } from '../xat/XatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 import { normalitzaAbast } from '../../data/origenNota.js';
 import { aplicatDe, passosDAplicacio } from './abastConnexio.js';
 
 const NO_ENVIAT = 'No s’ha enviat. El trobaràs al xat per a tornar-ho a provar.';
+/* Fase D (261020, tasca 2) · La reserva valenciana, com la resta de detalls d'ací. */
+const CAL_ACCEPTAR = TEXTOS_MODERACIO.calAcceptar[1];
 
 async function executaPas(pas, missatge, { creaFil, sendChatMessage }) {
   const { tipus, desti } = pas;
@@ -35,7 +45,9 @@ async function executaPas(pas, missatge, { creaFil, sendChatMessage }) {
       filId = desti.filId || await creaFil(desti.id, null);
       if (!filId) return { ...base, estat: 'error', detall: 'No s’ha pogut obrir la conversa.' };
     }
-    // sendChatMessage no llança: torna el missatge desat o [] si no ha eixit.
+    /* sendChatMessage torna el missatge desat o [] si no ha eixit. Fase D
+       (261020, tasca 2) · Només llança (AbortError) si es declinen les
+       normes, i això ja s'ha preguntat abans del primer pas (aplica). */
     const enviats = await sendChatMessage({ id: filId }, missatge);
     const fet = Array.isArray(enviats) && enviats.length > 0;
     return { ...base, estat: fet ? 'fet' : 'error', detall: fet ? 'Enviat per xat.' : NO_ENVIAT };
@@ -47,6 +59,8 @@ async function executaPas(pas, missatge, { creaFil, sendChatMessage }) {
 export function useAplicaAbast() {
   const { creaFil, sendChatMessage } = useXat();
   const { updateNote } = useNotesData();
+  /* asseguraNormes és estable (ModeracioContext): no refà `aplica`. */
+  const asseguraNormes = useModeracio()?.asseguraNormes ?? null;
 
   /**
    * `nota`: la connexió acabada de crear. `origen`: el que s'hi ha desat.
@@ -55,6 +69,14 @@ export function useAplicaAbast() {
    */
   const aplica = useCallback(async ({ nota, origen, abast, missatge }) => {
     const passos = passosDAplicacio(abast);
+    /* Fase D (261020, tasca 2) · Les normes, una sola vegada i abans de res. */
+    if (asseguraNormes && passos.some((pas) => pas.tipus !== 'mur') && !(await asseguraNormes())) {
+      return {
+        resultats: passos.map(({ tipus, desti }) => ({
+          clau: `${tipus}:${desti.id}`, tipus, id: desti.id, nom: desti.nom, estat: 'pendent', detall: CAL_ACCEPTAR
+        }))
+      };
+    }
     const resultats = [];
     for (const pas of passos) {
       resultats.push(await executaPas(pas, missatge, { creaFil, sendChatMessage }));
@@ -73,7 +95,7 @@ export function useAplicaAbast() {
       }
     }
     return { resultats };
-  }, [creaFil, sendChatMessage, updateNote]);
+  }, [creaFil, sendChatMessage, updateNote, asseguraNormes]);
 
   return { aplica };
 }

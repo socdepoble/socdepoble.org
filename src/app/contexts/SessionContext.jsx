@@ -1,6 +1,6 @@
 // src/app/contexts/SessionContext.jsx
 import { createContext, useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react';
-import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor, demanaRecuperacioContrasenya, definixContrasenyaNova } from '../../data/backendPort.js';
+import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor, demanaRecuperacioContrasenya, definixContrasenyaNova, entraAmbTokenDeProveidor } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
 import {
   escoltaRecuperacioPendent, estatEnllacDeRecuperacio, oblidaEnllacDeRecuperacio, oblidaRecuperacioPendent, recuperacioPendentPer
@@ -45,6 +45,10 @@ const ambEntradaExplicita = (entra) => (...args) => {
 const loginWithPasswordDelPort = ambEntradaExplicita((...args) => loginWithPassword(...args));
 const loginWithGoogleDelPort = ambEntradaExplicita((...args) => loginWithGoogle(...args));
 const registerWithPasswordDelPort = ambEntradaExplicita((...args) => registerWithPassword(...args));
+/* Fase D (261020, tasca 1) · La capacitat opcional 'entradaAmbToken' (Apple i
+   Google des del full natiu): una entrada explícita més, resolta en cridar-la
+   com 'salut' (un port, o una prova, sense ella no fa caure el proveïdor). */
+const entraAmbTokenDelPort = ambEntradaExplicita((...args) => entraAmbTokenDeProveidor(...args));
 /* Gauntlet 261016_1530 (Bloc 3.6.4; F66) · L'entrada pilot local
    (data/sessioPilot.js): només en desenvolupament i en mode de proves, sense
    cap petició. No és del port: la sessió de prova és del nucli, per a tots els
@@ -110,6 +114,7 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
     comprovaServidor: comprovaServidorDelPort,
     demanaRecuperacioContrasenya: demanaRecuperacioDelPort,
     definixContrasenyaNova: definixContrasenyaDelPort,
+    entraAmbTokenDeProveidor: entraAmbTokenDelPort,
     /* R2 · «Torna a entrar» i «Demana un enllaç nou» des de la pantalla. */
     oblidaEnllacDeRecuperacio
   }), []);

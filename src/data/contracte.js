@@ -247,6 +247,23 @@ export const CAPACITATS = Object.freeze({
     'demanaRecuperacioContrasenya',
     'definixContrasenyaNova'
   ]),
+  /* Fase D (261020, tasca 1; ordre del Mestre) · Entrar amb el testimoni OIDC
+     (id_token) que un proveïdor ha emés fora de la web (el full natiu d'Apple o
+     de Google). El port només parla OIDC: qui obri el full no és cosa del
+     backend (config/entradaNativa.js). Opcional a posta: un backend sense ella
+     continua sent vàlid i /registre no pinta els botons natius. La interfície
+     ho pregunta amb teCapacitat('entradaAmbToken'). Forma (config sempre l'últim):
+       entraAmbTokenDeProveidor(proveidor, { testimoni, nonce, testimoniAcces, nom }, config) → Promise<{ user }>
+         proveidor 'apple' | 'google'; testimoni el JWT; nonce el CRU (el
+         proveïdor n'ha rebut el SHA-256 en hex) o null; testimoniAcces l'access
+         token de Google (at_hash) o null; nom el que el proveïdor dona fora del
+         testimoni (Apple) o null, desat NOMÉS si la persona encara no en té cap
+         de propi. Coreografia de loginWithPassword (sdp:auth-change, alta
+         completada). Mai torna testimonis de sessió. Errors amb `code` de
+         CODI_ENTRADA (TOKEN_REBUTJAT, PROVEIDOR_INACTIU…); en seed o local, MODE_LOCAL. */
+  entradaAmbToken: Object.freeze([
+    'entraAmbTokenDeProveidor'
+  ]),
   /* Ordre del Mestre (261008, grup C) · Els membres d'una organització.
      Opcional a posta: un backend sense ella continua sent vàlid i el Perfil
      no pinta la gestió de membres ni «Eixir». La interfície ho pregunta amb
@@ -325,6 +342,41 @@ export const CAPACITATS = Object.freeze({
   personalitzacio: Object.freeze([
     'adminDesaPersonalitzacio',
     'adminHistorialPersonalitzacio'
+  ]),
+  /* Fase D (261020, tasca 2; pla 261020_1300 · App Store 1.2 i Google Play
+     UGC) · La moderació del contingut dels veïns: denunciar i bloquejar.
+     Opcional a posta: un node sense ella continua sent vàlid i cap targeta
+     ni bombolla no pinta «Més opcions». La interfície ho pregunta amb
+     teCapacitat('moderacio'). Formes (config sempre l'últim):
+       denunciaContingut({ objecte: { tipus, id }, motiu, detall?, autor?: { tipus, id }, filId? }, config)
+         → Promise<{ rebuda: true, repetida: boolean }>
+         tipus de TIPUS_OBJECTE_DENUNCIA; motiu de MOTIUS_DENUNCIA; detall de
+         fins a MAXIM_DETALL_DENUNCIA caràcters. També sense sessió (anon).
+         `repetida`: la mateixa persona ja l'havia denunciat i està pendent.
+       llistaBloquejos(config) → Promise<Bloqueig[]>  (de qui crida; [] sense sessió)
+       bloquejaAutor({ tipus, id, nom? }, config) → Promise<Bloqueig>  (idempotent)
+       desbloquejaAutor({ tipus, id }, config) → Promise<{ desbloquejat: boolean }>
+     Bloqueig: { tipus: 'persona' | 'entitat', id, nom: string | null, creatAl: ISO | null }.
+     Els errors porten `code` de CODI_MODERACIO; sense la migració aplicada,
+     'no-disponible'. */
+  moderacio: Object.freeze([
+    'denunciaContingut',
+    'llistaBloquejos',
+    'bloquejaAutor',
+    'desbloquejaAutor'
+  ]),
+  /* Fase D (261020, tasca 2) · Les normes de convivència, acceptades abans
+     de la primera publicació (Play UGC; App Store 1.2, tolerància zero).
+     Opcional: sense ella la interfície ho recorda només en este dispositiu.
+     Formes:
+       estatNormes(config) → Promise<{ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: ISO | null }>
+         L'acceptació de la versió vigent; sense sessió, acceptadaAl null.
+       acceptaNormes(versio, config) → Promise<{ versio, acceptadaAl }>
+         versio === VERSIO_NORMES_CONVIVENCIA (si no, 'versio-invalida');
+         sense sessió, 'sense-sessio'. */
+  normesConvivencia: Object.freeze([
+    'estatNormes',
+    'acceptaNormes'
   ])
 });
 
@@ -479,4 +531,83 @@ export function membreDOrganitzacio(dades, { ambRol = true } = {}) {
   const rolValid = !ambRol || (tipus === 'persona' ? rol === 'member' || rol === 'admin' : rol === 'member');
   if ((tipus !== 'persona' && tipus !== 'organitzacio') || !id || !rolValid) throw errorDeMembre('SDP-ORGMEM-001');
   return ambRol ? { tipus, id, rol } : { tipus, id };
+}
+
+/* ── Fase D (261020, tasca 2; pla 261020_1300) · La moderació ────────────
+   Una sola llista blanca i una sola regla d'entrada per a tots els
+   adaptadors de 'moderacio' i 'normesConvivencia' (Supabase, la llavor i
+   qualsevol node federat), com TIPUS_SUBJECTE_XAT i
+   MISSATGES_MEMBRES_ORGANITZACIO: la interfície decidix pel `code`, mai pel
+   text. Són els CHECK de
+   supabase/migrations/2610201500_moderacio_denuncies_i_bloquejos.sql, i
+   src/data/supabase/moderacio.migracio.test.js els contrasta. */
+export const TIPUS_OBJECTE_DENUNCIA = Object.freeze(['publicacio', 'producte', 'esdeveniment', 'missatge', 'persona', 'entitat']);
+export const MOTIUS_DENUNCIA = Object.freeze(['ofensiu', 'spam_frau', 'desinformacio', 'altre']);
+export const TIPUS_BLOQUEJAT = Object.freeze(['persona', 'entitat']);
+export const MAXIM_DETALL_DENUNCIA = 1000;
+export const MAXIM_NOM_BLOQUEJAT = 120;
+/* Canviar el text de les normes vol dir pujar esta data: tothom les torna a acceptar. */
+export const VERSIO_NORMES_CONVIVENCIA = '2026-10-20';
+const RE_ID_MODERACIO = /^[A-Za-z0-9._:~-]{1,200}$/;
+/** Cert si `id` és un identificador que el servidor accepta (el CHECK de la migració). Pura. */
+export const esIdDeModeracio = (id) => typeof id === 'string' && RE_ID_MODERACIO.test(id);
+
+export const CODI_MODERACIO = Object.freeze({
+  OBJECTIU_INVALID: 'objectiu-invalid', MOTIU_INVALID: 'motiu-invalid', DETALL_MASSA_LLARG: 'detall-massa-llarg',
+  AUTOBLOQUEIG: 'autobloqueig', VERSIO_INVALIDA: 'versio-invalida', LIMIT: 'limit',
+  SENSE_SESSIO: 'sense-sessio', NO_DISPONIBLE: 'no-disponible', DESCONEGUT: 'desconegut'
+});
+export const MISSATGE_MODERACIO = Object.freeze({
+  'objectiu-invalid': 'El contingut o la persona no són vàlids.',
+  'motiu-invalid': 'Tria un dels motius de la llista.',
+  'detall-massa-llarg': 'El detall passa de 1.000 caràcters.',
+  autobloqueig: 'No et pots bloquejar a tu mateix.',
+  'versio-invalida': 'La versió de les normes no és la vigent.',
+  limit: 'Massa denúncies o bloquejos en poc de temps. Torna-ho a provar d’ací a una estona.',
+  'sense-sessio': 'Cal entrar al compte.',
+  'no-disponible': 'El servidor encara no té la moderació. Cal aplicar la migració pendent.',
+  desconegut: 'No s’ha pogut completar. Torna-ho a provar.'
+});
+
+/** Un Error amb el `code` de CODI_MODERACIO (un codi desconegut és 'desconegut') i, si n'hi ha, la causa. Pura. */
+export function errorDeModeracio(code, cause) {
+  const codi = Object.hasOwn(MISSATGE_MODERACIO, code) ? code : CODI_MODERACIO.DESCONEGUT;
+  return Object.assign(new Error(MISSATGE_MODERACIO[codi], cause ? { cause } : undefined), { code: codi });
+}
+
+/**
+ * La denúncia normalitzada ({ objecte: { tipus, id }, motiu, detall, autor,
+ * filId }); si no és vàlida, llança amb el code (OBJECTIU_INVALID,
+ * MOTIU_INVALID o DETALL_MASSA_LLARG). Un autor o un fil que no casen amb
+ * la regla es descarten (null), no tomben la denúncia. Pura.
+ */
+export function denunciaDelContracte(dades) {
+  const tipus = String(dades?.objecte?.tipus ?? '').trim();
+  const id = String(dades?.objecte?.id ?? '').trim();
+  if (!TIPUS_OBJECTE_DENUNCIA.includes(tipus) || !esIdDeModeracio(id)) throw errorDeModeracio(CODI_MODERACIO.OBJECTIU_INVALID);
+  const motiu = String(dades?.motiu ?? '').trim();
+  if (!MOTIUS_DENUNCIA.includes(motiu)) throw errorDeModeracio(CODI_MODERACIO.MOTIU_INVALID);
+  const detall = typeof dades?.detall === 'string' ? dades.detall.trim() : '';
+  // .length compta unitats UTF-16 (≥ char_length de Postgres): mai s'envia el que el servidor rebutjaria.
+  if (detall.length > MAXIM_DETALL_DENUNCIA) throw errorDeModeracio(CODI_MODERACIO.DETALL_MASSA_LLARG);
+  const autorTipus = String(dades?.autor?.tipus ?? '').trim();
+  const autorId = String(dades?.autor?.id ?? '').trim();
+  const autor = TIPUS_BLOQUEJAT.includes(autorTipus) && esIdDeModeracio(autorId) ? { tipus: autorTipus, id: autorId } : null;
+  const filId = String(dades?.filId ?? '').trim();
+  return { objecte: { tipus, id }, motiu, detall: detall || null, autor, filId: esIdDeModeracio(filId) ? filId : null };
+}
+
+/**
+ * { tipus, id, nom } d'un bloqueig (o { tipus, id } amb `ambNom: false`),
+ * normalitzat; si no és vàlid, OBJECTIU_INVALID. El nom es retalla a
+ * MAXIM_NOM_BLOQUEJAT i, buit, és null. No valida si l'id és un UUID: cada
+ * adaptador sap quins ids són seus. Pura.
+ */
+export function autorDelContracte(dades, { ambNom = true } = {}) {
+  const tipus = String(dades?.tipus ?? '').trim();
+  const id = String(dades?.id ?? '').trim();
+  if (!TIPUS_BLOQUEJAT.includes(tipus) || !esIdDeModeracio(id)) throw errorDeModeracio(CODI_MODERACIO.OBJECTIU_INVALID);
+  if (!ambNom) return { tipus, id };
+  const nom = typeof dades?.nom === 'string' ? dades.nom.trim().slice(0, MAXIM_NOM_BLOQUEJAT) : '';
+  return { tipus, id, nom: nom || null };
 }

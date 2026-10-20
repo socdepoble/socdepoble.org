@@ -6,6 +6,12 @@ import {
 } from './contracte.js';
 import { SECTION_ORDER, SECTIONS } from '../config/sections.js';
 import { RUTA_FITXA_IAIA } from '../config/navigation.js';
+/* Fase D (261020, tasca 2) · La moderació: import a banda, perquè les altres
+   tasques de la fase toquen la llista de dalt alhora. */
+import {
+  CODI_MODERACIO, MAXIM_DETALL_DENUNCIA, MAXIM_NOM_BLOQUEJAT, MISSATGE_MODERACIO, MOTIUS_DENUNCIA, TIPUS_BLOQUEJAT,
+  TIPUS_OBJECTE_DENUNCIA, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, denunciaDelContracte, errorDeModeracio, esIdDeModeracio
+} from './contracte.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
    tractor-enxufe no deixa importar-lo des d'ací, tampoc en una prova. */
 
@@ -239,6 +245,26 @@ test('R · un backend injectat sense recuperacioContrasenya continua sent vàlid
   expect(port.definixContrasenyaNova('contrasenya-nova')).toBe('definixContrasenyaNova');
 });
 
+/* Fase D (261020, tasca 1) · Entrar amb el testimoni d'un proveïdor (Apple, Google). */
+test('Fase D · entradaAmbToken és una capacitat opcional d’un mètode, fora del nucli i congelada', () => {
+  expect(CAPACITATS.entradaAmbToken).toEqual(['entraAmbTokenDeProveidor']);
+  expect(Object.isFrozen(CAPACITATS.entradaAmbToken)).toBe(true);
+  expect(CONTRACTE_NUCLI).not.toContain('entraAmbTokenDeProveidor');
+  expect(CONTRACTE_BACKEND).toContain('entraAmbTokenDeProveidor');
+  /* El nucli no creix. */
+  expect(CONTRACTE_NUCLI).toHaveLength(32);
+});
+
+test('Fase D · un backend sense entradaAmbToken continua sent vàlid i no la pot cridar', () => {
+  expect(() => port.validaBackendImplementation(nucli())).not.toThrow();
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('entradaAmbToken')).toBe(false);
+  expect(() => port.entraAmbTokenDeProveidor('apple', { testimoni: 'a.b.c' })).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('entradaAmbToken') });
+  expect(port.teCapacitat('entradaAmbToken')).toBe(true);
+  expect(port.entraAmbTokenDeProveidor('apple', { testimoni: 'a.b.c' })).toBe('entraAmbTokenDeProveidor');
+});
+
 /* Ordre del Mestre (261008, grup C) · Els membres d'una organització. */
 test('grup C · membresOrganitzacio és una capacitat opcional de tres mètodes, fora del nucli i congelada', () => {
   expect(CAPACITATS.membresOrganitzacio).toEqual(['llistaMembresOrganitzacio', 'desaMembreOrganitzacio', 'llevaMembreOrganitzacio']);
@@ -391,4 +417,87 @@ test('un node amb el nucli sol continua sent vàlid, sense compte ni consentimen
   port.setBackendImplementation({ ...nucli(), ...capacitat('compte'), ...capacitat('consentiment') });
   expect(port.teCapacitat('compte')).toBe(true);
   expect(port.teCapacitat('consentiment')).toBe(true);
+});
+
+/* ── Fase D (261020, tasca 2; pla 261020_1300) · La moderació ── */
+test('Fase D · moderacio i normesConvivencia són capacitats opcionals, fora del nucli, i congelades', () => {
+  expect(CAPACITATS.moderacio).toEqual(['denunciaContingut', 'llistaBloquejos', 'bloquejaAutor', 'desbloquejaAutor']);
+  expect(CAPACITATS.normesConvivencia).toEqual(['estatNormes', 'acceptaNormes']);
+  for (const cap of ['moderacio', 'normesConvivencia']) {
+    expect(Object.isFrozen(CAPACITATS[cap])).toBe(true);
+    for (const nom of CAPACITATS[cap]) {
+      expect(CONTRACTE_NUCLI).not.toContain(nom);
+      expect(CONTRACTE_BACKEND).toContain(nom);
+    }
+    expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat(cap, 1) })).toThrow(`Capacitat parcial: ${cap}`);
+  }
+});
+
+test('Fase D · un backend sense moderació continua sent vàlid i no la pot cridar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('moderacio')).toBe(false);
+  expect(port.teCapacitat('normesConvivencia')).toBe(false);
+  expect(() => port.llistaBloquejos({})).toThrow('no està implementat');
+  expect(() => port.estatNormes({})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('moderacio'), ...capacitat('normesConvivencia') });
+  expect(port.teCapacitat('moderacio')).toBe(true);
+  expect(port.teCapacitat('normesConvivencia')).toBe(true);
+  expect(port.bloquejaAutor({ tipus: 'persona', id: 'p' }, {})).toBe('bloquejaAutor');
+  expect(port.acceptaNormes(VERSIO_NORMES_CONVIVENCIA, {})).toBe('acceptaNormes');
+});
+
+describe('Fase D · la regla d’entrada de la moderació', () => {
+  it('les llistes blanques són les de la migració, congelades', () => {
+    expect(TIPUS_OBJECTE_DENUNCIA).toEqual(['publicacio', 'producte', 'esdeveniment', 'missatge', 'persona', 'entitat']);
+    expect(MOTIUS_DENUNCIA).toEqual(['ofensiu', 'spam_frau', 'desinformacio', 'altre']);
+    expect(TIPUS_BLOQUEJAT).toEqual(['persona', 'entitat']);
+    expect([MAXIM_DETALL_DENUNCIA, MAXIM_NOM_BLOQUEJAT]).toEqual([1000, 120]);
+    expect(VERSIO_NORMES_CONVIVENCIA).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    for (const llista of [TIPUS_OBJECTE_DENUNCIA, MOTIUS_DENUNCIA, TIPUS_BLOQUEJAT, CODI_MODERACIO, MISSATGE_MODERACIO]) {
+      expect(Object.isFrozen(llista)).toBe(true);
+    }
+  });
+
+  it('cada codi té un missatge en valencià, i un error porta el code i la causa', () => {
+    expect(Object.keys(MISSATGE_MODERACIO).sort()).toEqual(Object.values(CODI_MODERACIO).sort());
+    for (const text of Object.values(MISSATGE_MODERACIO)) expect(text).toMatch(/^[A-ZÀ-Ú].*\.$/);
+    const causa = new Error('cru');
+    const error = errorDeModeracio(CODI_MODERACIO.LIMIT, causa);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toMatchObject({ code: 'limit', message: MISSATGE_MODERACIO.limit, cause: causa });
+    expect(errorDeModeracio('inventat').code).toBe('desconegut');
+  });
+
+  it('esIdDeModeracio: el CHECK de la migració', () => {
+    expect(esIdDeModeracio('a1b2-c3.d_e:f~g')).toBe(true);
+    expect(esIdDeModeracio('x'.repeat(200))).toBe(true);
+    for (const dolent of ['', 'amb espai', 'x'.repeat(201), 'barra/no', null, 7]) expect(esIdDeModeracio(dolent)).toBe(false);
+  });
+
+  it('denunciaDelContracte normalitza i descarta l’autor o el fil que no casen', () => {
+    expect(denunciaDelContracte({ objecte: { tipus: ' publicacio ', id: ' p1 ' }, motiu: 'ofensiu', detall: '  massa soroll  ',
+      autor: { tipus: 'persona', id: 'u1' }, filId: 'f1' }))
+      .toEqual({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'ofensiu', detall: 'massa soroll', autor: { tipus: 'persona', id: 'u1' }, filId: 'f1' });
+    expect(denunciaDelContracte({ objecte: { tipus: 'missatge', id: 'm1' }, motiu: 'altre', detall: '   ',
+      autor: { tipus: 'ia', id: 'iaia' }, filId: 'amb espai' }))
+      .toEqual({ objecte: { tipus: 'missatge', id: 'm1' }, motiu: 'altre', detall: null, autor: null, filId: null });
+    expect(denunciaDelContracte({ objecte: { tipus: 'persona', id: 'u1' }, motiu: 'spam_frau', detall: 'x'.repeat(1000) }).detall).toHaveLength(1000);
+  });
+
+  it('denunciaDelContracte rebutja amb el code: objecte, motiu i detall', () => {
+    const codi = (dades) => { try { denunciaDelContracte(dades); return null; } catch (error) { return error.code; } };
+    expect(codi({ objecte: { tipus: 'nota', id: 'n1' }, motiu: 'ofensiu' })).toBe('objectiu-invalid');
+    expect(codi({ objecte: { tipus: 'publicacio', id: 'amb espai' }, motiu: 'ofensiu' })).toBe('objectiu-invalid');
+    expect(codi({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'inventat' })).toBe('motiu-invalid');
+    expect(codi({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'ofensiu', detall: 'x'.repeat(1001) })).toBe('detall-massa-llarg');
+  });
+
+  it('autorDelContracte normalitza el nom (retallat, null si és buit) i rebutja el que no és persona ni entitat', () => {
+    expect(autorDelContracte({ tipus: 'entitat', id: 'e1', nom: `  ${'n'.repeat(130)} ` })).toEqual({ tipus: 'entitat', id: 'e1', nom: 'n'.repeat(120) });
+    expect(autorDelContracte({ tipus: 'persona', id: 'u1', nom: '  ' })).toEqual({ tipus: 'persona', id: 'u1', nom: null });
+    expect(autorDelContracte({ tipus: 'persona', id: 'u1', nom: 'Pep' }, { ambNom: false })).toEqual({ tipus: 'persona', id: 'u1' });
+    for (const dolent of [{ tipus: 'grup', id: 'g1' }, { tipus: 'persona', id: '' }, { tipus: 'persona', id: 'a b' }, null]) {
+      expect(() => autorDelContracte(dolent)).toThrow(expect.objectContaining({ code: 'objectiu-invalid' }));
+    }
+  });
 });

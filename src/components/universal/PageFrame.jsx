@@ -7,12 +7,13 @@ import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHRO
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
-import { escriuSeccio, llegixSeccio, rutaAmbConsulta, slugsDeSeccions } from './workspace/seleccioUrl.js';
+import { escriuSeccio, llegixSeccio, rutaAmbConsulta, seccioDelFragment, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
 import { llevaPuntFinal } from './editorial.js';
 import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
+import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
 import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
 import { useToast } from './NotificationContext.jsx';
 
@@ -45,6 +46,21 @@ export function encapcalamentsIndex(container, selector) {
     .filter((el) => !el.classList.contains('sr-only') && el.textContent.trim() !== '');
   const slugs = slugsDeSeccions(elements.map((el) => el.textContent));
   return elements.map((element, i) => ({ element, slug: slugs[i] }));
+}
+
+/* Fase D (261020, tasca 3.2) · L'àncora estable d'un encapçalament: data-sdp-ancora
+   (el sanejador conserva els data-*, mai l'id). Només h1-h6: és el que recorre l'Índex. */
+const RE_ANCORA = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export function ancoraDe(element) {
+  const valor = element?.getAttribute?.('data-sdp-ancora') ?? '';
+  return valor.length <= 80 && RE_ANCORA.test(valor) ? valor : null;
+}
+
+/* El fragment del document, com useLocation (RouterContext.jsx): només al navegador i
+   dins de la base. En memòria i fora de base, el fragment és de l'amfitrió. */
+function fragmentDelDocument(router) {
+  if (!router || router.memoria === true || typeof router.currentPath !== 'string' || typeof window === 'undefined') return '';
+  return window.location.hash || '';
 }
 
 /* Ordre del Mestre, 261004 (integració final, auditoria d'amfitrió) · Dins de
@@ -487,6 +503,12 @@ export function PageFrame({
      explícita del Mestre, amb el motiu escrit al costat; hui no la passa cap
      pàgina (PageFrame.barraTaronja.test.jsx ho fixa). */
   senseBarraTaronja = false,
+  /* Fase D (261020, tasca 2; pla 261020_1300) · `ambModeracio`: la barra
+     taronja porta «Més opcions» (denunciar i bloquejar l'element o el
+     perfil) darrere de la pastilla, si l'app té el proveïdor i el backend la
+     capacitat (useAccions). Mai en edició (accionsInoperatives). Opt-in:
+     sense la prop, el DOM de sempre. */
+  ambModeracio = false,
   /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · `logoEntitat`:
      el logotip de l'entitat que signa la pàgina, { clar, fosc?, alt }, amb
      els src ja resolts (un sdp-media:// es resol abans, amb
@@ -577,7 +599,8 @@ export function PageFrame({
     connectarVisible,
     comentarXat,
     comentarPrivatAmb,
-    menuTraduir
+    menuTraduir,
+    moderacio
   } = useAccions({
     title,
     objecte: accionsInoperatives ? undefined : objecte,
@@ -591,7 +614,8 @@ export function PageFrame({
     hasFooter: true, // Assuming full chrome provides a footer-like context for these
     // el Connectar de la barra es compta ací, i només ací (D-A: {comptar:false} no el compta)
     telemetria: { ...telemetria, origen: 'pagina' },
-    traduccio: ambTraductor ? traduccio : undefined
+    traduccio: ambTraductor ? traduccio : undefined,
+    ambModeracio: !accionsInoperatives && ambModeracio === true
   });
 
   const handleIndex = onIndex || (() => setIsTocOpen(true));
@@ -602,7 +626,9 @@ export function PageFrame({
      la pàgina hi fa scroll. La que acaba d'escriure l'Índex no torna a fer
      scroll: el clic ja l'ha portada (seccioConsumida). */
   const router = useRouterOpcional();
-  const seccioUrl = llegixSeccio(router?.searchParams);
+  /* Fase D (tasca 3.2) · ?seccio= mana; si no n'hi ha, el fragment del document
+     (/legal#esborra-compte, l'adreça de la Play Console) també hi porta. */
+  const seccioUrl = llegixSeccio(router?.searchParams) ?? seccioDelFragment(fragmentDelDocument(router));
 
   const escriuSeccioUrl = useCallback((slug) => {
     seccioConsumida = slug;
@@ -681,7 +707,7 @@ export function PageFrame({
       else fes();
     };
     const busca = () => {
-      const trobat = encapcalamentsIndex(container, selector).find(({ slug }) => slug === seccioUrl);
+      const trobat = encapcalamentsIndex(container, selector).find(({ element, slug }) => slug === seccioUrl || ancoraDe(element) === seccioUrl);
       if (!trobat) return false;
       salta(trobat.element);
       return true;
@@ -848,6 +874,12 @@ export function PageFrame({
           dateTime={barDateTime}
           onDateTime={onDateTime}
           etiquetaData={dateTimeLabel}
+          /* Fase D (261020, tasca 2) · El ⋮ «Més opcions» (Moderacio.jsx),
+             amb el títol de la pàgina al nom accessible. */
+          accioModeracio={moderacio ? (
+            <BotoModeracio titol={typeof title === 'string' ? title : ''} nomAutor={moderacio.objectiu.autor?.nom}
+              tipusObjectiu={moderacio.objectiu.tipus} potBloquejar={moderacio.potBloquejar} onTria={moderacio.onTria} />
+          ) : null}
         />
       )}
 

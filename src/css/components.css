@@ -92,6 +92,28 @@
   }
   .sdp-boto--gran { min-height: var(--sdp-alt-accio); padding: 0 var(--sdp-space-8); font-size: var(--sdp-text-base); }
   .sdp-boto--ple { width: 100%; }
+  /* Fase D (261020, tasca 1; ordre del Mestre) · Els botons de marca de l'entrada
+     nativa (EntradaNativa.jsx): «Continua amb Apple» (HIG) i «Continua amb Google»
+     (guia de marca de Google), tots dos de 48px d'alt (el sòl de .sdp-boto) amb la
+     lletra del sistema. Apple sense vora ni farciment vertical; Google amb la vora
+     d'1px de la seua guia. Cap :hover: el focus, el desactivat i el premut són els
+     de .sdp-boto. Els colors són tokens (--sdp-marca-*, tokens.css). */
+  .sdp-boto--marca { gap: var(--sdp-space-3); font-family: var(--sdp-font-sistema); font-weight: 600; }
+  .sdp-boto--apple {
+    padding-block: 0; border: 0;
+    background: var(--sdp-marca-apple-fons); color: var(--sdp-marca-apple-text); font-size: var(--sdp-marca-apple-lletra);
+  }
+  .sdp-boto--google {
+    border: 1px solid var(--sdp-marca-google-vora);
+    background: var(--sdp-marca-google-fons); color: var(--sdp-marca-google-text); font-weight: 500;
+  }
+  .sdp-boto__logotip { flex: none; }
+  .sdp-boto__logotip--apple { block-size: var(--sdp-marca-apple-logotip); inline-size: var(--sdp-marca-apple-logotip); }
+  .sdp-boto__logotip--google { block-size: var(--sdp-marca-google-logotip); inline-size: var(--sdp-marca-google-logotip); }
+  .sdp-logotip-google__blau { fill: var(--sdp-marca-google-blau); }
+  .sdp-logotip-google__verd { fill: var(--sdp-marca-google-verd); }
+  .sdp-logotip-google__groc { fill: var(--sdp-marca-google-groc); }
+  .sdp-logotip-google__roig { fill: var(--sdp-marca-google-roig); }
   /* Carregador: gir continu, exempt del sostre de 300ms (no és una
      interacció). Fase A · `transform: rotate()` i no la propietat `rotate`,
      que arriba amb Chrome 104 (Baseline 2022): a Chrome 100 no girava. */
@@ -3291,5 +3313,89 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
       border-inline-start: 0;
       border-block-start: 1px solid var(--sdp-crom-vora-forta);
     }
+  }
+}
+
+/* ── Fase D (261020, tasca 2; pla 261020_1300) · MODERACIÓ: «Més opcions»
+   de la boina (la caputxa de la targeta i la barra taronja), les normes de
+   convivència i la llista de bloquejos ─────────────────────────────────────
+   Components: BotoModeracio i MenuModeracio (PedraSeca/organismes/
+   Moderacio.jsx), DialegNormes (universal/DialegsModeracio.jsx) i
+   LlistaBloquejos (universal/LlistaBloquejos.jsx). Res d'ací es veu fins que
+   l'app té la moderació i qui mira l'obri (Llei del Píxel).
+     · El ⋮ és el cercle de vel fosc del pin (.btn-icon-orange, 48px). El
+       menú té la pell del de Traduir (.sdp-menu-traduir i les seues files) i
+       penja del seu botó (.sdp-moderacio, relatiu): cau davall, apegat a la
+       dreta, amb el sostre dels menús emergents (Pedra Seca §12) i el salt de
+       línia que la barra (.bar-actions, nowrap) li llevaria. Naix de la
+       cantonada del disparador (la regla de 261011: sdp-aparicio-menu).
+     · A la targeta, el cos (labels, enllaços, peu) també és z-index 2 i ve
+       després: la caputxa puja a 3 només mentre el focus hi és (el menú obert
+       el porta a dins), i cap píxel canvia en repòs.
+     · Damunt de la superfície clara del menú, l'anell del sistema: guanya a
+       .sp-card-header :focus-visible i a la C15 de la barra (modules.css),
+       que el posen del color del text de la boina.
+     · Les normes: una llista numerada de text de cos, i la de tolerància
+       zero en negreta. Els bloquejos: una fila per persona, amb el nom
+       retallat amb punts suspensius i «Desbloqueja» a la dreta, d'alt com
+       un toc (--sdp-touch). */
+@layer components {
+  .sdp-moderacio {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+  }
+  .sdp-menu-moderacio {
+    max-inline-size: var(--sdp-menu-ample-max);
+    white-space: normal;
+  }
+  /* Penjat del seu ⋮; la mostra del catàleg (mostra), al seu lloc del flux. */
+  .sdp-moderacio > .sdp-menu-moderacio {
+    position: absolute;
+    inset-block-start: calc(100% + var(--sdp-space-1));
+    inset-inline-end: 0;
+    z-index: 3;
+    transform-origin: top right;
+    animation: sdp-aparicio-menu var(--sdp-durada-rapida) var(--sdp-corba-eixida);
+  }
+  .sp-card-header:focus-within { z-index: 3; }
+  .sp-card-header .sdp-moderacio .sdp-menu-traduir__item:focus-visible,
+  section.bar-orange .sdp-moderacio .sdp-menu-traduir__item:focus-visible { outline-color: var(--sdp-focus); }
+
+  .sdp-normes {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-normes__zero { font-weight: var(--sdp-pes-negreta); }
+
+  .sdp-bloquejos {
+    list-style: none;
+    margin: var(--sdp-space-4) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-bloquejos__fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-bloquejos__nom {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sdp-text-cos);
   }
 }

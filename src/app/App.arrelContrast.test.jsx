@@ -23,6 +23,7 @@ import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { CONSULTA_CONTRAST_SISTEMA, CONTRAST_KEY, ESDEVENIMENT_CONTRAST } from '../config/theme.js';
 import { delVal, getVal, setVal } from '../config/storage.js';
+import { carregaDiccionari, createTranslator } from '../config/i18n.js';
 
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined, arrencaAuto: vi.fn(), exposaGlobal: vi.fn() }));
 vi.mock('../sections/notes/GlobalSaveManager.js', async (importOriginal) => ({
@@ -289,6 +290,23 @@ describe('document alié: data-theme i lang de l’amfitrió', () => {
     await screen.findByRole('main');
     expect(html.getAttribute('lang')).toBe('ca');
     expect(arrelDe(container).hasAttribute('lang')).toBe(false);
+  });
+
+  /* Fase D (261020, tasca 4.1) · L1 · El diccionari del castellà arriba
+     després del primer pintat: el lang de l'arrel i la barra lateral (un memo
+     que només llig el router) han de seguir la llengua del text quan arriba. */
+  test('lang i barra lateral: amfitrió en castellà, valencià fins que arriba el diccionari i castellà després', async () => {
+    sistema();
+    vi.stubGlobal('innerWidth', 1440);
+    const { container } = render(<PedraSecaEmbed config={{ routerType: 'memory', manageDocumentHead: false, language: 'es' }} />);
+    await screen.findByRole('main');
+    const barra = () => screen.getByRole('navigation', { name: 'Navegació principal' });
+    /* El tros pot haver arribat ja (l'efecte d'UIProvider el demana en muntar):
+       l'estat d'abans no és determinista; el d'arribada, sí. */
+    await act(async () => { await carregaDiccionari('es'); });
+    expect(arrelDe(container).getAttribute('lang')).toBe('es');
+    expect(barra().querySelector('a.nav-item[aria-label="Mercado"]')).not.toBeNull();
+    expect(createTranslator('es')('nav.mercat')).toBe('Mercado');
   });
 
   test('lang: dins del Shadow DOM, a l’amfitrió <soc-de-poble>, i l’<html> no es toca', async () => {

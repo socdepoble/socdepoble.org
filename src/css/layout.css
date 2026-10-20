@@ -165,12 +165,19 @@ nav.app-sidebar > .app-sidebar-nav { flex: 1 0 auto; overflow: visible; }
 nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; overflow: visible; }
 */
 
+/* El calaix lateral obri des de dalt de la pantalla: el seu logotip, com la
+   barra negra (header.bar-black, més avall), va davall de la Dynamic Island
+   i s'alinea amb ella (ordre del Mestre, 261020; sdp-app-grid-shell §5).
+   L'!important, com el del padding-left: el botó porta .sdp-unstyled-btn
+   (modules.css, la mateixa capa i més tard), que posa el coixí a zero. */
 .brand {
-  height: var(--sdp-alt-negra);
+  box-sizing: border-box;
+  height: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
   flex: none;
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  padding-top: env(safe-area-inset-top, 0px) !important;
   padding-left: 28px !important;
   border-bottom: 1px solid var(--sdp-crom-vora);
 }
@@ -288,8 +295,16 @@ nav.app-sidebar .nav-item--desplegable {
    muntar <aside class="app-list"> entre la sidebar i el visor.   */
 
 /* ── 5. COLUMNA 3 · VISOR — BARRES GLOBALS ─────────────────────── */
+/* Ordre del Mestre (261020, Fase D; sdp-app-grid-shell §5 i sdp-pedra-seca
+   §13) · La barra negra va JUST DAVALL de la barra d'estat del sistema (la
+   Dynamic Island a iOS), mai darrere: el coixí de dalt és el safe-area, i el
+   logotip i les icones es centren en els 64px útils de davall. Fora de l'app
+   natiu i dels mòbils amb osca, env() val 0 i la barra no canvia ni un píxel.
+   Les regles de compacte i de ≤480px no tornen a posar a zero este coixí. */
 header.bar-black {
-  height: var(--sdp-alt-negra);
+  box-sizing: border-box;
+  height: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
+  min-height: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
   flex: none;
   background: var(--sdp-crom-fons);
   color: var(--sdp-crom-text);
@@ -297,6 +312,7 @@ header.bar-black {
   display: flex;
   align-items: center;
   padding: 0 var(--sdp-space-6);
+  padding-top: env(safe-area-inset-top, 0px);
   padding-left: 0 !important;
   border-bottom: 1px solid var(--sdp-crom-vora);
   position: -webkit-sticky;
@@ -545,11 +561,11 @@ nav.mobile-nav { display: none; }
      Una vista demana la pantalla sencera (ModeImmersiuContext; la closca només
      posa l'atribut en compacte): la conversa del Xat en mòbil, com a les apps
      de missatgeria.
-     Fora la barra negra, la franja de l'amfitrió i la barra inferior. La
-     reserva de la barra inferior (--sdp-alt-nav-mobil) passa a zero a
+     Fora la franja de l'amfitrió i la barra inferior. La barra negra es
+     queda: no s'amaga mai (ordre del Mestre, 261020; sdp-app-grid-shell §5).
+     La reserva de la barra inferior (--sdp-alt-nav-mobil) passa a zero a
      tokens.css, fora de capa com el token, i tots els coixins que la sumen
      ho seguixen sols; el safe-area es queda. */
-  .sdp-root[data-sdp-immersiu] header.bar-black,
   .sdp-root[data-sdp-immersiu] .sdp-amfitrio-franja,
   .sdp-root[data-sdp-immersiu] nav.mobile-nav { display: none; }
 
@@ -694,7 +710,8 @@ nav.mobile-nav { display: none; }
   /* El FAB d'escriptori desapareix (el substitueix el CTA central) */
 
   /* Densitat de les barres */
-  :where(.sdp-root.is-compact) header.bar-black, :where(.sdp-root.is-compact) header.bar-blue, :where(.sdp-root.is-compact) section.bar-orange { padding: 0 var(--sdp-space-4); }
+  :where(.sdp-root.is-compact) header.bar-blue, :where(.sdp-root.is-compact) section.bar-orange { padding: 0 var(--sdp-space-4); }
+  :where(.sdp-root.is-compact) header.bar-black { padding: env(safe-area-inset-top, 0px) var(--sdp-space-4) 0; }
   :where(.sdp-root.is-compact) .brand { padding: 0 var(--sdp-space-5); }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
@@ -753,7 +770,7 @@ nav.mobile-nav { display: none; }
 }
 @container sdp-arrel (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
-  header.bar-black { padding: 0 8px; }
+  header.bar-black { padding: env(safe-area-inset-top, 0px) 8px 0; }
   /* T29 (ordre del Mestre, 260927 nit) · el logotip no es deforma ni es
      comprimix per la pressió de les icones de la dreta. Abans anava en una
      cel·la de 44px amb la imatge a 40px d'ample (300×78 → 40×10: una
@@ -803,7 +820,7 @@ nav.mobile-nav { display: none; }
 
 @media (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
-  header.bar-black { padding: 0 8px; }
+  header.bar-black { padding: env(safe-area-inset-top, 0px) 8px 0; }
   /* T29 (ordre del Mestre, 260927 nit) · el logotip no es deforma ni es
      comprimix per la pressió de les icones de la dreta. Abans anava en una
      cel·la de 44px amb la imatge a 40px d'ample (300×78 → 40×10: una

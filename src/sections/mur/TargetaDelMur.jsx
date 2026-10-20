@@ -109,6 +109,8 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
         authorName={quiSignaLActe.nom}
         authorAvatar={quiSignaLActe.avatar ?? (signaPersonaLActe ? null : undefined)}
         onConnect={() => navigate(rutaConnectarObjecte(acte))}
+        /* Fase D (261020, tasca 2) · «Més opcions»: denunciar i bloquejar. */
+        ambModeracio
       />
     );
   }
@@ -229,6 +231,9 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
          (targetesMur.js) ja porten rutes internes. */
       mainHref={(esRutaInterna(item.mainHref) ? item.mainHref : null) || getSectionItemPath(item.type === 'event' ? 'events' : ((item.type === 'market' || item.type === 'product') ? 'mercat' : (item.type === 'poble' ? 'pobles' : 'mur')), item.id)}
       showPin={item.isAvis}
+      /* Fase D (261020, tasca 2) · «Més opcions» (denunciar i bloquejar) a
+         tota publicació d'algú; mai a una pàgina del sistema. */
+      ambModeracio={!item.isSystem}
       hasFooter={true}
       showTranslate={true}
       showComment={true}

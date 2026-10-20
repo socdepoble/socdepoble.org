@@ -43,8 +43,9 @@ function GuardaPermis({ permis, children }) {
 
 function ContenidorApp({ manifest, entrada }) {
   const registre = useRegistre();
-  const { language } = useUIState();
-  useSEO({ title: titolDe(manifest.titol, language), index: false });
+  /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
+  const { language, llenguaDelText = language } = useUIState();
+  useSEO({ title: titolDe(manifest.titol, llenguaDelText), index: false });
   /* Una interna o un mòdul (sdp.modul.v1): el component lazy del registre. */
   const Component = manifest.origen === 'externa' ? null : registre.componentDe(manifest.id);
   let contingut = null;
@@ -79,7 +80,7 @@ export default function RutaApps() {
   const { pathname } = useLocation();
   const { dins, id, trams } = analitzaRuta(pathname);
   const app = useAppAvaluada(trams === null ? null : id);
-  const { language } = useUIState();
+  const { language, llenguaDelText = language } = useUIState();
   useEscalfamentMemoriaCau(); // closca de /app/* sense xarxa (ordre del Mestre, 261007)
 
   if (!dins) return null;
@@ -102,7 +103,7 @@ export default function RutaApps() {
       <AvisApp
         titol={PAGINA_INEXISTENT.titol}
         desti={rutaDeApp(manifest.id, manifest.entradaPerDefecte)}
-        etiqueta={`Ves a ${titolDe(manifest.titol, language)}`}
+        etiqueta={`Ves a ${titolDe(manifest.titol, llenguaDelText)}`}
       >
         {PAGINA_INEXISTENT.text}
       </AvisApp>

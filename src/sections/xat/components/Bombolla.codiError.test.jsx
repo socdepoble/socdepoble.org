@@ -4,6 +4,7 @@
    traduït, el missatge de l'error; sense res, «No s'ha enviat». */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
+import '../../../../tests/helpers/diccionaris.js';
 import Bombolla from './Bombolla.jsx';
 import { createTranslator } from '../../../config/i18n.js';
 

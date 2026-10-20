@@ -209,23 +209,19 @@ test('tot fitxer del torn acaba amb una línia buida', () => {
 
 const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
 
+/* Fase D (261020, tasca 4.1) · L1 · Cada llengua es llig del seu diccionari,
+   src/config/idiomes/<codi>.js (abans, un bloc de TRANSLATIONS a i18n.js);
+   un fitxer absent tomba la prova. */
 function clausPerLlengua(prefix) {
-  const text = llig('src/config/i18n.js');
-  const inici = text.indexOf('const TRANSLATIONS = {');
-  assert.ok(inici >= 0, 'No trobe TRANSLATIONS a i18n.js');
-  const cos = text.slice(inici);
-  const posicions = LLENGUES.map((l) => ({ l, i: cos.search(new RegExp(`\\n  ${l}: \\{`)) }));
-  for (const p of posicions) assert.ok(p.i >= 0, `No trobe el bloc ${p.l} a i18n.js`);
-  const ordenades = [...posicions].sort((a, b) => a.i - b.i);
   const resultat = {};
   const patro = new RegExp(`^\\s*'(${prefix.replace(/\./g, '\\.')}[^']+)'\\s*:\\s*(.*?),?\\s*$`, 'gm');
-  ordenades.forEach((p, idx) => {
-    const fi = idx + 1 < ordenades.length ? ordenades[idx + 1].i : cos.length;
-    const bloc = cos.slice(p.i, fi);
+  for (const l of LLENGUES) {
+    const ruta = `src/config/idiomes/${l}.js`;
+    assert.ok(existix(ruta), `No trobe el diccionari ${l} (${ruta})`);
     const claus = new Map();
-    for (const m of bloc.matchAll(patro)) claus.set(m[1], (claus.get(m[1]) || 0) + 1);
-    resultat[p.l] = claus;
-  });
+    for (const m of llig(ruta).matchAll(patro)) claus.set(m[1], (claus.get(m[1]) || 0) + 1);
+    resultat[l] = claus;
+  }
   return resultat;
 }
 

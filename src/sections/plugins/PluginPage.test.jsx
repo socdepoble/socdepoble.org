@@ -25,6 +25,7 @@
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { MemoryRouter, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
 import { UIProvider } from '../../app/contexts/UIContext.jsx';
 import { NotificationProvider } from '../../components/universal/NotificationContext.jsx';

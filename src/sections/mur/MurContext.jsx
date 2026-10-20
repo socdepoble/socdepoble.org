@@ -6,6 +6,8 @@ import { SECCIONS_PAGINABLES } from '../../data/contracte.js';
 import { sortPinnedContent } from '../../config/contentHelpers';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { filtraElementsBloquejats } from '../../config/moderacio.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 
@@ -81,6 +83,11 @@ function extresVigents(extra, base) {
 export function MurProvider({ children, config }) {
   const { actorId, actorKey, actor } = useIdentitat();
   const { currentUser } = useSession();
+  /* Fase D (261020, tasca 2) · El que has bloquejat no es veu enlloc on es
+     llig el Mur, el Mercat o l'Agenda: es filtra UNA vegada, al valor (null
+     sense ProveidorModeracio). Les pàgines, els cursors i hiHaMes no es
+     toquen: el filtre és del que es veu, no del que es carrega. */
+  const esElementBloquejat = useModeracio()?.esElementBloquejat ?? null;
   /* Decisió 2 del Mestre (261007) · Renovació silenciosa del Mur, el Mercat i
      el Calendari. La clau d'àmbit és la d'AÏLLAMENT (backend, persona, actor),
      sense `generacio`: renovar el JWT ja no buida les targetes ni pinta
@@ -228,16 +235,19 @@ export function MurProvider({ children, config }) {
 
   const value = useMemo(() => {
     const { mur, events, mercat } = seccions;
+    const feedPosts = filtraElementsBloquejats(mur.elements, esElementBloquejat);
+    const elsEvents = filtraElementsBloquejats(events.elements, esElementBloquejat);
+    const marketItems = filtraElementsBloquejats(mercat.elements, esElementBloquejat);
     return {
       status,
       error,
       errorRevalidacio,
-      feedPosts: mur.elements,
-      events: events.elements,
-      marketItems: mercat.elements,
-      sortedFeedPosts: sortPinnedContent(mur.elements),
-      sortedEvents: sortPinnedContent(events.elements),
-      sortedMarketItems: sortPinnedContent(mercat.elements),
+      feedPosts,
+      events: elsEvents,
+      marketItems,
+      sortedFeedPosts: sortPinnedContent(feedPosts),
+      sortedEvents: sortPinnedContent(elsEvents),
+      sortedMarketItems: sortPinnedContent(marketItems),
       sendSectionSubmission,
       refresh,
       carregaMes,
@@ -245,7 +255,7 @@ export function MurProvider({ children, config }) {
       carregantMes,
       errorMes
     };
-  }, [status, error, errorRevalidacio, seccions, sendSectionSubmission, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
+  }, [status, error, errorRevalidacio, seccions, esElementBloquejat, sendSectionSubmission, refresh, carregaMes, hiHaMes, carregantMes, errorMes]);
 
   useRecarregaExterna(refresh);
 

@@ -12,7 +12,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { delVal, getVal, setVal } from '../../../config/storage.js';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../../config/i18n.js';
-import fontI18n from '../../../config/i18n.js?raw';
+import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../../tests/helpers/diccionaris.js';
 
 /* Vitest buida els .css importats: el full es llig del disc, com les proves de capes. */
 const fontModuls = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');

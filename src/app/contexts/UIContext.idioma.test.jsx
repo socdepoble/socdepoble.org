@@ -13,6 +13,7 @@
  * UIProvider real; l'emmagatzematge es toca només per storage.js (tractor L2).
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { UIProvider, useUIActions, useUIState } from './UIContext.jsx';
 import {

@@ -193,6 +193,11 @@ export const comprovaServidor = asseguraMetode('comprovaServidor');
 export const demanaRecuperacioContrasenya = asseguraMetode('demanaRecuperacioContrasenya');
 export const definixContrasenyaNova = asseguraMetode('definixContrasenyaNova');
 
+/* Fase D (261020, tasca 1) · Entrar amb el testimoni d'un proveïdor (capacitat
+   'entradaAmbToken'): el full natiu d'Apple o de Google. No és nucli: /registre
+   pregunta abans amb teCapacitat i, sense ella, no pinta els botons natius. */
+export const entraAmbTokenDeProveidor = asseguraMetode('entraAmbTokenDeProveidor');
+
 /* Ordre del Mestre (261008, grup C) · Els membres d'una organització
    (capacitat 'membresOrganitzacio'). No és nucli: el Perfil pregunta abans
    amb teCapacitat i, sense ella, no pinta la gestió de membres ni «Eixir». */
@@ -215,3 +220,14 @@ export const retiraFactor = asseguraMetode('retiraFactor');
    loadCoreContent (camp additiu `personalitzacio`). */
 export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
 export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');
+
+/* Fase D (261020, tasca 2; pla 261020_1300) · La moderació (capacitat
+   'moderacio') i les normes de convivència ('normesConvivencia'). Cap és
+   nucli: ModeracioContext pregunta abans amb teCapacitat i, sense elles,
+   cap targeta ni bombolla no pinta «Més opcions» ni cap porta de normes. */
+export const denunciaContingut = asseguraMetode('denunciaContingut');
+export const llistaBloquejos = asseguraMetode('llistaBloquejos');
+export const bloquejaAutor = asseguraMetode('bloquejaAutor');
+export const desbloquejaAutor = asseguraMetode('desbloquejaAutor');
+export const estatNormes = asseguraMetode('estatNormes');
+export const acceptaNormes = asseguraMetode('acceptaNormes');

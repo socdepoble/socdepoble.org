@@ -889,6 +889,24 @@ const FITXERS = [
   'src/sections/wiki-de-poble/WikiDePobleSection.produccio.test.jsx',
   'src/data/identitatDual.guarda.test.js',
   'src/sections/consola/govern/comunicacioGovern.test.js',
+  /* Fase D (261020, tasca 4.1) · L1, diccionaris sota demanda: els cinc
+     diccionaris, el suport de proves, les tres proves noves i els fitxers de la
+     plataforma d'apps que encara no hi eren (i18n.js, UIContext.jsx, App.jsx,
+     main.jsx, natiu/entrada.jsx, PedraSecaEmbed.jsx, PortalApps.jsx,
+     entrada.test.jsx i App.arrelContrast.test.jsx ja són dalt). */
+  'src/config/idiomes/ca.js',
+  'src/config/idiomes/es.js',
+  'src/config/idiomes/en.js',
+  'src/config/idiomes/eu.js',
+  'src/config/idiomes/gl.js',
+  'tests/helpers/diccionaris.js',
+  'src/config/i18n.diferit.test.js',
+  'src/config/i18n.idiomes.test.js',
+  'src/app/contexts/UIContext.diferit.test.jsx',
+  'src/apps/plataforma/BarraApp.jsx',
+  'src/apps/plataforma/RutaApps.jsx',
+  'src/apps/plataforma/ClosaAplicacio.jsx',
+  'src/apps/plataforma/BarraLateral.jsx',
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

@@ -501,6 +501,28 @@
      Per a text damunt de color massis, este es el token. */
   --sdp-sobre-color: #ffffff;
 
+  /* Fase D (261020, tasca 1; ordre del Mestre) · Els colors de marca dels botons
+     natius «Continua amb Apple» i «Continua amb Google» (EntradaNativa.jsx): els
+     de la guia d'Apple (HIG) i de Google, mai fora d'estos dos botons. Apple, negre
+     en clar i blanc en fosc (decisió D3); els quatre colors de la G no canvien mai.
+     La lletra d'Apple és el 43 % de l'alt del botó (48px); el logotip d'Apple
+     provisional no porta farciment propi i es dimensiona com la G. */
+  --sdp-marca-apple-fons: #000000;
+  --sdp-marca-apple-text: #ffffff;
+  --sdp-marca-apple-lletra: 1.25rem;
+  --sdp-marca-apple-logotip: 1.25rem;
+  --sdp-marca-google-fons: #ffffff;
+  --sdp-marca-google-vora: #747775;
+  --sdp-marca-google-text: #1f1f1f;
+  --sdp-marca-google-blau: #4285f4;
+  --sdp-marca-google-verd: #34a853;
+  --sdp-marca-google-groc: #fbbc05;
+  --sdp-marca-google-roig: #ea4335;
+  --sdp-marca-google-logotip: 1.25rem;
+  /* La lletra del sistema (San Francisco a iOS, Roboto a Android): la que demanen
+     les dues guies per als botons d'entrar. */
+  --sdp-font-sistema: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
   accent-color: var(--sdp-accio);
   color-scheme: light;
 }
@@ -598,6 +620,14 @@
   --sdp-ombra-1: 0 1px 3px rgba(0, 0, 0, 0.45);
   --sdp-ombra-2: 0 3px 10px rgba(0, 0, 0, 0.55);
   --sdp-ombra-3: 0 10px 28px rgba(0, 0, 0, 0.62);
+
+  /* Fase D (261020, tasca 1) · Apple blanc sobre fosc (HIG, D3) i Google en el
+     seu tema fosc. Els colors de la G no canvien. */
+  --sdp-marca-apple-fons: #ffffff;
+  --sdp-marca-apple-text: #000000;
+  --sdp-marca-google-fons: #131314;
+  --sdp-marca-google-vora: #8e918f;
+  --sdp-marca-google-text: #e3e3e3;
 }
 
 /* ═══ MODE BANCAL · CONTRAST EXTREM PER A L'HORT A PLE SOL ════════════

@@ -11,6 +11,7 @@
    interfície (useUIActionsOpcional). jsdom no fa layout: l'amplària, a mà. */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../../tests/helpers/diccionaris.js';
 import { FileText, Folder } from 'lucide-react';
 import { delVal, setVal } from '../../../config/storage.js';
 import { createTranslator } from '../../../config/i18n.js';

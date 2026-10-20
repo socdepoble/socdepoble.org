@@ -9,7 +9,11 @@
  * vista hi posa una frase genèrica i mai el text del proveïdor.
  * R (Onada 3, 261003) · Recuperació de contrasenya (capacitat
  * 'recuperacioContrasenya'): ENLLAC_CADUCAT, l'enllaç del correu ja no val
- * (caducat o ja usat); MATEIXA_CONTRASENYA, la nova és la que ja hi havia. */
+ * (caducat o ja usat); MATEIXA_CONTRASENYA, la nova és la que ja hi havia.
+ * Fase D (261020, tasca 1) · Entrada amb el testimoni d'un proveïdor (capacitat
+ * 'entradaAmbToken'): TOKEN_REBUTJAT, el servidor no accepta el testimoni (mal
+ * format, nonce o audiència que no casen); PROVEIDOR_INACTIU, el servidor no té
+ * activat eixe proveïdor. Cap dels dos és culpa de la persona. */
 export const CODI_ENTRADA = Object.freeze({
   CREDENCIALS: 'credencials',
   CORREU_PENDENT: 'correu-pendent',
@@ -20,6 +24,8 @@ export const CODI_ENTRADA = Object.freeze({
   MODE_LOCAL: 'mode-local',
   ENLLAC_CADUCAT: 'enllac-caducat',
   MATEIXA_CONTRASENYA: 'mateixa-contrasenya',
+  TOKEN_REBUTJAT: 'token-rebutjat',
+  PROVEIDOR_INACTIU: 'proveidor-inactiu',
   DESCONEGUT: 'desconegut'
 });
 

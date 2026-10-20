@@ -21,6 +21,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
+import '../../tests/helpers/diccionaris.js';
 import fontApp from '../app/App.jsx?raw';
 import { RUTA_CONSOLA, segmentPagina } from '../sections/consola/consolaPagines.js';
 import { RUTA_DRETS_AUTOR, SYSTEM_PAGES, accioAlFinal, accioDeLaPagina, accioDeLaTargeta } from './systemPages.js';

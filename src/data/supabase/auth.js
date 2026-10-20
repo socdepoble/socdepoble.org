@@ -445,6 +445,9 @@ const MISSATGE_ENTRADA = Object.freeze({
   [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor del poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
   [CODI_ENTRADA.ENLLAC_CADUCAT]: 'L’enllaç per a restablir la contrasenya ja no val: ha caducat o ja s’ha fet servir. Demana’n un altre des de «Has oblidat la contrasenya?».',
   [CODI_ENTRADA.MATEIXA_CONTRASENYA]: 'La contrasenya nova ha de ser diferent de l’anterior.',
+  /* Fase D (261020, tasca 1) · L'entrada amb el testimoni d'un proveïdor (entraAmbTokenDeProveidor). */
+  [CODI_ENTRADA.TOKEN_REBUTJAT]: 'El servidor del poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.',
+  [CODI_ENTRADA.PROVEIDOR_INACTIU]: 'Esta manera d’entrar encara no està activada al servidor del poble. Entra amb el correu.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 const LIMIT_GOTRUE = /^over_[a-z_]+_rate_limit$/;
@@ -573,6 +576,101 @@ export const loginWithGoogle = async (config = {}) => {
   if (result?.access_token) { completaAlta(config); reafirmaSenseEsperar(config); }
   return result;
 };
+
+/* ── Fase D (261020, tasca 1; ordre del Mestre) · Capacitat 'entradaAmbToken' ──
+   El testimoni OIDC que el full natiu d'Apple o de Google ha tornat, canviat per
+   una sessió amb POST /auth/v1/token?grant_type=id_token (contracte.js). El nonce
+   viatja CRU: el proveïdor n'ha rebut el SHA-256 i GoTrue el torna a calcular.
+   Coreografia de loginWithPassword (intent, assertCurrent ABANS de desaSessio,
+   sdp:auth-change, alta completada) i, com Google web, la foto pròpia reafirmada. */
+const PROVEIDORS_AMB_TOKEN = Object.freeze(['apple', 'google']);
+const FORMA_JWT = /^[\w-]+\.[\w-]+\.[\w-]+$/;
+const FORMA_NONCE = /^[\x21-\x7e]{16,256}$/;
+/* El nom de reserva de private.nom_d_alta (2609261500): Apple no en posa mai al testimoni. */
+const NOM_DE_RESERVA_DEL_SERVIDOR = 'Veí/na';
+const TOPALL_NOM_MS = 5000;
+const CARACTERS_FORA = /[\p{Cc}‪-‮⁦-⁩]/gu;
+const rebutjaToken = () => ambCodi(new Error(MISSATGE_ENTRADA[CODI_ENTRADA.TOKEN_REBUTJAT]), CODI_ENTRADA.TOKEN_REBUTJAT);
+/* Com left(…, 120) de SQL: punts de codi, mai mitja parella subrogada. Fora els
+   caràcters de control i els de direcció (bidi), que farien fallar o enganyarien el PATCH. */
+const nomNet = (v) => Array.from(textNet(v).replace(CARACTERS_FORA, '').replace(/\s+/g, ' ').trim()).slice(0, 120).join('').trim();
+const nomPropi = (v) => { const n = textNet(v); return n && n !== NOM_DE_RESERVA_DEL_SERVIDOR ? n : ''; };
+
+/* Pura i abans de res: un rebuig ací no toca ni la sessió ni la xarxa (cas del kit). */
+function credencialNeta(proveidor, { testimoni, nonce, testimoniAcces, nom } = {}) {
+  if (!PROVEIDORS_AMB_TOKEN.includes(proveidor)) throw ambCodi(new Error('Proveïdor d’identitat desconegut.'), CODI_ENTRADA.DESCONEGUT);
+  const t = textNet(testimoni);
+  if (!FORMA_JWT.test(t) || t.length > 16384) throw rebutjaToken();
+  const n = textNet(nonce);
+  if (n && !FORMA_NONCE.test(n)) throw rebutjaToken();
+  /* L'accés només de Google (at_hash); el d'Apple seria el codi d'autorització. */
+  const a = proveidor === 'google' ? textNet(testimoniAcces) : '';
+  if (a.length > 8192 || /\s/.test(a)) throw rebutjaToken();
+  return {
+    cos: { provider: proveidor, id_token: t, ...(n ? { nonce: n } : {}), ...(a ? { access_token: a } : {}) },
+    nom: nomNet(nom) || null
+  };
+}
+
+/* El vocabulari de token_oidc.go de GoTrue: 400 amb error «invalid …» (Bad ID
+   token, invalid nonce) o validation_failed és un testimoni rebutjat; 400 amb
+   provider_disabled, el proveïdor apagat al servidor. La resta, com l'entrada amb
+   contrasenya (429, xarxa, 5xx, signup_disabled → DESCONEGUT). */
+function traduixErrorDeToken(error) {
+  if (!error || typeof error !== 'object' || error.name === 'AbortError') return error;
+  const cos = error.status === 400 ? cosDeGoTrue(error) : null;
+  let code = null;
+  if (cos?.error_code === 'provider_disabled') code = CODI_ENTRADA.PROVEIDOR_INACTIU;
+  else if (cos && (cos.error_code === 'validation_failed' || /^invalid[ _]/.test(String(cos.error ?? '')))) code = CODI_ENTRADA.TOKEN_REBUTJAT;
+  if (!code) return traduixErrorEntrada(error);
+  const traduit = ambCodi(new Error(MISSATGE_ENTRADA[code], { cause: error }), code);
+  traduit.status = error.status;
+  return traduit;
+}
+
+/* Mai llança. Curtcircuit: si GoTrue ja guarda un nom propi a les metadades (el
+   d'una primera vegada, o el que la persona haja canviat), no es llig res. Si no,
+   només una fila confirmada que encara té el nom de reserva (o cap): el connector
+   d'Apple torna el nom desat a cada entrada i mai ha de trepitjar un nom editat.
+   updateProfile emet el seu sdp:auth-change (identitat.js): no canvia la versió
+   de la sessió i no avorta l'intent. */
+async function desaNomDePrimeraVegada(nom, usuari, config) {
+  try {
+    if (nomPropi(usuari?.user_metadata?.full_name)) return false;
+    const fitxa = await getProfile(config);
+    if (!fitxa || fitxa.reserva || nomPropi(fitxa.full_name)) return false;
+    await updateProfile({ full_name: nom }, config);
+    return true;
+  } catch (error) {
+    console.warn('[supabase] Avís desant el nom del proveïdor:', error?.message);
+    return false;
+  }
+}
+
+export async function entraAmbTokenDeProveidor(proveidor, credencial = {}, config = {}) {
+  const { cos, nom } = credencialNeta(proveidor, credencial);
+  exigeixModeRemot(config);
+  recorda(config);
+  configuraBackendSessio(config);
+  const attempt = beginAuthAttempt();
+  try {
+    const result = await request('/auth/v1/token?grant_type=id_token', config, { method: 'POST', signal: attempt.signal, body: cos })
+      .catch((error) => { throw traduixErrorDeToken(error); });
+    attempt.assertCurrent();   // ABANS de desaSessio
+    if (!result?.access_token || !result?.user?.id) throw new Error('El servidor no ha confirmat la sessió. Torna a intentar entrar.');
+    if (!desaSessio(result)) {
+      emetCanvi(null);
+      throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
+    }
+    resetClient();
+    if (nom) await esperaAmbTopall(desaNomDePrimeraVegada(nom, result.user, config), TOPALL_NOM_MS);
+    const user = getCurrentUser() ?? result.user;
+    emetCanvi(user);
+    completaAlta(config);
+    reafirmaSenseEsperar(config);   // Google reescriu la foto de user_metadata a cada entrada
+    return { user };
+  } finally { attempt.finish(); }
+}
 
 /* ── R (Onada 3, 261003) · Recuperació de contrasenya ───────────────────
    Capacitat 'recuperacioContrasenya' (contracte.js). Disseny i alternatives:

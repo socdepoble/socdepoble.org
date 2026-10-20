@@ -255,24 +255,24 @@ test('tot fitxer del torn acaba amb una línia buida', () => {
 
 const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
 
+/* Fase D (261020, tasca 4.1) · L1 · El text del diccionari d'una llengua,
+   src/config/idiomes/<codi>.js (abans, un bloc de TRANSLATIONS a i18n.js).
+   Un fitxer absent tomba la prova: cap comprovació no passa en buit. */
+function diccionariDe(l) {
+  const ruta = `src/config/idiomes/${l}.js`;
+  assert.ok(existix(ruta), `No trobe el diccionari ${l} (${ruta})`);
+  return llig(ruta);
+}
+
 function clausPerLlengua() {
-  const text = llig('src/config/i18n.js');
-  const inici = text.indexOf('const TRANSLATIONS = {');
-  assert.ok(inici >= 0, 'No trobe TRANSLATIONS a i18n.js');
-  const cos = text.slice(inici);
-  const posicions = LLENGUES.map((l) => ({ l, i: cos.search(new RegExp(`\\n  ${l}: \\{`)) }));
-  for (const p of posicions) assert.ok(p.i >= 0, `No trobe el bloc ${p.l} a i18n.js`);
-  const ordenades = [...posicions].sort((a, b) => a.i - b.i);
   const resultat = {};
-  ordenades.forEach((p, idx) => {
-    const fi = idx + 1 < ordenades.length ? ordenades[idx + 1].i : cos.length;
-    const bloc = cos.slice(p.i, fi);
+  for (const l of LLENGUES) {
     const claus = new Map();
-    for (const m of bloc.matchAll(/^\s*'(section\.xat\.[^']+)'\s*:\s*(.*?),?\s*$/gm)) {
+    for (const m of diccionariDe(l).matchAll(/^\s*'(section\.xat\.[^']+)'\s*:\s*(.*?),?\s*$/gm)) {
       claus.set(m[1], (claus.get(m[1]) || 0) + 1);
     }
-    resultat[p.l] = claus;
-  });
+    resultat[l] = claus;
+  }
   return resultat;
 }
 
@@ -438,7 +438,7 @@ test('tot var(--sdp-*) usat al xat (CSS i JSX) està declarat a tokens.css o des
 test('3B · el rail no avisa de «pendent»: la clau section.xat.rail.pendent ha desaparegut', () => {
   const rail = llig('src/sections/xat/components/ClosCaXat.jsx');
   assert.doesNotMatch(rail, /section\.xat\.rail\.pendent|showToast|useToast/);
-  assert.doesNotMatch(llig('src/config/i18n.js'), /section\.xat\.rail\.pendent/);
+  for (const l of LLENGUES) assert.doesNotMatch(diccionariDe(l), /section\.xat\.rail\.pendent/, l);
   for (const vista of ['comunitats', 'telefonades', 'multimedia', 'destacats']) {
     assert.match(rail, new RegExp(`id: '${vista}', accio: 'vista'`), `${vista} no és una vista del rail`);
   }
@@ -476,16 +476,12 @@ function cosDeRegles(ruta) {
 
 /** Els valors section.xat.* de cada llengua, sense cometes. */
 function valorsPerLlengua() {
-  const text = llig('src/config/i18n.js');
-  const cos = text.slice(text.indexOf('const TRANSLATIONS = {'));
-  const posicions = LLENGUES.map((l) => ({ l, i: cos.search(new RegExp(`\\n  ${l}: \\{`)) })).sort((a, b) => a.i - b.i);
   const resultat = {};
-  posicions.forEach((p, idx) => {
-    const bloc = cos.slice(p.i, idx + 1 < posicions.length ? posicions[idx + 1].i : cos.length);
+  for (const l of LLENGUES) {
     const valors = new Map();
-    for (const m of bloc.matchAll(/^\s*'(section\.xat\.[^']+)'\s*:\s*(['"])(.*)\2,?\s*$/gm)) valors.set(m[1], m[3]);
-    resultat[p.l] = valors;
-  });
+    for (const m of diccionariDe(l).matchAll(/^\s*'(section\.xat\.[^']+)'\s*:\s*(['"])(.*)\2,?\s*$/gm)) valors.set(m[1], m[3]);
+    resultat[l] = valors;
+  }
   return resultat;
 }
 

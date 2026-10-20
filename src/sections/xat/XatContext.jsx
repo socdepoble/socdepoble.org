@@ -24,7 +24,23 @@
  * vegada per `id`: un reintent no duplica res. Si l'error és retriable es
  * reintenta sol tres vegades (1 s, 2 s, 4 s més component aleatori); si no, o
  * si s'esgoten, la bombolla passa a `error` i es queda fins que la persona la
- * reintenta o la descarta (XAT-B25). `sendChatMessage` no llança mai.
+ * reintenta o la descarta (XAT-B25). `sendChatMessage` només llança un
+ * AbortError, i només quan la persona no accepta les normes de convivència
+ * (Fase D, 261020, tasca 2: la porta d'abans del primer missatge, vegeu
+ * «Moderació» més avall); qui l'envia torna a posar el text al camp.
+ *
+ * MODERACIÓ (Fase D, 261020, tasca 2; pla 261020_1300)
+ * ────────────────────────────────────────────────────
+ * Amb ProveidorModeracio (App.jsx) per damunt, el que has bloquejat s'amaga
+ * a la font: els missatges d'una persona bloquejada arriben anotats
+ * (`bloquejat: true`, sense text ni metadades) a getThreadMessages i a
+ * chatMessages, la vista prèvia del fil s'amaga (`ultimAmagat`), cap avís no
+ * en salta, i els directes amb ella no compten als no llegits ni als
+ * contactes freqüents. Les dades crues (missatgesPerFil, fils, cursors) no
+ * es toquen: la lectura, les marques i el seq continuen. Els missatges
+ * signats per una entitat no s'anoten mai (config/moderacio.js). L'únic
+ * `sendChatMessage` que s'exposa passa per la porta de les normes
+ * (asseguraNormes); el relleu intern (accionsRef) continua cru.
  *
  * TEMPS REAL I SONDEIG (ARQ-A06, ARQ-F03)
  * ───────────────────────────────────────
@@ -203,6 +219,8 @@ import {
 import { buidaEsborranys } from './esborranys.js';
 import { recordaRutaForaDelXat } from './informeDError.js';
 import { clauDia } from './temps.js';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { anotaFilsBloquejats, anotaMissatgesBloquejats, senseDirectesBloquejats } from '../../config/moderacio.js';
 
 export const XatContext = createContext(null);
 let hostPromise;
@@ -235,6 +253,9 @@ const MS_MARQUES = 2000;
 const RUTA_XAT = /(^|\/)xat(\/|$)/;
 /* Una sola llista buida: els derivats buits no canvien de referència. */
 const CAP = Object.freeze([]);
+/* Fase D (261020, tasca 2) · Sense ProveidorModeracio, ningú no és bloquejat:
+   una sola funció, perquè cap derivat no canvie de referència. */
+const SENSE_BLOQUEIG = () => false;
 
 /* Sense la capacitat 'xatDePagina', «Comentar» ho ha de dir amb un avís honest. */
 const errorSenseCapacitat = () => Object.assign(
@@ -435,6 +456,17 @@ export function XatProvider({ children, config }) {
   const iaiaApagada = useNivellIaia() === 0;
   const iaiaApagadaRef = useRef(iaiaApagada);
   iaiaApagadaRef.current = iaiaApagada;
+  /* Fase D (261020, tasca 2) · La moderació (null sense proveïdor): qui has
+     bloquejat (vegeu la capçalera, «Moderació») i la porta de les normes. Les
+     dues refs les lligen avisaSiCal i l'enviament, que són estables. */
+  const moderacioDePoble = useModeracio();
+  const esPersonaBloquejada = moderacioDePoble?.esPersonaBloquejada ?? SENSE_BLOQUEIG;
+  const bloquejatRef = useRef(esPersonaBloquejada);
+  const moderacioRef = useRef(moderacioDePoble);
+  useLayoutEffect(() => {
+    bloquejatRef.current = esPersonaBloquejada;
+    moderacioRef.current = moderacioDePoble;
+  }, [esPersonaBloquejada, moderacioDePoble]);
   /* Sense sessió, el xat només existix en mode seed/local (l'adaptador ja escriu
      com a convidat amb el mateix identificador); en remot cal la sessió. Es llig
      de la configuració i no del port, que encara no està segellat al primer render. */
@@ -623,6 +655,9 @@ export function XatProvider({ children, config }) {
     if (s <= previ) return;
     ultimSeqAvisat.current[filId] = s;
     if (!autorId || autorId === joId) return;
+    /* Fase D (261020, tasca 2) · De qui has bloquejat, cap avís: la línia
+       base avança igual, i desbloquejar no en porta cap de vell. */
+    if (bloquejatRef.current(autorId)) return;
     if (iaiaApagadaRef.current) {
       const fil = filsRef.current.find((f) => f.id === filId) || visitantsRef.current[filId];
       if (esXatDeLaIAIA(fil)) return;
@@ -1170,6 +1205,26 @@ export function XatProvider({ children, config }) {
     return executaEnviament(filId, id, cos, respostaA);
   }, [joId, captura, vigent, accioVigent, mutaPendents, executaEnviament]);
 
+  /* ── Fase D (261020, tasca 2; crítica 261020, troballa 1) · La porta de les
+     normes de convivència, UNA sola i ací: és l'únic sendChatMessage que
+     s'exposa, també el que fa servir Connectar (useAplicaAbast). Abans de
+     res, i abans de pintar cap bombolla: si la persona no les accepta, llança
+     un AbortError i no s'envia ni es pinta res (Conversa torna a posar el
+     text al camp). El xat de la IAIA no hi passa: no és cap publicació per
+     al poble. Sense proveïdor, o amb la porta que no s'aplica (llavor,
+     local, sense sessió), és l'enviament de sempre. El relleu intern
+     (accionsRef) continua cru: una crida guardada d'abans d'una renovació ja
+     ha passat la porta. */
+  const enviaAmbNormes = useCallback(async (fil, text, opcions) => {
+    const moderacio = moderacioRef.current;
+    const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
+    if (typeof moderacio?.asseguraNormes === 'function' && String(text ?? '').trim() && !esXatDeLaIAIA(complet)
+      && !(await moderacio.asseguraNormes())) {
+      throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
+    }
+    return opcions === undefined ? sendChatMessage(fil, text) : sendChatMessage(fil, text, opcions);
+  }, [sendChatMessage]);
+
   /* ── Reintent manual d'una bombolla en error, amb el mateix id ── */
   const reintenta = useCallback(async (missatgeId) => {
     if (!joId || !vigent(captura())) return [];
@@ -1399,7 +1454,16 @@ export function XatProvider({ children, config }) {
   const filsVisibles = useMemo(() => filsAmbLaGentDelPoble(filsDeLaLlista, towns), [filsDeLaLlista, towns]);
   /* Els fils de la persona sense els de la IAIA, si està apagada: els no
      llegits i els contactes freqüents. La mateixa referència si no n'hi ha. */
-  const filsComptats = useMemo(() => (iaiaApagada ? senseLaIAIA(fils) : fils), [fils, iaiaApagada]);
+  /* Fase D (261020, tasca 2) · Ni els directes amb una persona bloquejada,
+     com la IAIA apagada: el seu recompte del servidor no s'hi suma. */
+  const filsComptats = useMemo(
+    () => senseDirectesBloquejats(iaiaApagada ? senseLaIAIA(fils) : fils, esPersonaBloquejada),
+    [fils, iaiaApagada, esPersonaBloquejada]
+  );
+  /* Fase D (261020, tasca 2) · La llista que es VEU, amb la vista prèvia
+     d'una persona bloquejada amagada. Internament (missatgesDerivats,
+     comunitats, la cerca de fils per id) es continua llegint filsVisibles. */
+  const filsAmbBloquejos = useMemo(() => anotaFilsBloquejats(filsVisibles, esPersonaBloquejada), [filsVisibles, esPersonaBloquejada]);
   /* Onada 6 (tasca 12) · Cert si `filId` és un xat de la IAIA que s'amaga
      perquè està apagada: XatSection en trau qui hi era dins, en lloc d'un 404. */
   const esFilAmagat = useCallback((filId) => {
@@ -1414,10 +1478,16 @@ export function XatProvider({ children, config }) {
     const resultat = {};
     for (const id of ids) {
       const fil = filsVisibles.find((f) => f.id === id);
-      resultat[id] = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], fil?.llegitPelsAltresFinsSeq ?? 0);
+      /* Fase D (261020, tasca 2) · Els d'una persona bloquejada, anotats i
+         sense text: la cerca, la cita, la multimèdia i les Notes ja no el
+         veuen. La MATEIXA llista si no n'hi ha cap. */
+      resultat[id] = anotaMissatgesBloquejats(
+        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], fil?.llegitPelsAltresFinsSeq ?? 0),
+        esPersonaBloquejada
+      );
     }
     return resultat;
-  }, [missatgesPerFil, pendentsPerFil, filsVisibles]);
+  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada]);
 
   /* Decisió 1 del Mestre (261007) · El que es VEU penja de l'àmbit de dades,
      no del testimoni d'operació. Amb un àmbit nou, res no es veu fins que la
@@ -1523,7 +1593,7 @@ export function XatProvider({ children, config }) {
     /* Remot sense sessió, ja comprovat (mai mentre la sessió es comprova):
        ?sobre= porta a /registre en lloc de fer com si. */
     senseSessio: !joId && estatSessio !== 'comprovant',
-    chatThreads: visible ? filsVisibles : [],
+    chatThreads: visible ? filsAmbBloquejos : [],
     chatMessages: visible && filActiu ? missatgesDerivats[filActiu] || [] : [],
     totalNoLlegits,
     filActiu: visible ? filActiu : null,
@@ -1532,7 +1602,8 @@ export function XatProvider({ children, config }) {
     carregantAntics,
     esperaAntics,
     carregaMesAntics,
-    sendChatMessage,
+    /* Fase D (261020, tasca 2) · Amb la porta de les normes (enviaAmbNormes). */
+    sendChatMessage: enviaAmbNormes,
     reintenta,
     descartaFallit,
     marcaVist,
@@ -1552,8 +1623,8 @@ export function XatProvider({ children, config }) {
        fil és un xat seu amagat per això. */
     iaiaApagada,
     esFilAmagat: filAmagat
-  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsVisibles, missatgesDerivats,
-    totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
+  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, missatgesDerivats,
+    totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, enviaAmbNormes, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat]);
 

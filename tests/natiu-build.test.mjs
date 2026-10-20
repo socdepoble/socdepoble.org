@@ -9,12 +9,15 @@ import configNatiu, {
   DIRECTORI_NATIU,
   ENLLAC_FONTS_LOCALS,
   ENTRADA_NATIVA,
+  ESQUEMA_GOOGLE_PENDENT,
   FONTS_LOCALS,
   MODE_NATIU,
   ORIGINALS_CITATS_SENSE_RESOLUTOR,
+  RECURSOS_QUE_L_APP_NO_LLIG,
   SUBSTITUCIONS_NATIVES,
   cspNativa,
   errorsEntornNatiu,
+  errorsGoogleIos,
   heretadesDelLloc,
   indexNatiuPlugin,
   nomsDeclarats,
@@ -23,12 +26,15 @@ import configNatiu, {
 } from '../vite.natiu.config.js';
 import { PROPIS_DEL_LLOC, esHostLocal, politicaDeMitjans, recursosDelPlugin } from '../vite.standalone.config.js';
 import { bessonaDe } from '../src/config/politicaDeMitjans.js';
+import { esquemaInvertitDeGoogleIos } from '../src/config/publicCredentials.js';
 
 /* El build de l'app nativa (ARQUITECTURA.txt §4.4 i §5, 261003) es prova amb
    FIXTURES, com tests/standalone-build.test.mjs: les peces pures sobre
    l'index.html REAL del repositori i entorns sintètics. Les eixides reals
    (dist-natiu/ i wordpress-plugin/dist/) només es miren si existixen; si no,
-   la prova diu per què se l'ha saltat. Mai passen en silenci. */
+   la prova diu per què se l'ha saltat. Mai passen en silenci. Fase D (261020,
+   revisió) · Tampoc no passen sobre una eixida més vella que el que proven:
+   se salten dient quin fitxer és més nou. */
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX = fs.readFileSync(path.join(ARREL, 'index.html'), 'utf8');
@@ -67,6 +73,50 @@ function fitxersAmb(directori, extensions) {
   recorre(directori);
   return eixida.sort();
 }
+
+/* Fase D (261020, L10) · Una eixida més vella que la config o que els recursos de
+   public/ que viatgen no diu res de l'arbre d'ara: es salta, dient per què.
+   Fase D (261020, revisió) · «Viatgen» amb les mateixes regles que el connector
+   natiu (vite.natiu.config.js): sense els índexs que l'app no llig
+   (RECURSOS_QUE_L_APP_NO_LLIG, que `npm run build` reescriu sempre) ni els
+   originals que la política nativa substituïx per la bessona. Abans, un build
+   web darrere de build:natiu saltava totes les proves de dist-natiu/. */
+function distNatiuVigent(t, arrel = ARREL) {
+  const index = path.join(arrel, DIRECTORI_NATIU, 'index.html');
+  if (!fs.existsSync(index)) { t.skip('cal npm run build:natiu: dist-natiu/ no existix en este arbre'); return false; }
+  const quan = fs.statSync(index).mtimeMs;
+  const publicDir = path.join(arrel, 'public');
+  let viatgen = [];
+  if (fs.existsSync(publicDir)) {
+    const substituits = new Set(politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: publicDir }))?.bessones ?? []);
+    viatgen = recursosDelPlugin(publicDir)
+      .filter((rel) => !RECURSOS_QUE_L_APP_NO_LLIG.includes(rel) && !substituits.has(rel))
+      .map((rel) => path.join(publicDir, rel));
+  }
+  const mesNou = mesNouQue(quan, [path.join(arrel, 'vite.natiu.config.js'), ...viatgen]);
+  if (mesNou) { t.skip(`dist-natiu/ és anterior a ${path.relative(arrel, mesNou)}: torna a compilar`); return false; }
+  return true;
+}
+
+/** El primer camí d'`entrades` modificat després de `quan` (mtimeMs), o null. */
+function mesNouQue(quan, entrades) {
+  return entrades.find((f) => fs.statSync(f).mtimeMs > quan) ?? null;
+}
+
+/* Fase D (261020, revisió) · Una eixida web (dist/, wordpress-plugin/dist/) més
+   vella que la frontera nativa no en pot dir res: les dependències
+   (package-lock.json, d'on ve el connector d'entrada social) i el codi de
+   src/natiu/ sense les proves. */
+function fronteraNativa(arrel = ARREL) {
+  const natiu = path.join(arrel, 'src', 'natiu');
+  const codi = fs.existsSync(natiu)
+    ? fs.readdirSync(natiu).filter((nom) => /\.jsx?$/.test(nom) && !nom.includes('.test.')).sort().map((nom) => path.join(natiu, nom))
+    : [];
+  return [path.join(arrel, 'package-lock.json'), ...codi].filter((f) => fs.existsSync(f));
+}
+
+/** El .js més recent d'una eixida: quan es va compilar per última vegada. */
+const compilatAl = (js) => Math.max(...js.map((f) => fs.statSync(f).mtimeMs));
 
 /* ─────────────────────── transformaIndexNatiu ─────────────────────── */
 
@@ -220,6 +270,59 @@ test('errorsEntornNatiu: VITE_UMAMI_* i VITE_GOOGLE_OAUTH_CLIENT_ID plens, o un 
   assert.deepEqual(errorsEntornNatiu(), [errorsEntornNatiu({})[0]]);
 });
 
+/* Fase D (261020, tasques 1 i 5) · Els clients OAuth de Google de l'entrada nativa:
+   públics, opcionals i mai a VITE_GOOGLE_OAUTH_CLIENT_ID (que continua buida). */
+const GOOGLE_WEB = '123-webabc.apps.googleusercontent.com';
+const GOOGLE_IOS = '123-iosabc.apps.googleusercontent.com';
+
+test('errorsEntornNatiu: els clients natius de Google, si hi són, amb la forma d\'un client, l\'iOS amb el web i diferents', () => {
+  const net = { VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU };
+  assert.deepEqual(errorsEntornNatiu({ ...net, VITE_NATIU_GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: GOOGLE_IOS }), [], 'els dos, bons');
+  assert.deepEqual(errorsEntornNatiu({ ...net, VITE_NATIU_GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB }), [], 'només el web (Android)');
+  assert.deepEqual(errorsEntornNatiu({ ...net, VITE_NATIU_GOOGLE_WEB_CLIENT_ID: '', VITE_NATIU_GOOGLE_IOS_CLIENT_ID: '  ' }), [], 'buides');
+  for (const [clau, dolent] of [['VITE_NATIU_GOOGLE_WEB_CLIENT_ID', 'web.apps.googleusercontent.com'], ['VITE_NATIU_GOOGLE_IOS_CLIENT_ID', '123-ABC.apps.googleusercontent.com']]) {
+    const errors = errorsEntornNatiu({ ...net, VITE_NATIU_GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: GOOGLE_IOS, [clau]: dolent });
+    assert.equal(errors.length, 1, clau);
+    assert.match(errors[0], new RegExp(`^${clau} no té la forma`));
+    assert.ok(!errors[0].includes(dolent), 'l\'error no porta el valor');
+  }
+  const senseWeb = errorsEntornNatiu({ ...net, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: GOOGLE_IOS });
+  assert.equal(senseWeb.length, 1);
+  assert.match(senseWeb[0], /VITE_NATIU_GOOGLE_IOS_CLIENT_ID sense VITE_NATIU_GOOGLE_WEB_CLIENT_ID/);
+  const mateix = errorsEntornNatiu({ ...net, VITE_NATIU_GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: ` ${GOOGLE_WEB} ` });
+  assert.equal(mateix.length, 1);
+  assert.match(mateix[0], /dos clients diferents/);
+});
+
+test('esquemaInvertitDeGoogleIos: l\'esquema d\'un client d\'iOS ben format, o null', () => {
+  assert.equal(esquemaInvertitDeGoogleIos(GOOGLE_IOS), 'com.googleusercontent.apps.123-iosabc');
+  assert.equal(esquemaInvertitDeGoogleIos(`  ${GOOGLE_IOS}\n`), 'com.googleusercontent.apps.123-iosabc', 'sense espais');
+  for (const dolent of ['123-ABC.apps.googleusercontent.com', '123-abc', '123-abc.apps.googleusercontent.com/x', 'abc.apps.googleusercontent.com',
+    'x123-abc.apps.googleusercontent.com', '', null, undefined, 123, {}]) {
+    assert.equal(esquemaInvertitDeGoogleIos(dolent), null, String(dolent));
+  }
+});
+
+test('errorsGoogleIos: sense client o sense projecte d\'iOS, res; un client dolent o un Info.plist sense el seu esquema, error sense el valor', () => {
+  const ambEsquema = (esquema) => `<plist><dict><key>CFBundleURLSchemes</key><array><string>${esquema}</string></array></dict></plist>`;
+  assert.equal(ESQUEMA_GOOGLE_PENDENT, 'com.googleusercontent.apps.pendent');
+  assert.equal(esquemaInvertitDeGoogleIos(ESQUEMA_GOOGLE_PENDENT), null, 'la reserva no és cap client');
+  assert.deepEqual(errorsGoogleIos(), []);
+  assert.deepEqual(errorsGoogleIos({ clientId: '', infoPlist: ambEsquema(ESQUEMA_GOOGLE_PENDENT) }), [], 'sense client, Google no s\'oferix a iOS');
+  assert.deepEqual(errorsGoogleIos({ clientId: GOOGLE_IOS, infoPlist: null }), [], 'sense ios/');
+  assert.deepEqual(errorsGoogleIos({ clientId: GOOGLE_IOS }), []);
+  assert.deepEqual(errorsGoogleIos({ clientId: GOOGLE_IOS, infoPlist: ambEsquema('com.googleusercontent.apps.123-iosabc') }), []);
+  const malFormat = errorsGoogleIos({ clientId: 'client-dolent', infoPlist: ambEsquema(ESQUEMA_GOOGLE_PENDENT) });
+  assert.equal(malFormat.length, 1);
+  assert.match(malFormat[0], /^VITE_NATIU_GOOGLE_IOS_CLIENT_ID no té la forma/);
+  for (const infoPlist of [ambEsquema(ESQUEMA_GOOGLE_PENDENT), ambEsquema('com.googleusercontent.apps.999-altre'), '']) {
+    const errors = errorsGoogleIos({ clientId: GOOGLE_IOS, infoPlist });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /Info\.plist no registra a CFBundleURLTypes/);
+    assert.ok(!errors[0].includes('123-iosabc'), 'l\'error no porta el client');
+  }
+});
+
 test('nomsDeclarats i heretadesDelLloc: només noms, i només les VITE_* amb valor que cap fitxer natiu ni el procés declara', () => {
   assert.deepEqual(nomsDeclarats('# VITE_COMENTADA=1\nVITE_A=1\n  export VITE_B = "x"\nVITE_C: y\nNO_ES_VITE=2\n\nsense igual\n'),
     ['VITE_A', 'VITE_B', 'VITE_C', 'NO_ES_VITE']);
@@ -236,7 +339,8 @@ test('nomsDeclarats i heretadesDelLloc: només noms, i només les VITE_* amb val
 
 /* ─────────────────────────── La config sencera ─────────────────────────── */
 
-const CLAUS_VIGILADES = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_TENANT_ID', 'VITE_GOOGLE_OAUTH_CLIENT_ID'];
+const CLAUS_VIGILADES = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_TENANT_ID', 'VITE_GOOGLE_OAUTH_CLIENT_ID',
+  'VITE_NATIU_GOOGLE_WEB_CLIENT_ID', 'VITE_NATIU_GOOGLE_IOS_CLIENT_ID'];
 
 /**
  * Avalua `funcio` amb un entorn controlat: process.env només porta les claus
@@ -254,7 +358,10 @@ function ambEntornNatiu(valors, funcio, fitxers = {}) {
     if (valors[k] === undefined) delete process.env[k];
     else process.env[k] = valors[k];
   }
-  for (const [nom, contingut] of Object.entries(fitxers)) fs.writeFileSync(path.join(carpeta, nom), contingut);
+  for (const [nom, contingut] of Object.entries(fitxers)) {
+    fs.mkdirSync(path.dirname(path.join(carpeta, nom)), { recursive: true });
+    fs.writeFileSync(path.join(carpeta, nom), contingut);
+  }
   process.chdir(carpeta);
   try { return funcio(); } finally {
     process.chdir(cwd);
@@ -320,6 +427,35 @@ test('la config llig els .env com Vite: un .env.local de desenvolupament fa fall
     const index = cfg.plugins.flat(Infinity).find((p) => p && p.name === 'sdp-index-natiu');
     assert.deepEqual(directives(cspDe(index.transformIndexHtml.handler(INDEX)))['connect-src'], ["'self'", 'data:', ORIGEN, WSS]);
   }, { ...desenvolupament, '.env.natiu.local': `VITE_SUPABASE_URL=${ORIGEN}\nVITE_SUPABASE_ANON_KEY=${CLAU}\nVITE_TENANT_ID=${TENANT}\n` });
+});
+
+test('la config contrasta el client d\'iOS de Google amb ios/App/App/Info.plist: sense el seu esquema no compila; amb ell, o sense ios/, sí', () => {
+  const PLIST = 'ios/App/App/Info.plist';
+  const plist = (esquema) => `<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>CFBundleURLTypes</key><array><dict><key>CFBundleURLSchemes</key><array><string>${esquema}</string></array></dict></array></dict></plist>\n`;
+  const entorn = { VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU, VITE_NATIU_GOOGLE_WEB_CLIENT_ID: GOOGLE_WEB, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: GOOGLE_IOS };
+  ambEntornNatiu(entorn, () => {
+    assert.throws(() => configNatiu({ mode: MODE_NATIU, command: 'build' }), (error) => {
+      assert.match(error.message, /no es pot fer[\s\S]*CFBundleURLTypes/);
+      assert.ok(!error.message.includes('123-iosabc'), 'l\'error no porta el client');
+      return true;
+    });
+  }, { [PLIST]: plist(ESQUEMA_GOOGLE_PENDENT) });
+  ambEntornNatiu(entorn, () => {
+    assert.equal(configNatiu({ mode: MODE_NATIU, command: 'build' }).build.outDir, DIRECTORI_NATIU);
+  }, { [PLIST]: plist(esquemaInvertitDeGoogleIos(GOOGLE_IOS)) });
+  ambEntornNatiu(entorn, () => {
+    assert.equal(configNatiu({ mode: MODE_NATIU, command: 'build' }).build.outDir, DIRECTORI_NATIU, 'sense ios/');
+  });
+  // Sense client d'iOS, la reserva no impedix res; un client mal format es diu una sola vegada.
+  ambEntornNatiu({ ...entorn, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: undefined }, () => {
+    assert.equal(configNatiu({ mode: MODE_NATIU, command: 'build' }).build.outDir, DIRECTORI_NATIU);
+  }, { [PLIST]: plist(ESQUEMA_GOOGLE_PENDENT) });
+  ambEntornNatiu({ ...entorn, VITE_NATIU_GOOGLE_IOS_CLIENT_ID: 'client-dolent' }, () => {
+    assert.throws(() => configNatiu({ mode: MODE_NATIU, command: 'build' }), (error) => {
+      assert.equal(error.message.split('VITE_NATIU_GOOGLE_IOS_CLIENT_ID no té la forma').length, 2);
+      return true;
+    });
+  }, { [PLIST]: plist(ESQUEMA_GOOGLE_PENDENT) });
 });
 
 /* Revisió adversarial (261003). Vite segella al binari TOTES les VITE_* de
@@ -452,6 +588,44 @@ test('la config porta la política nativa als dos llocs: el connector de recurso
   });
 });
 
+/* ─────────── L10 · Els índexs de la Wiki no viatgen a l'app (Fase D, 261020) ─────────── */
+
+test('L10 · l\'app no porta rag-index.json ni slugIndex.json de l\'arrel; el connector sí', () => {
+  assert.ok(Object.isFrozen(RECURSOS_QUE_L_APP_NO_LLIG));
+  assert.deepEqual([...RECURSOS_QUE_L_APP_NO_LLIG].sort(), ['rag-index.json', 'slugIndex.json']);
+  for (const nom of RECURSOS_QUE_L_APP_NO_LLIG) assert.ok(!PROPIS_DEL_LLOC.arrel.includes(nom), `${nom} viatja al connector`);
+  ambEntornNatiu({ VITE_SUPABASE_URL: ORIGEN, VITE_SUPABASE_ANON_KEY: CLAU }, () => {
+    const cfg = configNatiu({ mode: MODE_NATIU, command: 'build' });
+    const mostra = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-natiu-l10-'));
+    try {
+      for (const rel of ['rag-index.json', 'slugIndex.json', 'docs/rag-index.json', 'favicon.svg']) {
+        fs.mkdirSync(path.dirname(path.join(mostra, rel)), { recursive: true });
+        fs.writeFileSync(path.join(mostra, rel), rel);
+      }
+      const connector = cfg.plugins.flat(Infinity).find((p) => p && p.name === 'sdp-recursos-publics');
+      connector.configResolved({ publicDir: mostra });
+      const emesos = [];
+      connector.generateBundle.call({ emitFile: ({ fileName }) => emesos.push(fileName) });
+      assert.deepEqual(emesos.sort(), ['docs/rag-index.json', 'favicon.svg']);
+    } finally {
+      fs.rmSync(mostra, { recursive: true, force: true });
+    }
+  });
+});
+
+test('L10 · cap codi de src/ demana els índexs de la Wiki', (t) => {
+  if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
+  for (const nom of RECURSOS_QUE_L_APP_NO_LLIG) assert.ok(fs.existsSync(path.join(PUBLIC, nom)), `${nom} ja no és a public/: L10 sobra`);
+  const DEMANA = /(?:fetch\s*\(|import\s*\(|new URL\s*\()\s*[`'"][^`'"]*(?:rag-index|slugIndex)\.json/;
+  // wikiManifest.js és prosa de la Wiki compilada: un exemple de codi d'un document no és cap consumidor.
+  const generat = path.join(ARREL, 'src', 'data', 'wikiManifest.js');
+  const consumidors = fitxersAmb(path.join(ARREL, 'src'), ['.js', '.jsx', '.mjs'])
+    .filter((f) => f !== generat && !/\.test\.[cm]?jsx?$/.test(f))
+    .filter((f) => DEMANA.test(fs.readFileSync(f, 'utf8')))
+    .map((f) => path.relative(ARREL, f));
+  assert.deepEqual(consumidors, [], 'si l\'app els demana, lleva\'ls de RECURSOS_QUE_L_APP_NO_LLIG');
+});
+
 test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot avaluar abans de la lease', () => {
   const codi = fs.readFileSync(path.join(ARREL, 'vite.natiu.config.js'), 'utf8');
   assert.ok(!codi.includes(CAP), 'cap Capacitor');
@@ -459,11 +633,58 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   assert.deepEqual(especificadors, ['./src/config/publicCredentials.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
 });
 
+/* Fase D (261020, revisió) · La frescor de les eixides, sobre un arbre de mostra
+   amb dates fixades: el que no viatja a l'app no fa vella dist-natiu/, i una
+   eixida web es compara amb la frontera nativa sense les proves. */
+test('distNatiuVigent: els índexs que l’app no llig i els originals substituïts no fan vella l’eixida; el que viatja, sí', () => {
+  const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-natiu-vigent-'));
+  const abans = new Date('2026-10-20T10:00:00Z');
+  const compilat = new Date('2026-10-20T11:00:00Z');
+  const despres = new Date('2026-10-20T12:00:00Z');
+  const escriu = (rel, quan) => {
+    const abs = path.join(arrel, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, 'x');
+    fs.utimesSync(abs, quan, quan);
+  };
+  const motius = [];
+  const t = { skip: (motiu) => motius.push(motiu) };
+  try {
+    escriu('vite.natiu.config.js', abans);
+    escriu(`${DIRECTORI_NATIU}/index.html`, compilat);
+    escriu('public/assets/foto.jpg', despres);
+    escriu(`public/${bessonaDe('assets/foto.jpg')}`, abans);
+    for (const nom of RECURSOS_QUE_L_APP_NO_LLIG) escriu(`public/${nom}`, despres);
+    assert.equal(distNatiuVigent(t, arrel), true);
+    assert.deepEqual(motius, []);
+
+    escriu(`public/${bessonaDe('assets/foto.jpg')}`, despres);
+    assert.equal(distNatiuVigent(t, arrel), false);
+    assert.deepEqual(motius, [`dist-natiu/ és anterior a public/${bessonaDe('assets/foto.jpg')}: torna a compilar`]);
+  } finally {
+    fs.rmSync(arrel, { recursive: true, force: true });
+  }
+});
+
+test('fronteraNativa: package-lock.json i el codi de src/natiu/, sense les proves', () => {
+  const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-natiu-frontera-'));
+  try {
+    for (const rel of ['package-lock.json', 'src/natiu/entradaSocial.js', 'src/natiu/entrada.jsx', 'src/natiu/entradaSocial.test.js', 'src/natiu/nota.md']) {
+      fs.mkdirSync(path.dirname(path.join(arrel, rel)), { recursive: true });
+      fs.writeFileSync(path.join(arrel, rel), 'x');
+    }
+    assert.deepEqual(fronteraNativa(arrel).map((f) => path.relative(arrel, f).split(path.sep).join('/')),
+      ['package-lock.json', 'src/natiu/entrada.jsx', 'src/natiu/entradaSocial.js']);
+  } finally {
+    fs.rmSync(arrel, { recursive: true, force: true });
+  }
+});
+
 /* ─────────────────────── Eixides reals, si existixen ─────────────────────── */
 
 test('eixida real de dist-natiu/: sense worker, manifest ni servidor del lloc, i el backend segellat no és local', (t) => {
   const dir = path.join(ARREL, DIRECTORI_NATIU);
-  if (!fs.existsSync(dir)) { t.skip('cal npm run build:natiu: dist-natiu/ no existix en este arbre'); return; }
+  if (!distNatiuVigent(t)) return;
   for (const rel of ['sw.js', 'manifest.webmanifest', 'auth', 'robots.txt', 'sitemap.xml', '.htaccess', 'enxufe']) {
     assert.equal(fs.existsSync(path.join(dir, rel)), false, rel);
   }
@@ -484,7 +705,7 @@ test('eixida real de dist-natiu/: sense worker, manifest ni servidor del lloc, i
 
 test('eixida real de dist-natiu/: les bessones en lloc dels originals substituïts, els exclosos amb la seua, i la política segellada al JS', (t) => {
   const dir = path.join(ARREL, DIRECTORI_NATIU);
-  if (!fs.existsSync(dir)) { t.skip('cal npm run build:natiu: dist-natiu/ no existix en este arbre'); return; }
+  if (!distNatiuVigent(t)) return;
   if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
   const politica = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: PUBLIC }));
   if (!politica) { t.skip('sense bessones a public/ en este arbre'); return; }
@@ -502,12 +723,49 @@ test('eixida real de dist-natiu/: les bessones en lloc dels originals substituï
   for (const bessones of segellades) assert.deepEqual(bessones, politica.bessones);
 });
 
+test('L10 · eixida real de dist-natiu/: sense els índexs de la Wiki', (t) => {
+  if (!distNatiuVigent(t)) return;
+  for (const nom of RECURSOS_QUE_L_APP_NO_LLIG) {
+    assert.equal(fs.existsSync(path.join(ARREL, DIRECTORI_NATIU, nom)), false, `${nom} viatja a l'app`);
+  }
+});
+
+/* Fase D (261020, tasca 1) · A més del nom, una marca pròpia del connector d'entrada
+   social (la clau d'estat del seu OAuth web), composta a trossos. */
+const MARQUES_NATIVES = [CAP, ['social', 'login', 'oauth'].join('_')];
+
 test('eixida real del connector (wordpress-plugin/dist/): cap rastre de Capacitor', (t) => {
   const dirs = ['wordpress-plugin/dist', 'wordpress-plugin/builds/directori/dist']
     .map((rel) => path.join(ARREL, rel)).filter((abs) => fs.existsSync(abs));
   if (!dirs.length) { t.skip('cal npm run build:wp: wordpress-plugin/dist/ no existix en este arbre'); return; }
-  const js = dirs.flatMap((dir) => fitxersAmb(dir, ['.js']));
-  if (!js.length) { t.skip('cal npm run build:wp: wordpress-plugin/dist/ no porta cap .js'); return; }
-  const amb = js.filter((f) => fs.readFileSync(f, 'utf8').includes(CAP)).map((f) => path.relative(ARREL, f));
+  const totes = dirs.map((dir) => ({ dir, js: fitxersAmb(dir, ['.js']) })).filter(({ js }) => js.length);
+  if (!totes.length) { t.skip('cal npm run build:wp: wordpress-plugin/dist/ no porta cap .js'); return; }
+  /* Fase D (261020, revisió) · Una eixida anterior a la frontera nativa no es
+     compta com a verd: es diu, i si no en queda cap de vigent, se salta. */
+  const frontera = fronteraNativa();
+  const velles = totes.map((eixida) => ({ ...eixida, mesNou: mesNouQue(compilatAl(eixida.js), frontera) })).filter(({ mesNou }) => mesNou);
+  for (const { dir, mesNou } of velles) t.diagnostic(`${path.relative(ARREL, dir)} és anterior a ${path.relative(ARREL, mesNou)}: no es mira`);
+  const vigents = totes.filter(({ dir }) => !velles.some((vella) => vella.dir === dir));
+  if (!vigents.length) {
+    t.skip(`${path.relative(ARREL, velles[0].dir)} és anterior a ${path.relative(ARREL, velles[0].mesNou)}: torna a compilar (npm run build:wp)`);
+    return;
+  }
+  const js = vigents.flatMap((eixida) => eixida.js);
+  const amb = js.filter((f) => { const codi = fs.readFileSync(f, 'utf8'); return MARQUES_NATIVES.some((m) => codi.includes(m)); })
+    .map((f) => path.relative(ARREL, f));
+  assert.deepEqual(amb, []);
+});
+
+test('eixida real del web (dist/): cap rastre de Capacitor ni del connector d\'entrada social', (t) => {
+  const dir = path.join(ARREL, 'dist');
+  if (!fs.existsSync(dir)) { t.skip('cal npm run build: dist/ no existix en este arbre'); return; }
+  const js = fitxersAmb(dir, ['.js']);
+  if (!js.length) { t.skip('cal npm run build: dist/ no porta cap .js'); return; }
+  /* Fase D (261020, revisió) · Un dist/ anterior a la frontera nativa no es compta com a verd. */
+  const index = path.join(dir, 'index.html');
+  const mesNou = mesNouQue(fs.existsSync(index) ? fs.statSync(index).mtimeMs : compilatAl(js), fronteraNativa());
+  if (mesNou) { t.skip(`dist/ és anterior a ${path.relative(ARREL, mesNou)}: torna a compilar (npm run build)`); return; }
+  const amb = js.filter((f) => { const codi = fs.readFileSync(f, 'utf8'); return MARQUES_NATIVES.some((m) => codi.includes(m)); })
+    .map((f) => path.relative(ARREL, f));
   assert.deepEqual(amb, []);
 });

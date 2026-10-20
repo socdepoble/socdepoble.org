@@ -255,7 +255,8 @@ test('XAT-01 · en ample, la primera arribada manté la llista de converses senc
   const llista = document.getElementById('app-grid-list');
   const dreta = document.getElementById('app-grid-main');
   expect(within(llista).getByRole('list', { name: 'Converses' })).toBeTruthy();
-  expect(within(dreta).getByTestId('document-per-defecte')).toBeTruthy();
+  /* Fase D (261020, L4) · El document destacat arriba en diferit. */
+  expect(await within(dreta).findByTestId('document-per-defecte')).toBeTruthy();
   expect(dreta.querySelector('.sdp-xat-conversa')).toBeNull();
   expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
 });
@@ -270,7 +271,7 @@ test('XAT-01 · en ample, sense la comunitat del poble, ni la crea ni navega: la
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: /Gent de la Torre, Grup del poble/ })).toBeTruthy();
-  expect(within(document.getElementById('app-grid-main')).getByTestId('document-per-defecte')).toBeTruthy();
+  expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
 });
 
 test.each([[600, 'estret'], [800, 'mitja']])('XAT-01 · a %ipx (%s) la llista primer, com ara: cap navegació', async (amplada) => {

@@ -255,14 +255,26 @@ for (const f of JSX) {
     registra('LLEI_06_ENCAPSULAMENT', `${f}:${liniaDe(t, m.index)}  →  document.${m[1]}`);
 }
 
-/* LLEI 7 · PARITAT D'IDIOMES. */
+/* LLEI 7 · PARITAT D'IDIOMES.
+   Fase D (261020, tasca 4.1) · Lectura doble mentre conviuen les dos formes:
+   cada llengua es llig del seu diccionari, src/config/idiomes/<codi>.js
+   (L1, diccionaris sota demanda), i només si eixe fitxer no hi és, del bloc
+   antic dins de TRANSLATIONS a i18n.js. Una llengua sense cap de les dos és
+   «idioma absent». La branca antiga s'esborrarà quan L1 estiga assentat. */
 const i18n = llig('src/config/i18n.js');
 if (i18n) {
   const claus = {};
   for (const lang of IDIOMES) {
-    const m = new RegExp(`\\n\\s{0,4}${lang}\\s*:\\s*\\{`).exec(i18n);
-    if (!m) { registra('LLEI_07_PARITAT_I18N', `idioma absent: ${lang}`); continue; }
-    const b = bloc(i18n, i18n.indexOf('{', m.index));
+    const propi = llig(`src/config/idiomes/${lang}.js`);
+    let b = null;
+    if (propi !== null) {
+      const m = /export\s+default\s*\{/.exec(propi);
+      if (m) b = bloc(propi, propi.indexOf('{', m.index));
+    } else {
+      const m = new RegExp(`\\n\\s{0,4}${lang}\\s*:\\s*\\{`).exec(i18n);
+      if (m) b = bloc(i18n, i18n.indexOf('{', m.index));
+    }
+    if (!b) { registra('LLEI_07_PARITAT_I18N', `idioma absent: ${lang}`); continue; }
     claus[lang] = new Set([...b.matchAll(/['"]([\w.]+)['"]\s*:/g)].map((x) => x[1]));
   }
   const base = claus[IDIOMES[0]] || new Set();

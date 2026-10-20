@@ -1,5 +1,9 @@
-import { createContext, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { createTranslator, desaIdiomaTriat, esLlenguaSuportada, llegeixIdiomaTriat, resolIdioma } from '../../config/i18n';
+import { createContext, useContext, useEffect, useRef, useState, useMemo, useCallback, useSyncExternalStore } from 'react';
+import {
+  carregaDiccionari, createTranslator, desaIdiomaTriat, esLlenguaSuportada, llegeixIdiomaTriat, llenguaCarregada, resolIdioma,
+  subscriuDiccionaris
+} from '../../config/i18n';
+import { registraIncident } from '../../utils/autocuracio.js';
 import {
   ESDEVENIMENT_CONTRAST, ESDEVENIMENT_TEMA, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, readContrastPreference, readThemePreference,
   resolveContrast, resolveTheme, sistemaDemanaContrast, subscriuContrastSistema, writeContrastPreference, writeThemePreference
@@ -24,6 +28,16 @@ function avisaDelTema(preferencia) {
   window.dispatchEvent(new CustomEvent(ESDEVENIMENT_TEMA, { detail: { theme: preferencia } }));
 }
 
+/* Fase D (261020, tasca 4.1) · L1 · Demana un diccionari; si no arriba, en
+   queda rastre local (autocuracio, tipus 'tros', com els trossos de ruta de
+   RouteErrorBoundary). */
+function demanaDiccionari(codi) {
+  return carregaDiccionari(codi).then((carregat) => {
+    if (!carregat) registraIncident('tros', `idioma-${codi}`, 'fallada');
+    return carregat;
+  });
+}
+
 export function UIProvider({ children, externalConfig = {} }) {
   // === LANGUAGE (T1, decisió del Mestre 260930) ===
   /* La llengua és DERIVADA: tria explícita desada > `language` vàlida de
@@ -34,6 +48,15 @@ export function UIProvider({ children, externalConfig = {} }) {
      reiniciar. Muntar no escriu res: només setLanguage desa la tria. */
   const [idiomaTriat, setIdiomaTriat] = useState(llegeixIdiomaTriat);
   const language = resolIdioma({ triat: idiomaTriat, amfitrio: externalConfig?.language });
+
+  /* Fase D (261020, tasca 4.1) · L1 · `language` és la llengua demanada (la
+     ✓ dels selectors, les API de l'amfitrió); `llenguaDelText`, la que té el
+     diccionari en memòria. Mentre el de la demanada no hi és, el text, el
+     locale i el lang són el valencià sencer, i canvien quan arriba. L'efecte
+     cobrix la llengua de l'amfitrió, l'avís d'una altra instància i un
+     remuntatge; una fallada no es reintenta sola (cap bucle). */
+  const llenguaDelText = useSyncExternalStore(subscriuDiccionaris, () => llenguaCarregada(language), () => llenguaCarregada(language));
+  useEffect(() => { if (llenguaDelText !== language) demanaDiccionari(language); }, [language, llenguaDelText]);
 
   /* Dues instàncies a la mateixa pàgina no divergixen: l'oient només posa
      l'estat (no desa ni reemet), així que no hi ha bucle. */
@@ -49,6 +72,8 @@ export function UIProvider({ children, externalConfig = {} }) {
 
   const setLanguageFn = useCallback((code) => {
     if (!esLlenguaSuportada(code)) return;
+    /* L1 · La baixada comença dins del gest; l'efecte espera la mateixa promesa. */
+    carregaDiccionari(code);
     setIdiomaTriat(code);
     desaIdiomaTriat(code);
     if (typeof window !== 'undefined') {
@@ -59,8 +84,8 @@ export function UIProvider({ children, externalConfig = {} }) {
     }
   }, []);
 
-  const translator = useMemo(() => createTranslator(language), [language]);
-  const locale = LANGUAGE_LOCALES[language] || 'ca-ES';
+  const translator = useMemo(() => createTranslator(llenguaDelText), [llenguaDelText]);
+  const locale = LANGUAGE_LOCALES[llenguaDelText] || 'ca-ES';
 
 
   // === THEME ===
@@ -174,6 +199,7 @@ export function UIProvider({ children, externalConfig = {} }) {
 
   const stateValue = useMemo(() => ({
     language,
+    llenguaDelText,
     t: translator,
     locale,
     themeMode,
@@ -183,7 +209,7 @@ export function UIProvider({ children, externalConfig = {} }) {
     contrastPreference,
     externalConfig,
     status: globalStatus
-  }), [language, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastPreference, externalConfig, globalStatus]);
+  }), [language, llenguaDelText, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastPreference, externalConfig, globalStatus]);
 
   const actionsValue = useMemo(() => ({
     setLanguage: setLanguageFn,

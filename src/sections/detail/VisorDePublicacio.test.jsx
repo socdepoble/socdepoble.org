@@ -23,6 +23,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 import { gpsTorre, jpegAmbExif, orientacio } from '../../components/universal/enquadrament/jpegProva.js';
 
 const mocks = vi.hoisted(() => ({

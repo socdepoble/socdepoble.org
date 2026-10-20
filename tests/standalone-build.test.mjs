@@ -1188,6 +1188,17 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   // Cap façana: el mòdul d'entrada porta embed.jsx i tot el seu graf estàtic.
   assert.ok(entrada.moduleIds.some((id) => id === path.join(ARREL, 'src', 'embed.jsx')), 'embed.jsx és a l\'entrada');
   assert.deepEqual(entrada.imports, [], 'l\'entrada no espera cap altre tros per a avaluar-se');
+  /* Fase D (261020, tasca 4.1) · L1 · Diccionaris sota demanda: el valencià
+     viatja a l'entrada; els altres quatre, cadascun al seu tros, sense
+     importacions. Un import estàtic o un import.meta.glob els tornaria a ficar
+     a l'entrada (i18n.idiomes.test.js ho guarda també sobre el text). */
+  const idiomaDe = (id) => /[\\/]src[\\/]config[\\/]idiomes[\\/](ca|es|en|eu|gl)\.js$/.exec(id.split('?')[0])?.[1] ?? null;
+  assert.deepEqual(entrada.moduleIds.map(idiomaDe).filter(Boolean), ['ca'], 'a l\'entrada només hi ha el diccionari valencià');
+  for (const codi of ['es', 'en', 'eu', 'gl']) {
+    const tros = chunks.find((chunk) => !chunk.isEntry && chunk.facadeModuleId && idiomaDe(chunk.facadeModuleId) === codi);
+    assert.ok(tros, `el diccionari ${codi} té el seu propi tros`);
+    assert.deepEqual(tros.imports, [], `el tros del diccionari ${codi} no importa res`);
+  }
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));
   assert.ok(css(entrada), 'src/css/index.css?inline és a l\'entrada');
   assert.ok(!chunks.filter((chunk) => !chunk.isEntry).some(css), 'cap tros mandrós porta el full');
@@ -1265,6 +1276,21 @@ test('el plugin amb política no emet els externs ni els originals substituïts;
     assert.ok(emesos.includes('assets/system/ui/logo.svg') && emesos.includes('rag-index.json'), 'l’estructura viatja');
     assert.deepEqual(emet(recursosPublicsDelPlugin({ directori: arrel })).map((f) => f.fileName).sort(),
       [...VIATGEN, 'assets/towns/a/1.webp', 'assets/ui/v.jpg', 'assets/ui/v.webp'].sort());
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+/* Fase D (261020, L10) · L'app nativa deixa fora els índexs de la Wiki; el connector, mai. */
+test('exclosos: un paquet pot deixar fora camins exactes; per defecte, cap', () => {
+  const arrel = publicDeMostra(['assets/rag-index.json']);
+  try {
+    const tots = [...VIATGEN, 'assets/rag-index.json'].sort();
+    assert.deepEqual(emet(recursosPublicsDelPlugin({ directori: arrel })).map((f) => f.fileName).sort(), tots, 'per defecte, cap exclòs');
+    assert.deepEqual(emet(recursosPublicsDelPlugin({ directori: arrel, exclosos: [] })).map((f) => f.fileName).sort(), tots);
+    const sense = emet(recursosPublicsDelPlugin({ directori: arrel, exclosos: ['rag-index.json', 'slugIndex.json'] })).map((f) => f.fileName).sort();
+    assert.deepEqual(sense, tots.filter((rel) => rel !== 'rag-index.json' && rel !== 'slugIndex.json'));
+    assert.ok(sense.includes('assets/rag-index.json'), 'el camí és exacte: un homònim d\'una subcarpeta viatja');
+    // Un exclòs que no és a public/ no fa res.
+    assert.deepEqual(emet(recursosPublicsDelPlugin({ directori: arrel, exclosos: ['no-hi-es.json'] })).map((f) => f.fileName).sort(), tots);
   } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
 });
 

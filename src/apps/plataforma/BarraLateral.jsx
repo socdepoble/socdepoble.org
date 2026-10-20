@@ -58,6 +58,7 @@ export function BarraLateral({ children, isCompact = false, isDesktopSidebarClos
 
 export function useTitolBarraLateral() {
   const app = useAppActual();
-  const { language } = useUIState();
-  return app ? `Menú ${titolDe(app.titol, language)}` : TITOL_MENU_SDP;
+  /* Fase D (261020, tasca 4.1) · L1 · El títol seguix la llengua del text, no la demanada. */
+  const { language, llenguaDelText = language } = useUIState();
+  return app ? `Menú ${titolDe(app.titol, llenguaDelText)}` : TITOL_MENU_SDP;
 }

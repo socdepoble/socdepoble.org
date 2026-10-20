@@ -344,6 +344,53 @@ description: "Documentació canònica de Sóc de Poble."
   vigent de la columna) i en guarda el resultat; per a desfer-la, `alter
   column is_public set default false`.
 
+- `migrations/2610201500_moderacio_denuncies_i_bloquejos.sql`
+  Pla 261020_1300 (Tasca 2; App Store 1.2 i Google Play UGC): la moderació
+  del contingut dels veïns. Crea `public.denuncies` (una fila per denúncia
+  d'una publicació, un producte, un acte, un missatge, una persona o una
+  entitat, amb motiu tancat i detall de fins a 1.000 caràcters; també des
+  d'anon) i `public.bloquejos` (qui bloqueja a qui, persona o entitat), les
+  dues amb la RLS activa; dos disparadors d'abans d'inserir, SECURITY
+  DEFINER amb `search_path` buit, que forcen les columnes que el client no
+  tria i posen els límits (20 denúncies/hora per persona, 10/hora per IP
+  anònima, on una IPv6 compta per la seua /64, 50 si no se sap la IP, un
+  sostre comú de 300/hora entre totes les anònimes, una sola pendent per
+  persona i contingut, 1.000 bloquejos per persona); l'RPC
+  `denuncia_contingut` (SECURITY INVOKER: corre amb els permisos i la RLS,
+  mai amb els del propietari); i
+  `private.normes_acceptades` amb les RPC `accepta_normes_convivencia(p_versio)`
+  i `estat_normes_convivencia(p_versio)`, la prova al servidor que la persona
+  ha acceptat les normes de convivència (només una versió que siga una data
+  real i no futura al calendari de Madrid, i 20 versions per persona com a
+  molt). El compromís del sostre anònim (revisió 261020): la denúncia anònima
+  continua oberta, com mana l'ordre del Mestre, però qui inunda pot gastar el
+  sostre comú d'una hora, i mentre dura cap altra anònima no entra
+  (`SDP-MOD-429`, que el client diu com a límit); les de les persones amb
+  sessió no hi compten. Llevar del tot la denúncia anònima és decisió del
+  Mestre. Els permisos del mandat Supabase
+  30-Oct-2026, sencers, en la mateixa transacció i després de revocar-ho tot
+  a `public`, `anon`, `authenticated` i `service_role`:
+  `grant select, insert on public.denuncies to authenticated;`,
+  `grant insert on public.denuncies to anon;`,
+  `grant select, insert, delete on public.bloquejos to authenticated;` i
+  `grant select, insert, update, delete on public.denuncies, public.bloquejos to service_role;`.
+  Additiva i idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**, i
+  va ABANS de publicar el client: sense ella, les denúncies diuen
+  `no-disponible` i els bloquejos només duren la sessió. No depén de cap
+  altra pendent d'esta llista: només necessita `auth.users`, `public.towns`,
+  `public.organizations` i `private.es_superadmin()` (2609080000; aal2 des de
+  2610061448) i, si hi són, `private.hash_subjecte` i
+  `private.capcalera_client` (2609261500, 2610061450); sense elles, l'empremta
+  d'IP és null i les anònimes compartixen el compte de 50/hora (dins del
+  sostre de 300/hora). La moderació revisa la cua amb
+  la consulta de només lectura
+  `select id, objecte_tipus, objecte_id, motiu, creat_al from public.denuncies where estat = 'pendent' order by creat_al;`
+  i en canvia l'estat amb `service_role`. Pendent del Mestre (el «QUÈ NO FA»
+  de la capçalera): ningú no rep cap avís quan arriba una denúncia (la cua es
+  revisa a mà); el servidor no amaga el contingut de qui has bloquejat (ho fa
+  el client) ni li impedix escriure't; no es guarda cap còpia del contingut
+  denunciat i no hi ha cap filtre abans de publicar.
+
 - `seed.sql`
   Contingut inicial del portal.
 

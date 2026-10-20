@@ -6,8 +6,8 @@
    slug propi perquè no depenguen de l'ordre. */
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { MemoryRouter, RouterProvider, useLocation, useNavigate } from '../../app/contexts/RouterContext';
 import { ancoraDelClic, hrefInternDeClic, preparaRecolocacio } from '../../app/enllacosInterns.js';
 
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
@@ -20,7 +20,7 @@ const traduccio = vi.hoisted(() => {
 });
 vi.mock('../PedraSeca/hooks/useTraduccioPagina.js', () => ({ useTraduccioPagina: () => traduccio.valor }));
 
-import { PageFrame, encapcalamentsIndex } from './PageFrame.jsx';
+import { PageFrame, ancoraDe, encapcalamentsIndex } from './PageFrame.jsx';
 
 const saltats = [];
 const scrollAbans = Element.prototype.scrollIntoView;
@@ -366,4 +366,66 @@ test('un canvi de mida sense canvi de DOM (ResizeObserver de l’article i de la
   // En desmuntar-se la pàgina, l'observador es desconnecta.
   cleanup();
   expect(observador.desconnectat).toBe(true);
+});
+
+/* ─── Fase D (261020, tasca 3.2) · L'àncora declarada pel contingut ───
+   /legal#esborra-compte és l'adreça que la Play Console demana. Un
+   encapçalament la declara amb data-sdp-ancora (el sanejador no deixa cap id);
+   al navegador, el fragment del document hi porta; en memòria, ?seccio=. Cada
+   prova, amb la seua àncora (la secció consumida és de mòdul). */
+describe('àncora declarada (data-sdp-ancora) i fragment del document', () => {
+  afterEach(() => { window.history.replaceState(null, '', '/'); });
+  const ambAncora = (ancora) => (
+    <>
+      <h4>16. Els teus drets</h4>
+      <p>Text.</p>
+      <h5 data-sdp-ancora={ancora}>Com esborrar la teua conta</h5>
+      <p>Més text.</p>
+      <h4>17. Seguretat</h4>
+    </>
+  );
+  const h5 = () => document.querySelector('article.content-wrapper h5');
+
+  test('al navegador, /legal#àncora salta a l’encapçalament que la declara', () => {
+    window.history.replaceState(null, '', '/legal#ancora-navegador');
+    render(<RouterProvider>{pagina(ambAncora('ancora-navegador'))}</RouterProvider>);
+    fotograma();
+    expect(saltats[0][0]).toBe(h5());
+    expect(saltats[0][1]).toEqual({ block: 'start' });
+  });
+
+  test('en memòria, ?seccio=<àncora> també la troba', () => {
+    render(<MemoryRouter rutaInicial="/legal?seccio=ancora-memoria">{pagina(ambAncora('ancora-memoria'))}<Sonda /></MemoryRouter>);
+    fotograma();
+    expect(saltats[0][0]).toBe(h5());
+    expect(url()).toBe('/legal?seccio=ancora-memoria');
+  });
+
+  test('un fragment de paràmetres (#access_token=…) no fa cap salt', () => {
+    window.history.replaceState(null, '', '/legal#access_token=a&refresh_token=b');
+    render(<RouterProvider>{pagina(ambAncora('access_token'))}</RouterProvider>);
+    fotograma();
+    expect(saltats).toEqual([]);
+  });
+
+  test('?seccio= guanya al fragment', () => {
+    window.history.replaceState(null, '', '/legal?seccio=17-seguretat#ancora-perd');
+    render(<RouterProvider>{pagina(ambAncora('ancora-perd'))}</RouterProvider>);
+    fotograma();
+    expect(saltats[0][0].textContent).toBe('17. Seguretat');
+  });
+
+  test('el fragment amb el slug del text d’un encapçalament també hi porta', () => {
+    window.history.replaceState(null, '', '/legal#16-els-teus-drets');
+    render(<RouterProvider>{pagina(ambAncora('ancora-text'))}</RouterProvider>);
+    fotograma();
+    expect(saltats[0][0].textContent).toBe('16. Els teus drets');
+  });
+
+  test('ancoraDe: només una àncora en minúscules, xifres i guions, de 80 caràcters com a molt', () => {
+    const amb = (valor) => { const el = document.createElement('h5'); if (valor !== null) el.setAttribute('data-sdp-ancora', valor); return el; };
+    expect(ancoraDe(amb('esborra-compte'))).toBe('esborra-compte');
+    for (const dolenta of [null, '', 'Esborra', 'a--b', '-a', 'a b', 'à', 'x'.repeat(81)]) expect(ancoraDe(amb(dolenta))).toBeNull();
+    expect(ancoraDe(null)).toBeNull();
+  });
 });

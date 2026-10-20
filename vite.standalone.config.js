@@ -188,8 +188,14 @@ export function politicaDeMitjans(variant = 'autonom', { env = {}, directori, re
  * builds anteriors hi deixaren (retiraPropisDelLloc). Només si l'outDir és
  * estrictament dins de l'arrel del projecte, el mateix criteri de Vite per a
  * buidar-lo: un outDir que conté el projecte no es neteja mai.
+ *
+ * Fase D (261020, L10) · `exclosos`: camins POSIX exactes, relatius a public/
+ * (tal com els torna recursosDelPlugin), que ESTE paquet no emet a més dels de
+ * PROPIS_DEL_LLOC. Per defecte, cap. writeBundle continua retirant només els
+ * propis del lloc.
  */
-export function recursosPublicsDelPlugin({ directori, politica = null } = {}) {
+export function recursosPublicsDelPlugin({ directori, politica = null, exclosos = [] } = {}) {
+  const fora = new Set(exclosos);
   let arrel = directori;
   let arrelProjecte;
   let outDir;
@@ -205,6 +211,7 @@ export function recursosPublicsDelPlugin({ directori, politica = null } = {}) {
     },
     generateBundle() {
       for (const fileName of separaRecursos(recursosDelPlugin(arrel), politica).viatgen) {
+        if (fora.has(fileName)) continue;
         this.emitFile({ type: 'asset', fileName, source: fs.readFileSync(path.join(arrel, fileName)) });
       }
     },

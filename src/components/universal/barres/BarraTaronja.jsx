@@ -76,6 +76,9 @@ export function BarraTaronja({
   barActions = null,
   time, date, dateTime, onDateTime, etiquetaData,
   etiqueta = 'Autoria i data',
+  /* Fase D (261020, tasca 2) · El ⋮ «Més opcions» (Moderacio.jsx), dins de
+     .bar-actions i darrere del que ja hi havia. Null, el DOM de sempre. */
+  accioModeracio = null,
 }) {
   /* El ganxo es crida sempre, el primer: sense referència opaca rep '' i no fa res. */
   const avatarDelPort = useResolvedAsset(refDelPort(authorAvatar));
@@ -127,6 +130,7 @@ export function BarraTaronja({
         {barActions ? barActions : ((time || date || dateTime)
           ? <DateTimeControl time={time} date={date} dateTime={dateTime} label={etiquetaData} onClick={onDateTime} />
           : null)}
+        {accioModeracio}
       </div>
     </section>
   );

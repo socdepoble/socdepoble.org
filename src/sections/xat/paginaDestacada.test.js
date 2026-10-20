@@ -11,24 +11,37 @@ import {
 } from './paginaDestacada.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { paginaDeRuta } from '../text/paginaDeText.js';
+import font from './paginaDestacada.js?raw';
 
 describe('paginaDestacada · la tria de l’administrador', () => {
   test('per defecte, «El Xat»; «L’Ànima de la IAIA» continua sent la reserva i continua existint', () => {
     expect(PAGINA_DESTACADA_DEL_XAT).toBe('xat');
     expect(PAGINA_DESTACADA_DE_RESERVA).toBe('anima');
-    expect(paginaDestacada({})).toEqual({ clau: 'xat', pagina: PAGE_COPY.xat });
+    expect(paginaDestacada({}, undefined, PAGE_COPY)).toEqual({ clau: 'xat', pagina: PAGE_COPY.xat });
     expect(PAGE_COPY.anima.title).toBe("L'Ànima de la IAIA");
   });
 
   test('es pot triar qualsevol pàgina de text (anima, projecte…)', () => {
-    expect(paginaDestacada({}, 'anima')).toEqual({ clau: 'anima', pagina: PAGE_COPY.anima });
-    expect(paginaDestacada({}, 'projecte')).toEqual({ clau: 'projecte', pagina: PAGE_COPY.projecte });
+    expect(paginaDestacada({}, 'anima', PAGE_COPY)).toEqual({ clau: 'anima', pagina: PAGE_COPY.anima });
+    expect(paginaDestacada({}, 'projecte', PAGE_COPY)).toEqual({ clau: 'projecte', pagina: PAGE_COPY.projecte });
   });
 
   test('una clau que no existix (o heretada, com «constructor») cau a l’Ànima', () => {
     for (const clau of ['no-existix', 'constructor', '', null]) {
-      expect(paginaDestacada({}, clau)).toEqual({ clau: 'anima', pagina: PAGE_COPY.anima });
+      expect(paginaDestacada({}, clau, PAGE_COPY)).toEqual({ clau: 'anima', pagina: PAGE_COPY.anima });
     }
+  });
+
+  /* Fase D (261020, L4) · El mòdul no porta contingut: en estret /xat no
+     carrega pageContent.js (el document destacat el demana en diferit). */
+  test('sense còpia local només mira el contingut core, i null si no hi ha res; el mòdul no importa pageContent', () => {
+    expect(paginaDestacada({})).toBeNull();
+    expect(paginaDestacada(null, 'xat')).toBeNull();
+    const anima = { title: 'Ànima del core' };
+    expect(paginaDestacada({ anima })).toEqual({ clau: 'anima', pagina: anima });
+    expect(paginaDestacada({}, 'constructor')).toBeNull();
+    const codi = font.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(codi).not.toMatch(/pageContent|PAGE_COPY/);
   });
 
   test('el contingut core mana sobre PAGE_COPY, com a TextRoute', () => {

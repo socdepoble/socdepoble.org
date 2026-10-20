@@ -4,7 +4,8 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   LLINDAR_FONS_PX, anotaGrups, anunciDeNous, autorDeCita, classificaCanvi, clauAutor, clauDe, comportamentDesplacament,
-  construeixFiles, estaAlFons, estatObertura, extremsSeq, noLlegitsEnObrir, scrollPerCentrar, scrollPerDeixarDalt, textDeCita
+  construeixFiles, estaAlFons, estatObertura, extremsSeq, noLlegitsEnObrir, nousAnunciables, scrollPerCentrar, scrollPerDeixarDalt,
+  textDeCita
 } from './conversa.js';
 
 const t = (_, alternativa) => alternativa;
@@ -226,5 +227,22 @@ describe('anunciDeNous', () => {
     expect(anunciDeNous([m('1', 1, 'me'), m('2', 2, 'other', { esborrat: true })], t)).toBe("Pep: S'ha esborrat este missatge");
     expect(anunciDeNous([m('1', 1, 'me'), sistema('s', 2)], t)).toBe('');
     expect(anunciDeNous(undefined, t)).toBe('');
+  });
+});
+
+/* Fase D (261020, tasca 2) · El missatge d'algú que has bloquejat arriba
+   anotat de XatContext (bloquejat: true, sense text): ni s'anuncia ni es
+   cita amb el seu text. */
+describe('missatges de qui has bloquejat', () => {
+  test('nousAnunciables no els compta, i anunciDeNous no en diu res', () => {
+    const amagat = m('2', 2, 'other', { text: '', bloquejat: true });
+    expect(nousAnunciables([m('1', 1, 'other'), amagat])).toEqual([m('1', 1, 'other')]);
+    expect(anunciDeNous([amagat], t)).toBe('');
+    expect(anunciDeNous([m('1', 1, 'other', { text: 'Bon dia' }), amagat], t)).toBe('Pep: Bon dia');
+  });
+
+  test('la cita diu «Missatge amagat», també si a més s’ha esborrat', () => {
+    expect(textDeCita(m('1', 1, 'other', { text: '', bloquejat: true }), t)).toBe('Missatge amagat');
+    expect(textDeCita({ bloquejat: true, esborrat: true }, t)).toBe('Missatge amagat');
   });
 });

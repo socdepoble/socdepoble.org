@@ -164,6 +164,7 @@ import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
 import { usePastillaCalendari } from '../../universal/barres/pastillaCalendari.js';
 import { BotoComentar } from './Comentar.jsx';
+import { BotoModeracio } from './Moderacio.jsx';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, ShareIcon } from '../atoms/icones.jsx';
@@ -196,7 +197,10 @@ const SENSE_REFERENT = Object.freeze({ referrerPolicy: 'no-referrer' });
    (EmoticonaBarra en lectura): només hi és amb una emoticona triada, i
    llavors la caputxa passa a la graella de tres columnes de la barra
    taronja. Sense, el DOM i el flex de sempre. */
-function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction }) {
+/* Fase D (261020, tasca 2) · `accioModeracio`: el ⋮ «Més opcions»
+   (Moderacio.jsx), l'últim, a la vora dreta, després de la pastilla. Null,
+   el DOM de sempre. */
+function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction, accioModeracio = null }) {
   return (
     <header className={centre ? 'sp-card-header sp-card-header--amb-emoticona' : 'sp-card-header'}>
       {autor && (autorHref ? (
@@ -205,11 +209,12 @@ function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction }) {
         <span className="sp-card-author-block">{autor}</span>
       ))}
       {centre}
-      {(pin || headerAction || dataHora) && (
+      {(pin || headerAction || dataHora || accioModeracio) && (
         <div className="sp-card-meta">
           {pin}
           {headerAction}
           {dataHora}
+          {accioModeracio}
         </div>
       )}
     </header>
@@ -431,6 +436,11 @@ export function UniversalCard({
   showShare,
   showConnect,
   headerAction,
+  /* Fase D (261020, tasca 2; pla 261020_1300) · `ambModeracio`: la targeta
+     oferix «Més opcions» (denunciar i bloquejar) a la caputxa, si l'app té
+     el proveïdor i el backend la capacitat (useAccions). Opt-in: sense la
+     prop, el DOM de sempre, byte a byte. */
+  ambModeracio = false,
   onPin,
   onDateTime,
   onTranslate,
@@ -519,7 +529,8 @@ export function UniversalCard({
     compartirVisible,
     connectarVisible,
     comentarXat,
-    comentarPrivatAmb
+    comentarPrivatAmb,
+    moderacio
   } = useAccions({
     title,
     mainHref: safeMainHref,
@@ -533,7 +544,8 @@ export function UniversalCard({
     showComment,
     showShare,
     hasFooter,
-    telemetria: { ...telemetria, origen: 'targeta' }
+    telemetria: { ...telemetria, origen: 'targeta' },
+    ambModeracio
   });
 
   /* Ordre del Mestre, 261001 (tasca 4) · Sense onDateTime propi, la pastilla
@@ -603,6 +615,12 @@ export function UniversalCard({
      («Obrir», «Veure detall», «Sol·licitar plaça») porta el títol darrere
      de dos punts. */
   const titolText = typeof title === 'string' ? title : '';
+  /* Fase D (261020, tasca 2) · El ⋮ porta el títol al nom accessible, com
+     Comentar i Compartir. */
+  const accioModeracio = moderacio ? (
+    <BotoModeracio titol={titolText} nomAutor={moderacio.objectiu.autor?.nom} tipusObjectiu={moderacio.objectiu.tipus}
+      potBloquejar={moderacio.potBloquejar} onTria={moderacio.onTria} />
+  ) : null;
   const esConnectar = String(connectLabel).toLocaleLowerCase('ca') === 'connectar';
   const nomConnectar = !titolText ? connectLabel
     : esConnectar ? `${connectLabel} amb ${titolText}` : `${connectLabel}: ${titolText}`;
@@ -669,8 +687,9 @@ export function UniversalCard({
 
   return (
     <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual}>
-      {(autor || centre || pin || headerAction || dataHora) && (
-        <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction} />
+      {(autor || centre || pin || headerAction || dataHora || accioModeracio) && (
+        <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction}
+          accioModeracio={accioModeracio} />
       )}
 
       {ambPortes ? null : safeMainHref ? (

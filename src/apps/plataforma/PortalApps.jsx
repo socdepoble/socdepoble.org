@@ -88,7 +88,8 @@ export function PortalApps() {
   const apps = useApps();
   const apaga = useApagaApp();
   const navigate = useNavigate();
-  const { language } = useUIState();
+  /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
+  const { language, llenguaDelText = language } = useUIState();
   return (
     <PaginaApp
       title="Apps"
@@ -100,7 +101,7 @@ export function PortalApps() {
           <EstatBuit titol="Encara no hi ha cap app">Quan este node en porte alguna, la voràs ací.</EstatBuit>
         ) : (
           <ul className="sdp-app-portal__llista">
-            {apps.map((app) => <FitxaApp key={app.manifest.id} app={app} idioma={language} onApaga={apaga} />)}
+            {apps.map((app) => <FitxaApp key={app.manifest.id} app={app} idioma={llenguaDelText} onApaga={apaga} />)}
           </ul>
         )}
       </div>

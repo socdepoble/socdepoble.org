@@ -24,6 +24,12 @@
  * Ordre del Mestre del 261004 (prompt 261004_0515, T5) · «Multimèdia,
  * enllaços i documents» ja no és pendent: porta (`ruta`) a la vista del rail
  * /xat?vista=multimedia, la mateixa porta que la fila d'Ajustos > Xats.
+ *
+ * Fase D (261020, tasca 2; pla 261020_1300) · «Privacitat i seguretat», amb
+ * la moderació de l'app (la capacitat del backend), porta la llista de
+ * persones i entitats bloquejades amb «Desbloqueja» (LlistaBloquejos, la
+ * mateixa del perfil), i l'avís diu el que encara falta: silenciar i el
+ * xifratge (crítica 261020, 17). Sense, l'opció es pinta com sempre.
  */
 import { useState } from 'react';
 import { ArrowLeft, CircleDashed, Image as ImageIcon, PanelLeft, ShieldCheck, Timer } from 'lucide-react';
@@ -37,6 +43,8 @@ import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 import { PRESETS_AMPLARIA } from './amplariaColumnes.js';
 import { RUTES_AJUSTOS } from './ajustosXat.js';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
+import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx';
 
 /* `ruta`: l'opció no s'obri a la dreta, porta a eixa ruta de l'app. */
 const OPCIONS = [
@@ -54,6 +62,7 @@ const OPCIONS = [
 export default function XatControlSection() {
   const { t } = useUIActions();
   const navigate = useNavigate();
+  const moderacio = useModeracio();
   const [opcioId, setOpcioId] = useState(null);
   const opcio = OPCIONS.find((o) => o.id === opcioId) || null;
   const titol = t('section.xat.control.titol', 'Control del xat');
@@ -95,7 +104,7 @@ export default function XatControlSection() {
       {opcio ? <CapcaleraOpcio titol={t(opcio.titol[0], opcio.titol[1])} onTorna={() => setOpcioId(null)} t={t} /> : null}
       <div className="sdp-xat-control">
         {opcio ? (
-          <DetallOpcio opcio={opcio} t={t} />
+          <DetallOpcio opcio={opcio} moderacio={moderacio} t={t} />
         ) : (
           <p className="sdp-workspace-state" role="status">{t('section.xat.control.tria', 'Tria una opció de la llista.')}</p>
         )}
@@ -181,13 +190,22 @@ function CapcaleraOpcio({ titol, onTorna, t }) {
   );
 }
 
-function DetallOpcio({ opcio, t }) {
+function DetallOpcio({ opcio, moderacio = null, t }) {
+  /* Fase D (261020, tasca 2) · Els bloquejos, a «Privacitat i seguretat». */
+  const ambBloquejos = opcio.id === 'privacitat' && moderacio?.disponible === true;
   return (
     <article className="sdp-xat-control__panell" aria-labelledby={`xat-control-${opcio.id}`}>
       <h2 id={`xat-control-${opcio.id}`}>{t(opcio.titol[0], opcio.titol[1])}</h2>
       <p>{t(opcio.text[0], opcio.text[1])}</p>
       {opcio.id === 'espai' ? <AmplariaColumnes t={t} /> : null}
-      {opcio.pendent ? (
+      {ambBloquejos ? (
+        <>
+          <LlistaBloquejos moderacio={moderacio} />
+          <p className="sdp-xat-control__avis" role="status">
+            {t('section.moderacio.bloquejos.restaPendent', 'Silenciar les notificacions i el xifratge extrem a extrem encara no estan disponibles: es construiran en la fase següent del xat.')}
+          </p>
+        </>
+      ) : opcio.pendent ? (
         <p className="sdp-xat-control__avis" role="status">
           {t('section.xat.control.pendent', 'Esta opció encara no està disponible: es construirà en la fase següent del xat.')}
         </p>

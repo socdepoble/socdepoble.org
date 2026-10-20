@@ -4,6 +4,7 @@
  * «connectat»; en el dubte, mai verd.
  */
 import { expect, test } from 'vitest';
+import '../../../../tests/helpers/diccionaris.js';
 import { ESTATS_CONNEXIO, estatDeConnexio, estatValid, etiquetaDeConnexio } from './estatConnexio.js';
 import { createTranslator } from '../../../config/i18n';
 

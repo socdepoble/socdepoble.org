@@ -16,6 +16,9 @@ import { MenuTraduir } from '../../../../components/universal/traduccio/MenuTrad
 import { AvisTraduccio } from '../../../../components/universal/traduccio/TraduccioPagina.jsx';
 import { usePastillaCalendari } from '../../../../components/universal/barres/pastillaCalendari.js';
 import { LLENGUES_TRADUCCIO } from '../../../../data/traductor.js';
+/* Fase D (261020, tasca 2; pla 261020_1300) · «Més opcions» (⋮) de la boina, per la seua ruta:
+   no és a la façana (C2 llig l'import des de components/PedraSeca/). */
+import { BotoModeracio, MenuModeracio } from '../../../../components/PedraSeca/organismes/Moderacio.jsx';
 
 const res = () => {};
 
@@ -63,7 +66,7 @@ export default function EspecimenControlsBarra() {
   return (
     <>
     <Llinatge id="barres" />
-    <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu · BotoComentar · MenuComentar" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/RellotgeViu.jsx · atoms/icones.jsx · PedraSeca/organismes/Comentar.jsx"
+    <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu · BotoComentar · MenuComentar · BotoModeracio · MenuModeracio" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/RellotgeViu.jsx · atoms/icones.jsx · PedraSeca/organismes/Comentar.jsx · PedraSeca/organismes/Moderacio.jsx"
       descripcio="Les dues barres de color de PageFrame, que són components propis (T51): la blava de navegació de pàgina i la taronja d’autoria (autoria · emoticona · data). Els seus botons, i els del peu de la UniversalCard, són una sola família visual: cercles de 48px per a icones (44px, a tocar, als dos packs de la barra blava), pastilles de 48px per a text, mateix hover (vel blanc) i cap transform. A la barra blava mana l’ample de la BARRA, no el de la finestra: amb 480px o menys, CONNECTAR perd la paraula i queda el «+» en un cercle. A la taronja totes les icones són blanques dins d’un cercle de vel fosc."
       contracte={[
         ['BarraBlava', 'onBack · onForward · onIndex · *Visible · onTranslate · onComment · onShare · onConnect · comentarXat · accionsInoperatives · menuTraduir', '—', 'Presentacional: PageFrame hi posa useAccions. Sense onBack/onForward, la fletxa no es pinta.'],
@@ -73,6 +76,9 @@ export default function EspecimenControlsBarra() {
         ['BarraTaronja.author*', 'string', '—', 'Nom, poble, avatar (es resol i es valida ací) i ruta del perfil (T4).'],
         ['BarraTaronja.emoticona / onObriEmoticona', 'string / fn', "'' / null", 'L’espai central (EmoticonaBarra). Amb onObriEmoticona, botó que obri el diàleg (la ploma blanca sense emoticona); sense, lectura: l’emoticona triada o la cel·la buida.'],
         ['BarraTaronja.barActions', 'node', 'null', 'Les accions de la dreta; mana sobre la pastilla per defecte (time · date · dateTime · onDateTime).'],
+        ['BarraTaronja.accioModeracio', 'node', 'null', 'Fase D (261020, tasca 2; pla 261020_1300) · El ⋮ «Més opcions» (BotoModeracio), dins de .bar-actions i darrere de la pastilla. El posa PageFrame amb ambModeracio (el detall d’una publicació, un producte o un acte, i la fitxa pública d’un perfil aliè) quan l’app té la moderació. Null, el DOM de sempre.'],
+        ['BotoModeracio', 'titol · nomAutor · potBloquejar · tipusObjectiu · onTria · className', "— · '' · false · '' · — · 'btn-icon-orange'", 'El ⋮ de la boina, el cercle de vel fosc del pin (48px). Nom accessible «Més opcions: {títol}»; diu que obri un menú (aria-haspopup, aria-expanded). La via triada va a onTria(\'denuncia\' | \'bloqueja\', boto): el diàleg pren el botó per obridor i, en tancar-se, li torna el focus.'],
+        ['MenuModeracio.potBloquejar / tipusObjectiu / mostra', "boolean / 'publicacio' | 'producte' | 'esdeveniment' | 'persona' | 'entitat' | 'missatge' / boolean", "false / '' / false", 'Primera fila: «Denuncia el contingut» (en un perfil, «Denuncia {nom}»; en un missatge, «Denuncia el missatge»). Segona, només amb potBloquejar i un nom: «Bloqueja {nom}». El comportament és el de MenuComentar i MenuTraduir (useMenuEmergent); amb mostra, obert i quiet.'],
         ['BarraTaronja.etiquetaData', 'string', '—', 'Nom accessible de la pastilla per defecte. En lectura, la UniversalPage hi posa l’hora, el dia (en l’ordre en què es veuen) i on porta: «11:00 25/04/26 · Obri el calendari d’eixe mes».'],
         ['IconButton.label', 'string', '—', 'Nom accessible obligatori; és el títol del botó.'],
         ['IconButton.className', 'string', "''", 'Classes de lloc: a la barra blava, bar-blue-left__arrere i bar-blue-left__endavant (T53) o la de l’acció inoperativa.'],
@@ -124,6 +130,19 @@ export default function EspecimenControlsBarra() {
       <p>El botó, a soles: tancat, només diu que obri un menú (aria-haspopup, aria-expanded).</p>
       <div className="sdp-especimen__fila">
         <BotoComentar label="Comentar l’espècimen (menú)" comentarXat="comu" onComment={res} />
+      </div>
+
+      <h4>Més opcions: denunciar i bloquejar (moderació)</h4>
+      <p>Fase D (261020, tasca 2; pla 261020_1300): les botigues d’aplicacions demanen que tot el que publica la gent es puga denunciar i que qualsevol persona en puga bloquejar una altra. El ⋮ va l’últim a la caputxa de la targeta i a la barra taronja d’una pàgina, darrere de la data, i obri este menú davall seu, apegat a la dreta, amb el comportament del de Comentar. «Denuncia el contingut» obri el diàleg del motiu; «Bloqueja» i el nom de l’autor només ix si qui mira pot bloquejar, i demana confirmació. Mai al contingut propi, al de Sóc de Poble ni al de la IAIA. Ací, obert i quiet: només denunciar, i denunciar i bloquejar.</p>
+      <div className="sdp-especimen__fila">
+        <MenuModeracio onTria={res} onTanca={res} mostra />
+        <MenuModeracio potBloquejar nomAutor="Pepa" onTria={res} onTanca={res} mostra />
+      </div>
+      <p>El ⋮ a la barra taronja, darrere de la pastilla: tancat, només diu que obri un menú.</p>
+      <div className="sdp-especimen__barres">
+        <BarraTaronja {...AUTORIA} etiqueta="Autoria i data (espècimen, amb «Més opcions»)" {...DATA_LECTURA}
+          onDateTime={alCalendari.onClick} etiquetaData={alCalendari.etiqueta}
+          accioModeracio={<BotoModeracio titol="Fira de tardor" nomAutor="Pepa" potBloquejar onTria={res} />} />
       </div>
 
       <h4>Barra taronja en lectura (autoria · emoticona · data)</h4>

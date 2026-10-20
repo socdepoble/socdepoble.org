@@ -103,8 +103,9 @@ function PanellEstret({ columna }) {
  */
 export function ClosaAplicacio({ rutes, titols = {} }) {
   const { manifest } = useApp();
-  const { language } = useUIState();
-  const titol = titolDe(manifest.titol, language);
+  /* Fase D (261020, tasca 4.1) · L1 · El títol seguix la llengua del text, no la demanada. */
+  const { language, llenguaDelText = language } = useUIState();
+  const titol = titolDe(manifest.titol, llenguaDelText);
   const validacio = useMemo(() => validaTaulaDeClosa(rutes, manifest), [rutes, manifest]);
   const coincidencia = useRutaApp(validacio.ok ? rutes : null);
 

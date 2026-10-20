@@ -28,6 +28,14 @@
  * /socdepoble (un fil de la seua comunitat o un directe amb l'entitat) i la
  * IAIA a /iaia (també la seua conversa de mostra). «Gent de la Torre» ja hi
  * portava pel subjecte. La resta de converses, com sempre.
+ *
+ * Fase D (261020, tasca 2; pla 261020_1300 · Google Play UGC: denunciar
+ * persones) · En un directe 1:1 amb una persona (Conversa, amb la moderació
+ * de l'app), el menú «⋯» porta, darrere de «Seleccionar missatges», «Denuncia
+ * {nom}» i «Bloqueja {nom}» o, si ja la tens bloquejada, «Desbloqueja {nom}»:
+ * només els que arriben com a handler. Cada un tanca el menú, torna el focus
+ * al «⋯» (botoRef: el diàleg el pren per obridor i, en tancar-se, l'hi torna;
+ * crítica 261020, 13) i li'l passa. Sense els handlers, el menú de sempre.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
@@ -47,10 +55,22 @@ function participantsDe(n, t) {
 /* Només les rutes internes de l'aplicació: mai un enllaç a fora des d'ací. */
 const esRutaInterna = (ruta) => typeof ruta === 'string' && ruta.startsWith('/') && !ruta.startsWith('//');
 
-export default function CapcaleraConversa({ fil, onTorna, onSeleccionar, seleccio = null, t }) {
+export default function CapcaleraConversa({
+  fil, onTorna, onSeleccionar, seleccio = null, t,
+  onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = ''
+}) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
+  const botoRef = useRef(null);
   const idSub = useId();
+  /* Fase D (261020, tasca 2) · Tanca el menú, torna el focus al «⋯» i li'l passa. */
+  const triaDelMenu = (accio) => {
+    setMenuObert(false);
+    botoRef.current?.focus();
+    accio(botoRef.current);
+  };
+  const nomDeLaContrapart = String(nomContrapart || '').trim();
+  const ambNom = (clau, reserva) => t(clau, reserva).replace('{nom}', () => nomDeLaContrapart);
 
   /* El menú es tanca en clicar fora o amb Escape, sense tocar document.body.
      L'Escape que el tanca queda consumit (preventDefault): la selecció de
@@ -162,6 +182,7 @@ export default function CapcaleraConversa({ fil, onTorna, onSeleccionar, selecci
       {capIdentitat}
       <div className="sdp-xat-capcalera__menu" ref={menuRef}>
         <button
+          ref={botoRef}
           type="button"
           className="sdp-xat-icona"
           aria-label={t('section.xat.conversa.opcions', 'Opcions de la conversa')}
@@ -181,6 +202,21 @@ export default function CapcaleraConversa({ fil, onTorna, onSeleccionar, selecci
             >
               {t('section.xat.conversa.seleccionar', 'Seleccionar missatges')}
             </button>
+            {typeof onDenunciaPersona === 'function' && nomDeLaContrapart ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(onDenunciaPersona)}>
+                {ambNom('section.moderacio.denunciaPersona', 'Denuncia {nom}')}
+              </button>
+            ) : null}
+            {typeof onBloqueja === 'function' && nomDeLaContrapart ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(onBloqueja)}>
+                {ambNom('section.moderacio.bloqueja', 'Bloqueja {nom}')}
+              </button>
+            ) : null}
+            {typeof onDesbloqueja === 'function' && nomDeLaContrapart ? (
+              <button type="button" role="menuitem" className="sdp-xat-menu__item" onClick={() => triaDelMenu(onDesbloqueja)}>
+                {ambNom('section.moderacio.desbloqueja', 'Desbloqueja {nom}')}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

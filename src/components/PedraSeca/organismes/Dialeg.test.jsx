@@ -295,6 +295,44 @@ test('C4 · autoFocus genèric del consumidor sobreviu als passos de focus de sh
   expect(shadow.activeElement).toBe(within(root).getByRole('textbox', { name: 'Cercar emoticona' }));
 });
 
+/* Fase D (261020, revisió) · A la SPA, l'autoFocus del commit cau dins del
+   <dialog> encara tancat i el navegador no hi fa res (focusComAlNavegador);
+   showModal() fa els passos de focus del diàleg: l'atribut autofocus, que
+   React no escriu, o el primer control, la X. El focus inicial a
+   «Cancel·lar» el posa el Dialeg darrere de showModal(), i onObert encara
+   té l'última paraula. */
+function showModalComAlNavegador() {
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value() {
+    this.setAttribute('open', '');
+    (this.querySelector('[autofocus]') || this.querySelector('button'))?.focus();
+  } });
+}
+
+test('la confirmació destructiva a la SPA porta el focus inicial a Cancel·lar, no a la X de showModal()', () => {
+  focusComAlNavegador();
+  showModalComAlNavegador();
+  const { rerender } = render(<DialegConfirmacio obert={false} destructiu titol="Esborrar" onTanca={() => {}} onConfirma={() => {}} />);
+  rerender(<DialegConfirmacio obert destructiu titol="Esborrar" onTanca={() => {}} onConfirma={() => {}} />);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel·lar' }));
+  rerender(<DialegConfirmacio obert={false} destructiu titol="Esborrar" onTanca={() => {}} onConfirma={() => {}} />);
+  /* En tornar a obrir-lo, el botó ja és muntat: l'autoFocus no torna a córrer. */
+  rerender(<DialegConfirmacio obert destructiu titol="Esborrar" onTanca={() => {}} onConfirma={() => {}} />);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel·lar' }));
+});
+
+test('a la SPA, onObert té l’última paraula sobre el focus inicial que demana el contingut', () => {
+  focusComAlNavegador();
+  showModalComAlNavegador();
+  const onObert = () => document.getElementById('sdp-prova-desti')?.focus();
+  render(
+    <Dialeg obert titol="Prova" onObert={onObert}>
+      <button type="button" data-sdp-focus-inicial>Inicial</button>
+      <button type="button" id="sdp-prova-desti">Destí</button>
+    </Dialeg>
+  );
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Destí' }));
+});
+
 /* Pantalla completa (ordre del Mestre, 261001) · mida 'completa' i onObert.
    La resta de diàlegs no canvien ni de classes ni de capa. */
 test('mida completa: la classe del diàleg i, encastat, la capa --completa; les mides s, m i g i el calaix, com sempre', () => {

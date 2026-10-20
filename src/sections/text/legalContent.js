@@ -95,7 +95,7 @@ export const legalContent = {
       <li><strong>Després de demanar la baixa:</strong> esborrem les teues dades en un termini màxim de <strong>30 dies naturals</strong>.</li>
       <li><strong>Còpies de seguretat:</strong> el cicle de rotació és de <strong>30 dies</strong>; passat aquest termini, el que hages esborrat desapareix també d'ací.</li>
       <li><strong>Registres tècnics de seguretat</strong> (IP, marques de temps): <strong>12 mesos</strong>.</li>
-      <li><strong>Missatges de xat:</strong> mentre almenys una de les persones del fil el conserve. Un missatge que has enviat a una veïna és seu també: si tu et dones de baixa, la seua còpia de la conversa no s'esborra sola. Tin-ho present abans d'escriure.</li>
+      <li><strong>Missatges de xat:</strong> mentre la teua conta existisca. Si et dones de baixa, passats els 30 dies els missatges que has escrit s'esborren amb ella, també de les converses de les altres persones.</li>
       <li><strong>Dades bloquejades per a atendre possibles responsabilitats legals:</strong> durant els terminis de prescripció que marque la llei, i només per a això.</li>
     </ul>
 
@@ -146,6 +146,15 @@ export const legalContent = {
     <p><strong>Com s'exerceixen:</strong> escriu-nos a <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a> <strong>des del correu de la teua conta</strong>, dient què vols. Amb això n'hi ha prou; només et demanarem més identificació si tenim un dubte raonable que eres tu (art. 12.6 del RGPD), i mai et demanarem el DNI per defecte.</p>
     <p><strong>Termini de resposta:</strong> un mes des que rebem la petició, ampliable dos mesos més si el cas és complex, avisant-te sempre (art. 12.3).</p>
     <p><strong>Dret a reclamar:</strong> si creus que no t'hem atés bé, pots presentar una reclamació davant l'<strong>Agència Espanyola de Protecció de Dades</strong> (C/ Jorge Juan 6, 28001 Madrid — <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">www.aepd.es</a>). No cal que ens avises abans, però t'agraïm que ens dones l'oportunitat de resoldre-ho.</p>
+    <h5 data-sdp-ancora="esborra-compte">Com esborrar la teua conta</h5>
+    <p>Pots esborrar la teua conta de <strong>Sóc de Poble</strong> (el web socdepoble.org i l'aplicació Sóc de Poble per a Android i iPhone) quan vulgues i sense cap cost. Hi ha dos camins:</p>
+    <ul>
+      <li><strong>Amb la sessió oberta, a l'aplicació o al web:</strong> obri <strong>Perfil</strong>, després <strong>Privacitat i dades</strong> i, a l'apartat <strong>Donar-se de baixa</strong>, toca <strong>«Donar-me de baixa»</strong>. En aquell moment el teu perfil s'anonimitza i la sessió es tanca a tots els teus dispositius.</li>
+      <li><strong>Sense l'aplicació, o si ja no hi pots entrar:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Esborrar%20la%20meua%20conta">socdepoble@socdepoble.org</a> <strong>des del correu de la teua conta</strong>, amb l'assumpte «Esborrar la meua conta». Si vas entrar amb Apple i vas amagar el teu correu, digues-nos-ho al missatge: et demanarem la confirmació a l'adreça privada que Apple ens va donar. Et responem en <strong>un mes</strong> com a màxim.</li>
+    </ul>
+    <p><strong>Trenta dies per a fer-te arrere:</strong> durant <strong>30 dies naturals</strong> pots cancel·lar la baixa. Torna a entrar com ho feies (amb el teu correu, amb Apple o amb Google) i, a <strong>Privacitat i dades</strong>, toca «Cancel·lar la baixa». Passat aquest termini, la conta s'esborra definitivament i ja no es pot recuperar.</p>
+    <p><strong>Què s'esborra:</strong> la conta i el perfil, les notes privades, els missatges que has escrit al xat, les teues pertinences a grups i entitats, i les fotos i els fitxers que només eren teus.</p>
+    <p><strong>Què es conserva, i per què:</strong> les publicacions que vas fer públiques al Mur, al Mercat o a l'Agenda es queden <strong>sense el teu nom ni la teua foto</strong>, perquè formen part de la memòria del poble; si vols que també les esborrem, demana-ho al mateix correu. El que vas publicar en nom d'una entitat és de l'entitat. Les còpies de seguretat ho perden en 30 dies més, els registres tècnics de seguretat es guarden 12 mesos i el registre dels teus consentiments es guarda bloquejat fins a 3 anys, només per si una autoritat ens el demana (apartat 10).</p>
 
     <h4>17. Seguretat i bretxes</h4>
     <p>Apliquem mesures tècniques proporcionades: xifrat de les comunicacions (HTTPS/TLS), autenticació per testimoni de sessió, aïllament de dades per files al servidor perquè cadascú només veja el que li pertoca, i principi de mínim privilegi en els accessos.</p>

@@ -886,6 +886,17 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
    cos passava de la targeta i camps i alerta tocaven la vora. Només estos dos
    continguts partixen on calga; la resta de la targeta no canvia. */
 .sp-card--onboarding :is(.sdp-alerta, strong) { overflow-wrap: anywhere; }
+/* Fase D (261020, tasca 1) · Els botons d'Apple i Google de l'app nativa
+   (EntradaNativa.jsx), un davall de l'altre a tota l'amplària de la targeta,
+   com el Google web. Els 12px de separació passen del mínim d'Apple (1/10 de l'alt). */
+.onboarding-entrada-nativa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-3);
+  width: 100%;
+  align-self: stretch;
+  margin-top: var(--sdp-space-6);
+}
 
 }
 
@@ -3711,6 +3722,19 @@ details[open] summary.accordion-header svg:last-child {
     font-size: var(--sdp-text-meta);
     text-align: center;
   }
+  /* Fase D (261020, tasca 2) · El missatge de qui has bloquejat (Bombolla):
+     al lloc de la bombolla aliena, sense text ni nom, amb la parella de color
+     de l'avís de sistema (la mateixa ràtio) i en cursiva. */
+  .sdp-xat-bloquejat {
+    max-width: var(--sdp-xat-bombolla-max);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-style: italic;
+  }
   .sdp-xat-conversa-buida {
     align-items: center;
     padding: var(--sdp-space-8) var(--sdp-space-4);
@@ -3841,6 +3865,12 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-bombolla__accions .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
   .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
+  /* Fase D (261020, revisió al navegador a 375px) · En pantalla estreta el
+     menú del missatge s'obri cap a la bombolla, no cap a la vora: amb
+     «Denuncia el missatge» fa 14rem i, al costat d'una bombolla ampla, eixia
+     de la pantalla i amagava l'acció de denunciar (App Store 1.2). */
+  .sdp-root[data-sdp-estret] .sdp-xat-item--altre .sdp-xat-menu { right: 0; left: auto; transform-origin: top right; }
+  .sdp-root[data-sdp-estret] .sdp-xat-item--meu .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
 
   /* Grups (torn 260930, T1): entre dos files la llista posa el gap (8px)
      més el marge editorial de cada li (--sdp-li-gap, base.css); dins d'una
@@ -6336,7 +6366,7 @@ details[open] summary.accordion-header svg:last-child {
      transform al contingut trencaria els seus position: fixed. Sobreescriu
      el bloc antic .sdp-ptr-indicator de més amunt en este full. */
   .sdp-ptr-indicator {
-    top: var(--sdp-alt-negra);
+    top: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
     height: var(--sdp-space-12);
     font-size: var(--sdp-text-small);
     opacity: 0;

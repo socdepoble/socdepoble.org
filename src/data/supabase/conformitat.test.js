@@ -311,7 +311,11 @@ function fetchDelServidor(entrada, opcions = {}) {
     '/rest/v1/profiles': () => resposta(eq(p.get('id')) === PERSONA ? [{ id: PERSONA, full_name: 'Persona de conformitat', visibility: 'private' }] : []),
     '/rest/v1/rpc/list_my_organizations': () => resposta([]),
     '/rest/v1/organization_directory': () => resposta([]),
-    '/rest/v1/user_platform_roles': () => resposta([])
+    '/rest/v1/user_platform_roles': () => resposta([]),
+    /* Fase D (261020, tasca 2) · La moderació (2610201500): la persona de
+       conformitat no ha bloquejat ningú ni ha acceptat encara les normes. */
+    '/rest/v1/bloquejos': () => resposta([]),
+    '/rest/v1/rpc/estat_normes_convivencia': () => resposta({ versio: cos?.p_versio ?? null, acceptada_al: null })
   }[url.pathname];
   if (!ruta) {
     estat.rutesDesconegudes.push(`${metode} ${url.pathname}`);
