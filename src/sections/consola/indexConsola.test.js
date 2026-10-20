@@ -313,11 +313,15 @@ describe('les 18 il·lustracions de les ordres', () => {
   /* Les vinyetes de la carpeta que no són de les 18 de les ordres: la portada
      còmic de /fedivers (ESTAT 261014_1505; src/sections/text/pageContent.js). */
   const ALTRES_VINYETES = ['fedivers'];
+  /* La nano card del Mercat només viu com a bessona .webp: l'original .jpg es
+     va retirar a 1d45fb1a, i censImatges, legacyMedia, pageContent i la prova
+     del Panell de Control ja la nomenen així. */
+  const NOMES_BESSONA = new Set(['mercat']);
 
   test('les 14 vinyetes i les 4 nano cards són a public/, amb pes', () => {
     const rutes = [
       ...VINYETES.map((id) => `/assets/ui/plugins/${id}_vinyeta.jpg`),
-      ...NANO_CARDS.map((id) => `/assets/nano_cards/${id}_nano_card.jpg`)
+      ...NANO_CARDS.map((id) => `/assets/nano_cards/${id}_nano_card.${NOMES_BESSONA.has(id) ? 'webp' : 'jpg'}`)
     ];
     expect(rutes).toHaveLength(18);
     for (const ruta of rutes) expect(esFitxerAmbPes(ruta), ruta).toBe(true);

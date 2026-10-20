@@ -708,12 +708,6 @@
   flex: none;
 }
 
-.avatar-sm {
-  width: 32px;
-  height: 32px;
-  font-size: var(--sdp-text-meta);
-}
-
 .sp-card {
   background: var(--sdp-fons-targeta);
   border-radius: var(--sdp-radi-m);
@@ -1591,12 +1585,6 @@ a.pill:active {
   align-content: center;
   justify-content: center;
   margin-top: 0;
-}
-
-.card--soft .split-grid .sp-card-labels {
-  margin-top: 0;
-  margin-bottom: var(--sdp-space-3);
-  justify-content: center;
 }
 
 .btn-icon {

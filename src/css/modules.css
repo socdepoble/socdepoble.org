@@ -2339,13 +2339,6 @@ details[open] summary.accordion-header svg:last-child {
 /* ── TRASPASAT DE legacy-components.css ──
    sosp-spin i sosp-pulse, sense cap consumidor a src, retirats el 261004. */
 
-.detail-hero {
-  background: var(--sdp-fons-superficie);
-  border-radius: var(--sdp-radi-xl);
-  box-shadow: var(--sdp-ombra-2);
-  overflow: hidden;
-}
-
 .card__body {
   padding: var(--sdp-space-6);
 }
@@ -2515,27 +2508,6 @@ details[open] summary.accordion-header svg:last-child {
 .onboarding-form {
   display: flex;
   flex-direction: column;
-}
-
-.detail-hero .card__title {
-  margin-top: 14px;
-}
-
-.detail-hero .detail-content {
-  margin-top: 18px;
-}
-
-.card--soft .split-grid .media-frame {
-  aspect-ratio: 1/1;
-}
-
-.card--soft .split-grid .card__body {
-  display: grid;
-  align-content: center;
-}
-
-.card--soft .split-grid .card__title {
-  margin-top: 14px;
 }
 
 .card--soft + .feed-grid {
