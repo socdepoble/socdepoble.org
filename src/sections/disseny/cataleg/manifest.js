@@ -37,7 +37,7 @@ export const ICONES_ESPECIMENS = Object.freeze({
     arbre: '🌳', shell: '🐚', page: '📄', gestor: '🏛️', universalworkspace: '🖥️',
     columnes: '📰', divisor: '↔️', composicio: '🧩', 'barra-eines': '🛠️',
     'marc-columna': '🖼️', 'esquelet-bar': '🍺', 'esquelet-compra': '🛒', 'pagina-app': '📱',
-    'universal-tpv': '🏪'
+    'universal-tpv': '🏪', 'llista-comu': '🧺'
   }),
   formularis: Object.freeze({
     boto: '🆗', camp: '✏️', opcions: '☑️', pindola: '💊', cerca: '🔍',
@@ -396,6 +396,14 @@ CATALOG_ITEMS.push(
   especimen('estructura', 'universal-tpv', 'TPV universal', 'PedraSeca/organismes/UniversalTPV.jsx', ['organisme', 'tpv', 'cataleg'],
     'L’estructura de Loyverse amb la pell de Pedra Seca: el tiquet a l’esquerra, la graella de productes a la dreta i la barra d’accions partida al peu. La mateixa peça cobra al Bar («Cobra») i omple la Llista de la Compra o el Rebost («Afig a la llista»); en una amplada estreta, una sola columna amb pestanyes.',
     'tpv caixa tiquet cobra bar rebost llista compra loyverse graella productes categories tiquets oberts variants')
+);
+
+/* Fase E (261020, tasca 2; pla 261020_2045 «El Comú») · la llista viva: sis modes en una sola peça,
+   a la bombolla d'un xat de grup o a tota l'amplada. */
+CATALOG_ITEMS.push(
+  especimen('estructura', 'llista-comu', 'Llista viva d’«El Comú»', 'PedraSeca/UniversalListCard/UniversalListCard.jsx', ['organisme', 'llista', 'xat'],
+    'La llista que canvia en el lloc en compte de cent missatges: el Rebost i la Comanda de la colla en rajoles de 98 × 116 px que canvien d’estat amb un toc, el Cens de la colla on cadascú reclama el seu rol, l’Eixida de la banda, la Loteria en dipòsit amb les quatre signatures i la Fitxa privada d’un educand. Cap a una bombolla del xat d’un mòbil de 375 px.',
+    'llista viva comu rebost compra bar comanda colla cens disfresses banda eixida musics loteria dipòsit decims escola educand xat grup')
 );
 
 /* Ordre del Mestre, 261006 («deixa previst en el component de la targeta de producte l'espai i el

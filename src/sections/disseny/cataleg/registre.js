@@ -243,6 +243,10 @@ REGISTRE.push({ nom: 'CampFitxer', fitxer: 'PedraSeca/organismes/formulari.jsx',
    («Cobra») i per a la Llista de la Compra o el Rebost («Afig a la llista»). Espècimen:
    EspecimenUniversalTPV (estructura/universal-tpv). */
 REGISTRE.push({ nom: 'UniversalTPV', fitxer: 'PedraSeca/organismes/UniversalTPV.jsx', pagina: 'estructura', estat: 'viu' });
+/* Fase E (261020, tasca 2; pla 261020_2045 «El Comú») · la llista viva: Rebost, Bar · TPV,
+   Colla · Cens, Banda · Eixida, Loteria · Dipòsit i Escola · Educand en una sola peça, dins d'una
+   bombolla del xat o a tota l'amplada. Espècimen: EspecimenUniversalListCard (estructura/llista-comu). */
+REGISTRE.push({ nom: 'UniversalListCard', fitxer: 'PedraSeca/UniversalListCard/UniversalListCard.jsx', pagina: 'estructura', estat: 'viu' });
 /* Ordre del Mestre, 261006 («deixa previst en el component de la targeta de producte l'espai i el
    codi per a renderitzar aquestes xicotetes icones d'al·lèrgens») · les icones dels 14 al·lèrgens,
    amb els dibuixos del Mestre, per a la rajola del TPV i la targeta de la Carta Digital.

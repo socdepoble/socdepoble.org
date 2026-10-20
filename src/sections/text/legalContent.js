@@ -21,12 +21,13 @@ export const legalContent = {
     <h3>AVÍS LEGAL</h3>
 
     <h4>1. D'on ve el projecte i qui respon d'aquesta web</h4>
-    <p>Sóc de Poble és hereu de més de trenta anys d'activisme rural de l'<strong>Associació ecologista El Rentonar</strong>. Aquesta és la casa d'on ve el projecte, la seua memòria i la seua gent.</p>
-    <p>Ara bé, per a la llei fa falta un nom i un domicili concrets. En compliment de l'article 10 de la Llei 34/2002, d'11 de juliol, de Serveis de la Societat de la Informació i de Comerç Electrònic (LSSI-CE), s'informa que <strong>el responsable d'aquest portal i del seu tractament de dades és una persona física</strong>:</p>
+    <p>Sóc de Poble és hereu de més de trenta anys d'activisme rural de l'<strong>Associació ecologista El Rentonar</strong> (CIF G-03967668), entitat sense ànim de lucre validada per TechSoup i Goodstack. Aquesta és la casa d'on ve el projecte, la seua memòria i la seua gent.</p>
+    <p>Al seu costat hi ha el reconeixement comarcal de la <strong>Coordinadora d'Estudis Eòlics del Comtat</strong> i de l'<strong>Aplec pel Territori</strong>, companys de camí en la defensa del territori i de la vida rural.</p>
+    <p>Ara bé, per a la llei fa falta un nom i un domicili concrets. En compliment de l'article 10 de la Llei 34/2002, d'11 de juliol, de Serveis de la Societat de la Informació i de Comerç Electrònic (LSSI-CE), s'informa que <strong>el titular i promotor responsable d'aquest portal i del seu tractament de dades és una persona física</strong>, que també n'és el responsable davant la subvenció europea de NLnet (50.000 €):</p>
     <p>
-      <strong>Titular i responsable:</strong> Fco. Javier Llinares García<br />
-      <strong>NIF:</strong> [DADES PROTEGIDES AL CODI FONT]<br />
-      <strong>Domicili:</strong> [DADES PROTEGIDES AL CODI FONT]<br />
+      <strong>Titular i promotor responsable:</strong> Fco. Javier Llinares García<br />
+      <strong>NIF:</strong> 21476359V<br />
+      <strong>Domicili:</strong> Carrer Sant Isidre Llaurador, 16, 03108 - La Torre de les Maçanes (Alacant)<br />
       <strong>Nom del projecte:</strong> Sóc de Poble (socdepoble.org)<br />
       <strong>Activitat:</strong> Comunicació, tecnologia rural i vertebració etnogràfica.<br />
       <strong>Correu electrònic de contacte:</strong> <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>
@@ -45,7 +46,7 @@ export const legalContent = {
     <h4>3. Condicions d'ús</h4>
     <p>Entrar i utilitzar Sóc de Poble et dona la condició d'Usuari i implica que acceptes aquest text sencer. Si no l'acceptes, no utilitzes l'aplicació.</p>
     <p>La finalitat de la plataforma és servir d'espai de comunicació, intercanvi d'informació, preservació etnogràfica i cohesió per a les comunitats rurals. Et compromets a fer-la servir per a això i a no publicar continguts il·lícits, ofensius, ni dades personals d'altres persones sense el seu permís.</p>
-    <p><strong>Edat mínima: 14 anys</strong>, d'acord amb l'article 7 de la Llei Orgànica 3/2018 (LOPDGDD). Si tens menys de 14 anys, necessites que et done d'alta la persona que exercisca la teua pàtria potestat o tutela. Si detectem una conta d'una persona menor de 14 anys sense aquest consentiment, la donarem de baixa.</p>
+    <p><strong>Edat mínima: 14 anys</strong>, d'acord amb l'article 7 de la Llei Orgànica 3/2018 (LOPDGDD). Si tens menys de 14 anys, necessites que et done d'alta la persona que exercisca la teua pàtria potestat o tutela. Si detectem un compte d'una persona menor de 14 anys sense aquest consentiment, el donarem de baixa.</p>
     <p>Ens reservem el dret de suspendre l'accés a qui incomplisca aquestes condicions, avisant-lo prèviament sempre que siga possible.</p>
 
     <h4>4. Propietat intel·lectual i industrial</h4>
@@ -82,7 +83,7 @@ export const legalContent = {
 
     <h4>9. Per a què les fem servir i amb quina base jurídica</h4>
     <ul>
-      <li><strong>Donar-te el servei</strong> (crear la conta, autenticar-te, publicar, xatejar, guardar notes): base jurídica <em>execució del contracte</em>, article 6.1.b del RGPD. Les condicions d'ús de l'apartat 3 són aquest contracte. Sense aquestes dades no hi ha servei.</li>
+      <li><strong>Donar-te el servei</strong> (crear el compte, autenticar-te, publicar, xatejar, guardar notes): base jurídica <em>execució del contracte</em>, article 6.1.b del RGPD. Les condicions d'ús de l'apartat 3 són aquest contracte. Sense aquestes dades no hi ha servei.</li>
       <li><strong>Coses opcionals</strong> (imatge de perfil, ús de la IAIA MarIA, comunicacions no imprescindibles): base jurídica <em>consentiment</em>, article 6.1.a. El pots retirar quan vulgues i sense donar explicacions.</li>
       <li><strong>Mantindre això segur</strong> (prevenir suplantacions, abusos i atacs; conservar registres tècnics): base jurídica <em>interés legítim</em>, article 6.1.f. Hem valorat que el teu dret a la intimitat no queda per damunt de la necessitat de mantindre la xarxa del poble neta i operativa. Si vols que t'expliquem aquesta ponderació, demana-la i te la donem.</li>
       <li><strong>Complir la llei</strong> (atendre requeriments judicials o policials formals, obligacions comptables o de la LSSI-CE): base jurídica <em>obligació legal</em>, article 6.1.c.</li>
@@ -91,11 +92,11 @@ export const legalContent = {
 
     <h4>10. Quant de temps guardem cada cosa</h4>
     <ul>
-      <li><strong>Conta i perfil:</strong> mentre la conta estiga activa.</li>
+      <li><strong>Compte i perfil:</strong> mentre el compte estiga actiu.</li>
       <li><strong>Després de demanar la baixa:</strong> esborrem les teues dades en un termini màxim de <strong>30 dies naturals</strong>.</li>
       <li><strong>Còpies de seguretat:</strong> el cicle de rotació és de <strong>30 dies</strong>; passat aquest termini, el que hages esborrat desapareix també d'ací.</li>
       <li><strong>Registres tècnics de seguretat</strong> (IP, marques de temps): <strong>12 mesos</strong>.</li>
-      <li><strong>Missatges de xat:</strong> mentre la teua conta existisca. Si et dones de baixa, passats els 30 dies els missatges que has escrit s'esborren amb ella, també de les converses de les altres persones.</li>
+      <li><strong>Missatges de xat:</strong> mentre el teu compte existisca. Si et dones de baixa, passats els 30 dies els missatges que has escrit s'esborren amb ell, també de les converses de les altres persones.</li>
       <li><strong>Dades bloquejades per a atendre possibles responsabilitats legals:</strong> durant els terminis de prescripció que marque la llei, i només per a això.</li>
     </ul>
 
@@ -143,17 +144,17 @@ export const legalContent = {
       <li><strong>No ser objecte de decisions automatitzades</strong> (art. 22).</li>
       <li><strong>Retirar el consentiment</strong> en qualsevol moment (art. 7.3), sense que això afecte la legalitat del que s'ha fet abans.</li>
     </ul>
-    <p><strong>Com s'exerceixen:</strong> escriu-nos a <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a> <strong>des del correu de la teua conta</strong>, dient què vols. Amb això n'hi ha prou; només et demanarem més identificació si tenim un dubte raonable que eres tu (art. 12.6 del RGPD), i mai et demanarem el DNI per defecte.</p>
+    <p><strong>Com s'exerceixen:</strong> escriu-nos a <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a> <strong>des del correu del teu compte</strong>, dient què vols. Amb això n'hi ha prou; només et demanarem més identificació si tenim un dubte raonable que eres tu (art. 12.6 del RGPD), i mai et demanarem el DNI per defecte.</p>
     <p><strong>Termini de resposta:</strong> un mes des que rebem la petició, ampliable dos mesos més si el cas és complex, avisant-te sempre (art. 12.3).</p>
     <p><strong>Dret a reclamar:</strong> si creus que no t'hem atés bé, pots presentar una reclamació davant l'<strong>Agència Espanyola de Protecció de Dades</strong> (C/ Jorge Juan 6, 28001 Madrid — <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">www.aepd.es</a>). No cal que ens avises abans, però t'agraïm que ens dones l'oportunitat de resoldre-ho.</p>
-    <h5 data-sdp-ancora="esborra-compte">Com esborrar la teua conta</h5>
-    <p>Pots esborrar la teua conta de <strong>Sóc de Poble</strong> (el web socdepoble.org i l'aplicació Sóc de Poble per a Android i iPhone) quan vulgues i sense cap cost. Hi ha dos camins:</p>
+    <h5 id="esborra-compte" data-sdp-ancora="esborra-compte">Com esborrar el teu compte</h5>
+    <p>Pots esborrar el teu compte de <strong>Sóc de Poble</strong> (el web socdepoble.org i l'aplicació Sóc de Poble per a Android i iPhone) quan vulgues i sense cap cost. Hi ha dos camins:</p>
     <ul>
       <li><strong>Amb la sessió oberta, a l'aplicació o al web:</strong> obri <strong>Perfil</strong>, després <strong>Privacitat i dades</strong> i, a l'apartat <strong>Donar-se de baixa</strong>, toca <strong>«Donar-me de baixa»</strong>. En aquell moment el teu perfil s'anonimitza i la sessió es tanca a tots els teus dispositius.</li>
-      <li><strong>Sense l'aplicació, o si ja no hi pots entrar:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Esborrar%20la%20meua%20conta">socdepoble@socdepoble.org</a> <strong>des del correu de la teua conta</strong>, amb l'assumpte «Esborrar la meua conta». Si vas entrar amb Apple i vas amagar el teu correu, digues-nos-ho al missatge: et demanarem la confirmació a l'adreça privada que Apple ens va donar. Et responem en <strong>un mes</strong> com a màxim.</li>
+      <li><strong>Sense l'aplicació, o si ja no hi pots entrar:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Esborrar%20el%20meu%20compte">socdepoble@socdepoble.org</a> <strong>des del correu del teu compte</strong>, amb l'assumpte «Esborrar el meu compte». Si vas entrar amb Apple i vas amagar el teu correu, digues-nos-ho al missatge: et demanarem la confirmació a l'adreça privada que Apple ens va donar. Et responem en <strong>un mes</strong> com a màxim.</li>
     </ul>
-    <p><strong>Trenta dies per a fer-te arrere:</strong> durant <strong>30 dies naturals</strong> pots cancel·lar la baixa. Torna a entrar com ho feies (amb el teu correu, amb Apple o amb Google) i, a <strong>Privacitat i dades</strong>, toca «Cancel·lar la baixa». Passat aquest termini, la conta s'esborra definitivament i ja no es pot recuperar.</p>
-    <p><strong>Què s'esborra:</strong> la conta i el perfil, les notes privades, els missatges que has escrit al xat, les teues pertinences a grups i entitats, i les fotos i els fitxers que només eren teus.</p>
+    <p><strong>Trenta dies per a fer-te arrere:</strong> durant <strong>30 dies naturals</strong> pots cancel·lar la baixa. Torna a entrar com ho feies (amb el teu correu, amb Apple o amb Google) i, a <strong>Privacitat i dades</strong>, toca «Cancel·lar la baixa». Passat aquest termini, el compte s'esborra definitivament i ja no es pot recuperar.</p>
+    <p><strong>Què s'esborra:</strong> el compte i el perfil, les notes privades, els missatges que has escrit al xat, les teues pertinences a grups i entitats, i les fotos i els fitxers que només eren teus.</p>
     <p><strong>Què es conserva, i per què:</strong> les publicacions que vas fer públiques al Mur, al Mercat o a l'Agenda es queden <strong>sense el teu nom ni la teua foto</strong>, perquè formen part de la memòria del poble; si vols que també les esborrem, demana-ho al mateix correu. El que vas publicar en nom d'una entitat és de l'entitat. Les còpies de seguretat ho perden en 30 dies més, els registres tècnics de seguretat es guarden 12 mesos i el registre dels teus consentiments es guarda bloquejat fins a 3 anys, només per si una autoritat ens el demana (apartat 10).</p>
 
     <h4>17. Seguretat i bretxes</h4>
@@ -189,7 +190,7 @@ export const legalContent = {
     <ul>
       <li><code>socdepoble-language</code> — l'idioma que has triat.</li>
       <li><code>sdp-theme</code> i <code>sdp-grid-widths</code> — si vols la pantalla clara o fosca, i la grandària de les columnes.</li>
-      <li><code>socdepoble-guest-session-id</code> — un identificador anònim per a poder mirar l'aplicació sense conta.</li>
+      <li><code>socdepoble-guest-session-id</code> — un identificador anònim per a poder mirar l'aplicació sense compte.</li>
       <li><code>socdepoble-iaia-level</code> i <code>socdepoble-iaia-companions</code> — el teu progrés i els personatges triats a la secció de la IAIA.</li>
       <li><code>socdepoble-device-profile-v1-*</code>, <code>socdepoble-device-chat-v1-*</code>, <code>socdepoble-device-connections-v1-*</code> i <code>socdepoble-device-selected-peer-v1-*</code> — el perfil, les converses i les connexions de la secció <strong>Dispositius</strong>. Aquestes converses entre dispositius <strong>es queden al teu telèfon</strong> i no pugen al servidor.</li>
     </ul>

@@ -95,10 +95,15 @@ function coixiDalt(ol) {
    missatge» i, si es pot, «Bloqueja {nom}» (objectiuDeMissatge), i la
    capçalera d'un directe 1:1, «Denuncia {nom}» i «Bloqueja {nom}» o
    «Desbloqueja {nom}» (objectiuDeContrapart). Sense, el DOM de sempre. */
+/* Fase E (261020, tasca 3; pla 261020_2045) · `actorLlista` ({ id, nom } de
+   la sessió, memoritzat a XatSection) i `onMutaLlista` (el port de la tasca 4)
+   baixen a cada Bombolla per a la llista viva d'«El Comú». Per props, com
+   entitatActiva i moderacio: la conversa no llig cap context d'identitat.
+   Sense, les llistes es lligen però no es toquen. */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null, moderacio = null
+  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null
 }) {
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
@@ -520,6 +525,8 @@ export default function Conversa({
               onReintenta={onReintenta}
               onDescarta={onDescarta}
               onCopia={onCopia}
+              actorLlista={actorLlista}
+              onMutaLlista={onMutaLlista}
             />
           );
         })}

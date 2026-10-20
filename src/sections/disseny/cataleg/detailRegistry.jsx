@@ -108,6 +108,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'estructura/pagina-app': lazyRoute(() => import('./detalls/EspecimenPaginaApp.jsx')),
   /* Ordre del Mestre, 261006 (prompt 261006_1215) · el TPV universal, Mode Bar i Mode Rebost. */
   'estructura/universal-tpv': lazyRoute(() => import('./detalls/EspecimenUniversalTPV.jsx')),
+  /* Fase E (261020, tasca 2; pla 261020_2045) · la llista viva d'«El Comú», els sis modes. */
+  'estructura/llista-comu': lazyRoute(() => import('./detalls/EspecimenUniversalListCard.jsx')),
   /* Ordre del Mestre, 261006 · les icones dels 14 al·lèrgens, per al TPV i la Carta Digital. */
   'fonaments/icones-alergens': lazyRoute(() => import('./detalls/EspecimenIconesAlergens.jsx')),
   /* Ordre del Mestre, 261007 · el carrusel de la portada dels productes amb més d'una foto. */

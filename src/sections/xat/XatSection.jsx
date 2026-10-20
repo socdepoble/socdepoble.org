@@ -367,6 +367,14 @@ function XatWorkspace() {
      la conversa: només amb la capacitat i una sessió (el xat de mostra, mai).
      La porta de les normes no és ací: viu a XatContext (sendChatMessage). */
   const moderacioDePoble = useModeracio();
+  /* Fase E (261020, tasca 3; pla 261020_2045) · Qui toca les llistes vives
+     d'«El Comú»: la persona de la sessió, memoritzada perquè la targeta (que
+     és memo) no es torne a pintar a cada tecla del compositor. Sense sessió,
+     cap actor: la llista es llig però no es toca. */
+  const actorLlista = useMemo(
+    () => (joId && !senseSessio ? { id: String(joId), nom: String(joNom ?? '') } : null),
+    [joId, joNom, senseSessio]
+  );
   const moderacioDelXat = useMemo(
     () => (moderacioDePoble?.disponible === true && !senseSessio ? moderacioDePoble : null),
     [moderacioDePoble, senseSessio]
@@ -1419,6 +1427,7 @@ function XatWorkspace() {
           fil={activeThread}
           entitatActiva={entitatActiva}
           moderacio={moderacioDelXat}
+          actorLlista={actorLlista}
           messages={messages}
           onSendMessage={sendChatMessage}
           onBack={handleBackToList}

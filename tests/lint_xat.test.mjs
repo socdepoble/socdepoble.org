@@ -33,7 +33,9 @@ const COMPONENTS_XAT = [
   /* Onada 3 (AV, 261003): l'únic punt on el Xat pinta una cara. */
   'CaraXat',
   /* Onada 6: «Informa d'un error», l'accés dels beta testers. */
-  'BotoInformaDUnError'
+  'BotoInformaDUnError',
+  /* Fase E (261020, tasca 3): la llista viva d'«El Comú» dins de la bombolla. */
+  'TargetaLlistaComu'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
 /* Les proves dels components de l'onada 3 (també la de les files, T67), de
@@ -70,6 +72,9 @@ const JS_TORN = [
   'src/sections/xat/enllacos.test.js',
   'src/sections/xat/cercaXat.js',
   'src/sections/xat/cercaXat.test.js',
+  /* Fase E (261020, tasca 3): quan un missatge porta una llista viva, i les seues proves. */
+  'src/sections/xat/llistaComu.js',
+  'src/sections/xat/components/Bombolla.llistaComu.test.jsx',
   /* Torn 260930 (T1): lògica pura de la conversa, esborranys i poble. */
   'src/sections/xat/conversa.js',
   'src/sections/xat/conversa.test.js',

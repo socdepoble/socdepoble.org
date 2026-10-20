@@ -1061,6 +1061,8 @@ function ActorRoutes({ agents }) {
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
       <Route path="wikidepoble" element={<RutaWikiDePoble />} />
       <Route path="skills" element={<Navigate to="../wikidepoble" replace />} />
+      {/* P0-09 (ordre del Mestre, 261020) · /wiki, l'adreça curta que enllaça la pàgina «anima»: porta a la Wiki de Poble com /skills. */}
+      <Route path="wiki" element={<Navigate to="../wikidepoble" replace />} />
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
       <Route path="disseny" element={<DesignSection />} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />

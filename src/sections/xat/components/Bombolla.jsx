@@ -44,6 +44,16 @@
  * (`missatge.bloquejat`, XatContext) es pinta com un avís neutre, sense text,
  * sense nom i sense menú, però amb data-vist i data-missatge: la lectura,
  * les marques i les cites continuen.
+ *
+ * Fase E (261020, tasca 3; pla 261020_2045 «El Comú») · Ordre del Mestre:
+ * quan `missatge.tipus === 'llista_comu'` i porta una instantània llegible
+ * (llistaDeMissatge, llistaComu.js), el cos de la bombolla és la llista viva
+ * (TargetaLlistaComu, memoritzada) en lloc del text: els tocs la canvien en
+ * el lloc i no afigen cap missatge. L'autor, la cita, l'hora, les marques, el
+ * menú «⋯» i la moderació continuen com sempre. `actorLlista` (qui toca,
+ * memoritzat a XatSection) i `onMutaLlista` (el port, tasca 4) baixen de
+ * Conversa; en el mode de selecció la targeta és només de lectura. Sense
+ * instantània, o amb un altre tipus, el DOM de sempre.
  */
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
@@ -57,6 +67,8 @@ import { segmentaEnllacos, segmentaRutesDeLaWiki } from '../enllacos.js';
 import { textDErrorDelXat } from '../errorsXat.js';
 import { rutaCanonicaDePerfil, rutaDePerfil } from '../../../config/navigation.js';
 import { esIAIA } from '../../../data/identitatsSeed.js';
+import TargetaLlistaComu from './TargetaLlistaComu.jsx';
+import { llistaDeMissatge } from '../llistaComu.js';
 
 /**
  * Lògica d'Usuari (T3, T4): el nom de qui escriu es pinta als grups i, fora
@@ -117,7 +129,7 @@ export default function Bombolla({
   missatge, esGrup = false, locale, t,
   seleccio = null, onReintenta, onDescarta, onCopia,
   primerDelGrup = true, citat = null, onVesACita = null, onRespon = null, ressaltat = false,
-  onDenuncia = null, onBloqueja = null, nomAutor = ''
+  onDenuncia = null, onBloqueja = null, nomAutor = '', actorLlista = null, onMutaLlista = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -196,6 +208,8 @@ export default function Bombolla({
   /* F25 · La IAIA MarIA, per id i signant com a IA (mai pel nom), i fora del
      mode de selecció: els seus enllaços a la Wiki de Poble s'obrin a l'app. */
   const rutesDeLaWiki = !meu && !triable && Boolean(missatge.is_ai) && esIAIA(missatge.usuariId);
+  /* Fase E (tasca 3) · La llista viva d'«El Comú», si el missatge en porta una de llegible. */
+  const llistaComu = esborrat ? null : llistaDeMissatge(missatge);
 
   const propsSeleccio = triable ? {
     role: 'checkbox',
@@ -223,7 +237,7 @@ export default function Bombolla({
             {triat ? <CheckCircle2 size={20} focusable="false" /> : <Circle size={20} focusable="false" />}
           </span>
         ) : null}
-        <div className={`sdp-xat-bombolla ${meu ? 'sdp-xat-bombolla--meu' : 'sdp-xat-bombolla--altre'}${primerDelGrup ? ' sdp-xat-bombolla--cua' : ''}${enError ? ' sdp-xat-bombolla--error' : ''}`}>
+        <div className={`sdp-xat-bombolla ${meu ? 'sdp-xat-bombolla--meu' : 'sdp-xat-bombolla--altre'}${primerDelGrup ? ' sdp-xat-bombolla--cua' : ''}${enError ? ' sdp-xat-bombolla--error' : ''}${llistaComu ? ' sdp-xat-bombolla--llista' : ''}`}>
           {!meu && !esborrat && primerDelGrup ? (
             <AutorDeLaBombolla missatge={missatge} esGrup={esGrup} triable={triable} t={t} />
           ) : null}
@@ -234,6 +248,8 @@ export default function Bombolla({
             <p className="sdp-xat-bombolla__text sdp-xat-bombolla__text--esborrat">
               {t('section.xat.missatge.esborrat', "S'ha esborrat este missatge")}
             </p>
+          ) : llistaComu ? (
+            <TargetaLlistaComu llista={llistaComu} actor={actorLlista} interactiva={!triable} onMuta={onMutaLlista} />
           ) : (
             <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p>
           )}

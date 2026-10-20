@@ -15,7 +15,19 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenControlsBarra.jsx, 2026-10-20T17:07:16+02:00, Fase D (261020,
+ * Darrera posada al dia: EspecimenXat.jsx, 2026-10-20T22:42:54+02:00, Fase E (261020, tasca 3; pla 261020_2045
+ * «El Comú»): la bombolla de grup amb tipus 'llista_comu', que munta la llista viva
+ * (TargetaLlistaComu, memoritzada) en lloc del text, i la mateixa en el mode de selecció (només
+ * lectura), amb dades de mostra; les files actorLlista i onMutaLlista al contracte de Bombolla i la
+ * fila nova TargetaLlistaComu. Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenUniversalListCard.jsx, 2026-10-20T21:36:58+02:00, Fase E (261020,
+ * tasca 2; pla 261020_2045 «El Comú»): l'organisme nou UniversalListCard (la llista viva dels sis
+ * modes: Rebost, Bar · TPV, Colla · Cens, Banda · Eixida, Loteria · Dipòsit i Escola · Educand),
+ * registrat a registre.js i amb el seu carregador a detailRegistry.jsx (21:28:42), l'ítem
+ * estructura/llista-comu i l'emoji 🧺 a manifest.js (21:28:52), i l'espècimen nou
+ * EspecimenUniversalListCard.jsx (21:36:58), que el munta de veres en els sis modes amb dades de
+ * mostra, «Qui toca» (qui l'ha creada o un veí) i el marc d'una bombolla de 375 px.
+ * Versió anterior: EspecimenControlsBarra.jsx, 2026-10-20T17:07:16+02:00, Fase D (261020,
  * tasca 2; pla 261020_1300 · App Store 1.2 i Google Play UGC): «Més opcions» (⋮) de la boina,
  * l'organisme nou Moderacio.jsx (BotoModeracio i MenuModeracio, denunciar i bloquejar), registrat a
  * registre.js (17:05:48) i mostrat a EspecimenControlsBarra.jsx (el menú obert i quiet, només
@@ -168,4 +180,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-20T17:07:16+02:00';
+export const VERSIO_CATALEG = '2026-10-20T22:42:54+02:00';

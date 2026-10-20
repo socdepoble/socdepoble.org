@@ -91,6 +91,8 @@ export {
 //    sdp-clon-loiverse; l'estructura de Loyverse per al Bar i per a la Llista de
 //    la Compra o el Rebost; estils a tpv.css) ──
 export { UniversalTPV } from './organismes/UniversalTPV.jsx';
+/* Fase E (261020, tasca 2; pla 261020_2045) · la llista viva d'«El Comú», sis modes en una peça. */
+export { UniversalListCard } from './UniversalListCard/UniversalListCard.jsx';
 
 // ── ICONES D'AL·LÈRGENS (ordre del Mestre, 261006: «vital per a la Carta
 //    Digital i el TPV»; els dibuixos del Mestre viatgen dins del paquet, sense

@@ -3772,6 +3772,12 @@ details[open] summary.accordion-header svg:last-child {
     overflow-wrap: anywhere;
   }
   .sdp-xat-bombolla--meu { background: var(--sdp-accio-subtil); }
+  /* Fase E (261020, tasca 3; revisió adversarial) · El filter de la bombolla
+     en fa un context d'apilament: els suggeriments d'«Afig…» de la llista
+     viva quedarien davall de la bombolla següent i el toc hi cauria. Mentre
+     el focus és dins d'una bombolla amb llista, puja per damunt de les
+     següents (ítem flex: el z-index s'aplica sense position). */
+  .sdp-xat-bombolla--llista:focus-within { z-index: 1; }
   .sdp-xat-bombolla--altre { background: var(--sdp-accent-subtil); }
   /* La cua (torn 260930, T1 · patró de missatgeria): el triangle de la cantonada
      de dalt, al costat de l'autor, només a la primera bombolla de cada grup

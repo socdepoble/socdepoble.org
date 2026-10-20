@@ -1,5 +1,5 @@
 /**
- * Fase D (261020, tasca 3.2) · L'adreça pública per a esborrar la conta, la que
+ * Fase D (261020, tasca 3.2) · L'adreça pública per a esborrar el compte, la que
  * demanen la Play Console i l'App Store: https://socdepoble.org/legal#esborra-compte.
  * L'àncora la declara el contingut (data-sdp-ancora a l'h5 de l'apartat 16), el
  * sanejador la conserva i PageFrame hi salta pel fragment del document o per
@@ -54,15 +54,15 @@ function textDeLaSeccio(arrel, ancora) {
   return trossos;
 }
 
-describe('/legal#esborra-compte · com esborrar la conta', () => {
-  test('una sola àncora, un h5 «Com esborrar la teua conta» entre «Els teus drets» i «Seguretat»', () => {
+describe('/legal#esborra-compte · com esborrar el compte', () => {
+  test('una sola àncora, un h5 «Com esborrar el teu compte» entre «Els teus drets» i «Seguretat»', () => {
     const arrel = legalSanejat();
     const ancores = arrel.querySelectorAll('[data-sdp-ancora]');
     expect(ancores).toHaveLength(1);
     const [h5] = ancores;
     expect(h5.tagName).toBe('H5');
     expect(h5.getAttribute('data-sdp-ancora')).toBe(ANCORA);
-    expect(h5.textContent.trim()).toBe('Com esborrar la teua conta');
+    expect(h5.textContent.trim()).toBe('Com esborrar el teu compte');
     expect(h4Veina(arrel, h5, true).textContent).toMatch(/Els teus drets/);
     expect(h4Veina(arrel, h5, false).textContent).toMatch(/Seguretat/);
   });
@@ -71,7 +71,7 @@ describe('/legal#esborra-compte · com esborrar la conta', () => {
     const arrel = legalSanejat();
     const seccio = textDeLaSeccio(arrel, arrel.querySelector(`[data-sdp-ancora="${ANCORA}"]`));
     const text = seccio.map((node) => node.textContent).join('\n');
-    for (const frase of ['Privacitat i dades', 'Donar-me de baixa', '30 dies naturals', 'des del correu de la teua conta', 'Cancel·lar la baixa']) {
+    for (const frase of ['Privacitat i dades', 'Donar-me de baixa', '30 dies naturals', 'des del correu del teu compte', 'Cancel·lar la baixa']) {
       expect(text, frase).toContain(frase);
     }
     const correus = seccio.flatMap((node) => [...node.querySelectorAll('a[href^="mailto:"]')]);
@@ -99,6 +99,6 @@ describe('/legal#esborra-compte · com esborrar la conta', () => {
      esborra auth.users i, en cascada, els missatges de xat. */
   test('l’apartat 10 ja no diu que la còpia de la conversa es queda', () => {
     expect(PAGE_COPY.legal.html).not.toMatch(/no s'esborra sola/);
-    expect(PAGE_COPY.legal.html).toMatch(/els missatges que has escrit s'esborren amb ella/);
+    expect(PAGE_COPY.legal.html).toMatch(/els missatges que has escrit s'esborren amb ell,/);
   });
 });

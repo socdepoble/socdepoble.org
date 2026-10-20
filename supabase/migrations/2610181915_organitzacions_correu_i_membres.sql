@@ -10,6 +10,15 @@
 --      public.organization_member_organizations, membres_organitzacio,
 --      desa_membre_organitzacio i lleva_membre_organitzacio.
 --   4. Recarrega l'esquema de PostgREST (notify pgrst).
+--
+-- P0-01 (ordre del Mestre, 20-10-2026) · El correu privat (`contact_email`) no
+-- s'exposa a cap rol: ni a `anon` (la política «public read public
+-- organizations» deixa llegir les organitzacions públiques sense sessió) ni a
+-- `authenticated`. Només el llig qui administra l'organització, per l'RPC
+-- contacte_organitzacio (SECURITY DEFINER, can_manage_organization). Les
+-- columnes llegibles són només `public_email` (l'opt-in). El REVOKE explícit
+-- tanca també una base on ja s'haguera aplicat la versió d'abans d'este fitxer,
+-- que donava SELECT (contact_email) a anon i authenticated.
 -- ============================================================================
 
 begin;
@@ -19,7 +28,8 @@ set local statement_timeout = '60s';
 -- ── 1 · Columnes de correu de contacte a organizations ──────────────────────
 alter table public.organizations add column if not exists contact_email text;
 alter table public.organizations add column if not exists public_email boolean default false;
-grant select (contact_email, public_email) on table public.organizations to anon, authenticated;
+revoke select (contact_email) on table public.organizations from public, anon, authenticated;
+grant select (public_email) on table public.organizations to anon, authenticated;
 grant update (contact_email, public_email) on table public.organizations to authenticated;
 
 -- ── 2 · RPCs de contacte corporatiu ─────────────────────────────────────────

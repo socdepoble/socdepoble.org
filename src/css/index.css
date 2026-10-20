@@ -79,6 +79,10 @@
    layer(), per la mateixa raó: el full ja escriu dins de `@layer components`
    i ajusta peces de components.css i modules.css (.sdp-control, .sdp-pestanyes). */
 @import url('../components/PedraSeca/tpv.css');
+/* La llista viva d'«El Comú» (Fase E, 261020, tasca 2; pla 261020_2045). Sense
+   layer(), per la mateixa raó, i darrere de tpv.css: ajusta .sdp-pindola i
+   .sdp-control dins de la peça. */
+@import url('../components/PedraSeca/UniversalListCard/UniversalListCard.css');
 /* Ús de les amplades estretes de Noto Sans (261004). També escriu dins de
    `@layer components`: sense layer(), per la mateixa raó. */
 @import url('./tipografia-estreta.css');

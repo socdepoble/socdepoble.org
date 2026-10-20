@@ -24,6 +24,11 @@
  * separador «N missatges no llegits»; dos respostes, una amb la cita que
  * porta a l'original i una amb l'original sense carregar; el botó «Baixa al
  * final» amb la pastilla, i la barra de resposta damunt del compositor.
+ *
+ * Fase E (261020, tasca 3; pla 261020_2045 «El Comú») · Una bombolla de grup
+ * amb tipus 'llista_comu': la llista viva (TargetaLlistaComu, memoritzada) en
+ * lloc del text, que canvia en el lloc amb cada toc, i la mateixa en el mode de
+ * selecció (només lectura). Dades de mostra.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -108,6 +113,21 @@ const MISSATGES = [
     text: 'I les taules?', creatAl: hui(17, 36)
   }
 ];
+
+/* Fase E (tasca 3) · Qui toca les llistes de mostra, i la llista que viatja a les metadades. */
+const ACTOR_MOSTRA = Object.freeze({ id: 'p-6', nom: 'Javi Llinares' });
+const LLISTA_MOSTRA = Object.freeze({
+  id: 'mostra-compra-festes', mode: 'rebost', titol: 'Compra per a la paella', propietariId: 'p-4', revisio: 2,
+  elementsComu: [
+    { id: 'c1', ordre: 1, nom: 'Arròs', emoji: '🍚', capaMode: { estat: 'falta', especificacio: '3 kg', demanatPer: [{ usuariId: 'p-4', nom: 'Pepica la Vall', at: hui(18, 10), especificacio: '3 kg' }], compratPer: null } },
+    { id: 'c2', ordre: 2, nom: 'Pollastre', emoji: '🍗', capaMode: { estat: 'falta', especificacio: '2', demanatPer: [{ usuariId: 'p-4', nom: 'Pepica la Vall', at: hui(18, 10), especificacio: '2' }], compratPer: null } },
+    { id: 'c3', ordre: 3, nom: 'Garrofó', capaMode: { estat: 'comprat', especificacio: '1 kg', demanatPer: [{ usuariId: 'p-3', nom: 'Vicent Ferris', at: hui(18, 11), especificacio: '1 kg' }], compratPer: { usuariId: 'p-6', nom: 'Javi Llinares', at: hui(18, 20) } } }
+  ]
+});
+const MISSATGE_LLISTA = {
+  id: 'm-llista', seq: 60, sender: 'other', author: 'Pepica la Vall', usuariId: 'p-4', tipus: 'llista_comu',
+  text: '🧺 Llista: Compra per a la paella', metadades: { llista: LLISTA_MOSTRA }, creatAl: hui(18, 12), estatEnviament: 'enviat'
+};
 
 /* Les files com les munta la conversa: cada missatge amb primerDelGrup. */
 const filesDe = (missatges) => anotaGrups(missatges.map((msg) => ({ tipus: 'missatge', clau: msg.id, msg })));
@@ -243,7 +263,8 @@ export default function EspecimenXat() {
       descripcio="Les peces del Xat F0 tal com es munten sobre AppGridShell: fila de conversa de 72 px (--sdp-xat-fila-mida) amb avatar, nom, hora, previsualització i comptador; bombolles pròpies a la dreta (--sdp-accio-subtil) i alienes a l'esquerra (--sdp-accent-subtil), amb variants de sistema, esborrada, amb enllaç i en error; compositor amb textarea que creix fins a 6 línies; marques d'estat amb forma i text, mai només color."
       contracte={[
         ['FilaConversa', '{ fil, activa, onSelect, locale, t }', '—', 'Un botó per conversa; ressalta si hi ha no llegits o marca manual.'],
-        ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia?, primerDelGrup?, citat?, onVesACita?, onRespon?, ressaltat? }', 'primerDelGrup = true', 'Un <li data-missatge> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament. La cua i el nom, només a la primera del grup; amb respostaA, la cita dalt; «Respon» al menú si hi ha onRespon i el missatge és confirmat.'],
+        ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia?, primerDelGrup?, citat?, onVesACita?, onRespon?, ressaltat?, actorLlista?, onMutaLlista? }', 'primerDelGrup = true', 'Un <li data-missatge> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament. La cua i el nom, només a la primera del grup; amb respostaA, la cita dalt; «Respon» al menú si hi ha onRespon i el missatge és confirmat. Amb tipus \'llista_comu\' i una instantània a metadades.llista, el cos és la llista viva (actorLlista toca, onMutaLlista és el port); sense instantània, el text.'],
+        ['TargetaLlistaComu', '{ llista, actor?, interactiva?, onMuta? }', 'interactiva = true', 'La llista viva d’«El Comú» dins de la bombolla (UniversalListCard, variant bombolla). Memoritzada: una tecla al compositor no la repinta. En el mode de selecció, interactiva = false i cap control.'],
         ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil?, barra?, onEscapa?, campRef? }', '—', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt. barra es pinta just damunt del camp; Escape crida onEscapa.'],
         ['SeparadorNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «1 missatge no llegit» o «{n} missatges no llegits».'],
         ['BotoBaixar', '{ nous, onBaixa, t }', '0', 'Botó redó «Baixa al final»; la pastilla ix amb nous > 0 («99+» per damunt de 99).'],
@@ -282,6 +303,16 @@ export default function EspecimenXat() {
         {filesDe(MISSATGES).map(({ clau, msg, primerDelGrup }) => (
           <Bombolla key={clau} missatge={msg} esGrup primerDelGrup={primerDelGrup} locale={LOCALE} t={t} />
         ))}
+      </ol>
+
+      <h4>Una llista viva d’«El Comú» dins d’una bombolla (Fase E, tasca 3)</h4>
+      <ol className="sdp-xat-missatges" aria-label="Llista viva de mostra">
+        <Bombolla missatge={MISSATGE_LLISTA} esGrup locale={LOCALE} t={t} actorLlista={ACTOR_MOSTRA} />
+      </ol>
+      <h4>La mateixa, en el mode de selecció (només lectura)</h4>
+      <ol className="sdp-xat-missatges" aria-label="Llista viva de mostra en el mode de selecció">
+        <Bombolla missatge={MISSATGE_LLISTA} esGrup locale={LOCALE} t={t} actorLlista={ACTOR_MOSTRA}
+          seleccio={{ actiu: true, triat: false, onAlterna: () => {} }} />
       </ol>
 
       <h4>Grup de tres, no llegits, respostes i «Baixa al final» (T1)</h4>

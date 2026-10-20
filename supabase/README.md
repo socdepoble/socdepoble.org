@@ -344,6 +344,20 @@ description: "Documentació canònica de Sóc de Poble."
   vigent de la columna) i en guarda el resultat; per a desfer-la, `alter
   column is_public set default false`.
 
+- `migrations/2610181915_organitzacions_correu_i_membres.sql`
+  Ordre del Mestre (18-10-2026): el correu de contacte d'una organització
+  (`contact_email`, privat, i `public_email`, l'opt-in) amb les RPC
+  `contacte_organitzacio` i `desa_contacte_organitzacio`, i la gestió de
+  membres (`organization_member_organizations` i les RPC `membres_`,
+  `desa_membre_` i `lleva_membre_organitzacio`). **P0-01 (ordre del Mestre,
+  20-10-2026):** el correu privat no té cap SELECT per a `anon` ni per a
+  `authenticated`; el llig només qui administra l'organització, per
+  `contacte_organitzacio`. El fitxer fa `revoke select (contact_email)`
+  explícit, de manera que, si ja s'havia aplicat la versió d'abans (que el
+  donava a `anon` i `authenticated` i, amb la política «public read public
+  organizations», el deixava llegir sense sessió), tornar-lo a aplicar el
+  tanca. Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `migrations/2610201500_moderacio_denuncies_i_bloquejos.sql`
   Pla 261020_1300 (Tasca 2; App Store 1.2 i Google Play UGC): la moderació
   del contingut dels veïns. Crea `public.denuncies` (una fila per denúncia
