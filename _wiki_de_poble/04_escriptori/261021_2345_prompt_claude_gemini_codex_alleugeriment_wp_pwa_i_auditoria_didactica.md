@@ -111,8 +111,10 @@ Els objectius són dos grans blocs d'acció:
   - Auditar i dissenyar a `/connectar` (`ConnectarSection.jsx` / `useConnectaTargeta.js`) l'opció explícita de **Connectar amb l'Autor**.
   - No només desar la pàgina/card al Mas, sinó permetre establir connexió humana directa amb la persona o entitat creadora, preparant la base de dades i la interfície per a visualitzar qui està connectat amb qui.
 - [ ] **Tasca 7 (Metodologia REA Sense Fum d'Emowe: Deconstrucció d'Obsidian Local, Bring! i Loyverse):**
-  - **Document canònic d'investigació:** Llegir obligatòriament la guia dipositada pel Mestre: `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` i el vídeo de suport d'Emowe: [https://youtu.be/YpKpragPGyk](https://youtu.be/YpKpragPGyk) on explica com va crear el seu propi Obsidian en 22 minuts (amb calendari, graf i lectura/edició sobre 7.000 notes).
-  - **Avantatge físic local:** Obsidian està instal·lat al Mac (`/Applications/Obsidian.app`, paquet Electron `Contents/Resources/app.asar`). Amb les eines REA que teniu actives, teniu accés directe per a disseccionar-lo sense inventar res.
+  - 🎥 **VÍDEO OBLIGATORI DE YOUTUBE D'EMOWE:** [https://youtu.be/YpKpragPGyk?si=UCVcSYDL6imUlxBt](https://youtu.be/YpKpragPGyk?si=UCVcSYDL6imUlxBt)
+    *(On Marcos / Emowe explica pas a pas com va recrear el seu propi Obsidian en 22 minuts amb REA, graf de nodes i suport per a 7.000 notes).*
+  - 📄 **DOCUMENT DE REFERÈNCIA A L'ESCRIPTORI:** `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf`
+  - 💻 **APLICACIÓ LOCAL DISPONIBLE PER A REA:** `/Applications/Obsidian.app` (paquet Electron a `Contents/Resources/app.asar`).
   - **Els 4 Passos d'Emowe (Obligatoris per no cremar context):**
     1. *No demaneu clonar l'app sencera de colp:* Demanar una cosa concreta (el graf, la cerca, els enllaços bidireccionals `[[...]]`).
     2. *Demanar primer el mapa:* Analitzar només els fitxers propis del programa, ignorant les llibreries enormes de tercers per no quedar-se penjat.
