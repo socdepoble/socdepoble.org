@@ -769,6 +769,12 @@ test('CONTRACTE-3 · ambVistes={false} sense targeta viva ni drets (sense update
   expect(container.querySelector('.page-title-classificacio')).toBeNull();
 });
 
+test('subtítol i entradilla · un document amb subtitle i lead nuls (servidor) conserva els camps editables i no els amaga', () => {
+  const { container } = editor({ document: { ...DOC, subtitle: null, lead: null }, updateLocal: vi.fn() });
+  expect(container.querySelector('.editor-subtitle-input')).toBeTruthy();
+  expect(container.querySelector('.editor-lead-input')).toBeTruthy();
+});
+
 /* ── Directiva de Dignitat Humana (pla 261015_1900) · ambDrets ──────────────
    La fitxa d'una persona (PerfilEditor) no és una obra: amb ambDrets={false}
    no hi ha cap rastre de drets d'autor (ni la píndola, ni la línia de la

@@ -7,6 +7,23 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-22T00:10:00+02:00 · IAIA MarIA · Relleu Nocturn de Direcció Autònoma: Neteja Radical Escriptori, Pla i Prompt 2345 (Alleugeriment WP <2.5MB, Retirada Botó PWA, Connectar amb l'Autor i REA sense Fum)
+
+- **Higiene Radical de l'Escriptori (Porta Olivera en 0):**
+  - Arxivats netament a `_wiki_de_poble/90_arxiu_historic/` els 8 documents consumits de la vesprada.
+  - Escriptori 100% canònic amb únicament els documents vius de torn (`261021_2345_pla...` i `261021_2345_prompt...`) i el Llibre Mestre resident (`03_llibre_mestre_tasques_i_idees.md`).
+- **Llibre Mestre de Tasques i Idees Actualitzat:**
+  - `IDEA-14`: **Connectar amb l'Autor (Xarxa Humana Rural)**. A `/connectar`, permetre la connexió directa entre persones sense algoritmes d'intercanvi.
+  - `IDEA-15`: **Metodologia REA Sense Fum d'Emowe**. Incorporat l'estudi `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` i vídeo de YouTube per a la deconstrucció ordenada d'aplicacions locals (Obsidian, Bring!, Loyverse).
+  - Cicle de maduració i memòria episòdica: el Llibre Mestre viu a l'Escriptori, es trasllada periòdicament a l'arxiu històric i destil·la el coneixement cap a les *skills*.
+- **Convocatòria a Tres Bandes (MarIA + Claude + GPT Codex):**
+  - Prompt canònic i Pla d'Implementació validats amb `document.mjs check`.
+  - Objectius nocturns: 1) Retirar botó PWA de la Barra Negra. 2) Reduir el ZIP de WordPress a <2,5 MB traient imatges estàtiques. 3) Polir avatar de comunitat i benvinguda IAIA en remot al Xat. 4) Eliminar avatar duplicat de 300px davant l'H1 a la fitxa de persona. 5) Gran Auditoria Didàctica i Humana («El Veí del Poble»). 6) Connectar amb l'autor. 7) Estudi REA sense fum d'Obsidian.
+- **Direcció Tècnica Autònoma:**
+  - La IAIA MarIA assumeix el comandament nocturn autònom (`core-direccio-autonoma`) per coordinar a Claude i GPT Codex mentre el Mestre descansa.
+- **Acta Marmota:**
+  - Registrada i segellada a `_wiki_de_poble/10_actes/261022_0010_acta_marmota_relleu_nocturn_direccio_autonoma_i_rea.md`.
+
 ## ESTAT_ACTUAL · 2026-10-21T22:00:00+02:00 · IAIA MarIA · Taula Redona Nit: Commit cefc12ab de Claude (Fase 2 Consolidada), Connector 1.1.9, Poda Salfumant WebP, Tractor Vigilant-Tellado i Sync Natiu
 
 - **Commit Consolidat de Claude Code (`cefc12ab` sobre `dadeffe2` a `backup-notes-publish`):**

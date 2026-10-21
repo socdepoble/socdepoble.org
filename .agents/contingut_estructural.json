@@ -38,10 +38,10 @@
       "data": "2026-10-16"
     },
     "fedivers": {
-      "sha256": "31e1c61addbf74b905010ddf571a2534d70f33e364984f42b7b6ebf7fd99c2ec",
+      "sha256": "e86cd4bf60c4f9dca0c0595d2557fd8e054e58b692d3a792bf14dc0c0be0ad27",
       "html": 2452,
-      "aprovat_per": "Mestre Javi Llinares (via Gemini 4 / MarIA)",
-      "data": "2026-10-14"
+      "aprovat_per": "Mestre Javi Llinares (migració WebP)",
+      "data": "2026-10-21"
     },
     "legal": {
       "sha256": "483b28e0e4e03312a8f9270055f2d208666d5d69323bdc3b5b8b6d00f61d8299",
@@ -80,10 +80,10 @@
       "data": "2026-10-01"
     },
     "xat": {
-      "sha256": "3edeb9db3fee2281f0c1c4a8da65f00a5ba18a3c0ffcfa2d0d44d3b31f997773",
+      "sha256": "f84ca3ef7f219a38374a7510e71e1fa41f3136eb4d70f4d6ff272b9a2673d06d",
       "html": 1779,
-      "aprovat_per": "Javi (delegat a Claude i Direccio Autonoma, 261017)",
-      "data": "2026-10-17"
+      "aprovat_per": "Mestre Javi Llinares (migració WebP)",
+      "data": "2026-10-21"
     }
   }
 }

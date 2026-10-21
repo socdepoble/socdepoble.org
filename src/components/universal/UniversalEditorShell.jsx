@@ -582,7 +582,7 @@ export function UniversalEditorShell({
               <EditableField
                 key={`${id}-title`}
                 className="editor-title-input"
-                html={titleHtml}
+                html={titleHtml ?? ''}
                 placeholder={placeholderTitol || TEXTOS_LLAVOR.titol}
                 onChange={(val) => handleFieldChange('title', val)}
                 onBlur={(val) => handleFieldBlur('title', val)}
@@ -592,7 +592,7 @@ export function UniversalEditorShell({
               <EditableField
                 key={`${id}-subtitle`}
                 className="editor-subtitle-input"
-                html={subtitleHtml}
+                html={subtitleHtml ?? ''}
                 placeholder={TEXTOS_LLAVOR.subtitol}
                 onChange={(val) => handleFieldChange('subtitle', val)}
                 onBlur={(val) => handleFieldBlur('subtitle', val)}
@@ -602,7 +602,7 @@ export function UniversalEditorShell({
               <EditableField
                 key={`${id}-lead`}
                 className="editor-lead-input"
-                html={leadHtml}
+                html={leadHtml ?? ''}
                 placeholder={TEXTOS_LLAVOR.entradilla}
                 onChange={(val) => handleFieldChange('lead', val)}
                 onBlur={(val) => handleFieldBlur('lead', val)}

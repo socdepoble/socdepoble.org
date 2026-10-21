@@ -613,9 +613,9 @@ export function DocumentEditor({ adapter, onToast }) {
       id={document.id}
       topBar={topBar}
       posicioEines={posicioEines}
-      titleHtml={document.title}
-      subtitleHtml={document.subtitle}
-      leadHtml={document.lead}
+      titleHtml={document.title ?? ''}
+      subtitleHtml={document.subtitle ?? ''}
+      leadHtml={document.lead ?? ''}
       heroImage={document.heroImage}
       logoImage={document.logoImage}
       isPublished={document.isPublished}
