@@ -29,9 +29,9 @@ socdepoble_enxufe_estils_pantalla();
 	   Chrome d'advertències ("preloaded using link preload but not used within a few seconds"). */
 	ob_start();
 	wp_head();
-	$head_html = ob_get_clean();
-	$head_html = preg_replace( '/<link[^>]+rel=["\']preload["\'][^>]+fonts\.gstatic\.com[^>]*>\s*/i', '', $head_html );
-	echo $head_html;
+	$socdepoble_enxufe_head = ob_get_clean();
+	$socdepoble_enxufe_head = preg_replace( '/<link\b(?=[^>]*\brel=["\']?preload\b)(?=[^>]*fonts\.gstatic\.com)[^>]*>\s*/i', '', $socdepoble_enxufe_head );
+	echo $socdepoble_enxufe_head; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- eixida de wp_head(), que ja escapen el nucli i els seus ganxos; només se n'han llevat els preloads de fonts.gstatic.com.
 	?>
 </head>
 <body <?php body_class( 'socdepoble-enxufe-pantalla' ); ?>>

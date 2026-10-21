@@ -12,6 +12,8 @@ import { describe, expect, test } from 'vitest';
 const ARREL = process.cwd();
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const NOM = '2610181915_organitzacions_correu_i_membres.sql';
+/* P0-01 cap avant (261021): si la versió d'abans de NOM ja consta com a aplicada, l'eina no la repetix. */
+const NOU = '2610211715_revoca_correu_organitzacions.sql';
 const sensComentaris = (sql) => sql.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
 const sentencies = (sql) => sensComentaris(sql).split(';').map((s) => s.replace(/\s+/g, ' ').trim().toLowerCase()).filter(Boolean);
 const SENTENCIES = sentencies(readFileSync(path.join(MIGRACIONS, NOM), 'utf8'));
@@ -52,6 +54,35 @@ describe('P0-01 · contact_email fora dels rols públics', () => {
       return grantsDe(ss, 'contact_email').length > 0 || ss.some(grantDeTaula);
     });
     expect(culpables).toEqual([]);
+  });
+
+  test('la migració cap avant 2610211715 només repetix el REVOKE, en una sola transacció, i va després', () => {
+    const ordre = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql')).sort();
+    expect(ordre.indexOf(NOU)).toBeGreaterThan(ordre.indexOf(NOM));
+    const cru = readFileSync(path.join(MIGRACIONS, NOU), 'utf8');
+    expect(cru).toMatch(/NO aplicada: l'aplica el Mestre, mai un agent/);
+    expect(sentencies(cru)).toEqual([
+      'begin',
+      "set local lock_timeout = '5s'",
+      "set local statement_timeout = '60s'",
+      'revoke select (contact_email) on table public.organizations from public, anon, authenticated',
+      "notify pgrst, 'reload schema'",
+      'commit'
+    ]);
+  });
+
+  test('cap vista ni funció llig contact_email fora de les dues RPC de qui administra', () => {
+    const altres = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql') && f !== NOM && f !== NOU);
+    expect(altres.filter((f) => /\bcontact_email\b/i.test(sensComentaris(readFileSync(path.join(MIGRACIONS, f), 'utf8'))))).toEqual([]);
+    const cru = sensComentaris(readFileSync(path.join(MIGRACIONS, NOM), 'utf8'));
+    const cossos = [...cru.matchAll(/create or replace function public\.(\w+)\([\s\S]*?\$\$([\s\S]*?)\$\$/gi)];
+    expect(cossos.filter(([, , cos]) => /\bcontact_email\b/i.test(cos)).map(([, nom]) => nom))
+      .toEqual(['contacte_organitzacio', 'desa_contacte_organitzacio']);
+    expect(sentencies(cru.replace(/\$\$[\s\S]*?\$\$/g, '$$$$')).filter((s) => /\bcontact_email\b/.test(s))).toEqual([
+      'alter table public.organizations add column if not exists contact_email text',
+      'revoke select (contact_email) on table public.organizations from public, anon, authenticated',
+      'grant update (contact_email, public_email) on table public.organizations to authenticated'
+    ]);
   });
 
   test('l’entrada del catàleg supabase/README.md la diu NO aplicada i explica el P0-01', () => {

@@ -538,23 +538,29 @@ function socdepoble_enxufe_estils_pantalla() {
 	);
 	wp_enqueue_style( SOCDEPOBLE_ENXUFE_HANDLE );
 
-	/* Filtra preloads de fonts gstatic en pantalla completa per evitar advertències de consola */
+	/* P0-16 · Fora els preloads de fonts de fonts.gstatic.com que el tema pare o
+	   un plugin de rendiment demanen per l'API de WordPress (6.1+): la pantalla
+	   completa no les pinta i Chrome avisa als 3 s. No és 'wp_resource_hints',
+	   que només porta dns-prefetch, preconnect, prefetch i prerender (amb
+	   'preload' no s'hi entrava mai). Val també per a la plantilla de blocs
+	   (template-canvas.php), que no passa pel buffer de pantalla-completa.php. */
 	add_filter(
-		'wp_resource_hints',
-		static function ( $urls, $relation_type ) {
-			if ( 'preload' === $relation_type && is_array( $urls ) ) {
-				return array_filter(
-					$urls,
-					static function ( $url ) {
-						$href = is_array( $url ) ? ( $url['href'] ?? '' ) : (string) $url;
+		'wp_preload_resources',
+		static function ( $recursos ) {
+			if ( ! is_array( $recursos ) ) {
+				return $recursos;
+			}
+			return array_values(
+				array_filter(
+					$recursos,
+					static function ( $recurs ) {
+						$href = is_array( $recurs ) ? (string) ( $recurs['href'] ?? '' ) : '';
 						return false === strpos( $href, 'fonts.gstatic.com' );
 					}
-				);
-			}
-			return $urls;
+				)
+			);
 		},
-		999,
-		2
+		999
 	);
 }
 

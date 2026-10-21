@@ -379,7 +379,7 @@ describe('àncora declarada (data-sdp-ancora) i fragment del document', () => {
     <>
       <h4>16. Els teus drets</h4>
       <p>Text.</p>
-      <h5 data-sdp-ancora={ancora}>Com esborrar la teua conta</h5>
+      <h5 data-sdp-ancora={ancora}>Com esborrar el teu compte</h5>
       <p>Més text.</p>
       <h4>17. Seguretat</h4>
     </>

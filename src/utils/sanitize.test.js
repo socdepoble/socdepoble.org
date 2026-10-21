@@ -284,7 +284,7 @@ describe('sanitize.js', () => {
     /* Fase D (261020, tasca 3.2) · /legal#esborra-compte: l'àncora d'un
        encapçalament viu en data-sdp-ancora perquè l'id no passa el sanejador. */
     it('data-sdp-ancora sobreviu i id no', () => {
-      const net = sanitizeHtml('<h5 id="esborra-compte" data-sdp-ancora="esborra-compte">Com esborrar la teua conta</h5>');
+      const net = sanitizeHtml('<h5 id="esborra-compte" data-sdp-ancora="esborra-compte">Com esborrar el teu compte</h5>');
       expect(net).toContain('data-sdp-ancora="esborra-compte"');
       expect(net).not.toMatch(/\sid=/);
     });

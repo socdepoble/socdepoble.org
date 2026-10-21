@@ -73,14 +73,14 @@ function socdepoble_enxufe_traduccio_limit( $nom, $defecte ) {
 /** Esborra només el nostre lock: un procés antic mai lleva el del següent. */
 function socdepoble_enxufe_traduccio_allibera( $valor, $nom = 'sdp_traduccio_lock' ) {
 	global $wpdb;
-	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", $nom, $valor ) );
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", $nom, $valor ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- pany atòmic: només s'esborra el valor propi; la memòria cau es buida a la línia següent.
 	wp_cache_delete( $nom, 'options' );
 }
 
 /** INSERT únic, sense l'upsert d'add_option ni dependència de notoptions. */
 function socdepoble_enxufe_traduccio_insereix( $nom, $valor ) {
 	global $wpdb;
-	return $wpdb->query( $wpdb->prepare(
+	return $wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- INSERT IGNORE atòmic, que add_option() no garantix.
 		"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'off')",
 		$nom, $valor
 	) );
@@ -92,7 +92,7 @@ function socdepoble_enxufe_traduccio_bloqueja( $nom = 'sdp_traduccio_lock' ) {
 	if ( 1 === socdepoble_enxufe_traduccio_insereix( $nom, $valor ) ) {
 		return $valor;
 	}
-	$anterior = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $nom ) );
+	$anterior = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $nom ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- lectura fresca del pany, sense memòria cau a propòsit.
 	if ( is_string( $anterior ) && (int) $anterior < time() ) {
 		socdepoble_enxufe_traduccio_allibera( $anterior, $nom );
 		if ( 1 === socdepoble_enxufe_traduccio_insereix( $nom, $valor ) ) {
@@ -112,7 +112,7 @@ function socdepoble_enxufe_traduccio_reserva( $caracters ) {
 	if ( false === socdepoble_enxufe_traduccio_insereix( 'sdp_traduccio_pressupost', '{}' ) ) {
 		return socdepoble_enxufe_traduccio_error( 'pressupost', 503 );
 	}
-	$abans = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sdp_traduccio_pressupost' ) );
+	$abans = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sdp_traduccio_pressupost' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- lectura fresca per al CAS del pressupost.
 	$estat = is_string( $abans ) ? json_decode( $abans, true ) : null;
 	if ( ! is_array( $estat ) ) {
 		return socdepoble_enxufe_traduccio_error( 'pressupost', 503 );
@@ -125,7 +125,7 @@ function socdepoble_enxufe_traduccio_reserva( $caracters ) {
 		return socdepoble_enxufe_traduccio_error( 'limit', 429 );
 	}
 	$nou = wp_json_encode( array( 'dia' => $dia, 'mes' => $mes, 'diari' => $diari + $caracters, 'mensual' => $mensual + $caracters ) );
-	$resultat = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", $nou, 'sdp_traduccio_pressupost', $abans ) );
+	$resultat = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", $nou, 'sdp_traduccio_pressupost', $abans ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAS atòmic del pressupost; la memòria cau es buida a la línia següent.
 	wp_cache_delete( 'sdp_traduccio_pressupost', 'options' );
 	return 1 === $resultat ? true : socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
 }

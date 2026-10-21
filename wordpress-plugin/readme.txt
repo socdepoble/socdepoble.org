@@ -12,8 +12,6 @@ Connect to the Sóc de Poble Portal, a Fediverse of Connected Villages. Open Set
 
 == Description ==
 
-![Sóc de Poble - Connected Villages](https://socdepoble.org/assets/system/ui/og-socdepoble-1200x630.png)
-
 Sóc de Poble is an open source civic network for rural communities: chat, posts, a marketplace, events and a map. It continues decades of rural activism and connects neighbours, associations and local businesses, with community ownership and independence from advertising platforms as its guiding principles.
 
 = The Enxufe architecture =
@@ -50,7 +48,7 @@ This plugin connects to the Sóc de Poble service. Accounts, messages and posts 
 1. Sóc de Poble backend, currently hosted on Supabase: required for the connected service. It handles sign-in, profiles, messages, posts, marketplace listings, events and real-time updates. Google sign-in returns directly to the page that hosts the application. Terms and privacy information: https://socdepoble.org. Supabase terms: https://supabase.com/terms ; privacy: https://supabase.com/privacy
 2. Google Sign-In: used only when chosen by the visitor. Terms: https://policies.google.com/terms ; privacy: https://policies.google.com/privacy
 3. OpenStreetMap: used for the map view. Terms: https://wiki.osmfoundation.org/wiki/Terms_of_Use ; privacy: https://osmfoundation.org/wiki/Privacy_Policy
-4. Profile images for accounts using external identity providers may load from lh3.googleusercontent.com, graph.facebook.com or avatars.githubusercontent.com.
+4. Profile images from sign-in providers may load from lh3.googleusercontent.com, platform-lookaside.fbsbx.com, graph.facebook.com or avatars.githubusercontent.com. One design catalogue page embeds a YouTube video (youtube-nocookie.com). Terms: https://www.youtube.com/t/terms
 5. Optional DeepL translation: selected text or HTML is sent to api-free.deepl.com or api.deepl.com when a visitor requests translation. Configuration, retention, terms and privacy are described below.
 
 Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, then downloads the listed package. It queries this channel after api.wordpress.org answers WordPress's own update check. Requests identify the plugin, not the site. Automatic updates remain disabled until enabled in Plugins. The switch appears after an update check with the plugin active; activation clears the update cache so the next Plugins visit triggers a check. Updates are installed only while the plugin is active, in the socdepoble-enxufe directory, with the release channel key, and outside symlinks or Git checkouts. Automatic updates also require WP-Cron and connectivity to WordPress.org. Settings → Sóc de Poble and Site Health explain unmet conditions.

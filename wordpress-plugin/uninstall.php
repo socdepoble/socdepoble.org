@@ -33,7 +33,7 @@ if ( ! function_exists( 'socdepoble_enxufe_neteja_traduccio' ) ) {
 		global $wpdb;
 		delete_option( 'sdp_traduccio_pressupost' );
 		delete_option( 'sdp_traduccio_lock' );
-		$wpdb->query( $wpdb->prepare(
+		$wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- desinstal·lació: transients i panys propis per prefix, que cap API de WordPress no esborra.
 			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
 			$wpdb->esc_like( '_transient_sdp_tr_' ) . '%',
 			$wpdb->esc_like( '_transient_timeout_sdp_tr_' ) . '%',

@@ -405,6 +405,19 @@ description: "Documentació canònica de Sóc de Poble."
   el client) ni li impedix escriure't; no es guarda cap còpia del contingut
   denunciat i no hi ha cap filtre abans de publicar.
 
+- `migrations/2610211715_revoca_correu_organitzacions.sql`
+  P0-01 cap avant (auditoria de Claude 261021_1645): repetix el
+  `revoke select (contact_email) … from public, anon, authenticated` de
+  2610181915 en una versió nova. Si la primera versió de 2610181915 (la que
+  donava el correu a `anon` i `authenticated`) ja consta al registre de
+  migracions, l'eina no la torna a executar i el REVOKE afegit dins del mateix
+  fitxer no arribaria a la base; esta sí. No dona cap permís. Va després de
+  2610181915 (necessita la columna). Abans d'aplicar-la, el Mestre executa la
+  consulta de només lectura de la capçalera (`has_column_privilege` d'`anon` i
+  `authenticated` sobre `contact_email`) i en guarda el resultat; després, les
+  dues files han de tornar `false`. Idempotent; **NO aplicada: l'aplica el
+  Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
