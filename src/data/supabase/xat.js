@@ -506,12 +506,22 @@ export const loadFils = async (config = {}) => {
        juntes eren el duplicat que l'ordre prohibix. Ara només Javi i la IAIA
        (ACTORS_PERMANENTS). */
     if (seed) return ambXatsPerDefecte(await seed.loadFils(config), { paginaDeLaIAIA: false });
+    const user = usuariDeSessio();
+    /* Visitant anònim sense sessió: no té fils privats al servidor. Evitem la
+       crida a xat_fils_meus (que tornaria 401 Unauthorized i embrutaria la consola)
+       i servim directament les converses per defecte de la plataforma. */
+    if (!user?.id) return ambXatsPerDefecte([]);
     const supabase = await getClient(config);
     comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
     const { data, error, status } = await ambSenyal(supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId }), config);
-    if (error) throw ambEstat(error, status);
+    if (error) {
+      if (status === 401 || error?.status === 401 || error?.code === '401') {
+        return ambXatsPerDefecte([]);
+      }
+      throw ambEstat(error, status);
+    }
     /* Ordre del Mestre (261007) · «Sóc de Poble» i la «IAIA MarIA» són a la
        llista de tota persona, també el primer dia: si encara no en té la
        conversa real, una fila sintètica a la cua (Conversa.perDefecte). La

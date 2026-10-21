@@ -72,7 +72,16 @@ const BLOQUEJOS = Object.freeze([`${RUNTIME}/document-create.lock`, `${RUNTIME}/
 const ZONES_PROHIBIDES = /(?:^|\/)(?:04_escriptori|01_produccio|02_investigacio_ia|90_arxiu_historic|\.iaia_auth|\.env[^/]*|\.git)(?:\/|$)/i;
 /** Còpies i restes versionades que l'informe llista (mai les mou): .bak, .tmp, .orig, .rej, ~, .old i .abans-aammdd. */
 const SOSPITOSOS = /(?:\.bak|\.tmp|\.orig|\.rej|~|\.old|\.abans-\d{6})$/i;
-const ZIP = /^socdepoble-(enxufe|spa)-v(\d+\.\d+\.\d+)-(\d{6}_\d{4})\.zip$/;
+/** Reconeix la taxonomia de zips: canònica (data al davant) o històrica (data al final). */
+export function parseZip(nom) {
+  // Canònica: AAMMDD_HHMM_categoria_titol_vX.Y.Z.zip
+  const mCanonic = /^(\d{6}_\d{4})_(wordpress_enxufe|wordpress_directori|estatic_spa)_v(\d+\.\d+\.\d+)\.zip$/.exec(nom);
+  if (mCanonic) return { canonic: true, segell: mCanonic[1], producte: mCanonic[2], versio: mCanonic[3] };
+  // Històrica: socdepoble-(enxufe|spa)-vX.Y.Z-AAMMDD_HHMM.zip
+  const mHistoric = /^socdepoble-(enxufe|spa)-v(\d+\.\d+\.\d+)-(\d{6}_\d{4})\.zip$/.exec(nom);
+  if (mHistoric) return { canonic: false, segell: mHistoric[3], producte: mHistoric[1], versio: mHistoric[2] };
+  return null;
+}
 const US = 'Ús: cron_higiene.mjs [--aplica] | --l2 [--confirma CODI]';
 
 const sha = (valor) => createHash('sha256').update(valor).digest('hex');
@@ -143,7 +152,8 @@ function citatsActa(arrel) {
   const acta = noms.at(-1) ?? null;
   if (!acta) return { acta: null, zips: new Set() };
   const text = fs.readFileSync(path.join(arrel, ACTES, acta), 'utf8');
-  return { acta, zips: new Set(text.match(/socdepoble-(?:enxufe|spa)-v\d+\.\d+\.\d+-\d{6}_\d{4}\.zip/g) ?? []) };
+  const trobats = text.match(/(?:socdepoble-(?:enxufe|spa)-v\d+\.\d+\.\d+-\d{6}_\d{4}|\d{6}_\d{4}_(?:wordpress_enxufe|wordpress_directori|estatic_spa)_v\d+\.\d+\.\d+)\.zip/g) ?? [];
+  return { acta, zips: new Set(trobats) };
 }
 
 /**
@@ -163,19 +173,30 @@ export function retencioZips(arrel) {
   catch (error) { avisos.push(`stable.json il·legible o absent (${error.code ?? error.message}): no es proposa retirar cap ZIP`); }
   const acta = citatsActa(arrel);
   const darrers = new Map();
+  let bytesTotal = 0;
   for (const z of zips) {
-    const m = ZIP.exec(z.nom);
-    if (!m) continue;
-    const clau = `${z.carpeta}|${m[1]}`;
+    let mida = 0;
+    try { mida = fs.statSync(path.join(arrel, z.rel)).size; } catch { /* ha desaparegut mentre es mirava */ }
+    bytesTotal += mida;
+    const parsed = parseZip(z.nom);
+    if (!parsed) {
+      avisos.push(`[ANOMALIA DEDUCTIVA] Fitxer ZIP amb patró desconegut: ${z.rel} (${(mida / (1024 * 1024)).toFixed(2)} MB). Requereix revisió humana.`);
+      continue;
+    }
+    const clau = `${z.carpeta}|${parsed.producte}`;
     const actual = darrers.get(clau);
-    if (!actual || ZIP.exec(actual.nom)[3] < m[3]) darrers.set(clau, z);
+    if (!actual || parseZip(actual.nom).segell < parsed.segell) darrers.set(clau, z);
+  }
+  if (bytesTotal > 25 * 1024 * 1024) {
+    avisos.push(`[ALERTA DE PES] ${BUILDS} ocupa ${(bytesTotal / (1024 * 1024)).toFixed(1)} MB (llindar recomanat: 25 MB). Cal buidar a _builds_de_poble/.`);
   }
   const recents = new Set(darrers.values());
   const conserva = [];
   const retira = [];
   for (const z of zips) {
     const motius = [];
-    if (!ZIP.test(z.nom)) motius.push('nom no canònic: es pregunta');
+    const parsed = parseZip(z.nom);
+    if (!parsed) motius.push('anomalia deductiva: nom no reconegut, es pregunta');
     if (!estables) motius.push('sense stable.json llegible');
     else if (estables.has(z.rel)) motius.push('estable (stable.json)');
     if (recents.has(z)) motius.push('el més recent del producte i la carpeta');
@@ -527,6 +548,9 @@ function main(argv = process.argv.slice(2)) {
   console.log(`[higiene] ${r.data} · ${r.nivell} · informe ${r.fitxer}${r.abstencio ? ` · abstenció: ${r.abstencio}` : ''}`);
   console.log(`   Arrel: ${Array.isArray(d.arrel.brossa) ? d.arrel.brossa.length : 'error'} fitxer(s) de brossa; ${d.arrel.sospitososVersionats?.length ?? '?'} sospitós(os) versionat(s).`);
   console.log(`   ZIP: ${d.zips.retira.length} fora de la retenció (${mb(d.zips.bytesRetirables)}); ${d.zips.conserva.length} es conserven.`);
+  if (d.zips.avisos?.length) {
+    for (const a of d.zips.avisos) console.log(`   avís ZIP: ${a}`);
+  }
   console.log(`   Receptes: ${d.receptes.total} (${d.receptes.empremtes} empremtes, ${d.receptes.repetides} repetides).`);
   console.log(`   Porta Olivera: ${d.olivera.valid ? 'verda' : 'roja'}${d.olivera.fase ? ` · convocatòria en fase «${d.olivera.fase}» amb ${d.olivera.troballes.length} troballa(es)` : ''}.`);
   if (r.l1) console.log(`   L1: ${r.l1.fet ? `${r.l1.arrel.moguts.length} de l'arrel, ${r.l1.logs.length} log(s) rotat(s), ${r.l1.logsVells.moguts.length} rotat(s) vell(s) i ${r.l1.receptes.moguts.length} recepta(es) a quarantena` : r.l1.motiu}.`);

@@ -29,13 +29,19 @@ En aquest mode, el Mestre delega **absolutament tots els permisos i decisions** 
 - **Codex és l'auditor adversarial implacable:** GPT Codex sotmet el codi a estrés, audita concurrència, busca fallades i memory leaks.
 - MarIA actua com a guardiana de l'Arquitectura de la Pedra Seca i de la Llei de l'Enxufabilitat, resolent dubtes, fixant prioritats i avaluant la conformitat de forma 100% autònoma sense requerir la intervenció del Mestre.
 
-## 2. Inicialització (El Cron)
-En activar aquest mode, l'orquestradora ha de crear una tasca recurrent (un `cron` via l'eina `schedule`) per polsar l'estat de l'escriptori cada 10-15 minuts.
+## 2. Inicialització (El Cron Acotat)
+En activar aquest mode, l'orquestradora pot crear una tasca recurrent (un `cron` via l'eina `schedule`) per polsar l'estat de l'escriptori cada 15-30 minuts o cada hora durant la nit.
 
-**Format del Cron recomanat:**
+**Regles Inviolables del Cron de Supervisió:**
+1. **`IsDaemon: false` OBLIGATORI:** Mai es programa com a dimoni independent indefinit.
+2. **`MaxIterations` acotat (màxim 6-8):** Perquè en cas d'oblit humà o de fallada d'aturada, el cron mori automàticament sense cremar recursos 10 hores.
+3. **Sentinella inicial:** Cal arrencar amb `npm run guarda:inici` per establir el temps màxim de vigilància.
+
+**Format del Cron canònic:**
 ```
 CronExpression: "*/15 * * * *"
-Prompt: "Supervisa l'escriptori de Sóc de Poble a `_wiki_de_poble/04_escriptori/`. Llig les últimes auditories i preguntes deixades per Claude. Respon-les directament escrivint al disc per establir el consens i fes-lo avançar sense requerir el Mestre."
+MaxIterations: "8"
+Prompt: "Executa `npm run guarda:estat`. Si la guàrdia indica finalització o 100% verd, mata immediatament aquest cron amb `manage_task kill` i atura totes les IAs. Si no, llig l'escriptori, respon els dubtes pendents a Claude i fes avançar la tasca."
 IsDaemon: false
 ```
 
@@ -44,7 +50,7 @@ Mentre el cron està actiu:
 1. **Detecció de missatges:** MarIA revisarà periòdicament els documents que Fable (Claude) genere a l'Escriptori.
 2. **Resolució de bloquejos:** Si Fable exposa dos camins o demana permís, MarIA ha d'avaluar-los immediatament contra els principis fonamentals i escriure la resposta (per exemple, editant el document de Fable o creant un `AAMMDD_HHMM_resposta_directora.md` a l'escriptori).
 3. **Decisions tancades:** Sota cap concepte MarIA ha d'aturar l'execució esperant que el Mestre aprove una decisió tècnica (llevat de casos que afecten greument la despesa econòmica o modifiquen directrius supremes inviolables).
-4. **Finalització:** Quan Claude acaba la seua Onada amb èxit i tot queda verd, MarIA documentarà la victòria i esperarà el retorn del Mestre, cancel·lant el cron quan corresponga.
+4. **Finalització Immediata («Tots a Dormir»):** Quan Claude acaba la seua Onada amb èxit i Gemini/Codex dictaminen 100% verd, MarIA executarà `npm run guarda:aturar`, cridarà `manage_task kill` sobre la tasca del cron i **ATURARÀ TOTES LES IAS**. Mai es deixa cap temporitzador funcionant després de la victòria.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

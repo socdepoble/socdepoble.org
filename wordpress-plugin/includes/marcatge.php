@@ -537,6 +537,25 @@ function socdepoble_enxufe_estils_pantalla() {
 		. '@media screen and (max-width:782px){.admin-bar .socdepoble-enxufe{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}'
 	);
 	wp_enqueue_style( SOCDEPOBLE_ENXUFE_HANDLE );
+
+	/* Filtra preloads de fonts gstatic en pantalla completa per evitar advertències de consola */
+	add_filter(
+		'wp_resource_hints',
+		static function ( $urls, $relation_type ) {
+			if ( 'preload' === $relation_type && is_array( $urls ) ) {
+				return array_filter(
+					$urls,
+					static function ( $url ) {
+						$href = is_array( $url ) ? ( $url['href'] ?? '' ) : (string) $url;
+						return false === strpos( $href, 'fonts.gstatic.com' );
+					}
+				);
+			}
+			return $urls;
+		},
+		999,
+		2
+	);
 }
 
 /**

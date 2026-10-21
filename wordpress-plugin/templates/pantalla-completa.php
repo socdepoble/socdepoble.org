@@ -22,7 +22,17 @@ socdepoble_enxufe_estils_pantalla();
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<?php wp_head(); ?>
+	<?php
+	/* Neteja radical de consola: el tema pare o plugins de rendiment poden injectar
+	   preloads de fonts (ex: Roboto o Open Sans de fonts.gstatic.com) que a la pantalla
+	   completa de Sóc de Poble no s'arriben a pintar en 3 segons, omplint la consola de
+	   Chrome d'advertències ("preloaded using link preload but not used within a few seconds"). */
+	ob_start();
+	wp_head();
+	$head_html = ob_get_clean();
+	$head_html = preg_replace( '/<link[^>]+rel=["\']preload["\'][^>]+fonts\.gstatic\.com[^>]*>\s*/i', '', $head_html );
+	echo $head_html;
+	?>
 </head>
 <body <?php body_class( 'socdepoble-enxufe-pantalla' ); ?>>
 <?php wp_body_open(); ?>

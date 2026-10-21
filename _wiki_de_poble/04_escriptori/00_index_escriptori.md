@@ -34,13 +34,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-
-
-- [[261021_0145_auditoria_claude_dossier_desbloqueig_socdepoble_org]]
-- [[261021_0140_auditoria_claude_llancament_apps_i_sollutia]]
-- [[261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia]]
-- [[261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia]]
-- [[261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]
+- [[261021_1600_prompt_claude_codex_auditoria_radical_fitxers_i_desbloqueig]]
+- [[261021_1600_pla_implementacio_auditoria_radical_fitxers_i_desbloqueig]]
+- [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -770,6 +766,12 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261021_0800_auditoria_gemini_llancament_apps_i_sollutia]]
+- [[../90_arxiu_historic/261021_0145_auditoria_claude_dossier_desbloqueig_socdepoble_org]]
+- [[../90_arxiu_historic/261021_0140_auditoria_claude_llancament_apps_i_sollutia]]
+- [[../90_arxiu_historic/261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia]]
+- [[../90_arxiu_historic/261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia]]
+- [[../90_arxiu_historic/261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]
 - [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2030_auditoria_gemini_enginyeria_inversa_bring_i_lovable]]
 - [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2030_prompt_gemini_enginyeria_inversa_bring_i_lovable]]
 - [[../90_arxiu_historic/261020_Sessio_Salfumant_i_El_Comu/261020_2045_pla_implementacio_el_comu_i_llistes_reactives]]
@@ -955,3 +957,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261020_1930_acta_marmota_relleu_fase_d_i_enginyeria_inversa_bring_lovable]]
 - [[../10_actes/261020_2345_acta_marmota_relleu_salfumant_markdown_i_llancament_app]]
 - [[../10_actes/261021_0030_acta_marmota_relleu_nocturn_zero_oblit_i_llancament_apps]]
+- [[../10_actes/261021_1600_acta_marmota_relleu_salfumant_builds_i_preparacio_autonoma]]

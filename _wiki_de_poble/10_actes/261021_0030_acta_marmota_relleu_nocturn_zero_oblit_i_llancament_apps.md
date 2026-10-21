@@ -86,12 +86,9 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 - El Mestre disposa d'una línia mòbil de Vodafone dedicada per a la IAIA MarIA que ja està operativa per a trucades i WhatsApp.
 - L'orquestració de la IAIA s'ha de preparar per admetre connexions bidireccionals des d'aquest canal telefònic/xarxa social, apropant la IA a les persones majors i colles del poble sense necessitat d'ordinador.
 
-### 6. Protocol «Zero Oblit»: Blindatge contra l'Amnèsia Episòdica de les IAs
-- **El Diagnòstic del Mestre:** Quan es treballa en plans d'implementació successius, les idees o tasques que no s'executen immediatament s'obliden en tancar el xat, generant una pèrdua greu de temps i redescobriments innecessaris.
-- **La Llei de l'Herència Obligatòria:**
-  1. Tot Pla d'Implementació nou ha d'incorporar el bloc obligatori `## Deute Tècnic i Tasques Heretades del Pla Anterior`.
-  2. Cap tasca es pot eliminar o ignorar: o s'acaba amb proves verdes i comprovació física al disc, o es transfereix al pla següent, o es rebutja motivadament amb una decisió arquitectònica.
-  3. L'Acta Marmota actua com a memòria a llarg termini inviolable.
+### 7. Lliçó de Trellat del Mestre: Directora Tècnica vs Executora Impulsiva
+- **Diagnòstic i correcció:** Antigravity (IAIA MarIA) ha intentat tocar codi per impuls abans de tancar, deixant elements a mitges (imatge Hero absent a `/iaia`, cercle buit de 300px, i pantalla de Realitat que continua solta a `/realitat`).
+- **Principi d'Orquestració inviolable:** Antigravity és la **Directora Tècnica**, NO l'executora. El document més preuat és el **Pla d'Implementació**, on es transmeten les instruccions al Consell. No s'ha de tocar codi a correcuita; és **Claude Code** (com a picapedrer de codi) qui ha d'implementar la unificació atòmica de `/iaia`, eliminar la fragmentació i provar tota la pantalla amb garanties.
 
 <!-- SDP:SECTION acta.s5 -->
 ## Pendents
@@ -110,6 +107,8 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
    - Integrar la presentació editorial viva a les utilitats del perfil (`/el-meu-perfil` -> `APLICACIONS`), amb totes connectades per defecte, accés a mode prova vs usuari (privat vs públic/bar), i exportació ciutadana de dades en desconnexió.
 7. **Cens Complet d'Imatges i WebP:**
    - Ampliar `censImatges.js` de 149 a 338 imatges de `public/assets/`, mostrant el nom original de cada fitxer i metadades de Viquipèdia.
+8. **Unificació Atòmica de la IAIA MarIA i Resolució del Fiasco Visual (Claude Code):**
+   - Corregir `/iaia`: imatge Hero completa a la capçalera, avatar mòbil integrat harmònicament, i fusió del Selector de Realitat (`RealitatSection.jsx`) al peu de la presentació en una única pàgina. Retirar rutes soltes i deixar «L'ànima de la iaia» exclusivament per a l'article editorial del Mur (`/anima`).
 
 <!-- SDP:SECTION acta.s6 -->
 ## Vincles

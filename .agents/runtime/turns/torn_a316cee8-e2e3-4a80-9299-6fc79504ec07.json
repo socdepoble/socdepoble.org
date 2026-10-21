@@ -4,9 +4,9 @@
   "actor": "agent-local",
   "scope": "code",
   "state": "context_loaded",
-  "revision": 21,
+  "revision": 24,
   "createdAt": "2026-10-20T21:37:56.728Z",
-  "updatedAt": "2026-10-20T22:23:13.229Z",
+  "updatedAt": "2026-10-20T22:54:43.817Z",
   "expiresAt": "2026-10-21T21:37:56.729Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3767,6 +3767,32 @@
         "committedAt": "2026-10-20T22:23:13.229Z",
         "documentHash": "4cb70c88d939a7a58a5b4b5cefc8ce4036a4720149ee30ae6110be933ec20a9c"
       }
+    },
+    "14acd124-add8-441c-b74f-23530d708a90": {
+      "id": "14acd124-add8-441c-b74f-23530d708a90",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261021_0800_auditoria_gemini_llancament_apps_i_sollutia.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-20T22:54:06.019Z"
+    },
+    "00982e71-284c-441f-86f6-82aad8408e49": {
+      "id": "00982e71-284c-441f-86f6-82aad8408e49",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261021_0800_auditoria_gemini_llancament_apps_i_sollutia.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-20T22:54:43.786Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-20T22:54:43.787Z",
+        "committedAt": "2026-10-20T22:54:43.817Z",
+        "documentHash": "a42b030a13672c54c0f0a0404e1d825ab1ff4f0f44d40cfbe938c682f0314abe"
+      }
     }
   },
   "plan": null,
@@ -3893,6 +3919,23 @@
       "file": "_wiki_de_poble/10_actes/261021_0030_acta_marmota_relleu_nocturn_zero_oblit_i_llancament_apps.md",
       "at": "2026-10-20T22:23:13.229Z",
       "hash": "4cb70c88d939a7a58a5b4b5cefc8ce4036a4720149ee30ae6110be933ec20a9c"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-20T22:54:06.020Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-20T22:54:43.787Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "00982e71-284c-441f-86f6-82aad8408e49",
+      "file": "_wiki_de_poble/04_escriptori/261021_0800_auditoria_gemini_llancament_apps_i_sollutia.md",
+      "at": "2026-10-20T22:54:43.817Z",
+      "hash": "a42b030a13672c54c0f0a0404e1d825ab1ff4f0f44d40cfbe938c682f0314abe"
     }
   ],
   "ownedPaths": [

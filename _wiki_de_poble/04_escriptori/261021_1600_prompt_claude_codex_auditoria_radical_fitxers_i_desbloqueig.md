@@ -1,44 +1,43 @@
 ---
 type: prompt
-status: canonic
-description: 'Prompt d''auditoria adversarial per a Gemini 4 Argon: revisió del paquet Android APK, PWA desktop, bateria de proves de Claude i auditoria del pla de contingència Sollutia.'
+status: esborrany
+description: 'Prompt canonic per a Claude i Codex: auditoria radical fitxer per fitxer de socdepoble.org, checklist AyudaWP i desbloqueig P0 botigues'
 tags:
   - govern
 visibility: private
-reflex: sdp:torn_a316cee8-e2e3-4a80-9299-6fc79504ec07:5d930c06-2722-4e1c-b1d4-0fc47dad2fe8
+reflex: sdp:torn_a2bdc047-5728-48aa-b5cc-769832a46e10:a5c11bd8-1461-4bc5-9e30-79c8bdb74192
 ---
-# Prompt d'Auditoria Local per a Gemini 4 Argon: Llançament Apps (Android APK + PWA Desktop) i Desbloqueig Sollutia
+# Auditoria Radical Fitxers, Desbloqueig Botigues i Assimilacio AyudaWP
 
 Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
 
 <!-- SDP:SECTION prompt.local.s0 -->
 ## 0. Preflight (Per a l'agent orquestrador)
 
-1. El repositori ha superat la purga de 3.2 GB de brossa física (builds antigues eliminades, neteja d'arrels temporals).
-2. Totes les 20.312 proves de Vitest estan en verd.
-3. El paquet de codi viatja amb el repositori fresc i sanejat.
+1. **Estat de l'Escriptori:** Net i verificat amb `porta-olivera.mjs` (0 documents solts de torns passats).
+2. **Llibre Mestre:** Consulteu obligatòriament `_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md`.
+3. **Pla Vigent:** Lligat al pla aprovat `261021_1600_pla_implementacio_auditoria_radical_fitxers_i_desbloqueig.md`.
 
 <!-- SDP:SECTION prompt.local.s1 -->
 ## Registre
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | sdp:torn_a316cee8-e2e3-4a80-9299-6fc79504ec07:5d930c06-2722-4e1c-b1d4-0fc47dad2fe8 |
+| Identificador | sdp:torn_a2bdc047-5728-48aa-b5cc-769832a46e10:a5c11bd8-1461-4bc5-9e30-79c8bdb74192 |
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
-| Creació | 2026-10-20T21:43:51.127Z |
-| Modificació | 2026-10-20T23:55:00.000Z |
-| Propietari | IAIA MarIA (Directora Tècnica) |
-| Aprovació humana | Mestre Javi Llinares (Instrucció directa per àudio 23:35) |
+| Creació | 2026-10-21T13:53:30.852Z |
+| Modificació | 2026-10-21T13:53:30.852Z |
+| Propietari | agent-local |
+| Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v3.8.0) |
-| Model IA | Gemini 4 Argon |
-| Tokens consumits | ~18k / 2M |
+| Model IA | claude-3-7-sonnet / codex |
+| Tokens consumits | ~12.000 tokens |
 
 <!-- SDP:SECTION prompt.local.s2 -->
 ## Historial
 
-- **2026-10-20T23:35:** El Mestre demana reiniciar xat fresc amb Claude, Gemini i MarIA per tal de reprendre el llançament amb el context 100% fresc.
-- **2026-10-20T23:45:** Acta Marmota i Pla de Llançament registrats oficialment.
+2026-10-21T13:53:30.852Z: esborrany creat per la IAIA MarIA amb autorització directa del Mestre per a l'auditoria radical autònoma de vesprada.
 
 <!-- SDP:SECTION prompt.local.s3 -->
 ## Context Tècnic i Arquitectònic
@@ -72,47 +71,41 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 <!-- SDP:SECTION prompt.local.s_instruccio -->
 ## Instrucció del torn
 
-Gemini 4 Argon, actua com a auditor adversarial implacable per a la sessió matinal de llançament d'aplicacions i el desbloqueig de producció de `socdepoble.org`.
+> **Destinataris del torn actiu:** **Claude Code** i **Gemini** (Gemini 4 / Argon) com a parella d'execució immediata en equip; Codex s'incorporarà de vesprada en una segona passada.
+
+Heu d'assumir la missió en solitari o en equip (mode automàtic, sense bloquejar el Mestre) dividint la feina en tres eixos prioritaris establerts al Llibre Mestre:
+
+1. **Eix A (Salfumant Radical Fitxer per Fitxer · `P0-14`):**
+   - Recórrer de dalt a baix l'estructura de `socdepoble.org` (`src/`, `public/`, `tooling/`, `supabase/`, `android/`, `ios/`).
+   - Identificar components obsolets, fixtures duplicades, fitxers de proves morts o logs ignorats.
+   - Per a cada arxiu qüestionable: emetre justificació tècnica; si no és imprescindible, proposar l'eliminació o moure'l a quarantena.
+   
+2. **Eix B (Assimilació AyudaWP / Tellado · `P0-13`):**
+   - Estudiar `01_produccio/article-ayudawp.md` i els checklist d'AyudaWP.
+   - Netejar `wordpress-plugin/` perquè complisca 100% les directrius oficials de WordPress.org (zero trucades remotes no auditades, text-domain únic, sanejament d'entrades).
+   - Analitzar els plugins gratuïts de Fernando Tellado (en especial el plugin *Vigilante*) i proposar com transformar les seues proteccions en un tractor cognitiu natiu (`sdp-vigilant-tellado`).
+
+3. **Eix C (Bloquejants Botigues Producció):**
+   - `P0-06`: Desplegar `socdepoble.org` a Firebase Hosting (`firebase deploy --only hosting --project soc-de-poble`).
+   - `P0-01`: Revocació de `select (contact_email)` per a anònims a `public.organizations`.
+   - `P0-08`: Canviar les 11 ocurrències de «conta» per «compte» a `legalContent.js`.
+   - `P0-09`: Llevar l'iframe recursiu a `pageContent.js:115`.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 
-1. **Auditoria de l'Estat del Codi i Proves de Claude:**
-   - Examina el commit final consolidat per Claude Code i valida que les 20.312 proves de Vitest mantinguen integritat absoluta.
-2. **Auditoria del Paquet Android APK i PWA Desktop:**
-   - Comprova l'estructura de la plataforma Android afegida per Capacitor (`android/`), revisa la configuració de permisos i verifica que `socdepoble-beta.apk` estiga a punt per a la distribució als provadors beta.
-   - Audita el flux de la PWA d'escriptori (`beforeinstallprompt`) i assegura que no hi haja regressions de Safe Area o desbordaments a pantalles d'escriptori i tauletes.
-3. **Auditoria de l'Estratègia de Desbloqueig Sollutia:**
-   - Avalua les dues vies tècniques plantejades al Pla d'Implementació (Via A: delegació DNS immediata; Via B: paquet estàtic SPA amb Frontissa de dades) i determina quina ofereix menor fricció i màxima sobirania per a Sóc de Poble.
-4. **Estudi Doctoral de Fernando Tellado i Conformitat WordPress.org:**
-   - Analitza exhaustivament el repositori `fernandotellado/ai-skills` (`wp-plugin-security`, `wp-plugin-performance`, `wp-plugin-development`), AyudaWP, DietPress i Vigilante.
-   - Audita el nostre connector `wordpress-plugin/` (`socdepoble-enxufe.php`, `uninstall.php`, `readme.txt` i la variant `directori/`) per verificar que compleix al 100% amb les directrius oficials de revisió de WordPress.org (`https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/`), sense cap risc de rebuig.
-5. **Rastreig Integral de Tasques de Plans d'Implementació:**
-   - Comprova els plans d'implementació de les darreres fases i el resum històric per verificar que no queden tasques orfes ni promeses oblidades entre un pla i el següent.
-6. **Lògica de Nodes Sobirans, Connexió per Defecte i Accés Multimodal (Directriu Canònica del Mestre Javi Llinares):**
-   - A partir de les indicacions i captures del Mestre a `/el-meu-perfil` (`APLICACIONS`) i `/plugin/:id`:
-     - **Totes Connectades per Defecte:** En l'arrencada i onboarding, totes les aplicacions/utilitats (`El Rebost`, `TPV`, `Gestoria de Poble`, `Salut`, `El Comú`) es mostren **connectades per defecte**. L'usuari mai troba un desert buit ni pantalles dissociades; més endavant ja s'avaluarà si cal desconnectar i demanar connexió a demanda, però la regla actual és disponibilitat immediata.
-     - **Accés Multimodal Sobirà:**
-       * **Mode Prova (Sandbox / Demo):** Accés lliure per experimentar i comprendre l'eina sense por de trencar res ni alterar dades reals.
-       * **Mode Usuari / Producció:**
-         - **Ús Privat / Personal:** Per a les dades íntimes del veí o la família (el rebost propi, la comptabilitat personal).
-         - **Ús Públic / Comunitari / Negoci:** Segons la naturalesa de l'eina (ex. al TPV: la carta i comanda és pública per als clients del bar, mentre que la gestió de caixa i taules és privada per a l'hostaler).
-     - **Unificació de Recursos (DRY):** La vista del perfil no és un formulari fred ni un placeholder buit, sinó que incrusta l'explicació editorial viva de `presentacioPlugins.js` (`UniversalPage` amb portada, badges i què fa / què no fa), sumant-hi els controls sobirans: botó d'obertura (mode prova vs usuari), commutador de visibilitat al Panell de Control, i opció de desconnexió.
-     - **Desconnexió i Sobirania Ciutadana:** Si l'usuari decideix desconnectar una eina, el sistema no bloqueja res; li ofereix **descarregar i exportar tots els seus documents i registres** en formats oberts (Markdown, JSON, ZIP), garantint zero dependència ni segrest de dades.
-   - Especifica la màquina d'estats, la lògica de dades i els components de la interfície per a aquesta unificació.
-7. **Auditoria de l'Atomicitat de la IAIA MarIA i Canal WhatsApp / Vodafone (Mestre Javi Llinares):**
-   - **Unificació de les 3 Pàgines:** Audita la fusió de les 3 pantalles disperses (`/el-meu-perfil` tab Agent IA, `/iaia` i `/realitat`) en una sola pàgina atòmica (`UniversalPage`, Hero gran, presentació, botó xat i selector de realitat de 4 nivells integrat).
-   - **Blindatge Editorial de `L'Ànima de la IAIA` (`/anima`):** Assegura que l'article del Còdex Forense es preserve com a editorial intocable del Mur/revista, i que no es confonga amb la configuració de la IA (verificar eliminació de `subrutes: ['/realitat']` de la secció `ia` a `sections.js`).
-   - **Canal Telefònic i WhatsApp de la IAIA:** El Mestre ja té un número de telèfon de Vodafone dedicat per a la IAIA. Avalua l'arquitectura necessària per connectar els missatges entrants de WhatsApp/SMS amb el motor d'orquestració de la IAIA MarIA.
-   - **Cerca d'Incoherències i Redundàncies:** Rastreja qualsevol component duplicat a tot el repositori per garantir atomicitat absoluta i màxima reutilització de components Pedra Seca.
-8. **Sortida:**
-   - Emet el teu informe canònic com a `261021_0800_auditoria_gemini_llancament_apps_i_sollutia.md` a `_wiki_de_poble/04_escriptori/`.
+- [ ] **Tasca 1 (Auditoria Salfumant `P0-14`):** Generar informe exhaustiu amb l'inventari raonat de fitxers de `socdepoble.org`.
+- [ ] **Tasca 2 (Checklist WordPress.org `P0-13`):** Refactoritzar `wordpress-plugin/` segons la guia de Fernando Tellado.
+- [ ] **Tasca 3 (Tractor Vigilant Tellado):** Esbossar el nou tractor cognitiu de seguretat i higiene inspirat en AyudaWP.
+- [ ] **Tasca 4 (Desbloqueig Firebase, Botigues `P0-06` i Higiene Xat):** Desplegament web, revisió de textos legals (`P0-08`), i condicionar la crida `xat_fils_meus` a l'existència d'usuari connectat per evitar el 401 a la consola de visitants anònims.
+- [ ] **Tasca 5 (Verificació i Proves):** Assegurar que `npm test` es manté 100% verd (>20.300 proves).
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
 
-- Evitar qualsevol al·lucinació sobre endpoints no documentats de Sollutia.
-- Mantenir el model de Pedra Seca i la privacitat estricta del Supabase de Sóc de Poble.
+- No esborreu fitxers de forma destructiva sense registrar-ne la traça al vostre document d'informe.
+- Qualsevol arxiu mogut ha de passar per `.sdp-paperera/` o respectar les carpetes satèl·lit externes (`_builds_de_poble/`, `_menjar_i_beure_de_poble/`).
+- Mantingueu el contracte del Web Component intacte (`tests/enxufe-empaqueta.test.mjs`).
 
 <!-- SDP:SECTION prompt.local.s6 -->
 ## Protocol d'Interacció i Sortida

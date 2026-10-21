@@ -8,7 +8,8 @@
   ],
   "exempts": {
     "00_index_escriptori.md": "Índex de l'Escriptori: nom canònic sense data.",
-    "00_index_actes.md": "Índex de les actes, si n'hi ha: nom canònic sense data."
+    "00_index_actes.md": "Índex de les actes, si n'hi ha: nom canònic sense data.",
+    "03_llibre_mestre_tasques_i_idees.md": "Llibre Mestre Permanent de Tasques, Deutes i Idees: nom canònic sense data."
   },
   "tolerancia_dies_passat": 30,
   "categories": {

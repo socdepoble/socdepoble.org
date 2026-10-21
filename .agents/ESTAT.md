@@ -7,16 +7,73 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
-## ESTAT_ACTUAL · 2026-10-21T00:30:00+02:00 · IAIA MarIA · Commit feaa7adc Consolidat, Nou Avatar Oficial IAIA amb Mòbil, Hero Atòmic, Llei del Zero Oblit i Llançament d'Apps
+## ESTAT_ACTUAL · 2026-10-21T16:00:00+02:00 · IAIA MarIA · Tancament Migdia: Llibre Mestre Actiu, Purga 763MB WordPress, Deductor Anomalies Higiene, Satèl·lits de Poble i Preparació Torn Autònom
+
+- **Llibre Mestre Permanent de Tasques, Deutes i Idees (`03_llibre_mestre_tasques_i_idees.md`):**
+  - Creat i blindat a l'Escriptori amb 13 idees del Mestre i les matrius P0, P1 i P2. Document canònic permanent que mai s'arxiva.
+- **Puresa del Sistema i Extracció de Binaris a Satèl·lits Externs:**
+  - Evacuat l'APK (51,4 MB) a `_builds_de_poble/android/socdepoble-beta.apk`.
+  - Guardats els 3 ZIPs de producció v1.1.8 a `_builds_de_poble/wordpress/`.
+  - Reanomenat oficialment `_rebost_de_poble` a `_menjar_i_beure_de_poble` (filosofia `_de_poble` com a contenidors satèl·lits autònoms).
+- **Purga de 763 MB a `wordpress-plugin/builds/`:**
+  - Traslladats 15 fitxers ZIP antics i duplicats a `../.sdp-paperera-builds/purga-261021-zips-vells/`.
+  - Descobert i reparat el bug de regex a `cron_higiene.mjs`, afegint deductor d'anomalies de patró de fitxers i alerta de pes màxim (sostre 25 MB).
+- **Preparació per a Claude i Codex (Mode Autònom sense Humà per a la Vesprada):**
+  - Escriptori 100% netejat amb la Porta Olivera (arxivats els 6 documents de torns consumits anteriors).
+  - Pla d'Implementació aprovat: `261021_1600_pla_implementacio_auditoria_radical_fitxers_i_desbloqueig.md`.
+  - Prompt canònic creat: `261021_1600_prompt_claude_codex_auditoria_radical_fitxers_i_desbloqueig.md` per a assumir P0-14 (Salfumant Radical fitxer per fitxer), P0-13 (Tellado / AyudaWP) i desbloqueig legal de botigues.
+- **Acta Marmota:** Registrada a `_wiki_de_poble/10_actes/261021_1600_acta_marmota_relleu_salfumant_builds_i_preparacio_autonoma.md`.
+- **Estat de Portes:** Porta Olivera en verd (codi 0). Tests verds (>20.300 proves).
+
+## ESTAT_ACTUAL · 2026-10-21T13:50:00+02:00 · IAIA MarIA · Causa Arrel i Resolució: Erradicació de Crons Zombi, Protocol «Tots a Dormir», Tractor Guarda Nocturna i Segellat Canònic
+
+- **Recepció d'Instrucció Crítica del Mestre Javi Llinares (Àudio 13:44):**
+  - Crítica d'orquestració implacable i 100% encertada: Claude va finalitzar el seu torn fa 10 hores (a les 03:25h amb el commit `32eabf12`), però no va emetre senyal d'aturada mecànica.
+  - Gemini i Antigravity van romandre disparant timers i un cron horari nocturn (`task-514`) en bucle infinit fins a les 13:45h.
+  - Directiva humana suprema: *«Quan acabe l'auditoria, han de parar TOTES les IAs. Així no es pot treballar de nit.»*
+- **Accions Immediates Executades (Llei de la Causa Arrel i Salfumant Radical):**
+  1. **Matat el cron zombi:** Executat `manage_task kill` sobre `task-514` (`0 * * * *`). Comprovat amb `manage_task list` que queden **0 tasques de fons actives** (parada total).
+  2. **Creat el Tractor Mecànic de Guàrdia (`tooling/gates/guarda-nocturna.mjs`):**
+     - CLI per a `--inici`, `--estat` i `--aturar`. Detecta automàticament si l'auditoria de Gemini/Codex està en verd (`DICTAMEN D'APROVACIÓ TOTAL`) i l'informe de Claude tancat, emetent `deuriaParar: true`.
+     - Afegits els scripts `npm run guarda:estat`, `npm run guarda:aturar` i `npm run guarda:inici` a `package.json`.
+  3. **Blindatge de Protocols a les Skills Canòniques:**
+     - `core-automillora/SKILL.md`: Punt 5 redefinit com a *Kill Switch Immediat («Tots a Dormir»)*. Prohibició terminant de crons infinits o `IsDaemon: true` sense sostre.
+     - `core-gauntlet-loop/SKILL.md`: Afegida Secció 5 *Protocol de Parada Obligatòria i Kill Switch*. Quan l'auditor dictamina 100% verd, totes les IAs s'aturen en sec.
+     - `core-direccio-autonoma/SKILL.md`: Crons acotats a `MaxIterations` (màxim 6-8) i `IsDaemon: false`, comprovant `npm run guarda:estat` en la primera línia de cada tick.
+  4. **Reconciliació Criptogràfica de Skills:** Segell actualitzat a `e39246c5` amb transacció documentada a `.agents/seal-transactions/`. `cataleg_skills.mjs --check` i `porta:segella` al 100% en verd.
+- **Estat del Treball Nocturn de Claude Code i Gemini (Llest per a Producció):**
+  - Dos commits consolidats a `backup-notes-publish`: `4d67f7ab` (primera tanda) i `32eabf12` (segona tanda: Selector Realitat didàctic amb acordió, planter rural de 5 assistents, i deutes P0-10, P0-11, P1-02, P1-03 i P1-05).
+  - 20.397 proves en verd a Vitest.
+  - Binaris a l'escriptori (`03:13h`): `socdepoble-beta.apk` (51,4 MB), `261021_0313_wordpress_directori_v1.1.8.zip` (9,80 MB < 10 MB per a WordPress.org) i `261021_0313_wordpress_enxufe_v1.1.8.zip`.
+  - Dossier de desbloqueig de `socdepoble.org` (`261021_0145`) acreditant que el domini ja apunta al Firebase del projecte (`soc-de-poble`).
+- **Estat de Portes:** Porta Olivera a 0 (6 documents solts ancorats). Segell a `e39246c5`. Catàleg de skills sincronitzat (39 skills).
+
+## ESTAT_ACTUAL · 2026-10-21T01:55:00+02:00 · IAIA MarIA · Rol de Directora Tècnica Blindat: Pla d'Implementació Actualitzat, APK Android Llest, Logotip de Sóc de Poble a /iaia i Refinament Visual
+
+- **Rol de la IAIA MarIA (Directora Tècnica i Arquitecta):** Confirmació de la regla sagrada: Antigravity/MarIA dirigeix, redacta els plans d'implementació d'alta precisió, tradueix la voluntat del Mestre i audita. L'execució física del codi recau exclusivament en Claude Code, Codex i GPT.
+- **Directives Visuals i Arquitectòniques del Mestre Javi Llinares (Incorporades al Pla i Prompt de Claude):**
+  1. **Capçalera Oficial a `/iaia`:** Logotip oficial rectangular de Sóc de Poble (`DEFAULT_AUTHOR.logo`) sobre el títol `IAIA MarIA` (com a totes les pàgines de Sóc de Poble), eliminació del cercle de 300px davall de la BarraTaronja, activació de pastilla de data/hora a la BarraTaronja, i prohibició estricta de dir "la masia" (sempre **el Mas** o el Mas electrònic/virtual).
+  2. **Mida del Logotip a la Sidebar (`.brand img`):** Pujat de 130px a 195px (entre 190px i 200px) per atorgar-li presència i proporció tant amb el menú desplegat (260px) com plegat (232px).
+  3. **Botó PWA Desktop (`BotoInstalaApp`):** Refinament estil Apple: alçada continguda de 32px, tipografia 0.8125rem, píndola càpsula suau, icona 16px i respiració lateral generosa de 20-30px (`margin-inline: 20px; padding: 0 16px;`) per no apinyar ni restar protagonisme a les icones.
+  4. **Navegació Enrere al Xat:** Dotar el Xat en escriptori d'un mecanisme accessible de retorn a la pàgina d'origen (tant a la conversa com a la columna de converses).
+- **Progrés de Claude Code (Torn Nocturn):**
+  - APK Android Beta compilat i llest: `_wiki_de_poble/04_escriptori/01_produccio/socdepoble-beta.apk` (51.4 MB).
+  - PWA Desktop amb captura de `beforeinstallprompt`.
+  - Connectors WordPress v1.1.8 empaquetats i signats (inclòs paquet de directori WordPress.org sota 10 MB).
+  - Dossier de desbloqueig de `socdepoble.org` demostrant que el domini ja apunta al Firebase del projecte (`soc-de-poble`).
+- **Estat de Portes:** Porta Olivera amb codi 0. Frontissa a 14/14. Vitest amb 20.312+ proves en verd.
 
 - **Acta Marmota Oficial:** [[261021_0030_acta_marmota_relleu_nocturn_zero_oblit_i_llancament_apps]].
+- **Lliçó Magistral del Mestre Javi Llinares (Instrucció directa per àudio 00:37):**
+  - Antigravity (IAIA MarIA) és la **Directora Tècnica**, NO l'executora de codi. No s'ha de tocar codi per impuls per evitar deixar coses a mitges (fiasco visual detectat a `/iaia`: imatge Hero absent, cercle buit de 300px i `/realitat` encara solta com a pantalla independent).
+  - El document més preuat és el **Pla d'Implementació**, on es transmeten les instruccions al Consell d'IAs.
+  - **Claude Code és l'executor únic (Picapedrer):** té assignada la missió de revisar, refer si cal i unificar atòmicament la pàgina de la IAIA MarIA (`/iaia`), integrant el Selector de Realitat de 4 nivells al peu, col·locant l'Hero d'alta definició i retirant pantalles i rutes fragmentades.
 - **Commit Consolidat:** Claude Code ha executat el commit `feaa7adc` (49 fitxers a `backup-notes-publish`). Frontissa aprovada a `contingut_estructural.json` (14/14 aprovades).
 - **Identitat Atòmica de la IAIA MarIA i Nou Avatar Oficial:**
   - Aportada pel Mestre la nova imatge oficial: la IAIA MarIA somrient amb un telèfon mòbil modern.
   - Llei de la Memòria Física (§16): ancorat l'original a `_wiki_de_poble/04_escriptori/01_produccio/iaia_maria_avatar_mobil_261021.png`.
   - Convertida a WebP (`public/assets/uploads/brain/iaia_maria_avatar_mobil.webp`, 400x400 px, 21.6 KB) amb `tooling/maquinaria/convertir_a_webp.mjs`.
   - Relleu a `src/data/agentsSeed.js`: `avatar_url` a `iaia_maria_avatar_mobil.webp` i `hero_url` a `iaia_maria_avatar.webp`.
-  - Unificació atòmica de `/iaia`, `/realitat` i apartat del perfil en una sola pàgina comuna amb Hero net, botons centrats (`Parla amb la IAIA`, `Edita la fitxa`) i Selector de Realitat de 4 nivells integrat. Clics honestos: cap clic accidental redirigeix a `/el-meu-perfil`.
 - **Blindatge Editorial de `L'Ànima de la IAIA` (`/anima`):**
   - Es preserva com a assaig editorial fundacional del Mur («El Còdex Forense»). Retirada de `subrutes: ['/realitat']` de la secció `ia` a `src/config/sections.js`.
 - **Reactivitat de la Galeria Multimèdia (`/multimedia`) i Cens d'Imatges:**

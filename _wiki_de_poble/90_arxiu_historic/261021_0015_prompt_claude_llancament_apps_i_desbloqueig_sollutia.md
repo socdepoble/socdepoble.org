@@ -100,13 +100,54 @@ El Mestre se'n va a dormir i **NO estarà davant de la pantalla** per respondre 
    - Compila la versió actualitzada del connector (`SDP_RELEASE=1 SDP_VERSIO=1.1.8 npm run build:wp` i `npm run build:wp:directori`) per incorporar el fix del parser Markdown, el botó `[Registra't]` directe i la targeta viva `UniversalListCard`.
 6. **Esmena Tipogràfica Editorial (H3) a les Presentacions de Plugins:**
    - Revisa `src/sections/plugins/presentacioPlugins.js` i els estils editorials perquè els títols de bloc de la presentació (com `La nevera i el rebost de casa`) utilitzen l'escala H3 canònica i la tipografia editorial de `core-llegibilitat-text`.
-7. **Unificació Atòmica de la IAIA MarIA (`/iaia`, `/realitat`, `/el-meu-perfil`) i Separació Editorial de `L'Ànima de la IAIA` (`/anima`):**
-   - El Mestre ha detectat una fragmentació incoherent de 3 pàgines per a la mateixa entitat (`/el-meu-perfil` tab Agent IA, `/iaia` i `/realitat`). Totes tres han de convergir en una sola pàgina comuna i atòmica de la IAIA:
-     * Portada i Hero d'alta resolució de la IAIA, amb el seu avatar, presentació («Qui és la IAIA MarIA?»), bio («Matriarca Digital») i accions («Parla amb la IAIA», «Edita la fitxa»).
-     * **Integració nativa del Selector de Realitat** (`RealitatSection.jsx`) dins d'aquesta pàgina: el ciutadà pot conèixer la IAIA i al mateix temps triar el seu nivell d'interactivitat (0 Apagada, 1 Passiva, 2 Interactiva, 3 Connexió total) sense saltar de pantalla ni duplicar components.
-     * Al perfil (`/el-meu-perfil`), reutilitzar directament aquest component unificat.
-     * **Correcció Canònica a `src/config/sections.js`:** Retira `subrutes: ['/realitat']` de la secció `ia` (`/anima`). `L'Ànima de la IAIA` (`/anima`) és una publicació fundacional i editorial del Mur («El Còdex Forense: Termodinàmica, Humanització i Comunicació»), NO la pàgina de configuració de la IA.
-     * Cerca i unifica qualsevol component o codi duplicat perquè tot el sistema siga atòmic i reuse components segons el patró de Pedra Seca. Treballa sense parar tota la nit («fins que se't gasten els crèdits»).
+7. **Unificació Atòmica de la IAIA MarIA (`/iaia`), Resolució del Fiasco Visual i Neteja de Pantalles Disperses:**
+   - **Ordre del Mestre Javi Llinares (Instrucció directa per àudio 00:37 i 01:10):** La Directora Tècnica (Antigravity/MarIA) no toca codi; **tu (Claude Code) ets l'executor únic (Picapedrer)** encarregat d'implementar tota aquesta solució neta, sòlida i provada.
+   - **Capçalera canònica i oficial de Sóc de Poble a `/iaia`:**
+     * **Logotip Oficial Rectangular de Sóc de Poble (`DEFAULT_AUTHOR.logo`):** Damunt del títol `IAIA MarIA` (com a totes les pàgines de Sóc de Poble), certificant que és una creació oficial del Mas electrònic de Sóc de Poble.
+     * **Eliminació de l'Avatar Circular de 300px davall de la BarraTaronja:** No es repeteix la cara de la IAIA sota la barra taronja (`avatarDeLaFitxa = null`), ja que viu a la mateixa BarraTaronja.
+     * **BarraTaronja canònica:** Mostra a l'esquerra l'avatar de la IAIA MarIA (amb el mòbil), el nom «IAIA MarIA», poble «La Torre de les Maçanes» i la **pastilla de data i hora** (passant `creat: agent.created_at` i `modificat: agent.updated_at` al DTO de `perfilDeLaIADelPaquet`).
+     * **Lèxic Obligatori:** Mai dir «la masia»; sempre **el Mas** (o el Mas electrònic/virtual).
+   - **Hero d'alta definició** amb la imatge de capçalera retallada sense vora blanca (`iaia_maria_avatar.webp`).
+   - **Botó centrat sota el lema:** Botó primari `[Parla amb la IAIA]` centrat just sota el lema «Pensant en global, treballant en local», seguit del bloc d'avís de màquina en proves.
+   - **Presentació i targetes bidireccionals:** Presentació completa («Qui és la IAIA MarIA?»), amb la `UniversalCard` viva de `L'Ànima de la IAIA` (`/anima`) incrustada al seu text, i viceversa a `/anima`.
+   - **Selector de Realitat Integrat (Bloc de 4 nivells):** Directament al peu de la presentació, amb amplada completa (`width: 100%`) sense estrènyer a `--sdp-measure`.
+   - **Netedat al menú i redireccions:** `/realitat` redirigeix netament a `/iaia`, i «L'ànima de la iaia» porta exclusivament a `/anima`.
+8. **Mida del Logotip a la Barra Lateral (`.brand img` a `src/css/layout.css`):**
+   - El logotip de la sidebar estava fixat a només 130px d'ample, quedant petit i desproporcionat en la columna de 260px.
+   - **Augmentar a 195px** (entre 190px i 200px segons mesura del Mestre), assegurant coherència i presència tant amb el menú desplegat (260px) com plegat (`.sidebar-closed .brand` a 232px).
+9. **Botó d'Instal·lació de l'Ordinador (`BotoInstalaApp` a `src/css/utilities.css`):**
+   - **Disseny contingut i estilitzat estil Apple:** Reduir alçada a 32px (`height: 32px; min-height: 32px;`), tipografia més fina (`font-size: 0.8125rem; font-weight: 500;`), píndola suau (`border-radius: 9999px;`) i icona de 15-16px.
+   - **Respiració lateral generosa:** Deixar 20px a 30px de marge lateral (`margin-inline: 20px; padding: 0 16px;`) perquè respire i no llebe protagonisme ni oprema les icones contigües (idioma, IAIA, sessió).
+10. **Navegació Enrere des del Xat cap a la Pàgina d'Origen:**
+   - Quan l'usuari entra al Xat des de `/iaia` (fent clic a «Parla amb la IAIA») o des d'una altra fitxa de perfil, en escriptori no hi ha mecanisme intern per a tornar a la pàgina d'origen sense fer ús de les fletxes del navegador.
+   - Habilitar mecanisme de retorn clar: fletxa `ArrowLeft` o opció de retorn tant a la capçalera de la conversa (`CapcaleraConversa.jsx`, eliminant el bloqueig exclusiu `d-mobile-only` quan hi ha històric previ o permetent tornar a la pàgina d'origen) com a la columna de converses.
+11. **Reforma Didàctica Radical del Selector de Realitat (`SelectorRealitat.jsx`):**
+   - **Instrucció Expressa del Mestre Javi Llinares:**
+     * **Elimina completament qualsevol referència a «la barra negra»:** L'usuari no entén què és eixa «barra negra» ni té sentit parlar de reposar/activar-se en ella.
+     * **Textos Didàctics i Pedagògics Individuals (sense duplicacions):**
+       - **Nivell 0 · Apagada:** «La intel·ligència artificial està completament desconnectada. L'aplicació funciona de manera tradicional: només tu i la gent del poble, amb privadesa manual absoluta i zero intervenció d'assistents.» (Targeta: «Completament apagada · Zero IA»).
+       - **Nivell 1 · Passiva:** «La IAIA MarIA i els assistents estan en silenci i a l'espera. Només respondran si tu els fas una pregunta directa o demanes la seua ajuda; mai no prendran la iniciativa ni t'interrompran.» (Targeta: «En espera · Només respon si tu li preguntes»).
+       - **Nivell 2 · Interactiva:** «Col·laboració activa amb els acompanyants que tu tries. Els assistents seleccionats t'ajuden a redactar missatges, traduir o proposar idees al mur i al xat.» (Targeta: «Activa · Amb els acompanyants que tries tu»).
+       - **Nivell 3 · Connexió total:** «El Mas connectat en comunitat plena. Tots els assistents (la IAIA MarIA, El Gall del temps, El Pregoner, L'Artiste Nano Banana...) col·laboren automàticament per dinamitzar i cuidar el poble.» (Targeta: «Comunitat plena · Tot el Mas al teu servei»).
+     * **Usabilitat Clau (Desplegable a la mateixa Card):** La llista/graella de selecció d'acompanyants ha d'aparéixer **directament com un acordió o desplegable integrat a la mateixa targeta de Nivell 2 (Interactiva)**. Si l'usuari clica «Interactiva», els acompanyants s'obrin allà mateix per triar-los, sense aparéixer com un bloc solt al fons que ningú veu en mòbil o escriptori.
+12. **Purga Immediata i Dignificació del Cens Rural d'IA (`agentsSeed.js` i `identitatsSeed.js`):**
+   - Extirpa del cens de caràcters d'IA les caricatures estranyes que enfurismen el Mestre («Súper Ratolí», «Flash optimitzador», «Sultan seguretat DID», «Mixa», «generador de batecs»).
+   - Mantén i consolida exclusivament el planter oficial autèntic de 5 assistents rurals:
+     1. **IAIA MarIA** (Matriarca Digital, Saviesa i Memòria del Mas)
+     2. **Nano Banana («L'Artiste»)** (Dibuixant del poble, Bruguera/Berlanga)
+     3. **Marc (El Gall)** (Meteorologia, oratge i alertes del camp)
+     4. **El Pregoner** (Bans municipals, avisos oficials i difusió comunitària)
+     5. **L'Acompanyant de Paraula** (Assistent de redacció i transcripció per a veïns i gent gran)
+13. **Tancament Implacable de Deutes Tècnics P0/P1 del Catàleg Històric (`261020_2230`):**
+   - `P0-10`: Traduccions als 5 idiomes de les cadenes de moderació i eliminació de compte als diccionaris (`es.js`, `en.js`, `eu.js`, `gl.js`).
+   - `P0-11`: Substitució d'anglicismes («ítems» per «elements») a `src/config/idiomes/ca.js`.
+   - `P1-02`: Fix a `useUniversalRichText.js` per evitar l'esborrat de notes en desenfocar quan el text coincideix amb la plantilla.
+   - `P1-03`: Substitució d'origen a `share` (`capacitor://localhost` per `https://socdepoble.org`).
+   - `P1-05`: Optimització de la imatge pesada de fons del xat (`xat-bg-map-v2.jpg` de 1 MB a WebP).
+14. **Recompilació Neta i Revalidació Total:**
+   - Recompila l'APK beta d'Android (`npm run build && npx cap sync android && cd android && ./gradlew assembleDebug`) i copia el binari final a `_wiki_de_poble/04_escriptori/01_produccio/socdepoble-beta.apk`.
+   - Recompila els paquets de WordPress 1.1.8 (`SDP_RELEASE=1 SDP_VERSIO=1.1.8 npm run build:wp` i `npm run build:wp:directori`).
+   - Executa `npx vitest run` assegurant que la totalitat de les proves (20.300+) queden en verd impol·lut.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos

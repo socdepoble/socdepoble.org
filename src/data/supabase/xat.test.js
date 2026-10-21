@@ -281,6 +281,15 @@ describe('xats d’ajuda per defecte en remot', () => {
     expect(fils.some(f => f.imatgeUrl === LOGO_QUADRAT)).toBe(false);
     expect(client.rpc).toHaveBeenCalledTimes(1);
   });
+  it('un usuari anònim sense sessió rep directament els fils per defecte sense cridar xat_fils_meus (zero 401 a la consola)', async () => {
+    mock.user = null;
+    const fils = await loadFils(REMOT);
+    expect(fils.map(f => [f.id, f.perDefecte])).toEqual([
+      ['sdp-per-defecte:javi', 'javi'],
+      ['sdp-per-defecte:iaia', 'iaia']
+    ]);
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
   it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), el directe i, a la cua, Javi i la IAIA', async () => {
     query.data = [{ id: 'f-real', tipus: 'directe', titol: null, org_id: UUID_ENTITAT, entitat_nom: 'Sóc de Poble', com_entitat: false,
       altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }], ultim_seq: 2 }];

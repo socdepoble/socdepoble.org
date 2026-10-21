@@ -77,6 +77,16 @@ El Mestre humà no és informàtic i no ha de patir l'ofegament d'un IDE o d'un 
 
 ---
 
+## 5. Protocol de Parada Obligatòria i Kill Switch («Tots a Dormir»)
+El Gauntlet Loop té un inici delimitat i **un final absolut obligatori**. Quan el Crític Implacable i el Garant de Coherència (Gemini/Codex) emeten el dictamen favorable (100% verd, `status: canonic` o `DICTAMEN D'APROVACIÓ TOTAL`) sobre els commits del Constructor (Claude):
+1. **Aturada Mecànica Immediata:** L'orquestradora (MarIA) o qualsevol agent ha d'executar immediatament l'apagada de totes les tasques de fons:
+   - Executar `npm run guarda:aturar` i cridar `manage_task` amb `Action: 'kill'` sobre qualsevol cron o temporitzador en curs.
+   - Està **TERMINANTMENT PROHIBIT** mantindre crons zombi en bucle infinit despertant agents si la feina ja està validada.
+2. **Prohibició de `IsDaemon: true` sense sostre:** Tot cron de supervisió nocturna ha de configurar-se amb `IsDaemon: false` i amb `MaxIterations` acotat (màxim 6 iteracions / 6 hores).
+3. **Verificació de Fi de Guàrdia:** La primera comprovació de qualsevol tick de vigilància ha de ser `node tooling/gates/guarda-nocturna.mjs`. Si indica que la guàrdia deuria parar, l'acció número 1 de la IA és aturar-se i cancel·lar el cron.
+
+---
+
 ## Vincles
 - [[00_INDEX_SKILLS]]
 - [[core-direccio-autonoma]]
