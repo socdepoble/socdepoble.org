@@ -3,6 +3,10 @@
    literal quan la llengua es tria o es demana. Cap altre mòdul de producció
    l'importa. Una clau absent ací cau en el valencià (ca.js). */
 export default {
+  'section.xat.sessio.connectar': "Conectarse",
+  'section.xat.sessio.registrar': "Rexistrarse",
+  'section.xat.iaia.cortesia': "Benvida automática. Só se mostra aquí; non é unha resposta gardada no chat compartido.",
+
   'section.xat.sessio.calEntrar': "Inicia sesión para buscar persoas e enviar mensaxes.",
   'section.xat.sessio.entrar': "Iniciar sesión",
   'section.xat.padro.noDisponible': "Non dispoñible",

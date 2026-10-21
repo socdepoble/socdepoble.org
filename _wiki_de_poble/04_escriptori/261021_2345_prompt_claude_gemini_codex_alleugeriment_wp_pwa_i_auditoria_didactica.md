@@ -105,8 +105,12 @@ Els objectius són dos grans blocs d'acció:
   - Configurar l'avatar de la comunitat «Sóc de Poble» al xat amb el logotip oficial quadrat verd.
   - Implementar o connectar la resposta de cortesia/benvinguda de la IAIA MarIA en mode remot.
   - Afegir el botó de crida a l'acció («Connectar-se / Registrar-se») als peus del xat quan s'accedeix sense sessió.
-- [ ] **Tasca 4 (Fitxa de Persona):**
-  - Assegurar que per a persones físiques, l'avatar només es mostra a la Barra Taronja i mai com a cercle duplicat de 300px davant de l'H1.
+- [ ] **Tasca 4 (Unificació del Perfil de Javi Llinares i Retirada d'Avatar Duplicat):**
+  - **Ordre directa del Mestre (261022):** Conviuen dos perfils diferents de Javi Llinares. Cal **eliminar el vell** i deixar només el perfil bo i canònic:
+    * *Perfil vell a extirpar:* H2 «Coordinador del projecte Sóc de Poble» i entradilla «Coordinador i visionari darrere del projecte Sóc de Poble» (a `src/data/agentsSeed.js` JAVI).
+    * *Perfil bo a consolidar:* H1 «Javi Llinares», poble «La Torre de les Maçanes», H2 «La Torre de les Maçanes», i entradilla oficial: *«Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l'Associació El Rentonar, coordine el Projecte Sóc de Poble.»* (el que es veia a la ruta llarga d'UUID `cc74bb...`).
+  - Assegurar que tant `/javillinares` com `/gent/javillinares` resolen de forma unificada i neta la fitxa bona del Mestre.
+  - Eliminar l'avatar redó de 300px duplicat sobre l'H1 per a persones físiques (l'avatar només viu a la Barra Taronja).
   - Actualitzar els tests associats a `PerfilPublicSection.test.jsx`.
 - [ ] **Tasca 5 (Auditoria Didàctica Humana):**
   - Auditar exhaustivament les pantalles `/plugin/gestoria`, `/plugin/rss`, `/notes`, `/mercat`, `/pobles`.
@@ -132,6 +136,15 @@ Els objectius són dos grans blocs d'acció:
     * *Prompt 2 (Pruebas y límites):* `Para cada conclusión, dime de dónde la sacas (fichero o función) y márcala como confirmada, deducida o desconocida.`
     * *Prompt 3 (Una función a la vez):* `Entiende cómo funciona [el grafo de vínculos bidireccionales / la sincronización local / los paneles plegables] en Obsidian y enséñame las pruebas.`
     * *Prompt 4 (El manual antes que el código):* `Escribe un manual de comportamiento de [la función] sin copiar código. Lo construiremos en Sóc de Poble a partir de esa especificación.`
+- [ ] **Tasca 8 (Deconstrucció de WhatsApp amb REA i Multimèdia Interactiva al Xat):**
+  - Aplicar REA al patró de WhatsApp (`sdp-clon-whatsapp`) per fer el Xat plenament operatiu per als veïns:
+    1. **Àudios:** Enregistrament i reproducció operativa de missatges de veu directes al fil de conversa.
+    2. **Imatges:** Pujada i previsualització d'imatges operatives.
+    3. **Vídeos curts:** Prova pilot de clips de fins a 10 segons.
+    4. **Trellat Rural i Quota de Dades:** Sostre de 20 MB per usuari. En arribar al límit, missatge proper de poble: *«Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!»*.
+- [ ] **Tasca 9 (Auditoria Forense de Rendiment i Càrrega Remota):**
+  - **Problema observat en viu pel Mestre:** Càrrega excessivament lenta amb spinner infinit en entrar a `socdepoble.org/gent/...` i error a la consola: `GET https://socdepoble.org/favicon.svg 500 (Internal Server Error)`.
+  - Auditar la cadena de resolució (`loadPerfilPublic`, queries de Supabase, gestió d'Auth a `personaDeSessio.js` i rewrites de Firebase per a recursos estàtics) per eliminar els colls d'ampolla i reduir el temps de càrrega a menys d'1 segon.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos

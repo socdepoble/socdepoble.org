@@ -616,12 +616,12 @@ export default function BrainGraph({
         <p>{nodes.length} nodes · {links.length} vincles</p>
       </aside>}
       <div className="sdp-brain-graph-controls" role="group" aria-label="Controls del graf">
-        <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={() => setIsSimulationActive(!isSimulationActive)} title={isSimulationActive ? 'Pausar simulació' : 'Reprendre simulació'}>
+        <button className="sdp-boto sdp-boto--secundari btn-icon" disabled={nodes.length === 0} onClick={() => setIsSimulationActive(!isSimulationActive)} title={isSimulationActive ? 'Pausar simulació' : 'Reprendre simulació'}>
           {isSimulationActive ? <Pause size={18} /> : <Play size={18} />}
         </button>
-        <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={handleZoomIn} title="Apropar"><ZoomIn size={18} /></button>
-        <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={handleZoomOut} title="Allunyar"><ZoomOut size={18} /></button>
-        <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={handleReset} title="Centrar"><Maximize size={18} /></button>
+        <button className="sdp-boto sdp-boto--secundari btn-icon" disabled={nodes.length === 0} onClick={handleZoomIn} title="Apropar"><ZoomIn size={18} /></button>
+        <button className="sdp-boto sdp-boto--secundari btn-icon" disabled={nodes.length === 0} onClick={handleZoomOut} title="Allunyar"><ZoomOut size={18} /></button>
+        <button className="sdp-boto sdp-boto--secundari btn-icon" disabled={nodes.length === 0} onClick={handleReset} title="Centrar"><Maximize size={18} /></button>
       </div>
     </div>
   );

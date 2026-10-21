@@ -7,7 +7,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
-import FilaConversa, { AvatarFil, FilaComunitat } from './FilaConversa.jsx';
+import FilaConversa, { AvatarFil, AvatarComunitat, FilaComunitat } from './FilaConversa.jsx';
+import { ENTITAT_PILOT_ID } from '../../../data/identitatsSeed.js';
+import { AJUDA_PER_CLAU } from '../../../data/xatsPerDefecte.js';
 import { agrupaComunitats, mapejaFil } from '../missatges.js';
 
 const t = (_, alternativa) => alternativa;
@@ -195,4 +197,14 @@ test('la pastilla grisa passa AA i el punt gris fa 3:1 sobre la fila, en clar i 
     /* El hover de la fila és --sdp-fons-subtil. */
     expect(contrast(vora[tema], subtil[tema])).toBeGreaterThanOrEqual(3);
   }
+});
+
+
+test('la comunitat de Sóc de Poble sense imatge mostra el logo oficial, però un homònim no', () => {
+  const fil = { id: 'comunitat-remota', tipus: 'comunitat', avatar_url: null, subjecte: { tipus: 'entitat', id: ENTITAT_PILOT_ID } };
+  const { container, rerender } = render(<AvatarComunitat fil={fil} nom="Sóc de Poble" />);
+  expect(container.querySelector('img')?.getAttribute('src')).toBe(AJUDA_PER_CLAU.socdepoble.avatar);
+  expect(container.querySelector('.sdp-xat-avatar--quadrat')).toBeTruthy();
+  rerender(<AvatarComunitat fil={{ ...fil, subjecte: { tipus: 'entitat', id: 'altra-entitat' } }} nom="Sóc de Poble" />);
+  expect(container.querySelector('img')).toBeNull();
 });

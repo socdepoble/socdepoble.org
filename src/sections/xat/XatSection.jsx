@@ -1412,6 +1412,7 @@ function XatWorkspace({ origen = null }) {
         </div>
       ) : null}
       {vistaNode ? null : <div className="sdp-workspace-column__body">{cos}</div>}
+      {senseSessio && !activeThread ? <AccesAlXat t={t} tornar={rutaActual} navigate={navigate} /> : null}
       <DialegNovaConversa
         obert={dialegNou}
         senseSessio={senseSessio}
@@ -1446,6 +1447,8 @@ function XatWorkspace({ origen = null }) {
           key={`${activeThread.id}\n${revisioEsborrany}`}
           clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
+          peu={senseSessio ? <AccesAlXat t={t} tornar={rutaActual} navigate={navigate} /> : null}
+          cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && esXatDeLaIAIA(activeThread)}
           fil={activeThread}
           entitatActiva={entitatActiva}
           moderacio={moderacioDelXat}
@@ -1597,6 +1600,24 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
   return <FitxaComunitat {...resta} onObriFil={obri} />;
 }
 
+/* L'accés continua visible també al peu d'un fil de mostra o només lectura. */
+function AccesAlXat({ t, tornar, navigate }) {
+  return (
+    <div className="sdp-alerta">
+      <p>{t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}</p>
+      <div className="sdp-alerta__accions">
+        <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar }))}>
+          {t('section.xat.sessio.connectar', 'Connectar-se')}
+        </button>
+        <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ mode: 'crear', tornar }))}>
+          {t('section.xat.sessio.registrar', 'Registrar-se')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 /* Ordre del Mestre (261007) · El patró estàndard de missatgeria en mòbil: la
    barra inferior només viu a les pestanyes d'arrel; tota pantalla empesa (conversa,
    fitxa de comunitat, ajustos) ocupa la pantalla sencera amb la fletxa a dalt
@@ -1605,6 +1626,7 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
    barra inferior (ModeImmersiuContext); la fletxa torna a la llista i el mode
    s'apaga sol. En «mitja» la llista conviu amb la conversa i les barres es
    queden. Les pàgines universals no el demanen mai: la barra negra hi és fixa. */
+
 function ConversaAPantallaCompleta() {
   const { mida, panellObert } = useAppGrid();
   useModeImmersiu(mida === 'estret' && panellObert === null);

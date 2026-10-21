@@ -9,7 +9,7 @@ reflex: sdp:torn_3a204f4c-4ba0-4264-b032-c80606c7242a:385712cc-40cd-439d-abe9-47
 ---
 # Pla d'Implementació — Alleugeriment WP, Retirada Boto PWA i Auditoria Didactica
 
-**Estat del Pla:** en elaboració
+**Estat del Pla:** estabilitzat per a execució local el 2026-10-22, segons el mandat autònom explícit del Mestre en este xat.
 
 <!-- SDP:SECTION pla.implementacio.s1 -->
 ## Registre
@@ -22,7 +22,7 @@ reflex: sdp:torn_3a204f4c-4ba0-4264-b032-c80606c7242a:385712cc-40cd-439d-abe9-47
 | Creació | 2026-10-21T21:38:32.617Z |
 | Modificació | 2026-10-21T21:38:32.617Z |
 | Propietari | MarIA |
-| Aprovació humana | pendent |
+| Aprovació humana | execució local autoritzada pel mandat explícit del Mestre de 2026-10-22 |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md (v2.0.0) |
 | Model IA | Antigravity (IAIA MarIA) |
 | Tokens consumits | [procediment en curs] |
@@ -61,9 +61,13 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 - **Resposta de la IAIA MarIA en remot:** Assegurar que en mode remot, si un usuari parla amb la IAIA MarIA, reba la resposta de benvinguda o frase feta oficial en comptes de quedar el fil orfe.
 - **Botons d'Accés per a Visitants:** Mostrar clarament botons per a «Connectar-se o Registrar-se» quan un anònim vulga participar en converses.
 
-### 5. Avatar a la Fitxa de Persona (Sense Duplicitats)
-- **Motiu:** L'avatar de la persona ja es mostra de forma canònica a la Barra Taronja (`topBarData.authorAvatar`). No ha de duplicar-se com a cercle gegant de 300px just damunt de l'H1.
-- **Acció:** Ajustar `PerfilPublicSection.jsx` i adaptar la suite de tests perquè cap persona tinga avatar duplicat sobre l'H1.
+### 5. Unificació del Perfil de Javi Llinares i Retirada d'Avatar Duplicat (Ordre del Mestre 261022)
+- **Problema detectat pel Mestre:** Conviuen dos perfils diferents de Javi Llinares a la plataforma:
+  1. *El perfil vell/fòssil:* H2 «Coordinador del projecte Sóc de Poble» i entradilla «Coordinador i visionari darrere del projecte Sóc de Poble» (procedent de `src/data/agentsSeed.js` JAVI com a fallback del paquet). AQUEST ÉS EL QUE S'HA D'ELIMINAR.
+  2. *El perfil bo, real i canònic:* H1 «Javi Llinares», poble «La Torre de les Maçanes», H2 «La Torre de les Maçanes», i l'entradilla oficial: *«Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l'Associació El Rentonar, coordine el Projecte Sóc de Poble.»* (el que actualment es mostrava a la ruta llarga d'UUID `cc74bb...`).
+- **Acció d'unificació:**
+  - Actualitzar `src/data/agentsSeed.js` (JAVI) i els fallbacks perquè el contingut siga exactament el bo de la Torre de les Maçanes, o enllaçar la resolució canònica per a que `/javillinares` i `/gent/javillinares` mostren exclusivament la fitxa real.
+  - Retirar l'avatar redó de 300px duplicat damunt de l'H1 per a persones físiques (l'avatar només viu a la Barra Taronja).
 
 ### 6. Protocol per a la Gran Auditoria Didàctica a Tres Bandes (MarIA + Claude + Codex)
 - **Objectiu:** Posar a Claude i GPT Codex en el rol del «Veí del Poble»:
@@ -84,12 +88,27 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
   3. El sistema de panells i espais de treball mal·leables.
   Traslladar aquestes solucions al nostre `UniversalWorkspace` / Bloc de Notes sota el disseny Pedra Seca.
 
+### 9. Deconstrucció de WhatsApp amb REA i Multimèdia Interactiva al Xat (Ordre del Mestre 261022)
+- **Visió:** Aplicar la mateixa enginyeria inversa REA d'Obsidian al clon de WhatsApp (`sdp-clon-whatsapp`) per fer el Xat 100% operatiu per als veïns:
+  1. **Notes de veu (Àudios):** Permetre enregistrar i enviar missatges de veu directes a les converses.
+  2. **Pujada d'imatges:** Enviament operatiu de fotografies amb previsualització.
+  3. **Vídeos curts:** Prova pilot de vídeos de fins a 10 segons.
+  4. **Trellat Rural i Sostre de Dades:** Límit de 20 MB per usuari. Si se sobrepassa la quota, mostrar missatge amigable i clar: *«Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!»*.
+
+### 10. Auditoria Forense de Rendiment i Càrrega Remota (Ordre del Mestre 261022)
+- **Problema de latència observat en viu pel Mestre:**
+  - El navegador es queda mostrant el spinner durant massa segons en entrar a `socdepoble.org/gent/...`.
+  - Apareix a la consola de xarxa un error `GET https://socdepoble.org/favicon.svg 500 (Internal Server Error)`.
+- **Acció:** Diagnosticar la cadena de càrrega (`loadPerfilPublic`, timeouts de Supabase, hidratació d'Auth a `personaDeSessio.js` i regles de rewrites de Firebase per a recursos estàtics com `favicon.svg`) per garantir una resposta immediata inferior a 1 segon.
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
+Coordinació Codex 2026-10-22: tres agents independents (WP, UI/Xat/Perfil, REA) i integració central (didàctica, autoria, proves i informe). No es declara participació de Claude o Gemini sense evidència d’un fil real. El paquet final es construeix després d’integrar els canvis. No es desplega ni s’apliquen migracions remotes en este torn. Es conserva el Model B i no s’inventa cap servei d’instal·lació, autoria ni IA remot.
+
 1. **Porta Olivera:** Comprovació que l'Escriptori es manté en 0 documents orfes (`node tooling/gates/porta-olivera.mjs`).
 2. **Suites de Tests:** Execució de `vitest run` per a l'editor universal, perfil públic i xat.
-3. **Mida del Paquet:** Verificació que `socdepoble.zip` a `_builds_de_poble/wordpress/` queda per davall de 3 MB.
+3. **Mida del Paquet:** Verificació que `socdepoble.zip` a `_builds_de_poble/wordpress/` queda per davall de 2.500.000 bytes (2,5 MB decimals).
 4. **Validació Didàctica:** Prova de navegació sense sessió a `/plugin/rss`, `/plugin/gestoria` i `/xat`.
 
 <!-- SDP:SECTION pla.implementacio.s6 -->

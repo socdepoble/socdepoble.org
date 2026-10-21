@@ -3,6 +3,10 @@
    tros d'entrada. És també la reserva clau per clau de les altres quatre.
    Una clau nova va als cinc diccionaris de src/config/idiomes/. */
 export default {
+  'section.xat.sessio.connectar': "Connectar-se",
+  'section.xat.sessio.registrar': "Registrar-se",
+  'section.xat.iaia.cortesia': "Benvinguda automàtica. Es mostra només ací; no és una resposta guardada al xat compartit.",
+
   'section.xat.sessio.calEntrar': "Entra per buscar persones i enviar missatges.",
   'section.xat.sessio.entrar': "Entrar",
   'section.xat.padro.noDisponible': "No disponible",

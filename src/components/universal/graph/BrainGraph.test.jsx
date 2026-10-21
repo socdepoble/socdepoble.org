@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { act, render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import BrainGraph from './BrainGraph';
 import useForceLayout from './useForceLayout';
@@ -262,4 +262,20 @@ test('sense `enquadra` (la Wiki), la simulació quieta no mou la vista', () => {
   useForceLayout.mock.lastCall[0].onAssentat();
   buida();
   expect(vista()).toEqual({ x: 0, y: 0, k: 1 });
+});
+
+test('un graf buit desactiva els controls i els recupera quan arriben nodes', () => {
+  const { rerender } = render(<BrainGraph graf={{ nodes: [], links: [] }} inspector={false} />);
+  const controls = () => within(screen.getByRole('group', { name: 'Controls del graf' })).getAllByRole('button');
+  expect(controls()).toHaveLength(4);
+  for (const button of controls()) expect(button.disabled).toBe(true);
+  fireEvent.click(screen.getByTitle('Apropar'));
+  buida();
+  expect(vista().k).toBe(1);
+
+  rerender(<BrainGraph graf={{ nodes: [{ id: 'nota', label: 'Olivera', type: 'document' }], links: [] }} inspector={false} />);
+  for (const button of controls()) expect(button.disabled).toBe(false);
+  fireEvent.click(screen.getByTitle('Apropar'));
+  buida();
+  expect(vista().k).toBeCloseTo(1.3);
 });

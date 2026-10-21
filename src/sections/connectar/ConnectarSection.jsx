@@ -59,6 +59,8 @@ import { useXat } from '../xat/XatContext.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
 import { autorDe, esRutaInterna, getSectionItemPath, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
+import { rutaXatPrivat } from '../../config/objecteConnectable.js';
+import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esBackendInabastable } from '../../data/errorsBackend.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -189,6 +191,19 @@ export function origenAmbOriginal(origen, targeta, item = null) {
   };
 }
 
+/** Només una autoria resolta pot obrir el contacte humà; mai la query. */
+export function autorPerConnectar(item, { currentUser = null, actor = null, identitats = [], dataMode = 'remote' } = {}) {
+  const autor = autorDe(item);
+  if (!autor || !['persona', 'entitat'].includes(autor.tipus)) return null;
+  if (!autor.id.trim() || autor.id.length > 200 || /[\s\u0000-\u001f\u007f]/.test(autor.id)) return null;
+  const propis = new Set(currentUser?.id ? [String(currentUser.id)] : []);
+  for (const identitat of [actor, ...(Array.isArray(identitats) ? identitats : [])]) {
+    if (identitat?.id != null) aliesDeLActor(identitat, { dataMode }).forEach((id) => propis.add(String(id)));
+  }
+  if (propis.has(autor.id)) return null;
+  return esRutaInterna(rutaXatPrivat(autor)) ? autor : null;
+}
+
 function ConnectarElementIntern() {
   const { showToast } = useToast();
   const { t } = useUIActions();
@@ -219,6 +234,7 @@ function ConnectarElementIntern() {
   const isGuest = !currentUser;
   const teSessio = Boolean(currentUser);
   const dataMode = useMemo(() => modeResolt(config), [config]);
+  const autorHuma = autorPerConnectar(itemOriginal, { currentUser, actor, identitats, dataMode });
   /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
      del dispositiu: es connecta igual. En remot cal entrar (calEntrar): cap
      simulació. Amb el Bloc encara carregant (canCreate exigix 'ready'), el
@@ -464,6 +480,15 @@ function ConnectarElementIntern() {
             </Alerta>
           ) : null}
         </section>
+        {autorHuma ? (
+          <section className="sdp-connectar__seccio" aria-labelledby={`${id}-autor`}>
+            <h3 id={`${id}-autor`} className="sdp-connectar__titol-seccio">Connectar amb l’autor</h3>
+            <p>Obri una conversa privada. No envia cap missatge fins que l’escrigues.</p>
+            <Boto varietat="secundari" onClick={() => navigate(calEntrar ? rutaPerAEntrar(params) : rutaXatPrivat(autorHuma))}>
+              {calEntrar ? 'Entra per a connectar amb l’autor' : 'Connectar amb l’autor'}
+            </Boto>
+          </section>
+        ) : null}
         {/* T43b-3 · el nom de l'organització no ve de l'URL (title): el resol el bloc d'una font de confiança. */}
         {params.get('organitzacio') ? <BlocAdministrarOrganitzacio orgId={params.get('organitzacio')} config={config} /> : null}
 

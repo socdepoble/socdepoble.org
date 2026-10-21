@@ -799,3 +799,51 @@ test('T43 · D10: sense la columna notes.origen el servidor ho rebutja i es diu 
   expect(avis.textContent).not.toContain('PGRST204');
   expect(mocks.navigate).not.toHaveBeenCalled();
 });
+
+
+/* 261022: el contacte humà no és el desat d'una targeta al MAS. */
+test.each([
+  [{ author_user_id: 'persona-real' }, 'persona-real'],
+  [{ author_org_id: 'entitat-real', author_user_id: 'gestor-privat' }, 'entitat-real']
+])('connectar amb l’autor usa l’original resolt i no envia res: %j', (autoria, id) => {
+  mocks.mur = MERCAT_AMB(autoria);
+  render(<ConnectarSection />);
+  expect(mocks.xat.creaFil).not.toHaveBeenCalled();
+  expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
+  expect(mocks.crea).not.toHaveBeenCalled();
+  expect(screen.getByText('Obri una conversa privada. No envia cap missatge fins que l’escrigues.')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Connectar amb l’autor' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${id}`);
+  expect(mocks.crea).not.toHaveBeenCalled();
+  expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
+});
+
+test('una autoria inventada en l’URL no activa el contacte, ni sense original ni amb un original sense autor', () => {
+  const vista = render(<ConnectarSection />);
+  expect(screen.queryByRole('button', { name: 'Connectar amb l’autor' })).toBeNull();
+  mocks.mur = MERCAT_AMB({ author_name: 'Sóc de Poble' });
+  vista.rerender(<ConnectarSection />);
+  expect(screen.queryByRole('button', { name: 'Connectar amb l’autor' })).toBeNull();
+});
+
+test.each([
+  { author_user_id: 'U' },
+  { author_org_id: 'org-propia' }
+])('el contacte humà no obri un xat amb qui mira ni amb una entitat que representa: %j', (autoria) => {
+  mocks.identitat.identitats.push({ tipus: 'entitat', id: 'org-propia' });
+  mocks.mur = MERCAT_AMB(autoria);
+  render(<ConnectarSection />);
+  expect(screen.queryByRole('button', { name: 'Connectar amb l’autor' })).toBeNull();
+  expect(mocks.xat.creaFil).not.toHaveBeenCalled();
+});
+
+test('sense sessió remota, connectar amb l’autor conserva la consulta per a entrar', () => {
+  mocks.user = null;
+  mocks.config = { dataMode: 'remote' };
+  mocks.mur = MERCAT_AMB({ author_user_id: 'persona-real' });
+  render(<ConnectarSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Entra per a connectar amb l’autor' }));
+  expect(anadaAEntrar(mocks.navigate.mock.calls.at(-1)[0])).toEqual({ ruta: '/registre', mode: 'entrar', tornar: `/connectar?${mocks.params}` });
+  expect(mocks.xat.creaFil).not.toHaveBeenCalled();
+  expect(mocks.crea).not.toHaveBeenCalled();
+});

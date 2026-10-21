@@ -89,10 +89,42 @@ const SALUT = [
   '<p>D’ací només ixen <strong>dos fitxers</strong>, i sempre <strong>per la teua mà</strong>: la còpia de seguretat, que ho porta tot, i el full per al metge, que descarregues o compartixes tu. Al full, el nom de la persona <strong>no hi va</strong> si no l’escrius en eixe moment. Per la mena de dades que guarda, el quadern <strong>només s’obri a la pàgina pròpia de Sóc de Poble</strong>, mai dins d’una altra web, i la primera vegada et demana que lliges l’avís i digues <strong>«Ho he entés»</strong>. Encara està <strong>en proves</strong>: si ací no es pot obrir, el botó <strong>«Obrir Salut»</strong> no fa res i la pàgina et diu per què.</p>'
 ];
 
-/** El cos de la pàgina de cada plugin que en té: sis blocs (un <h3> i el seu <p>), un element per línia. */
+const GESTORIA = [
+  '<h3>Per a què et servix</h3>',
+  '<p>La <strong>Gestoria</strong> és un quadern per a ordenar els papers de la teua activitat: factures, contactes i comptes del trimestre. Així els tens a mà quan parles amb qui et porta la gestió.</p>',
+  '<h3>Per on comences</h3>',
+  '<p>Quan l’eina estiga disponible, prem <strong>«Obrir la Gestoria»</strong>. Comença per la teua identitat i després entra a Facturació. Revisa cada dada abans de donar-la per bona.</p>',
+  '<h3>Un exemple del poble</h3>',
+  '<p>Si vens oli o portes un taller, pots ordenar les factures de la faena i preparar el full trimestral. El que no has apuntat no apareix en els comptes.</p>',
+  '<h3>Els papers continuen sent teus</h3>',
+  '<p>Les dades financeres es guarden en <strong>este dispositiu</strong>. No apareixen a soles en un altre ordinador. Conserva els justificants originals i les còpies que necessites.</p>',
+  '<h3>Què has de fer tu</h3>',
+  '<p>L’eina <strong>no presenta impostos ni envia documents</strong> per tu. Tu revises els papers i decidixes què compartixes amb la teua gestora o gestor.</p>',
+  '<h3>Si encara no la pots obrir</h3>',
+  '<p>Encara està <strong>en proves</strong>. Si esta web no la porta o no la permet, davall tens l’explicació i les opcions disponibles. Desactivar-la no esborra els teus papers.</p>'
+];
+
+const RSS = [
+  '<h3>Les notícies, en un mateix lloc</h3>',
+  '<p>El <strong>Lector RSS</strong> reunix notícies de diferents fonts perquè no hages d’anar de web en web. Una font és el lloc que les publica, com ara una associació o un ajuntament.</p>',
+  '<h3>Com es fa servir</h3>',
+  '<p>Quan estiga disponible, prem <strong>«Obrir el Lector»</strong>. Entra a Fonts, tria les que t’interessen i torna a Notícies per a llegir-les.</p>',
+  '<h3>Un exemple de cada dia</h3>',
+  '<p>Pots reunir els avisos de les entitats que seguixes i obrir cada notícia per a llegir-la. La font indica d’on ve; el lector no és qui l’ha escrita.</p>',
+  '<h3>El que recorda el lector</h3>',
+  '<p>El que lliges, deses o seguixes es queda en <strong>este navegador</strong>. No se sincronitza a soles amb el mòbil o un altre ordinador.</p>',
+  '<h3>Les notícies de prova</h3>',
+  '<p>El lector encara està <strong>en proves</strong>: les fonts RSS en viu estan pendents de connexió. Les notícies de mostra no acrediten que una font estiga actualitzada.</p>',
+  '<h3>Si esta web encara no el porta</h3>',
+  '<p>Consulta les opcions de davall per a saber com obtindre’l o <strong>desactiva l’eina</strong> si ara no la necessites. No hi ha cap descàrrega independent disponible encara.</p>'
+];
+
+/** Sis blocs didàctics per eina, sense duplicar els títols de la pàgina. */
 export const PRESENTACIO_PLUGINS = Object.freeze({
   rebost: REBOST.join('\n'),
-  salut: SALUT.join('\n')
+  salut: SALUT.join('\n'),
+  gestoria: GESTORIA.join('\n'),
+  rss: RSS.join('\n')
 });
 
 /** L'HTML de la presentació d'un plugin (només claus pròpies), o null. */

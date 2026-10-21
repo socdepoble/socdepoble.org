@@ -61,6 +61,8 @@ export const NOMES_CANAL_PROPI = 'includes/actualitzador.php';
 
 /** Mida màxima del zip al formulari d'alta de WordPress.org (10 MB). */
 export const LIMIT_DIRECTORI = 10 * 1024 * 1024;
+/** Límit decimal del connector lleuger encomanat el 2026-10-21. */
+export const LIMIT_LLEUGER = 2_500_000;
 
 /* Patrons que Plugin Check marca com a actualitzador propi
    (Plugin_Updater_Check), més els noms del nostre canal: la variant del
@@ -499,6 +501,51 @@ export function fitxersAdaptador(arrelPlugin = ARREL_PLUGIN) {
     .map((rel) => ({ rel, dades: fs.readFileSync(path.join(arrelPlugin, rel)) }));
 }
 
+/**
+ * Connector instal·lable manualment, amb els assets al servidor canònic.
+ * Reutilitza inventari, contracte i comprovació de secrets de les releases.
+ * No necessita ni modifica el canal signat, ni la variant de WordPress.org.
+ */
+export function creaPaquetLleuger({ arrelPlugin = ARREL_PLUGIN } = {}) {
+  const dist = path.join(arrelPlugin, 'dist');
+  const manifestText = fs.readFileSync(path.join(dist, FITXER_RELEASE));
+  const release = JSON.parse(manifestText);
+  const errors = errorsDelBuild(release);
+  if (errors.length) throw new Error(`Build lleuger invàlid:\n- ${errors.join('\n- ')}`);
+  if (release.runtime?.amfitrio !== 'autonom' || release.runtime.dependencies?.length !== 0) {
+    throw new Error('El connector lleuger necessita el runtime autònom.');
+  }
+  const mitjans = release.mitjans;
+  let origen;
+  try { origen = new URL(mitjans?.origen); } catch { /* validació de baix */ }
+  if (!origen || origen.protocol !== 'https:' || esHostLocal(origen.hostname)
+      || origen.username || origen.password || origen.search || origen.hash
+      || `${origen.origin}${origen.pathname}`.replace(/\/+$/, '') !== mitjans.origen
+      || JSON.stringify(mitjans.externs) !== '["assets/"]') {
+    throw new Error('Compila amb SDP_MITJANS=externs i un origen https públic de mitjans.');
+  }
+  const { camins, restes } = verificaInventari(dist, release);
+  verificaPaquet(dist, release, camins);
+  if (camins.some(cami => cami.startsWith('assets/'))) throw new Error('El connector lleuger encara porta assets locals.');
+  const adaptador = fitxersAdaptador(arrelPlugin).map(({ rel, dades }) => {
+    if (rel === 'socdepoble-enxufe.php') dades = Buffer.from(estampaVersio(dades.toString('utf8'), release.versio));
+    if (rel === 'readme.txt') {
+      dades = Buffer.from(`${estampaReadme(dades.toString('utf8'), release.versio)}\n== Lightweight media ==\n\nThis manually installed package loads its images and media from ${mitjans.origen}/assets/. Each request sends the visitor's IP address and browser user agent to that server. The application code, fonts and knowledge index are included in the plugin. Terms and privacy: https://socdepoble.org/legal\n`);
+    }
+    return { nom: `${SLUG}/${rel}`, dades };
+  });
+  const entrades = [
+    ...adaptador,
+    ...[...camins, FITXER_RELEASE, FITXER_INVENTARI].map(cami => ({
+      nom: `${SLUG}/dist/${cami}`, dades: fs.readFileSync(path.join(dist, cami))
+    }))
+  ];
+  comprovaSecretsDeepL(entrades);
+  const zip = creaZip(entrades, { data: new Date(release.generat) });
+  if (zip.length >= LIMIT_LLEUGER) throw new Error(`El connector fa ${zip.length} B: ha de quedar per davall de ${LIMIT_LLEUGER} B.`);
+  return { zip, versio: release.versio, mida: zip.length, sha256: sha256(zip), origen: mitjans.origen, restes };
+}
+
 /** Patrons d'actualitzador que queden en unes entrades de zip (fitxers .php i readme). */
 export function patronsActualitzadorEn(entrades) {
   const trobats = [];
@@ -734,6 +781,8 @@ function comprovaDestinacio(arrelPlugin, desti, fitxers) {
 export const AJUDA = `Empaquetador de l'enxufe (sdp.release.v1)
 
 Ús:
+  SDP_MITJANS=externs SDP_RELEASE=1 SDP_VERSIO=1.1.10-beta.1 npm run build:wp
+  node wordpress-plugin/eines/empaqueta.mjs --lleuger
   node wordpress-plugin/eines/empaqueta.mjs --url-base URL --clau FITXER.pem [--notes URL] [--sortida DIR]
   node wordpress-plugin/eines/empaqueta.mjs --genera-clau FITXER.pem
   node wordpress-plugin/eines/empaqueta.mjs --prova --url-base http://localhost:8881/enxufe/
@@ -753,6 +802,8 @@ Una release, en ordre:
   4. DESPRÉS, copia stable.json, 0.2.0.json i les seues .sig a public/enxufe/ i desplega socdepoble.org.
 
 Opcions:
+  --lleuger          Crea ../_builds_de_poble/wordpress/socdepoble.zip (<2.500.000 B).
+                     Requerix el build autònom amb SDP_MITJANS=externs. No publica cap canal.
   --url-base URL      On es podran baixar els zips ({versio} es substituïx).
   --clau FITXER       Clau privada Ed25519 (PEM). Ha de correspondre a SOCDEPOBLE_ENXUFE_CLAU_PUBLICA.
   --notes URL         Notes de la versió (https).
@@ -773,7 +824,7 @@ function llegixArguments(argv) {
     if (ambValor.has(nom)) {
       if (i + 1 >= argv.length) throw new Error(`Falta el valor de --${nom}.`);
       opcions[nom] = argv[i += 1];
-    } else if (nom === 'prova' || nom === 'ajuda') {
+    } else if (nom === 'prova' || nom === 'ajuda' || nom === 'lleuger') {
       opcions[nom] = true;
     } else {
       throw new Error(`Opció desconeguda: --${nom}`);
@@ -785,6 +836,21 @@ function llegixArguments(argv) {
 export function executa(argv, registre = console) {
   const opcions = llegixArguments(argv);
   if (opcions.ajuda) { registre.log(AJUDA); return 0; }
+
+  if (opcions.lleuger) {
+    if (Object.keys(opcions).length !== 1) throw new Error('--lleuger no es combina amb opcions del canal de releases.');
+    const desti = path.resolve(ARREL_REPO, '../_builds_de_poble/wordpress');
+    if (!fs.existsSync(desti) || !fs.lstatSync(desti).isDirectory()
+        || fs.lstatSync(path.dirname(desti)).isSymbolicLink()) {
+      throw new Error('Falta la carpeta satèl·lit canònica _builds_de_poble/wordpress/ (no es crea automàticament).');
+    }
+    const fitxer = path.join(desti, 'socdepoble.zip');
+    if (fs.lstatSync(fitxer, { throwIfNoEntry: false })?.isSymbolicLink()) throw new Error('El ZIP de destinació no pot ser un enllaç simbòlic.');
+    const resultat = creaPaquetLleuger();
+    fs.writeFileSync(fitxer, resultat.zip);
+    registre.log(`${fitxer}\n${resultat.mida} B; SHA-256 ${resultat.sha256}\nMitjans: ${resultat.origen}/assets/\nPaquet manual; canal estable intacte.`);
+    return 0;
+  }
 
   if (opcions['genera-clau']) {
     const fitxer = path.resolve(opcions['genera-clau']);

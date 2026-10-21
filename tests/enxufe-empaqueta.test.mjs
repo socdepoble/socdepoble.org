@@ -23,6 +23,8 @@ import {
   clauPublicaHex,
   crc32,
   creaZip,
+  creaPaquetLleuger,
+  LIMIT_LLEUGER,
   comprovaSecretsDeepL,
   empaqueta,
   errorsDelBuild,
@@ -97,6 +99,47 @@ const neteja = (f) => fs.rmSync(f.arrel, { recursive: true, force: true });
 const entradesDe = (fitxer) => new Map(llegixZip(fs.readFileSync(fitxer)).map((e) => [e.nom, e.dades]));
 
 /* ─────────────────────────────── ZIP ─────────────────────────────── */
+
+test('connector lleuger: inventari verificat, assets externs, mida màxima i cap canal modificat', () => {
+  const f = fixture();
+  const mitjans = { origen: 'https://socdepoble.org', externs: ['assets/'], bessones: [] };
+  const fitxers = [
+    { cami: ENTRADA, contingut: Buffer.from('var SocDePoble = 1;\n') },
+    { cami: 'fonts/noto-sans.css', contingut: Buffer.from('@font-face{font-family:x}') },
+    { cami: 'rag-index.json', contingut: Buffer.from('{"documents":[]}') }
+  ];
+  const segella = (llista, politica = mitjans) => {
+    for (const { cami, contingut } of llista) {
+      fs.mkdirSync(path.dirname(path.join(f.dist, cami)), { recursive: true });
+      fs.writeFileSync(path.join(f.dist, cami), contingut);
+    }
+    const result = manifestDeRelease({ versio: '1.1.10-beta.1', node: NODE_BO, fitxers: llista,
+      generat: '2026-10-22T00:00:00.000Z', mitjans: politica });
+    fs.writeFileSync(path.join(f.dist, FITXER_RELEASE), result.manifestText);
+    fs.writeFileSync(path.join(f.dist, FITXER_INVENTARI), result.inventariText);
+  };
+  try {
+    assert.throws(() => creaPaquetLleuger({ arrelPlugin: f.plugin }), /SDP_MITJANS=externs/);
+    segella(fitxers);
+    const resultat = creaPaquetLleuger({ arrelPlugin: f.plugin });
+    const entrades = new Map(llegixZip(resultat.zip).map(e => [e.nom, e.dades]));
+    assert.ok(resultat.mida < LIMIT_LLEUGER);
+    assert.equal(resultat.sha256, sha256(resultat.zip));
+    assert.ok(![...entrades.keys()].some(cami => cami.startsWith(`${SLUG}/dist/assets/`)));
+    assert.ok(entrades.has(`${SLUG}/dist/fonts/noto-sans.css`));
+    assert.match(entrades.get(`${SLUG}/readme.txt`).toString(), /https:\/\/socdepoble.org\/assets\//);
+    assert.match(entrades.get(`${SLUG}/socdepoble-enxufe.php`).toString(), /Version:\s+1\.1\.10-beta\.1/);
+    assert.ok(!fs.existsSync(path.join(f.plugin, 'builds/stable.json')));
+    fs.appendFileSync(path.join(f.dist, ENTRADA), 'alterat');
+    assert.throws(() => creaPaquetLleuger({ arrelPlugin: f.plugin }), /no coincidix|mida|sha256|canviat/i);
+    segella([...fitxers, { cami: 'gran.bin', contingut: crypto.randomBytes(LIMIT_LLEUGER) }]);
+    assert.throws(() => creaPaquetLleuger({ arrelPlugin: f.plugin }), /ha de quedar per davall/);
+    segella([...fitxers, { cami: 'assets/fotos/encara.png', contingut: Buffer.from('imatge') }]);
+    assert.throws(() => creaPaquetLleuger({ arrelPlugin: f.plugin }), /encara porta assets locals/);
+    segella(fitxers, { ...mitjans, origen: 'https://localhost' });
+    assert.throws(() => creaPaquetLleuger({ arrelPlugin: f.plugin }), /origen https públic/);
+  } finally { neteja(f); }
+});
 
 test('crc32 és el de ZIP', () => {
   assert.equal(crc32(Buffer.from('123456789')), 0xCBF43926);

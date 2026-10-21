@@ -29,7 +29,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
 import { IDS_PLUGINS, pluginPerId } from './registrePlugins.js';
 
-const AMB_PRESENTACIO = ['rebost', 'salut'];
+const AMB_PRESENTACIO = ['rebost', 'salut', 'gestoria', 'rss'];
 const font = (ruta) => readFileSync(path.join(process.cwd(), ruta), 'utf8');
 /* Els elements d'una presentació: un per línia, cada <h3> davant del seu <p>. */
 const linies = (html) => html.split('\n');
@@ -42,7 +42,7 @@ const titols = (html) => linies(html).filter((linia) => linia.startsWith('<h3>')
 const marques = (html) => [...html.matchAll(/<\/?([a-zA-Z][a-zA-Z0-9]*)/g)].map(([, nom]) => nom.toLowerCase());
 
 describe('presentació dels plugins', () => {
-  test('només el Rebost i Salut en tenen, i tots dos són del registre', () => {
+  test('les quatre eines amb presentació són del registre', () => {
     expect(Object.isFrozen(PRESENTACIO_PLUGINS)).toBe(true);
     expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(AMB_PRESENTACIO);
     for (const id of AMB_PRESENTACIO) {
@@ -50,7 +50,7 @@ describe('presentació dels plugins', () => {
     }
   });
 
-  test('presentacioDelPlugin: l’HTML del Rebost i de Salut, i null per a la resta', () => {
+  test('presentacioDelPlugin: l’HTML de les eines didàctiques, i null per a la resta', () => {
     for (const id of AMB_PRESENTACIO) expect([id, presentacioDelPlugin(id)]).toEqual([id, PRESENTACIO_PLUGINS[id]]);
     for (const id of IDS_PLUGINS.filter((un) => !AMB_PRESENTACIO.includes(un))) {
       expect([id, presentacioDelPlugin(id)]).toEqual([id, null]);
@@ -109,7 +109,8 @@ describe('presentació dels plugins', () => {
     expect(text).toContain(`«${plugin.etiquetaObrir}»`);
     // I diu, honestament, que encara està en proves i que el botó pot no fer res.
     expect(text).toContain('en proves');
-    expect(text).toMatch(/el botó «[^»]+» (?:t’hi porta; si no, el botó )?no fa res/);
+    if (['rebost', 'salut'].includes(id)) expect(text).toMatch(/el botó «[^»]+» (?:t’hi porta; si no, el botó )?no fa res/);
+    else expect(text).toMatch(/desactiv/i);
   });
 });
 

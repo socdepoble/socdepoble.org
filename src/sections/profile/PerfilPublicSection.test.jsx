@@ -539,23 +539,15 @@ test.each([
   expect(container.querySelector('header.page-title').firstElementChild.tagName).toBe('H1');
 });
 
-/* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Una
-   persona o la IAIA porten el seu avatar redó davant de l'H1, mai un
-   logotip. Si la fitxa és de qui mira, l'avatar és un botó que porta al
-   canvi d'imatge del Perfil (el mateix destí que «Edita la fitxa»). */
-test.each([
-  ['una persona', { ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, avatar: '/assets/pepa.png' }, 'Pepa']
-])('avatar · %s porta el seu avatar redó davant de l’H1, sense logotip', async (_que, dto, nom) => {
-  mocks.load.mockResolvedValue(dto);
+/* Ordre 261022: la persona conserva una sola cara, a la barra taronja. */
+test('avatar · una persona mostra la cara només a la barra taronja, sense duplicar-la davant de l’H1', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, avatar: '/assets/pepa.png' });
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
-  await screen.findByRole('heading', { level: 1, name: nom });
-  const capcalera = container.querySelector('header.page-title');
-  expect([...capcalera.children].map((e) => `${e.tagName}.${e.className}`).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
-  const img = capcalera.querySelector('img.page-title-avatar__imatge');
-  expect(img.getAttribute('src')).toBe(dto.avatar);
-  expect(img.getAttribute('alt')).toBe(`Avatar de ${nom}`);
+  await screen.findByRole('heading', { level: 1, name: 'Pepa' });
+  expect(container.querySelector('header.page-title').firstElementChild.tagName).toBe('H1');
+  expect(container.querySelector('.page-title-avatar')).toBeNull();
   expect(container.querySelector('.page-title-logo')).toBeNull();
-  expect(container.querySelector('button.page-title-avatar')).toBeNull();
+  expect(container.querySelector('section.bar-orange .sp-card-avatar')?.getAttribute('src')).toBe('/assets/pepa.png');
 });
 
 /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
@@ -573,12 +565,13 @@ test('avatar · la IAIA porta el logotip oficial del Mas damunt de l’H1, sense
   expect(container.querySelector('section.bar-orange .sp-card-avatar')?.getAttribute('src')).toBe('/assets/iaia.png');
 });
 
-test('avatar · la fitxa pròpia d’una persona: l’avatar és un botó que porta al canvi d’imatge del Perfil', async () => {
+test('avatar · la fitxa pròpia conserva Edita la fitxa sense duplicar la cara', async () => {
   mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, propietari: true, avatar: '/assets/pepa.png' });
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Pepa' });
-  const boto = screen.getByRole('button', { name: 'Canvia la teua imatge' });
-  expect(boto).toBe(container.querySelector('header.page-title > button.page-title-avatar'));
+  expect(container.querySelector('.page-title-avatar')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Canvia la teua imatge' })).toBeNull();
+  const boto = screen.getByRole('button', { name: 'Edita la fitxa' });
   fireEvent.click(boto);
   expect(mocks.navigate).toHaveBeenLastCalledWith('/el-meu-perfil');
 });
@@ -598,7 +591,7 @@ test('avatar · una persona sense avatar no porta res: el bloc del títol comen�
    foto del padró pilot (PERSONA_PILOT.avatar): la fitxa la pinta com a avatar
    redó davant de l'H1, com la de qualsevol persona, i la marca no ix mai com
    a avatar. DEROGAT «ni avatar ni logotip: el bloc del títol comença per l'H1». */
-test('avatar · la persona pilot del catàleg porta la foto del padró com a avatar redó, mai la marca de Sóc de Poble', async () => {
+test('avatar · la persona pilot porta la foto del padró només a la barra taronja', async () => {
   mocks.config = { dataMode: 'seed' };
   mocks.capacitat = false;
   mocks.id = AGENTS_MAP.JAVI.id;
@@ -607,8 +600,9 @@ test('avatar · la persona pilot del catàleg porta la foto del padró com a ava
   expect(AGENTS_MAP.JAVI.avatar_url).toBe(PERSONA_PILOT.avatar);
   expect(AGENTS_MAP.JAVI.avatar_url).not.toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
   const capcalera = container.querySelector('header.page-title');
-  expect([...capcalera.children].map((e) => `${e.tagName}.${e.className}`).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
-  expect(capcalera.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+  expect(capcalera.firstElementChild.tagName).toBe('H1');
+  expect(capcalera.querySelector('.page-title-avatar')).toBeNull();
+  expect(container.querySelector('section.bar-orange .sp-card-avatar')?.getAttribute('src')).toBe(PERSONA_PILOT.avatar);
   expect([...capcalera.querySelectorAll('img')].map((img) => img.getAttribute('src'))).not.toContain(AGENTS_MAP.SOCDEPOBLE.avatar_url);
   expect(container.querySelector('.page-title-logo')).toBeNull();
 });
@@ -790,7 +784,7 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, null));
   const convidat = render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
-  expect(convidat.container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+  expect(convidat.container.querySelector('section.bar-orange .sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
   expect(etiquetesDelTitol(convidat.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
   expect(dretsDelTitol(convidat.container)).toBeNull();
   cleanup();
@@ -805,7 +799,7 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   mocks.load.mockResolvedValue(null);
   const remot = render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
-  expect(remot.container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+  expect(remot.container.querySelector('section.bar-orange .sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
   expect(etiquetesDelTitol(remot.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
   expect(dretsDelTitol(remot.container)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();

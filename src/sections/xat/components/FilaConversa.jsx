@@ -33,6 +33,8 @@ import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
 import { estatDeLUltim } from '../missatges.js';
 import { etiquetaLlista } from '../temps.js';
+import { esEntitatDelProjecte } from '../../../config/navigation.js';
+import { AJUDA_PER_CLAU } from '../../../data/xatsPerDefecte.js';
 
 const esCanal = (fil) => Boolean(fil?.esCanal) || fil?.tipus === 'canal';
 const esGrup = (fil) => Boolean(fil?.esGrup) || fil?.tipus === 'grup';
@@ -76,9 +78,13 @@ export function nomsDelsGrups(fills = []) {
 
 /** L'avatar quadrat d'una comunitat, amb les targetes apilades darrere (CSS). */
 export function AvatarComunitat({ fil, nom }) {
+  // La comunitat remota pot arribar sense imatge. La identitat, mai el nom,
+  // decidix el logotip oficial i evita atribuir-lo a una entitat homònima.
+  const esDelProjecte = fil?.subjecte?.tipus === 'entitat' && esEntitatDelProjecte(fil.subjecte);
+  const avatar = esDelProjecte ? AJUDA_PER_CLAU.socdepoble.avatar : fil?.avatar_url;
   return (
     <span className="sdp-xat-apilat" aria-hidden="true">
-      <CaraXat nom={nom} src={fil?.avatar_url} mida="md" llavor={fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
+      <CaraXat nom={nom} src={avatar} mida="md" llavor={fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
     </span>
   );
 }

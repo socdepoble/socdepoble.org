@@ -81,16 +81,15 @@ test('un sdp-media:// continua passant pel port (i només ell)', async () => {
   expect(mocks.resol).toHaveBeenCalledWith('sdp-media://organitzacions/forn', expect.anything());
 });
 
-test('una persona passa el seu avatar a PageFrame (avatarAutor), sense logotip', async () => {
+test('una persona passa el seu avatar només a la barra taronja, sense duplicar-lo al títol', async () => {
   mocks.id = 'pepa';
   mocks.load.mockResolvedValue({ ...FORN, tipus: 'persona', id: 'u-1', slug: 'pepa', nom: 'Pepa', avatar: 'sdp-media://avatars/pepa' });
   render(<PerfilPublicSection />);
   await screen.findByRole('heading', { level: 1, name: 'Pepa' });
   const props = rendersDe('Pepa').at(-1);
   expect(props.logoEntitat).toBeNull();
-  /* PageFrame resol l'sdp-media:// (useResolvedAsset): la fitxa li passa la referència tal qual. */
-  expect(props.avatarAutor).toMatchObject({ src: 'sdp-media://avatars/pepa', alt: 'Avatar de Pepa' });
-  expect(props.avatarAutor.onCanvia).toBeUndefined();
+  expect(props.avatarAutor).toBeNull();
+  expect(props.topBarData.authorAvatar).toBe('sdp-media://avatars/pepa');
 });
 
 /* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a

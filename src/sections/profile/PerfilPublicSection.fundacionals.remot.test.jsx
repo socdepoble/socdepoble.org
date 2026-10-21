@@ -100,7 +100,8 @@ describe.each([['sense sessió', null], ['amb sessió', SESSIO]])('remot, %s', (
     expect(pobleDe(props)).toEqual([POBLE_FUNDACIONAL]);
     expect(props.topBarData.authorLocation).toBe(POBLE_FUNDACIONAL);
     expect(props.labels.map((etiqueta) => etiqueta.text)).not.toContain('La teua fitxa');
-    expect(props.avatarAutor?.src).toBe(PERSONA_PILOT.avatar);
+    expect(props.avatarAutor).toBeNull();
+    expect(props.topBarData.authorAvatar).toBe(PERSONA_PILOT.avatar);
     expect(m.seo).toHaveBeenLastCalledWith(expect.objectContaining({
       title: AGENTS_MAP.JAVI.name, index: true, canonical: 'https://socdepoble.org/javillinares'
     }));

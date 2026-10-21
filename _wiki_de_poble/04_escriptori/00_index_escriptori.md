@@ -34,6 +34,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261022_0150_auditoria_claude]]
+- [[261022_0141_auditoria_codex]]
+- [[261022_0142_auditoria_gemini]]
 - [[261021_2345_prompt_claude_gemini_codex_alleugeriment_wp_pwa_i_auditoria_didactica]]
 - [[261021_2345_pla_implementacio_alleugeriment_wp_pwa_i_auditoria_didactica]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre

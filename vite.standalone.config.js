@@ -168,9 +168,22 @@ export function origenDeMitjans(valor, { release = false } = {}) {
  */
 export function politicaDeMitjans(variant = 'autonom', { env = {}, directori, release = false } = {}) {
   if (variant !== 'autonom' && variant !== 'wordpress') throw new Error(`SDP_VARIANT desconeguda: ${variant}`);
+  if (env.SDP_MITJANS && env.SDP_MITJANS !== 'externs') throw new Error(`SDP_MITJANS desconegut: ${env.SDP_MITJANS}`);
+  if (env.SDP_MITJANS === 'externs' && variant !== 'autonom') {
+    throw new Error('SDP_MITJANS=externs és el connector lleuger del canal propi; no és la variant del directori WordPress.org.');
+  }
   /* Només sota assets/: és el que el resolutor sap demanar (els recursos de
      l'arrel, com apple-touch-icon.png, els nomena l'HTML de l'amfitrió). */
   const bessones = Object.freeze(bessonesDe(recursosDelPlugin(directori)).filter((cami) => cami.startsWith('assets/')));
+  // Encàrrec 261021_2345: perfil explícit, sense canviar els builds natius
+  // ni el directori WordPress.org. Codi, fonts i Wiki continuen al paquet.
+  if (env.SDP_MITJANS === 'externs') {
+    return Object.freeze({
+      origen: origenDeMitjans(env.SDP_ORIGEN_MITJANS || MITJANS_EXTERNS_DEL_DIRECTORI.origen, { release }),
+      externs: Object.freeze(['assets/']),
+      bessones
+    });
+  }
   if (variant === 'autonom') {
     return bessones.length ? Object.freeze({ origen: null, externs: Object.freeze([]), bessones }) : null;
   }
@@ -695,7 +708,7 @@ export default defineConfig(({ mode }) => {
        En una release (SDP_RELEASE=1) la carpeta es buida: l'artefacte només
        porta el que este build ha emés. */
     outDir: perWordPress ? 'wordpress-plugin/builds/directori/dist' : 'wordpress-plugin/dist',
-    emptyOutDir: release,
+    emptyOutDir: release || env.SDP_MITJANS === 'externs',
     /* public/ el copia recursosPublicsDelPlugin, sense el que és propi del
        lloc (PROPIS_DEL_LLOC), i en acabar en retira les còpies que builds
        anteriors deixaren ací. copyPublicDir i no publicDir: la carpeta

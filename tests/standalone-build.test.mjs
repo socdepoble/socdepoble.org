@@ -1272,6 +1272,20 @@ test('politicaDeMitjans: l’autònom, només les bessones (D3); el directori, e
   } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
 });
 
+test('el perfil lleuger extern deixa fora tots els assets, conserva codi, fonts i Wiki i no canvia els altres perfils', () => {
+  const arrel = publicDeMostra(['assets/logo.png', 'assets/ui/v.webp']);
+  try {
+    const politica = politicaDeMitjans('autonom', { directori: arrel, env: { SDP_MITJANS: 'externs' }, release: true });
+    const emesos = emet(recursosPublicsDelPlugin({ directori: arrel, politica })).map(f => f.fileName);
+    assert.equal(politica.origen, 'https://socdepoble.org');
+    assert.deepEqual(politica.externs, ['assets/']);
+    assert.ok(!emesos.some(cami => cami.startsWith('assets/')));
+    for (const cami of ['components/c.js', 'fonts/x.css', 'rag-index.json', 'slugIndex.json']) assert.ok(emesos.includes(cami), cami);
+    assert.throws(() => politicaDeMitjans('wordpress', { env: { SDP_MITJANS: 'externs' } }), /no és la variant del directori/);
+    assert.throws(() => politicaDeMitjans('autonom', { env: { SDP_MITJANS: 'errada' } }), /SDP_MITJANS desconegut/);
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
 test('el plugin amb política no emet els externs ni els originals substituïts; sense, com sempre', () => {
   const arrel = publicDeMostra(['assets/ui/v.jpg', 'assets/ui/v.webp', 'assets/towns/a/1.webp']);
   try {

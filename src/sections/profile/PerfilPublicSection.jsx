@@ -403,16 +403,9 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
   const logoCru = esEntitat && !esElProjecte && typeof perfil.avatar === 'string' ? perfil.avatar.trim() : '';
   const logoDelPort = useResolvedAsset(logoCru.startsWith('sdp-media://') ? logoCru : '');
   const logoPropi = logoCru.startsWith('sdp-media://') ? logoDelPort : (logoCru ? resolveAsset(logoCru) : '');
-  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Una
-     persona o la IA (ents de carboni o de silici) no porten logotip: porten
-     el seu avatar redó, centrat davant de l'H1 (PageFrame, avatarAutor, que
-     també resol un sdp-media://). Si la fitxa és de qui mira, l'avatar és
-     un botó que porta al canvi d'imatge que ja existix: el Perfil, on el
-     botó «Avatar» obri la finestra de retall (useImatgeDeFitxa, Onada 4).
-     Ordre del Mestre (261021, prompt 261021_0015, tasca 7; «clics honestos»)
-     · L'avatar d'una IA no és cap botó: un clic a la IAIA portava a
-     /el-meu-perfil sense voler-ho. Qui la gestiona té «Edita la fitxa». */
-  const esPersonaOIA = perfil?.tipus === 'persona' || perfil?.tipus === 'ia';
+  /* Ordre del Mestre (261022): les persones ja porten avatar a la barra
+     taronja. Només els altres agents IA el conserven davant de l'H1. */
+  const esAgentIA = perfil?.tipus === 'ia';
 
   /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
      · Una persona no és una obra ni es categoritza: la seua fitxa pública no
@@ -474,15 +467,14 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
      taronja com a cercle de 300px: ja hi viu, a la mateixa barra. Damunt de
      l'H1 porta el logotip oficial rectangular de Sóc de Poble
      (DEFAULT_AUTHOR.logo), com totes les pàgines del Mas. La resta de fitxes
-     (persones i els altres agents del catàleg) seguixen amb el seu avatar redó
+     (els altres agents del catàleg) seguixen amb el seu avatar redó
      (sdp-pedra-seca §11), i el d'una IA no és cap botó («clics honestos»). */
   const logoDeLaFitxa = (esElProjecte || esLaIAIA)
     ? DEFAULT_AUTHOR.logo
     : (logoPropi ? { clar: logoPropi, alt: `Logotip de ${perfil.nom}` } : null);
-  const avatarDeLaFitxa = esPersonaOIA && !esLaIAIA && perfil.avatar ? {
+  const avatarDeLaFitxa = esAgentIA && !esLaIAIA && perfil.avatar ? {
     src: perfil.avatar,
-    alt: `Avatar de ${perfil.nom}`,
-    onCanvia: perfil.propietari && !perfil.esIA ? () => navigate(rutaEdita) : undefined
+    alt: `Avatar de ${perfil.nom}`
   } : null;
   /* El directe de sempre per a tothom; per a la IAIA, la conversa de la seua
      fila en cada mode de dades (en llavor i en local, el mateix directe). */

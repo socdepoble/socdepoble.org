@@ -66,7 +66,11 @@
  * L'arquitectura de plugins sencera (injecció, cicle de vida, aïllament) és
  * de la pròxima onada (directriu 261003_2320): ací només hi ha la pàgina.
  */
+import { useState } from 'react';
 import { useParams } from '../../app/contexts/RouterContext';
+import { Boto } from '../../components/PedraSeca/index.js';
+import { useApagaApp, usePreferenciesApps } from '../../apps/plataforma/PlataformaContext.jsx';
+import { desaUtilitatActiva } from '../profile/utilitatsActives.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
@@ -77,7 +81,7 @@ import { useSEO } from '../../hooks/useSEO';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { CosDeLaPagina } from '../text/TextSection.jsx';
 import { presentacioDelPlugin } from './presentacioPlugins.js';
-import { clauPortadaDelPlugin, pluginPerId } from './registrePlugins.js';
+import { appDelPlugin, clauPortadaDelPlugin, pluginPerId } from './registrePlugins.js';
 import { portaDelPlugin, useDestiDelPlugin } from './useDestiDelPlugin.js';
 
 /* Les etiquetes de la portada plegable, traduïbles (el valencià és la reserva). */
@@ -85,6 +89,38 @@ const TEXTOS_PORTADA = Object.freeze({
   amaga: Object.freeze(['pagina.portada.amaga', 'Amaga la portada']),
   mostra: Object.freeze(['pagina.portada.mostra', 'Mostra la portada'])
 });
+
+function EinaNoDisponible({ plugin }) {
+  const [ajuda, setAjuda] = useState(false);
+  const [error, setError] = useState('');
+  const apaga = useApagaApp();
+  const preferencies = usePreferenciesApps();
+  const idApp = appDelPlugin(plugin);
+  const apagada = preferencies.apps[idApp] === false;
+  const canvia = () => {
+    if (!desaUtilitatActiva(plugin.id, apagada)) {
+      setError('No s’ha pogut guardar la preferència. Torna-ho a provar.');
+      return;
+    }
+    apaga(idApp, !apagada);
+    setError('');
+  };
+  return <>
+    <Boto varietat="primari" mida="gran" ple aria-expanded={ajuda} onClick={() => setAjuda(!ajuda)}>
+      Com instal·lar esta eina
+    </Boto>
+    {ajuda ? <p>
+      Esta eina encara està en proves i no té un paquet independent de descàrrega.
+      La persona que administra esta web ha d’afegir una versió compatible quan estiga disponible.
+      Ací no es pot instal·lar amb un clic.
+    </p> : null}
+    <Boto onClick={canvia}>{apagada ? 'Torna a mostrar esta eina' : 'Desactiva esta eina'}</Boto>
+    <p>{apagada
+      ? 'L’eina està desactivada per a tu. Tornar-la a mostrar no la instal·la.'
+      : 'La desactivació només afecta el teu navegador: amaga l’eina del Panell i no esborra les teues dades.'}</p>
+    {error ? <Alerta to="error">{error}</Alerta> : null}
+  </>;
+}
 
 function PaginaDelPlugin({ plugin }) {
   const { t } = useUIActions();
@@ -96,6 +132,7 @@ function PaginaDelPlugin({ plugin }) {
   });
   const { avis, porta } = portaDelPlugin(plugin, desti, t);
   const presentacio = presentacioDelPlugin(plugin.id);
+  const necessitaAjuda = ['gestoria', 'rss'].includes(plugin.id) && !desti.ruta;
   return (
     <UniversalPage
       title={plugin.titol}
@@ -117,12 +154,12 @@ function PaginaDelPlugin({ plugin }) {
       /* Onada 10 (M2) · El botó de dalt, només amb presentació. Es decidix
          amb la dada, mai amb l'element: sense la prop, PageFrame no pinta
          cap div.page-title-accio. */
-      {...(presentacio ? { accioPrincipal: <PortaDePagina porta={porta} /> } : null)}
+      {...(presentacio && !necessitaAjuda ? { accioPrincipal: <PortaDePagina porta={porta} /> } : null)}
     >
       {presentacio ? <CosDeLaPagina html={presentacio} /> : null}
       {avis ? <Alerta to="info">{avis}</Alerta> : null}
       <div className="sdp-pagina-accio">
-        <PortaDePagina porta={porta} />
+        {necessitaAjuda ? <EinaNoDisponible key={plugin.id} plugin={plugin} /> : <PortaDePagina porta={porta} />}
       </div>
     </UniversalPage>
   );

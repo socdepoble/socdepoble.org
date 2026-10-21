@@ -38,6 +38,7 @@ import { _reiniciaPreferencies, CLAU_PREFERENCIES } from '../../apps/plataforma/
 import { creaRegistre, MANIFESTS_INTERNS } from '../../apps/plataforma/registreApps.js';
 import { baseRecursos, fixaBaseRecursos } from '../../config/assetResolver';
 import { createTranslator, SUPPORTED_LANGUAGES } from '../../config/i18n';
+import { estaAlPanell, CLAU_UTILITATS_ACTIVES } from '../profile/utilitatsActives.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import PluginPage from './PluginPage.jsx';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
@@ -124,6 +125,7 @@ function elsDosControls(container, rol, nom) {
 
 beforeEach(() => {
   window.localStorage.removeItem(STORAGE_PREFIX + CLAU_PORTADES);
+  window.localStorage.removeItem(STORAGE_PREFIX + CLAU_UTILITATS_ACTIVES);
   window.localStorage.removeItem(STORAGE_PREFIX + CLAU_PREFERENCIES);
   _reiniciaPortades();
   _reiniciaPreferencies();
@@ -133,6 +135,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   window.localStorage.removeItem(STORAGE_PREFIX + CLAU_PORTADES);
+  window.localStorage.removeItem(STORAGE_PREFIX + CLAU_UTILITATS_ACTIVES);
   window.localStorage.removeItem(STORAGE_PREFIX + CLAU_PREFERENCIES);
   _reiniciaPortades();
   _reiniciaPreferencies();
@@ -223,9 +226,9 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
    amb un sol botó. */
 describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost i Salut)', () => {
   test('el cens: només el Rebost i Salut tenen presentació', () => {
-    expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['rebost', 'salut']);
-    expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut']);
-    expect(SENSE_PRESENTACIO.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets', 'gestoria', 'rss', 'tpv']);
+    expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['gestoria', 'rebost', 'salut', 'rss']);
+    expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut', 'gestoria', 'rss']);
+    expect(SENSE_PRESENTACIO.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets', 'tpv']);
   });
 
   test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s: el cos de sis blocs, un H3 i el seu paràgraf, entre l’entradilla i l’acció', (id, plugin) => {
@@ -274,7 +277,7 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
 
   /* Si el destí no es pot obrir, tots dos són inerts i diuen el mateix; l'avís
      en text es diu una sola vegada, entre el cos i el botó de baix. */
-  test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s en producció: els dos botons inerts, un sol avís entre el cos i l’acció, i cap dels dos navega', (id, plugin) => {
+  test.each(AMB_PRESENTACIO.filter((p) => ['rebost', 'salut'].includes(p.id)).map((p) => [p.id, p]))('/plugin/%s en producció: els dos botons inerts, un sol avís entre el cos i l’acció, i cap dels dos navega', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: new RegExp(plugin.etiquetaObrir) })).toBeNull();
     const { dalt, baix } = elsDosControls(container, 'button', `${plugin.etiquetaObrir} (no disponible ací)`);
@@ -420,7 +423,7 @@ describe('el botó Obrir', () => {
      dada); mai la Wiki ni /gestoria. */
   test('la Gestoria en desenvolupament obri la seua app pel router, i cap lloc de la Wiki', () => {
     const { container } = munta('/plugin/gestoria', { entorn: ENTORN_OBERT });
-    const enllac = screen.getByRole('link', { name: 'Obrir la Gestoria' });
+    const enllac = screen.getAllByRole('link', { name: 'Obrir la Gestoria' })[0];
     expect(enllac.getAttribute('href')).toBe('/app/gestoria');
     expect(document.querySelector('[href="/gestoria"]')).toBeNull();
     expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"]')).toBeNull();
@@ -435,13 +438,14 @@ describe('el botó Obrir', () => {
     const { container } = munta('/plugin/gestoria', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
     expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"], a[href*="/app/gestoria"]')).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Obrir la Gestoria (no disponible ací)' });
-    expect(boto.getAttribute('aria-disabled')).toBe('true');
+    const boto = screen.getByRole('button', { name: 'Com instal·lar esta eina' });
+    expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
     const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
     expect(screen.getByRole('status').textContent).toBe(motiu);
     fireEvent.click(boto);
     expect(ubicacio()).toBe('/plugin/gestoria');
-    expect(screen.getAllByText(motiu)).toHaveLength(2);
+    expect(boto.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText(/no té un paquet independent de descàrrega/)).toBeTruthy();
     // La pàgina de la Gestoria continua sent la seua: portada, títol i entradilla.
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Gestoria');
     expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
@@ -464,13 +468,14 @@ describe('el botó Obrir', () => {
   test('capa d’entorn: una app compilada amb entorn «desenvolupament», en producció, no fa cap enllaç mort: inert i diu per què', () => {
     munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Obrir el Lector (no disponible ací)' });
-    expect(boto.getAttribute('aria-disabled')).toBe('true');
+    const boto = screen.getByRole('button', { name: 'Com instal·lar esta eina' });
+    expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
     const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
     expect(screen.getByRole('status').textContent).toBe(motiu);
     fireEvent.click(boto);
     expect(ubicacio()).toBe('/plugin/rss');
-    expect(screen.getAllByText(motiu)).toHaveLength(2);
+    expect(boto.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText(/no té un paquet independent de descàrrega/)).toBeTruthy();
   });
 
   /* Peça C (261007) · El build de producció de veres sense VITE_SDP_APP_*:
@@ -484,13 +489,14 @@ describe('el botó Obrir', () => {
     expect(registre.componentDe('lector')).toBeNull();
     munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Obrir el Lector (no disponible ací)' });
-    expect(boto.getAttribute('aria-disabled')).toBe('true');
+    const boto = screen.getByRole('button', { name: 'Com instal·lar esta eina' });
+    expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
     const motiu = 'Este node no porta esta app.';
     expect(screen.getByRole('status').textContent).toBe(motiu);
     fireEvent.click(boto);
     expect(ubicacio()).toBe('/plugin/rss');
-    expect(screen.getAllByText(motiu)).toHaveLength(2);
+    expect(boto.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText(/no té un paquet independent de descàrrega/)).toBeTruthy();
   });
 
   /* Onada 8 (261009) · Abans, darrere, el Panell de Disseny (cap app de la
@@ -500,13 +506,14 @@ describe('el botó Obrir', () => {
      Gestoria, un de sol, com abans. El compte és exacte per a cada pàgina. */
   test('build de producció: cap app de la plataforma fa enllaç', () => {
     const registre = registreDeProduccio();
-    for (const [id, nom, quants] of [['tpv', 'Obrir el Bar', 1], ['rebost', 'Obrir el Rebost', 2], ['salut', 'Obrir Salut', 2], ['gestoria', 'Obrir la Gestoria', 1]]) {
+    for (const [id, nom, quants] of [['tpv', 'Obrir el Bar', 1], ['rebost', 'Obrir el Rebost', 2], ['salut', 'Obrir Salut', 2], ['gestoria', 'Obrir la Gestoria', 0], ['rss', 'Obrir el Lector', 0]]) {
       const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
       expect(screen.queryByRole('link', { name: new RegExp(nom) }), id).toBeNull();
       expect(container.querySelector('a[href*="/app/"]'), id).toBeNull();
-      const botons = screen.getAllByRole('button', { name: `${nom} (no disponible ací)` });
+      const botons = screen.queryAllByRole('button', { name: `${nom} (no disponible ací)` });
       expect([id, botons.length]).toEqual([id, quants]);
-      expect([id, quants]).toEqual([id, presentacioDelPlugin(id) ? 2 : 1]);
+      if (quants === 0) expect(screen.getByRole('button', { name: 'Desactiva esta eina' })).toBeTruthy();
+      else expect([id, quants]).toEqual([id, presentacioDelPlugin(id) ? 2 : 1]);
       for (const boto of botons) expect(boto.getAttribute('aria-disabled'), id).toBe('true');
       cleanup();
     }
@@ -615,4 +622,19 @@ describe('textos nous de la UI en les cinc llengües', () => {
     expect(screen.getByText(es('section.plugin.enObres'))).toBeTruthy();
     expect(screen.getByRole('button', { name: `Obrir Animalets ${es('section.control.porta.enObres')}` })).toBeTruthy();
   });
+});
+
+
+test.each(['gestoria', 'rss'])('%s: desactivar amaga del Panell, conserva dades i es pot desfer', (id) => {
+  const registre = registreDeProduccio();
+  munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
+  expect(estaAlPanell(id)).toBe(true);
+  window.localStorage.setItem('dades-test-conservades', 'papers');
+  fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
+  expect(estaAlPanell(id)).toBe(false);
+  expect(window.localStorage.getItem('dades-test-conservades')).toBe('papers');
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  expect(estaAlPanell(id)).toBe(true);
+  expect(screen.queryByRole('link', { name: /Obrir/ })).toBeNull();
+  window.localStorage.removeItem('dades-test-conservades');
 });

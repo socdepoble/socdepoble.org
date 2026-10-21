@@ -40,6 +40,7 @@
  *     nous d'altres que entren pel final (#11). La cita porta el focus a
  *     l'original (#12).
  */
+import { RESPOSTA_IAIA } from '../../../data/identitatsSeed.js';
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
@@ -106,7 +107,7 @@ function coixiDalt(ol) {
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null
+  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false
 }) {
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
@@ -501,7 +502,7 @@ export default function Conversa({
           </li>
         ) : null}
         <li className="sdp-xat-sentinella" ref={sentinellaRef} aria-hidden="true" />
-        {messages.length === 0 ? (
+        {messages.length === 0 && !cortesiaIAIA ? (
           <li className="sdp-xat-conversa-buida">{t('section.xat.conversaBuida', 'Cap missatge encara. Inicia la conversa!')}</li>
         ) : null}
         {files.map((fila) => {
@@ -534,6 +535,13 @@ export default function Conversa({
             />
           );
         })}
+        {cortesiaIAIA ? (
+          <li className="sdp-xat-conversa-buida">
+            <strong>IAIA MarIA</strong>
+            <p>{RESPOSTA_IAIA}</p>
+            <small>{t('section.xat.iaia.cortesia', 'Benvinguda automàtica. Es mostra només ací; no és una resposta guardada al xat compartit.')}</small>
+          </li>
+        ) : null}
       </ol>
 
       {/* Només els nous d'altres que entren pel final (#11). */}
@@ -567,6 +575,7 @@ export default function Conversa({
           barra={resposta ? <BarraResposta missatge={resposta} onCancela={cancelaResposta} t={t} /> : null}
         />
       )}
+      {peu}
     </div>
   );
 }

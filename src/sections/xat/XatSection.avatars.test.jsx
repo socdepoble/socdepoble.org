@@ -20,7 +20,7 @@
  * poble) i una foto PUJADA, que el node desa com a 'sdp-media://…' i només el
  * port pot resoldre (CaraXat → AvatarResolt).
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { XatContext } from './XatContext';
@@ -28,6 +28,8 @@ import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
+import { RESPOSTA_IAIA } from '../../data/identitatsSeed.js';
+import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { CARA_DE_LA_IAIA } from '../../data/xatsPerDefecte.js';
 
@@ -380,4 +382,26 @@ test('una foto pujada (sdp-media) en un node sense la capacitat «mitjans»: ini
   expect(llista().querySelector('[title="Maria Pujada"]').textContent).toContain('MP');
   expect(mocks.resol).not.toHaveBeenCalled();
   capImatgeTrencada();
+});
+
+
+test.each([null, 'fake-javi', 'fake-iaia'])('sense sessió els botons d’accés són visibles també al peu del fil %s', (filId) => {
+  mocks.threadId = filId;
+  munta(senseSessio());
+  const tornar = filId ? `/xat/${filId}` : '/xat';
+  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar }));
+  fireEvent.click(screen.getByRole('button', { name: 'Registrar-se' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ mode: 'crear', tornar }));
+});
+
+test('el fil remot de la IAIA porta la benvinguda oficial, sense afegir missatges al servidor', () => {
+  const fil = mapejaFil({ id: 'iaia-remota', tipus: 'grup', titol: 'IAIA MarIA', subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia' } });
+  mocks.threadId = fil.id;
+  const xat = context({ chatThreads: [fil] });
+  munta(xat);
+  expect(screen.getByText(RESPOSTA_IAIA)).toBeTruthy();
+  expect(screen.getByText(/Benvinguda automàtica/)).toBeTruthy();
+  expect(xat.sendChatMessage).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'Registrar-se' })).toBeNull();
 });

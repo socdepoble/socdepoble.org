@@ -134,7 +134,7 @@ fixaBaseRecursos(baseDeLScriptActual());
 let politicaActual = null;
 
 const RE_ORIGINAL = /^assets\/(?:[^/]+\/)*[^/]+\.(?:jpe?g|png)$/i;
-const RE_PREFIX_EXTERN = /^assets\/(?:[^/.][^/]*\/)+$/;
+const RE_PREFIX_EXTERN = /^assets\/(?:[^/.][^/]*\/)*$/;
 
 function normalitzaPolitica(valor) {
   let dades = valor;

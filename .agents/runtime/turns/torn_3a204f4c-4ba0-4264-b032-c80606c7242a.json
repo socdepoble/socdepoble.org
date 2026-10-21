@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 11,
+  "revision": 14,
   "createdAt": "2026-10-21T21:38:04.509Z",
-  "updatedAt": "2026-10-21T22:56:37.539Z",
+  "updatedAt": "2026-10-21T23:41:00.195Z",
   "expiresAt": "2026-10-22T21:38:04.510Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3692,6 +3692,32 @@
         "committedAt": "2026-10-21T22:07:39.644Z",
         "documentHash": "6cec02e0958c0120f7295fb3250d55fbd44411ea6b997794279d2cf124704610"
       }
+    },
+    "25280f89-93e6-4776-908f-a8c374248eba": {
+      "id": "25280f89-93e6-4776-908f-a8c374248eba",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0142_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-21T23:40:48.424Z"
+    },
+    "e35aa74a-47ed-45b3-a529-4813962cd862": {
+      "id": "e35aa74a-47ed-45b3-a529-4813962cd862",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0142_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-21T23:41:00.173Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-21T23:41:00.173Z",
+        "committedAt": "2026-10-21T23:41:00.195Z",
+        "documentHash": "0167431ccd934f515aeb9875fe3b5bfc4a5225431107ad568dd6f1c7111b568c"
+      }
     }
   },
   "plan": null,
@@ -3762,6 +3788,23 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-21T22:56:37.539Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-21T23:40:48.425Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-21T23:41:00.173Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "e35aa74a-47ed-45b3-a529-4813962cd862",
+      "file": "_wiki_de_poble/04_escriptori/261022_0142_auditoria_gemini.md",
+      "at": "2026-10-21T23:41:00.195Z",
+      "hash": "0167431ccd934f515aeb9875fe3b5bfc4a5225431107ad568dd6f1c7111b568c"
     }
   ],
   "ownedPaths": [

@@ -76,6 +76,16 @@ test('l’origen extern mana sobre qualsevol base: la de l’amfitrió, un plugi
     .toBe('https://altre.example/dist/assets/ui/plugins/consola_vinyeta.webp');
 });
 
+test('el connector lleuger resol també el logo, les vinyetes i els assets de l’arrel des de l’origen canònic', () => {
+  fixaBaseRecursos(PAQUET);
+  fixaPoliticaDeMitjans({ ...POLITICA, externs: ['assets/'] });
+  for (const cami of ['assets/system/ui/logo.png', 'assets/soc_de_poble_ibanez.webp', 'assets/nano_cards/mur.webp']) {
+    expect(resolveAsset(`/${cami}`)).toBe(`${ORIGEN}/${cami}`);
+  }
+  expect(resolveAsset('/assets/ui/plugins/consola_vinyeta.jpg')).toBe(`${ORIGEN}/assets/ui/plugins/consola_vinyeta.webp`);
+  expect(resolveAsset('/fonts/noto-sans.css')).toBe(`${PAQUET}/fonts/noto-sans.css`);
+});
+
 test('la consulta, la versió i el fragment es conserven; una URL resolta no es torna a tocar', () => {
   fixaBaseRecursos(PAQUET);
   fixaPoliticaDeMitjans(POLITICA);
