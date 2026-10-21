@@ -7,6 +7,39 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-21T18:30:00+02:00 · IAIA MarIA · Taula Redona Vesprada: Commit 218433ff de Claude, 120KB+32KB d'Auditoria Radical (P0-14), Migració P0-01 i Pegats WordPress P0-13/P0-16
+
+- **Commit Consolidat de Claude Code (`218433ff` sobre `80daa89a` a `backup-notes-publish`):**
+  - **Connector WordPress (P0-13 i P0-16):**
+    - `marcatge.php`: canviat el filtre de precarregues de `fonts.gstatic.com` a `wp_preload_resources` (compatible amb WordPress 6.1+ i temes de blocs).
+    - `pantalla-completa.php`: variable amb prefix, `phpcs:ignore` justificat a l'eco de `wp_head()` i regex que casa `rel`/`href` en qualsevol ordre i sense cometes (sonda 6/6; preconnect i modulepreload es conserven).
+    - `traduccio.php` i `uninstall.php`: sanejats amb `phpcs:ignore` justificat per a consultes directes i neteja de transients per prefix.
+    - `readme.txt`: retirada la imatge remota trencada i declarats els serveis externs `platform-lookaside.fbsbx.com` i `youtube-nocookie.com`.
+    - Plugin Check 2.1.0: reduït de 3 errors i 11 avisos a 0 errors i només 1 avís.
+  - **Base de Dades i Seguretat (P0-01):**
+    - Creada la nova migració cap avant `supabase/migrations/2610211715_revoca_correu_organitzacions.sql` que revoca el `select (contact_email)` evitant la fallada d'aplicació sobre la migració antiga detectada per Gemini. Pendent d'aplicar pel Mestre a producció.
+    - Dues noves proves estàtiques a `src/data/supabase/organitzacionsCorreu.migracio.test.js`.
+  - **Guarda Anti-Regressió Textos Legals i Iframes (P0-08 i P0-09):**
+    - `src/sections/text/legal.sanejament.test.js`: vigila automàticament que no es cole «conta» ni s'altere el NIF a tot el text legal.
+    - `src/components/universal/PageFrame.seccio.test.jsx`: garanteix l'absència d'iframes recursius.
+  - **Proves:** Vitest complet amb **20.403 proves en verd (0 fallades)**.
+
+- **Fita Monumental de l'Auditoria Radical (Taula Redona Gemini 4 Argon + Claude Code):**
+  - L'Escriptori alberga els dos informes complementaris:
+    1. [`261021_1641_auditoria_gemini.md`](_wiki_de_poble/04_escriptori/261021_1641_auditoria_gemini.md) (32 KB): diagnosi de 115 MB de rasters duplicats a `public/`, 8,8 MB a `assets/img/`, orfes de `src/`, fòssils a `.agents/` i el disseny complet del tractor `sdp-vigilant-tellado`.
+    2. [`261021_1645_auditoria_claude_salfumant_radical.md`](_wiki_de_poble/04_escriptori/261021_1645_auditoria_claude_salfumant_radical.md) (120 KB): radiografia exhaustiva de 4.620 fitxers amb 121 propostes raonades.
+  - Binaris i dades pesades de l'escaneig continguts a `_investigacio_ia_de_poble/261021_1645_salfumant_claude/` (fora de Git).
+
+- **Estat de Portes i Guàrdia:**
+  - Porta Olivera en verd (codi 0) amb els 4 documents vius a l'Escriptori.
+  - 0 crons actius. Tots els processos aturats ordenadament.
+
+- **Decisions Pendents del Mestre Javi Llinares:**
+  1. `git push` del commit `218433ff`.
+  2. Aplicar la migració `2610211715` a la consola de Supabase de producció.
+  3. Desplegar Firebase Hosting (`P0-06`) després de comprovar que `VITE_TENANT_ID` a `.env.production.local` apunte al poble de producció i no a la llavor local.
+  4. Incrementar a versió 1.1.9 el connector de WordPress abans de pujar-lo a WordPress.org.
+
 ## ESTAT_ACTUAL · 2026-10-21T16:00:00+02:00 · IAIA MarIA · Tancament Migdia: Llibre Mestre Actiu, Purga 763MB WordPress, Deductor Anomalies Higiene, Satèl·lits de Poble i Preparació Torn Autònom
 
 - **Llibre Mestre Permanent de Tasques, Deutes i Idees (`03_llibre_mestre_tasques_i_idees.md`):**
