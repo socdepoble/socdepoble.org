@@ -7,6 +7,43 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-21T22:00:00+02:00 · IAIA MarIA · Taula Redona Nit: Commit cefc12ab de Claude (Fase 2 Consolidada), Connector 1.1.9, Poda Salfumant WebP, Tractor Vigilant-Tellado i Sync Natiu
+
+- **Commit Consolidat de Claude Code (`cefc12ab` sobre `dadeffe2` a `backup-notes-publish`):**
+  - **Mòdul A · Connector WordPress v1.1.9 i Paquets Oficials:**
+    - Versió actualitzada a 1.1.9 (`socdepoble-enxufe.php`, `readme.txt`, `Stable tag: 1.1.9`, Changelog i Upgrade Notice).
+    - Canals de distribució generats i signats criptogràficament: `stable.json`, `1.1.9.json` i les seues signatures Ed25519 `.sig`.
+    - Generats els 3 paquets ZIP a `_builds_de_poble/wordpress/`: `wordpress_enxufe_v1.1.9.zip`, `wordpress_directori_v1.1.9.zip` (9,80 MB, net d'actualitzadors per a WordPress.org) i `estatic_spa_v1.1.9.zip`.
+    - Carpeta paràsita `wordpress-plugin/supabase/` moguda a quarantena (.sdp-paperera).
+    - Proves del connector: **41/41 proves en verd**.
+  - **Mòdul B · Poda Salfumant Radical Fase 2 i Salvaguarda WebP:**
+    - `assets/img/` de l'arrel (15 fitxers, 9,2 MB) evacuat a `_multimedia_de_poble/quarantena_arrel_assets/img/` i retirat de Git.
+    - `tooling/brain/crear_bundle.mjs` desvinculat de l'antiga carpeta `assets`.
+    - Eliminades les dues làpides mortes del Lector (`Carpetes.jsx` i `Fonts.jsx`).
+    - Migrats **32 rasters de `public/assets/` a WebP** sota la rigorosa Llei del Píxel (mides idèntiques), estalviant **28,95 MB** a `public/` sense trencar cap contracte ni fila de base de dades.
+  - **Mòdul C · Tractor Cognitiu `sdp-vigilant-tellado`:**
+    - Instal·lat a `.agents/skills/sdp-vigilant-tellado/SKILL.md` (v1.0.0) integrant les regles `VIG-01`..`VIG-06` i les 27 comprovacions de perímetre en 3 capes.
+    - Segell criptogràfic Llei Z verificat i intacte: `4a1546c3`.
+  - **Mòdul D · Sincronització Nativa Mòbil:**
+    - `npm run build:natiu` i `npx cap sync ios` + `npx cap sync android` completats.
+    - Bundles d'Android i iOS nets de «conta», dades protegides i iframe recursiu.
+  - **Proves:** Vitest complet amb **20.403 proves en verd (0 fallades)**.
+
+- **Informes d'Auditoria Fase 2 Canònics a l'Escriptori:**
+  1. [`261021_1900_auditoria_gemini_fase2.md`](_wiki_de_poble/04_escriptori/261021_1900_auditoria_gemini_fase2.md): Auditoria de conformitat i contrast de seguretat de Gemini 4 Argon.
+  2. [`261021_1905_auditoria_claude_botigues_ayudawp_fase2.md`](_wiki_de_poble/04_escriptori/261021_1905_auditoria_claude_botigues_ayudawp_fase2.md): Auditoria d'execució i taula de migració de Claude Code.
+
+- **Estat de Portes:**
+  - Porta Olivera en verd (codi 0).
+  - Segell Llei Z en verd (`4a1546c3`).
+  - 0 crons actius.
+
+- **Passos Següents Immediats per al Mestre Javi Llinares:**
+  1. `git push` a `fork/backup-notes-publish`.
+  2. Desplegar `socdepoble.org` a Firebase Hosting (perquè serva els 32 fitxers `.webp` nous abans de distribuir el zip del directori).
+  3. Publicar la release `enxufe-v1.1.9` a GitHub amb els zips i publicar el canal a `public/enxufe/`.
+  4. Tràmits oficials de botigues (WordPress.org, Google Play i App Store).
+
 ## ESTAT_ACTUAL · 2026-10-21T18:30:00+02:00 · IAIA MarIA · Taula Redona Vesprada: Commit 218433ff de Claude, 120KB+32KB d'Auditoria Radical (P0-14), Migració P0-01 i Pegats WordPress P0-13/P0-16
 
 - **Commit Consolidat de Claude Code (`218433ff` sobre `80daa89a` a `backup-notes-publish`):**
