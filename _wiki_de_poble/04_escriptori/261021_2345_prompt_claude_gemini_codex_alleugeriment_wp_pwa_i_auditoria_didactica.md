@@ -111,13 +111,18 @@ Els objectius són dos grans blocs d'acció:
   - Auditar i dissenyar a `/connectar` (`ConnectarSection.jsx` / `useConnectaTargeta.js`) l'opció explícita de **Connectar amb l'Autor**.
   - No només desar la pàgina/card al Mas, sinó permetre establir connexió humana directa amb la persona o entitat creadora, preparant la base de dades i la interfície per a visualitzar qui està connectat amb qui.
 - [ ] **Tasca 7 (Metodologia REA Sense Fum d'Emowe: Deconstrucció d'Obsidian Local, Bring! i Loyverse):**
-  - **Referència Mestre:** Guia PDF `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` i vídeo de YouTube d'Emowe: [https://youtu.be/YpKpragPGyk](https://youtu.be/YpKpragPGyk) on explica com recrear el seu propi Obsidian mitjançant REA.
-  - **Avantatge d'Obsidian instal·lat localment:** Com que tenim Obsidian instal·lat a la màquina (`/Applications/Obsidian.app` i el seu bundle Electron a `Contents/Resources/app.asar`), l'enginyeria inversa sobre la nostra pròpia instal·lació és immediata i molt més senzilla. Les IAs no han d'imaginar res: tenen accés directe al binar, a l'arbre d'actius i a les eines REA.
-  - **Objectiu d'implementació per a Sóc de Poble:** Aplicar els 4 passos i els 7 prompts d'enginyeria inversa (mapa primer, proves curtes, manual abans que codi) per a disseccionar com Obsidian té resolt:
-    1. El graf interactiu de nodes i enllaços bidireccionals (`[[...]]`).
-    2. La gestió de la barra lateral, panells i pestanyes mal·leables.
-    3. L'estructura de dades per a notes locals i suport sense connexió.
-  - **Trasllat a Pedra Seca:** Incorporar aquestes solucions provades d'Obsidian al nostre `UniversalWorkspace`, Bloc de Notes i Graf de poble, evitant reinventar la roda i adoptant les millors pràctiques d'arquitectura.
+  - **Document canònic d'investigació:** Llegir obligatòriament la guia dipositada pel Mestre: `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` i el vídeo de suport d'Emowe: [https://youtu.be/YpKpragPGyk](https://youtu.be/YpKpragPGyk) on explica com va crear el seu propi Obsidian en 22 minuts (amb calendari, graf i lectura/edició sobre 7.000 notes).
+  - **Avantatge físic local:** Obsidian està instal·lat al Mac (`/Applications/Obsidian.app`, paquet Electron `Contents/Resources/app.asar`). Amb les eines REA que teniu actives, teniu accés directe per a disseccionar-lo sense inventar res.
+  - **Els 4 Passos d'Emowe (Obligatoris per no cremar context):**
+    1. *No demaneu clonar l'app sencera de colp:* Demanar una cosa concreta (el graf, la cerca, els enllaços bidireccionals `[[...]]`).
+    2. *Demanar primer el mapa:* Analitzar només els fitxers propis del programa, ignorant les llibreries enormes de tercers per no quedar-se penjat.
+    3. *Interrogar amb preguntes curtes i proves:* Cada conclusió ha d'indicar d'on ix (fitxer o funció) i distingir entre confirmat, deduït o desconegut.
+    4. *El manual abans que el codi:* Redactar primer el manual de comportament de la funcionalitat en un informe a `04_escriptori/`, i només després implementar la nostra versió neta a Sóc de Poble (`UniversalWorkspace` / Bloc de Notes) sota el disseny Pedra Seca.
+  - **Els Prompts REA d'Emowe a aplicar:**
+    * *Prompt 1 (El mapa primer):* `Con REA, haz solo un mapa de /Applications/Obsidian.app: qué partes tiene, con qué tecnología está hecha y qué ficheros son suyos y cuáles librerías de terceros.`
+    * *Prompt 2 (Pruebas y límites):* `Para cada conclusión, dime de dónde la sacas (fichero o función) y márcala como confirmada, deducida o desconocida.`
+    * *Prompt 3 (Una función a la vez):* `Entiende cómo funciona [el grafo de vínculos bidireccionales / la sincronización local / los paneles plegables] en Obsidian y enséñame las pruebas.`
+    * *Prompt 4 (El manual antes que el código):* `Escribe un manual de comportamiento de [la función] sin copiar código. Lo construiremos en Sóc de Poble a partir de esa especificación.`
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
