@@ -1,0 +1,17 @@
+{
+  "id": "4a734cba-08d6-44fd-92d1-ca7371725faa",
+  "session": "29d5f2e9-8303-4c16-8522-e292d100527e",
+  "operationId": "261021-modul-b-crear-bundle-sense-assets",
+  "claim": "29d5f2e9-8303-4c16-8522-e292d100527e:governance-write",
+  "planHash": "b4c46a3604e2fcae04f46dcd2ca66036af2ebc6baf0ff9a50201eded0fdbc168",
+  "beforeSeal": "92eb2c8ac5644050d315bdfd7693da3aa3ff00749453ad4dcab04da5cc83bed5",
+  "files": [
+    {
+      "path": "tooling/brain/crear_bundle.mjs",
+      "before": "57195285c904ba4a494916f735614bbc96d25358d181aba8bec7a9884eb32ec0",
+      "after": "2d57ead1abaff6192b279b767a457beb188411caa54a214a1914ef45372cc282"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

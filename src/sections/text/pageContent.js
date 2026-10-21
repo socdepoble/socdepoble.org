@@ -190,7 +190,7 @@ export const PAGE_COPY = {
     "title": "Nodes i Fedivers",
     "subtitle": "Com es connecten els pobles?",
     "lead": "Sóc de Poble no és una sola web: és una xarxa de nodes. Cada poble o col·lectiu pot obrir l’App a la seua casa digital i continuar connectat amb la resta.",
-    "image": "/assets/ui/plugins/fedivers_vinyeta.jpg",
+    "image": "/assets/ui/plugins/fedivers_vinyeta.webp",
     "imageAlt": "Il·lustració còmic estil Bruguera i Berlanga amb pobles connectats per pots de llanda, coloms missatgers i un tractor amb parabòlica",
     "labels": [
       { "text": "Sistema", "className": "sdp-badge-system" },
@@ -339,10 +339,10 @@ export const PAGE_COPY = {
     "title": "Publicar al Mapa",
     "subtitle": "Si tens coses que vols geolocalitzar, este és el lloc.",
     "lead": "Per defecte, les fotos que puges conserven la ubicació i la data en què es van fer, per a situar el patrimoni del poble al mapa; abans de publicar-les, les pots llevar desmarcant «Conserva la ubicació i la data de la foto». Les imatges que poses dins del text es netegen sempre. Publicar al mapa vol dir acceptar que la teua foto es podrà localitzar públicament des d'altres pàgines i pobles.",
-    "image": "/assets/ui/plugins/mapa_vinyeta.jpg",
+    "image": "/assets/ui/plugins/mapa_vinyeta.webp",
     "imageAlt": "Llauradors en un bancal intentant clavar la punxa del mapa de geolocalització",
     "labels": [],
-    "html": "\n      <h5>Un espai per a situar-nos al territori</h5>\n      <p>El <strong>mapa de la comarca</strong> és l'eina perfecta per a marcar aquells <strong>camins, fonts, assuts o llocs d'interès</strong> que vols compartir amb la resta del veïnat. Siga un avís d'un camí tallat, una troballa patrimonial o un punt de trobada, ací pots deixar la teua <strong>petjada digital sobre el terreny</strong>.</p>\n\n      <h5>La privacitat sempre per davant</h5>\n      <p>Sabem que la teua ubicació és informació sensible. Per eixe motiu, quan puges una foto que porta la ubicació o la data, el sistema t'ho diu abans de publicar-la: de manera predeterminada <strong>les conserva dins de la foto</strong>, per al mapa del patrimoni del poble, i les pots llevar d'un sol toc desmarcant <strong>«Conserva la ubicació i la data de la foto»</strong>. Les imatges que poses dins del text <strong>es netegen sempre de manera automàtica</strong>.</p>\n\n      <h5>Visibilitat oberta</h5>\n      <p>Has de tindre en compte que, en fixar un punt al mapa, la teua publicació serà <strong>visible i geolocalitzable</strong> tant des del nostre poble com des d'altres pàgines connectades a la xarxa. Fes-ho servir amb <strong>prudència i estima per la terra</strong>, evitant assenyalar domicilis privats sense permís i compartint informació útil per a <strong>cuidar el nostre terme</strong>.</p>\n      <img src=\"/assets/ui/plugins/mapa_vinyeta.jpg\" alt=\"Mapa del poble\" />\n"
+    "html": "\n      <h5>Un espai per a situar-nos al territori</h5>\n      <p>El <strong>mapa de la comarca</strong> és l'eina perfecta per a marcar aquells <strong>camins, fonts, assuts o llocs d'interès</strong> que vols compartir amb la resta del veïnat. Siga un avís d'un camí tallat, una troballa patrimonial o un punt de trobada, ací pots deixar la teua <strong>petjada digital sobre el terreny</strong>.</p>\n\n      <h5>La privacitat sempre per davant</h5>\n      <p>Sabem que la teua ubicació és informació sensible. Per eixe motiu, quan puges una foto que porta la ubicació o la data, el sistema t'ho diu abans de publicar-la: de manera predeterminada <strong>les conserva dins de la foto</strong>, per al mapa del patrimoni del poble, i les pots llevar d'un sol toc desmarcant <strong>«Conserva la ubicació i la data de la foto»</strong>. Les imatges que poses dins del text <strong>es netegen sempre de manera automàtica</strong>.</p>\n\n      <h5>Visibilitat oberta</h5>\n      <p>Has de tindre en compte que, en fixar un punt al mapa, la teua publicació serà <strong>visible i geolocalitzable</strong> tant des del nostre poble com des d'altres pàgines connectades a la xarxa. Fes-ho servir amb <strong>prudència i estima per la terra</strong>, evitant assenyalar domicilis privats sense permís i compartint informació útil per a <strong>cuidar el nostre terme</strong>.</p>\n      <img src=\"/assets/ui/plugins/mapa_vinyeta.webp\" alt=\"Mapa del poble\" />\n"
   },
   "vehicle_compartit": {
     "date": "2026-10-03T22:45:00+02:00",
@@ -352,7 +352,7 @@ export const PAGE_COPY = {
     "image": "/assets/nano_cards/vehicle_nano_card.jpg",
     "imageAlt": "Un cotxe taronja carregat de veïns, gallines i farcells pel camí del poble",
     "labels": [],
-    "html": "\n      <h5>Moviment eficient i solidari</h5>\n      <p>Pujar i baixar del poble per anar al <strong>metge, a l'hospital o a fer encàrrecs</strong> a la ciutat no ha de ser un maldecap per a qui no té cotxe o ja no vol conduir. Amb aquesta eina pots <strong>oferir els seients buits</strong> del teu vehicle o <strong>buscar algun veí de confiança</strong> que baixe a la mateixa hora que tu. Menys cotxes buits a la carretera significa <strong>més companyia, més estalvi i menys fum</strong>.</p>\n\n      <h5>Privacitat en les rutes</h5>\n      <p>Publicar un trajecte suposa mostrar públicament una part de la teua <strong>rutina de desplaçaments</strong>. Et recomanem ser prudent i indicar només el <strong>poble d'eixida, el destí i l'hora aproximada</strong> per a trobar companys de viatge. Una vegada connectats, podeu acabar de quadrar el <strong>punt exacte de recollida per missatge privat</strong> al Xat.</p>\n\n      <h5>Sense intermediaris</h5>\n      <p>Com en la resta de serveis del Mas, ací <strong>no cobrem cap taxa ni comissió</strong> pel viatge. Repartir les despeses de la gasolina o convidar a un café és un <strong>acord privat</strong> entre els ocupants del vehicle. Confiem que cada viatge compartit servisca també per a <strong>fer comboi i enfortir els llaços</strong> entre el veïnat.</p>\n      <img src=\"/assets/ui/plugins/vehicle_vinyeta.jpg\" alt=\"Vehicle compartit\" />\n"
+    "html": "\n      <h5>Moviment eficient i solidari</h5>\n      <p>Pujar i baixar del poble per anar al <strong>metge, a l'hospital o a fer encàrrecs</strong> a la ciutat no ha de ser un maldecap per a qui no té cotxe o ja no vol conduir. Amb aquesta eina pots <strong>oferir els seients buits</strong> del teu vehicle o <strong>buscar algun veí de confiança</strong> que baixe a la mateixa hora que tu. Menys cotxes buits a la carretera significa <strong>més companyia, més estalvi i menys fum</strong>.</p>\n\n      <h5>Privacitat en les rutes</h5>\n      <p>Publicar un trajecte suposa mostrar públicament una part de la teua <strong>rutina de desplaçaments</strong>. Et recomanem ser prudent i indicar només el <strong>poble d'eixida, el destí i l'hora aproximada</strong> per a trobar companys de viatge. Una vegada connectats, podeu acabar de quadrar el <strong>punt exacte de recollida per missatge privat</strong> al Xat.</p>\n\n      <h5>Sense intermediaris</h5>\n      <p>Com en la resta de serveis del Mas, ací <strong>no cobrem cap taxa ni comissió</strong> pel viatge. Repartir les despeses de la gasolina o convidar a un café és un <strong>acord privat</strong> entre els ocupants del vehicle. Confiem que cada viatge compartit servisca també per a <strong>fer comboi i enfortir els llaços</strong> entre el veïnat.</p>\n      <img src=\"/assets/ui/plugins/vehicle_vinyeta.webp\" alt=\"Vehicle compartit\" />\n"
   },
   "animalets": {
     "date": "2026-10-03T22:45:00+02:00",
@@ -362,27 +362,27 @@ export const PAGE_COPY = {
     "image": "/assets/nano_cards/animalets_nano_card.jpg",
     "imageAlt": "Un gos en bicicleta i un gat que toca l'acordió avaloten un carrer del poble",
     "labels": [],
-    "html": "\n      <h5>Una xarxa de rescat i adopció</h5>\n      <p>Aquesta secció està pensada exclusivament per al <strong>benestar animal</strong> i l'ajuda ràpida entre masos i carrers. Si has perdut el teu gos, has trobat <strong>un animalet desorientat pel camí</strong> o vols oferir una ventrada en adopció a una bona família, aquest és el punt de trobada ideal per a <strong>mobilitzar tota la comunitat ràpidament</strong>.</p>\n\n      <h5>Avisos d'emergència</h5>\n      <p>Quan es perd un animalet a la muntanya o a l'horta, el temps és or. Pots crear una alerta amb una <strong>foto clara i l'últim lloc on s'ha vist</strong> que arribarà a la resta de veïns de manera immediata. Recorda que qualsevol <strong>telèfon o contacte</strong> que inclogues a la publicació serà visible públicament, o bé pots demanar que t'escriguen pel <strong>Xat de Sóc de Poble</strong>.</p>\n\n      <h5>Compromís amb la fauna</h5>\n      <p>Sóc de Poble aposta per una convivència respectuosa amb tots els éssers vius del terme. Utilitza aquest espai per a fomentar les <strong>adopcions responsables</strong>, sense cap ànim de lucre, i ajudar a mantenir la cura ètica de les colònies. El <strong>respecte als animals</strong> és un reflex directe de la nostra <strong>qualitat humana com a poble</strong>.</p>\n      <img src=\"/assets/ui/plugins/animalets_vinyeta.jpg\" alt=\"Animalets\" />\n"
+    "html": "\n      <h5>Una xarxa de rescat i adopció</h5>\n      <p>Aquesta secció està pensada exclusivament per al <strong>benestar animal</strong> i l'ajuda ràpida entre masos i carrers. Si has perdut el teu gos, has trobat <strong>un animalet desorientat pel camí</strong> o vols oferir una ventrada en adopció a una bona família, aquest és el punt de trobada ideal per a <strong>mobilitzar tota la comunitat ràpidament</strong>.</p>\n\n      <h5>Avisos d'emergència</h5>\n      <p>Quan es perd un animalet a la muntanya o a l'horta, el temps és or. Pots crear una alerta amb una <strong>foto clara i l'últim lloc on s'ha vist</strong> que arribarà a la resta de veïns de manera immediata. Recorda que qualsevol <strong>telèfon o contacte</strong> que inclogues a la publicació serà visible públicament, o bé pots demanar que t'escriguen pel <strong>Xat de Sóc de Poble</strong>.</p>\n\n      <h5>Compromís amb la fauna</h5>\n      <p>Sóc de Poble aposta per una convivència respectuosa amb tots els éssers vius del terme. Utilitza aquest espai per a fomentar les <strong>adopcions responsables</strong>, sense cap ànim de lucre, i ajudar a mantenir la cura ètica de les colònies. El <strong>respecte als animals</strong> és un reflex directe de la nostra <strong>qualitat humana com a poble</strong>.</p>\n      <img src=\"/assets/ui/plugins/animalets_vinyeta.webp\" alt=\"Animalets\" />\n"
   },
   "treball": {
     "date": "2026-10-04T01:10:00+02:00",
     "title": "Treball",
     "subtitle": "Ofertes de feina i recerca de professionals al poble.",
     "lead": "Un espai per a connectar qui busca faena amb qui en té per a oferir. Recorda que l'acord laboral s'ha de tancar en persona.",
-    "image": "/assets/ui/plugins/treball_vinyeta.jpg",
+    "image": "/assets/ui/plugins/treball_vinyeta.webp",
     "imageAlt": "Llauradors i professionals treballant i construint junts",
     "labels": [],
-    "html": "\n      <h5>Connectem talent local</h5>\n      <p>Aquesta secció fa més fàcil trobar <strong>feina digna o professionals d'ofici</strong> —des d'ajuda per a la campanya agrícola fins a un <strong>obrer, electricista, fontaner o cuidadora</strong>— sense eixir del poble i sense intermediaris, tractant sempre les condicions en un <strong>acord directe entre persones</strong>.</p>\n      <img src=\"/assets/ui/plugins/treball_vinyeta.jpg\" alt=\"Treball\" />\n"
+    "html": "\n      <h5>Connectem talent local</h5>\n      <p>Aquesta secció fa més fàcil trobar <strong>feina digna o professionals d'ofici</strong> —des d'ajuda per a la campanya agrícola fins a un <strong>obrer, electricista, fontaner o cuidadora</strong>— sense eixir del poble i sense intermediaris, tractant sempre les condicions en un <strong>acord directe entre persones</strong>.</p>\n      <img src=\"/assets/ui/plugins/treball_vinyeta.webp\" alt=\"Treball\" />\n"
   },
   "habitatge": {
     "date": "2026-10-04T01:10:00+02:00",
     "title": "Habitatge",
     "subtitle": "Lloguer i compravenda de cases i pisos al poble.",
     "lead": "Facilitem la informació d'habitatges disponibles per a atraure nova gent o ajudar a qui ja hi viu.",
-    "image": "/assets/ui/plugins/habitatge_vinyeta.jpg",
+    "image": "/assets/ui/plugins/habitatge_vinyeta.webp",
     "imageAlt": "Una casa rural amb les portes obertes al poble",
     "labels": [],
-    "html": "\n      <h5>Obrir portes tancades</h5>\n      <p>Mantingues el poble viu posant en contacte els propietaris de <strong>cases o pisos tancats</strong> amb famílies que busquen <strong>lloguer o compra directa al municipi</strong>, basant el tracte en la <strong>confiança veïnal i sense comissions</strong> d'agència.</p>\n      <img src=\"/assets/ui/plugins/habitatge_vinyeta.jpg\" alt=\"Habitatge\" />\n"
+    "html": "\n      <h5>Obrir portes tancades</h5>\n      <p>Mantingues el poble viu posant en contacte els propietaris de <strong>cases o pisos tancats</strong> amb famílies que busquen <strong>lloguer o compra directa al municipi</strong>, basant el tracte en la <strong>confiança veïnal i sense comissions</strong> d'agència.</p>\n      <img src=\"/assets/ui/plugins/habitatge_vinyeta.webp\" alt=\"Habitatge\" />\n"
   },
   /* Ordre del Mestre (261007) · «El Xat»: la pàgina que explica el xat de
      Sóc de Poble (el patró estàndard de missatgeria que la gent ja coneix)
@@ -405,7 +405,7 @@ export const PAGE_COPY = {
     "title": "El Xat",
     "subtitle": "Parla amb la teua gent amb la tecnologia de casa",
     "lead": "Hem integrat una missatgeria que funciona com les que ja coneixes. Sense descarregar aplicacions noves, sense configuracions estranyes i sense vendre ni cedir les teues converses a ningú.",
-    "image": "/assets/uploads/brain/xat_portada.jpg",
+    "image": "/assets/uploads/brain/xat_portada.webp",
     "imageWidth": 1024,
     "imageHeight": 1024,
     "imageFetchPriority": "high",

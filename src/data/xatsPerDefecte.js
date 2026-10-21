@@ -316,12 +316,12 @@ export function senseXatPerDefecte(converses, clau) {
 
 /**
  * La cara de la IAIA al xat: la iaia del mocador roig i el mòbil, al centre de
- * baix de la il·lustració «Festa del Poble» (xat_portada.jpg, 1024 × 1024).
+ * baix de la il·lustració «Festa del Poble» (xat_portada.webp, 1024 × 1024).
  * Cap fitxer nou: Avatar la retalla amb la variant d'enquadrament 'iaia'
  * (modules.css). El padró i el perfil conserven el seu avatar de sempre
  * (agentsSeed.js): només el xat la pinta així (CaraXat).
  */
-export const CARA_DE_LA_IAIA = Object.freeze({ src: '/assets/uploads/brain/xat_portada.jpg', enquadrament: 'iaia' });
+export const CARA_DE_LA_IAIA = Object.freeze({ src: '/assets/uploads/brain/xat_portada.webp', enquadrament: 'iaia' });
 
 /* Els avatars amb què arriba la IAIA al xat: el d'AJUDA (el del padró) i el
    del catàleg d'agents, que avui són el mateix fitxer. */

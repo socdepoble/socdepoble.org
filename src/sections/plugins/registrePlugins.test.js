@@ -121,13 +121,25 @@ describe('registre de plugins', () => {
 
   /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La del TPV del Bar ja és
      .webp (extensioImatge); la resta continua en .jpg, idèntica. Abans esta
-     prova fixava .jpg per a totes: l'ordre ho canvia només per al TPV. */
-  test('cada il·lustració és /assets/ui/plugins/<id>_vinyeta.jpg (la del TPV, .webp) i existix a public/', () => {
+     prova fixava .jpg per a totes: l'ordre ho canvia només per al TPV.
+     Expectativa actualitzada a propòsit (ordre del Mestre, 261021, torn fase
+     2, Mòdul B, P0-14) · Les del Mapa, Vehicle, Animalets, el Rebost i Salut
+     també són .webp: el seu original .jpg ix de public/ (evacuat a
+     _multimedia_de_poble/originals_raster_public/) i la bessona, amb les
+     mateixes mides, és la il·lustració. La Gestoria i l'RSS continuen en .jpg.
+     Abans: només la del TPV era .webp. */
+  const EN_WEBP = new Set(['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'tpv']);
+  test('cada il·lustració és /assets/ui/plugins/<id>_vinyeta.jpg (la del TPV i les del Mòdul B, .webp) i existix a public/', () => {
     expect(IMATGES_PLUGINS).toBe('/assets/ui/plugins');
     for (const { id, imatge } of PLUGINS) {
-      expect([id, imatge]).toEqual([id, `/assets/ui/plugins/${id}_vinyeta.${id === 'tpv' ? 'webp' : 'jpg'}`]);
+      expect([id, imatge]).toEqual([id, `/assets/ui/plugins/${id}_vinyeta.${EN_WEBP.has(id) ? 'webp' : 'jpg'}`]);
       expect([id, existsSync(path.join(process.cwd(), 'public', imatge))]).toEqual([id, true]);
     }
+    // Les del Mòdul B: cap .jpg al costat, cap còpia doble al disc (la del TPV sí: és una altra imatge).
+    for (const id of [...EN_WEBP].filter((x) => x !== 'tpv')) {
+      expect([id, existsSync(path.join(process.cwd(), 'public', IMATGES_PLUGINS, `${id}_vinyeta.jpg`))]).toEqual([id, false]);
+    }
+    expect(PLUGINS.filter((p) => !EN_WEBP.has(p.id)).map((p) => p.id)).toEqual(['gestoria', 'rss']);
   });
 
   /* Gauntlet 261016 (Bloc 1, Llei del Quadrat: capçalera i targeta, la

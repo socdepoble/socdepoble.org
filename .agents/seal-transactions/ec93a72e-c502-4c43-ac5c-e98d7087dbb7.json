@@ -1,0 +1,17 @@
+{
+  "id": "ec93a72e-c502-4c43-ac5c-e98d7087dbb7",
+  "session": "f01e5ca0-cebf-49f0-8135-f07a555a9289",
+  "operationId": "261021-mòdul-c-manifest-yaml",
+  "claim": "f01e5ca0-cebf-49f0-8135-f07a555a9289:governance-write",
+  "planHash": "137932f68ecd50651f4979b8ac8ecc0c756f3c174c25d3cc358ce2ee990c6642",
+  "beforeSeal": "cb33a180f1d5e1fe0eefc2e9907046d9b7014aee5d229a7612b48e6817e830ff",
+  "files": [
+    {
+      "path": ".agents/manifest.yaml",
+      "before": "788e348cff74287d74b66741b5082d5d9751973c18e1e5150f9950861216c8ae",
+      "after": "68d8f1ea4ebb4e9a25ee3e5e68aa12ad42766568a7f48f92ecdcbc9571801136"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

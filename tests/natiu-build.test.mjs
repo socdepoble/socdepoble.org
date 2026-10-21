@@ -594,16 +594,27 @@ test('la config porta la política nativa als dos llocs: el connector de recurso
     assert.deepEqual(segellada.externs, []);
     for (const { original } of ORIGINALS_CITATS_SENSE_RESOLUTOR) assert.ok(!segellada.bessones.includes(original), original);
     /* P1-05 (261021, pla 261021_0015 §13) · Els dos originals pesants que
-       l'app citava crus ja se substituïxen: a l'app només hi va la bessona. */
-    for (const original of ['assets/system/ui/xat-bg-map-v2.jpg', 'assets/notes/bloc_notes_vintage.jpg']) {
-      assert.ok(segellada.bessones.includes(original), original);
-    }
+       l'app citava crus ja se substituïxen: a l'app només hi va la bessona.
+       Expectativa actualitzada a propòsit (ordre del Mestre, 261021, torn
+       fase 2, Mòdul B, P0-14) · L'original del fons del Xat ja no és a
+       public/ (evacuat a _multimedia_de_poble/originals_raster_public/): no hi
+       ha res a substituir, i la .webp, que és la que citen tokens.css i
+       PedraSecaEmbed.jsx, hi viatja com qualsevol fitxer. La foto de mostra de
+       l'Enquadrament continua substituint-se. Abans: les dues dins de bessones. */
+    assert.ok(segellada.bessones.includes('assets/notes/bloc_notes_vintage.jpg'), 'assets/notes/bloc_notes_vintage.jpg');
+    const fonsDelXat = 'assets/system/ui/xat-bg-map-v2.webp';
+    assert.ok(fs.existsSync(path.join(PUBLIC, fonsDelXat)), `${fonsDelXat} no és a public/`);
+    assert.ok(!fs.existsSync(path.join(PUBLIC, fonsDelXat.replace(/\.webp$/, '.jpg'))), 'l\'original del fons del Xat torna a ser a public/');
+    assert.ok(!segellada.bessones.some((original) => bessonaDe(original) === fonsDelXat), 'el fons del Xat no pot tornar a ser la bessona de ningú');
     /* El connector: sobre un public/ de mostra, la bessona en lloc d'un
        substituït. Expectativa actualitzada a propòsit (261021, pla
        261021_0015 §13, P1-05): el fons del Xat ja no és cap exclòs i hi viatja
        només la seua bessona; abans hi anava també l'original. Un exclòs
-       viatjaria amb la seua: ho prova politicaDeMitjansNativa, dalt. */
-    const fons = 'assets/system/ui/xat-bg-map-v2.jpg';
+       viatjaria amb la seua: ho prova politicaDeMitjansNativa, dalt.
+       Mòdul B (261021) · L'original del fons del Xat ja no és a public/: la
+       mostra fa servir l'altre original que l'app citava cru, la foto de
+       l'Enquadrament, que continua amb la seua bessona. */
+    const fons = 'assets/notes/bloc_notes_vintage.jpg';
     const substituit = esperada.bessones.find((original) => original !== fons);
     const mostra = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-natiu-public-'));
     try {

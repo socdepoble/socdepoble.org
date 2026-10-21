@@ -246,7 +246,7 @@ describe('classificaPeticio (pura)', () => {
 
   test('les còpies de public/ dins de /assets/ no tenen empremta i passen', () => {
     for (const url of ['/assets/cc-by-nc-sa.svg', '/assets/pedra-seca.css', '/assets/media_registry.json',
-      '/assets/soc_de_poble_ibanez.png', '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+      '/assets/soc_de_poble_ibanez.webp', '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
       '/assets/system/ui/og-socdepoble-1200x630.png', '/assets/uploads/gent/avatars/a-12345678.js',
       '/assets/logo-socdepoble-rect-blanc-CMqUaDOP.svg', '/fonts/noto-sans.css', '/rag-index.json',
       '/sw.js', '/manifest.webmanifest', '/apple-touch-icon.png']) {

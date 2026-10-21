@@ -39,6 +39,13 @@
  * l'original, una sola entrada per foto: l'id, els drets, l'origen i la fusió
  * de l'Arxiu no canvien. Quin dels dos fitxers se servix ho decidix el
  * resolutor de recursos (assetResolver.js) segons el paquet.
+ * Ordre del Mestre (261021, torn fase 2, Mòdul B, P0-14) · Els originals que
+ * tenien bessona amb les mateixes dimensions i que cap SQL, ni index.html ni
+ * el manifest no citaven ixen de public/ (evacuats, no esborrats, a
+ * _multimedia_de_poble/originals_raster_public/). Sense original, la .webp ja
+ * no és la bessona de ningú: és la imatge, i el cens (i EXCLOSES) la nomena
+ * a ella, amb la mateixa entrada, el mateix id (idDelCens lleva l'extensió) i
+ * les mateixes mides.
  */
 
 export const AMBITS = Object.freeze(['poble', 'persona', 'entitat', 'ia', 'contingut']);
@@ -51,21 +58,23 @@ const POBLES_VIQUIPEDIA = [
   ['sella', 'Sella'], ['orxeta', 'Orxeta'], ['relleu', 'Relleu'], ['alcoleja', 'Alcoleja'], ['xixona', 'Xixona'], ['tibi', 'Tibi']
 ];
 
-/* Les vinyetes de les apps (ui/plugins), il·lustracions d'IA. */
+/* Les vinyetes de les apps (ui/plugins), il·lustracions d'IA. L'extensió,
+   'jpg' si no en porta: les que diuen 'webp' només viuen ja com a WebP (Mòdul
+   B, 261021, capçalera). */
 const VINYETES = [
-  ['animalets', 'Vinyeta d’Animalets'], ['bascula', 'Vinyeta de la Bàscula'], ['cervell', 'Vinyeta del Cervell'],
-  ['consola', 'Vinyeta de la Consola'], ['disseny', 'Vinyeta de Disseny'], ['fedivers', 'Vinyeta del Fedivers'],
-  ['gestoria', 'Vinyeta de la Gestoria'], ['habitatge', 'Vinyeta d’Habitatge'], ['mapa', 'Vinyeta del Mapa'],
-  ['rebost', 'Vinyeta del Rebost'], ['rss', 'Vinyeta de Notícies'], ['salut', 'Vinyeta de Salut'],
-  ['treball', 'Vinyeta de Treball'], ['vehicle', 'Vinyeta de Vehicles']
+  ['animalets', 'Vinyeta d’Animalets', 'webp'], ['bascula', 'Vinyeta de la Bàscula'], ['cervell', 'Vinyeta del Cervell'],
+  ['consola', 'Vinyeta de la Consola'], ['disseny', 'Vinyeta de Disseny'], ['fedivers', 'Vinyeta del Fedivers', 'webp'],
+  ['gestoria', 'Vinyeta de la Gestoria'], ['habitatge', 'Vinyeta d’Habitatge', 'webp'], ['mapa', 'Vinyeta del Mapa', 'webp'],
+  ['rebost', 'Vinyeta del Rebost', 'webp'], ['rss', 'Vinyeta de Notícies'], ['salut', 'Vinyeta de Salut', 'webp'],
+  ['treball', 'Vinyeta de Treball', 'webp'], ['vehicle', 'Vinyeta de Vehicles', 'webp']
 ];
 
 export const CENS_IMATGES = Object.freeze([
-  e('/assets/soc_de_poble_ibanez.png', 'Sóc de Poble a l’estil Ibáñez', 'contingut', 'ia'),
+  e('/assets/soc_de_poble_ibanez.webp', 'Sóc de Poble a l’estil Ibáñez', 'contingut', 'ia'),
 
   e('/assets/events/aplec_2023_cartell.jpg', 'Cartell del 2n Aplec pel Territori', 'contingut', 'foto'),
   e('/assets/events/aplec_2023_ponents.png', 'Captura: la targeta de l’Aplec al catàleg', 'contingut', 'sistema'),
-  e('/assets/events/aplec_2023_reunio.png', 'Captura: la pàgina de l’Aplec', 'contingut', 'sistema'),
+  e('/assets/events/aplec_2023_reunio.webp', 'Captura: la pàgina de l’Aplec', 'contingut', 'sistema'),
   e('/assets/events/nano_sessio_treball.png', 'Sessió de treball', 'contingut', 'ia'),
 
   e('/assets/fotos/carla-soriano.png', 'Carla Soriano', 'ia', 'ia'),
@@ -101,11 +110,11 @@ export const CENS_IMATGES = Object.freeze([
     e(`/assets/towns/${slug}/2.jpg`, `${nom}, segona vista`, 'poble', 'foto', slug)
   ]),
 
-  ...VINYETES.map(([fitxer, titol]) => e(`/assets/ui/plugins/${fitxer}_vinyeta.jpg`, titol, 'contingut', 'ia')),
+  ...VINYETES.map(([fitxer, titol, extensio = 'jpg']) => e(`/assets/ui/plugins/${fitxer}_vinyeta.${extensio}`, titol, 'contingut', 'ia')),
   e('/assets/ui/plugins/tpv_vinyeta.webp', 'Vinyeta del Bar', 'contingut', 'ia'),
 
   e('/assets/uploads/ajuntament/la-torre-de-les-macanes/avatar/IMG_20200904_143451.jpg', 'Ajuntament de la Torre de les Maçanes', 'entitat', 'foto', 'la-torre-de-les-macanes'),
-  e('/assets/uploads/ajuntament/la-torre-de-les-macanes/post/collita-poma-local.png', 'Collita de poma local', 'entitat', 'ia'),
+  e('/assets/uploads/ajuntament/la-torre-de-les-macanes/post/collita-poma-local.webp', 'Collita de poma local', 'entitat', 'ia'),
 
   e('/assets/uploads/avatars/andreu-soler-comic.png', 'Andreu Soler', 'ia', 'ia'),
   e('/assets/uploads/avatars/avatar-marc-comic.png', 'Marc (El Gall)', 'ia', 'ia'),
@@ -128,7 +137,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/brain/art_trellat_farmer_1774708525806.png', 'El trellat del llaurador', 'contingut', 'ia'),
   e('/assets/uploads/brain/art_trellat_v2_1774708257858.png', 'El trellat', 'contingut', 'ia'),
   e('/assets/uploads/brain/beatriz_somriure_1774195114538.png', 'Beatriz somriu', 'contingut', 'ia'),
-  e('/assets/uploads/brain/caricatura_socdepoble_portada.jpg', 'Caricatura de Sóc de Poble', 'contingut', 'ia'),
+  e('/assets/uploads/brain/caricatura_socdepoble_portada.webp', 'Caricatura de Sóc de Poble', 'contingut', 'ia'),
   e('/assets/uploads/brain/collita_pomes_valencia_1779774496548.png', 'Collita de pomes', 'contingut', 'ia'),
   e('/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png', 'Psiquiatria forense i IA', 'contingut', 'ia'),
   e('/assets/uploads/brain/hero_panoramic_landscape_1774710654078.png', 'Paisatge panoràmic', 'contingut', 'ia'),
@@ -141,17 +150,17 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg', 'Pedra Seca a l’estil Ibáñez', 'contingut', 'ia'),
   e('/assets/uploads/brain/llibre_anima_cover_1776032370908.png', 'Portada del llibre de l’ànima', 'contingut', 'ia'),
   e('/assets/uploads/brain/mac_mini_m4_1787721966622.jpg', 'Mac Mini M4', 'contingut', 'foto'),
-  e('/assets/uploads/brain/media__1775376768839.jpg', 'Infografia de Sóc de Poble', 'contingut', 'ia'),
-  e('/assets/uploads/brain/media__1775516493101.jpg', 'Les IA i el CSS', 'contingut', 'ia'),
-  e('/assets/uploads/brain/nano-banana_arxiver_1774284589999.png', 'La Nano Banana arxivera', 'contingut', 'ia'),
+  e('/assets/uploads/brain/media__1775376768839.webp', 'Infografia de Sóc de Poble', 'contingut', 'ia'),
+  e('/assets/uploads/brain/media__1775516493101.webp', 'Les IA i el CSS', 'contingut', 'ia'),
+  e('/assets/uploads/brain/nano-banana_arxiver_1774284589999.webp', 'La Nano Banana arxivera', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_agricola_mas_1773539958988.png', 'El Mas agrícola', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp', 'L’ànima del Mas', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_mel_font_roja_1774216345755.png', 'Mel de la Font Roja', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_mixa_socis_1774215027069.png', 'La Mixa i els socis', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_oli_oliva_1774198089084.png', 'Oli d’oliva', 'contingut', 'ia'),
-  e('/assets/uploads/brain/nano_pedra_seca_1777089570387.png', 'Pedra seca', 'contingut', 'ia'),
+  e('/assets/uploads/brain/nano_pedra_seca_1777089570387.webp', 'Pedra seca', 'contingut', 'ia'),
   e('/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png', 'Termodinàmica i maquinari d’IA', 'contingut', 'ia'),
-  e('/assets/uploads/brain/xat_portada.jpg', 'Portada del Xat', 'contingut', 'ia'),
+  e('/assets/uploads/brain/xat_portada.webp', 'Portada del Xat', 'contingut', 'ia'),
 
   e('/assets/uploads/companies/mercat/aitana.png', 'Oli verge', 'entitat', 'ia'),
   e('/assets/uploads/companies/mercat/camiseta_portada.png', 'Samarreta', 'entitat', 'ia'),
@@ -168,25 +177,25 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/08-javi-llinares-perfil-1024px.jpg', 'Javi Llinares amb la samarreta', 'persona', 'foto'),
   e('/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/samarreta-socdepoble-verd-638px.jpg', 'Samarreta Sóc de Poble, verda', 'entitat', 'foto'),
 
-  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/0-container.png', 'Anatomia de Pedra Seca: el contenidor', 'entitat', 'sistema'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/0-container.webp', 'Anatomia de Pedra Seca: el contenidor', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/1-header.png', 'Anatomia de Pedra Seca: la capçalera', 'entitat', 'sistema'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/3-content.png', 'Anatomia de Pedra Seca: el contingut', 'entitat', 'sistema'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/3-content.webp', 'Anatomia de Pedra Seca: el contingut', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/4-secction-header.png', 'Anatomia de Pedra Seca: la capçalera de secció', 'entitat', 'sistema'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/5-section-media.jpg', 'Anatomia de Pedra Seca: el mitjà', 'entitat', 'sistema'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/disseny/5-section-media.webp', 'Anatomia de Pedra Seca: el mitjà', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/6-section-capucha-identidad.png', 'Anatomia de Pedra Seca: la caputxa d’identitat', 'entitat', 'sistema'),
   e('/assets/uploads/empresa/soc-de-poble/posts/disseny/7-section-title-decoration.png', 'Anatomia de Pedra Seca: la decoració del títol', 'entitat', 'sistema'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-codig-v3.png', 'L’art del codi', 'entitat', 'ia'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-iaia-v4.png', 'L’art de la IAIA', 'entitat', 'ia'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-sobirania-v2.png', 'L’art de la sobirania', 'entitat', 'ia'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-trellat-v3.png', 'L’art del trellat', 'entitat', 'ia'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-codig-v3.webp', 'L’art del codi', 'entitat', 'ia'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-iaia-v4.webp', 'L’art de la IAIA', 'entitat', 'ia'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-sobirania-v2.webp', 'L’art de la sobirania', 'entitat', 'ia'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-trellat-v3.webp', 'L’art del trellat', 'entitat', 'ia'),
   e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/exemple-de-poble-001.png', 'Exemple de poble', 'entitat', 'ia'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/nano-banana.png', 'La Nano Banana', 'entitat', 'ia'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/nano-banana.webp', 'La Nano Banana', 'entitat', 'ia'),
   e('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/presentacio.jpg', 'Presentació de Sóc de Poble', 'entitat', 'ia'),
   e('/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png', 'Portada del Genotip', 'entitat', 'ia'),
-  e('/assets/uploads/empresa/soc-de-poble/posts/iaies-mundials/portada_iaies.png', 'Les iaies del món', 'entitat', 'ia'),
+  e('/assets/uploads/empresa/soc-de-poble/posts/iaies-mundials/portada_iaies.webp', 'Les iaies del món', 'entitat', 'ia'),
 
   e('/assets/uploads/ia/10-joanet-serra-xiquet/avatars/joanet-serra-comic.png', 'Joanet Serra', 'ia', 'ia'),
-  e('/assets/uploads/ia/11-tio-colau-viajant/avatars/tio-colau-comic.png', 'Tio Colau', 'ia', 'ia'),
+  e('/assets/uploads/ia/11-tio-colau-viajant/avatars/tio-colau-comic.webp', 'Tio Colau', 'ia', 'ia'),
   e('/assets/uploads/ia/05-carla-soriano-doctora/posts/post-carla-salut.png', 'Carla Soriano: la salut', 'ia', 'ia'),
   e('/assets/uploads/ia/06-pepica-la-vall-cuinera/posts/post-pepica-cuina.png', 'Pepica la Vall: la cuina', 'ia', 'ia'),
   e('/assets/uploads/ia/15-marc-el-gall-el-temps/posts/post-gall-meteo.png', 'El Gall: el temps', 'ia', 'ia'),
@@ -230,17 +239,17 @@ export const EXCLOSES = Object.freeze({
   ...Object.fromEntries(COPIES_DELS_AVATARS.map((nom) => [`/assets/uploads/gent/avatars/${nom}`, 'còpia de l’avatar de /assets/uploads/avatars/'])),
   ...Object.fromEntries(COPIES_IA.map(([calaix, nom]) => [`/assets/uploads/ia/${calaix}/avatars/${nom}`, 'còpia de l’avatar de /assets/uploads/avatars/'])),
   '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg': 'còpia de /assets/fotos/javi-llinares-perfil-1200px.jpg',
-  '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.jpg': 'la mateixa foto de perfil a més resolució',
-  '/assets/uploads/brain/avatar_ratoli_comic_1778960942888.png': 'còpia de /assets/uploads/avatars/avatar-ratoli-comic.png',
+  '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.webp': 'la mateixa foto de perfil a més resolució',
+  '/assets/uploads/brain/avatar_ratoli_comic_1778960942888.webp': 'còpia de /assets/uploads/avatars/avatar-ratoli-comic.png',
   '/assets/uploads/brain/cuc-de-pi-poster.png': 'còpia de /assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png',
-  '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.png': 'còpia de /assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
+  '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.webp': 'còpia de /assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
   '/assets/uploads/brain/nano_mercat_llaurador_1774197050578.png': 'còpia de /assets/nano_cards/mercat_nano_card.webp',
   '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png': 'la mateixa il·lustració en PNG; es queda el JPEG',
   '/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.jpg': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-q.png': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r-trans.png': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r.png': 'logotip',
-  '/assets/uploads/empresa/soc-de-poble/posts/el-projecte/antigravity-badge.png': 'insígnia d’una eina (logotip)',
+  '/assets/uploads/empresa/soc-de-poble/posts/el-projecte/antigravity-badge.webp': 'insígnia d’una eina (logotip)',
   /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 5; Gemini 2030,
      A3.1) · La captura fòssil de la barra lateral antiga (v10.38.20, amb el
      botó «+ CONNECTAR» d'abans): cap article no la fa servir i l'Arxiu la

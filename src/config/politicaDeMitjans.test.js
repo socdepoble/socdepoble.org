@@ -47,9 +47,9 @@ describe('els mitjans externs del directori', () => {
     expect(MITJANS_EXTERNS_DEL_DIRECTORI.origen).toMatch(/^https:\/\/[^/]+$/);
     for (const prefix of MITJANS_EXTERNS_DEL_DIRECTORI.prefixos) expect(prefix, prefix).toMatch(/^assets\/[a-z_]+\/$/);
     // La interfície i el contingut fix de l'app viatgen (guia 7 del directori; D1 del Mestre, opció B): cap prefix no els cobrix.
-    for (const cami of ['assets/system/ui/logo.png', 'assets/ui/plugins/mapa_vinyeta.jpg', 'assets/notes/bloc_notes_vintage.jpg',
+    for (const cami of ['assets/system/ui/logo.png', 'assets/ui/plugins/consola_vinyeta.jpg', 'assets/notes/bloc_notes_vintage.jpg',
       'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg',
-      'assets/soc_de_poble_ibanez.png', 'assets/pedra-seca.css', 'rag-index.json', 'fonts/noto-sans.css']) {
+      'assets/soc_de_poble_ibanez.webp', 'assets/pedra-seca.css', 'rag-index.json', 'fonts/noto-sans.css']) {
       expect(esExtern(cami, MITJANS_EXTERNS_DEL_DIRECTORI.prefixos), cami).toBe(false);
     }
     // El contingut del servei, a l'origen extern.
@@ -68,16 +68,16 @@ describe('els mitjans externs del directori', () => {
   test('separaRecursos: externs fora, originals amb bessona substituïts, la resta viatja en ordre', () => {
     const camins = [
       'assets/towns/a/1.jpg', 'assets/towns/a/1.webp',
-      'assets/ui/plugins/mapa_vinyeta.jpg', 'assets/ui/plugins/mapa_vinyeta.webp',
+      'assets/ui/plugins/consola_vinyeta.jpg', 'assets/ui/plugins/consola_vinyeta.webp',
       'assets/ui/plugins/petita.jpg',
       'assets/system/ui/logo.svg',
       'rag-index.json'
     ];
     const politica = { externs: ['assets/towns/'], bessones: bessonesDe(camins) };
     expect(separaRecursos(camins, politica)).toEqual({
-      viatgen: ['assets/ui/plugins/mapa_vinyeta.webp', 'assets/ui/plugins/petita.jpg', 'assets/system/ui/logo.svg', 'rag-index.json'],
+      viatgen: ['assets/ui/plugins/consola_vinyeta.webp', 'assets/ui/plugins/petita.jpg', 'assets/system/ui/logo.svg', 'rag-index.json'],
       externs: ['assets/towns/a/1.jpg', 'assets/towns/a/1.webp'],
-      substituits: ['assets/ui/plugins/mapa_vinyeta.jpg']
+      substituits: ['assets/ui/plugins/consola_vinyeta.jpg']
     });
   });
 

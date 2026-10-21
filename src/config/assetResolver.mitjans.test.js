@@ -24,10 +24,14 @@ import { permetOrigenMitjans, sanitizeHtml } from '../utils/sanitize.js';
 
 const PAQUET = 'https://wp.example/wp-content/plugins/socdepoble-enxufe/dist';
 const ORIGEN = 'https://socdepoble.org';
+/* Nom d'exemple (Mòdul B, 261021): un original de la interfície que continua
+   amb la seua bessona a public/ (consola_vinyeta). Abans era la vinyeta del
+   Mapa, que ja només viu com a WebP. La política és sintètica: cap prova no
+   llig el disc ací. */
 const POLITICA = {
   origen: ORIGEN,
   externs: ['assets/uploads/', 'assets/towns/'],
-  bessones: ['assets/ui/plugins/mapa_vinyeta.jpg', 'assets/uploads/poble/DSC00410.JPG', 'assets/towns/tibi/1.jpg']
+  bessones: ['assets/ui/plugins/consola_vinyeta.jpg', 'assets/uploads/poble/DSC00410.JPG', 'assets/towns/tibi/1.jpg']
 };
 
 afterEach(() => {
@@ -40,7 +44,7 @@ afterEach(() => {
 test('sense política (proves, socdepoble.org) tot resol com sempre', () => {
   expect(fixaPoliticaDeMitjans(null)).toBeNull();
   expect(origenDeMitjansExterns()).toBe('');
-  expect(resolveAsset('/assets/ui/plugins/mapa_vinyeta.jpg')).toBe('/assets/ui/plugins/mapa_vinyeta.jpg');
+  expect(resolveAsset('/assets/ui/plugins/consola_vinyeta.jpg')).toBe('/assets/ui/plugins/consola_vinyeta.jpg');
   expect(resolveAsset('/assets/uploads/poble/DSC00410.JPG')).toBe('/assets/uploads/poble/DSC00410.JPG');
   expect(resolRecursPropi('/assets/towns/tibi/1.jpg')).toBe('/assets/towns/tibi/1.jpg');
   const html = '<p><img src="/assets/uploads/poble/DSC00410.JPG" alt=""></p>';
@@ -52,7 +56,7 @@ test('amb política i base de paquet: la bessona viatja al paquet; l’arxiu, a 
   fixaPoliticaDeMitjans(POLITICA);
   expect(origenDeMitjansExterns()).toBe(ORIGEN);
   // Estructura: la bessona, dins del paquet.
-  expect(resolveAsset('/assets/ui/plugins/mapa_vinyeta.jpg')).toBe(`${PAQUET}/assets/ui/plugins/mapa_vinyeta.webp`);
+  expect(resolveAsset('/assets/ui/plugins/consola_vinyeta.jpg')).toBe(`${PAQUET}/assets/ui/plugins/consola_vinyeta.webp`);
   // Sense bessona: l'original, dins del paquet.
   expect(resolveAsset('/assets/ui/plugins/petita.jpg')).toBe(`${PAQUET}/assets/ui/plugins/petita.jpg`);
   expect(resolveAsset('/assets/system/ui/logo.svg')).toBe(`${PAQUET}/assets/system/ui/logo.svg`);
@@ -68,15 +72,15 @@ test('l’origen extern mana sobre qualsevol base: la de l’amfitrió, un plugi
   expect(resolveAsset('/assets/uploads/x.png', '/', 'https://altre.example/dist')).toBe(`${ORIGEN}/assets/uploads/x.png`);
   expect(resolveAsset('/assets/uploads/x.png', '/sub')).toBe(`${ORIGEN}/assets/uploads/x.png`);
   // La resta continua penjant de la base demanada.
-  expect(resolveAsset('/assets/ui/plugins/mapa_vinyeta.jpg', '/', 'https://altre.example/dist'))
-    .toBe('https://altre.example/dist/assets/ui/plugins/mapa_vinyeta.webp');
+  expect(resolveAsset('/assets/ui/plugins/consola_vinyeta.jpg', '/', 'https://altre.example/dist'))
+    .toBe('https://altre.example/dist/assets/ui/plugins/consola_vinyeta.webp');
 });
 
 test('la consulta, la versió i el fragment es conserven; una URL resolta no es torna a tocar', () => {
   fixaBaseRecursos(PAQUET);
   fixaPoliticaDeMitjans(POLITICA);
-  expect(resolveAsset('/assets/ui/plugins/mapa_vinyeta.jpg?x=1#a', '/', '', '7'))
-    .toBe(`${PAQUET}/assets/ui/plugins/mapa_vinyeta.webp?x=1&v=7#a`);
+  expect(resolveAsset('/assets/ui/plugins/consola_vinyeta.jpg?x=1#a', '/', '', '7'))
+    .toBe(`${PAQUET}/assets/ui/plugins/consola_vinyeta.webp?x=1&v=7#a`);
   expect(resolveAsset('/assets/uploads/poble/DSC00410.JPG#retall', '/', '', '3'))
     .toBe(`${ORIGEN}/assets/uploads/poble/DSC00410.webp?v=3#retall`);
   const resolta = resolveAsset('/assets/uploads/poble/DSC00410.JPG');
@@ -91,12 +95,12 @@ test('la bessona només si és a la política: el nom exacte, sense endevinar', 
   fixaPoliticaDeMitjans(POLITICA);
   // Una altra caixa no és el mateix fitxer en un servidor que distingix majúscules.
   expect(resolveAsset('/assets/uploads/poble/dsc00410.jpg')).toBe(`${ORIGEN}/assets/uploads/poble/dsc00410.jpg`);
-  expect(resolveAsset('/assets/ui/plugins/mapa_vinyeta.png')).toBe('/assets/ui/plugins/mapa_vinyeta.png');
+  expect(resolveAsset('/assets/ui/plugins/consola_vinyeta.png')).toBe('/assets/ui/plugins/consola_vinyeta.png');
 });
 
 test('resolRecursPropi i resolRecursosDeHtml apliquen la política també sense base (i el sanejador hi deixa passar l’origen registrat)', () => {
   fixaPoliticaDeMitjans(POLITICA);
-  expect(resolRecursPropi('/assets/ui/plugins/mapa_vinyeta.jpg')).toBe('/assets/ui/plugins/mapa_vinyeta.webp');
+  expect(resolRecursPropi('/assets/ui/plugins/consola_vinyeta.jpg')).toBe('/assets/ui/plugins/consola_vinyeta.webp');
   expect(resolRecursPropi('/assets/uploads/avatars/mixa-comic.png')).toBe(`${ORIGEN}/assets/uploads/avatars/mixa-comic.png`);
   expect(resolRecursPropi('sdp-media://mitjans/x')).toBe('sdp-media://mitjans/x');
   expect(resolRecursPropi('/altre/x.png')).toBe('/altre/x.png');
@@ -160,7 +164,7 @@ test('recursOriginalDeBessona: de l’adreça d’una bessona, la del seu origin
   fixaPoliticaDeMitjans(POLITICA);
   expect(hiHaPoliticaDeMitjans()).toBe(true);
   expect(recursOriginalDeBessona(`${ORIGEN}/assets/uploads/poble/DSC00410.webp`)).toBe(`${ORIGEN}/assets/uploads/poble/DSC00410.JPG`);
-  expect(recursOriginalDeBessona(`${PAQUET}/assets/ui/plugins/mapa_vinyeta.webp?v=3#a`)).toBe(`${PAQUET}/assets/ui/plugins/mapa_vinyeta.jpg?v=3#a`);
+  expect(recursOriginalDeBessona(`${PAQUET}/assets/ui/plugins/consola_vinyeta.webp?v=3#a`)).toBe(`${PAQUET}/assets/ui/plugins/consola_vinyeta.jpg?v=3#a`);
   expect(recursOriginalDeBessona('/assets/towns/tibi/1.webp')).toBe('/assets/towns/tibi/1.jpg');
   expect(recursOriginalDeBessona('assets/towns/tibi/1.webp')).toBe('assets/towns/tibi/1.jpg');
   // Una base que també porta «assets/» al camí no confon la cerca.

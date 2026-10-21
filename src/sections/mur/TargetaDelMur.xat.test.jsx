@@ -62,7 +62,7 @@ describe('261007 · la targeta d’El Xat', () => {
   test('és una pàgina del sistema: /page/xat, al Mur i al Calendari, amb l’acció «Anar al xat»', () => {
     expect(SYSTEM_PAGES.find((pagina) => pagina.key === 'xat')).toMatchObject({ key: 'xat', isAvis: false, href: '/page/xat' });
     const xat = sistema('xat');
-    expect(xat).toMatchObject({ id: 'xat', isSystem: true, mainHref: '/page/xat', title: 'El Xat', image: '/assets/uploads/brain/xat_portada.jpg' });
+    expect(xat).toMatchObject({ id: 'xat', isSystem: true, mainHref: '/page/xat', title: 'El Xat', image: '/assets/uploads/brain/xat_portada.webp' });
     expect(accioDeLaTargeta('xat')).toEqual({ id: 'anar-al-xat', verb: 'Anar al xat', desti: '/xat', varietat: 'primari' });
     /* Cap altra targeta del sistema porta acció: el Mur no canvia per a elles.
        Onada 10 (261010) · Derogat de l'Onada 8 que la Consola i el Cervell hi

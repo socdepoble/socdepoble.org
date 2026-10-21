@@ -354,7 +354,7 @@ const PAGINA_IAIA = { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'àn
 
 describe('tasca 12 · la cara de la IAIA', () => {
   test('el seu avatar del padró es pinta amb la cara retallada de «Festa del Poble»; cap altra font', () => {
-    expect(CARA_DE_LA_IAIA).toEqual({ src: '/assets/uploads/brain/xat_portada.jpg', enquadrament: 'iaia' });
+    expect(CARA_DE_LA_IAIA).toEqual({ src: '/assets/uploads/brain/xat_portada.webp', enquadrament: 'iaia' });
     expect(Object.isFrozen(CARA_DE_LA_IAIA)).toBe(true);
     expect(caraDeLaIAIA(AJUDA_PER_CLAU.iaia.avatar)).toBe(CARA_DE_LA_IAIA);
     expect(caraDeLaIAIA(AGENTS_MAP.IAIA.avatar_url)).toBe(CARA_DE_LA_IAIA);

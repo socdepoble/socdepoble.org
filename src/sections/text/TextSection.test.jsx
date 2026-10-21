@@ -147,7 +147,7 @@ test('261007 · El Xat: les props de la seua UniversalPage', () => {
     title: 'El Xat',
     subtitle: pagina.subtitle,
     lead: pagina.lead,
-    heroImage: '/assets/uploads/brain/xat_portada.jpg',
+    heroImage: '/assets/uploads/brain/xat_portada.webp',
     heroWidth: 1024,
     heroHeight: 1024,
     heroFetchPriority: 'high',

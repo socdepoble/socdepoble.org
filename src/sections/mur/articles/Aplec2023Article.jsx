@@ -63,7 +63,7 @@ export function Aplec2023Article() {
       </p>
 
       <div className="media-frame detail-content__figura detail-content__figura--final">
-        <img src={resolveAsset('/assets/events/aplec_2023_reunio.png')} alt="Reunió preparatòria Aplec" />
+        <img src={resolveAsset('/assets/events/aplec_2023_reunio.webp')} alt="Reunió preparatòria Aplec" />
       </div>
     </article>
   );

@@ -41,7 +41,7 @@ export const AGENTS_MAP = {
     town_name: 'La Torre de les Maçanes',
     lema: 'Fem xarxa al territori.',
     short_bio: 'El compte oficial i central de tota la infraestructura de socdepoble',
-    hero_url: '/assets/uploads/brain/caricatura_socdepoble_portada.jpg',
+    hero_url: '/assets/uploads/brain/caricatura_socdepoble_portada.webp',
     presentacio_html: `<p><strong>El cor de la plaça digital</strong><br/><strong>socdepoble</strong> no és simplement una aplicació informàtica qualsevol, sinó una aposta radical per la sobirania tecnològica rural. En un món dominat per les grans corporacions que converteixen les persones en productes, aquesta iniciativa naix amb l'esperit de recuperar el caliu del <strong>bancal i la plaça</strong> a través del món digital, prioritzant la privacitat i la proximitat del veïnat.</p><p><strong>La doctrina de la Pedra Seca</strong><br/>L'arquitectura tecnològica de la plataforma està dissenyada seguint el patró de la <strong>Pedra Seca</strong>, on cada peça encaixa perfectament amb la següent sense necessitat de ciment. Això ens permet mantindre una aplicació extremadament <strong>enxufable i modular</strong>, capaç d'adaptar-se a qualsevol servidor futur sense perdre la seua essència. L'objectiu és garantir la durabilitat de les dades del poble, de manera que la informació dels agricultors i fadrins estiga completament protegida davant l'obsolescència d'internet.</p><p><strong>Resiliència i autonomia</strong><br/>Cada detall, des dels esmorzars organitzats fins als anuncis de tractors, funciona sota una lògica de <strong>sobirania local</strong> pensada per a no deixar mai el veïnat tirat, ni tan sols quan la connexió falle. Aquesta és la vertadera essència d'estar al <strong>Mas</strong>, on la tecnologia no dicta les regles de convivència, sinó que es doblega davant la saviesa i el <strong>trellat</strong> de les tradicions heretades.</p>`
   },
   JAVI: {
@@ -125,12 +125,12 @@ Llista d'Experts (usa sempre l'arroba @):
       title: 'El mas',
       type: 'image'
     }, {
-      src: '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.png',
+      src: '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.webp',
       title: 'Esmorzaret',
       type: 'image'
     }],
     private_album: [{
-      src: '/assets/uploads/brain/nano-banana_arxiver_1774284589999.png',
+      src: '/assets/uploads/brain/nano-banana_arxiver_1774284589999.webp',
       title: 'Arxiu secret',
       type: 'image'
     }]

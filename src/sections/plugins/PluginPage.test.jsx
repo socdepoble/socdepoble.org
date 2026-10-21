@@ -146,7 +146,12 @@ describe('cada plugin té la seua pàgina', () => {
     expect(container.querySelector('.page-intro .lead').textContent).toBe(plugin.entradilla);
     const portada = container.querySelector('.hero-image img');
     // Gauntlet 261016 (Bloc 1, Llei del Quadrat) · la portada del TPV és la vinyeta nova en WebP.
-    expect(portada.getAttribute('src')).toBe(`/assets/ui/plugins/${id}_vinyeta.${id === 'tpv' ? 'webp' : 'jpg'}`);
+    /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, torn fase
+       2, Mòdul B, P0-14) · Les del Mapa, Vehicle, Animalets, el Rebost i Salut
+       també són WebP: el seu original .jpg ix de public/ i la bessona, amb les
+       mateixes mides, és la portada. Abans: només la del TPV. */
+    const enWebp = ['mapa', 'vehicle', 'animalets', 'rebost', 'salut', 'tpv'].includes(id);
+    expect(portada.getAttribute('src')).toBe(`/assets/ui/plugins/${id}_vinyeta.${enWebp ? 'webp' : 'jpg'}`);
     expect(portada.getAttribute('alt')).toBe(plugin.imatgeAlt);
     // La portada és plegable i es veu per defecte.
     const plega = screen.getByRole('button', { name: 'Amaga la portada' });

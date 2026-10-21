@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.8
+Stable tag: 1.1.9
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -129,6 +129,10 @@ Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enx
 
 == Changelog ==
 
+= 1.1.9 =
+* Full-screen template: unused font preloads from fonts.gstatic.com are removed through wp_preload_resources, also with block themes.
+* WordPress.org review: prefixed template variable, documented direct database queries, complete external services list, no remote image in the readme.
+
 = 1.1.8 =
 * Wiki: the Markdown parser keeps consecutive items in one list and shows Mermaid blocks as diagram cards.
 * Chat: read-only sample conversations show a direct Register button.
@@ -138,18 +142,7 @@ Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enx
 * TPV Pedra Seca integration with offline capability and allergens support.
 
 = 1.0.3 =
-* Every page, including system pages, shows the orange author bar. The author's name links to the author's page; pages without a named author link to the project page.
-* Pages published by Sóc de Poble show its logo above the title, up to 600 pixels wide and scaled down on small screens. An organization's public profile shows that organization's logo. Pages signed by a person show that person's round avatar instead of the logo.
-* Workspace navigation (Wiki, Notes, Design) stays visible as a narrow rail at medium widths, such as tablets, landscape phones and narrow host boxes. On small screens, lists and pages leave room for the mobile navigation bar.
-* Pull to refresh works on touch screens inside WordPress pages too, only when the host page is scrolled to the top and the application starts within the screen.
-* The section index opens inside the application instead of at the end of the theme's page, receives keyboard focus, and jumping to a section scrolls only the application. Long links in Wiki pages wrap instead of being cut off.
-* Cards from posts, the marketplace and events can be embedded in notes and posts from the editor.
-* Chat: a media view lists the files, links and documents shared in a conversation.
-* Signed-in members see their round avatar in the top bar, linking to their profile.
-* The embedded console no longer requests development-only files from the host.
-* The slash menu of the editor opens next to the cursor inside the host page, and profile settings no longer send storage events to the host window.
-* Fluid text sizes follow the width of their container where the browser supports it, with a viewport-based fallback for older browsers.
-* The project page includes its illustrations in the package.
+* Author bar and publisher logo on every page; workspace rail at medium widths; pull to refresh and the section index work inside WordPress pages; shortcode and full-screen template.
 
 = 1.0.2 =
 * The Tenant ID setting is removed. The application always uses the data scope sealed in its package; no host setting, attribute or script can change the backend or the data scope.
@@ -184,6 +177,9 @@ Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enx
 * Shortcode and full-screen template.
 
 == Upgrade Notice ==
+
+= 1.1.9 =
+Cleaner browser console on full-screen pages and WordPress.org review fixes.
 
 = 1.0.5 =
 TPV integration with Pedra Seca architecture and offline capabilities.

@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { Avatar, ENQUADRAMENTS_AVATAR } from './Avatar.jsx';
 
-const SRC = '/assets/uploads/brain/xat_portada.jpg';
+const SRC = '/assets/uploads/brain/xat_portada.webp';
 afterEach(cleanup);
 
 test('amb imatge i un enquadrament de la llista, les dues classes de la variant', () => {

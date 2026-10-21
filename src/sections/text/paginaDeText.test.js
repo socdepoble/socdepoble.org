@@ -87,7 +87,7 @@ test('261007 · /page/xat és «El Xat»; /xat no és cap pàgina; l’Ànima co
   expect(paginaDeRuta('/xat')).toBeNull();
   expect(paginaDeRuta('/iaia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
   const { title, html, image, imageWidth, imageHeight, imageFetchPriority, date } = PAGE_COPY.xat;
-  expect([title, image, imageWidth, imageHeight, imageFetchPriority]).toEqual(['El Xat', '/assets/uploads/brain/xat_portada.jpg', 1024, 1024, 'high']);
+  expect([title, image, imageWidth, imageHeight, imageFetchPriority]).toEqual(['El Xat', '/assets/uploads/brain/xat_portada.webp', 1024, 1024, 'high']);
   // La data que fixa el Mestre: 01:30 hora local del 07-10-2026 (capçalera de pageContent.js).
   expect(date).toBe('2026-10-07T01:30:00+02:00');
   // Escrit com a classe [12]: design_guard llig els literals de capçalera de qualsevol .js.

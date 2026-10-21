@@ -3,7 +3,7 @@
  * Plugin Name:       Sóc de Poble. Portal de Pobles Connectats
  * Plugin URI:        https://socdepoble.org/enxufe/
  * Description:       Connect to the Sóc de Poble Portal, a Fediverse of Connected Villages! The civic network connecting neighbours, associations, events and local shops. Open Settings ➔ Sóc de Poble to choose your village and activate this node.
- * Version:           1.1.8
+ * Version:           1.1.9
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Sóc de Poble
@@ -120,7 +120,7 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 	return;
 }
 
-const SOCDEPOBLE_ENXUFE_VERSIO    = '1.1.8';
+const SOCDEPOBLE_ENXUFE_VERSIO    = '1.1.9';
 const SOCDEPOBLE_ENXUFE_FITXER    = __FILE__;
 const SOCDEPOBLE_ENXUFE_SLUG      = 'socdepoble-enxufe';
 const SOCDEPOBLE_ENXUFE_HANDLE    = 'socdepoble-enxufe';

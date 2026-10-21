@@ -17,7 +17,12 @@ import { PLUGINS, pluginPerId } from '../plugins/registrePlugins.js';
 const PUBLIC = path.join(process.cwd(), 'public');
 const alDisc = (ruta) => path.join(PUBLIC, ...ruta.split('/').filter(Boolean));
 const esFitxerAmbPes = (ruta) => existsSync(alDisc(ruta)) && statSync(alDisc(ruta)).isFile() && statSync(alDisc(ruta)).size > 0;
-const FORMA = /^\/assets\/(ui\/plugins\/[a-z]+_vinyeta|nano_cards\/[a-z_]+_nano_card)\.jpg$/;
+/* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, torn fase 2,
+   Mòdul B, P0-14) · Les vinyetes de Treball, el Mapa i Salut ja només viuen
+   com a WebP (l'original .jpg ix de public/; la bessona té les mateixes
+   mides): la forma admet .webp, però només quan no hi ha cap .jpg al costat
+   (ho vigila la prova «cada fitxer és a public/…»). Abans: només .jpg. */
+const FORMA = /^\/assets\/(ui\/plugins\/[a-z]+_vinyeta|nano_cards\/[a-z_]+_nano_card)\.(?:jpg|webp)$/;
 
 /* Totes les fonts que ja pinten una imatge, amb el seu text alternatiu. */
 const FONTS = [
@@ -39,7 +44,11 @@ describe('la taula', () => {
     for (const [id, { imatge }] of Object.entries(IMATGES_CONSOLA)) {
       expect(imatge, id).toMatch(FORMA);
       expect(esFitxerAmbPes(imatge), `${imatge} no és a public/`).toBe(true);
+      // Una .webp només si el seu .jpg ja no és al disc: mentre hi ha l'original, la taula nomena l'original.
+      if (imatge.endsWith('.webp')) expect(existsSync(alDisc(imatge.replace(/\.webp$/, '.jpg'))), imatge).toBe(false);
     }
+    expect(Object.values(IMATGES_CONSOLA).map((x) => x.imatge).filter((ruta) => ruta.endsWith('.webp')).sort())
+      .toEqual(['/assets/ui/plugins/mapa_vinyeta.webp', '/assets/ui/plugins/salut_vinyeta.webp', '/assets/ui/plugins/treball_vinyeta.webp']);
   });
 
   test('cap imatge repetida: una il·lustració, un sol lloc de /consola (lliçó 261010)', () => {

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-10-21T11:50:29.672Z",
-  "hash": "e39246c52b1d34cdfe60fcccdf861b81347c6e95164271439e9cf7a090f2efd8",
-  "filesCount": 40,
+  "timestamp": "2026-10-21T17:03:28.446Z",
+  "hash": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae",
+  "filesCount": 41,
   "manifest": {
-    ".agents/skills/00_INDEX_SKILLS.md": "e73a11e8e9f063281c993cc8eddc0c35c91d7844a4d4fdfbb8b7055fcb4c8fa5",
+    ".agents/skills/00_INDEX_SKILLS.md": "3c2597d7867aa9246d0654d22ae4f874f8f55320e14b924baeeec92d25aea615",
     ".agents/skills/core-automillora/SKILL.md": "b9fae0508f9c6dafd66d9c3d580c1b0b45b660636fe2f64ce608ec578b94ec68",
     ".agents/skills/core-comprensio-reflexiva/SKILL.md": "9c1c70142662cdc6ced8fdd4486498c0771662b162d6d79c0e0ec7ba50b73bcc",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "002164a7d50dfe9fe819696b804c5fe68a114028dc39d2a6abdea4b3ef08db46",
@@ -38,11 +38,12 @@
     ".agents/skills/sdp-pedra-seca/SKILL.md": "e2acdb7fca327aadb516eec21e92d4cb7248d8c786b8b06f93d7c59c78faf6a7",
     ".agents/skills/sdp-universal-editor/SKILL.md": "1700fef579fd06700cb5cf4be41a0192d5aff3a4ca50e55f70a8b37b5dbe7ee4",
     ".agents/skills/sdp-universal-page/SKILL.md": "32ab89ebe8fa538d0300eacc0ad0aae46bb9d1221337c24bc0dd9b99ae0e1941",
+    ".agents/skills/sdp-vigilant-tellado/SKILL.md": "09c00bd78a15162592793e5feed9cbffe7ba235fb624ee53eaf54fee60dd4f29",
     ".agents/skills/sdp-workflow/SKILL.md": "9770359c113a0fedead87ce0b4a31fadac3b7e249a03bb98a39ed66b50ff5b80",
     ".agents/skills/wiki-busca-skills/SKILL.md": "cb3e09095daf65e63c4a65682e2d5c671783c2dbbbba6b27ddb28e86a697cd1a",
     ".agents/skills/wiki-cicle-de-vida/SKILL.md": "664254e3719d0cd1b2441f1d3823458654d84db0cb39b804b3db4bb096201184",
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "fcbdfcfd88c759b3a7245f29514573437a3e2bb1373af8ec5f711788e6669d65",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "209f6826f46f5afec2d068b129a006e911a1b470df5cedd144fa6fe62b791dea"
   },
-  "transaction": "c4f7f8a4-81e9-4811-af8a-10f17bcd6155"
+  "transaction": "4a734cba-08d6-44fd-92d1-ca7371725faa"
 }

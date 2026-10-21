@@ -462,12 +462,12 @@ test('la boina de les targetes de la Consola és la de Sóc de Poble, i el seu l
 test('l’article de l’Aplec pinta les seues imatges amb la base vigent', () => {
   const srcs = (container) => [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
   const sense = render(React.createElement(Aplec2023Article));
-  expect(srcs(sense.container)).toEqual(['/assets/events/aplec_2023_ponents.png', '/assets/events/aplec_2023_reunio.png']);
+  expect(srcs(sense.container)).toEqual(['/assets/events/aplec_2023_ponents.png', '/assets/events/aplec_2023_reunio.webp']);
   cleanup();
   fixaBaseRecursos(PAQUET);
   const amb = render(React.createElement(Aplec2023Article));
   expect(srcs(amb.container)).toEqual([
-    `${PAQUET}/assets/events/aplec_2023_ponents.png`, `${PAQUET}/assets/events/aplec_2023_reunio.png`
+    `${PAQUET}/assets/events/aplec_2023_ponents.png`, `${PAQUET}/assets/events/aplec_2023_reunio.webp`
   ]);
 });
 

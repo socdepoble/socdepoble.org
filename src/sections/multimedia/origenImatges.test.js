@@ -15,7 +15,7 @@ const CENS = indexaCens(CENS_IMATGES);
 describe('origenDe', () => {
   test('mana el camp de l’element; després el cens; després el camí; en el dubte, foto', () => {
     expect(origenDe({ origen: 'sistema', src: '/assets/nano_cards/x.jpg' })).toBe('sistema');
-    expect(origenDe({ src: '/assets/uploads/brain/xat_portada.jpg' }, CENS)).toBe('ia');
+    expect(origenDe({ src: '/assets/uploads/brain/xat_portada.webp' }, CENS)).toBe('ia');
     expect(origenDe({ src: '/assets/uploads/brain/mac_mini_m4_1787721966622.jpg' }, CENS)).toBe('foto');
     expect(origenDe({ src: '/assets/system/ui/logo.png' })).toBe('sistema');
     expect(origenDe({ src: '/assets/nano_cards/nova.jpg' })).toBe('ia');

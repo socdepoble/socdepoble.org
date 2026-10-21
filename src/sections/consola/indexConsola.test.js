@@ -317,16 +317,31 @@ describe('les 18 il·lustracions de les ordres', () => {
      va retirar a 1d45fb1a, i censImatges, legacyMedia, pageContent i la prova
      del Panell de Control ja la nomenen així. */
   const NOMES_BESSONA = new Set(['mercat']);
+  /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, torn fase
+     2, Mòdul B, P0-14) · Com la del Mercat, huit vinyetes ja només viuen com
+     a WebP: el seu original .jpg ix de public/ (evacuat a
+     _multimedia_de_poble/originals_raster_public/) i la bessona, amb les
+     mateixes mides, és la il·lustració. Abans: les 15 eren .jpg. La Bàscula,
+     el Cervell, la Consola i Disseny es conserven al disc en .jpg (cap
+     esborrat, registrePlugins.test.js) i la Gestoria també (la cita una ADR
+     viva de la Wiki). */
+  const VINYETES_NOMES_WEBP = new Set(['animalets', 'fedivers', 'habitatge', 'mapa', 'rebost', 'salut', 'treball', 'vehicle']);
+  const extensioDeVinyeta = (id) => (VINYETES_NOMES_WEBP.has(id) ? 'webp' : 'jpg');
 
   test('les 14 vinyetes i les 4 nano cards són a public/, amb pes', () => {
     const rutes = [
-      ...VINYETES.map((id) => `/assets/ui/plugins/${id}_vinyeta.jpg`),
+      ...VINYETES.map((id) => `/assets/ui/plugins/${id}_vinyeta.${extensioDeVinyeta(id)}`),
       ...NANO_CARDS.map((id) => `/assets/nano_cards/${id}_nano_card.${NOMES_BESSONA.has(id) ? 'webp' : 'jpg'}`)
     ];
     expect(rutes).toHaveLength(18);
     for (const ruta of rutes) expect(esFitxerAmbPes(ruta), ruta).toBe(true);
+    for (const id of ALTRES_VINYETES) expect(esFitxerAmbPes(`/assets/ui/plugins/${id}_vinyeta.${extensioDeVinyeta(id)}`), id).toBe(true);
     // La carpeta de vinyetes no en porta cap altra: les 14 i les ALTRES_VINYETES són totes les que hi ha.
-    expect(readdirSync(alDisc('/assets/ui/plugins')).filter((f) => f.endsWith('.jpg')).sort())
-      .toEqual([...VINYETES, ...ALTRES_VINYETES].map((id) => `${id}_vinyeta.jpg`).sort());
+    const delDisc = readdirSync(alDisc('/assets/ui/plugins'));
+    expect(delDisc.filter((f) => f.endsWith('.jpg')).sort())
+      .toEqual([...VINYETES, ...ALTRES_VINYETES].filter((id) => !VINYETES_NOMES_WEBP.has(id)).map((id) => `${id}_vinyeta.jpg`).sort());
+    // Cada una té la seua .webp (la bessona o, sense original, la il·lustració), i cap altra.
+    expect(delDisc.filter((f) => f.endsWith('.webp')).sort())
+      .toEqual([...VINYETES, ...ALTRES_VINYETES].map((id) => `${id}_vinyeta.webp`).sort());
   });
 });

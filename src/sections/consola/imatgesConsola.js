@@ -60,7 +60,7 @@ export const IMATGES_CONSOLA = Object.freeze({
     'Dos llauradors es rasquen el cap davant d’un taulell de fusta ple de rellotges i manòmetres, enmig dels tarongers'),
   explorador: il(`${VINYETES}/cervell_vinyeta.jpg`,
     'Un cervell ple d’engranatges i bombetes dins d’una bóta, connectat a una màquina d’escriure, davant de veïns bocabadats'),
-  fluxos: il(`${VINYETES}/treball_vinyeta.jpg`,
+  fluxos: il(`${VINYETES}/treball_vinyeta.webp`,
     'Llauradors i professionals treballant i construint junts'),
   calendari: il(`${NANO_CARDS}/calendari_nano_card.jpg`,
     'Un llaurador es posa les mans al cap davant d\'un calendari agrícola gegant clavat a la paret'),
@@ -70,9 +70,9 @@ export const IMATGES_CONSOLA = Object.freeze({
     'Un llaurador assenyala la bàscula gegant de la cooperativa mentre una iaia apunta la pesada a la llibreta'),
   agents: il(`${NANO_CARDS}/cervell_nano_card.jpg`,
     'Un cap mecànic d’engranatges i bombetes, damunt d’unes erugues, enmig de la plaça i dels veïns bocabadats'),
-  actors: il(`${VINYETES}/mapa_vinyeta.jpg`,
+  actors: il(`${VINYETES}/mapa_vinyeta.webp`,
     'Llauradors en un bancal intentant clavar la punxa del mapa de geolocalització'),
-  salut: il(`${VINYETES}/salut_vinyeta.jpg`,
+  salut: il(`${VINYETES}/salut_vinyeta.webp`,
     'Un metge pren la tensió a un iaio assegut en una cadira de bova, al carrer, entre gats i gossos')
 });
 

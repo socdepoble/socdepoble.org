@@ -45,6 +45,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[sdp-pedra-seca/SKILL|sdp-pedra-seca]]: Reglament matemàtic visual Pedra Seca (Alta Definició)
 - [[sdp-universal-editor/SKILL|sdp-universal-editor]]: Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.
 - [[sdp-universal-page/SKILL|sdp-universal-page]]: Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.
+- [[sdp-vigilant-tellado/SKILL|sdp-vigilant-tellado]]: Tractor de perímetre i enduriment, inspirat en Vigilant (Vigilante) de Fernando Tellado (AyudaWP). Sis regles VIG de la checklist d'AyudaWP i comprovacions de perímetre: capçaleres, CSP, exposició de fitxers, integritat del paquet, secrets versionats, enumeració, 2FA i compatibilitat amb els plugins de seguretat de l'amfitrió, en tres capes: connector WordPress, SPA amb Supabase, i govern. Només llig i informa. No arregla res.
 - [[sdp-workflow/SKILL|sdp-workflow]]: Workflow principal de treball i Spec-Driven Development
 - [[wiki-busca-skills/SKILL|wiki-busca-skills]]: Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.
 - [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]]: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.

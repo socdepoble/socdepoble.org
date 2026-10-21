@@ -850,11 +850,11 @@ test('P5 · T8 · la imatge de cada targeta és el hero de la seua pàgina, amb 
     ['mur', '/assets/nano_cards/mur_nano_card.jpg'],
     ['mercat', '/assets/nano_cards/mercat_nano_card.webp'],
     ['calendari', '/assets/nano_cards/calendari_nano_card.jpg'],
-    ['mapa', '/assets/ui/plugins/mapa_vinyeta.jpg'],
+    ['mapa', '/assets/ui/plugins/mapa_vinyeta.webp'],
     ['vehicle', '/assets/nano_cards/vehicle_nano_card.jpg'],
     ['animalets', '/assets/nano_cards/animalets_nano_card.jpg'],
-    ['treball', '/assets/ui/plugins/treball_vinyeta.jpg'],
-    ['habitatge', '/assets/ui/plugins/habitatge_vinyeta.jpg']
+    ['treball', '/assets/ui/plugins/treball_vinyeta.webp'],
+    ['habitatge', '/assets/ui/plugins/habitatge_vinyeta.webp']
   ];
   expect(targetes).toHaveLength(esperades.length);
   for (const [index, [id, src]] of esperades.entries()) {

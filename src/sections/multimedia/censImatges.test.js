@@ -11,7 +11,10 @@
    Encàrrec 261019_1425 · Les bessones .webp que escriu el tractor de mitjans
    al costat d'un original (src/config/politicaDeMitjans.js) no són imatges
    noves: el cens nomena l'original i la bessona en seguix l'estat. Un .webp
-   que no és la bessona de cap original declarat continua fent roja la prova. */
+   que no és la bessona de cap original declarat continua fent roja la prova.
+   Ordre del Mestre (261021, torn fase 2, Mòdul B, P0-14) · Un original evacuat
+   de public/ deixa la seua .webp sense ningú de qui ser bessona: el cens (o
+   EXCLOSES) la nomena a ella, en el lloc de l'original i amb el mateix id. */
 import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -135,7 +138,7 @@ describe('el cens de l’Arxiu visual', () => {
       expect(delCens.has(original), `${copia} → ${original}`).toBe(true);
     }
     /* Una variant de resolució o un logotip no són còpies de res. */
-    expect(ALIES_DEL_CENS).not.toHaveProperty(['/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.jpg']);
+    expect(ALIES_DEL_CENS).not.toHaveProperty(['/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1600px.webp']);
     expect(ALIES_DEL_CENS).not.toHaveProperty(['/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.jpg']);
     expect(Object.isFrozen(ALIES_DEL_CENS)).toBe(true);
   });

@@ -74,7 +74,9 @@ const ABAST = (() => {
   return a ? a.slice(8).split(',').map(p => p.trim()) : null;
 })();
 
-/** Directoris que s'aboquen sencers. Si un no existix, s'avorta. */
+/** Directoris que s'aboquen sencers. Si un no existix, s'avorta.
+ *  261021 (pla 261021_1850, Mòdul B) · Fora 'assets': la carpeta de l'arrel era una còpia de
+ *  public/assets/uploads/brain/ i s'ha evacuat a _multimedia_de_poble/quarantena_arrel_assets/. */
 const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'sollutia' ? [
   CAMINS.src,
   'supabase',
@@ -90,7 +92,6 @@ const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'so
   CAMINS.tooling,
   'scripts',
   CAMINS.wiki,
-  'assets',
   'supabase',
   'tests',
 ] : [
@@ -99,7 +100,6 @@ const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'so
   CAMINS.tooling,
   'scripts',
   CAMINS.wiki,
-  'assets',
   'supabase',
   'tests',
 ]);

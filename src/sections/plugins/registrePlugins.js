@@ -69,6 +69,11 @@
  *     (public/). És la portada (Hero) de la pàgina i la imatge de la targeta.
  *     Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La del TPV del Bar és
  *     tpv_vinyeta.webp (extensioImatge); la resta, .jpg com sempre.
+ *     Ordre del Mestre (261021, torn fase 2, Mòdul B, P0-14) · Les del Mapa,
+ *     Vehicle Compartit, Animalets, el Rebost i Salut ja només viuen com a
+ *     WebP (la bessona, amb les mateixes mides; l'original .jpg ix de
+ *     public/): també porten extensioImatge 'webp'. La Gestoria i l'RSS
+ *     continuen en .jpg.
  *   · obrir  · la ruta de l'app o de la secció QUE JA EXISTIX, o null («en
  *     obres»). Cap ruta inventada: registrePlugins.test.js comprova que cada
  *     una la servix App de veres. Una ruta /app/<id>/… és d'una app de la
@@ -233,7 +238,9 @@ export const PLUGINS = Object.freeze([
     subtitol: 'Els llocs del poble, damunt del mapa',
     entradilla: 'Eina en obres: encara no es pot marcar cap lloc. Un punt publicat al mapa serà públic i el podrà localitzar qualsevol, també des d’altres pobles.',
     imatgeAlt: 'Veïns i veïnes claven una agulla de mapa roja i gegant enmig dels tarongers',
-    etiquetaObrir: 'Obrir el Mapa'
+    etiquetaObrir: 'Obrir el Mapa',
+    /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
+    extensioImatge: 'webp'
   }),
   plugin({
     id: 'vehicle',
@@ -241,7 +248,9 @@ export const PLUGINS = Object.freeze([
     subtitol: 'Seients buits per a pujar i baixar del poble',
     entradilla: 'Eina en obres: encara no es pot publicar cap trajecte. Un trajecte publicat diu a tothom el teu horari i el teu camí; les despeses les acordeu entre vosaltres, fora de l’app.',
     imatgeAlt: 'Una furgoneta plena de veïns, caixes de tomaques i un acordió baixa pel camí del poble',
-    etiquetaObrir: 'Obrir Vehicle Compartit'
+    etiquetaObrir: 'Obrir Vehicle Compartit',
+    /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
+    extensioImatge: 'webp'
   }),
   plugin({
     id: 'animalets',
@@ -249,7 +258,9 @@ export const PLUGINS = Object.freeze([
     subtitol: 'Animals perduts, trobats i en adopció',
     entradilla: 'Eina en obres: encara no es pot publicar cap avís. El telèfon o el contacte que poses en un avís el veurà tothom.',
     imatgeAlt: 'Una iaia baixa un gatet d’una olivera amb l’ajuda d’un veí, entre gossos, gallines i un ase',
-    etiquetaObrir: 'Obrir Animalets'
+    etiquetaObrir: 'Obrir Animalets',
+    /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
+    extensioImatge: 'webp'
   }),
   plugin({
     id: 'gestoria',
@@ -274,7 +285,9 @@ export const PLUGINS = Object.freeze([
     espai: 'llar',
     etiquetaObrir: 'Obrir el Rebost',
     data: DATA_DE_L_ORDRE,
-    etiquetes: classificacio('Compra')
+    etiquetes: classificacio('Compra'),
+    /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
+    extensioImatge: 'webp'
   }),
   plugin({
     id: 'salut',
@@ -286,7 +299,9 @@ export const PLUGINS = Object.freeze([
     espai: 'llar',
     etiquetaObrir: 'Obrir Salut',
     data: DATA_DE_L_ORDRE,
-    etiquetes: classificacio('Cures')
+    etiquetes: classificacio('Cures'),
+    /* Mòdul B (261021) · L'original .jpg ix de public/: la vinyeta és la WebP. */
+    extensioImatge: 'webp'
   }),
   /* Onada 8 (261009) · La Consola, el Cervell i el Panell de Disseny ja no
      són plugins: són pàgines del sistema (vegeu la capçalera). */
