@@ -34,6 +34,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261021_1850_prompt_claude_gemini_botigues_ayudawp_i_salfumant]]
+- [[261021_1850_pla_implementacio_botigues_ayudawp_i_salfumant_fase2]]
 - [[261021_1645_auditoria_claude_salfumant_radical]]
 - [[261021_1641_auditoria_gemini]]
 - [[261021_1600_prompt_claude_codex_auditoria_radical_fitxers_i_desbloqueig]]
