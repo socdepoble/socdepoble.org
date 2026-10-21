@@ -186,10 +186,11 @@ test('agents PERSON, COMPANY i AI van al tipus i a la ruta que toquen', () => {
 });
 
 /* Gauntlet 261016 (Bloc 3; ordre del Mestre) · Un personatge ANIMAL del
-   catàleg (El Gall, Súper Ratolí, La Mixa, Sultan) és una IA, amb el mateix
-   vocabulari que el directori i el perfil públic (data/agentsSeed.js ·
-   tipusDAgent): l'etiqueta d'IA i la ruta /perfil. Abans eixia com a persona,
-   cap a /gent. El tipus es llig en majúscules o en minúscules, com abans. */
+   catàleg (hui, Marc El Gall: ordre del Mestre, 261021, pla 261021_0015 §12)
+   és una IA, amb el mateix vocabulari que el directori i el perfil públic
+   (data/agentsSeed.js · tipusDAgent): l'etiqueta d'IA i la ruta /perfil.
+   Abans eixia com a persona, cap a /gent. El tipus es llig en majúscules o en
+   minúscules, com abans. */
 test('Gauntlet 261016 · un agent ANIMAL és una IA: l’etiqueta d’IA i la seua fitxa d’IA', () => {
   const etiquetes = { etiquetes: { ia: 'Intel·ligència artificial' } };
   for (const type of ['ANIMAL', 'animal']) {

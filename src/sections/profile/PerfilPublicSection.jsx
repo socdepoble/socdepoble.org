@@ -40,6 +40,7 @@ import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargete
    personatge ANIMAL és una IA. */
 import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { origenPublic } from '../../config/origenPublic.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
    a config/navigation.js: el directori (ProfileSection) fa el mateix camí. */
@@ -173,10 +174,11 @@ const AGENTS_BUITS = Object.freeze([]);
    · La URL canònica d'una de les tres identitats del Mestre: la seua ruta neta
    (rutaCanonicaDePerfil) a l'origen canònic del build, el mateix que fa servir
    useSEO.js (VITE_CANONICAL_URL o, si no, el de la pàgina). És l'adreça que el
-   Mestre nomena, a l'arrel del domini: no depén d'on estiga muntada l'app. */
+   Mestre nomena, a l'arrel del domini: no depén d'on estiga muntada l'app.
+   Ordre del Mestre (261021, pla 261021_0015 §13, P1-03) · L'origen ve
+   d'origenPublic.js: dins de l'app nativa, socdepoble.org. */
 function urlCanonica(ruta) {
-  const origen = import.meta.env?.VITE_CANONICAL_URL || window.location.origin;
-  return `${String(origen).replace(/\/$/, '')}${ruta}`;
+  return `${origenPublic()}${ruta}`;
 }
 
 /**

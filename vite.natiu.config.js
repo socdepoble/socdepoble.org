@@ -325,21 +325,14 @@ function infoPlistDe(arrel) {
    costat). `fitxer` és on viu la cita i `cites`, els textos que la fan; una
    prova comprova que hi continuen (si algú la fa passar pel resolutor,
    l'excepció sobra i la prova ho diu) i que cap url() dels CSS de src/ no
-   cita cap altre original amb bessona. */
-export const ORIGINALS_CITATS_SENSE_RESOLUTOR = Object.freeze([
-  Object.freeze({
-    original: 'assets/system/ui/xat-bg-map-v2.jpg',
-    que: "el fons del Xat (--sdp-xat-fons-imatge): només el resol <soc-de-poble> quan té base (PedraSecaEmbed.jsx, _aplicaBaseRecursos), i l'app no munta l'element",
-    fitxer: 'src/css/tokens.css',
-    cites: Object.freeze(["url('/assets/system/ui/xat-bg-map-v2.jpg')"])
-  }),
-  Object.freeze({
-    original: 'assets/notes/bloc_notes_vintage.jpg',
-    que: "la foto de mostra de l'Enquadrament al catàleg de Disseny: arriba crua a DialegEnquadrament, que la baixa amb fetch()",
-    fitxer: 'src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx',
-    cites: Object.freeze(["const MOSTRA = '/assets/notes/bloc_notes_vintage.jpg';", 'setFont(MOSTRA)'])
-  })
-]);
+   cita cap altre original amb bessona.
+   Ordre del Mestre (261021, pla 261021_0015 §13, P1-05) · Buida: les dues que
+   hi havia ja citen la bessona .webp (el fons del Xat a tokens.css i a
+   PedraSecaEmbed.jsx, i la foto de mostra d'EspecimenEnquadrament.jsx), i els
+   seus originals (1,2 MB i 764 KB) ja no viatgen dins de l'app. Una cita crua
+   nova d'un original amb bessona torna ací, amb la forma
+   { original, que, fitxer, cites }, congelada. */
+export const ORIGINALS_CITATS_SENSE_RESOLUTOR = Object.freeze([]);
 
 /* Fase D (261020, L10) · Els índexs de la Wiki que el connector porta per transparència
    radical i que l'app no llig mai (cap fitxer de src/ els demana; la IAIA local llig

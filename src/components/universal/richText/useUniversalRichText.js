@@ -87,6 +87,25 @@ const LLAVORS_PER_EDITOR = new WeakMap();
    ni tornen a eixir. Un altre document (un altre id) és una càrrega nova. */
 const VERGES_PER_EDITOR = new WeakMap();
 
+/* Ordre del Mestre (261021, pla 261021_0015 §13, P1-02: «una nota desada per
+   la persona no s'ha de buidar mai en tornar-la a muntar quan el seu cos és
+   igual que la llavor») · La condició de verge vivia només a l'editor: un
+   editor nou per a la mateixa nota (NotesEditor el munta per id), o el mateix
+   editor que passava per una altra nota i hi tornava, tornava a decidir-la per
+   la igualtat del text, i el primer focus esborrava el que la persona havia
+   escrit i desat igual que la plantilla. Ara la plantilla EFÍMERA és un estat
+   de la nota, no del text: el primer gest sobre el cos d'un document l'apunta
+   ací pel seu id, i cap càrrega posterior d'eixe id no torna a ser verge (ni
+   es buida ni hi torna la llavor). Una nota que ningú no ha tocat continua
+   esvaint-se. Dura el que dura la pàgina: el que es desa al servidor no porta
+   cap marca, i el text tampoc no la pot portar. */
+const IDS_AMB_LLAVOR_CONSUMIDA = new Set();
+
+/** Per a les proves: oblida els documents que ja han consumit la llavor. */
+export function oblidaLlavorsConsumides() {
+  IDS_AMB_LLAVOR_CONSUMIDA.clear();
+}
+
 /**
  * Buida el cos, en una transacció PRÒPIA, si encara és la llavor verge que
  * s'hi va carregar i ningú no l'ha tocada, i torna true; si no (text propi,
@@ -112,7 +131,9 @@ export function buidaLlavorVerge(editor) {
   const estat = VERGES_PER_EDITOR.get(editor);
   if (!estat || estat.consumida) return false;
   estat.consumida = true;
-  if (!estat.verge || !esLlavorVerge(editor, LLAVORS_PER_EDITOR.get(editor)?.current)) return false;
+  const llavors = LLAVORS_PER_EDITOR.get(editor)?.current;
+  if (estat.id != null && llavors?.length) IDS_AMB_LLAVOR_CONSUMIDA.add(estat.id);
+  if (!estat.verge || !esLlavorVerge(editor, llavors)) return false;
   return editor.chain().setMeta('addToHistory', false).clearContent().run();
 }
 
@@ -247,14 +268,19 @@ export function useUniversalRichText({
     let estat = VERGES_PER_EDITOR.get(editor);
     const carrega = !estat || estat.id !== id;
     if (!estat) VERGES_PER_EDITOR.set(editor, (estat = {}));
-    if (carrega) Object.assign(estat, { id, verge: false, consumida: false });
+    /* P1-02 (261021, pla 261021_0015 §13) · Una nota que ja ha consumit la
+       llavor arriba consumida: el seu cos és de la persona, encara que siga
+       igual que la plantilla. */
+    if (carrega) Object.assign(estat, { id, verge: false, consumida: id != null && IDS_AMB_LLAVOR_CONSUMIDA.has(id) });
     try {
       const llavors = llavorsRef.current;
       // Només sincronitzem si no hi ha canvis pendents de l'usuari (dirty state)
       const sincronitza = editor.getHTML() !== content && pendingSaveRef.current.content === null;
       if (sincronitza) {
         const cos = content || '';
-        if (estat.consumida && casaAmbUnaLlavor(createDocument(cos, editor.schema), editor.schema, llavors)) return;
+        /* P1-02 · Només dins del mateix document: una càrrega (un altre id)
+           posa sempre el seu cos, mai es queda amb el de la nota d'on es ve. */
+        if (!carrega && estat.consumida && casaAmbUnaLlavor(createDocument(cos, editor.schema), editor.schema, llavors)) return;
         editor.chain().setMeta('addToHistory', false).setContent(cos, { emitUpdate: false }).run();
       } else if (carrega) {
         editor.chain().setMeta('addToHistory', false).setMeta('preventUpdate', true).run();

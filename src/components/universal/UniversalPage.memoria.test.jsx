@@ -68,3 +68,19 @@ test('NAVEGADOR sense base (socdepoble.org): Connectar i Compartir, els d’aban
   fireEvent.click(botoCompartir(container));
   expect(share).toHaveBeenCalledWith({ title: 'Pàgina', url: window.location.href });
 });
+
+/* Ordre del Mestre (261021, pla 261021_0015 §13, P1-03) · L'app nativa munta
+   el router de NAVEGADOR sense base, però la barra d'adreces és
+   capacitor://localhost (iOS) o https://localhost (Android): Compartir de la
+   barra porta socdepoble.org i el mateix camí. */
+test('APP NATIVA (navegador sense base): Compartir de la barra porta socdepoble.org', () => {
+  window.history.replaceState(null, '', '/mur?date=2026-09-28');
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    const { container } = render(<BrowserRouter><UniversalPage chrome="context" title="Pàgina" /></BrowserRouter>);
+    fireEvent.click(botoCompartir(container));
+    expect(share).toHaveBeenCalledWith({ title: 'Pàgina', url: 'https://socdepoble.org/mur?date=2026-09-28' });
+  } finally {
+    delete window.Capacitor;
+  }
+});

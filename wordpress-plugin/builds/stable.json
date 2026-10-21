@@ -2,7 +2,7 @@
   "schema": "sdp.release.v1",
   "producte": "soc-de-poble",
   "versio": "1.1.8",
-  "generat": "2026-10-21T00:16:26.537Z",
+  "generat": "2026-10-21T01:13:42.718Z",
   "contracte": {
     "marcatge": "sdp.markup.v1",
     "element": "soc-de-poble",
@@ -34,8 +34,8 @@
   "entrada": {
     "cami": "soc-de-poble.standalone.js",
     "mida": 3427,
-    "sha256": "765798f0aa54b2e9d8f2b58519e2d205db1270221f9200ea026fd4da4662d362",
-    "integrity": "sha384-kDmBncDPmt6/S69ooF99Ffp4KRACzAp7CRc+++bDgfBuFxxTOqsyh8Jnis6UBXHd"
+    "sha256": "ef5ba75a21ba9d9e28452dbbc205396b40995b9d1f8914db8712c3a021308628",
+    "integrity": "sha384-TxtBUFJvbrmC5zlKmKOzbwSIh8L8rPM31E3wNBu41DC+NAGPYYxwlrb9QjOnkVA7"
   },
   "fonts": {
     "cami": "fonts/noto-sans.css",
@@ -44,11 +44,11 @@
   "inventari": {
     "cami": "sdp-inventari.json",
     "fitxers": 540,
-    "sha256": "58ec1edc3a4d6ff76c66ceee54cd1e8f6cbd52b2d1e4a175261ad4518ae6a335"
+    "sha256": "31d2a61fe52ffb6fa630ebac9dac96c4fa4ef253e343c245801ada7805ef5a45"
   },
   "formatDelPaquet": {
     "format": "trossos",
-    "modul": "trossos/soc-de-poble-BBTAgDhc.js",
+    "modul": "trossos/soc-de-poble-BU6kvs5-.js",
     "trossos": 301
   },
   "mitjans": {
@@ -65,16 +65,16 @@
       "requires_php": "7.4",
       "tested": "7.1",
       "paquet": {
-        "nom": "261021_0216_wordpress_enxufe_v1.1.8.zip",
-        "url": "https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v1.1.8/261021_0216_wordpress_enxufe_v1.1.8.zip",
-        "mida": 42444594,
-        "sha256": "b036d9b8c02f89aac1e65fa0fd8386f00dbb9220d2242e4b0b6cf336ac246ab0"
+        "nom": "261021_0313_wordpress_enxufe_v1.1.8.zip",
+        "url": "https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v1.1.8/261021_0313_wordpress_enxufe_v1.1.8.zip",
+        "mida": 42444615,
+        "sha256": "73ef40b55c5b788d6ef0a7ca67b15c20d8fa5d464cbaffca50ffae130be1e736"
       },
       "directori": {
-        "nom": "261021_0216_wordpress_directori_v1.1.8.zip",
-        "cami": "261021_0216_wordpress_directori_v1.1.8.zip",
-        "mida": 9803890,
-        "sha256": "4a23f8348ed67db9da3da2d8bef02f22b9bd8313da7939d7dd4f8738ab959fa2",
+        "nom": "261021_0313_wordpress_directori_v1.1.8.zip",
+        "cami": "261021_0313_wordpress_directori_v1.1.8.zip",
+        "mida": 9803907,
+        "sha256": "49edd5ef515b05ace86bf983f115ef9a487ed2369712966a02a04ea8f585174d",
         "requires": "6.6",
         "requires_php": "7.4",
         "tested": "7.1",
@@ -89,19 +89,19 @@
         },
         "entrada": {
           "cami": "soc-de-poble.standalone.js",
-          "mida": 4992188,
-          "sha256": "b3a154e2b97f3a4c43b116236fd7475802b8330e31baa2630f0f567e3b91c5b8",
-          "integrity": "sha384-4/8dXLIiJ61oPa04bX/8Wtje273wVP4MDiisqXtR7kSoZELQygCEgojX3YWdSjPQ"
+          "mida": 4993025,
+          "sha256": "b5aaa01e3282ed69e03212acfe5fe5931cb5d31bd1f4123aa8292281f785135a",
+          "integrity": "sha384-SlfHBqrGUyizg3/kjsvy0ueVSsX1PFf+3FXEuSPQLqijYJZlpu2GUfE2ZilUGG/j"
         }
       }
     }
   },
   "estatic": {
     "paquet": {
-      "nom": "261021_0216_estatic_spa_v1.1.8.zip",
-      "url": "https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v1.1.8/261021_0216_estatic_spa_v1.1.8.zip",
-      "mida": 42365030,
-      "sha256": "acb6562ce8480b00dd6dfb83d579a24ae89722269f36a21b15b75fffe20a1b28"
+      "nom": "261021_0313_estatic_spa_v1.1.8.zip",
+      "url": "https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v1.1.8/261021_0313_estatic_spa_v1.1.8.zip",
+      "mida": 42365051,
+      "sha256": "8da58433ddce06c7b7afee0a878e6929570cfed1c041860fee76e6c899d05fcb"
     }
   }
 }

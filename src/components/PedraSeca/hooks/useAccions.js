@@ -8,6 +8,7 @@ import {
 } from '../../../config/objecteConnectable.js';
 import { useXatSocDePoble } from './xatSocDePoble.js';
 import { useModeracio } from './moderacioDePoble.js';
+import { origenDeLaPagina, origenPublic, urlDeLaPagina } from '../../../config/origenPublic.js';
 
 /* T63.2 · La via pública de Comentar cridada on no hi ha cap xat públic (una
    pàgina sense xat comú, un element que no s'ha trobat): ho diu, no navega
@@ -124,10 +125,10 @@ export function rutaXatPerDefecte(title, mainHref, { pagina = false, router = nu
 /* Origen dels enllaços compartits des de MEMÒRIA: el canònic del build si el
    porta (VITE_CANONICAL_URL) o, si no, el de la pàgina amfitriona; i la base,
    com als href dels enllaços. És la mateixa fórmula que la URL canònica de
-   useSEO.js. */
+   useSEO.js. Ordre del Mestre (261021, pla 261021_0015 §13, P1-03) · Una sola
+   font: origenPublic (src/config/origenPublic.js). */
 function prefixDeMemoria(router) {
-  const origen = import.meta.env?.VITE_CANONICAL_URL || window.location.origin;
-  return `${String(origen).replace(/\/$/, '')}${router.basename || ''}`;
+  return `${origenPublic()}${router.basename || ''}`;
 }
 
 /**
@@ -143,6 +144,10 @@ function prefixDeMemoria(router) {
  *    window.location.origin + base + ruta (a tota incrustació la base és '').
  *    DECISIÓ PENDENT del Mestre: quin origen ha de portar un enllaç compartit
  *    des d'un amfitrió. Sense canònic, la ruta pot no existir a l'amfitrió.
+ *  · APP NATIVA (ordre del Mestre, 261021, pla 261021_0015 §13, P1-03): el
+ *    router és de NAVEGADOR sense base, però la barra és capacitor://localhost
+ *    o https://localhost: l'origen de la barra se substituïx per l'origen
+ *    públic (origenPublic.js), amb el mateix camí, consulta i fragment.
  * Un href de fora de l'app (un altre origen, 'mailto:') es resol com sempre.
  */
 export function urlPerCompartir(href, router = null) {
@@ -152,9 +157,12 @@ export function urlPerCompartir(href, router = null) {
     const ruta = href ? resolRuta(href, cami || '/') : `${cami}${consulta}`;
     if (ruta !== null) return `${prefixDeMemoria(router)}${ruta}`;
   }
-  if (!href) return window.location.href;
+  /* P1-03 (261021, pla 261021_0015 §13) · Dins de l'app nativa la barra és
+     capacitor://localhost o https://localhost: el mateix camí, a l'origen
+     públic. Fora, la barra d'adreces, byte a byte (origenPublic.js). */
+  if (!href) return urlDeLaPagina();
   const base = router?.basename && esRutaDeLApp(href) ? router.basename : '';
-  try { return new URL(`${base}${href}`, window.location.origin).href; } catch { return window.location.href; }
+  try { return new URL(`${base}${href}`, origenDeLaPagina()).href; } catch { return urlDeLaPagina(); }
 }
 
 /**

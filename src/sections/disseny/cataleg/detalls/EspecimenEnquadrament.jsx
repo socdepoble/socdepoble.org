@@ -15,8 +15,11 @@ import { Llinatge } from '../Llinatge.jsx';
 /* T46 (ordre del Mestre, 260928) · Re-enquadrar la capçalera. Una foto
    apaisada del mateix origen (1376×768): en quadrat es veu que el marc talla i
    que es pot moure. El diàleg només es munta obert: allLoaders el pinta tancat
-   en jsdom, que no té canvas. */
-const MOSTRA = '/assets/notes/bloc_notes_vintage.jpg';
+   en jsdom, que no té canvas.
+   Ordre del Mestre (261021, pla 261021_0015 §13, P1-05) · La bessona .webp
+   (99 KB, també de 1376×768): l'original .jpg (764 KB) ja no ha de viatjar
+   dins de l'app nativa. */
+const MOSTRA = '/assets/notes/bloc_notes_vintage.webp';
 
 /* Onada 4 · T3 · L'avatar de la IAIA que pinta avui el Xat (agentsSeed.js), una
    escena quadrada de 1024 px: el retall és la cara. Cap imatge nova ni tocada

@@ -12,14 +12,16 @@ import { Llinatge } from '../Llinatge.jsx';
    una entitat, el seu logotip. Les mostres no porten H1 (la pàgina de Disseny
    ja porta el seu) ni barra blava (chrome 'page'); la taronja sí, perquè és
    universal, i dins del catàleg no s'enganxa (sdp-especimen__barres).
-   La imatge és la d'un agent de la IA de la llavor (agentsSeed.js, Súper
-   Ratolí): una il·lustració del projecte, cap foto d'una persona real. */
-const AVATAR_MOSTRA = '/assets/uploads/avatars/avatar-ratoli-comic.png';
+   La imatge és la d'un agent de la IA de la llavor (agentsSeed.js, Nano
+   Banana): una il·lustració del projecte, cap foto d'una persona real.
+   Ordre del Mestre (261021, pla 261021_0015 §12) · Súper Ratolí ja no és al
+   catàleg d'assistents: signa Nano Banana, amb el seu avatar i el seu poble. */
+const AVATAR_MOSTRA = '/assets/uploads/avatars/nano-banana-comic.png';
 const DATA_MOSTRA = { time: '09:30', date: '04/10/26', dateTime: '2026-10-04T09:30' };
 /* Sense ruta d'autoria: la boina no porta enlloc des del catàleg i no és la
    de Sóc de Poble (el seu perfil, Onada 8), de manera que PageFrame no hi
    posa logotip. */
-const SIGNA_LA_IA = { authorName: 'Súper Ratolí', authorLocation: 'Xixona', authorAvatar: AVATAR_MOSTRA, authorHref: null };
+const SIGNA_LA_IA = { authorName: 'Nano Banana', authorLocation: 'Xixona', authorAvatar: AVATAR_MOSTRA, authorHref: null };
 
 /* Correcció del verificador (261004) · Dins de la columna del catàleg, tres
    farciments (el cos de la pàgina de Disseny, la caixa de l'espècimen i la
@@ -36,7 +38,7 @@ const TITOL_PANTALLA_COMPLETA = 'La pàgina és de qui mira, a pantalla completa
 export default function EspecimenPage() {
   const [avis, setAvis] = useState('Encara no has premut l’avatar.');
   const pantalla = usePantallaCompleta();
-  const avatar = { src: AVATAR_MOSTRA, alt: 'Avatar de Súper Ratolí' };
+  const avatar = { src: AVATAR_MOSTRA, alt: 'Avatar de Nano Banana' };
   const canvia = () => setAvis(`Has premut «${ETIQUETA_CANVIA_AVATAR}»: a la pàgina de veres s’obriria el canvi d’imatge; al catàleg no fa res més.`);
   return (
     <>

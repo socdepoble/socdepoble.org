@@ -43,19 +43,22 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 - **2026-10-21T01:37-01:48:** bateria completa de Vitest; correcció de les dues regressions de l'HEAD.
 - **2026-10-21T01:50:** build natiu, APK copiat a `01_produccio/` i release 1.1.8 tornada a compilar i signar.
 - **2026-10-21T01:52-02:15:** pla actualitzat per MarIA (§8.1, 8.3, 8.4 i 8.5): capçalera de la IAIA amb el logotip del Mas (Claude) i, en paral·lel, logotip lateral, botó d'instal·lació i tornada del Xat, amb revisió adversarial. Una tercera regressió de l'HEAD (clau `botoRegistrat`) corregida.
-- **2026-10-21T02:16:** APK i release 1.1.8 finals; bateria completa de Vitest final.
+- **2026-10-21T02:16:** APK i release 1.1.8; bateria completa (20.379 en verd).
+- **2026-10-21T02:33:** commit de punt de control `4d67f7ab` (arbre assajat `601495d8`).
+- **2026-10-21T02:19-03:15:** segona tanda (pla §11-§14): Selector didàctic i acordió (Claude); planter de cinc i deutes P1-02, P1-03 i P1-05 (subagents amb revisió adversarial); APK i release 1.1.8 a les 03:13.
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
 
 ### Resum per al Mestre: què tens a les mans este matí
 
-- **APK d'Android per als beta testers:** `_wiki_de_poble/04_escriptori/01_produccio/socdepoble-beta.apk` (51.430.193 B, SHA-256 `a2a45cf99183f189aa64b2ab4045770e98bfb7ff80bfb8e129da92d3963917f8`, 02:16). És un APK de depuració, signat amb la clau de depuració d'este Mac: s'instal·la directament (Ajustos › Seguretat › «Instal·lar aplicacions desconegudes» per al navegador o l'app de fitxers que l'obri). Parla amb el Supabase de producció; s'hi entra amb correu i contrasenya.
+- **APK d'Android per als beta testers:** `_wiki_de_poble/04_escriptori/01_produccio/socdepoble-beta.apk` (51.430.004 B, SHA-256 `1d9b76b5cf4fb5ffa108d7b5ed21b194c69c40e06d11c4360b73feb71e8f66ed`, 03:13, amb la segona tanda). És un APK de depuració, signat amb la clau de depuració d'este Mac: s'instal·la directament (Ajustos › Seguretat › «Instal·lar aplicacions desconegudes» per al navegador o l'app de fitxers que l'obri). Parla amb el Supabase de producció; s'hi entra amb correu i contrasenya.
 - **PWA d'escriptori (Mac, Windows i Linux):** a Chrome, Edge o Brave d'escriptori, la barra negra mostra **«Instal·la al teu ordinador»** quan el navegador ho oferix, i l'app s'obri en finestra pròpia. **Només funcionarà quan l'arbre d'ara estiga desplegat:** `socdepoble.org` servix encara la compilació de l'11 de juny.
 - **socdepoble.org:** el dossier [[261021_0145_auditoria_claude_dossier_desbloqueig_socdepoble_org]] demostra que **el domini ja apunta al nostre Firebase (`soc-de-poble`)**, no a Sollutia. **Si tens accés a Firebase, un redesplegament el desbloqueja hui sense tocar el DNS ni escriure a ningú** (Via 0). Abans d'escriure a Sollutia, respon les 7 preguntes de la seua secció 2.
-- **Connector de WordPress 1.1.8, compilat i signat:** `wordpress-plugin/builds/261021_0216_wordpress_enxufe_v1.1.8.zip` (canal propi), `261021_0216_wordpress_directori_v1.1.8.zip` (WordPress.org, **9.803.890 B**, davall del límit de 10 MB) i `261021_0216_estatic_spa_v1.1.8.zip` (Web Component per a Sollutia).
+- **Connector de WordPress 1.1.8, compilat i signat:** `wordpress-plugin/builds/261021_0313_wordpress_enxufe_v1.1.8.zip` (canal propi), `261021_0313_wordpress_directori_v1.1.8.zip` (WordPress.org, **9.803.907 B**, davall del límit de 10 MB) i `261021_0313_estatic_spa_v1.1.8.zip` (Web Component per a Sollutia).
 - **`/iaia`, la porta única de la IAIA MarIA,** segons el pla actualitzat per MarIA a les 01:52: portada, barra taronja amb la cara de la IAIA i la data, logotip oficial del Mas damunt de l'H1, identitat, «Parla amb la IAIA» centrat, avís d'IA, presentació amb la targeta viva de `/anima` i el **Selector de Realitat dels 4 nivells al peu**. `/realitat` hi redirigix.
 - **Del mateix pla:** logotip de la barra lateral a 195 px, botó d'instal·lació més contingut i **fletxa de tornada del Xat a la pàgina d'origen**.
+- **Segona tanda (pla §11-§14, 02:19-03:15):** Selector de Realitat didàctic amb els acompanyants desplegats dins de la targeta «Interactiva», **planter oficial de cinc assistents**, deutes P0-10, P0-11, P1-02, P1-03 i P1-05 tancats, i APK i connector recompilats (punt 13).
 
 ### 1. Commit consolidat («Tot en un commit»)
 
@@ -95,7 +98,7 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 - **Troballa de Gemini confirmada (§4.4):** la pantalla d'ajustos deia `[socdepoble]`, un shortcode que no existix (WordPress el pinta com a text literal). Ara diu `[socdepoble_app]`, també a la traducció valenciana. Els altres detalls de Gemini en eixe punt eren inexactes (cadena, nom de la funció, fitxer de traducció).
 - **Release:** `SDP_RELEASE=1 SDP_VERSIO=1.1.8` amb `build:wp` i `build:wp:directori` seguits i `empaqueta.mjs` signat amb la clau Ed25519 de `~/.sdp/`, la mateixa `--url-base` que la 1.1.7. **Els noms reals no són els del pla:** van a l'arrel de `builds/` amb la marca `AAMMDD_HHMM`.
 - **Verificat dins dels zips:** versió 1.1.8 estampada, la variant del directori sense `Update URI` ni `actualitzador.php`, i les marques de les correccions (botó «Registra't», targetes de diagrama, `llista_comu`, botó d'instal·lació, Selector de Realitat i H3 dels plugins) als dos paquets. `stable.json`, `1.1.8.json` i les seues `.sig` es verifiquen amb la clau incrustada.
-- **Tres compilacions:** les de les 01:37 (`261021_0137_*`) i les 01:50 (`261021_0150_*`) **queden substituïdes** per la de les 02:16 (`261021_0216_*`), l'única amb tot el codi del commit i la que signa `stable.json`. Cap agent esborra zips: la retenció de `core-empaquetat-wp` §4 la proposarà per retirar.
+- **Quatre compilacions:** les de les 01:37, 01:50 i 02:16 (`261021_0137_*`, `261021_0150_*` i `261021_0216_*`) **queden substituïdes** per la de les 03:13 (`261021_0313_*`), l'única amb tot el codi del segon commit i la que signa `stable.json`. Cap agent esborra zips: la retenció de `core-empaquetat-wp` §4 la proposarà per retirar.
 - **Encara no publicat:** cal pujar els zips a la release `enxufe-v1.1.8` de GitHub i després desplegar el canal a `https://socdepoble.org/enxufe/` (hui, la compilació vella). Per a WordPress.org, demaneu l'slug `socdepoble-enxufe`: el Plugin Name en derivaria un altre.
 
 ### 6. H3 editorial a les presentacions dels plugins
@@ -149,6 +152,8 @@ Mentre treballava, una altra mà va editar el mateix tram (01:08-01:56), i MarIA
 - **Publicar l'enxufe 1.1.8:** release de GitHub i canal a `/enxufe/`; l'alta a WordPress.org amb l'slug `socdepoble-enxufe`.
 - **Aprovar o canviar** els 12 títols H3 dels plugins.
 - **Xat:** si vols també la tornada a la columna de converses (§8.5), i si en mòbil la fletxa ha d'anar a l'origen (ara) o a la llista.
+- **Retrats d'El Pregoner i de L'Acompanyant de Paraula** (ara provisionals) i **la fila `agents` del Supabase de producció** amb el planter nou.
+- **«Privacitat i dades» en cinc idiomes** (P0-10 fora d'abast) i la marca desada de les notes (P1-02 després de recarregar).
 - **`--aprova` de la frontissa** si vols la targeta de la IAIA dins de `/anima`.
 - **APK de release i Play:** clau de signatura, logotip oficial i ids de client de Google per a Android (sense `VITE_NATIU_GOOGLE_WEB_CLIENT_ID`, l'APK no mostra Google).
 - **La llista de la barra negra** de `.agents/skills/sdp-app-grid-shell/SKILL.md` (§5) ha d'afegir el botó d'instal·lació: `.agents/` no és de Claude.
@@ -166,7 +171,32 @@ La bateria completa va trobar, a més, dos regressions que ja eren a l'HEAD (`a6
 - **`iaia_maria_avatar_mobil.png`** no era al cens d'imatges: ara hi és, amb la seua bessona `.webp`.
 - **`section.xat.fake.botoRegistrat`**, la clau del botó «Registra't», no era a cap diccionari (`tests/lint_xat.test.mjs` en roig): ara és als cinc.
 
-### 13. Higiene
+### 13. Segona tanda de la nit (pla §11-§14, 02:19-03:15)
+
+**Primer, un punt de control:** la faena de la primera tanda es va confirmar en el commit `4d67f7ab` (arbre `601495d8`, assajat en una còpia neta, i bateria completa de 20.379 en verd). La segona tanda va en un commit propi.
+
+**§11 · Selector de Realitat didàctic**
+- **Fora «la barra negra»:** cap text del selector en parla (prova nova que ho blinda per als quatre nivells).
+- **Un text propi per nivell**, el que dicta el pla, al tauler d'estat (`estat`) i al detall de cada targeta (`detall`), amb les pedres. Abans, els nivells 0 i 1 compartien un text i els 2 i 3, un altre.
+- **Acordió:** `GrupOpcions` (Pedra Seca, `formulari.jsx`) admet ara un `desplegable` per opció: el que la configura s'obri **just darrere de la seua targeta**, a tota l'amplada i només mentre és la triada. Amb «Interactiva», «Tria els teus acompanyants»; amb «Connexió total», qui t'acompanya. La graella fa `grid-auto-flow: row dense`, i sense desplegables es pinta igual que abans. Comprovat al navegador.
+
+**§12 · Planter oficial de cinc assistents** (`agentsSeed.js`, `supabase/seed.sql`)
+- **Fora:** Súper Ratolí, La Mixa, Flash i Sultan. **«Generador de Batecs» era el rol de Nano Banana**, no un agent: ara és «L'Artiste · dibuixant i cartellista del poble».
+- **En este ordre:** IAIA MarIA, Nano Banana, Marc (El Gall), **El Pregoner** i **L'Acompanyant de Paraula** (nous, amb ids nous i etiqueta `TECNOLOGIA`, com els altres assistents). La llista de la IAIA nomena `@pregoner` i `@acompanyant`.
+- **Es queden les 8 persones de ficció** (Andreu Soler, Beatriz Ortega…): no són assistents.
+- **Retrats provisionals** dels dos nous, d'imatges que ja eren al cens: el pregoner del megàfon (`rss_vinyeta.jpg`) i la persona que pren notes amb una iaia (`drets_autor_comic.jpg`). Cal fer-ne els retrats de veres (`core-identitat-visual`).
+- **Producció:** la fila `agents` de `app_content` del Supabase real **no canvia amb el codi**; cal aplicar-la (pendents).
+
+**§13 · Deutes del catàleg 261020_2230**
+- **P0-10:** ja tancat a l'arbre (cap clau de compte, moderació ni accés en valencià cru a es, en, eu ni gl). S'han traduït 3 avisos d'accés que quedaven en valencià a `gl.js`. **Fora d'abast:** la pantalla «Privacitat i dades» (`DetallPrivacitat.jsx`, amb la baixa del compte) està escrita en valencià dins del component, sense diccionaris.
+- **P0-11:** ja tancat (cap «ítems» visible).
+- **P1-02:** reproduït amb una prova abans de corregir-lo: una nota desada amb el mateix text que la plantilla es buidava en tornar-hi. Ara, una nota que algú ha tocat mai no es tracta com a plantilla. **Límit:** la memòria dura fins a recarregar la pàgina; tancar-lo del tot demana una marca desada a la nota (decisió de model de dades).
+- **P1-03:** `src/config/origenPublic.js`: dins de l'app nativa, els enllaços compartits i la URL canònica són de `https://socdepoble.org`, no de `capacitor://localhost`. A la web i al WordPress, res no canvia.
+- **P1-05:** el fons del xat i la foto de mostra de l'Enquadrament citen les bessones `.webp`; l'APK ja no porta els originals d'1,2 MB i 764 KB. Els `og-card-*.jpg` del deute ja no existixen.
+
+**Amb Gemini:** la seua Ronda 3 (03:08) coincidix amb esta tanda. Els seus tres passos: el test del catàleg (fet), la recompilació (feta a les 03:13) i la còpia `iaia_maria_avatar.original.webp`, que **no s'ha esborrat**: s'ha mogut a `_multimedia_de_poble/00_inbox/261021_iaia_maria_avatar_original_amb_vora.webp`.
+
+### 14. Higiene
 
 - **Crons i tasques de fons:** cap creat per Claude; els subagents han acabat.
 - **Torn extra:** una crida de prova (`obrir_torn.mjs --help`) va obrir el torn `torn_463729e4-…` com a `agent-local`; no té cap document i caduca sol en 24 h. El torn d'este informe és `torn_bb2367a1-ab43-452c-9929-e595b12058ba`.

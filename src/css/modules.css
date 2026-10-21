@@ -8078,6 +8078,22 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-4);
     margin-top: var(--sdp-space-3);
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    /* 261021 (pla §11.4) · Un desplegable a tota l'amplada no deixa forat: la
+       targeta germana de la mateixa fila hi torna. Sense desplegables, la
+       graella es pinta igual que abans. */
+    grid-auto-flow: row dense;
+  }
+  /* Ordre del Mestre (261021, pla 261021_0015 §11.4) · El desplegable d'una
+     opció triada (GrupOpcions, formulari.jsx): enganxat a la fila de la seua
+     targeta, amb la vora d'acció de la triada perquè es llija com una sola
+     peça amb ella. */
+  .sdp-grup__desplegable {
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding: var(--sdp-space-4) var(--sdp-space-5);
+    border: 2px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-accio-subtil);
   }
   .sdp-targeta-opcio--destacada {
     grid-column: 1 / -1;
@@ -8259,6 +8275,9 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-realitat__company-nom { font-weight: 700; color: var(--sdp-text-titol); }
   .sdp-realitat__company .sdp-casella__ajuda { grid-column: 2; }
   .sdp-realitat__connexio .sdp-avatar-grup { flex: none; }
+  /* 261021 (pla §11.4) · Dins del desplegable de «Connexió total», la vora i el
+     fons ja són els del desplegable: cap caixa dins de la caixa. */
+  .sdp-grup__desplegable > .sdp-realitat__connexio { padding: 0; border: 0; background: none; }
 }
 
 /* T45 · cerca avançada */

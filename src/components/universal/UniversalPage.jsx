@@ -9,6 +9,7 @@ import { isSafeUrl } from './UniversalUtils';
 import { rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
 import { usePastillaCalendari } from './barres/pastillaCalendari.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
+import { origenDeLaPagina } from '../../config/origenPublic.js';
 import { STORAGE_PREFIX, delVal, getVal, setVal } from '../../config/storage';
 
 /* ── P7-A · PORTADA PLEGABLE (directriu 261003_2320 del Mestre, «Hero Image
@@ -192,8 +193,12 @@ export function UniversalPage(props) {
     : undefined);
   const handleShare = props.onShare || (() => {
     // En memòria, la URL de la ruta de l'app; fora de memòria, la barra d'adreces com sempre.
-    const hrefDePagina = router?.memoria === true ? urlPerCompartir(undefined, router) : window.location.href;
-    const safeHref = isSafeUrl(hrefDePagina) ? hrefDePagina : window.location.origin;
+    /* Ordre del Mestre (261021, pla 261021_0015 §13, P1-03) · Dins de l'app
+       nativa, la barra és capacitor://localhost o https://localhost: el mateix
+       camí, a l'origen públic (urlPerCompartir · origenPublic.js). A la web,
+       la barra d'adreces, byte a byte. */
+    const hrefDePagina = urlPerCompartir(undefined, router);
+    const safeHref = isSafeUrl(hrefDePagina) ? hrefDePagina : origenDeLaPagina();
     if (navigator.share) {
       /* Gauntlet 261017 (Bloc 0.1) · Tancar el menú de compartir (AbortError)
          no és cap error, com en compartix (PedraSeca/hooks/useAccions.js). */

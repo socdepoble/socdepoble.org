@@ -455,15 +455,18 @@ describe('base de recursos de l’element', () => {
   test('plugin-url d’un altre origen: fixa la base, publica el fons del Xat i obri els mitjans', async () => {
     const element = await munta({ 'plugin-url': `${CDN}/dist/` });
     expect(baseRecursos()).toBe(`${CDN}/dist`);
-    expect(element.style.getPropertyValue(FONS_XAT)).toBe(`url("${CDN}/dist/assets/system/ui/xat-bg-map-v2.jpg")`);
+    /* Expectativa actualitzada a propòsit (261021, pla 261021_0015 §13, P1-05):
+       la bessona .webp; els paquets amb política ja la demanaven en lloc del .jpg. */
+    expect(element.style.getPropertyValue(FONS_XAT)).toBe(`url("${CDN}/dist/assets/system/ui/xat-bg-map-v2.webp")`);
     expect(permetOrigenMitjans).toHaveBeenCalledWith(`${CDN}/dist`);
   });
 
   test('plugin-url camí del mateix lloc: fons des de la carpeta del paquet, cap origen nou', async () => {
     const element = await munta({ 'plugin-url': '/wp-content/plugins/socdepoble-enxufe/dist/' });
     expect(baseRecursos()).toBe('/wp-content/plugins/socdepoble-enxufe/dist');
+    // Expectativa actualitzada a propòsit (261021, pla 261021_0015 §13, P1-05): la bessona .webp.
     expect(element.style.getPropertyValue(FONS_XAT))
-      .toBe('url("/wp-content/plugins/socdepoble-enxufe/dist/assets/system/ui/xat-bg-map-v2.jpg")');
+      .toBe('url("/wp-content/plugins/socdepoble-enxufe/dist/assets/system/ui/xat-bg-map-v2.webp")');
     expect(permetOrigenMitjans).not.toHaveBeenCalled();
   });
 

@@ -436,3 +436,29 @@ describe('GrupOpcions · aspecte llista (per defecte, sense canvis)', () => {
     expect(screen.getByRole('radio', { name: 'B' }).disabled).toBe(true);
   });
 });
+
+/* Ordre del Mestre (261021, pla 261021_0015 §11.4) · El desplegable d'una opció
+   en aspecte «targetes»: s'obri just darrere de la seua targeta, a tota
+   l'amplada, només mentre l'opció és la triada; sense desplegables, la graella
+   és la de sempre. */
+describe('GrupOpcions · desplegable de l’opció triada (261021)', () => {
+  const OPCIONS = [
+    { valor: 'a', etiqueta: 'Sola' },
+    { valor: 'b', etiqueta: 'Amb companyia', desplegable: <p>Tria amb qui</p> },
+    { valor: 'c', etiqueta: 'Tot el poble' }
+  ];
+  test('només la triada obri el seu desplegable, just darrere de la seua targeta', () => {
+    const { rerender, container } = render(<GrupOpcions aspecte="targetes" llegenda="L" valor="a" onCanvi={() => {}} opcions={OPCIONS} />);
+    expect(container.querySelector('.sdp-grup__desplegable')).toBeNull();
+    rerender(<GrupOpcions aspecte="targetes" llegenda="L" valor="b" onCanvi={() => {}} opcions={OPCIONS} />);
+    const desplegable = container.querySelector('.sdp-grup__desplegable');
+    expect(desplegable.textContent).toBe('Tria amb qui');
+    expect(desplegable.previousElementSibling.querySelector('input').value).toBe('b');
+    expect(desplegable.parentElement.classList.contains('sdp-grup__targetes')).toBe(true);
+    expect([...container.querySelectorAll('.sdp-grup__targetes > .sdp-targeta-opcio')].map((t) => t.querySelector('input').value)).toEqual(['a', 'b', 'c']);
+  });
+  test('sense mode controlat, cap desplegable', () => {
+    const { container } = render(<GrupOpcions aspecte="targetes" llegenda="L" opcions={OPCIONS} />);
+    expect(container.querySelector('.sdp-grup__desplegable')).toBeNull();
+  });
+});

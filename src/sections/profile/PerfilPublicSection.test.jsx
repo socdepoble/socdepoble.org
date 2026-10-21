@@ -703,12 +703,17 @@ test.each([
   expect(dretsDelTitol(container)).toBe(drets);
 });
 
-/* Ordre del Mestre · Els personatges ANIMAL del catàleg (El Gall, Súper
-   Ratolí, La Mixa i Sultan) són IA: personatges simbòlics, bots amb
-   systemPrompt. La fitxa del catàleg es conserva, també el seu type 'ANIMAL';
-   només canvia com es classifica (data/agentsSeed.js · tipusDAgent, la font
-   única del directori, del perfil públic, de localPerfils i del Cercador). */
-const ANIMALS = ['GALL', 'RATO', 'MIXA', 'SULTAN'].map((clau) => AGENTS_MAP[clau]);
+/* Ordre del Mestre · Els personatges ANIMAL del catàleg (hui, Marc El Gall)
+   són IA: personatges simbòlics, bots amb systemPrompt. La fitxa del catàleg
+   es conserva, també el seu type 'ANIMAL'; només canvia com es classifica
+   (data/agentsSeed.js · tipusDAgent, la font única del directori, del perfil
+   públic, de localPerfils i del Cercador).
+   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §12) · El catàleg és el dels cinc assistents oficials: fora
+   Súper Ratolí, La Mixa, Flash i Sultan. La fitxa sense el port es prova per
+   als quatre assistents que no són la IAIA (ella té la seua pàgina). */
+const ANIMALS = ['GALL'].map((clau) => AGENTS_MAP[clau]);
+const ASSISTENTS = ['NANOBANANA', 'GALL', 'PREGONER', 'ACOMPANYANT'].map((clau) => AGENTS_MAP[clau]);
 
 test('Gauntlet 261016 · perfilDelCataleg: els personatges ANIMAL són IA, amb la seua fitxa sencera', async () => {
   const { perfilDelCataleg } = await import('./PerfilPublicSection.jsx');
@@ -720,18 +725,18 @@ test('Gauntlet 261016 · perfilDelCataleg: els personatges ANIMAL són IA, amb l
     });
   }
   /* PERSON continua sent persona, AI una IA i COMPANY una entitat. */
-  expect([AGENTS_MAP.JAVI, AGENTS_MAP.FLASH, AGENTS_MAP.SOCDEPOBLE].map(tipusDAgent)).toEqual(['persona', 'ia', 'entitat']);
+  expect([AGENTS_MAP.JAVI, AGENTS_MAP.PREGONER, AGENTS_MAP.SOCDEPOBLE].map(tipusDAgent)).toEqual(['persona', 'ia', 'entitat']);
 });
 
 /* El prefix de la ruta és orientatiu (App.jsx munta esta pàgina a /gent/:agentId
    i a /perfil/:agentId): la clau és l'id, i perfilDelCataleg el busca per id.
    L'avís i el botó porten el seu nom; mai els textos de la IAIA, ni la
    promesa de les frases fetes, que només fa ella (RESPOSTA_IAIA). */
-test.each(ANIMALS.map((agent) => [agent.name, agent]))('Gauntlet 261016 · sense el port, la fitxa de «%s» és la d’una IA amb el seu nom', async (_nom, agent) => {
+test.each(ASSISTENTS.map((agent) => [agent.name, agent]))('Gauntlet 261016 · sense el port, la fitxa de «%s» és la d’una IA amb el seu nom', async (_nom, agent) => {
   mocks.config = { dataMode: 'seed' };
   mocks.capacitat = false;
   mocks.id = agent.id;
-  const { container } = render(<PerfilPublicSection agents={[AGENTS_MAP.JAVI, ...ANIMALS]} />);
+  const { container } = render(<PerfilPublicSection agents={[AGENTS_MAP.JAVI, ...ASSISTENTS]} />);
   await screen.findByRole('heading', { level: 1, name: agent.name });
   expect(etiquetesDelTitol(container)).toEqual(['Intel·ligència artificial', agent.town_name]);
   const avis = screen.getByRole('status');
@@ -747,8 +752,11 @@ test.each(ANIMALS.map((agent) => [agent.name, agent]))('Gauntlet 261016 · sense
 });
 
 /* En llavor, pel port (localPerfils.js, que fa de servidor): una IA del
-   catàleg que no és la IAIA i un personatge ANIMAL. */
-test.each([['una IA del catàleg', 'NANOBANANA'], ['un personatge ANIMAL', 'SULTAN']])('Gauntlet 261016 · en llavor, pel port, %s porta l’avís i el botó amb el seu nom', async (_que, clau) => {
+   catàleg que no és la IAIA i un personatge ANIMAL.
+   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §12) · El personatge ANIMAL és El Gall (Sultan ja no és al
+   catàleg), i s'hi afig un dels dos assistents nous. */
+test.each([['una IA del catàleg', 'NANOBANANA'], ['un personatge ANIMAL', 'GALL'], ['un assistent nou del catàleg', 'ACOMPANYANT']])('Gauntlet 261016 · en llavor, pel port, %s porta l’avís i el botó amb el seu nom', async (_que, clau) => {
   const agent = AGENTS_MAP[clau];
   const perfils = createLocalPerfilsAdapter();
   mocks.config = { dataMode: 'seed' };

@@ -397,9 +397,11 @@ export default {
   'section.login.placeholder.email': 'nome@exemplo.com',
   'section.login.placeholder.name': 'Nome e apelidos',
   'section.login.placeholder.password': '••••••••',
-  'section.login.error.empty': 'Ompli tots els camps.',
-  'section.login.success.login': 'Sessió iniciada.',
-  'section.login.success.register': 'Compte creat.',
+  /* Ordre del Mestre (261021, pla 261021_0015 §13, P0-10) · Els avisos de
+     l'accés duien el valencià cru. Proposta a revisar per algú que parle gallec. */
+  'section.login.error.empty': 'Enche todos os campos.',
+  'section.login.success.login': 'Sesión iniciada.',
+  'section.login.success.register': 'Conta creada.',
   'section.myprofile.success': 'Perfil guardat.',
   'section.myprofile.error': 'Error guardant el perfil.',
   'section.myprofile.title': 'El teu perfil',

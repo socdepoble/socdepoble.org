@@ -504,9 +504,13 @@ test('els recursos de public/ que viatgen a l\'app: els del connector, sense wor
    i sense els originals que l'app cita sense resolutor. */
 
 test('politicaDeMitjansNativa: la de l\'autònom, sense origen ni carpetes externes i sense els exclosos; pura', () => {
-  const [exclos] = ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original);
+  /* Expectativa actualitzada a propòsit (261021, pla 261021_0015 §13, P1-05):
+     ORIGINALS_CITATS_SENSE_RESOLUTOR ja és buida, i l'exclòs és de mostra i es
+     dona com a `excloses`. De sèrie, cap bessona no es deixa fora. */
+  const exclos = 'assets/c/cita-crua.jpg';
   const autonom = Object.freeze({ origen: null, externs: Object.freeze([]), bessones: Object.freeze(['assets/a/u.jpg', exclos, 'assets/b/d.PNG']) });
-  const nativa = politicaDeMitjansNativa(autonom);
+  assert.deepEqual(politicaDeMitjansNativa(autonom).bessones, autonom.bessones);
+  const nativa = politicaDeMitjansNativa(autonom, [exclos]);
   assert.deepEqual(nativa, { origen: null, externs: [], bessones: ['assets/a/u.jpg', 'assets/b/d.PNG'] });
   assert.ok(Object.isFrozen(nativa) && Object.isFrozen(nativa.externs) && Object.isFrozen(nativa.bessones));
   assert.deepEqual(autonom.bessones, ['assets/a/u.jpg', exclos, 'assets/b/d.PNG'], 'no toca la rebuda');
@@ -514,7 +518,7 @@ test('politicaDeMitjansNativa: la de l\'autònom, sense origen ni carpetes exter
   const directori = { origen: 'https://socdepoble.org', externs: ['assets/uploads/'], bessones: ['assets/uploads/x.jpg'] };
   assert.deepEqual(politicaDeMitjansNativa(directori), { origen: null, externs: [], bessones: ['assets/uploads/x.jpg'] });
   // Sense cap bessona que quede, null, com politicaDeMitjans; `excloses` es pot donar.
-  assert.equal(politicaDeMitjansNativa({ origen: null, externs: [], bessones: [exclos] }), null);
+  assert.equal(politicaDeMitjansNativa({ origen: null, externs: [], bessones: [exclos] }, [exclos]), null);
   assert.equal(politicaDeMitjansNativa(null), null);
   assert.equal(politicaDeMitjansNativa(undefined), null);
   assert.equal(politicaDeMitjansNativa({}), null);
@@ -522,10 +526,27 @@ test('politicaDeMitjansNativa: la de l\'autònom, sense origen ni carpetes exter
   assert.deepEqual(politicaDeMitjansNativa(autonom, new Set(['assets/a/u.jpg'])).bessones, [exclos, 'assets/b/d.PNG']);
 });
 
+/* Ordre del Mestre (261021, pla 261021_0015 §13, P1-05) · Les dues cites
+   crues d'abans (el fons del Xat i la foto de mostra de l'Enquadrament) ja
+   citen la bessona .webp: la llista queda buida i els originals (1,2 MB i
+   764 KB) se substituïxen com tots. */
+const CITES_DE_LA_BESSONA = Object.freeze([
+  Object.freeze({ fitxer: 'src/css/tokens.css', cita: "url('/assets/system/ui/xat-bg-map-v2.webp')", bessona: 'assets/system/ui/xat-bg-map-v2.webp' }),
+  Object.freeze({ fitxer: 'src/PedraSecaEmbed.jsx', cita: "resolveAsset('assets/system/ui/xat-bg-map-v2.webp')", bessona: 'assets/system/ui/xat-bg-map-v2.webp' }),
+  Object.freeze({ fitxer: 'src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx', cita: "const MOSTRA = '/assets/notes/bloc_notes_vintage.webp';", bessona: 'assets/notes/bloc_notes_vintage.webp' })
+]);
+
 test('ORIGINALS_CITATS_SENSE_RESOLUTOR: cada cita continua on diu, i cada original té bessona a public/ (si no, l\'excepció sobra)', (t) => {
   assert.ok(Object.isFrozen(ORIGINALS_CITATS_SENSE_RESOLUTOR) && ORIGINALS_CITATS_SENSE_RESOLUTOR.every(Object.isFrozen));
-  assert.deepEqual(ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original),
-    ['assets/system/ui/xat-bg-map-v2.jpg', 'assets/notes/bloc_notes_vintage.jpg']);
+  /* Expectativa actualitzada a propòsit (261021, pla 261021_0015 §13, P1-05):
+     abans, ['assets/system/ui/xat-bg-map-v2.jpg', 'assets/notes/bloc_notes_vintage.jpg']. */
+  assert.deepEqual(ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original), []);
+  for (const { fitxer, cita, bessona } of CITES_DE_LA_BESSONA) {
+    const text = fs.readFileSync(path.join(ARREL, fitxer), 'utf8');
+    assert.ok(text.includes(cita), `${fitxer} ja no porta «${cita}»`);
+    assert.ok(!text.includes(bessona.replace(/\.webp$/, '.jpg')), `${fitxer} torna a citar l'original de ${bessona}`);
+    if (fs.existsSync(PUBLIC)) assert.ok(fs.existsSync(path.join(PUBLIC, bessona)), `${bessona} no és a public/`);
+  }
   for (const { original, que, fitxer, cites } of ORIGINALS_CITATS_SENSE_RESOLUTOR) {
     assert.match(original, /^assets\/(?:[^/]+\/)*[^/]+\.(?:jpe?g|png)$/i, original);
     assert.ok(que && cites.length, original);
@@ -545,10 +566,14 @@ test('cap url() dels CSS de src/ no cita un original amb bessona que l\'app subs
   if (!fs.existsSync(PUBLIC)) { t.skip('sense public/ en este arbre'); return; }
   const ambBessona = new Set(politicaDeMitjans('autonom', { directori: PUBLIC })?.bessones ?? []);
   const exclosos = new Set(ORIGINALS_CITATS_SENSE_RESOLUTOR.map(({ original }) => original));
+  /* Expectativa actualitzada a propòsit (261021, pla 261021_0015 §13, P1-05):
+     el fons del Xat de tokens.css ja cita la bessona .webp; la prova continua
+     veient-lo (també mira els .webp), i cap .webp no té bessona. */
   const citats = fitxersAmb(path.join(ARREL, 'src'), ['.css']).flatMap((f) =>
-    [...fs.readFileSync(f, 'utf8').matchAll(/url\(\s*(['"]?)\/?(assets\/[^'")\s]+?\.(?:jpe?g|png))\1\s*\)/gi)]
+    [...fs.readFileSync(f, 'utf8').matchAll(/url\(\s*(['"]?)\/?(assets\/[^'")\s]+?\.(?:jpe?g|png|webp))\1\s*\)/gi)]
       .map((m) => ({ fitxer: path.relative(ARREL, f), original: m[2] })));
-  assert.ok(citats.some(({ original }) => exclosos.has(original)), 'la prova veu el fons del Xat de tokens.css');
+  assert.ok(citats.some(({ fitxer, original }) => fitxer === path.join('src', 'css', 'tokens.css') && original === 'assets/system/ui/xat-bg-map-v2.webp'),
+    'la prova veu el fons del Xat de tokens.css');
   const perduts = citats.filter(({ original }) => ambBessona.has(original) && !exclosos.has(original));
   assert.deepEqual(perduts, [], 'dins de l\'app, eixos url() demanarien un original que no hi viatja: afig-los a ORIGINALS_CITATS_SENSE_RESOLUTOR');
 });
@@ -568,12 +593,21 @@ test('la config porta la política nativa als dos llocs: el connector de recurso
     assert.equal(segellada.origen, null);
     assert.deepEqual(segellada.externs, []);
     for (const { original } of ORIGINALS_CITATS_SENSE_RESOLUTOR) assert.ok(!segellada.bessones.includes(original), original);
-    // El connector: sobre un public/ de mostra, la bessona en lloc d'un substituït; un exclòs viatja amb la seua.
-    const [substituit] = esperada.bessones;
-    const exclos = ORIGINALS_CITATS_SENSE_RESOLUTOR[0].original;
+    /* P1-05 (261021, pla 261021_0015 §13) · Els dos originals pesants que
+       l'app citava crus ja se substituïxen: a l'app només hi va la bessona. */
+    for (const original of ['assets/system/ui/xat-bg-map-v2.jpg', 'assets/notes/bloc_notes_vintage.jpg']) {
+      assert.ok(segellada.bessones.includes(original), original);
+    }
+    /* El connector: sobre un public/ de mostra, la bessona en lloc d'un
+       substituït. Expectativa actualitzada a propòsit (261021, pla
+       261021_0015 §13, P1-05): el fons del Xat ja no és cap exclòs i hi viatja
+       només la seua bessona; abans hi anava també l'original. Un exclòs
+       viatjaria amb la seua: ho prova politicaDeMitjansNativa, dalt. */
+    const fons = 'assets/system/ui/xat-bg-map-v2.jpg';
+    const substituit = esperada.bessones.find((original) => original !== fons);
     const mostra = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-natiu-public-'));
     try {
-      for (const rel of [substituit, bessonaDe(substituit), exclos, bessonaDe(exclos), 'assets/sense-bessona.jpg', 'favicon.svg']) {
+      for (const rel of [substituit, bessonaDe(substituit), fons, bessonaDe(fons), 'assets/sense-bessona.jpg', 'favicon.svg']) {
         fs.mkdirSync(path.dirname(path.join(mostra, rel)), { recursive: true });
         fs.writeFileSync(path.join(mostra, rel), rel);
       }
@@ -581,7 +615,7 @@ test('la config porta la política nativa als dos llocs: el connector de recurso
       connector.configResolved({ publicDir: mostra });
       const emesos = [];
       connector.generateBundle.call({ emitFile: ({ fileName }) => emesos.push(fileName) });
-      assert.deepEqual(emesos.sort(), [bessonaDe(substituit), exclos, bessonaDe(exclos), 'assets/sense-bessona.jpg', 'favicon.svg'].sort());
+      assert.deepEqual(emesos.sort(), [bessonaDe(substituit), bessonaDe(fons), 'assets/sense-bessona.jpg', 'favicon.svg'].sort());
     } finally {
       fs.rmSync(mostra, { recursive: true, force: true });
     }

@@ -6,9 +6,9 @@
  * té foto. A totes les targetes, per coherència de la graella. Sense poble, el
  * DOM de sempre.
  *
- * I els personatges ANIMAL del catàleg (El Gall, Súper Ratolí, La Mixa i
- * Sultan) són IA (data/agentsSeed.js · tipusDAgent): la targeta porta a la
- * seua fitxa d'IA (/perfil/<id>), i la fitxa del catàleg no canvia.
+ * I els personatges ANIMAL del catàleg (hui, Marc El Gall) són IA
+ * (data/agentsSeed.js · tipusDAgent): la targeta porta a la seua fitxa d'IA
+ * (/perfil/<id>), i la fitxa del catàleg no canvia.
  */
 import React from 'react';
 import { cleanup, fireEvent, render } from '@testing-library/react';
@@ -30,7 +30,11 @@ afterEach(cleanup);
 beforeEach(() => { vi.clearAllMocks(); });
 
 const targeta = (arrel, nom) => [...arrel.querySelectorAll('article.sp-card')].find((a) => a.querySelector('.sp-card-title')?.textContent === nom);
-const ANIMALS = ['GALL', 'RATO', 'MIXA', 'SULTAN'].map((clau) => AGENTS_MAP[clau]);
+/* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §12) · El catàleg és el dels cinc assistents oficials: fora
+   Súper Ratolí, La Mixa i Sultan, i l'únic personatge ANIMAL és El Gall. */
+const ANIMALS = ['GALL'].map((clau) => AGENTS_MAP[clau]);
+const ASSISTENTS_OFICIALS = ['IAIA MarIA', 'Nano Banana', 'Marc (El Gall)', 'El Pregoner', 'L\'Acompanyant de Paraula'];
 
 test('cada targeta del catàleg porta el seu poble a la boina, amb el seu avatar i mai la silueta de reserva', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
@@ -92,21 +96,39 @@ test('els personatges ANIMAL són IA: la targeta porta a la seua fitxa d’IA, i
 /* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL i els
    agents són IA «no com a humans», «preservant la seua fitxa») · Al
    directori, una targeta de tipus 'ia' porta la marca d'IA (ETIQUETA_IA), mai
-   l'etiqueta humana del catàleg: Súper Ratolí deia «GENT». La fitxa del
-   catàleg no canvia, i una persona o una entitat continuen amb la seua. */
+   l'etiqueta humana del catàleg: El Pregoner i L'Acompanyant de Paraula diuen
+   «GENT». La fitxa del catàleg no canvia, i una persona o una entitat
+   continuen amb la seua.
+   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §12) · Abans ho provava Súper Ratolí, que ja no és al catàleg. */
 const etiquetesDe = (fitxa) => [...fitxa.querySelectorAll('.sp-card-labels > li')].map((li) => li.textContent);
 
 test('les targetes de tipus IA (animals i agents) porten la marca d’IA, mai «GENT»; la fitxa del catàleg no canvia', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
   const ia = AGENTS.filter((agent) => tipusDAgent(agent) === 'ia');
-  expect(ia.map((agent) => agent.id)).toEqual(expect.arrayContaining([AGENTS_MAP.IAIA.id, AGENTS_MAP.RATO.id]));
+  expect(ia.map((agent) => agent.id)).toEqual(expect.arrayContaining([AGENTS_MAP.IAIA.id, AGENTS_MAP.PREGONER.id, AGENTS_MAP.ACOMPANYANT.id]));
   for (const agent of ia) {
     expect([agent.name, etiquetesDe(targeta(container, agent.name))]).toEqual([agent.name, [ETIQUETA_IA]]);
   }
-  expect(etiquetesDe(targeta(container, AGENTS_MAP.RATO.name))).not.toContain('GENT');
-  /* La fitxa del catàleg es preserva tal qual. */
-  expect([AGENTS_MAP.RATO.type, AGENTS_MAP.RATO.tag]).toEqual(['ANIMAL', 'GENT']);
+  for (const clau of ['PREGONER', 'ACOMPANYANT']) {
+    expect(etiquetesDe(targeta(container, AGENTS_MAP[clau].name))).not.toContain('TECNOLOGIA');
+    /* La fitxa del catàleg es preserva tal qual. Expectativa actualitzada a
+       propòsit (261021): els assistents porten «TECNOLOGIA», com Nano Banana i
+       el Gall; «GENT» és la de les persones i la cerca «gent» ja no els torna. */
+    expect([clau, AGENTS_MAP[clau].type, AGENTS_MAP[clau].tag]).toEqual([clau, 'AI', 'TECNOLOGIA']);
+  }
   /* Una entitat continua amb la seua etiqueta; una persona, sense cap (Dignitat Humana). */
   expect(etiquetesDe(targeta(container, AGENTS_MAP.SOCDEPOBLE.name))).toEqual([AGENTS_MAP.SOCDEPOBLE.tag]);
   expect(etiquetesDe(targeta(container, AGENTS_MAP.JAVI.name))).toEqual([]);
+});
+
+/* Ordre del Mestre (261021, pla 261021_0015 §12) · Al directori, les targetes
+   d'IA són les dels cinc assistents oficials, en el seu ordre; les persones de
+   ficció i les identitats fundacionals no hi entren. */
+test('261021 · les targetes d’IA del directori són els cinc assistents oficials, en el seu ordre', () => {
+  const { container } = render(<ProfileSection agents={AGENTS} />);
+  const ambMarcaDIA = [...container.querySelectorAll('article.sp-card')]
+    .filter((fitxa) => etiquetesDe(fitxa).includes(ETIQUETA_IA))
+    .map((fitxa) => fitxa.querySelector('.sp-card-title').textContent);
+  expect(ambMarcaDIA).toEqual(ASSISTENTS_OFICIALS);
 });

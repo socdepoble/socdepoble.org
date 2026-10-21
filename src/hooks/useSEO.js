@@ -3,6 +3,7 @@ import { useUIActions, useUIState } from '../app/contexts/UIContext';
 import { useLocation, useRouter } from '../app/contexts/RouterContext';
 import { registerSeo } from './seoHead.js';
 import { esMarcaDeLEntitat } from '../components/universal/UniversalUtils.js';
+import { origenPublic } from '../config/origenPublic.js';
 
 // Gestoria i tractors tracten fitxers personals: mai indexables. Robots no és
 // autorització; només evita que un cercador les llistes.
@@ -53,7 +54,10 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
     // (router fora de la seua base) la pàgina és de l'amfitrió i tampoc s'hi toca.
     const isIframe = window.self !== window.top;
     if (externalConfig?.manageDocumentHead !== true || isIframe || window.__SDP_EMBEDDED__ || !pathname) return undefined;
-    const origin = import.meta.env?.VITE_CANONICAL_URL || window.location.origin;
+    /* Ordre del Mestre (261021, pla 261021_0015 §13, P1-03) · El canònic del
+       build o, si no, el de la pàgina; dins de l'app nativa, socdepoble.org
+       (origenPublic.js), no capacitor://localhost. */
+    const origin = origenPublic();
     const imatge = imatgeSocial(JSON.parse(imatgeClau), resolveAsset(IMATGE_BASE), origin);
     const canIndex = index !== false && routeAllowsIndex(pathname);
     const canonical = canonicalExplicit || `${String(origin).replace(/\/$/, '')}${basename || ''}${pathname}`;

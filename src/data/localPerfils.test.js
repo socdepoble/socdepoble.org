@@ -381,9 +381,13 @@ test('Front 3 · la regla de la llavor no s’estén a Rentonar: qui té sessió
 /* Ordre del Mestre · Els personatges ANIMAL del catàleg són IA (la font única,
    agentsSeed.js · tipusDAgent): la seua fitxa pública és d'IA, amb `esIA`, i
    la resta de la fitxa del catàleg no canvia. Una IA del catàleg continua
-   sent-ho; una persona, també. */
+   sent-ho; una persona, també.
+   Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §12) · El catàleg és el dels cinc assistents oficials: l'únic
+   personatge ANIMAL és El Gall (fora Súper Ratolí, La Mixa i Sultan), i les
+   IA que no canvien són els dos assistents nous (Flash ja no hi és). */
 test('Gauntlet 261016 · un personatge ANIMAL del catàleg té fitxa pública d’IA; PERSON i AI no canvien', () => {
-  for (const clau of ['GALL', 'RATO', 'MIXA', 'SULTAN']) {
+  for (const clau of ['GALL']) {
     const agent = AGENTS_MAP[clau];
     for (const usuari of [null, USUARI]) {
       expect([clau, adapter.loadPerfilPublic(agent.id, usuari)]).toEqual([clau, expect.objectContaining({
@@ -393,7 +397,8 @@ test('Gauntlet 261016 · un personatge ANIMAL del catàleg té fitxa pública d�
     }
     expect(agent.type).toBe('ANIMAL');
   }
-  expect(adapter.loadPerfilPublic(AGENTS_MAP.FLASH.id, null)).toMatchObject({ tipus: 'ia', esIA: true });
+  expect(adapter.loadPerfilPublic(AGENTS_MAP.PREGONER.id, null)).toMatchObject({ tipus: 'ia', esIA: true });
+  expect(adapter.loadPerfilPublic(AGENTS_MAP.ACOMPANYANT.id, null)).toMatchObject({ tipus: 'ia', esIA: true });
   expect(adapter.loadPerfilPublic(AGENTS_MAP.CAPATAS.id, null)).toMatchObject({ tipus: 'persona', esIA: false });
 });
 

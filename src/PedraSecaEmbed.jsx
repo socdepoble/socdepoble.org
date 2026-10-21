@@ -970,8 +970,12 @@ class SocDePobleElement extends BaseElement {
     if (!base) return;
     /* tokens.css declara el fons del Xat a :root i :host, no a .sdp-root:
        el valor de l'element l'hereta l'arbre de dins del shadow root. La base
-       ja ve sense cometes ni espais (assetResolver.js), i cap no trenca el url(). */
-    this.style.setProperty('--sdp-xat-fons-imatge', `url("${resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')}")`);
+       ja ve sense cometes ni espais (assetResolver.js), i cap no trenca el url().
+       Ordre del Mestre (261021, pla 261021_0015 §13, P1-05) · La bessona .webp,
+       la mateixa que tokens.css. Els paquets amb política de mitjans (el
+       directori i l'autònom) ja la demanaven en lloc del .jpg: per a ells res
+       no canvia. */
+    this.style.setProperty('--sdp-xat-fons-imatge', `url("${resolveAsset('assets/system/ui/xat-bg-map-v2.webp')}")`);
 
     /* Les imatges de contingut sanejat són nostres encara que vinguen d'un
        altre origen: sense açò, sanitize.js les bloquejaria com a far de tercers. */

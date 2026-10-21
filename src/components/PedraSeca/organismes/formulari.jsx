@@ -16,7 +16,7 @@
     únic de Q2 (261004), també el botó de CampFitxer.
  *   · Interruptor = acció immediata. Casella = decisió que es confirma després.
  */
-import { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import { Check, CircleAlert, FileUp } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { Insignia } from '../atoms/Insignia.jsx';
@@ -322,6 +322,10 @@ function OpcioTargeta({ opcio: o, idOpcio, nom, controlat, triada, onCanvi, text
  * opcions: [{ valor, etiqueta, ajuda?, desactivada?, antetitol?, icona?, detall? }]
  *   · desactivada: el ràdio d'eixa opció no es pot triar (en les dues variants).
  *   · antetitol, icona i detall només es pinten en aspecte «targetes».
+ *   · desplegable (261021, pla 261021_0015 §11.4): en aspecte «targetes», el
+ *     que configura l'opció (p. ex. triar els acompanyants del nivell 2 del
+ *     Selector de Realitat). Es pinta just darrere de la targeta, a tota
+ *     l'amplada, només mentre l'opció és la triada (mode controlat).
  * aspecte: 'llista' (per defecte, files denses de formulari) o 'targetes'
  *   (T44 · elecció protagonista: cada opció és una targeta clicable sencera).
  * textTriada: text de la insígnia de l'opció marcada (només en mode
@@ -338,11 +342,23 @@ export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error
       {targetes ? (
         /* Un fieldset en grid dona problemes als navegadors: la graella és un div. */
         <div className="sdp-grup__targetes">
-          {opcions.map((o) => (
-            <OpcioTargeta key={o.valor} opcio={o} idOpcio={`${id}-${o.valor}`} nom={nomReal}
-              controlat={valor !== undefined} triada={valor !== undefined && valor === o.valor}
-              onCanvi={onCanvi} textTriada={textTriada} />
-          ))}
+          {opcions.map((o) => {
+            const triada = valor !== undefined && valor === o.valor;
+            return (
+              <Fragment key={o.valor}>
+                <OpcioTargeta opcio={o} idOpcio={`${id}-${o.valor}`} nom={nomReal}
+                  controlat={valor !== undefined} triada={triada}
+                  onCanvi={onCanvi} textTriada={textTriada} />
+                {/* Ordre del Mestre (261021, pla 261021_0015 §11.4) · El que
+                    configura una opció s'obri amb ella, com un acordió: just
+                    darrere de la seua targeta, a tota l'amplada de la graella,
+                    i només mentre és la triada. */}
+                {triada && o.desplegable ? (
+                  <div className="sdp-grup__desplegable" id={`${id}-${o.valor}-desplegable`}>{o.desplegable}</div>
+                ) : null}
+              </Fragment>
+            );
+          })}
         </div>
       ) : opcions.map((o) => {
         const idOpcio = `${id}-${o.valor}`;

@@ -27,14 +27,18 @@ vi.mock('../../components/universal/richText', async (importOriginal) => ({
   UniversalRichTextToolbar: () => null
 }));
 import { DocumentEditor } from '../../components/universal/DocumentEditor.jsx';
-import { esLlavorVerge } from '../../components/universal/richText/useUniversalRichText.js';
+import { esLlavorVerge, oblidaLlavorsConsumides } from '../../components/universal/richText/useUniversalRichText.js';
 /* La barra negra de veres (la mateixa execució que DocumentEditor passa a la barra). */
 import { executa } from '../../components/universal/richText/tiptapToolbarAdapter.js';
 import { LLAVOR_NOTA, LLAVOR_NOTA_ANTIGA, LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
 
+/* Ordre del Mestre (261021, pla 261021_0015 §13, P1-02) · El document que ja
+   ha consumit la llavor es recorda pel seu id durant la pàgina; cada prova
+   munta el seu 'd1' com una nota nova. */
 afterEach(() => {
   cleanup();
   m.editor = null;
+  oblidaLlavorsConsumides();
 });
 
 const compacta = (html) => html.replace(/>\s+</g, '><');

@@ -362,3 +362,27 @@ test('T43a-1 · NAVEGADOR amb base: la ruta de l’app sense la base (navigate()
   window.history.replaceState(null, '', '/altra-pagina');
   expect(rutaActual(router)).toBe('');
 });
+
+/* Ordre del Mestre (261021, pla 261021_0015 §13, P1-03) · L'app nativa munta
+   el router de NAVEGADOR sense base, però la barra és capacitor://localhost
+   (iOS) o https://localhost (Android): un enllaç compartit amb eixe origen no
+   obri res fora del telèfon. Ara va a socdepoble.org, amb el mateix camí. */
+test('P1-03 · APP NATIVA (navegador sense base): Compartir porta socdepoble.org i el camí de l’app', async () => {
+  window.history.replaceState(null, '', '/mur?item=a%20b');
+  window.Capacitor = { isNativePlatform: () => true };
+  const share = vi.fn(() => Promise.resolve());
+  Object.defineProperty(window.navigator, 'share', { value: share, configurable: true });
+  try {
+    const { result } = ambRouter(BrowserRouter, {}, () => useAccions({ title: 'Mur', hasFooter: true }));
+    const { router } = result.current;
+    expect(router.memoria).toBe(false);
+    expect(urlPerCompartir(undefined, router)).toBe('https://socdepoble.org/mur?item=a%20b');
+    expect(urlPerCompartir('/mur/3', router)).toBe('https://socdepoble.org/mur/3');
+    expect(urlPerCompartir('https://ca.wikipedia.org/wiki/Sella', router)).toBe('https://ca.wikipedia.org/wiki/Sella');
+    await result.current.accions.handleShare();
+    expect(share).toHaveBeenCalledWith({ title: 'Mur', url: 'https://socdepoble.org/mur?item=a%20b' });
+  } finally {
+    delete window.Capacitor;
+    delete window.navigator.share;
+  }
+});

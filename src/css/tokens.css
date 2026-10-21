@@ -548,9 +548,12 @@
 /* Fons de mapa de la conversa del Xat. Viu a :root i :host, i NO a .sdp-root:
    incrustada, l'app penja d'un .sdp-root dins del shadow root, i si el token
    s'hi tornara a declarar tallaria l'herència del valor que l'element
-   <soc-de-poble> fixa al seu estil amb la base de recursos de l'amfitrió. */
+   <soc-de-poble> fixa al seu estil amb la base de recursos de l'amfitrió.
+   Ordre del Mestre (261021, pla 261021_0015 §13, P1-05) · La bessona .webp
+   (296 KB, la mateixa imatge de 768 × 1376): l'original .jpg (1,2 MB) ja no
+   ha de viatjar dins de l'app nativa. */
 :root, :host {
-  --sdp-xat-fons-imatge: url('/assets/system/ui/xat-bg-map-v2.jpg');
+  --sdp-xat-fons-imatge: url('/assets/system/ui/xat-bg-map-v2.webp');
 }
 
 /* ═══ CAPA 2 · SEMÀNTICS · TEMA FOSC ═══════════════════════════════

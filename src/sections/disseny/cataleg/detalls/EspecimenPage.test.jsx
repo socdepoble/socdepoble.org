@@ -12,7 +12,10 @@ import EspecimenPage from './EspecimenPage.jsx';
 
 afterEach(cleanup);
 
-const AVATAR = '/assets/uploads/avatars/avatar-ratoli-comic.png';
+/* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §12) · Súper Ratolí ja no és al catàleg d'assistents: la mostra
+   la signa Nano Banana, amb el seu avatar. */
+const AVATAR = '/assets/uploads/avatars/nano-banana-comic.png';
 const pinta = () => render(<MemoryRouter><EspecimenPage /></MemoryRouter>).container;
 /* jsdom no dona nom a una figure des del seu figcaption: es busca pel peu. */
 const mostra = (peu) => screen.getByText(peu, { selector: 'figcaption' }).closest('figure');
@@ -37,13 +40,13 @@ describe('EspecimenPage · el bloc del títol: avatar o logotip', () => {
     pinta();
     const figura = mostra('Una persona o la IA: l’avatar redó, cap logotip');
     expect(fills(capcalera(figura))).toEqual(['DIV.page-title-avatar']);
-    const img = within(figura).getByRole('img', { name: 'Avatar de Súper Ratolí' });
+    const img = within(figura).getByRole('img', { name: 'Avatar de Nano Banana' });
     expect(img.className).toBe('page-title-avatar__imatge');
     expect(img.getAttribute('src')).toBe(AVATAR);
     expect(figura.querySelector('.page-title-logo')).toBeNull();
     expect(capcalera(figura).querySelector('button')).toBeNull();
     /* La boina signa la IA i no porta enlloc des del catàleg. */
-    expect(within(figura.querySelector('section.bar-orange')).getByText('Súper Ratolí')).toBeTruthy();
+    expect(within(figura.querySelector('section.bar-orange')).getByText('Nano Banana')).toBeTruthy();
     expect(figura.querySelector('section.bar-orange a')).toBeNull();
   });
 
