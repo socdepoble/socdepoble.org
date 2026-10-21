@@ -110,9 +110,14 @@ Els objectius són dos grans blocs d'acció:
 - [ ] **Tasca 6 (Connectar amb l'Autor · Xarxa Humana Rural):**
   - Auditar i dissenyar a `/connectar` (`ConnectarSection.jsx` / `useConnectaTargeta.js`) l'opció explícita de **Connectar amb l'Autor**.
   - No només desar la pàgina/card al Mas, sinó permetre establir connexió humana directa amb la persona o entitat creadora, preparant la base de dades i la interfície per a visualitzar qui està connectat amb qui.
-- [ ] **Tasca 7 (Metodologia REA Sense Fum d'Emowe per a Obsidian, Bring! i Loyverse):**
-  - Llegir la guia d'investigació dipositada pel Mestre: `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` i el vídeo `https://youtu.be/YpKpragPGyk`.
-  - Aplicar els 4 passos i els 7 prompts d'enginyeria inversa (mapa primer, proves curtes, manual abans que codi) per a millorar la construcció del nostre editor de notes/graf (Obsidian) i el disseny de la botiga/TPV (Bring! i Loyverse) sense caure en còpies cegues de façana.
+- [ ] **Tasca 7 (Metodologia REA Sense Fum d'Emowe: Deconstrucció d'Obsidian Local, Bring! i Loyverse):**
+  - **Referència Mestre:** Guia PDF `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` i vídeo de YouTube d'Emowe: [https://youtu.be/YpKpragPGyk](https://youtu.be/YpKpragPGyk) on explica com recrear el seu propi Obsidian mitjançant REA.
+  - **Avantatge d'Obsidian instal·lat localment:** Com que tenim Obsidian instal·lat a la màquina (`/Applications/Obsidian.app` i el seu bundle Electron a `Contents/Resources/app.asar`), l'enginyeria inversa sobre la nostra pròpia instal·lació és immediata i molt més senzilla. Les IAs no han d'imaginar res: tenen accés directe al binar, a l'arbre d'actius i a les eines REA.
+  - **Objectiu d'implementació per a Sóc de Poble:** Aplicar els 4 passos i els 7 prompts d'enginyeria inversa (mapa primer, proves curtes, manual abans que codi) per a disseccionar com Obsidian té resolt:
+    1. El graf interactiu de nodes i enllaços bidireccionals (`[[...]]`).
+    2. La gestió de la barra lateral, panells i pestanyes mal·leables.
+    3. L'estructura de dades per a notes locals i suport sense connexió.
+  - **Trasllat a Pedra Seca:** Incorporar aquestes solucions provades d'Obsidian al nostre `UniversalWorkspace`, Bloc de Notes i Graf de poble, evitant reinventar la roda i adoptant les millors pràctiques d'arquitectura.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos

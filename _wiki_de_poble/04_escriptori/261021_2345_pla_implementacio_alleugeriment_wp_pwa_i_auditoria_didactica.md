@@ -75,6 +75,15 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 - **Visió:** A la pantalla `/connectar`, la connexió no pot limitar-se exclusivament a l'element o la targeta física cap a la Safata d'Entrada del MAS.
 - **Acció:** Oferir l'opció clara de **«Connectar també amb l'autor»** (persona o entitat creadora). Sense algoritmes cecs: teixir vincles humans reals per distingir qui està connectat amb qui a la comunitat rural.
 
+### 8. Metodologia REA Sense Fum d'Emowe: Deconstrucció d'Obsidian Local (Ordre del Mestre 261022)
+- **Visió:** Emowe demostra al seu vídeo de YouTube ([https://youtu.be/YpKpragPGyk](https://youtu.be/YpKpragPGyk)) i a la guia `_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf` com recrear el seu propi Obsidian mitjançant enginyeria inversa ordenada amb REA.
+- **Avantatge d'execució local:** Obsidian està físicament instal·lat al Mac (`/Applications/Obsidian.app`). Per a les nostres IAs (Claude, Gemini, Codex) és infinitament més senzill disseccionar una app local que tenim davant que inventar solucions teòriques.
+- **Acció per a Sóc de Poble:** Disseccionar com Obsidian resol:
+  1. El graf interactiu i els vincles bidireccionals (`[[...]]`).
+  2. L'aïllament i persistència de notes en Markdown net.
+  3. El sistema de panells i espais de treball mal·leables.
+  Traslladar aquestes solucions al nostre `UniversalWorkspace` / Bloc de Notes sota el disseny Pedra Seca.
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
