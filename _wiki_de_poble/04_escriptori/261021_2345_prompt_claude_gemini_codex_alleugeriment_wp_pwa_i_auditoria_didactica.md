@@ -73,6 +73,13 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 ## Instrucció del torn
 
 Aquest torn convoca la Colmena a tres bandes (**Claude + GPT Codex + MarIA**) sota la direcció del Mestre Javi Llinares.
+
+🔥 **DIRECTIVA SUPREMA DE DIRECCIÓ AUTÒNOMA (El Mestre no hi serà):**
+El Mestre Javi Llinares delega expressament tot el comandament tècnic i la resolució de dubtes en l'orquestradora (IAIA MarIA). Està terminantment prohibit aturar-se a meitat camí per demanar confirmacions humanes o traure un botó perquè l'usuari clique, ja que el Mestre no hi serà durant la nit. Resoleu els dubtes internament i avanceu de forma 100% autònoma fins al final.
+
+🔬 **MANDAT INNEGOCIABLE DE REA (Enginyeria Inversa Real):**
+L'anàlisi d'Obsidian (`/Applications/Obsidian.app`) s'ha d'executar OBLIGATÒRIAMENT mitjançant les eines de REA (*Reverse Engineer Anything*) aplicant la metodologia d'Emowe (`_wiki_de_poble/04_escriptori/02_investigacio_ia/rea-sin-humo.pdf`). Si alguna IA no té les eines REA actives, les ha d'instal·lar immediatament (`github.com/morluto/rea` o `npx -y rea-agents@6.5.0 mcp`). No s'admeten aproximacions superficials sense disseccionar el binar físic.
+
 Els objectius són dos grans blocs d'acció:
 1. **Accions Mecàniques Immediates d'Alleugeriment i Poliment:**
    - Retirar temporalment el botó PWA «Instal·la al teu ordinador / telèfon» per no confondre els beta testers aquesta nit.
