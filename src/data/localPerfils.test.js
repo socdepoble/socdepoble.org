@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from 'vitest';
 import { createLocalPerfilsAdapter, PERSONES_SEED } from './localPerfils.js';
 import {
-  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, entitatSeed, rolALEntitat
+  AGENTS_IA_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, entitatSeed, rolALEntitat
 } from './identitatsSeed.js';
 import { XAT_SEED_MEMBRES } from './xatSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
@@ -135,7 +135,10 @@ const minut = (n) => new Date(Date.UTC(2026, 8, 28, 8, n)).toISOString();
 test('T51 · el padró naix amb el magatzem i la fitxa de la persona quan entra, com el default now() del servidor', () => {
   const ambRellotge = createLocalPerfilsAdapter({ ara: rellotge() });
   expect(ambRellotge.listMyOrganizations(USUARI)[0]).toMatchObject({ created_at: minut(0), updated_at: minut(0) });
-  expect(ambRellotge.listMyAgents(USUARI)[0]).toMatchObject({ created_at: minut(0), updated_at: minut(0) });
+  /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+     261021_0015 §8.1): la IAIA declara les seues dates a la llavor
+     (AGENTS_IA_SEED), i una fitxa que ja porta dates les conserva. */
+  expect(ambRellotge.listMyAgents(USUARI)[0]).toMatchObject({ created_at: AGENTS_IA_SEED[0].created_at, updated_at: AGENTS_IA_SEED[0].updated_at });
   expect(ambRellotge.getProfile(USUARI)).toMatchObject({ created_at: minut(1), updated_at: minut(1) });
   // Tornar a llegir no la crea de nou: la data de creació no es mou.
   expect(ambRellotge.getProfile(USUARI).created_at).toBe(minut(1));
@@ -147,14 +150,14 @@ test('T51 · cada actualització amb camps del contracte renova updated_at; sens
   expect(ambRellotge.updateProfile(USUARI, { lema: 'Del Comtat' })).toMatchObject({ created_at: minut(1), updated_at: minut(2) });
   expect(ambRellotge.updateProfile(USUARI, { rol: 'superadmin' })).toMatchObject({ updated_at: minut(2) });
   expect(ambRellotge.updateOrganization(ENTITAT_PILOT_ID, { lema: 'Fem xarxa' })).toMatchObject({ created_at: minut(0), updated_at: minut(4) });
-  expect(ambRellotge.updateAgent(IAIA_ID, { lema: 'Trellat digital' })).toMatchObject({ created_at: minut(0), updated_at: minut(5) });
+  expect(ambRellotge.updateAgent(IAIA_ID, { lema: 'Trellat digital' })).toMatchObject({ created_at: AGENTS_IA_SEED[0].created_at, updated_at: minut(5) });
 });
 
 test('T51 · el perfil públic porta creat i modificat de la fitxa; les de només lectura, el naixement del magatzem', () => {
   const ambRellotge = createLocalPerfilsAdapter({ ara: rellotge() });
   ambRellotge.updateOrganization(ENTITAT_PILOT_ID, { lema: 'Fem xarxa' });
   expect(ambRellotge.loadPerfilPublic(ENTITAT_PILOT_SLUG, USUARI)).toMatchObject({ creat: minut(0), modificat: minut(1) });
-  expect(ambRellotge.loadPerfilPublic(IAIA_ID, USUARI)).toMatchObject({ creat: minut(0), modificat: minut(0) });
+  expect(ambRellotge.loadPerfilPublic(IAIA_ID, USUARI)).toMatchObject({ creat: AGENTS_IA_SEED[0].created_at, modificat: AGENTS_IA_SEED[0].updated_at });
   expect(ambRellotge.loadPerfilPublic(USUARI.id, USUARI)).toMatchObject({ creat: minut(2), modificat: minut(2) });
   expect(ambRellotge.loadPerfilPublic('0001', null)).toMatchObject({ creat: minut(0), modificat: minut(0) });
 });

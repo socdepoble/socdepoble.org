@@ -146,8 +146,19 @@ test.each([['per id', IAIA_ID], ['per slug', 'iaia-maria']])('D12 · en remot, q
   /* Front D4 (integració) · El cos de la presentació, tal qual: es llig per
      l'outerHTML de l'article (la porta lint_logica_usuari no admet cap lectura
      directa del cos fora de sanitizeHtml). */
-  expect(container.querySelector('article.detail-content').outerHTML).toContain(AGENTS_MAP.IAIA.presentacio_html);
-  expect(container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(AGENTS_MAP.IAIA.avatar_url);
+  /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+     261021_0015 §8.2): el text, intacte, porta la targeta viva de /anima
+     darrere del seu H3. */
+  const presentacio = AGENTS_MAP.IAIA.presentacio_html;
+  const tall = presentacio.indexOf('</h3>') + 5;
+  const article = container.querySelector('article.detail-content').outerHTML;
+  expect(article).toContain(presentacio.slice(0, tall));
+  expect(article).toContain(presentacio.slice(tall));
+  expect(container.querySelector('article.detail-content .sdp-targetes a[href="/anima"]')).toBeTruthy();
+  /* Expectativa actualitzada a propòsit (pla 261021_0015 §8.1): la cara de la
+     IAIA, a la barra taronja; damunt de l'H1, el logotip oficial del Mas. */
+  expect(container.querySelector('section.bar-orange .sp-card-avatar').getAttribute('src')).toBe(AGENTS_MAP.IAIA.avatar_url);
+  expect(logosDelTitol(container).map((img) => img.getAttribute('src'))).toEqual(LOGOTIP_SDP);
   expect(screen.queryByText(/encara no es poden obrir/)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
@@ -174,11 +185,18 @@ test('D12 · perfilDeLaIADelPaquet: el mateix DTO que el port, només per a una 
   expect(perfilDeLaIADelPaquet(null)).toBeNull();
   expect(perfilDeLaIADelPaquet(undefined)).toBeNull();
   const [iaia] = AGENTS_IA_SEED;
+  /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, prompt
+     261021_0015, tasca 7): la portada de /iaia és la del catàleg. */
   expect(perfilDeLaIADelPaquet(iaia)).toEqual({
-    tipus: 'ia', id: IAIA_ID, slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: AGENTS_MAP.IAIA.avatar_url, hero: '',
+    tipus: 'ia', id: IAIA_ID, slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: AGENTS_MAP.IAIA.avatar_url, hero: AGENTS_MAP.IAIA.hero_url,
     lema: AGENTS_MAP.IAIA.lema, bio: AGENTS_MAP.IAIA.role, presentacioHtml: AGENTS_MAP.IAIA.presentacio_html,
-    poble: AGENTS_MAP.IAIA.town_name, esIA: true, publicat: true, propietari: false, copyright: '', emoticona: ''
+    poble: AGENTS_MAP.IAIA.town_name, esIA: true, publicat: true, propietari: false, copyright: '', emoticona: '',
+    /* Expectativa actualitzada a propòsit (pla 261021_0015 §8.1): la pastilla de
+       data de la barra taronja, amb les dates que declara la fila. */
+    creat: iaia.created_at, modificat: iaia.updated_at
   });
+  expect([iaia.created_at, iaia.updated_at].every((data) => !Number.isNaN(Date.parse(data)))).toBe(true);
+  expect(perfilDeLaIADelPaquet({ ...iaia, created_at: undefined, updated_at: undefined })).toMatchObject({ creat: undefined, modificat: undefined });
 });
 
 test('en seed el «Perfil no trobat» no parla de cap límit del servidor', async () => {
@@ -526,8 +544,7 @@ test.each([
    logotip. Si la fitxa és de qui mira, l'avatar és un botó que porta al
    canvi d'imatge del Perfil (el mateix destí que «Edita la fitxa»). */
 test.each([
-  ['una persona', { ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, avatar: '/assets/pepa.png' }, 'Pepa'],
-  ['la IAIA', { ...IAIA, avatar: '/assets/iaia.png' }, 'IAIA MarIA']
+  ['una persona', { ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, avatar: '/assets/pepa.png' }, 'Pepa']
 ])('avatar · %s porta el seu avatar redó davant de l’H1, sense logotip', async (_que, dto, nom) => {
   mocks.load.mockResolvedValue(dto);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
@@ -539,6 +556,21 @@ test.each([
   expect(img.getAttribute('alt')).toBe(`Avatar de ${nom}`);
   expect(container.querySelector('.page-title-logo')).toBeNull();
   expect(container.querySelector('button.page-title-avatar')).toBeNull();
+});
+
+/* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+   261021_0015 §8.1: «Capçalera canònica del Mas») · La IAIA ja no porta el
+   cercle de 300px davall de la barra taronja, on ja hi ha la seua cara: damunt
+   de l'H1 porta el logotip oficial rectangular de Sóc de Poble, clar i fosc.
+   Una IA que no és la IAIA, ni amb el seu slug, continua amb el seu avatar. */
+test('avatar · la IAIA porta el logotip oficial del Mas damunt de l’H1, sense el cercle de 300px', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, avatar: '/assets/iaia.png', propietari: true });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+  expect(logosDelTitol(container).map((img) => img.getAttribute('src'))).toEqual(LOGOTIP_SDP);
+  expect(container.querySelector('.page-title-avatar')).toBeNull();
+  expect(container.querySelector('header.page-title button')).toBeNull();
+  expect(container.querySelector('section.bar-orange .sp-card-avatar')?.getAttribute('src')).toBe('/assets/iaia.png');
 });
 
 test('avatar · la fitxa pròpia d’una persona: l’avatar és un botó que porta al canvi d’imatge del Perfil', async () => {

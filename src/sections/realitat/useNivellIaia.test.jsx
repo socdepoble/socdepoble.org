@@ -1,5 +1,5 @@
 /* Onada 6 (tasca 12) · useNivellIaia: el nivell d'IA viu per a qui el pinta en
-   React. Arrenca amb el desat, seguix l'esdeveniment de RealitatSection en
+   React. Arrenca amb el desat, seguix l'esdeveniment de SelectorRealitat en
    esta pestanya i l'esdeveniment 'storage' d'una altra; un valor fora de 0-3
    cau a Passiva (1), com nivellIaiaDesat. */
 import { act, cleanup, render } from '@testing-library/react';

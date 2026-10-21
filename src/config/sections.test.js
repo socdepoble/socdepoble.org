@@ -41,3 +41,13 @@ test('cap ruta declarada encén dues entrades de la barra alhora', () => {
   const repetides = [...propietaris].filter(([, ids]) => ids.length > 1).map(([ruta, ids]) => `${ruta}: ${ids.join(', ')}`);
   expect(repetides).toEqual([]);
 });
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · «L'ànima de la
+   iaia» és només l'article de /anima, i /realitat ja no és cap secció: el
+   Selector de Realitat viu al peu de /iaia (App.jsx hi redirigix). */
+test('261021 · /anima no porta subrutes i cap secció declara /realitat', () => {
+  const ia = SECTIONS.find((section) => section.id === 'ia');
+  expect(ia).toMatchObject({ path: '/anima', pageKey: 'anima' });
+  expect(ia.subrutes).toBeUndefined();
+  expect(SECTIONS.filter((section) => section.path === '/realitat' || subrutes(section).includes('/realitat'))).toEqual([]);
+});

@@ -306,3 +306,47 @@ describe('la resta de pàgines de text no canvien', () => {
     expect(ruta.match(/objecteDeLaPaginaDeText/g)).toHaveLength(1);
   });
 });
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7: «Pàgina Única
+   Atòmica») · /iaia és la porta única de la IAIA MarIA: la portada del
+   catàleg, la fitxa i, al peu de la presentació, el Selector de Realitat dels
+   4 nivells. /realitat ja no és cap pantalla solta (hi redirigix), la IAIA de
+   la barra negra hi porta, i «L'ànima de la iaia» de «Sistema» porta només a
+   l'article de /anima. */
+describe('261021 · /iaia, la porta única de la IAIA MarIA, amb el Selector de Realitat al peu', () => {
+  test('/realitat porta a /iaia, que pinta la portada, la fitxa i els 4 nivells al peu de la presentació', async () => {
+    await muntaLApp('/realitat?origen=prova', { dataMode: 'seed' }, async () => {
+      await capcaleraDe('IAIA MarIA');
+      expect(ubicacio()).toBe('/iaia?origen=prova');
+      expect(document.querySelector('.hero-image img')?.getAttribute('src')).toContain('iaia_maria_avatar.webp');
+      await waitFor(() => expect(screen.getAllByRole('radio')).toHaveLength(4), ESPERA);
+      expect(screen.getByRole('radio', { name: 'Nivell 1 Passiva' }).checked).toBe(true);
+      const selector = screen.getByRole('heading', { level: 3, name: "Tu decidixes quanta intel·ligència artificial t'acompanya" });
+      const presentacio = document.querySelector('article.detail-content');
+      expect(presentacio.compareDocumentPosition(selector) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(presentacio.contains(selector)).toBe(false);
+      expect(document.querySelectorAll('a[href="/realitat"]')).toHaveLength(0);
+      expect(document.getElementById('app-sidebar-sistema').querySelector('a[href="/anima"]').hasAttribute('aria-current')).toBe(false);
+    });
+  }, LIMIT_DE_PROVA);
+
+  test('la IAIA de la barra negra porta a /iaia i diu el seu nom, no el de l’article de /anima', async () => {
+    await muntaLApp('/anima', { dataMode: 'seed' }, async () => {
+      await capcaleraDe(PAGE_COPY.anima.title);
+      const boto = document.querySelector('.bar-black [data-iaia-activa]');
+      expect(boto.getAttribute('aria-label')).toBe('IAIA MarIA');
+      fireEvent.click(boto);
+      await capcaleraDe('IAIA MarIA');
+      expect(window.location.pathname).toBe('/iaia');
+    });
+  }, LIMIT_DE_PROVA);
+
+  test('a la font: /realitat redirigix i la barra negra ja no hi porta', () => {
+    /* La font crua: llevar comentaris amb una expressió regular també es menja
+       codi (un path="/app/*" obri un fals comentari). */
+    const codi = fontApp;
+    expect(codi).toContain('<Route path="/realitat" element={<RedireccioRealitat />} />');
+    expect(codi).not.toContain("navigateWithTransition('/realitat')");
+    expect(codi).not.toContain('RealitatSection');
+  });
+});

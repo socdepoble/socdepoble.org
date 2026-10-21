@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Eye, Lock, SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
@@ -32,6 +32,12 @@ import { documentDeFitxa, fitxaPublicada, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { avatarDeLaFitxa, potEditarFitxa, rutaDeFitxaPublica } from './fitxaDePerfil.js';
 import { textosDeFitxa } from './visibilitatFitxa.js';
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · «La pàgina» d'un
+   agent IA és la seua fitxa pública de /iaia (FitxaPublica), la mateixa i no
+   una còpia; a demanda, perquè el Perfil no carregue la fitxa pública si no
+   s'obri l'apartat. */
+const PaginaDeLAgent = lazy(() => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })));
 
 /* Els consumidors d'abans l'importaven d'ací. Ordre del Mestre (261008) · un
    grup ja no necessita cap empresa mare: el diàleg de NOVA ORG no la demana,
@@ -262,6 +268,15 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
       </>
     );
     if (vista === 'fitxa') return ambFitxaPublica(<PerfilEditor key={identitat.id} identitat={identitat} />);
+    /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · La pàgina de
+       l'agent, la de /iaia: per a la IAIA, amb el Selector de Realitat al peu. */
+    if (vista === 'pagina') {
+      return ambFitxaPublica(
+        <Suspense fallback={null}>
+          <PaginaDeLAgent key={identitat.id} identitat={identitat} />
+        </Suspense>,
+      );
+    }
     /* Ordre del Mestre (261008) · la vista A4, la portada i la targeta, fora de l'editor. */
     if (vista === 'vistes') return ambFitxaPublica(<DetallVistes key={identitat.id} identitat={identitat} />);
     /* T9 (261001) · on està connectada la persona: nodes i estat de la connexió. */

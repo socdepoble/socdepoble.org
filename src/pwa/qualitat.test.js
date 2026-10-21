@@ -13,9 +13,12 @@ import { describe, expect, test } from 'vitest';
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
-const PRODUCCIO = ['public/sw.js', 'src/pwa/registre.js', 'src/main.jsx'];
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · i la instal·lació a l'ordinador: el magatzem, el ganxo i el botó. */
+const PRODUCCIO = ['public/sw.js', 'src/pwa/registre.js', 'src/main.jsx', 'src/pwa/instalacio.js', 'src/hooks/useInstalacioApp.js',
+  'src/components/universal/BotoInstalaApp.jsx'];
 const PROVES = ['src/pwa/registre.test.js', 'src/pwa/sw.test.js', 'src/pwa/manifest.test.js', 'src/pwa/qualitat.test.js',
-  'src/pwa/__fixtures__/tokens.js'];
+  'src/pwa/__fixtures__/tokens.js', 'src/pwa/instalacio.test.js', 'src/hooks/useInstalacioApp.test.jsx',
+  'src/components/universal/BotoInstalaApp.test.jsx'];
 const TOTS = [...PRODUCCIO, ...PROVES];
 
 describe('ESLint', () => {

@@ -200,6 +200,11 @@ function socdepoble_enxufe_diagnosi() {
 
 /**
  * La pàgina d'ajustos.
+ *
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 5): el pas 2 de la
+ * benvinguda nomena el shortcode que registra includes/marcatge.php,
+ * [socdepoble_app]; [socdepoble] no existix i WordPress el deixava com a
+ * text literal a la pàgina, sense l'App.
  */
 function socdepoble_enxufe_pagina() {
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -220,7 +225,7 @@ function socdepoble_enxufe_pagina() {
 			<code>la-torre-de-les-macanes</code> (La Torre de les Maçanes) · <code>penaguila</code> (Penàguila) · <code>benifallim</code> (Benifallim) · <code>sella</code> (Sella) · <code>orxeta</code> (Orxeta) · <code>relleu</code> (Relleu) · <code>alcoleja</code> (Alcoleja) · <code>xixona</code> (Xixona) · <code>tibi</code> (Tibi) · <em>Rentonar (30 anys de llegat rural)</em></p>
 			<ol style="margin-bottom:0">
 				<li><?php esc_html_e( 'Choose your village identity below (for example: Gent de la Torre and la-torre-de-les-macanes) and save.', 'socdepoble-enxufe' ); ?></li>
-				<li><?php esc_html_e( 'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble] shortcode.', 'socdepoble-enxufe' ); ?></li>
+				<li><?php esc_html_e( 'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble_app] shortcode.', 'socdepoble-enxufe' ); ?></li>
 				<li><?php esc_html_e( 'Select the Sóc de Poble · full screen page template so the village plaza fills the entire window.', 'socdepoble-enxufe' ); ?></li>
 			</ol>
 		</div>

@@ -218,6 +218,7 @@ import {
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
 import { recordaRutaForaDelXat } from './informeDError.js';
+import { recordaOrigenDelXat } from './origenDelXat.js';
 import { clauDia } from './temps.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { anotaFilsBloquejats, anotaMissatgesBloquejats, senseDirectesBloquejats } from '../../config/moderacio.js';
@@ -408,12 +409,15 @@ function espera(ms, signal) {
  * el text, i només quan la persona no és al xat.
  */
 function AvisadorXat({ registra }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { showToast } = useToast();
   const { t } = useUIActions();
   /* Onada 6 · On era la persona abans d'entrar al Xat: la ruta (sense dades)
      de l'informe de «Informa d'un error» (informeDError.js). */
   useEffect(() => { recordaRutaForaDelXat(pathname); }, [pathname]);
+  /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · I la mateixa ruta amb
+     la consulta, on torna la fletxa de la conversa (origenDelXat.js). */
+  useEffect(() => { recordaOrigenDelXat(pathname, search); }, [pathname, search]);
   useEffect(() => {
     registra((nom) => {
       if (RUTA_XAT.test(String(pathname || ''))) return;

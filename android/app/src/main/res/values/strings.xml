@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sóc de Poble</string>
+    <string name="title_activity_main">Sóc de Poble</string>
+    <string name="package_name">org.socdepoble.app</string>
+    <string name="custom_url_scheme">org.socdepoble.app</string>
+</resources>

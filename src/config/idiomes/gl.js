@@ -97,6 +97,7 @@ export default {
   'nav.wikidepoble': 'Wiki de Poble',
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': 'A alma da iaia',
+  'nav.iaiaFitxa': 'IAIA MarIA',
   'nav.roadmap': 'Folla de ruta',
   'nav.roadmapShort': 'Ruta',
   'nav.versions': 'Versións',
@@ -110,6 +111,9 @@ export default {
   'nav.cerca': 'Buscar',
   'nav.acces': 'Acceso',
   'nav.tema': 'Tema',
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Instal·lar la PWA a l'ordinador (BotoInstalaApp.jsx). */
+  'nav.instalaApp': 'Instala no teu ordenador',
+  'nav.instalaAppTitol': 'Instala Sóc de Poble no teu ordenador como aplicación, nunha xanela propia',
   'nav.visor': 'Visor',
   'nav.idiomaTitle': 'Escolle un idioma',
   'nav.idiomaSubtitle': 'Cambia o idioma da interface e garda a preferencia no navegador.',
@@ -992,6 +996,7 @@ export default {
   'section.xat.informe.assumpte': 'Informe dun erro en Sóc de Poble',
   'section.xat.iaia.apagada': 'A IAIA está apagada (nivel de IA 0). Podes volver acendela en «Realitat».',
   'section.xat.conversa.torna': 'Voltar á lista',
+  'section.xat.conversa.tornaOrigen': 'Voltar á páxina anterior',
   'section.xat.conversa.opcions': 'Opcións da conversa',
   'section.xat.conversa.seleccionar': 'Seleccionar mensaxes',
   'section.xat.seleccio.eixir': 'Saír da selección',
@@ -1041,6 +1046,7 @@ export default {
   'section.xat.fake.sdp1': 'Benvido a Sóc de Poble. Somos unha rede de vilas conectadas.',
   'section.xat.fake.sdp2': 'Rexístrate para descubrir todo o que ofrecemos.',
   'section.xat.fake.reply': 'Isto é unha simulación. Rexístrate para falar coas vilas de verdade!',
+  'section.xat.fake.botoRegistrat': 'Rexístrate',
   'section.xat.ajustos.titol': 'Axustes',
   'section.xat.ajustos.obri': 'Ti: axustes',
   /* Pla 261014_1450 (front C) · Proposta: l'ha de revisar algú que parle gallec. */

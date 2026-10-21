@@ -40,7 +40,13 @@ export const PROPIS_DEL_LLOC = Object.freeze({
        amfitrió, un worker amb abast «/» i un manifest de socdepoble.org no hi
        pinten res i sí poden fer mal. */
     'sw.js',
-    'manifest.webmanifest'
+    'manifest.webmanifest',
+    /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Les icones de
+       192 i 512 que el manifest demana per a instal·lar a l'ordinador: només
+       les llig eixe manifest, així que tampoc viatgen (el zip del directori
+       de WordPress.org no creix). apple-touch-icon.png sí que hi va, com abans. */
+    'icona-app-192.png',
+    'icona-app-512.png'
   ])
 });
 

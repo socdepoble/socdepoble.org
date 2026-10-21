@@ -26,8 +26,9 @@
  *     «Obrir…» de dalt si el plugin té presentació, i el copyright.
  *   · H2 i entradilla del registre (.page-intro).
  *   · El cos: la presentació del plugin, si en té (presentacioPlugins.js: sis
- *     paràgrafs per al Rebost i per a Salut), pintada per CosDeLaPagina, la
- *     peça de les pàgines de text, que saneja l'HTML.
+ *     blocs, un títol H3 i el seu paràgraf, per al Rebost i per a Salut),
+ *     pintada per CosDeLaPagina, la peça de les pàgines de text, que saneja
+ *     l'HTML.
  *   · L'avís en text, si el botó no es pot obrir.
  *   · Al final, el gran botó blau «Obrir …» (PortaDePagina, la mateixa porta
  *     de les pàgines de publicació), dins de div.sdp-pagina-accio, que és
@@ -44,8 +45,8 @@
  *     el TPV del Bar, «sense etiquetes» (les etiquetes buides fixes d'esta
  *     pàgina) i «sense data»: l'ordre nova és la del registre. Mapa, Vehicle
  *     Compartit i Animalets, que no en porten, queden com abans.
- *   · M4 · El Rebost i Salut porten sis paràgrafs de presentació entre
- *     l'entradilla i el botó.
+ *   · M4 · El Rebost i Salut porten sis blocs de presentació (H3 i
+ *     paràgraf, vegeu baix) entre l'entradilla i el botó.
  *   · M2 · A la pàgina del Rebost i a la de Salut el botó «Obrir…» va DALT I
  *     AL FINAL, com a les pàgines de Publicar (Treball, Mapa…): la mateixa
  *     PortaDePagina amb la mateixa porta, dins del bloc blanc de l'H1 (la
@@ -55,6 +56,12 @@
  *     DEROGAT «un sol botó, al final» per a estes dues pàgines. Les pàgines
  *     dels plugins sense presentació conserven un sol botó, baix, i el DOM
  *     de l'article d'abans: la decisió M2 no les nomena.
+ *
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3) · Cada
+ *   paràgraf de la presentació porta davant el seu títol H3: el cos comença
+ *   en H3, davall de l'H2 i l'entradilla del registre (sdp-universal-page
+ *   §1.E.4, core-llegibilitat-text §2). Ni codi ni CSS nous: l'HTML viu a
+ *   presentacioPlugins.js i l'H3 global de base.css ja és el canònic.
  *
  * L'arquitectura de plugins sencera (injecció, cicle de vida, aïllament) és
  * de la pròxima onada (directriu 261003_2320): ací només hi ha la pàgina.

@@ -36,6 +36,12 @@
  * només els que arriben com a handler. Cada un tanca el menú, torna el focus
  * al «⋯» (botoRef: el diàleg el pren per obridor i, en tancar-se, l'hi torna;
  * crítica 261020, 13) i li'l passa. Sense els handlers, el menú de sempre.
+ *
+ * Ordre del Mestre (261021, pla 261021_0015 §8.5) · `onTornaAOrigen`: qui ha
+ * entrat a esta conversa des d'una altra pàgina de l'app (/iaia, una fitxa de
+ * perfil; XatSection, origenDelXat.js) hi torna amb la mateixa fletxa, ara
+ * també en ample (sense d-mobile-only) i amb el seu nom («Torna a la pàgina
+ * anterior»). Sense, la fletxa de sempre: només en estret i a la llista.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
@@ -57,7 +63,8 @@ const esRutaInterna = (ruta) => typeof ruta === 'string' && ruta.startsWith('/')
 
 export default function CapcaleraConversa({
   fil, onTorna, onSeleccionar, seleccio = null, t,
-  onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = ''
+  onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
+  onTornaAOrigen = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -174,11 +181,20 @@ export default function CapcaleraConversa({
     );
   }
 
+  /* §8.5 · Amb origen, la fletxa és a totes les amplàries i hi torna. */
+  const fletxa = typeof onTornaAOrigen === 'function' ? (
+    <button type="button" className="sdp-xat-icona" onClick={onTornaAOrigen} aria-label={t('section.xat.conversa.tornaOrigen', 'Torna a la pàgina anterior')}>
+      <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+    </button>
+  ) : (
+    <button type="button" className="sdp-xat-icona d-mobile-only" onClick={onTorna} aria-label={t('section.xat.conversa.torna', 'Torna a la llista')}>
+      <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+    </button>
+  );
+
   return (
     <header className="sdp-xat-capcalera">
-      <button type="button" className="sdp-xat-icona d-mobile-only" onClick={onTorna} aria-label={t('section.xat.conversa.torna', 'Torna a la llista')}>
-        <ArrowLeft size={24} aria-hidden="true" focusable="false" />
-      </button>
+      {fletxa}
       {capIdentitat}
       <div className="sdp-xat-capcalera__menu" ref={menuRef}>
         <button

@@ -58,11 +58,39 @@ import {
    és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
 import { rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefecte.js';
 import { useXat } from '../xat/XatContext';
+import SelectorRealitat from '../realitat/SelectorRealitat.jsx';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
    · Només una entitat, un grup o una IA porten la píndola del seu tipus. Una
    persona no es categoritza: no n'hi ha cap per a ella (abans, «Persona»). */
 const ETIQUETA = Object.freeze({ entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
+
+const atributHtml = (valor) => String(valor ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Ordre del Mestre (261021, pla 261021_0015 §8.2: «Incrustació bidireccional
+ * de targetes») · A /iaia, la targeta viva de «L'Ànima de la IAIA» (/anima),
+ * amb el mecanisme de targetes incrustades de sempre (data-sdp-targetes,
+ * lliçó 261007 de sdp-universal-page): una targeta sola, a la dreta, dins del
+ * flux de la presentació, just després del seu H3. Les dades són les de la
+ * pàgina (PAGE_COPY.anima), mai una còpia. El text de la IAIA (decisió del
+ * Mestre del 261010) no canvia: la targeta s'hi afig en pintar-lo. El sentit
+ * contrari (la targeta de la IAIA dins de /anima) toca un contingut
+ * estructural de la frontissa i espera l'aprovació del Mestre.
+ */
+export function presentacioAmbLaTargetaDeLAnima(html) {
+  const anima = PAGE_COPY.anima;
+  const text = String(html || '');
+  if (!anima || !text) return text;
+  const targeta = '<div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta">'
+    + `<div data-sdp-targeta="pagina:anima" class="sdp-targeta" data-ruta="/anima" data-titol="${atributHtml(anima.title)}"`
+    + ` data-subtitol="${atributHtml(anima.subtitle)}" data-entradilla="${atributHtml(anima.lead)}"`
+    + ` data-imatge="${atributHtml(anima.image)}" data-autor="IAIA MarIA" data-autor-ruta="/iaia">`
+    + `<a href="/anima" rel="noopener noreferrer nofollow">${atributHtml(anima.title)}</a></div></div>`;
+  const fiDelTitol = text.indexOf('</h3>');
+  return fiDelTitol === -1 ? `${text}${targeta}` : `${text.slice(0, fiDelTitol + 5)}${targeta}${text.slice(fiDelTitol + 5)}`;
+}
 
 /** El mateix DTO que loadPerfilPublic, però des del catàleg d'agents del paquet. */
 export function perfilDelCataleg(agent) {
@@ -90,7 +118,11 @@ export function perfilDeLaIADelPaquet(agent) {
     tipus: 'ia', id: agent.id, slug: agent.slug || null, nom: agent.name, avatar: agent.avatar_url || '',
     hero: agent.hero_url || '', lema: agent.lema || '', bio: agent.role || '',
     presentacioHtml: agent.presentacio_html || agent.short_bio || '', poble: agent.town_name || '',
-    esIA: true, publicat: true, propietari: false, copyright: agent.copyright || '', emoticona: ''
+    esIA: true, publicat: true, propietari: false, copyright: agent.copyright || '', emoticona: '',
+    /* Ordre del Mestre (261021, pla 261021_0015 §8.1) · La pastilla de data i
+       hora de la barra taronja: les dates que declara la fila de l'agent
+       (AGENTS_IA_SEED). Sense dates, cap pastilla (T51: cap data inventada). */
+    creat: agent.created_at || undefined, modificat: agent.updated_at || undefined
   };
 }
 
@@ -158,17 +190,6 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const { t } = useUIActions();
   const { externalConfig } = useUIState();
   const navigate = useNavigate();
-  const { memberships = [], actor, setActor } = useIdentitat();
-  /* Onada 11 (261010; refutació del front C, D12) · En remot, el directe
-     /xat?amb=<id> amb la IAIA no s'obri: el servidor no coneix el seu UUID
-     (crea_fil_directe falla i el Xat avisa) i, sense sessió, el fil de mostra
-     que obri és el de Sóc de Poble, no el seu. El botó va on va la seua fila
-     (rutaDelXatDeLaIAIA). `senseSessio` és el de useXat() (fora del
-     proveïdor, el BUIT: false); el mode de dades es llig de la configuració,
-     com a la càrrega de davall, i no de useXat(), que fora del proveïdor diu
-     'remote' també en llavor. */
-  const { senseSessio } = useXat();
-  const modeDades = normalizeBackendConfig(externalConfig).dataMode;
   const [estat, setEstat] = useState({ id: null, status: 'loading', perfil: null });
   /* Auditoria de seguretat 261019 (F6) · La fitxa del projecte oberta per id
      (/empresa/<uuid>) ja no es registra sola (vegeu la càrrega, davall): la
@@ -254,34 +275,6 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const perfil = estat.status === 'ready' ? estat.perfil : null;
   const carregant = estat.status !== 'ready';
 
-  /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina
-     d'una entitat porta dalt el seu logotip. L'entitat del projecte es
-     reconeix per l'identificador (rutaDAutoria torna la seua ruta,
-     esRutaDelProjecte; des de l'Onada 8, el seu perfil; l'id remot
-     el registra la resolució de l'app, pel slug i dins del poble actiu, i la
-     càrrega d'esta fitxa quan es demana pel slug: auditoria de seguretat
-     261019, F6), mai pel nom: el seu logotip
-     rectangular, clar i fosc. Una altra entitat, el seu logo_url (l'avatar
-     del perfil) resolt ací, que pot ser un sdp-media://: una sola imatge per
-     als dos temes. Un grup no en porta (com abans).
-     Correcció final (ordre del Mestre, 261004) · Només un sdp-media:// passa
-     pel port (useResolvedAsset); un camí o una URL es resolen en el mateix
-     render (resolveAsset). Abans tot passava pel hook, que torna '' en el
-     primer render: el logotip entrava un commit més tard i la fitxa saltava
-     fins a 600px. El hook va abans de les eixides primerenques. */
-  const esEntitat = perfil?.tipus === 'entitat';
-  const esElProjecte = esEntitat && esRutaDelProjecte(rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }));
-  const logoCru = esEntitat && !esElProjecte && typeof perfil.avatar === 'string' ? perfil.avatar.trim() : '';
-  const logoDelPort = useResolvedAsset(logoCru.startsWith('sdp-media://') ? logoCru : '');
-  const logoPropi = logoCru.startsWith('sdp-media://') ? logoDelPort : (logoCru ? resolveAsset(logoCru) : '');
-  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Una
-     persona o la IA (ents de carboni o de silici) no porten logotip: porten
-     el seu avatar redó, centrat davant de l'H1 (PageFrame, avatarAutor, que
-     també resol un sdp-media://). Si la fitxa és de qui mira, l'avatar és
-     un botó que porta al canvi d'imatge que ja existix: el Perfil, on el
-     botó «Avatar» obri la finestra de retall (useImatgeDeFitxa, Onada 4). */
-  const esPersonaOIA = perfil?.tipus === 'persona' || perfil?.tipus === 'ia';
-
   /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · La fitxa d'una de les
      tres identitats del Mestre declara la seua URL canònica neta, s'obriga
      per la ruta canònica o per una d'abans (/gent/0001, /empresa/socdepoble,
@@ -295,7 +288,9 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   useSEO({
     title: perfil ? perfil.nom : t('section.perfil.public.noTrobat', 'Perfil no trobat'),
     description: perfil ? (perfil.lema || perfil.bio || '') : '',
-    image: perfil?.avatar || null,
+    /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · La imatge SEO
+       és la portada (sdp-universal-page §1.B); sense portada, l'avatar. */
+    image: perfil?.hero || perfil?.avatar || null,
     type: perfil?.tipus === 'persona' ? 'Person' : 'Organization',
     index: Boolean(perfil?.publicat),
     ...(rutaCanonica ? { canonical: urlCanonica(rutaCanonica) } : {})
@@ -335,6 +330,88 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
     );
   }
 
+  return <FitxaPublica perfil={perfil} />;
+}
+
+/**
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 7: «Perfil ciutadà:
+ * reutilitza el mateix component atòmic») · «La pàgina» d'un agent IA al
+ * Perfil (perfilModel.js, vista 'pagina'): la seua FitxaPublica, amb el DTO
+ * del padró (perfilDeLaIADelPaquet) des de la fila de l'agent. Qui la veu ací
+ * l'administra: és la seua fitxa («La teua fitxa», sense «Més opcions») i
+ * «Edita la fitxa» no cal, «La fitxa» és l'apartat del costat. PerfilShell la
+ * carrega a demanda (lazy): el Perfil no arrossega la fitxa pública si no
+ * s'obri.
+ */
+export function PaginaDeLAgent({ identitat }) {
+  const agent = identitat?.dades;
+  if (!agent) return null;
+  return <FitxaPublica perfil={{ ...perfilDeLaIADelPaquet(agent), propietari: true }} ambEdita={false} chrome="context" />;
+}
+
+/**
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 7: «Pàgina Única
+ * Atòmica») · La fitxa pública ja carregada: la pinta /iaia (i qualsevol
+ * fitxa de /gent, /empresa, /perfil…) i també el Perfil (/el-meu-perfil,
+ * apartat «La pàgina» d'un agent IA), el mateix component i no una còpia. La
+ * càrrega, l'error i el SEO són de la ruta (PerfilPublicSection): el Perfil no
+ * canvia el títol del document.
+ *   · Per a la IAIA MarIA, al peu de la presentació, el Selector de Realitat
+ *     (sections/realitat/SelectorRealitat.jsx): qui la coneix tria, en el
+ *     mateix lloc, quanta IA l'acompanya. /realitat redirigix ací.
+ *   · `ambEdita` false lleva «Edita la fitxa»: al Perfil, «La fitxa» és
+ *     l'apartat del costat.
+ *   · `chrome` és el de la UniversalPage: 'full' a la ruta, 'context' dins
+ *     del Workspace del Perfil (com «Les vistes»).
+ */
+export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
+  const { t } = useUIActions();
+  const { externalConfig } = useUIState();
+  const navigate = useNavigate();
+  const { memberships = [], actor, setActor } = useIdentitat();
+  /* Onada 11 (261010; refutació del front C, D12) · En remot, el directe
+     /xat?amb=<id> amb la IAIA no s'obri: el servidor no coneix el seu UUID
+     (crea_fil_directe falla i el Xat avisa) i, sense sessió, el fil de mostra
+     que obri és el de Sóc de Poble, no el seu. El botó va on va la seua fila
+     (rutaDelXatDeLaIAIA). `senseSessio` és el de useXat() (fora del
+     proveïdor, el BUIT: false); el mode de dades es llig de la configuració,
+     com a la càrrega de la ruta, i no de useXat(), que fora del proveïdor diu
+     'remote' també en llavor. */
+  const { senseSessio } = useXat();
+  const modeDades = normalizeBackendConfig(externalConfig).dataMode;
+
+  /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina
+     d'una entitat porta dalt el seu logotip. L'entitat del projecte es
+     reconeix per l'identificador (rutaDAutoria torna la seua ruta,
+     esRutaDelProjecte; des de l'Onada 8, el seu perfil; l'id remot
+     el registra la resolució de l'app, pel slug i dins del poble actiu, i la
+     càrrega d'esta fitxa quan es demana pel slug: auditoria de seguretat
+     261019, F6), mai pel nom: el seu logotip
+     rectangular, clar i fosc. Una altra entitat, el seu logo_url (l'avatar
+     del perfil) resolt ací, que pot ser un sdp-media://: una sola imatge per
+     als dos temes. Un grup no en porta (com abans).
+     Correcció final (ordre del Mestre, 261004) · Només un sdp-media:// passa
+     pel port (useResolvedAsset); un camí o una URL es resolen en el mateix
+     render (resolveAsset). Abans tot passava pel hook, que torna '' en el
+     primer render: el logotip entrava un commit més tard i la fitxa saltava
+     fins a 600px. FitxaPublica no té eixides primerenques: el hook es crida
+     sempre. */
+  const esEntitat = perfil?.tipus === 'entitat';
+  const esElProjecte = esEntitat && esRutaDelProjecte(rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }));
+  const logoCru = esEntitat && !esElProjecte && typeof perfil.avatar === 'string' ? perfil.avatar.trim() : '';
+  const logoDelPort = useResolvedAsset(logoCru.startsWith('sdp-media://') ? logoCru : '');
+  const logoPropi = logoCru.startsWith('sdp-media://') ? logoDelPort : (logoCru ? resolveAsset(logoCru) : '');
+  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Una
+     persona o la IA (ents de carboni o de silici) no porten logotip: porten
+     el seu avatar redó, centrat davant de l'H1 (PageFrame, avatarAutor, que
+     també resol un sdp-media://). Si la fitxa és de qui mira, l'avatar és
+     un botó que porta al canvi d'imatge que ja existix: el Perfil, on el
+     botó «Avatar» obri la finestra de retall (useImatgeDeFitxa, Onada 4).
+     Ordre del Mestre (261021, prompt 261021_0015, tasca 7; «clics honestos»)
+     · L'avatar d'una IA no és cap botó: un clic a la IAIA portava a
+     /el-meu-perfil sense voler-ho. Qui la gestiona té «Edita la fitxa». */
+  const esPersonaOIA = perfil?.tipus === 'persona' || perfil?.tipus === 'ia';
+
   /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
      · Una persona no és una obra ni es categoritza: la seua fitxa pública no
      porta la píndola del tipus ni els drets d'autor (ni el desat ni el «© Nom»
@@ -372,29 +449,44 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
     : null;
   const administra = Boolean(membership) && esRolQueMana(membership.role);
   const actuaComEsta = administra && actor?.tipus === 'entitat' && String(actor.id) === String(membership.id);
-  const rutaEdita = administra ? rutaFitxaOrganitzacio(membership.id) : '/el-meu-perfil';
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · «Edita la fitxa»
+     d'una IA obri el Perfil a la seua fitxa (l'agent del grup AGENTS IA,
+     seleccioInicialDePerfil), no a la de la persona. */
+  const rutaEdita = administra
+    ? rutaFitxaOrganitzacio(membership.id)
+    : (perfil.esIA ? rutaFitxaOrganitzacio(perfil.id) : '/el-meu-perfil');
   const correuPublic = esOrganitzacio ? String(perfil.correu || '').trim() : '';
   const mailto = correuPublic ? enllacMailto(correuPublic) : null;
-  const logoDeLaFitxa = esElProjecte
+  /* Gauntlet 261016 (Bloc 3) · L'avís i el botó d'una IA porten el seu nom:
+     abans deien «La IAIA MarIA» i «Parla amb la IAIA» per a qualsevol IA (un
+     personatge del catàleg, com El Gall o Nano Banana). Per a la IAIA, pel seu
+     id o pel seu slug declarat (agentIASeed), mai pel nom, els textos de
+     sempre. Només ella respon amb frases fetes (la seua resposta fixa,
+     localXat.js · RESPOSTA_IAIA): l'avís d'una altra IA no ho promet.
+     Ordre del Mestre (261021, pla §8.1) · I ha de ser una IA: ara també decidix
+     el logotip oficial, i una persona o una entitat que prenguera el slug
+     «iaia-maria» no se l'ha de quedar (com navigation.js · esLaFitxaDeLaIAIA). */
+  const esLaIAIA = Boolean(perfil.esIA) && (esIAIA(perfil.id) || esIAIA(agentIASeed(perfil.slug)?.id));
+  /* Ordre del Mestre (261021, pla 261021_0015 §8.1: «Capçalera canònica del
+     Mas») · A /iaia, la cara de la IAIA no es repetix davall de la barra
+     taronja com a cercle de 300px: ja hi viu, a la mateixa barra. Damunt de
+     l'H1 porta el logotip oficial rectangular de Sóc de Poble
+     (DEFAULT_AUTHOR.logo), com totes les pàgines del Mas. La resta de fitxes
+     (persones i els altres agents del catàleg) seguixen amb el seu avatar redó
+     (sdp-pedra-seca §11), i el d'una IA no és cap botó («clics honestos»). */
+  const logoDeLaFitxa = (esElProjecte || esLaIAIA)
     ? DEFAULT_AUTHOR.logo
     : (logoPropi ? { clar: logoPropi, alt: `Logotip de ${perfil.nom}` } : null);
-  const avatarDeLaFitxa = esPersonaOIA && perfil.avatar ? {
+  const avatarDeLaFitxa = esPersonaOIA && !esLaIAIA && perfil.avatar ? {
     src: perfil.avatar,
     alt: `Avatar de ${perfil.nom}`,
-    onCanvia: perfil.propietari ? () => navigate(rutaEdita) : undefined
+    onCanvia: perfil.propietari && !perfil.esIA ? () => navigate(rutaEdita) : undefined
   } : null;
   /* El directe de sempre per a tothom; per a la IAIA, la conversa de la seua
      fila en cada mode de dades (en llavor i en local, el mateix directe). */
   const rutaDelXat = esIAIA(perfil.id)
     ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
     : `/xat?amb=${encodeURIComponent(perfil.id)}`;
-  /* Gauntlet 261016 (Bloc 3) · L'avís i el botó d'una IA porten el seu nom:
-     abans deien «La IAIA MarIA» i «Parla amb la IAIA» per a qualsevol IA (un
-     personatge del catàleg, com El Gall o Nano Banana). Per a la IAIA, pel seu
-     id o pel seu slug declarat (agentIASeed), mai pel nom, els textos de
-     sempre. Només ella respon amb frases fetes (la seua resposta fixa,
-     localXat.js · RESPOSTA_IAIA): l'avís d'una altra IA no ho promet. */
-  const esLaIAIA = esIAIA(perfil.id) || esIAIA(agentIASeed(perfil.slug)?.id);
   const avisDIA = esLaIAIA
     ? t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona del poble.')
     : `${perfil.nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.`;
@@ -402,7 +494,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
 
   return (
     <UniversalPage
-      chrome="full"
+      chrome={chrome}
       layout="contained"
       title={perfil.nom}
       subtitle={perfil.bio || undefined}
@@ -452,16 +544,12 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
          continua sent el directe per a tothom. */
       objecte={objecte}
     >
-      {perfil.esIA ? (
-        <Alerta to="avis" titol={t('section.perfil.public.iaTitol', 'Este perfil és una intel·ligència artificial')}>
-          {avisDIA}
-        </Alerta>
-      ) : null}
-      <div className="sdp-alerta__accions">
+      {/* Ordre del Mestre (261021) · Botó centrat amb respiració sota el lema, seguit de l'avís */}
+      <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
         <Boto varietat="primari" icona={perfil.esIA ? Bot : MessageCircle} onClick={() => navigate(rutaDelXat)}>
           {perfil.esIA ? parlaAmbLaIA : t('section.perfil.public.escriu', 'Escriu-li al xat')}
         </Boto>
-        {perfil.propietari || administra ? (
+        {ambEdita && (perfil.propietari || administra) ? (
           <Boto varietat="secundari" icona={PencilLine} onClick={() => navigate(rutaEdita)}>
             {t('section.perfil.public.edita', 'Edita la fitxa')}
           </Boto>
@@ -472,6 +560,11 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
           </Boto>
         ) : null}
       </div>
+      {perfil.esIA ? (
+        <Alerta to="avis" titol={t('section.perfil.public.iaTitol', 'Este perfil és una intel·ligència artificial')}>
+          {avisDIA}
+        </Alerta>
+      ) : null}
       {actuaComEsta ? <p role="status">{`Ara actues com a ${perfil.nom}.`}</p> : null}
       {mailto ? (
         <p>
@@ -482,8 +575,14 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
           incrustades de la presentació, sincronitzades amb el seu original. */}
       {perfil.presentacioHtml ? (
-        <ProveidorSincronitzacioTargetes>{renderRichText(perfil.presentacioHtml)}</ProveidorSincronitzacioTargetes>
+        <ProveidorSincronitzacioTargetes>
+          {renderRichText(esLaIAIA ? presentacioAmbLaTargetaDeLAnima(perfil.presentacioHtml) : perfil.presentacioHtml)}
+        </ProveidorSincronitzacioTargetes>
       ) : null}
+      {/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · Al peu de la
+          presentació de la IAIA, el Selector de Realitat dels 4 nivells: fora
+          de l'article de la presentació i sense cap regió viva. */}
+      {esLaIAIA ? <SelectorRealitat /> : null}
     </UniversalPage>
   );
 }

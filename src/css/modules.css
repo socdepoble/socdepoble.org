@@ -4617,11 +4617,14 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-suau);
     text-align: center;
   }
+  /* Ordre del Mestre (261021, prompt 261021_0015: «totes les proves en verd»)
+     · El botó «Registra't» (a60d6fd3) complix les lleis dures: sòl tàctil de
+     48px (--sdp-touch) i lletra de 14px o més (--sdp-text-small; el
+     --sdp-text-sm d'abans no existia i caia als 13,6px de la reserva). */
   .sdp-xat-compositor__boto-registre {
-    min-height: 36px;
-    height: 36px;
+    min-height: var(--sdp-touch);
     padding: 0 var(--sdp-space-4);
-    font-size: var(--sdp-text-sm, 0.85rem);
+    font-size: var(--sdp-text-small);
     white-space: nowrap;
     text-decoration: none;
   }
@@ -8168,12 +8171,12 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-targeta-opcio__insignia { align-self: flex-start; margin-top: var(--sdp-space-2); }
 
-  /* /realitat (substituïx el bloc T31): dins de l'ample de lectura. */
+  /* /realitat: Tota l'amplada de la pàgina, sense encongiment artificial. */
   .sdp-realitat {
     display: flex;
     flex-direction: column;
     gap: var(--sdp-space-8);
-    max-width: var(--sdp-measure);
+    width: 100%;
     margin-inline: auto;
   }
   .sdp-realitat .sdp-grup { margin: 0; }

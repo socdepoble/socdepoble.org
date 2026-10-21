@@ -103,6 +103,7 @@ export default {
   'nav.wikidepoble': 'Wiki de Poble',
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': 'iaia-ren arima',
+  'nav.iaiaFitxa': 'IAIA MarIA',
   'nav.roadmap': 'Bide-orria',
   'nav.roadmapShort': 'Bidea',
   'nav.versions': 'Bertsioak',
@@ -116,6 +117,9 @@ export default {
   'nav.cerca': 'Bilatu',
   'nav.acces': 'Sarbidea',
   'nav.tema': 'Gaia',
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Instal·lar la PWA a l'ordinador (BotoInstalaApp.jsx). */
+  'nav.instalaApp': 'Instalatu zure ordenagailuan',
+  'nav.instalaAppTitol': 'Instalatu Sóc de Poble zure ordenagailuan aplikazio gisa, bere leihoan',
   'nav.visor': 'Ikuslea',
   'nav.idiomaTitle': 'Hizkuntza aukeratu',
   'nav.idiomaSubtitle': 'Aldatu interfazearen hizkuntza eta gorde aukeraketa nabigatzailean.',
@@ -995,6 +999,7 @@ export default {
   'section.xat.informe.assumpte': 'Akats-txostena: Sóc de Poble',
   'section.xat.iaia.apagada': 'IAIA itzalita dago (IA maila 0). «Realitat» atalean piztu dezakezu berriro.',
   'section.xat.conversa.torna': 'Itzuli zerrendara',
+  'section.xat.conversa.tornaOrigen': 'Itzuli aurreko orrira',
   'section.xat.conversa.opcions': 'Elkarrizketaren aukerak',
   'section.xat.conversa.seleccionar': 'Hautatu mezuak',
   'section.xat.seleccio.eixir': 'Irten hautapenetik',
@@ -1044,6 +1049,7 @@ export default {
   'section.xat.fake.sdp1': 'Ongi etorri Sóc de Poble-ra. Konektatutako herrien sarea gara.',
   'section.xat.fake.sdp2': 'Erregistratu eskaintzen dugun guztia ezagutzeko.',
   'section.xat.fake.reply': 'Simulazio bat da hau. Erregistratu benetako herriekin hitz egiteko!',
+  'section.xat.fake.botoRegistrat': 'Erregistratu',
   'section.xat.ajustos.titol': 'Ezarpenak',
   'section.xat.ajustos.obri': 'Zu: ezarpenak',
   /* Pla 261014_1450 (front C) · Proposta: l'ha de revisar algú que parle basc. */

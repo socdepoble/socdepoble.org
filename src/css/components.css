@@ -149,6 +149,7 @@
   .sdp-alerta__titol { margin: 0 0 var(--sdp-space-1); font-weight: 800; }
   .sdp-alerta__text > :last-child { margin-bottom: 0; }
   .sdp-alerta__accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); margin-top: var(--sdp-space-3); }
+  .sdp-alerta__accions--centrades { justify-content: center; margin: var(--sdp-space-4) 0 var(--sdp-space-5); }
   .sdp-alerta__tanca {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     width: var(--sdp-touch-min); height: var(--sdp-touch-min); margin: calc(var(--sdp-space-3) * -1);

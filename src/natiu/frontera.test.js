@@ -292,7 +292,8 @@ describe('els adaptadors natius', () => {
 
   test('l’entrada nativa no exposa cap global, no registra cap worker ni toca l’emmagatzematge directe', () => {
     const codi = llig(`${NATIU}/entrada.jsx`).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-    expect(codi).not.toMatch(/exposaGlobal|pwa\/registre/);
+    // Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Tampoc l'oferta d'instal·lar a l'ordinador.
+    expect(codi).not.toMatch(/exposaGlobal|pwa\/(?:registre|instalacio)|capturaInstalacio/);
     expect(codi).not.toMatch(new RegExp(['service', 'Worker|local', 'Storage|session', 'Storage'].join('')));
     expect(codi).not.toMatch(/\b(?:window|globalThis)(?:\.[A-Za-z_$][\w$]*|\[[^\]]+\])\s*=(?!=)/);
     expect(codi).toMatch(/dataMode: 'remote'/);

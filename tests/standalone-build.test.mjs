@@ -148,7 +148,9 @@ test('la llista d\'exclusions és curta, congelada i no toca els recursos de l\'
   assert.equal(PROPIS_DEL_LLOC.prefixOcult, '.');
   // enxufe/ és el canal de releases de socdepoble.org (stable.json i la signatura).
   // sw.js i manifest.webmanifest: la PWA de l'entrada pròpia (Fase 0, 261003).
-  assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['auth', 'enxufe', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml', 'sw.js']);
+  // Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · i les icones de 192 i 512 que només llig eixe manifest.
+  assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['auth', 'enxufe', 'icona-app-192.png', 'icona-app-512.png', 'manifest.webmanifest',
+    'robots.txt', 'sitemap.xml', 'sw.js']);
   for (const rel of ['rag-index.json', 'slugIndex.json', 'assets', 'fonts', 'components']) {
     assert.ok(!PROPIS_DEL_LLOC.arrel.includes(rel), rel);
   }
@@ -379,21 +381,25 @@ test('el canal de releases (public/enxufe/) no viatja dins del paquet', () => {
   } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
 });
 
-test('la PWA de l\'entrada pròpia (sw.js i manifest.webmanifest) no viatja al paquet ni hi queda de builds anteriors', (t) => {
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Les icones de 192 i
+   512 del manifest (instal·lar a l'ordinador) són de la mateixa PWA. */
+const PWA_DEL_LLOC = ['sw.js', 'manifest.webmanifest', 'icona-app-192.png', 'icona-app-512.png'];
+
+test('la PWA de l\'entrada pròpia (sw.js, manifest.webmanifest i les seues icones) no viatja al paquet ni hi queda de builds anteriors', (t) => {
   // De mostra: a l'arrel es queda; a una altra fondària és un recurs qualsevol.
-  const arrel = publicDeMostra(['sw.js', 'manifest.webmanifest', 'assets/sw.js', 'assets/manifest.webmanifest']);
+  const arrel = publicDeMostra([...PWA_DEL_LLOC, ...PWA_DEL_LLOC.map((rel) => `assets/${rel}`)]);
   try {
     const rels = recursosDelPlugin(arrel);
-    for (const rel of ['sw.js', 'manifest.webmanifest']) assert.ok(!rels.includes(rel), rel);
-    for (const rel of ['assets/sw.js', 'assets/manifest.webmanifest']) assert.ok(rels.includes(rel), rel);
+    for (const rel of PWA_DEL_LLOC) assert.ok(!rels.includes(rel), rel);
+    for (const rel of PWA_DEL_LLOC.map((r) => `assets/${r}`)) assert.ok(rels.includes(rel), rel);
   } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
 
   // Restes d'un build anterior a l'outDir: es retiren com la resta de propis del lloc.
   const { projecte, outDir } = outDirDeMostra();
   try {
-    for (const rel of ['sw.js', 'manifest.webmanifest']) fs.writeFileSync(path.join(outDir, rel), rel);
+    for (const rel of PWA_DEL_LLOC) fs.writeFileSync(path.join(outDir, rel), rel);
     const retirats = retiraPropisDelLloc(outDir);
-    for (const rel of ['sw.js', 'manifest.webmanifest']) {
+    for (const rel of PWA_DEL_LLOC) {
       assert.ok(retirats.includes(rel), rel);
       assert.equal(fs.existsSync(path.join(outDir, rel)), false, rel);
     }
@@ -403,7 +409,7 @@ test('la PWA de l\'entrada pròpia (sw.js i manifest.webmanifest) no viatja al p
   const real = path.resolve('public');
   if (!fs.existsSync(real)) { t.skip('sense public/ en aquest arbre'); return; }
   const relsReals = recursosDelPlugin(real);
-  for (const rel of ['sw.js', 'manifest.webmanifest']) assert.ok(!relsReals.includes(rel), `public/${rel}`);
+  for (const rel of PWA_DEL_LLOC) assert.ok(!relsReals.includes(rel), `public/${rel}`);
 });
 
 test('nodeSegellat: origen públic, mode com dataMode.js i tenant només si és un UUID', () => {
@@ -1358,4 +1364,24 @@ test('la configuració d’allotjament del repositori servix /assets/ amb CORS i
   const valor = (clau) => deAssets.headers.find((h) => h.key === clau)?.value;
   assert.equal(valor('Access-Control-Allow-Origin'), '*');
   assert.deepEqual(valor('Access-Control-Expose-Headers').split(',').map((s) => s.trim()).sort(), ['Content-Range', 'ETag']);
+});
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 4: dossier de
+   desbloqueig de socdepoble.org) · Dos forats de la configuració d'allotjament
+   que el dossier demana tancar abans de cap desplegament:
+   · el CSP de la capçalera ha d'admetre `data:` a connect-src, com el de
+     index.html: el navegador aplica tots dos, i la pujada d'imatges fa
+     fetch(dataUrl) (utils/pujadaImatge.js);
+   · /assets/ ha d'admetre la capçalera Range a la preflight CORS: el visor hi
+     llig l'EXIF amb Range des del WordPress que l'incrusta. */
+test('vercel.json: connect-src admet data: (paritat amb index.html) i /assets/ admet Range a CORS', () => {
+  const config = JSON.parse(fs.readFileSync(path.resolve('vercel.json'), 'utf8'));
+  const csp = config.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy')?.value || '';
+  const connect = csp.match(/connect-src([^;]*)/);
+  assert.ok(connect, 'cap connect-src a vercel.json');
+  assert.ok(connect[1].trim().split(/\s+/).includes('data:'), connect[1]);
+  const html = fs.readFileSync(path.resolve('index.html'), 'utf8').match(/connect-src([^;"]*)/);
+  assert.ok(html && html[1].trim().split(/\s+/).includes('data:'), 'index.html també ha de portar data: a connect-src');
+  const deAssets = config.headers.find((h) => h.source === '/assets/(.*)');
+  assert.equal(deAssets.headers.find((h) => h.key === 'Access-Control-Allow-Headers')?.value, 'Range');
 });

@@ -186,7 +186,10 @@ export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
   lema: AGENTS_MAP.IAIA.lema,
   short_bio: AGENTS_MAP.IAIA.short_bio,
   avatar_url: AGENTS_MAP.IAIA.avatar_url,
-  hero_url: '',
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · La portada de
+     /iaia és la del catàleg, com l'avatar. Abans era buida: el hero_url que
+     a60d6fd3 va posar a agentsSeed.js no arribava a cap pàgina. */
+  hero_url: AGENTS_MAP.IAIA.hero_url,
   /* Onada 10 (261010; decisió del Mestre del 261010) · «Qui és la IAIA
      MarIA?», el cos del seu perfil públic: el text del catàleg (agentsSeed.js,
      la font única), com el nom, el rol, el lema i l'avatar. Abans era buit i
@@ -195,7 +198,9 @@ export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
   copyright: '',
   town_name: AGENTS_MAP.IAIA.town_name,
   /* L'entitat que administra l'agent: qui hi mana pot editar-ne la fitxa. */
-  owner_org_id: ENTITAT_PILOT_ID
+  owner_org_id: ENTITAT_PILOT_ID,
+  created_at: '2026-09-08T00:00:00.000Z',
+  updated_at: '2026-10-21T00:30:00.000Z'
 })]);
 
 /* T3 (mock): la resposta fixa de la IAIA, literal del prompt del Mestre.

@@ -1,6 +1,6 @@
 /**
  * nivellIaia.js — l'únic estat d'activitat de la IA que té l'app: el nivell
- * del Selector de Realitat (RealitatSection), desat amb getVal/setVal.
+ * del Selector de Realitat (SelectorRealitat, el bloc de /iaia), desat amb getVal/setVal.
  *
  * T30.2 (ordre del Mestre, 260927 nit): la IAIA de la barra negra respira
  * quan la IA està activa. «Activa» és, ací, a partir del nivell 2

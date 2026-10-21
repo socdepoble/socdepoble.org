@@ -4,7 +4,7 @@
  * nivell 0 (Apagada) la IAIA no apareix al xat.
  *
  * Arrenca amb el nivell desat (nivellIaiaDesat) i el seguix per dos camins:
- *   · EVENT_NIVELL_IAIA a `window`, que llança RealitatSection en esta mateixa
+ *   · EVENT_NIVELL_IAIA a `window`, que llança SelectorRealitat en esta mateixa
  *     pestanya (anunciaNivellIaia);
  *   · l'esdeveniment 'storage', perquè un canvi fet en una altra pestanya del
  *     mateix navegador també hi arribe sense tornar a carregar.

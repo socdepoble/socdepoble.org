@@ -95,6 +95,7 @@ export default {
   'nav.wikidepoble': 'Wiki de Poble',
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': "L'ànima de la iaia",
+  'nav.iaiaFitxa': 'IAIA MarIA',
   'nav.roadmap': 'Full de ruta',
   'nav.roadmapShort': 'Ruta',
   'nav.versions': 'Versions',
@@ -108,6 +109,9 @@ export default {
   'nav.cerca': 'Cerca',
   'nav.acces': 'Accés',
   'nav.tema': 'Tema',
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Instal·lar la PWA a l'ordinador (BotoInstalaApp.jsx). */
+  'nav.instalaApp': 'Instal·la al teu ordinador',
+  'nav.instalaAppTitol': 'Instal·la Sóc de Poble al teu ordinador com a aplicació, en una finestra pròpia',
   'nav.visor': 'Visor',
   'nav.idiomaTitle': 'Tria un idioma',
   'nav.idiomaSubtitle': 'Canvia l’idioma de la interfície i guarda la preferència al navegador.',
@@ -1019,6 +1023,7 @@ export default {
   'section.xat.informe.assumpte': "Informe d'un error a Sóc de Poble",
   'section.xat.iaia.apagada': "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat».",
   'section.xat.conversa.torna': 'Torna a la llista',
+  'section.xat.conversa.tornaOrigen': 'Torna a la pàgina anterior',
   'section.xat.conversa.opcions': 'Opcions de la conversa',
   'section.xat.conversa.seleccionar': 'Seleccionar missatges',
   'section.xat.seleccio.eixir': 'Eixir de la selecció',
@@ -1069,6 +1074,7 @@ export default {
   'section.xat.fake.sdp1': 'Benvingut a Sóc de Poble. Som una xarxa de pobles connectats.',
   'section.xat.fake.sdp2': "Registra't per a descobrir tot el que oferim.",
   'section.xat.fake.reply': "Açò és una simulació. Registra't per a parlar amb els pobles de veritat!",
+  'section.xat.fake.botoRegistrat': "Registra't",
   /* Torn 260930 (T1): el full «Ajustos» (anatomia habitual de missatgeria). */
   'section.xat.ajustos.titol': 'Ajustos',
   'section.xat.ajustos.obri': 'Tu: ajustos',

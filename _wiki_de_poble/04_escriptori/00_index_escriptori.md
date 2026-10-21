@@ -36,6 +36,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
+- [[261021_0145_auditoria_claude_dossier_desbloqueig_socdepoble_org]]
+- [[261021_0140_auditoria_claude_llancament_apps_i_sollutia]]
 - [[261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia]]
 - [[261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia]]
 - [[261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]

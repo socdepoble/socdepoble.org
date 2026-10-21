@@ -35,6 +35,8 @@ import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } fr
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Instal·la l'app a l'ordinador (PWA d'escriptori, pwa/instalacio.js). */
+import { BotoInstalaApp } from '../components/universal/BotoInstalaApp.jsx';
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'estil desat del poble, aplicat a l'arrel de la instància. */
 import { EstilDelPoble } from './EstilDelPoble.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
@@ -66,7 +68,6 @@ const PerfilPublicSection = lazyRoute(() => import('../sections/profile/PerfilPu
 const PerfilShell = lazyRoute(() => import('../sections/profile/PerfilShell'));
 const ItemDetailSection = lazyRoute(() => import('../sections/detail/ItemDetailSection'));
 const PageDetailSection = lazyRoute(() => import('../sections/detail/PageDetailSection'));
-const RealitatSection = lazyRoute(() => import('../sections/realitat/RealitatSection'));
 /* Plataforma d'Apps Enxufables (261002) · el portal /app i cada app a /app/<id>/*. */
 const RutaApps = lazyRoute(() => import('../apps/plataforma/RutaApps.jsx'));
 /* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
@@ -715,19 +716,29 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
 
       <div className="right-icons">
         <BotoCrom />
+        {/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · «Instal·la al
+            teu ordinador»: només quan el navegador d'escriptori ho oferix
+            (beforeinstallprompt, capturat a main.jsx) i l'app és ama del
+            document; mai dins de l'app nativa ni incrustada. */}
+        <BotoInstalaApp />
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>
         {/* T30 (ordre del Mestre, 260927 nit): la IAIA (la figureta al costat
             de la bola del món) es queda a la barra negra, en mòbil i en
-            escriptori. La «icona de la IA» que T23.1 mana llevar no és esta. */}
+            escriptori. La «icona de la IA» que T23.1 mana llevar no és esta.
+            Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · Porta a
+            /iaia, la porta única de la IAIA MarIA, amb el Selector de
+            Realitat al peu; abans anava a la pantalla solta /realitat. El nom
+            és el de la IAIA: «L'ànima de la iaia» (nav.ia) és l'article de
+            /anima. */}
         <button
           type="button"
           className={['icon', 'sdp-top-bar-btn', esIaiaActiva(nivellIaia) && 'sdp-top-bar-btn--iaia-activa'].filter(Boolean).join(' ')}
           data-iaia-activa={esIaiaActiva(nivellIaia) ? 'true' : 'false'}
-          onClick={() => navigateWithTransition('/realitat')}
-          aria-label={t('nav.ia', 'Interacció amb la IA')}
-          title={t('nav.ia', 'Interacció amb la IA')}
+          onClick={() => navigateWithTransition(RUTA_FITXA_IAIA)}
+          aria-label={t('nav.iaiaFitxa', 'IAIA MarIA')}
+          title={t('nav.iaiaFitxa', 'IAIA MarIA')}
         >
           <IaiaIcon aria-hidden="true" focusable="false" />
         </button>
@@ -925,6 +936,15 @@ function RedireccioIaia() {
   return <Navigate to={consulta ? `/anima?${consulta}` : '/anima'} replace />;
 }
 
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · /realitat ja no és
+   una pantalla solta: el Selector de Realitat viu al peu de /iaia, la pàgina
+   única de la IAIA MarIA. Un enllaç vell hi porta, amb la seua consulta. */
+function RedireccioRealitat() {
+  const { search } = useLocation();
+  const consulta = new URLSearchParams(search).toString();
+  return <Navigate to={consulta ? `${RUTA_FITXA_IAIA}?${consulta}` : RUTA_FITXA_IAIA} replace />;
+}
+
 /* Onada 5 (ordre del Mestre, 261008) · Àlies «chat» → «xat»: un enllaç
    copiat amb la paraula anglesa (/chat, /chat/<fil>) aterra al Xat i
    conserva la consulta. useParams descodifica: el fil es torna a codificar. */
@@ -1004,7 +1024,7 @@ function AppRoutes() {
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />
-        <Route path="/realitat" element={<RealitatSection />} />
+        <Route path="/realitat" element={<RedireccioRealitat />} />
         {/* Plataforma d'Apps Enxufables (261002) · /app (portal) i /app/<id>/* (cada app). */}
         <Route path="/app/*" element={<RutaApps />} />
 

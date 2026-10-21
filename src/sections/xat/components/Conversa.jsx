@@ -100,10 +100,13 @@ function coixiDalt(ol) {
    baixen a cada Bombolla per a la llista viva d'«El Comú». Per props, com
    entitatActiva i moderacio: la conversa no llig cap context d'identitat.
    Sense, les llistes es lligen però no es toquen. */
+/* Ordre del Mestre (261021, pla 261021_0015 §8.5) · `onTornaAOrigen` baixa
+   tal qual a la capçalera: la fletxa torna a la pàgina d'on s'ha entrat
+   (origenDelXat.js). Sense, la fletxa de sempre (onBack). */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null
+  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null
 }) {
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
@@ -466,6 +469,7 @@ export default function Conversa({
       <CapcaleraConversa
         fil={fil}
         onTorna={onBack}
+        onTornaAOrigen={onTornaAOrigen}
         onSeleccionar={() => setModeSeleccio(true)}
         seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
         t={t}

@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.3
+Stable tag: 1.1.8
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -115,7 +115,7 @@ It contains the community application. A Shadow DOM isolates its styles from the
 
 = Can the same village be served without WordPress? =
 
-Yes. Use the standalone socdepoble-spa-vVERSIO-AAMMDD_HHMM.zip distribution and its embedding manifest. The project's own distribution also provides embedding code in Settings → Sóc de Poble. The directory variant requires WordPress's runtime and explains that another host needs the standalone package.
+Yes. Use the standalone AAMMDD_HHMM_estatic_spa_vVERSIO.zip distribution and its embedding manifest. The project's own distribution also provides embedding code in Settings → Sóc de Poble. The directory variant requires WordPress's runtime and explains that another host needs the standalone package.
 
 = The page shows an empty box. What is missing? =
 
@@ -127,9 +127,14 @@ A ZIP without the socdepoble-enxufe directory at its root may install alongside 
 
 = Where are generated packages stored? =
 
-Packages are written under wordpress-plugin/builds/. Names use the standalone build's timestamp in Europe/Madrid. The own-channel plugin is socdepoble-enxufe-vVERSIO-AAMMDD_HHMM.zip; the directory variant uses the same filename under directori/. Channel manifests declare each variant's exact name and path. --sortida accepts only builds/ or one of its subdirectories.
+Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enxufe_vVERSIO.zip, AAMMDD_HHMM_wordpress_directori_vVERSIO.zip and AAMMDD_HHMM_estatic_spa_vVERSIO.zip, stamped with the standalone build's time in Europe/Madrid. Channel manifests declare each exact name. --sortida accepts only builds/ or one of its subdirectories.
 
 == Changelog ==
+
+= 1.1.8 =
+* Wiki: the Markdown parser keeps consecutive items in one list and shows Mermaid blocks as diagram cards.
+* Chat: read-only sample conversations show a direct Register button.
+* Chat: list messages can render as a live list card.
 
 = 1.0.5 =
 * TPV Pedra Seca integration with offline capability and allergens support.

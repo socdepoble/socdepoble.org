@@ -32,7 +32,11 @@ export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'calendari', 'mu
    /iaia a /anima: és un assaig escrit per la IAIA, no la seua fitxa. /iaia
    és ara la fitxa pública de la IAIA MarIA (RUTA_FITXA_IAIA, navigation.js),
    la mateixa que /perfil/<id>: penja de Pobles com /perfil i les tres rutes
-   canòniques, i Pobles s'encén igual. */
+   canòniques, i Pobles s'encén igual.
+   Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · /anima ja no porta
+   cap subruta: «L'ànima de la iaia» és només l'article editorial del Mur. El
+   Selector de Realitat viu al peu de /iaia (la seua secció 'realitat' i la
+   subruta '/realitat' d'ací s'han llevat; /realitat redirigix a /iaia). */
 export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat', subrutes: ['/control-xat'] },
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
@@ -46,7 +50,7 @@ export const SECTIONS = [
   { id: 'notes', path: '/notes', label: 'Notes', shortLabel: 'Notes', icon: NotebookPen, kind: 'notes' },
   { id: 'projecte', path: '/projecte', label: 'El projecte', shortLabel: 'Proj.', icon: FileText, kind: 'text', pageKey: 'projecte' },
   { id: 'constitucio', path: '/constitucio', label: 'Constitució', shortLabel: 'Lleis', icon: ShieldCheck, kind: 'text', pageKey: 'constitucio' },
-  { id: 'ia', path: '/anima', label: "L'ànima de la iaia", shortLabel: 'IAIA', icon: BrainCircuit, kind: 'text', pageKey: 'anima', subrutes: ['/realitat'] },
+  { id: 'ia', path: '/anima', label: "L'ànima de la iaia", shortLabel: 'IAIA', icon: BrainCircuit, kind: 'text', pageKey: 'anima' },
   { id: 'roadmap', path: '/roadmap', label: 'Full de ruta', shortLabel: 'Ruta', icon: Route, kind: 'text', pageKey: 'roadmap' },
   { id: 'versions', path: '/versions', label: 'Versions', shortLabel: 'Versions', icon: FileText, kind: 'text', pageKey: 'versions' },
   { id: 'legal', path: '/legal', label: 'Legal i privacitat', shortLabel: 'Legal', icon: FileText, kind: 'text', pageKey: 'legal' },
@@ -54,7 +58,6 @@ export const SECTIONS = [
   { id: 'control', path: '/control', label: 'Control', shortLabel: 'Control', icon: Settings, kind: 'text' },
 
   { id: 'poblacio', path: '/poblacio', label: 'Població', shortLabel: 'Gent', icon: UserRound, kind: 'pobles' },
-  { id: 'realitat', path: '/realitat', label: 'Realitat', shortLabel: 'Real', icon: BrainCircuit, kind: 'text' },
   /* T8 (ordre del Mestre, 261001) · On porta la franja de l'amfitrió: què és
      un node. Pàgina de text (PAGE_COPY.fedivers) fora de SECTION_ORDER: no
      ix a la barra lateral ni al Mur. El pageKey la posa sota la frontissa de

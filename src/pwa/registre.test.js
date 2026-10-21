@@ -381,6 +381,20 @@ describe('frontera', () => {
     expect(llig('src/main.jsx')).toMatch(/^registraServiceWorker\(\);$/m);
   });
 
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · L'oferta
+     d'instal·lar a l'ordinador és de la pàgina, com el worker: dins d'un
+     amfitrió, quedar-se-la li furtaria la seua instal·lació (LLEI 3). */
+  test('només src/main.jsx captura l\'oferta d\'instal·lació, al nivell de dalt; ni embed.jsx ni l\'entrada nativa', () => {
+    const capturen = PRODUCCIO.filter((ruta) => /\bcapturaInstalacio\s*\(/.test(llig(ruta)) && ruta !== 'src/pwa/instalacio.js');
+    expect(capturen).toEqual(['src/main.jsx']);
+    expect(llig('src/main.jsx')).toMatch(/^capturaInstalacio\(\);$/m);
+    expect(llig('src/main.jsx')).toMatch(/^import \{ capturaInstalacio \} from '\.\/pwa\/instalacio\.js';$/m);
+    for (const entrada of ['src/embed.jsx', 'src/natiu/entrada.jsx']) {
+      const codi = llig(entrada);
+      expect(codi, entrada).not.toMatch(/pwa\/instalacio|capturaInstalacio/);
+    }
+  });
+
   test('cap altre fitxer de producció de src/ toca el service worker', () => {
     const patro = new RegExp(['service', 'Worker'].join(''));
     expect(PRODUCCIO.filter((ruta) => patro.test(llig(ruta)))).toEqual(['src/pwa/registre.js']);

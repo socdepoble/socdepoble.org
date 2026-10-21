@@ -8,6 +8,7 @@ import PedraSecaEmbed from './PedraSecaEmbed.jsx';
 import { configura, arrenca, exposaGlobal } from './host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from './config/capaDelPaquet.js';
 import { registraServiceWorker } from './pwa/registre.js';
+import { capturaInstalacio } from './pwa/instalacio.js';
 import { pintaAmbDiccionari } from './config/i18n.js';
 
 const init = () => {
@@ -70,3 +71,10 @@ if (document.readyState === 'loading') {
    ningú més. Només en producció, en context segur, fora d'iframe i fora de
    l'app nativa; el paquet autònom (embed.jsx) no la registra mai. */
 registraServiceWorker();
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · L'oferta
+   d'instal·lar a l'ordinador (beforeinstallprompt) es captura ací, en avaluar
+   el mòdul: el navegador la dispara una sola volta per càrrega i un component
+   muntat tard la perdria. Només l'entrada pròpia; ni embed.jsx ni
+   natiu/entrada.jsx (src/pwa/instalacio.js). */
+capturaInstalacio();

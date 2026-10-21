@@ -3,10 +3,15 @@
  * sis paràgrafs només són per al Rebost i Salut») · La presentació llarga de
  * la pàgina d'un plugin (presentacioPlugins.js): sis paràgrafs per al Rebost
  * i per a Salut, i null per a la resta del registre.
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3) · Cada
+ * paràgraf porta davant el seu títol <h3>: el cos comença en H3
+ * (sdp-universal-page §1.E.4, core-llegibilitat-text §2), i els paràgrafs no
+ * canvien.
  *
  * El que fixa:
- *   · la forma: una cadena per plugin, sis <p>, només <p> i <strong>, cap
- *     encapçalament (l'H1 i l'H2 són els del registre) i cap atribut;
+ *   · la forma: una cadena per plugin, sis blocs (un <h3> sense punt final i
+ *     el seu <p>, un element per línia), només <h3>, <p> i <strong>, cap
+ *     altre encapçalament (l'H1 i l'H2 són els del registre) i cap atribut;
  *   · que el sanejador de les pàgines de text no en lleva res: el que
  *     s'escriu és el que es pinta;
  *   · que els literals que el text cita entre cometes són els que pinta
@@ -26,9 +31,13 @@ import { IDS_PLUGINS, pluginPerId } from './registrePlugins.js';
 
 const AMB_PRESENTACIO = ['rebost', 'salut'];
 const font = (ruta) => readFileSync(path.join(process.cwd(), ruta), 'utf8');
-/* Els paràgrafs d'una presentació: un per línia. */
-const paragrafs = (html) => html.split('\n');
+/* Els elements d'una presentació: un per línia, cada <h3> davant del seu <p>. */
+const linies = (html) => html.split('\n');
+/* Només els paràgrafs (261021, tasca 6): paragrafs(salut)[1] continua sent el de «Avui». */
+const paragrafs = (html) => linies(html).filter((linia) => linia.startsWith('<p>'));
 const senseMarques = (html) => html.replace(/<[^>]+>/g, '');
+/* El text dels títols H3 d'una presentació, en ordre. */
+const titols = (html) => linies(html).filter((linia) => linia.startsWith('<h3>')).map(senseMarques);
 /* Els noms de totes les marques d'un HTML, d'obertura i de tancament. */
 const marques = (html) => [...html.matchAll(/<\/?([a-zA-Z][a-zA-Z0-9]*)/g)].map(([, nom]) => nom.toLowerCase());
 
@@ -52,8 +61,16 @@ describe('presentació dels plugins', () => {
     }
   });
 
-  test.each(AMB_PRESENTACIO)('%s: sis paràgrafs, només <p> i <strong>, cap encapçalament i cap atribut', (id) => {
+  test.each(AMB_PRESENTACIO)('%s: sis blocs (un <h3> i el seu <p>), només h3, p i strong, cap altre encapçalament i cap atribut', (id) => {
     const html = presentacioDelPlugin(id);
+    const plugin = pluginPerId(id);
+    // Ordre del Mestre (261021, prompt 261021_0015, tasca 6) · El cos comença en H3 i alterna títol i paràgraf.
+    expect(html).toMatch(/^<h3>/);
+    expect(linies(html)).toHaveLength(12);
+    for (const [index, linia] of linies(html).entries()) {
+      const forma = index % 2 === 0 ? /^<h3>[^<]+<\/h3>$/ : /^<p>.+<\/p>$/;
+      expect([index, forma.test(linia)]).toEqual([index, true]);
+    }
     expect(paragrafs(html)).toHaveLength(6);
     for (const [index, paragraf] of paragrafs(html).entries()) {
       expect([index, /^<p>.+<\/p>$/.test(paragraf)]).toEqual([index, true]);
@@ -62,11 +79,20 @@ describe('presentació dels plugins', () => {
       expect([index, paragraf.split('<strong>').length]).toEqual([index, paragraf.split('</strong>').length]);
       expect([index, senseMarques(paragraf).trim().length > 0]).toEqual([index, true]);
     }
+    // Sis títols, tots distints, sense espais sobrers ni punt final, i cap repetix l'H1 ni l'H2 del registre.
+    expect(titols(html)).toHaveLength(6);
+    expect(new Set(titols(html)).size).toBe(6);
+    for (const titol of titols(html)) {
+      expect([titol, titol.length > 0, titol === titol.trim(), titol.endsWith('.')]).toEqual([titol, true, true, false]);
+      expect([titol, titol === plugin.titol, titol === plugin.subtitol]).toEqual([titol, false, false]);
+    }
     expect(html.split('<p>').length - 1).toBe(6);
-    expect([...new Set(marques(html))].sort()).toEqual(['p', 'strong']);
-    expect(html).not.toMatch(/<h[1-6]\b/i);
+    expect(html.split('<h3>').length - 1).toBe(6);
+    expect([...new Set(marques(html))].sort()).toEqual(['h3', 'p', 'strong']);
+    // Cap altre encapçalament. Escrit com a classe [124-6]: design_guard llig els literals de capçalera de qualsevol .js.
+    expect(html).not.toMatch(/<h[124-6]\b/i);
     // Cap atribut (ni classe, ni estil, ni enllaç): totes les marques són nues.
-    expect(html.match(/<[^>]+>/g).filter((marca) => !/^<\/?(?:p|strong)>$/.test(marca))).toEqual([]);
+    expect(html.match(/<[^>]+>/g).filter((marca) => !/^<\/?(?:h3|p|strong)>$/.test(marca))).toEqual([]);
     // Cap entitat: el text pla que es llig és el que hi ha escrit.
     expect(html).not.toMatch(/&[a-z#0-9]+;/i);
   });

@@ -5,9 +5,11 @@
  * amb «/:sectionId/:itemId») i que un id desconegut és la 404.
  * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M2 i
  * M4) · El Rebost i Salut porten el botó «Obrir…» dalt (dins del bloc blanc
- * de l'H1) i al final, i sis paràgrafs de presentació: dins de l'App de
- * veres també. Les consultes de coincidència única passen a demanar-ne
- * exactament dos, amb el mateix destí o el mateix estat inert.
+ * de l'H1) i al final, i sis blocs de presentació: dins de l'App de veres
+ * també. Les consultes de coincidència única passen a demanar-ne exactament
+ * dos, amb el mateix destí o el mateix estat inert.
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3) · Cada
+ * bloc és un títol H3 i el seu paràgraf: el cos comença en H3.
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -67,7 +69,7 @@ async function muntaApp(ruta, cos) {
   }
 }
 
-test('App munta /plugin/rebost: la pàgina del plugin, amb la portada plegable, els sis paràgrafs i el botó d’Obrir dalt i al final', async () => {
+test('App munta /plugin/rebost: la pàgina del plugin, amb la portada plegable, els sis blocs (H3 i paràgraf) i el botó d’Obrir dalt i al final', async () => {
   await muntaApp('/plugin/rebost', async () => {
     const titol = await screen.findByRole('heading', { level: 1, name: 'Rebost Domèstic' });
     expect(titol).toBeTruthy();
@@ -79,10 +81,12 @@ test('App munta /plugin/rebost: la pàgina del plugin, amb la portada plegable, 
     expect(dalt.parentElement.className).toBe('page-title-accio');
     expect(dalt.closest('header.page-title')).toBe(titol.closest('header.page-title'));
     expect(baix.parentElement.className).toBe('sdp-pagina-accio');
-    // Onada 10 (M4) · Els sis paràgrafs, dins de l'article i abans del botó de baix.
+    // Onada 10 (M4) · Els sis blocs, dins de l'article i abans del botó de baix:
+    // des del 261021 (tasca 6), cada un un títol H3 i el seu paràgraf.
     const article = baix.closest('article.content-wrapper');
     expect(article.lastElementChild).toBe(baix.parentElement);
     expect(article.querySelectorAll(':scope > article.cms-preview > p')).toHaveLength(6);
+    expect(article.querySelectorAll(':scope > article.cms-preview > h3')).toHaveLength(6);
     expect(baix.parentElement.previousElementSibling.className).toBe('cms-preview');
   });
 });

@@ -129,6 +129,92 @@
     outline-offset: 2px;
   }
 
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · «Instal·la al
+     teu ordinador» (BotoInstalaApp.jsx): una pastilla amb rètol entre les
+     icones de la barra negra. Ací i no a layout.css: dins de @layer legacy
+     perdria el fons i el radi davant de .sdp-top-bar-btn. És closca: només
+     --sdp-crom-* (tractor-crom K3), igual en clar i en fosc, amb els colors
+     del botó CONTROL de la barra lateral. En compacte queda només la icona;
+     el nom accessible és l'aria-label.
+     Ordre del Mestre (261021, pla 261021_0015 §8.4) · Estil Apple: una
+     pastilla continguda i fina, amb aire als costats (--sdp-space-5) perquè
+     no oprimisca l'idioma, la IAIA ni la sessió. El pla demanava 32px d'alt
+     i lletra de 13px; dos lleis dures ho adapten sense perdre l'aspecte:
+       · Llei de vida (tractor-pedra-seca LLEI_04, Q2 del pla 261004_0050):
+         cap control per davall de --sdp-touch. El botó continua fent 48px
+         d'alt i és transparent; la pastilla de 32px la pinta el ::before,
+         retallada per dalt i per baix amb --sdp-space-2 (48 − 2 × 8). L'àrea
+         de toc no minva, i l'anell de focus abraça la pastilla.
+       · Sòl de lletra de 14px (rocaIGuardes.capes.test.js): el rètol va en
+         --sdp-text-meta (14px), no en 0.8125rem (13px).
+     El pes 500 va literal: tokens.css no en té cap per davall de
+     --sdp-pes-semi (600). */
+  .sdp-top-bar-btn.sdp-top-bar-btn--instal {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    flex: none;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    margin-inline: var(--sdp-space-5);
+    padding: 0 var(--sdp-space-4);
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-crom-control-text);
+    font-family: var(--sdp-font);
+    font-size: var(--sdp-text-meta);
+    font-weight: 500;
+    line-height: var(--sdp-leading-titol);
+    white-space: nowrap;
+  }
+  .sdp-top-bar-btn.sdp-top-bar-btn--instal::before {
+    content: '';
+    position: absolute;
+    inset: var(--sdp-space-2) 0;
+    z-index: -1;
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-crom-control-fons);
+    transition: background-color var(--sdp-t);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    /* La caixa tàctil no s'encén (el hover de .sdp-top-bar-btn ompliria els
+       48px): només la pastilla. */
+    .sdp-top-bar-btn.sdp-top-bar-btn--instal:hover {
+      background-color: transparent;
+    }
+    .sdp-top-bar-btn.sdp-top-bar-btn--instal:hover::before {
+      background-color: var(--sdp-crom-control-hover);
+    }
+  }
+  .sdp-top-bar-btn.sdp-top-bar-btn--instal:focus-visible {
+    outline: none;
+  }
+  .sdp-top-bar-btn.sdp-top-bar-btn--instal:focus-visible::before {
+    outline: 2px solid var(--sdp-crom-focus);
+    outline-offset: 2px;
+  }
+  /* El glif, de 16px al costat del rètol (la barra en posa 30px a les icones soles). */
+  .bar-black .right-icons .sdp-top-bar-btn--instal svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+  }
+  /* Compacte: només la icona, dins d'un cercle de 32px al mig de la cel·la
+     de --sdp-touch, i sense el marge lateral: la barra mòbil no en té, de lloc. */
+  :where(.sdp-root.is-compact) .sdp-top-bar-btn.sdp-top-bar-btn--instal {
+    margin-inline: 0;
+    padding: 0;
+  }
+  :where(.sdp-root.is-compact) .sdp-top-bar-btn.sdp-top-bar-btn--instal::before {
+    inset-inline: var(--sdp-space-2);
+  }
+  :where(.sdp-root.is-compact) .sdp-top-bar-btn--instal .sdp-top-bar-btn__rotul {
+    display: none;
+  }
+
   .sdp-icon--1em {
     width: 1em;
     height: 1em;

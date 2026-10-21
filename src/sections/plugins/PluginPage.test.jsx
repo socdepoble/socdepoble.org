@@ -11,7 +11,9 @@
  *   · M4 · La pàgina diu el mateix que la targeta canònica: si el plugin
  *     porta `data`, la barra taronja en pinta la data i l'hora; si porta
  *     `etiquetes`, van davall de l'H1. El Rebost i Salut porten, a més, sis
- *     paràgrafs de presentació entre l'entradilla i el botó.
+ *     blocs de presentació entre l'entradilla i el botó: des de l'ordre del
+ *     Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3), un títol H3 i
+ *     el seu paràgraf cada un.
  *   · M2 · El Rebost i Salut porten el botó «Obrir…» DALT I AL FINAL: un dins
  *     del bloc blanc de l'H1 (header.page-title > .page-title-accio) i un
  *     dins de .sdp-pagina-accio, l'últim fill de l'article. DEROGAT per a
@@ -95,8 +97,13 @@ const article = (container) => container.querySelector('article.content-wrapper'
    derivats de les dades i no escrits a mà. */
 const AMB_PRESENTACIO = PLUGINS.filter((p) => presentacioDelPlugin(p.id) !== null);
 const SENSE_PRESENTACIO = PLUGINS.filter((p) => presentacioDelPlugin(p.id) === null);
-/* El text pla de cada paràgraf de la presentació (un per línia), sense les marques. */
-const paragrafsDe = (id) => presentacioDelPlugin(id).split('\n').map((p) => p.replace(/<[^>]+>/g, ''));
+/* El text pla de cada element de la presentació (un per línia: el títol H3 i
+   el seu paràgraf), sense les marques. */
+const liniesDe = (id) => presentacioDelPlugin(id).split('\n').map((linia) => linia.replace(/<[^>]+>/g, ''));
+/* Només els títols H3 de la presentació, en ordre (261021, tasca 6). */
+const titolsDe = (id) => presentacioDelPlugin(id).split('\n')
+  .filter((linia) => linia.startsWith('<h3>'))
+  .map((linia) => linia.replace(/<[^>]+>/g, ''));
 /* Els controls grans de la pàgina que comencen pel nom del botó, siguen enllaç o botó. */
 const controlsObrir = (container, plugin) => [...container.querySelectorAll('a, button')]
   .filter((el) => el.textContent.startsWith(plugin.etiquetaObrir));
@@ -205,28 +212,34 @@ describe('Onada 10 · la pàgina porta la data i les etiquetes de la targeta', (
 });
 
 /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4 i
-   M2) · El Rebost i Salut: sis paràgrafs de presentació entre l'entradilla i
-   el botó, i el botó «Obrir…» dalt i al final. La resta de plugins, el DOM
-   de l'article d'abans amb un sol botó. */
-describe('Onada 10 · presentació de sis paràgrafs i botó dalt i al final (Rebost i Salut)', () => {
+   M2) · El Rebost i Salut: sis blocs de presentació (un H3 i el seu
+   paràgraf, des del 261021) entre l'entradilla i el botó, i el botó
+   «Obrir…» dalt i al final. La resta de plugins, el DOM de l'article d'abans
+   amb un sol botó. */
+describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost i Salut)', () => {
   test('el cens: només el Rebost i Salut tenen presentació', () => {
     expect(AMB_PRESENTACIO.map((p) => p.id)).toEqual(['rebost', 'salut']);
     expect(Object.keys(PRESENTACIO_PLUGINS)).toEqual(['rebost', 'salut']);
     expect(SENSE_PRESENTACIO.map((p) => p.id)).toEqual(['mapa', 'vehicle', 'animalets', 'gestoria', 'rss', 'tpv']);
   });
 
-  test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s: el cos de sis paràgrafs, entre l’entradilla i l’acció', (id, plugin) => {
+  test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s: el cos de sis blocs, un H3 i el seu paràgraf, entre l’entradilla i l’acció', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`);
     // L'article, de dalt a baix: l'H2 i l'entradilla, el cos i el botó. Cap avís: ací es pot obrir.
     expect([...article(container).children].map((fill) => fill.className)).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
     const cos = article(container).querySelector(':scope > article.cms-preview');
     expect(cos.previousElementSibling).toBe(container.querySelector('.page-intro'));
     expect(cos.nextElementSibling).toBe(accio(container));
-    // Sis <p>, fills directes, amb el text literal de la presentació.
-    expect([...cos.children].map((fill) => fill.tagName)).toEqual(Array(6).fill('P'));
-    expect([...cos.children].map((p) => p.textContent)).toEqual(paragrafsDe(id));
-    // Només paràgrafs i negretes: cap encapçalament (l'H1 i l'H2 són els del registre), cap enllaç, cap imatge.
-    expect(cos.querySelector('h1, h2, h3, h4, h5, h6, a, img, button')).toBeNull();
+    // Sis blocs, fills directes: un <h3> i el seu <p>, amb el text literal de la presentació.
+    expect([...cos.children].map((fill) => fill.tagName)).toEqual(Array.from({ length: 12 }, (_, index) => (index % 2 ? 'P' : 'H3')));
+    expect([...cos.children].map((fill) => fill.textContent)).toEqual(liniesDe(id));
+    // Ordre del Mestre (261021, prompt 261021_0015, tasca 6) · Títols H3, paràgrafs i negretes: cap altre
+    // encapçalament (l'H1 i l'H2 són els del registre), cap enllaç, cap imatge.
+    expect(cos.querySelector('h1, h2, h4, h5, h6, a, img, button')).toBeNull();
+    expect(within(cos).getAllByRole('heading', { level: 3 }).map((titol) => titol.textContent)).toEqual(titolsDe(id));
+    // L'escala de l'article, sense salts: l'H2 del registre i, davall, els sis H3 del cos.
+    expect([...article(container).querySelectorAll('h1, h2, h3, h4, h5, h6')].map((titol) => titol.tagName))
+      .toEqual(['H2', ...Array(6).fill('H3')]);
     expect(cos.querySelectorAll('strong').length).toBe(presentacioDelPlugin(id).split('<strong>').length - 1);
     // L'entradilla curta continua sent l'entradilla: la presentació no la substituïx.
     expect(container.querySelector('.page-intro .lead').textContent).toBe(plugin.entradilla);
@@ -248,7 +261,7 @@ describe('Onada 10 · presentació de sis paràgrafs i botó dalt i al final (Re
     expect(accioDeDalt(container).previousElementSibling).toBe(capcalera.querySelector('ul.page-title-labels'));
     expect(accioDeDalt(container).nextElementSibling).toBe(capcalera.querySelector('p.page-title-copyright'));
     expect(accioDeDalt(container).children).toHaveLength(1);
-    // Baix: l'últim fill de l'article, després dels sis paràgrafs.
+    // Baix: l'últim fill de l'article, després dels sis blocs.
     expect(article(container).lastElementChild).toBe(accio(container));
     expect(accio(container).children).toHaveLength(1);
     expect(container.querySelectorAll('.page-title-accio, .sdp-pagina-accio')).toHaveLength(2);

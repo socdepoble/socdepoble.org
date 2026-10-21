@@ -128,10 +128,19 @@ describe('el perfil pintat', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).toBeTruthy();
     expect(mocks.load).toHaveBeenCalledWith(clau, mocks.config);
     const cos = document.querySelector('article.detail-content');
-    expect([...cos.children].map((fill) => fill.tagName)).toEqual(['H3', 'P', 'P', 'P', 'P']);
-    expect(cos.querySelector('h3').textContent).toBe('Qui és la IAIA MarIA?');
-    expect([...cos.querySelectorAll('p')].map((p, i) => p.textContent.startsWith(PRIMERES_PARAULES[i]))).toEqual([true, true, true, true]);
-    expect(cos.innerHTML).toBe(TEXT);
+    /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
+       261021_0015 §8.2) · El text, intacte, es pinta en trossos amb la
+       targeta viva de «L'Ànima de la IAIA» (/anima) just després de l'H3. */
+    const text = [...cos.querySelectorAll(':scope > .sdp-cos-tros > *')];
+    expect(text.map((fill) => fill.tagName)).toEqual(['H3', 'P', 'P', 'P', 'P']);
+    expect(text[0].textContent).toBe('Qui és la IAIA MarIA?');
+    expect(text.slice(1).map((p, i) => p.textContent.startsWith(PRIMERES_PARAULES[i]))).toEqual([true, true, true, true]);
+    const tall = TEXT.indexOf('</h3>') + 5;
+    expect(cos.outerHTML).toContain(TEXT.slice(0, tall));
+    expect(cos.outerHTML).toContain(TEXT.slice(tall));
+    const targeta = cos.querySelector(':scope > .sdp-targetes[data-forma="sola"][data-alineacio="dreta"]');
+    expect(targeta.previousElementSibling.querySelector('h3').textContent).toBe('Qui és la IAIA MarIA?');
+    expect(targeta.querySelector('a[href="/anima"]')).toBeTruthy();
     expect(document.querySelectorAll('article.detail-content')).toHaveLength(1);
     /* L'avís d'intel·ligència artificial es queda, i va abans del text. El
        que diu («en proves», «no substituïx cap persona del poble») és el que
@@ -143,6 +152,53 @@ describe('el perfil pintat', () => {
     expect(avis.compareDocumentPosition(cos) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
     expect(mocks.navigate).toHaveBeenCalledWith(`/xat?amb=${IAIA_ID}`);
+  });
+});
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · La portada del
+   catàleg arriba a la pàgina, l'avatar no és cap botó cap al Perfil («clics
+   honestos») i el Selector de Realitat va al peu de la presentació, només a la
+   fitxa de la IAIA. */
+describe('261021 · la pàgina única de la IAIA MarIA', () => {
+  test('la portada del catàleg és el hero, i la imatge SEO', async () => {
+    expect(AGENTS_IA_SEED[0].hero_url).toBe(AGENTS_MAP.IAIA.hero_url);
+    render(<PerfilPublicSection agents={[]} />);
+    await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+    expect(document.querySelector('.hero-image img').getAttribute('src')).toContain('iaia_maria_avatar.webp');
+    expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ image: AGENTS_MAP.IAIA.hero_url }));
+  });
+
+  test('l’avatar de la IA no és cap botó, ni per a qui l’administra; «Edita la fitxa» obri la seua fitxa al Perfil', async () => {
+    mocks.load.mockImplementation(async (clau) => ({ ...perfils.loadPerfilPublic(clau, null), propietari: true }));
+    render(<PerfilPublicSection agents={[]} />);
+    const capcalera = (await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).closest('header.page-title');
+    expect(capcalera.querySelector('button')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Edita la fitxa' }));
+    expect(mocks.navigate).toHaveBeenCalledWith(`/el-meu-perfil?organitzacio=${IAIA_ID}`);
+  });
+
+  test('el Selector de Realitat va al peu de la presentació, fora del seu article, amb un sol role="status"', async () => {
+    render(<PerfilPublicSection agents={[]} />);
+    await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+    const cos = document.querySelector('article.detail-content');
+    const titol = screen.getByRole('heading', { level: 3, name: "Tu decidixes quanta intel·ligència artificial t'acompanya" });
+    expect(cos.contains(titol)).toBe(false);
+    expect(cos.compareDocumentPosition(titol) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(document.querySelector('.sdp-realitat')).toBeTruthy();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  test('una altra IA no porta el selector', async () => {
+    mocks.id = 'nano';
+    mocks.load.mockResolvedValue({
+      tipus: 'ia', id: 'nano', slug: 'nano', nom: 'Nano Banana', avatar: '', hero: '', lema: '', bio: 'Il·lustradora',
+      presentacioHtml: '<p>Hola.</p>', poble: '', esIA: true, publicat: true, propietari: false, copyright: '', emoticona: ''
+    });
+    render(<PerfilPublicSection agents={[]} />);
+    await screen.findByRole('heading', { level: 1, name: 'Nano Banana' });
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    expect(document.querySelector('.sdp-realitat')).toBeNull();
   });
 });
 

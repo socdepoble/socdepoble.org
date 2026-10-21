@@ -36,6 +36,8 @@ export const ICONES_APARTATS = Object.freeze({
   privacitat: '\u{1F6E1}\u{FE0F}', // 🛡️
   nodes: '\u{1F310}', // 🌐
   multimedia: '\u{1F5BC}\u{FE0F}', // 🖼️
+  /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · «La pàgina» d'un agent IA. */
+  pagina: '\u{1F4C4}', // 📄
 });
 
 /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · El subtítol
@@ -59,11 +61,14 @@ export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/na
  * La primera categoria del Perfil: l'organització demanada per la ruta o,
  * si no, la que és l'actor actiu, sempre que siga una de les seues; si no,
  * la persona ('jo').
+ * Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · També un agent IA
+ * que administra («Edita la fitxa» de /iaia): obri la seua fitxa, no la de la
+ * persona.
  */
 export function seleccioInicialDePerfil(identitats, preferides = []) {
-  const organitzacions = identitats.filter(esOrganitzacio);
+  const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
   const triada = preferides.find((id) => id != null && id !== ''
-    && organitzacions.some((identitat) => String(identitat.id) === String(id)));
+    && seleccionables.some((identitat) => String(identitat.id) === String(id)));
   return { categoryId: triada != null ? String(triada) : 'jo' };
 }
 
@@ -186,8 +191,23 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
       searchText: `multimedia fotos imatges galeria avatar ${actor === 'organitzacio' ? 'logotip ' : ''}capcalera ${nom}`,
       data: { vista: 'multimedia', identitatId: identitat.id },
     }] : [];
-    /* Un agent IA només té fitxa (i les seues vistes i fotos): ni compte ni privacitat que administrar. */
-    if (esAgent(identitat)) return [fitxa, ...vistes, ...multimedia];
+    /* Un agent IA només té fitxa (i les seues vistes i fotos): ni compte ni privacitat que administrar.
+       Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · I la seua
+       pàgina, la mateixa de /iaia (FitxaPublica, PerfilPublicSection.jsx;
+       per a la IAIA, amb el Selector de Realitat al peu), just després de
+       «La fitxa»: com la veu el poble, sense cap vista paral·lela. */
+    if (esAgent(identitat)) {
+      const pagina = {
+        id: `${identitat.id}-pagina`,
+        categoryIds,
+        title: 'La pàgina',
+        subtitle: 'Com la veu el poble',
+        icon: ICONES_APARTATS.pagina,
+        searchText: `pagina publica realitat ${nom}`,
+        data: { vista: 'pagina', identitatId: identitat.id },
+      };
+      return [fitxa, pagina, ...vistes, ...multimedia];
+    }
     const fills = [
       fitxa,
       ...vistes,

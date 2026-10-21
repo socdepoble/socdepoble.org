@@ -1,6 +1,5 @@
 import { useEffect, useId, useState } from 'react';
 import { Lightbulb, MessagesSquare, Network, PowerOff } from 'lucide-react';
-import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Avatar, Casella, GrupAvatars, GrupOpcions, IaiaIcon } from '../../components/PedraSeca/index.js';
 import { AGENTS, tipusDAgent } from '../../data/agentsSeed.js';
 import { resolveAsset } from '../../config/assetResolver';
@@ -8,7 +7,15 @@ import { getVal, setVal } from '../../config/storage.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { CLAU_NIVELL_IAIA, anunciaNivellIaia, esIaiaActiva, nivellIaiaDesat } from './nivellIaia.js';
 
-/* T44 (ordre del Mestre, 260928) · cada nivell diu el seu propòsit, i el
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · El Selector de
+   Realitat ja no és una pantalla solta (/realitat, ara una redirecció): és un
+   bloc de la pàgina de la IAIA MarIA (/iaia, FitxaPublica de
+   profile/PerfilPublicSection.jsx), al peu de la seua presentació. Qui
+   coneix la IAIA hi tria, en el mateix lloc, quanta IA l'acompanya. El bloc
+   obri amb el seu H3, com els apartats de la presentació
+   (core-llegibilitat-text §2): l'H1 i l'H2 són els de la fitxa.
+
+   T44 (ordre del Mestre, 260928) · cada nivell diu el seu propòsit, i el
    detall de la targeta diu l'efecte que ja té hui: la IAIA de la barra negra
    s'activa a partir del nivell 2 (T30.2). No es diu «respira»: amb moviment
    reduït el resplendor de layout.css no es veu i la frase seria falsa.
@@ -33,7 +40,7 @@ function Pedres({ plenes }) {
   );
 }
 
-export default function RealitatSection() {
+export default function SelectorRealitat() {
   const { t } = useUIActions();
   const idAjudaCompanys = useId();
 
@@ -74,18 +81,14 @@ export default function RealitatSection() {
   const activa = esIaiaActiva(nivellActual.id);
 
   return (
-    <UniversalPage
-      title={t('section.realitat.title', 'Selector de Realitat')}
-      subtitle={t('section.realitat.subtitle', "Tu decidixes quanta intel·ligència artificial t'acompanya")}
-      lead={t(
-        'section.realitat.lead',
-        'Cada nivell diu fins on pot arribar la IA. La tria es guarda només en este navegador i la pots canviar quan vulgues.'
-      )}
-      chrome="system"
-      /* Norma del Mestre, 261004 (logotips) · Signa Sóc de Poble, i porta el
-         seu logotip dalt de l'H1. Derogat el showLogos={false} que el llevava
-         sense cap ordre escrita (ordre del Mestre, 261004). */
-    >
+    <>
+      <h3>{t('section.realitat.subtitle', "Tu decidixes quanta intel·ligència artificial t'acompanya")}</h3>
+      <p>
+        {t(
+          'section.realitat.lead',
+          'Cada nivell diu fins on pot arribar la IA. La tria es guarda només en este navegador i la pots canviar quan vulgues.'
+        )}
+      </p>
       {/* T44 (ordre del Mestre, 260928) · substituïx la llista grisa de T31:
           un tauler d'estat lligat a la IAIA de la barra negra, els nivells com
           a targetes (GrupOpcions aspecte="targetes": el control continua sent
@@ -171,6 +174,6 @@ export default function RealitatSection() {
           </div>
         ) : null}
       </div>
-    </UniversalPage>
+    </>
   );
 }

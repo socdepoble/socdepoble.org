@@ -55,6 +55,8 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
 vi.mock('../../data/backendPort.js', () => ({ teCapacitat: (cap) => m.caps.has(cap) }));
+/* Ordre del Mestre (261021, tasca 7) · «La pàgina» d'un agent és la FitxaPublica de /iaia (PerfilPublicSection.iaia.test.jsx). */
+vi.mock('./PerfilPublicSection.jsx', () => ({ PaginaDeLAgent: ({ identitat }) => <p>{`pàgina de ${identitat.nom}`}</p> }));
 import PerfilShell, * as modulShell from './PerfilShell.jsx';
 
 const { itemsDePerfil } = modulShell;
@@ -183,9 +185,11 @@ test('261008 · «Les vistes»: l’apartat, la icona de l’ull i la seua pàgi
   expect(screen.getByText('vistes de Pep')).toBeTruthy();
   expect(screen.getByText('vistes de Forn')).toBeTruthy();
   /* Un agent IA només té fitxa, les seues vistes i (expectativa actualitzada a
-     propòsit: relleu del Pla 2000, punt 3) les seues fotos. */
+     propòsit: relleu del Pla 2000, punt 3) les seues fotos. I (expectativa
+     actualitzada a propòsit: ordre del Mestre, 261021, prompt 261021_0015,
+     tasca 7) la seua pàgina, la de /iaia, just després de «La fitxa». */
   const agent = { id: 'A', mena: 'agent', nom: 'IAIA', dades: {} };
-  expect(itemsDePerfil([jo, agent]).filter((i) => i.categoryIds.includes('A')).map((i) => i.id)).toEqual(['A-fitxa', 'A-vistes', 'A-multimedia']);
+  expect(itemsDePerfil([jo, agent]).filter((i) => i.categoryIds.includes('A')).map((i) => i.id)).toEqual(['A-fitxa', 'A-pagina', 'A-vistes', 'A-multimedia']);
 });
 
 test('261008 · «Les vistes» no hi és per a qui no pot editar la fitxa: un membre, una baixa en curs o la fila de reserva', () => {
@@ -430,6 +434,25 @@ test('T43 · actuant com una entitat seua, el Perfil obri la seua fitxa; una que
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'O' });
   vista.unmount();
   m.actor = { tipus: 'entitat', id: 'desconeguda', nom: 'Altra' };
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
+});
+
+/* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · «Edita la fitxa»
+   de /iaia obri el Perfil a la fitxa de l'agent que s'administra; un id que no
+   és de cap identitat seua, la persona. «La pàgina» de l'agent és la fitxa
+   pública de /iaia, la mateixa, carregada a demanda. */
+test('261021 · ?organitzacio=<agent> obri la fitxa de l’agent, i «La pàgina» és la fitxa pública de /iaia', async () => {
+  const agent = { id: 'A', mena: 'agent', nom: 'IAIA MarIA', dades: { id: 'A', name: 'IAIA MarIA' } };
+  m.perfil = { ...m.perfil, identitats: [jo, forn, agent] };
+  m.params = new URLSearchParams('organitzacio=A');
+  const vista = render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'A' });
+  expect(item('A-pagina')).toMatchObject({ title: 'La pàgina', subtitle: 'Com la veu el poble', data: { vista: 'pagina', identitatId: 'A' } });
+  render(m.workspace.renderDetail({ item: item('A-pagina') }));
+  expect(await screen.findByText('pàgina de IAIA MarIA')).toBeTruthy();
+  vista.unmount();
+  m.params = new URLSearchParams('organitzacio=desconegut');
   render(<PerfilShell />);
   expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
 });

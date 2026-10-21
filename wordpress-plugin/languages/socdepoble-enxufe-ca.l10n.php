@@ -65,7 +65,7 @@ return array(
 		'Sóc de Poble is the decentralized civic network born in the rural mountains of Alicante to connect neighbours, local associations, traditional events, village markets and collective memory without technological dependence.' => 'Sóc de Poble és la xarxa cívica descentralitzada nascuda a la muntanya alacantina per a connectar veïns, associacions locals, esdeveniments tradicionals, mercat de poble i memòria viva sense dependència tecnològica.',
 		'Active village nodes in the network (9 municipalities + historical root):' => 'Nodes de poble actius a la xarxa (9 municipis + arrel històrica):',
 		'Choose your village identity below (for example: Gent de la Torre and la-torre-de-les-macanes) and save.' => 'Tria ací baix la identitat del teu poble (per exemple: Gent de la Torre i la-torre-de-les-macanes) i desa els canvis.',
-		'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble] shortcode.' => 'Crea o edita qualsevol pàgina de WordPress i inserix el bloc Sóc de Poble o l’etiqueta [socdepoble].',
+		'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble_app] shortcode.' => 'Crea o edita qualsevol pàgina de WordPress i inserix el bloc Sóc de Poble o l’etiqueta [socdepoble_app].',
 		'Select the Sóc de Poble · full screen page template so the village plaza fills the entire window.' => 'Tria la plantilla de pàgina Sóc de Poble · pantalla completa perquè la plaça del poble ocupe tota la finestra.',
 		'Technical diagnosis and universal host markup (for developers)' => 'Diagnosi tècnica i marcatge universal d’amfitrió (per a desenvolupadors)',
 

@@ -9,12 +9,14 @@ import { emojiSol } from '../../utils/emoji.js';
    guarda: RGI complet (U+FE0F inclòs), sense ZWJ, Unicode 13 o anterior i cap
    bandera (Baseline 2022, Safari 16). */
 describe('Pla 261015 · les icones dels apartats del Perfil', () => {
-  test('👁️ Les vistes, 🔐 El compte, 🛡️ Privacitat i dades, 🌐 Els nodes i 🖼️ Multimèdia, tots distints', () => {
+  test('👁️ Les vistes, 🔐 El compte, 🛡️ Privacitat i dades, 🌐 Els nodes, 🖼️ Multimèdia i 📄 La pàgina, tots distints', () => {
     // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 4 (🖼️ «Multimèdia», la cinquena icona).
+    // I ordre del Mestre (261021, prompt 261021_0015, tasca 7): 📄 «La pàgina» d'un agent IA, la sisena.
     expect(ICONES_APARTATS).toEqual({
       vistes: '\u{1F441}\u{FE0F}', compte: '\u{1F510}', privacitat: '\u{1F6E1}\u{FE0F}', nodes: '\u{1F310}', multimedia: '\u{1F5BC}\u{FE0F}',
+      pagina: '\u{1F4C4}',
     });
-    expect(new Set(Object.values(ICONES_APARTATS)).size).toBe(5);
+    expect(new Set(Object.values(ICONES_APARTATS)).size).toBe(6);
     expect(Object.isFrozen(ICONES_APARTATS)).toBe(true);
   });
 

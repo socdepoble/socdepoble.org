@@ -181,7 +181,20 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   padding-left: var(--sdp-space-4) !important;
   border-bottom: 1px solid var(--sdp-crom-vora);
 }
-.brand img { width: 130px; flex: none; max-width: 130px; height: auto; object-fit: contain; }
+/* Ordre del Mestre (261021, pla 261021_0015 §8.3) · El logotip passa de 130px
+   a 195px d'ample (el Mestre el volia entre 190 i 200): a 130px quedava
+   menut dins de la columna de 260px. El PNG és de 985×256: a 195px fa uns
+   51px d'alt, dins de la marca de var(--sdp-alt-negra) (64px). Hi cap
+   desplegada (16 + 195 = 211 de 260px), plegada (la marca fa 232px, § TRUC
+   PER A LA SIDEBAR EN ESCRIPTORI; el títol de l'amfitrió no es mou).
+   Al calaix compacte (el <dialog> .sdp-dialeg-sidebar fa width: max-content,
+   components.css) el logotip passa a ser el fill més ample: el calaix creix
+   de 196 a 211px i el logotip arriba a la vora dreta, perquè
+   .sdp-unstyled-btn posa a zero el coixí de la dreta. Donar-li aire (calaix
+   de 227px) o deixar-lo com abans al calaix és decisió del Mestre (revisió
+   261021). El max-width: 100% només el fa encongir quan el calaix topa amb
+   el seu sostre, min(300px, 100% − 48px): pantalles de menys de 259px. */
+.brand img { width: 195px; flex: none; max-width: 100%; height: auto; object-fit: contain; }
 
 /* ── BOTÓ DEL PANELL DE CONTROL ──
    El Mestre ha demanat expressament tornar al disseny clàssic de bloc sencer
@@ -713,6 +726,11 @@ nav.mobile-nav { display: none; }
   :where(.sdp-root.is-compact) header.bar-blue, :where(.sdp-root.is-compact) section.bar-orange { padding: 0 var(--sdp-space-4); }
   :where(.sdp-root.is-compact) header.bar-black { padding: env(safe-area-inset-top, 0px) var(--sdp-space-4) 0; }
   :where(.sdp-root.is-compact) .brand { padding: 0 var(--sdp-space-4); }
+  /* Ordre del Mestre (261021, pla 261021_0015 §8.3) · Amb el logotip de 195px,
+     el calaix de mòbil (max-content) creix fins al logotip: .sdp-unstyled-btn
+     (modules.css) llevava el marge dret i el logotip tocava la vora. El marge
+     de la regla de dalt torna a valdre també a la dreta. */
+  :where(.sdp-root.is-compact) .brand.sdp-unstyled-btn { padding-inline-end: var(--sdp-space-4); }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
 @container sdp-arrel (max-width: 720px) {

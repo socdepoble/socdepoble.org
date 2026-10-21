@@ -37,6 +37,9 @@ var/
 # La seua traça, .agents/runtime/antigravity-hook.log, ja queda fora per *.log.
 .agents/runtime/antigravity-hook.off
 *.zip
+# Ordre del Mestre (261021, prompt 261021_0015, tasca 2) · L'APK de prova dels
+# beta testers (01_produccio/socdepoble-beta.apk, 51 MB) es lliura, no es versiona.
+*.apk
 .claude/
 
 # Ordre del Mestre (261002) · Fora del repositori: els guions de prova de

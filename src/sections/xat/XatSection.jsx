@@ -107,6 +107,8 @@ import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
 import useObriXatPerDefecte from './useObriXatPerDefecte.js';
+/* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La fletxa de la conversa torna a la pàgina d'origen. */
+import { useOrigenDelXat } from './origenDelXat.js';
 import { PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
 /* Gauntlet 261016_1530 (Bloc 3.6) · Els quatre actors al capdamunt, en
    l'ordre del Mestre, i la fila que porta a la comunitat de Sóc de Poble. */
@@ -266,6 +268,10 @@ const ID_FILA_DE_LA_IAIA = `${PREFIX_PER_DEFECTE}iaia`;
 
 export default function XatSection() {
   const xat = useXat();
+  /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La pàgina de l'app
+     d'on s'ha entrat a la conversa (origenDelXat.js). Viu ací, per damunt de
+     XatWorkspace: un àmbit nou torna a muntar l'espai, no tornar a entrar. */
+  const origen = useOrigenDeLaConversa();
   // Padró, cerca i selecció pertanyen al mateix àmbit, i un altre àmbit
   // (persona, actor o backend) torna a muntar l'espai sencer.
   // Decisió 1 del Mestre (261007) · La clau és `ambitEstable` i no `scopeKey`:
@@ -276,14 +282,25 @@ export default function XatSection() {
   if (xat.senseSessio) {
     return (
       <FakeChatOnboarding originalContext={xat}>
-        <XatWorkspace key={xat.ambitEstable ?? 'xat-fake'} />
+        <XatWorkspace key={xat.ambitEstable ?? 'xat-fake'} origen={origen} />
       </FakeChatOnboarding>
     );
   }
-  return <XatWorkspace key={xat.ambitEstable ?? 'xat'} />;
+  return <XatWorkspace key={xat.ambitEstable ?? 'xat'} origen={origen} />;
 }
 
-function XatWorkspace() {
+/* §8.5 · Hi ha una conversa demanada si la URL en porta una (/xat/<fil>) o la
+   demana (?amb=, ?sobre=); una fila d'ajuda (/xat/sdp-per-defecte:<clau>)
+   encara no és cap conversa: es resol amb replace i l'origen l'espera. */
+function useOrigenDeLaConversa() {
+  const { threadId } = useParams();
+  const [params] = useSearchParams();
+  const intencio = Boolean(threadId || params.get('amb') || params.get('sobre'));
+  const fil = threadId && !esIdPerDefecte(threadId) ? String(threadId) : null;
+  return useOrigenDelXat({ intencio, fil });
+}
+
+function XatWorkspace({ origen = null }) {
   const mounted = useRef(false);
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { showToast } = useToast();
@@ -1036,6 +1053,11 @@ function XatWorkspace() {
     else navigate('/xat');
   };
 
+  /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · Amb origen, la fletxa
+     (també en ample) torna a la pàgina d'on s'ha entrat, amb una entrada
+     nova: Arrere del navegador no sempre hi porta (origenDelXat.js). */
+  const tornaAOrigen = origen ? () => navigate(origen) : null;
+
   /* Onada 3B · Una conversa oberta des de la vista de comunitats conserva la
      vista a la columna central, com la fitxa conserva ?comunitat=. */
   const obriFilDeLaVista = (id) => {
@@ -1431,6 +1453,7 @@ function XatWorkspace() {
           messages={messages}
           onSendMessage={sendChatMessage}
           onBack={handleBackToList}
+          onTornaAOrigen={tornaAOrigen}
           onEnviaAlBloc={enviaAlBloc}
           onCopia={copiaText}
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
