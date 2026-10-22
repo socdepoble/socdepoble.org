@@ -73,6 +73,13 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 ### 5. L'Horitzó Sollutia i el Sistema Immortal
 - **Objectiu:** El codi ha de ser tan clar, resilient i modular que qualsevol desenvolupador de Sollutia o qualsevol altra IA puga mantindre'l sense problemes. La nostra relació amb Sollutia és de suport i infraestructura, oferint-los un sistema sòlid i net que no els genere càrrega de treball.
 
+### 6. Auditoria Metodològica del Co-working a 5 Bandes (Mestre + 4 IAs)
+- **Objectiu Estratègic del Mestre:** Debatre i analitzar si el nostre model d'Escriptori compartit (1 humà + 4 IAs: MarIA Antigravity, Claude Opus UltraCode, Gemini 4 Argon High i GPT Codex) és l'estat de l'art o si la indústria (LangGraph, CrewAI, AutoGen, Aider git-driven) ofereix alternatives més instantànies i efectives.
+- **Rols Documentals:**
+  - El **Pla d'Implementació** com a *font viva canònica*: és on s'incorporen els canvis i decisions en temps real sense desnaturalitzar el prompt de convocatòria.
+  - L'**Escriptori (`04_escriptori/`)** com a *taula de reunió*: cada agent, en despertar-se amb el seu cron, consulta primer l'Escriptori i el Pla vigent per conéixer l'últim estat i opinions del Mestre.
+  - Cada IA ha de dedicar un apartat a la seua auditoria analitzant com optimitzar aquest canal col·laboratiu per minimitzar consum de tokens, accelerar el consens i blindar la veritat documental.
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
