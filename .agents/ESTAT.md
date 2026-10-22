@@ -7,9 +7,30 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
-## ESTAT_ACTUAL · 2026-10-22T11:28:00+02:00 · Codex · Gauntlet contrastat i desconvocat
+## ESTAT_ACTUAL · 2026-10-22T14:50:00+02:00 · IAIA MarIA · Tancament de Sessió: Higiene Escriptori (2 docs vius), Diagnosi Forense Supabase i Lliurament Emojis Grans (36px-40px) per a Claude/Codex
 
-Torn: `torn_1692fc65-a75b-4ae9-9af6-0e6834af94b0`.
+Torn: `torn_823c12d5-e3f6-4ba9-8031-d90b99226b8c`.
+
+- **Higiene Radical de l'Escriptori (Porta Olivera en 0):**
+  - Traslladats netament a `_wiki_de_poble/90_arxiu_historic/` els 12 documents consumits de les tandes passades (`261021_2345`, `261022_0141`, `261022_0142`, `261022_0150`, `261022_0225`, `261022_0235`, `261022_0615`).
+  - Escriptori 100% canònic i net: només queden exactament els 2 documents vius de la nova tasca: `261022_1425_pla_implementacio_emojis_grans_i_paritat_whatsapp.md` i `261022_1425_prompt_claude_gemini_emojis_grans_i_paritat_whatsapp.md` (més el Llibre Mestre resident).
+  - Porta Olivera validada amb codi 0 i índex actualitzat.
+- **Diagnosi Forense de Supabase `public.profiles`:**
+  - Descobert el motiu del «No rows returned» en l'UPDATE anterior:
+    * L'UUID de Carmen Chaves és `b4439a84-71ee-466b-a234-bf4b2675681c` (comença per `b443`, no per `b441`).
+    * L'UUID de «Desconegut» és `00000000-0000-0000-0000-000000000000` (tots zeros, no `00100000`).
+  - L'script de correcció està preparat per a l'arrencada del nou torn.
+- **Diagnosi de Taules Remotes:**
+  - `public.realms`: taula fòssil del 28 de març de 2026, no s'usa en absolut a l'SPA modern.
+  - `public.system_agents`: panell de control d'agents de Supabase; conserva la llavor de la IAIA MarIA.
+- **Direcció Tècnica d'Emojis Grans (36px - 40px) i Paritat WhatsApp:**
+  - Pla d'implementació i Prompt local canònic segellats amb contracte documental.
+  - MarIA assumeix la Direcció Tècnica (supervisió i auditoria) i delega la codificació a Claude Opus i Gemini (Codex reservat per quota setmanal al 52%).
+- **Acta Marmota:**
+  - Registrada i validada a `_wiki_de_poble/10_actes/261022_1450_acta_marmota.md`.
+- **Full de ruta per a la següent sessió (post-reboot de l'ordinador):**
+  1. Claude Opus / Gemini executen el codi del selector d'emoticones al xat.
+  2. El Mestre i la MarIA fan l'auditoria visual pausada taula per taula de Supabase.
 
 - **Lliurables:** [[261022_0235_auditoria_codex]] i [[261022_0235_acta_tancament_codex]]. Llegits els tancaments de Claude i l'acta de consens/desconvocatòria de MarIA 261022_0615.
 - **Paquet vigent:** beta.3 de Claude, `../_builds_de_poble/wordpress/socdepoble.zip`, **2.212.160 bytes**, SHA-256 `a7a4f17ce5953e29a36380102164663de8db1432870685d734ec25647cbaa57f`. Verificat de nou per Codex (CRC/inventari i 2.520 fonts contrastades). Beta.2 preservada. Cap publicació.

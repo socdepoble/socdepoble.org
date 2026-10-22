@@ -4110,6 +4110,103 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-compositor__envia:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-compositor__envia:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  /* Pla 261022_1425 (emojis grans, paritat WhatsApp) · La carona, a
+     l'esquerra del camp, i el calaix que obri damunt del compositor
+     (SelectorEmoticones.jsx). El calaix és un popover: no empeny la llista,
+     s'ancora a la vora de dalt del compositor i no passa mai de l'amplada de
+     la columna (també encastat en un web més estret que la pantalla). En
+     estret no passa de 280px d'alçada ni de mitja pantalla. */
+  .sdp-xat-compositor__emojis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-text-suau);
+    cursor: pointer;
+  }
+  .sdp-xat-compositor__emojis[aria-expanded="true"] { color: var(--sdp-accio-text); background: var(--sdp-fons-elevat); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-compositor__emojis:hover:not(:disabled) { color: var(--sdp-accio-text); background: var(--sdp-fons-elevat); }
+  }
+  .sdp-xat-compositor__emojis:disabled { opacity: 0.5; cursor: default; }
+  .sdp-xat-compositor__emojis:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-emojis {
+    position: absolute;
+    inset-block-end: calc(100% + var(--sdp-space-1));
+    inset-inline-start: var(--sdp-space-2);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(22.5rem, calc(100% - var(--sdp-space-2) * 2));
+    max-block-size: min(20rem, 60dvh);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    box-shadow: var(--sdp-ombra-flotant);
+    overflow: hidden;
+  }
+  .sdp-xat-emojis--estret { max-block-size: min(17.5rem, 50dvh); }
+  .sdp-xat-emojis__pestanyes {
+    display: flex;
+    flex: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-emojis__pestanya {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--sdp-touch);
+    block-size: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-block-end: 3px solid transparent;
+    background: transparent;
+    color: var(--sdp-text-suau);
+    cursor: pointer;
+    scroll-snap-align: start;
+  }
+  .sdp-xat-emojis__pestanya[aria-selected="true"] { color: var(--sdp-accio-text); border-block-end-color: var(--sdp-accio); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-emojis__pestanya:hover { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-xat-emojis__pestanya:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-emojis__panell {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sdp-xat-emojis__panell { scroll-behavior: auto; }
+  }
+  .sdp-xat-emojis__titol {
+    margin: 0 0 var(--sdp-space-1);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+  .sdp-xat-emojis__estat {
+    display: grid;
+    justify-items: start;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding-block: var(--sdp-space-3);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
   .sdp-xat-compositor--seleccio { align-items: center; justify-content: center; }
   /* Barra de resposta (torn 260930, T1): dins del peu del compositor, just
      damunt del camp, amb el mateix fons; la cita porta la vora d'acció a

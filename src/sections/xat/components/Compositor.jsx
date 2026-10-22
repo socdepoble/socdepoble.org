@@ -30,9 +30,26 @@
  *     per fil, no la barra negra; `entitatActiva` (useXat, per Conversa) només
  *     servix perquè, si la barra diu una entitat i el fil el signa la persona,
  *     també es diga.
+ *   · Emoticones (pla 261022_1425, paritat WhatsApp): la carona a l'esquerra
+ *     del camp obri el calaix gran (SelectorEmoticones) damunt del camp.
+ *     L'emoticona entra on era el cursor (o en lloc del tros seleccionat) i
+ *     el cursor queda just darrere. Es recorda l'última selecció del camp
+ *     (select, blur, escriure): en mòbil, tocar el calaix el desenfoca.
+ *       - Ample: el focus torna (o es queda) al camp per a continuar
+ *         escrivint, i el calaix seguix obert per a posar-ne més, com a
+ *         WhatsApp Web.
+ *       - Estret: com a WhatsApp al mòbil, el calaix fa de teclat. El focus
+ *         no torna al camp (el teclat de la pantalla taparia el calaix): la
+ *         carona es torna un teclat que el tanca i torna al camp, i tocar
+ *         el camp també el tanca.
+ *     Es tanca amb Escape (abans que la resposta: el primer Escape és del
+ *     calaix), en clicar fora del compositor i en enviar.
  */
-import { Building2, Megaphone, Send, UserRound, Users } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Building2, Keyboard, Megaphone, Send, Smile, UserRound, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
+import { inserixAlCursor } from '../emoticonesXat.js';
+import SelectorEmoticones from './SelectorEmoticones.jsx';
 
 export const LIMIT_TEXT = 4096;
 export const LLINDAR_COMPTADOR = 3900;
@@ -40,6 +57,10 @@ export const LLINDAR_COMPTADOR = 3900;
    compositor a la pantalla, com el seu textarea, #xat-message-input). */
 const ID_SIGNA = 'xat-message-signa';
 const ID_COMPTADOR = 'xat-message-comptador';
+const ID_EMOTICONES = 'xat-message-emoticones';
+
+/* Si el camp té el focus (també dins de l'arrel d'ombra de l'encastament). */
+const teElFocus = (node) => Boolean(node) && node.getRootNode?.().activeElement === node;
 
 /** Cert si al fil no s'hi pot escriure: potEscriure false o un canal sense permís explícit (D7). */
 export function esNomesLectura(fil) {
@@ -154,12 +175,99 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
      pinta: cap id penjat a un element que no existix. */
   const descritPer = [idSigna, mostraComptador ? ID_COMPTADOR : null].filter(Boolean).join(' ') || undefined;
 
+  /* Pla 261022_1425 · El calaix d'emoticones: null tancat; obert, si el focus
+     hi ha d'entrar (amb el teclat, o en estret per a amagar el de la pantalla). */
+  const [calaix, setCalaix] = useState(null);
+  const obert = Boolean(calaix) && !desactivat;
+  const formulari = useRef(null);
+  const camp = useRef(null);
+  /* L'última selecció coneguda del camp ({ inici, fi }), o null: al final. */
+  const seleccio = useRef(null);
+  /* L'últim valor que ha eixit d'ací (escriure o una emoticona): un altre
+     (enviar, l'esborrany d'un altre fil) fa oblidar la selecció. */
+  const valorPropi = useRef(valor);
+  /* El cursor que toca posar quan el valor amb l'emoticona torne del pare. */
+  const pendent = useRef(null);
+
+  const posaCamp = useCallback((node) => {
+    camp.current = node;
+    if (typeof campRef === 'function') campRef(node);
+    else if (campRef) campRef.current = node;
+  }, [campRef]);
+
+  useLayoutEffect(() => {
+    const cursor = pendent.current;
+    pendent.current = null;
+    if (valor !== valorPropi.current) {
+      seleccio.current = null;
+      return;
+    }
+    if (!cursor || cursor.valor !== valor || !cursor.enfoca) return;
+    const node = camp.current;
+    if (!node) return;
+    node.focus({ preventScroll: true });
+    node.setSelectionRange(cursor.posicio, cursor.posicio);
+  }, [valor]);
+
+  const tanca = useCallback((enfoca) => {
+    setCalaix(null);
+    if (enfoca) camp.current?.focus();
+  }, []);
+
+  /* Clicar fora del compositor tanca el calaix i no mou el focus (MenuLlista:
+     a l'arrel del node, també dins de l'arrel d'ombra de l'encastament). */
+  useEffect(() => {
+    if (!obert) return undefined;
+    const node = formulari.current;
+    const arrel = node?.getRootNode?.() || document;
+    const fora = (e) => { if (node && !node.contains(e.target)) setCalaix(null); };
+    arrel.addEventListener('pointerdown', fora);
+    return () => arrel.removeEventListener('pointerdown', fora);
+  }, [obert]);
+
+  const recordaSeleccio = (e) => {
+    seleccio.current = { inici: e.currentTarget.selectionStart, fi: e.currentTarget.selectionEnd };
+  };
+
+  /* Estable: escriure amb el calaix obert no torna a pintar les seues llistes
+     (Persones en porta 2.430). Llig el valor de l'últim pintat. */
+  const actual = useRef({ valor, estret, onCanvia });
+  useLayoutEffect(() => { actual.current = { valor, estret, onCanvia }; });
+  const inserix = useCallback((glif) => {
+    const { valor: text, estret: enEstret, onCanvia: canvia } = actual.current;
+    const node = camp.current;
+    const lloc = teElFocus(node) ? { inici: node.selectionStart, fi: node.selectionEnd } : seleccio.current;
+    const resultat = inserixAlCursor(text, glif, lloc?.inici, lloc?.fi, LIMIT_TEXT);
+    if (!resultat) return;
+    seleccio.current = { inici: resultat.cursor, fi: resultat.cursor };
+    valorPropi.current = resultat.valor;
+    pendent.current = { valor: resultat.valor, posicio: resultat.cursor, enfoca: !enEstret };
+    canvia(resultat.valor);
+  }, []);
+  const tancaAmbEscape = useCallback(() => tanca(true), [tanca]);
+  /* Estret: tocar el camp per a escriure tanca el calaix (hi torna el teclat). */
+  const tancaEnEntrar = estret && obert ? () => setCalaix(null) : undefined;
+
+  /* La carona obri i tanca. Amb el ratolí (detail ≥ 1), en ample el focus es
+     queda al camp; amb el teclat, o en estret, entra al calaix. Tancar-lo amb
+     ella torna al camp (en estret, és el teclat de la pantalla que torna). */
+  const commuta = (e) => {
+    if (obert) tanca(true);
+    else setCalaix({ enfoca: estret || e.detail === 0 });
+  };
+
   const envia = () => {
     if (buit || desactivat) return;
+    setCalaix(null);
     onEnvia();
   };
 
   const alTeclat = (e) => {
+    if (e.key === 'Escape' && obert) {
+      e.preventDefault();
+      tanca(true);
+      return;
+    }
     if (e.key === 'Escape' && typeof onEscapa === 'function') {
       e.preventDefault();
       onEscapa();
@@ -176,19 +284,53 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
      adversarial 260930, #13; modules.css). Sense barra no canvia res. */
   return (
     <form
+      ref={formulari}
       className={`sdp-xat-compositor${mostraComptador ? ' sdp-xat-compositor--comptador' : ''}`}
       onSubmit={(e) => { e.preventDefault(); envia(); }}
     >
+      <button
+        type="button"
+        className="sdp-xat-compositor__emojis"
+        aria-label={t('section.xat.emoticones.etiqueta', 'Emoticones')}
+        aria-haspopup="dialog"
+        aria-expanded={obert}
+        aria-controls={obert ? ID_EMOTICONES : undefined}
+        onMouseDown={estret ? undefined : (e) => e.preventDefault()}
+        onClick={commuta}
+        disabled={desactivat}
+      >
+        {obert && estret
+          ? <Keyboard size={22} aria-hidden="true" focusable="false" />
+          : <Smile size={22} aria-hidden="true" focusable="false" />}
+      </button>
+      {obert ? (
+        <SelectorEmoticones
+          id={ID_EMOTICONES}
+          t={t}
+          onTria={inserix}
+          onTanca={tancaAmbEscape}
+          enfocaEnObrir={calaix.enfoca}
+          retenFocus={!estret}
+          estret={estret}
+        />
+      ) : null}
       <div className="sdp-xat-compositor__camp" data-valor={valor}>
         <textarea
-          ref={campRef}
+          ref={posaCamp}
           id="xat-message-input"
           name="message"
           className="sdp-xat-compositor__textarea"
           rows={1}
           value={valor}
           maxLength={LIMIT_TEXT}
-          onChange={(e) => onCanvia(e.target.value)}
+          onChange={(e) => {
+            recordaSeleccio(e);
+            valorPropi.current = e.target.value;
+            onCanvia(e.target.value);
+          }}
+          onSelect={recordaSeleccio}
+          onBlur={recordaSeleccio}
+          onFocus={tancaEnEntrar}
           onKeyDown={alTeclat}
           placeholder={t('section.xat.composePlaceholder', 'Escriu un missatge...')}
           aria-label={t('section.xat.compositor.etiqueta', 'Escriu un missatge')}

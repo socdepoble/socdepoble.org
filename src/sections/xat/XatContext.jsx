@@ -218,6 +218,7 @@ import {
   trobaPendent
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
+import { buidaRecents } from './emoticonesXat.js';
 import { recordaRutaForaDelXat } from './informeDError.js';
 import { recordaOrigenDelXat } from './origenDelXat.js';
 import { clauDia } from './temps.js';
@@ -1572,6 +1573,8 @@ export function XatProvider({ children, config }) {
     personaPrevia.current = clauPersona;
     entradesFetes.current = new Set();
     buidaEsborranys();
+    /* Pla 261022_1425 · Les emoticones recents tampoc passen d'una persona a l'altra. */
+    buidaRecents();
   }, [clauPersona]);
 
   /* Auditoria adversarial 261016 (P3) · El xat de només lectura de Javi porta

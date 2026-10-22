@@ -2722,6 +2722,17 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     font-size: var(--sdp-text-small);
     overflow-wrap: anywhere;
   }
+  /* Pla 261022_1425 · La variant gran (LlistaEmojis gran, el calaix del xat):
+     glif de 38px (2,375rem, entre els 36 i els 40 del pla) en una diana de
+     52px (3,25rem), per damunt dels 48 de --sdp-touch i dels 44 del WCAG
+     2.2 AAA (2.5.5). En rem: si la persona engrandix la lletra, creixen. */
+  .sdp-graella-emojis__graella--gran {
+    grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+  }
+  .sdp-graella-emojis__graella--gran .sdp-graella-emojis__boto {
+    min-block-size: 3.25rem;
+    font-size: 2.375rem;
+  }
 
   /* ── Selector d'Emojis en Pàgina de Workspace (PaginaEmojis.jsx) ─────────
      Substitució de finestres flotants per subvista de columna dedicada. */

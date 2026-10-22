@@ -93,8 +93,11 @@ const BotoEmoji = memo(function BotoEmoji({ codi, glif, nom, index, enSequencia,
   );
 });
 
-/* Els botons d'una família (o dels resultats). Un sol tabindex 0 per llista. */
-const Botons = memo(function Botons({ emojis, etiqueta, onTria }) {
+/* Els botons d'una família (o dels resultats). Un sol tabindex 0 per llista.
+   Pla 261022_1425 (emojis grans) · El selector del compositor del xat també
+   la munta (LlistaEmojis), amb `gran`: glif de 38px en una diana de 52px,
+   per a qui no hi veu bé o té el dit gros. */
+const Botons = memo(function Botons({ emojis, etiqueta, onTria, gran = false }) {
   const [actiu, setActiu] = useState(0);
   const llista = useRef(null);
   const enSequencia = actiu < emojis.length ? actiu : 0;
@@ -110,7 +113,7 @@ const Botons = memo(function Botons({ emojis, etiqueta, onTria }) {
   };
 
   return (
-    <ul ref={llista} className="sdp-graella-emojis__graella" aria-label={etiqueta} onKeyDown={mou}>
+    <ul ref={llista} className={`sdp-graella-emojis__graella${gran ? ' sdp-graella-emojis__graella--gran' : ''}`} aria-label={etiqueta} onKeyDown={mou}>
       {emojis.map(([codi, glif, nom], index) => (
         <BotoEmoji key={codi} codi={codi} glif={glif} nom={nom} index={index}
           enSequencia={index === enSequencia} onActiva={setActiu} onTria={onTria} />
@@ -118,6 +121,9 @@ const Botons = memo(function Botons({ emojis, etiqueta, onTria }) {
     </ul>
   );
 });
+
+/** Una llista d'emojis amb fletxes, Inici i Fi: { emojis: [[codi, glif, nom]], etiqueta, onTria (glif, nom), gran }. */
+export const LlistaEmojis = Botons;
 
 /* Una família: el summary diu el nom i quantes n'hi ha; els botons, només
    oberta. El <details> és controlat: React el deixa com diu el navegador. */

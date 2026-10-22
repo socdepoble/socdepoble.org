@@ -34,18 +34,10 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261022_0615_acta_consens_gauntlet_extrem]]
-- [[261022_0235_acta_tancament_codex]]
-- [[261022_0235_auditoria_codex]]
-- [[261022_0235_auditoria_gemini]]
-- [[261022_0225_prompt_claude_gemini_codex_gauntlet_extrem_i_sistema_resilient]]
-- [[261022_0225_pla_implementacio_gauntlet_extrem_i_sistema_resilient]]
-- [[261022_0141_acta_tancament_codex]]
-- [[261022_0150_auditoria_claude]]
-- [[261022_0141_auditoria_codex]]
-- [[261022_0142_auditoria_gemini]]
-- [[261021_2345_prompt_claude_gemini_codex_alleugeriment_wp_pwa_i_auditoria_didactica]]
-- [[261021_2345_pla_implementacio_alleugeriment_wp_pwa_i_auditoria_didactica]]
+- [[261022_1556_auditoria_gemini]]
+- [[261022_1500_auditoria_claude]]
+- [[261022_1425_prompt_claude_gemini_emojis_grans_i_paritat_whatsapp]]
+- [[261022_1425_pla_implementacio_emojis_grans_i_paritat_whatsapp]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
@@ -776,6 +768,19 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261022_0615_acta_consens_gauntlet_extrem]]
+- [[../90_arxiu_historic/261022_0235_auditoria_gemini]]
+- [[../90_arxiu_historic/261022_0235_auditoria_codex]]
+- [[../90_arxiu_historic/261022_0235_acta_tancament_codex]]
+- [[../90_arxiu_historic/261022_0225_prompt_claude_gemini_codex_gauntlet_extrem_i_sistema_resilient]]
+- [[../90_arxiu_historic/261022_0225_pla_implementacio_gauntlet_extrem_i_sistema_resilient]]
+- [[../90_arxiu_historic/261022_0150_auditoria_claude]]
+- [[../90_arxiu_historic/261022_0142_auditoria_gemini]]
+- [[../90_arxiu_historic/261022_0141_auditoria_codex]]
+- [[../90_arxiu_historic/261022_0141_acta_tancament_codex]]
+- [[../90_arxiu_historic/261021_2345_prompt_claude_gemini_codex_alleugeriment_wp_pwa_i_auditoria_didactica]]
+- [[../90_arxiu_historic/261021_2345_pla_implementacio_alleugeriment_wp_pwa_i_auditoria_didactica]]
+- [[../90_arxiu_historic/261022_1425_prompt_consell_emojis_grans_i_paritat_whatsapp]]
 - [[../90_arxiu_historic/261021_1905_auditoria_claude_botigues_ayudawp_fase2]]
 - [[../90_arxiu_historic/261021_1900_auditoria_gemini_fase2]]
 - [[../90_arxiu_historic/261021_1850_prompt_claude_gemini_botigues_ayudawp_i_salfumant]]
@@ -977,3 +982,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261021_0030_acta_marmota_relleu_nocturn_zero_oblit_i_llancament_apps]]
 - [[../10_actes/261021_1600_acta_marmota_relleu_salfumant_builds_i_preparacio_autonoma]]
 - [[../10_actes/261022_0010_acta_marmota_relleu_nocturn_direccio_autonoma_i_rea]]
+- [[../10_actes/261022_1450_acta_marmota]]
