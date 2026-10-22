@@ -11,8 +11,10 @@
  *     Cada emoticona és la mateixa entrada del catàleg Emojis XL
  *     ([codi, glif, nom oficial en anglès]: el nom accessible de la graella
  *     universal) i la prova ho comprova: res no se n'aparta. Totes són
- *     d'Emoji 13.0 o anteriors: Safari 16 i els Android de fa uns anys les
- *     pinten sense esperar el catàleg.
+ *     d'Emoji 12.0 o anteriors: emojiSol mira les dades d'Unicode del motor,
+ *     no la font, i Windows 10 (Segoe UI Emoji) i els Android fins al 10 no
+ *     pinten les d'Emoji 13 (l'oliva, el pebrot, el poal, l'acordió): eixes
+ *     queden a les famílies del catàleg.
  *   · Recents: les últimes triades, primer la més nova. Com els esborranys
  *     (esborranys.js), només en memòria: no toquen cap emmagatzematge
  *     persistent, recarregar les oblida i XatContext les buida quan canvia la
@@ -93,7 +95,6 @@ export const EMOTICONES_DEL_POBLE = Object.freeze([
     nom: 'Horta, camp i menjar',
     emojis: Object.freeze([
       ['1F345', '🍅', 'tomato'],
-      ['1FAD2', '🫒', 'olive'],
       ['1F34A', '🍊', 'tangerine'],
       ['1F34B', '🍋', 'lemon'],
       ['1F351', '🍑', 'peach'],
@@ -106,7 +107,6 @@ export const EMOTICONES_DEL_POBLE = Object.freeze([
       ['1F9C4', '🧄', 'garlic'],
       ['1F33D', '🌽', 'ear of corn'],
       ['1F955', '🥕', 'carrot'],
-      ['1FAD1', '🫑', 'bell pepper'],
       ['1F346', '🍆', 'eggplant'],
       ['1F96C', '🥬', 'leafy green'],
       ['1F35E', '🍞', 'bread'],
@@ -166,7 +166,6 @@ export const EMOTICONES_DEL_POBLE = Object.freeze([
       ['1F3D8 FE0F', '🏘️', 'houses'],
       ['26F2', '⛲', 'fountain'],
       ['1F9FA', '🧺', 'basket'],
-      ['1FAA3', '🪣', 'bucket'],
       ['1FA93', '🪓', 'axe'],
       ['26CF FE0F', '⛏️', 'pick'],
       ['1F528', '🔨', 'hammer'],
@@ -176,7 +175,6 @@ export const EMOTICONES_DEL_POBLE = Object.freeze([
       ['1F4DE', '📞', 'telephone receiver'],
       ['1F3B8', '🎸', 'guitar'],
       ['1F3BA', '🎺', 'trumpet'],
-      ['1FA97', '🪗', 'accordion'],
       ['1F941', '🥁', 'drum'],
       ['1F3B6', '🎶', 'musical notes'],
       ['1F483', '💃', 'woman dancing'],

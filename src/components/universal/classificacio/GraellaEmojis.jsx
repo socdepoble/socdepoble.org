@@ -113,7 +113,7 @@ const Botons = memo(function Botons({ emojis, etiqueta, onTria, gran = false }) 
   };
 
   return (
-    <ul ref={llista} className={`sdp-graella-emojis__graella${gran ? ' sdp-graella-emojis__graella--gran' : ''}`} aria-label={etiqueta} onKeyDown={mou}>
+    <ul ref={llista} className={gran ? 'sdp-graella-emojis__graella sdp-graella-emojis__graella--gran' : 'sdp-graella-emojis__graella'} aria-label={etiqueta} onKeyDown={mou}>
       {emojis.map(([codi, glif, nom], index) => (
         <BotoEmoji key={codi} codi={codi} glif={glif} nom={nom} index={index}
           enSequencia={index === enSequencia} onActiva={setActiu} onTria={onTria} />

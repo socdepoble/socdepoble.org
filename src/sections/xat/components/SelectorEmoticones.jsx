@@ -18,8 +18,9 @@
  *     les dades d'Unicode 14) no es pinten: es veurien trencades, i la
  *     interfície no promet el que no fa.
  *   · Cada llista és la de GraellaEmojis (LlistaEmojis): un sol botó al
- *     tabulador i les fletxes s'hi mouen. Triar crida onTria(glif); qui munta
- *     el calaix decidix on va el text i el focus.
+ *     tabulador i les fletxes s'hi mouen. Triar crida onTria(glif, nom); qui
+ *     munta el calaix decidix on va el text i el focus, i torna false si no
+ *     l'ha posada (aleshores no va a les recents).
  *   · Les recents es lligen en obrir: triar no les reordena davall del dit,
  *     com a WhatsApp. Es veuen ordenades la pròxima vegada.
  *   · Escape crida onTanca. `enfocaEnObrir` porta el focus a la pestanya
@@ -28,7 +29,7 @@
  *     furte el focus al camp, com a WhatsApp Web.
  *
  * CONTRACTE
- *   id · t · onTria (glif) · onTanca () · enfocaEnObrir · retenFocus · estret
+ *   id · t · onTria (glif, nom) => false si no l'ha posada · onTanca () · enfocaEnObrir · retenFocus · estret
  *   carregaCataleg () => Promise<{ GRUPS_EMOJIS }> (estable; per defecte, el del Bloc)
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -99,7 +100,7 @@ function pestanyesDe(t, grups) {
 
 function Seccio({ titol, emojis, onTria }) {
   return (
-    <section className="sdp-xat-emojis__seccio">
+    <section>
       <h3 className="sdp-xat-emojis__titol">{titol}</h3>
       <LlistaEmojis gran emojis={emojis} etiqueta={titol} onTria={onTria} />
     </section>
@@ -137,8 +138,11 @@ export default function SelectorEmoticones({
   const idPestanya = (clau) => `${id}-pestanya-${clau}`;
   const idPanell = `${id}-panell`;
 
-  const triaPestanya = (clau) => {
+  /* La pestanya triada es veu sencera: en una pantalla estreta, la tira es
+     desplaça i deixa vore les que venen darrere. */
+  const triaPestanya = (clau, boto = null) => {
     setPestanya(clau);
+    boto?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     if (panell.current) panell.current.scrollTop = 0;
   };
 
@@ -151,14 +155,14 @@ export default function SelectorEmoticones({
     if (desti === undefined) return;
     e.preventDefault();
     botons[desti].focus();
-    botons[desti].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-    triaPestanya(pestanyes[desti].id);
+    triaPestanya(pestanyes[desti].id, botons[desti]);
   };
 
-  /* Estable (amb onTria estable): canviar de pestanya no torna a pintar les llistes. */
+  /* Estable (amb onTria estable): canviar de pestanya no torna a pintar les
+     llistes. Només va a les recents la que s'ha posat de veres (onTria torna
+     false si no hi cap: el límit de 4.096 caràcters). */
   const triaEmoji = useCallback((glif, nom) => {
-    recordaRecent(glif, nom);
-    onTria?.(glif);
+    if (onTria?.(glif, nom) !== false) recordaRecent(glif, nom);
   }, [onTria]);
 
   const alTeclat = (e) => {
@@ -188,7 +192,17 @@ export default function SelectorEmoticones({
     contingut = (
       <div className="sdp-xat-emojis__estat" role="alert">
         <p>{t('section.xat.emoticones.error', 'No s’han pogut carregar les emoticones.')}</p>
-        <Boto varietat="secundari" onClick={() => setIntent((n) => n + 1)}>{t('common.reintenta', 'Torna-ho a provar')}</Boto>
+        {/* El botó desapareix en tornar a carregar: el focus passa abans a la
+            pestanya, que es queda (si no, cauria al <body> i Escape ja no tancaria). */}
+        <Boto
+          varietat="secundari"
+          onClick={() => {
+            barra.current?.querySelector('[aria-selected="true"]')?.focus();
+            setIntent((n) => n + 1);
+          }}
+        >
+          {t('common.reintenta', 'Torna-ho a provar')}
+        </Boto>
       </div>
     );
   } else {
@@ -198,7 +212,7 @@ export default function SelectorEmoticones({
   return (
     <div
       id={id}
-      className={`sdp-xat-emojis${estret ? ' sdp-xat-emojis--estret' : ''}`}
+      className={estret ? 'sdp-xat-emojis sdp-xat-emojis--estret' : 'sdp-xat-emojis'}
       role="dialog"
       aria-label={t('section.xat.emoticones.etiqueta', 'Emoticones')}
       onKeyDown={alTeclat}
@@ -223,7 +237,7 @@ export default function SelectorEmoticones({
             aria-label={nom}
             title={nom}
             tabIndex={clau === activa ? 0 : -1}
-            onClick={() => triaPestanya(clau)}
+            onClick={(e) => triaPestanya(clau, e.currentTarget)}
           >
             <Icona size={22} aria-hidden="true" focusable="false" />
           </button>

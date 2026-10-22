@@ -35,7 +35,9 @@ const COMPONENTS_XAT = [
   /* Onada 6: «Informa d'un error», l'accés dels beta testers. */
   'BotoInformaDUnError',
   /* Fase E (261020, tasca 3): la llista viva d'«El Comú» dins de la bombolla. */
-  'TargetaLlistaComu'
+  'TargetaLlistaComu',
+  /* Pla 261022_1425: el calaix d'emoticones gran del compositor. */
+  'SelectorEmoticones'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
 /* Les proves dels components de l'onada 3 (també la de les files, T67), de
@@ -75,6 +77,11 @@ const JS_TORN = [
   /* Fase E (261020, tasca 3): quan un missatge porta una llista viva, i les seues proves. */
   'src/sections/xat/llistaComu.js',
   'src/sections/xat/components/Bombolla.llistaComu.test.jsx',
+  /* Pla 261022_1425: les emoticones del compositor (inserció al cursor, «Del poble», recents) i les seues proves. */
+  'src/sections/xat/emoticonesXat.js',
+  'src/sections/xat/emoticonesXat.test.js',
+  'src/sections/xat/components/SelectorEmoticones.test.jsx',
+  'src/sections/xat/components/Compositor.emoticones.test.jsx',
   /* Torn 260930 (T1): lògica pura de la conversa, esborranys i poble. */
   'src/sections/xat/conversa.js',
   'src/sections/xat/conversa.test.js',

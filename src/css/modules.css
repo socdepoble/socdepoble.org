@@ -4115,7 +4115,10 @@ details[open] summary.accordion-header svg:last-child {
      (SelectorEmoticones.jsx). El calaix és un popover: no empeny la llista,
      s'ancora a la vora de dalt del compositor i no passa mai de l'amplada de
      la columna (també encastat en un web més estret que la pantalla). En
-     estret no passa de 280px d'alçada ni de mitja pantalla. */
+     estret no passa de 280px d'alçada ni de mitja pantalla. dvh no és de
+     Chrome 100-107 ni de Firefox 100: primer va la línia en vh, que la
+     segona substituïx on dvh existix. El Compositor encara el retalla a
+     l'espai que hi ha fins a la llista de missatges (style del calaix). */
   .sdp-xat-compositor__emojis {
     display: inline-flex;
     align-items: center;
@@ -4144,6 +4147,7 @@ details[open] summary.accordion-header svg:last-child {
     display: flex;
     flex-direction: column;
     inline-size: min(22.5rem, calc(100% - var(--sdp-space-2) * 2));
+    max-block-size: min(20rem, 60vh);
     max-block-size: min(20rem, 60dvh);
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
@@ -4151,7 +4155,14 @@ details[open] summary.accordion-header svg:last-child {
     box-shadow: var(--sdp-ombra-flotant);
     overflow: hidden;
   }
-  .sdp-xat-emojis--estret { max-block-size: min(17.5rem, 50dvh); }
+  .sdp-xat-emojis--estret {
+    max-block-size: min(17.5rem, 50vh);
+    max-block-size: min(17.5rem, 50dvh);
+  }
+  /* Amb el calaix obert, el compositor puja damunt de «Baixa al final»
+     (.sdp-xat-baixa, z-index 2 a la mateixa conversa): si no, el botó
+     tapava les emoticones de la vora i se'n menjava el toc. */
+  .sdp-xat-compositor--emojis { z-index: 3; }
   .sdp-xat-emojis__pestanyes {
     display: flex;
     flex: none;
@@ -4166,7 +4177,9 @@ details[open] summary.accordion-header svg:last-child {
     align-items: center;
     justify-content: center;
     flex: none;
-    inline-size: var(--sdp-touch);
+    /* Sis pestanyes i mitja per tira: la mitja de la vora diu que n'hi ha
+       més (la tira es desplaça), també en una pantalla tàctil sense barra. */
+    inline-size: max(var(--sdp-touch), calc(100% / 6.5));
     block-size: var(--sdp-touch);
     padding: 0;
     border: 0;
@@ -4194,6 +4207,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-emojis__titol {
     margin: 0 0 var(--sdp-space-1);
+    /* Sense el filet ni el coixí dels h3 editorials (base.css). */
+    padding: 0;
+    border: 0;
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
     font-weight: 700;

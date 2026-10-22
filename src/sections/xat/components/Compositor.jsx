@@ -38,16 +38,22 @@
  *       - Ample: el focus torna (o es queda) al camp per a continuar
  *         escrivint, i el calaix seguix obert per a posar-ne més, com a
  *         WhatsApp Web.
- *       - Estret: com a WhatsApp al mòbil, el calaix fa de teclat. El focus
- *         no torna al camp (el teclat de la pantalla taparia el calaix): la
- *         carona es torna un teclat que el tanca i torna al camp, i tocar
- *         el camp també el tanca.
- *     Es tanca amb Escape (abans que la resposta: el primer Escape és del
- *     calaix), en clicar fora del compositor i en enviar.
+ *       - Tàctil (estret, o una tauleta: CONSULTA_TACTIL): com a WhatsApp al
+ *         mòbil, el calaix fa de teclat. El focus no torna al camp (el
+ *         teclat de la pantalla taparia el calaix): la carona es torna un
+ *         teclat que el tanca i torna al camp, i tocar el camp també el tanca.
+ *       - Amb el teclat dins del calaix, el focus s'hi queda (un segon Retorn
+ *         no ha d'enviar el missatge) i un avís en viu diu què s'ha afegit.
+ *     Es tanca amb Escape des de qualsevol lloc del compositor (abans que la
+ *     resposta: el primer Escape és del calaix), en clicar fora (també fora
+ *     de l'encastament, al web amfitrió) i en enviar. L'alçada del calaix no
+ *     passa mai de l'espai que hi ha entre el compositor i la llista de
+ *     missatges: la capçalera de la conversa no es tapa.
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Building2, Keyboard, Megaphone, Send, Smile, UserRound, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
+import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import { inserixAlCursor } from '../emoticonesXat.js';
 import SelectorEmoticones from './SelectorEmoticones.jsx';
 
@@ -61,6 +67,10 @@ const ID_EMOTICONES = 'xat-message-emoticones';
 
 /* Si el camp té el focus (també dins de l'arrel d'ombra de l'encastament). */
 const teElFocus = (node) => Boolean(node) && node.getRootNode?.().activeElement === node;
+/* Una pantalla sense ratolí (mòbil, tauleta): el calaix hi fa de teclat. */
+const esTactil = () => Boolean(globalThis.matchMedia?.(CONSULTA_TACTIL)?.matches);
+/* El calaix mai no es fa més baix que les pestanyes i una fila d'emoticones. */
+const ALCADA_MINIMA = 112;
 
 /** Cert si al fil no s'hi pot escriure: potEscriure false o un canal sense permís explícit (D7). */
 export function esNomesLectura(fil) {
@@ -168,6 +178,9 @@ export default function Compositor({
 function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef, idSigna = null }) {
   const { mida } = useAppGrid();
   const estret = mida === 'estret';
+  /* Pla 261022_1425 · Mòbil o tauleta: el calaix fa de teclat (la mida només
+     decidix l'alçada del calaix i el Retorn). */
+  const tactil = estret || esTactil();
   const buit = !String(valor ?? '').trim();
   const llargada = String(valor ?? '').length;
   const mostraComptador = llargada >= LLINDAR_COMPTADOR;
@@ -176,9 +189,12 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   const descritPer = [idSigna, mostraComptador ? ID_COMPTADOR : null].filter(Boolean).join(' ') || undefined;
 
   /* Pla 261022_1425 · El calaix d'emoticones: null tancat; obert, si el focus
-     hi ha d'entrar (amb el teclat, o en estret per a amagar el de la pantalla). */
+     hi ha d'entrar (amb el teclat, o en tàctil per a amagar el de la pantalla). */
   const [calaix, setCalaix] = useState(null);
   const obert = Boolean(calaix) && !desactivat;
+  /* L'avís en viu de l'emoticona afegida quan el focus no és al camp. */
+  const [afegida, setAfegida] = useState('');
+  useEffect(() => { if (!obert) setAfegida(''); }, [obert]);
   const formulari = useRef(null);
   const camp = useRef(null);
   /* L'última selecció coneguda del camp ({ inici, fi }), o null: al final. */
@@ -209,20 +225,79 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     node.setSelectionRange(cursor.posicio, cursor.posicio);
   }, [valor]);
 
-  const tanca = useCallback((enfoca) => {
-    setCalaix(null);
-    if (enfoca) camp.current?.focus();
+  /* Tornar al camp des de fora (el calaix, la carona, un altre lloc): el
+     cursor torna on era (darrere de l'última emoticona: React l'havia portat
+     al final en canviar el valor) o, si no se sap, al final, com a WhatsApp
+     (un camp que no ha tingut mai el focus el posaria al principi). Si ja hi
+     era, no es toca: dins de l'arrel d'ombra el `select` de React no arriba
+     i la selecció recordada podria ser vella. */
+  const tornaAlCamp = useCallback(() => {
+    const node = camp.current;
+    if (!node || teElFocus(node)) {
+      node?.focus();
+      return;
+    }
+    node.focus();
+    const lloc = seleccio.current;
+    const fi = node.value.length;
+    if (lloc && lloc.fi <= fi) node.setSelectionRange(lloc.inici, lloc.fi);
+    else node.setSelectionRange(fi, fi);
   }, []);
 
+  const tanca = useCallback((enfoca) => {
+    setCalaix(null);
+    if (enfoca) tornaAlCamp();
+  }, [tornaAlCamp]);
+
   /* Clicar fora del compositor tanca el calaix i no mou el focus (MenuLlista:
-     a l'arrel del node, també dins de l'arrel d'ombra de l'encastament). */
+     a l'arrel del node, també dins de l'arrel d'ombra de l'encastament). Dins
+     d'una arrel d'ombra, el web amfitrió no hi arriba: el document també
+     escolta, i tot el que hi arriba des de dins del giny porta de destí
+     l'amfitrió (arrel.host), que ja ha mirat l'escolta de l'arrel. */
   useEffect(() => {
     if (!obert) return undefined;
     const node = formulari.current;
-    const arrel = node?.getRootNode?.() || document;
+    const doc = node?.ownerDocument || document;
+    const arrel = node?.getRootNode?.() || doc;
     const fora = (e) => { if (node && !node.contains(e.target)) setCalaix(null); };
+    const foraDelGiny = (e) => { if (e.target !== arrel.host) setCalaix(null); };
     arrel.addEventListener('pointerdown', fora);
-    return () => arrel.removeEventListener('pointerdown', fora);
+    if (arrel !== doc) doc.addEventListener('pointerdown', foraDelGiny);
+    return () => {
+      arrel.removeEventListener('pointerdown', fora);
+      if (arrel !== doc) doc.removeEventListener('pointerdown', foraDelGiny);
+    };
+  }, [obert]);
+
+  /* El calaix no passa de l'espai entre el seu peu (la vora de dalt del
+     compositor) i el cap de la llista de missatges: amb poc espai (mòbil
+     apaïsat, el peu d'accés davall), el CSS sol el faria pujar damunt de la
+     capçalera. Es mesura en obrir i quan canvia la conversa o el compositor;
+     sense llista (l'espècimen de Disseny) o sense layout, mana el CSS. */
+  useLayoutEffect(() => {
+    if (!obert) return undefined;
+    const node = formulari.current;
+    const calaixNode = node?.querySelector(`#${ID_EMOTICONES}`);
+    const conversa = node?.closest('.sdp-xat-conversa');
+    const llista = conversa?.querySelector('.sdp-xat-missatges');
+    if (!calaixNode || !llista) return undefined;
+    const ajusta = () => {
+      calaixNode.style.removeProperty('max-block-size');
+      const caixa = calaixNode.getBoundingClientRect();
+      const espai = Math.floor(caixa.bottom - llista.getBoundingClientRect().top);
+      if (!caixa.height || !(espai < caixa.height)) return;
+      calaixNode.style.maxBlockSize = `${Math.max(espai, ALCADA_MINIMA)}px`;
+    };
+    ajusta();
+    const vista = node.ownerDocument.defaultView;
+    const observa = typeof vista?.ResizeObserver === 'function' ? new vista.ResizeObserver(ajusta) : null;
+    observa?.observe(conversa);
+    observa?.observe(node);
+    vista?.addEventListener('resize', ajusta);
+    return () => {
+      observa?.disconnect();
+      vista?.removeEventListener('resize', ajusta);
+    };
   }, [obert]);
 
   const recordaSeleccio = (e) => {
@@ -230,30 +305,47 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   };
 
   /* Estable: escriure amb el calaix obert no torna a pintar les seues llistes
-     (Persones en porta 2.430). Llig el valor de l'últim pintat. */
-  const actual = useRef({ valor, estret, onCanvia });
-  useLayoutEffect(() => { actual.current = { valor, estret, onCanvia }; });
-  const inserix = useCallback((glif) => {
-    const { valor: text, estret: enEstret, onCanvia: canvia } = actual.current;
+     (Persones en porta 2.430). Llig el valor de l'últim pintat. Torna false
+     si l'emoticona no hi cap (el calaix no la posa a les recents). */
+  const actual = useRef({ valor, tactil, onCanvia, t });
+  useLayoutEffect(() => { actual.current = { valor, tactil, onCanvia, t }; });
+  const inserix = useCallback((glif, nom) => {
+    const { valor: text, tactil: enTactil, onCanvia: canvia, t: tradueix } = actual.current;
     const node = camp.current;
-    const lloc = teElFocus(node) ? { inici: node.selectionStart, fi: node.selectionEnd } : seleccio.current;
+    const actiu = node?.getRootNode?.().activeElement;
+    const lloc = actiu === node ? { inici: node.selectionStart, fi: node.selectionEnd } : seleccio.current;
     const resultat = inserixAlCursor(text, glif, lloc?.inici, lloc?.fi, LIMIT_TEXT);
-    if (!resultat) return;
+    if (!resultat) return false;
+    /* Amb el teclat dins del calaix (o en tàctil) el focus no se'n va. */
+    const dinsDelCalaix = Boolean(actiu?.closest?.(`#${ID_EMOTICONES}`));
+    const enfoca = !enTactil && !dinsDelCalaix;
     seleccio.current = { inici: resultat.cursor, fi: resultat.cursor };
     valorPropi.current = resultat.valor;
-    pendent.current = { valor: resultat.valor, posicio: resultat.cursor, enfoca: !enEstret };
+    pendent.current = { valor: resultat.valor, posicio: resultat.cursor, enfoca };
     canvia(resultat.valor);
+    if (!enfoca) {
+      /* Un espai dur alterna: dues iguals seguides també s'anuncien. */
+      const avis = tradueix('section.xat.emoticones.afegida', 'Afegida: {nom}').replace('{nom}', nom || glif);
+      setAfegida((abans) => (abans === avis ? `${avis}\u00A0` : avis));
+    }
+    return true;
   }, []);
   const tancaAmbEscape = useCallback(() => tanca(true), [tanca]);
-  /* Estret: tocar el camp per a escriure tanca el calaix (hi torna el teclat). */
-  const tancaEnEntrar = estret && obert ? () => setCalaix(null) : undefined;
+  /* Tàctil: tocar el camp per a escriure tanca el calaix (hi torna el teclat). */
+  const tancaEnEntrar = tactil && obert ? () => setCalaix(null) : undefined;
 
-  /* La carona obri i tanca. Amb el ratolí (detail ≥ 1), en ample el focus es
-     queda al camp; amb el teclat, o en estret, entra al calaix. Tancar-lo amb
-     ella torna al camp (en estret, és el teclat de la pantalla que torna). */
+  /* La carona obri i tanca. Amb el ratolí (detail ≥ 1), en ample el focus va
+     (o es queda) al camp, com a WhatsApp Web; amb el teclat, o en tàctil,
+     entra al calaix. Tancar-lo amb ella torna al camp (en tàctil, és el
+     teclat de la pantalla que torna). */
   const commuta = (e) => {
-    if (obert) tanca(true);
-    else setCalaix({ enfoca: estret || e.detail === 0 });
+    if (obert) {
+      tanca(true);
+      return;
+    }
+    const perTeclat = e.detail === 0;
+    setCalaix({ enfoca: tactil || perTeclat });
+    if (!tactil && !perTeclat) tornaAlCamp();
   };
 
   const envia = () => {
@@ -279,14 +371,26 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     envia();
   };
 
+  /* Escape des de la carona o des del botó d'enviar també tanca el calaix
+     (el camp i el calaix ja l'han consumit abans: defaultPrevented). */
+  const alTeclatDelFormulari = (e) => {
+    if (e.key !== 'Escape' || !obert || e.defaultPrevented) return;
+    e.preventDefault();
+    tanca(true);
+  };
+
   /* --comptador: amb la barra de resposta damunt, el compositor reserva
      l'alçada del comptador perquè no es pinte damunt de la cita (revisió
-     adversarial 260930, #13; modules.css). Sense barra no canvia res. */
+     adversarial 260930, #13; modules.css). Sense barra no canvia res.
+     --emojis: amb el calaix obert, el compositor puja damunt del botó «Baixa
+     al final», que si no tapava (i es menjava) les emoticones de la vora. */
+  const classes = ['sdp-xat-compositor', mostraComptador && 'sdp-xat-compositor--comptador', obert && 'sdp-xat-compositor--emojis'];
   return (
     <form
       ref={formulari}
-      className={`sdp-xat-compositor${mostraComptador ? ' sdp-xat-compositor--comptador' : ''}`}
+      className={classes.filter(Boolean).join(' ')}
       onSubmit={(e) => { e.preventDefault(); envia(); }}
+      onKeyDown={alTeclatDelFormulari}
     >
       <button
         type="button"
@@ -295,11 +399,11 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
         aria-haspopup="dialog"
         aria-expanded={obert}
         aria-controls={obert ? ID_EMOTICONES : undefined}
-        onMouseDown={estret ? undefined : (e) => e.preventDefault()}
+        onMouseDown={tactil ? undefined : (e) => e.preventDefault()}
         onClick={commuta}
         disabled={desactivat}
       >
-        {obert && estret
+        {obert && tactil
           ? <Keyboard size={22} aria-hidden="true" focusable="false" />
           : <Smile size={22} aria-hidden="true" focusable="false" />}
       </button>
@@ -310,10 +414,13 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
           onTria={inserix}
           onTanca={tancaAmbEscape}
           enfocaEnObrir={calaix.enfoca}
-          retenFocus={!estret}
+          retenFocus={!tactil}
           estret={estret}
         />
       ) : null}
+      {/* Només amb el calaix obert (la conversa ja té el seu status): naix
+          buida en obrir i el text canvia després, i així s'anuncia. */}
+      {obert ? <span className="sdp-nomes-lector" role="status" aria-live="polite">{afegida}</span> : null}
       <div className="sdp-xat-compositor__camp" data-valor={valor}>
         <textarea
           ref={posaCamp}
@@ -341,7 +448,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
         {mostraComptador ? (
           <span
             id={ID_COMPTADOR}
-            className={`sdp-xat-compositor__comptador${llargada >= LIMIT_TEXT ? ' sdp-xat-compositor__comptador--limit' : ''}`}
+            className={llargada >= LIMIT_TEXT ? 'sdp-xat-compositor__comptador sdp-xat-compositor__comptador--limit' : 'sdp-xat-compositor__comptador'}
             aria-live="polite"
           >
             {t('section.xat.compositor.comptador', '{n} de {max} caràcters')
