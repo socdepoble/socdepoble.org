@@ -480,7 +480,8 @@ describe('fora de desenvolupament', () => {
     const carrega = vi.fn(manifestGestoria.carrega);
     muntaPlataforma('/app/gestoria', { registre: registre({ ...manifestGestoria, carrega }), entorn: ENTORN_OBERT });
     expect(screen.getByText('Esta app no està activada')).toBeTruthy();
-    expect(screen.getByText('Encara està en obres: només es pot provar en desenvolupament.')).toBeTruthy();
+    // Gauntlet 261022_0225 (F7) · El motiu de la plataforma, sense «desenvolupament».
+    expect(screen.getByText('Esta eina encara està en proves i no està a punt per a tothom.')).toBeTruthy();
     expect(carrega).not.toHaveBeenCalled();
     expect(screen.queryByText('Doble de la closca')).toBeNull();
   });

@@ -49,7 +49,13 @@ export const AGENTS_MAP = {
     personaKey: 'JAVI',
     name: 'Javi Llinares',
     avatarName: 'Javi Llinares',
-    role: 'Coordinador del projecte Sóc de Poble',
+    /* Gauntlet 261022_0225 (Tasca 2: «Unificació Radical de la Fitxa de Javi
+       Llinares») · La fitxa autèntica, la mateixa que el servidor dona per
+       l'UUID del Mestre: H2 = role (el seu poble), entradilla = lema i cap
+       presentació (short_bio buit). La fitxa del paquet (/javillinares,
+       /gent/javillinares en remot i sense sessió), PERSONA_PILOT i la
+       hidratació remota (identitatsSeed.js) la prenen d'ací. */
+    role: 'La Torre de les Maçanes',
     /* Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · La foto del padró
        pilot, no el logotip de l'entitat: una persona no porta la marca com a
        avatar (skill sdp-pedra-seca §11). És la font única de la foto
@@ -69,8 +75,8 @@ export const AGENTS_MAP = {
     /* Gauntlet 261016 (Bloc 3.5.2) · El poble de la persona: el mateix que el
        de l'entitat. La seua targeta del directori (Bloc 3.3) el pinta. */
     town_name: 'La Torre de les Maçanes',
-    lema: 'Sempre buscant el trellat.',
-    short_bio: 'Coordinador i visionari darrere del projecte Sóc de Poble.'
+    lema: "Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l'Associació El Rentonar, coordine el Projecte Sóc de Poble.",
+    short_bio: ''
   },
   IAIA: {
     id: '11111111-1a1a-0000-0000-000000000000',

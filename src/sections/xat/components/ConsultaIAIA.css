@@ -1,0 +1,9 @@
+@layer components {
+  /* La resposta llarga té un sol desplaçament: el cos del diàleg canònic. */
+  .sdp-iaia-consulta { overflow: hidden; }
+  .sdp-iaia-consulta .sdp-dialeg__cap { flex-shrink: 0; }
+  .sdp-iaia-consulta .sdp-dialeg__cos { min-height: 0; }
+  /* Gauntlet 261022_0225 (crítica Claude) · Mentre consulta, el botó no es
+     desactiva (el focus no cau) però s'apaga com un .sdp-boto:disabled. */
+  .sdp-iaia-consulta .sdp-boto[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
+}

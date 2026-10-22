@@ -314,7 +314,9 @@ export function deAgent(agent, opcions = {}) {
     tipus: perfil === 'entitat' ? 'entitats' : 'persones',
     id: agent?.id,
     titol: agent?.name,
-    meta: [perfil === 'ia' ? opcions.etiquetes?.ia : null, agent?.role, agent?.town_name],
+    /* Gauntlet 261022_0225 (Tasca 2) · El càrrec d'una persona pot ser el seu poble
+       (la fitxa de Javi Llinares porta «La Torre de les Maçanes» als dos camps): una sola volta. */
+    meta: [perfil === 'ia' ? opcions.etiquetes?.ia : null, agent?.role, agent?.town_name !== agent?.role ? agent?.town_name : null],
     extracte: primerText(agent?.short_bio, agent?.lema),
     cos: [agent?.role, agent?.town_name, agent?.tag, agent?.lema],
     avatar: { src: agent?.avatar_url, llavor: agent?.id },

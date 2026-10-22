@@ -97,23 +97,53 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
   const scope = (owner, config) => JSON.stringify([backendScope(config), owner]);
   const seeds = config => normalizeBackendConfig(config).dataMode === 'seed' ? APP_SEED.notes || [] : [];
   const initial = config => Object.fromEntries(seeds(config).map(n => [n.id, { ...n, revision: n.revision || 0, isPublished: false }]));
+  /* Gauntlet 261022_0225 (crítica Claude, F9) · Les lectures que coincidixen
+     en el temps es compartixen: 10.000 loadNotesPage alhora feien 20.002
+     lectures del magatzem (a IndexedDB, cada una amb una connexió nova) i
+     10.000 còpies de 7.000 notes. Ara cada abast té com a molt una lectura i
+     una càrrega en vol, i qui arriba mentrestant rep el mateix resultat. No hi
+     ha memòria cau més enllà de la lectura: una escriptura d'este adaptador
+     talla la compartició en començar i en acabar, i la càrrega següent ja la
+     veu. Ningú no modifica el resultat compartit (notes.js en fa còpies).
+     La purga de la paperera també es compartix: és idempotent, i qui la
+     demana (la primera pàgina de loadNotesPage) no en mira el resultat. */
+  const lecturesEnVol = new Map();
+  const carreguesEnVol = new Map();
+  const purguesEnVol = new Map();
+  const comparteix = (enVol, clau, fes) => {
+    if (!enVol.has(clau)) {
+      const promesa = fes().finally(() => { if (enVol.get(clau) === promesa) enVol.delete(clau); });
+      enVol.set(clau, promesa);
+    }
+    return enVol.get(clau);
+  };
+  const llig = clau => comparteix(lecturesEnVol, clau, async () => storage.read(clau));
+  const escriu = async (clau, transform) => {
+    lecturesEnVol.delete(clau);
+    carreguesEnVol.delete(clau);
+    try { return await storage.mutate(clau, transform); }
+    finally { lecturesEnVol.delete(clau); carreguesEnVol.delete(clau); }
+  };
   return {
     async load(owner = getDefaultUserId(), config = {}) {
-      const notes = { ...initial(config), ...await storage.read(scope(owner, config)) };
-      const totes = Object.values(notes);
-      const bones = totes.filter(esNota);
-      const malmeses = totes.length - bones.length - totes.filter(note => note?._esborrada).length;
-      if (malmeses && registraIncident('dades', 'notes-locals', 'entrada-apartada') === 1) {
-        console.warn(`[localNotes] ${malmeses} entrada/es del magatzem local no són notes: es deixen de banda, sense tocar-les.`);
-      }
-      return { notes: bones, noteFolders: NOTE_FOLDERS_SEED };
+      const clau = scope(owner, config);
+      return comparteix(carreguesEnVol, clau, async () => {
+        const notes = { ...initial(config), ...await llig(clau) };
+        const totes = Object.values(notes);
+        const bones = totes.filter(esNota);
+        const malmeses = totes.length - bones.length - totes.filter(note => note?._esborrada).length;
+        if (malmeses && registraIncident('dades', 'notes-locals', 'entrada-apartada') === 1) {
+          console.warn(`[localNotes] ${malmeses} entrada/es del magatzem local no són notes: es deixen de banda, sense tocar-les.`);
+        }
+        return { notes: bones, noteFolders: NOTE_FOLDERS_SEED };
+      });
     },
     async create(input, config = {}) {
       const id = input.id || crypto.randomUUID();
       const time = new Date().toISOString();
       const note = { id, folderId: 'f-notes', title: '', content: '', ...clean(input), revision: 0,
         isPublished: false, createdAt: time, updatedAt: time };
-      await storage.mutate(scope(getDefaultUserId(), config), stored => {
+      await escriu(scope(getDefaultUserId(), config), stored => {
         const all = { ...initial(config), ...stored };
         if (Object.hasOwn(all, id)) throw Object.assign(new Error('La nota ja existix.'), { status: 409 });
         return { ...all, [id]: note };
@@ -122,7 +152,7 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
     },
     async update(id, changes, expectedRevision, config = {}) {
       if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('Cal la revisió de la nota.');
-      const all = await storage.mutate(scope(getDefaultUserId(), config), stored => {
+      const all = await escriu(scope(getDefaultUserId(), config), stored => {
         const notes = { ...initial(config), ...stored };
         const previous = viva(notes, id);
         if (!previous) throw noTrobada();
@@ -138,7 +168,7 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
       if (!ESTATS_NOTA.includes(estat)) throw new Error('Estat de nota invàlid.');
       if (!revisioValida(expectedRevision)) throw new Error('Cal la revisió de la nota.');
       const ara = rellotge().toISOString();
-      const all = await storage.mutate(scope(getDefaultUserId(), config), stored => {
+      const all = await escriu(scope(getDefaultUserId(), config), stored => {
         const notes = { ...initial(config), ...stored };
         const previous = viva(notes, id);
         if (!previous) throw noTrobada();
@@ -152,7 +182,7 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
     },
     async remove(id, expectedRevision, config = {}) {
       if (!revisioValida(expectedRevision)) throw new Error('Cal la revisió de la nota.');
-      await storage.mutate(scope(getDefaultUserId(), config), stored => {
+      await escriu(scope(getDefaultUserId(), config), stored => {
         const notes = { ...initial(config), ...stored };
         const previous = viva(notes, id);
         if (!previous) throw noTrobada();
@@ -171,21 +201,23 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
       const vencuda = note => Boolean(note) && !note._esborrada && note.estat === 'paperera'
         && Date.parse(note.enPapereraAl) <= limit;
       const key = scope(owner, config);
-      // Lectura primer: una llista sense res vençut no escriu a IndexedDB.
-      if (!Object.values(await storage.read(key)).some(vencuda)) return 0;
-      let purgades = 0;
-      await storage.mutate(key, stored => {
-        const resta = { ...stored };
-        purgades = 0;
-        for (const [id, note] of Object.entries(resta)) {
-          if (!vencuda(note)) continue;
-          if (Object.hasOwn(initial(config), id)) resta[id] = { id, _esborrada: true };
-          else delete resta[id];
-          purgades++;
-        }
-        return resta;
+      return comparteix(purguesEnVol, key, async () => {
+        // Lectura primer: una llista sense res vençut no escriu a IndexedDB.
+        if (!Object.values(await llig(key)).some(vencuda)) return 0;
+        let purgades = 0;
+        await escriu(key, stored => {
+          const resta = { ...stored };
+          purgades = 0;
+          for (const [id, note] of Object.entries(resta)) {
+            if (!vencuda(note)) continue;
+            if (Object.hasOwn(initial(config), id)) resta[id] = { id, _esborrada: true };
+            else delete resta[id];
+            purgades++;
+          }
+          return resta;
+        });
+        return purgades;
       });
-      return purgades;
     }
   };
 }

@@ -217,6 +217,15 @@ describe('textos de la cita', () => {
     expect(textDeCita({ esborrat: true, text: 'x' }, t)).toBe("S'ha esborrat este missatge");
     expect(textDeCita(null, t)).toBe('');
   });
+
+  /* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-1) · Un adjunt sense peu es desa amb text NULL. */
+  test('un adjunt sense peu es cita pel seu tipus; amb peu, pel peu', () => {
+    expect(textDeCita({ tipus: 'imatge', text: null }, t)).toBe('Foto adjunta');
+    expect(textDeCita({ tipus: 'video', text: '' }, t)).toBe('Vídeo adjunt');
+    expect(textDeCita({ tipus: 'veu' }, t)).toBe('Missatge de veu');
+    expect(textDeCita({ tipus: 'imatge', text: 'La bassa' }, t)).toBe('La bassa');
+    expect(textDeCita({ tipus: 'text', text: '' }, t)).toBe('');
+  });
 });
 
 /* Revisió adversarial 260930, #11: només s'anuncien els nous d'altres. */

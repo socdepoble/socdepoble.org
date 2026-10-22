@@ -54,6 +54,28 @@ const ESTATS_NOTA = ['activa', 'paperera', 'arxivada'];
    del detall en fusionar (mergeNotes) i la nota deixaria de ser «connectada». */
 const summary = row => { const value = nota(row); delete value.content; delete value.origen; return { ...value, contentLoaded: false }; };
 
+/* Gauntlet 261022_0225 (crítica Claude, F10) · Sense servidor, l'ordre i el
+   cursor fan servir el mateix comparador, per unitat de codi, com
+   `order=id.desc` i `id=lt.` de PostgREST. Abans s'ordenava amb localeCompare
+   i es tallava amb `<`: amb ids de caixa mixta (create accepta input.id), una
+   pàgina repetia notes i se'n perdien d'altres. Amb UUID en minúscula i amb
+   les llavors n1/n2, l'ordre és el mateix que abans. */
+const perIdDesc = (a, b) => {
+  const x = String(a.id);
+  const y = String(b.id);
+  return x < y ? 1 : x > y ? -1 : 0;
+};
+/* Gauntlet 261022_0225 (crítica Claude, F9) · Les actives, ordenades una sola
+   vegada per lectura: les pàgines que compartixen una lectura del magatzem
+   (localNotes, lectures en vol) ja no tornen a ordenar 7.000 notes cadascuna.
+   La clau és la llista que torna load(): una lectura nova és una llista nova,
+   i res no es queda vell. */
+const activesPerLectura = new WeakMap();
+function activesOrdenades(notes) {
+  if (!activesPerLectura.has(notes)) activesPerLectura.set(notes, notes.filter(activa).sort(perIdDesc));
+  return activesPerLectura.get(notes);
+}
+
 /** Una pàgina de metadades, amb cursor d’ID immutable (sense salts per offset).
  * complete confirma el final del recorregut, no una instantània transaccional.
  * El servidor pot imposar un límit inferior: sols un rang amb total o una
@@ -77,13 +99,14 @@ export async function loadNotesPage({ ownerUserId = getDefaultUserId(), cursor =
     // provar en la càrrega següent.
     if (cursor === null) await localNotes.purgaPaperera(config, ownerUserId).catch(() => 0);
     const seed = await localNotes.load(ownerUserId, config);
-    const remaining = [...(seed.notes || [])].filter(activa)
-      .sort((a, b) => String(b.id).localeCompare(String(a.id)))
-      .filter(note => after === null || String(note.id) < after);
-    const notes = remaining.slice(0, limit).map(note => {
+    const actives = activesOrdenades(seed.notes || []);
+    // La primera nota de la pàgina és la primera per davall del cursor (llista ordenada).
+    const desDe = after === null ? 0 : actives.findIndex(note => String(note.id) < after);
+    const queden = desDe < 0 ? 0 : actives.length - desDe;
+    const notes = (queden ? actives.slice(desDe, desDe + limit) : []).map(note => {
       const value = { ...note, contentLoaded: false }; delete value.content; return value;
     });
-    const complete = remaining.length <= limit;
+    const complete = queden <= limit;
     return { notes, noteFolders: seed.noteFolders || [], complete,
       nextCursor: complete ? null : JSON.stringify([tenantId, ownerUserId, String(notes.at(-1).id)]) };
   }

@@ -19,6 +19,12 @@
  * portaDelPlugin(plugin, desti, t) fa, d'eixe destí, la porta «Obrir» de
  * PortesTargeta (PortaDePagina a la pàgina; la graella del Control la pot
  * reutilitzar) i l'avís en text. Una sola manera de dir-ho.
+ *
+ * Gauntlet 261022_0225 (F7) · El motiu passa pel traductor (textDelMotiu amb
+ * `t`): l'avís i el toast parlen la llengua de la persona. Una app de la
+ * plataforma 'no-disponible' ja no pinta la porta inerta a la pàgina
+ * (PluginPage.jsx, EinaNoDisponible); la porta continua per a qui la
+ * reutilitze i per a les eines en obres.
  */
 import { useAppAvaluada, useContextApps } from '../../apps/plataforma/PlataformaContext.jsx';
 import { textDelMotiu } from '../../apps/plataforma/PortalApps.jsx';
@@ -65,7 +71,7 @@ export function portaDelPlugin(plugin, desti, t) {
   const base = { id: 'obrir', verb: nom, nom, varietat: 'primari' };
   if (desti?.ruta) return { avis: null, porta: { ...base, desti: desti.ruta } };
   if (desti?.estat === 'no-disponible') {
-    const motiu = textDelMotiu(desti.motiu) || tr(TEXTOS_OBRIR.enObres);
+    const motiu = textDelMotiu(desti.motiu, t) || tr(TEXTOS_OBRIR.enObres);
     return { avis: motiu, porta: { ...base, desti: null, enObres: tr(TEXTOS_OBRIR.sufixNoDisponible), avis: motiu } };
   }
   return {

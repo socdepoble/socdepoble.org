@@ -353,11 +353,13 @@ test('prompt 261014_0400 · l’editor del pilot, en lectura, no demana al port 
   expect(m.resolts).toContain(logo);
 });
 
-test('ordre E · una persona en lectura (baixa en curs) veu el seu avatar redó, sense el botó', () => {
+/* Expectativa actualitzada a propòsit (Gauntlet 261022_0225, PERF-5) · Abans
+   la persona en lectura veia el seu avatar redó de 300px damunt de l'H1. Ara,
+   com a la seua fitxa pública, la cara només viu a la barra taronja. */
+test('ordre E · una persona en lectura (baixa en curs) no porta avatar damunt de l’H1, només a la barra taronja', () => {
   const enBaixa = { ...ambAvatar, dades: { ...ambAvatar.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } };
   render(<PerfilEditor identitat={enBaixa} />);
-  const avatar = capcalera().querySelector('.page-title-avatar');
-  expect(avatar.tagName).toBe('DIV');
-  expect(avatar.querySelector('img').getAttribute('alt')).toBe('Avatar de Pep');
+  expect(capcalera().querySelector('.page-title-avatar')).toBeNull();
   expect(capcalera().querySelector('.page-title-avatar--canvia')).toBeNull();
+  expect(barraTaronja().querySelector('img.sp-card-avatar')).not.toBeNull();
 });

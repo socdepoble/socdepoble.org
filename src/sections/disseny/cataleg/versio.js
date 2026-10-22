@@ -15,7 +15,13 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenXat.jsx, 2026-10-20T22:42:54+02:00, Fase E (261020, tasca 3; pla 261020_2045
+ * Darrera posada al dia: EspecimenPage.jsx, 2026-10-22T03:46:55+02:00, Gauntlet 261022_0225 (Tasca 2,
+ * PERF-2): el text de l'avatarAutor, la regla «fes», el bloc del títol i la primera mostra ja no
+ * ensenyen l'avatar de 300px a la fitxa d'una persona, pública o en lectura (la seua cara viu a la
+ * barra taronja). Abans, 2026-10-22T02:45:11+02:00, EspecimenXat.jsx: la mostra nova dels adjunts
+ * del xat (ControlsAdjunt amb un servei de mostra que no puja res). Cap espècimen ni entrada de
+ * manifest nous.
+ * Versió anterior: EspecimenXat.jsx, 2026-10-20T22:42:54+02:00, Fase E (261020, tasca 3; pla 261020_2045
  * «El Comú»): la bombolla de grup amb tipus 'llista_comu', que munta la llista viva
  * (TargetaLlistaComu, memoritzada) en lloc del text, i la mateixa en el mode de selecció (només
  * lectura), amb dades de mostra; les files actorLlista i onMutaLlista al contracte de Bombolla i la
@@ -180,4 +186,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-20T22:42:54+02:00';
+export const VERSIO_CATALEG = '2026-10-22T03:46:55+02:00';

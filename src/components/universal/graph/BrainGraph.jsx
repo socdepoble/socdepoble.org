@@ -280,13 +280,34 @@ export default function BrainGraph({
   }, [nodes, links]);
 
   const selected = nodes.find(node => node.id === selectedId);
+  /* Gauntlet 261022_0225 (crítica Claude, F2) · Els veïns ixen d'una llista
+     d'adjacència feta una sola vegada per graf. Abans, cada tria recorria tots
+     els vincles per cada node (O(n·l): 1,1 s amb 7.000 nodes). Els veïns són
+     els mateixos, en els dos sentits i en l'ordre de `nodes`. */
+  const adjacencia = useMemo(() => {
+    if (!inspector) return null;
+    const mapa = new Map();
+    const afig = (de, a) => {
+      if (!mapa.has(de)) mapa.set(de, new Set());
+      mapa.get(de).add(a);
+    };
+    for (const link of links) {
+      afig(link.source, link.target);
+      afig(link.target, link.source);
+    }
+    return mapa;
+  }, [links, inspector]);
   const neighbours = useMemo(() => {
-    if (!selectedId || !inspector) return [];
-    return nodes.filter(node => links.some(link =>
-      (link.source === selectedId && link.target === node.id) ||
-      (link.target === selectedId && link.source === node.id)
-    ));
-  }, [selectedId, nodes, links, inspector]);
+    const veins = selectedId ? adjacencia?.get(selectedId) : null;
+    return veins ? nodes.filter(node => veins.has(node.id)) : [];
+  }, [selectedId, nodes, adjacencia]);
+  /* Gauntlet 261022_0225 (crítica Claude, F3) · Les opcions del selector no
+     depenen de la tria: es fan una vegada per graf, i una selecció ja no torna
+     a comparar-les totes. El selector és el de sempre. */
+  const opcions = useMemo(
+    () => (inspector ? nodes.map(node => <option key={node.id} value={node.id}>{node.label}</option>) : null),
+    [nodes, inspector]
+  );
 
   // 2. Run physics
   const nodesRef = useForceLayout({
@@ -597,7 +618,7 @@ export default function BrainGraph({
           if (node) onNodeClick?.(node);
         }}>
           <option value="">Selecciona un node…</option>
-          {nodes.map(node => <option key={node.id} value={node.id}>{node.label}</option>)}
+          {opcions}
         </select>
         {selected ? <>
           <button type="button" onClick={() => setSelectedId('')} aria-label="Netejar selecció"><X size={16} /></button>

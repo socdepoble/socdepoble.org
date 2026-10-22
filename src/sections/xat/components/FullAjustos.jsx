@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { Dialeg } from '../../../components/PedraSeca/index.js';
 import CaraXat from './CaraXat.jsx';
+import { caraDeComunitat } from '../caraDeSocDePoble.js';
 import { AvatarResolt } from '../../../components/universal/identitat/AvatarResolt.jsx';
 import { PRESETS_COLUMNES, useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { useEixidaSegura } from '../../../components/universal/EixidaSegura.jsx';
@@ -544,7 +545,9 @@ function ResultatsAjustos({ resultats, terme, t, onObri }) {
 
 /* Preferits (captura 20.50.36): les converses marcades com a preferides,
    amb l'avatar i el nom; prémer-ne una l'obri. Afegir-ne o reordenar-ne no
-   té cap funció al Xat encara: no es pinta. Sense cap, l'estat buit. */
+   té cap funció al Xat encara: no es pinta. Sense cap, l'estat buit.
+   Gauntlet 261022_0225 (XAT-3) · Sóc de Poble hi porta el seu logo oficial,
+   com a la llista (caraDeSocDePoble.js). */
 function PaginaPreferits({ preferits, t, onObri }) {
   if (!preferits.length) {
     return (
@@ -564,7 +567,7 @@ function PaginaPreferits({ preferits, t, onObri }) {
           return (
             <li key={fil.id}>
               <button type="button" className="sdp-xat-ajustos__fila sdp-xat-ajustos__fila--conversa" data-sdp-fila={`conversa-${fil.id}`} onClick={() => onObri(fil.id)}>
-                <CaraXat nom={nom} src={fil.avatar_url} mida="sm" llavor={fil.id} alt="" />
+                <CaraXat nom={nom} src={caraDeComunitat(fil)} mida="sm" llavor={fil.id} alt="" />
                 <span className="sdp-xat-ajustos__linia">
                   <span className="sdp-xat-ajustos__etiqueta">{nom}</span>
                 </span>

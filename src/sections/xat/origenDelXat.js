@@ -39,9 +39,9 @@ const RE_RUTA_XAT = /(^|\/)(?:xat|chat)(\/|$)/;
 
 /* Revisió adversarial (261021, pla 261021_0015 §8.5) · L'entrada tampoc és
    cap origen: /registre i els àlies que hi porten amb replace (App.jsx ·
-   RedireccioDEntrada). Qui torna al Xat amb Arrere des del «Registra't» del
-   convidat no ha de tindre la fletxa cap al formulari (en estret, abans era la
-   llista): conserva la pàgina d'abans de l'entrada. */
+   RedireccioDEntrada). Qui torna al Xat amb Arrere des de «Connectar-se» o
+   «Registrar-se» del convidat no ha de tindre la fletxa cap al formulari (en
+   estret, abans era la llista): conserva la pàgina d'abans de l'entrada. */
 const RE_RUTA_D_ENTRADA = /^\/(?:registre|registra|login|accedir|entrar|crear-compte)(\/|$)/;
 
 let darreraForaDelXat = null;

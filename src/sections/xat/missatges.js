@@ -109,6 +109,7 @@ export function mapejaFil(fil, ara = Date.now()) {
     comEntitat: Boolean(fil.comEntitat),
     esIA: tipus === 'iaia',
     ultimText,
+    ultimTipus: fil.ultimTipus || null,
     ultimAl: fil.ultimAl || fil.actualitzatAl || null,
     ultimAutorId: fil.ultimAutorId || null,
     ultimSeq,
@@ -379,6 +380,7 @@ export function actualitzaFilAmbMissatge(fil, m) {
   return {
     ...fil,
     ultimText,
+    ultimTipus: m.tipus || null,
     ultimAl: m.creatAl || fil.ultimAl,
     ultimAutorId: m.usuariId || fil.ultimAutorId,
     ultimSeq,

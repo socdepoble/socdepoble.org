@@ -7,8 +7,9 @@
  */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  DOCUMENTS_PER_RESPOSTA, ENCAPCALAMENT_DE_LA_WIKI, RUTA_DE_LA_WIKI, TEMPS_MAXIM_DE_LA_WIKI,
-  cerca, componResposta, construeixIndex, oblidaIndexDeLaWiki, respostaDeLaIAIA, rutaDeDocumentWiki,
+  DOCUMENTS_PER_RESPOSTA, ENCAPCALAMENT_DE_LA_WIKI, RUTA_DE_LA_WIKI, SALUTACIO_TECNICA_IAIA, TEMPS_MAXIM_DE_LA_WIKI,
+  arrel, cerca, cercaRellevant, componResposta, construeixIndex, consultaTecnicaIAIA, oblidaIndexDeLaWiki, respostaDeLaIAIA,
+  rutaDeDocumentWiki,
   termesDeLaPregunta, titolDeDocument, tokenitza
 } from './iaiaLocal.js';
 import { wikiManifest } from './wikiManifest.js';
@@ -43,9 +44,32 @@ describe('tokenitza i termesDeLaPregunta', () => {
     }
   });
 
-  test('amb una paraula de veres, el nom de la IAIA també busca, i cap terme no es repetix', () => {
+  test('el vocatiu IAIA no contamina el tema, i cap terme no es repetix', () => {
     expect(termesDeLaPregunta('Què és la pedra seca?')).toEqual(['pedra', 'seca']);
-    expect(termesDeLaPregunta('La personalitat de la IAIA, la IAIA!')).toEqual(['personalitat', 'iaia']);
+    expect(termesDeLaPregunta('La personalitat de la IAIA, la IAIA!')).toEqual(['personalitat']);
+  });
+});
+
+/* Gauntlet 261022_0225 (crítica Claude) · IAIA-2. L'arrel lleugera. */
+describe('arrel', () => {
+  test('les formes d’un verb i el plural comparteixen arrel; una paraula curta es queda sencera', () => {
+    for (const familia of [['pujo', 'puge', 'pujar', 'pugen', 'pujat', 'puja'], ['esborre', 'esborrar', 'esborra', 'esborrat', 'esborrades'],
+      ['busque', 'buscar', 'busca', 'busques'], ['pague', 'pagar', 'pagueu'], ['compte', 'comptes'], ['foto', 'fotos'], ['xat', 'xats'],
+      ['paper', 'papers'], ['dada', 'dades'], ['privat', 'privada', 'privades'], ['mercat', 'mercats'],
+      ['sistema', 'sistemes'], ['cadena', 'cadenes'], ['preparada', 'preparades', 'preparat', 'preparats']]) {
+      expect([familia, new Set(familia.map(arrel)).size]).toEqual([familia, 1]);
+    }
+    expect(arrel('xat')).toBe('xat');
+    expect(arrel('autor')).toBe('autor');
+  });
+
+  /* Revisió de la crítica · El plural torna al singular abans de llevar el
+     verb: un plural femení ja no es retalla un pas més que el seu singular. */
+  test('un plural no cau en l’arrel d’una altra paraula', () => {
+    for (const [plural, altra] of [['barates', 'bar'], ['nomenes', 'nom'], ['safates', 'saf']]) {
+      expect([plural, arrel(plural) === arrel(altra)]).toEqual([plural, false]);
+    }
+    expect(termesDeLaPregunta('Com passe les portes de qualitat?')).toEqual(['passe', 'qualitat']);
   });
 });
 
@@ -99,6 +123,64 @@ describe('cerca', () => {
   });
 });
 
+/* Gauntlet 261022_0225 (crítica Claude) · IAIA-2. El llindar de
+   rellevància: el títol i la prosa del fragment mostrat han de portar les
+   paraules de la pregunta (totes si en són una o dues; dues si en són més). */
+describe('cercaRellevant', () => {
+  test('una coincidència solta, encara que puntue més, no es presenta com a resposta', () => {
+    const index = construeixIndex([
+      doc('safata', '# Safata d’eixida\n\nLa safata només esborre amb una confirmació del servidor. La safata esborre, esborre i esborre.'),
+      doc('compte', '# Ajustos\n\nPer a esborrar el teu compte, obri els Ajustos i tria «Esborra el compte».')
+    ]);
+    expect(cerca(index, 'Com esborre el meu compte?').map((r) => r.id)).toContain('safata');
+    expect(cercaRellevant(index, 'Com esborre el meu compte?').map((r) => r.id)).toEqual(['compte']);
+    expect(cercaRellevant(index, 'Com esborre la safata del pis?').map((r) => r.id)).toEqual(['safata']);
+  });
+
+  test('cap document que passe el llindar, cap resultat', () => {
+    expect(cercaRellevant(construeixIndex(FIXTURA), 'Com pujo una foto al xat?')).toEqual([]);
+    expect(cercaRellevant(construeixIndex(FIXTURA), 'Bon dia, IAIA')).toEqual([]);
+  });
+
+  test('el codi en línia i els noms de fitxer no compten com a prosa que responga', () => {
+    const index = construeixIndex([
+      doc('paginacio', '# Paginació\n\nEl port demana `mercat` amb `order=created_at.desc&limit=50` i no tenia cap cursor.'),
+      doc('memoria', '# Memòria\n\nTres persones grans han enviat una foto (font: 260926_2330_skill_esborrany_xat.md).')
+    ]);
+    expect(cerca(index, 'mercat').map((r) => r.id)).toEqual(['paginacio']);
+    expect(cercaRellevant(index, 'mercat')).toEqual([]);
+    expect(cercaRellevant(index, 'Com pujo una foto al xat?')).toEqual([]);
+  });
+
+  test('el títol compta, i amb tres paraules o més en basten dues', () => {
+    const index = construeixIndex(FIXTURA);
+    expect(cercaRellevant(index, 'Què és la pedra seca?').map((r) => r.id)).toEqual(['pedra_seca']);
+    expect(cercaRellevant(index, 'marges de pedra seca del bancal').map((r) => r.id)).toEqual(['pedra_seca', 'bancals']);
+  });
+
+  /* Revisió de la crítica · «Què és un node?», «Quant costa?»: amb una sola
+     paraula, la prosa d'un fragment no basta; el document l'ha de portar al títol. */
+  test('una pregunta d’una sola paraula només troba els documents que la porten al títol', () => {
+    const index = construeixIndex(FIXTURA);
+    expect(cercaRellevant(index, 'Què són els bancals?').map((r) => r.id)).toEqual(['bancals']);
+    expect(cerca(index, 'marges').map((r) => r.id).sort()).toEqual(['bancals', 'pedra_seca']);
+    expect(cercaRellevant(index, 'marges')).toEqual([]);
+  });
+
+  test('tria d’entre tots els documents, no només d’entre els 3 primers de la cerca', () => {
+    const soroll = [1, 2, 3, 4].map((i) => doc(`soroll${i}`, `# Nota ${i}\n\nTorn torn torn torn del pis.\n\nReg reg reg reg de la casa.`));
+    const index = construeixIndex([...soroll, doc('sindic', '# Síndic\n\nEl torn de reg es demana al síndic, que guarda la llibreta de la comunitat de regants.')]);
+    expect(cerca(index, 'torn de reg').map((r) => r.id)).not.toContain('sindic');
+    expect(cercaRellevant(index, 'torn de reg').map((r) => r.id)).toEqual(['sindic']);
+  });
+
+  test('la paraula escrita tal qual mana sobre una que només en comparteix l’arrel per a retallar el fragment', () => {
+    const llarg = `Rebostar és una altra cosa. ${'Una col·laboració il·lustrada. '.repeat(30)}El Rebost guarda la llista.`;
+    const [resultat] = cercaRellevant(construeixIndex([doc('rebost', `# El Rebost\n\n${llarg}`)]), 'Rebost');
+    expect(resultat.fragment).toMatch(/El Rebost guarda la llista\.$/);
+  });
+});
+
 describe('componResposta i rutaDeDocumentWiki', () => {
   test('l’encapçalament literal i una línia per document amb el títol i l’enllaç /wikidepoble?item=<slug>', () => {
     const text = componResposta([{ id: 'pedra_seca', titol: 'La pedra seca' }, { id: 'ADR-2026-09-SOLLUTIA-MODEL-B', titol: 'Model B' }]);
@@ -136,7 +218,7 @@ describe('respostaDeLaIAIA', () => {
   test('compon la resposta amb els documents trobats', async () => {
     const carrega = vi.fn(ambFixtura);
     expect(await respostaDeLaIAIA('Què és Sollutia?', { carrega })).toBe(
-      `${ENCAPCALAMENT_DE_LA_WIKI}\n· Soci Sollutia — /wikidepoble?item=sollutia`
+      `${ENCAPCALAMENT_DE_LA_WIKI}\nSollutia és l’amfitrió de l’app.\n· Soci Sollutia — /wikidepoble?item=sollutia`
     );
     expect(carrega).toHaveBeenCalledTimes(1);
   });
@@ -145,9 +227,14 @@ describe('respostaDeLaIAIA', () => {
     expect(await respostaDeLaIAIA('zzqx', { carrega: ambFixtura })).toBeNull();
   });
 
-  test('una salutació ni tan sols carrega la Wiki', async () => {
+  /* Gauntlet 261022_0225 (crítica Claude) · IAIA-5. A una salutació, la
+     seua salutació (la mateixa que la benvinguda), no «Ara estic en proves». */
+  test('una salutació ni tan sols carrega la Wiki: la IAIA torna la salutació', async () => {
     const carrega = vi.fn(ambFixtura);
-    expect(await respostaDeLaIAIA('Bon dia, IAIA', { carrega })).toBeNull();
+    expect(await respostaDeLaIAIA('Bon dia, IAIA', { carrega })).toBe(SALUTACIO_TECNICA_IAIA);
+    /* Revisió de la crítica · I a tot missatge sense cap paraula que busque. */
+    expect(await respostaDeLaIAIA('Gràcies', { carrega })).toBe(SALUTACIO_TECNICA_IAIA);
+    expect(await respostaDeLaIAIA('   ', { carrega })).toBeNull();
     expect(carrega).not.toHaveBeenCalled();
   });
 
@@ -179,13 +266,70 @@ describe('amb la Wiki de veres del paquet', () => {
     const index = construeixIndex(wikiManifest.items);
     for (const slug of slugs) {
       const document = index.documents.find((d) => d.id === slug);
-      expect([slug, ['sollutia', 'model'].some((terme) => document.freq.has(terme))]).toEqual([slug, true]);
+      expect([slug, ['sollutia', 'model'].some((terme) => document.freq.has(arrel(terme)))]).toEqual([slug, true]);
     }
   });
 
-  test('una salutació o una paraula que no hi és, null: la IAIA respon la frase de sempre', async () => {
-    expect(await respostaDeLaIAIA('Bon dia, IAIA')).toBeNull();
+  test('una salutació torna la salutació; una paraula que no hi és, null: la IAIA respon la frase de sempre', async () => {
+    expect(await respostaDeLaIAIA('Bon dia, IAIA')).toBe(SALUTACIO_TECNICA_IAIA);
     expect(await respostaDeLaIAIA('zzqxwv')).toBeNull();
+  });
+
+  /* Gauntlet 261022_0225 (crítica Claude) · IAIA-2. Les huit preguntes de
+     veïnat de la crítica, sobre la Wiki de veres, i les paràfrasis de la
+     revisió: cada fila diu l'estat que n'espera i, si respon, la primera font;
+     cap altra font fora de les que hi toquen. Cap instrucció per a la IA, cap
+     plantilla, cap fitxa de l'equip. La Wiki pública encara no té cap manual
+     d'ús (Tasca 4 PARCIAL): les fonts que hi toquen són de projecte. */
+  test.each([
+    ['Com puc publicar al Mercat?', 'sense_resultats'],
+    ['Què és la Gestoria?', 'sense_resultats'],
+    ['Com pujo una foto al xat?', 'sense_resultats'],
+    ['Qui porta Sóc de Poble?', 'resposta', '00_full_de_ruta',
+      ['00_full_de_ruta', '00_visio_i_pilars', 'identitat_visual', 'el_projecte', 'arquitectura_l_anima', '01_identitat', '00_index_identitat']],
+    ['Com esborre el meu compte?', 'sense_resultats'],
+    ['Què és un node?', 'sense_resultats'],
+    ['Com puc connectar amb un autor?', 'sense_resultats'],
+    ['Les meues dades són privades?', 'resposta', 'ADR-2026-08-ONLINE-FIRST',
+      ['ADR-2026-08-ONLINE-FIRST', 'seguretat_execucio', 'ADR-2026-13-BYOP-XIFRAT-LOCAL', 'llei_05_privacitat']],
+    ['Com faig una nota?', 'sense_resultats'],
+    ['Quant costa?', 'sense_resultats'],
+    ['Com instal·le l’app al mòbil?', 'sense_resultats'],
+    ['Com em registre?', 'sense_resultats'],
+    ['Què és el Rebost?', 'sense_resultats'],
+    ['Com funciona el Bar?', 'sense_resultats'],
+    ['Com passe les portes de qualitat?', 'sense_resultats']
+  ])('«%s»: %s', async (pregunta, estat, primera, quehitoquen = []) => {
+    const r = await consultaTecnicaIAIA(pregunta);
+    const ids = r.fonts.map((font) => font.id);
+    expect([pregunta, r.estat, ids[0]]).toEqual([pregunta, estat, primera]);
+    expect([pregunta, ids.filter((id) => !quehitoquen.includes(id))]).toEqual([pregunta, []]);
+  });
+
+  test('les fonts bones continuen arribant: Sollutia, la privacitat, els pilars i el Trellat', async () => {
+    expect((await consultaTecnicaIAIA('Què és Sollutia?')).fonts.map((f) => f.id).slice(0, 2).sort())
+      .toEqual(['ADR-2026-09-SOLLUTIA-MODEL-B', 'soci_sollutia']);
+    expect((await consultaTecnicaIAIA('Què diu la llei de privacitat?')).fonts[0].id).toBe('llei_05_privacitat');
+    expect((await consultaTecnicaIAIA('Quins són els pilars de Sóc de Poble?')).fonts[0].id).toBe('00_visio_i_pilars');
+    expect((await consultaTecnicaIAIA('Què és el Trellat?')).fonts[0].id).toBe('01_trellat');
+  });
+
+  /* Si un d'estos documents canvia d'id, la prova ho diu: la llista
+     d'iaiaLocal.js s'ha d'actualitzar, mai buidar. */
+  test('cap document de la Wiki que parle a la IA, de memòria de l’equip o de plantilla no ix com a font', () => {
+    const index = construeixIndex(wikiManifest.items);
+    const servits = new Set(index.documents.map((d) => d.id));
+    for (const item of wikiManifest.items) {
+      if (['plantilla', 'prompt', 'bundle', 'skill', 'protocol'].includes(item.attributes?.type)) expect([item.id, servits.has(item.id)]).toEqual([item.id, false]);
+    }
+    for (const id of ['personalitat_iaia', 'perfil_psiquiatric', 'agents_equip_ia', 'sgq_prompts', '03_llibre_d_or_memoria_episodica',
+      '04_taula_potencia_models', '03_equip_ia']) {
+      expect([id, wikiManifest.items.some((item) => item.id === id), servits.has(id)]).toEqual([id, true, false]);
+    }
+    for (const carpeta of ['folder:02_saber/obsidian_plugins', 'folder:02_saber/03_consola_termodinamica']) {
+      const dins = wikiManifest.items.filter((item) => item.categoryId === carpeta).map((item) => item.id);
+      expect([carpeta, dins.length > 0, dins.filter((id) => servits.has(id))]).toEqual([carpeta, true, []]);
+    }
   });
 
   /* Qualitat mínima de la cerca. Mesura del 261016 sobre el manifest d'eixe

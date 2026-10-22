@@ -32,9 +32,9 @@ import CaraXat from './CaraXat.jsx';
 import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
 import { estatDeLUltim } from '../missatges.js';
+import { textDAdjunt } from '../conversa.js';
 import { etiquetaLlista } from '../temps.js';
-import { esEntitatDelProjecte } from '../../../config/navigation.js';
-import { AJUDA_PER_CLAU } from '../../../data/xatsPerDefecte.js';
+import { caraDeComunitat } from '../caraDeSocDePoble.js';
 
 const esCanal = (fil) => Boolean(fil?.esCanal) || fil?.tipus === 'canal';
 const esGrup = (fil) => Boolean(fil?.esGrup) || fil?.tipus === 'grup';
@@ -80,11 +80,10 @@ export function nomsDelsGrups(fills = []) {
 export function AvatarComunitat({ fil, nom }) {
   // La comunitat remota pot arribar sense imatge. La identitat, mai el nom,
   // decidix el logotip oficial i evita atribuir-lo a una entitat homònima.
-  const esDelProjecte = fil?.subjecte?.tipus === 'entitat' && esEntitatDelProjecte(fil.subjecte);
-  const avatar = esDelProjecte ? AJUDA_PER_CLAU.socdepoble.avatar : fil?.avatar_url;
+  // Gauntlet 261022_0225 (XAT-3) · La regla viu a caraDeSocDePoble.js.
   return (
     <span className="sdp-xat-apilat" aria-hidden="true">
-      <CaraXat nom={nom} src={avatar} mida="md" llavor={fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
+      <CaraXat nom={nom} src={caraDeComunitat(fil)} mida="md" llavor={fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
     </span>
   );
 }
@@ -172,8 +171,8 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
                 (XatContext, anotaFilsBloquejats): ni qui ni què. */}
             {fil.ultimAmagat ? t('section.moderacio.bloquejat.previa', 'Missatge amagat') : (
               <>
-                {fil.ultimText ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
-                {fil.ultimText || t('section.xat.capMissatge', 'Cap missatge.')}
+                {fil.ultimText || fil.ultimTipus ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
+                {fil.ultimText || textDAdjunt(fil.ultimTipus, t) || t('section.xat.capMissatge', 'Cap missatge.')}
               </>
             )}
           </span>

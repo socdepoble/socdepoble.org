@@ -11,6 +11,8 @@
  *     bio o descripció o rol, entradilla = lema, cos = presentació.
  *   · Una IA es diu: etiqueta i avís visibles, sempre.
  *   · Accions honestes: «Escriu-li» obri el xat amb eixa identitat (?amb=id)
+ *     (fora de la fitxa del paquet de la persona pilot: on va la seua fila
+ *     del Xat, Gauntlet 261022_0225, P4b-3)
  *     i «Edita la fitxa» només si la fitxa és de qui mira. Per a la IAIA,
  *     «Parla amb la IAIA» va on va la seua fila de la llista del Xat
  *     (rutaDelXatDeLaIAIA, sections/xat/useObriXatPerDefecte.js).
@@ -57,7 +59,8 @@ import {
 } from '../../data/identitatsSeed.js';
 /* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
    és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
-import { rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefecte.js';
+import { rutaDelXatDeJavi, rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefecte.js';
+import { ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte } from '../../data/xatsPerDefecte.js';
 import { useXat } from '../xat/XatContext';
 import SelectorRealitat from '../realitat/SelectorRealitat.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
@@ -160,10 +163,31 @@ export function perfilFundacionalDelPaquet(clau) {
   };
 }
 
+/**
+ * Gauntlet 261022_0225 (Tasca 1: «Erradicació del Spinner Infinit») · La
+ * reserva local d'una clau, la que la càrrega ja posa quan el servidor no dona
+ * res: la IA del paquet (D12) o una de les tres identitats del Mestre (els
+ * àlies de la persona pilot inclosos), o null. És el que es pinta si el host i
+ * la xarxa no han respost en TERMINI_DEL_PERFIL_MS.
+ */
+export function perfilDeReservaLocal(clau) {
+  return perfilDeLaIADelPaquet(agentIASeed(clau)) || perfilFundacionalDelPaquet(clau);
+}
+
+/* Gauntlet 261022_0225 (Tasca 1) · El termini estricte de la càrrega, l'espera
+   del host inclosa: passat, la càrrega s'avorta (cap petició tardana) i es
+   pinta la reserva local o l'avís amb «Torna-ho a provar». */
+export const TERMINI_DEL_PERFIL_MS = 3000;
+/* Revisió del Gauntlet 261022_0225 (REV-PERF-2) · «Torna-ho a provar» de la
+   mateixa clau té el temps d'una petició (els 12 s de runtime.js): amb els
+   3 s de la primera, en una línia lenta fallaria sempre igual. Una clau nova
+   torna a tindre els 3 s. */
+export const TERMINI_DEL_REINTENT_MS = 12000;
+
 let hostPromise;
-function hostReady() {
+function hostReady({ signal } = {}) {
   hostPromise ||= import('../../host.js').catch((error) => { hostPromise = null; throw error; });
-  return hostPromise.then((host) => host.quanLlest());
+  return hostPromise.then((host) => host.quanLlest({ signal }));
 }
 
 /* Valor per defecte estable: un `[]` nou a cada render entraria als deps de
@@ -193,6 +217,9 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const { externalConfig } = useUIState();
   const navigate = useNavigate();
   const [estat, setEstat] = useState({ id: null, status: 'loading', perfil: null });
+  /* Gauntlet 261022_0225 (Tasca 1) · «Torna-ho a provar» de l'avís: cada clic
+     torna a llançar la càrrega (REV-PERF-2: amb la clau, per al seu termini). */
+  const [intent, setIntent] = useState({ clau: null, n: 0 });
   /* Auditoria de seguretat 261019 (F6) · La fitxa del projecte oberta per id
      (/empresa/<uuid>) ja no es registra sola (vegeu la càrrega, davall): la
      reconeix la resolució de l'app, pel slug i dins del poble actiu, i esta
@@ -200,26 +227,67 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
      (TargetaDelMur) i el lector del MAS (PublicacioDetall). */
   useEntitatDelProjecte();
 
+  /* Gauntlet 261022_0225 (T9-1) · App.jsx passa un `agents` nou cada vegada
+     que el contingut base canvia d'estat, i la fitxa es tornava a carregar
+     sencera (una segona consulta i «Carregant el perfil…» enmig). El catàleg
+     només el llig un node sense la capacitat de directori i fora del remot:
+     només llavors entra als deps de la càrrega. */
+  const agentsDelCataleg = !teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote'
+    ? agents
+    : AGENTS_BUITS;
+
   useEffect(() => {
     let viu = true;
     const clau = String(agentId || '');
-    setEstat({ id: clau, status: 'loading', perfil: null });
+    /* Gauntlet 261022_0225 (Tasca 1) · La càrrega es pot cancel·lar: en
+       desmuntar o en canviar de clau, l'espera del host i la consulta
+       s'avorten, i el termini es lleva. */
+    const controlador = new AbortController();
+    /* T9-1 · La mateixa clau ja pintada es revalida sense buidar la pantalla. */
+    setEstat((previ) => (previ.id === clau && previ.status === 'ready' ? previ : { id: clau, status: 'loading', perfil: null }));
+    /* Gauntlet 261022_0225 (Tasca 1) · Si en TERMINI_DEL_PERFIL_MS el host i
+       la consulta no han acabat, la càrrega s'avorta (un host que ignore el
+       senyal ja no encetarà cap consulta) i es pinta la reserva local o
+       l'avís amb «Torna-ho a provar». Mai «Carregant el perfil…» per sempre. */
+    let vencut = false;
+    const reintent = intent.clau === clau;
+    const terminiMs = reintent ? TERMINI_DEL_REINTENT_MS : TERMINI_DEL_PERFIL_MS;
+    const termini = setTimeout(() => {
+      if (!viu) return;
+      vencut = true;
+      controlador.abort();
+      const reserva = perfilDeReservaLocal(clau);
+      if (reserva && clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(reserva);
+      setEstat((previ) => {
+        if (previ.id === clau && previ.status === 'ready') return previ;
+        return reserva ? { id: clau, status: 'ready', perfil: reserva } : { id: clau, status: 'senseResposta', perfil: null };
+      });
+    }, terminiMs);
     (async () => {
       let perfil = null;
-      if (teCapacitat('directori')) {
-        try {
-          await hostReady();
-          perfil = await loadPerfilPublic(clau, externalConfig || {});
-        } catch (error) {
-          if (error?.name !== 'AbortError') console.warn('[PerfilPublic] No s’ha pogut llegir el perfil:', error?.message);
+      let fallada = false;
+      /* Gauntlet 261022_0225 (T9-1) · Primer el host i després la capacitat: al
+         primer pintat el port encara pot no estar segellat, i abans era la
+         segona càrrega (la de l'`agents` nou) la que arribava a preguntar. */
+      try {
+        await hostReady({ signal: controlador.signal });
+        if (!viu || vencut) return;
+        if (teCapacitat('directori')) {
+          /* REV-PERF-2 · La primera, el pressupost de l'adaptador (els mateixos 3 s). */
+          perfil = await loadPerfilPublic(clau, { ...(externalConfig || {}), signal: controlador.signal, ...(reintent ? { terminiMs } : {}) });
         }
+      } catch (error) {
+        if (!viu || vencut) return;
+        if (error?.name !== 'AbortError') console.warn('[PerfilPublic] No s’ha pogut llegir el perfil:', error?.message);
+        fallada = true;
       }
+      if (!viu || vencut) return;
       // Una resposta buida del servidor és autoritativa (fora de la IA del
       // paquet, D12, i de les tres identitats del Mestre, més avall). El
       // catàleg només suplix un node demostratiu que no implementa el port de
       // directori.
       if (!teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote') {
-        perfil = perfilDelCataleg(agents.find((agent) => String(agent.id) === clau));
+        perfil = perfilDelCataleg(agentsDelCataleg.find((agent) => String(agent.id) === clau));
       }
       /* Onada 11 (261010; prompt 261010_1730, tasca 6, D12) · Una IA del
          paquet (AGENTS_IA_SEED: hui, la IAIA MarIA) no viu a cap taula: en
@@ -251,6 +319,15 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
          fitxa del Mestre. Per a tota altra persona o entitat, D12 es manté. */
       const delPaquet = perfilFundacionalDelPaquet(clau);
       if (delPaquet && (!perfil || (delPaquet.tipus === 'persona' && perfil.tipus !== 'persona'))) perfil = delPaquet;
+      clearTimeout(termini);
+      /* Gauntlet 261022_0225 (Tasca 1) · Una fallada (el host que no
+         arrenca, la consulta que es talla) no és «Perfil no trobat»: sense
+         reserva, l'avís amb «Torna-ho a provar». Una fitxa ja pintada de la
+         mateixa clau es queda. */
+      if (!perfil && fallada) {
+        setEstat((previ) => (previ.id === clau && previ.status === 'ready' ? previ : { id: clau, status: 'senseResposta', perfil: null }));
+        return;
+      }
       /* Revisió dels verificadors (front «logo», 261004) · En remot, l'id de
          l'entitat del projecte és el del servidor (un UUID) i només el
          registrava la resolució de l'app (useEntitatDelProjecte). Si esta
@@ -268,14 +345,19 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
          amb el slug «socdepoble», oberta per /empresa/<uuid>, es registrava
          com el projecte i se'n duia la marca i la identitat oficial. Per id,
          el projecte el registra la resolució de l'app. */
-      if (viu && clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(perfil);
-      if (viu) setEstat({ id: clau, status: 'ready', perfil });
+      if (clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(perfil);
+      setEstat({ id: clau, status: 'ready', perfil });
     })();
-    return () => { viu = false; };
-  }, [agentId, agents, externalConfig]);
+    return () => {
+      viu = false;
+      clearTimeout(termini);
+      controlador.abort();
+    };
+  }, [agentId, agentsDelCataleg, externalConfig, intent]);
 
   const perfil = estat.status === 'ready' ? estat.perfil : null;
-  const carregant = estat.status !== 'ready';
+  const carregant = estat.status === 'loading';
+  const senseResposta = estat.status === 'senseResposta';
 
   /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · La fitxa d'una de les
      tres identitats del Mestre declara la seua URL canònica neta, s'obriga
@@ -287,8 +369,15 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
      /perfil/iaia-maria (rutaCanonicaDePerfil). */
   const rutaCanonica = rutaCanonicaDePerfil(perfil);
 
+  /* Gauntlet 261022_0225 (T9-4) · Mentre carrega, el títol del document diu
+     que carrega, no «Perfil no trobat», i no s'indexa; el de l'avís, l'avís. */
+  const titolSenseFitxa = carregant
+    ? t('section.perfil.public.carregant', 'Carregant el perfil…')
+    : senseResposta
+      ? t('section.perfil.public.senseResposta', 'No s’ha pogut carregar el perfil')
+      : t('section.perfil.public.noTrobat', 'Perfil no trobat');
   useSEO({
-    title: perfil ? perfil.nom : t('section.perfil.public.noTrobat', 'Perfil no trobat'),
+    title: perfil ? perfil.nom : titolSenseFitxa,
     description: perfil ? (perfil.lema || perfil.bio || '') : '',
     /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · La imatge SEO
        és la portada (sdp-universal-page §1.B); sense portada, l'avatar. */
@@ -305,6 +394,30 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
     return (
       <UniversalPage chrome="system" showLogos={true} title={t('section.perfil.public.carregant', 'Carregant el perfil…')} objecte={null}>
         <p className="sdp-buit" role="status" aria-live="polite">{t('section.perfil.public.carregant', 'Carregant el perfil…')}</p>
+      </UniversalPage>
+    );
+  }
+
+  /* Gauntlet 261022_0225 (Tasca 1) · El servidor no ha respost a temps (o ha
+     fallat) i la clau no té reserva local: un avís clar, «Torna-ho a provar»
+     i el camí de sempre cap al directori. La navegació no queda bloquejada. */
+  if (senseResposta) {
+    return (
+      <UniversalPage
+        chrome="system"
+        showLogos={true}
+        title={titolSenseFitxa}
+        lead={t('section.perfil.public.senseRespostaText', 'El servidor del poble no respon ara mateix. Pots tornar-ho a provar o continuar navegant.')}
+        objecte={null}
+      >
+        {/* Revisió del Gauntlet 261022_0225 (REV-PERF-9) · El «Carregant…» era
+            una regió viva i desapareix: un lector de pantalla també sap que
+            la càrrega ha fallat. Cap canvi visual. */}
+        <p className="sdp-nomes-lector" role="alert">{titolSenseFitxa}</p>
+        <div className="sdp-alerta__accions">
+          <Boto varietat="primari" onClick={() => setIntent((previ) => ({ clau: String(agentId || ''), n: previ.n + 1 }))}>{t('common.reintenta', 'Torna-ho a provar')}</Boto>
+          <Boto varietat="secundari" onClick={() => navigate('/perfil')}>{t('section.perfil.public.directori', 'Torna al directori')}</Boto>
+        </div>
       </UniversalPage>
     );
   }
@@ -477,14 +590,27 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
     alt: `Avatar de ${perfil.nom}`
   } : null;
   /* El directe de sempre per a tothom; per a la IAIA, la conversa de la seua
-     fila en cada mode de dades (en llavor i en local, el mateix directe). */
+     fila en cada mode de dades (en llavor i en local, el mateix directe).
+     Gauntlet 261022_0225 (P4b-3) · La fitxa del paquet de la persona pilot
+     (id d'un àlies seu: '0001', mai un UUID del servidor) va on va la seua fila
+     del Xat: en llavor i en local, el directe del padró (rutaDelXatDeJavi); en
+     remot sense sessió, el seu xat de només lectura. En remot amb sessió el
+     servidor no en coneix el compte (crea_fil_directe rebutja '0001') i el
+     botó no es pinta: cap clic que acabe en error. */
+  const esLaPilotDelPaquet = perfil.tipus === 'persona' && esLaPersonaDeContacte(perfil);
   const rutaDelXat = esIAIA(perfil.id)
     ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
-    : `/xat?amb=${encodeURIComponent(perfil.id)}`;
+    : esLaPilotDelPaquet
+      ? (senseSessio ? `/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}` : rutaDelXatDeJavi(modeDades))
+      : `/xat?amb=${encodeURIComponent(perfil.id)}`;
   const avisDIA = esLaIAIA
     ? t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona del poble.')
     : `${perfil.nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.`;
   const parlaAmbLaIA = esLaIAIA ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA') : `Parla amb ${perfil.nom}`;
+  /* Revisió del Gauntlet 261022_0225 (REV-PERF-7) · Sense cap botó (la fitxa
+     del paquet de la persona pilot en remot amb sessió, P4b-3), la fila no es
+     pinta: el seu marge deixava un forat davall de l'entradilla. */
+  const ambAccions = Boolean(rutaDelXat) || (ambEdita && (perfil.propietari || administra)) || (administra && !actuaComEsta);
 
   return (
     <UniversalPage
@@ -535,25 +661,30 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
       /* T63.2 (doctrina del Mestre, 260928) · Comentar d'una persona o d'una IA
          és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un
          grup, el xat comú de la seua pàgina (la Comunitat). «Escriu-li al xat»
-         continua sent el directe per a tothom. */
+         continua sent el directe per a tothom (llevat de la fitxa del paquet
+         de la persona pilot, P4b-3). */
       objecte={objecte}
     >
       {/* Ordre del Mestre (261021) · Botó centrat amb respiració sota el lema, seguit de l'avís */}
-      <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
-        <Boto varietat="primari" icona={perfil.esIA ? Bot : MessageCircle} onClick={() => navigate(rutaDelXat)}>
-          {perfil.esIA ? parlaAmbLaIA : t('section.perfil.public.escriu', 'Escriu-li al xat')}
-        </Boto>
-        {ambEdita && (perfil.propietari || administra) ? (
-          <Boto varietat="secundari" icona={PencilLine} onClick={() => navigate(rutaEdita)}>
-            {t('section.perfil.public.edita', 'Edita la fitxa')}
-          </Boto>
-        ) : null}
-        {administra && !actuaComEsta ? (
-          <Boto varietat="secundari" icona={UserCheck} onClick={() => setActor?.('entitat', membership.id)}>
-            {`Actua com a ${perfil.nom}`}
-          </Boto>
-        ) : null}
-      </div>
+      {ambAccions ? (
+        <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
+          {rutaDelXat ? (
+            <Boto varietat="primari" icona={perfil.esIA ? Bot : MessageCircle} onClick={() => navigate(rutaDelXat)}>
+              {perfil.esIA ? parlaAmbLaIA : t('section.perfil.public.escriu', 'Escriu-li al xat')}
+            </Boto>
+          ) : null}
+          {ambEdita && (perfil.propietari || administra) ? (
+            <Boto varietat="secundari" icona={PencilLine} onClick={() => navigate(rutaEdita)}>
+              {t('section.perfil.public.edita', 'Edita la fitxa')}
+            </Boto>
+          ) : null}
+          {administra && !actuaComEsta ? (
+            <Boto varietat="secundari" icona={UserCheck} onClick={() => setActor?.('entitat', membership.id)}>
+              {`Actua com a ${perfil.nom}`}
+            </Boto>
+          ) : null}
+        </div>
+      ) : null}
       {perfil.esIA ? (
         <Alerta to="avis" titol={t('section.perfil.public.iaTitol', 'Este perfil és una intel·ligència artificial')}>
           {avisDIA}

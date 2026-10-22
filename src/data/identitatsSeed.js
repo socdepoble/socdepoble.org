@@ -48,6 +48,7 @@
  * l'entitat pilot amb el contingut que la llavor signa (aliesDeLActor, F4).
  */
 import { AGENTS_MAP } from './agentsSeed.js';
+import { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
 /* Pla 261018_1605 (Tasca 0, D6 i D7; ordre del Mestre, 18-10-2026) · El
    classificador únic de fonts pròpies (hidrataPerfilPersonaPilot). */
 import { esFontImatgePropia } from '../utils/sanitize.js';
@@ -206,9 +207,12 @@ export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
 /* T3 (mock): la resposta fixa de la IAIA, literal del prompt del Mestre.
    Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · En llavor i en local, la
    IAIA primer busca a la Wiki pública del paquet (iaiaLocal.js); esta frase és
-   la reserva quan no hi troba res o la Wiki no es pot carregar. */
+   la reserva quan no hi troba res o la Wiki no es pot carregar.
+   Gauntlet 261022_0225 (crítica Claude) · «No hi troba res» inclou el que no
+   passa el llindar de rellevància. A una salutació sola ja no la diu: torna
+   BENVINGUDA_IAIA, que no la contradiu. */
 export const RESPOSTA_IAIA = 'Ara estic en proves, només puc respondre preguntes molt simples i no estic per a tonteries, però poc a poc aniré aprenent.';
-export const BENVINGUDA_IAIA = 'Hola! Sóc la IAIA MarIA. Escriu-me el que vullgues i et diré fins on arribe.';
+export const BENVINGUDA_IAIA = SALUTACIO_TECNICA_IAIA;
 
 export const esIAIA = (id) => String(id ?? '') === IAIA_ID;
 export const entitatSeed = (id) => {

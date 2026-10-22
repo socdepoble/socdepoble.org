@@ -5,10 +5,16 @@
  * el gran botó blau «Obrir …». Amb destí, un enllaç del router (amb la base de
  * l'amfitrió); sense destí, o amb una app apagada en este build, un botó
  * inert que ho diu (aria-disabled, avís en text i toast) i no navega mai.
- * Gestoria/RSS substituïxen la porta inerta pel motiu real i la preferència
- * reversible del Panell. L'ajuda d'instal·lació només apareix si falta l'app;
- * ni apagar-la ni el bloqueig de privacitat es resolen instal·lant-la.
  * Un id desconegut és la 404 de sempre (NotFoundPage).
+ *
+ * Gauntlet 261022_0225 (F1, F2, F4, F6, F7) · DEROGAT, per a les eines amb
+ * app de la plataforma, «sense destí, un botó inert»: la Gestoria, el
+ * Rebost, Salut, el Lector RSS i el TPV que ací no es poden obrir no pinten
+ * cap «Obrir…» (ni dalt ni baix). Baix hi ha el camí que li queda a la
+ * persona (cap instal·lació: no n'hi ha cap mecanisme) i «Desactiva esta
+ * eina», que només escriu la preferència del Panell. Els textos, en les cinc
+ * llengües. Les eines en obres (Mapa, Vehicle, Animalets) conserven el botó
+ * inert.
  *
  * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
  *   · M4 · La pàgina diu el mateix que la targeta canònica: si el plugin
@@ -43,7 +49,8 @@ import { baseRecursos, fixaBaseRecursos } from '../../config/assetResolver';
 import { createTranslator, SUPPORTED_LANGUAGES } from '../../config/i18n';
 import { desaUtilitatActiva, estaAlPanell, CLAU_UTILITATS_ACTIVES } from '../profile/utilitatsActives.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
-import PluginPage from './PluginPage.jsx';
+import { textDelMotiu } from '../../apps/plataforma/PortalApps.jsx';
+import PluginPage, { TEXTOS_EINA } from './PluginPage.jsx';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
 import { PLUGINS, pluginPerId } from './registrePlugins.js';
 import { portaDelPlugin } from './useDestiDelPlugin.js';
@@ -66,14 +73,20 @@ function Ubicacio() {
    reprodueix el paquet de producció. */
 const registreDeProduccio = () => creaRegistre({ internes: MANIFESTS_INTERNS.map((m) => ({ ...m, carrega: null })) });
 
-function munta(ruta, { entorn = ENTORN_OBERT, basename = '', externalConfig = {}, registre } = {}) {
+function munta(ruta, opcions = {}) {
   vi.stubGlobal('matchMedia', vi.fn((query) => ({
     matches: false, media: query, onchange: null,
     addListener: vi.fn(), removeListener: vi.fn(),
     addEventListener: vi.fn(), removeEventListener: vi.fn(),
     dispatchEvent: vi.fn()
   })));
-  return render(
+  return render(arbre(ruta, opcions));
+}
+
+/* L'arbre de munta, a banda: una prova el pot tornar a pintar amb un altre
+   entorn (rerender) sense desmuntar la pàgina. */
+function arbre(ruta, { entorn = ENTORN_OBERT, basename = '', externalConfig = {}, registre } = {}) {
+  return (
     <UIProvider externalConfig={externalConfig}>
       <NotificationProvider>
         <MemoryRouter rutaInicial={ruta} basename={basename}>
@@ -96,6 +109,33 @@ const accio = (container) => container.querySelector('.sdp-pagina-accio');
    accioPrincipal d'UniversalPage. */
 const accioDeDalt = (container) => container.querySelector('header.page-title > .page-title-accio');
 const article = (container) => container.querySelector('article.content-wrapper');
+
+/* Gauntlet 261022_0225 (F7) · Els textos en valencià que llig la persona,
+   escrits ací a mà a posta: si algú els canvia, estes proves ho diuen. */
+const MOTIU = Object.freeze({
+  entorn: 'Esta eina encara està en proves i no està a punt per a tothom.',
+  noCompilada: 'Esta web encara no té esta eina.',
+  personaApagada: 'L’has desactivada tu. La pots tornar a activar quan vulgues.'
+});
+const CAMI = Object.freeze({
+  posar: 'Tu no has d’instal·lar ni baixar res. Esta eina només la pot afegir qui porta esta web, quan estiga a punt. Llavors, ací mateix tindràs el botó per a obrir-la.',
+  demanar: 'Tu no has d’instal·lar ni pagar res. Només la pot posar en marxa qui porta esta web: si la vols fer servir, demana-li-ho.'
+});
+const NOTA = Object.freeze({
+  activa: 'Desactivar-la només la trau del teu Panell, en este navegador. No s’esborra res del que hi tingues.',
+  desactivada: 'Està desactivada per a tu, només en este navegador. Si la tornes a activar, tornarà al teu Panell.',
+  apagada: 'L’has desactivada a la llista d’eines, només en este navegador. Si la tornes a activar, la podràs tornar a obrir ací quan esta web la tinga.'
+});
+/* Els motius d'interruptors.js (avaluaApp), tots: cada un té el seu text. */
+const MOTIUS = ['no-compilada', 'entorn-desenvolupament', 'amfitrio-no-la-declara', 'apagada-per-defecte', 'persona-apagada',
+  'sense-capacitat', 'document-no-propi', 'document-no-propi-financeres', 'sense-dret'];
+const DESACTIVA = 'Desactiva esta eina';
+const REACTIVA = 'Torna a activar esta eina';
+/* Cap paraula de la troballa F7 en l'estat buit: ni «node», ni «app», ni
+   instal·lar amb un clic, ni paquets ni versions. */
+const JARGO = /\bnode\b|\bapps?\b|amfitri|premium|desenvolupament|\bcodi\b|paquet|versió compatible|amb un clic/i;
+/* Les preferències de la plataforma (el portal /app), tal com queden desades. */
+const appsDesades = () => JSON.parse(window.localStorage.getItem(STORAGE_PREFIX + CLAU_PREFERENCIES) || '{"apps":{}}').apps;
 
 /* Onada 10 · Els plugins amb presentació (el Rebost i Salut) i la resta,
    derivats de les dades i no escrits a mà. */
@@ -278,32 +318,28 @@ describe('Onada 10 · presentació de sis blocs i botó dalt i al final (Rebost 
     expect(container.querySelectorAll('.page-title-accio, .sdp-pagina-accio')).toHaveLength(2);
   });
 
-  /* Si el destí no es pot obrir, tots dos són inerts i diuen el mateix; l'avís
-     en text es diu una sola vegada, entre el cos i el botó de baix. */
-  test.each(AMB_PRESENTACIO.filter((p) => ['rebost', 'salut'].includes(p.id)).map((p) => [p.id, p]))('/plugin/%s en producció: els dos botons inerts, un sol avís entre el cos i l’acció, i cap dels dos navega', (id, plugin) => {
+  /* Gauntlet 261022_0225 (F2) · DEROGAT «si el destí no es pot obrir, tots
+     dos són inerts» (M2): sense destí, cap «Obrir…», ni dalt ni baix. L'avís
+     en text es diu una sola vegada, entre el cos i l'acció, i baix hi ha
+     l'estat buit: el camí i «Desactiva esta eina». */
+  test.each(AMB_PRESENTACIO.map((p) => [p.id, p]))('/plugin/%s en producció: cap «Obrir…», un sol avís entre el cos i l’acció, i l’estat buit baix', (id, plugin) => {
     const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: new RegExp(plugin.etiquetaObrir) })).toBeNull();
-    const { dalt, baix } = elsDosControls(container, 'button', `${plugin.etiquetaObrir} (no disponible ací)`);
-    expect(controlsObrir(container, plugin)).toHaveLength(2);
-    for (const boto of [dalt, baix]) {
-      expect(boto.getAttribute('aria-disabled')).toBe('true');
-      expect(boto.getAttribute('type')).toBe('button');
-    }
-    const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
+    expect(controlsObrir(container, plugin)).toEqual([]);
+    expect(accioDeDalt(container)).toBeNull();
     const avis = screen.getByRole('status');
-    expect(avis.textContent).toBe(motiu);
+    expect(avis.textContent).toBe(MOTIU.entorn);
     // L'ordre de l'article: entradilla, cos, avís i acció.
     const fills = [...article(container).children];
     expect(fills).toHaveLength(4);
     expect([fills[0].className, fills[1].className, fills[3].className]).toEqual(['page-intro', 'cms-preview', 'sdp-pagina-accio']);
     expect(fills[2] === avis || fills[2].contains(avis)).toBe(true);
     expect(fills[1].querySelectorAll(':scope > p')).toHaveLength(6);
-    // Cap dels dos navega, i tots dos ho diuen amb el mateix toast.
-    fireEvent.click(dalt);
-    expect(ubicacio()).toBe(`/plugin/${id}`);
-    expect(screen.getAllByText(motiu)).toHaveLength(2);
-    fireEvent.click(baix);
-    expect(ubicacio()).toBe(`/plugin/${id}`);
+    // Baix: el camí (qui la pot posar), «Desactiva esta eina» i què fa.
+    expect(within(accio(container)).getByText(CAMI.posar)).toBeTruthy();
+    expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
+    expect(within(accio(container)).getByText(NOTA.activa)).toBeTruthy();
+    expect(accio(container).querySelector('[aria-disabled="true"]')).toBeNull();
   });
 
   /* Llei del Píxel: la decisió M2 només nomena el Rebost i Salut. La resta
@@ -441,13 +477,12 @@ describe('el botó Obrir', () => {
     const { container } = munta('/plugin/gestoria', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
     expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"], a[href*="/app/gestoria"]')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
-    const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
-    expect(screen.getByRole('status').textContent).toBe(motiu);
-    fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
+    expect(screen.getByRole('status').textContent).toBe(MOTIU.entorn);
+    fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
     expect(ubicacio()).toBe('/plugin/gestoria');
-    expect(screen.getByRole('status').textContent).toBe(motiu);
+    expect(screen.getByRole('status').textContent).toBe(MOTIU.entorn);
     // La pàgina de la Gestoria continua sent la seua: portada, títol i entradilla.
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Gestoria');
     expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
@@ -470,52 +505,57 @@ describe('el botó Obrir', () => {
   test('capa d’entorn: el Lector compilat en producció diu per què no es pot obrir, sense ajuda d’instal·lació', () => {
     munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
-    const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
-    expect(screen.getByRole('status').textContent).toBe(motiu);
-    fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
+    expect(screen.getByRole('status').textContent).toBe(MOTIU.entorn);
+    fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
     expect(ubicacio()).toBe('/plugin/rss');
-    expect(screen.getByRole('status').textContent).toBe(motiu);
+    expect(screen.getByRole('status').textContent).toBe(MOTIU.entorn);
   });
 
   /* Peça C (261007) · El build de producció de veres sense VITE_SDP_APP_*:
      el Lector no és al paquet (carrega null) i la plataforma ho diu abans que
      l'entorn ('no-compilada', interruptors.js). Este és el text que veu
-     producció, no el de la capa d'entorn. */
-  test('build de producció sense VITE_SDP_APP_* (carrega null): inert, «Este node no porta esta app.» i no navega', () => {
+     producció, no el de la capa d'entorn.
+     Gauntlet 261022_0225 (F7) · DEROGAT «Com instal·lar esta eina»: no hi
+     ha cap manera d'instal·lar-la, i el botó prometia passos que no hi
+     havia. Ara el text diu, sense cap botó, qui la pot posar. */
+  test('build de producció sense VITE_SDP_APP_* (carrega null): «Esta web encara no té esta eina.», qui la pot posar, i cap botó d’instal·lar', () => {
     const registre = registreDeProduccio();
     // El registre simulat és el de producció: el Lector hi és, però sense compilar.
     expect(registre.appPerId('lector')).toMatchObject({ id: 'lector', origen: 'interna', carrega: null });
     expect(registre.componentDe('lector')).toBeNull();
-    munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre });
+    const { container } = munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Com instal·lar esta eina' });
+    expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
-    const motiu = 'Este node no porta esta app.';
-    expect(screen.getByRole('status').textContent).toBe(motiu);
-    fireEvent.click(boto);
-    expect(ubicacio()).toBe('/plugin/rss');
-    expect(boto.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByText(/no té un paquet independent de descàrrega/)).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe(MOTIU.noCompilada);
+    expect(within(accio(container)).getByText(CAMI.posar)).toBeTruthy();
+    expect(accio(container).querySelector('[aria-expanded]')).toBeNull();
+    // Cap paraula de jerga en tot el que diu la pàgina sense destí.
+    expect(JARGO.test(screen.getByRole('status').textContent + accio(container).textContent)).toBe(false);
   });
 
   /* Onada 8 (261009) · Abans, darrere, el Panell de Disseny (cap app de la
      plataforma, el seu enllaç no depenia del build): ja no és un plugin.
-     Onada 10 (decisió M2 del Mestre, 261010) · El Rebost i Salut porten el
-     botó dalt i al final: en són DOS, i tots dos inerts. El TPV i la
-     Gestoria, un de sol, com abans. El compte és exacte per a cada pàgina. */
-  test('build de producció: cap app de la plataforma fa enllaç', () => {
+     Onada 10 (decisió M2 del Mestre, 261010) · El Rebost i Salut portaven el
+     botó dalt i al final, tots dos inerts.
+     Gauntlet 261022_0225 (F2) · DEROGAT el compte d'inerts (1 per al TPV, 2
+     per al Rebost i Salut): cap de les cinc pinta cap «Obrir…», ni dalt ni
+     baix, i totes oferixen el camí i «Desactiva esta eina». */
+  test('build de producció: cap app de la plataforma fa enllaç ni pinta cap «Obrir…» inert', () => {
     const registre = registreDeProduccio();
-    for (const [id, nom, quants] of [['tpv', 'Obrir el Bar', 1], ['rebost', 'Obrir el Rebost', 2], ['salut', 'Obrir Salut', 2], ['gestoria', 'Obrir la Gestoria', 0], ['rss', 'Obrir el Lector', 0]]) {
+    for (const [id, nom] of [['tpv', 'Obrir el Bar'], ['rebost', 'Obrir el Rebost'], ['salut', 'Obrir Salut'], ['gestoria', 'Obrir la Gestoria'], ['rss', 'Obrir el Lector']]) {
       const { container } = munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
       expect(screen.queryByRole('link', { name: new RegExp(nom) }), id).toBeNull();
       expect(container.querySelector('a[href*="/app/"]'), id).toBeNull();
-      const botons = screen.queryAllByRole('button', { name: `${nom} (no disponible ací)` });
-      expect([id, botons.length]).toEqual([id, quants]);
-      if (quants === 0) expect(screen.getByRole('button', { name: 'Desactiva esta eina' })).toBeTruthy();
-      else expect([id, quants]).toEqual([id, presentacioDelPlugin(id) ? 2 : 1]);
-      for (const boto of botons) expect(boto.getAttribute('aria-disabled'), id).toBe('true');
+      expect([id, controlsObrir(container, pluginPerId(id)).length]).toEqual([id, 0]);
+      expect([id, container.querySelectorAll('[aria-disabled="true"]').length]).toEqual([id, 0]);
+      expect([id, accioDeDalt(container)]).toEqual([id, null]);
+      // La Gestoria porta entorn 'desenvolupament' al registre: és la primera capa que la tanca (troballa F3).
+      expect([id, screen.getByRole('status').textContent]).toEqual([id, id === 'gestoria' ? MOTIU.entorn : MOTIU.noCompilada]);
+      expect(within(accio(container)).getByText(CAMI.posar)).toBeTruthy();
+      expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
       cleanup();
     }
   });
@@ -534,31 +574,41 @@ describe('el botó Obrir', () => {
      l'entorn, i si fora de desenvolupament ha de ser inert és una decisió
      pendent de MarIA o del Mestre (systemPages.js, OBRIR_CONSOLA). */
 
-  test('si la persona apaga l’app al portal, el botó deixa de portar-hi', () => {
+  /* Gauntlet 261022_0225 (F2) · Abans, un «Obrir el Bar (no disponible
+     ací)» inert. Ara, el motiu i el camí de tornada: el botó de baix. */
+  test('si la persona apaga l’app al portal, el botó deixa de portar-hi i la pàgina oferix tornar-la a activar', () => {
     window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { bar: false }, interruptors: {} }));
     _reiniciaPreferencies();
-    munta('/plugin/tpv');
+    const { container } = munta('/plugin/tpv');
     expect(screen.queryByRole('link', { name: /Obrir el Bar/ })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Obrir el Bar (no disponible ací)' }).getAttribute('aria-disabled')).toBe('true');
-    expect(screen.getByRole('status').textContent).toBe('L’has apagada tu. La pots tornar a encendre quan vulgues.');
+    expect(controlsObrir(container, pluginPerId('tpv'))).toEqual([]);
+    expect(screen.getByRole('status').textContent).toBe(MOTIU.personaApagada);
+    // Cap camí escrit: el camí és el botó.
+    expect(accio(container).querySelectorAll('p')).toHaveLength(1);
+    // Gauntlet 261022_0225 (R1) · Apagada només al portal: la targeta no ha eixit del Panell.
+    expect(within(accio(container)).getByText(NOTA.apagada)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
+    expect(screen.getByRole('link', { name: 'Obrir el Bar' }).getAttribute('href')).toBe('/app/bar');
+    expect(appsDesades()).toEqual({});
   });
 
-  /* Onada 10 (decisió M2 del Mestre, 261010) · Salut porta el botó dalt i al
-     final: tots dos inerts, i el motiu de la privacitat es diu una sola
-     vegada (un sol avís), damunt del botó de baix. */
-  test('Salut dins d’una web d’altri (no és l’ama del document): inert, amb el motiu de la privacitat', () => {
+  /* Onada 10 (decisió M2 del Mestre, 261010) · Salut portava el botó dalt i
+     al final, tots dos inerts. Gauntlet 261022_0225 (F2) · Cap dels dos: el
+     motiu de la privacitat es diu una sola vegada, damunt de l'estat buit, i
+     no hi ha cap camí escrit (l'avís ja diu on s'obri) ni cap instal·lació. */
+  test('Salut dins d’una web d’altri (no és l’ama del document): cap «Obrir…», amb el motiu de la privacitat', () => {
     const { container } = munta('/plugin/salut', { entorn: { ...ENTORN_OBERT, amaDelDocument: false } });
     expect(screen.queryByRole('link', { name: /Obrir Salut/ })).toBeNull();
     expect(container.querySelector('a[href*="/app/salut"]')).toBeNull();
-    const { dalt, baix } = elsDosControls(container, 'button', 'Obrir Salut (no disponible ací)');
-    for (const boto of [dalt, baix]) expect(boto.getAttribute('aria-disabled')).toBe('true');
+    expect(controlsObrir(container, pluginPerId('salut'))).toEqual([]);
+    expect(accioDeDalt(container)).toBeNull();
     const avis = screen.getByRole('status');
     expect(avis.textContent).toContain('Guarda dades de salut');
     expect(accio(container).previousElementSibling.contains(avis)).toBe(true);
-    for (const boto of [dalt, baix]) {
-      fireEvent.click(boto);
-      expect(ubicacio()).toBe('/plugin/salut');
-    }
+    expect(accio(container).querySelectorAll('p')).toHaveLength(1);
+    expect(within(accio(container)).getByRole('button', { name: DESACTIVA })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
+    expect(ubicacio()).toBe('/plugin/salut');
   });
 });
 
@@ -578,7 +628,7 @@ test('portaDelPlugin (la que pot reutilitzar la graella del Control): oberta, en
     }
   });
   const apagada = portaDelPlugin(bar, { estat: 'no-disponible', ruta: null, motiu: 'persona-apagada' }, t);
-  expect(apagada.avis).toBe('L’has apagada tu. La pots tornar a encendre quan vulgues.');
+  expect(apagada.avis).toBe(MOTIU.personaApagada);
   expect(apagada.porta).toMatchObject({ desti: null, enObres: '(no disponible ací)', avis: apagada.avis });
 });
 
@@ -614,6 +664,45 @@ describe('textos nous de la UI en les cinc llengües', () => {
     }
   });
 
+  /* Gauntlet 261022_0225 (F1, F7) · L'estat sense destí i el motiu de la
+     plataforma: cada clau en les cinc llengües, i el valencià del
+     diccionari és la reserva del codi (TEXTOS_EINA i textDelMotiu). */
+  test.each(Object.values(TEXTOS_EINA).map(([clau, reserva]) => [clau, reserva]))('%s: valor propi en cada llengua i el valencià és la reserva del codi', (clau, reserva) => {
+    expect(createTranslator('ca')(clau)).toBe(reserva);
+    for (const { code } of SUPPORTED_LANGUAGES.filter((l) => l.code !== 'ca')) {
+      const valor = createTranslator(code)(clau);
+      expect([code, valor !== clau && valor.length > 0, valor === reserva]).toEqual([code, true, false]);
+    }
+  });
+
+  test.each(MOTIUS)('el motiu «%s», en les cinc llengües i sense jerga en valencià', (motiu) => {
+    const reserva = textDelMotiu(motiu);
+    expect(reserva.length).toBeGreaterThan(0);
+    expect(textDelMotiu(motiu, createTranslator('ca'))).toBe(reserva);
+    expect(JARGO.test(reserva)).toBe(false);
+    for (const { code } of SUPPORTED_LANGUAGES.filter((l) => l.code !== 'ca')) {
+      const valor = textDelMotiu(motiu, createTranslator(code));
+      expect([code, valor.length > 0, valor === reserva]).toEqual([code, true, false]);
+    }
+  });
+
+  test('textDelMotiu: un motiu que no és de la plataforma no diu res', () => {
+    for (const res of ['', 'constructor', '__proto__', 'toString', null, undefined, 3]) expect([String(res), textDelMotiu(res)]).toEqual([String(res), '']);
+  });
+
+  test('amb l’amfitrió en castellà, l’estat sense destí parla castellà', () => {
+    const es = createTranslator('es');
+    const { container } = munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio(), externalConfig: { language: 'es' } });
+    expect(screen.getByRole('status').textContent).toBe(es('plataforma.motiu.noCompilada'));
+    expect(within(accio(container)).getByText(es('section.plugin.eina.camiPosar'))).toBeTruthy();
+    expect(within(accio(container)).getByText(es('section.plugin.eina.notaActiva'))).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: es('section.plugin.eina.desactiva') }));
+    expect(screen.getByRole('button', { name: es('section.plugin.eina.reactiva') })).toBeTruthy();
+    expect(within(accio(container)).getByText(es('section.plugin.eina.notaDesactivada'))).toBeTruthy();
+    // Ni un mot del valencià de reserva.
+    for (const [, reserva] of Object.values(TEXTOS_EINA)) expect(accio(container).textContent).not.toContain(reserva);
+  });
+
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: el plugin en obres d'esta prova és Animalets. */
   test('amb l’amfitrió en castellà, la portada i l’avís d’obres parlen castellà', () => {
     const es = createTranslator('es');
@@ -626,16 +715,26 @@ describe('textos nous de la UI en les cinc llengües', () => {
 });
 
 
-test.each(['gestoria', 'rss'])('%s: desactivar amaga del Panell, conserva dades i es pot desfer', (id) => {
+/* Gauntlet 261022_0225 (F2) · Les cinc eines amb app de la plataforma, no
+   només la Gestoria i el Lector: la llista ix de la dada. */
+const AMB_APP = PLUGINS.filter((p) => p.obrir?.startsWith('/app/')).map((p) => p.id);
+
+test('el cens de les eines amb app de la plataforma (l’estat sense destí val per a totes)', () => {
+  expect(AMB_APP).toEqual(['gestoria', 'rebost', 'salut', 'rss', 'tpv']);
+});
+
+test.each(AMB_APP)('%s: desactivar la trau del Panell, conserva dades i es pot desfer', (id) => {
   const registre = registreDeProduccio();
   munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
   expect(estaAlPanell(id)).toBe(true);
   window.localStorage.setItem('dades-test-conservades', 'papers');
-  fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
+  fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
   expect(estaAlPanell(id)).toBe(false);
   expect(window.localStorage.getItem('dades-test-conservades')).toBe('papers');
-  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  expect(screen.getByText(NOTA.desactivada)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
   expect(estaAlPanell(id)).toBe(true);
+  expect(screen.getByText(NOTA.activa)).toBeTruthy();
   expect(screen.queryByRole('link', { name: /Obrir/ })).toBeNull();
   window.localStorage.removeItem('dades-test-conservades');
 });
@@ -644,46 +743,156 @@ test.each(['gestoria', 'rss'])('%s: recupera al primer clic una eina amagada aba
   desaUtilitatActiva(id, false);
   munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
   expect(estaAlPanell(id)).toBe(false);
-  expect(screen.queryByRole('button', { name: 'Desactiva esta eina' })).toBeNull();
-  expect(screen.getByText(/L’eina està amagada del teu Panell/)).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  expect(screen.queryByRole('button', { name: DESACTIVA })).toBeNull();
+  expect(screen.getByText(NOTA.desactivada)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
   expect(estaAlPanell(id)).toBe(true);
-  expect(screen.getByRole('button', { name: 'Desactiva esta eina' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: DESACTIVA })).toBeTruthy();
   expect(screen.queryByRole('link', { name: /Obrir/ })).toBeNull();
 });
 
 test('el botó segueix els canvis de visibilitat del Panell mentre la pàgina està oberta', () => {
   munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
   act(() => { desaUtilitatActiva('rss', false); });
-  expect(screen.getByRole('button', { name: 'Torna a mostrar esta eina' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: REACTIVA })).toBeTruthy();
   act(() => { desaUtilitatActiva('rss', true); });
-  expect(screen.getByRole('button', { name: 'Desactiva esta eina' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: DESACTIVA })).toBeTruthy();
 });
 
-test.each([['gestoria', 'gestoria'], ['rss', 'lector']])('%s: reactivar una app compilada i apagada recupera la porta sense instal·lació', (id, idApp) => {
+/* Gauntlet 261022_0225 (F6) · El botó premut desapareix (la porta torna) i
+   el focus va al nou «Obrir…» de baix, no al <body>. */
+test.each([['gestoria', 'gestoria'], ['rss', 'lector'], ['tpv', 'bar'], ['rebost', 'nevera'], ['salut', 'salut']])('%s: reactivar una app compilada i apagada recupera la porta sense instal·lació, amb el focus al nou «Obrir…»', (id, idApp) => {
   window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { [idApp]: false }, interruptors: {} }));
   _reiniciaPreferencies();
-  munta(`/plugin/${id}`);
-  expect(screen.getByRole('status').textContent).toBe('L’has apagada tu. La pots tornar a encendre quan vulgues.');
-  expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  const { container } = munta(`/plugin/${id}`);
+  expect(screen.getByRole('status').textContent).toBe(MOTIU.personaApagada);
+  expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
+  const boto = screen.getByRole('button', { name: REACTIVA });
+  boto.focus();
+  fireEvent.click(boto);
   expect(estaAlPanell(id)).toBe(true);
   expect(screen.queryByRole('status')).toBeNull();
-  expect(screen.getAllByRole('link', { name: pluginPerId(id).etiquetaObrir })).toHaveLength(2);
+  const plugin = pluginPerId(id);
+  const enllacos = screen.getAllByRole('link', { name: plugin.etiquetaObrir });
+  expect(enllacos).toHaveLength(presentacioDelPlugin(id) ? 2 : 1);
+  expect(document.activeElement).toBe(accio(container).querySelector('a[href]'));
+  expect(document.activeElement).toBe(enllacos[enllacos.length - 1]);
+});
+
+test('reactivar sense que l’eina es puga obrir: el focus es queda al mateix botó', () => {
+  desaUtilitatActiva('rss', false);
+  const { container } = munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
+  const boto = screen.getByRole('button', { name: REACTIVA });
+  boto.focus();
+  fireEvent.click(boto);
+  expect(document.activeElement).toBe(boto);
+  expect(boto.textContent).toBe(DESACTIVA);
+  expect(accio(container).contains(document.activeElement)).toBe(true);
+});
+
+test('reactivar una app apagada que una altra capa encara tanca: el motiu canvia, el focus es queda al botó', () => {
+  window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { salut: false }, interruptors: {} }));
+  _reiniciaPreferencies();
+  munta('/plugin/salut', { entorn: { ...ENTORN_OBERT, amaDelDocument: false } });
+  expect(screen.getByRole('status').textContent).toBe(MOTIU.personaApagada);
+  const boto = screen.getByRole('button', { name: REACTIVA });
+  boto.focus();
+  fireEvent.click(boto);
+  expect(screen.getByRole('status').textContent).toContain('Guarda dades de salut');
+  expect(document.activeElement).toBe(boto);
+  expect(boto.textContent).toBe(DESACTIVA);
+});
+
+/* Gauntlet 261022_0225 (R9) · La demanda de focus es desfà en el primer canvi
+   del destí, encara que no es puga obrir: si l'eina s'obri més tard per una
+   altra causa, el focus no salta al nou «Obrir…». */
+test('reactivar quan una altra capa encara la tanca, i obrir-se més tard: el focus no salta', () => {
+  window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { salut: false }, interruptors: {} }));
+  _reiniciaPreferencies();
+  const tancat = { ...ENTORN_OBERT, amaDelDocument: false };
+  const { container, rerender } = munta('/plugin/salut', { entorn: tancat });
+  fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
+  expect(screen.getByRole('status').textContent).toContain('Guarda dades de salut');
+  // La persona se'n va a un altre control de la pàgina.
+  const altre = screen.getByRole('button', { name: 'Amaga la portada' });
+  altre.focus();
+  rerender(arbre('/plugin/salut', { entorn: ENTORN_OBERT }));
+  const baix = accio(container).querySelector('a[href]');
+  expect(baix.textContent).toBe('Obrir Salut');
+  expect(document.activeElement).toBe(altre);
+});
+
+/* Gauntlet 261022_0225 (F4) · «Desactiva esta eina» escriu UNA preferència,
+   la del Panell (la mateixa del Perfil), i ho diu. Cap entrada deixa les
+   dues fora de pas. */
+describe('F4 · desactivar i tornar a activar, des de qualsevol entrada', () => {
+  test('desactivar no apaga l’app al portal /app: només la trau del Panell', () => {
+    munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
+    fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
+    expect(estaAlPanell('rss')).toBe(false);
+    expect(appsDesades()).toEqual({});
+  });
+
+  test('desactivada ací i mostrada des del Perfil: la pàgina torna a dir «Desactiva», sense cap preferència penjada', () => {
+    munta('/plugin/gestoria', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
+    fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
+    // El Perfil («Mostrar al Panell») escriu la mateixa preferència.
+    act(() => { desaUtilitatActiva('gestoria', true); });
+    expect(screen.getByRole('button', { name: DESACTIVA })).toBeTruthy();
+    expect(screen.getByText(NOTA.activa)).toBeTruthy();
+    expect(appsDesades()).toEqual({});
+  });
+
+  /* Gauntlet 261022_0225 (R1) · Apagada només al portal («Vull vore: No»): la
+     targeta continua al Panell, i la nota no ho pot negar. */
+  test('apagada només al portal: la nota és la del portal i no parla del Panell', () => {
+    window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { lector: false }, interruptors: {} }));
+    _reiniciaPreferencies();
+    const { container } = munta('/plugin/rss');
+    expect(estaAlPanell('rss')).toBe(true);
+    expect(screen.getByRole('button', { name: REACTIVA })).toBeTruthy();
+    const nota = within(accio(container)).getByText(NOTA.apagada);
+    expect(nota.textContent).not.toMatch(/Panell/);
+    expect(accio(container).textContent).not.toContain(NOTA.desactivada);
+    // Amagada també del Panell: llavors sí, la nota del Panell.
+    act(() => { desaUtilitatActiva('rss', false); });
+    expect(within(accio(container)).getByText(NOTA.desactivada)).toBeTruthy();
+  });
+
+  test('apagada al portal i amagada al Perfil: «Torna a activar» desfà totes dues i l’eina s’obri', () => {
+    window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { lector: false }, interruptors: {} }));
+    _reiniciaPreferencies();
+    desaUtilitatActiva('rss', false);
+    munta('/plugin/rss');
+    fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
+    expect(estaAlPanell('rss')).toBe(true);
+    expect(appsDesades()).toEqual({});
+    expect(screen.getAllByRole('link', { name: 'Obrir el Lector' })).toHaveLength(2);
+  });
+
+  test('si no es pot guardar, ho diu en la llengua de la persona i no toca res més', () => {
+    munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('ple'); });
+    fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
+    expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut guardar el canvi. Torna-ho a provar.');
+    expect(screen.getByRole('button', { name: DESACTIVA })).toBeTruthy();
+  });
 });
 
 test('Gestoria en un document d’altri: desactivar i recuperar conserva el bloqueig financer sense proposar instal·lar', () => {
   munta('/plugin/gestoria', { entorn: { ...ENTORN_OBERT, amaDelDocument: false }, basename: '/poble' });
   const motiu = screen.getByRole('status').textContent;
   expect(motiu).toContain('Guarda dades financeres');
-  expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+  expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
   expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
+  fireEvent.click(screen.getByRole('button', { name: DESACTIVA }));
   expect(estaAlPanell('gestoria')).toBe(false);
-  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  // F4 · El motiu de la privacitat no canvia: desactivar no toca el portal.
+  expect(screen.getByRole('status').textContent).toBe(motiu);
+  fireEvent.click(screen.getByRole('button', { name: REACTIVA }));
   expect(estaAlPanell('gestoria')).toBe(true);
   expect(screen.getByRole('status').textContent).toBe(motiu);
-  expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+  expect(screen.queryByRole('button', { name: /instal·la/i })).toBeNull();
   expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
   expect(ubicacio()).toBe('/plugin/gestoria');
 });

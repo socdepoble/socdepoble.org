@@ -254,7 +254,22 @@ export function autorDeCita(msg, t) {
 export function textDeCita(msg, t) {
   if (msg?.bloquejat) return t('section.moderacio.bloquejat.previa', 'Missatge amagat');
   if (msg?.esborrat || msg?.esborratAl) return t('section.xat.missatge.esborrat', "S'ha esborrat este missatge");
-  return String(msg?.text ?? msg?.content ?? '');
+  return String(msg?.text ?? msg?.content ?? '') || textDAdjunt(msg?.tipus, t);
+}
+
+/* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-1) · Un adjunt sense peu es
+   desa amb text NULL (no es guarda cap «Foto» en valencià al servidor): la
+   previa de la llista, la cita i l'anunci el diuen pel tipus, traduït. */
+const TEXT_D_ADJUNT = Object.freeze({
+  imatge: ['section.xat.adjunts.foto', 'Foto adjunta'],
+  video: ['section.xat.adjunts.video', 'Vídeo adjunt'],
+  veu: ['section.xat.adjunts.veu', 'Missatge de veu']
+});
+
+/** El text d'un adjunt sense peu pel seu tipus ('imatge', 'video', 'veu'), o ''. */
+export function textDAdjunt(tipus, t) {
+  const text = Object.hasOwn(TEXT_D_ADJUNT, tipus ?? '') ? TEXT_D_ADJUNT[tipus] : null;
+  return text ? t(text[0], text[1]) : '';
 }
 
 /* ─────────────────────────────── Anunci ─────────────────────────────── */

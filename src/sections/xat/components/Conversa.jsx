@@ -40,8 +40,8 @@
  *     nous d'altres que entren pel final (#11). La cita porta el focus a
  *     l'original (#12).
  */
-import { RESPOSTA_IAIA } from '../../../data/identitatsSeed.js';
-import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { BENVINGUDA_IAIA } from '../../../data/identitatsSeed.js';
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
@@ -51,6 +51,8 @@ import SeparadorNoLlegits from './SeparadorNoLlegits.jsx';
 import BotoBaixar from './BotoBaixar.jsx';
 import BarraResposta from './BarraResposta.jsx';
 import Compositor, { esNomesLectura } from './Compositor.jsx';
+import ControlsAdjunt from './ControlsAdjunt.jsx';
+import ConsultaIAIA from './ConsultaIAIA.jsx';
 import {
   MAX_PAGINES_NO_LLEGITS, MS_ESPERA_OBERTURA, MS_RESSALT, anunciDeNous, clauDe, classificaCanvi,
   comportamentDesplacament, construeixFiles, estaAlFons, estatObertura, extremsSeq, noLlegitsEnObrir,
@@ -86,6 +88,48 @@ function coixiDalt(ol) {
   return Number.isFinite(valor) ? valor : 0;
 }
 
+/* Gauntlet 261022_0225 (crítica Claude, F5) · La regió en viu (#11) té
+   l'estat propi: anunciar els nous d'altres només repinta este <p>. Abans
+   l'estat vivia a Conversa, i cada missatge d'altri feia un segon render de
+   tota la conversa (20.002 bombolles amb 10.000 missatges). Conversa li
+   passa els anunciables per la ref. */
+const AnunciDeNous = forwardRef(function AnunciDeNous({ t }, ref) {
+  const [perAnunciar, setPerAnunciar] = useState(CAP);
+  useImperativeHandle(ref, () => setPerAnunciar, []);
+  return <p className="sdp-nomes-lector" role="status">{anunciDeNous(perAnunciar, t)}</p>;
+});
+
+/* Gauntlet 261022_0225 (crítica Claude, REV-ESTRES-2) · Cada missatge conserva
+   l'objecte d'abans mentre els seus camps són els mateixos. XatContext torna a
+   derivar la llista a cada missatge nou i a cada canvi dels fils, i
+   combinaMissatges (els propis ja llegits) i anotaMissatgesBloquejats hi fan
+   objectes nous amb els mateixos camps. Amb Bombolla memo, cada objecte nou
+   repintava la seua bombolla: en un directe, un missatge entrant en repintava
+   la meitat. Els objectes plans (metadades) es comparen un nivell més; la
+   resta, per identitat. Si no canvia res, la llista d'abans. */
+const esPla = (valor) => valor !== null && typeof valor === 'object'
+  && [Object.prototype, null].includes(Object.getPrototypeOf(valor));
+function mateixosCamps(a, b, nivell = 1) {
+  const claus = Object.keys(a);
+  if (claus.length !== Object.keys(b).length) return false;
+  return claus.every((clau) => Object.hasOwn(b, clau) && (Object.is(a[clau], b[clau])
+    || (nivell > 0 && esPla(a[clau]) && esPla(b[clau]) && mateixosCamps(a[clau], b[clau], nivell - 1))));
+}
+function estabilitza(rebuts, previ) {
+  if (!previ) return { llista: rebuts, perClau: new Map(rebuts.map((m, i) => [clauDe(m, i), m])) };
+  const perClau = new Map();
+  let igual = rebuts.length === previ.llista.length;
+  const llista = rebuts.map((m, i) => {
+    const clau = clauDe(m, i);
+    const abans = previ.perClau.get(clau);
+    const estable = abans && esPla(m) && abans !== m && mateixosCamps(abans, m) ? abans : m;
+    perClau.set(clau, estable);
+    if (estable !== previ.llista[i]) igual = false;
+    return estable;
+  });
+  return { llista: igual ? previ.llista : llista, perClau };
+}
+
 /* Pla 261014_1450 (front C) · `entitatActiva` (l'entitat de la barra negra,
    d'useXat per XatSection) baixa per props al Compositor, que diu qui signa.
    Per props i no per IdentitatContext: la UI de la conversa no llig cap
@@ -105,10 +149,16 @@ function coixiDalt(ol) {
    tal qual a la capçalera: la fletxa torna a la pàgina d'on s'ha entrat
    (origenDelXat.js). Sense, la fletxa de sempre (onBack). */
 export default function Conversa({
-  initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
+  initialText = '', clauEsborrany = null, fil, messages: missatgesRebuts, onSendMessage, onSendMedia = null, configAdjunts, usuariAdjunts, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false
+  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false
 }) {
+  /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
+     guarda la de l'últim render confirmat. */
+  const establesRef = useRef(null);
+  const estables = useMemo(() => estabilitza(missatgesRebuts, establesRef.current), [missatgesRebuts]);
+  useLayoutEffect(() => { establesRef.current = estables; }, [estables]);
+  const messages = estables.llista;
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triats, setTriats] = useState(() => new Set());
@@ -117,8 +167,8 @@ export default function Conversa({
   const [aBaix, setABaix] = useState(true);
   const [nousAvall, setNousAvall] = useState(0);
   const [ressalt, setRessalt] = useState(null);
-  /* Els nous d'altres que ha d'anunciar la regió en viu (#11). */
-  const [perAnunciar, setPerAnunciar] = useState(CAP);
+  /* Els nous d'altres que ha d'anunciar la regió en viu (#11): AnunciDeNous. */
+  const anunciRef = useRef(null);
   /* En estret (mòbil), enfocar el camp obriria el teclat (#6). */
   const estret = useContext(AppGridContext)?.mida === 'estret';
 
@@ -244,7 +294,7 @@ export default function Conversa({
         }
         /* Només després del salt inicial: la càrrega d'obrir no s'anuncia. */
         const anunciables = nousAnunciables(canvi.nous);
-        if (posicionadaRef.current && anunciables.length) setPerAnunciar(anunciables);
+        if (posicionadaRef.current && anunciables.length) anunciRef.current?.(anunciables);
       }
     }
     const claus = messages.map(clauDe);
@@ -260,7 +310,10 @@ export default function Conversa({
 
   useEffect(() => {
     setModeSeleccio(false);
-    setTriats(new Set());
+    /* Gauntlet 261022_0225 (crítica Claude, F6) · Un Set nou sempre és un
+       estat nou: en muntar, forçava un segon render de tota la conversa. Ara
+       només es buida si hi havia res triat. */
+    setTriats((previs) => (previs.size ? new Set() : previs));
   }, [fil?.id]);
 
   /* L'espera a estar al dia té límit: passat MS_ESPERA_OBERTURA es fixa amb
@@ -319,25 +372,57 @@ export default function Conversa({
      visible (XAT-C08). El context agrupa i mai fa retrocedir la marca. Res
      fins que la conversa és llesta: la llista provisional (memòria cau
      rància, o la pàgina sense el primer no llegit) no ha de fer pujar la
-     marca per damunt de no llegits que ningú no ha vist (#1, #4). */
+     marca per damunt de no llegits que ningú no ha vist (#1, #4).
+     Gauntlet 261022_0225 (crítica Claude, F7) · Un sol observador mentre la
+     conversa és llesta: cada canvi de la llista observa només les bombolles
+     noves i deixa les que ja no hi són. Abans se'n creava un a cada missatge,
+     que tornava a observar-les totes (6.668 observe() per un sol missatge
+     amb 10.000). Com que ja no es torna a notificar tot, es recorda què és a
+     la vista, i cada notificació amb la pestanya visible marca fins al més
+     alt: el mateix que feia la notificació inicial de l'observador nou. */
+  const marcaVistRef = useRef(onMarcaVist);
+  useEffect(() => { marcaVistRef.current = onMarcaVist; }, [onMarcaVist]);
+  const vigiaRef = useRef(null);
   useEffect(() => {
     const ol = llistaRef.current;
     if (!ol || !llesta || typeof IntersectionObserver === 'undefined') return undefined;
-    const nodes = ol.querySelectorAll('[data-vist]');
-    if (!nodes.length) return undefined;
+    const aLaVista = new Set();
     const observador = new IntersectionObserver((entrades) => {
+      for (const e of entrades) {
+        if (e.isIntersecting) aLaVista.add(e.target);
+        else aLaVista.delete(e.target);
+      }
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       let maxim = null;
-      for (const e of entrades) {
-        if (!e.isIntersecting) continue;
-        const seq = Number(e.target.getAttribute('data-vist'));
+      for (const node of aLaVista) {
+        const seq = Number(node.getAttribute('data-vist') ?? NaN);
         if (Number.isFinite(seq) && (maxim == null || seq > maxim)) maxim = seq;
       }
-      if (maxim != null) onMarcaVist(maxim);
+      if (maxim != null) marcaVistRef.current(maxim);
     }, { root: ol, threshold: 0.5 });
-    nodes.forEach((n) => observador.observe(n));
-    return () => observador.disconnect();
-  }, [messages, llesta, onMarcaVist]);
+    vigiaRef.current = { observador, observats: new Set(), aLaVista };
+    return () => {
+      observador.disconnect();
+      vigiaRef.current = null;
+    };
+  }, [llesta]);
+  useEffect(() => {
+    const vigia = vigiaRef.current;
+    const ol = llistaRef.current;
+    if (!vigia || !ol) return;
+    const actuals = new Set(ol.querySelectorAll('[data-vist]'));
+    for (const node of vigia.observats) {
+      if (actuals.has(node)) continue;
+      vigia.observador.unobserve(node);
+      vigia.observats.delete(node);
+      vigia.aLaVista.delete(node);
+    }
+    for (const node of actuals) {
+      if (vigia.observats.has(node)) continue;
+      vigia.observador.observe(node);
+      vigia.observats.add(node);
+    }
+  }, [messages, llesta]);
 
   /* El ressalt del missatge citat dura MS_RESSALT; un objecte nou a cada
      salt el torna a encendre encara que siga el mateix missatge. */
@@ -412,14 +497,14 @@ export default function Conversa({
     setRessalt({ id: String(id) });
   }, []);
 
-  const alterna = (clau) => {
+  const alterna = useCallback((clau) => {
     setTriats((previs) => {
       const nous = new Set(previs);
       if (nous.has(clau)) nous.delete(clau);
       else nous.add(clau);
       return nous;
     });
-  };
+  }, []);
 
   const surtDeSeleccio = () => {
     setModeSeleccio(false);
@@ -451,6 +536,83 @@ export default function Conversa({
     for (const m of messages) if (m?.id != null) mapa.set(String(m.id), m);
     return mapa;
   }, [messages]);
+
+  /* Gauntlet 261022_0225 (crítica Claude, F4) · Bombolla és memo i la llista
+     es memoritza: una tecla al compositor ja no torna a fer cap bombolla, i un
+     missatge nou només pinta el seu (també amb la llista que deriva
+     XatContext: estabilitza, REV-ESTRES-2). Per a tindre props estables, les accions
+     de moderació de cada missatge són sempre les mateixes funcions (es
+     resolen en el clic, amb la moderació i el fil del darrer render), i la
+     tria de cada bombolla només canvia quan canvia la seua casella. */
+  const araRef = useRef({ moderacio, fil });
+  useLayoutEffect(() => { araRef.current = { moderacio, fil }; });
+  const [accionsPerMissatge] = useState(() => new WeakMap());
+  const accionsDe = useCallback((msg) => {
+    let accions = accionsPerMissatge.get(msg);
+    if (!accions) {
+      const objectiuAra = () => {
+        const { moderacio: mod, fil: filAra } = araRef.current;
+        return mod && !msg.bloquejat ? mod.objectiuDeMissatge?.(msg, filAra) ?? null : null;
+      };
+      accions = {
+        denuncia: (obridor) => {
+          const objectiu = objectiuAra();
+          if (objectiu) araRef.current.moderacio.demanaDenuncia(objectiu, obridor);
+        },
+        bloqueja: (obridor) => {
+          const objectiu = objectiuAra();
+          if (objectiu) araRef.current.moderacio.demanaBloqueig(objectiu, obridor);
+        }
+      };
+      accionsPerMissatge.set(msg, accions);
+    }
+    return accions;
+  }, [accionsPerMissatge]);
+  const [triesPerClau] = useState(() => new Map());
+  const seleccioDe = useCallback((clau, triat) => {
+    const previa = triesPerClau.get(clau);
+    if (previa?.triat === triat) return previa;
+    const tria = { actiu: true, triat, onAlterna: () => alterna(clau) };
+    triesPerClau.set(clau, tria);
+    return tria;
+  }, [triesPerClau, alterna]);
+
+  const bombolles = useMemo(() => files.map((fila) => {
+    if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
+    if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
+    const msg = fila.msg;
+    /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
+    const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
+    const accions = objectiu ? accionsDe(msg) : null;
+    return (
+      <Bombolla
+        key={fila.clau}
+        missatge={msg}
+        configAdjunts={configAdjunts}
+        usuariAdjunts={usuariAdjunts}
+        onDenuncia={objectiu ? accions.denuncia : null}
+        onBloqueja={objectiu?.bloquejable && moderacio.potBloquejar ? accions.bloqueja : null}
+        nomAutor={objectiu?.autor?.nom ?? ''}
+        esGrup={esGrup}
+        primerDelGrup={fila.primerDelGrup}
+        citat={msg.respostaA != null ? perId.get(String(msg.respostaA)) ?? null : null}
+        onVesACita={vesAlMissatge}
+        onRespon={potRespondre ? respon : null}
+        ressaltat={ressalt != null && msg.id != null && ressalt.id === String(msg.id)}
+        locale={locale}
+        t={t}
+        seleccio={modeSeleccio ? seleccioDe(fila.clau, triats.has(fila.clau)) : null}
+        onReintenta={onReintenta}
+        onDescarta={onDescarta}
+        onCopia={onCopia}
+        actorLlista={actorLlista}
+        onMutaLlista={onMutaLlista}
+      />
+    );
+  }), [
+    files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
+    ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista
+  ]);
 
   /* Fase D (261020, tasca 2) · L'altra part d'un directe 1:1 amb una persona
      (ni grups, ni la IAIA, ni canals d'entitat, ni fils de pàgina). */
@@ -505,50 +667,30 @@ export default function Conversa({
         {messages.length === 0 && !cortesiaIAIA ? (
           <li className="sdp-xat-conversa-buida">{t('section.xat.conversaBuida', 'Cap missatge encara. Inicia la conversa!')}</li>
         ) : null}
-        {files.map((fila) => {
-          if (fila.tipus === 'dia') return <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />;
-          if (fila.tipus === 'no-llegits') return <SeparadorNoLlegits key={fila.clau} quants={fila.quants} t={t} />;
-          const msg = fila.msg;
-          /* Fase D (261020, tasca 2) · Què es pot denunciar o bloquejar d'esta bombolla. */
-          const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
-          return (
-            <Bombolla
-              key={fila.clau}
-              missatge={msg}
-              onDenuncia={objectiu ? (obridor) => moderacio.demanaDenuncia(objectiu, obridor) : null}
-              onBloqueja={objectiu?.bloquejable && moderacio.potBloquejar ? (obridor) => moderacio.demanaBloqueig(objectiu, obridor) : null}
-              nomAutor={objectiu?.autor?.nom ?? ''}
-              esGrup={esGrup}
-              primerDelGrup={fila.primerDelGrup}
-              citat={msg.respostaA != null ? perId.get(String(msg.respostaA)) ?? null : null}
-              onVesACita={vesAlMissatge}
-              onRespon={potRespondre ? respon : null}
-              ressaltat={ressalt != null && msg.id != null && ressalt.id === String(msg.id)}
-              locale={locale}
-              t={t}
-              seleccio={modeSeleccio ? { actiu: true, triat: triats.has(fila.clau), onAlterna: () => alterna(fila.clau) } : null}
-              onReintenta={onReintenta}
-              onDescarta={onDescarta}
-              onCopia={onCopia}
-              actorLlista={actorLlista}
-              onMutaLlista={onMutaLlista}
-            />
-          );
-        })}
+        {bombolles}
         {cortesiaIAIA ? (
           <li className="sdp-xat-conversa-buida">
             <strong>IAIA MarIA</strong>
-            <p>{RESPOSTA_IAIA}</p>
+            <p>{t('section.xat.iaia.salutacio', BENVINGUDA_IAIA)}</p>
             <small>{t('section.xat.iaia.cortesia', 'Benvinguda automàtica. Es mostra només ací; no és una resposta guardada al xat compartit.')}</small>
           </li>
         ) : null}
       </ol>
 
       {/* Només els nous d'altres que entren pel final (#11). */}
-      <p className="sdp-nomes-lector" role="status">{anunciDeNous(perAnunciar, t)}</p>
+      <AnunciDeNous ref={anunciRef} t={t} />
+
+      {consultaIAIA && !modeSeleccio ? <ConsultaIAIA t={t} /> : null}
 
       {aBaix ? null : <BotoBaixar nous={nousAvall} onBaixa={baixaAlFinal} t={t} />}
 
+      {!modeSeleccio && potRespondre && !contrapartBloquejada && fil.participant !== false && onSendMedia ? (
+        <ControlsAdjunt fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale} onEnvia={async (conversa, adjunt, opcions) => {
+          const resultat = await onSendMedia(conversa, { ...adjunt, respostaA: resposta?.id || null }, opcions);
+          if (resultat?.length) cancelaResposta();
+          return resultat;
+        }} />
+      ) : null}
       {modeSeleccio ? (
         <div className="sdp-xat-compositor sdp-xat-compositor--seleccio">
           <button

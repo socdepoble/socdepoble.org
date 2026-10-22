@@ -83,6 +83,10 @@
    layer(), per la mateixa raó, i darrere de tpv.css: ajusta .sdp-pindola i
    .sdp-control dins de la peça. */
 @import url('../components/PedraSeca/UniversalListCard/UniversalListCard.css');
+/* Xat: els fulls de les peces viatgen al CSS compartit que la SPA i el
+   component encastat injecten dins del seu Shadow DOM. Ja declaren capa. */
+@import url('../sections/xat/components/AdjuntXat.css');
+@import url('../sections/xat/components/ConsultaIAIA.css');
 /* Ús de les amplades estretes de Noto Sans (261004). També escriu dins de
    `@layer components`: sense layer(), per la mateixa raó. */
 @import url('./tipografia-estreta.css');

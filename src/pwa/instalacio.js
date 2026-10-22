@@ -1,7 +1,10 @@
 /* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Instal·lar Sóc de
    Poble a l'ordinador (Mac, Windows i Linux) com una aplicació en finestra
-   pròpia: els provadors de la beta ho fan des del botó de la barra negra
-   (src/components/universal/BotoInstalaApp.jsx).
+   pròpia, des del botó de la barra negra
+   (src/components/universal/BotoInstalaApp.jsx). Pausa de la beta (pla
+   261021_2345 §1): App.jsx no munta el botó; la captura continua ací perquè
+   reactivar-lo siga tornar-lo a muntar, i mentrestant el navegador tampoc no
+   oferix la seua instal·lació pròpia.
 
    Chromium (Chrome, Edge, Brave, Opera) dispara «beforeinstallprompt» com a
    molt una volta per càrrega, quan la pàgina complix els criteris
@@ -172,6 +175,6 @@ export function creaInstalacio() {
   return Object.freeze({ captura, subscriu, pot, demana });
 }
 
-/* El de la pàgina: l'únic que captura és src/main.jsx, i l'únic que el llig és useInstalacioApp. */
+/* El de la pàgina: l'únic que captura és src/main.jsx, i l'únic que el llig és useInstalacioApp (sense cap lector muntat durant la pausa de la beta). */
 export const INSTALACIO = creaInstalacio();
 export const capturaInstalacio = INSTALACIO.captura;

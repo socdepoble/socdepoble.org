@@ -849,17 +849,20 @@ export function PerfilEditor({ identitat }) {
      avatar» i «Guardar enquadre»; sense imatge, el selector). Sense cap foto,
      el cercle es pinta buit amb la càmera (botoBuit), i la ranura «Avatar»
      de la persona i de l'agent ja no hi és: la ranura queda per al logotip
-     d'una organització. En lectura, l'avatar redó de sempre, sense botó.
-     Mentre la foto nova puja, el cercle ho diu (ocupat → aria-busy) i el clic
+     d'una organització. En lectura, l'avatar redó d'un agent, sense botó; una
+     persona, cap (Gauntlet 261022_0225, PERF-5). Mentre la foto nova puja, el cercle ho diu (ocupat → aria-busy) i el clic
      ho avisa (la guarda d'useImatgeDeFitxa). Correcció de la revisió · I es
      veu i s'anuncia: el carregador al lloc de la càmera i, amagat,
      l'AVIS_IMATGE_PUJANT de sempre en una regió d'estat (textOcupat). */
   const ranuraDelLogo = potEditar && !esPilot && !ambAvatarRedo;
   const etiquetaImatgePropia = ETIQUETA_LOGOTIP;
-  const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && avatarDesat && !potEditar ? {
+  /* Gauntlet 261022_0225 (Tasca 2; PERF-5) · En lectura, una persona no porta
+     el cercle de 300px damunt de l'H1: com a la seua fitxa pública (ordre del
+     Mestre, 261022), la cara viu a la barra taronja. L'agent el conserva. */
+  const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && mena !== 'persona' && avatarDesat && !potEditar ? {
     src: avatarDesat,
     alt: `Avatar de ${identitat.nom}`,
-  } : null), [ambAvatarRedo, avatarDesat, identitat.nom, potEditar]);
+  } : null), [ambAvatarRedo, mena, avatarDesat, identitat.nom, potEditar]);
   const avatarDeLEdicio = useMemo(() => (ambAvatarRedo && potEditar ? {
     src: avatarDesat,
     alt: `Avatar de ${identitat.nom}`,
@@ -887,7 +890,8 @@ export function PerfilEditor({ identitat }) {
     return {
       document: potEditar ? fitxa : null,
       /* Ordre E (261007) · En lectura, damunt de l'H1, el mateix que la fitxa
-         pública: el logotip d'una entitat o l'avatar redó, sense botó. */
+         pública: el logotip d'una entitat o l'avatar redó d'un agent, sense
+         botó. Una persona, res (Gauntlet 261022_0225, PERF-5). */
       emptyDocument: potEditar ? undefined : {
         ...fitxaDeLectura(identitat),
         labels: etiquetes,

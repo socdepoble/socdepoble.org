@@ -182,8 +182,10 @@ describe('Javi Llinares', () => {
       expect([consulta, tipus, resultat.perTipus.persones, resum(resultat.llista)]).toEqual([consulta, tipus, 1, [PROPIA]]);
       expect(resultat.llista[0].accio).toBeNull();
     }
-    /* El text del catàleg també compta: el seu rol troba la fitxa pròpia. */
-    expect(resum(cercaEntrades(entrades, 'coordinador', 'persones').llista)).toEqual([PROPIA]);
+    /* El text del catàleg també compta: la seua entradilla troba la fitxa pròpia.
+       Gauntlet 261022_0225 (Tasca 2) · Abans buscava pel rol vell
+       («coordinador»); ara pel text de la fitxa autèntica. */
+    expect(resum(cercaEntrades(entrades, 'dissenyador', 'persones').llista)).toEqual([PROPIA]);
     /* La IAIA i l'entitat pilot no es toquen. */
     expect(cercaEntrades(entrades, 'iaia', 'persones').llista.map((entrada) => entrada.clau)).toEqual([`persones:${IAIA_ID}`]);
     expect(cercaEntrades(entrades, 'sóc de poble', 'entitats').llista.map((entrada) => entrada.clau)).toEqual([`entitats:${ENTITAT_PILOT_ID}`]);

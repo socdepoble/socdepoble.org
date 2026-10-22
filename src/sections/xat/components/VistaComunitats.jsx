@@ -15,6 +15,10 @@
  *     llista (FilaConversa); i «Veure-ho tot ›», que obri la seua fitxa
  *     (/xat?comunitat=<id>, FitxaComunitat de l'onada 3A);
  *   · sense cap comunitat, un estat buit que diu d'on naixen.
+ * Gauntlet 261022_0225 (XAT-3) · La comunitat de Sóc de Poble porta el seu
+ * logo oficial, com a la llista i al rail (caraDeSocDePoble.js).
+ * Gauntlet 261022_0225 (XAT-1) · `peu`: un node darrere del contingut, dins
+ * del cos amb scroll (sense sessió, l'accés que li passa XatSection).
  *
  * Presentacional: no llig cap context de l'app, i per això es pot pintar al
  * catàleg de disseny. Qui la munta decidix on porta cada clic.
@@ -24,6 +28,7 @@ import { ChevronRight, Plus, Users } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import CaraXat from './CaraXat.jsx';
 import FilaConversa from './FilaConversa.jsx';
+import { caraDeComunitat } from '../caraDeSocDePoble.js';
 
 const CAP = Object.freeze([]);
 const noop = () => {};
@@ -37,7 +42,7 @@ export function fillsEnOrdre(fills = CAP) {
 
 export default function VistaComunitats({
   comunitats = CAP, filActiuId = null, onObriFil = noop, onObriComunitat = noop, onNova = noop,
-  esquerra = null, carregant = false, locale, t, joId = null
+  esquerra = null, carregant = false, peu = null, locale, t, joId = null
 }) {
   const base = useId();
   const titol = t('section.xat.rail.comunitats', 'Comunitats');
@@ -65,7 +70,7 @@ export default function VistaComunitats({
             <section key={fil.id} className="sdp-xat-vista-comunitats__bloc" aria-labelledby={idNom} data-comunitat={String(fil.id)}>
               <h3 id={idNom} className="sdp-xat-vista-comunitats__cap">
                 <span className="sdp-xat-vista-comunitats__avatar" aria-hidden="true">
-                  <CaraXat nom={nom} src={fil.avatar_url} mida="md" llavor={fil.id} alt="" className="sdp-xat-avatar--quadrat" />
+                  <CaraXat nom={nom} src={caraDeComunitat(fil)} mida="md" llavor={fil.id} alt="" className="sdp-xat-avatar--quadrat" />
                 </span>
                 <span className="sdp-xat-vista-comunitats__nom">{nom}</span>
               </h3>
@@ -106,7 +111,7 @@ export default function VistaComunitats({
           <Plus size={24} aria-hidden="true" focusable="false" />
         </button>
       </AppGridColumn>
-      <div className="sdp-workspace-column__body">{cos}</div>
+      <div className={peu ? 'sdp-workspace-column__body sdp-xat-cos--amb-peu' : 'sdp-workspace-column__body'}>{cos}{peu}</div>
     </>
   );
 }

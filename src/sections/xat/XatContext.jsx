@@ -165,6 +165,7 @@ import {
   loadFils,
   loadMissatges,
   enviaMissatge,
+  publicaAdjuntXat,
   marcaLlegit,
   creaFilDirecte,
   carregaMembres,
@@ -371,6 +372,7 @@ const BUIT = {
   llistaFresca: true,
   avisLlista: null,
   sendChatMessage: async () => [],
+  sendChatMedia: null,
   reintenta: async () => [],
   descartaFallit: () => {},
   marcaVist: () => {},
@@ -1229,6 +1231,35 @@ export function XatProvider({ children, config }) {
     return opcions === undefined ? sendChatMessage(fil, text) : sendChatMessage(fil, text, opcions);
   }, [sendChatMessage]);
 
+  /* L'adjunt conserva la previsualització local fins a la confirmació.
+     No entra a la cua de text ni desa Blobs/URL temporals en localStorage. */
+  const sendChatMedia = useCallback(async (fil, adjunt, { signal } = {}) => {
+    const op = captura();
+    if (!joId || !vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+    const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
+    if (!complet?.id || complet.potEscriure === false || (complet.tipus === 'canal' && complet.potEscriure !== true)) {
+      throw new Error('No pots enviar fitxers en esta conversa.');
+    }
+    if (!teCapacitat('xatMultimedia')) throw new Error('Este node encara no permet enviar adjunts.');
+    const moderacio = moderacioRef.current;
+    if (typeof moderacio?.asseguraNormes === 'function' && !(await moderacio.asseguraNormes())) {
+      throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
+    }
+    if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+    const controller = new AbortController();
+    const avorta = () => controller.abort();
+    signal?.addEventListener('abort', avorta, { once: true });
+    op.controller.signal.addEventListener('abort', avorta, { once: true });
+    let desat;
+    try { desat = await publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal }); }
+    finally { signal?.removeEventListener('abort', avorta); op.controller.signal.removeEventListener('abort', avorta); }
+    if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+    const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
+    mutaMissatges((previs) => ({ ...previs, [complet.id]: fusionaPerSeq(previs[complet.id] || [], [definitiu]) }));
+    mutaFils((previs) => previs.map((f) => f.id === complet.id ? actualitzaFilAmbMissatge(f, definitiu) : f));
+    return [definitiu];
+  }, [joId, captura, vigent, config, mutaMissatges, mutaFils]);
+
   /* ── Reintent manual d'una bombolla en error, amb el mateix id ── */
   const reintenta = useCallback(async (missatgeId) => {
     if (!joId || !vigent(captura())) return [];
@@ -1608,6 +1639,7 @@ export function XatProvider({ children, config }) {
     carregaMesAntics,
     /* Fase D (261020, tasca 2) · Amb la porta de les normes (enviaAmbNormes). */
     sendChatMessage: enviaAmbNormes,
+    sendChatMedia,
     reintenta,
     descartaFallit,
     marcaVist,
@@ -1628,7 +1660,7 @@ export function XatProvider({ children, config }) {
     iaiaApagada,
     esFilAmagat: filAmagat
   }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, missatgesDerivats,
-    totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, enviaAmbNormes, reintenta, descartaFallit, marcaVist,
+    totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat]);
 

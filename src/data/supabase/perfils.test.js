@@ -4,6 +4,7 @@ vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, request: m.reques
   getResolvedConfig: (config = {}) => ({ hasSupabaseConfig: true, runtimeDataMode: config.dataMode || 'remote', ...config }) }));
 vi.mock('../localPerfils.js', () => ({ localPerfils: { loadPerfilPublic: m.local } }));
 import { loadPerfilPublic, perfilDOrganitzacio, perfilDePersona } from './perfils.js';
+import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
 beforeEach(() => { vi.clearAllMocks(); m.user = null; m.request.mockResolvedValue([]); m.rpc.mockResolvedValue([]); m.local.mockResolvedValue({ id: 'demo' }); });
 
 test.each(['socdepoble', '0001', '11111111-1a1a-0000-0000-000000000000'])('remot no suplix %s amb el catàleg demostratiu', async id => {
@@ -138,8 +139,29 @@ test('261002 · una altra persona amb sessió: es demana a perfil_public i mai a
     lema: 'Del Comtat', bio: 'Llauradora', publicat: true, propietari: false, emoticona: '🌾', creat: '2026-08-01T09:00:00+00:00', modificat: null
   });
   expect(m.rpc).toHaveBeenCalledTimes(1);
-  expect(m.rpc).toHaveBeenCalledWith('perfil_public', { p_id: ELLA }, { signal }, { signal });
+  /* Expectativa actualitzada a propòsit (Gauntlet 261022_0225, Tasca 1) · La
+     RPC rep el senyal de l'adaptador, lligat al de qui crida i al termini de
+     3 s (la prova de davall), no el de qui crida tal qual. */
+  expect(m.rpc).toHaveBeenCalledWith('perfil_public', { p_id: ELLA }, { signal: expect.any(AbortSignal) }, { signal: expect.any(AbortSignal) });
+  const [[, , configDeLaRpc, opcionsDeLaRpc]] = m.rpc.mock.calls;
+  expect(opcionsDeLaRpc.signal).toBe(configDeLaRpc.signal);
   expect(m.request.mock.calls.map(([ruta]) => ruta).some((ruta) => ruta.includes('/profiles'))).toBe(false);
+});
+
+/* Gauntlet 261022_0225 (Tasca 1) · El senyal de qui crida avorta la lectura
+   remota en vol, i la consulta en curs rep l'avortament. */
+test('Gauntlet 261022_0225 · el senyal de qui crida avorta la lectura en vol amb un AbortError', async () => {
+  let senyalDeLaConsulta;
+  m.request.mockImplementation((_ruta, _config, { signal }) => {
+    senyalDeLaConsulta = signal;
+    return new Promise(() => {});
+  });
+  const controlador = new AbortController();
+  const lectura = loadPerfilPublic('forn', { signal: controlador.signal });
+  await Promise.resolve();
+  controlador.abort();
+  await expect(lectura).rejects.toMatchObject({ name: 'AbortError' });
+  expect(senyalDeLaConsulta.aborted).toBe(true);
 });
 
 test('261002 · la fitxa mínima (mateix poble, no publicada): nom, foto i poble, la resta buida i sense publicar', async () => {
@@ -171,4 +193,43 @@ test('261002 · sense sessió, amb un slug o amb el propi id no es pregunta a pe
   m.request.mockImplementation(async (url) => (url.includes('/profiles') ? [{ id: JO, full_name: 'Jo' }] : []));
   expect(await loadPerfilPublic(JO)).toMatchObject({ propietari: true, nom: 'Jo' });
   expect(m.rpc).not.toHaveBeenCalled();
+});
+
+/* Revisió del Gauntlet 261022_0225 (REV-PERF-1) · Una consulta que no ha
+   arribat al servidor (sense xarxa: l'estat 0 i CODI_BACKEND_INABASTABLE de
+   runtime.js; temps esgotat) es propaga, en les tres lectures; una resposta
+   del servidor amb error continua sent null. */
+test('REV-PERF-1 · sense xarxa o sense temps, la lectura es rebutja; un 503 del servidor continua sent null', async () => {
+  const senseXarxa = Object.assign(new Error('Error de xarxa'), { name: 'ErrorSupabase', status: 0, codi: CODI_BACKEND_INABASTABLE });
+  const tallada = Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' });
+  m.request.mockRejectedValueOnce(senseXarxa);
+  await expect(loadPerfilPublic('forn')).rejects.toBe(senseXarxa);
+  m.request.mockRejectedValueOnce(tallada);
+  await expect(loadPerfilPublic('forn')).rejects.toBe(tallada);
+  m.request.mockRejectedValueOnce(Object.assign(new Error('Supabase 503: fallada'), { name: 'ErrorSupabase', status: 503 }));
+  expect(await loadPerfilPublic('forn')).toBeNull();
+  m.user = { id: JO };
+  m.rpc.mockRejectedValueOnce(senseXarxa);
+  await expect(loadPerfilPublic(ELLA)).rejects.toBe(senseXarxa);
+  m.request.mockImplementation(async (url) => { if (url.includes('/profiles')) throw senseXarxa; return []; });
+  await expect(loadPerfilPublic(JO)).rejects.toBe(senseXarxa);
+});
+
+/* Revisió del Gauntlet 261022_0225 (REV-PERF-2) · Qui crida pot demanar un
+   altre pressupost (el «Torna-ho a provar» de la fitxa pública); no arriba a
+   la consulta. Sense, els 3 s (perfils.gauntlet.test.js). */
+test('REV-PERF-2 · config.terminiMs allarga el pressupost de la lectura i no arriba a la consulta', async () => {
+  vi.useFakeTimers();
+  try {
+    m.request.mockImplementation(() => new Promise(() => {}));
+    let resultat;
+    loadPerfilPublic('forn', { terminiMs: 12000 }).catch((error) => { resultat = error; });
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(resultat).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(9000);
+    expect(resultat).toMatchObject({ name: 'TimeoutError' });
+    expect(m.request.mock.calls[0][1]).not.toHaveProperty('terminiMs');
+  } finally {
+    vi.useRealTimers();
+  }
 });

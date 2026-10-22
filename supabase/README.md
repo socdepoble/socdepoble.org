@@ -418,6 +418,65 @@ description: "Documentació canònica de Sóc de Poble."
   dues files han de tornar `false`. Idempotent; **NO aplicada: l'aplica el
   Mestre, mai un agent**.
 
+- `migrations/2610220240_xat_adjunts_i_quota.sql`
+  Gauntlet 261022_0225 (Tasca 3; disseny de GPT Codex, reparat per la crítica
+  de Claude, F1-F14 i revisió R1-R8): els adjunts privats del xat (foto, nota
+  de veu i vídeo de fins a 10 s) i la quota rural de 20 MB per persona. Crea
+  `public.xat_adjunts` (una reserva per adjunt; l'id és el del missatge i el
+  nom opac de l'objecte), el bucket privat `xat_adjunts`, les polítiques de
+  `storage.objects`, el disparador `private.xat_escriptura_final`, les RPC
+  `xat_quota`, `xat_reserva_adjunt`, `xat_cancella_reserva`,
+  `xat_prepara_descart`, `xat_publica_adjunt` i `xat_llegix_adjunt`, la v5 de
+  `xat_fils_meus` (la v4 de 2609282100 sencera més `ultim_tipus`) i la neteja
+  `private.xat_neteja_adjunts`. storage-api fa una sonda de permisos (un
+  INSERT com a `authenticated` amb `mimetype` i `contentLength`, sense
+  `size`, que desfà) i després l'escriptura final com a superusuari (sense
+  RLS, amb `size`). La política d'inserció valida la sonda (reserva pròpia de
+  fa menys de 15 minuts, MIME i `Content-Length` exactes, només POST o TUS,
+  cap URL de pujada signada); el disparador valida només l'escriptura final
+  (reserva viva, ni publicada ni en descart, de qui puja, mida i MIME exactes,
+  sota el pany de la fila), de manera que cancel·lar a mitja pujada la fa
+  fallar i no deixa cap objecte; `xat_publica_adjunt` ho torna a comprovar i
+  fixa la versió que es podrà llegir. La pujada ha de ser un POST de cos cru
+  (o TUS) amb `Content-Type` i `Content-Length` iguals als de la reserva: el
+  `.upload()` de supabase-js amb un Blob o un File envia multipart i Storage el
+  rebutja amb 403. Ningú no pot llistar el bucket. Sostres: foto WebP o JPEG
+  fins a 2 MB, veu fins a 3 MB, vídeo MP4, WebM o QuickTime fins a 20 MB, 64
+  bytes com a mínim (el CHECK `xat_adjunts_mida` de la taula només fixa 64
+  bytes - 20 MB; un sostre per tipus es canvia amb una migració nova i només
+  afecta les reserves noves); deu pendents sense publicar i seixanta adjunts
+  vius reservats en l'última hora per persona (una reserva cancel·lada no
+  compta, perquè no deixa res). Codis: `SDP-XAT-001`, `006`, `008`, `009`,
+  `011`, `020`, `021`, `022` (deu pendents: cal enviar-ne o descartar-ne) i
+  `429`, i en aplicar-la `SDP-XAT-903` (avís: pg_cron no està actiu). Els
+  permisos del mandat Supabase 30-Oct-2026, després de revocar-ho tot a `public`, `anon`,
+  `authenticated` i `service_role`:
+  `grant select, delete on table public.xat_adjunts to service_role;` (el
+  client només hi entra per les RPC).
+  **NO aplicada: l'aplica el Mestre, mai un agent**, i va ABANS de publicar el
+  client que envia adjunts. Prerequisits
+  aplicats de veres: 2609261500 (`private.purga_storage_pendent`; sense ella,
+  la cascada d'una baixa falla), 2609270200 i 2609272200 (seq,
+  `es_participant`, `seq_visible`, `es_admin_del_fil`), 2609282100
+  (`xat_fils_meus` v4), 2610081543 (la signatura vigent de `xat_envia`) i un
+  storage-api amb `storage.operation()`, `owner_id` i `version` (provat amb
+  v1.79.36); el rol que l'aplica ha de poder crear un disparador sobre
+  `storage.objects` (si no, la transacció sencera es desfà). Si pg_cron no hi
+  era, la neteja es programa a mà, com a `postgres`:
+  `select cron.schedule('sdp-neteja-xat-adjunts', '23 * * * *', $cron$select private.xat_neteja_adjunts(500)$cron$);`.
+  Límits coneguts: la durada del vídeo i de la veu és la que declara el client
+  (el servidor no descodifica el fitxer); els binaris alliberats esperen a
+  `private.purga_storage_pendent` el worker amb `service_role`, que encara no
+  existix, i fins que el worker no els purga continuen comptant en la quota
+  de qui els va pujar; un adjunt sense peu es desa amb `text` null i, fins que
+  el client llija `ultim_tipus`, la llista de converses en diu «Cap missatge.».
+  Verificació posterior (lectura):
+  `select id, public, file_size_limit, allowed_mime_types from storage.buckets where id = 'xat_adjunts';`
+  i `select jobname, schedule from cron.job where jobname = 'sdp-neteja-xat-adjunts';`;
+  després, una pujada real des del client. La prova és
+  `node tests/xat-multimedia-postgres.audit.mjs`: storage-api real si les
+  imatges de Supabase són locals i, si no, la fixture, i diu quina ha corregut.
+
 - `seed.sql`
   Contingut inicial del portal.
 

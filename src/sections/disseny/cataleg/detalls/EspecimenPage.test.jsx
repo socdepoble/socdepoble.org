@@ -149,6 +149,18 @@ describe('EspecimenPage · el bloc del títol: avatar o logotip', () => {
     expect(fila.textContent).toContain('Amb fila de píndoles');
   });
 
+  /* Gauntlet 261022_0225 (Tasca 2; PERF-2) · El text ja no ensenya l'avatar
+     de 300px a la fitxa d'una persona: la seua cara viu a la barra taronja. */
+  it('el text diu que la fitxa d’una persona no porta l’avatar damunt de l’H1', () => {
+    const arrel = pinta();
+    const fila = [...arrel.querySelectorAll('table tbody tr')].find((tr) => tr.querySelector('td code').textContent === 'avatarAutor');
+    expect(fila.textContent).not.toContain('(la fitxa pública, el detall d’un element)');
+    expect(fila.textContent).toContain('La fitxa d’una persona, pública o en lectura, no el porta');
+    const mostraPersona = mostra('Una persona o la IA: l’avatar redó, cap logotip').textContent;
+    expect(mostraPersona).not.toContain('A la fitxa de qui signa fa 300px');
+    expect(mostraPersona).toContain('La fitxa d’una persona ja no el porta.');
+  });
+
   /* Decisió del Mestre (261008) · drets d'autor dins de l'editor: el contracte
      de PageFrame documenta onCanviaCopyright i diu que fora de l'editor és
      l'enllaç de sempre. */

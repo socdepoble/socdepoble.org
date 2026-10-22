@@ -80,10 +80,13 @@ export default function Compositor({
        Avisos (el xat de Javi Llinares per a qui no s'ha registrat, al xat de
        mostra) porta el seu avís ja traduït (`avisNomesLectura`): la mateixa
        línia i la mateixa classe, amb la icona de persona.
-       Ordre del Mestre (261020, 23:30) · Botó blau clar «Registra't» per a
-       facilitar l'accés directe a la pàgina de registre des del peu del xat. */
+       Ordre del Mestre (261020, 23:30) · L'accés directe a la pàgina de
+       registre des del peu del xat. Gauntlet 261022_0225 (XAT-4) · El fa la
+       parella «Connectar-se» / «Registrar-se» del peu de la conversa
+       (AccesAlXat, XatSection: pel router, cada una amb el seu mode i la
+       tornada). L'enllaç cru «Registra't» d'ací obria «Entrar», recarregava
+       la pàgina i repetia el nom del botó que crea el compte: ja no hi és. */
     const avisPropi = typeof fil.avisNomesLectura === 'string' && fil.avisNomesLectura ? fil.avisNomesLectura : null;
-    const esDeMostra = Boolean(fil?.id?.startsWith('fake-') || avisPropi);
     return (
       <div className="sdp-xat-compositor-barra-avis">
         <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
@@ -92,14 +95,6 @@ export default function Compositor({
             : <Megaphone size={20} aria-hidden="true" focusable="false" />}
           <span>{avisPropi || t('section.xat.canal.nomesAdmins', 'En Avisos només escriuen els administradors.')}</span>
         </p>
-        {esDeMostra ? (
-          <a
-            href="/registre?mode=entrar&tornar=%2Fxat"
-            className="sdp-boto sdp-boto--primari sdp-xat-compositor__boto-registre"
-          >
-            {t('section.xat.fake.botoRegistrat', "Registra't")}
-          </a>
-        ) : null}
       </div>
     );
   }

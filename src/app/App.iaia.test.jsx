@@ -193,7 +193,7 @@ describe('/anima · el botó «Anar al xat» dins del bloc de l’H1 i al final 
       /* La conversa oberta és la de mostra: les dues bombolles de la IAIA del xat de mostra. */
       await waitFor(() => {
         const bombolles = [...document.querySelectorAll('.sdp-xat-bombolla__text')].map((bombolla) => bombolla.textContent);
-        expect(bombolles).toEqual([t('section.xat.fake.iaia1'), t('section.xat.fake.iaia2')]);
+        expect(bombolles).toEqual([BENVINGUDA_IAIA, t('section.xat.fake.iaia2')]);
       }, ESPERA);
       expect(window.location.pathname).not.toBe('/registre');
       expect(document.body.textContent).not.toContain('Ací no hi ha res');

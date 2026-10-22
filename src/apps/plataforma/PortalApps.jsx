@@ -8,7 +8,7 @@
  * premium sense dret ho diu tal qual: res de patrons foscos.
  */
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
-import { useUIState } from '../../app/contexts/UIContext';
+import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { PaginaApp } from '../../components/PedraSeca/index.js';
 import { EstatBuit } from '../../components/PedraSeca/atoms/estats.jsx';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
@@ -26,24 +26,35 @@ export const ETIQUETA_ESTAT = Object.freeze({
 
 const TO_ESTAT = Object.freeze({ available: 'exit', disabled: 'neutre', unavailable: 'avis', unsubscribed: 'info' });
 
+/* Gauntlet 261022_0225 (troballa F7 i auditoria didàctica de /plugin/gestoria
+   i /plugin/rss) · El motiu, en paraules del poble i traduïble: [clau,
+   reserva], i el valencià és la reserva. Abans, literals fixos amb «node»,
+   «app», «amfitrió», «desenvolupament», «premium» i «codi», que el canvi
+   d'idioma no traduïa. El mateix parell de verbs que el botó de la pàgina
+   del plugin: «desactivar» i «tornar a activar». */
 const TEXT_MOTIU = Object.freeze({
-  'no-compilada': 'Este node no porta esta app.',
-  'entorn-desenvolupament': 'Encara està en obres: només es pot provar en desenvolupament.',
-  'amfitrio-no-la-declara': 'L’amfitrió d’este node no l’ha activada.',
-  'apagada-per-defecte': 'Este node no l’activa per defecte.',
-  'persona-apagada': 'L’has apagada tu. La pots tornar a encendre quan vulgues.',
-  'sense-capacitat': 'El servidor d’este node encara no té el que esta app necessita.',
-  'document-no-propi': 'Guarda dades de salut: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.',
-  'document-no-propi-financeres': 'Guarda dades financeres: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.',
-  'sense-dret': 'És una app premium i este node encara no en té el dret. Sóc de Poble és un projecte lliure: el premium paga el servei, no el codi.'
+  'no-compilada': Object.freeze(['plataforma.motiu.noCompilada', 'Esta web encara no té esta eina.']),
+  'entorn-desenvolupament': Object.freeze(['plataforma.motiu.entornDesenvolupament', 'Esta eina encara està en proves i no està a punt per a tothom.']),
+  'amfitrio-no-la-declara': Object.freeze(['plataforma.motiu.amfitrioNoLaDeclara', 'Qui porta esta web no l’ha encesa.']),
+  'apagada-per-defecte': Object.freeze(['plataforma.motiu.apagadaPerDefecte', 'Esta web la té apagada, de moment.']),
+  'persona-apagada': Object.freeze(['plataforma.motiu.personaApagada', 'L’has desactivada tu. La pots tornar a activar quan vulgues.']),
+  'sense-capacitat': Object.freeze(['plataforma.motiu.senseCapacitat', 'Esta web encara no té tot el que esta eina necessita per a funcionar.']),
+  'document-no-propi': Object.freeze(['plataforma.motiu.documentNoPropi', 'Guarda dades de salut: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.']),
+  'document-no-propi-financeres': Object.freeze(['plataforma.motiu.documentNoPropiFinanceres', 'Guarda dades financeres: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.']),
+  'sense-dret': Object.freeze(['plataforma.motiu.senseDret', 'És una eina de pagament i esta web encara no l’ha contractada. El programa és lliure: el que es paga és el servei.'])
 });
 
-/** El text que explica un motiu d'estat (interruptors.js). */
-export function textDelMotiu(motiu) {
-  return TEXT_MOTIU[motiu] || '';
+/* Sense traductor (qui no en té cap a mà), el valencià de reserva. */
+const RESERVA = (_clau, reserva) => reserva;
+
+/** El text que explica un motiu d'estat (interruptors.js). `t(clau, reserva)`, el traductor de la UI. */
+export function textDelMotiu(motiu, t = RESERVA) {
+  if (typeof motiu !== 'string' || !Object.hasOwn(TEXT_MOTIU, motiu)) return '';
+  return t(...TEXT_MOTIU[motiu]);
 }
 
 function FitxaApp({ app, idioma, onApaga }) {
+  const { t } = useUIActions();
   const { manifest, estat, motiu, personaPotApagar } = app;
   const Icona = iconaDe(manifest.icona);
   const titol = titolDe(manifest.titol, idioma);
@@ -58,7 +69,7 @@ function FitxaApp({ app, idioma, onApaga }) {
         <p className="sdp-app-fitxa__estat">
           <Insignia to={TO_ESTAT[estat]}>{ETIQUETA_ESTAT[estat]}</Insignia>
         </p>
-        {motiu ? <p className="sdp-app-fitxa__motiu">{textDelMotiu(motiu)}</p> : null}
+        {motiu ? <p className="sdp-app-fitxa__motiu">{textDelMotiu(motiu, t)}</p> : null}
       </div>
       <div className="sdp-app-fitxa__accions">
         <Interruptor

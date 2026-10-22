@@ -74,7 +74,8 @@ test('una ruta canònica passa el seu identificador fix, que mana sobre el parà
   mocks.load.mockResolvedValue(JAVI);
   render(<PerfilPublicSection id="javillinares" />);
   await screen.findByRole('heading', { level: 1, name: JAVI.nom });
-  expect(mocks.load).toHaveBeenCalledWith('javillinares', mocks.ui.externalConfig);
+  /* Gauntlet 261022_0225 (Tasca 1) · Amb el senyal que cancel·la la càrrega. */
+  expect(mocks.load).toHaveBeenCalledWith('javillinares', { ...mocks.ui.externalConfig, signal: expect.any(AbortSignal) });
   expect(mocks.load).not.toHaveBeenCalledWith('ruta', expect.anything());
 });
 
@@ -83,7 +84,7 @@ test('sense `id`, el paràmetre de la ruta de sempre (/gent/:agentId…)', async
   mocks.load.mockResolvedValue(FORN);
   render(<PerfilPublicSection />);
   await screen.findByRole('heading', { level: 1, name: FORN.nom });
-  expect(mocks.load).toHaveBeenCalledWith('forn', mocks.ui.externalConfig);
+  expect(mocks.load).toHaveBeenCalledWith('forn', { ...mocks.ui.externalConfig, signal: expect.any(AbortSignal) });
 });
 
 /* Revisió adversarial del Gauntlet 261016 (encàrrec C) · DEROGAT «un UUID en
@@ -141,7 +142,7 @@ test('Bloc 3.6.3 · la fitxa de la IAIA declara /iaia per la ruta neta i per /pe
   mocks.load.mockResolvedValue(null);
   render(<PerfilPublicSection id={IAIA_ID} />);
   await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.IAIA.name });
-  expect(mocks.load).toHaveBeenCalledWith(IAIA_ID, mocks.ui.externalConfig);
+  expect(mocks.load).toHaveBeenCalledWith(IAIA_ID, { ...mocks.ui.externalConfig, signal: expect.any(AbortSignal) });
   expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: AGENTS_MAP.IAIA.name, canonical: 'https://socdepoble.org/iaia' }));
   cleanup();
   mocks.seo.mockClear();

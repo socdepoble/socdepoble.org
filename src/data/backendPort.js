@@ -142,6 +142,10 @@ export const promoteToPublic = asseguraMetode('promoteToPublic');
    pinta les fotos actives de la fitxa. */
 export const llistaElsMeusMitjans = asseguraMetode('llistaElsMeusMitjans');
 export const esborraElMeuMitja = asseguraMetode('esborraElMeuMitja');
+export const quotaXat = asseguraMetode('quotaXat');
+export const publicaAdjuntXat = asseguraMetode('publicaAdjuntXat');
+export const urlAdjuntXat = asseguraMetode('urlAdjuntXat');
+export const descartaAdjuntXat = asseguraMetode('descartaAdjuntXat');
 
 /* Fase 5 · Agenda */
 export const loadActesAgenda = asseguraMetode('loadActesAgenda');

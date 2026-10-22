@@ -51,7 +51,10 @@ const errorDeFormaGoogle = (clau) => `${clau} no té la forma d’un client OAut
    ARQUITECTURA §4.4. Dins de l'app només compta la meta (no hi ha cap
    capçalera de servidor). connect-src porta data: perquè tres pujades fan
    fetch(dataUrl) abans de pujar la imatge; la resta de connect-src és només el
-   backend segellat. worker-src 'none': dins de l'app no hi ha cap worker. */
+   backend segellat. worker-src 'none': dins de l'app no hi ha cap worker.
+   Gauntlet 261022_0225 (crítica Claude, MEDIA-2) · media-src, amb la mateixa
+   amplària que img-src: sense, les notes de veu i els vídeos del xat (URL
+   signades https del Storage) heretaven default-src i no sonaven mai. */
 
 /** L'origen públic del backend, o un error: https, sense ruta i fora de la xarxa local. */
 function origenPublic(origenBackend) {
@@ -74,6 +77,7 @@ export function cspNativa(origenBackend) {
     "style-src 'self' 'unsafe-inline'",
     `connect-src 'self' data: ${url.origin} wss://${url.host}`,
     "img-src 'self' data: blob: https:",
+    "media-src 'self' data: blob: https:",
     "font-src 'self' data:",
     "frame-src 'self' https:",
     "worker-src 'none'",
@@ -90,7 +94,7 @@ export function cspNativa(origenBackend) {
    primer text igual, per a un comentari de més d'una línia. Si index.html
    canvia, una prova ho diu abans que el build. */
 
-const META_CSP_DEL_WEB = `<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: https: wss: ws://localhost:* http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:* sdp-media:; font-src 'self' https: data:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">`;
+const META_CSP_DEL_WEB = `<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: https: wss: ws://localhost:* http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:* sdp-media:; media-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*; font-src 'self' https: data:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">`;
 
 export const SUBSTITUCIONS_NATIVES = Object.freeze([
   Object.freeze({ que: "l'entrada del lloc", cerca: '<script type="module" src="/src/main.jsx"></script>', posa: `<script type="module" src="${ENTRADA_NATIVA}"></script>` }),

@@ -150,6 +150,27 @@ const clausDeLaLlista = () => [...llista().querySelectorAll(':scope > li')].map(
 /* Un id remot qualsevol de l'entitat pilot, com el que torna loadPerfilPublic('socdepoble'). */
 const UUID_SDP = '7d1e5c2a-0000-4000-8000-0000000000aa';
 
+test.each([
+  { id: 'fake-iaia', tipus: 'ia', senseSessio: true },
+  { id: 'iaia-real', tipus: 'iaia', senseSessio: false }
+])('consulta Wiki en el fil $id, retirada quan la IAIA s’apaga', ({ id, tipus, senseSessio }) => {
+  mocks.senseSessio = senseSessio;
+  mocks.threadId = id;
+  mocks.threads = [{ id, tipus, name: 'IAIA MarIA', title: 'IAIA MarIA', potEscriure: true }];
+  const vista = render(<XatSection />);
+  expect(screen.getByRole('button', { name: 'Pregunta a la IAIA' })).toBeTruthy();
+  mocks.iaiaApagada = true;
+  vista.rerender(<XatSection />);
+  expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
+});
+
+test('el mateix nom en un altre directe no activa l’ajuda oficial', () => {
+  mocks.threadId = 'un-altre';
+  mocks.threads = [{ id: 'un-altre', tipus: 'directe', name: 'IAIA MarIA', title: 'IAIA MarIA', potEscriure: true }];
+  render(<XatSection />);
+  expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
+});
+
 afterEach(() => {
   cleanup();
   oblidaEntitatDelProjecte();
@@ -502,11 +523,13 @@ describe('el compositor d’un fil de només lectura que no és uns Avisos', () 
     expect(screen.getByRole('status').textContent).toBe('En Avisos només escriuen els administradors.');
   });
 
-  test('un fil de mostra porta el botó blau Registra’t cap a la pàgina de registre', () => {
-    pinta({ id: 'fake-javi', tipus: 'persona', potEscriure: false, avisNomesLectura: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!" });
-    const boto = screen.getByRole('link', { name: "Registra't" });
-    expect(boto).not.toBeNull();
-    expect(boto.getAttribute('href')).toBe('/registre?mode=entrar&tornar=%2Fxat');
-    expect(boto.className).toContain('sdp-boto--primari');
+  /* Gauntlet 261022_0225 (XAT-4) · L'accés d'un fil de mostra és la parella
+     del peu de la conversa (AccesAlXat, XatSection.avatars.test.jsx): el
+     compositor ja no hi afig cap enllaç cru a /registre. */
+  test('un fil de mostra no porta cap enllaç propi a la pàgina de registre', () => {
+    const { container } = pinta({ id: 'fake-javi', tipus: 'persona', potEscriure: false, avisNomesLectura: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!" });
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(container.querySelector('a[href^="/registre"]')).toBeNull();
   });
 });

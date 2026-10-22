@@ -26,7 +26,7 @@ const mocks = vi.hoisted(() => ({
   actorKey: 'persona::A',
   port: {
     loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(), creaFilDirecte: vi.fn(),
-    carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(), obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
+    carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(), obriFilDePagina: vi.fn(), teCapacitat: vi.fn(), quotaXat: vi.fn(async () => ({ usats: 0, limit: 20_000_000, pendents: [] })), descartaAdjuntXat: vi.fn()
   }
 }));
 

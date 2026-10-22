@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, obriFilDePagina, subscribeToXat, unsubscribeFromXat } from './xat.js';
 import { esperaLaIAIA, reiniciaLocalXat } from '../localXat.js';
 import { AGENTS_MAP } from '../agentsSeed.js';
-import { PERSONA_PILOT } from '../identitatsSeed.js';
+import { BENVINGUDA_IAIA, PERSONA_PILOT } from '../identitatsSeed.js';
 import { XAT_SEED_IDS, XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from '../xatSeed.js';
 
 /* modePerDefecte fa de política d'execució del host (host.js): és el mode que
@@ -231,6 +231,8 @@ describe('historial per cursor i marques', () => {
     const [fil] = await loadFils(REMOT);
     expect(client.rpc).toHaveBeenCalledWith('xat_fils_meus', { p_tenant_id: '00000000-0000-4000-8000-000000000000' });
     expect(fil).toEqual({ id: 'f', tipus: 'grup', titol: 'Comissió', altresNoms: ['Pepa'], imatgeUrl: null, actualitzatAl: 'x', ultimText: 'Hola',
+      /* La v2 no porta ultim_tipus (arriba amb la v5 de 2610220240). */
+      ultimTipus: null,
       ultimAl: 'y', ultimAutorId: 'B', ultimSeq: 18, llegitFinsSeq: 15, rebutFinsSeq: 18, llegitPelsAltresFinsSeq: 18, noLlegits: 3,
       arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false,
       /* Lògica d'Usuari: la v2 encara no diu qui són els altres ni si és un canal d'entitat. */
@@ -518,9 +520,9 @@ describe('mode seed (localXat)', () => {
       expect(tot).not.toContain(robot);
     }
     expect(llavor.fils.map(f => f.tipus).sort()).toEqual(TIPUS_DE_LA_LLAVOR);
-    /* La benvinguda de la IAIA, tal com estava. */
+    /* La salutació canònica acordada també és la benvinguda de la llavor. */
     expect(llavor.missatges.filter(m => m.filId === XAT_SEED_IDS.filIaia))
-      .toEqual([expect.objectContaining({ usuariId: XAT_SEED_IDS.iaia, esIA: true, text: expect.stringMatching(/^Hola! Sóc la IAIA MarIA/) })]);
+      .toEqual([expect.objectContaining({ usuariId: XAT_SEED_IDS.iaia, esIA: true, text: BENVINGUDA_IAIA })]);
   });
 
   it('T63.1 · la comunitat «Sóc de Poble» naix de la Pàgina Universal de l’entitat i porta Avisos, General i Beta Testers', () => {
@@ -624,7 +626,9 @@ describe('mode seed (localXat)', () => {
     const missatges = await loadMissatges(XAT_SEED_IDS.filIaia, SEED);
     expect(missatges.map(m => m.seq)).toEqual([1, 2, 3]);
     expect(missatges[2]).toMatchObject({ usuariId: XAT_SEED_IDS.iaia, autorNom: 'IAIA MarIA', esIA: true });
-    expect(missatges[2].text).toMatch(/^Ara estic en proves/);
+    /* Gauntlet 261022_0225 (crítica Claude) · A una salutació, la seua
+       salutació: abans, «Ara estic en proves» contradeia la benvinguda. */
+    expect(missatges[2].text).toBe(BENVINGUDA_IAIA);
     await Promise.resolve();
     expect(callback).toHaveBeenCalledWith(null, { tipus: 'nous', filId: XAT_SEED_IDS.filIaia, seq: 3 });
     expect(callback).toHaveBeenCalledTimes(1);

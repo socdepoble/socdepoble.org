@@ -13,6 +13,7 @@ export * from './organizations.js';
 export * from './auth.js';
 export * from './notes.js';
 export * from './xat.js';
+export * from './xatMultimedia.js';
 export * from './storage.js';
 export * from './realtime.js';
 export * from './utils.js';

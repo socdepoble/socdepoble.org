@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import Conversa from './Conversa.jsx';
-import { RESPOSTA_IAIA } from '../../../data/identitatsSeed.js';
+import { BENVINGUDA_IAIA } from '../../../data/identitatsSeed.js';
 import EspecimenXat from '../../disseny/cataleg/detalls/EspecimenXat.jsx';
 import { MS_RESSALT } from '../conversa.js';
 import { buidaEsborranys, llegixEsborrany } from '../esborranys.js';
@@ -442,10 +442,20 @@ describe('esborranys', () => {
 
 test('la cortesia remota de la IAIA és explícita i no inventa missatges ni crida el port', () => {
   const { props, container, repinta } = pinta({ cortesiaIAIA: true });
-  expect(screen.getByText(RESPOSTA_IAIA)).toBeTruthy();
+  expect(screen.getByText(BENVINGUDA_IAIA)).toBeTruthy();
   expect(screen.getByText(/Benvinguda automàtica/)).toBeTruthy();
   expect(container.querySelector('[data-missatge]')).toBeNull();
   expect(props.onSendMessage).not.toHaveBeenCalled();
   repinta({ cortesiaIAIA: false });
-  expect(screen.queryByText(RESPOSTA_IAIA)).toBeNull();
+  expect(screen.queryByText(BENVINGUDA_IAIA)).toBeNull();
+});
+
+test('la consulta personal té una porta explícita i desapareix quan es desactiva', () => {
+  const { props, repinta } = pinta({ consultaIAIA: true });
+  fireEvent.click(screen.getByRole('button', { name: 'Pregunta a la IAIA' }));
+  expect(screen.getByRole('dialog', { name: 'IAIA · ajuda amb la Wiki' })).toBeTruthy();
+  expect(props.onSendMessage).not.toHaveBeenCalled();
+  repinta({ consultaIAIA: false });
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Pregunta a la IAIA' })).toBeNull();
 });

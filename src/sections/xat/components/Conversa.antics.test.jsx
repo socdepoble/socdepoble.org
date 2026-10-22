@@ -23,7 +23,7 @@ const mock = vi.hoisted(() => ({
   session: { currentUser: { id: 'A' }, generacio: 1 }, showToast: vi.fn(),
   loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(),
   creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(),
-  obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
+  obriFilDePagina: vi.fn(), teCapacitat: vi.fn(), quotaXat: vi.fn(async () => ({ usats: 0, limit: 20_000_000, pendents: [] })), descartaAdjuntXat: vi.fn()
 }));
 vi.mock('../../../app/contexts/SessionContext', () => ({ useSession: () => mock.session }));
 vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: 'persona::A', identitats: undefined }) }));

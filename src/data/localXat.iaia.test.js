@@ -17,7 +17,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
-import { IAIA_ID, RESPOSTA_IAIA } from './identitatsSeed.js';
+import { BENVINGUDA_IAIA, IAIA_ID, RESPOSTA_IAIA } from './identitatsSeed.js';
 import { ENCAPCALAMENT_DE_LA_WIKI } from './iaiaLocal.js';
 import { esperaLaIAIA, localXat, reiniciaLocalXat } from './localXat.js';
 import { wikiManifest } from './wikiManifest.js';
@@ -56,9 +56,22 @@ describe('el directe amb la IAIA és la fila «IAIA MarIA» de la llista', () =>
   /* Gauntlet 261016_1530 (Bloc 3.6.6; relleu F25) · La resposta és asíncrona
      (primer busca a la Wiki): es demana quan la IAIA ha acabat. Una salutació
      no busca res, i la IAIA contesta la frase de sempre. */
-  it('llavor · en eixe fil la IAIA contesta amb la seua frase «en proves»', async () => {
+  /* Gauntlet 261022_0225 (crítica Claude) · IAIA-5. A una salutació, la seua
+     salutació, la de la benvinguda: abans contestava «Ara estic en proves»
+     just després de prometre preguntes tècniques. La frase «en proves» queda
+     per al que la Wiki pública no sap. */
+  it('llavor · en eixe fil la IAIA torna la salutació a qui saluda', async () => {
     const filId = await localXat.creaFilDirecte(IAIA_ID, null, SEED);
     await localXat.enviaMissatge(filId, { id: 'm-1', text: 'Bon dia, iaia' }, SEED);
+    await esperaLaIAIA();
+    const missatges = await localXat.loadMissatges(filId, SEED);
+    expect(missatges.map((missatge) => missatge.text)).toEqual([BENVINGUDA_IAIA, 'Bon dia, iaia', BENVINGUDA_IAIA]);
+    expect(missatges.at(-1)).toMatchObject({ usuariId: IAIA_ID, esIA: true });
+  });
+
+  it('llavor · al que la Wiki pública no sap, la IAIA contesta amb la seua frase «en proves»', async () => {
+    const filId = await localXat.creaFilDirecte(IAIA_ID, null, SEED);
+    await localXat.enviaMissatge(filId, { id: 'm-1', text: 'Com esborre el meu compte?' }, SEED);
     await esperaLaIAIA();
     const missatges = await localXat.loadMissatges(filId, SEED);
     expect(missatges.at(-1)).toMatchObject({ usuariId: IAIA_ID, esIA: true, text: RESPOSTA_IAIA });
@@ -72,9 +85,11 @@ describe('el directe amb la IAIA és la fila «IAIA MarIA» de la llista', () =>
     const missatges = await localXat.loadMissatges(filId, config);
     const resposta = missatges.at(-1);
     expect(resposta).toMatchObject({ usuariId: IAIA_ID, autorNom: 'IAIA MarIA', esIA: true, seq: pregunta.seq + 1, respostaA: null });
-    const [primera, ...documents] = resposta.text.split('\n');
+    const [primera, ...linies] = resposta.text.split('\n');
+    const documents = linies.filter((linia) => linia.startsWith('· '));
     expect(primera).toBe(ENCAPCALAMENT_DE_LA_WIKI);
     expect(documents).toHaveLength(3);
+    expect(linies.some((linia) => !linia.startsWith('· ') && linia.length > 24)).toBe(true);
     const ids = new Set(wikiManifest.items.map((item) => item.id));
     for (const linia of documents) {
       const [, titol, slug] = /^· (.+) — \/wikidepoble\?item=(\S+)$/.exec(linia) || [];

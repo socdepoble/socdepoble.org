@@ -35,7 +35,6 @@ import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } fr
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
-/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · Instal·la l'app a l'ordinador (PWA d'escriptori, pwa/instalacio.js). */
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'estil desat del poble, aplicat a l'arrel de la instància. */
 import { EstilDelPoble } from './EstilDelPoble.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
@@ -715,11 +714,11 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
 
       <div className="right-icons">
         <BotoCrom />
-        {/* Ordre del Mestre (261021, prompt 261021_0015, tasca 3) · «Instal·la al
-            teu ordinador»: només quan el navegador d'escriptori ho oferix
-            (beforeinstallprompt, capturat a main.jsx) i l'app és ama del
-            document; mai dins de l'app nativa ni incrustada. */}
-        {/* Instal·lació PWA pausada durant la beta. BotoInstalaApp es conserva per a reactivar-la. */}
+        {/* Instal·lació PWA pausada durant la beta (pla 261021_2345 §1): ací anava
+            <BotoInstalaApp /> (components/universal/BotoInstalaApp.jsx, ordre del
+            Mestre 261021, prompt 261021_0015, tasca 3). Per a reactivar-la,
+            torna l'import i l'element: main.jsx continua capturant
+            beforeinstallprompt i el component es conserva amb les seues proves. */}
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>

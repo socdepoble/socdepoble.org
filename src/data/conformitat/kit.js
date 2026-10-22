@@ -488,6 +488,15 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => ['sdp-media://mitjans/conformitat/no-es-meua/avatars/conformitat.webp', ctx.config],
     comprova: rebuigAmbCode
   }),
+  ...['quotaXat', 'publicaAdjuntXat', 'urlAdjuntXat', 'descartaAdjuntXat'].map((metode) => cas({
+    metode, capacitat: 'xatMultimedia', espera: 'rebutja',
+    titol: `${metode}: sense servei remot rebutja amb code, mai simula adjunts privats`,
+    arguments: (ctx) => {
+      const config = { ...ctx.config, dataMode: 'seed' };
+      return metode === 'quotaXat' ? [config] : ['urlAdjuntXat', 'descartaAdjuntXat'].includes(metode) ? ['invalid', config] : ['invalid', {}, config];
+    },
+    comprova: rebuigAmbCode
+  })),
   /* Fase D (261020, tasca 2; pla 261020_1300) · La moderació (capacitats
      'moderacio' i 'normesConvivencia'). Cap cas no escriu: la llista i
      l'estat de les normes només es lligen, i els rebuigs ixen de la regla

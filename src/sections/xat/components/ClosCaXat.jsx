@@ -87,6 +87,7 @@ import { getVal, setVal } from '../../../config/storage.js';
 import { useXat } from '../XatContext';
 import { useCaraDelPoble } from '../usePobleAmfitrio.js';
 import { comunitatsAmbCaraDelPoble } from '../pobleAmfitrio.js';
+import { caraDeComunitat } from '../caraDeSocDePoble.js';
 import FullAjustos from './FullAjustos.jsx';
 
 export const CLAU_RAIL = 'sdp-xat-rail';
@@ -377,8 +378,10 @@ export function RailXat({
   };
 
   const nomDe = (comunitat) => comunitat.fil?.name || comunitat.fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
+  /* Gauntlet 261022_0225 (XAT-3) · La comunitat de Sóc de Poble porta el
+     logo oficial, com a la llista (caraDeSocDePoble.js). */
   const avatarDe = (comunitat) => (
-    <CaraXat nom={nomDe(comunitat)} src={comunitat.fil?.avatar_url} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
+    <CaraXat nom={nomDe(comunitat)} src={caraDeComunitat(comunitat.fil)} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
   );
   /* Pla 261014_1450 (fronts A i C) · La cara del peu és la de la barra negra:
      amb una entitat activa, el SEU logo (mai la foto de la persona,

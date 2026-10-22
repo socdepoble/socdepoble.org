@@ -138,13 +138,15 @@ test('transformaIndexNatiu sobre l\'index.html real: entrada nativa, CSP del §4
   assert.ok(!html.includes('/src/main.jsx'));
 
   const d = directives(cspDe(html));
-  assert.deepEqual(Object.keys(d).sort(), ['base-uri', 'connect-src', 'default-src', 'font-src', 'frame-src', 'img-src', 'object-src', 'script-src', 'style-src', 'worker-src']);
+  assert.deepEqual(Object.keys(d).sort(), ['base-uri', 'connect-src', 'default-src', 'font-src', 'frame-src', 'img-src', 'media-src', 'object-src', 'script-src', 'style-src', 'worker-src']);
   assert.deepEqual(d['connect-src'], ["'self'", 'data:', ORIGEN, WSS], 'data: per a les tres pujades amb fetch(dataUrl), i només el backend');
   assert.deepEqual(d['worker-src'], ["'none'"]);
   assert.deepEqual(d['script-src'], ["'self'"]);
   assert.deepEqual(d['style-src'], ["'self'", "'unsafe-inline'"]);
   assert.deepEqual(d['default-src'], ["'self'", 'data:', 'blob:']);
   assert.deepEqual(d['img-src'], ["'self'", 'data:', 'blob:', 'https:']);
+  // Gauntlet 261022_0225 (crítica Claude, MEDIA-2) · Les notes de veu i els vídeos del xat (URL signades del Storage).
+  assert.deepEqual(d['media-src'], ["'self'", 'data:', 'blob:', 'https:']);
   assert.deepEqual(d['font-src'], ["'self'", 'data:']);
   assert.deepEqual(d['frame-src'], ["'self'", 'https:']);
   assert.deepEqual(d['object-src'], ["'none'"]);

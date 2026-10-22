@@ -3,10 +3,10 @@
   "turn_id": "torn_26323853-dc67-4268-8b87-72e38f13f063",
   "actor": "claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 4,
+  "state": "planned",
+  "revision": 5,
   "createdAt": "2026-10-21T23:40:43.916Z",
-  "updatedAt": "2026-10-21T23:44:39.340Z",
+  "updatedAt": "2026-10-22T04:07:50.293Z",
   "expiresAt": "2026-10-22T23:40:43.917Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3590,7 +3590,10 @@
       }
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261022_0225_pla_implementacio_gauntlet_extrem_i_sistema_resilient.md",
+    "hash": "2e54962c6ce72a529c0826ea6aeeab34165a4975b71e094a9f8070a54fdae319"
+  },
   "verification": null,
   "history": [
     {
@@ -3621,6 +3624,11 @@
         "_wiki_de_poble/04_escriptori/261022_0150_auditoria_claude.md"
       ],
       "at": "2026-10-21T23:44:39.339Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-22T04:07:50.293Z"
     }
   ],
   "ownedPaths": [

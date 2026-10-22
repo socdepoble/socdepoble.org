@@ -811,10 +811,13 @@ test('Bloc 3.5.4 · sense avatar_url i amb la foto de la sessió: l’avatar red
   const finestra = screen.getByRole('dialog', { name: 'Retalla la foto' });
   expect(within(finestra).queryByRole('button', { name: 'Llevar avatar' })).toBeNull();
   expect(within(finestra).getByRole('button', { name: 'Canviar foto' })).toBeTruthy();
-  // En lectura (una baixa en curs), la mateixa foto, sense cap botó.
+  /* En lectura (una baixa en curs), la mateixa foto només a la barra taronja.
+     Expectativa actualitzada a propòsit (Gauntlet 261022_0225, PERF-5): una
+     persona ja no porta el cercle de 300px damunt de l'H1, com a la seua
+     fitxa pública. */
   cleanup();
   render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } }} />);
-  expect(m.adapter.emptyDocument.avatarAutor).toEqual({ src: 'a.webp', alt: 'Avatar de Pep' });
+  expect(m.adapter.emptyDocument).not.toHaveProperty('avatarAutor');
   /* Encàrrec d'harmonització (261018) · En lectura, cap avatar amb botons al desplegable. */
   expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
   expect(m.adapter.barAuthorAvatar).toBe('a.webp');
@@ -905,7 +908,10 @@ test('ordre E · l’entitat pilot (el seu perfil): cap ranura ni avatar; PageFr
   expect(m.adapter).not.toHaveProperty('identitatEdicioAvancada');
 });
 
-test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logotip d’una entitat, res per a un grup, avatar sense onCanvia', () => {
+/* Expectativa actualitzada a propòsit (Gauntlet 261022_0225, PERF-5) · La
+   persona en lectura ja no porta avatar damunt de l'H1 (la fitxa pública
+   tampoc); l'agent el conserva, sense onCanvia. */
+test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logotip d’una entitat, res per a un grup ni per a una persona', () => {
   render(<PerfilEditor identitat={{ ...org('member'), avatar: '/assets/forn.webp', dades: { ...org('member').dades, logo_url: '/assets/forn.webp' } }} />);
   expect(m.adapter.emptyDocument.logoEntitat).toEqual({ clar: '/assets/forn.webp', alt: 'Logotip de Forn' });
   expect(m.adapter.emptyDocument).not.toHaveProperty('avatarAutor');
@@ -915,7 +921,8 @@ test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logo
   cleanup();
   const enBaixa = { ...ambAvatar, dades: { ...ambAvatar.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } };
   render(<PerfilEditor identitat={enBaixa} />);
-  expect(m.adapter.emptyDocument.avatarAutor).toEqual({ src: 'https://poble.test/a.webp', alt: 'Avatar de Pep' });
+  expect(m.adapter.emptyDocument).not.toHaveProperty('avatarAutor');
+  expect(m.adapter.barAuthorAvatar).toBe('https://poble.test/a.webp');
 });
 
 test('Onada 4 · «Capçalera» obri directament la finestra de retall (quadrada des del Gauntlet 261016); cancel·lar no puja res ni torna la closca a la imatge', async () => {

@@ -1,0 +1,307 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Mic, Pause, Play } from 'lucide-react';
+import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
+import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
+import { textDErrorAdjunt } from '../adjuntLocal.js';
+
+const enValencia = (_clau, text) => text;
+/* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · El traductor de les peces
+   d'adjunts és el `t` que els passen, com a la resta del xat (Bombolla,
+   Compositor); soltes (espècimens i proves), el valencià. No es llig cap
+   context: les proves del xat el fan de mentides a mitges. */
+export const traductorAdjunt = (t) => (typeof t === 'function' ? t : enValencia);
+
+/** m:ss d'una durada en mil·lisegons. */
+export function tempsDeVeu(ms, arrodonix = Math.floor) {
+  const segons = Math.max(0, arrodonix((Number(ms) || 0) / 1000));
+  return `${Math.floor(segons / 60)}:${String(segons % 60).padStart(2, '0')}`;
+}
+
+/* Gauntlet 261022_0225 (crítica Claude, MEDIA-7) · El reproductor de veu de
+   Pedra Seca: botó de reproduir i pausar, barra de posició i durada. La
+   durada ve de metadades.adjunt.duradaMs (el rellotge de la gravació) fins
+   que el navegador en sap una de finita: el WebM de Chromium no la porta.
+   La URL es demana en prémer (MEDIA-8): el play() sense font, dins del gest,
+   desbloqueja l'element a WebKit abans d'esperar la signatura. Si la
+   signatura caduca abans o durant la reproducció (STRESS-7), se'n demana
+   una de nova una vegada i es continua des del mateix punt.
+   Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-10) · La vista quieta (el
+   mode de selecció) és una altra peça, sense <audio> ni controls dins de la
+   casella: en passar-hi, el reproductor es desmunta (para el so i buida el
+   seu únic element) i en tornar n'hi ha un de nou, en repòs: «Reprodueix» i
+   la URL en prémer (dins dels 60 s, la mateixa signatura i cap petició). */
+export function ReproductorVeu({ interactiu = true, ...props }) {
+  return interactiu ? <ReproductorActiu {...props} /> : <VeuQuieta duradaMs={props.duradaMs} t={props.t} />;
+}
+
+function VeuQuieta({ duradaMs = null, t }) {
+  const total = Number.isFinite(duradaMs) && duradaMs > 0 ? duradaMs : 0;
+  return (
+    <p className="sdp-xat-veu sdp-xat-veu--quieta">
+      <Mic size={20} aria-hidden="true" focusable="false" />
+      <span>{t('section.xat.adjunts.veu', 'Missatge de veu')}</span>
+      <span className="sdp-xat-veu__temps">{tempsDeVeu(total, Math.round)}</span>
+    </p>
+  );
+}
+
+function ReproductorActiu({ obteUrl, duradaMs = null, t }) {
+  const audio = useRef(null);
+  const viu = useRef(true);
+  const volSonar = useRef(false);
+  const recarregant = useRef(false);
+  const reintentat = useRef(false);
+  const repren = useRef(0);
+  const [sona, setSona] = useState(false);
+  const [carregant, setCarregant] = useState(false);
+  const [teFont, setTeFont] = useState(false);
+  const [posMs, setPosMs] = useState(0);
+  const [duradaReal, setDuradaReal] = useState(null);
+  const [error, setError] = useState(null);
+  const total = duradaReal ?? (Number.isFinite(duradaMs) && duradaMs > 0 ? duradaMs : 0);
+  const etiqueta = t('section.xat.adjunts.veu', 'Missatge de veu');
+  const textTotal = tempsDeVeu(total, Math.round);
+
+  useEffect(() => {
+    viu.current = true;
+    const element = audio.current;
+    return () => {
+      viu.current = false;
+      if (element) { element.pause(); element.removeAttribute('src'); element.load(); }
+    };
+  }, []);
+
+  const carrega = (renova) => {
+    const element = audio.current;
+    recarregant.current = true;
+    setCarregant(true);
+    setError(null);
+    obteUrl({ renova }).then((url) => {
+      if (!viu.current || !volSonar.current || !element) return undefined;
+      element.src = url;
+      setTeFont(true);
+      return element.play();
+    }).catch((e) => {
+      /* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-2) · Una font que no
+         carrega (CSP, token caducat, còdec) rebutja el play() amb
+         NotSupportedError: la gestiona fallaCarrega (renova i, la segona,
+         l'error amb codi). Ací només la resta, sempre amb text traduïble. */
+      if (!viu.current || e?.name === 'AbortError' || e?.name === 'NotSupportedError') return;
+      volSonar.current = false;
+      setSona(false);
+      setError(e?.code ? e : errorAdjuntXat('obrir'));
+    }).finally(() => {
+      recarregant.current = false;
+      if (viu.current) setCarregant(false);
+    });
+  };
+  const commuta = () => {
+    const element = audio.current;
+    if (!element) return;
+    if (volSonar.current) { volSonar.current = false; element.pause(); setCarregant(false); return; }
+    volSonar.current = true;
+    const font = element.getAttribute('src');
+    if (font && !error && !element.error) { element.play()?.catch?.(() => {}); return; }
+    // Sense font, o després d'un error (el botó «Torna-ho a provar»): signatura nova.
+    reintentat.current = false;
+    element.play()?.catch?.(() => {});
+    carrega(Boolean(font));
+  };
+  const fallaCarrega = () => {
+    const element = audio.current;
+    if (!element?.getAttribute('src') || !viu.current) return;
+    if (reintentat.current) { volSonar.current = false; setSona(false); setCarregant(false); setError(errorAdjuntXat('obrir')); return; }
+    reintentat.current = true;
+    // La font nova torna a començar: es continua des d'on anava en tindre metadades.
+    repren.current = element.currentTime || posMs / 1000;
+    carrega(true);
+  };
+  const durada = (e) => {
+    const segons = e.currentTarget.duration;
+    if (Number.isFinite(segons) && segons > 0) setDuradaReal(segons * 1000);
+  };
+  const metadades = (e) => {
+    durada(e);
+    if (repren.current) { e.currentTarget.currentTime = repren.current; repren.current = 0; }
+  };
+
+  const textPosicio = t('section.xat.adjunts.temps', '{posicio} de {durada}')
+    .replace('{posicio}', tempsDeVeu(posMs)).replace('{durada}', textTotal);
+  const enMarxa = sona || carregant;
+  return (
+    <div className="sdp-xat-veu-caixa">
+      <div className="sdp-xat-veu" role="group" aria-label={etiqueta}>
+        <button
+          type="button"
+          className="sdp-xat-veu__boto"
+          onClick={commuta}
+          aria-label={enMarxa ? t('section.xat.adjunts.pausa', 'Pausa el missatge de veu') : t('section.xat.adjunts.reprodueix', 'Reprodueix el missatge de veu')}
+          aria-busy={carregant || undefined}
+        >
+          {enMarxa ? <Pause size={20} aria-hidden="true" focusable="false" /> : <Play size={20} aria-hidden="true" focusable="false" />}
+        </button>
+        <input
+          type="range"
+          className="sdp-xat-veu__posicio"
+          min="0"
+          max={Math.max(total, 1) / 1000}
+          step="0.1"
+          value={Math.min(posMs, total) / 1000}
+          disabled={!teFont || !total}
+          aria-label={t('section.xat.adjunts.posicio', 'Posició del missatge de veu')}
+          aria-valuetext={textPosicio}
+          onChange={(e) => {
+            const segons = Number(e.target.value);
+            if (audio.current) audio.current.currentTime = segons;
+            setPosMs(segons * 1000);
+          }}
+        />
+        <span className="sdp-xat-veu__temps">{tempsDeVeu(posMs)} / {textTotal}</span>
+        <audio
+          ref={audio}
+          preload="none"
+          onPlay={() => setSona(true)}
+          onPlaying={() => { reintentat.current = false; }}
+          onPause={() => { if (!recarregant.current) volSonar.current = false; setSona(false); }}
+          onEnded={(e) => { volSonar.current = false; setSona(false); setPosMs(0); e.currentTarget.currentTime = 0; }}
+          onTimeUpdate={(e) => setPosMs(e.currentTarget.currentTime * 1000)}
+          onLoadedMetadata={metadades}
+          onDurationChange={durada}
+          onError={fallaCarrega}
+        />
+      </div>
+      {error ? (
+        <p className="sdp-xat-adjunt__estat">
+          {textDErrorAdjunt(error, t, t('section.xat.adjunts.error.obrir', 'No hem pogut obrir el fitxer.'))}
+          {' '}<button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria" onClick={commuta}>{t('section.xat.missatge.reintenta', 'Torna-ho a provar')}</button>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/* MEDIA-8 i STRESS-2 · Una foto o un vídeo demana la URL quan entra (o està a
+   punt d'entrar) a la vista, no en muntar-se: obrir un historial llarg no
+   llança una ràfega de peticions. Un error de càrrega renova la signatura una
+   vegada sense demanar res a la persona; el segon, el botó.
+   Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-6) · L'arrel és la llista
+   que desplaça: amb el viewport, el marge de 200px no passa del retall de la
+   llista i res no es carregava per avançat. Fora de la llista, el viewport. */
+function useFontVisible(obteUrl) {
+  const caixa = useRef(null);
+  const reintentat = useRef(false);
+  const [visible, setVisible] = useState(() => typeof IntersectionObserver !== 'function');
+  const [intent, setIntent] = useState({ n: 0, renova: false });
+  const [estat, setEstat] = useState({ url: null, error: null });
+  useEffect(() => {
+    if (visible || !caixa.current) return undefined;
+    const observador = new IntersectionObserver((entrades) => {
+      if (entrades.some((e) => e.isIntersecting)) { setVisible(true); observador.disconnect(); }
+    }, { root: caixa.current.closest('.sdp-xat-missatges'), rootMargin: '200px 0px' });
+    observador.observe(caixa.current);
+    return () => observador.disconnect();
+  }, [visible]);
+  useEffect(() => {
+    if (!visible) return undefined;
+    const controller = new AbortController();
+    setEstat((previ) => (previ.error ? { ...previ, error: null } : previ));
+    obteUrl({ signal: controller.signal, renova: intent.renova })
+      .then((url) => { if (!controller.signal.aborted) setEstat({ url, error: null }); })
+      .catch((e) => { if (!controller.signal.aborted && e?.name !== 'AbortError') setEstat({ url: null, error: e }); });
+    return () => controller.abort();
+  }, [visible, obteUrl, intent]);
+  const fallaCarrega = useCallback(() => {
+    if (reintentat.current) { setEstat({ url: null, error: errorAdjuntXat('obrir') }); return; }
+    reintentat.current = true;
+    setIntent((i) => ({ n: i.n + 1, renova: true }));
+  }, []);
+  const reintenta = useCallback(() => {
+    reintentat.current = false;
+    setIntent((i) => ({ n: i.n + 1, renova: true }));
+  }, []);
+  const correcte = useCallback(() => { reintentat.current = false; }, []);
+  return { caixa, ...estat, fallaCarrega, reintenta, correcte };
+}
+
+function EstatAdjunt({ error, onReintenta, t }) {
+  if (!error) return <p className="sdp-xat-adjunt__estat">{t('section.xat.adjunts.carregant', 'Carregant el fitxer…')}</p>;
+  return (
+    <p className="sdp-xat-adjunt__estat">
+      {textDErrorAdjunt(error, t, t('section.xat.adjunts.error.obrir', 'No hem pogut obrir el fitxer.'))}
+      {onReintenta ? <>{' '}<button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria" onClick={onReintenta}>{t('section.xat.missatge.reintenta', 'Torna-ho a provar')}</button></> : null}
+    </p>
+  );
+}
+
+function ImatgeAdjunta({ obteUrl, t, interactiu }) {
+  const font = useFontVisible(obteUrl);
+  return (
+    <div className="sdp-xat-adjunt" ref={font.caixa}>
+      {font.url ? <img className="sdp-xat-adjunt__imatge" src={font.url} alt={t('section.xat.adjunts.foto', 'Foto adjunta')} onLoad={font.correcte} onError={font.fallaCarrega} /> : null}
+      {!font.url ? <EstatAdjunt error={font.error} onReintenta={interactiu ? font.reintenta : null} t={t} /> : null}
+    </div>
+  );
+}
+
+function VideoAdjunt({ obteUrl, t, interactiu }) {
+  const font = useFontVisible(obteUrl);
+  const repren = useRef(null);
+  const falla = (e) => {
+    const element = e.currentTarget;
+    repren.current = { temps: element.currentTime, sonava: !element.paused || repren.current?.sonava };
+    font.fallaCarrega();
+  };
+  const continua = (e) => {
+    const element = e.currentTarget;
+    const punt = repren.current;
+    repren.current = null;
+    if (!punt) return;
+    if (punt.temps) element.currentTime = punt.temps;
+    if (punt.sonava) element.play()?.catch?.(() => {});
+  };
+  return (
+    <div className="sdp-xat-adjunt" ref={font.caixa}>
+      {font.url ? (
+        <video
+          className="sdp-xat-adjunt__video"
+          src={font.url}
+          controls={interactiu}
+          tabIndex={interactiu ? undefined : -1}
+          playsInline
+          preload="metadata"
+          aria-label={t('section.xat.adjunts.video', 'Vídeo adjunt')}
+          onLoadedMetadata={continua}
+          onPlaying={font.correcte}
+          onError={falla}
+        />
+      ) : <EstatAdjunt error={font.error} onReintenta={interactiu ? font.reintenta : null} t={t} />}
+    </div>
+  );
+}
+
+/** La previsualització local (URL blob:) abans d'enviar. */
+export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, t: tProp }) {
+  const t = traductorAdjunt(tProp);
+  const obteUrl = useMemo(() => () => Promise.resolve(url), [url]);
+  if (tipus === 'imatge') return <img className="sdp-xat-adjunt__imatge" src={url} alt={t('section.xat.adjunts.foto', 'Foto adjunta')} onError={onError} />;
+  if (tipus === 'video') return <video className="sdp-xat-adjunt__video" src={url} controls playsInline preload="metadata" onError={onError} aria-label={t('section.xat.adjunts.video', 'Vídeo adjunt')} />;
+  return <ReproductorVeu key={url} obteUrl={obteUrl} duradaMs={duradaMs} t={t} />;
+}
+
+/** La bombolla guarda l'id, mai una URL pública ni una URL signada persistent.
+ *  `interactiu` fals (el mode de selecció) la pinta sense controls: la foto i
+ *  el vídeo, muntats (el mateix node); la nota de veu, quieta (ADV-MEDIA-10). */
+export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, t: tProp, interactiu = true }) {
+  const t = traductorAdjunt(tProp);
+  const obteUrl = useCallback(({ signal, renova = false } = {}) => (
+    urlAdjuntXat(adjunt.id, { ...externalConfig, signal }, { renova })
+  ), [adjunt.id, externalConfig]);
+  if (!teCapacitat('xatMultimedia')) {
+    return <div className="sdp-xat-adjunt"><p className="sdp-xat-adjunt__estat">{t('section.xat.adjunts.noCapacitat', 'Este node encara no pot obrir els adjunts del xat.')}</p></div>;
+  }
+  // Un canvi de sessió munta una peça nova: res de la URL anterior no passa a l'altra persona.
+  const clau = String(usuariId ?? '');
+  if (tipus === 'imatge') return <ImatgeAdjunta key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
+  if (tipus === 'video') return <VideoAdjunt key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
+  return <div className="sdp-xat-adjunt"><ReproductorVeu key={clau} obteUrl={obteUrl} duradaMs={adjunt.duradaMs} t={t} interactiu={interactiu} /></div>;
+}

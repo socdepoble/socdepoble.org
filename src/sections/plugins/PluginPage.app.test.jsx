@@ -7,7 +7,8 @@
  * M4) · El Rebost i Salut porten el botó «Obrir…» dalt (dins del bloc blanc
  * de l'H1) i al final, i sis blocs de presentació: dins de l'App de veres
  * també. Les consultes de coincidència única passen a demanar-ne exactament
- * dos, amb el mateix destí o el mateix estat inert.
+ * dos, amb el mateix destí o el mateix estat inert (Gauntlet 261022_0225,
+ * F2: sense destí ja no n'hi ha cap, ni inert).
  * Ordre del Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3) · Cada
  * bloc és un títol H3 i el seu paràgraf: el cos comença en H3.
  */
@@ -91,14 +92,17 @@ test('App munta /plugin/rebost: la pàgina del plugin, amb la portada plegable, 
   });
 });
 
-test('App: Salut en un document que no és l’ama (sense manageDocumentHead) no fa cap enllaç', async () => {
+/* Onada 10 (M2) · Abans, dos botons inerts, dalt i al final.
+   Gauntlet 261022_0225 (F2) · DEROGAT: sense destí, cap «Obrir…», ni dalt ni
+   baix; baix, l'estat buit amb «Desactiva esta eina». */
+test('App: Salut en un document que no és l’ama (sense manageDocumentHead) no fa cap enllaç ni pinta cap «Obrir…»', async () => {
   await muntaApp('/plugin/salut', async () => {
-    await screen.findByRole('heading', { level: 1, name: 'Salut' });
+    const titol = await screen.findByRole('heading', { level: 1, name: 'Salut' });
     expect(screen.queryByRole('link', { name: /Obrir Salut/ })).toBeNull();
-    // Onada 10 (M2) · Dos botons, dalt i al final, i tots dos inerts.
-    const botons = screen.getAllByRole('button', { name: 'Obrir Salut (no disponible ací)' });
-    expect(botons.map((boto) => [boto.parentElement.className, boto.getAttribute('aria-disabled')]))
-      .toEqual([['page-title-accio', 'true'], ['sdp-pagina-accio', 'true']]);
+    expect(screen.queryByRole('button', { name: /Obrir Salut/ })).toBeNull();
+    expect(titol.closest('header.page-title').querySelector('.page-title-accio')).toBeNull();
+    const desactiva = screen.getByRole('button', { name: 'Desactiva esta eina' });
+    expect(desactiva.closest('.sdp-pagina-accio')).not.toBeNull();
   });
 });
 

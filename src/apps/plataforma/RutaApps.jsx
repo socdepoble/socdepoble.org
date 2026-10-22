@@ -80,7 +80,7 @@ export default function RutaApps() {
   const { pathname } = useLocation();
   const { dins, id, trams } = analitzaRuta(pathname);
   const app = useAppAvaluada(trams === null ? null : id);
-  const { language, llenguaDelText = language } = useUIState();
+  const { language, llenguaDelText = language, t } = useUIState();
   useEscalfamentMemoriaCau(); // closca de /app/* sense xarxa (ordre del Mestre, 261007)
 
   if (!dins) return null;
@@ -93,7 +93,7 @@ export default function RutaApps() {
 
   const { manifest, estat, motiu } = app;
   if (estat !== 'available') {
-    return <AvisApp titol={TITOL_ESTAT[estat]}>{textDelMotiu(motiu)}</AvisApp>;
+    return <AvisApp titol={TITOL_ESTAT[estat]}>{textDelMotiu(motiu, t)}</AvisApp>;
   }
   if (!trams.length) return <Navigate to={rutaDeApp(manifest.id, manifest.entradaPerDefecte)} replace />;
 

@@ -40,4 +40,13 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Gauntlet 261022_0225 (crítica Claude, MEDIA-11): les notes de veu del xat.
+         BridgeWebChromeClient demana estos dos en temps d'execució; sense
+         declarar-los, Android els denega sense cap diàleg. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-9): RECORD_AUDIO fa
+         obligatori el micròfon i Google Play amagaria l'app als aparells que
+         no en tenen. El xat només el fa servir si n'hi ha (potGravar). -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 </manifest>

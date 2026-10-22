@@ -57,7 +57,8 @@ beforeEach(() => {
 test('la IAIA porta avís d’intel·ligència artificial i el botó parla amb ella al xat', async () => {
   render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).toBeTruthy();
-  expect(mocks.load).toHaveBeenCalledWith('iaia', mocks.config);
+  /* Gauntlet 261022_0225 (Tasca 1) · La configuració de sempre, amb el senyal que cancel·la la càrrega. */
+  expect(mocks.load).toHaveBeenCalledWith('iaia', { ...mocks.config, signal: expect.any(AbortSignal) });
   const avis = screen.getByRole('status');
   expect(avis.textContent).toContain('Este perfil és una intel·ligència artificial');
   expect(screen.getByText('Intel·ligència artificial', { selector: '.sp-card-label' })).toBeTruthy();
@@ -140,7 +141,7 @@ test.each([['per id', IAIA_ID], ['per slug', 'iaia-maria']])('D12 · en remot, q
   mocks.load.mockResolvedValue(null);
   const { container } = render(<PerfilPublicSection agents={[]} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).toBeTruthy();
-  expect(mocks.load).toHaveBeenCalledWith(clau, mocks.config);
+  expect(mocks.load).toHaveBeenCalledWith(clau, { ...mocks.config, signal: expect.any(AbortSignal) });
   expect(screen.getByRole('status').textContent).toContain('Este perfil és una intel·ligència artificial');
   expect(screen.getByText('Intel·ligència artificial', { selector: '.sp-card-label' })).toBeTruthy();
   /* Front D4 (integració) · El cos de la presentació, tal qual: es llig per
@@ -758,7 +759,7 @@ test.each([['una IA del catàleg', 'NANOBANANA'], ['un personatge ANIMAL', 'GALL
   mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, null));
   render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: agent.name });
-  expect(mocks.load).toHaveBeenCalledWith(agent.id, mocks.config);
+  expect(mocks.load).toHaveBeenCalledWith(agent.id, { ...mocks.config, signal: expect.any(AbortSignal) });
   expect(screen.getByText('Intel·ligència artificial', { selector: '.sp-card-label' })).toBeTruthy();
   expect(screen.getByRole('status').textContent).toContain(`${agent.name} és una màquina de Sóc de Poble, en proves.`);
   fireEvent.click(screen.getByRole('button', { name: `Parla amb ${agent.name}` }));
@@ -787,6 +788,11 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   expect(convidat.container.querySelector('section.bar-orange .sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
   expect(etiquetesDelTitol(convidat.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
   expect(dretsDelTitol(convidat.container)).toBeNull();
+  /* Gauntlet 261022_0225 (Tasca 2) · La fitxa autèntica també en llavor: H2 el
+     poble, l'entradilla oficial i cap presentació (ni la vella). */
+  expect(convidat.container.querySelector('.page-intro h2').textContent).toBe('La Torre de les Maçanes');
+  expect(convidat.container.querySelector('.page-intro p.lead').textContent).toBe("Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l'Associació El Rentonar, coordine el Projecte Sóc de Poble.");
+  expect(convidat.container.textContent).not.toMatch(/Coordinador|visionari|buscant el trellat/);
   cleanup();
   const usuari = { id: 'u-javi', user_metadata: { full_name: 'Javi Pilot' } };
   mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, usuari));

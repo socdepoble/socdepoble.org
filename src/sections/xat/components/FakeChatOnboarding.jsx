@@ -62,7 +62,7 @@ import {
 } from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
 import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelXat } from '../pobleAmfitrio.js';
-import { ENTITAT_PILOT_ID } from '../../../data/identitatsSeed.js';
+import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID } from '../../../data/identitatsSeed.js';
 import { RUTA_DE_SOC_DE_POBLE } from '../actorsDelXat.js';
 
 const IAIA = AJUDA_PER_CLAU.iaia;
@@ -118,7 +118,9 @@ export default function FakeChatOnboarding({ originalContext, children }) {
   const [ara] = useState(() => new Date().toISOString());
   const [messages, setMessages] = useState(() => ({
     'fake-iaia': [
-      { id: 'm1', seq: 1, text: t('section.xat.fake.iaia1', "Hola, foraster! Sóc la IAIA MarIA, la intel·ligència d'este poble."), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara },
+      /* Gauntlet 261022_0225 (crítica Claude) · La salutació del Mestre, en
+         la llengua de la interfície com la bombolla de davall. */
+      { id: 'm1', seq: 1, text: t('section.xat.iaia.salutacio', BENVINGUDA_IAIA), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara },
       { id: 'm2', seq: 2, text: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara }
     ],
     /* Gauntlet 261016_1530 · La benvinguda de sempre, ara als Avisos de la comunitat. */

@@ -13,6 +13,9 @@ import { PRESETS_AMPLARIA } from '../amplariaColumnes.js';
 import ClosCaXat, { BotoObriRail, CLAU_RAIL, RUTA_PERFIL } from './ClosCaXat.jsx';
 import PanellInicialMobil from './PanellInicialMobil.jsx';
 import { RUTES_AJUSTOS } from '../ajustosXat.js';
+import { LOGO_DE_SOC_DE_POBLE } from '../caraDeSocDePoble.js';
+import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../../config/navigation.js';
+import { ENTITAT_PILOT_SLUG } from '../../../data/identitatsSeed.js';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -277,6 +280,29 @@ test('Preferits: la comunitat del poble de l’amfitrió porta la cara del poble
     .map((avatar) => [avatar.getAttribute('title'), avatar.querySelector('img')?.getAttribute('src') ?? null]));
   expect(cares['La Torre de les Maçanes']).toBe(CARA);
   expect(cares['Comissió de Festes']).toBeNull();
+});
+
+/* Gauntlet 261022_0225 (XAT-3) · En remot, la comunitat de Sóc de Poble
+   arriba amb l'id del servidor i el logo pujat de l'organització: amb l'id ja
+   registrat, porta el logo oficial, com a la llista. Un homònim, la seua. */
+test('Preferits: la comunitat de Sóc de Poble porta el logo oficial; un homònim, la seua cara', () => {
+  const UUID = '58325860-a199-4056-b160-94c19b124277';
+  registraEntitatDelProjecte({ tipus: 'entitat', id: UUID, slug: ENTITAT_PILOT_SLUG });
+  try {
+    mocks.fils = [
+      { id: 'c-sdp', name: 'Sóc de Poble', tipus: 'comunitat', esComunitat: true, subjecte: { tipus: 'entitat', id: UUID }, avatar_url: '/assets/pujat.webp', preferit: true },
+      { id: 'c-homonim', name: 'Sóc de Poble (homònim)', tipus: 'comunitat', esComunitat: true, subjecte: { tipus: 'entitat', id: 'altra-entitat' }, avatar_url: '/assets/pujat.webp', preferit: true }
+    ];
+    pinta();
+    obriDesDelPeu();
+    fireEvent.click(fila('Preferits'));
+    const cares = Object.fromEntries([...full().querySelectorAll('.sdp-avatar')]
+      .map((avatar) => [avatar.getAttribute('title'), avatar.querySelector('img')?.getAttribute('src') ?? null]));
+    expect(cares['Sóc de Poble']).toBe(LOGO_DE_SOC_DE_POBLE);
+    expect(cares['Sóc de Poble (homònim)']).toBe('/assets/pujat.webp');
+  } finally {
+    oblidaEntitatDelProjecte();
+  }
 });
 
 test('Preferits sense cap: el títol i la frase honesta, sense cap fila', () => {

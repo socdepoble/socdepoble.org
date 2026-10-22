@@ -28,7 +28,7 @@ import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
-import { RESPOSTA_IAIA } from '../../data/identitatsSeed.js';
+import { BENVINGUDA_IAIA } from '../../data/identitatsSeed.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { CARA_DE_LA_IAIA } from '../../data/xatsPerDefecte.js';
@@ -393,6 +393,87 @@ test.each([null, 'fake-javi', 'fake-iaia'])('sense sessió els botons d’accés
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar }));
   fireEvent.click(screen.getByRole('button', { name: 'Registrar-se' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ mode: 'crear', tornar }));
+  /* Gauntlet 261022_0225 (XAT-4) · Una sola parella a la pantalla: cap
+     «Registra't» del compositor ni cap enllaç cru a /registre. */
+  expect(screen.getAllByRole('button', { name: /^(Connectar-se|Registrar-se)$/ })).toHaveLength(2);
+  expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
+  expect(document.querySelector('a[href^="/registre"]')).toBeNull();
+  /* XAT-1 · Al DOM: a la llista, l'accés és l'últim fill del cos amb scroll,
+     darrere de la llista; a la conversa, el seu peu. La cascada que el deixa
+     baixar al fons i compactar-se en una pantalla baixa, jsdom no la resol:
+     la comprova XatSection.acces.capes.test.js. */
+  const acces = document.querySelector('.sdp-xat-acces');
+  if (filId) expect(acces.parentElement.classList.contains('sdp-xat-conversa')).toBe(true);
+  else {
+    expect(peuDAccesAlCos()).toBe(acces.parentElement);
+    expect(acces.parentElement.previousElementSibling).toBe(llista());
+  }
+});
+
+/* El peu de l'accés (l'únic de la pantalla) si és l'últim fill del cos amb
+   scroll de la columna central; si no, falla. */
+function peuDAccesAlCos() {
+  const totes = document.querySelectorAll('.sdp-xat-acces');
+  expect(totes).toHaveLength(1);
+  const peu = totes[0].parentElement;
+  expect([...peu.classList]).toEqual(['sdp-xat-llista__peu', 'sdp-xat-llista__peu--acces']);
+  expect([...peu.parentElement.classList]).toEqual(['sdp-workspace-column__body', 'sdp-xat-cos--amb-peu']);
+  expect(peu.parentElement.lastElementChild).toBe(peu);
+  return peu;
+}
+
+/* Gauntlet 261022_0225 (XATR-1) · Sense sessió, la parella d'accés no és
+   només de la llista: com quan vivia davall del cos, també la porten la fitxa
+   d'una comunitat i «Comunitats», dins del seu cos amb scroll. */
+test.each([
+  ['la fitxa d’una comunitat', 'comunitat=fake-poble', '.sdp-xat-fitxa-comunitat'],
+  ['la vista Comunitats', 'vista=comunitats', '.sdp-xat-vista-comunitats']
+])('sense sessió, %s porta l’accés al peu del seu cos', (_, consulta, contingut) => {
+  mocks.params = new URLSearchParams(consulta);
+  munta(senseSessio());
+  const peu = peuDAccesAlCos();
+  expect(peu.previousElementSibling.matches(contingut)).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: `/xat?${consulta}` }));
+});
+
+/* XATR-1 · La cerca: la llista de filtres en obrir el camp i els resultats
+   amb un terme. El peu és el mateix node que davall de la llista (obrir o
+   tancar la cerca no el torna a muntar davall del dit). */
+test('sense sessió, la cerca conserva l’accés al peu del cos, sense tornar-lo a muntar', () => {
+  munta(senseSessio());
+  const peu = peuDAccesAlCos();
+  const camp = document.querySelector('input[name="xatSearch"]');
+  fireEvent.focus(camp);
+  expect(document.querySelector('.sdp-xat-filtres-cerca')).toBeTruthy();
+  expect(peuDAccesAlCos()).toBe(peu);
+  fireEvent.change(camp, { target: { value: 'Torre' } });
+  expect(screen.getByRole('region', { name: 'Resultats de la cerca' })).toBeTruthy();
+  expect(peuDAccesAlCos()).toBe(peu);
+});
+
+/* XATR-1 · Multimèdia pinta el seu cos (VistaMultimedia, fora d'esta
+   secció): l'accés hi va darrere, a la columna, com abans. */
+test('sense sessió, la vista Multimèdia porta l’accés darrere del seu cos', () => {
+  mocks.params = new URLSearchParams('vista=multimedia');
+  munta(senseSessio());
+  const totes = document.querySelectorAll('.sdp-xat-acces');
+  expect(totes).toHaveLength(1);
+  const peu = totes[0].parentElement;
+  expect([...peu.classList]).toEqual(['sdp-xat-llista__peu', 'sdp-xat-llista__peu--acces']);
+  expect(peu.previousElementSibling.classList.contains('sdp-workspace-column__body')).toBe(true);
+});
+
+/* Gauntlet 261022_0225 (XAT-6) · Sense sessió, un filtre sense cap conversa
+   diu el seu text, i la crida a entrar només ix una vegada: la del peu. */
+test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
+  munta(senseSessio());
+  fireEvent.click(screen.getByRole('button', { name: 'Filtra les converses' }));
+  fireEvent.click(screen.getByRole('menuitemradio', { name: /Preferits/ }));
+  const cos = document.querySelector('input[name="xatSearch"]').closest('aside').querySelector(':scope > .sdp-workspace-column__body');
+  expect(cos.querySelector('.sdp-workspace-state').textContent).toBe('Cap conversa amb este filtre.');
+  expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Entra per buscar persones i enviar missatges.')).toHaveLength(1);
+  expect([...cos.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Connectar-se', 'Registrar-se']);
 });
 
 test('el fil remot de la IAIA porta la benvinguda oficial, sense afegir missatges al servidor', () => {
@@ -400,7 +481,7 @@ test('el fil remot de la IAIA porta la benvinguda oficial, sense afegir missatge
   mocks.threadId = fil.id;
   const xat = context({ chatThreads: [fil] });
   munta(xat);
-  expect(screen.getByText(RESPOSTA_IAIA)).toBeTruthy();
+  expect(screen.getByText(BENVINGUDA_IAIA)).toBeTruthy();
   expect(screen.getByText(/Benvinguda automàtica/)).toBeTruthy();
   expect(xat.sendChatMessage).not.toHaveBeenCalled();
   expect(screen.queryByRole('button', { name: 'Registrar-se' })).toBeNull();

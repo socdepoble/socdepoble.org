@@ -4510,13 +4510,49 @@ details[open] summary.accordion-header svg:last-child {
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu {
     padding-bottom: calc(var(--sdp-space-4) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
-  /* L'accés sense sessió viu fora del cos amb scroll: el peu de la llista
-     reserva la barra inferior ací també. Dins d'una conversa la reserva ja
-     la porta .sdp-xat-conversa. Text damunt i accions que poden compartir
-     fila, sense encongir el peu quan la llista ocupa l'altura disponible. */
+  /* L'accés sense sessió. Gauntlet 261022_0225 (XAT-1) · El seu peu
+     (.sdp-xat-llista__peu--acces) és l'últim fill del cos amb scroll de la
+     columna: la llista, la fitxa d'una comunitat, la cerca o «Comunitats»
+     (abans vivia fora del cos, no s'encongia i en un mòbil apaïsat deixava
+     la llista a 0 px). El cos que el porta, .sdp-xat-cos--amb-peu (la classe
+     la posa React, sense :has(), Baseline 2022): amb poc contingut el peu
+     baixa al fons de la columna, com abans; amb molt, va darrere i el cos fa
+     scroll. La fitxa ja no reclama tota l'altura: s'estira fins al peu. Dins
+     d'una conversa la reserva de la barra la porta .sdp-xat-conversa i
+     l'accés no s'encongix (els missatges sí). Text damunt i accions que
+     poden compartir fila. */
   .sdp-alerta.sdp-xat-acces { flex: none; flex-direction: column; margin: 0; }
   .sdp-xat-acces > p { margin: 0; }
   .sdp-xat-acces > .sdp-alerta__accions { margin: 0; }
+  .sdp-workspace-column__body.sdp-xat-cos--amb-peu { display: flex; flex-direction: column; }
+  .sdp-workspace-column__body.sdp-xat-cos--amb-peu > * { flex-shrink: 0; }
+  .sdp-workspace-column__body.sdp-xat-cos--amb-peu > .sdp-xat-fitxa-comunitat { flex-grow: 1; min-height: 0; }
+  .sdp-workspace-column__body.sdp-xat-cos--amb-peu > .sdp-xat-llista__peu { margin-top: auto; }
+  /* Gauntlet 261022_0225 (XATR-2) · El peu de l'accés no hi suma un segon
+     coixí: l'alerta va a sang de la columna, com quan ella mateixa era el
+     peu, i en compacte porta ella la reserva de la barra mòbil (la seua caixa
+     continua davall de la barra, com abans). El contingut de damunt, que la
+     reservava quan era l'últim, ja no (torna al seu coixí de base). */
+  .sdp-xat-llista__peu.sdp-xat-llista__peu--acces,
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu.sdp-xat-llista__peu--acces { padding: 0; }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu--acces > .sdp-xat-acces {
+    padding-bottom: calc(var(--sdp-space-4) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu :is(.sdp-xat-llista, .sdp-xat-resultats) { padding-bottom: 0; }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-filtres-cerca { padding-bottom: var(--sdp-space-2); }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-fitxa-comunitat__peu { padding-bottom: var(--sdp-space-3); }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-vista-comunitats { padding-bottom: var(--sdp-space-4); }
+  /* En una pantalla baixa (≤ 500 px d'alt, un mòbil apaïsat), compacte: les
+     dos píndoles comparteixen fila si hi caben, amb menys coixí, i la frase
+     cau: els botons ja diuen què fan. Els missatges conserven l'espai. */
+  @media (max-height: 500px) {
+    .sdp-alerta.sdp-xat-acces { padding: var(--sdp-space-2) var(--sdp-space-3); }
+    :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu--acces > .sdp-xat-acces {
+      padding-bottom: calc(var(--sdp-space-2) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+    }
+    .sdp-xat-acces > p { display: none; }
+    .sdp-xat-acces > .sdp-alerta__accions > .sdp-xat-pindola { flex: 1 1 auto; width: auto; }
+  }
   .sdp-xat-informe:disabled { opacity: 0.6; cursor: progress; }
   .sdp-xat-informe__nota {
     margin: var(--sdp-space-3) 0 0;
@@ -4624,17 +4660,13 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-suau);
     text-align: center;
   }
-  /* Ordre del Mestre (261021, prompt 261021_0015: «totes les proves en verd»)
-     · El botó «Registra't» (a60d6fd3) complix les lleis dures: sòl tàctil de
-     48px (--sdp-touch) i lletra de 14px o més (--sdp-text-small; el
-     --sdp-text-sm d'abans no existia i caia als 13,6px de la reserva). */
-  .sdp-xat-compositor__boto-registre {
-    min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-4);
-    font-size: var(--sdp-text-small);
-    white-space: nowrap;
-    text-decoration: none;
-  }
+  /* Gauntlet 261022_0225 (XATR-7) · L'avís hereta `flex: none` de
+     .sdp-xat-compositor: en una barra estreta no s'encongia, eixia de la
+     columna i es retallava pels dos costats. Ara s'encongix i el text salta
+     de línia, centrat. */
+  .sdp-xat-compositor-barra-avis > .sdp-xat-compositor--avis { flex: 0 1 auto; min-width: 0; }
+  /* Gauntlet 261022_0225 (XAT-4) · El botó «Registra't» del compositor ja no
+     existix: l'accés d'un fil de mostra és la parella del peu (.sdp-xat-acces). */
 
   /* Amb la barra mòbil a la vista (.sdp-root.is-compact; torn 260930, com la
      reserva del bloc F0): la barra flotant no ha de tapar res de l'onada. La

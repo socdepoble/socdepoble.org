@@ -137,14 +137,16 @@ describe('apps que no s’obrin', () => {
   test('una app desactivada no es carrega i explica per què', () => {
     muntaPlataforma('/app/prova/inici', { registre: registreDeProva({ actiuPerDefecte: false }) });
     expect(screen.getByText('Esta app no està activada')).toBeTruthy();
-    expect(screen.getByText('Este node no l’activa per defecte.')).toBeTruthy();
+    // Gauntlet 261022_0225 (F7) · El motiu, sense «node»: abans «Este node no l’activa per defecte.».
+    expect(screen.getByText('Esta web la té apagada, de moment.')).toBeTruthy();
     expect(carregaDeLaProva).not.toHaveBeenCalled();
     expect(ubicacio()).toBe('/app/prova/inici');
   });
 
   test('en producció, una app en obres (entorn desenvolupament) no es carrega', () => {
     muntaPlataforma('/app/prova/inici', { registre: registreDeProva({ entorn: 'desenvolupament' }) });
-    expect(screen.getByText('Encara està en obres: només es pot provar en desenvolupament.')).toBeTruthy();
+    // Gauntlet 261022_0225 (F7) · Abans «Encara està en obres: només es pot provar en desenvolupament.».
+    expect(screen.getByText('Esta eina encara està en proves i no està a punt per a tothom.')).toBeTruthy();
     expect(carregaDeLaProva).not.toHaveBeenCalled();
   });
 
@@ -154,7 +156,8 @@ describe('apps que no s’obrin', () => {
       entorn: { ...ENTORN_OBERT, teDret: () => false }
     });
     expect(screen.getByText('Esta app és premium')).toBeTruthy();
-    expect(screen.getByText(/projecte lliure/)).toBeTruthy();
+    // Gauntlet 261022_0225 (F7) · Sense «premium» ni «codi» al motiu: abans «…és un projecte lliure: el premium paga el servei, no el codi.».
+    expect(screen.getByText(/El programa és lliure: el que es paga és el servei\./)).toBeTruthy();
     expect(carregaDeLaProva).not.toHaveBeenCalled();
   });
 
@@ -203,7 +206,8 @@ describe('el portal /app', () => {
     fireEvent.click(interruptor);
     expect(interruptor.getAttribute('aria-checked')).toBe('false');
     expect(screen.getByText('Apagada')).toBeTruthy();
-    expect(screen.getByText('L’has apagada tu. La pots tornar a encendre quan vulgues.')).toBeTruthy();
+    // Gauntlet 261022_0225 (F7) · Un sol parell de verbs: desactivar i tornar a activar.
+    expect(screen.getByText('L’has desactivada tu. La pots tornar a activar quan vulgues.')).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Obri' })).toBeNull();
     fireEvent.click(interruptor);
     expect(interruptor.getAttribute('aria-checked')).toBe('true');

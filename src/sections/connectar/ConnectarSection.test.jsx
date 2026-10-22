@@ -46,9 +46,15 @@ vi.mock('../notes/NotesDataContext', () => ({
 vi.mock('./organitzacio/BlocAdministrarOrganitzacio.jsx', () => ({
   BlocAdministrarOrganitzacio: ({ orgId, nom, config }) => React.createElement('p', { 'data-bloc-administrar': orgId, 'data-mode': config?.dataMode || '', 'data-nom': nom ?? '' }, 'Administrar')
 }));
-import ConnectarSection, { origenAmbOriginal, origenDeLaConnexio } from './ConnectarSection.jsx';
+import ConnectarSection, { idsDeQuiConnecta, origenAmbOriginal, origenDeLaConnexio } from './ConnectarSection.jsx';
 import { contingutDeLaConnexio } from '../notes/connexions.js';
 import { delVal, setVal } from '../../config/storage.js';
+/* Gauntlet 261022_0225 (CA-1, CA-6) · el xat de «En privat» i els diccionaris de veres. */
+import { XAT_SOCDEPOBLE_DE_LLAVOR, XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
+import { directeDeLlavor } from '../control/xatCorporatiu.js';
+import { CORREU_PERSONA_PILOT, IAIA_ID } from '../../data/identitatsSeed.js';
+import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
+import { FONTS_PER_IDIOMA } from '../../../tests/helpers/diccionaris.js';
 
 const PARAMS = 'item_id=samarreta-socdepoble&title=Samarreta&sectionId=mercat&targetUserId=socdepoble&autorTipus=entitat&author=S%C3%B3c%20de%20Poble';
 /* D1 · el nom visible de la carpeta 'f-connectats' i el botó de connectar-hi. */
@@ -801,29 +807,170 @@ test('T43 · D10: sense la columna notes.origen el servidor ho rebutja i es diu 
 });
 
 
-/* 261022: el contacte humà no és el desat d'una targeta al MAS. */
+/* 261022: el contacte humà no és el desat d'una targeta al MAS.
+   Gauntlet 261022_0225 (CA-1, CA-2, CA-4 i CA-6) · El xat amb l'autor és el
+   de «En privat» (useAccions): l'entitat pilot va al xat de Sóc de Poble que
+   resol el port, en remot un id de la llavor no té xat i en llavor va a l'id
+   del padró (directeAmb). El botó diu amb qui, amb el nom de l'element resolt
+   i per t(). Les fitxes del Mercat són les de supabase/seed.sql (app_content). */
+const UUID_PERSONA = '6f1c2a3b-4d5e-4f60-8a71-92b3c4d5e6f7';
+const UUID_ENTITAT = '2b3c4d5e-6f70-4812-9a3b-4c5d6e7f8091';
+const UUID_SOCDEPOBLE = '0e9d8c7b-6a5f-4e3d-9c2b-1a0f9e8d7c6b';
+const SAMARRETA = { author_name: 'Sóc de Poble', seller: 'Sóc de Poble', author_id: 'soc-de-poble_official', author_entity_id: 'socdepoble' };
+const MAC_MINI = { author_name: 'Javi Llinares', seller: 'Javi Llinares', author_id: 'javillinares' };
+/* El valor de ProveidorXatSocDePoble: en remot, amb l'entitat ja resolta pel port; en llavor, amb directeAmb. */
+const XAT_REMOT = Object.freeze({ estat: 'remot', href: `/xat?amb=${UUID_SOCDEPOBLE}`, avis: null, resol: null });
+const XAT_DE_LLAVOR = Object.freeze({ ...XAT_SOCDEPOBLE_DE_LLAVOR, directeAmb: directeDeLlavor });
+const ambXat = (xat) => <XatSocDePobleContext.Provider value={xat}><ConnectarSection /></XatSocDePobleContext.Provider>;
+const seccioDeLAutor = () => screen.queryByRole('heading', { name: 'Connectar amb l’autor' });
+const TEXT_AUTOR = (nom) => `Obri una conversa privada amb ${nom}. Li apareixerà de seguida a la seua llista de converses, però no rebrà cap missatge fins que l’escrigues.`;
+/* Revisió (CN-R4) · En llavor la conversa és d'este dispositiu: l'autor no la veu. */
+const TEXT_AUTOR_LLAVOR = (nom) => `Obri una conversa privada amb ${nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.`;
+
 test.each([
-  [{ author_user_id: 'persona-real' }, 'persona-real'],
-  [{ author_org_id: 'entitat-real', author_user_id: 'gestor-privat' }, 'entitat-real']
-])('connectar amb l’autor usa l’original resolt i no envia res: %j', (autoria, id) => {
+  [{ author_user_id: UUID_PERSONA }, UUID_PERSONA],
+  [{ author_org_id: UUID_ENTITAT, author_user_id: UUID_PERSONA }, UUID_ENTITAT]
+])('remot · un autor amb l’id del servidor: el botó diu amb qui, obri el seu xat i no envia res: %j', (autoria, id) => {
   mocks.mur = MERCAT_AMB(autoria);
-  render(<ConnectarSection />);
+  render(ambXat(XAT_REMOT));
   expect(mocks.xat.creaFil).not.toHaveBeenCalled();
   expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
   expect(mocks.crea).not.toHaveBeenCalled();
-  expect(screen.getByText('Obri una conversa privada. No envia cap missatge fins que l’escrigues.')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Connectar amb l’autor' }));
+  /* CA-4 · el text no amaga que la conversa ja li apareix a l'autor. */
+  expect(screen.getByText(TEXT_AUTOR('Pepa Soler'))).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Pepa Soler' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${id}`);
   expect(mocks.crea).not.toHaveBeenCalled();
   expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
 });
 
+test('CA-1 · remot · la Samarreta (entitat pilot) obri el xat de Sóc de Poble que ha resolt el port, mai /xat?amb=socdepoble', () => {
+  mocks.mur = MERCAT_AMB(SAMARRETA);
+  render(ambXat(XAT_REMOT));
+  expect(screen.getByText(TEXT_AUTOR('Sóc de Poble'))).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Sóc de Poble' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${UUID_SOCDEPOBLE}`);
+  expect(mocks.navigate).not.toHaveBeenCalledWith('/xat?amb=socdepoble');
+  expect(mocks.xat.creaFil).not.toHaveBeenCalled();
+});
+
+test('CA-1 · remot · amb el xat de Sóc de Poble encara per resoldre, el clic el demana al proveïdor i hi va quan arriba', async () => {
+  const resol = vi.fn(async () => ({ estat: 'remot', href: `/xat?amb=${UUID_SOCDEPOBLE}`, avis: null, darrera: true }));
+  mocks.mur = MERCAT_AMB(SAMARRETA);
+  render(ambXat({ estat: 'pendent', href: null, avis: 'Xat de Sóc de Poble: encara s’està buscant en este servidor.', resol }));
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Sóc de Poble' }));
+  expect(resol).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${UUID_SOCDEPOBLE}`));
+  expect(mocks.navigate).not.toHaveBeenCalledWith('/xat?amb=socdepoble');
+});
+
+test('CA-1 · remot · sense abast de backend (resol null), la Samarreta no ofereix cap xat', () => {
+  mocks.mur = MERCAT_AMB(SAMARRETA);
+  render(ambXat({ estat: 'absent', href: null, avis: 'Xat de Sóc de Poble: encara no disponible en este servidor.', resol: null }));
+  expect(seccioDeLAutor()).toBeNull();
+});
+
+/* Revisió (CN-R5) · L'«absent» que ha dit el port conserva `resol` per a
+   tornar-ho a provar passada l'espera (M4-01): el botó hi és, i durant
+   l'espera el clic diu l'avís i no porta enlloc. */
+test('CN-R5 · remot · amb l’«absent» del port, la Samarreta conserva el botó: el clic diu l’avís i no navega', async () => {
+  const AVIS_ABSENT = 'Xat de Sóc de Poble: encara no disponible en este servidor.';
+  const resol = vi.fn(async () => ({ estat: 'absent', href: null, avis: AVIS_ABSENT, darrera: true }));
+  mocks.mur = MERCAT_AMB(SAMARRETA);
+  render(ambXat({ estat: 'absent', href: null, avis: AVIS_ABSENT, resol }));
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Sóc de Poble' }));
+  expect(mocks.toast).toHaveBeenCalledWith(AVIS_ABSENT);
+  expect(resol).toHaveBeenCalledTimes(1);
+  await act(async () => { await resol.mock.results[0].value; });
+  expect(mocks.toast).toHaveBeenCalledTimes(1);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test.each(['javillinares', 'javi-llinares'])('CA-1 · remot · el Mac Mini signat amb l’àlies de llavor %s no ofereix cap xat: el servidor no el pot obrir', (alies) => {
+  mocks.mur = MERCAT_AMB({ ...MAC_MINI, author_id: alies });
+  render(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+/* Revisió (CN-R2) · La guarda de la llavor no mira el tipus declarat. */
+test.each([
+  ['soc-de-poble_official', 'Sóc de Poble'],
+  [IAIA_ID, 'IAIA MarIA']
+])('CN-R2 · remot · un id de la llavor signat com a persona (%s) no ofereix cap xat', (idDeLlavor, nom) => {
+  mocks.mur = MERCAT_AMB({ author_name: nom, seller: nom, author_id: idDeLlavor });
+  render(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test('CA-2 · en remot, la sessió acreditada de la persona pilot signa també amb els seus àlies; una altra sessió, no', () => {
+  const actor = { tipus: 'persona', id: UUID_PERSONA, slug: 'javillinares' };
+  const pilot = { id: UUID_PERSONA, email: CORREU_PERSONA_PILOT, email_confirmed_at: '2026-10-18T18:00:00.000Z' };
+  const propis = idsDeQuiConnecta({ currentUser: pilot, actor, identitats: [actor], dataMode: 'remote' });
+  expect([...propis]).toEqual(expect.arrayContaining([UUID_PERSONA, 'javillinares', 'javi-llinares', '0001']));
+  /* El mateix UUID sense el correu acreditat no és la persona pilot: cap àlies (D1, mai pel nom). */
+  const altra = idsDeQuiConnecta({ currentUser: { id: UUID_PERSONA }, actor, identitats: [actor], dataMode: 'remote' });
+  expect([...altra]).toEqual([UUID_PERSONA]);
+});
+
+/* Revisió (CN-R1) · En remot ho decidix esIdDeLaLlavor, per a qualsevol sessió. */
+test('CA-2 · remot · el Mac Mini no té xat ni per a la persona pilot ni per a cap altra sessió (esIdDeLaLlavor)', () => {
+  mocks.user = { id: UUID_PERSONA, email: CORREU_PERSONA_PILOT, email_confirmed_at: '2026-10-18T18:00:00.000Z' };
+  mocks.identitat = { actor: { tipus: 'persona', id: UUID_PERSONA, nom: 'Javi Llinares' }, identitats: [{ tipus: 'persona', id: UUID_PERSONA, nom: 'Javi Llinares' }] };
+  mocks.mur = MERCAT_AMB(MAC_MINI);
+  const vista = render(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
+  mocks.user = { id: UUID_PERSONA };
+  vista.rerender(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
+});
+
+/* Revisió (CN-R1) · En 'local' aliesDeLActor no dona cap àlies a una persona:
+   l'únic que fa seu el Mac Mini és el compte acreditat de la persona pilot. */
+test('CA-2 · local · la persona pilot no té xat sobre el seu Mac Mini; el mateix id sense el correu acreditat va al directe del padró (0001)', () => {
+  mocks.config = { dataMode: 'local' };
+  const actor = { tipus: 'persona', id: UUID_PERSONA, nom: 'Javi Llinares' };
+  mocks.identitat = { actor, identitats: [actor] };
+  mocks.mur = MERCAT_AMB(MAC_MINI);
+  mocks.user = { id: UUID_PERSONA, email: CORREU_PERSONA_PILOT, email_confirmed_at: '2026-10-18T18:00:00.000Z' };
+  const vista = render(ambXat(XAT_DE_LLAVOR));
+  expect(seccioDeLAutor()).toBeNull();
+  mocks.user = { id: UUID_PERSONA };
+  vista.rerender(ambXat(XAT_DE_LLAVOR));
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Javi Llinares' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=0001');
+});
+
+test('llavor · el Mac Mini va al directe del padró (0001), la Samarreta al xat de Sóc de Poble, i qui no és del padró no té botó', () => {
+  mocks.config = { dataMode: 'seed' };
+  mocks.mur = MERCAT_AMB(MAC_MINI);
+  const vista = render(ambXat(XAT_DE_LLAVOR));
+  expect(screen.getByText(TEXT_AUTOR_LLAVOR('Javi Llinares'))).toBeTruthy();
+  expect(screen.queryByText(TEXT_AUTOR('Javi Llinares'))).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Javi Llinares' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=0001');
+  mocks.mur = MERCAT_AMB(SAMARRETA);
+  vista.rerender(ambXat(XAT_DE_LLAVOR));
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li a Sóc de Poble' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
+  mocks.mur = MERCAT_AMB({ author_user_id: 'u-veina' });
+  vista.rerender(ambXat(XAT_DE_LLAVOR));
+  expect(seccioDeLAutor()).toBeNull();
+});
+
 test('una autoria inventada en l’URL no activa el contacte, ni sense original ni amb un original sense autor', () => {
-  const vista = render(<ConnectarSection />);
-  expect(screen.queryByRole('button', { name: 'Connectar amb l’autor' })).toBeNull();
+  const vista = render(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
   mocks.mur = MERCAT_AMB({ author_name: 'Sóc de Poble' });
-  vista.rerender(<ConnectarSection />);
-  expect(screen.queryByRole('button', { name: 'Connectar amb l’autor' })).toBeNull();
+  vista.rerender(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
+});
+
+test('un autor sense nom a l’element no té botó: el botó ha de dir amb qui', () => {
+  mocks.mur = MERCAT_AMB({ author_name: '', author_user_id: UUID_PERSONA });
+  render(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
 });
 
 test.each([
@@ -832,18 +979,42 @@ test.each([
 ])('el contacte humà no obri un xat amb qui mira ni amb una entitat que representa: %j', (autoria) => {
   mocks.identitat.identitats.push({ tipus: 'entitat', id: 'org-propia' });
   mocks.mur = MERCAT_AMB(autoria);
-  render(<ConnectarSection />);
-  expect(screen.queryByRole('button', { name: 'Connectar amb l’autor' })).toBeNull();
+  render(ambXat(XAT_REMOT));
+  expect(seccioDeLAutor()).toBeNull();
   expect(mocks.xat.creaFil).not.toHaveBeenCalled();
 });
 
-test('sense sessió remota, connectar amb l’autor conserva la consulta per a entrar', () => {
+test('sense sessió remota, el botó de l’autor diu amb qui i conserva la consulta per a entrar', () => {
   mocks.user = null;
   mocks.config = { dataMode: 'remote' };
-  mocks.mur = MERCAT_AMB({ author_user_id: 'persona-real' });
-  render(<ConnectarSection />);
-  fireEvent.click(screen.getByRole('button', { name: 'Entra per a connectar amb l’autor' }));
+  mocks.mur = MERCAT_AMB({ author_user_id: UUID_PERSONA });
+  render(ambXat(XAT_REMOT));
+  fireEvent.click(screen.getByRole('button', { name: 'Entra per a escriure-li a Pepa Soler' }));
   expect(anadaAEntrar(mocks.navigate.mock.calls.at(-1)[0])).toEqual({ ruta: '/registre', mode: 'entrar', tornar: `/connectar?${mocks.params}` });
   expect(mocks.xat.creaFil).not.toHaveBeenCalled();
   expect(mocks.crea).not.toHaveBeenCalled();
+});
+
+test('CA-6 · en castellà, el títol, el text i el botó són del diccionari, amb el nom de l’element i no el de l’URL', () => {
+  mocks.t = createTranslator('es');
+  mocks.params = new URLSearchParams(PARAMS.replace('author=S%C3%B3c%20de%20Poble', 'author=Impostora'));
+  mocks.mur = MERCAT_AMB({ author_user_id: UUID_PERSONA });
+  render(ambXat(XAT_REMOT));
+  expect(screen.getByRole('heading', { name: 'Conectar con el autor' })).toBeTruthy();
+  expect(screen.getByText(/^Abre una conversación privada con Pepa Soler\. /)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Escríbele a Pepa Soler' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(`/xat?amb=${UUID_PERSONA}`);
+  expect(screen.queryByText(/Impostora/)).toBeNull();
+});
+
+test('CA-6 · les claus del xat amb l’autor són als cinc diccionaris, cadascuna amb el seu {nom}', () => {
+  const CLAUS_AMB_NOM = ['section.connectar.autor.text', 'section.connectar.autor.textLlavor', 'section.connectar.autor.boto', 'section.connectar.autor.entra'];
+  for (const { code } of SUPPORTED_LANGUAGES) {
+    for (const clau of ['section.connectar.autor.titol', ...CLAUS_AMB_NOM]) expect(FONTS_PER_IDIOMA[code]).toContain(`'${clau}':`);
+    const t = createTranslator(code);
+    for (const clau of CLAUS_AMB_NOM) expect(t(clau, '').split('{nom}')).toHaveLength(2);
+    /* Revisió (CN-R3) · Cap sufix enganxat al nom: el nom de l'autor és lliure
+       i una declinació ('-rekin') només casa amb part dels noms. */
+    for (const clau of CLAUS_AMB_NOM) expect(t(clau, '')).not.toMatch(/\{nom\}-/);
+  }
 });

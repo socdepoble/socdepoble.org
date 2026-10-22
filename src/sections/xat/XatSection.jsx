@@ -106,7 +106,7 @@ import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
-import useObriXatPerDefecte from './useObriXatPerDefecte.js';
+import useObriXatPerDefecte, { ID_FIL_DE_MOSTRA_DE_LA_IAIA } from './useObriXatPerDefecte.js';
 /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La fletxa de la conversa torna a la pàgina d'origen. */
 import { useOrigenDelXat } from './origenDelXat.js';
 import { PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
@@ -305,7 +305,7 @@ function XatWorkspace({ origen = null }) {
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { showToast } = useToast();
   const { t } = useUIActions();
-  const { locale } = useUIState();
+  const { locale, externalConfig } = useUIState();
   const { creaNota } = useNotesData();
 
   const { threadId } = useParams();
@@ -345,6 +345,7 @@ function XatWorkspace({ origen = null }) {
     chatThreads,
     getThreadMessages,
     sendChatMessage,
+    sendChatMedia,
     obriFil = noop,
     status = 'ready',
     avis = null,
@@ -1172,15 +1173,21 @@ function XatWorkspace({ origen = null }) {
   const etiquetaCerca = t('section.xat.cerca', 'Cerca converses');
   /* T4 · Qui entra des del Xat hi torna, a la mateixa ruta i consulta. */
   const rutaActual = rutaAmbConsulta(pathname, params);
+  /* Gauntlet 261022_0225 (XAT-1) · Sense sessió, l'accés (AccesAlXat) és
+     l'últim fill del cos amb scroll de la columna, davall de la llista, de la
+     fitxa d'una comunitat, de la cerca o de «Comunitats», com quan vivia fora
+     del cos davall de tots. Fora del cos no s'encongia i en una pantalla baixa
+     (un mòbil apaïsat) deixava la llista a 0 px. Sempre al mateix lloc del
+     cos: obrir o tancar la cerca no el torna a muntar davall del dit. */
+  const peuDAcces = senseSessio && !activeThread ? (
+    <div className="sdp-xat-llista__peu sdp-xat-llista__peu--acces"><AccesAlXat t={t} tornar={rutaActual} navigate={navigate} /></div>
+  ) : null;
 
+  /* Gauntlet 261022_0225 (XAT-6) · Sense sessió, la crida a entrar ja la
+     porta el peu de la llista (AccesAlXat): l'estat buit no la repetix i diu
+     el mateix que a qui té sessió (el filtre buit o la llista buida). */
   let estatBuit = null;
-  if (senseSessio) estatBuit = <>
-    <p>{t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}</p>
-    <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar: rutaActual }))}>
-      {t('section.xat.sessio.entrar', 'Entrar')}
-    </button>
-  </>;
-  else if (filtre !== 'tot') estatBuit = t('section.xat.buit.filtre', 'Cap conversa amb este filtre.');
+  if (filtre !== 'tot') estatBuit = t('section.xat.buit.filtre', 'Cap conversa amb este filtre.');
   else {
     estatBuit = (
       <>
@@ -1313,6 +1320,7 @@ function XatWorkspace({ origen = null }) {
         onNova={() => showToast(t('section.xat.vista.comunitats.nova', "Les comunitats naixen de la Pàgina Universal d'una entitat o d'un poble: obri la seua pàgina i prem «Comentar»."), 'info')}
         esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
         carregant={status !== 'ready' && !threads.length}
+        peu={peuDAcces}
         locale={locale}
         t={t}
         joId={joId}
@@ -1411,8 +1419,10 @@ function XatWorkspace({ origen = null }) {
           <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={setFiltre} t={t} />
         </div>
       ) : null}
-      {vistaNode ? null : <div className="sdp-workspace-column__body">{cos}</div>}
-      {senseSessio && !activeThread ? <AccesAlXat t={t} tornar={rutaActual} navigate={navigate} aLaLlista /> : null}
+      {vistaNode ? null : <div className={peuDAcces ? 'sdp-workspace-column__body sdp-xat-cos--amb-peu' : 'sdp-workspace-column__body'}>{cos}{peuDAcces}</div>}
+      {/* Multimèdia i les vistes «En construcció» pinten el seu cos (fora
+          d'esta secció): l'accés hi va darrere, com abans. */}
+      {vistaNode && vistaActiva !== 'comunitats' ? peuDAcces : null}
       <DialegNovaConversa
         obert={dialegNou}
         senseSessio={senseSessio}
@@ -1449,12 +1459,16 @@ function XatWorkspace({ origen = null }) {
           initialText={connectionContext}
           peu={senseSessio ? <AccesAlXat t={t} tornar={rutaActual} navigate={navigate} /> : null}
           cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && esXatDeLaIAIA(activeThread)}
+          consultaIAIA={!iaiaApagada && (esXatDeLaIAIA(activeThread) || (senseSessio && activeThread.id === ID_FIL_DE_MOSTRA_DE_LA_IAIA))}
           fil={activeThread}
           entitatActiva={entitatActiva}
           moderacio={moderacioDelXat}
           actorLlista={actorLlista}
           messages={messages}
           onSendMessage={sendChatMessage}
+          onSendMedia={modeDades === 'remote' && !senseSessio && !esXatDeLaIAIA(activeThread) ? sendChatMedia : null}
+          configAdjunts={externalConfig}
+          usuariAdjunts={joId}
           onBack={handleBackToList}
           onTornaAOrigen={tornaAOrigen}
           onEnviaAlBloc={enviaAlBloc}
@@ -1600,10 +1614,12 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
   return <FitxaComunitat {...resta} onObriFil={obri} />;
 }
 
-/* L'accés continua visible també al peu d'un fil de mostra o només lectura. */
-function AccesAlXat({ t, tornar, navigate, aLaLlista = false }) {
+/* L'accés continua visible també al peu d'un fil de mostra o només lectura.
+   Gauntlet 261022_0225 (XAT-4) · És l'única parella d'accés del Xat sense
+   sessió: el compositor d'un fil de mostra ja no hi afig cap enllaç. */
+function AccesAlXat({ t, tornar, navigate }) {
   return (
-    <div className={`sdp-alerta sdp-xat-acces${aLaLlista ? ' sdp-xat-llista__peu' : ''}`}>
+    <div className="sdp-alerta sdp-xat-acces">
       <p>{t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}</p>
       <div className="sdp-alerta__accions">
         <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar }))}>

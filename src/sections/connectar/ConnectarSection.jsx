@@ -57,15 +57,15 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
-import { autorDe, esRutaInterna, getSectionItemPath, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
+import { autorDe, esRutaInterna, getSectionItemPath, objecteDe, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
-import { rutaXatPrivat } from '../../config/objecteConnectable.js';
-import { aliesDeLActor } from '../../data/identitatsSeed.js';
+import { ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esBackendInabastable } from '../../data/errorsBackend.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
-import { urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
+import { interlocutorDelPrivat, urlPerCompartir, useComentaEnPrivat, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
+import { useXatSocDePoble } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { netejaDrets, normalitzaAbast, teDretsReservats } from '../../data/origenNota.js';
 import { useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
@@ -191,18 +191,69 @@ export function origenAmbOriginal(origen, targeta, item = null) {
   };
 }
 
-/** Només una autoria resolta pot obrir el contacte humà; mai la query. */
-export function autorPerConnectar(item, { currentUser = null, actor = null, identitats = [], dataMode = 'remote' } = {}) {
-  const autor = autorDe(item);
-  if (!autor || !['persona', 'entitat'].includes(autor.tipus)) return null;
-  if (!autor.id.trim() || autor.id.length > 200 || /[\s\u0000-\u001f\u007f]/.test(autor.id)) return null;
+/** Els ids amb què signa qui mira: el de la sessió, l'actor i les identitats
+ * que representa, amb els àlies del MAS (aliesDeLActor).
+ * Gauntlet 261022_0225 (CA-2) · El compte de la persona pilot porta també els
+ * seus àlies quan la sessió ho acredita (esComptePersonaPilot, mai pel nom; la
+ * mateixa regla de useCercaGlobal). Compta en 'local', on aliesDeLActor no en
+ * dona cap a una persona (només en 'seed'), i per a l'id que torna directeAmb
+ * ('0001'): el Mac Mini signat amb 'javillinares' és seu i no s'hi ofereix cap
+ * xat. En remot el Mac Mini no té xat per a ningú (esIdDeLaLlavor). */
+export function idsDeQuiConnecta({ currentUser = null, actor = null, identitats = [], dataMode = 'remote' } = {}) {
   const propis = new Set(currentUser?.id ? [String(currentUser.id)] : []);
   for (const identitat of [actor, ...(Array.isArray(identitats) ? identitats : [])]) {
     if (identitat?.id != null) aliesDeLActor(identitat, { dataMode }).forEach((id) => propis.add(String(id)));
   }
-  if (propis.has(autor.id)) return null;
-  return esRutaInterna(rutaXatPrivat(autor)) ? autor : null;
+  if (esComptePersonaPilot(currentUser)) PERSONA_PILOT.alies.forEach((id) => propis.add(id));
+  return propis;
 }
+
+/* Gauntlet 261022_0225 (CA-1) · En remot, un id de la llavor (un àlies de la
+   persona pilot, una entitat del padró) no és l'id de cap persona ni entitat
+   del servidor (W4-09): crea_fil_directe no hi pot obrir cap xat. El format
+   de l'id és cosa del proveïdor (W4-10): ací no se'n comprova cap.
+   Revisió (CN-R2) · Sense mirar el tipus declarat: un àlies de l'entitat
+   pilot signat com a persona ('soc-de-poble_official' sense author_entity_id)
+   o la IAIA (en remot, el seu xat és el públic de /iaia) tampoc no en tenen. */
+const IDS_DE_LA_LLAVOR = new Set([
+  ...PERSONA_PILOT.alies,
+  ...ENTITATS_SEED.flatMap((entitat) => [entitat.id, entitat.slug, ...entitat.alies]),
+  IAIA_ID
+].map(String));
+const esIdDeLaLlavor = ({ id }) => IDS_DE_LA_LLAVOR.has(String(id));
+
+/** Només una autoria resolta pot obrir el contacte humà; mai la query.
+ * Gauntlet 261022_0225 (CA-1) · Amb qui obri el xat i com, o null si no es
+ * pot obrir: { interlocutor, nom }. És la via «En privat» (useAccions), sense
+ * cap còpia: el descriptor de l'element (objecteDe) i interlocutorDelPrivat,
+ * amb el `xat` de useXatSocDePoble.
+ *  · L'entitat pilot (la marca `projecte`) no porta interlocutor: el clic
+ *    obri el xat de Sóc de Poble que resol el port (ProveidorXatSocDePoble),
+ *    i només es mostra si hi ha enllaç o encara es pot resoldre.
+ *  · En remot, un autor amb un id de la llavor no té xat (esIdDeLaLlavor).
+ *  · En llavor, l'id del padró que torna directeAmb (el Mac Mini, '0001'); un
+ *    autor que el xat local no pot obrir no té botó.
+ *  · `nom` és el de l'element resolt (objecteDe), mai el de l'URL. */
+export function autorPerConnectar(item, {
+  seccio = '', currentUser = null, actor = null, identitats = [], dataMode = 'remote', xat = null
+} = {}) {
+  const autor = autorDe(item);
+  if (!autor || !['persona', 'entitat'].includes(autor.tipus)) return null;
+  if (!autor.id.trim() || autor.id.length > 200 || /[\s\u0000-\u001f\u007f]/.test(autor.id)) return null;
+  const propis = idsDeQuiConnecta({ currentUser, actor, identitats, dataMode });
+  const esDeQuiMira = (id) => propis.has(String(id ?? '')) || xat?.esDeQuiMira?.(id) === true;
+  if (esDeQuiMira(autor.id)) return null;
+  const objecte = objecteDe(item, seccio);
+  const nom = objecte?.autor?.nom.trim() || '';
+  if (!nom) return null;
+  if (objecte.autor.projecte) return xat?.href || typeof xat?.resol === 'function' ? { interlocutor: null, nom } : null;
+  if (dataMode === 'remote' && esIdDeLaLlavor(autor)) return null;
+  const interlocutor = interlocutorDelPrivat(objecte, { directeAmb: xat?.directeAmb, esDeQuiMira });
+  return interlocutor ? { interlocutor, nom } : null;
+}
+
+/** El text d'una clau amb el nom de qui obri el xat. */
+const ambNom = (text, nom) => text.replaceAll('{nom}', () => nom);
 
 function ConnectarElementIntern() {
   const { showToast } = useToast();
@@ -234,7 +285,13 @@ function ConnectarElementIntern() {
   const isGuest = !currentUser;
   const teSessio = Boolean(currentUser);
   const dataMode = useMemo(() => modeResolt(config), [config]);
-  const autorHuma = autorPerConnectar(itemOriginal, { currentUser, actor, identitats, dataMode });
+  /* Gauntlet 261022_0225 (CA-1) · El xat amb l'autor és el de «En privat»:
+     el mateix destí (autorPerConnectar) i el mateix clic (useComentaEnPrivat). */
+  const xatSocDePoble = useXatSocDePoble();
+  const contacte = autorPerConnectar(itemOriginal, {
+    seccio: origenDeLURL.sectionId, currentUser, actor, identitats, dataMode, xat: xatSocDePoble
+  });
+  const obriXatAmbLAutor = useComentaEnPrivat(contacte?.interlocutor ?? null);
   /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
      del dispositiu: es connecta igual. En remot cal entrar (calEntrar): cap
      simulació. Amb el Bloc encara carregant (canCreate exigix 'ready'), el
@@ -480,12 +537,21 @@ function ConnectarElementIntern() {
             </Alerta>
           ) : null}
         </section>
-        {autorHuma ? (
+        {/* Gauntlet 261022_0225 · CA-4: en remot, obrir el xat ja crea la
+            conversa, i l'autor la veu a la seua llista abans de cap missatge;
+            en llavor (CN-R4) la conversa és d'este dispositiu i l'autor no la
+            veu: un altre text. CA-6: el botó diu amb qui (el nom de l'element
+            resolt), i tot passa per t(). */}
+        {contacte ? (
           <section className="sdp-connectar__seccio" aria-labelledby={`${id}-autor`}>
-            <h3 id={`${id}-autor`} className="sdp-connectar__titol-seccio">Connectar amb l’autor</h3>
-            <p>Obri una conversa privada. No envia cap missatge fins que l’escrigues.</p>
-            <Boto varietat="secundari" onClick={() => navigate(calEntrar ? rutaPerAEntrar(params) : rutaXatPrivat(autorHuma))}>
-              {calEntrar ? 'Entra per a connectar amb l’autor' : 'Connectar amb l’autor'}
+            <h3 id={`${id}-autor`} className="sdp-connectar__titol-seccio">{t('section.connectar.autor.titol', 'Connectar amb l’autor')}</h3>
+            <p>{ambNom(dataMode === 'remote'
+              ? t('section.connectar.autor.text', 'Obri una conversa privada amb {nom}. Li apareixerà de seguida a la seua llista de converses, però no rebrà cap missatge fins que l’escrigues.')
+              : t('section.connectar.autor.textLlavor', 'Obri una conversa privada amb {nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.'), contacte.nom)}</p>
+            <Boto varietat="secundari" onClick={() => (calEntrar ? navigate(rutaPerAEntrar(params)) : obriXatAmbLAutor())}>
+              {ambNom(calEntrar
+                ? t('section.connectar.autor.entra', 'Entra per a escriure-li a {nom}')
+                : t('section.connectar.autor.boto', 'Escriu-li a {nom}'), contacte.nom)}
             </Boto>
           </section>
         ) : null}

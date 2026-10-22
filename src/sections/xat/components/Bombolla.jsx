@@ -55,7 +55,7 @@
  * Conversa; en el mode de selecció la targeta és només de lectura. Sense
  * instantània, o amb un altre tipus, el DOM de sempre.
  */
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle2, Circle, Copy, Flag, MoreVertical, Reply } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import MarquesEstat from './MarquesEstat.jsx';
@@ -68,6 +68,7 @@ import { textDErrorDelXat } from '../errorsXat.js';
 import { rutaCanonicaDePerfil, rutaDePerfil } from '../../../config/navigation.js';
 import { esIAIA } from '../../../data/identitatsSeed.js';
 import TargetaLlistaComu from './TargetaLlistaComu.jsx';
+import AdjuntXat from './AdjuntXat.jsx';
 import { llistaDeMissatge } from '../llistaComu.js';
 
 /**
@@ -125,8 +126,8 @@ function textDeSistema(missatge, t) {
   return text;
 }
 
-export default function Bombolla({
-  missatge, esGrup = false, locale, t,
+function Bombolla({
+  missatge, esGrup = false, locale, t, configAdjunts, usuariAdjunts,
   seleccio = null, onReintenta, onDescarta, onCopia,
   primerDelGrup = true, citat = null, onVesACita = null, onRespon = null, ressaltat = false,
   onDenuncia = null, onBloqueja = null, nomAutor = '', actorLlista = null, onMutaLlista = null
@@ -134,6 +135,21 @@ export default function Bombolla({
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
   const botoRef = useRef(null);
+  const arrelRef = useRef(null);
+  const triable = Boolean(seleccio?.actiu);
+
+  /* Gauntlet 261022_0225 (crítica Claude, REV-ESTRES-1) · En el mode de
+     selecció l'adjunt continua muntat i sense controls (STRESS-2). El que
+     sonava es para en entrar-hi, i també el que comence a sonar mentrestant:
+     dins de la casella no hi hauria manera de parar-lo (WCAG 1.4.2). */
+  useEffect(() => {
+    const node = arrelRef.current;
+    if (!triable || !node) return undefined;
+    const para = (e) => { if (typeof e.target?.pause === 'function') e.target.pause(); };
+    node.querySelectorAll('audio, video').forEach((media) => media.pause());
+    node.addEventListener('play', para, true);
+    return () => node.removeEventListener('play', para, true);
+  }, [triable]);
 
   /* El patró de MenuLlista (revisió adversarial 260930, #7 i #8): en obrir,
      el focus entra a la primera opció; Escape tanca, queda consumit (un sol
@@ -187,7 +203,6 @@ export default function Bombolla({
   const enError = estat === 'error';
   const hora = etiquetaHora(missatge.creatAl, locale);
   const text = missatge.text ?? missatge.content ?? '';
-  const triable = Boolean(seleccio?.actiu);
   const triat = Boolean(seleccio?.triat);
   /* Només es respon a un missatge que el servidor ja té: amb id, ni pendent
      ni en error, i mai a una làpida (T1). */
@@ -229,6 +244,7 @@ export default function Bombolla({
       data-vist={!meu && missatge.seq != null ? missatge.seq : undefined}
       data-missatge={missatge.id ?? undefined}
       tabIndex={-1}
+      ref={arrelRef}
       {...propsSeleccio}
     >
       <div className="sdp-xat-bombolla-wrap">
@@ -250,6 +266,18 @@ export default function Bombolla({
             </p>
           ) : llistaComu ? (
             <TargetaLlistaComu llista={llistaComu} actor={actorLlista} interactiva={!triable} onMuta={onMutaLlista} />
+          ) : ['imatge', 'video', 'veu'].includes(missatge.tipus) && missatge.metadades?.adjunt?.id ? (
+            <>
+              {/* Gauntlet 261022_0225 (crítica Claude, STRESS-2) · En el mode de
+                  selecció la foto i el vídeo continuen muntats, sense controls:
+                  entrar i eixir ja no torna a demanar cap URL signada.
+                  REV-ESTRES-3 · La nota de veu es torna a muntar a cada canvi: la
+                  vista quieta no té <audio>, i el reproductor tornaria amb
+                  l'estat d'abans («Pausa») i sense font. La seua URL es demana
+                  en prémer, mai en muntar, i el play següent la torna a signar. */}
+              <AdjuntXat key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'} adjunt={missatge.metadades.adjunt} tipus={missatge.tipus} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} interactiu={!triable} />
+              {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p> : null}
+            </>
           ) : (
             <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p>
           )}
@@ -327,3 +355,12 @@ export default function Bombolla({
     </li>
   );
 }
+
+/* Gauntlet 261022_0225 (crítica Claude, F4) · memo: amb 10.000 missatges,
+   cada tecla del compositor i cada missatge nou repintaven totes les
+   bombolles (1–3 s per tecla). Conversa li passa props estables, i una
+   bombolla només es repinta quan canvia el seu missatge, la cita, el
+   ressalt, la tria o la moderació. REV-ESTRES-2 · «Canvia el seu missatge»
+   vol dir que canvia algun camp: Conversa conserva l'objecte d'abans quan
+   XatContext en deriva un de nou amb els mateixos camps. */
+export default memo(Bombolla);

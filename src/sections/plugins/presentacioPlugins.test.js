@@ -6,7 +6,13 @@
  * Ordre del Mestre (261021, prompt 261021_0015, tasca 6; pla §7.3) · Cada
  * paràgraf porta davant el seu títol <h3>: el cos comença en H3
  * (sdp-universal-page §1.E.4, core-llegibilitat-text §2), i els paràgrafs no
- * canvien.
+ * canvien. DEROGAT (Gauntlet 261022_0225, F2/F7) «els paràgrafs no canvien»:
+ * l'últim del Rebost i de Salut canvia perquè «el botó no fa res» ja no és
+ * cert; pendent de revisió del Mestre (el de Salut, també del text de salut).
+ * EXTENSIÓ (d31c1ccd; Gauntlet 261022_0225, F8) · La Gestoria i el Lector RSS
+ * també en porten sis, i els seus literals citats tenen guarda (CITES).
+ * Gauntlet 261022_0225 (F7) · Els textos diuen com està l'eina ara, en
+ * paraules del poble, i cap promet un botó inert.
  *
  * El que fixa:
  *   · la forma: una cadena per plugin, sis blocs (un <h3> sense punt final i
@@ -107,10 +113,27 @@ describe('presentació dels plugins', () => {
     const plugin = pluginPerId(id);
     expect(text).toContain(plugin.titol);
     expect(text).toContain(`«${plugin.etiquetaObrir}»`);
-    // I diu, honestament, que encara està en proves i que el botó pot no fer res.
+    // I diu, honestament, que encara està en proves.
     expect(text).toContain('en proves');
-    if (['rebost', 'salut'].includes(id)) expect(text).toMatch(/el botó «[^»]+» (?:t’hi porta; si no, el botó )?no fa res/);
-    else expect(text).toMatch(/desactiv/i);
+    /* Gauntlet 261022_0225 (F2) · DEROGAT «el botó pot no fer res»: sense
+       destí no hi ha cap botó inert, i el text no ho pot prometre. */
+    expect(text).not.toMatch(/no fa res/);
+    if (['rebost', 'salut'].includes(id)) expect(text).toMatch(/en lloc del botó (?:«[^»]+» )?la pàgina et diu per què i què pots fer/);
+    /* La Gestoria i el Lector: un últim bloc neutre, cert en qualsevol estat
+       (també si l'ha desactivada la persona, i el botó de baix és «Torna a
+       activar»): ni «la web no la pot obrir» ni «com desactivar-la». */
+    else {
+      expect(text).toMatch(/Si ací baix no tens el botó, davall et diem per què i què pots fer\. Desactivar-(la|lo) o tornar-\1 a activar no esborra/);
+      expect(text).not.toMatch(/esta web encara no (?:la|el) pot obrir|com desactivar-/);
+    }
+  });
+
+  /* Gauntlet 261022_0225 (F7 i auditoria didàctica) · Cap jerga i cap promesa
+     del que no hi ha: ni descàrregues, ni paquets, ni notícies de mostra que
+     ja no existixen, ni «quan estiga disponible» davant d'un botó que pot ser-hi. */
+  test.each(AMB_PRESENTACIO)('%s: paraules del poble, en present', (id) => {
+    const text = senseMarques(presentacioDelPlugin(id));
+    expect(text).not.toMatch(/\bnode\b|\bapps?\b|amfitri|premium|desenvolupament|paquet|descàrrega independent|versió compatible|acredit|notícies de mostra|sincronitza|Quan (?:l’eina )?estiga disponible/i);
   });
 });
 
@@ -139,8 +162,23 @@ describe('els literals citats són els de l’app', () => {
       ['Ho he entés', `${SALUT}/vistes/Ajustos.jsx`, '>Ho he entés</Boto>'],
       ['parla-ho amb el metge', `${SALUT}/textos.js`, '«parla-ho amb el metge»'],
       ['truca al 112', `${SALUT}/textos.js`, '«truca al 112»']
+    ],
+    /* Gauntlet 261022_0225 (F8) · Les entrades de la Gestoria i del Lector
+       que el text cita: si l'app les canvia de nom, esta prova cau. */
+    gestoria: [
+      ['Identitat i Finestreta', 'src/apps/gestoria/manifest.js', "ca: 'Identitat i Finestreta'"],
+      ['Facturació', 'src/apps/gestoria/manifest.js', "ca: 'Facturació'"]
+    ],
+    rss: [
+      ['Fonts', 'src/apps/lector/manifest.js', "ca: 'Fonts'"],
+      ['Notícies', 'src/apps/lector/manifest.js', "ca: 'Notícies'"]
     ]
   };
+
+  test('rss: «encara no hi ha cap font connectada» és el que diu l’estat buit de l’app', () => {
+    expect(senseMarques(presentacioDelPlugin('rss'))).toContain('de moment no hi ha cap font connectada');
+    expect(font('src/apps/lector/AppLector.jsx')).toContain('Encara no hi ha cap font connectada');
+  });
 
   test.each(Object.entries(CITES).flatMap(([id, cites]) => cites.map((cita) => [id, ...cita])))(
     '%s cita «%s», que és a %s', (id, literal, fitxer, comHiEs) => {

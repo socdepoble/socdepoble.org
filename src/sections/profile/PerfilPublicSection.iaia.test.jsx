@@ -126,7 +126,8 @@ describe('el perfil pintat', () => {
     mocks.id = clau;
     render(<PerfilPublicSection agents={[]} />);
     expect(await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).toBeTruthy();
-    expect(mocks.load).toHaveBeenCalledWith(clau, mocks.config);
+    /* Gauntlet 261022_0225 (Tasca 1) · Amb el senyal que cancel·la la càrrega. */
+    expect(mocks.load).toHaveBeenCalledWith(clau, { ...mocks.config, signal: expect.any(AbortSignal) });
     const cos = document.querySelector('article.detail-content');
     /* Expectativa actualitzada a propòsit (ordre del Mestre, 261021, pla
        261021_0015 §8.2) · El text, intacte, es pinta en trossos amb la

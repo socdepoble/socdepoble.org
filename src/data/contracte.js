@@ -147,6 +147,15 @@ export const CAPACITATS = Object.freeze({
     'llistaElsMeusMitjans',
     'esborraElMeuMitja'
   ]),
+  /* Adjunts privats del xat; independents dels mitjans públics del perfil.
+     quotaXat(config) → { usats, limit, pendents: [{id, bytes, mime}] } en bytes (reserves incloses).
+     publicaAdjuntXat(filId, {id, fitxer: Blob, tipus, duradaMs, text?, respostaA?}, config)
+       → Missatge confirmat; id estable per reintentar sense duplicar quota.
+     descartaAdjuntXat(id, config) → true després d’esborrar un pendent propi.
+     urlAdjuntXat(id, config, { renova }?) → URL temporal, només amb accés vigent al fil;
+       renova=true obliga a una signatura nova (cap URL desada).
+     Sense servidor/migració: error 'sense-capacitat', mai èxit local simulat. */
+  xatMultimedia: Object.freeze(['quotaXat', 'publicaAdjuntXat', 'urlAdjuntXat', 'descartaAdjuntXat']),
   agenda: Object.freeze([
     'loadActesAgenda'
   ]),

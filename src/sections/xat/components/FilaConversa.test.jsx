@@ -108,6 +108,16 @@ test('grup amb l’últim missatge meu: marques i «Tu: »; d’una altra person
   expect(previa(boto).textContent).toBe('Porte la furgoneta.');
 });
 
+/* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-1) · xat_fils_meus v5 diu el tipus de l'últim:
+   una foto sense peu no és «Cap missatge.». */
+test('l’últim és un adjunt sense peu: la previa diu el tipus, amb «Pep: » davant', () => {
+  const grup = { id: 'g-8', tipus: 'grup', titol: 'Festes', ultimText: '', ultimTipus: 'imatge', ultimSeq: 3,
+    altres: [{ id: 'pep', nom: 'Pep' }], ultimAutorId: 'pep' };
+  const boto = fila(grup);
+  expect(previa(boto).textContent).toBe('Pep: Foto adjunta');
+  expect(boto.textContent).not.toContain('Cap missatge.');
+});
+
 test('un canal amb l’últim missatge meu també porta «Tu: »', () => {
   const boto = fila({ id: 'k-1', tipus: 'canal', titol: 'Avisos', rol: 'admin', ultimText: 'Tall d’aigua.', ultimAutorId: 'jo', ultimSeq: 1 });
   expect(within(boto).getByText('Tu: Tall d’aigua.')).toBe(previa(boto));

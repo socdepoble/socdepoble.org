@@ -62,6 +62,8 @@ const UUID_SDP = '6c1d2e3f-4051-4b62-8c73-8d94ea5fb607';
 const UUID_ALCOI = '0c1d2e3f-4051-4a62-8b73-94a5b6c7d8e9';
 const UUID_ALTRA = '22222222-2b2b-4000-8000-000000000000';
 const NO_TROBAT = 'Perfil no trobat';
+/* Gauntlet 261022_0225 (Tasca 2) · L'entradilla oficial de Javi Llinares, literal de l'ordre. */
+const ENTRADILLA_DE_JAVI = "Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l'Associació El Rentonar, coordine el Projecte Sóc de Poble.";
 
 const darrer = (nom) => m.renders.filter((props) => props.title === nom).at(-1);
 const pobleDe = (props) => props.labels.filter((etiqueta) => etiqueta.className === 'sdp-badge-category').map((etiqueta) => etiqueta.text);
@@ -98,6 +100,10 @@ describe.each([['sense sessió', null], ['amb sessió', SESSIO]])('remot, %s', (
     expect(m.rpc).not.toHaveBeenCalled();
     const props = darrer(AGENTS_MAP.JAVI.name);
     expect(pobleDe(props)).toEqual([POBLE_FUNDACIONAL]);
+    /* Gauntlet 261022_0225 (Tasca 2) · La fitxa autèntica, la mateixa que dona
+       el servidor: H2 el seu poble, l'entradilla oficial i res de la vella. */
+    expect([props.title, props.subtitle, props.lead]).toEqual([AGENTS_MAP.JAVI.name, POBLE_FUNDACIONAL, ENTRADILLA_DE_JAVI]);
+    expect(JSON.stringify(m.renders.map(({ title, subtitle, lead }) => [title, subtitle, lead]))).not.toMatch(/Coordinador|visionari|buscant el trellat/);
     expect(props.topBarData.authorLocation).toBe(POBLE_FUNDACIONAL);
     expect(props.labels.map((etiqueta) => etiqueta.text)).not.toContain('La teua fitxa');
     expect(props.avatarAutor).toBeNull();

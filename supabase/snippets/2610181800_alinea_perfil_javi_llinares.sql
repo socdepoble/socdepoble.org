@@ -81,8 +81,8 @@ $$;
 update public.profiles p
    set full_name = case when coalesce(btrim(p.full_name), '') = '' then 'Javi Llinares' else p.full_name end,
        town_name = case when coalesce(btrim(p.town_name), '') = '' then 'La Torre de les Maçanes' else p.town_name end,
-       bio = case when coalesce(btrim(p.bio), '') = '' then 'Coordinador del projecte Sóc de Poble' else p.bio end,
-       lema = case when coalesce(btrim(p.lema), '') = '' then 'Sempre buscant el trellat.' else p.lema end,
+       bio = case when coalesce(btrim(p.bio), '') = '' then 'La Torre de les Maçanes' else p.bio end,
+       lema = case when coalesce(btrim(p.lema), '') = '' then 'Dissenyador gràfic, sempre disposat a integrar-me en equips de treball on aprendre i aportar valor als projectes. Dins de l''Associació El Rentonar, coordine el Projecte Sóc de Poble.' else p.lema end,
        avatar_url = case
          when coalesce(btrim(p.avatar_url), '') = ''
            or btrim(p.avatar_url) ~* '^https://([a-z0-9-]+\.)*(googleusercontent\.com|ggpht\.com)(/|$)'

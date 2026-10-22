@@ -279,3 +279,56 @@ test('un graf buit desactiva els controls i els recupera quan arriben nodes', ()
   buida();
   expect(vista().k).toBeCloseTo(1.3);
 });
+
+/* Gauntlet 261022_0225 (crítica Claude, F2) · Els veïns ixen de la llista
+   d'adjacència: els dos sentits, cap repetit i en l'ordre dels nodes. */
+test('els veïns d’un node són els vincles dels dos sentits, sense repetir, en l’ordre dels nodes', () => {
+  const graf = {
+    nodes: [
+      { id: 'a', label: 'Alfa', type: 'document' }, { id: 'b', label: 'Beta', type: 'document' },
+      { id: 'c', label: 'Gamma', type: 'tag' }, { id: 'd', label: 'Delta', type: 'category' }
+    ],
+    links: [{ source: 'c', target: 'b' }, { source: 'b', target: 'a' }, { source: 'b', target: 'a' }, { source: 'd', target: 'c' }]
+  };
+  render(<BrainGraph graf={graf} />);
+  const inspector = screen.getByRole('complementary', { name: 'Consola del graf' });
+  const veins = () => within(inspector).getAllByRole('listitem').map((li) => li.textContent);
+  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'b' } });
+  expect(veins()).toEqual(['Alfa', 'Gamma']);
+  expect(within(inspector).getByText('Connexions').nextElementSibling.textContent).toBe('2');
+  fireEvent.click(within(inspector).getByRole('button', { name: 'Gamma' }));
+  expect(screen.getByRole('combobox').value).toBe('c');
+  expect(veins()).toEqual(['Beta', 'Delta']);
+});
+
+/* Gauntlet 261022_0225 (crítica Claude, REV-ESTRES-5) · El cost de F2 i F3, no
+   només el resultat: una tria no torna a recórrer els vincles per cada node ni
+   a fer les <option>. Es compten les lectures dels camps: abans, una tria en
+   llegia N × vincles (els veïns) i N etiquetes (les opcions). */
+test('triar un node no recorre els vincles per cada node ni torna a fer les opcions', () => {
+  const N = 60;
+  const lectures = { vincles: 0, etiquetes: 0 };
+  const comptat = (tipus, valor) => ({ enumerable: true, get: () => { lectures[tipus]++; return valor; } });
+  const nodes = Array.from({ length: N }, (_, i) => Object.defineProperty({ id: `n${i}`, type: 'document' }, 'label', comptat('etiquetes', `Node ${i}`)));
+  const links = Array.from({ length: N - 1 }, (_, i) => Object.defineProperties({}, { source: comptat('vincles', `n${i}`), target: comptat('vincles', `n${i + 1}`) }));
+  /* Les posicions, fetes una vegada i sense llegir cap etiqueta. */
+  const posats = { current: nodes.map((node, i) => ({ id: node.id, type: node.type, label: '', x: 10 * i, y: 300 })) };
+  const original = useForceLayout.getMockImplementation();
+  useForceLayout.mockImplementation(() => posats);
+  try {
+    render(<BrainGraph graf={{ nodes, links }} />);
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'n10' } });
+    lectures.vincles = 0;
+    lectures.etiquetes = 0;
+    fireEvent.change(select, { target: { value: 'n40' } });
+    const inspector = screen.getByRole('complementary', { name: 'Consola del graf' });
+    expect(within(inspector).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Node 39', 'Node 41']);
+    /* Només el pintat del canvas: una passada pels vincles. */
+    expect(lectures.vincles).toBeLessThanOrEqual(2 * links.length);
+    /* Només el detall i els veïns. */
+    expect(lectures.etiquetes).toBeLessThan(N / 4);
+  } finally {
+    useForceLayout.mockImplementation(original);
+  }
+});

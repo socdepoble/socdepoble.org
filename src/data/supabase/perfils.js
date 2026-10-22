@@ -35,6 +35,7 @@
  *     sense fila, torna null i la pàgina ho diu, com abans.
  */
 import { getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
+import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
 import { emojiSol } from '../../utils/emoji.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -93,6 +94,39 @@ export function perfilDePersona(fila, usuari) {
   };
 }
 
+/* Gauntlet 261022_0225 (Tasca 1: «Introduir un timeout de seguretat estricte
+   (fail-safe) a loadPerfilPublic: si en 3 segons la xarxa no respon…») · El
+   pressupost de TOTA la lectura remota: el directori i la RPC de persona
+   comparteixen els mateixos 3 s, que no es reinicien entre una consulta i
+   l'altra. Passat el termini, la lectura s'avorta i es rebutja amb un
+   TimeoutError (no és cap «no trobat»: qui crida decidix què es veu), també si
+   el transport ignora l'avortament. El senyal de qui crida (config.signal)
+   l'avorta abans, amb un AbortError. Revisió del Gauntlet 261022_0225
+   (REV-PERF-2) · Qui crida pot demanar un altre pressupost (config.terminiMs):
+   el «Torna-ho a provar» de la fitxa pública, que si no fallaria sempre igual
+   en una línia lenta. Sense, els 3 s. */
+export const TERMINI_DE_LA_FITXA_MS = 3000;
+
+function ambTermini(senyalExtern, ms, feina) {
+  const controlador = new AbortController();
+  let talla;
+  const tallada = new Promise((_resolve, reject) => { talla = reject; });
+  const perTermini = setTimeout(() => {
+    talla(new DOMException('La fitxa no ha arribat a temps.', 'TimeoutError'));
+    controlador.abort();
+  }, ms);
+  const perFora = () => {
+    talla(new DOMException('Operació cancel·lada.', 'AbortError'));
+    controlador.abort();
+  };
+  if (senyalExtern?.aborted) perFora();
+  else senyalExtern?.addEventListener('abort', perFora, { once: true });
+  return Promise.race([feina(controlador.signal), tallada]).finally(() => {
+    clearTimeout(perTermini);
+    senyalExtern?.removeEventListener('abort', perFora);
+  });
+}
+
 export async function loadPerfilPublic(idOSlug, config = {}) {
   const clau = String(idOSlug ?? '').trim();
   if (!clau) return null;
@@ -102,6 +136,20 @@ export async function loadPerfilPublic(idOSlug, config = {}) {
   const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) return null;
 
+  const { terminiMs, ...resta } = config;
+  const ms = Number.isFinite(terminiMs) && terminiMs > 0 ? terminiMs : TERMINI_DE_LA_FITXA_MS;
+  return ambTermini(config.signal, ms, (signal) => llegixPerfilRemot(clau, tenantId, { ...resta, signal }));
+}
+
+/* Revisió del Gauntlet 261022_0225 (REV-PERF-1) · Una consulta que no ha
+   arribat al servidor (avortada, temps esgotat o sense xarxa: l'estat 0 i
+   CODI_BACKEND_INABASTABLE de runtime.js) no és cap «no trobat»: es propaga,
+   i la fitxa pública pinta l'avís amb «Torna-ho a provar». Una resposta del
+   servidor amb error (404, 403, 503…) continua sent null, com abans. */
+const senseResposta = (error) => error?.name === 'AbortError' || error?.name === 'TimeoutError'
+  || error?.status === 0 || error?.codi === CODI_BACKEND_INABASTABLE;
+
+async function llegixPerfilRemot(clau, tenantId, config) {
   const esUuid = UUID.test(clau);
   /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Un slug només és
      únic dins d'un poble (organizations: unique (tenant_id, slug)): sense el
@@ -123,7 +171,7 @@ export async function loadPerfilPublic(idOSlug, config = {}) {
     const orgs = await request(`/rest/v1/organization_directory?select=*&${filtre}&limit=1`, config, { signal: config.signal });
     if (orgs?.[0]) return perfilDOrganitzacio(orgs[0]);
   } catch (error) {
-    if (error?.name === 'AbortError') throw error;
+    if (senseResposta(error)) throw error;
   }
   const usuari = getCurrentUser();
   if (esUuid && usuari?.id === clau) {
@@ -131,7 +179,7 @@ export async function loadPerfilPublic(idOSlug, config = {}) {
       const files = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(clau)}&limit=1`, config, { signal: config.signal });
       if (files?.[0]) return perfilDePersona(files[0], usuari);
     } catch (error) {
-      if (error?.name === 'AbortError') throw error;
+      if (senseResposta(error)) throw error;
     }
   } else if (esUuid && usuari?.id) {
     /* Ordre del Mestre (261002) · Una altra persona: la RPC decidix què se'n
@@ -141,7 +189,7 @@ export async function loadPerfilPublic(idOSlug, config = {}) {
       const fila = Array.isArray(files) ? files[0] : files;
       if (fila?.id) return perfilDePersona(fila, usuari);
     } catch (error) {
-      if (error?.name === 'AbortError') throw error;
+      if (senseResposta(error)) throw error;
     }
   }
   return null;
