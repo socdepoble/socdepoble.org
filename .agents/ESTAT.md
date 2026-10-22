@@ -7,6 +7,22 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-23T01:10:00+02:00 · IAIA MarIA · Incident de Regressió de Tenant a Producció, Reversió d'Urgència a 1111... i Congelació fins al Matí
+
+Torn: `torn_cercador_rollback_nocturn`.
+
+- **Incident de Regressió Producció (`socdepoble.org`):**
+  - Després de compilar amb `VITE_TENANT_ID=edd2f840...`, la web mostrava «Cap poble trobat» i les seccions del Mur i Mercat buides, ja que `app_content` té totes les dades registrades sota `tenant_id = '11111111-2222-3333-4444-555555555555'`.
+- **Acció d'Urgència Executada (Reversió Total):**
+  - Revertit `VITE_TENANT_ID` a `11111111-2222-3333-4444-555555555555` tant a `.env.local` com a `.env.production.local`.
+  - Recompilat el web bundle (`npm run build:web`).
+  - Redesplegat immediatament a Firebase Hosting (`soc-de-poble`).
+  - Verificat via curl a `https://socdepoble.org`: el bundle torna a injectar `tenantId: "11111111-2222-3333-4444-555555555555"` i el contingut remot de Pobles, Mur i Mercat torna a estar operatiu.
+- **Congelació i Ordre del Mestre per a Demà de Matí:**
+  - Cap toc a la base de dades ni canvis solitaris a cegues.
+  - Tot registrat al pla d'implementació (`_wiki_de_poble/04_escriptori/261022_1955_pla_implementacio_cercador_universal.md`).
+  - Demà al matí, la tasca prioritària número 1 serà resoldre el tenant amb Claude desplegant agents d'auditoria multi-agent per comprovar totes les taules i assegurar que res no es trenque.
+
 ## ESTAT_ACTUAL · 2026-10-22T23:30:00+02:00 · IAIA MarIA · Tancament Nocturn: Cercador Universal Validat (21k proves), Poliment Visual (Carregant i Mur), Consens Canònic D1-A i Relleu a Botigues
 
 Torn: `torn_528e27ee-1e76-438d-899e-0abfcd996b0b`.

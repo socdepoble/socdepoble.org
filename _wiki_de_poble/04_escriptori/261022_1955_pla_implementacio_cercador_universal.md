@@ -36,6 +36,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 ## Historial
 
 2026-10-22T18:27:56.186Z: Creació del pla d'arquitectura arran de la invisibilitat d'empreses públiques («La Figuera», `/empresa/lafiguera`) a `/cerca` i l'error 403 Forbidden («Mode Foraster») al padró de persones (Carmen i Damián).
+2026-10-23T01:05:00.000Z: **Incident de regressió de tenant a producció**. En compilar amb `VITE_TENANT_ID=edd2f840...`, la web va mostrar «Cap poble trobat» i contingut buit a Mur i Mercat perquè `app_content` resideix exclusivament a `11111111-2222-3333-4444-555555555555`. S'ha revertit a `1111...` i s'ha redesplegat a Firebase per restablir el servei. S'ajorna la unificació per a demà de matí amb l'auditoria multi-agent de Claude.
 
 <!-- SDP:SECTION pla.implementacio.s4 -->
 ## Canvis proposats
@@ -45,44 +46,41 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 2. **Col·lapse del Padró per mismatch de Tenant (403 Forbidden)**: El cercador delegava la cerca de persones en `xat.cercaMembres()`. Aquest mètode crida `public.membres_del_poble(p_tenant_id)`. El frontend enviava el `VITE_TENANT_ID` de prova (`11111111-2222-3333-4444-555555555555`). Com els usuaris reals estan a La Torre de les Maçanes (`edd2f840-f4af-414a-821c-ebb8b8b2a80a`), la guarda `private.is_town_member()` llançava excepció `42501` (403 Forbidden). La banner de «Mode Foraster» bloquejava el padró i deixava a 0 Carmen i Damián.
 3. **Estat de Supabase SQL**: A la vista `organization_directory` falta afegir `town_name` (migració `2610081401` pendent d'aplicar a la base de dades remota).
 
-### 2. Accions Concretes de Codi
+### 2. Accions Concretes de Codi (Implementades per Claude)
 
 #### A. Adaptador i Port per a Entitats Públiques
-- `src/data/contracte.js` & `src/data/backendPort.js`: Afegir mètode neutral `listPublicOrganizations(filtre, config)`.
-- `src/data/supabase/organizations.js`: Implementar `listPublicOrganizations` consultant `/rest/v1/organization_directory?select=*`.
-- `src/data/localPerfils.js`: Implementar `listPublicOrganizations` per als modes `seed` i `local`.
+- `src/data/contracte.js` & `src/data/backendPort.js`: Afegit mètode neutral `listPublicOrganizations(filtre, config)` i capacitat `directoriEntitats`.
+- `src/data/supabase/organizations.js`: Implementat `listPublicOrganizations` consultant `/rest/v1/organization_directory` amb columnes explícites.
+- `src/data/localPerfils.js`: Implementat `listPublicOrganizations` per als modes `seed` i `local`.
 
 #### B. Adaptador de Cerca Global
-- `src/sections/search/indexCerca.js`:
-  * Crear l'adaptador `deOrganitzacio(org, opcions)` que converteix cada fila de `organization_directory` en una entrada tipus `'entitats'` amb títol, meta (poble), extracte (`description` o `lema`), logo i ruta canònica `/empresa/<slug>`.
-  * Optimitzar `cercaEntrades` amb normalització valenciana avançada (accents, dièresis, ç, l·l) i rànquing intel·ligent per rellevància.
-- `src/sections/search/useCercaGlobal.js`:
-  * Afegir la font autònoma `entitatsPubliques` via `listPublicOrganizations`.
-  * Desacoblar la fallada de xat: si `cercaMembres` respon 403, no bloquejar ni llançar error alarmista; tractar el padró privat com a buit per a forasters i mantenir la cerca de perfils públics operativa.
-  * Harmonitzar `clauCanonica` perquè si una entitat és administrada per l'usuari i alhora està al directori públic, es fusione transparentment sense duplicar fitxes.
+- `src/sections/search/indexCerca.js`: Adaptador `deOrganitzacio` amb normalització valenciana avançada, ressaltat i rànquing intel·ligent per rellevància.
+- `src/sections/search/useCercaGlobal.js`: Font `directori` desacoblada del xat; padró tancat silenciós (sense alertes vermelles de 403 per a forasters).
 
-#### C. Configuració d'Entorn
-- Actualitzar `VITE_TENANT_ID` a `.env.local` i `.env.production.local` amb l'UUID real de La Torre de les Maçanes (`edd2f840-f4af-414a-821c-ebb8b8b2a80a`).
-
-#### D. SQL de Supabase (per al Mestre)
-- Proporcionar el script SQL net per actualitzar `organization_directory` amb `town_name` i garantir lectura pública a `anon` i `authenticated`.
+### 3. Pendent per a Demà de Matí: Resolució Segura del Tenant Partit (Decisió D1)
+*Avís de seguretat*: No tocar la base de dades a cegues ni canviar `VITE_TENANT_ID` aïlladament sense Claude i agents d'auditoria.
+- **Opcions sobre la taula (per auditar amb Claude)**:
+  * **Opció D1-A (Conservadora)**: Mantenir `VITE_TENANT_ID=11111111-2222-3333-4444-555555555555`. Donar d'alta les persones a `town_memberships` per al tenant `1111...` i canviar el nom de la fila a `towns` de «Poble de Llavors» a «La Torre de les Maçanes».
+  * **Opció D1-B (Migració completa)**: Moure les 11 taules amb `tenant_id` de `1111...` a `edd2f840...` mitjançant un script SQL transaccional i auditat per Claude amb agents adversarials, comprovant claus foranes i triggers.
+- **Protocol d'arrencada matinal**:
+  1. Claude generarà els agents d'auditoria per validar l'estat exacte de Supabase.
+  2. Execució de les consultes de només lectura (§4 de l'informe Claude `261022_2220_auditoria_claude.md`).
+  3. Decisió del Mestre i execució controlada amb comprovació passiva prèvia.
 
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
-1. `npm test src/sections/search/`: Validar totes les proves unitàries d'indexació i cerca.
-2. `npm test src/data/`: Validar contracte i conformitat del port.
-3. Prova d'integració al navegador:
-   - `/cerca?q=figuera` -> Troba «La Figuera» amb insígnia d'Entitat/Empresa, logo i enllaç a `/empresa/lafiguera`.
-   - `/cerca?q=carmen` i `/cerca?q=damian` -> Troba les seues fitxes de persona.
-   - Foraster / Anònim -> Cap error 403 en roig.
+1. `npm test src/sections/search/`: Validar totes les proves unitàries d'indexació i cerca (Comprovat: 60/60 tests verds).
+2. `npm test src/data/`: Validar contracte i conformitat del port (Comprovat: verd).
+3. Verificació a Producció:
+   - `socdepoble.org` restablert amb `VITE_TENANT_ID=1111...` (Pobles, Mur i Mercat visibles).
 4. `node tooling/gates/porta-olivera.mjs` -> Escriptori net en 0.
 
 <!-- SDP:SECTION pla.implementacio.s6 -->
 ## Riscos
 
-- **Duplicitat d'entitats**: Risc que una empresa isca dues vegades si l'usuari n'és propietari. Mitigació: `clauCanonica` i `ambLaIdentitatPropia` dedupliquen per slug/id abans del rànquing.
-- **Rendiment en xarxa**: La càrrega d'entitats públiques es memoritza en caché per àmbit de poble, evitant peticions repetides a cada pulsació de tecla.
+- **Mismatch de Tenant**: Canviar el tenant del frontend sense migrar `app_content` buida completament l'aplicació. Mitigació: Prohibit tocar `VITE_TENANT_ID` sense haver migrat o harmonitzat prèviament les dades a Supabase amb verificació prèvia.
+- **Inconsistència de Claus Foranes a Supabase**: Moure files entre tenants sense actualitzar les 11 taules trenca `town_memberships` i el xat. Mitigació: L'auditoria matinal de Claude revisarà la integritat referencial abans de cap canvi.
 
 <!-- SDP:SECTION pla.implementacio.s7 -->
 ## Vincles
@@ -90,4 +88,5 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 - [[00_index]]
 - [[00_index_escriptori]]
 - [[261022_1955_prompt_claude_gemini_cercador_universal]]
+- [[261022_2220_auditoria_claude]]
 
