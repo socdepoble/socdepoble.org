@@ -23,10 +23,11 @@
  *   · Bloc blanc de l'H1 (header.page-title, «la Decoració de l'H1» de la
  *     skill sdp-universal-page): el logotip, l'H1, les `etiquetes` del
  *     registre si en porta (la Categoria i l'Etiqueta de la targeta), el botó
- *     «Obrir…» de dalt si el plugin té presentació, i el copyright.
+ *     «Obrir…» de dalt si el plugin té presentació i una porta disponible
+ *     (Gestoria/RSS), i el copyright.
  *   · H2 i entradilla del registre (.page-intro).
  *   · El cos: la presentació del plugin, si en té (presentacioPlugins.js: sis
- *     blocs, un títol H3 i el seu paràgraf, per al Rebost i per a Salut),
+ *     blocs, un títol H3 i el seu paràgraf, per al Rebost, Salut, Gestoria i RSS),
  *     pintada per CosDeLaPagina, la peça de les pàgines de text, que saneja
  *     l'HTML.
  *   · L'avís en text, si el botó no es pot obrir.
@@ -34,9 +35,10 @@
  *     de les pàgines de publicació), dins de div.sdp-pagina-accio, que és
  *     SEMPRE l'últim fill de l'article: amb destí, un enllaç del router
  *     (Link, amb la base de l'amfitrió i el router en memòria de WordPress);
- *     sense, o amb una app que ací no es pot obrir (useDestiDelPlugin), un
- *     botó inert (aria-disabled) que no navega, amb l'avís en text damunt i
- *     el toast en prémer-lo.
+ *     sense destí, Gestoria/RSS expliquen el motiu real i permeten amagar
+ *     l'eina del Panell o recuperar-la. Només si el node no porta l'app hi
+ *     ha ajuda d'instal·lació: no substituïx els permisos ni la privacitat.
+ *     La resta conserva el botó inert, l'avís en text i el toast.
  *
  * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
  *   · M4 · Targeta i pàgina diuen el mateix (ordre del Mestre, 261001): la
@@ -66,11 +68,11 @@
  * L'arquitectura de plugins sencera (injecció, cicle de vida, aïllament) és
  * de la pròxima onada (directriu 261003_2320): ací només hi ha la pàgina.
  */
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useParams } from '../../app/contexts/RouterContext';
 import { Boto } from '../../components/PedraSeca/index.js';
 import { useApagaApp, usePreferenciesApps } from '../../apps/plataforma/PlataformaContext.jsx';
-import { desaUtilitatActiva } from '../profile/utilitatsActives.js';
+import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
@@ -90,33 +92,36 @@ const TEXTOS_PORTADA = Object.freeze({
   mostra: Object.freeze(['pagina.portada.mostra', 'Mostra la portada'])
 });
 
-function EinaNoDisponible({ plugin }) {
+function EinaNoDisponible({ plugin, motiu }) {
   const [ajuda, setAjuda] = useState(false);
   const [error, setError] = useState('');
   const apaga = useApagaApp();
   const preferencies = usePreferenciesApps();
   const idApp = appDelPlugin(plugin);
+  const visible = useSyncExternalStore(subscriuUtilitatsActives, () => estaAlPanell(plugin.id), () => true);
   const apagada = preferencies.apps[idApp] === false;
+  const restaura = apagada || !visible;
+  const faltaApp = motiu === 'no-compilada';
   const canvia = () => {
-    if (!desaUtilitatActiva(plugin.id, apagada)) {
+    if (!desaUtilitatActiva(plugin.id, restaura)) {
       setError('No s’ha pogut guardar la preferència. Torna-ho a provar.');
       return;
     }
-    apaga(idApp, !apagada);
+    apaga(idApp, !restaura);
     setError('');
   };
   return <>
-    <Boto varietat="primari" mida="gran" ple aria-expanded={ajuda} onClick={() => setAjuda(!ajuda)}>
+    {faltaApp ? <Boto varietat="primari" mida="gran" ple aria-expanded={ajuda} onClick={() => setAjuda(!ajuda)}>
       Com instal·lar esta eina
-    </Boto>
-    {ajuda ? <p>
+    </Boto> : null}
+    {faltaApp && ajuda ? <p>
       Esta eina encara està en proves i no té un paquet independent de descàrrega.
       La persona que administra esta web ha d’afegir una versió compatible quan estiga disponible.
       Ací no es pot instal·lar amb un clic.
     </p> : null}
-    <Boto onClick={canvia}>{apagada ? 'Torna a mostrar esta eina' : 'Desactiva esta eina'}</Boto>
-    <p>{apagada
-      ? 'L’eina està desactivada per a tu. Tornar-la a mostrar no la instal·la.'
+    <Boto onClick={canvia}>{restaura ? 'Torna a mostrar esta eina' : 'Desactiva esta eina'}</Boto>
+    <p>{restaura
+      ? `${visible ? 'L’eina està desactivada per a tu.' : 'L’eina està amagada del teu Panell.'} Tornar-la a mostrar no la instal·la ni canvia els permisos d’esta web.`
       : 'La desactivació només afecta el teu navegador: amaga l’eina del Panell i no esborra les teues dades.'}</p>
     {error ? <Alerta to="error">{error}</Alerta> : null}
   </>;
@@ -159,7 +164,7 @@ function PaginaDelPlugin({ plugin }) {
       {presentacio ? <CosDeLaPagina html={presentacio} /> : null}
       {avis ? <Alerta to="info">{avis}</Alerta> : null}
       <div className="sdp-pagina-accio">
-        {necessitaAjuda ? <EinaNoDisponible key={plugin.id} plugin={plugin} /> : <PortaDePagina porta={porta} />}
+        {necessitaAjuda ? <EinaNoDisponible key={plugin.id} plugin={plugin} motiu={desti.motiu} /> : <PortaDePagina porta={porta} />}
       </div>
     </UniversalPage>
   );

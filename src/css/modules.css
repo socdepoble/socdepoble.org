@@ -4510,6 +4510,13 @@ details[open] summary.accordion-header svg:last-child {
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu {
     padding-bottom: calc(var(--sdp-space-4) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
+  /* L'accés sense sessió viu fora del cos amb scroll: el peu de la llista
+     reserva la barra inferior ací també. Dins d'una conversa la reserva ja
+     la porta .sdp-xat-conversa. Text damunt i accions que poden compartir
+     fila, sense encongir el peu quan la llista ocupa l'altura disponible. */
+  .sdp-alerta.sdp-xat-acces { flex: none; flex-direction: column; margin: 0; }
+  .sdp-xat-acces > p { margin: 0; }
+  .sdp-xat-acces > .sdp-alerta__accions { margin: 0; }
   .sdp-xat-informe:disabled { opacity: 0.6; cursor: progress; }
   .sdp-xat-informe__nota {
     margin: var(--sdp-space-3) 0 0;

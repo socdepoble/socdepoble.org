@@ -34,6 +34,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261022_0225_prompt_claude_gemini_codex_gauntlet_extrem_i_sistema_resilient]]
+- [[261022_0225_pla_implementacio_gauntlet_extrem_i_sistema_resilient]]
+- [[261022_0141_acta_tancament_codex]]
 - [[261022_0150_auditoria_claude]]
 - [[261022_0141_auditoria_codex]]
 - [[261022_0142_auditoria_gemini]]

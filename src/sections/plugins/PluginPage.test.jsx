@@ -5,6 +5,9 @@
  * el gran botó blau «Obrir …». Amb destí, un enllaç del router (amb la base de
  * l'amfitrió); sense destí, o amb una app apagada en este build, un botó
  * inert que ho diu (aria-disabled, avís en text i toast) i no navega mai.
+ * Gestoria/RSS substituïxen la porta inerta pel motiu real i la preferència
+ * reversible del Panell. L'ajuda d'instal·lació només apareix si falta l'app;
+ * ni apagar-la ni el bloqueig de privacitat es resolen instal·lant-la.
  * Un id desconegut és la 404 de sempre (NotFoundPage).
  *
  * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
@@ -25,7 +28,7 @@
  * Router en memòria i plataforma de veres (ProveidorPlataforma amb un entorn
  * fixat). Les proves són fora de L2 (tractor-persistencia).
  */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
 import { MemoryRouter, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
@@ -38,7 +41,7 @@ import { _reiniciaPreferencies, CLAU_PREFERENCIES } from '../../apps/plataforma/
 import { creaRegistre, MANIFESTS_INTERNS } from '../../apps/plataforma/registreApps.js';
 import { baseRecursos, fixaBaseRecursos } from '../../config/assetResolver';
 import { createTranslator, SUPPORTED_LANGUAGES } from '../../config/i18n';
-import { estaAlPanell, CLAU_UTILITATS_ACTIVES } from '../profile/utilitatsActives.js';
+import { desaUtilitatActiva, estaAlPanell, CLAU_UTILITATS_ACTIVES } from '../profile/utilitatsActives.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import PluginPage from './PluginPage.jsx';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
@@ -434,18 +437,17 @@ describe('el botó Obrir', () => {
 
   /* Fora de desenvolupament, l'app no s'obri (entorn 'desenvolupament'): la
      pàgina es manté, diu honestament que està en obres i no navega a res. */
-  test('la Gestoria en producció: cap enllaç, botó inert, diu que està en obres i no navega', () => {
+  test('la Gestoria compilada en producció: explica la limitació d’entorn sense suggerir instal·lar-la', () => {
     const { container } = munta('/plugin/gestoria', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
     expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"], a[href*="/app/gestoria"]')).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Com instal·lar esta eina' });
+    expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
     const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
     expect(screen.getByRole('status').textContent).toBe(motiu);
-    fireEvent.click(boto);
+    fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
     expect(ubicacio()).toBe('/plugin/gestoria');
-    expect(boto.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByText(/no té un paquet independent de descàrrega/)).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe(motiu);
     // La pàgina de la Gestoria continua sent la seua: portada, títol i entradilla.
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Gestoria');
     expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
@@ -465,17 +467,16 @@ describe('el botó Obrir', () => {
      el Lector hi és compilat i només l'apaga la capa d'entorn (manifest amb
      entorn 'desenvolupament' i produccio: true). Es conserva, amb el nom del
      que comprova de veres; el build real és la prova de davall. */
-  test('capa d’entorn: una app compilada amb entorn «desenvolupament», en producció, no fa cap enllaç mort: inert i diu per què', () => {
+  test('capa d’entorn: el Lector compilat en producció diu per què no es pot obrir, sense ajuda d’instal·lació', () => {
     munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Com instal·lar esta eina' });
+    expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Obrir.*no disponible/ })).toBeNull();
     const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
     expect(screen.getByRole('status').textContent).toBe(motiu);
-    fireEvent.click(boto);
+    fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
     expect(ubicacio()).toBe('/plugin/rss');
-    expect(boto.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByText(/no té un paquet independent de descàrrega/)).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe(motiu);
   });
 
   /* Peça C (261007) · El build de producció de veres sense VITE_SDP_APP_*:
@@ -637,4 +638,52 @@ test.each(['gestoria', 'rss'])('%s: desactivar amaga del Panell, conserva dades 
   expect(estaAlPanell(id)).toBe(true);
   expect(screen.queryByRole('link', { name: /Obrir/ })).toBeNull();
   window.localStorage.removeItem('dades-test-conservades');
+});
+
+test.each(['gestoria', 'rss'])('%s: recupera al primer clic una eina amagada abans des del Perfil', (id) => {
+  desaUtilitatActiva(id, false);
+  munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
+  expect(estaAlPanell(id)).toBe(false);
+  expect(screen.queryByRole('button', { name: 'Desactiva esta eina' })).toBeNull();
+  expect(screen.getByText(/L’eina està amagada del teu Panell/)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  expect(estaAlPanell(id)).toBe(true);
+  expect(screen.getByRole('button', { name: 'Desactiva esta eina' })).toBeTruthy();
+  expect(screen.queryByRole('link', { name: /Obrir/ })).toBeNull();
+});
+
+test('el botó segueix els canvis de visibilitat del Panell mentre la pàgina està oberta', () => {
+  munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre: registreDeProduccio() });
+  act(() => { desaUtilitatActiva('rss', false); });
+  expect(screen.getByRole('button', { name: 'Torna a mostrar esta eina' })).toBeTruthy();
+  act(() => { desaUtilitatActiva('rss', true); });
+  expect(screen.getByRole('button', { name: 'Desactiva esta eina' })).toBeTruthy();
+});
+
+test.each([['gestoria', 'gestoria'], ['rss', 'lector']])('%s: reactivar una app compilada i apagada recupera la porta sense instal·lació', (id, idApp) => {
+  window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { [idApp]: false }, interruptors: {} }));
+  _reiniciaPreferencies();
+  munta(`/plugin/${id}`);
+  expect(screen.getByRole('status').textContent).toBe('L’has apagada tu. La pots tornar a encendre quan vulgues.');
+  expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  expect(estaAlPanell(id)).toBe(true);
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.getAllByRole('link', { name: pluginPerId(id).etiquetaObrir })).toHaveLength(2);
+});
+
+test('Gestoria en un document d’altri: desactivar i recuperar conserva el bloqueig financer sense proposar instal·lar', () => {
+  munta('/plugin/gestoria', { entorn: { ...ENTORN_OBERT, amaDelDocument: false }, basename: '/poble' });
+  const motiu = screen.getByRole('status').textContent;
+  expect(motiu).toContain('Guarda dades financeres');
+  expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+  expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Desactiva esta eina' }));
+  expect(estaAlPanell('gestoria')).toBe(false);
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a mostrar esta eina' }));
+  expect(estaAlPanell('gestoria')).toBe(true);
+  expect(screen.getByRole('status').textContent).toBe(motiu);
+  expect(screen.queryByRole('button', { name: 'Com instal·lar esta eina' })).toBeNull();
+  expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
+  expect(ubicacio()).toBe('/plugin/gestoria');
 });

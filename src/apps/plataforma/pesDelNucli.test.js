@@ -13,11 +13,10 @@
      · El tros d'entrada no passa del sostre: si un build nou el passa, o
        s'aprima el nucli o s'apuja SOSTRE_DEL_TROS_D_ENTRADA a posta, amb el
        motiu escrit al costat. Mai en silenci.
-   I dues proves [DEFECTE] que reproduïxen el deute conegut i s'han de girar
-   quan es pague (fase 2 de l'ADR, amb la Llei del Píxel): el CSS de la
-   Gestoria viatja inlinat dins del tros d'entrada (index.css?inline,
-   PedraSecaEmbed.jsx) i els seus mitjans, dins del paquet (recursosDelPlugin
-   copia tot public/).
+   Una prova [DEFECTE] reproduïx el deute de CSS de la Gestoria inlinat dins
+   del tros d'entrada (index.css?inline, PedraSecaEmbed.jsx). Els mitjans es
+   comproven segons la política del manifest: locals al paquet complet,
+   absents i resolts a l'origen declarat al connector lleuger.
    El títol diu de quan és el build que es mesura: el dist no es reconstruïx
    sol, i un build vell no diu res de l'arbre d'ara. Sense build (un clon net,
    la CI), les proves del dist se salten: vitest les compta com a saltades,
@@ -25,6 +24,8 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { bessonaDe, bessonesDe, esExtern, esHostLocal } from '../../config/politicaDeMitjans.js';
+import { fixaBaseRecursos, fixaPoliticaDeMitjans, resolveAsset } from '../../config/assetResolver.js';
 
 const ARREL = process.cwd();
 
@@ -75,7 +76,7 @@ const comACadena = (marca) => new RegExp(`["'\`]${marca}["'\`]`);
 /* La Wiki compilada (src/data/wikiManifest.js i el seu tros) és text de documentació: les
    skills i els ADR hi nomenen les bases de les apps sense portar-ne el codi. No compta. */
 const esTextDeLaWiki = (ruta) => ruta === 'src/data/wikiManifest.js' || /\/wikiManifest-[A-Za-z0-9_-]{8}\.js$/.test(ruta);
-/* Els mitjans de la Gestoria que encara hi viatgen (el deute de la prova [DEFECTE]). */
+/* Els mitjans de la Gestoria: cada perfil els ha de servir sense duplicar-los. */
 const MITJANS_DE_LA_GESTORIA = Object.freeze(['assets/nano_cards/gestoria_nano_card.jpg', 'assets/ui/plugins/gestoria_vinyeta.jpg']);
 
 const CODI = /\.(?:[cm]?js|jsx)$/;
@@ -171,13 +172,38 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
     expect(entrada.split('sdp-gestoria').length - 1).toBeGreaterThan(0);
   });
 
-  /* [DEFECTE] Deute conegut: recursosDelPlugin (vite.standalone.config.js)
-     copia tot public/, també els mitjans de la Gestoria. Quan la fase 2 els
-     excloga del paquet del nucli, esta prova s'ha de girar.
-     Decisió D3 del Mestre (261019) · Un original amb bessona .webp viatja com
-     a bessona: el mitjà continua dins del paquet, en l'un format o en l'altre. */
-  test('[DEFECTE] els mitjans de la Gestoria encara viatgen dins del paquet del nucli', () => {
-    const bessona = (cami) => cami.replace(/\.[^./]+$/, '.webp');
-    for (const cami of MITJANS_DE_LA_GESTORIA) expect(midaDe(cami) ?? midaDe(bessona(cami)), cami).toBeGreaterThan(0);
+  test('els mitjans de la Gestoria respecten el perfil: locals o externs resolts, mai absents sense origen', () => {
+    // El manifest conserva el nombre de bessones; la llista segellada al
+    // bundle es calcula sobre public/ amb la mateixa regla d'única font.
+    const bessones = bessonesDe(fitxersDe('public/assets', /\.(?:png|jpe?g|webp)$/i)
+      .map(cami => cami.replace(/^public\//, '')));
+    const politica = RELEASE.mitjans ? { ...RELEASE.mitjans, bessones } : null;
+    const base = 'https://amfitrio.example/wp-content/plugins/socdepoble-enxufe/dist';
+    fixaBaseRecursos(base);
+    fixaPoliticaDeMitjans(politica);
+    try {
+      for (const cami of MITJANS_DE_LA_GESTORIA) {
+        const externa = Boolean(politica?.origen) && esExtern(cami, politica.externs);
+        const servit = politica && bessones.includes(cami) ? bessonaDe(cami) : cami;
+        if (externa) {
+          const origen = new URL(politica.origen);
+          expect(origen.protocol).toBe('https:');
+          expect(esHostLocal(origen.hostname)).toBe(false);
+          expect(origen.username || origen.password || origen.search || origen.hash).toBe('');
+          for (const local of [cami, bessonaDe(cami)]) {
+            expect(midaDe(local), local).toBeUndefined();
+            expect(existsSync(path.join(DIST, local)), local).toBe(false);
+          }
+          expect(resolveAsset(`/${cami}`), cami).toBe(`${politica.origen}/${servit}`);
+        } else {
+          expect(midaDe(servit), servit).toBeGreaterThan(0);
+          expect(existsSync(path.join(DIST, servit)), servit).toBe(true);
+          expect(resolveAsset(`/${cami}`), cami).toBe(`${base}/${servit}`);
+        }
+      }
+    } finally {
+      fixaPoliticaDeMitjans(null);
+      fixaBaseRecursos('/');
+    }
   });
 });

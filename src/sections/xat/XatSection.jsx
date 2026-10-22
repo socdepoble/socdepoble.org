@@ -1412,7 +1412,7 @@ function XatWorkspace({ origen = null }) {
         </div>
       ) : null}
       {vistaNode ? null : <div className="sdp-workspace-column__body">{cos}</div>}
-      {senseSessio && !activeThread ? <AccesAlXat t={t} tornar={rutaActual} navigate={navigate} /> : null}
+      {senseSessio && !activeThread ? <AccesAlXat t={t} tornar={rutaActual} navigate={navigate} aLaLlista /> : null}
       <DialegNovaConversa
         obert={dialegNou}
         senseSessio={senseSessio}
@@ -1601,9 +1601,9 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
 }
 
 /* L'accés continua visible també al peu d'un fil de mostra o només lectura. */
-function AccesAlXat({ t, tornar, navigate }) {
+function AccesAlXat({ t, tornar, navigate, aLaLlista = false }) {
   return (
-    <div className="sdp-alerta">
+    <div className={`sdp-alerta sdp-xat-acces${aLaLlista ? ' sdp-xat-llista__peu' : ''}`}>
       <p>{t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}</p>
       <div className="sdp-alerta__accions">
         <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar }))}>

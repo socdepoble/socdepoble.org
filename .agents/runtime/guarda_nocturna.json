@@ -1,5 +1,5 @@
 {
-  "activa": true,
+  "activa": false,
   "onada": "guarda-nocturna",
   "objectiu": "",
   "inici": "2026-10-21T14:45:22.427Z",
@@ -8,6 +8,7 @@
   "estat_claude": "pendent",
   "estat_auditoria": "pendent",
   "ultim_check": "2026-10-21T14:45:22.427Z",
-  "finalitzada": false,
-  "motiu_finalitzacio": null
+  "finalitzada": true,
+  "motiu_finalitzacio": "Aturada expressa via CLI",
+  "tancat_a": "2026-10-21T23:53:47.821Z"
 }

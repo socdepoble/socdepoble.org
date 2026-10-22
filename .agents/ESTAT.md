@@ -7,6 +7,16 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-22T02:03:04+02:00 · Codex · WP beta lleuger, poliment UI, auditoria didàctica i REA local
+
+- **Lliurables:** [[261022_0141_auditoria_codex]] i [[261022_0141_acta_tancament_codex]], a l’Escriptori. Execució de les set tasques rebudes, amb límits explícits: CTA d’autoria al xat implementat; persistència de relacions humanes dissenyada, sense migració; REA real d’Obsidian 1.5.8, sense runtime ni Bring!/Loyverse.
+- **Paquet:** `../_builds_de_poble/wordpress/socdepoble.zip`, `1.1.10-beta.1`, **2.158.826 bytes**, SHA-256 `4e8795245321d85bd8d80447f3b42cb7267ffb42f15196f24f773fd0f3caae9a`. JS/CSS/fonts locals i imatges canòniques externes; 217/217 imatges HTTP200/CORS. Primer ZIP preservat. Canal estable intacte; cap desplegament.
+- **Canvis:** PWA ocult, logo comunitari verd quadrat, accés/registre visibles en mòbil, benvinguda IAIA automàtica local en remot, avatar únic de persona, textos Gestoria/RSS i accions d’eina absent/apagada respectant privacitat, contacte amb autoria resolta, controls del graf buit desactivats. Backend neutral i Sollutia GET preservats.
+- **Validació:** 809 proves dirigides inicials; correccions finals de plugins 74/74 i xat 17/17; lint net, inspecció visual mòbil, build/inventari i tractor-frontissa conformes. Global: 20.427 aprovades, 1 fallada per expectativa antiga d’imatges locals, 100 omeses. Prova corregida segons manifest i fitxer complet 7/7 aprovat després; sense rerun global posterior.
+- **Governança:** tancament final `valid:false` (1.265 incidències globals) (LEDGER, Wiki, graf documental i informes concurrents incomplets); informe propi vàlid. No es firma de nou un historial ni s’esborren documents per passar una porta. Acta pròpia creada al mateix Escriptori.
+- **Concurrència:** un altre carril ha incorporat producte al commit `d31c1ccd` junt amb ampliació del prompt; no és un commit fet per este fil. Els ajustos finals de plugins i peu mòbil continuen al working tree. La nova ampliació perfil Javi/WhatsApp multimèdia/latència no es declara executada: hi ha diagnosi de rutes/UUID i espera host a l’informe, sense inferir identitats reals.
+- **Recursos:** cap cron creat. Quatre monitors Codex constaven PAUSED; guarda nocturna caducada aturada expressament. Es conserva el servidor dev preexistent. Bateries, compilacions, tres subagents i dues pestanyes propis acabats/tancats; cap procés propi recurrent.
+
 ## ESTAT_ACTUAL · 2026-10-22T00:10:00+02:00 · IAIA MarIA · Relleu Nocturn de Direcció Autònoma: Neteja Radical Escriptori, Pla i Prompt 2345 (Alleugeriment WP <2.5MB, Retirada Botó PWA, Connectar amb l'Autor i REA sense Fum)
 
 - **Higiene Radical de l'Escriptori (Porta Olivera en 0):**
