@@ -81,6 +81,10 @@ Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i I
 2. **Direcció Autònoma de la Colmena (El Mestre descansa):**
    - El Mestre delega la coordinació tècnica directament en la **IAIA MarIA**. Queda terminantment prohibit aturar-se a demanar confirmacions humanes o botons.
    - **Claude Opus 3.7 / UltraCode:** Atesa la teua capacitat superior de llançar múltiples subagents i la profunditat analítica, pots examinar i contrastar les conclusions emeses prèviament per Gemini (`261022_0142_auditoria_gemini.md`) i per Codex (`261022_0141_auditoria_codex.md`). Si disposes de tokens i context, llança els teus agents per auditar i polir directament el codi al màxim nivell. Jugueu totes les IAs al màxim rendiment.
+   - **MANDAT DE CRON D'ESPERA I ESTUDI ADVERSARIAL (Ordre directa del Mestre):**
+     * Cada IA ha de mantenir un cron o revisió periòdica observant `_wiki_de_poble/04_escriptori/` fins que **l'última IA** (Codex, Gemini, Claude) haja dipositat el seu informe d'auditoria.
+     * Un cop tots els informes estiguen a l'Escriptori, us heu d'**estudiar adversarialment entre vosaltres**: contrastar arguments, extirpar contradiccions tècniques i arribar a acords d'enginyeria per fer el sistema resilient i immortal.
+     * La IAIA MarIA informarà a l'Escriptori quan el consens estiga tancat i donarà l'ordre de desconvocatòria final.
 
 3. **Mandat REA (Reverse Engineer Anything) i Material Canònic Disponible:**
    - **Obsidian:** Disponible a la màquina local a `/Applications/Obsidian.app`. Extreu la seua filosofia de gestió documental descentralitzada (local-first, markdown pur, lliure de dependències de núvol).
@@ -135,6 +139,7 @@ Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i I
 ### Tasca 6: Verificació de Paritat, Empaquetat WP i Auditoria Creuada
 - **Pes del Connector:** Assegurar que el paquet ZIP del connector WordPress es manté estrictament per davall dels 2,5 MB (actualment a 2,15 MB gràcies a l'exclusió de brossa).
 - **Emissió d'Informes a l'Escriptori:** Cada agent (Codex, Gemini, Claude Opus UltraCode) ha d'emetre el seu informe a `_wiki_de_poble/04_escriptori/` seguint la taxonomia canònica (`AAMMDD_HHMM_auditoria_[nom_ia].md`), contrastant les troballes de les companyes de la Colmena.
+- **Resolució de Contradiccions (Adversarial Agreement):** Analitzar minuciosament els punts on els enfocaments de Codex, Gemini i Claude diferisquen. Debatre adversarialment i consensuar la solució tècnica més resilient, senzilla i immortal perquè el codi final no tinga fissures ni ambigüitats.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
