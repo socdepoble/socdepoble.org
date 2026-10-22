@@ -1,14 +1,15 @@
 {
   "activa": false,
-  "onada": "guarda-nocturna",
-  "objectiu": "",
-  "inici": "2026-10-21T14:45:22.427Z",
-  "expira": "2026-10-21T20:45:22.427Z",
+  "onada": "gauntlet_extrem_261022_codex",
+  "objectiu": "Auditoria creuada del pla 261022_0225; aturada en desconvocatòria o TTL",
+  "inici": "2026-10-22T00:37:08.182Z",
+  "expira": "2026-10-22T05:37:08.182Z",
   "maxHores": 6,
   "estat_claude": "pendent",
   "estat_auditoria": "pendent",
-  "ultim_check": "2026-10-21T14:45:22.427Z",
+  "ultim_check": "2026-10-22T00:37:08.182Z",
   "finalitzada": true,
-  "motiu_finalitzacio": "Aturada expressa via CLI",
-  "tancat_a": "2026-10-21T23:53:47.821Z"
+  "motiu_finalitzacio": "Temps màxim de guàrdia assolit (TTL expirat). S'han d'aturar els crons per seguretat.",
+  "modeTancament": "desconvocatoria",
+  "tancat_a": "2026-10-22T09:21:16.878Z"
 }

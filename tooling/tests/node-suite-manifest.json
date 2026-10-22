@@ -38,7 +38,8 @@
     "tests/sistema_nervios.test.mjs",
     "tests/standalone-build.test.mjs",
     "tests/verificador-scc.test.mjs",
-    "tests/vite-empremta-dev.test.mjs"
+    "tests/vite-empremta-dev.test.mjs",
+    "tooling/gates/guarda-nocturna.test.mjs"
   ],
   "files": [
     {
@@ -545,6 +546,11 @@
       "path": "tooling/broker/broker.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/gates/guarda-nocturna.test.mjs",
+      "suite": "primary",
+      "reason": "Guàrdia amb desconvocatòria explícita acotada a l’onada i TTL, amb fixtures temporals i compatibilitat legacy."
     },
     {
       "path": "tooling/gates/tractor-psicopatia.test.mjs",

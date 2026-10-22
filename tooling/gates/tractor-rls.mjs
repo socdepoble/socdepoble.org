@@ -136,11 +136,12 @@ for (const file of files) {
     }
   }
 
-  const createTriggerRegex = /create trigger [a-zA-Z0-9_]+ (?:after|before) [a-zA-Z0-9_ ]+ on (?:public\.)?([a-zA-Z0-9_]+)/gi;
+  const createTriggerRegex = /create trigger [a-zA-Z0-9_]+ (?:after|before) [a-zA-Z0-9_ ]+ on (?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/gi;
   while ((match = createTriggerRegex.exec(content)) !== null) {
-    const table = match[1];
-    if (!tables.has(table)) {
-      falla('R1', file, `create trigger sobre taula inexistent: ${table}`);
+    const schema = match[1] || 'public';
+    const table = match[2];
+    if (schema !== 'storage' && !TAULES_DEL_SERVEI.has(`${schema}.${table}`) && !tables.has(table)) {
+      falla('R1', file, `create trigger sobre taula inexistent: ${schema}.${table}`);
     }
   }
 

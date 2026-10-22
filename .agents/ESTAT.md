@@ -7,6 +7,19 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-22T11:28:00+02:00 · Codex · Gauntlet contrastat i desconvocat
+
+Torn: `torn_1692fc65-a75b-4ae9-9af6-0e6834af94b0`.
+
+- **Lliurables:** [[261022_0235_auditoria_codex]] i [[261022_0235_acta_tancament_codex]]. Llegits els tancaments de Claude i l'acta de consens/desconvocatòria de MarIA 261022_0615.
+- **Paquet vigent:** beta.3 de Claude, `../_builds_de_poble/wordpress/socdepoble.zip`, **2.212.160 bytes**, SHA-256 `a7a4f17ce5953e29a36380102164663de8db1432870685d734ec25647cbaa57f`. Verificat de nou per Codex (CRC/inventari i 2.520 fonts contrastades). Beta.2 preservada. Cap publicació.
+- **Implementació:** perfil amb termini total de 3 s i bio única; multimèdia/quota de 20 MB; IAIA extractiva pública; REA i adaptadors Bring/Loyverse. Claude corregix Storage real/CSP, rellevància, importadors i rendiment. Última esmena Codex: payload local de Javi de supabase/seed.sql, sense executar SQL.
+- **Validació:** revalidació final Codex: 298 passades, 1 omesa i 28/28 Node. Global inicial Codex: 20.649 passades / 8 fallades / 100 omeses, seguida de correccions dirigides. Global final Claude: 20.916 passades / 1 fallada / 109 omeses i Node: 1.018 passades / 3 fallades (Git absent en còpia); es preserven els resultats, sense proclamar una suite única 100% verda.
+- **Tancament formal:** documents propis vàlids; Olivera verda; tancament global `valid:false`, 1262 incidències de LEDGER/Wiki/SCC. Sense resegellar historial.
+- **Pendents reals:** desplegament Firebase/CSP, migració remota, worker de purga, dispositius reals, tenant/UUID, pont WhatsApp i consumidors dels importadors. Governança amb manca de lease i deute global documentats; no s'ha fet commit ni resegellat historial.
+- **Recursos:** heartbeat Codex PAUSED, guarda finalitzada, pestanya pròpia tancada, contenidors de prova eliminats i subagents acabats. El selector CUA quedà pendent de 03:16 a 11:20; desconvocatòria processada a les 11:21 en recuperar el control. Dev server 3340 preexistent conservat.
+
+
 ## ESTAT_ACTUAL · 2026-10-22T02:03:04+02:00 · Codex · WP beta lleuger, poliment UI, auditoria didàctica i REA local
 
 - **Lliurables:** [[261022_0141_auditoria_codex]] i [[261022_0141_acta_tancament_codex]], a l’Escriptori. Execució de les set tasques rebudes, amb límits explícits: CTA d’autoria al xat implementat; persistència de relacions humanes dissenyada, sense migració; REA real d’Obsidian 1.5.8, sense runtime ni Bring!/Loyverse.

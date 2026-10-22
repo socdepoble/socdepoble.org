@@ -12,7 +12,11 @@ const FITXER_GUARDA = '.agents/runtime/guarda_nocturna.json';
  * TOTES les IAs i temporitzadors s'aturen immediatament.
  */
 
-export function obrirGuarda(root, { onada = 'guarda-nocturna', maxHores = 6, objectiu = '' } = {}) {
+export function obrirGuarda(root, { onada = 'guarda-nocturna', maxHores = 6, objectiu = '', modeTancament = 'legacy' } = {}) {
+  if (!['legacy', 'desconvocatoria'].includes(modeTancament)) throw new Error('Mode de tancament desconegut');
+  if (modeTancament === 'desconvocatoria' && (
+    typeof onada !== 'string' || !onada.trim() || !Number.isFinite(maxHores) || maxHores <= 0 || maxHores > 6
+  )) throw new Error('La desconvocatòria requerix una onada identificada i un TTL positiu de com a màxim 6 hores');
   const ruta = path.join(root, FITXER_GUARDA);
   const ara = new Date();
   const expira = new Date(ara.getTime() + maxHores * 60 * 60 * 1000);
@@ -29,6 +33,7 @@ export function obrirGuarda(root, { onada = 'guarda-nocturna', maxHores = 6, obj
     ultim_check: ara.toISOString(),
     finalitzada: false,
     motiu_finalitzacio: null,
+    ...(modeTancament === 'desconvocatoria' ? { modeTancament } : {}),
   };
 
   fs.mkdirSync(path.dirname(ruta), { recursive: true });
@@ -36,7 +41,7 @@ export function obrirGuarda(root, { onada = 'guarda-nocturna', maxHores = 6, obj
   return dada;
 }
 
-export function aturarGuarda(root, motiu = 'Aturada manualment') {
+export function aturarGuarda(root, motiu = 'Aturada manualment', { onada } = {}) {
   const ruta = path.join(root, FITXER_GUARDA);
   let dada = { activa: false, finalitzada: true };
   if (fs.existsSync(ruta)) {
@@ -45,6 +50,10 @@ export function aturarGuarda(root, motiu = 'Aturada manualment') {
     } catch {
       // Ignorar lectura corrupta
     }
+  }
+  // Una ordre antiga no pot tancar una altra onada que haja ocupat el mateix fitxer.
+  if (dada.modeTancament === 'desconvocatoria' && (!onada || onada !== dada.onada)) {
+    throw new Error('Cal indicar la mateixa onada de la guàrdia per a desconvocar-la');
   }
   dada.activa = false;
   dada.finalitzada = true;
@@ -75,7 +84,11 @@ export function comprovarGuarda(root) {
   let hiHaInformeClaudeTancat = false;
   let detalls = [];
 
-  if (fs.existsSync(dirEscriptori)) {
+  /* Gauntlet 261022: opt-in explícit. La prosa no és cap rebut d'aprovació:
+     pot citar un dictamen anterior o un commit històric. En este mode només
+     una desconvocatòria acotada a l'onada o el TTL tanquen la guàrdia.
+     Sense opt-in es conserva el protocol històric, sense reinterpretar-lo. */
+  if (dada?.modeTancament !== 'desconvocatoria' && fs.existsSync(dirEscriptori)) {
     const fitxers = fs.readdirSync(dirEscriptori);
     for (const f of fitxers) {
       if (f.endsWith('.md')) {
@@ -159,13 +172,14 @@ async function main() {
       onada: o.onada || 'guarda-nocturna',
       maxHores: Number(o['max-hores'] || 6),
       objectiu: o.objectiu || '',
+      modeTancament: o['mode-tancament'] || 'legacy',
     });
     console.log(JSON.stringify({ valid: true, accio: 'inici', guarda: res }, null, 2));
     return;
   }
 
   if (o.aturar || o.stop) {
-    const res = aturarGuarda(root, o.motiu || 'Aturada expressa via CLI');
+    const res = aturarGuarda(root, o.motiu || 'Aturada expressa via CLI', { onada: o.onada });
     console.log(JSON.stringify({ valid: true, accio: 'aturar', guarda: res }, null, 2));
     return;
   }

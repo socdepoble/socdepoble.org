@@ -1208,6 +1208,8 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));
   assert.ok(css(entrada), 'src/css/index.css?inline és a l\'entrada');
   assert.ok(!chunks.filter((chunk) => !chunk.isEntry).some(css), 'cap tros mandrós porta el full');
+  assert.match(entrada.code, /\.sdp-iaia-consulta\{overflow:hidden\}/, 'el diàleg IAIA porta els seus estils dins del Shadow DOM');
+  assert.match(entrada.code, /\.sdp-xat-adjunts\{flex:none;/, 'els controls multimèdia porten els seus estils dins del Shadow DOM');
   const deSrc = entrada.moduleIds
     .filter((id) => id.startsWith(path.join(ARREL, 'src') + path.sep))
     .map((id) => path.relative(ARREL, id.split('?')[0]).split(path.sep).join('/'));

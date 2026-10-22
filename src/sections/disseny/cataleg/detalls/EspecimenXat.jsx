@@ -37,6 +37,7 @@ import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import FilaConversa from '../../../xat/components/FilaConversa.jsx';
 import Bombolla from '../../../xat/components/Bombolla.jsx';
 import Compositor from '../../../xat/components/Compositor.jsx';
+import ControlsAdjunt from '../../../xat/components/ControlsAdjunt.jsx';
 import CapcaleraConversa from '../../../xat/components/CapcaleraConversa.jsx';
 import MarquesEstat from '../../../xat/components/MarquesEstat.jsx';
 import PastillaNoLlegits from '../../../xat/components/PastillaNoLlegits.jsx';
@@ -50,6 +51,8 @@ import { anotaGrups } from '../../../xat/conversa.js';
    les alternatives ja són el text en valencià. Sense UIContext. */
 const t = (clau, alternativa) => alternativa;
 const LOCALE = 'ca-ES';
+const SERVEI_ADJUNTS_DE_MOSTRA = { teCapacitat: () => true, quotaXat: async () => ({ usats: 0, limit: 20_000_000 }) };
+const ENVIA_ADJUNT_DE_MOSTRA = async () => { throw new Error('És una mostra del manual: no s’ha pujat ni enviat el fitxer.'); };
 
 /* Hores d'avui, perquè la llista mostre «17:34» i no una data. */
 function hui(hores, minuts) {
@@ -320,6 +323,10 @@ export default function EspecimenXat() {
 
       <h4>Compositor (UX-B03) amb la barra de resposta (T1)</h4>
       <CompositorDeMostra />
+
+      <h4>Adjunts: previsualitza abans d’enviar</h4>
+      <p>Foto comprimida, vídeo de fins a 10 segons o gravació de veu. Esta mostra no puja cap fitxer.</p>
+      <ControlsAdjunt fil={FIL_PAGINA} servei={SERVEI_ADJUNTS_DE_MOSTRA} onEnvia={ENVIA_ADJUNT_DE_MOSTRA} />
 
       <h4>Capçalera de la conversa: una pàgina («Sobre:» i participants) i els Avisos (el megàfon)</h4>
       <CapcaleresDeMostra />

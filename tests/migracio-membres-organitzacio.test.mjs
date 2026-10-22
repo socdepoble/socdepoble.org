@@ -17,7 +17,8 @@ const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = fs.readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
 const CLIENT = fs.readFileSync(path.join(ARREL, 'src/data/supabase/organizations.js'), 'utf8');
 // Sense comentaris de línia: es comprova el codi, no la prosa.
-const CODI = SQL.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
+const senseComentaris = (sql) => sql.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
+const CODI = senseComentaris(SQL);
 const SENSE_ESPAIS = (text) => text.replace(/\s+/g, ' ').trim().toLowerCase();
 
 /** Cada funció: esquema, nom, paràmetres, capçalera (fins a «as $$») i cos. */
@@ -97,15 +98,30 @@ test('taula: RLS activa, revoke all i només SELECT per a qui administra alguna 
   assert.doesNotMatch(CODI, /using\s*\(\s*true\s*\)/i);
 });
 
-test('cap permís s’hereta: cap funció private es redefinix i la taula només la llegixen les RPC noves', () => {
+test('cap permís s’hereta: només les tres RPC accedixen a la taula, també en la consolidació posterior', () => {
   assert.equal(FUNCIONS.length, 3);
   assert.ok(FUNCIONS.every((f) => f.esquema === 'public'), 'cap funció de private (permisos) es toca');
   for (const permis of ['can_manage_organization', 'is_organization_member', 'can_create_group', 'pot_signar_com_organitzacio']) {
     assert.doesNotMatch(CODI, new RegExp(`function\\s+\\w+\\.${permis}\\b`, 'i'));
   }
-  // Fora d'esta migració, ningú no la llig (sobretot cap funció de permisos).
+  // La consolidació de correu i membres repetix el bloc complet sense canvis.
+  // Validem també taula, RLS, cossos i grants; no excloem el fitxer de l'auditoria.
+  const iniciBloc = 'create table if not exists public.organization_member_organizations';
+  const finalBloc = "notify pgrst, 'reload schema';";
+  const blocOriginal = CODI.slice(CODI.indexOf(iniciBloc), CODI.indexOf(finalBloc));
+  const normalitzaBloc = (sql) => sql.replace(/\s+/g, ' ').trim();
   for (const fitxer of fs.readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql') && f !== NOM)) {
-    assert.doesNotMatch(fs.readFileSync(path.join(MIGRACIONS, fitxer), 'utf8'), /organization_member_organizations/, fitxer);
+    const codi = senseComentaris(fs.readFileSync(path.join(MIGRACIONS, fitxer), 'utf8'));
+    if (fitxer === '2610181915_organitzacions_correu_i_membres.sql') {
+      const inici = codi.indexOf(iniciBloc), fi = codi.indexOf(finalBloc);
+      assert.ok(inici >= 0 && fi > inici, `${fitxer}: falta el bloc consolidat`);
+      assert.equal(normalitzaBloc(codi.slice(inici, fi)), normalitzaBloc(blocOriginal),
+        `${fitxer}: el bloc de membres ha de conservar taula, RLS, RPC i permisos`);
+      assert.doesNotMatch(codi.slice(0, inici) + codi.slice(fi), /organization_member_organizations/i,
+        `${fitxer}: cap altre accés a la taula fora del bloc consolidat`);
+    } else {
+      assert.doesNotMatch(codi, /organization_member_organizations/i, fitxer);
+    }
   }
 });
 

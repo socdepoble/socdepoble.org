@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 5,
+  "revision": 14,
   "createdAt": "2026-10-22T00:21:09.768Z",
-  "updatedAt": "2026-10-22T00:22:22.227Z",
+  "updatedAt": "2026-10-22T04:16:59.302Z",
   "expiresAt": "2026-10-23T00:21:09.768Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3608,6 +3608,80 @@
         "committedAt": "2026-10-22T00:22:22.227Z",
         "documentHash": "795eee321bb6cb461ce8bc717e602a8da9aad1af990829d29b16beab2172569a"
       }
+    },
+    "3cf4b311-d4e2-445d-93aa-3721799f69f6": {
+      "id": "3cf4b311-d4e2-445d-93aa-3721799f69f6",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0235_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-22T00:35:46.295Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-10-22T00:35:46.295Z",
+        "failedAt": "2026-10-22T00:35:46.303Z",
+        "absent": true
+      }
+    },
+    "19b20077-3988-47cd-97dc-584c3097a1e1": {
+      "id": "19b20077-3988-47cd-97dc-584c3097a1e1",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0235_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-22T00:36:04.062Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-22T00:36:04.063Z",
+        "committedAt": "2026-10-22T00:36:04.083Z",
+        "documentHash": "965b807a5c7d6e02c5f561af0e591c19e2a959ba273ea865b7177af6fe952544"
+      }
+    },
+    "62333cae-8437-48db-afcc-18060b42a75c": {
+      "id": "62333cae-8437-48db-afcc-18060b42a75c",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0615_acta_consens_gauntlet_extrem.md",
+      "contractSnapshot": "aab8e03cf41c231d86fcc60f2035a4e1d4540934c787699cd17e6c6d553870b7",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-22T04:16:26.105Z"
+    },
+    "217ee91d-ecd8-43ad-9431-510f80a204f9": {
+      "id": "217ee91d-ecd8-43ad-9431-510f80a204f9",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0615_acta_consens_gauntlet_extrem.md",
+      "contractSnapshot": "aab8e03cf41c231d86fcc60f2035a4e1d4540934c787699cd17e6c6d553870b7",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-22T04:16:48.657Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-10-22T04:16:48.658Z",
+        "failedAt": "2026-10-22T04:16:48.663Z",
+        "absent": true
+      }
+    },
+    "7dc4f133-e287-4be7-9047-4fee49d60be5": {
+      "id": "7dc4f133-e287-4be7-9047-4fee49d60be5",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_0615_acta_consens_gauntlet_extrem.md",
+      "contractSnapshot": "aab8e03cf41c231d86fcc60f2035a4e1d4540934c787699cd17e6c6d553870b7",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-22T04:16:59.279Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-22T04:16:59.279Z",
+        "committedAt": "2026-10-22T04:16:59.302Z",
+        "documentHash": "b511b6da5ac007bc3683851f51d58b9e43a3bd9964cb30be85d33630430db574"
+      }
     }
   },
   "plan": null,
@@ -3646,6 +3720,59 @@
       "file": "_wiki_de_poble/04_escriptori/261022_0225_prompt_claude_gemini_codex_gauntlet_extrem_i_sistema_resilient.md",
       "at": "2026-10-22T00:22:22.227Z",
       "hash": "795eee321bb6cb461ce8bc717e602a8da9aad1af990829d29b16beab2172569a"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-22T00:35:46.295Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "3cf4b311-d4e2-445d-93aa-3721799f69f6",
+      "file": "_wiki_de_poble/04_escriptori/261022_0235_auditoria_gemini.md",
+      "at": "2026-10-22T00:35:46.303Z",
+      "absent": true
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-22T00:36:04.063Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "19b20077-3988-47cd-97dc-584c3097a1e1",
+      "file": "_wiki_de_poble/04_escriptori/261022_0235_auditoria_gemini.md",
+      "at": "2026-10-22T00:36:04.083Z",
+      "hash": "965b807a5c7d6e02c5f561af0e591c19e2a959ba273ea865b7177af6fe952544"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-22T04:16:26.105Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-22T04:16:48.658Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "217ee91d-ecd8-43ad-9431-510f80a204f9",
+      "file": "_wiki_de_poble/04_escriptori/261022_0615_acta_consens_gauntlet_extrem.md",
+      "at": "2026-10-22T04:16:48.663Z",
+      "absent": true
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-22T04:16:59.279Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "7dc4f133-e287-4be7-9047-4fee49d60be5",
+      "file": "_wiki_de_poble/04_escriptori/261022_0615_acta_consens_gauntlet_extrem.md",
+      "at": "2026-10-22T04:16:59.302Z",
+      "hash": "b511b6da5ac007bc3683851f51d58b9e43a3bd9964cb30be85d33630430db574"
     }
   ]
 }
