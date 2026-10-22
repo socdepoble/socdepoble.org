@@ -147,7 +147,8 @@ export const CENS_IMATGES = Object.freeze([
   /* Ordre del Mestre (261021) · L'avatar oficial de la IAIA amb el mòbil (a60d6fd3); la seua bessona .webp és la que pinta /iaia. */
   e('/assets/uploads/brain/iaia_maria_avatar_mobil.png', 'La IAIA MarIA amb el mòbil', 'ia', 'ia'),
   e('/assets/uploads/brain/ibanez_design_system_1780246898431.png', 'El sistema de disseny a l’estil Ibáñez', 'contingut', 'ia'),
-  e('/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg', 'Pedra Seca a l’estil Ibáñez', 'contingut', 'ia'),
+  /* Pla 261022_1645 · L'original canònic és el .png (ordre del Mestre); el .jpg duplicat ja no és a public/. */
+  e('/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png', 'Pedra Seca a l’estil Ibáñez', 'contingut', 'ia'),
   e('/assets/uploads/brain/llibre_anima_cover_1776032370908.png', 'Portada del llibre de l’ànima', 'contingut', 'ia'),
   e('/assets/uploads/brain/mac_mini_m4_1787721966622.jpg', 'Mac Mini M4', 'contingut', 'foto'),
   e('/assets/uploads/brain/media__1775376768839.webp', 'Infografia de Sóc de Poble', 'contingut', 'ia'),
@@ -244,7 +245,8 @@ export const EXCLOSES = Object.freeze({
   '/assets/uploads/brain/cuc-de-pi-poster.png': 'còpia de /assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png',
   '/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.webp': 'còpia de /assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
   '/assets/uploads/brain/nano_mercat_llaurador_1774197050578.png': 'còpia de /assets/nano_cards/mercat_nano_card.webp',
-  '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png': 'la mateixa il·lustració en PNG; es queda el JPEG',
+  /* Pla 261022_1645 (ordre del Mestre) · Abans s'excloïa el .png i es quedava el JPEG; ara el
+     canònic és el .png, que és al cens, i el .jpg duplicat ja no és a public/. */
   '/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.jpg': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-q.png': 'logotip',
   '/assets/uploads/poble/la-torre-de-les-macanes/gentdelatorre-logo-bn-r-trans.png': 'logotip',
@@ -259,7 +261,8 @@ export const EXCLOSES = Object.freeze({
      d'OpenGraph de La Torre: targetes socials, no fotos de l'Arxiu. */
   ...Object.fromEntries([
     '/assets/towns/la-torre-de-les-macanes/og-la-torre-1200x630.jpg',
-    ...['apaisat.jpg', 'classic.jpg', 'foto.jpg', 'mapa_apaisat.jpg', 'mapa_cuadrat_blanc.jpg', 'mapa_cuadrat_halo.jpg',
+    /* Pla 261022_1645 (ordre del Mestre) · De mapa_cuadrat_halo es queda el .png (canònic); el .jpg ja no és a public/. */
+    ...['apaisat.jpg', 'classic.jpg', 'foto.jpg', 'mapa_apaisat.jpg', 'mapa_cuadrat_blanc.jpg',
       'mapa_cuadrat_halo.png', 'verd_net.jpg'].map((nom) => `/assets/uploads/poble/la-torre-de-les-macanes/og_gentdelatorre_${nom}`)
   ].map((src) => [src, 'targeta social (OpenGraph): no és cap foto de l’Arxiu']))
 });

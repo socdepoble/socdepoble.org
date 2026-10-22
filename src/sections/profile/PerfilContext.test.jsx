@@ -25,6 +25,12 @@ vi.mock('../../data/identitat.js', () => ({
 }));
 /* `portSenseUsuari`: el JWT ha caducat i es renova. El port diu «ningú», però la sessió de React continua dins. */
 vi.mock('../../data/backendPort.js', () => ({ ...mock, getCurrentUser: () => (mock.portSenseUsuari ? null : mock.user), teCapacitat: (nom) => !mock.senseCapacitats.has(nom) }));
+/* Pla 261022_1645 · jsdom no codifica: la guarda WebP de pujaMitja (pujadaImatge.js ·
+   garantixWebp) rep un compressImage simulat; la resta d'imageUtils és la de veres. */
+vi.mock('../../utils/imageUtils.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  compressImage: async () => 'data:image/webp;base64,UklGRgAAAABXRUJQVlA4IA==',
+}));
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 import { desaLlicenciaPerDefecte, llegixLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
@@ -663,4 +669,7 @@ it('261018 · en mode de proves pujaMitja torna el data URL i no puja res; en re
   await act(async () => { url = await value.pujaMitja(foto); });
   expect(url).toBe('sdp-media://mitjans/t/u/avatars/x.png');
   expect(mock.uploadToStorage).toHaveBeenCalledTimes(1);
+  /* Pla 261022_1645 · A Storage el PNG arriba en WebP (garantixWebp). */
+  const [pujat] = mock.uploadToStorage.mock.calls[0];
+  expect([pujat.name, pujat.type]).toEqual(['capcalera.webp', 'image/webp']);
 });

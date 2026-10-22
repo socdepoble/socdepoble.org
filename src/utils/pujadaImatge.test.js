@@ -7,8 +7,8 @@ vi.mock('./imageUtils.js', () => ({ compressImage: dobles.compressImage }));
 import {
   AVISOS_DE_LA_FOTO, ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ERROR_PRESSUPOST, ERROR_PRESSUPOST_EXIF,
   ERROR_PRESSUPOST_EXIF_CAMERA, MAX_CODIFICACIONS, MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP, PRESSUPOST_PUJADA,
-  QUALITATS_DE_LA_CERCA, QUALITAT_MAXIMA, QUALITAT_MINIMA,
-  bytesDeDataUrl, esAvisDeLaFoto, fitxerDeDataUrl, fotoDinsDelPressupost, tipusReal,
+  QUALITATS_DE_LA_CERCA, QUALITAT_MAXIMA, QUALITAT_MINIMA, MAX_COSTAT_WEBP, QUALITAT_WEBP,
+  bytesDeDataUrl, esAvisDeLaFoto, fitxerDeDataUrl, fotoDinsDelPressupost, garantixWebp, tipusReal,
 } from './pujadaImatge.js';
 import {
   APP0_JFIF, IMATGE, SOI, TIPUS, concatena, dataOriginal, gpsTorre, jpegAmbExif, tiff,
@@ -482,5 +482,79 @@ describe('fitxerDeDataUrl · el nom porta l’extensió del tipus real i els byt
     expect(fitxer).toBeInstanceOf(File);
     expect([fitxer.name, fitxer.type]).toEqual([nom, tipus]);
     expect([...await bytesDe(fitxer)]).toEqual([...bytes]);
+  });
+});
+
+/* Pla 261022_1645 (tasca 2) · La guarda de l'última porta abans de Storage:
+   un JPEG o un PNG ix en WebP (1.600 px com a molt, qualitat 0,82, sense
+   EXIF); la resta passa tal qual; en WebKit, que no codifica WebP en canvas,
+   el fitxer es puja com venia. */
+describe('garantixWebp · cap JPEG ni PNG nou a Storage', () => {
+  test('les constants del pla: 1.600 px i qualitat 0,82', () => {
+    expect([MAX_COSTAT_WEBP, QUALITAT_WEBP]).toEqual([1600, 0.82]);
+  });
+
+  test.each([
+    ['un JPEG', 'image/jpeg', JPEG, 'foto-del-forn.jpg', 'foto-del-forn.webp'],
+    ['un PNG', 'image/png', PNG, 'logotip.png', 'logotip.webp'],
+    ['un nom sense extensió', 'image/jpeg', JPEG, 'captura', 'captura.webp'],
+    ['un nom amb punts', 'image/png', PNG, 'festa.2026.png', 'festa.2026.webp'],
+  ])('%s ix en WebP, amb el nom en .webp i els bytes del codificador', async (_cas, tipus, bytes, nom, nomNou) => {
+    fetchDeVeres();
+    dobles.compressImage.mockResolvedValue(dataUrl('image/webp', WEBP));
+    const original = new File([bytes], nom, { type: tipus });
+    const fitxer = await garantixWebp(original);
+    expect(dobles.compressImage).toHaveBeenCalledTimes(1);
+    expect(dobles.compressImage).toHaveBeenCalledWith(original, { maxSize: 1600, format: 'image/webp', quality: 0.82 });
+    expect(fitxer).toBeInstanceOf(File);
+    expect([fitxer.name, fitxer.type]).toEqual([nomNou, 'image/webp']);
+    expect([...await bytesDe(fitxer)]).toEqual([...WEBP]);
+  });
+
+  test('sense cap opció d’EXIF: la recodificació no porta ni la ubicació ni la data', async () => {
+    fetchDeVeres();
+    dobles.compressImage.mockResolvedValue(dataUrl('image/webp', WEBP));
+    await garantixWebp(new File([JPEG], 'a.jpg', { type: 'image/jpeg' }));
+    const [, opcions] = dobles.compressImage.mock.calls[0];
+    expect(opcions).not.toHaveProperty('conservaExif');
+    expect(opcions).not.toHaveProperty('original');
+  });
+
+  test.each([
+    ['un WebP (el de fotoDinsDelPressupost, amb el seu pressupost i el seu EXIF)', new File([WEBP], 'a.webp', { type: 'image/webp' })],
+    ['un AVIF', new File([Uint8Array.of(0)], 'a.avif', { type: 'image/avif' })],
+    ['un PDF del Bloc', new File([Uint8Array.of(0x25, 0x50, 0x44, 0x46)], 'acta.pdf', { type: 'application/pdf' })],
+  ])('%s passa tal qual, sense codificar', async (_cas, fitxer) => {
+    expect(await garantixWebp(fitxer)).toBe(fitxer);
+    expect(dobles.compressImage).not.toHaveBeenCalled();
+  });
+
+  test('el que no és un Blob torna tal qual', async () => {
+    expect(await garantixWebp(null)).toBeNull();
+    expect(await garantixWebp('foto.jpg')).toBe('foto.jpg');
+    expect(dobles.compressImage).not.toHaveBeenCalled();
+  });
+
+  test('WebKit (el canvas torna PNG en lloc de WebP): es puja el fitxer com venia, sense cap fetch', async () => {
+    const fetchEspia = vi.fn();
+    vi.stubGlobal('fetch', fetchEspia);
+    dobles.compressImage.mockResolvedValue(dataUrl('image/png', PNG));
+    const original = new File([JPEG], 'foto.jpg', { type: 'image/jpeg' });
+    expect(await garantixWebp(original)).toBe(original);
+    expect(fetchEspia).not.toHaveBeenCalled();
+  });
+
+  test('el codificador injectable (comprimeix) mana sobre el de sempre', async () => {
+    fetchDeVeres();
+    const comprimeix = vi.fn(async () => dataUrl('image/webp', WEBP));
+    const fitxer = await garantixWebp(new File([PNG], 'x.png', { type: 'image/png' }), { comprimeix });
+    expect(comprimeix).toHaveBeenCalledTimes(1);
+    expect(dobles.compressImage).not.toHaveBeenCalled();
+    expect(fitxer.type).toBe('image/webp');
+  });
+
+  test('un error del codificador (imatge trencada) no es menja: qui puja el veu', async () => {
+    dobles.compressImage.mockRejectedValue(new Error('No s’ha pogut llegir la imatge'));
+    await expect(garantixWebp(new File([JPEG], 'x.jpg', { type: 'image/jpeg' }))).rejects.toThrow('No s’ha pogut llegir la imatge');
   });
 });

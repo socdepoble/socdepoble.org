@@ -16,6 +16,7 @@ import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { triaAvatar } from '../../app/contexts/personaDeSessio.js';
 import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
 import { imatgeLocalComDataUrl } from '../../utils/imageUtils.js';
+import { garantixWebp } from '../../utils/pujadaImatge.js';
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
@@ -671,7 +672,11 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
       return dataUrl;
     }
     if (!teCapacitat('mitjans')) return null;
-    const res = await uploadToStorage(fitxer, { carpeta }, configRef.current);
+    /* Pla 261022_1645 · A Storage, cap JPEG ni PNG nou: la guarda el passa a
+       WebP si el navegador en sap fer (pujadaImatge.js · garantixWebp). */
+    const perPujar = await garantixWebp(fitxer);
+    assertCurrent();
+    const res = await uploadToStorage(perPujar, { carpeta }, configRef.current);
     assertCurrent();
     return res.url;
   }, [assertCurrent]);

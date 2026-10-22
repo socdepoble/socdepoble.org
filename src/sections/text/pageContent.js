@@ -71,9 +71,9 @@ export const PAGE_COPY = {
     "title": "Disseny Pedra Seca",
     "subtitle": "Arquitectura Pedra Seca per a interfícies clares i resistents",
     "lead": "Inclou la Targeta Mestra, els colors oficials, i tots els elements preparats perquè qualsevol IA puga entendre este sistema i reproduir-lo. (Nota: Secció mantinguda deliberadament asèptica sota indicació del Mestre, l'evolució es porta en el codi actual).",
-    "image": "/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg",
-    "imageWidth": 768,
-    "imageHeight": 768,
+    "image": "/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp",
+    "imageWidth": 1024,
+    "imageHeight": 1024,
     "imageFetchPriority": "high",
     "imageAlt": "Il·lustració del sistema de Disseny Pedra Seca",
     "labels": [

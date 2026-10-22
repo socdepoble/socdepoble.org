@@ -41,13 +41,20 @@ const entradillaEnCurs = (categoria) => (
  * hi és. Mentre el core carrega (pageCopy buit), mana PAGE_COPY, com abans.
  */
 const PORTADA_ANTIGA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png';
-const PORTADA_LLEUGERA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg';
+/* Pla 261022_1645 (ordre del Mestre, 261022: el .png és l'original canònic i
+   el .jpg de 768 px es retira de public/) · El derivat lleuger és ara la
+   bessona .webp del .png: 1.024 px i 348 KB, menys que els 367 KB del .jpg
+   d'abans. Un copy que encara cite el .jpg retirat (un core vell, una llavor
+   a mitges) també hi va: el fitxer ja no hi és. */
+const PORTADA_JPG_RETIRADA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg';
+const PORTADA_LLEUGERA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp';
+const MIDA_PORTADA_LLEUGERA = 1024;
 const copyDeLaPortada = (pageCopy) => {
   const page = pageCopy?.disseny || PAGE_COPY.disseny;
   // Derivat del mateix recurs propi: el core antic conserva text/data/autoria.
   // Una portada diferent conserva la seua URL i metadades, sense inferir mida.
-  return [PORTADA_ANTIGA, PORTADA_LLEUGERA].includes(page.image)
-    ? { ...page, image: PORTADA_LLEUGERA, imageWidth: 768, imageHeight: 768 }
+  return [PORTADA_ANTIGA, PORTADA_JPG_RETIRADA, PORTADA_LLEUGERA].includes(page.image)
+    ? { ...page, image: PORTADA_LLEUGERA, imageWidth: MIDA_PORTADA_LLEUGERA, imageHeight: MIDA_PORTADA_LLEUGERA }
     : page;
 };
 

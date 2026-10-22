@@ -155,7 +155,8 @@ describe('el cens de l’Arxiu visual', () => {
     expect(mitjansDelCens().some((m) => m.src === fossil)).toBe(false);
     // Les de system/ (la interfície) ja en queden fora sense nomenar-les.
     const socials = DISC.filter((src) => /\/og[-_][^/]+$/.test(src) && !src.startsWith('/assets/system/') && !esBessona(src));
-    expect(socials).toHaveLength(9);
+    // Pla 261022_1645 · 8: el .jpg duplicat d'og_gentdelatorre_mapa_cuadrat_halo s'ha retirat (es queda el .png).
+    expect(socials).toHaveLength(8);
     for (const src of socials) {
       expect(EXCLOSES[src], src).toBe('targeta social (OpenGraph): no és cap foto de l’Arxiu');
       expect(delCens.has(src), src).toBe(false);

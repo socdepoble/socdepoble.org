@@ -146,18 +146,27 @@ const EXTENSIONS = { 'image/png': 'png', 'image/webp': 'webp', 'image/jpeg': 'jp
    és blanc: la transparència no hi cap i, sense fons, eixiria negra. */
 async function codifica(element, rect, amplada, alcada, tipus, qualitat) {
   const canvas = document.createElement('canvas');
-  canvas.width = amplada;
-  canvas.height = alcada;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('El navegador no ha pogut preparar la imatge enquadrada.');
-  if (tipus === 'image/jpeg') {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, amplada, alcada);
+  let blob;
+  try {
+    canvas.width = amplada;
+    canvas.height = alcada;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('El navegador no ha pogut preparar la imatge enquadrada.');
+    if (tipus === 'image/jpeg') {
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, amplada, alcada);
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(element, rect.x, rect.y, rect.w, rect.h, 0, 0, amplada, alcada);
+    blob = await new Promise((resol) => canvas.toBlob(resol, tipus, qualitat));
+  } finally {
+    /* Pla 261022_1645 · El canvas s'allibera en acabar (també si falla), com
+       giraSiCal: Safari d'iOS compta la memòria dels canvas vius. El blob ja
+       té els bytes. */
+    canvas.width = 0;
+    canvas.height = 0;
   }
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(element, rect.x, rect.y, rect.w, rect.h, 0, 0, amplada, alcada);
-  const blob = await new Promise((resol) => canvas.toBlob(resol, tipus, qualitat));
   if (!blob) throw new Error('El navegador no ha pogut preparar la imatge enquadrada.');
   return blob;
 }

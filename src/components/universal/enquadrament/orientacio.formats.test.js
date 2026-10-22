@@ -323,6 +323,9 @@ let ctx;
 let mides;
 let imatges;
 let canvases;
+/* Pla 261022_1645 · Les mides de cada canvas en el moment de codificar: després,
+   compressImage l'allibera (0 × 0) perquè Safari d'iOS no se'n quede sense memòria. */
+let codificats;
 const urlOriginal = { crea: URL.createObjectURL, revoca: URL.revokeObjectURL };
 
 /* Una Image falsa: «descodifica» en posar-li src, amb la mida que toca a
@@ -358,12 +361,16 @@ beforeEach(() => {
   mides = [];
   imatges = [];
   canvases = [];
+  codificats = [];
   vi.stubGlobal('Image', ImatgeFalsa);
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function getContext() {
     canvases.push(this);
     return ctx;
   });
-  vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockImplementation((tipus = 'image/png') => `data:${tipus};base64,${aBase64(SORTIDA_CANVAS)}`);
+  vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockImplementation(function toDataURL(tipus = 'image/png') {
+    codificats.push([this.width, this.height]);
+    return `data:${tipus};base64,${aBase64(SORTIDA_CANVAS)}`;
+  });
   vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((cb) => cb(new Blob([SORTIDA_CANVAS], { type: 'image/jpeg' })));
 });
 
@@ -417,7 +424,9 @@ describe('imageUtils.js · compressImage: la pujada directa també gira UNA vega
     const dataUrl = await compressImage(foto(format, o), { maxSize: 600, conservaExif: true, orienta: chromium() });
     const giraAci = !giraElNavegador(format) && o > 1;
     const [w, h] = o >= 5 ? [450, 600] : [600, 450];
-    expect([canvases.at(-1).width, canvases.at(-1).height]).toEqual([w, h]);
+    expect(codificats.at(-1)).toEqual([w, h]);
+    // Codificat, el canvas s'allibera.
+    expect([canvases.at(-1).width, canvases.at(-1).height]).toEqual([0, 0]);
     expect(transformacions(ctx)).toEqual(giraAci ? [transformacioOrientacio(o, 600, 450).matriu] : []);
     expect(ctx.drawImage.mock.calls).toEqual([[imatges[0], 0, 0, ...(giraAci ? [600, 450] : [w, h])]]);
     // El raster es posa dret ABANS de codificar-lo, i l'EXIF de l'original hi torna amb l'orientació 1.
@@ -430,7 +439,8 @@ describe('imageUtils.js · compressImage: la pujada directa també gira UNA vega
   test('sense conservaExif (els camins sense casella): també dreta, i neta', async () => {
     mides.push([1200, 900]);
     const dataUrl = await compressImage(foto('image/webp', 8), { maxSize: 600, orienta: chromium() });
-    expect([canvases.at(-1).width, canvases.at(-1).height]).toEqual([450, 600]);
+    expect(codificats.at(-1)).toEqual([450, 600]);
+    expect([canvases.at(-1).width, canvases.at(-1).height]).toEqual([0, 0]);
     expect(transformacions(ctx)).toEqual([transformacioOrientacio(8, 600, 450).matriu]);
     expect([...deDataUrl(dataUrl)]).toEqual([...SORTIDA_CANVAS]);
   });

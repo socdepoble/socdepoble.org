@@ -92,24 +92,34 @@ export function compressImage(file, {
           }
 
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error('El navegador no ha pogut preparar la imatge.');
+          let dataUrl;
+          try {
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('El navegador no ha pogut preparar la imatge.');
 
-          // Fons transparent per si s'usa format PNG o similar
-          ctx.clearRect(0, 0, width, height);
-          /* Gauntlet 261016 (Bloc 1) · El JPEG no té transparència: sense fons,
-             la part transparent d'un PNG eixiria negra. Blanc, com l'exportador
-             del retall (imatgeCanvas.js). */
-          if (format === 'image/jpeg') {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, width, height);
+            // Fons transparent per si s'usa format PNG o similar
+            ctx.clearRect(0, 0, width, height);
+            /* Gauntlet 261016 (Bloc 1) · El JPEG no té transparència: sense fons,
+               la part transparent d'un PNG eixiria negra. Blanc, com l'exportador
+               del retall (imatgeCanvas.js). */
+            if (format === 'image/jpeg') {
+              ctx.fillStyle = 'white';
+              ctx.fillRect(0, 0, width, height);
+            }
+            // Amb 1, el drawImage de sempre; si no, girada i reduïda d'un sol cop.
+            dibuixaDreta(ctx, img, orientacio, width, height);
+
+            dataUrl = canvas.toDataURL(format, quality);
+          } finally {
+            /* Pla 261022_1645 · El canvas s'allibera en acabar, també si falla:
+               Safari d'iOS compta la memòria de tots els canvas vius i, passat
+               el sostre, en torna de buits (la cerca del pressupost en fa fins
+               a set seguits). El data URL ja té els bytes; cap píxel canvia. */
+            canvas.width = 0;
+            canvas.height = 0;
           }
-          // Amb 1, el drawImage de sempre; si no, girada i reduïda d'un sol cop.
-          dibuixaDreta(ctx, img, orientacio, width, height);
-
-          const dataUrl = canvas.toDataURL(format, quality);
           // Bloc 1.2 · ambExifDeLoriginal no rebutja mai: sense EXIF publicable, el mateix data URL.
           return conservaExif ? ambExifDeLoriginal(dataUrl, original || file) : dataUrl;
         })().then(resolve, reject);

@@ -10,10 +10,19 @@ import { capaDelPaquet, fixaCapaDelPaquet } from './config/capaDelPaquet.js';
 import { registraServiceWorker } from './pwa/registre.js';
 import { capturaInstalacio } from './pwa/instalacio.js';
 import { pintaAmbDiccionari } from './config/i18n.js';
+import { instalaFallbackDeBessones } from './config/fallbackBessones.js';
 
 const init = () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
+
+    /* Pla 261022_1645 (tasca 3) · El salvavides de les bessones, abans del
+       primer pintat: una .webp que no arriba es torna a demanar en l'extensió
+       del seu original (fallbackBessones.js). L'SPA pròpia es pinta dins de
+       #root, al DOM de la pàgina (cap shadow root), i un escoltador en
+       captura sobre l'arrel veu l'error de qualsevol <img> de l'app, sense
+       tocar el cos de la pàgina (LLEI_06, encapsulament). */
+    instalaFallbackDeBessones(arrel);
 
     /* Model B (decisions A1 i A3 del Mestre, 261003): el backend i l'abast de
        dades del lloc propi entren per la capa del paquet, una via interna que

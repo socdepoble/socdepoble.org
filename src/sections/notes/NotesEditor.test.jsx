@@ -37,6 +37,12 @@ vi.mock('./useEstatDesamentNota.js', async importOriginal => ({
 }));
 vi.mock('../../components/universal/DocumentEditor', () => ({ DocumentEditor: ({ adapter, onToast }) => { mocks.adapter = adapter; mocks.onToast = onToast; return null; } }));
 vi.mock('../../data/backendPort.js', () => ({ uploadToStorage: mocks.upload, teCapacitat: () => true }));
+/* Pla 261022_1645 · jsdom no codifica: la guarda WebP de pujarImatgeDeNota (pujadaImatge.js ·
+   garantixWebp) rep un compressImage simulat; la resta d'imageUtils és la de veres. */
+vi.mock('../../utils/imageUtils.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  compressImage: async () => 'data:image/webp;base64,UklGRgAAAABXRUJQVlA4IA==',
+}));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ agents: [] }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => mocks.session, ESTAT: { DINS: 'dins' } }));
@@ -83,13 +89,30 @@ const escrits = () => mocks.setLocal.mock.calls.map(([id, camp, valor]) => [id, 
 test('la pujada usa la configuració del workspace A i després la de B', async () => {
   mocks.upload.mockResolvedValue({ url: 'sdp-media://result' });
   const { rerender } = render(<NotesEditor />);
-  const file = new Blob(['image'], { type: 'image/png' });
+  /* Pla 261022_1645 · Un WebP (el que arriba ja preparat) passa tal qual per la guarda. */
+  const file = new Blob(['image'], { type: 'image/webp' });
   await mocks.adapter.uploadMedia(file);
   expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: mocks.TENANT_A }, mocks.config);
   mocks.config = { tenantId: mocks.TENANT_B };
   rerender(<NotesEditor />);
   await mocks.adapter.uploadMedia(file);
   expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: mocks.TENANT_B }, mocks.config);
+});
+
+/* Pla 261022_1645 (tasca 2) · A Storage, cap JPEG ni PNG nou: un PNG que arriba a
+   uploadMedia puja en WebP; un PDF del Bloc, tal qual. */
+test('261022_1645 · a Storage, un PNG puja en WebP (garantixWebp) i un PDF passa tal qual', async () => {
+  mocks.config = { tenantId: mocks.TENANT_A };
+  mocks.upload.mockReset();
+  mocks.upload.mockResolvedValue({ url: 'sdp-media://result' });
+  render(<NotesEditor />);
+  await mocks.adapter.uploadMedia(new File([new Uint8Array([137, 80, 78, 71])], 'mapa.png', { type: 'image/png' }));
+  const [pujat, opcions] = mocks.upload.mock.lastCall;
+  expect([pujat.name, pujat.type]).toEqual(['mapa.webp', 'image/webp']);
+  expect(opcions).toEqual({ carpeta: 'notes', tenantId: mocks.TENANT_A });
+  const pdf = new File(['%PDF'], 'acta.pdf', { type: 'application/pdf' });
+  await mocks.adapter.uploadMedia(pdf);
+  expect(mocks.upload.mock.lastCall[0]).toBe(pdf);
 });
 
 /* Gauntlet 261016 (Bloc 1 i 1.2, Llei del Quadrat i mandat de l'EXIF) · El

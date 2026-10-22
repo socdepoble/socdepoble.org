@@ -4,7 +4,8 @@
  * la compressió, en UNA sola font. La consumixen la pujada de la closca
  * (useHeroImageHandler), la finestra de retall de la fitxa
  * (useEnquadramentImatge), l'ajust d'imatge del compte (DetallAjust) i l'ordre
- * «/» Imatge del text enriquit.
+ * «/» Imatge del text enriquit. Pla 261022_1645 · I la guarda WebP de l'última
+ * porta abans de Storage (garantixWebp).
  *
  * No viu a imageUtils.js: moltes proves substituïxen eixe mòdul sencer amb
  * només compressImage, i qualsevol exportació nova hi faltaria. Per això la
@@ -240,4 +241,46 @@ export async function fotoDinsDelPressupost(file, {
   }
   if (millor) return millor;
   throw new Error(llegit?.tiff && menor - llegit.tiff.length < PRESSUPOST_PUJADA ? errorPressupostExif(llegit) : ERROR_PRESSUPOST);
+}
+
+/*
+ * Pla 261022_1645 (tasca 2; ordre del Mestre, àudio 261022_1637: «qualsevol
+ * imatge que entre al sistema desaparega com a jpeg i es convertisca en
+ * webp») · La guarda de l'última porta abans de Storage. La criden els dos
+ * camins que pugen al servidor (PerfilContext · pujaMitja i NotesEditor ·
+ * pujarImatgeDeNota), just abans d'uploadToStorage. Els camins d'abans ja
+ * comprimixen a WebP (fotoDinsDelPressupost, l'enquadrament, el text
+ * enriquit; el xat, a adjuntLocal · preparaAdjunt): ací arriba el que se'ls
+ * escapa.
+ *   · Un JPEG o un PNG es torna a codificar en WebP amb compressImage (la
+ *     foto ix dreta segons l'EXIF, que un toBlob directe no faria) a 1.600 px
+ *     pel costat llarg com a molt, sense ampliar-la mai, i a qualitat 0,82.
+ *     El nom passa a .webp i el tipus, a image/webp. Com tota recodificació
+ *     sense `conservaExif`, el resultat no porta l'EXIF ni el GPS.
+ *   · Un WebP, un AVIF, un PDF (el Bloc) o qualsevol altra cosa passen tal
+ *     qual: un WebP que ja ve de fotoDinsDelPressupost porta la qualitat del
+ *     pressupost i l'EXIF que la persona ha triat, i no es toca.
+ *   · WebKit (Safari 16 del Baseline i tots els navegadors d'iOS) no sap
+ *     codificar WebP en canvas i torna PNG: la guarda no ho pot fer i el
+ *     fitxer es puja com venia (el JPEG de la reserva). «Zero JPEG» en
+ *     WebKit demana un codificador WebP en WASM (dependència nova: aprovació
+ *     del Mestre) o convertir-lo al servidor.
+ */
+/** El costat llarg màxim d'una imatge que la guarda torna a codificar. */
+export const MAX_COSTAT_WEBP = 1600;
+/** La qualitat WebP de la guarda (la del pla 261022_1645). */
+export const QUALITAT_WEBP = 0.82;
+const A_CONVERTIR = Object.freeze([FORMAT_JPEG, FORMAT_PNG]);
+
+/**
+ * El fitxer que es pot pujar a Storage: un JPEG o un PNG, en WebP; la resta,
+ * tal qual. Si el navegador no sap fer WebP (WebKit), el mateix fitxer.
+ * `comprimeix` és injectable per a les proves.
+ */
+export async function garantixWebp(fitxer, { comprimeix = compressImage } = {}) {
+  if (!(fitxer instanceof Blob) || !A_CONVERTIR.includes(fitxer.type)) return fitxer;
+  const dataUrl = await comprimeix(fitxer, { maxSize: MAX_COSTAT_WEBP, format: FORMAT_WEBP, quality: QUALITAT_WEBP });
+  if (tipusReal(dataUrl) !== FORMAT_WEBP) return fitxer;
+  const nomBase = String(fitxer.name || 'imatge').replace(/\.[^./]*$/, '') || 'imatge';
+  return fitxerDeDataUrl(dataUrl, nomBase);
 }

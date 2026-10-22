@@ -1,5 +1,6 @@
 import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
 import { imatgeLocalComDataUrl } from '../../utils/imageUtils.js';
+import { garantixWebp } from '../../utils/pujadaImatge.js';
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -91,7 +92,9 @@ async function pujarImatgeDeNota(fitxer, config) {
     return imatgeLocalComDataUrl(fitxer);
   }
   if (!teCapacitat('mitjans')) return null;
-  const res = await uploadToStorage(fitxer, { carpeta: 'notes', tenantId: config?.tenantId }, config);
+  /* Pla 261022_1645 · A Storage, cap JPEG ni PNG nou (pujadaImatge.js ·
+     garantixWebp); un PDF o un WebP passen tal qual. */
+  const res = await uploadToStorage(await garantixWebp(fitxer), { carpeta: 'notes', tenantId: config?.tenantId }, config);
   return res.url;
 }
 
