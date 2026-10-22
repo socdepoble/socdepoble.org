@@ -3,10 +3,10 @@
   "turn_id": "torn_241a9f50-0fae-45e4-b1ce-724b30668c6d",
   "actor": "gemini",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "planned",
+  "revision": 15,
   "createdAt": "2026-10-22T13:56:24.643Z",
-  "updatedAt": "2026-10-22T13:56:56.984Z",
+  "updatedAt": "2026-10-22T20:09:11.289Z",
   "expiresAt": "2026-10-23T13:56:24.644Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3629,9 +3629,70 @@
         "committedAt": "2026-10-22T13:56:56.984Z",
         "documentHash": "2368edabb287f57f80023934d7990d301b49bbb7c885dab8ee6501dbdaebd5eb"
       }
+    },
+    "1e6787fe-8fc9-4239-b666-4778adcd0e54": {
+      "id": "1e6787fe-8fc9-4239-b666-4778adcd0e54",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-22T15:00:16.169Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-10-22T15:00:16.170Z",
+        "failedAt": "2026-10-22T15:00:16.176Z",
+        "absent": true
+      }
+    },
+    "29c2e94d-fcb1-4c98-9b3a-bfe1ba009c81": {
+      "id": "29c2e94d-fcb1-4c98-9b3a-bfe1ba009c81",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-22T15:00:35.122Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-22T15:00:35.125Z",
+        "committedAt": "2026-10-22T15:00:35.152Z",
+        "documentHash": "ae846b0940df53fd6a1855387208c1ad3ac7a0971d460c330f26fc67a2f84e0d"
+      }
+    },
+    "63b04153-e0d8-44c5-b9f1-0d8883d17b8f": {
+      "id": "63b04153-e0d8-44c5-b9f1-0d8883d17b8f",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-22T20:09:11.168Z"
+    },
+    "90bd8774-a331-420c-aade-28c40fc43a77": {
+      "id": "90bd8774-a331-420c-aade-28c40fc43a77",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-22T20:09:11.218Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-22T20:09:11.219Z",
+        "committedAt": "2026-10-22T20:09:11.242Z",
+        "documentHash": "0fb1901bde79d23daab180e612d3ef3d5aac2b1efd0a0239fd1e335046bcafce"
+      }
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261022_1955_pla_implementacio_cercador_universal.md",
+    "hash": "c1bcf126e18815888b5036e6e5aad67bec0a2954a724d306ce91caee6c0421b1"
+  },
   "verification": null,
   "history": [
     {
@@ -3655,6 +3716,83 @@
       "file": "_wiki_de_poble/04_escriptori/261022_1556_auditoria_gemini.md",
       "at": "2026-10-22T13:56:56.984Z",
       "hash": "2368edabb287f57f80023934d7990d301b49bbb7c885dab8ee6501dbdaebd5eb"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "_wiki_de_poble/04_escriptori/261022_1556_auditoria_gemini.md"
+      ],
+      "at": "2026-10-22T14:11:11.585Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-22T15:00:16.120Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-22T15:00:16.170Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "1e6787fe-8fc9-4239-b666-4778adcd0e54",
+      "file": "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md",
+      "at": "2026-10-22T15:00:16.176Z",
+      "absent": true
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-22T15:00:35.125Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "29c2e94d-fcb1-4c98-9b3a-bfe1ba009c81",
+      "file": "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md",
+      "at": "2026-10-22T15:00:35.152Z",
+      "hash": "ae846b0940df53fd6a1855387208c1ad3ac7a0971d460c330f26fc67a2f84e0d"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md"
+      ],
+      "at": "2026-10-22T15:00:35.187Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-22T20:09:11.108Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-22T20:09:11.169Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-22T20:09:11.219Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "90bd8774-a331-420c-aade-28c40fc43a77",
+      "file": "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md",
+      "at": "2026-10-22T20:09:11.242Z",
+      "hash": "0fb1901bde79d23daab180e612d3ef3d5aac2b1efd0a0239fd1e335046bcafce"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md"
+      ],
+      "at": "2026-10-22T20:09:11.288Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/04_escriptori/261022_1556_auditoria_gemini.md",
+    "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md",
+    "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md"
   ]
 }

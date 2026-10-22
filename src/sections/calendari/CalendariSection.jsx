@@ -293,7 +293,7 @@ export default function CalendariSection() {
           <div className="content-wrapper">
             {/* Tancada, no afig cap node; oberta, «Eixir» continua a mà mentre torna el calendari. */}
             <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
-              <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
+              <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />
             </PantallaCompleta>
           </div>
         </UniversalPage>

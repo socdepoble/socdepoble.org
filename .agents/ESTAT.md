@@ -7,6 +7,93 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-22T23:30:00+02:00 · IAIA MarIA · Tancament Nocturn: Cercador Universal Validat (21k proves), Poliment Visual (Carregant i Mur), Consens Canònic D1-A i Relleu a Botigues
+
+Torn: `torn_528e27ee-1e76-438d-899e-0abfcd996b0b`.
+
+- **Cercador Universal (`/cerca`) Completat i Blindat (Claude Opus + Gemini 4):**
+  - Implementades T1, T2 i T3: capacitat opcional `directoriEntitats: ['listPublicOrganizations']` a `contracte.js` i `backendPort.js`, adaptador `organizations.js` i `localPerfils.js`, normalització valenciana (l·l, accents, lligadures), rànquing multicriteri IDF amb proximitat per poble actiu, i degradació silenciosa del 403 («Mode Foraster») al padró.
+  - Gauntlet adversarial superat: 21.043 proves en verd. Resolució d'avatars de cubell públic via `useResolvedAsset`.
+- **Poliment Visual de Trellat (IAIA MarIA):**
+  - Text de càrrega canviat a `Carregant contingut...` (fora «del poble») a `MurSection.jsx`, `ItemDetailSection.jsx` i `CalendariSection.jsx`, harmonitzat als 5 idiomes (`ca`, `es`, `en`, `eu`, `gl`).
+  - Subtítol del Mur canviat a `Explora el mur públic a través de les diferents vistes: llista, calendari i mapa.` (eliminada la redundància i la saturació de poble).
+  - 227 proves de robustesa Vitest en verd.
+- **Gran Consens Arquitectònic de Supabase (Taula Redona Claude-Gemini):**
+  - Claude frena el SQL de Gemini per 3 motius crítics (taula `tenant_memberships` inexistent, forat de seguretat a `profiles.town_name` i 11 taules fragmentades).
+  - Gemini contra-audita i accepta el veredicte, demostrant que moure les 11 taules (Opció B) tenia 4 mines letals (trigger SDP-SEC-001, deadlocks de 5 FKs i rutes físiques d'Storage sota `11111111-...`).
+  - Consens canònic: **Opció D1-A** (mantenir `11111111-2222-3333-4444-555555555555` com a seu mare, reanomenar la fila a «La Torre de les Maçanes» a `towns` i alinear `.env.local` / `.env.production.local`).
+- **Acta Marmota i Guàrdia:**
+  - Registrada i validada a `_wiki_de_poble/10_actes/261022_2330_acta_marmota_consens_cercador_i_preparacio_botigues.md`.
+  - 0 crons actius, 0 processos de fons.
+- **Full de Ruta per a la Sessió de Matí:**
+  1. Executar la diagnosi de només lectura a Supabase (§4 de l'informe de Claude) i aplicar l'Opció D1-A.
+  2. Compilar i desplegar a Firebase Hosting (`socdepoble.org`) per servir les imatges WebP noves.
+  3. Fase de Botigues: WordPress.org (ZIP v1.1.9 <10 MB), App Store (Capacitor 8 iOS) i Google Play (APK).
+
+## ESTAT_ACTUAL · 2026-10-22T22:08:00+02:00 · IAIA MarIA · Diagnosi Forense Cercador Global, Desbloqueig SQL Supabase (town_name) i Convocatòria Cercador Universal
+
+Torn: `torn_34da1b34-3cf4-4b01-970e-00424573bf81`.
+
+- **Desbloqueig i Verificació SQL de Supabase:**
+  - El Mestre ha executat amb èxit la migració de la vista `public.organization_directory` incorporant la columna `town_name` i permisos públics per a `anon` i `authenticated`.
+  - Verificat via REST: `organization_directory` retorna correctament «La Figuera» (`slug: 'lafiguera'`, `town_name: 'La Torre de les Maçanes'`).
+- **Alineació del Tenant als Fitxers d'Entorn:**
+  - Actualitzats `.env.local` i `.env.production.local`: `VITE_TENANT_ID` canviat de `11111111-2222-3333-4444-555555555555` a l'UUID real de La Torre de les Maçanes (`edd2f840-f4af-414a-821c-ebb8b8b2a80a`).
+  - Això resol l'error 403 Forbidden («Mode Foraster») al padró del xat (`membres_del_poble`).
+- **Pla d'Arquitectura i Prompt Convocats (Porta Olivera en Codi 0):**
+  - Pla aprovat: `_wiki_de_poble/04_escriptori/261022_1955_pla_implementacio_cercador_universal.md`.
+  - Prompt d'execució i auditoria per a Claude Opus 5.5 i Gemini 4: `_wiki_de_poble/04_escriptori/261022_1955_prompt_claude_gemini_cercador_universal.md`.
+- **Propers Passos:**
+  1. Opcional a Supabase: unificar `tenant_id = 'edd2f840-f4af-414a-821c-ebb8b8b2a80a'` a la taula `organizations` per a El Rentonar i Sóc de Poble.
+  2. Implementació del Cercador Universal seguint el prompt per part de Claude Opus / Gemini 4.
+
+## ESTAT_ACTUAL · 2026-10-22T19:00:00+02:00 · IAIA MarIA · Tancament de Sessió: Transició WebP (Commit 8fcbd22aa, 97 fitxers), Sanejament Total Supabase i Relleu Tècnic
+
+Torn: `torn_2d59d6bf-8aef-4462-91e3-f6c5766a52b6`.
+
+- **Transició Integral a WebP Natiu Segellada (Commit `8fcbd22aa`):**
+  - Commit realitzat per Claude Opus amb `--no-verify` sota autorització del Mestre (`8fcbd22aa`), integrant 97 camins:
+    * 75 bessones WebP noves (cobertura total de `public/assets/`).
+    * 3 parells ambigus resolts (el `.png` queda com a original canònic, els 3 `.jpg` duplicats moguts a `_multimedia_de_poble/originals_raster_public/`).
+    * Guarda WebP client-side (`garantixWebp` a `pujadaImatge.js`) i alliberament de memòria al canvas (`width = height = 0`) en un bloc `finally` per protegir Safari/iOS.
+    * Salvavides de bessones (`src/main.jsx`) ancorat a `#root` (`LLEI_06_ENCAPSULAMENT`) per rescata automàticament qualsevol imatge absent sense bucles.
+    * Aprovació de la clau «disseny» a la frontissa registrada a `.agents/contingut_estructural.json`.
+    * Suite de proves massiva: 20.995 proves en verd.
+- **Sanejament Radical de Supabase Executat pel Mestre:**
+  - `public.profiles`: Avatar de Javi Llinares actualitzat a `/assets/fotos/javi-llinares-perfil-1200px.webp`. Dades professionals i territorials harmonitzades en JSONB per a Carmen Chaves, Damià Llorens i Javi Llinares.
+  - `public.town_memberships`: Purgat l'usuari fantasma i «Poble de Llavors»; taula deixada amb exactament 3 membres oficials per a La Torre de les Maçanes.
+  - `public.app_content`: Migrades totes les rutes `.jpg`/`.jpeg` a `.webp` dins del payload JSONB.
+  - `public.user_tags`: Eliminada definitivament (`DROP TABLE`).
+  - `public.user_platform_roles`: Javi Llinares registrat com a `superadmin`.
+- **Estat de Producció (`socdepoble.org`):**
+  - Els errors 404 detectats a la consola de producció es deuen exclusivament al fet que Supabase ja serveix les noves rutes `.webp`, però Firebase Hosting encara manté la compilació anterior.
+- **Acta Marmota i Porta Olivera:**
+  - Acta Marmota registrada a `_wiki_de_poble/10_actes/261022_1900_acta_marmota_transicio_webp_sanejament_supabase_i_relleu.md` (vàlida i segellada).
+  - Porta Olivera amb codi 0 i safata d'entrada neta.
+- **Deures pendents per al nou nanochat (post-reboot/descans):**
+  1. Desplegar a Firebase Hosting (`socdepoble.org`): `npm run build:web` i deploy mitjançant `GOOGLE_APPLICATION_CREDENTIALS`.
+  2. Compilar i empaquetar el connector WordPress (`npm run build:wp` + ZIP).
+  3. Sincronitzar Capacitor per a les botigues d'Apple i Google (`npx cap sync`).
+  4. Reprendre auditories adversarials amb el Consell.
+
+
+- **Segona Purga de Supabase Executada amb Èxit:**
+  - Eliminades les 4 taules fòssils abandonades: `public.conversations`, `public.messages`, `public.duels_nodes`, `public.user_realms`.
+  - Netejades les claus paràsites d'`app_content`: `noteNotes` i `mechanisms`.
+  - Confirmada integritat de les taules canòniques vives: `bloquejos` (moderació), `consentiments` (RGPD), `notes` (mur), i xat modern (`xat_fils`, `xat_missatges`, etc.).
+- **Tancament i Consolidació de la Tasca d'Emojis Grans (38px/52px):**
+  - Implementat `SelectorEmoticones.jsx`, adaptat `GraellaEmojis.jsx` amb variant `gran` (38px glif, 52px botó).
+  - Paritat WhatsApp a `Compositor.jsx`: focus retingut, inserció al cursor, icona teclat en mòbil, tancament amb Escape/clic exterior.
+  - Sincronitzades les 5 llengües (`ca`, `es`, `en`, `eu`, `gl`).
+  - Suite de proves unitàries 42/42 en verd; ESLint i lint_xat 20/20 sense cap advertència.
+  - Auditories d'èxit emeses per Claude (`261022_1500_auditoria_claude.md`) i Gemini (`261022_1556_auditoria_gemini.md`).
+- **Obertura de la Nova Fase: Transició Integral a WebP i Fallback de Bessones:**
+  - Pla aprovat: `_wiki_de_poble/04_escriptori/261022_1645_pla_implementacio_transicio_webp_i_salvavides.md`.
+  - Prompt local preparat: `_wiki_de_poble/04_escriptori/261022_1645_prompt_claude_gemini_transicio_webp_i_salvavides.md`.
+  - Objectiu: conversió física d'imatges locals, blindatge client-side a `src/utils/pujadaImatge.js`, activació del salvavides invisible a `src/main.jsx` i preparació de build per a Firebase Hosting.
+- **Porta Olivera:**
+  - Validada amb codi 0. Escriptori canònic i net.
+
 ## ESTAT_ACTUAL · 2026-10-22T14:50:00+02:00 · IAIA MarIA · Tancament de Sessió: Higiene Escriptori (2 docs vius), Diagnosi Forense Supabase i Lliurament Emojis Grans (36px-40px) per a Claude/Codex
 
 Torn: `torn_823c12d5-e3f6-4ba9-8031-d90b99226b8c`.

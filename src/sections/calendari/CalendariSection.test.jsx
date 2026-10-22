@@ -452,7 +452,7 @@ test('pantalla completa · si el Mur torna a carregar, «Eixir» continua; quan 
   rerender(arbre(''));
   const carregant = screen.getByRole('dialog', { name: TITOL_PANTALLA });
   expect(within(carregant).getByRole('button', { name: NOM_EIXIR })).toBeTruthy();
-  expect(within(carregant).getByText('Carregant contingut del poble...')).toBeTruthy();
+  expect(within(carregant).getByText('Carregant contingut...')).toBeTruthy();
   expect(graella()).toBeNull();
 
   mocks.mur = { ...mocks.mur, status: 'ready' };
@@ -469,7 +469,7 @@ test('mentre el Mur carrega, el carregant; si falla, l’error dins de la pàgin
   mocks.mur = { ...mocks.mur, status: 'loading', sortedEvents: [], sortedFeedPosts: [], sortedMarketItems: [] };
   pinta();
   expect(graella()).toBeNull();
-  expect(screen.getByText('Carregant contingut del poble...')).toBeTruthy();
+  expect(screen.getByText('Carregant contingut...')).toBeTruthy();
   cleanup();
 
   mocks.mur = { ...mocks.mur, status: 'error', error: new Error('caiguda') };

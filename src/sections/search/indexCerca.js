@@ -7,8 +7,10 @@
  * indexa ni mostra un correu.
  *
  * `cercaEntrades` fa la cerca: una fitxa per paraula, lògica AND, plegat
- * d'accents als dos costats i rànquing (títol igual > prefix al títol >
- * dins del títol > dins del cos), amb desempat per data i per ordre alfabètic.
+ * d'accents als dos costats i rànquing per camps (vegeu puntua: frase igual >
+ * paraula del títol > prefix al títol > dins del títol > lema o ofici > cos),
+ * amb el pes de cada paraula segons com n'és de rara a l'índex, un desempat
+ * pel poble actiu i, després, per data i per ordre alfabètic.
  */
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { llevaEtiquetes, llevaScriptsIEstils, normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
@@ -19,6 +21,7 @@ import { tipusDAgent } from '../../data/agentsSeed.js';
 import {
   ENTITAT_PILOT_SLUG, PERSONA_PILOT, POBLE_FUNDACIONAL, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau
 } from '../../data/identitatsSeed.js';
+import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
@@ -46,13 +49,28 @@ export const tipusValid = (valor) => (IDS_TIPUS.includes(valor) ? valor : 'tot')
 const COMBINANTS = /[\u0300-\u036f]/g;
 /* El punt volat de «l·l» no separa paraules: «col·legi» i «collegi» són la mateixa. */
 const PUNT_VOLAT = /[\u00b7\u2027\u2219]/g;
+/* Pla 261022_1955 (Cercador Universal, T2: «plegat exhaustiu […] l·l») · Tres
+   formes més de la ela geminada i de les lletres que NFD no descompon:
+     · el punt baix entre dues eles, el substitut de teclat («col.legi»,
+       «il.lusió»), és el mateix punt volat; mai entre altres lletres («Sr.
+       Lluís» o una adreça no s'ajunten);
+     · «ŀ» (U+0140, un sol caràcter) i les lligadures o lletres d'amplada
+       completa: NFKD les descompon («ŀ» en «l·», «ﬁ» en «fi»);
+     · les lletres soltes sense descomposició (œ, æ, ß, ø, ł, đ, ı), per la
+       seua forma llatina. */
+const PUNT_BAIX_DE_GEMINADA = /([lL])\.(?=[lL])/g;
+const LLETRES_SOLTES = Object.freeze({ 'œ': 'oe', 'æ': 'ae', 'ß': 'ss', 'ø': 'o', 'ł': 'l', 'đ': 'd', 'ı': 'i' });
+const RE_LLETRES_SOLTES = /[œæßøłđı]/g;
+const lletraSolta = (lletra) => LLETRES_SOLTES[lletra];
+const esEla = (caracter) => caracter === 'l' || caracter === 'L';
 const RE_CORREU = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 
 export const esCorreu = (valor) => RE_CORREU.test(String(valor ?? ''));
 
-/** Minúscules, sense accents ni punt volat, espais plegats. */
+/** Minúscules, sense accents, punt volat ni lligadures, espais plegats. */
 export function plega(valor) {
-  return normalizeSearchText(String(valor ?? '').replace(PUNT_VOLAT, ''));
+  const net = String(valor ?? '').replace(PUNT_BAIX_DE_GEMINADA, '$1').normalize('NFKD').replace(PUNT_VOLAT, '');
+  return normalizeSearchText(net).replace(RE_LLETRES_SOLTES, lletraSolta);
 }
 
 /** Les paraules d'una consulta, plegades i sense repetir. */
@@ -60,8 +78,11 @@ export function fitxes(consulta) {
   return [...new Set(plega(consulta).split(/[^a-z0-9]+/).filter(Boolean))];
 }
 
+/* El mateix plegat que `plega`, d'un sol caràcter (el punt baix de la
+   geminada el decidix mapaPlegat, que en veu els veïns). */
 function plegaCaracter(caracter) {
-  return caracter.toLowerCase().normalize('NFD').replace(COMBINANTS, '').replace(PUNT_VOLAT, '');
+  return caracter.normalize('NFKD').toLowerCase().normalize('NFD').replace(COMBINANTS, '').replace(PUNT_VOLAT, '')
+    .replace(RE_LLETRES_SOLTES, lletraSolta);
 }
 
 /* El text plegat caràcter a caràcter, amb l'índex original de cada caràcter
@@ -69,14 +90,24 @@ function plegaCaracter(caracter) {
 function mapaPlegat(text) {
   let plegat = '';
   const index = [];
-  for (let i = 0; i < text.length; i += 1) {
-    const peca = plegaCaracter(text[i]);
+  /* Gauntlet (crític de l'índex, confirmat) · Per punt de codi, no per unitat
+     UTF-16: una lletra del pla astral («𝐅» de les negretes que es copien de
+     les xarxes) es plega com un tot (NFKD la fa «f», igual que `plega`), i el
+     final del tram (`fi`) és el del caràcter sencer: mai mig parell suplent. */
+  const fi = [];
+  for (let i = 0; i < text.length;) {
+    const caracter = String.fromCodePoint(text.codePointAt(i));
+    const seguent = i + caracter.length;
+    if (caracter === '.' && esEla(text[i - 1]) && esEla(text[seguent])) { i = seguent; continue; }
+    const peca = plegaCaracter(caracter);
     for (let j = 0; j < peca.length; j += 1) {
       plegat += peca[j];
       index.push(i);
+      fi.push(seguent);
     }
+    i = seguent;
   }
-  return { plegat, index };
+  return { plegat, index, fi };
 }
 
 /**
@@ -88,12 +119,12 @@ export function partsRessaltades(text, llistaFitxes = []) {
   if (!net) return [];
   const cerca = (Array.isArray(llistaFitxes) ? llistaFitxes : []).filter(Boolean);
   if (!cerca.length) return [{ text: net, marca: false }];
-  const { plegat, index } = mapaPlegat(net);
+  const { plegat, index, fi } = mapaPlegat(net);
   const trams = [];
   for (const fitxa of cerca) {
     let posicio = plegat.indexOf(fitxa);
     while (posicio >= 0) {
-      trams.push([index[posicio], index[posicio + fitxa.length - 1] + 1]);
+      trams.push([index[posicio], fi[posicio + fitxa.length - 1]]);
       posicio = plegat.indexOf(fitxa, posicio + fitxa.length);
     }
   }
@@ -213,9 +244,20 @@ const primeraImatge = (...valors) => {
  * de la nota…): d'ací ix l'extracte quan la coincidència no és a l'entradilla.
  * `canonica` és la clau de la identitat d'una persona o d'una entitat
  * (clauCanonica), o null: amb ella, ambLaIdentitatPropia en deixa una fitxa.
+ * Pla 261022_1955 (Cercador Universal, T2) · Dos camps més per al rànquing
+ * (puntua), tots dos plegats i fora del que es pinta:
+ *   · `etiquetes`, el lema, l'ofici o el rol, el subtítol o les etiquetes: el
+ *     graó entre el títol i el cos (etiquetesPlegades);
+ *   · `poble`, el poble de la fitxa, si en té (poblePlegat): la bonificació
+ *     del poble actiu.
+ * I l'avatar porta `ref` quan la seua foto és una referència opaca del bucket
+ * PÚBLIC (fotoDelBucketPublic: un logo o una foto pujats): qui pinta la
+ * demana al port (useResolvedAsset) en lloc de les inicials. La resta de
+ * referències opaques (mitjans_privats, un camí brut) no en porten mai.
  */
-function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], imatge = null, avatar = null,
-  href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null, canonica = null }) {
+function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], etiquetes = [], poble = '',
+  imatge = null, avatar = null, href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null,
+  canonica = null }) {
   if (id == null || String(id) === '') return null;
   const textExtracte = textPla(extracte);
   const textTitol = textPla(titol).slice(0, 200) || textExtracte.slice(0, 80);
@@ -231,7 +273,7 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     extracte: textExtracte,
     detall: textDetall === textExtracte ? '' : textDetall,
     imatge: src ? { src, alt: imatge?.alt || '' } : null,
-    avatar: avatar ? { nom: textTitol, src: primeraImatge(avatar.src), llavor: avatar.llavor ?? id } : null,
+    avatar: avatar ? avatarDeLEntrada(textTitol, avatar, id) : null,
     href: href || null,
     accio,
     data: marcaTemps(data),
@@ -241,8 +283,18 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     fotoDe,
     canonica,
     titolPlegat: plega(textTitol),
+    etiquetesPlegades: plega(etiquetes.map((valor) => textPla(valor)).join(' ')),
+    poblePlegat: plega(textPla(poble)),
     text: plega([textTitol, textExtracte, textDetall, ...cos.map((valor) => textPla(valor))].join(' '))
   };
+}
+
+/* { nom, src, llavor } i, només si la foto és una referència del bucket públic, `ref` (vegeu entrada). */
+function avatarDeLEntrada(nom, avatar, id) {
+  const src = primeraImatge(avatar.src);
+  const ref = src ? null : fotoDelBucketPublic(avatar.src);
+  const llavor = avatar.llavor ?? id;
+  return ref ? { nom, src, llavor, ref } : { nom, src, llavor };
 }
 
 /**
@@ -319,6 +371,8 @@ export function deAgent(agent, opcions = {}) {
     meta: [perfil === 'ia' ? opcions.etiquetes?.ia : null, agent?.role, agent?.town_name !== agent?.role ? agent?.town_name : null],
     extracte: primerText(agent?.short_bio, agent?.lema),
     cos: [agent?.role, agent?.town_name, agent?.tag, agent?.lema],
+    etiquetes: [agent?.role, agent?.lema, agent?.tag],
+    poble: agent?.town_name,
     avatar: { src: agent?.avatar_url, llavor: agent?.id },
     href: rutaDeLaFitxa(perfil, agent?.id),
     canonica: clauCanonica(perfil, agent?.id)
@@ -377,6 +431,11 @@ export function deMembre(membre, opcions = {}) {
     titol: nom,
     meta: [perfil === 'ia' ? opcions.etiquetes?.ia : null, poble],
     cos: poble ? [poble] : [],
+    /* Pla 261022_1955 (T2) · El padró és el del poble de la sessió: qui hi
+       consta n'és veí (opcions.pobleDelPadro, useCercaGlobal), també per a
+       la bonificació del poble actiu. Mai es pinta a la meta: no és cap dada
+       de la fila. */
+    poble: poble || opcions.pobleDelPadro || '',
     avatar: { src: membre?.avatar_url ?? membre?.avatarUrl, llavor: id },
     href: fitxaOberta ? rutaDeLaFitxa(perfil, id) : null,
     accio: id == null ? null : {
@@ -427,9 +486,71 @@ export function deIdentitat(identitat, opcions = {}) {
     titol: nom,
     meta: esEntitat ? [pobleDeLEntitat] : [opcions.poble],
     cos: esEntitat ? [identitat.slug, pobleDeLEntitat] : [opcions.poble],
+    poble: esEntitat ? pobleDeLEntitat : opcions.poble,
     avatar: { src: identitat.avatar, llavor: identitat.id },
     href: fitxaOberta ? rutaDeLaFitxa(perfil, identitat.id) : null,
     propia: perfil,
+    canonica
+  });
+}
+
+/* El CHECK de organizations.slug (2609080000): l'únic slug que pot ser una ruta neta. */
+const RE_SLUG_DE_RUTA = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const uuidNet = (valor) => (valor == null ? '' : String(valor).trim().toLowerCase());
+
+/**
+ * La clau de la ruta pública d'una fila del directori: el seu slug quan la
+ * fitxa l'obri, i si no, el seu id. En remot, el perfil públic només resol un
+ * slug dins del poble actiu (perfils.js · llegixPerfilRemot: `unique (tenant_id,
+ * slug)`), i un id a tot el servidor: una entitat d'un altre tenant que el de
+ * la configuració porta a /empresa/<id>, que sí que s'obri. Una fila sense
+ * tenant (seed i local: un sol poble) porta el slug. Sense saber el tenant
+ * actiu, l'id: mai un enllaç a «Perfil no trobat».
+ */
+function clauDeRutaDOrganitzacio(org, tenantActiu) {
+  const slug = typeof org?.slug === 'string' ? org.slug.trim() : '';
+  if (!RE_SLUG_DE_RUTA.test(slug)) return org.id;
+  const seu = uuidNet(org?.tenant_id);
+  if (!seu) return slug;
+  return seu === uuidNet(tenantActiu) ? slug : org.id;
+}
+
+/**
+ * Pla 261022_1955 (Cercador Universal, T2) · Una fila del directori públic
+ * (organization_directory; port · listPublicOrganizations): una empresa, una
+ * entitat o un grup públic de qualsevol poble, també sense sessió. A la cerca
+ * totes són 'entitats', amb l'id de la fila: la mateixa clau que la del padró
+ * (membres_del_poble, tipus 'entitat') i que la identitat pròpia
+ * (IdentitatContext), i fusionaPerClau en fa una sola fitxa. La clau
+ * canònica, per l'id (clauCanonica: mai pel slug ni pel nom de la fila);
+ * l'entitat pilot amb l'id del servidor la reconeix després
+ * ambLaIdentitatPropia (`delProjecte`).
+ *   · el títol, el nom; la meta, el poble (pobleDEntitat); l'extracte, el lema
+ *     o la descripció; el detall, la descripció i la presentació;
+ *   · el logo és l'avatar (una referència opaca del bucket públic porta `ref`);
+ *   · l'enllaç, la ruta canònica d'una identitat del Mestre o
+ *     /empresa/<slug> (clauDeRutaDOrganitzacio; `opcions.tenantActiu`).
+ * Mai cap correu: la vista no en porta, i un nom amb forma de correu no s'indexa.
+ */
+export function deOrganitzacio(org, opcions = {}) {
+  const id = org?.id;
+  if (id == null || String(id).trim() === '' || esCorreu(org?.name)) return null;
+  const canonica = clauCanonica('entitat', id);
+  const poble = pobleDEntitat(id, org?.town_name);
+  const descripcio = typeof org?.description === 'string' ? org.description : '';
+  return entrada({
+    tipus: 'entitats',
+    id,
+    titol: org?.name,
+    meta: [poble],
+    extracte: primerText(org?.lema, descripcio),
+    detall: [descripcio, textPla(org?.presentacio_html)].filter(Boolean).join(' · '),
+    cos: [org?.slug, poble],
+    etiquetes: [org?.lema],
+    poble,
+    avatar: { src: org?.logo_url, llavor: id },
+    href: RUTES_CANONIQUES[canonica] || rutaDePerfil('entitat', clauDeRutaDOrganitzacio(org, opcions.tenantActiu)),
+    data: org?.updated_at || org?.created_at,
     canonica
   });
 }
@@ -443,6 +564,8 @@ export function dePoble(poble) {
     extracte: primerText(poble?.post_subtitle, poble?.content),
     detall: poble?.content,
     cos: [poble?.comarca, poble?.population, poble?.author],
+    etiquetes: [poble?.comarca],
+    poble: primerText(poble?.title, poble?.name),
     imatge: { src: primeraImatge(poble?.imageSrc, poble?.image_url, poble?.avatar_url) },
     href: poble?.id == null ? null : getSectionItemPath('pobles', poble.id),
     data: poble?.created_at
@@ -464,6 +587,8 @@ export function dePublicacio(post, opcions = {}) {
     extracte: primerText(post?.summary, post?.post_subtitle, post?.description, post?.content),
     detall: post?.content,
     cos: [post?.post_subtitle, post?.description, autor, post?.town_name, post?.tag],
+    etiquetes: [post?.post_subtitle, post?.tag],
+    poble: post?.town_name,
     imatge: { src: primeraImatge(post?.imageSrc, post?.image_url, post?.image) },
     href: resolveItemPath({ ...post, sectionId: post?.sectionId || 'mur' }),
     data
@@ -479,6 +604,7 @@ export function deActe(acte, opcions = {}) {
     extracte: primerText(acte?.summary, acte?.entradilla, acte?.subtitle, acte?.description),
     detall: acte?.description,
     cos: [acte?.subtitle, acte?.entradilla, acte?.author_name, acte?.author_location],
+    etiquetes: [acte?.subtitle, acte?.entradilla],
     imatge: { src: primeraImatge(acte?.image_url, acte?.imageSrc) },
     href: resolveItemPath({ ...acte, sectionId: acte?.sectionId || 'events' }),
     data: acte?.date || acte?.created_at
@@ -501,6 +627,8 @@ export function deProducte(producte) {
     extracte: primerText(producte?.subtitle, producte?.summary, producte?.description),
     detall: producte?.description,
     cos: [producte?.subtitle, venedor, producte?.tag, producte?.category_slug, producte?.population],
+    etiquetes: [producte?.subtitle, producte?.tag, producte?.category_slug],
+    poble: producte?.population,
     /* Onada 12 (261011; ordres 261011_0130, punt 1) · La miniatura és la foto
        del producte, la mateixa regla de la targeta i del detall
        (imatgesDeProducte: `images` primer, mai l'avatar de qui ven). Abans
@@ -534,6 +662,7 @@ export function deMedia(media, opcions = {}) {
     extracte: primerText(media?.description, media?.subtitle),
     detall: media?.description,
     cos: [media?.subtitle, media?.source, media?.tag],
+    etiquetes: [media?.subtitle, media?.tag],
     imatge: esImatge ? { src: primeraImatge(media?.src, media?.imageSrc) } : null,
     href: resolveItemPath({ ...media, sectionId: media?.sectionId || 'multimedia' }),
     data: media?.created_at,
@@ -556,6 +685,7 @@ export function deNota(nota, opcions = {}) {
     extracte: primerText(textPla(nota?.lead), textPla(nota?.subtitle), cos),
     detall: cos,
     cos: [nota?.subtitle, nota?.lead, ...(Array.isArray(nota?.tags) ? nota.tags : [])],
+    etiquetes: [nota?.subtitle, ...(Array.isArray(nota?.tags) ? nota.tags : [])],
     href: nota?.id == null ? null : `/notes?nota=${encodeURIComponent(String(nota.id))}`,
     data: nota?.updatedAt || nota?.updated_at || nota?.created_at,
     privada: true
@@ -588,6 +718,7 @@ export function dePagina(pagina) {
     extracte: primerText(pagina?.lead, pagina?.subtitle),
     detall: pagina?.html,
     cos: [pagina?.subtitle, pagina?.lead],
+    etiquetes: [pagina?.subtitle],
     imatge: { src: primeraImatge(pagina?.image), alt: '' },
     href: clau == null ? null : (resolvePageSlugPath(clau) || `/page/${encodeURIComponent(String(clau))}`),
     data: pagina?.date
@@ -596,19 +727,63 @@ export function dePagina(pagina) {
 
 /* ── La cerca ───────────────────────────────────────────────────────────── */
 
-function puntua(entradaCerca, llistaFitxes, frase) {
+/* Pla 261022_1955 (Cercador Universal, T2: «Coincidència exacta > Prefix >
+   Títol > Lema/Ofici > Contingut», amb el poble actiu de bonificació) · El
+   graó de cada paraula segons on cau. La frase sencera igual al títol, o al
+   seu començament, hi suma. El poble actiu NO suma punts: és la primera clau
+   de desempat (compara), i així només ordena dins del mateix graó, mai el
+   capgira (Gauntlet, crític de l'índex, confirmat: amb una bonificació fixa,
+   una paraula freqüent, de pes IDF baix, deixava que el poble passara davant
+   d'un graó més alt). */
+const PES = Object.freeze({
+  paraulaDelTitol: 6, prefixDelTitol: 4, dinsDelTitol: 2, prefixDeLEtiqueta: 1.5, dinsDeLEtiqueta: 1, cos: 0.5
+});
+const PES_FRASE_IGUAL = 10;
+const PES_FRASE_PREFIX = 3;
+const paraulesDe = (text) => (text || '').split(/[^a-z0-9]+/).filter(Boolean);
+
+function graoDeLaFitxa(fitxa, { titol, paraules, etiquetes, paraulesEtiqueta }) {
+  if (paraules.includes(fitxa)) return PES.paraulaDelTitol;
+  if (paraules.some((paraula) => paraula.startsWith(fitxa))) return PES.prefixDelTitol;
+  if (titol.includes(fitxa)) return PES.dinsDelTitol;
+  if (paraulesEtiqueta.some((paraula) => paraula.startsWith(fitxa))) return PES.prefixDeLEtiqueta;
+  if (etiquetes.includes(fitxa)) return PES.dinsDeLEtiqueta;
+  return PES.cos;
+}
+
+/**
+ * Els punts d'una entrada que ja casa amb totes les fitxes (AND). Cada fitxa
+ * pesa segons com n'és de rara a l'índex (`pesos`, una IDF a l'estil de BM25
+ * normalitzada entre 0,5 i 1): en «carmen torre», trobar «carmen» al títol
+ * val més que trobar-hi «torre». Amb una sola paraula, o amb paraules
+ * igual de rares, totes pesen 1.
+ */
+function puntua(entradaCerca, llistaFitxes, frase, pesos) {
   const titol = entradaCerca.titolPlegat || '';
-  const paraules = titol.split(/[^a-z0-9]+/).filter(Boolean);
-  let punts = paraules.join(' ') === frase ? 8 : 0;
-  for (const fitxa of llistaFitxes) {
-    if (paraules.some((paraula) => paraula.startsWith(fitxa))) punts += 4;
-    else if (titol.includes(fitxa)) punts += 2;
-    else punts += 1;
-  }
+  const paraules = paraulesDe(titol);
+  const etiquetes = entradaCerca.etiquetesPlegades || '';
+  const camps = { titol, paraules, etiquetes, paraulesEtiqueta: paraulesDe(etiquetes) };
+  const titolNet = paraules.join(' ');
+  let punts = titolNet === frase ? PES_FRASE_IGUAL : frase.includes(' ') && titolNet.startsWith(frase) ? PES_FRASE_PREFIX : 0;
+  for (const fitxa of llistaFitxes) punts += graoDeLaFitxa(fitxa, camps) * (pesos.get(fitxa) ?? 1);
   return punts;
 }
 
+/* La IDF de cada fitxa sobre l'índex sencer (`n` entrades, `presencies` de
+   cada fitxa), escalada a [0,5, 1] respecte a la més rara. */
+function pesosDeLesFitxes(llistaFitxes, presencies, n) {
+  const idf = new Map(llistaFitxes.map((fitxa) => {
+    const amb = presencies.get(fitxa) || 0;
+    return [fitxa, Math.log(1 + (n - amb + 0.5) / (amb + 0.5))];
+  }));
+  const maxim = Math.max(0, ...idf.values());
+  return new Map(llistaFitxes.map((fitxa) => [fitxa, maxim > 0 ? 0.5 + 0.5 * (idf.get(fitxa) / maxim) : 1]));
+}
+
+/* Pla 261022_1955 (T2) · Punts; dins dels mateixos punts, el poble actiu
+   (`delPoble`); després, la data i l'alfabet. */
 const compara = (a, b) => (b.punts - a.punts)
+  || ((b.delPoble || 0) - (a.delPoble || 0))
   || ((b.entrada.data || 0) - (a.entrada.data || 0))
   || a.entrada.titol.localeCompare(b.entrada.titol, 'ca');
 
@@ -618,9 +793,7 @@ const llistaDe = (valor) => (Array.isArray(valor) ? valor : []);
    que li falte de l'altra, i es busca en el text de totes dues. */
 function fusiona(primera, altra) {
   const senseText = !primera.extracte && !primera.detall;
-  const avatar = primera.avatar && !primera.avatar.src && altra.avatar?.src
-    ? { ...primera.avatar, src: altra.avatar.src }
-    : primera.avatar || altra.avatar || null;
+  const avatar = fusionaAvatar(primera.avatar, altra.avatar);
   return {
     ...primera,
     meta: [...new Set([...llistaDe(primera.meta), ...llistaDe(altra.meta)])],
@@ -628,11 +801,33 @@ function fusiona(primera, altra) {
     detall: senseText ? altra.detall || '' : primera.detall,
     imatge: primera.imatge || altra.imatge || null,
     avatar,
-    href: primera.href || altra.href || null,
+    href: hrefDeLaFusio(primera, altra),
     accio: primera.accio || altra.accio || null,
     data: primera.data || altra.data || 0,
+    etiquetesPlegades: [primera.etiquetesPlegades, altra.etiquetesPlegades].filter((valor) => typeof valor === 'string' && valor).join(' '),
+    poblePlegat: primera.poblePlegat || altra.poblePlegat || '',
     text: [primera.text, altra.text].filter((valor) => typeof valor === 'string' && valor).join(' ')
   };
+}
+
+/* Pla 261022_1955 (T3) · La ruta de la primera, llevat que siga la de reserva
+   d'una entitat (/empresa/<id>: la identitat pròpia o el padró) i l'altra, de
+   la mateixa clau, en porte una de neta (el slug o la canònica del directori,
+   deOrganitzacio, que el servidor ja ha verificat). */
+function hrefDeLaFusio(primera, altra) {
+  const deReserva = primera.tipus === 'entitats' && primera.href === rutaDePerfil('entitat', primera.id);
+  const neta = altra.tipus === 'entitats' && altra.href && altra.href !== rutaDePerfil('entitat', altra.id);
+  if (deReserva && neta) return altra.href;
+  return primera.href || altra.href || null;
+}
+
+/* La cara de la primera; si no en té, la foto de l'altra (una URL abans que
+   una referència del port). */
+function fusionaAvatar(primer, altre) {
+  if (!primer) return altre || null;
+  if (primer.src || !altre) return primer;
+  if (altre.src) return { ...primer, src: altre.src };
+  return !primer.ref && altre.ref ? { ...primer, ref: altre.ref } : primer;
 }
 
 /**
@@ -737,17 +932,34 @@ export function ambLaIdentitatPropia(entrades, alies = [], { delProjecte = [] } 
  * també a «tot» si l'article no casa amb la consulta o no és a l'índex. El
  * recompte de cada tipus és el que el seu filtre ensenya; el de «tot», el de
  * la vista «tot».
+ * Pla 261022_1955 (T2) · `pobleActiu` (opcional): el poble de qui busca; una
+ * entrada del mateix poble passa davant de les que tenen els mateixos punts
+ * (compara), mai d'una de més punts.
  */
-export function cercaEntrades(entrades, consulta, tipus = 'tot') {
+export function cercaEntrades(entrades, consulta, tipus = 'tot', { pobleActiu = '' } = {}) {
   const llistaFitxes = fitxes(consulta);
   const perTipus = Object.fromEntries(IDS_TIPUS.map((id) => [id, 0]));
   if (!llistaFitxes.length) return { llista: [], perTipus, total: 0, fitxes: llistaFitxes };
-  const frase = llistaFitxes.join(' ');
+  /* Gauntlet (crític de l'índex, confirmat) · La frase, amb les paraules
+     repetides: «Bora Bora» o «pas a pas» són títols exactes. Les fitxes (AND i
+     IDF) continuen sense repetir. */
+  const frase = plega(consulta).split(/[^a-z0-9]+/).filter(Boolean).join(' ');
   const filtre = tipusValid(tipus);
-  const coincidents = fusionaPerClau(entrades).filter((actual) => {
+  const fusionades = fusionaPerClau(entrades);
+  /* Una sola passada: qui casa amb totes (AND) i, per a la IDF, en quantes
+     entrades de l'índex sencer apareix cada fitxa. */
+  const presencies = new Map();
+  const coincidents = fusionades.filter((actual) => {
     const text = typeof actual.text === 'string' ? actual.text : '';
-    return llistaFitxes.every((fitxa) => text.includes(fitxa));
+    let totes = true;
+    for (const fitxa of llistaFitxes) {
+      if (text.includes(fitxa)) presencies.set(fitxa, (presencies.get(fitxa) || 0) + 1);
+      else totes = false;
+    }
+    return totes;
   });
+  const pesos = pesosDeLesFitxes(llistaFitxes, presencies, fusionades.length);
+  const poble = plega(pobleActiu);
   const clausTrobades = new Set(coincidents.map((actual) => actual.clau));
   const trobades = [];
   for (const actual of coincidents) {
@@ -755,7 +967,11 @@ export function cercaEntrades(entrades, consulta, tipus = 'tot') {
     if (actual.tipus in perTipus) perTipus[actual.tipus] += 1;
     if (!repetida) perTipus.tot += 1;
     if (filtre === 'tot' ? !repetida : actual.tipus === filtre) {
-      trobades.push({ entrada: actual, punts: puntua(actual, llistaFitxes, frase) });
+      trobades.push({
+        entrada: actual,
+        punts: puntua(actual, llistaFitxes, frase, pesos),
+        delPoble: poble && actual.poblePlegat === poble ? 1 : 0
+      });
     }
   }
   trobades.sort(compara);

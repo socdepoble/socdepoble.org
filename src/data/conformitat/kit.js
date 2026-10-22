@@ -379,6 +379,25 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => ['conformitat-sense-perfil', ctx.config],
     comprova: (valor) => (valor === null ? [] : [`havia de ser null: ${JSON.stringify(valor)?.slice(0, 120)}`])
   }),
+  /* Pla 261022_1955 (Cercador Universal, T1) · El directori públic: una
+     llista de files amb id i nom, i mai cap correu (contracte.js). */
+  cas({
+    metode: 'listPublicOrganizations', capacitat: 'directoriEntitats',
+    titol: 'listPublicOrganizations({ limit }, config) → Fila[] amb id i nom, sense correu',
+    arguments: (ctx) => [{ limit: 5 }, ctx.config],
+    comprova: (llista) => {
+      const falles = exigixLlistaAmbId(llista, 'organitzacions');
+      if (falles.length) return falles;
+      if (llista.length > 5) falles.push(`el límit era 5 i en torna ${llista.length}`);
+      for (const fila of llista) {
+        if (!esTextNoBuit(fila.name)) falles.push(`la fila ${fila.id} no té nom`);
+        if (['contact_email', 'public_email', 'email', 'correu'].some((camp) => Object.hasOwn(fila, camp))) {
+          falles.push(`la fila ${fila.id} porta un correu`);
+        }
+      }
+      return falles;
+    }
+  }),
   cas({
     metode: 'listMyAgents', capacitat: 'agents', titol: 'listMyAgents(config) → Agent[]',
     arguments: (ctx) => [ctx.config],

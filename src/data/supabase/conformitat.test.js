@@ -278,6 +278,26 @@ function rutaDePublicacions(url, opcions) {
   return resposta(pagina, { contentRange: ambTotal ? (pagina.length ? `0-${pagina.length - 1}/${files.length}` : '*/0') : null });
 }
 
+/* Pla 261022_1955 (Cercador Universal, T1; Gauntlet, crític de dades) · La
+   vista organization_directory. Una consulta d'una fitxa (slug o id: la de
+   loadPerfilPublic) no troba ningú, com abans. Un llistat (listPublicOrganizations)
+   rep una fila realista amb NOMÉS les columnes demanades; amb select=* també
+   el correu que la taula guarda (contact_email), perquè una regressió a
+   select=* no passe per bona. */
+const FILA_DEL_DIRECTORI = Object.freeze({
+  id: '00000000-0000-4000-8000-0000000000d1', tenant_id: POBLE, slug: 'lafiguera', name: 'La Figuera', kind: 'company',
+  parent_organization_id: null, lema: '', description: 'Natural art', logo_url: '', hero_url: '', presentacio_html: '',
+  copyright: '', town_name: 'La Torre de les Maçanes', created_at: '2026-10-22T17:29:24Z', updated_at: null,
+  contact_email: 'figuera@poble.invalid'
+});
+function rutaDelDirectori(p) {
+  if (p.has('slug') || p.has('id') || p.has('or')) return resposta([]);
+  const select = p.get('select') || '*';
+  if (select === '*') return resposta([FILA_DEL_DIRECTORI]);
+  const columnes = select.split(',').filter((columna) => Object.hasOwn(FILA_DEL_DIRECTORI, columna));
+  return resposta([Object.fromEntries(columnes.map((columna) => [columna, FILA_DEL_DIRECTORI[columna]]))]);
+}
+
 function fetchDelServidor(entrada, opcions = {}) {
   const url = new URL(String(entrada));
   const metode = opcions.method || 'GET';
@@ -310,7 +330,7 @@ function fetchDelServidor(entrada, opcions = {}) {
     '/rest/v1/notes': () => rutaDeNotes(url, metode, cos),
     '/rest/v1/profiles': () => resposta(eq(p.get('id')) === PERSONA ? [{ id: PERSONA, full_name: 'Persona de conformitat', visibility: 'private' }] : []),
     '/rest/v1/rpc/list_my_organizations': () => resposta([]),
-    '/rest/v1/organization_directory': () => resposta([]),
+    '/rest/v1/organization_directory': () => rutaDelDirectori(p),
     '/rest/v1/user_platform_roles': () => resposta([]),
     /* Fase D (261020, tasca 2) · La moderació (2610201500): la persona de
        conformitat no ha bloquejat ningú ni ha acceptat encara les normes. */

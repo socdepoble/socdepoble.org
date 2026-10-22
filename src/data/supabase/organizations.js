@@ -1,6 +1,6 @@
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
-import { errorDeMembre, membreDOrganitzacio } from '../contracte.js';
+import { LIMIT_DIRECTORI_ENTITATS, errorDeMembre, membreDOrganitzacio } from '../contracte.js';
 import { pobleDOrganitzacio } from '../pobleOrganitzacio.js';
 
 /* Lògica d'Usuari · en seed i local les organitzacions on la persona mana són
@@ -145,6 +145,91 @@ function columnaAbsentDelSelect(error) {
   return trobada ? trobada[1] : null;
 }
 const selectOrg = () => COLUMNES_ORG.split(',').filter((columna) => !columnesSelectAbsents.has(columna)).join(',');
+
+/* ═══════════════════════════════════════════════════════════════════
+   Pla 261022_1955 (Cercador Universal, T1) · EL DIRECTORI PÚBLIC
+
+   Capacitat OPCIONAL 'directoriEntitats' (contracte.js): les organitzacions
+   públiques de tots els pobles del node, per a /cerca. En remot, la vista
+   organization_directory (visibility = 'public', sense correu; grant de
+   lectura a anon i authenticated): cap filtre de tenant, perquè una entitat
+   d'un altre poble també es pot trobar i el poble actiu només la pondera. En
+   seed i local, localPerfils. Les columnes van una per una, mai '*': si la
+   vista d'un servidor encara no en té alguna (town_name abans de
+   2610081401), es torna a llegir sense ella i es recorda, com
+   organitzacioDelSlug. La memòria és d'esta vista, no de la taula.
+   ═══════════════════════════════════════════════════════════════════ */
+const COLUMNES_DIRECTORI = Object.freeze(['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema',
+  'description', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at']);
+/* Sense estes no hi ha fila que es puga pintar ni enllaçar: mai es lleven del select. */
+const COLUMNES_DIRECTORI_FIXES = new Set(['id', 'slug', 'name']);
+const columnesDirectoriAbsents = new Set();
+/* Les columnes on el servidor busca una paraula (ilike), totes de la primera vista pública. */
+const CAMPS_DE_CERCA_DIRECTORI = Object.freeze(['name', 'slug', 'lema', 'description']);
+const MAXIM_PARAULES_DIRECTORI = 5;
+const MAXIM_PARAULA_DIRECTORI = 40;
+
+/** El `limit` d'una crida, entre 1 i LIMIT_DIRECTORI_ENTITATS. */
+const limitDelDirectori = (valor) => {
+  const n = Math.trunc(Number(valor));
+  return Number.isFinite(n) && n >= 1 ? Math.min(n, LIMIT_DIRECTORI_ENTITATS) : LIMIT_DIRECTORI_ENTITATS;
+};
+
+/* Les paraules de la consulta, amb només lletres, xifres, l'apòstrof i el
+   guionet: cap coma, parèntesi, punt, cometa ni comodí no arriba a la sintaxi
+   de PostgREST. Una paraula ha d'apareixer en algun camp (or); totes juntes,
+   AND. Gauntlet (crític de dades) · Es tallen per punts de codi, mai per
+   unitats UTF-16 (un parell suplent partit fa caure encodeURIComponent), i
+   cada paraula hi va com un patró tolerant als accents (patroTolerant). */
+function filtreDeCercaDirectori(consulta) {
+  const netes = String(consulta ?? '').normalize('NFC').toLowerCase()
+    .replace(/[^\p{L}\p{N}'\u2019-]+/gu, ' ').split(' ').filter(Boolean)
+    .map((paraula) => patroTolerant(Array.from(paraula).slice(0, MAXIM_PARAULA_DIRECTORI).join('')));
+  const paraules = [...new Set(netes)].filter(Boolean).slice(0, MAXIM_PARAULES_DIRECTORI);
+  if (!paraules.length) return '';
+  const perParaula = paraules.map((paraula) => `or(${CAMPS_DE_CERCA_DIRECTORI.map((camp) => `${camp}.ilike."*${paraula}*"`).join(',')})`);
+  return `&and=${encodeURIComponent(`(${perParaula.join(',')})`)}`;
+}
+
+/* Gauntlet (crític de dades) · ilike no plega accents, i a partir del sostre
+   (LIMIT_DIRECTORI_ENTITATS) una entitat només es troba pel servidor. Cada
+   paraula hi va, doncs, com un patró que és un SUPERCONJUNT de les formes
+   valencianes (qui busca torna a plegar, filtrar i ordenar al client):
+     · sense diacrítics (NFD i fora les marques);
+     · cada vocal, la «c» (ç) i l'apòstrof, el comodí d'un caràcter ('_'):
+       «sèquia», «sequia» i «SEQUIA» són «s_q___»;
+     · «ll» és «l*l», que també casa amb «l·l». */
+function patroTolerant(paraula) {
+  return paraula.normalize('NFD').replace(/\p{M}/gu, '').replace(/[aeiouc'\u2019]/g, '_').replace(/ll/g, 'l*l');
+}
+
+export async function listPublicOrganizations(filtre = {}, config = {}) {
+  const consulta = typeof filtre?.consulta === 'string' ? filtre.consulta.trim() : '';
+  const limit = limitDelDirectori(filtre?.limit);
+  if (esModeLocal(config)) return (await perfilsLocals()).listPublicOrganizations({ consulta, limit });
+  if (!getResolvedConfig(config).hasSupabaseConfig) return [];
+  const signal = filtre?.signal ?? config.signal;
+  const cerca = filtreDeCercaDirectori(consulta);
+  for (;;) {
+    const columnes = COLUMNES_DIRECTORI.filter((columna) => !columnesDirectoriAbsents.has(columna)).join(',');
+    try {
+      const files = await request(`/rest/v1/organization_directory?select=${columnes}${cerca}&order=name.asc,id.asc&limit=${limit}`,
+        config, { signal });
+      return Array.isArray(files) ? files : [];
+    } catch (error) {
+      const columna = columnaAbsentDelSelect(error);
+      const nomesDelSelect = columna && COLUMNES_DIRECTORI.includes(columna) && !COLUMNES_DIRECTORI_FIXES.has(columna)
+        && !CAMPS_DE_CERCA_DIRECTORI.includes(columna) && !columnesDirectoriAbsents.has(columna);
+      if (!nomesDelSelect) throw error;
+      columnesDirectoriAbsents.add(columna);
+    }
+  }
+}
+
+/* Per a les proves: la memòria de columnes és del mòdul i duraria d'una prova a l'altra. */
+export function reiniciaMemoriaDirectori() {
+  columnesDirectoriAbsents.clear();
+}
 
 export async function updateOrganization(id, updates, config = {}) {
   const payload = {};

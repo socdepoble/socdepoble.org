@@ -29,6 +29,8 @@ import {
 import { Link, useSearchParams } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
+import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { TIPUS_CERCA, extracteDeResultat, partsRessaltades, tipusValid } from './indexCerca.js';
 import { propsDeTargetaDeResultat, teVistaDeTargetes, vistaValida } from './targetaDeResultat.js';
 import { useCercaGlobal } from './useCercaGlobal.js';
@@ -45,6 +47,17 @@ function Ressaltat({ parts }) {
   return parts.map((part, i) => (
     part.marca ? <mark key={i}>{part.text}</mark> : <Fragment key={i}>{part.text}</Fragment>
   ));
+}
+
+/* Pla 261022_1955 (Cercador Universal, T2: «el seu logo») · Una entrada que
+   només porta la referència del bucket públic de la seua foto (un logo pujat,
+   indexCerca.js · avatarDeLEntrada) la demana al port, com AvatarResolt.
+   Mentre es resol, o sense la capacitat 'mitjans', les inicials: mai la
+   referència crua en un <img>. */
+function ResultatAmbCara({ avatar, ...props }) {
+  const url = useResolvedAsset(avatar && !avatar.src && avatar.ref ? avatar.ref : '');
+  const cara = avatar && !avatar.src && url && !esMitjaOpac(url) ? { ...avatar, src: url } : avatar;
+  return <ResultatCerca {...props} avatar={cara} />;
 }
 
 export default function SearchSection() {
@@ -217,7 +230,7 @@ export default function SearchSection() {
   const pintaResultat = (e) => {
     const { titol, extracte } = ressaltats.get(e.clau);
     return (
-      <ResultatCerca
+      <ResultatAmbCara
         titol={<Ressaltat parts={titol} />}
         href={e.href}
         meta={metaDe(e)}

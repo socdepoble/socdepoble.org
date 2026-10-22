@@ -301,7 +301,7 @@ test.each(VISTES)('Mur carregant, amb error i recarregat en iniciar sessió · %
   const { rerender } = pinta(consultaDe(vista));
   await espera();
   comprovaSenseErrors(`${context} · carregant`, { ambCalendari: false });
-  expect(screen.getByText('Carregant contingut del poble...')).toBeTruthy();
+  expect(screen.getByText('Carregant contingut...')).toBeTruthy();
 
   posaDades(LLAVOR);
   rerender(arbre(consultaDe(vista)));

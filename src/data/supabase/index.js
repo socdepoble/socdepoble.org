@@ -46,5 +46,8 @@ export { llistaElsMeusMitjans, esborraElMeuMitja } from './storage.js';
 export {
   denunciaContingut, llistaBloquejos, bloquejaAutor, desbloquejaAutor, estatNormes, acceptaNormes
 } from './moderacio.js';
+/* Pla 261022_1955 (Cercador Universal, T1) · Capacitat 'directoriEntitats', el
+   directori públic de /cerca. Explícita pel mateix motiu. */
+export { listPublicOrganizations } from './organizations.js';
 
 

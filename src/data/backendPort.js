@@ -170,6 +170,10 @@ export const esborraNota = asseguraMetode('esborraNota');
    administrats (capacitat 'agents'). Cap és nucli: la interfície pregunta
    abans amb teCapacitat. */
 export const loadPerfilPublic = asseguraMetode('loadPerfilPublic');
+/* Pla 261022_1955 (T1) · El directori públic de les organitzacions (capacitat
+   'directoriEntitats'). No és nucli: /cerca pregunta abans amb teCapacitat i,
+   sense ella, no el demana. */
+export const listPublicOrganizations = asseguraMetode('listPublicOrganizations');
 export const listMyAgents = asseguraMetode('listMyAgents');
 export const updateAgent = asseguraMetode('updateAgent');
 

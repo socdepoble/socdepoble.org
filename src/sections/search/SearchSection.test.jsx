@@ -258,11 +258,15 @@ test('canviar de filtre fa push (replace false); escriure fa replace després d�
   await waitFor(() => expect(mocks.setParams).toHaveBeenCalledWith({ q: 'benifallim' }, { replace: true }));
 });
 
-test('si el padró rebutja amb SDP-XAT-003 es pinta una Alerta i la resta de resultats continua', async () => {
-  mocks.xat.cercaMembres = vi.fn(async () => { throw new Error("SDP-XAT-003: no eres membre d'aquest poble"); });
+/* Pla 261022_1955 (T3) · Expectativa actualitzada a propòsit: el rebuig del
+   foraster (SDP-XAT-003, amb el seu `code`) ja no és cap fallada de la cerca i
+   no pinta cap avís (SearchSection.cercador.test.jsx). Una fallada de veres
+   del padró (la xarxa) continua avisant-se, amb el seu reintent. */
+test('si el padró falla de veres (la xarxa) es pinta una Alerta i la resta de resultats continua', async () => {
+  mocks.xat.cercaMembres = vi.fn(async () => { throw Object.assign(new Error('Error de xarxa en carregar el padró'), { code: 'XARXA', retriable: true }); });
   mocks.url = '?q=javi';
   await pinta();
-  await waitFor(() => expect(screen.getByText("SDP-XAT-003: no eres membre d'aquest poble")).toBeTruthy());
+  await waitFor(() => expect(screen.getByText('Error de xarxa en carregar el padró')).toBeTruthy());
   expect(screen.getByText("No s'ha pogut buscar en el padró del poble")).toBeTruthy();
   expect(screen.getByRole('link', { name: 'Mestre Javi' })).toBeTruthy();
   /* 261019 · La pròpia es veu (sense 'directori' no enllaça: revisió adversarial). */

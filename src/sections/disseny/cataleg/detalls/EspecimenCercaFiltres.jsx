@@ -106,10 +106,13 @@ export default function EspecimenCercaFiltres() {
         Revisa com ho has escrit o prova amb menys paraules: només ixen els resultats que les contenen totes.
       </EstatBuit>
 
+      {/* Pla 261022_1955 (Cercador Universal, T3) · El padró tancat d'un foraster
+          (SDP-XAT-003) ja no és cap fallada i no pinta cap avís: la mostra és ara
+          una font que no ha respost a temps, que sí que s'avisa. */}
       <h4>Una font ha fallat</h4>
-      <Alerta to="avis" titol="No s’ha pogut buscar en el padró del poble"
+      <Alerta to="avis" titol="No s’ha pogut buscar en el directori d’entitats"
         accions={<Boto varietat="secundari">Torna-ho a provar</Boto>}>
-        SDP-XAT-003: no eres membre d’aquest poble.
+        No ha respost a temps. La resta de resultats continua ací.
       </Alerta>
 
       <h4>Paginació simplificada (anterior / següent)</h4>

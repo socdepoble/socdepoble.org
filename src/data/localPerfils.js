@@ -76,6 +76,18 @@ const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio
 /* Grup C (261008) · `town_name`: el poble de l'organització (2610081401). */
 const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright', 'town_name'];
 const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
+/* Pla 261022_1955 (T1) · Les columnes d'organization_directory (2610081401), en
+   el seu ordre: el directori local torna la mateixa fila que el servidor. Una
+   columna que la fitxa no porta ix null, com al servidor. */
+const COLUMNES_DIRECTORI_LOCAL = ['id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
+  'created_at', 'updated_at', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
+/* Gauntlet (crític de dades) · El filtre local pot plegar de veres (el
+   servidor fa un superconjunt tolerant): minúscules, sense diacrítics ni
+   punt volat, i les lligadures descompostes (NFKD). */
+const plegaDelDirectori = (valor) => String(valor ?? '').normalize('NFKD').replace(/\p{M}/gu, '')
+  .replace(/[\u00b7\u2027\u2219]/g, '').toLowerCase();
+const COLUMNES_DIRECTORI_BUIDES = Object.freeze(Object.fromEntries(['id', 'tenant_id', ...COLUMNES_DIRECTORI_LOCAL.slice(1)]
+  .map((columna) => [columna, null])));
 
 function nomDeSessio(usuari) {
   const meta = usuari?.user_metadata || {};
@@ -301,6 +313,28 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       if (!org) throw new Error("No s'ha pogut actualitzar l'organització.");
       actualitza(org, updates, CAMPS_ORG, moment());
       return { ...org };
+    },
+
+    /**
+     * Pla 261022_1955 (Cercador Universal, T1) · El directori públic, amb la
+     * forma de les files d'organization_directory: només visibility 'public',
+     * sense visibility, membres ni àlies, i tenant_id null (en local només hi
+     * ha un poble). Per nom i id. Amb `consulta`, les que porten totes les
+     * paraules al nom, al slug, al lema o a la descripció, com el filtre del
+     * servidor (sense plegar accents). Sense sessió també: és públic.
+     */
+    listPublicOrganizations({ consulta = '', limit } = {}) {
+      const paraules = plegaDelDirectori(consulta).split(/[^\p{L}\p{N}'\u2019-]+/u).filter(Boolean);
+      const conte = (org) => {
+        const camps = [org.name, org.slug, org.lema, org.description].map(plegaDelDirectori);
+        return paraules.every((paraula) => camps.some((camp) => camp.includes(paraula)));
+      };
+      const sostre = Number.isFinite(limit) && limit >= 1 ? Math.trunc(limit) : Infinity;
+      return [...estat.organitzacions.values()]
+        .filter((org) => org.visibility === 'public' && conte(org))
+        .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ca') || String(a.id).localeCompare(String(b.id)))
+        .slice(0, sostre)
+        .map((org) => ({ ...COLUMNES_DIRECTORI_BUIDES, ...copiaCamps(org, COLUMNES_DIRECTORI_LOCAL), tenant_id: null }));
     },
 
     listMyAgents(usuari) {

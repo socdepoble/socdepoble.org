@@ -1,0 +1,63 @@
+{
+  "hosting": {
+    "site": "soc-de-poble",
+    "public": "dist",
+    "ignore": [
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": false,
+    "rewrites": [
+      {
+        "source": "!/@(assets|fonts)/**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: https: wss: ws://localhost:* http://localhost:*; img-src 'self' data: blob: https:; font-src 'self' https: data:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self' https://*.socdepoble.org https://socdepoble.org https://*.sollutia.cat https://sollutia.cat https://*.sollutia.com http://localhost:*;"
+          }
+        ]
+      },
+      {
+        "source": "!/@(assets|fonts)/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Access-Control-Expose-Headers",
+            "value": "Content-Range, ETag"
+          },
+          {
+            "key": "Access-Control-Allow-Headers",
+            "value": "Range"
+          }
+        ]
+      },
+      {
+        "regex": "^/assets/[^/]+-[A-Za-z0-9_-]{8}\\.(js|mjs|css|woff2?)$",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
+    ]
+  }
+}

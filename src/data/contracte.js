@@ -190,6 +190,33 @@ export const CAPACITATS = Object.freeze({
   directori: Object.freeze([
     'loadPerfilPublic'
   ]),
+  /* Pla 261022_1955 (Cercador Universal, T1) · El directori públic de les
+     organitzacions: el que /cerca indexa perquè tota empresa, entitat o grup
+     públic es trobe, amb sessió o sense. Capacitat a banda a posta, i no dins
+     de 'directori': el control de capacitat parcial (backendPort.js) tombaria
+     'directori' sencer en un amfitrió que ja el té i no sap llistar, i la
+     fitxa pública deixaria d'obrir-se. Opcional: sense ella, /cerca només
+     troba les organitzacions que ja porten les altres fonts. La interfície ho
+     pregunta amb teCapacitat('directoriEntitats'). Forma (config sempre l'últim):
+       listPublicOrganizations({ consulta?, limit?, signal? }, config) → Promise<Fila[]>
+         Les organitzacions amb visibility 'public' de TOTS els pobles del node
+         (el poble actiu el pondera qui busca, no el filtra), per nom i id.
+         Sense consulta, les primeres `limit` (≤ LIMIT_DIRECTORI_ENTITATS, per
+         defecte eixe); amb consulta, les que porten totes les seues paraules
+         (com a molt cinc) al nom, al slug, al lema o a la descripció. Pot
+         tornar-ne de més (un patró tolerant als accents, mai de menys): qui
+         busca torna a plegar i filtrar. Sense servidor, [].
+       Fila: la de la vista organization_directory, i mai cap correu:
+         { id, tenant_id, slug, name, kind ('company' | 'entity' | 'group'),
+         parent_organization_id, lema, description, logo_url (URL, ruta
+         pròpia o referència opaca 'sdp-media://…'), hero_url,
+         presentacio_html, copyright, town_name (o null), created_at, updated_at }.
+     Els errors porten l'estat HTTP (`status`) quan n'hi ha; un tall o una
+     cancel·lació, el seu nom (AbortError, TimeoutError). Cap codi més: qui
+     busca no decidix res pel tipus d'error del directori. */
+  directoriEntitats: Object.freeze([
+    'listPublicOrganizations'
+  ]),
   /* Agents IA que la persona administra (la IAIA): fitxa editable des del
      Workspace amb el mateix Editor Universal. Opcional: un node sense agents
      continua sent vàlid i el Perfil no pinta el grup. */
@@ -388,6 +415,11 @@ export const CAPACITATS = Object.freeze({
     'acceptaNormes'
   ])
 });
+
+/* Pla 261022_1955 (T1) · El sostre de listPublicOrganizations: una sola font per
+   als adaptadors i per a qui busca (si torna el sostre, pregunta al servidor
+   per la consulta, com el padró amb LIMIT_PADRO). */
+export const LIMIT_DIRECTORI_ENTITATS = 500;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

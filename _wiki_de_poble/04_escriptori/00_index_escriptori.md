@@ -34,6 +34,14 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261022_2220_auditoria_claude]]
+- [[261022_2210_auditoria_gemini]]
+- [[261022_1955_prompt_claude_gemini_cercador_universal]]
+- [[261022_1955_pla_implementacio_cercador_universal]]
+- [[261022_1725_auditoria_claude]]
+- [[261022_1700_auditoria_gemini]]
+- [[261022_1645_prompt_claude_gemini_transicio_webp_i_salvavides]]
+- [[261022_1645_pla_implementacio_transicio_webp_i_salvavides]]
 - [[261022_1556_auditoria_gemini]]
 - [[261022_1500_auditoria_claude]]
 - [[261022_1425_prompt_claude_gemini_emojis_grans_i_paritat_whatsapp]]
@@ -983,3 +991,6 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261021_1600_acta_marmota_relleu_salfumant_builds_i_preparacio_autonoma]]
 - [[../10_actes/261022_0010_acta_marmota_relleu_nocturn_direccio_autonoma_i_rea]]
 - [[../10_actes/261022_1450_acta_marmota]]
+- [[../10_actes/261022_1900_acta_marmota_transicio_webp_sanejament_supabase_i_relleu]]
+- [[../10_actes/261022_2215_acta_marmota_cercador_universal_desbloqueig_supabase_i_relleu]]
+- [[../10_actes/261022_2330_acta_marmota_consens_cercador_i_preparacio_botigues]]

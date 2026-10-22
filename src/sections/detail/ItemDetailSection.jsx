@@ -128,7 +128,7 @@ function DetallDElement() {
     image: pagina ? pagina.heroImage : null
   });
 
-  if (esperant) return <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />;
+  if (esperant) return <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />;
 
   if (bloquejat) {
     return (

@@ -11,6 +11,7 @@ dist
 .wiki-safety/
 _build/
 .snapshots/
+.firebase/
 .env
 .env.*
 !.env.example

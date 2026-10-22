@@ -15,7 +15,11 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenPage.jsx, 2026-10-22T03:46:55+02:00, Gauntlet 261022_0225 (Tasca 2,
+ * Darrera posada al dia: EspecimenCercaFiltres.jsx, 2026-10-22T22:48:40+02:00, pla 261022_1955
+ * (Cercador Universal, T3): la mostra «Una font ha fallat» és ara una font que no ha respost a
+ * temps (el directori d'entitats), perquè el padró tancat d'un foraster (SDP-XAT-003) ja no pinta
+ * cap avís. Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenPage.jsx, 2026-10-22T03:46:55+02:00, Gauntlet 261022_0225 (Tasca 2,
  * PERF-2): el text de l'avatarAutor, la regla «fes», el bloc del títol i la primera mostra ja no
  * ensenyen l'avatar de 300px a la fitxa d'una persona, pública o en lectura (la seua cara viu a la
  * barra taronja). Abans, 2026-10-22T02:45:11+02:00, EspecimenXat.jsx: la mostra nova dels adjunts
@@ -186,4 +190,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-22T03:46:55+02:00';
+export const VERSIO_CATALEG = '2026-10-22T22:48:40+02:00';

@@ -155,7 +155,7 @@ export default function MurSection() {
   const config = {
     title: t('section.mur.kicker', 'Mur'),
     subtitle: t('section.mur.title', 'Publicacions recents'),
-    lead: t('section.mur.subtitle', 'Llig el mur públic amb les darreres publicacions del poble.'),
+    lead: t('section.mur.subtitle', 'Explora el mur públic a través de les diferents vistes: llista, calendari i mapa.'),
     chrome: "system",
     showLogos: true
   };
@@ -184,7 +184,7 @@ export default function MurSection() {
         <UniversalPage objecte={paginaMur}>
           <div className="content-wrapper">
             {estatMur === 'loading'
-              ? <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
+              ? <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />
               : <EstatErrorDades titol={t('section.mur.error', "No s'ha pogut carregar el Mur")} error={errorMur} onReintenta={recarregaMur} />}
           </div>
         </UniversalPage>

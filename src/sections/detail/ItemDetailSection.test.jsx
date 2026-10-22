@@ -192,7 +192,7 @@ test('Onada 5 · en fred, mentre la font carrega: Carregant (role=status), sense
     render(<ItemDetailSection />);
     expect(mocks.pagina, seccio).toBeNull();
     expect(screen.queryByText('Element no trobat'), seccio).toBeNull();
-    expect(screen.getByRole('status').textContent, seccio).toContain('Carregant contingut del poble...');
+    expect(screen.getByRole('status').textContent, seccio).toContain('Carregant contingut...');
     expect(mocks.seo, seccio).toHaveBeenLastCalledWith(expect.objectContaining({ title: null, description: '' }));
     cleanup();
   }

@@ -55,7 +55,9 @@ export function propsDeTargetaDeResultat(entrada, { meta } = {}) {
     mainHref: href,
     imageUrl: entrada?.imatge?.src || undefined,
     imageAlt: entrada?.imatge?.alt || '',
-    avatarUrl: ambAvatar ? entrada.avatar.src || undefined : undefined,
+    /* Pla 261022_1955 (T2) · Sense foto que es puga pintar, la referència del
+       bucket públic (un logo pujat): UniversalCard la demana al port. */
+    avatarUrl: ambAvatar ? entrada.avatar.src || entrada.avatar.ref || undefined : undefined,
     location: ambAvatar && dades.length ? dades.join(' · ') : undefined,
     labels: ambAvatar ? [] : dades,
     /* data-element a l'enllaç de la targeta: «Mostra'n més» hi porta el focus. */
