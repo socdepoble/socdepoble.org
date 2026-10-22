@@ -31,7 +31,7 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 | Propietari | MarIA |
 | Aprovació humana | aprovat pel Mestre Javi Llinares |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v3.8.0) |
-| Model IA | Claude 3.7 Sonnet / Gemini 4 Argon High / GPT Codex / MarIA |
+| Model IA | Claude Opus 3.7 / UltraCode (multi-agent) / Gemini 4 Argon High / GPT Codex / MarIA |
 | Tokens consumits | [procediment en curs] |
 
 <!-- SDP:SECTION prompt.local.s2 -->
@@ -71,7 +71,7 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 <!-- SDP:SECTION prompt.local.s_instruccio -->
 ## Instrucció del torn
 
-Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i IAIA Viva** per a tota la Colmena (Claude 3.7 Sonnet, Gemini 4 Argon High i GPT Codex), sota la **Direcció Autònoma Total de la IAIA MarIA**:
+Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i IAIA Viva** per a tota la Colmena (**Claude Opus 3.7 / UltraCode multi-agent**, Gemini 4 Argon High i GPT Codex), sota la **Direcció Autònoma Total de la IAIA MarIA**:
 
 1. **Visió Suprema — Sistema Immortal i Suport a Sollutia:**
    El Mestre ha marcat l'objectiu estratègic definitiu: Sóc de Poble s'enfila directament cap a les botigues d'aplicacions d'Apple (App Store), Google (Play Store) i el repositori de WordPress.
@@ -80,12 +80,17 @@ Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i I
 
 2. **Direcció Autònoma de la Colmena (El Mestre descansa):**
    - El Mestre delega la coordinació tècnica directament en la **IAIA MarIA**. Queda terminantment prohibit aturar-se a demanar confirmacions humanes o botons.
-   - Claude, atesa la teua capacitat de llançar subagents i profunditat analítica, pots examinar i contrastar les conclusions emeses prèviament per Gemini (`261022_0142_auditoria_gemini.md`) i per Codex (`261022_0141_auditoria_codex.md`). Si disposes de tokens i temps de context, executa i audita directament el codi al màxim nivell. Jugueu totes les IAs al màxim rendiment.
+   - **Claude Opus 3.7 / UltraCode:** Atesa la teua capacitat superior de llançar múltiples subagents i la profunditat analítica, pots examinar i contrastar les conclusions emeses prèviament per Gemini (`261022_0142_auditoria_gemini.md`) i per Codex (`261022_0141_auditoria_codex.md`). Si disposes de tokens i context, llança els teus agents per auditar i polir directament el codi al màxim nivell. Jugueu totes les IAs al màxim rendiment.
 
-3. **Mandat REA (Reverse Engineer Anything) i Patrons de Referència:**
+3. **Mandat REA (Reverse Engineer Anything) i Material Canònic Disponible:**
    - **Obsidian:** Disponible a la màquina local a `/Applications/Obsidian.app`. Extreu la seua filosofia de gestió documental descentralitzada (local-first, markdown pur, lliure de dependències de núvol).
-   - **WhatsApp:** Deconstrucció implacable del patró visual i funcional de WhatsApp per portar multimèdia real al nostre xat (àudios, imatges, vídeos curts de 10s i gestió de quota rural).
-   - **Loyverse TPV i Bring!:** Aplicacions de referència del Mestre a l'iPad. S'inicia la investigació REA de la seua estructura de dades, categories, tiquets i llistes compartides per a la integració al Rebost i al TPV de Pedra Seca.
+   - **WhatsApp:** Deconstrucció implacable del patró visual i funcional de WhatsApp per portar multimèdia real al nostre xat (àudios, imatges, vídeos curts de 10s i gestió de quota rural). Material de referència guardat a `_arxiu_wiki_de_poble/01_Produccio/WhatsApp-Clon-01` i `WhatsApp-Clon-02`.
+   - **Loyverse TPV i Bring! (Captures Reals de l'iPad del Mestre):**
+     * Les captures reals de pantalla de l'iPad fetes pel Mestre estan preservades a:
+       - `_arxiu_wiki_de_poble/01_Produccio/loyverse_clon/` (27 captures de Loyverse en taulell/iPad).
+       - `_arxiu_wiki_de_poble/01_Produccio/loyverse_clon_mobil/` (36 captures de Loyverse en mòbil).
+       - `_arxiu_wiki_de_poble/01_Produccio/bring_clon/` (12 captures completes de Bring! Shopping List).
+     * Connecteu aquest material visual amb l'aplicació web oficial de Bring! (`https://web.getbring.com/app`) i l'API oberta de Loyverse (`https://developer.loyverse.com/docs/`).
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
@@ -106,7 +111,7 @@ Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i I
 
 ### Tasca 3: Deconstrucció REA de WhatsApp i Multimèdia Operativa al Xat
 - **Notes de Veu (Àudios):** Implementar la infraestructura per a enregistrar àudio des del navegador (MediaRecorder API) i enviar notes de veu al xat amb reproductor estilitzat segons Pedra Seca.
-- **Imatges i Fotos:** Enviament d'imatges amb compressió local prèvia i previsualització inline al fil de conversa.
+- **Imatges i Fotos:** Enviament d'imatges amb compressió local prèvia i previsualització inline al fil de conversa (contrastar amb `_arxiu_wiki_de_poble/01_Produccio/WhatsApp-Clon-01` i `02`).
 - **Clips de Vídeo Curts:** Suport per a càrrega de clips de vídeo breus d'un màxim de 10 segons.
 - **Quota Rural de Trellat (Límit de 20 MB):**
   - Implementar un comptador de consum d'emmagatzematge per usuari amb un topall màxim de 20 MB.
@@ -119,7 +124,9 @@ Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i I
 - **Salutació amb Caràcter:**
   > *«Ara no estic pa tonteries, però sí que puc contestar-te preguntes tècniques i explicar-te com funciona qualsevol racó del poble.»*
 
-### Tasca 5: Deconstrucció REA de Loyverse TPV i Bring! Shopping List
+### Tasca 5: Deconstrucció REA de Loyverse TPV i Bring! amb les Captures Reals
+- **Material de l'iPad del Mestre:**
+  - Inspeccionar les captures a `_arxiu_wiki_de_poble/01_Produccio/loyverse_clon/` (interfície TPV taulell), `_arxiu_wiki_de_poble/01_Produccio/loyverse_clon_mobil/` i `_arxiu_wiki_de_poble/01_Produccio/bring_clon/`.
 - **Mapeig Arquitectònic:** Analitzar la jerarquia de dades i interaccions de Loyverse (venda ràpida de taulell, tiquets, categories de bar) i de Bring! (agrupació per passadissos, estat pendent/al carro, col·laboració síncrona).
 - **Mètode d'Enginyeria Inversa:**
   - Utilitzar les eines REA web sobre `https://web.getbring.com/app` i l'API pública de Loyverse (`https://developer.loyverse.com/docs/`).
@@ -127,7 +134,7 @@ Convocatòria oficial del **Gauntlet Loop Extrem, Sistema Resilient Immortal i I
 
 ### Tasca 6: Verificació de Paritat, Empaquetat WP i Auditoria Creuada
 - **Pes del Connector:** Assegurar que el paquet ZIP del connector WordPress es manté estrictament per davall dels 2,5 MB (actualment a 2,15 MB gràcies a l'exclusió de brossa).
-- **Emissió d'Informes a l'Escriptori:** Cada agent (Codex, Gemini, Claude) ha d'emetre el seu informe a `_wiki_de_poble/04_escriptori/` seguint la taxonomia canònica (`AAMMDD_HHMM_auditoria_[nom_ia].md`), contrastant les troballes de les companyes de la Colmena.
+- **Emissió d'Informes a l'Escriptori:** Cada agent (Codex, Gemini, Claude Opus UltraCode) ha d'emetre el seu informe a `_wiki_de_poble/04_escriptori/` seguint la taxonomia canònica (`AAMMDD_HHMM_auditoria_[nom_ia].md`), contrastant les troballes de les companyes de la Colmena.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
