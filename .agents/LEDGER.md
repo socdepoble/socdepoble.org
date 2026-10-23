@@ -1008,4 +1008,9 @@ Les imatges del perfil (capçalera i avatar) es desen en mode de proves com a da
 Informe `261023_2328_auditoria_codex`, encàrrec del prompt i pla aprovats 2026-10-23 22:45. NO-GO públic: controls incomplets, retenció d'UGC personal després de baixa, purga Storage sense consumidor, revocació Apple absent, CSP Firebase de mitjans, filtratge previ UGC pendent i AAB actual sense signar; referència documental a migració inexistent. Verificació, proves, fonts i límits a l'informe; diàleg amb Claude/Gemini incorporat. Sense canvis de producte, SQL, credencials ni desplegaments. ESTAT i àncora actualitzats; cap cron creat. El checksum del LEDGER ja falla en HEAD abans d'esta entrada: es preserva el segell anterior i no es certifica ni resegella silenciosament el cos preexistent. Tancament global amb deute Wiki/SCC preexistent; no es declara sessió segellada.
 
 
+## 2026-10-24T01:36:48+02:00 · Codex · Addenda adversarial DSA/P3 · torn_0b08c39b-2bf0-4275-be82-0ed0c59efc56
+
+Encàrrec directe del prompt261024_0130. Addenda a261023_2328_auditoria_codex, pla vinculat i Llibre Mestre actualitzat amb deutes i transcripció correcta de D-2. P3 no aplicat viu:215/215 en còpia temporal, ESLint0;54/54 fluxos i41/41 botigues. No aprovat per publicar sense completar contacte, proporcionalitat i execució de compromisos; AAB/iOS presents sense signar. CSP local corregida però capçalera viva pendent. Sense codi, SQL, signatures, credencials, desplegaments ni correus; cap cron creat. Checksum previ del LEDGER vàlid=False; es preserva el cos i el segell anterior sense resegellar deute alié. Resultats i tancament global a l’addenda.
+
+
 <!-- HASH: c1042d8d5bcb510c40328e20428c7ba2d68c8fc9a266bba4ebdaef8d921a57e7 -->

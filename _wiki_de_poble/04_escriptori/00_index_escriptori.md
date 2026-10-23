@@ -34,6 +34,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261024_0130_pla_implementacio_auditoria_adversarial_claude_i_dsa]]
+- [[261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa]]
 - [[261023_2331_auditoria_gemini]]
 - [[261023_2330_auditoria_claude]]
 - [[261023_2328_auditoria_codex]]

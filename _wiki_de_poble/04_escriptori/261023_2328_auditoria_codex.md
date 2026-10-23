@@ -1,7 +1,7 @@
 ---
 type: informe
 status: esborrany
-description: Auditoria Codex del client web i natiu, controls incomplets, esborrat de compte i fronteres de seguretat abans de botigues
+description: Auditoria Codex de botigues i addenda adversarial de Claude, DSA i P3, amb proves i contrast de codi i artefactes
 tags:
   - auditoria
 visibility: private
@@ -11,16 +11,18 @@ reflex: sdp:torn_94df0b65-86cb-4a5d-8647-3e6e7e15dfe3:28d3447f-8a74-4570-9734-86
 
 Esta guia és consultiva i de només lectura. Els resultats els calcula el codi vigent; la guia no pot substituir els scripts ni declarar salut si una comprovació falla.
 
+**Actualització vigent:** vegeu l’addenda del 2026-10-24, davall de les troballes inicials, per al contrast de Claude §9–§10, P3 i les pistes internes. El primer bloc conserva el tall del 2026-10-23.
+
 <!-- SDP:SECTION auditoria.s1 -->
 ## Registre
 
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_94df0b65-86cb-4a5d-8647-3e6e7e15dfe3:28d3447f-8a74-4570-9734-86a4ae906997 |
-| Versió del document | 1.0.0 |
+| Versió del document | 1.1.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-10-23T21:28:53.319Z |
-| Modificació | 2026-10-23T21:42:01+00:00 |
+| Modificació | 2026-10-23T23:40:58+00:00 |
 | Propietari | Codex |
 | Aprovació humana | Encàrrec explícit del Mestre: executar el rol Codex del prompt canònic 2026-10-23 22:45 |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
@@ -178,6 +180,153 @@ El prevol i la identitat byte a byte d'`index.html` són verificacions útils, p
 
 Propostes per a MarIA sobre la plantilla: fixar un únic SHA complet auditable en lloc de tres commits diferents al context; separar compilació, signatura, prova remota i publicació; incloure criteris de purga/Apple revoke/moderació; i registrar el hash de la candidata a cada prova. L'ordre «qualsevol document de l'Escriptori» necessita definir primer nivell i exclusions de producció/laboratori/arxiu, perquè l'índex conté molta memòria antiga. Són propostes; no s'ha modificat la plantilla.
 
+### Addenda 2026-10-24 · Auditoria adversarial de Claude §9–§10 i del pegat P3
+
+**Dictamen actual:** P3 és un esborrany útil, però **no l'aprovaria per a publicar en l'estat revisat**. La prova de regressió passa; falta completar el contacte, la política d'expulsió i l'execució real dels compromisos. **Els binaris presents tampoc estan llestos per a pujar a pistes internes: continuen sense signar.** Una prova interna preparada després de signar i configurar el compte és una fase diferent de publicar l'app oberta.
+
+D-1 (`org.socdepoble.app`) i D-2 (equip Individual `9KNUA4JR8P`) són decisions humanes vigents i **no es tornen a demanar**. Decidir l'equip no signa automàticament el binari ni determina la condició de comerciant o l'aplicabilitat de la DSA.
+
+**Traçabilitat.** Encàrrec `261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa`; pla vinculat al torn `torn_0b08c39b-2bf0-4275-be82-0ed0c59efc56`. `document.mjs context --route auditoria` ha entregat la plantilla viva v2.0.0 i el rebut `fc924209-00ba-4e4d-8e0c-d92c37144ffe`; l'original d'este informe conserva el seu rebut i la seua data. Tall de Git `b8fbb881a`, amb canvis documentals concurrents ja presents. Esta addenda és l'actualització del rol Codex, no una nova ordre d'implementació.
+
+Fonts físiques principals, llegides íntegrament o per trams consecutius fins a completar-les:
+
+- Informe Claude, 327 línies, SHA-256 `1659a2cf1a51db71f97b679b31b6cfc9fdbe6d14229fee6b0f98d9d6e65eb603`, amb §9 i §10.
+- P3 `PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch`, SHA-256 `b5b539946a8365af38dc8bf814221bf8865a301a60e4d5a5cdf1daa6b9c7a939`.
+- Informe Gemini, SHA-256 `b39870e0a907ae5c6a01d9ffe0b7d747318a82f9e65056c7150d3b64ea32ab8d`, pla i prompt del trio, pla i prompt actuals, Llibre Mestre i Acta Marmota de les 00:35. De l'índex s'han rellegit els canvis respecte de la lectura íntegra anterior; no s'han recorregut automàticament els seus arxius històrics.
+
+#### A. Contrast de §9: confirmacions i afirmacions que cal delimitar
+
+| Afirmació | Resultat de la revisió |
+|---|---|
+| Declaració Apple de comerciant i TestFlight | Confirmat el tractament diferent de TestFlight. Apple demana declarar l'estat quan es tramet una app nova, també fora de la UE; Apple no decidix si la persona és comerciant. L'accés al tràmit no és exclusiu del titular: **Account Holder o Admin**. |
+| Contacte públic d'un comerciant Individual | Confirmats adreça, telèfon i correu, amb alternativa postal documentada. Açò no obliga a publicar el domicili particular si hi ha una alternativa admesa i acreditada. |
+
+Font comuna: [Apple, requisits de comerciant DSA](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/). Les subvencions, la feina professional i els plans de monetització són indicis a valorar; no convertisc cap d'ells en una classificació jurídica automàtica del Mestre.
+
+| Afirmació | Resultat de la revisió |
+|---|---|
+| «Google Commerce Limited és comerciant de registre de tot Google Play», basat en DDA 3.4 | **Massa àmplia.** El DDA repartix eixe paper entre Google i el desenvolupador segons territoris. [DDA vigent, §3.4](https://play.google/developer-distribution-agreement.html). |
+| «Google Play no té cap declaració de comerciant DSA» | No ho donaria com a absolut universal vigent. L'auditoria oficial 2024 documenta la interpretació de Google Ireland per a la UE i el període 28-08-2023–31-05-2024; no és una decisió de la Comissió ni una inspecció de la consola actual del Mestre. [Auditoria oficial, pàgines PDF 5 i 16](https://storage.googleapis.com/transparencyreport/report-downloads/dsa-audit-google-play_2023-8-28_2024-5-31_en_v1.pdf). Formulació prudent: no s'ha identificat un tràmit separat equivalent al d'Apple en la documentació consultada; verificar els requisits efectius del compte. |
+| Google personal gratuït: nom, país i correu públics | Confirmat com a regla general; falta reservar els requisits addicionals de determinades regions i el canvi si es monetitza. [Google, informació del compte](https://support.google.com/googleplay/android-developer/answer/13628312?hl=en). |
+| Personal nou: 12 persones / 14 dies | Confirmat per a comptes personals creats després del 13-11-2023, abans d'accedir a producció; no és el requisit de pista interna. [Google, accés a producció](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en). El tipus i data del compte real continuen sense comprovar-se. |
+| Canvi personal → organització a Google | Confirmat, amb verificació, perfil de pagaments i requisits del procediment; no cal reobrir D-2 d'Apple per això. [Procediment de Google](https://support.google.com/googleplay/android-developer/answer/16260648?hl=en). |
+| «Salut no pot anar a iOS mentre l'equip siga Individual» | Cal condicionar-ho al servei i dades efectivament distribuïts. Apple 5.1.1(ix) contempla serveis regulats o informació sensible; no prohibix una etiqueta anomenada Salut. [Apple 5.1.1](https://developer.apple.com/app-store/review/guidelines/#data-collection-and-storage). `src/apps/salut/manifest.js` és DEV o `VITE_SDP_APP_SALUT=1`, desactivat per defecte. No bloquege amb esta frase una beta sense el mòdul; si s'hi inclou el diari de salut, cal validar el supòsit amb Apple. El caràcter local de les dades no elimina per si sol el risc. |
+
+#### B. P3: buits de contacte i mesures de moderació
+
+La qualificació concreta de Sóc de Poble com a servei intermediari/allotjament/plataforma i les possibles exempcions han de quedar documentades abans d'afirmar conformitat. El compte Individual d'Apple no resol eixa qüestió.
+
+| ID / prioritat del text | Contrast normatiu i aplicació al pegat |
+|---|---|
+| P3-01 · P1 abans de publicar E6 | L'art.12.1 inclou elecció de mitjans. P3 només identifica un correu i §10 deixa un segon canal fora. Eixe estat **no acredita la tria**: cal concretar i provar una alternativa real, mantenint contacte humà. |
+| P3-02 · P1 abans de publicar E7 | L'art.14.4 exigix proporcionalitat. «Retirem i expulsem» per qualsevol falta és una regla uniforme que cal revisar; no deduïsc que siguen obligatòries sancions graduades. |
+| P3-02, motivació | Art.17.3 inclou abast territorial quan pertoque. Cal incorporar-lo al model de comunicació. L'art.19 pot eximir micro/petites empreses dels arts.20–21, preservant l'excepció24.3; no donar «només jutjats» per suficient sense acreditar el supòsit. |
+
+Font normativa comuna: [DSA al BOE, arts.12,14,17,19](https://www.boe.es/buscar/doc.php?id=DOUE-L-2022-81573). Estes són observacions d'auditoria, no una determinació jurídica de l'activitat del Mestre.
+
+**Proposta conservadora:** tornar E6/E7 a Claude amb estos punts acotats. L'expulsió uniforme ja figura a les normes de l'app; no s'ha de canviar només al text legal i conservar una promesa contrària a `ca.js:631`. La revisió de proporcionalitat i el responsable de moderació són decisions operatives que falten, no errors de sintaxi. `requires_human_decision: true` quant a l'operació i les mesures, sense reobrir D-1/D-2.
+
+La ruta de denúncia per correu recull els elements que Claude declara haver incorporat; el formulari curt de l'app és un canal diferent. El correu manual pot ser un mecanisme vàlid si realment s'atén. El pegat no crea ni la cua humana, ni els correus de recepció/decisió/motivació. Les 24 hores són un compromís del servei, no un termini general que la norma impose a tots els casos. Claude ja deixa estes confirmacions pendents: es confirma la reserva, no es presenta com una troballa nova de codi.
+
+#### C. P3-03 · P2: versió futura no és avís previ ni consentiment recollit
+
+**Evidència de producte:** condició2 de Claude §10 (`261023_2330:270`) proposa versió2.2 i fila amb `vigent_des_de` futur «per avisar abans». Però `politiques_privacitat` té RLS `vigent_des_de <= now()` (`2609261500_identitat_perfil_f1.sql:382`), i `estat_consentiment()` aplica el mateix filtre (`:679-684`). La fila futura és invisible al destinatari ordinari. L'únic consumidor de l'estat és `DetallPrivacitat.jsx:130-142`, quan s'obri aquella vista; no s'ha trobat un avisador global.
+
+`2610081543_xat_consentiment_i_metadades.sql:97` comprova el timestamp del consentiment del padró, no la versió. `cal_reconsentir` és un resultat consultable; no implica que s'haja mostrat l'avís, que s'haja acceptat ni que tot tractament quede bloquejat.
+
+**Acceptació requerida:** definir l'instant d'avís, el text nou accessible abans de l'entrada en vigor, el canal efectiu i el rebut de la nova acceptació quan pertoque. No es declara il·legal continuar tot tractament contractual per falta d'un nou clic: el defecte és donar per executat un flux que el codi no executa. Cal segellar el text complet, la seua empremta i la versió visible; P3 encara deixa el rètol **2.1** perquè Claude el reserva com a pas separat. `requires_human_decision: true` per a calendari i canal.
+
+#### D. P3-04 · P2: la migració no recupera acceptacions només locals
+
+**Evidència:** `src/app/contexts/ModeracioContext.jsx:327-339` tolera `NO_DISPONIBLE` de l'RPC i desa la versió en local. En la visita següent `:280-282` la considera acceptada, `:297` evita preguntar al servidor i `:309-311` deixa continuar. Instal·lar després `2610201500` no crea la fila amb data/versió/IP que E11 promet guardar.
+
+Les proves existents també ho acrediten: `ModeracioContext.test.jsx:254-260` exigix no preguntar al servidor si hi ha cache, i `:284-296` acredita la reserva local sense migració. Han passat en este torn. No s'ha fabricat una fila remota ni s'ha afirmat que la migració estiga o no aplicada en producció.
+
+**Correcció conservadora:** el pla d'aplicació ha d'incloure sincronització o reacceptació verificable per a qui només té la cache; alternativament, E11 ha de distingir l'acceptació local de la prova del servidor mentre existisca eixa reserva. No traslladar retroactivament una data/IP inventada. `requires_human_decision: false` per al diagnòstic; el canvi de flux necessita el seu encàrrec.
+
+#### E. P3-05 · P2 operatiu: Private Email Relay requerix més que un domini escrit
+
+La condició3 de Claude és necessària però cal fer-la verificable: registrar les **fonts reals** de correu, inclosos subdominis/remitents que s'usen, autenticar SPF i/o DKIM amb l'alineació prevista i provar recepció des del servei real en una adreça relay d'un compte de prova. Registrar només el domini web no acredita eixa entrega. [Apple, configurar el relay privat](https://developer.apple.com/help/account/capabilities/configure-private-email-relay-service/).
+
+No s'ha enviat cap correu ni s'ha vist la configuració privada del compte: no es declara que el registre falte, sinó que **no està acreditat**. L'activació d'Apple a Supabase i el relay de correu són configuracions diferents. No es poden anunciar motivacions entregades sense el camí funcional. `requires_human_decision: true` per a configuració i prova del correu.
+
+#### F. P3-06 · P2 deute de dades: l'exportació no inclou tota la moderació
+
+E11 declara denúncies, bloquejos i acceptacions. L'únic `exporta_les_meues_dades()` (`2609261500_identitat_perfil_f1.sql:963-1087`) no inclou `denuncies`, `bloquejos` ni `normes_acceptades` de la migració posterior. La UI (`DetallPrivacitat.jsx:98-100`) promet una còpia de «tot». Cal completar l'exportació de les dades pròpies i mantindre protegida la identitat dels denunciants aliens. Este deute és anterior al pegat; s'ha incorporat al Llibre Mestre i no s'usa com a prova que cada frase d'E11 siga falsa.
+
+**Retenció de denúncies:** `2610201500:87-112` lleva el FK de qui denuncia amb `ON DELETE SET NULL`, però conserva objecte, autor, detall i empremta. «Es conserva desvinculada del compte» hauria de dir que es lleva **la vinculació directa com a denunciant**, sense suggerir anonimització completa. Els identificadors i el text poden continuar identificant persones. El termini indefinit «mentre facen falta» continua requerint criteri operatiu i revisió; el SQL no l'executa.
+
+**Confirmacions sense defecte nou:** E4 clarifica el subjecte; E14 corregix l'apartat20; la clau local `sdp_embed_normes-convivencia:*` és exacta; hi ha pebre per a les empremtes; les cascades de bloquejos, acceptacions del servidor i motiu de baixa encaixen amb la descripció. L'afegit d'Apple descriu un flux que el client oferix, però el backend viu el té apagat: no es pot considerar provat en ús real. No s'han verificat contractes d'encàrrec ni dades legals personals.
+
+#### G. Contrassenya de pistes internes: NO-GO dels artefactes presents, prova possible després de signar
+
+| Control físic executat | Resultat |
+|---|---|
+| AAB satèl·lit `../_builds_de_poble/android/261023_socdepoble_1.0.0+1.aab` | 40.986.252 bytes, SHA-256 `474256acc407ec25594692ae149368c6fbe9a737d568b2d538d91e52c872082a`; idèntic a l'AAB anterior. `jarsigner -verify`: **unsigned**. No és una signatura nova. |
+| Manifest Android dins de l'AAB | `org.socdepoble.app`, 1.0.0(1), minSdk24, targetSdk36. D-1 complida. |
+| Paritat completa | Els 547 fitxers de `dist-natiu/` (40.945.257 bytes) coincideixen per hash amb iOS, Android i AAB; només hi ha els dos extres Cordova de plataforma. És una comprovació més àmplia que comparar només l'index. |
+| Arxiu iOS físic inspeccionat en el scratchpad de Claude | `org.socdepoble.app`, 1.0.0(1), arm64, iOS16/SDK27.1, iPhone/iPad; sense signatura, equip al rebut, `_CodeSignature` ni perfil incrustat. `codesign` diu que no està signat. No servix per a pujar com està. |
+| D-2 | El prevol ja no diu Team ID absent. Però `project.pbxproj` no fixa `DEVELOPMENT_TEAM` i `puja-ios.mjs:71-73` no el passa. Cal seleccionar/configurar l'equip i generar/exportar una candidata signada amb provisionament correcte. |
+| Prevol actual | Totes: eixida5 per empremta Android, claus API ASC i JSON Play; Android `--signa`: també les quatre variables de keystore. La ruta manual evita les claus d'API, **no la signatura**. |
+
+La generació local correcta prova la compilació. No prova la verificació del compte, els acords, el registre d'app, el processament de la consola o la instal·lació física. El GO de l'Acta de les 00:35 s'ha de llegir com a **viabilitat condicionada**, perquè ella mateixa diu «per ser signat i pujat». No és una entrega ja uploadable ni una prova de producte acabada.
+
+**Riscos de prova confirmats:**
+
+- GET públic `/auth/v1/settings`, sense mutació ni credencial en la sortida: `apple=false`, `google=true`, `email=true`, alta habilitada. iOS oferix Apple sempre; el bescanvi fallarà mentre el proveïdor continue apagat. És un risc del recorregut de prova, no de carregar el fitxer a TestFlight.
+- La sonda pura de `urlDeTornadaRecuperacio` llança amb `capacitor://localhost/registre` i retorna `https://localhost/registre?sdp_auth=recuperacio` a Android. Cal resoldre les tornades natives i provar-les en dispositiu. No és una fuga de trànsit HTTP. `mailer_autoconfirm=true` al servidor: el defecte de retorn no acredita que l'alta actual quede sempre bloquejada per confirmació; sí que queda pendent la recuperació.
+- Arrere Android i descàrrega al WebView continuen requerint prova en dispositiu. La lectura d'un `BridgeActivity` buit o d'un `a.download` no és, per si sola, la reproducció física; no convertisc totes les afirmacions de comportament de Claude en «confirmades en aparell».
+
+**CSP C-05:** correcció confirmada **al fitxer local** `firebase.json:22`. HEAD del web viu a les 01:27:39 CEST del 2026-10-24 continua sense `media-src` (200; Last-Modified 2026-10-23 15:10:02Z). Per tant, pendent desplegar i verificar. No afecta la política empaquetada nativa ni obliga a reconstruir-la per a este canvi d'allotjament.
+
+#### H. Balanç de l'encàrrec i verificació d'esta addenda
+
+| Tasca del prompt actual | Estat i evidència |
+|---|---|
+| Auditar §9 i §10 | **FET:** fonts oficials i contrast de codi/SQL, amb límits expressos. No s'aprova jurídicament el text. |
+| Auditar E4/E6/E7/E11/E14 | **FET:** diff aplicable i 215 proves sobre còpia amb P3; E6/E7 i condicions d'E11 pendents abans de publicar. |
+| Migració2610201500, versió2.2, relay | **PARCIAL:** condicions auditades; aplicació remota, avís i entrega de correu no acreditats ni executats. |
+| Validesa de pistes internes | **FET el dictamen / NO FET el llançament:** dos artefactes sense signar; decisions D-1/D-2 acceptades; recorreguts d'auth pendents. |
+| Llibre Mestre | Actualitzat amb els deutes i la correcció material de la transcripció d'equip; cap decisió humana nova inventada. |
+| Informe | Esta addenda conserva l'auditoria anterior i separa els dos talls. |
+
+Proves i comprovacions d'este torn:
+
+1. `git apply --check` de P3 sobre l'arbre viu: **0**. Aplicat només a `/private/tmp/sdp-p3-codex-261024-7fq3td8e`, una exportació seleccionada de HEAD, sense `.env` i amb dependències existents; **cap canvi al font viu**. La còpia temporal pròpia s’ha netejat en tancar, després de conservar el resultat del test. Dos intents inicials de l'arnés temporal van fallar per marcadors/helpers no exportats; s'ha completat l'arnés abans del resultat definitiu. No s'han confós amb fallades del pegat.
+2. `vitest run src/sections/text src/components/universal/editorial.test.js src/components/universal/richText/extensions/targetes/formaDelGrup.test.js --maxWorkers=2`, amb P3 en la còpia: **215/215, 14 fitxers, 7,76s, eixida0**. ESLint del fitxer legal amb P3: **0**. Estes proves no comproven conformitat jurídica ni execució del correu/servidor.
+3. `vitest run src/app/contexts/ModeracioContext.test.jsx src/data/supabase/compte.test.js src/sections/profile/DetallPrivacitat.moderacio.test.jsx --maxWorkers=2`: **54/54**, eixida0. Inclouen els comportaments de cache local comentats més amunt.
+4. `node --test tests/botigues.test.mjs tests/natiu-build.test.mjs`: **41/41**, eixida0.
+5. Font legal viu encara SHA-256 `7503adcdba2fef9102bf2c509fc4ac80a592822f97ab6e5dd25977a1bdba83fb`; P3 no aplicat. No s'ha repetit tota la suite de21.161 perquè no s'ha canviat codi de producte; el resultat de la primera auditoria continua identificat en el seu tall.
+
+**Condicions de publicació de P3 que ha de consumir el pla següent:** tancar P3-01/P3-02; evidència remota de la migració i de les acceptacions; calendari i canal d'avís/versió efectivament executats; fonts/autenticació/entrega relay; responsable i cobertura24h, criteri de conservació i model de motivació. Mantindre el NO-GO públic dels altres blocs de producte fins que se'n demostre la reparació. No s'executa cap d'estes mutacions en esta auditoria.
+
+**Millora de la convocatòria:** marcar un SHA complet i hashes dels artefactes; substituir «AAB fresc» per hash+estat de signatura; diferenciar CSP local/desplegada; distingir una decisió humana del seu efecte tècnic; i completar l'estat editorial del pla, que encara mostra les quatre opcions i aprovació pendent malgrat l'encàrrec humà explícit. Este últim defecte documental no ha impedit una auditoria autoritzada.
+
+#### I. Rèplica a l'addenda de Gemini: no s'ha de corregir un pegat diferent
+
+La nova addenda Gemini G-05…G-09 i §6 s'ha publicat durant este torn i s'ha llegit íntegrament en contrast amb la versió anterior (SHA-256 de la versió ara revisada: `f8775a5ee1e9eae9b5e8fba2dc33bc991c7fb0a7e687122ac2091e382ec74ce3`). Algunes conclusions **no corresponen al P3 amb hash `b5b539…`**, que continua intacte. Comprovació literal independent en dos revisions:
+
+| Afirmació de Gemini | Evidència sobre P3 i font viu |
+|---|---|
+| G-05 cita «Si no has iniciat sessió…» per denunciar bloqueig anònim | **0 aparicions** en P3. La línia38 diu «amb la sessió oberta». El problema de client que explica Gemini no és una contradicció d'eixa frase real. **No aplicar eixa esmena al P3 com si reparara un error present.** |
+| G-08 atribuïx a E4 «…abans de continuar» i recomana llevar-ho | **0 aparicions**, també de «abans de continuar». E4 real definix «nosaltres» al §1. La mancança d'avís/reconsentiment real sí existix (P3-03), però no es resol esborrant una cita absent. |
+| G-07 cita «El meu compte» i «Pots retirar el consentiment donant-te de baixa» | **0 aparicions** en el pegat i en el text legal viu. `legalContent.js:153` ja assenyala Privacitat i dades. Estes dues cites no sustenten la correcció proposada. |
+| La matriu diu que E6 incorpora `Apple Inc.` i `@privaterelay.appleid.com` | **0 aparicions** de les dos cadenes en P3. E6 real és el punt de contacte DSA; les dades Apple són E11. Cal usar la numeració del diff real. |
+| G-06 afirma que falta tot criteri de conservació | La línia79 sí conté «mentre facen falta per a respondre reclamacions o requeriments sobre aquella decisió». Es pot qüestionar la concreció i la seua execució; **no afirmar que falta literalment**. El màxim3anys nou proposat necessita una decisió fonamentada; no s'hereta del termini dels consentiments. |
+
+No es pot determinar si Gemini ha llegit una versió anterior o ha reconstruït el text. Es poden refutar estes cites sobre l'artefacte identificat, sense atribuir intencions. **La seua omissió d'exportació sí és correcta**, i concorda amb P3-06; també coincidim en la necessitat de comprovar desplegament, registre de versió i relay. El consens ha de conservar eixes coincidències i retirar els falsos positius.
+
+**Altres dos matisos de la mateixa addenda:**
+
+- G-09 no acredita automàticament l'exempció de micro/petita empresa pel tipus de titular. La reserva de l'art.24.3 ha de continuar explícita; vegeu B. La plantilla, finances i vinculacions efectives no s'han inspeccionat.
+- §6 declara irreversible el certificat d'upload de Google. **És refutable:** amb Play App Signing hi ha un procediment de reset d'upload key per pèrdua o compromís. Cal distingir clau de pujada, clau de signatura de l'app i identificador del paquet. [Google, Play App Signing](https://support.google.com/googleplay/android-developer/answer/9842756?hl=en). Açò no lleva la necessitat de custodiar la clau que es trie.
+- La frase «no existix cap risc d'escaneig binari ni de penalització de compte» després de signar **no està demostrada per una inspecció local**. Hi ha comprovacions favorables de manifests, però cap rebut d'ingestió, compte verificat, processament o instal·lació en consola/dispositiu. Mantinc la viabilitat condicionada i no una garantia de risc zero. Tampoc es confon la presència d'un Privacy Manifest amb haver superat un escaneig real d'Apple.
+
+**Tancament mecànic del torn:** `document.mjs check` de l'informe passa. Olivera, plantilles, autoritat, segell i skills ixen0. `tancament --check --turn-id torn_0b08c39b…` ix1, `planned`, amb1.277 incidències:4 de metadades preexistents del Llibre Mestre (reflex absent i3etiquetes fora de l'enum),1 de LEDGER,1 de compilació Wiki,1.008 enllaços,242 àncores i21 orfes. El frontmatter del Llibre és **idèntic al de HEAD abans de les edicions**; no s'ha migrat la governança del document permanent per fer passar l'auditoria. No hi ha cap error del contracte de l'informe propi. S'han actualitzat ESTAT i el relleu de LEDGER, preservant el checksum previ ja invàlid; no s'ha executat `--close`.
+
+Cap cron creat, cap missatge a tercers, cap correu de prova enviat, cap build nou i cap mutació remota. Els processos de proves i els subagents propis han acabat. L'Acta Marmota0035 s'ha llegit; MarIA pot consolidar-hi després les conclusions d'esta addenda sense confondre-la amb el tall anterior.
+
+
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
 
@@ -223,3 +372,5 @@ S'han creat l'informe i el seu rebut/àncora pel circuit, s'ha vinculat el pla a
 - [[03_llibre_mestre_tasques_i_idees]]
 - [[261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio]]
 - [[261023_2245_pla_implementacio_botigues_i_auditoria_trio]]
+- [[261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa]]
+- [[261024_0130_pla_implementacio_auditoria_adversarial_claude_i_dsa]]

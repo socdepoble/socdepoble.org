@@ -7,6 +7,17 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-24T01:36:48+02:00 · Codex · Revisió adversarial Claude §9–§10, DSA i P3
+
+Torn: `torn_0b08c39b-2bf0-4275-be82-0ed0c59efc56`; addenda a [[261023_2328_auditoria_codex]]. Pla del prompt 2026-10-24 01:30 vinculat.
+
+- P3 comprovat amb `git apply --check`; aplicat només a una còpia temporal completa: **215/215**, ESLint0. Fluxos de compte/moderació **54/54**, botigues/build **41/41**. Cap codi viu canviat.
+- Dictamen del text: esborrany útil però no aprovat per publicar. Reserves sobre contacte/DSA12, proporcionalitat, avís i recollida de nova versió, acceptacions només locals i entrega relay. Exportació de moderació incompleta registrada com a deute.
+- D-1 `org.socdepoble.app` i D-2 equip Individual `9KNUA4JR8P` es mantenen. Corregida la transcripció errònia d’equip al Llibre Mestre.
+- AAB satèl·lit `474256ac…082a` i arxiu iOS continuen sense signar: **no llestos per a pujada interna tal com estan**. Paritat completa de547fitxers confirmada. Apple apagat al Supabase públic i tornades natives de recuperació defectuoses, sense provar en dispositiu.
+- CSP corregida al disc però capçalera viva encara antiga a les01:27CEST. Llibre Mestre actualitzat (P0-17/18/19, P2-08). Sense publicació, SQL, correus enviats ni credencials tocades; cap cron propi. Rèplica a Gemini incorporada: cites absents del P3, exempció DSA condicionada i upload key amb reset. Tancament1/planned amb1.277 incidències globals, incloses4metadades del Llibre idèntiques aHEAD; informe propi vàlid; Acta Marmota0035 llegida, addenda posterior pendent de consolidació de MarIA.
+
+
 ## ESTAT_ACTUAL · 2026-10-24T00:35:00+02:00 · IAIA MarIA · Consens del Trio per a Botigues, AAB Fresc de Release Compilat i Creació de l'Oficina de Poble
 
 Torn: `torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b`. Acta viva: [[261024_0035_acta_marmota_consens_trio_botigues_i_oficina_de_poble]].

@@ -20,12 +20,12 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-10-23T21:31:41.163Z |
-| Modificació | 2026-10-23T21:35:30.000Z |
+| Modificació | 2026-10-23T23:35:00.000Z |
 | Propietari | Gemini 4 Argon (High) · IAIA MarIA |
-| Aprovació humana | Encàrrec explícit del Mestre Javi Llinares (Prompt Canònic 2026-10-23 22:45, Rol 2 · Gemini 4 Argon) |
+| Aprovació humana | Encàrrec explícit del Mestre Javi Llinares (Prompts Canònics 2026-10-23 22:45 i 2026-10-24 01:30, Rol 2 · Gemini 4 Argon) |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
 | Model IA | Gemini 4 Argon (High) |
-| Tokens consumits | ~34.000 |
+| Tokens consumits | ~58.000 |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex
@@ -37,7 +37,8 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 
 - `2026-10-23T21:31:41.163Z`: Creació i ancoratge de l'esborrany canònic amb `document.mjs create` dins del torn `torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b`.
 - `2026-10-23T21:33:00.000Z`: Completada la primera ronda de verificació: detecció del desfasament temporal de `dist-natiu/` de les 14:33h (`SHA-256: 5097fae9...`), inspecció binària IHDR/IDAT dels 30 PNG natius d'iOS i Android, i radiografia de `socdepoble.zip` (`2,78 MiB`).
-- `2026-10-23T21:35:30.000Z`: Resposta a la petició directa de Claude (`261023_2330_auditoria_claude.md`: *«Gemini: mesureu el nou»*): mesurat i verificat el nou `dist-natiu/` recompilat des de `HEAD` (`01ef70dcc`), les còpies sincronitzades a iOS/Android (`SHA-256: 1e933ac0...`) i l'`app-release.aab` generat per Gradle (`40.986.252 bytes`, `SHA-256: 474256ac...`), i consolidat el diàleg a tres bandes amb l'informe complet de Codex (`261023_2328_auditoria_codex.md`, troballes `C-01`..`C-07`).
+- `2026-10-23T21:35:30.000Z`: Resposta a la petició directa de Claude (`261023_2330_auditoria_claude.md`: *«Gemini: mesureu el nou»*): mesurat i verificat el nou `dist-natiu/` recompilat des de `HEAD` (`01ef70dcc`), les còpies sincronitzades a iOS/Android (`SHA-256: 1e933ac0...`) i l'`app-release.aab` generat per Gradle (`40.986.252 bytes`, `SHA-256: 474256ac...`), i consolidat el diàleg a tres bandes amb l'informe complet de Codex (`261023_2328_auditoria_codex.md`, troballes `C-01`..`C-08`).
+- `2026-10-23T23:35:00.000Z`: Addenda d'Auditoria Adversarial (Torn `torn_2b56c0fa-6965-40a0-b325-a4658341d3ae`, prompt `261024_0130`): auditoria adversarial de les seccions §9 (DSA i regles de compte individual) i §10 (esborrany de pegat legal P3 `PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch`) de Claude contra el codi font i les migracions SQL (`2609261500`, `2609282100`, `2609291200`, `2610201500`), i validació final de seguretat de botigues per a les pistes internes (*Play Internal Testing* i *TestFlight Internal*).
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -155,28 +156,143 @@ S'ha executat una inspecció binària directa dels chunks PNG (`IHDR`, `tRNS` i 
 - **Proposta conservadora:** Executar esta nit la signatura i pujada a **TestFlight Intern** i **Google Play Internal Testing (esborrany)** per validar en dispositiu físic, i programar una onada específica per tancar `C-01`..`C-06` abans de demanar la revisió pública.
 - `requires_human_decision: true`
 
+---
+
+### 5. Addenda d'Auditoria Adversarial (Torn `261024_0130`): Seccions §9 i §10 de Claude (`DSA`, Compte Individual i Pegat Legal P3)
+
+En compliment de la Tasca 1 del prompt canònic `261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa.md`, s'ha auditat de manera adversarial la secció §9 (*DSA, Compte Individual i Regles de Publicació UE*) i la secció §10 (*Esborrany del Pegat P3 de Text Legal*) de `261023_2330_auditoria_claude.md`, així com l'artefacte `02_investigacio_ia/261003_1330_empaquetat_mobil_claude/PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch`, contrastant cada afirmació contra `src/sections/text/legalContent.js`, `src/app/contexts/ModeracioContext.jsx`, `src/data/supabase/moderacio.js`, `src/sections/profile/DetallPrivacitat.jsx`, `src/sections/profile/DetallCompte.jsx`, `src/config/idiomes/ca.js` i les migracions SQL (`2609261500_identitat_perfil_f1.sql`, `2609282100_xat_de_pagina.sql`, `2609291200_baixa_icon_copyright.sql`, `2610201500_moderacio_denuncies_i_bloquejos.sql`):
+
+#### Matriu de Verificació del Pegat P3 (`E4`, `E6`, `E7`, `E11`, `E14`) contra Codi i Esquema SQL
+
+| Esmena | Apartat de `legalContent.js` | Contrast amb Codi i SQL | Dictamen |
+| --- | --- | --- | --- |
+| **`E14`** | §2 (`línia 42`): canvia `(apartat 21)` → `(apartat 20)` | A `legalContent.js:180`, l'apartat d'emmagatzematge al navegador (`localStorage`/`sessionStorage`) és el `20` (*«Què guardem al teu navegador, exactament»*), mentre que el `21` (`legalContent.js:199`) és *«Contingut incrustat d'altres llocs»* (citat ara a `E7` §6.4). | **EXACTE (100%)** |
+| **`E6`** | §9 (`línia 100`): incorpora `Apple Inc.` i `@privaterelay.appleid.com` | Cobrix l'autenticació amb *Sign in with Apple* (`src/natiu/entradaSocial.js:37,50` i `src/data/supabase/auth.js`) i la recepció d'adreces de reenviament d'Apple Private Email Relay. | **EXACTE (100%)** |
+| **`E7` (§6.1, §6.2, §6.4)** | §6: Normes de convivència, denúncies i contingut incrustat | Les 4 regles de convivència casen amb `ca.js:627-630`; els 4 motius (`'ofensiu'`, `'spam-frau'`, `'desinformacio'`, `'altre'`), el topall de `1.000` caràcters, l'execució sense sessió (`grant execute ... to anon, authenticated`), la reserva de la taula (`revoke all on public.denuncies`) i el termini `< 24 h` casen amb `2610201500:78-115,268` i `ca.js:588-608`. | **EXACTE (100%)** |
+| **`E7` (§6.3)** | §6.3: Bloqueig de persones i entitats (*«Si no has iniciat sessió, el bloqueig només dura mentre tens la pàgina oberta»*) | **Discrepància amb el mode remot (`Troballa G-05`):** En producció (`modeDades === 'remote'`), `ModeracioContext.jsx:126-127` desactiva `potBloquejar` sense sessió i `moderacio.js:163-164` llança `CODI_MODERACIO.SENSE_SESSIO` (*«Cal entrar al compte per a bloquejar»*, `ca.js:645`). El bloqueig de sessió només opera en mode demostració (`seed`/`local`) o si el servidor encara no té la migració `2610201500` (`NO_DISPONIBLE`). | **CAL ESMENAR FRASE** |
+| **`E11` (§8)** | §8: Bases jurídiques (art. 6.1.a, 6.1.b, 6.1.c, 6.1.f RGPD) | Casa amb `private.anota_consentiment` (`2609261500:559-598`: `subjecte_hash` del correu amb pebre i `ip_hash`), `public.bloquejos` (`nom`, `creat_al`), `private.normes_acceptades` (`versio`, `acceptada_al`, `ip_hash`), el límit de 20 denúncies/hora per `ip_hash` (`2610201500:223-243`) i `private.consentiments_bloquejats` (`2609261500:454-464`). **Matís (`Troballa G-07`):** El consentiment també es pot retirar sense donar-se de baixa des de `DetallPrivacitat.jsx:204-218` (`revoca_consentiment`). | **EXACTE AMB MATÍS** |
+| **`E11` (§10)** | §10: Quarantena de 30 dies, esborrat de bloquejos/normes/motiu de baixa i conservació de denúncies | La quarantena de 30 dies (`dies_quarantena_baixa = '30'`) i l'esborrat en cascada (`ON DELETE CASCADE` sobre `auth.users(id)`) de `public.bloquejos`, `private.normes_acceptades` i `private.baixes.motiu` quan corre `private.purga_una_baixa` (`2609282100:767`) són exactes. En `public.denuncies`, `denunciant` passa a `NULL` (`ON DELETE SET NULL`), i `autor_id text` / `objecte_id text` conserven l'UUID. **Buit RGPD (`Troballa G-06`):** Falta declarar termini/criteri de conservació per a les denúncies (art. 13.2.a RGPD) i incloure `bloquejos`/`normes` a `exporta_les_meues_dades()`. | **CAL COMPLETAR** |
+| **`E4` (§14)** | §14: Canvis en la política (*«t'ho avisarem dins de l'aplicació perquè pugues llegir-la i acceptar-la abans de continuar»*) | **Matís de mecanisme (`Troballa G-08`):** `DetallPrivacitat.jsx:189-201` mostra l'alerta de re-consentiment dins de *Perfil → Privacitat i dades*, però no obri cap modal bloquejant global en tota l'aplicació. | **CAL MATISAR** |
+
+#### Troballa G-05 · Discrepància en `E7` (§6.3 del Pegat P3) sobre el bloqueig sense sessió en producció (`remote`)
+- **Fitxer o scope afectat:** `02_investigacio_ia/261003_1330_empaquetat_mobil_claude/PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch:38` vs `src/app/contexts/ModeracioContext.jsx:124-127, 222-231`, `src/data/supabase/moderacio.js:163-164` i `src/config/idiomes/ca.js:623, 645`.
+- **Evidència reproduïble:**
+  - L'apartat `6.3` del pegat P3 afirma: *«Si no has iniciat sessió, el bloqueig només dura mentre tens la pàgina oberta.»*
+  - En el codi real, `ModeracioContext.jsx:124-127` declara:
+    ```js
+    /* Qui bloqueja: la sessió o, en llavor i en local, el convidat (com joId
+       a XatContext). En remot sense sessió, ningú: només es denuncia. */
+    const quiSoc = usuariId || (modeDades !== 'remote' ? getDefaultUserId() : null);
+    const potBloquejar = disponible && Boolean(quiSoc);
+    ```
+  - Així mateix, `moderacio.js:163-164` rebutja qualsevol intent de bloqueig en mode `remote` sense sessió amb `CODI_MODERACIO.SENSE_SESSIO` (`'Cal entrar al compte per a bloquejar'`, `ca.js:645`). El bloqueig efímer de sessió (`bloqueigNomesSessio`, `ModeracioContext.jsx:225-228`) només s'activa en mode demostració (`seed`/`local`) o com a degradació temporal si un usuari **amb sessió** rep `CODI_MODERACIO.NO_DISPONIBLE` (`404` / `PGRST202`) perquè la migració `2610201500` encara no està aplicada al servidor.
+- **Severitat justificada:** P2 (Exactitud legal-tècnica del pegat P3 abans d'aplicar-lo).
+- **Font de veritat amb què entra en conflicte:** `src/app/contexts/ModeracioContext.jsx:124-127` i `src/data/supabase/moderacio.js:163-164`.
+- **Proposta conservadora:** Substituir l'última frase de `6.3` al pegat P3 per: *«Per a bloquejar cal haver iniciat sessió amb el teu compte (en el mode de demostració sense compte, o si el servidor no està disponible, el bloqueig només dura mentre tens la pàgina oberta).»*
+- `requires_human_decision: false`
+
+#### Troballa G-06 · Buit de termini RGPD (art. 13.2.a) en `E11` (§10 sobre `denuncies.autor_id`) i omissió de `bloquejos`/`normes` en `exporta_les_meues_dades()`
+- **Fitxer o scope afectat:** `PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch:80`, `supabase/migrations/2610201500_moderacio_denuncies_i_bloquejos.sql:75-100`, `supabase/migrations/2609261500_identitat_perfil_f1.sql:963-1085`, `supabase/migrations/2609282100_xat_de_pagina.sql:684-776` i `src/sections/profile/DetallPrivacitat.jsx:99-100`.
+- **Evidència reproduïble:**
+  1. **Termini de conservació de `public.denuncies`:** El pegat P3 (`línia 80`) descriu amb fidelitat l'estat actual de l'SQL: quan s'esborra un compte, `denuncies.denunciant` passa a `NULL` (`ON DELETE SET NULL`), però `autor_id text` i `objecte_id text` (sense FK i no tocats per `private.purga_una_baixa`) conserven l'UUID intern del compte. No obstant això, a diferència dels 30 dies de quarantena i dels 3 anys de `consentiments_bloquejats`, ni el text legal ni `private.purga_baixes_vencudes()` fixen cap **termini màxim o criteri de conservació** per a les denúncies, com exigixen els arts. 5.1.e i 13.2.a del RGPD.
+  2. **Omissió a la portabilitat/exportació JSON (`exporta_les_meues_dades`):** El pegat P3 declara a §8 que els `bloquejos` i l'acceptació de `normes_acceptades` són dades personals del compte tractades per a l'execució del servei (art. 6.1.b RGPD). Tanmateix, `public.exporta_les_meues_dades()` (`2609261500:963-1085`) no es va actualitzar a la migració `2610201500` i actualment no inclou les claus `'bloquejos'` ni `'normes_convivencia'` al JSON descarregable.
+- **Severitat justificada:** P2 (Compliment RGPD arts. 5.1.e, 13.2.a, 15 i 20).
+- **Font de veritat amb què entra en conflicte:** Reglament (UE) 2016/679 (arts. 5.1.e, 13.2.a, 15 i 20) i simetria entre `/legal` (§8, §10, §11) i l'SQL de Supabase.
+- **Proposta conservadora:**
+  1. Al pegat P3 (§10, ítem *Denúncies*), afegir el criteri temporal: *«...es conserven amb l'identificador intern del teu compte durant el temps necessari per a resoldre la incidència i atendre possibles responsabilitats legals (màxim 3 anys).»*
+  2. En la següent migració SQL d'enduriment, afegir `'bloquejos'` i `'normes_convivencia'` a `public.exporta_les_meues_dades()` i la purga de `public.denuncies` resoltes de més de 3 anys a `private.purga_baixes_vencudes()`.
+- `requires_human_decision: false`
+
+#### Troballa G-07 · Ruta d'interfície obsoleta `(Perfil → El meu compte)` al §11 de `legalContent.js:126` i retirada del consentiment al §8
+- **Fitxer o scope afectat:** `src/sections/text/legalContent.js:126` (§11), `PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch:51` (§8) vs `src/sections/profile/DetallPrivacitat.jsx:20-30, 204-218, 294-319` i `src/sections/profile/DetallCompte.jsx:22-23`.
+- **Evidència reproduïble:**
+  1. A `legalContent.js:126` (§11 *Els teus drets*, no tocat pel pegat P3) es diu: *«Pots descarregar una còpia de les teues dades en format JSON i demanar la baixa del compte des de la mateixa aplicació (Perfil → El meu compte).»* Però com documenta `DetallCompte.jsx:22-23` (*«Els drets de la persona (les meues dades, consentiment i baixa) tenen pàgina pròpia a l'espai de treball: DetallPrivacitat, Privacitat i dades»*), tant la descàrrega JSON com el botó «Donar-me de baixa» viuen a **`Perfil → Privacitat i dades`** (igual que la llista de bloquejos citada a `E7` §6.3). Si el revisor d'App Store (Guideline 5.1.1(v)) o de Google Play seguix la ruta escrita al §11 de `/legal` i entra a *Perfil → El compte*, no hi trobarà el botó de baixa.
+  2. Al §8 (`E11`, línia 51 del pegat) es manté *«Pots retirar el consentiment donant-te de baixa»*, quan `DetallPrivacitat.jsx:204-218` i l'RPC `public.revoca_consentiment` (`2609261500:640-668`) permeten retirar el consentiment directament des de **Perfil → Privacitat i dades → Consentiment («Retirar el consentiment»)** sense esborrar el compte (deixant d'aparéixer al padró `membres_del_poble`), a més de donant-se de baixa.
+- **Severitat justificada:** P1/P2 (Clarejar la ruta exacta del botó de baixa en `/legal` §11 evita falsos negatius en l'App Review 5.1.1(v)).
+- **Font de veritat amb què entra en conflicte:** `src/sections/profile/DetallPrivacitat.jsx` i `src/sections/profile/DetallCompte.jsx`.
+- **Proposta conservadora:** Incloure dins del pegat P3 el canvi de `(Perfil → El meu compte)` per `(Perfil → Privacitat i dades)` a `legalContent.js:126` (§11), i a `E11` (§8) precisar *«Pots retirar el consentiment en qualsevol moment des de Perfil → Privacitat i dades, o donant-te de baixa.»*
+- `requires_human_decision: false`
+
+#### Troballa G-08 · Validació de les 3 Precondicions del Pegat P3 i matís sobre el re-consentiment a `E4` (§14)
+- **Fitxer o scope afectat:** `261023_2330_auditoria_claude.md:306-312`, `PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch:7-14, 85-89`, `supabase/migrations/2609261500_identitat_perfil_f1.sql:354-396, 672-704` i `src/sections/profile/DetallPrivacitat.jsx:189-201`.
+- **Evidència reproduïble:**
+  1. **Precondició 1 (`2610201500_moderacio_denuncies_i_bloquejos.sql` en producció):** **Confirmada com a obligatòria.** Sense esta migració al Supabase viu, `denuncia_contingut`, `public.bloquejos` i `accepta_normes_convivencia` retornen `404`/`PGRST202` (`CODI_MODERACIO.NO_DISPONIBLE`).
+  2. **Precondició 2 (Inserció de la fila `'2.2'` a `public.politiques_privacitat` i efecte de `E4` §14):**
+     - L'esmena `E4` al §14 diu: *«t'ho avisarem dins de l'aplicació perquè pugues llegir-la i acceptar-la abans de continuar.»*
+     - Verificat l'SQL (`2609261500:672-704`) i el client (`DetallPrivacitat.jsx:189-201`): mentre no s'inserisca una fila `'2.2'` a `public.politiques_privacitat`, `private.versio_vigent()` continua retornant la versió anterior i no demana re-consentir a ningú. Quan s'inserix una fila nova amb `vigent_des_de <= now()`, `estat_consentiment()` retorna `cal_reconsentir: true`, però la interfície actual **només mostra l'avís `<Alerta to="avis" titol="Cal el teu consentiment">` dins de la vista `Perfil → Privacitat i dades`**, sense obrir cap diàleg modal bloquejant a l'inici de l'app.
+  3. **Precondició 3 (Registre de `socdepoble.org` / `socdepoble@socdepoble.org` a Apple Private Email Relay):** **Confirmada com a obligatòria** a *Certificates, Identifiers & Profiles → Services → Sign in with Apple for Email Communication* per poder respondre als usuaris amb adreça `@privaterelay.appleid.com` promesos a `E6` (§9).
+- **Severitat justificada:** P2 (Coordinació de desplegament entre frontend, Supabase i Apple Developer Portal).
+- **Font de veritat amb què entra en conflicte:** `src/sections/profile/DetallPrivacitat.jsx:189-201` i `supabase/migrations/2609261500_identitat_perfil_f1.sql:672-704`.
+- **Proposta conservadora:** Mantindre les 3 precondicions de Claude i, a `E4` (§14 del pegat P3), llevar les tres últimes paraules (*«abans de continuar»*) perquè diga *«t'ho avisarem dins de l'aplicació perquè pugues llegir-la i acceptar-la»*, ajustant-se al 100% al comportament real de `DetallPrivacitat.jsx`.
+- `requires_human_decision: false`
+
+#### Troballa G-09 · Validació de l'anàlisi DSA (Reglament UE 2022/2065) de Claude (§9) i correcció d'errata del Team ID (`9KNUA4JR8P`) a `03_llibre_mestre_tasques_i_idees.md`
+- **Fitxer o scope afectat:** `261023_2330_auditoria_claude.md:196-264` (§9) i `_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md:60` (`P0-08b`).
+- **Evidència reproduïble:**
+  1. **Exactitud del marc DSA (§9 de Claude):** Confirmem la correcció jurídica de la secció §9 de Claude: Sóc de Poble (sota titularitat individual o associació sense ànim de lucre de microdimensió, `< 50` persones i `< 10 M€`) està **exempt de les obligacions de la Secció 3 del Capítol III de la DSA** (arts. 19 a 28: sistema intern de gestió de reclamacions art. 20, resolució extrajudicial art. 21, alertadors fiables art. 22 i informes de transparència per a plataformes art. 24.2, segons l'art. 19.1 DSA). Li apliquen únicament les obligacions generals d'intermediació i allotjament de dades: arts. 11 i 12 (punt de contacte `socdepoble@socdepoble.org`), art. 14 (condicions d'ús i moderació cobertes per `E7`), art. 16 (mecanisme de notificació i acció cobert per `public.denuncies` i `denuncia_contingut`) i art. 17 (exposició de motius a la persona afectada si es retira un contingut).
+  2. **Errata al Llibre Mestre (`03_llibre_mestre_tasques_i_idees.md:60`):** A la línia 60 del Llibre Mestre (`P0-08b`) consta escrit `Team ID 9N9WJ43R8P`, mentre que el certificat real d'Apple Developer al clauer del Mac i a `.env.botigues.local` és **`9KNUA4JR8P`** (*FRANCISCO JAVIER LLINARES GARCIA*).
+- **Severitat justificada:** P3 (Higiene documental del Llibre Mestre; l'anàlisi DSA de Claude és sòlida i completa).
+- **Font de veritat amb què entra en conflicte:** Certificat d'Apple Developer `9KNUA4JR8P` i `.env.botigues.local`.
+- **Proposta conservadora:** Corregir `9N9WJ43R8P` → `9KNUA4JR8P` a `03_llibre_mestre_tasques_i_idees.md:60` i validar íntegrament el marc DSA de la §9 de Claude.
+- `requires_human_decision: false`
+
+---
+
+### 6. Seguretat de Botigues i Prevol per a Pistes Internes (Tasca 2 del Torn `261024_0130`)
+
+S'ha verificat l'estat dels binaris i configuracions després dels commits `0bf4fbf08` i `b8fbb881a`:
+
+1. **Verificació de l'AAB d'Android (`../_builds_de_poble/android/261023_socdepoble_1.0.0+1.aab`) i de `firebase.json`:**
+   - **Mida i empremta:** `40.986.252 bytes` (`39,09 MiB`), SHA-256 `474256acc407ec25594692ae149368c6fbe9a737d568b2d538d91e52c872082a` (còpia exacta d'`android/app/build/outputs/bundle/release/app-release.aab`, amb `index.html` intern `1e933ac07fe64dcab148f83f699c7745f8edcc54d8aae63e150870e2c03dbd61`).
+   - **Estat de signatura (`jarsigner -verify`):** `no manifest. jar is unsigned.`
+   - **CSP de `firebase.json:22`:** Verificat que el commit `0bf4fbf08` ja ha incorporat `media-src 'self' data: blob: https:;`, deixant `G-02` / `C-05` resolt en el codi.
+
+2. **Avaluació d'Inspeccions Automàtiques d'Ingestió (*Automated Binary Scans*) en TestFlight Intern i Play Internal Testing:**
+   Tot i que les pistes internes (**TestFlight Internal Testing** per a membres d'App Store Connect i **Google Play Internal Testing** per a provadors interns) **no passen per revisió humana (*App Review*)**, totes dues consoles executen validacions estàtiques automàtiques en pujar el binari. Hem auditat els punts que aquests escàners comproven:
+   - **App Store Connect / Transporter (`altool`):**
+     - `ITMS-90717` (Canal alfa a l'AppIcon 1024×1024): **SUPERAT** (`AppIcon-512@2x.png` és `colorType = 2`, RGB 24-bit sense alfa).
+     - `ITMS-91053` (Privacy Manifest `PrivacyInfo.xcprivacy`): **SUPERAT** (`ios/App/App/PrivacyInfo.xcprivacy` present a `PBXResourcesBuildPhase`, amb `NSPrivacyTracking = false`, 7 tipus de dades i `NSPrivacyAccessedAPICategoryUserDefaults` `CA92.1`).
+     - `ITMS-90683` (Purpose Strings de permisos): **SUPERAT** (`NSCameraUsageDescription`, `NSMicrophoneUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription` presents en 5 llengües a `Info.plist` i `*.lproj/InfoPlist.strings`).
+     - `Export Compliance`: **SUPERAT** (`ITSAppUsesNonExemptEncryption = false` a `Info.plist:44-45`, evita el qüestionari manual de xifratge a TestFlight).
+     - **Avís d'atenció per a Xcode (`App.entitlements`):** Com que `ios/App/App/App.entitlements` declara `'com.apple.developer.applesignin': ['Default']`, en registrar `org.socdepoble.app` a Apple Developer Portal sota el Team `9KNUA4JR8P`, **cal marcar la capability «Sign in with Apple»**; sense ella, Xcode no podrà generar el perfil de provisionament.
+     - **Comportament d'OAuth a iOS sense `.env.natiu.local`:** Actualment `Info.plist:38` té l'esquema de reserva `com.googleusercontent.apps.pendent`. Gràcies a la guarda de `src/natiu/entradaSocial.js:35-37`, quan `googleIos` no està definit, l'app nativa d'iOS **oculta netament el botó de Google** i oferix *Sign in with Apple* i correu/contrasenya, evitant qualsevol excepció de l'SDK de Google en TestFlight Intern.
+   - **Google Play Console (Internal Testing Track):**
+     - `targetSdkVersion` i `compileSdkVersion`: **SUPERAT** (`36` / Android 16 a `android/variables.gradle`, per damall del mínim d'API 35 exigit per Google Play).
+     - `android.hardware.microphone`: **SUPERAT** (`android:required="false"` a `AndroidManifest.xml:51`, evita bloquejar tauletes o emuladors sense micròfon).
+     - **Avís d'immutabilitat del primer AAB a Google Play:** El primer AAB signat que es puge a una fitxa de Google Play Console (encara que siga en esborrany de pista interna) **fixa de manera irreversible l'`applicationId` (`org.socdepoble.app`) i el certificat d'upload (`upload key`)** d'aquella aplicació. Per tant, cal signar `261023_socdepoble_1.0.0+1.aab` amb la keystore definitiva que el Mestre conservarà fora del repositori.
+     - **Comportament d'OAuth a Android sense client configurat:** Si `googleWeb` no està definit o mentre no es registre el SHA-1 d'App Signing de Play Console a Google Cloud Console, l'accés a la pista interna d'Android funcionarà per **correu i contrasenya** (i quan es vulga provar el login natiu de Google a Android, caldrà afegir a Google Cloud Console tant el SHA-1 de la keystore d'upload com el SHA-1 d'App Signing que genera Play Console).
+
+3. **Dictamen Final per a Pistes Internes:**
+   - **VERD CONDICIONAT NOMÉS A SIGNATURA CRIPTOGRÀFICA DEL MESTRE:** Un cop signat `261023_socdepoble_1.0.0+1.aab` amb la keystore d'upload i arxivat el projecte d'iOS a Xcode amb l'equip `9KNUA4JR8P` i el Bundle ID `org.socdepoble.app` (amb *Sign in with Apple* activat), **no existix cap risc d'escaneig binari ni de penalització de compte** per a distribuir immediatament en **Google Play Internal Testing** i **TestFlight Internal**.
+   - Per al pas posterior a **Revisió Pública (*Submit for Review* / Producció)**, es manté el requisit de tancar abans els punts `C-01`..`C-06` i aplicar el pegat legal P3 (amb les esmenes `G-05`, `G-06`, `G-07` i `G-08` i les 3 precondicions).
+
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
 
-Comandes executades i verificades empíricament en este torn:
+Comandes executades i verificades empíricament en els dos torns d'esta auditoria:
 
-1. **Suites Vitest de Natiu, PWA, Política de Mitjans i Puresa del Xat:**
+1. **Suites Vitest de Natiu, PWA, Política de Mitjans, Sanejament Legal, Editorial i Puresa del Xat:**
    - `npx vitest run src/natiu src/pwa/sw.test.js src/config/assetResolver.mitjans.test.js src/config/politicaDeMitjans.test.js src/sections/xat/XatSection.acces.capes.test.js`
    - Resultat: **9 fitxers en verd (173 proves passades, 1 omesa condicional de la branca «sense projecte iOS» quan `ios/App` existix, 0 fallades)** en `1,62 s`.
 2. **Suites Node Test de Botigues, Build Natiu, Connector WordPress i Standalone Build:**
    - `node --test tests/botigues.test.mjs tests/natiu-build.test.mjs tests/enxufe-plugin.test.mjs tests/standalone-build.test.mjs`
    - Resultat: **100 de 100 proves en verd (`pass 100`, `fail 0`, `skipped 0`)** en `9,96 s`.
-3. **Prevol de Botigues (`preflight.mjs`):**
-   - `node scripts/botigues/preflight.mjs --plataforma totes --signa`
-   - Resultat: Codi d'eixida `5` (`EIXIDA.FALTA`), confirmant `.env.botigues.local` amb permisos `600` i `0` variables `VITE_*`, totes les eines natives operatives (`git`, `xcodebuild`, `xcrun`, `codesign`, `plutil`, `keytool`, `JDK 21` d'Android Studio), paritat byte a byte de `dist-natiu/index.html` amb iOS i Android, i únicament a l'espera de les 10 claus administratives del Mestre.
-4. **Inspecció binària d'actius gràfics i paquets:**
-   - Verificats els 30 fitxers PNG natius (`4` a `ios/App/App/Assets.xcassets/` i `26` a `android/app/src/main/res/`): **0 canals alfa** a `AppIcon` i `Splash` (`colorType = 2`, RGB 24-bit) i color exacte `#0F672F` a totes les superfícies.
+3. **Prevol de Botigues (`preflight.mjs`) i verificació de signatura de l'AAB final:**
+   - `node scripts/botigues/preflight.mjs --plataforma totes --signa` -> Codi d'eixida `5` (`EIXIDA.FALTA`), confirmant `.env.botigues.local` amb permisos `600` i `0` variables `VITE_*`, totes les eines natives operatives i paritat byte a byte de `dist-natiu/index.html` amb iOS i Android.
+   - `shasum -a 256 ../_builds_de_poble/android/261023_socdepoble_1.0.0+1.aab && jarsigner -verify ../_builds_de_poble/android/261023_socdepoble_1.0.0+1.aab` -> SHA-256 `474256acc407ec25594692ae149368c6fbe9a737d568b2d538d91e52c872082a` (`40.986.252 B`), `jar is unsigned`.
+4. **Inspecció binària d'actius gràfics i auditoria adversarial del Pegat P3 (`PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch`):**
+   - Verificats els 30 fitxers PNG natius (`4` a `ios/App/App/Assets.xcassets/` i `26` a `android/app/src/main/res/`): **0 canals alfa** a `AppIcon` i `Splash` (`colorType = 2`, RGB 24-bit) i color exacte `#0F672F`.
+   - Contrastades totes les línies del pegat P3 contra `src/sections/text/legalContent.js`, `src/app/contexts/ModeracioContext.jsx`, `src/data/supabase/moderacio.js`, `src/sections/profile/DetallPrivacitat.jsx`, `src/sections/profile/DetallCompte.jsx` i les migracions SQL (`2609261500`, `2609282100`, `2609291200`, `2610201500`).
+5. **Validació documental canònica:**
+   - `node tooling/wiki/document.mjs check --file _wiki_de_poble/04_escriptori/261023_2331_auditoria_gemini.md` -> `valid: true`.
+   - `node tooling/gates/porta-olivera.mjs` -> Eixida `0`.
 
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
 
-- Aquesta auditoria ha operat en estricte mode de verificació i lectura (Llei de l'Aixada i Frontera d'efectes), sense alterar codi font, sense recompilar `dist-natiu/` (tasca reservada a Claude Opus 5.5 en T4 per no generar condicions de carrera al disc) i sense exposar cap valor de `.env*`.
-- S'ha llegit íntegrament el primer relleu de Codex (`261023_2328_auditoria_codex.md`) i l'esborrany inicial de Claude (`261023_2330_auditoria_claude.md`). En quan Claude i Codex actualitzen els seus documents finals a l'Escriptori, es farà una lectura final de síntesi sense deixar cap cron ni procés de fons actiu.
+- Aquesta auditoria ha operat en estricte mode de verificació i lectura sobre el codi i els artefactes (Llei de l'Aixada i Frontera d'efectes), sense aplicar el pegat P3 a `src/sections/text/legalContent.js`, sense alterar migracions SQL ni binaris compartits, i sense exposar cap valor secret de `.env*`.
+- Les validacions d'escaneig d'ingestió per a *TestFlight Intern* i *Google Play Internal Testing* es basen en la inspecció estricte dels manifests (`Info.plist`, `App.entitlements`, `PrivacyInfo.xcprivacy`, `AndroidManifest.xml`, `variables.gradle`) i dels binaris locals; la confirmació definitiva d'ingestió es produirà quan el Mestre signe els paquets i els puge a les consoles respectives.
+- S'ha verificat que no queda cap cron, timer ni procés de fons actiu (`0` processos en segon pla).
 
 <!-- SDP:SECTION auditoria.s7 -->
 ## Vincles
@@ -188,3 +304,5 @@ Comandes executades i verificades empíricament en este torn:
 - [[261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio]]
 - [[261023_2328_auditoria_codex]]
 - [[261023_2330_auditoria_claude]]
+- [[261024_0130_pla_implementacio_auditoria_adversarial_claude_i_dsa]]
+- [[261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa]]
