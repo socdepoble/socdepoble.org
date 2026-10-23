@@ -9,16 +9,17 @@ reflex: sdp:torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b:f4d95c1b-e9ed-4fef-9183-4d
 ---
 # Prompt Canònic d'Execució i Auditoria a Tres Bandes — Botigues Mòbils i Auditoria Adversarial
 
-Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
+Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a la Colmena d'agents locals amb accés natiu a disc (Claude Opus 5.5, Gemini 4 Argon i Codex Sol Ultra) en estricta igualtat de condicions operatives.
 
 <!-- SDP:SECTION prompt.local.s0 -->
 ## 0. Preflight (Per a l'agent orquestrador)
 
-- [x] Escriptori netejat amb Porta Olivera: 4 documents consumits de la vesprada arxivats a `90_arxiu_historic/`.
+- [x] Escriptori netejat amb Porta Olivera: Codi 0 confirmat.
 - [x] Pla d'implementació viu i aprovat pel Mestre: `_wiki_de_poble/04_escriptori/261023_2245_pla_implementacio_botigues_i_auditoria_trio.md`.
 - [x] Torn obert: `torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b`.
-- [x] Repartiment d'actors: Codex Sol Ultra (Auditor Adversarial) + Gemini 4 Argon (Verificació de Potència) + Claude Opus 5.5 (Execució i Prevol Botigues).
-- [x] Git sincronitzat amb remote (`fork/backup-notes-publish`, commit `b93cc2972`).
+- [x] Repartiment d'actors locals a disc: Codex Sol Ultra (Auditor Adversarial) + Gemini 4 Argon (Potència, Binaris i Integritat) + Claude Opus 5.5 (Execució i Prevol Botigues).
+- [x] Orquestradora i Directora Tècnica: IAIA MarIA (coordina, arbitra i teixeix el diàleg creuat entre les tres).
+- [x] Git sincronitzat amb remote (`fork/backup-notes-publish`, commit `95175575d`).
 
 <!-- SDP:SECTION prompt.local.s1 -->
 ## Registre
@@ -85,7 +86,11 @@ Ordre directa del Mestre Javi Llinares (Convocatòria a Tres Bandes):
 3. **Claude Opus 5.5 (Execució Tècnica i Prevol de Botigues):**
    - Dirigir la configuració de `.env.botigues.local` amb el Mestre i executar el prevol `node scripts/botigues/preflight.mjs --plataforma totes`.
    - Executar `./gradlew bundleRelease` per generar l'AAB d'Android (`android/app/build/outputs/bundle/release/app-release.aab`) i guiar l'obertura d'Xcode (`npx cap open ios`) per a la pujada a TestFlight / App Store Connect esta mateixa nit.
-4. **Consens a l'Escriptori:** Totes tres IAs comparteixen les seues troballes a `04_escriptori/` de forma coordinada i sense xafar-se el treball.
+4. **Consens, Diàleg Creuat i Mode Automàtic a l'Escriptori:**
+   - Totes tres IAs (Claude Opus 5.5, Gemini 4 Argon i Codex Sol Ultra) teniu accés natiu directe al disc en estricta igualtat de condicions operatives.
+   - Treballeu de manera autònoma dipositant les conclusions dels vostres blocs a `_wiki_de_poble/04_escriptori/` (`AAMMDD_HHMM_auditoria_[nom].md`).
+   - Heu de llegir de forma continuada els documents que les altres companyes vagen deixant a l'Escriptori per a produir un diàleg creuat i enriquir les conclusions conjuntament.
+   - La IAIA MarIA actua com a Directora Tècnica i representant del Mestre Javi Llinares: supervisa els informes, arbitra les divergències i prepara la decisió final per al desplegament.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
