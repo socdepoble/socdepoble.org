@@ -46,15 +46,26 @@ describe('els mitjans externs del directori', () => {
     expect(Object.isFrozen(MITJANS_EXTERNS_DEL_DIRECTORI.prefixos)).toBe(true);
     expect(MITJANS_EXTERNS_DEL_DIRECTORI.origen).toMatch(/^https:\/\/[^/]+$/);
     for (const prefix of MITJANS_EXTERNS_DEL_DIRECTORI.prefixos) expect(prefix, prefix).toMatch(/^assets\/[a-z_]+\/$/);
-    // La interfície i el contingut fix de l'app viatgen (guia 7 del directori; D1 del Mestre, opció B): cap prefix no els cobrix.
-    for (const cami of ['assets/system/ui/logo.png', 'assets/ui/plugins/consola_vinyeta.jpg', 'assets/notes/bloc_notes_vintage.jpg',
-      'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg',
+    // La carcassa bàsica de la UI viatja al paquet: cap prefix no la cobrix.
+    for (const cami of ['assets/system/ui/logo.png', 'assets/system/ui/socdepoble_logo_color_brutalist.svg',
       'assets/soc_de_poble_ibanez.webp', 'assets/pedra-seca.css', 'rag-index.json', 'fonts/noto-sans.css']) {
       expect(esExtern(cami, MITJANS_EXTERNS_DEL_DIRECTORI.prefixos), cami).toBe(false);
     }
-    // El contingut del servei, a l'origen extern.
-    expect([...MITJANS_EXTERNS_DEL_DIRECTORI.prefixos]).toEqual(['assets/uploads/', 'assets/towns/', 'assets/fotos/', 'assets/events/']);
-    expect(esExtern('assets/uploads/poble/x.jpg', MITJANS_EXTERNS_DEL_DIRECTORI.prefixos)).toBe(true);
+    // El contingut pesant i les il·lustracions, a l'origen extern.
+    expect([...MITJANS_EXTERNS_DEL_DIRECTORI.prefixos]).toEqual([
+      'assets/uploads/',
+      'assets/towns/',
+      'assets/fotos/',
+      'assets/events/',
+      'assets/ui/',
+      'assets/nano_cards/',
+      'assets/img/',
+      'assets/notes/'
+    ]);
+    for (const cami of ['assets/uploads/poble/x.jpg', 'assets/ui/plugins/consola_vinyeta.jpg',
+      'assets/nano_cards/mur_nano_card.jpg', 'assets/img/que-es-socdepoble-1.jpg', 'assets/notes/bloc_notes_vintage.jpg']) {
+      expect(esExtern(cami, MITJANS_EXTERNS_DEL_DIRECTORI.prefixos), cami).toBe(true);
+    }
   });
 
   test('un prefix és una carpeta exacta: ni un nom que hi comença ni la mateixa carpeta més avall', () => {

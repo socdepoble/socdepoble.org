@@ -36,6 +36,8 @@
    Només el registra src/pwa/registre.js, des de src/main.jsx i en producció.
    Cap amfitrió el rep: és a PROPIS_DEL_LLOC (vite.standalone.config.js).
    Sense skipWaiting: una versió nova espera que es tanquen les pestanyes.
+   L'única excepció és l'ordre de la PWA de juny (MISSATGE_LLEGAT_SALTA_ESPERA),
+   que la pàgina d'ara no envia mai (261023).
    Les funcions pures de dalt es proven a src/pwa/sw.test.js. */
 'use strict';
 
@@ -69,8 +71,14 @@ const CAPCALERA_RECURSOS = 'x-sdp-recursos';
    recurs) vol dir que la pàgina l'ha confirmada; sense ella, la closca no es
    dona. */
 const CAPCALERA_RECURSOS_PAGINA = 'x-sdp-recursos-pagina';
-/* Memòries de la PWA retirada per l'ADR-2026-08 (Workbox): fora en activar. */
+/* Memòries de la PWA retirada per l'ADR-2026-08 (Workbox): fora en activar.
+   Per prefix, la precàrrega (workbox-precache-v2-…); pel nom exacte, les de
+   temps d'execució de juny (src/sw.js de f484b6986: static-resources, CacheFirst
+   sense caducitat; wasm-worker-cache, NetworkFirst) i la del public/
+   service-worker.js d'abril (d9b064012, sdp-v1). El nom exacte i no un prefix:
+   cap altra memòria del lloc (sdp-salut, sdp-v2…) s'hi toca (261023). */
 const PREFIXOS_LLEGATS = ['workbox-'];
+const NOMS_LLEGATS = Object.freeze(['static-resources', 'wasm-worker-cache', 'sdp-v1']);
 /* Camins de servei: mai es toquen, tampoc en navegació (relé OAuth inclòs). */
 const PREFIXOS_DE_SERVEI = ['/rest/', '/auth/', '/functions/', '/storage/', '/realtime/', '/graphql/', '/api/'];
 /* Eixida de Rollup a l'arrel de /assets/: <nom>-<hash base64url de 8>.<ext>.
@@ -92,6 +100,14 @@ const CAMI_DEL_PORTAL = '/app/';
 const MAXIM_CLOSQUES = 32;
 /* El missatge de la pàgina (src/pwa/registre.js, MISSATGE_ESCALFAMENT). */
 const MISSATGE_ESCALFAMENT = 'sdp-escalfa';
+/* L'ordre del botó «Actualitzar ara» de la PWA de juny (PwaUpdater.jsx de
+   f484b6986: updateServiceWorker(true) de vite-plugin-pwa, que envia
+   { type: 'SKIP_WAITING' } al worker en espera). Els navegadors que la van
+   tindre servixen l'app de juny des de la precàrrega de Workbox (/ → /chats,
+   la clau vella de Supabase) fins que este worker pren el control. Sense
+   atendre l'ordre, el botó es queda en «Actualitzant…» i l'espera dura fins
+   que es tanquen totes les pestanyes i l'app instal·lada (261023). */
+const MISSATGE_LLEGAT_SALTA_ESPERA = 'SKIP_WAITING';
 const CLASSE = Object.freeze({ NAVEGACIO: 'navegacio', RECURS: 'recurs-amb-empremta' });
 const CSP_SENSE_CONNEXIO = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
 
@@ -135,9 +151,10 @@ function classificaPeticio(peticio, origenPropi) {
 }
 
 /**
- * Si una resposta de recurs amb empremta es pot guardar. La reescriptura SPA
- * torna index.html amb 200 per a un chunk que ja no existix: eixe HTML no ha
- * d'entrar mai com si fóra JavaScript.
+ * Si una resposta de recurs amb empremta es pot guardar. Una reescriptura SPA
+ * que també cobrira /assets/ tornaria index.html amb 200 per a un chunk que ja
+ * no existix (la de firebase.json deixa fora /assets/ i torna 404): eixe HTML
+ * no ha d'entrar mai com si fóra JavaScript.
  * `resposta`: { status, tipus, redirigida, contentType, cacheControl, cami }.
  */
 function esRespostaGuardable(resposta) {
@@ -294,7 +311,13 @@ function planDEscalfament(dades, origenPropi) {
 function cachesAEsborrar(noms, actuals) {
   const vives = [].concat(actuals);
   return noms.filter((nom) => !vives.includes(nom) &&
-    (nom.startsWith(PREFIX_PROPI) || PREFIXOS_LLEGATS.some((prefix) => nom.startsWith(prefix))));
+    (nom.startsWith(PREFIX_PROPI) || PREFIXOS_LLEGATS.some((prefix) => nom.startsWith(prefix)) ||
+      NOMS_LLEGATS.includes(nom)));
+}
+
+/** Si un missatge és l'ordre de saltar l'espera de la PWA de juny: un objecte amb `type` exactament 'SKIP_WAITING'. */
+function esOrdreLlegadaDeSaltarEspera(dades) {
+  return Boolean(dades) && typeof dades === 'object' && dades.type === MISSATGE_LLEGAT_SALTA_ESPERA;
 }
 
 /**
@@ -626,10 +649,16 @@ self.addEventListener('fetch', (event) => {
   else if (classe === CLASSE.RECURS) event.respondWith(recursAmbEmpremta(event));
 });
 
-/* Només missatges de pàgines de l'origen propi i amb la forma de
+/* Només missatges de pàgines de l'origen propi: l'ordre de juny (salta
+   l'espera, i en activar ix la seua precàrrega) o la forma de
    planDEscalfament; la resta, res. */
 self.addEventListener('message', (event) => {
   if (event.origin && event.origin !== self.location.origin) return;
+  if (esOrdreLlegadaDeSaltarEspera(event.data)) {
+    const salt = Promise.resolve(self.skipWaiting()).catch(() => {});
+    if (typeof event.waitUntil === 'function') event.waitUntil(salt);
+    return;
+  }
   const pla = planDEscalfament(event.data, self.location.origin);
   if (!pla) return;
   const feina = escalfa(pla).catch(() => {});

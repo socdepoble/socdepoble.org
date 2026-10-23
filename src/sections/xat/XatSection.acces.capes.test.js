@@ -100,3 +100,13 @@ test('XATR-7 · l’avís d’un fil de només lectura s’encongix dins de la s
   expect(valor('.sdp-xat-compositor-barra-avis > .sdp-xat-compositor--avis', 'flex')).toBe('0 1 auto');
   expect(valor('.sdp-xat-compositor-barra-avis > .sdp-xat-compositor--avis', 'min-width')).toBe('0');
 });
+
+test('puresa visual de l’accés: sense vora lateral de cita ni fons d’alerta, amb text i botons centrats', () => {
+  expect(valor('.sdp-alerta.sdp-xat-acces', 'border')).toBe('none');
+  expect(valor('.sdp-alerta.sdp-xat-acces', 'border-inline-start-width')).toBe('0');
+  expect(valor('.sdp-alerta.sdp-xat-acces', 'background')).toBe('transparent');
+  expect(valor('.sdp-alerta.sdp-xat-acces', 'text-align')).toBe('center');
+  expect(valor('.sdp-alerta.sdp-xat-acces', 'align-items')).toBe('center');
+  expect(valor('.sdp-xat-acces > p', 'text-align')).toBe('center');
+  expect(valor('.sdp-xat-acces > .sdp-alerta__accions', 'justify-content')).toBe('center');
+});

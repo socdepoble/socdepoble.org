@@ -956,7 +956,8 @@ define( 'SOCDEPOBLE_ENXUFE_FITXER', __DIR__ . '/socdepoble-enxufe.php' );
 define( 'SOCDEPOBLE_ENXUFE_MANIFEST', 'dist/sdp-release.json' );
 define( 'SOCDEPOBLE_ENXUFE_BUNDLE', 'dist/soc-de-poble.standalone.js' );
 define( 'SOCDEPOBLE_ENXUFE_FONTS', 'dist/fonts/noto-sans.css' );
-define( 'SOCDEPOBLE_ENXUFE_HANDLE', 'socdepoble-enxufe' );
+define( 'SOCDEPOBLE_ENXUFE_SLUG', 'socdepoble' );
+define( 'SOCDEPOBLE_ENXUFE_HANDLE', 'socdepoble' );
 define( 'SOCDEPOBLE_ENXUFE_VERSIO', '0.0.0-prova' );
 define( 'SOCDEPOBLE_ENXUFE_OPCIO', 'socdepoble_enxufe' );
 function plugin_dir_path( $p ) { return dirname( $p ) . '/'; }
@@ -1289,15 +1290,15 @@ test('el perfil lleuger extern deixa fora tots els assets, conserva codi, fonts 
 });
 
 test('el plugin amb política no emet els externs ni els originals substituïts; sense, com sempre', () => {
-  const arrel = publicDeMostra(['assets/ui/v.jpg', 'assets/ui/v.webp', 'assets/towns/a/1.webp']);
+  const arrel = publicDeMostra(['assets/system/ui/v.jpg', 'assets/system/ui/v.webp', 'assets/ui/v.webp', 'assets/towns/a/1.webp']);
   try {
     const politica = politicaDeMitjans('wordpress', { directori: arrel });
     const emesos = emet(recursosPublicsDelPlugin({ directori: arrel, politica })).map((f) => f.fileName).sort();
-    assert.ok(!emesos.some((cami) => cami.startsWith('assets/towns/')), 'cap extern');
-    assert.ok(!emesos.includes('assets/ui/v.jpg') && emesos.includes('assets/ui/v.webp'), 'la bessona en lloc de l’original');
+    assert.ok(!emesos.some((cami) => cami.startsWith('assets/towns/') || cami.startsWith('assets/ui/')), 'cap extern');
+    assert.ok(!emesos.includes('assets/system/ui/v.jpg') && emesos.includes('assets/system/ui/v.webp'), 'la bessona en lloc de l’original');
     assert.ok(emesos.includes('assets/system/ui/logo.svg') && emesos.includes('rag-index.json'), 'l’estructura viatja');
     assert.deepEqual(emet(recursosPublicsDelPlugin({ directori: arrel })).map((f) => f.fileName).sort(),
-      [...VIATGEN, 'assets/towns/a/1.webp', 'assets/ui/v.jpg', 'assets/ui/v.webp'].sort());
+      [...VIATGEN, 'assets/towns/a/1.webp', 'assets/system/ui/v.jpg', 'assets/system/ui/v.webp', 'assets/ui/v.webp'].sort());
   } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
 });
 

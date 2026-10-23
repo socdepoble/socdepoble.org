@@ -847,7 +847,7 @@ function socdepoble_enxufe_comprova_ara() {
 	check_admin_referer( 'socdepoble_enxufe_comprova' );
 	delete_site_transient( 'update_plugins' );
 	socdepoble_enxufe_canal( true );
-	wp_safe_redirect( admin_url( 'options-general.php?page=socdepoble-enxufe' ) );
+	wp_safe_redirect( admin_url( 'options-general.php?page=' . SOCDEPOBLE_ENXUFE_SLUG ) );
 	exit;
 }
 add_action( 'admin_post_socdepoble_enxufe_comprova', 'socdepoble_enxufe_comprova_ara' );

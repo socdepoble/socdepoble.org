@@ -13,14 +13,14 @@
  *     el disc d'un Mac no les distingix). Un .webp sense original, o amb dos,
  *     no és la bessona de ningú.
  *   · Els mitjans EXTERNS de la variant del directori de WordPress.org
- *     (SDP_VARIANT=wordpress): el contingut del servei (l'arxiu i les fotos
- *     de la comunitat, dels pobles, de la gent i dels esdeveniments) no
- *     viatja dins del zip, que no pot passar de 10 MB, i se servix des d'un
- *     origen extern. La interfície i el contingut fix de l'app (system/, ui/,
- *     nano_cards/, img/, notes/ i els fitxers de l'arrel d'assets/) sí que hi
- *     viatgen: la guia 7 del directori prohibix descarregar d'un servidor
- *     extern el que no és contingut del servei (decisió D1 del Mestre,
- *     opció B, 261019).
+ *     (SDP_VARIANT=wordpress): el contingut pesant del servei i les
+ *     il·lustracions editorials/demostratives (uploads/, towns/, fotos/,
+ *     events/, ui/, nano_cards/, img/ i notes/) no viatgen dins del zip per
+ *     mantindre el paquet al voltant de 3,6 MB (molt per davall del límit de
+ *     10 MB de WordPress.org), i se servixen des de l'origen extern
+ *     (https://socdepoble.org). La carcassa bàsica de la interfície (system/,
+ *     fonts/, components/, els índexs i els fitxers de l'arrel d'assets/) sí
+ *     que hi viatja.
  *
  * El fitxer és pur: cap import, cap fs, cap import.meta. El fan servir
  * vite.standalone.config.js (què viatja al paquet i què se segella al bundle),
@@ -82,7 +82,11 @@ export const MITJANS_EXTERNS_DEL_DIRECTORI = Object.freeze({
     'assets/uploads/',
     'assets/towns/',
     'assets/fotos/',
-    'assets/events/'
+    'assets/events/',
+    'assets/ui/',
+    'assets/nano_cards/',
+    'assets/img/',
+    'assets/notes/'
   ])
 });
 

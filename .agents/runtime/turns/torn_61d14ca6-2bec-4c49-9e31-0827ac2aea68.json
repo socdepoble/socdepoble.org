@@ -3,10 +3,10 @@
   "turn_id": "torn_61d14ca6-2bec-4c49-9e31-0827ac2aea68",
   "actor": "claude",
   "scope": "code",
-  "state": "opened",
-  "revision": 0,
+  "state": "planned",
+  "revision": 4,
   "createdAt": "2026-10-23T12:15:25.401Z",
-  "updatedAt": "2026-10-23T12:15:25.401Z",
+  "updatedAt": "2026-10-23T13:02:48.285Z",
   "expiresAt": "2026-10-24T12:15:25.402Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3615,14 +3615,66 @@
     "vite.config.js": "4015f5d903b9b01cf40e82b5ba4590ef3169b4496a3f57c92cd573a5b466e5bd",
     ".gitignore": "33885caedaf4deebcd398d0a812b5afa8047f96225d3e377ca71bc02846f4774"
   },
-  "receipts": {},
-  "plan": null,
+  "receipts": {
+    "050ab351-6a16-4a42-bde0-663b530aee3a": {
+      "id": "050ab351-6a16-4a42-bde0-663b530aee3a",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261023_1450_auditoria_claude.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-23T12:48:58.983Z"
+    },
+    "eed43cc1-08f8-4d92-999b-76645e1d4ed9": {
+      "id": "eed43cc1-08f8-4d92-999b-76645e1d4ed9",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261023_1450_auditoria_claude.md",
+      "contractSnapshot": "4839a92b72c907ce2962882325d639c4e03499259e30d86bb33c576687252386",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-23T12:48:59.068Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-23T12:48:59.070Z",
+        "committedAt": "2026-10-23T12:48:59.111Z",
+        "documentHash": "f02a3e9a755e5f63b879d370af857f736af393c7305a072fb0004550cbbc9727"
+      }
+    }
+  },
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261023_1345_pla_implementacio_botigues_mobil.md",
+    "hash": "e006c762079a8179369362100b533d89c281ebb93320653f74aab28135aa2f60"
+  },
   "verification": null,
   "history": [
     {
       "state": "opened",
       "action": "open",
       "at": "2026-10-23T12:15:25.401Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-23T12:48:58.984Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-23T12:48:59.070Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "eed43cc1-08f8-4d92-999b-76645e1d4ed9",
+      "file": "_wiki_de_poble/04_escriptori/261023_1450_auditoria_claude.md",
+      "at": "2026-10-23T12:48:59.111Z",
+      "hash": "f02a3e9a755e5f63b879d370af857f736af393c7305a072fb0004550cbbc9727"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-23T13:02:48.284Z"
     }
   ]
 }

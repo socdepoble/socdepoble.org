@@ -157,7 +157,7 @@ add_action( 'admin_menu', 'socdepoble_enxufe_afig_pagina' );
  * @return array
  */
 function socdepoble_enxufe_enllac_ajustos( $enllacos ) {
-	$ajustos = '<a href="' . esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ) . '">' . esc_html__( 'Settings', 'socdepoble' ) . '</a>';
+	$ajustos = '<a href="' . esc_url( admin_url( 'options-general.php?page=' . SOCDEPOBLE_ENXUFE_SLUG ) ) . '">' . esc_html__( 'Settings', 'socdepoble' ) . '</a>';
 	array_unshift( $enllacos, $ajustos );
 	return $enllacos;
 }

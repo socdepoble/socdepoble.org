@@ -226,6 +226,19 @@ const RE_TAB_O_SALT = /[\t\n\r]/g;
    en lloc de la silueta de sempre. '//x' continua sent el camí propi '/x'. */
 const RE_INICI_AMB_ORIGEN_AMAGAT = /^[/.]*[\\\u0000-\u001F\u007F]/;
 
+/* Pla 261022_1645 i encàrrec d'aprimament · Els tres .jpg retirats de public/
+   que col·lidien amb el .png canònic i les cites curtes d'ibanez_pedra_seca_design
+   es normalitzen al seu camí .webp sota assets/ quan s'aplica la política de
+   mitjans o hi ha base d'amfitrió. */
+const ALIAS_CANONICS_MITJANS = new Map([
+  ['ibanez_pedra_seca_design_1780873465211.webp', 'assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp'],
+  ['ibanez_pedra_seca_design_1780873465211.jpg', 'assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp'],
+  ['ibanez_pedra_seca_design_1780873465211.png', 'assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp'],
+  ['assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg', 'assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp'],
+  ['assets/uploads/poble/la-torre-de-les-macanes/og_gentdelatorre_mapa_cuadrat_halo.jpg', 'assets/uploads/poble/la-torre-de-les-macanes/og_gentdelatorre_mapa_cuadrat_halo.webp'],
+  ['assets/system/ui/og-socdepoble-1200x630.jpg', 'assets/system/ui/og-socdepoble-1200x630.webp']
+]);
+
 export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '') {
   if (!path) return '';
   /* Gauntlet 261017 (I34) · Sense espais als extrems: ' /assets/x.png' donava
@@ -264,6 +277,7 @@ export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '')
     const posConsulta = senseFragment.indexOf('?');
     let fitxer = posConsulta === -1 ? senseFragment : senseFragment.slice(0, posConsulta);
     const consulta = posConsulta === -1 ? '' : senseFragment.slice(posConsulta);
+    if (ALIAS_CANONICS_MITJANS.has(fitxer)) fitxer = ALIAS_CANONICS_MITJANS.get(fitxer);
     if (politicaActual.bessones.has(fitxer)) fitxer = fitxer.replace(/\.[^./]+$/, '.webp');
     if (politicaActual.externs.some((prefix) => fitxer.startsWith(prefix))) base = politicaActual.origen;
     return `${base}/${fitxer}${consulta}${query}${fragment}`;

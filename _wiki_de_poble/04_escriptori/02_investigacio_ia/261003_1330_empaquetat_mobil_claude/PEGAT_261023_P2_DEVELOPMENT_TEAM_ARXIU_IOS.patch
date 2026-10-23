@@ -1,0 +1,35 @@
+diff --git a/scripts/botigues/puja-ios.mjs b/scripts/botigues/puja-ios.mjs
+index 01329a4bf2f43e1e83bb52900d2ae9a0a93c888c..1316fd496286b9d13a8c24bcd42116c70b9d9aca 100644
+--- a/scripts/botigues/puja-ios.mjs
++++ b/scripts/botigues/puja-ios.mjs
+@@ -67,10 +67,13 @@ export function planIos({ arrel, valors, versio, build, projecte }) {
+        defecte, hi busca credencials al clauer de macOS: amb un element de github.com al clauer,
+        la resolució es queda esperant el clauer (10 min en la validació d'iOS de la Fase C).
+        Amb netrc no toca el clauer; sense ~/.netrc, la baixada és anònima [VERIFICAT 261019,
+-       «xcodebuild -help» d'Xcode 27.1 i resolució real en 17,9 s]. */
++       «xcodebuild -help» d'Xcode 27.1 i resolució real en 17,9 s].
++       261023 · project.pbxproj no porta DEVELOPMENT_TEAM (signatura automàtica): l'equip
++       arriba a l'arxiu des de SDP_APPLE_TEAM_ID, el mateix que després comprova codesign -dv,
++       i la línia d'ordres el mostra com a <SDP_APPLE_TEAM_ID>. */
+     arxiva: ['xcodebuild', [projecte.opcio, projecte.cami, '-scheme', 'App', '-configuration', 'Release',
+       '-destination', 'generic/platform=iOS', '-packageAuthorizationProvider', 'netrc', '-archivePath', arxiu, ...autenticacio,
+-      `MARKETING_VERSION=${versio}`, `CURRENT_PROJECT_VERSION=${build}`, 'archive']],
++      `DEVELOPMENT_TEAM=${valors.SDP_APPLE_TEAM_ID.trim()}`, `MARKETING_VERSION=${versio}`, `CURRENT_PROJECT_VERSION=${build}`, 'archive']],
+     exporta: ['xcodebuild', ['-exportArchive', '-archivePath', arxiu, '-exportPath', exportacio,
+       '-exportOptionsPlist', plist, ...autenticacio]],
+     valida: (ipa) => ['xcrun', altool('--validate-app', ipa)],
+diff --git a/tests/botigues.test.mjs b/tests/botigues.test.mjs
+index 97d51620319a9405654a24238d6fadb439ef1d19..8aeb22abf07cf290b5b526b75e1627c2720d8be5 100644
+--- a/tests/botigues.test.mjs
++++ b/tests/botigues.test.mjs
+@@ -135,6 +135,10 @@ test('botigues: plans emmascarats, contrasenyes només a l\'entorn del fill, i e
+   assert.deepEqual(e.opcionsQueFalten(ajudaAltool, ios.OPCIONS_ALTOOL), []);
+   assert.deepEqual(e.opcionsQueFalten(ajudaAltool, ['--file', '--type']), ['--file', '--type'], 'el pla de 261003 parava amb l\'eixida 6');
+   assert.match(mostrat, /MARKETING_VERSION=1\.0\.0 CURRENT_PROJECT_VERSION=7 archive/);
++  // 261023 · project.pbxproj no porta DEVELOPMENT_TEAM: l'arxiu el rep de SDP_APPLE_TEAM_ID, i en mostrar-lo ix emmascarat.
++  assert.match(mostrat, /-authenticationKeyIssuerID <SDP_ASC_ISSUER_ID> DEVELOPMENT_TEAM=<SDP_APPLE_TEAM_ID> MARKETING_VERSION=1\.0\.0 /);
++  assert.ok(pla.arxiva[1].includes('DEVELOPMENT_TEAM=ABCDE12345'), 'xcodebuild rep l\'equip de veres');
++  assert.ok(!mostrat.includes('ABCDE12345'), 'l\'equip no es mostra');
+   // Fase C (261019) · SPM sense clauer: la resolució no es queda esperant una credencial de github.com.
+   assert.match(mostrat, /-destination generic\/platform=iOS -packageAuthorizationProvider netrc /);
+   assert.ok(ios.OPCIONS_XCODEBUILD.includes('-packageAuthorizationProvider'));

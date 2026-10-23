@@ -52,7 +52,7 @@ function socdepoble_enxufe_resultat_salut( $prova, $estat, $etiqueta, $descripci
 		'description' => '<p>' . esc_html( $descripcio ) . '</p>',
 		'actions'     => sprintf(
 			'<p><a href="%1$s">%2$s</a></p>',
-			esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ),
+			esc_url( admin_url( 'options-general.php?page=' . SOCDEPOBLE_ENXUFE_SLUG ) ),
 			esc_html__( 'Open Settings → Sóc de Poble', 'socdepoble' )
 		),
 		'test'        => $prova,

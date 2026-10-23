@@ -123,11 +123,26 @@ test('resolRecursPropi i resolRecursosDeHtml apliquen la política també sense 
   expect(sanitizeHtml(resolt)).toContain(`src="${ORIGEN}/assets/uploads/poble/DSC00410.webp"`);
 });
 
-test('les reserves dels pobles (uploads/brain) van a l’origen extern', () => {
+test('les reserves dels pobles (uploads/brain) i ibanez_pedra_seca_design van sempre a l’origen extern', () => {
   fixaBaseRecursos(PAQUET);
-  fixaPoliticaDeMitjans(POLITICA);
+  fixaPoliticaDeMitjans({
+    ...POLITICA,
+    bessones: [...POLITICA.bessones, 'assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png']
+  });
   const reserva = resolveTownImageUrl('', 'Benifallim');
   expect(reserva).toBe(`${ORIGEN}${TOWN_FALLBACK_IMAGES[0]}`);
+  const esperada = 'https://socdepoble.org/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp';
+  for (const entrada of [
+    '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp',
+    'assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp',
+    '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png',
+    '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg',
+    'ibanez_pedra_seca_design_1780873465211.webp',
+    'ibanez_pedra_seca_design_1780873465211.jpg',
+    'ibanez_pedra_seca_design_1780873465211.png'
+  ]) {
+    expect(resolveAsset(entrada), entrada).toBe(esperada);
+  }
 });
 
 test('una política mal formada no s’aplica: cap origen relatiu, cap prefix fora d’assets/, cap «..»', () => {

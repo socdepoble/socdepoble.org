@@ -7,6 +7,43 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-23T17:15:00+02:00 · IAIA MarIA · Desplegament Viu Firebase socdepoble.org, Puresa Visual Xat, Curació SW Juny (R1+R2) i Aprimament Històric WordPress (2,8 MB)
+
+Torn: `torn_8abf96ed-4ca0-4d1e-b8da-82e99e058c03`.
+
+- **Desplegament Viu a Firebase Hosting (`socdepoble.org`):**
+  - Desallotjada la versió fòssil antiga de Firebase Hosting. Recompilat el web bundle (`npm run build:web`) i desplegat mitjançant `npx firebase-tools deploy --only hosting --project soc-de-poble` (729 fitxers publicats).
+  - Verificat via xarxa i curl que `https://socdepoble.org` respon amb HTTP 200, serveix la ruta canònica `/xat` (amb x) i eradica qualsevol referència a la vella `/chats` amb 401.
+- **Curació de Navegadors de Juny al Service Worker (`public/sw.js` · Claude):**
+  - Implementat i verificat el pegat R1+R2 a `public/sw.js` i `src/pwa/sw.test.js`:
+    * R1: Atén `{type: 'SKIP_WAITING'}` enviat pel botó «Actualitzar ara» de la PWA de juny, desbloquejant els navegadors atrapats.
+    * R2: Neteja automàticament les 3 memòries cau orfes de juny/març (`static-resources`, `wasm-worker-cache`, `sdp-v1`).
+  - Suite de proves de PWA: **163 de 163 en verd**, ESLint net i empaquetat 72/72 en verd.
+- **Aprimament Històric del Connector WordPress (`socdepoble.zip` · Gemini):**
+  - Reduït el paquet oficial de 9,80 MB a **2,80 MB** (reducció del 71%, llunyíssim del límit de 10 MB de WordPress.org).
+  - Externalització de mitjans pesats a `https://socdepoble.org` via `politicaDeMitjans.js` i `assetResolver.js`.
+  - Suite completa de proves del connector i build: **59 de 59 proves en verd** (`enxufe-plugin.test.mjs`, `standalone-build.test.mjs`).
+- **Puresa Visual del Xat (IAIA MarIA):**
+  - Eliminada la vora lateral de cita de 6px a `.sdp-alerta.sdp-xat-acces` de `src/css/modules.css`.
+  - Centrat net del text d'accés i dels botons (`Connectar-se` / `Registrar-se`). Proves de capes 6/6 en verd.
+- **Estat de l'Escriptori i Portes:**
+  - Porta Olivera en **Codi 0** (4 documents del torn ancorats i validats a `00_index_escriptori.md`).
+
+## ESTAT_ACTUAL · 2026-10-23T15:30:00+02:00 · IAIA MarIA · Consolidació Commit Botigues 1.0.0 (9027265e1), Tancament de Sessió i Acta Marmota
+
+Torn: `torn_b68ea50d-7d14-4717-a320-9c8c517e0da0`.
+
+- **Commit de Git Consolidat (`9027265e1`):**
+  - Consolidats 48 fitxers a `backup-notes-publish`: tasques T1-T4 de Gemini + tasques E1-E4 de Claude (guarda signing gradle, versió 1.0.0, textos de permisos iOS, splash screen verd d'Android 12, traduccions valencianes del plugin i correccions d'enllaços d'Ajustos).
+- **WordPress & Gent de La Torre:**
+  - `socdepoble.zip` oficial enviat a WordPress.org amb slug `socdepoble`.
+  - Plugin nou instal·lat i actiu a `gentdelatorre.net`, configurat per al municipi La Torre.
+  - Corregit l'enllaç d'Ajustos a `includes/ajustos.php`, `includes/salut.php` i `includes/actualitzador.php` (`options-general.php?page=socdepoble`).
+  - Decisió canònica del Mestre: una sola variant universal del plugin sense actualitzador privat; les actualitzacions seran natives de WordPress.org un cop aprovat.
+- **Acta Marmota i Relleu:**
+  - Redactada l'acta canònica a [`_wiki_de_poble/10_actes/261023_1530_acta_marmota_triomf_botigues_i_el_pont_empatic.md`](_wiki_de_poble/10_actes/261023_1530_acta_marmota_triomf_botigues_i_el_pont_empatic.md).
+  - Preparat el prompt d'optimització per a Gemini Pro (aprimament del paquet a 4-5 MB i càrrega de mitjans externa).
+
 ## ESTAT_ACTUAL · 2026-10-23T14:35:00+02:00 · IAIA MarIA · Lliurament Oficial a WordPress.org (Slug i Text Domain `socdepoble`), Unificació de La Torre a Supabase (D1-A) i Mòbil Sincronitzat
 
 Torn: `torn_b68ea50d-7d14-4717-a320-9c8c517e0da0`.

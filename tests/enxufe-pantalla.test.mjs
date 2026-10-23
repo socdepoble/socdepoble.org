@@ -150,7 +150,7 @@ test('pantalla completa amb tema de blocs: respecta template-canvas si la planti
   assert.deepEqual(nostra.classes, ['socdepoble-enxufe-pantalla']);
   assert.ok(nostra.estils.includes(CSS_CLASSIC), 'la mateixa pell que la plantilla PHP');
   assert.ok(nostra.estils.includes('.socdepoble-enxufe-pantalla .wp-site-blocks{padding:0}'));
-  assert.ok(nostra.cua_estils.includes('socdepoble-enxufe'));
+  assert.ok(nostra.cua_estils.includes('socdepoble'));
 
   // WordPress 6.5 i 6.6: el canvas pinta la page.html del tema, no la nostra.
   const aliena = executa(t, { plantilla: FULLSCREEN, entrada: CANVAS, plantilla_actual: 'twentytwentyfive//page' });
@@ -167,7 +167,7 @@ test('pantalla completa amb tema de blocs: respecta template-canvas si la planti
 test('plantilla de blocs: mateix slug que l’opció clàssica, només pàgines, i el contingut de la pàgina dins de <main>', OPCIONS, t => {
   const amb = executa(t, { mode: 'blocs', registre_blocs: true });
   assert.ok(amb.init.includes('socdepoble_enxufe_registra_plantilla_blocs'), 'es registra a init');
-  const nom = `socdepoble-enxufe//${FULLSCREEN}`;
+  const nom = `socdepoble//${FULLSCREEN}`;
   assert.deepEqual(Object.keys(amb.plantilles), [nom]);
   assert.match(nom, /^[a-z0-9_-]+\/\/[a-z0-9_-]+$/, 'el patró que exigix WP_Block_Templates_Registry');
   const args = amb.plantilles[nom];

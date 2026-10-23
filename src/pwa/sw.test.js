@@ -23,7 +23,7 @@ const CODI = readFileSync(path.join(process.cwd(), 'public/sw.js'), 'utf8');
 const ORIGEN = 'https://socdepoble.org';
 /* La darrera expressió del script és el seu valor: així es lligen les funcions
    i les constants de dalt sense que el fitxer publicat exporte res. */
-const LECTURA = '\n;({ classificaPeticio, esRespostaGuardable, esCloscaGuardable, esCamiDApp, camiDeLaClosca, recursosDeLHtml, recursosDeLaClau, esCloscaConfirmada, esDelBuild, llistesDeLaClosca, capcaleresDeLaClosca, recursosPerArrencar, planDEscalfament, cachesAEsborrar, clausSobrants, midaDeLaClau, paginaSenseConnexio, CLASSE, MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIES_VIVES, CAMI_DEL_PORTAL, MAXIM_CLOSQUES, MAXIM_RECURSOS, MAXIM_BYTES, CAPCALERA_MIDA, CAPCALERA_RECURSOS, CAPCALERA_RECURSOS_PAGINA, CSP_SENSE_CONNEXIO, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA });';
+const LECTURA = '\n;({ classificaPeticio, esRespostaGuardable, esCloscaGuardable, esCamiDApp, camiDeLaClosca, recursosDeLHtml, recursosDeLaClau, esCloscaConfirmada, esDelBuild, llistesDeLaClosca, capcaleresDeLaClosca, recursosPerArrencar, planDEscalfament, cachesAEsborrar, esOrdreLlegadaDeSaltarEspera, NOMS_LLEGATS, MISSATGE_LLEGAT_SALTA_ESPERA, clausSobrants, midaDeLaClau, paginaSenseConnexio, CLASSE, MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIES_VIVES, CAMI_DEL_PORTAL, MAXIM_CLOSQUES, MAXIM_RECURSOS, MAXIM_BYTES, CAPCALERA_MIDA, CAPCALERA_RECURSOS, CAPCALERA_RECURSOS_PAGINA, CSP_SENSE_CONNEXIO, MISSATGE_ESCALFAMENT, RECURS_AMB_EMPREMTA });';
 
 const urlDe = (x) => (typeof x === 'string' ? x : x.url);
 
@@ -295,6 +295,14 @@ describe('memòries: neteja i poda (pures)', () => {
     expect(api.MEMORIA_RECURSOS).toBe('sdp-pwa-recursos-v1');
   });
 
+  test('261023: també les de temps d\'execució de juny i la del worker de març, pel nom exacte; res que s\'hi semble', () => {
+    expect(Array.from(api.NOMS_LLEGATS)).toEqual(['static-resources', 'wasm-worker-cache', 'sdp-v1']);
+    const noms = [api.MEMORIA_RECURSOS, 'static-resources', 'wasm-worker-cache', 'sdp-v1',
+      'static-resources-2', 'mes-static-resources', 'sdp-v2', 'sdp-v1-x', 'sdp-salut', 'Static-Resources'];
+    expect(Array.from(api.cachesAEsborrar(noms, api.MEMORIES_VIVES)))
+      .toEqual(['static-resources', 'wasm-worker-cache', 'sdp-v1']);
+  });
+
   test('amb la closca, les dos memòries vives es queden i les versions velles de totes dos ixen', () => {
     expect(api.MEMORIA_CLOSCA).toBe('sdp-pwa-closca-v1');
     expect(Array.from(api.MEMORIES_VIVES)).toEqual(['sdp-pwa-recursos-v1', 'sdp-pwa-closca-v1']);
@@ -514,11 +522,12 @@ describe('la closca de les apps (pures)', () => {
 });
 
 describe('el worker en marxa', () => {
-  test('només escolta activate, fetch i message (l\'escalfament): cap skipWaiting, cap push ni sync, cap importScripts', () => {
+  test('només escolta activate, fetch i message (l\'escalfament): cap push ni sync, cap importScripts; skipWaiting, només per a l\'ordre de juny', () => {
     const worker = carregaWorker();
     expect([...worker.escoltes.keys()].sort()).toEqual(['activate', 'fetch', 'message']);
     expect(worker.self.skipWaiting).not.toHaveBeenCalled();
-    expect(CODI).not.toMatch(/skipWaiting\s*\(/);
+    // 261023: una sola crida, la de l'ordre de juny (les proves de «l'ordre "Actualitzar ara"» la disparen).
+    expect(CODI.match(/skipWaiting\s*\(/g)).toHaveLength(1);
     expect(CODI).not.toMatch(/importScripts\s*\(/);
     expect(CODI).not.toMatch(/\b(?:indexedDB|localStorage|sessionStorage)\b/);
   });
@@ -1148,11 +1157,62 @@ describe('l\'escalfament que demana la pàgina d\'una app', () => {
   test('missatges que no són d\'escalfament, o d\'un altre origen: res, ni memòria ni xarxa', async () => {
     const { caches } = memoriesFalses();
     const worker = carregaWorker({ caches, fetch: vi.fn() });
-    for (const dades of [null, 'sdp-escalfa', { tipus: 'altre' }, { type: 'SKIP_WAITING' }, { tipus: 'sdp-escalfa', closca: '/mur' }]) {
+    for (const dades of [null, 'sdp-escalfa', { tipus: 'altre' }, { tipus: 'sdp-escalfa', closca: '/mur' }]) {
       expect(await missatge(worker, dades), JSON.stringify(dades)).toBe(0);
     }
     expect(await missatge(worker, { tipus: 'sdp-escalfa', recursos: [JS], closca: '/app/bar' }, { origin: 'https://altre.org' })).toBe(0);
     expect(caches.open).not.toHaveBeenCalled();
     expect(worker.fetch).not.toHaveBeenCalled();
+    expect(worker.self.skipWaiting).not.toHaveBeenCalled();
+  });
+});
+
+describe('261023 · l\'ordre «Actualitzar ara» de la PWA de juny', () => {
+  test('la forma: un objecte amb type exactament \'SKIP_WAITING\', el de workbox-window (updateServiceWorker de vite-plugin-pwa)', () => {
+    const { api } = carregaWorker();
+    expect(api.MISSATGE_LLEGAT_SALTA_ESPERA).toBe('SKIP_WAITING');
+    expect(api.esOrdreLlegadaDeSaltarEspera({ type: 'SKIP_WAITING' })).toBe(true);
+    expect(api.esOrdreLlegadaDeSaltarEspera({ type: 'SKIP_WAITING', meta: 'workbox-window' })).toBe(true);
+    for (const dades of [null, undefined, 'SKIP_WAITING', { tipus: 'SKIP_WAITING' }, { type: 'skip_waiting' },
+      { type: 'SKIP_WAITING ' }, { type: 'sw:apply-update' }, { tipus: 'sdp-escalfa', recursos: [JS] }, ['SKIP_WAITING']]) {
+      expect(api.esOrdreLlegadaDeSaltarEspera(dades), JSON.stringify(dades)).toBe(false);
+    }
+  });
+
+  test('de l\'origen propi: el worker en espera salta l\'espera, sense obrir cap memòria ni anar a la xarxa', async () => {
+    const { caches } = memoriesFalses();
+    const worker = carregaWorker({ caches, fetch: vi.fn() });
+    expect(await missatge(worker, { type: 'SKIP_WAITING' })).toBe(1);
+    expect(worker.self.skipWaiting).toHaveBeenCalledTimes(1);
+    expect(caches.open).not.toHaveBeenCalled();
+    expect(worker.fetch).not.toHaveBeenCalled();
+  });
+
+  test('d\'un altre origen, o amb una altra forma: res', async () => {
+    const worker = carregaWorker({ fetch: vi.fn() });
+    expect(await missatge(worker, { type: 'SKIP_WAITING' }, { origin: 'https://altre.org' })).toBe(0);
+    for (const dades of ['SKIP_WAITING', { tipus: 'SKIP_WAITING' }, { type: 'skip_waiting' }]) {
+      expect(await missatge(worker, dades), JSON.stringify(dades)).toBe(0);
+    }
+    expect(worker.self.skipWaiting).not.toHaveBeenCalled();
+  });
+
+  test('si skipWaiting falla, el missatge acaba igual (cap rebuig sense atendre)', async () => {
+    const worker = carregaWorker();
+    worker.self.skipWaiting.mockImplementation(() => Promise.reject(new Error('InvalidStateError')));
+    expect(await missatge(worker, { type: 'SKIP_WAITING' })).toBe(1);
+    expect(worker.self.skipWaiting).toHaveBeenCalledTimes(1);
+  });
+
+  test('i en activar ix la precàrrega de juny i les seues memòries de temps d\'execució; les del lloc es queden', async () => {
+    const { caches, memories } = memoriesFalses({
+      'workbox-precache-v2-https://socdepoble.org/': [], 'static-resources': [], 'wasm-worker-cache': [], 'sdp-v1': [],
+      'sdp-pwa-recursos-v1': [], 'sdp-salut': [], 'sdp-v2': []
+    });
+    const worker = carregaWorker({ caches });
+    await missatge(worker, { type: 'SKIP_WAITING' });
+    await activa(worker);
+    expect([...memories.keys()].sort()).toEqual(['sdp-pwa-recursos-v1', 'sdp-salut', 'sdp-v2']);
+    expect(worker.self.clients.claim).toHaveBeenCalledTimes(1);
   });
 });

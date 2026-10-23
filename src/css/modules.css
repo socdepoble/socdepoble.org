@@ -4634,9 +4634,23 @@ details[open] summary.accordion-header svg:last-child {
      d'una conversa la reserva de la barra la porta .sdp-xat-conversa i
      l'accés no s'encongix (els missatges sí). Text damunt i accions que
      poden compartir fila. */
-  .sdp-alerta.sdp-xat-acces { flex: none; flex-direction: column; margin: 0; }
-  .sdp-xat-acces > p { margin: 0; }
-  .sdp-xat-acces > .sdp-alerta__accions { margin: 0; }
+  .sdp-alerta.sdp-xat-acces {
+    flex: none;
+    flex-direction: column;
+    margin: 0;
+    border: none;
+    border-inline-start-width: 0;
+    background: transparent;
+    text-align: center;
+    align-items: center;
+  }
+  .sdp-xat-acces > p { margin: 0; text-align: center; }
+  .sdp-xat-acces > .sdp-alerta__accions {
+    margin: var(--sdp-space-3) 0 0;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu { display: flex; flex-direction: column; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > * { flex-shrink: 0; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > .sdp-xat-fitxa-comunitat { flex-grow: 1; min-height: 0; }
