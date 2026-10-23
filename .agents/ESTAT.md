@@ -7,6 +7,25 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-23T22:50:00+02:00 · IAIA MarIA · Convocatòria a Tres Bandes (Claude, Gemini, Codex) per a Pujada a Botigues Mòbils, Correcció CSS i Preflight Llest
+
+Torn: `torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b`.
+
+- **Correcció CSS de Compatibilitat (`src/css/modules.css`):**
+  - Resolt l'avís del linter incorporant la propietat estàndard `line-clamp` junt a `-webkit-line-clamp` a les regles del calendari setmanal. Arbre de codi font 100% net d'errors o avisos.
+- **Sincronització de Git amb el Remot (`fork/backup-notes-publish`):**
+  - Commits `b082b13d6` i `6d7e6cd2c` emesos i enviats amb èxit (`git push`). Arbre de treball 100% net (`git status --porcelain` buit).
+- **Preflight Mòbil Natiu (`scripts/botigues/preflight.mjs`):**
+  - Totes les eines natives operatives: Git, Xcode, xcrun, codesign, plutil, keytool i JDK 21 per a Gradle.
+  - Còpies natives (`dist-natiu/index.html`, `ios/`, `android/`) idèntiques byte a byte.
+  - Única pendent: omplir les claus del Mestre a `.env.botigues.local` (Keystore de release per a Android i Team ID per a iOS).
+- **Pla i Prompt Canònic a l'Escriptori (`04_escriptori/`):**
+  - Aprovat el Pla d'Implementació: `261023_2245_pla_implementacio_botigues_i_auditoria_trio.md`.
+  - Convocat el Prompt a Tres Bandes: `261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio.md`.
+  - Repartiment clar: **Codex Sol Ultra** (auditoria adversarial del sistema complet i conformitat amb App Store/Play Store), **Gemini 4 Argon** (verificació de potència, integritat dels actius natius sense canal alfa i binaris), **Claude Opus 5.5** (execució del prevol, compilació de release AAB i preparació d'Xcode per a la pujada esta mateixa nit).
+- **Higiene de l'Escriptori:**
+  - Porta Olivera en **Codi 0**.
+
 ## ESTAT_ACTUAL · 2026-10-23T17:15:00+02:00 · IAIA MarIA · Desplegament Viu Firebase socdepoble.org, Puresa Visual Xat, Curació SW Juny (R1+R2) i Aprimament Històric WordPress (2,8 MB)
 
 Torn: `torn_8abf96ed-4ca0-4d1e-b8da-82e99e058c03`.
