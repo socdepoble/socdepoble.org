@@ -251,7 +251,7 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
   const versio = capcalera(principal, 'Version');
   assert.equal(principal.match(/^const SOCDEPOBLE_ENXUFE_VERSIO\s*=\s*'([^']+)';/m)?.[1], versio);
   assert.equal(capcalera(readme, 'Stable tag'), versio);
-  assert.equal(capcalera(principal, 'Text Domain'), 'socdepoble-enxufe');
+  assert.equal(capcalera(principal, 'Text Domain'), 'socdepoble');
   assert.equal(capcalera(principal, 'Domain Path'), '/languages');
   assert.equal(capcalera(principal, 'License'), capcalera(readme, 'License'));
   assert.equal(readme.match(/^=== (.+) ===$/m)?.[1], capcalera(principal, 'Plugin Name'), 'el nom del readme és el del plugin');
@@ -278,7 +278,7 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
 
   const bloc = JSON.parse(llig('includes/bloc/block.json'));
   assert.equal(bloc.name, 'socdepoble/app');
-  assert.equal(bloc.textdomain, 'socdepoble-enxufe');
+  assert.equal(bloc.textdomain, 'socdepoble');
   for (const clau of ['render', 'editorScript']) {
     assert.match(bloc[clau], /^file:\.\//);
     assert.ok(fs.existsSync(path.join(PLUGIN, 'includes/bloc', bloc[clau].slice(7))), `${clau} existix`);
@@ -298,14 +298,14 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
   for (const [rel, text] of Object.entries(textDe)) {
     if (rel.startsWith('languages/')) continue;
     for (const m of text.matchAll(FUNCIONS_I18N)) {
-      assert.equal(m[2], 'socdepoble-enxufe', `${rel}: text domain «${m[2]}»`);
+      assert.equal(m[2], 'socdepoble', `${rel}: text domain «${m[2]}»`);
       msgids.add(m[1].replace(/\\'/g, '\''));
     }
     assert.doesNotMatch(text, /\b(?:__|_e|esc_html__|esc_html_e|esc_attr__|esc_attr_e|_x|_n)\(\s*"/, `${rel}: textos traduïbles entre cometes dobles`);
   }
-  for (const m of llig('includes/bloc/editor.js').matchAll(/__\(\s*'[^']*'\s*,\s*'([^']*)'\s*\)/g)) assert.equal(m[1], 'socdepoble-enxufe');
+  for (const m of llig('includes/bloc/editor.js').matchAll(/__\(\s*'[^']*'\s*,\s*'([^']*)'\s*\)/g)) assert.equal(m[1], 'socdepoble');
 
-  const traduccio = llig('languages/socdepoble-enxufe-ca.l10n.php');
+  const traduccio = llig('languages/socdepoble-ca.l10n.php');
   const claus = new Set([...traduccio.matchAll(/^\t\t'((?:[^'\\]|\\.)*)' => '/gm)].map((m) => m[1]));
   msgids.add(capcalera(llig('socdepoble-enxufe.php'), 'Description'));
   const falten = [...msgids].filter((id) => !SENSE_TRADUCCIO.has(id) && !claus.has(id));
@@ -321,13 +321,13 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
 
   /* L'editor del bloc: JSON pel handle que genera WordPress
      (generate_block_asset_handle: socdepoble/app + editorScript). */
-  const json = JSON.parse(llig('languages/socdepoble-enxufe-ca-socdepoble-app-editor-script.json'));
+  const json = JSON.parse(llig('languages/socdepoble-ca-socdepoble-app-editor-script.json'));
   const missatges = json.locale_data.messages;
   assert.equal(missatges[''].lang, 'ca');
-  const idsEditor = [...llig('includes/bloc/editor.js').matchAll(/__\(\s*'([^']*)'\s*,\s*'socdepoble-enxufe'\s*\)/g)].map((m) => m[1]);
+  const idsEditor = [...llig('includes/bloc/editor.js').matchAll(/__\(\s*'([^']*)'\s*,\s*'socdepoble'\s*\)/g)].map((m) => m[1]);
   assert.ok(idsEditor.length >= 8);
   assert.deepEqual(idsEditor.filter((id) => !SENSE_TRADUCCIO.has(id) && !Array.isArray(missatges[id])), [], 'textos de l\'editor sense traducció');
-  assert.match(llig('includes/marcatge.php'), /wp_set_script_translations\(\s*'socdepoble-app-editor-script',\s*'socdepoble-enxufe',/);
+  assert.match(llig('includes/marcatge.php'), /wp_set_script_translations\(\s*'socdepoble-app-editor-script',\s*'socdepoble',/);
 });
 
 /* ─────────── Guardes de les correccions de la revisió adversarial ───────────

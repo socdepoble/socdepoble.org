@@ -78,34 +78,34 @@ function socdepoble_enxufe_registra_ajustos() {
 
 	add_settings_section(
 		'socdepoble_enxufe_amfitrio',
-		__( 'Host identity', 'socdepoble-enxufe' ),
+		__( 'Host identity', 'socdepoble' ),
 		'socdepoble_enxufe_seccio_amfitrio',
-		'socdepoble-enxufe'
+		'socdepoble'
 	);
 
 	add_settings_field(
 		'socdepoble_enxufe_nompoble',
-		__( 'Village name', 'socdepoble-enxufe' ),
+		__( 'Village name', 'socdepoble' ),
 		'socdepoble_enxufe_camp',
-		'socdepoble-enxufe',
+		'socdepoble',
 		'socdepoble_enxufe_amfitrio',
 		array(
 			'clau'       => 'nomPoble',
 			'label_for'  => 'socdepoble-enxufe-nompoble',
-			'descripcio' => __( 'Shown in the app as the server that hosts it, for example Gent de la Torre.', 'socdepoble-enxufe' ),
+			'descripcio' => __( 'Shown in the app as the server that hosts it, for example Gent de la Torre.', 'socdepoble' ),
 		)
 	);
 
 	add_settings_field(
 		'socdepoble_enxufe_poble',
-		__( 'Village id', 'socdepoble-enxufe' ),
+		__( 'Village id', 'socdepoble' ),
 		'socdepoble_enxufe_camp',
-		'socdepoble-enxufe',
+		'socdepoble',
 		'socdepoble_enxufe_amfitrio',
 		array(
 			'clau'       => 'poble',
 			'label_for'  => 'socdepoble-enxufe-poble',
-			'descripcio' => __( 'Id of the village in the Villages section: visitors land on its page. It is not a data scope.', 'socdepoble-enxufe' ),
+			'descripcio' => __( 'Id of the village in the Villages section: visitors land on its page. It is not a data scope.', 'socdepoble' ),
 		)
 	);
 }
@@ -115,7 +115,7 @@ add_action( 'admin_init', 'socdepoble_enxufe_registra_ajustos' );
  * Text de la secció.
  */
 function socdepoble_enxufe_seccio_amfitrio() {
-	echo '<p>' . esc_html__( 'Empty fields keep the test bench values. The socdepoble_enxufe_config filter has the last word.', 'socdepoble-enxufe' ) . '</p>';
+	echo '<p>' . esc_html__( 'Empty fields keep the test bench values. The socdepoble_enxufe_config filter has the last word.', 'socdepoble' ) . '</p>';
 }
 
 /**
@@ -141,10 +141,10 @@ function socdepoble_enxufe_camp( $args ) {
  */
 function socdepoble_enxufe_afig_pagina() {
 	add_options_page(
-		__( 'Sóc de Poble', 'socdepoble-enxufe' ),
-		__( 'Sóc de Poble', 'socdepoble-enxufe' ),
+		__( 'Sóc de Poble', 'socdepoble' ),
+		__( 'Sóc de Poble', 'socdepoble' ),
 		'manage_options',
-		'socdepoble-enxufe',
+		'socdepoble',
 		'socdepoble_enxufe_pagina'
 	);
 }
@@ -157,7 +157,7 @@ add_action( 'admin_menu', 'socdepoble_enxufe_afig_pagina' );
  * @return array
  */
 function socdepoble_enxufe_enllac_ajustos( $enllacos ) {
-	$ajustos = '<a href="' . esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ) . '">' . esc_html__( 'Settings', 'socdepoble-enxufe' ) . '</a>';
+	$ajustos = '<a href="' . esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ) . '">' . esc_html__( 'Settings', 'socdepoble' ) . '</a>';
 	array_unshift( $enllacos, $ajustos );
 	return $enllacos;
 }
@@ -180,21 +180,21 @@ function socdepoble_enxufe_diagnosi() {
 	$manifest = socdepoble_enxufe_manifest_local();
 	$files    = array();
 	if ( null === $manifest ) {
-		$files[ __( 'Package manifest', 'socdepoble-enxufe' ) ] = socdepoble_enxufe_te_bundle()
-			? __( 'Missing (dist/sdp-release.json). Rebuild the package with npm run build:wp.', 'socdepoble-enxufe' )
-			: __( 'Missing, and the bundle is missing too.', 'socdepoble-enxufe' );
+		$files[ __( 'Package manifest', 'socdepoble' ) ] = socdepoble_enxufe_te_bundle()
+			? __( 'Missing (dist/sdp-release.json). Rebuild the package with npm run build:wp.', 'socdepoble' )
+			: __( 'Missing, and the bundle is missing too.', 'socdepoble' );
 		return $files;
 	}
 	$node = $manifest['node'];
-	$files[ __( 'App version', 'socdepoble-enxufe' ) ]      = $manifest['versio'];
-	$files[ __( 'Bundle SHA-256', 'socdepoble-enxufe' ) ]   = $manifest['entrada']['sha256'];
-	$files[ __( 'Bundle integrity', 'socdepoble-enxufe' ) ] = $manifest['entrada']['integrity'];
-	$files[ __( 'Sealed data node', 'socdepoble-enxufe' ) ] = '' !== $node['origen'] ? $node['origen'] : __( 'none', 'socdepoble-enxufe' );
-	$files[ __( 'Data mode', 'socdepoble-enxufe' ) ]        = $node['mode'];
-	$files[ __( 'Package kind', 'socdepoble-enxufe' ) ]     = $node['desenvolupament'] || 'remote' !== $node['mode']
-		? __( 'Development: it only works next to its local backend.', 'socdepoble-enxufe' )
-		: __( 'Release: it can serve real visitors, here or in any other host.', 'socdepoble-enxufe' );
-	$files[ __( 'Site environment', 'socdepoble-enxufe' ) ] = wp_get_environment_type();
+	$files[ __( 'App version', 'socdepoble' ) ]      = $manifest['versio'];
+	$files[ __( 'Bundle SHA-256', 'socdepoble' ) ]   = $manifest['entrada']['sha256'];
+	$files[ __( 'Bundle integrity', 'socdepoble' ) ] = $manifest['entrada']['integrity'];
+	$files[ __( 'Sealed data node', 'socdepoble' ) ] = '' !== $node['origen'] ? $node['origen'] : __( 'none', 'socdepoble' );
+	$files[ __( 'Data mode', 'socdepoble' ) ]        = $node['mode'];
+	$files[ __( 'Package kind', 'socdepoble' ) ]     = $node['desenvolupament'] || 'remote' !== $node['mode']
+		? __( 'Development: it only works next to its local backend.', 'socdepoble' )
+		: __( 'Release: it can serve real visitors, here or in any other host.', 'socdepoble' );
+	$files[ __( 'Site environment', 'socdepoble' ) ] = wp_get_environment_type();
 	return $files;
 }
 
@@ -215,33 +215,33 @@ function socdepoble_enxufe_pagina() {
 		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
 		<?php if ( socdepoble_enxufe_node_inadequat() ) : ?>
-			<div class="notice notice-error inline"><p><?php esc_html_e( 'This package points to a development backend. Visitors of this site will see the app without data. Rebuild it as a release with production values.', 'socdepoble-enxufe' ); ?></p></div>
+			<div class="notice notice-error inline"><p><?php esc_html_e( 'This package points to a development backend. Visitors of this site will see the app without data. Rebuild it as a release with production values.', 'socdepoble' ); ?></p></div>
 		<?php endif; ?>
 
 		<div class="card" style="max-width:56rem;margin-top:1rem;padding:1.25rem 1.5rem;border-left:4px solid #f97316">
-			<h2 style="margin-top:0"><?php esc_html_e( 'Welcome to the Sóc de Poble Portal of Connected Villages', 'socdepoble-enxufe' ); ?></h2>
-			<p><?php esc_html_e( 'Sóc de Poble is the decentralized civic network born in the rural mountains of Alicante to connect neighbours, local associations, traditional events, village markets and collective memory without technological dependence.', 'socdepoble-enxufe' ); ?></p>
-			<p><strong><?php esc_html_e( 'Active village nodes in the network (9 municipalities + historical root):', 'socdepoble-enxufe' ); ?></strong><br />
+			<h2 style="margin-top:0"><?php esc_html_e( 'Welcome to the Sóc de Poble Portal of Connected Villages', 'socdepoble' ); ?></h2>
+			<p><?php esc_html_e( 'Sóc de Poble is the decentralized civic network born in the rural mountains of Alicante to connect neighbours, local associations, traditional events, village markets and collective memory without technological dependence.', 'socdepoble' ); ?></p>
+			<p><strong><?php esc_html_e( 'Active village nodes in the network (9 municipalities + historical root):', 'socdepoble' ); ?></strong><br />
 			<code>la-torre-de-les-macanes</code> (La Torre de les Maçanes) · <code>penaguila</code> (Penàguila) · <code>benifallim</code> (Benifallim) · <code>sella</code> (Sella) · <code>orxeta</code> (Orxeta) · <code>relleu</code> (Relleu) · <code>alcoleja</code> (Alcoleja) · <code>xixona</code> (Xixona) · <code>tibi</code> (Tibi) · <em>Rentonar (30 anys de llegat rural)</em></p>
 			<ol style="margin-bottom:0">
-				<li><?php esc_html_e( 'Choose your village identity below (for example: Gent de la Torre and la-torre-de-les-macanes) and save.', 'socdepoble-enxufe' ); ?></li>
-				<li><?php esc_html_e( 'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble_app] shortcode.', 'socdepoble-enxufe' ); ?></li>
-				<li><?php esc_html_e( 'Select the Sóc de Poble · full screen page template so the village plaza fills the entire window.', 'socdepoble-enxufe' ); ?></li>
+				<li><?php esc_html_e( 'Choose your village identity below (for example: Gent de la Torre and la-torre-de-les-macanes) and save.', 'socdepoble' ); ?></li>
+				<li><?php esc_html_e( 'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble_app] shortcode.', 'socdepoble' ); ?></li>
+				<li><?php esc_html_e( 'Select the Sóc de Poble · full screen page template so the village plaza fills the entire window.', 'socdepoble' ); ?></li>
 			</ol>
 		</div>
 
 		<form action="options.php" method="post">
 			<?php
 			settings_fields( 'socdepoble_enxufe' );
-			do_settings_sections( 'socdepoble-enxufe' );
+			do_settings_sections( 'socdepoble' );
 			submit_button();
 			?>
 		</form>
 
 		<details style="max-width:56rem;margin-top:1.5rem;padding:0.75rem 1rem;background:#fff;border:1px solid #c3c4c7">
-			<summary style="cursor:pointer;font-weight:600"><?php esc_html_e( 'Technical diagnosis and universal host markup (for developers)', 'socdepoble-enxufe' ); ?></summary>
+			<summary style="cursor:pointer;font-weight:600"><?php esc_html_e( 'Technical diagnosis and universal host markup (for developers)', 'socdepoble' ); ?></summary>
 
-			<h2><?php esc_html_e( 'Package and data node', 'socdepoble-enxufe' ); ?></h2>
+			<h2><?php esc_html_e( 'Package and data node', 'socdepoble' ); ?></h2>
 			<table class="widefat striped" role="presentation">
 				<tbody>
 				<?php foreach ( socdepoble_enxufe_diagnosi() as $etiqueta => $valor ) : ?>
@@ -259,8 +259,8 @@ function socdepoble_enxufe_pagina() {
 			}
 			?>
 
-			<h2><?php esc_html_e( 'Universal markup', 'socdepoble-enxufe' ); ?></h2>
-			<p><?php esc_html_e( 'The three pieces this plugin sends to the page (WordPress adds ?ver= to the script). Any other host (Sollutia, a static page) emits the same three pieces pointing to its own copy of dist/. The box that contains the element needs a height.', 'socdepoble-enxufe' ); ?></p>
+			<h2><?php esc_html_e( 'Universal markup', 'socdepoble' ); ?></h2>
+			<p><?php esc_html_e( 'The three pieces this plugin sends to the page (WordPress adds ?ver= to the script). Any other host (Sollutia, a static page) emits the same three pieces pointing to its own copy of dist/. The box that contains the element needs a height.', 'socdepoble' ); ?></p>
 			<pre style="white-space:pre-wrap;word-break:break-all"><code><?php echo esc_html( socdepoble_enxufe_marcatge_de_referencia() ); ?></code></pre>
 		</details>
 	</div>

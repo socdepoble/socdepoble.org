@@ -10,7 +10,7 @@
  * Author URI:        https://socdepoble.org
  * License:           AGPL-3.0-or-later
  * License URI:       https://www.gnu.org/licenses/agpl-3.0.html
- * Text Domain:       socdepoble-enxufe
+ * Text Domain:       socdepoble
  * Domain Path:       /languages
  * Update URI:        https://socdepoble.org/enxufe/
  *
@@ -87,12 +87,12 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 					esc_html(
 						sprintf(
 							/* translators: 1: folder of the copy already active, 2: folder of this copy. */
-							__( 'Sóc de Poble — Enxufe is already active from the folder %1$s. Deactivate that copy in Plugins before activating this one, in %2$s.', 'socdepoble-enxufe' ),
+							__( 'Sóc de Poble — Enxufe is already active from the folder %1$s. Deactivate that copy in Plugins before activating this one, in %2$s.', 'socdepoble' ),
 							dirname( SOCDEPOBLE_ENXUFE_FITXER ),
 							__DIR__
 						)
 					),
-					esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble-enxufe' ),
+					esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble' ),
 					array( 'back_link' => true )
 				);
 			}
@@ -109,7 +109,7 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 				esc_html(
 					sprintf(
 						/* translators: 1: folder of the copy that is loaded, 2: folder of this copy. */
-						__( 'Sóc de Poble — Enxufe is installed twice and both copies are active. The copy in %1$s is loaded and the copy in %2$s is ignored. Deactivate one of them in Plugins.', 'socdepoble-enxufe' ),
+						__( 'Sóc de Poble — Enxufe is installed twice and both copies are active. The copy in %1$s is loaded and the copy in %2$s is ignored. Deactivate one of them in Plugins.', 'socdepoble' ),
 						dirname( SOCDEPOBLE_ENXUFE_FITXER ),
 						__DIR__
 					)
@@ -122,8 +122,8 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 
 const SOCDEPOBLE_ENXUFE_VERSIO    = '1.1.9';
 const SOCDEPOBLE_ENXUFE_FITXER    = __FILE__;
-const SOCDEPOBLE_ENXUFE_SLUG      = 'socdepoble-enxufe';
-const SOCDEPOBLE_ENXUFE_HANDLE    = 'socdepoble-enxufe';
+const SOCDEPOBLE_ENXUFE_SLUG      = 'socdepoble';
+const SOCDEPOBLE_ENXUFE_HANDLE    = 'socdepoble';
 const SOCDEPOBLE_ENXUFE_BUNDLE    = 'dist/soc-de-poble.standalone.js';
 const SOCDEPOBLE_ENXUFE_MANIFEST  = 'dist/sdp-release.json';
 const SOCDEPOBLE_ENXUFE_SEO_RUTES = 'dist/seo-routes.json';

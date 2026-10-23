@@ -7,6 +7,42 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-23T14:35:00+02:00 · IAIA MarIA · Lliurament Oficial a WordPress.org (Slug i Text Domain `socdepoble`), Unificació de La Torre a Supabase (D1-A) i Mòbil Sincronitzat
+
+Torn: `torn_b68ea50d-7d14-4717-a320-9c8c517e0da0`.
+
+- **WordPress.org (Lliurament Oficial Completat):**
+  - Slug assignat i confirmat oficialment: **`socdepoble`** (`https://wordpress.org/plugins/socdepoble/`).
+  - Text Domain alineat de `socdepoble-enxufe` a **`socdepoble`** a tot el codi PHP, JS, block.json i als fitxers de traduccions valencianes (`socdepoble-ca.l10n.php` i `socdepoble-ca-socdepoble-app-editor-script.json`).
+  - Suite de proves de plugin: **18 de 18 tests verds** (`tests/enxufe-plugin.test.mjs`).
+  - Paquet oficial `_builds_de_poble/wordpress/socdepoble.zip` (9.36 MB, carpeta arrel `socdepoble/`, sense canal privat ni Update URI) pujat i acceptat amb èxit a la cua de revisió de WordPress.org.
+- **Supabase (Patró Canònic D1-A Assolit):**
+  - Executat amb èxit l'script SQL en 3 passos al SQL Editor de Supabase: reanomenada la fila satèl·lit, assignat el nom canònic oficial «La Torre de les Maçanes» a la fila mare `11111111-2222-3333-4444-555555555555` i transferits els membres de `town_memberships`.
+- **Mòbil i Capacitor 8 (Sincronitzat i Llest):**
+  - `npm run build:natiu` + `npx cap sync` executats amb èxit.
+  - Proves de paritat d'iOS (`src/natiu/projecteIos.test.js`): **11/11 verds**.
+  - Porta Olivera mantinguda en **Codi 0**.
+
+## ESTAT_ACTUAL · 2026-10-23T14:20:00+02:00 · IAIA MarIA (Gemini 4 Argon High) · Execució i Auditoria de Botigues Mòbils (Capacitor 8): `.env.botigues.local`, Paritat Gràfica iOS/Android `#0F672F` Sense Alfa, `signingConfigs.release` i Binaris Compilats
+
+Torn: `torn_b68ea50d-7d14-4717-a320-9c8c517e0da0`.
+
+- **T1 · Configuració d'Entorn de Botigues i Build Natiu (`.env.botigues.local` i `.env.natiu.local`):**
+  - Creat `.env.botigues.local` (`chmod 600`, ignorat per Git) amb `SDP_APP_ID=org.socdepoble.app` i `SDP_BUILDS_DIR=../_builds_de_poble/ios` (creada la carpeta satèl·lit fora del repositori).
+  - Creat `.env.natiu.local` (`chmod 600`, ignorat per Git) amb les credencials públiques de `.env.production.local` i `VITE_SOLLUTIA_ISSUER=` buida, desbloquejant la barrera `heretadesDelLloc` de `vite.natiu.config.js`.
+- **T2 · Metadades i Contractes d'iOS i Android:**
+  - Documentat i blindat que `com.googleusercontent.apps.pendent` a `ios/App/App/Info.plist:38` és la reserva canònica (`ESQUEMA_GOOGLE_PENDENT`) exigida per `src/natiu/projecteIos.test.js:130` fins que es cree un Client ID d'iOS a Google Cloud Console (mentre no n'hi haja, iOS ofereix només Sign in with Apple i correu, sense inicialitzar GoogleSignIn).
+  - Corregit `android/app/build.gradle`: `versionName` actualitzat de `"1.0"` a `"1.0.0"` (exigit per `puja-android.mjs:109`) i afegit el bloc `signingConfigs.release` que llig les 4 variables `SDP_ANDROID_KEYSTORE_*` de l'entorn del procés fill.
+- **T3 · Harmonització d'Actius Gràfics Natius (`Assets.xcassets` d'iOS):**
+  - Substituïts la icona i els 3 splash blaus de plantilla de Capacitor a `ios/App/App/Assets.xcassets/` per la rosa dels vents blanca sobre el verd `#0F672F` en PNG RGB de 24 bits sense canal alfa (`color_type = 2`, `hasAlpha: no`): `AppIcon-512@2x.png` (`1024×1024`) i `splash-2732x2732*.png` (`2732×2732`).
+  - Ajustat `LaunchScreen.storyboard` amb fons `#0F672F` i afegida prova de contracte a `src/natiu/projecteIos.test.js`.
+- **T4 · Compilació Nativa, Sincronització i Proves:**
+  - `npm run build:natiu` + `npx cap sync` completats amb èxit (`dist-natiu/index.html` idèntic a iOS i Android).
+  - `./gradlew --no-daemon assembleDebug`: `BUILD SUCCESSFUL`. Actualitzat `../_builds_de_poble/android/socdepoble-beta.apk` (`43.086.745 bytes`, `43,1 MB`, SHA-256 `3e6e6b2a4d698eed3d2d106b2f4d8d9bbd43c91c792e1a4d24b2fd9c6c03c72c`, −8,35 MB gràcies a WebP).
+  - `xcodebuild` (iOS Simulator): `** BUILD SUCCEEDED **`.
+  - Proves: `npx vitest run src/natiu` (**55/55 en verd**) i `node --test tests/natiu-build.test.mjs tests/botigues.test.mjs` (**41/41 en verd, 0 omeses**).
+  - Informe canònic emés i validat a [`261023_1418_auditoria_gemini.md`](_wiki_de_poble/04_escriptori/261023_1418_auditoria_gemini.md). Porta Olivera en Codi 0. 0 tasques de fons actives.
+
 ## ESTAT_ACTUAL · 2026-10-23T01:10:00+02:00 · IAIA MarIA · Incident de Regressió de Tenant a Producció, Reversió d'Urgència a 1111... i Congelació fins al Matí
 
 Torn: `torn_cercador_rollback_nocturn`.

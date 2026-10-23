@@ -120,16 +120,16 @@ function socdepoble_enxufe_host_local( $host ) {
 function socdepoble_enxufe_url_no_permesa( $url ) {
 	$parts = wp_parse_url( (string) $url );
 	if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
-		return __( 'The URL is not valid.', 'socdepoble-enxufe' );
+		return __( 'The URL is not valid.', 'socdepoble' );
 	}
 	$local = socdepoble_enxufe_host_local( $parts['host'] );
 	if ( $local && ! socdepoble_enxufe_lloc_de_desenvolupament() ) {
-		return __( 'Local URLs are only allowed on development sites.', 'socdepoble-enxufe' );
+		return __( 'Local URLs are only allowed on development sites.', 'socdepoble' );
 	}
 	if ( 'https' === $parts['scheme'] || ( 'http' === $parts['scheme'] && $local ) ) {
 		return '';
 	}
-	return __( 'Only https URLs are allowed.', 'socdepoble-enxufe' );
+	return __( 'Only https URLs are allowed.', 'socdepoble' );
 }
 
 /**
@@ -195,7 +195,7 @@ function socdepoble_enxufe_llig_url( $url, $maxim ) {
 	$codi = (int) wp_remote_retrieve_response_code( $resposta );
 	if ( 200 !== $codi ) {
 		/* translators: 1: URL, 2: HTTP status code. */
-		return new WP_Error( 'socdepoble_enxufe_http', sprintf( __( '%1$s answered HTTP %2$d.', 'socdepoble-enxufe' ), $url, $codi ) );
+		return new WP_Error( 'socdepoble_enxufe_http', sprintf( __( '%1$s answered HTTP %2$d.', 'socdepoble' ), $url, $codi ) );
 	}
 	return (string) wp_remote_retrieve_body( $resposta );
 }
@@ -307,17 +307,17 @@ function socdepoble_enxufe_valida_canal( $dades ) {
  */
 function socdepoble_enxufe_analitza_canal( $cos, $signatura ) {
 	if ( '' === socdepoble_enxufe_clau_publica() ) {
-		return array( null, __( 'No signing key is configured, so no update is offered.', 'socdepoble-enxufe' ) );
+		return array( null, __( 'No signing key is configured, so no update is offered.', 'socdepoble' ) );
 	}
 	if ( '' === (string) $cos ) {
-		return array( null, __( 'The channel has not been read yet.', 'socdepoble-enxufe' ) );
+		return array( null, __( 'The channel has not been read yet.', 'socdepoble' ) );
 	}
 	if ( ! socdepoble_enxufe_signatura_valida( $cos, $signatura ) ) {
-		return array( null, __( 'The channel signature does not verify.', 'socdepoble-enxufe' ) );
+		return array( null, __( 'The channel signature does not verify.', 'socdepoble' ) );
 	}
 	$canal = socdepoble_enxufe_valida_canal( json_decode( (string) $cos, true ) );
 	if ( null === $canal ) {
-		return array( null, __( 'The signed manifest does not follow sdp.release.v1 or does not suit this site.', 'socdepoble-enxufe' ) );
+		return array( null, __( 'The signed manifest does not follow sdp.release.v1 or does not suit this site.', 'socdepoble' ) );
 	}
 	return array( $canal, '' );
 }
@@ -343,7 +343,7 @@ function socdepoble_enxufe_refresca_canal( $estat ) {
 			if ( null !== $canal ) {
 				list( $previ ) = socdepoble_enxufe_analitza_canal( $estat['cos'] ?? '', $estat['signatura'] ?? '' );
 				if ( null !== $previ && version_compare( $canal['versio'], $previ['versio'], '<' ) ) {
-					$motiu = __( 'The channel served an older signed manifest; the newer one is kept.', 'socdepoble-enxufe' );
+					$motiu = __( 'The channel served an older signed manifest; the newer one is kept.', 'socdepoble' );
 				} else {
 					$estat['cos']       = $cos;
 					$estat['signatura'] = trim( $sig );
@@ -394,7 +394,7 @@ function socdepoble_enxufe_bloqueig_instal_lacio( $plugin_file = '' ) {
 	if ( SOCDEPOBLE_ENXUFE_SLUG !== $carpeta ) {
 		return sprintf(
 			/* translators: 1: current folder, 2: expected folder. */
-			__( 'The plugin lives in the folder %1$s instead of %2$s, so an update would install a second copy. Reinstall it from a release package.', 'socdepoble-enxufe' ),
+			__( 'The plugin lives in the folder %1$s instead of %2$s, so an update would install a second copy. Reinstall it from a release package.', 'socdepoble' ),
 			$carpeta,
 			SOCDEPOBLE_ENXUFE_SLUG
 		);
@@ -405,15 +405,15 @@ function socdepoble_enxufe_bloqueig_instal_lacio( $plugin_file = '' ) {
 		$de_xarxa  = array_key_exists( $plugin_file, (array) get_site_option( 'active_sitewide_plugins', array() ) );
 		$principal = in_array( $plugin_file, (array) get_blog_option( get_main_site_id(), 'active_plugins', array() ), true );
 		if ( ! $de_xarxa && ! $principal ) {
-			return __( 'On a multisite network WordPress only checks for updates on the main site and in the network admin. Activate the plugin network-wide or on the main site so the channel is consulted.', 'socdepoble-enxufe' );
+			return __( 'On a multisite network WordPress only checks for updates on the main site and in the network admin. Activate the plugin network-wide or on the main site so the channel is consulted.', 'socdepoble' );
 		}
 	}
 	$cami = trailingslashit( WP_PLUGIN_DIR ) . $carpeta;
 	if ( is_link( $cami ) ) {
-		return __( 'The plugin folder is a symbolic link to a working copy. Updating it would delete the linked files, so updates stay off.', 'socdepoble-enxufe' );
+		return __( 'The plugin folder is a symbolic link to a working copy. Updating it would delete the linked files, so updates stay off.', 'socdepoble' );
 	}
 	if ( file_exists( $cami . '/.git' ) ) {
-		return __( 'The plugin folder is a git checkout, so updates stay off to protect it.', 'socdepoble-enxufe' );
+		return __( 'The plugin folder is a git checkout, so updates stay off to protect it.', 'socdepoble' );
 	}
 	return '';
 }
@@ -644,7 +644,7 @@ function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
 	) + get_file_data( plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'readme.txt', array( 'tested' => 'Tested up to' ) );
 
 	$seccions = array(
-		'description' => '<p>' . esc_html__( 'Embeds the Sóc de Poble rural community app with the universal host markup. WordPress is one host among others: Sollutia or a static page embed exactly the same package.', 'socdepoble-enxufe' ) . '</p>' . ( $readme['description'] ?? '' ),
+		'description' => '<p>' . esc_html__( 'Embeds the Sóc de Poble rural community app with the universal host markup. WordPress is one host among others: Sollutia or a static page embed exactly the same package.', 'socdepoble' ) . '</p>' . ( $readme['description'] ?? '' ),
 	);
 	foreach ( array( 'installation', 'faq', 'changelog' ) as $clau ) {
 		if ( ! empty( $readme[ $clau ] ) ) {
@@ -653,14 +653,14 @@ function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
 	}
 	// La versió oferida encara no és al readme instal·lat: primer, les seues notes.
 	if ( '' !== ( $canal['notes'] ?? '' ) ) {
-		$seccions['changelog'] = '<p><a href="' . esc_url( $canal['notes'] ) . '">' . esc_html__( 'Release notes', 'socdepoble-enxufe' ) . '</a></p>' . ( $seccions['changelog'] ?? '' );
+		$seccions['changelog'] = '<p><a href="' . esc_url( $canal['notes'] ) . '">' . esc_html__( 'Release notes', 'socdepoble' ) . '</a></p>' . ( $seccions['changelog'] ?? '' );
 	}
 	if ( empty( $seccions['changelog'] ) ) {
-		$seccions['changelog'] = '<p>' . esc_html__( 'No release notes published.', 'socdepoble-enxufe' ) . '</p>';
+		$seccions['changelog'] = '<p>' . esc_html__( 'No release notes published.', 'socdepoble' ) . '</p>';
 	}
 
 	$info                = new stdClass();
-	$info->name          = esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble-enxufe' );
+	$info->name          = esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble' );
 	$info->slug          = SOCDEPOBLE_ENXUFE_SLUG;
 	$info->version       = null !== $oferta ? $oferta['versio'] : SOCDEPOBLE_ENXUFE_VERSIO;
 	$info->author        = '<a href="https://socdepoble.org">Sóc de Poble</a>';
@@ -702,12 +702,12 @@ function socdepoble_enxufe_pre_descarrega( $resposta, $paquet, $upgrader, $hook_
 		return new WP_Error( 'socdepoble_enxufe_bloqueig', $bloqueig );
 	}
 	if ( null === socdepoble_enxufe_canal() ) {
-		return new WP_Error( 'socdepoble_enxufe_canal', __( 'The Sóc de Poble update channel could not be verified.', 'socdepoble-enxufe' ) );
+		return new WP_Error( 'socdepoble_enxufe_canal', __( 'The Sóc de Poble update channel could not be verified.', 'socdepoble' ) );
 	}
 	$oferta = socdepoble_enxufe_oferta( SOCDEPOBLE_ENXUFE_VERSIO, $hook_extra['plugin'] );
 	if ( 0 !== strpos( (string) $paquet, SOCDEPOBLE_ENXUFE_PAQUET_SIMBOLIC ) || null === $oferta ) {
 		socdepoble_enxufe_caduca_canal();
-		return new WP_Error( 'socdepoble_enxufe_url', __( 'The package does not match the signed manifest.', 'socdepoble-enxufe' ) );
+		return new WP_Error( 'socdepoble_enxufe_url', __( 'The package does not match the signed manifest.', 'socdepoble' ) );
 	}
 	/* Es baixa sempre el paquet del manifest verificat ara, encara que siga més
 	   nou que l'oferta del transient: la mida i el sha256 en són la garantia. */
@@ -719,7 +719,7 @@ function socdepoble_enxufe_pre_descarrega( $resposta, $paquet, $upgrader, $hook_
 	}
 	$fitxer = wp_tempnam( SOCDEPOBLE_ENXUFE_SLUG . '.zip' );
 	if ( ! $fitxer ) {
-		return new WP_Error( 'socdepoble_enxufe_temporal', __( 'Could not create a temporary file.', 'socdepoble-enxufe' ) );
+		return new WP_Error( 'socdepoble_enxufe_temporal', __( 'Could not create a temporary file.', 'socdepoble' ) );
 	}
 	$descarrega = socdepoble_enxufe_amb_xarxa_local(
 		$paquet,
@@ -742,12 +742,12 @@ function socdepoble_enxufe_pre_descarrega( $resposta, $paquet, $upgrader, $hook_
 		$error = $descarrega->get_error_message();
 	} elseif ( 200 !== (int) wp_remote_retrieve_response_code( $descarrega ) ) {
 		/* translators: %d: HTTP status code. */
-		$error = sprintf( __( 'The package download answered HTTP %d.', 'socdepoble-enxufe' ), (int) wp_remote_retrieve_response_code( $descarrega ) );
+		$error = sprintf( __( 'The package download answered HTTP %d.', 'socdepoble' ), (int) wp_remote_retrieve_response_code( $descarrega ) );
 	} else {
 		clearstatcache( true, $fitxer );
 		$hash = hash_file( 'sha256', $fitxer );
 		if ( filesize( $fitxer ) !== $esperat['mida'] || ! is_string( $hash ) || ! hash_equals( $esperat['sha256'], $hash ) ) {
-			$error = __( 'The downloaded package does not match the size and SHA-256 of the signed manifest.', 'socdepoble-enxufe' );
+			$error = __( 'The downloaded package does not match the size and SHA-256 of the signed manifest.', 'socdepoble' );
 		} else {
 			$error = socdepoble_enxufe_error_arrel_zip( $fitxer );
 		}
@@ -773,10 +773,10 @@ function socdepoble_enxufe_error_arrel_zip( $fitxer ) {
 	if ( ! class_exists( 'ZipArchive' ) ) {
 		return '';
 	}
-	$motiu = __( 'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.', 'socdepoble-enxufe' );
+	$motiu = __( 'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.', 'socdepoble' );
 	$zip   = new ZipArchive();
 	if ( true !== $zip->open( $fitxer ) ) {
-		return __( 'The package is not a valid zip file.', 'socdepoble-enxufe' );
+		return __( 'The package is not a valid zip file.', 'socdepoble' );
 	}
 	$principal = false;
 	$total     = (int) $zip->count();
@@ -818,7 +818,7 @@ function socdepoble_enxufe_seleccio_origen( $origen, $origen_remot, $upgrader, $
 	   engabiats no és la ruta local, i s'ha de preguntar a ell. */
 	$existix = $wp_filesystem instanceof WP_Filesystem_Base ? $wp_filesystem->is_file( $principal ) : file_exists( $principal );
 	if ( SOCDEPOBLE_ENXUFE_SLUG !== basename( $carpeta ) || ! $existix ) {
-		return new WP_Error( 'socdepoble_enxufe_arrel', __( 'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.', 'socdepoble-enxufe' ) );
+		return new WP_Error( 'socdepoble_enxufe_arrel', __( 'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.', 'socdepoble' ) );
 	}
 	return $origen;
 }
@@ -842,7 +842,7 @@ add_action( 'delete_site_transient_update_plugins', 'socdepoble_enxufe_caduca_ca
  */
 function socdepoble_enxufe_comprova_ara() {
 	if ( ! current_user_can( 'update_plugins' ) ) {
-		wp_die( esc_html__( 'You are not allowed to update plugins.', 'socdepoble-enxufe' ), 403 );
+		wp_die( esc_html__( 'You are not allowed to update plugins.', 'socdepoble' ), 403 );
 	}
 	check_admin_referer( 'socdepoble_enxufe_comprova' );
 	delete_site_transient( 'update_plugins' );
@@ -896,17 +896,17 @@ function socdepoble_enxufe_seccio_canal() {
 	$bloqueig              = socdepoble_enxufe_bloqueig_instal_lacio();
 
 	$files = array(
-		__( 'Channel', 'socdepoble-enxufe' )                 => SOCDEPOBLE_ENXUFE_CANAL,
-		__( 'Signing key', 'socdepoble-enxufe' )             => '' !== $clau ? $clau : __( 'none: no update will be offered', 'socdepoble-enxufe' ),
-		__( 'Last check', 'socdepoble-enxufe' )              => $comprovat > 0 ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $comprovat ) : __( 'never', 'socdepoble-enxufe' ),
-		__( 'Latest verified release', 'socdepoble-enxufe' ) => null !== $canal ? $canal['versio'] : $motiu,
-		__( 'Last error', 'socdepoble-enxufe' )              => ! empty( $estat['error'] ) ? (string) $estat['error'] : __( 'none', 'socdepoble-enxufe' ),
-		__( 'WordPress update check', 'socdepoble-enxufe' )  => socdepoble_enxufe_wp_aplica_el_canal() ? __( 'The channel is applied.', 'socdepoble-enxufe' ) : __( 'Not applied yet: WordPress only asks the channel after api.wordpress.org answers its update check.', 'socdepoble-enxufe' ),
-		__( 'This installation', 'socdepoble-enxufe' )       => '' !== $bloqueig ? $bloqueig : __( 'Can update itself.', 'socdepoble-enxufe' ),
+		__( 'Channel', 'socdepoble' )                 => SOCDEPOBLE_ENXUFE_CANAL,
+		__( 'Signing key', 'socdepoble' )             => '' !== $clau ? $clau : __( 'none: no update will be offered', 'socdepoble' ),
+		__( 'Last check', 'socdepoble' )              => $comprovat > 0 ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $comprovat ) : __( 'never', 'socdepoble' ),
+		__( 'Latest verified release', 'socdepoble' ) => null !== $canal ? $canal['versio'] : $motiu,
+		__( 'Last error', 'socdepoble' )              => ! empty( $estat['error'] ) ? (string) $estat['error'] : __( 'none', 'socdepoble' ),
+		__( 'WordPress update check', 'socdepoble' )  => socdepoble_enxufe_wp_aplica_el_canal() ? __( 'The channel is applied.', 'socdepoble' ) : __( 'Not applied yet: WordPress only asks the channel after api.wordpress.org answers its update check.', 'socdepoble' ),
+		__( 'This installation', 'socdepoble' )       => '' !== $bloqueig ? $bloqueig : __( 'Can update itself.', 'socdepoble' ),
 	);
 	?>
-	<h2><?php esc_html_e( 'Update channel', 'socdepoble-enxufe' ); ?></h2>
-	<p><?php esc_html_e( 'Updates come from the signed Sóc de Poble channel, not from WordPress.org. Automatic updates are off until an administrator turns them on in the Plugins screen.', 'socdepoble-enxufe' ); ?></p>
+	<h2><?php esc_html_e( 'Update channel', 'socdepoble' ); ?></h2>
+	<p><?php esc_html_e( 'Updates come from the signed Sóc de Poble channel, not from WordPress.org. Automatic updates are off until an administrator turns them on in the Plugins screen.', 'socdepoble' ); ?></p>
 	<table class="widefat striped" role="presentation">
 		<tbody>
 		<?php foreach ( $files as $etiqueta => $valor ) : ?>
@@ -921,7 +921,7 @@ function socdepoble_enxufe_seccio_canal() {
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="socdepoble_enxufe_comprova" />
 			<?php wp_nonce_field( 'socdepoble_enxufe_comprova' ); ?>
-			<?php submit_button( __( 'Check the channel now', 'socdepoble-enxufe' ), 'secondary', 'submit', false ); ?>
+			<?php submit_button( __( 'Check the channel now', 'socdepoble' ), 'secondary', 'submit', false ); ?>
 		</form>
 	<?php endif; ?>
 	<?php
@@ -938,14 +938,14 @@ function socdepoble_enxufe_prova_canal() {
 	$prova    = 'socdepoble_enxufe_canal';
 	$bloqueig = socdepoble_enxufe_bloqueig_instal_lacio();
 	if ( '' !== $bloqueig ) {
-		return socdepoble_enxufe_resultat_salut( $prova, 'recommended', __( 'Sóc de Poble cannot update itself here', 'socdepoble-enxufe' ), $bloqueig );
+		return socdepoble_enxufe_resultat_salut( $prova, 'recommended', __( 'Sóc de Poble cannot update itself here', 'socdepoble' ), $bloqueig );
 	}
 	if ( '' === socdepoble_enxufe_clau_publica() ) {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'recommended',
-			__( 'The Sóc de Poble update channel has no signing key', 'socdepoble-enxufe' ),
-			__( 'Updates stay off until the plugin carries the public key of the channel. Install a release package, which always carries it.', 'socdepoble-enxufe' )
+			__( 'The Sóc de Poble update channel has no signing key', 'socdepoble' ),
+			__( 'Updates stay off until the plugin carries the public key of the channel. Install a release package, which always carries it.', 'socdepoble' )
 		);
 	}
 	$estat         = socdepoble_enxufe_estat_canal();
@@ -954,24 +954,24 @@ function socdepoble_enxufe_prova_canal() {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'recommended',
-			__( 'The Sóc de Poble update channel could not be verified', 'socdepoble-enxufe' ),
-			! empty( $estat['error'] ) ? (string) $estat['error'] : __( 'The channel has not been read yet.', 'socdepoble-enxufe' )
+			__( 'The Sóc de Poble update channel could not be verified', 'socdepoble' ),
+			! empty( $estat['error'] ) ? (string) $estat['error'] : __( 'The channel has not been read yet.', 'socdepoble' )
 		);
 	}
 	if ( ! socdepoble_enxufe_wp_aplica_el_canal() ) {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'recommended',
-			__( 'WordPress has not asked the Sóc de Poble update channel yet', 'socdepoble-enxufe' ),
-			__( 'The channel verifies, but WordPress only consults it after api.wordpress.org answers its update check. If this site blocks api.wordpress.org or has no Internet access, no update will be offered.', 'socdepoble-enxufe' )
+			__( 'WordPress has not asked the Sóc de Poble update channel yet', 'socdepoble' ),
+			__( 'The channel verifies, but WordPress only consults it after api.wordpress.org answers its update check. If this site blocks api.wordpress.org or has no Internet access, no update will be offered.', 'socdepoble' )
 		);
 	}
 	return socdepoble_enxufe_resultat_salut(
 		$prova,
 		'good',
-		__( 'The Sóc de Poble update channel is verified', 'socdepoble-enxufe' ),
+		__( 'The Sóc de Poble update channel is verified', 'socdepoble' ),
 		/* translators: %s: version number. */
-		sprintf( __( 'The latest signed release is %s.', 'socdepoble-enxufe' ), $canal['versio'] )
+		sprintf( __( 'The latest signed release is %s.', 'socdepoble' ), $canal['versio'] )
 	);
 }
 

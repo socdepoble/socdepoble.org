@@ -17,6 +17,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 import { describe, expect, test } from 'vitest';
 import { esquemaInvertitDeGoogleIos } from '../config/publicCredentials.js';
 
@@ -30,8 +31,8 @@ const llig = (...trossos) => fs.readFileSync(path.join(...trossos), 'utf8');
 const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
 const PERMISOS = ['NSCameraUsageDescription', 'NSMicrophoneUsageDescription', 'NSPhotoLibraryAddUsageDescription', 'NSPhotoLibraryUsageDescription'];
 const TEXTOS_CA = Object.freeze({
-  NSCameraUsageDescription: 'Sóc de Poble necessita accés a la càmera per a fer fotos dels productes del mercat o actualitzar el teu perfil.',
-  NSMicrophoneUsageDescription: 'Sóc de Poble necessita el micròfon per a gravar el so dels vídeos que compartixes amb el poble.',
+  NSCameraUsageDescription: 'Sóc de Poble necessita accés a la càmera per a fer les fotos i els vídeos que compartixes amb el poble i la foto del teu perfil.',
+  NSMicrophoneUsageDescription: 'Sóc de Poble necessita el micròfon per a gravar els àudios del xat i el so dels vídeos que compartixes amb el poble.',
   NSPhotoLibraryAddUsageDescription: 'Permet desar a la teua galeria les imatges que tries guardar de Sóc de Poble.',
   NSPhotoLibraryUsageDescription: 'Permet triar fotografies de la teua galeria per a compartir-les amb el poble.'
 });
@@ -190,6 +191,34 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
       expect(textos.CFBundleDisplayName, llengua).toBe('Sóc de Poble');
       for (const permis of PERMISOS) expect(textos[permis].trim().length, `${llengua} · ${permis}`).toBeGreaterThan(20);
       if (llengua === 'ca') for (const permis of PERMISOS) expect(textos[permis], permis).toBe(info[permis]);
+    }
+  });
+
+  test('Assets.xcassets: AppIcon (1024×1024) i Splash (2732×2732) en RGB sense alfa i amb el verd #0F672F de Sóc de Poble', () => {
+    const capcaleraPng = (cami) => {
+      const buf = fs.readFileSync(cami);
+      const ample = buf.readUInt32BE(16);
+      const alt = buf.readUInt32BE(20);
+      const profunditat = buf.readUInt8(24);
+      const tipusColor = buf.readUInt8(25);
+      let pos = 8;
+      const trossos = [];
+      while (pos < buf.length) {
+        const mida = buf.readUInt32BE(pos);
+        const etiqueta = buf.toString('ascii', pos + 4, pos + 8);
+        if (etiqueta === 'IDAT') trossos.push(buf.subarray(pos + 8, pos + 8 + mida));
+        pos += 12 + mida;
+      }
+      const descomprimit = zlib.inflateSync(Buffer.concat(trossos));
+      const filtre = descomprimit[0];
+      const primerPixel = filtre === 0 ? [descomprimit[1], descomprimit[2], descomprimit[3]] : null;
+      return { ample, alt, profunditat, tipusColor, primerPixel };
+    };
+    const icona = capcaleraPng(path.join(APP, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png'));
+    expect(icona).toEqual({ ample: 1024, alt: 1024, profunditat: 8, tipusColor: 2, primerPixel: [15, 103, 47] });
+    for (const nom of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png']) {
+      const splash = capcaleraPng(path.join(APP, 'Assets.xcassets', 'Splash.imageset', nom));
+      expect(splash, nom).toEqual({ ample: 2732, alt: 2732, profunditat: 8, tipusColor: 2, primerPixel: [15, 103, 47] });
     }
   });
 

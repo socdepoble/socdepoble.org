@@ -44,10 +44,10 @@
 				null,
 				el(
 					PanelBody,
-					{ title: __( 'Village', 'socdepoble-enxufe' ) },
-					camp( 'nomPoble', __( 'Village name', 'socdepoble-enxufe' ), __( 'Shown as the host of this page. Leave it empty to use Settings → Sóc de Poble.', 'socdepoble-enxufe' ) ),
-					camp( 'poble', __( 'Village id', 'socdepoble-enxufe' ), __( 'Id of the village in the Villages section, for example la-torre-de-les-macanes.', 'socdepoble-enxufe' ) ),
-					camp( 'rutaInicial', __( 'Initial route', 'socdepoble-enxufe' ), __( 'Optional app route to open first, for example /mur.', 'socdepoble-enxufe' ) )
+					{ title: __( 'Village', 'socdepoble' ) },
+					camp( 'nomPoble', __( 'Village name', 'socdepoble' ), __( 'Shown as the host of this page. Leave it empty to use Settings → Sóc de Poble.', 'socdepoble' ) ),
+					camp( 'poble', __( 'Village id', 'socdepoble' ), __( 'Id of the village in the Villages section, for example la-torre-de-les-macanes.', 'socdepoble' ) ),
+					camp( 'rutaInicial', __( 'Initial route', 'socdepoble' ), __( 'Optional app route to open first, for example /mur.', 'socdepoble' ) )
 				)
 			),
 			el(
@@ -55,8 +55,8 @@
 				useBlockProps(),
 				el( Placeholder, {
 					icon: 'groups',
-					label: __( 'Sóc de Poble', 'socdepoble-enxufe' ),
-					instructions: __( 'The app appears here on the published page.', 'socdepoble-enxufe' )
+					label: __( 'Sóc de Poble', 'socdepoble' ),
+					instructions: __( 'The app appears here on the published page.', 'socdepoble' )
 				} )
 			)
 		);

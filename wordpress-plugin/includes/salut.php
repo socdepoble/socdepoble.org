@@ -19,12 +19,12 @@ defined( 'ABSPATH' ) || exit;
  */
 function socdepoble_enxufe_proves_salut( $proves ) {
 	$proves['direct']['socdepoble_enxufe_paquet'] = array(
-		'label' => __( 'Sóc de Poble package', 'socdepoble-enxufe' ),
+		'label' => __( 'Sóc de Poble package', 'socdepoble' ),
 		'test'  => 'socdepoble_enxufe_prova_paquet',
 	);
 	if ( function_exists( 'socdepoble_enxufe_prova_canal' ) ) {
 		$proves['direct']['socdepoble_enxufe_canal'] = array(
-			'label' => __( 'Sóc de Poble update channel', 'socdepoble-enxufe' ),
+			'label' => __( 'Sóc de Poble update channel', 'socdepoble' ),
 			'test'  => 'socdepoble_enxufe_prova_canal',
 		);
 	}
@@ -46,14 +46,14 @@ function socdepoble_enxufe_resultat_salut( $prova, $estat, $etiqueta, $descripci
 		'label'       => $etiqueta,
 		'status'      => $estat,
 		'badge'       => array(
-			'label' => __( 'Sóc de Poble', 'socdepoble-enxufe' ),
+			'label' => __( 'Sóc de Poble', 'socdepoble' ),
 			'color' => 'good' === $estat ? 'blue' : ( 'critical' === $estat ? 'red' : 'orange' ),
 		),
 		'description' => '<p>' . esc_html( $descripcio ) . '</p>',
 		'actions'     => sprintf(
 			'<p><a href="%1$s">%2$s</a></p>',
 			esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ),
-			esc_html__( 'Open Settings → Sóc de Poble', 'socdepoble-enxufe' )
+			esc_html__( 'Open Settings → Sóc de Poble', 'socdepoble' )
 		),
 		'test'        => $prova,
 	);
@@ -119,30 +119,30 @@ function socdepoble_enxufe_prova_paquet() {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'critical',
-			__( 'The Sóc de Poble bundle is missing', 'socdepoble-enxufe' ),
-			__( 'dist/soc-de-poble.standalone.js is not in the plugin folder, so pages with the shortcode or the block show nothing to visitors.', 'socdepoble-enxufe' )
+			__( 'The Sóc de Poble bundle is missing', 'socdepoble' ),
+			__( 'dist/soc-de-poble.standalone.js is not in the plugin folder, so pages with the shortcode or the block show nothing to visitors.', 'socdepoble' )
 		);
 	}
 	if ( null === socdepoble_enxufe_manifest_local() ) {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'recommended',
-			__( 'The Sóc de Poble package has no valid manifest', 'socdepoble-enxufe' ),
-			__( 'Without dist/sdp-release.json the app still loads, but nobody can tell which data node it uses, and the script loads without integrity.', 'socdepoble-enxufe' )
+			__( 'The Sóc de Poble package has no valid manifest', 'socdepoble' ),
+			__( 'Without dist/sdp-release.json the app still loads, but nobody can tell which data node it uses, and the script loads without integrity.', 'socdepoble' )
 		);
 	}
 	if ( socdepoble_enxufe_node_inadequat() ) {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'critical',
-			__( 'The Sóc de Poble package points to a development backend', 'socdepoble-enxufe' ),
-			__( 'It was built against a local backend, without https or in seed mode. Visitors will see the app without data, and any other host would too. Rebuild it as a release with production values.', 'socdepoble-enxufe' )
+			__( 'The Sóc de Poble package points to a development backend', 'socdepoble' ),
+			__( 'It was built against a local backend, without https or in seed mode. Visitors will see the app without data, and any other host would too. Rebuild it as a release with production values.', 'socdepoble' )
 		);
 	}
 	return socdepoble_enxufe_resultat_salut(
 		$prova,
 		'good',
-		__( 'The Sóc de Poble package is ready', 'socdepoble-enxufe' ),
-		__( 'The bundle, its manifest and its sealed data node are consistent with this site.', 'socdepoble-enxufe' )
+		__( 'The Sóc de Poble package is ready', 'socdepoble' ),
+		__( 'The bundle, its manifest and its sealed data node are consistent with this site.', 'socdepoble' )
 	);
 }

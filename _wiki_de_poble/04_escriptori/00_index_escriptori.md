@@ -34,18 +34,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261022_2220_auditoria_claude]]
-- [[261022_2210_auditoria_gemini]]
-- [[261022_1955_prompt_claude_gemini_cercador_universal]]
-- [[261022_1955_pla_implementacio_cercador_universal]]
-- [[261022_1725_auditoria_claude]]
-- [[261022_1700_auditoria_gemini]]
-- [[261022_1645_prompt_claude_gemini_transicio_webp_i_salvavides]]
-- [[261022_1645_pla_implementacio_transicio_webp_i_salvavides]]
-- [[261022_1556_auditoria_gemini]]
-- [[261022_1500_auditoria_claude]]
-- [[261022_1425_prompt_claude_gemini_emojis_grans_i_paritat_whatsapp]]
-- [[261022_1425_pla_implementacio_emojis_grans_i_paritat_whatsapp]]
+- [[261023_1418_auditoria_gemini]]
+- [[261023_1345_prompt_claude_gemini_botigues_mobil]]
+- [[261023_1345_pla_implementacio_botigues_mobil]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
@@ -776,6 +767,18 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261022_1425_pla_implementacio_emojis_grans_i_paritat_whatsapp]]
+- [[../90_arxiu_historic/261022_1425_prompt_claude_gemini_emojis_grans_i_paritat_whatsapp]]
+- [[../90_arxiu_historic/261022_1500_auditoria_claude]]
+- [[../90_arxiu_historic/261022_1556_auditoria_gemini]]
+- [[../90_arxiu_historic/261022_1645_pla_implementacio_transicio_webp_i_salvavides]]
+- [[../90_arxiu_historic/261022_1645_prompt_claude_gemini_transicio_webp_i_salvavides]]
+- [[../90_arxiu_historic/261022_1700_auditoria_gemini]]
+- [[../90_arxiu_historic/261022_1725_auditoria_claude]]
+- [[../90_arxiu_historic/261022_1955_pla_implementacio_cercador_universal]]
+- [[../90_arxiu_historic/261022_1955_prompt_claude_gemini_cercador_universal]]
+- [[../90_arxiu_historic/261022_2210_auditoria_gemini]]
+- [[../90_arxiu_historic/261022_2220_auditoria_claude]]
 - [[../90_arxiu_historic/261022_0615_acta_consens_gauntlet_extrem]]
 - [[../90_arxiu_historic/261022_0235_auditoria_gemini]]
 - [[../90_arxiu_historic/261022_0235_auditoria_codex]]

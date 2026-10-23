@@ -1,0 +1,20 @@
+{
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "ca",
+				"plural-forms": "nplurals=2; plural=n != 1;"
+			},
+			"Village": [ "Poble" ],
+			"Village name": [ "Nom del poble" ],
+			"Shown as the host of this page. Leave it empty to use Settings → Sóc de Poble.": [ "Es mostra com l’amfitrió d’esta pàgina. Deixa-ho buit per a usar Ajustos → Sóc de Poble." ],
+			"Village id": [ "Identificador del poble" ],
+			"Id of the village in the Villages section, for example la-torre-de-les-macanes.": [ "Identificador del poble a la secció Pobles, per exemple la-torre-de-les-macanes." ],
+			"Initial route": [ "Ruta inicial" ],
+			"Optional app route to open first, for example /mur.": [ "Ruta opcional de l’App que s’obri primer, per exemple /mur." ],
+			"The app appears here on the published page.": [ "L’App apareix ací a la pàgina publicada." ]
+		}
+	}
+}

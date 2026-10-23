@@ -72,12 +72,12 @@ function socdepoble_enxufe_refusa_xarxa_amb_copies( $network_wide ) {
 		esc_html(
 			sprintf(
 				/* translators: 1: folders of the copies already active, 2: folder of this copy. */
-				__( 'Sóc de Poble — Enxufe is already active from the folder %1$s on at least one site of this network. Deactivate that copy on every site before activating this one, in %2$s, for the whole network.', 'socdepoble-enxufe' ),
+				__( 'Sóc de Poble — Enxufe is already active from the folder %1$s on at least one site of this network. Deactivate that copy on every site before activating this one, in %2$s, for the whole network.', 'socdepoble' ),
 				implode( ', ', $carpetes ),
 				dirname( SOCDEPOBLE_ENXUFE_FITXER )
 			)
 		),
-		esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble-enxufe' ),
+		esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble' ),
 		array( 'back_link' => true )
 	);
 }

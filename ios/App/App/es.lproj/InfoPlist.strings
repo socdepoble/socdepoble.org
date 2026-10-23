@@ -1,6 +1,6 @@
 /* Fase D (261020, tasca 5) · Els textos dels permisos d'iOS, en castellà. */
 "CFBundleDisplayName" = "Sóc de Poble";
-"NSCameraUsageDescription" = "Sóc de Poble necesita acceso a la cámara para hacer fotos de los productos del mercado o actualizar tu perfil.";
-"NSMicrophoneUsageDescription" = "Sóc de Poble necesita el micrófono para grabar el sonido de los vídeos que compartes con el pueblo.";
+"NSCameraUsageDescription" = "Sóc de Poble necesita acceso a la cámara para hacer las fotos y los vídeos que compartes con el pueblo y la foto de tu perfil.";
+"NSMicrophoneUsageDescription" = "Sóc de Poble necesita el micrófono para grabar los audios del chat y el sonido de los vídeos que compartes con el pueblo.";
 "NSPhotoLibraryAddUsageDescription" = "Permite guardar en tu galería las imágenes que decidas conservar de Sóc de Poble.";
 "NSPhotoLibraryUsageDescription" = "Permite elegir fotografías de tu galería para compartirlas con el pueblo.";

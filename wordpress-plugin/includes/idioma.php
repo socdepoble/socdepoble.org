@@ -16,6 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Carrega el text domain des de languages/.
  */
 function socdepoble_enxufe_carrega_traduccions() {
-	load_plugin_textdomain( 'socdepoble-enxufe', false, dirname( plugin_basename( SOCDEPOBLE_ENXUFE_FITXER ) ) . '/languages' );
+	load_plugin_textdomain( 'socdepoble', false, dirname( plugin_basename( SOCDEPOBLE_ENXUFE_FITXER ) ) . '/languages' );
 }
 add_action( 'init', 'socdepoble_enxufe_carrega_traduccions', 1 );

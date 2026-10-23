@@ -22,12 +22,12 @@ function socdepoble_enxufe_deepl_clau() {
 function socdepoble_enxufe_traduccio_error( $codi, $estat ) {
 	// Codis estables per a la UI; mai el cos ni les credencials del proveïdor.
 	$missatges = array(
-		'limit' => __( 'Translation limit reached. Try again later.', 'socdepoble-enxufe' ),
-		'sense_clau' => __( 'Translation is not configured on this server.', 'socdepoble-enxufe' ),
-		'ocupada' => __( 'Translation is busy. Try again shortly.', 'socdepoble-enxufe' ),
-		'proveidor' => __( 'The translation provider is unavailable. Try again later.', 'socdepoble-enxufe' ),
+		'limit' => __( 'Translation limit reached. Try again later.', 'socdepoble' ),
+		'sense_clau' => __( 'Translation is not configured on this server.', 'socdepoble' ),
+		'ocupada' => __( 'Translation is busy. Try again shortly.', 'socdepoble' ),
+		'proveidor' => __( 'The translation provider is unavailable. Try again later.', 'socdepoble' ),
 	);
-	$missatge = $missatges[ $codi ] ?? __( 'The translation request could not be accepted.', 'socdepoble-enxufe' );
+	$missatge = $missatges[ $codi ] ?? __( 'The translation request could not be accepted.', 'socdepoble' );
 	return new WP_Error( 'sdp_traduccio_' . $codi, $missatge, array( 'status' => $estat ) );
 }
 

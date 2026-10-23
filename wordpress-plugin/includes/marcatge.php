@@ -334,7 +334,7 @@ function socdepoble_enxufe_te_bundle() {
 function socdepoble_enxufe_marcatge( $instancia = array(), $embolcall = 'class="socdepoble-enxufe"' ) {
 	if ( ! socdepoble_enxufe_te_bundle() ) {
 		if ( current_user_can( 'edit_posts' ) ) {
-			return '<p>' . esc_html__( 'Sóc de Poble — Enxufe: dist/soc-de-poble.standalone.js is missing. Build it with npm run build:wp.', 'socdepoble-enxufe' ) . '</p>';
+			return '<p>' . esc_html__( 'Sóc de Poble — Enxufe: dist/soc-de-poble.standalone.js is missing. Build it with npm run build:wp.', 'socdepoble' ) . '</p>';
 		}
 		return '';
 	}
@@ -410,7 +410,7 @@ function socdepoble_enxufe_registra_entrades() {
 	register_block_type( dirname( SOCDEPOBLE_ENXUFE_FITXER ) . '/includes/bloc' );
 	/* Traduccions de l'editor del bloc des de languages/: WordPress busca
 	   socdepoble-enxufe-{locale}-socdepoble-app-editor-script.json. */
-	wp_set_script_translations( 'socdepoble-app-editor-script', 'socdepoble-enxufe', plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'languages' );
+	wp_set_script_translations( 'socdepoble-app-editor-script', 'socdepoble', plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'languages' );
 }
 add_action( 'init', 'socdepoble_enxufe_registra_entrades' );
 
@@ -474,7 +474,7 @@ function socdepoble_enxufe_marcatge_de_referencia() {
  * @return array
  */
 function socdepoble_enxufe_afig_plantilla( $plantilles ) {
-	$plantilles[ SOCDEPOBLE_ENXUFE_PLANTILLA ] = __( 'Sóc de Poble · full screen', 'socdepoble-enxufe' );
+	$plantilles[ SOCDEPOBLE_ENXUFE_PLANTILLA ] = __( 'Sóc de Poble · full screen', 'socdepoble' );
 	return $plantilles;
 }
 add_filter( 'theme_page_templates', 'socdepoble_enxufe_afig_plantilla' );
@@ -508,8 +508,8 @@ function socdepoble_enxufe_registra_plantilla_blocs() {
 	register_block_template(
 		SOCDEPOBLE_ENXUFE_SLUG . '//' . SOCDEPOBLE_ENXUFE_PLANTILLA,
 		array(
-			'title'       => __( 'Sóc de Poble · full screen', 'socdepoble-enxufe' ),
-			'description' => __( 'Only the page content, without the theme header or footer, so the Sóc de Poble app fills the window.', 'socdepoble-enxufe' ),
+			'title'       => __( 'Sóc de Poble · full screen', 'socdepoble' ),
+			'description' => __( 'Only the page content, without the theme header or footer, so the Sóc de Poble app fills the window.', 'socdepoble' ),
 			'content'     => socdepoble_enxufe_contingut_plantilla_blocs(),
 			'post_types'  => array( 'page' ),
 		)

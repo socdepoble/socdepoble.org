@@ -46,9 +46,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Sóc de Poble necessita accés a la càmera per a fer fotos dels productes del mercat o actualitzar el teu perfil.</string>
+	<string>Sóc de Poble necessita accés a la càmera per a fer les fotos i els vídeos que compartixes amb el poble i la foto del teu perfil.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Sóc de Poble necessita el micròfon per a gravar el so dels vídeos que compartixes amb el poble.</string>
+	<string>Sóc de Poble necessita el micròfon per a gravar els àudios del xat i el so dels vídeos que compartixes amb el poble.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Permet desar a la teua galeria les imatges que tries guardar de Sóc de Poble.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

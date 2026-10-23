@@ -1,6 +1,6 @@
 /* Fase D (261020, tasca 5) · Els textos dels permisos d'iOS, en basc (pendents de revisió nativa). */
 "CFBundleDisplayName" = "Sóc de Poble";
-"NSCameraUsageDescription" = "Sóc de Poble-k kamera erabiltzeko baimena behar du merkatuko produktuen argazkiak ateratzeko edo zure profila eguneratzeko.";
-"NSMicrophoneUsageDescription" = "Sóc de Poble-k mikrofonoa behar du herriarekin partekatzen dituzun bideoen soinua grabatzeko.";
+"NSCameraUsageDescription" = "Sóc de Poble-k kamera erabiltzeko baimena behar du herriarekin partekatzen dituzun argazkiak eta bideoak eta zure profileko argazkia ateratzeko.";
+"NSMicrophoneUsageDescription" = "Sóc de Poble-k mikrofonoa behar du txateko audioak eta herriarekin partekatzen dituzun bideoen soinua grabatzeko.";
 "NSPhotoLibraryAddUsageDescription" = "Sóc de Poble-tik gorde nahi dituzun irudiak zure galerian gordetzeko aukera ematen du.";
 "NSPhotoLibraryUsageDescription" = "Zure galeriako argazkiak aukeratzeko aukera ematen du, herriarekin partekatzeko.";

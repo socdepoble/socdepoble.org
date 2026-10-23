@@ -8,7 +8,7 @@
 	"icon": "groups",
 	"description": "Embeds the Sóc de Poble app with the universal host markup.",
 	"keywords": [ "socdepoble", "poble", "village", "community" ],
-	"textdomain": "socdepoble-enxufe",
+	"textdomain": "socdepoble",
 	"attributes": {
 		"nomPoble": {
 			"type": "string",
