@@ -1,0 +1,90 @@
+diff --git a/src/sections/text/legalContent.js b/src/sections/text/legalContent.js
+index 8531195a4..1e592fa4c 100644
+--- a/src/sections/text/legalContent.js
++++ b/src/sections/text/legalContent.js
+@@ -33,13 +33,15 @@ export const legalContent = {
+       <strong>Correu electrònic de contacte:</strong> <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>
+     </p>
+     <p>No s'ha designat Delegat de Protecció de Dades perquè aquest tractament no encaixa en cap dels tres supòsits de l'article 37.1 del RGPD. Per a qualsevol qüestió de dades, el contacte és el correu de dalt.</p>
++    <p><strong>Qui és «nosaltres».</strong> En aquest text, quan diem «nosaltres» o «el responsable», o parlem en primera persona del plural, ens referim a la persona titular que acabem d'identificar. «Sóc de Poble» és el nom del projecte i de l'aplicació: quan diem que Sóc de Poble fa alguna cosa o es compromet a fer-la, qui ho fa i qui en respon és aquesta mateixa persona.</p>
++    <p><strong>Punt únic de contacte.</strong> Els articles 11 i 12 del Reglament (UE) 2022/2065, de Serveis Digitals, ens obliguen a tindre un punt únic de contacte. El nostre és el correu <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>. Hi poden escriure les autoritats dels Estats membres, la Comissió Europea i la Junta Europea de Serveis Digitals, i també tu. Ens pots escriure en valencià, en castellà o en anglés. Aquest correu l'atén una persona: no depén només d'eines automàtiques.</p>
+ 
+     <h4>2. Com funciona això, de veritat</h4>
+     <p>Volem ser francs, perquè hi ha molt de màrqueting tecnològic que promet coses que no compleix. <strong>Sóc de Poble és una aplicació connectada.</strong> Concretament:</p>
+     <ul>
+       <li>Necessita connexió a internet per a funcionar. Sense cobertura, no funciona.</li>
+       <li>Les teues dades s'emmagatzemen en <strong>servidors nostres allotjats a proveïdors externs</strong> (els trobaràs nomenats a l'apartat 11). No viuen al teu telèfon.</li>
+-      <li>El teu navegador guarda algunes coses tècniques xicotetes, que t'enumerem una per una a l'apartat 21. Cap d'elles és la teua informació del poble: això és al servidor.</li>
++      <li>El teu navegador guarda algunes coses tècniques xicotetes, que t'enumerem una per una a l'apartat 20. Cap d'elles és la teua informació del poble: això és al servidor.</li>
+     </ul>
+     <p><strong>Cap on volem anar (i açò no és una promesa legal).</strong> L'horitzó del projecte és la sobirania tecnològica rural, amb arquitectures on cada poble controle la seua pròpia infraestructura. Hui no és així i no volem que cap frase bonica t'ho faça creure. Quan canvie, canviarem aquest text abans, no després.</p>
+ 
+@@ -48,6 +50,23 @@ export const legalContent = {
+     <p>La finalitat de la plataforma és servir d'espai de comunicació, intercanvi d'informació, preservació etnogràfica i cohesió per a les comunitats rurals. Et compromets a fer-la servir per a això i a no publicar continguts il·lícits, ofensius, ni dades personals d'altres persones sense el seu permís.</p>
+     <p><strong>Edat mínima: 14 anys</strong>, d'acord amb l'article 7 de la Llei Orgànica 3/2018 (LOPDGDD). Si tens menys de 14 anys, necessites que et done d'alta la persona que exercisca la teua pàtria potestat o tutela. Si detectem un compte d'una persona menor de 14 anys sense aquest consentiment, el donarem de baixa.</p>
+     <p>Ens reservem el dret de suspendre l'accés a qui incomplisca aquestes condicions, avisant-lo prèviament sempre que siga possible.</p>
++    <h5>Normes de convivència i moderació</h5>
++    <p>Abans de publicar per primera vegada, et demanem que acceptes les <strong>normes de convivència del poble</strong>:</p>
++    <ul>
++      <li>Respecta les persones: res d'insults, amenaces, assetjament ni discriminació.</li>
++      <li>Res de contingut sexual explícit, violent o il·legal, ni res que pose ningú en perill.</li>
++      <li>Res d'enganys: ni spam, ni estafes, ni suplantar ningú, ni escampar desinformació.</li>
++      <li>Publica només el que és teu o tens permís per a compartir, i respecta la intimitat dels altres.</li>
++    </ul>
++    <p>Així les fem complir, d'acord amb els articles 14, 16, 17 i 18 del Reglament (UE) 2022/2065, de Serveis Digitals:</p>
++    <ul>
++      <li><strong>Denunciar dins de l'aplicació, també sense compte:</strong> toca el botó <strong>⋮</strong> d'una publicació del Mur, del Mercat o de l'Agenda, d'un missatge del xat o de la fitxa d'una persona o d'una entitat, i tria l'opció de denunciar. Després tria el motiu (contingut ofensiu, spam o frau, desinformació o un altre motiu) i, si vols, afegeix-hi un detall. No direm a qui l'ha publicat, ni a la persona denunciada, que la denúncia és teua, llevat que ens hi obligue la llei o un jutjat.</li>
++      <li><strong>Denunciar per correu, també sense compte:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Den%C3%BAncia%20de%20contingut">socdepoble@socdepoble.org</a>. Posa-hi l'enllaç exacte del contingut, per què creus que és il·legal o que incompleix aquestes normes, el teu nom i el teu correu, i una frase que diga que creus de bona fe que el que ens expliques és exacte i complet. Si denuncies abús o explotació sexual de menors, no cal que t'identifiques. Si ens deixes el teu correu, et confirmarem que hem rebut la denúncia i, quan decidim, et direm què hem fet i com pots reclamar.</li>
++      <li><strong>Bloquejar:</strong> amb la sessió oberta, pots bloquejar una persona o una entitat. Deixaràs de veure les seues publicacions al Mur, al Mercat i a l'Agenda i, si és una persona, els seus missatges al xat. Qui bloqueges no en rebrà cap avís. Bloquejar només t'ho amaga a tu: no li impedeix veure el que publiques ni escriure't. Ho pots desfer quan vulgues a <strong>Perfil</strong>, <strong>Privacitat i dades</strong>, o al <strong>Control</strong> del xat, a <strong>Privacitat i seguretat</strong>.</li>
++      <li><strong>Com ho revisem:</strong> cada denúncia la revisa una persona de l'equip de moderació, <strong>en menys de 24 hores</strong>. No fem servir cap sistema automàtic per a decidir què es retira. Els únics filtres automàtics són de seguretat: el que impedeix carregar imatges d'altres llocs dins de les publicacions (apartat 21) i un límit de denúncies per hora des d'un mateix compte o una mateixa connexió, per a evitar abusos. <strong>Tolerància zero:</strong> si un contingut incompleix aquestes normes o la llei, el retirem i expulsem qui l'ha publicat, com diuen les normes que acceptes a l'aplicació.</li>
++      <li><strong>Si retirem un contingut teu</strong> o limitem el teu compte, t'ho direm al correu del teu compte, com a molt tard quan apliquem la mesura, llevat que la llei ens ho impedisca. Et direm què hem fet i fins quan, quin contingut és, si ho hem sabut per una denúncia o per una revisió nostra, quina norma o quina llei creiem que incompleix i per què, que ho ha decidit una persona i no un sistema automàtic, i que, si no hi estàs d'acord, pots acudir als jutjats.</li>
++      <li><strong>Si hi ha un perill:</strong> si un contingut ens fa sospitar un delicte que posa en perill la vida o la seguretat d'una persona, ho comunicarem de seguida a la policia o a l'autoritat judicial del país afectat o, si no sabem quin és, a la policia d'Espanya o a Europol.</li>
++    </ul>
+ 
+     <h4>4. Propietat intel·lectual i industrial</h4>
+     <div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta"><div data-sdp-targeta="pagina:drets-autor" class="sdp-targeta" data-ruta="/page/drets-autor" data-titol="Drets d'autor" data-subtitol="Totes les llicències, explicades amb paraules de poble" data-entradilla="Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra." data-autor="Sóc de Poble" data-autor-ruta="/projecte"><a href="/page/drets-autor" rel="noopener noreferrer nofollow">Drets d'autor</a></div></div>
+@@ -73,10 +92,13 @@ export const legalContent = {
+ 
+     <h4>8. Quines dades tractem</h4>
+     <ul>
+-      <li><strong>Dades d'identificació i accés:</strong> adreça de correu electrònic o número de telèfon amb què inicies sessió i, si entres amb Google, l'identificador que ens retorna aquest servei.</li>
++      <li><strong>Dades d'identificació i accés:</strong> adreça de correu electrònic amb què inicies sessió. Si entres amb Google, l'identificador, el correu, el nom i la foto del teu compte de Google; el nom i la foto els fem servir per a començar el teu perfil, i els pots canviar. Si entres amb Apple, l'identificador que ens retorna Apple, el correu associat (o l'adreça privada de reenviament, si tries amagar-lo) i, la primera vegada, el nom, si decideixes compartir-lo, que posem com a nom del teu perfil i que pots canviar.</li>
+       <li><strong>Dades de perfil:</strong> nom o pseudònim, imatge d'avatar i poble al qual pertanys.</li>
+       <li><strong>Contingut que publiques:</strong> textos, imatges, notes, publicacions al Mur, anuncis del Mercat i missatges de xat.</li>
+       <li><strong>Dades tècniques:</strong> adreça IP, data i hora de connexió i tipus de navegador, que queden als registres del servidor.</li>
++      <li><strong>Consentiments i normes:</strong> quan acceptes aquesta política, o dones o retires algun altre consentiment, guardem la data, la versió del text i, quan el servidor els rep, el tipus de navegador i una empremta (<em>hash</em>) de l'adreça IP; també una empremta del teu correu. Una empremta és un codi calculat amb una clau secreta, que guardem en lloc de l'adreça o del correu. Quan acceptes les normes de convivència, guardem la data, la versió de les normes i l'empremta de l'adreça IP. És la prova del teu consentiment.</li>
++      <li><strong>Moderació:</strong> les denúncies que fas (què denuncies, el motiu, el detall que hi afegeixes i una empremta de l'adreça IP, per a frenar abusos; si denuncies per correu, també el teu nom, el teu correu i el que ens hi expliques), les denúncies que altres persones fan sobre tu o sobre el teu contingut, les persones o entitats que bloqueges (amb el nom que tenien quan les vas bloquejar) i els bloquejos que altres persones et fan a tu.</li>
++      <li><strong>Si et dones de baixa:</strong> el motiu, si en vols escriure un.</li>
+       <li><strong>Consultes a la IAIA MarIA:</strong> el text que li escrius, si decideixes fer-la servir.</li>
+     </ul>
+     <p>No demanem ni volem dades de categories especials (salut, ideologia, religió, orientació sexual, afiliació sindical). Si en publiques dins d'un contingut lliure, ho fas sota la teua responsabilitat.</p>
+@@ -84,9 +106,9 @@ export const legalContent = {
+     <h4>9. Per a què les fem servir i amb quina base jurídica</h4>
+     <ul>
+       <li><strong>Donar-te el servei</strong> (crear el compte, autenticar-te, publicar, xatejar, guardar notes): base jurídica <em>execució del contracte</em>, article 6.1.b del RGPD. Les condicions d'ús de l'apartat 3 són aquest contracte. Sense aquestes dades no hi ha servei.</li>
+-      <li><strong>Coses opcionals</strong> (imatge de perfil, ús de la IAIA MarIA, comunicacions no imprescindibles): base jurídica <em>consentiment</em>, article 6.1.a. El pots retirar quan vulgues i sense donar explicacions.</li>
+-      <li><strong>Mantindre això segur</strong> (prevenir suplantacions, abusos i atacs; conservar registres tècnics): base jurídica <em>interés legítim</em>, article 6.1.f. Hem valorat que el teu dret a la intimitat no queda per damunt de la necessitat de mantindre la xarxa del poble neta i operativa. Si vols que t'expliquem aquesta ponderació, demana-la i te la donem.</li>
+-      <li><strong>Complir la llei</strong> (atendre requeriments judicials o policials formals, obligacions comptables o de la LSSI-CE): base jurídica <em>obligació legal</em>, article 6.1.c.</li>
++      <li><strong>Coses opcionals</strong> (imatge de perfil, ús de la IAIA MarIA, comunicacions no imprescindibles, el motiu de la baixa si en vols escriure un): base jurídica <em>consentiment</em>, article 6.1.a. El pots retirar quan vulgues i sense donar explicacions.</li>
++      <li><strong>Mantindre això segur</strong> (prevenir suplantacions, abusos i atacs; atendre les denúncies i fer complir les normes de convivència; conservar registres tècnics): base jurídica <em>interés legítim</em>, article 6.1.f. Hem valorat que el teu dret a la intimitat no queda per damunt de la necessitat de mantindre la xarxa del poble neta i operativa. Si vols que t'expliquem aquesta ponderació, demana-la i te la donem.</li>
++      <li><strong>Complir la llei</strong> (atendre requeriments judicials o policials formals, obligacions comptables, de la LSSI-CE o del Reglament (UE) 2022/2065, de Serveis Digitals, i poder demostrar els consentiments que ens has donat, com exigeix l'article 7.1 del RGPD): base jurídica <em>obligació legal</em>, article 6.1.c.</li>
+     </ul>
+     <p><strong>El que no fem, en cap cas:</strong> publicitat comportamental, perfilat comercial, venda ni lloguer de dades a corredors de dades o agències de màrqueting.</p>
+ 
+@@ -97,6 +119,8 @@ export const legalContent = {
+       <li><strong>Còpies de seguretat:</strong> el cicle de rotació és de <strong>30 dies</strong>; passat aquest termini, el que hages esborrat desapareix també d'ací.</li>
+       <li><strong>Registres tècnics de seguretat</strong> (IP, marques de temps): <strong>12 mesos</strong>.</li>
+       <li><strong>Missatges de xat:</strong> mentre el teu compte existisca. Si et dones de baixa, passats els 30 dies els missatges que has escrit s'esborren amb ell, també de les converses de les altres persones.</li>
++      <li><strong>Bloquejos, acceptació de les normes de convivència i motiu de la baixa:</strong> s'esborren quan s'esborra definitivament el teu compte (o abans, si desfàs el bloqueig o cancel·les la baixa). El registre dels consentiments d'aquesta política, en canvi, es guarda bloquejat fins a 3 anys, com expliquem a l'apartat 16.</li>
++      <li><strong>Denúncies:</strong> les que has fet es conserven desvinculades del teu compte (en queden el motiu, el detall i l'empremta de l'adreça IP), i les que altres persones han fet sobre tu o sobre el teu contingut es conserven amb l'identificador intern del teu compte. Les guardem com a part de l'historial de moderació, mentre facen falta per a respondre reclamacions o requeriments sobre aquella decisió.</li>
+       <li><strong>Dades bloquejades per a atendre possibles responsabilitats legals:</strong> durant els terminis de prescripció que marque la llei, i només per a això.</li>
+     </ul>
+ 
+@@ -189,6 +213,7 @@ export const legalContent = {
+     <p><strong>Emmagatzematge local</strong> (<em>localStorage</em>) — <strong>persisteix fins que l'esborres tu</strong>:</p>
+     <ul>
+       <li><code>socdepoble-language</code> — l'idioma que has triat.</li>
++      <li><code>sdp_embed_normes-convivencia:*</code> — la versió de les normes de convivència que has acceptat en aquest dispositiu, amb l'identificador del teu compte, perquè no te les tornem a demanar cada vegada.</li>
+       <li><code>sdp-theme</code> i <code>sdp-grid-widths</code> — si vols la pantalla clara o fosca, i la grandària de les columnes.</li>
+       <li><code>socdepoble-guest-session-id</code> — un identificador anònim per a poder mirar l'aplicació sense compte.</li>
+       <li><code>socdepoble-iaia-level</code> i <code>socdepoble-iaia-companions</code> — el teu progrés i els personatges triats a la secció de la IAIA.</li>

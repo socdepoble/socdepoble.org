@@ -145,7 +145,7 @@ Ací van C-01 a C-08 de Codex, que no repetisc, més estes. Totes estan confirma
 | IOS-06 | baixa | GoogleSignIn, AppAuth i el seu esquema de reserva van dins del binari d'iOS però no s'usen. L'informe de privacitat d'Xcode llistarà dades que l'app no arreplega. | Omplir App Privacy des del comportament real; P1 o el client real de Google. | sí |
 | A-07 | baixa | `USE_CREDENTIALS`, `USE_BIOMETRIC` i `USE_FINGERPRINT` vénen de les llibreries i no s'usen. | `tools:node="remove"` al manifest. | no |
 | PAY-08 | info | `media_registry.json` i `components/sp-identity-components.js` viatgen sense que res els referencie. | Excloure'ls. | no |
-| IOS-05, PIPE-12 | mitjana | La condició de comerciant (DSA) s'ha de declarar a les dues botigues abans de publicar a la UE. TestFlight no compta com a distribució de comerciant. | El Mestre, amb D-2. | sí |
+| IOS-05, PIPE-12 | mitjana | La condició de comerciant (DSA) s'ha de declarar **només a Apple**, abans de la primera tramesa a l'App Store; TestFlight no compta com a distribució de comerciant. *Corregit el 2026-10-24:* Google Play no té cap declaració de comerciant (vegeu §9). | El Mestre, amb D-2 (§9). | sí |
 | IOS-08 | info | A partir d'abril de 2027, les apps fetes amb l'SDK 27.1 o posterior necessitaran captures d'«iPhone Duo». | Planificar-ho. | no |
 
 ### 6. El canal de botigues (proposta de Claude per la ruta de govern)
@@ -181,6 +181,107 @@ Ací van C-01 a C-08 de Codex, que no repetisc, més estes. Totes estan confirma
 - El criteri de verificació del prevol ha de dir quina ruta: «0» no és possible en la manual.
 - «Llegir sencer qualsevol document de l'Escriptori»: limitar-ho al primer nivell i excloure-hi `01_produccio`, `02_investigacio_ia` i l'arxiu.
 - Cadència del canal viu: el prompt diu 10-15 minuts i la lliçó 261003 de `wiki-documentacio-i-reflex` en diu 3-4. Cal triar-ne una.
+
+### 9. D-2 (publicador Individual): què canvia en la DSA i en el text legal
+
+Font: workflow `wf_db38b4a4-510`, amb 3 investigadors i 3 refutadors, sobre pàgines oficials consultades el 2026-10-24. Es van confirmar 47 de 51 afirmacions; 2 van quedar incertes i 2 refutades, i les quatre estan corregides ací. No és assessorament jurídic: on diu «assessor», ho ha de confirmar la Gestoria o un professional. Cap valor personal (NIF, domicili, telèfon) es reproduïx.
+
+**Apple: declaració de comerciant (DSA)**
+- **Qui i quan.** La declara el titular del compte (el Mestre) a App Store Connect › Business › Agreements › Compliance › Digital Services Act. Es pot canviar per app a App Information.
+  - És obligatòria abans de la primera tramesa a l'App Store, encara que l'app no es distribuïsca a la UE.
+  - Sense declaració, l'app es retira de l'App Store de la UE (des del 17-02-2025).
+  - **No cal per a TestFlight intern.** Apple diu que qui només distribuïx per TestFlight «not acting as a trader».
+  - Font: developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements.
+- **Comerciant o no.** Ho decidix qui publica; Apple no ho dictamina. Apple diu que qui programa per afició «with no intention of commercializing it, you may not be considered a trader».
+  - Indicis que poden apuntar a comerciant: la subvenció NLnet, l'alta d'autònom o d'IVA, treball pagat per a ajuntaments o per a Sollutia, i futures donacions o versió premium.
+  - Declarar-se falsament no comerciant és pràctica deslleial (Directiva 2005/29/CE, annex I, 22). **Ho ha de confirmar l'assessor.**
+- **Si és comerciant, com a persona física:**
+  - Apple verifica el correu i el telèfon i demana un document que acredite el nom i l'adreça.
+  - Després publica **adreça, telèfon i correu** al costat del nom legal, en les 27 botigues de la UE.
+  - S'admet un apartat de correus o una adreça alternativa, si se n'acredita la vinculació.
+  - Hi ha informes de fòrums de verificacions que han tardat setmanes [no oficial].
+- **Nom del venedor.** És el nom legal complet i no es pot canviar.
+  - Per a mostrar una organització caldria convertir la inscripció (cal D-U-N-S i ser-ne fundador) o transferir l'app.
+  - La transferència demana almenys una versió publicada, i les persones que entren amb Apple s'han de migrar en 60 dies.
+  - Un cop pujat un build, l'identificador queda lligat a este equip.
+- **Guideline 5.1.1(ix).** Les apps amb dades sensibles (salut, finances) les ha de trametre una entitat jurídica, no una persona. **Mentre l'equip siga Individual, Salut no pot anar a iOS**: és el cas de la v1.1 de `LLEGIU_PRIMER.txt:203-206`.
+
+**Google Play**
+- **No hi ha declaració de comerciant DSA.** Google Commerce Limited és el comerciant de registre de tot Google Play (DDA 3.4), i la seua auditoria DSA diu que els arts. 30-32 no s'hi apliquen. Les notes que deien «les dues botigues» s'han de corregir (`LLEGIU_PRIMER.txt` O2, B11; este informe §5, ja corregit).
+- **Què es publica depén del tipus de compte i de si l'app fa diners:**
+  - Compte personal amb app gratuïta: nom legal, país i correu de desenvolupador. Ni l'adreça ni el telèfon, si no s'escriuen a Store settings.
+  - Compte d'organització: nom, adreça, correu i telèfon, i cal D-U-N-S.
+  - Un compte personal es pot convertir en d'organització sense canviar de compte (answer/16260648); a l'inrevés no.
+- **Compte personal nou:** 12 persones en prova tancada durant 14 dies abans de producció, verificació d'un dispositiu Android i verificació d'identitat. Si la verificació del compte està pendent, pot bloquejar fins i tot la prova interna (answer/10841920): cal mirar la Home de Play Console abans de pujar.
+
+**Text legal (`src/sections/text/legalContent.js`)**
+- **Ja quadra en l'essencial.** La persona física és titular LSSI (:26-28), responsable del tractament (:72) i titular de la propietat intel·lectual (:55), que és el que mostrarà Apple.
+  - La contradicció O3 del 261003 ja està resolta: des del 2026-10-20 el §1 i el §7 publiquen tots dos NIF i domicili, i `legal.sanejament.test.js:18-23` ho exigix.
+  - Mantindre'ls o retirar-los és decisió del Mestre amb l'assessor. L'LSSI art. 10 només s'aplica si hi ha activitat econòmica, i admet «en su defecto» l'adreça d'un establiment a Espanya. Retirar-los de la pàgina no els lleva de l'historial públic de git.
+- **Esmenes proposades.** Claude no n'ha aplicada cap.
+  - E1 · :28, :55, :72: el nom de pila complet, igual que el venedor d'App Store Connect; el text l'abrevia. Mestre.
+  - E2/E3 · :23-26 i `LICENSE:3`: el §1 comença per l'associació El Rentonar, i `LICENSE` dona el copyright a «Sóc de Poble / El Rentonar». Cal alinear-ho amb IDEA-17, perquè Apple 5.2.1 vol que trameta qui té la propietat intel·lectual o una llicència. Assessor.
+  - E4 · després de :35: definir que «Sóc de Poble / nosaltres» és la persona titular. Claude.
+  - E6/E7: punt de contacte DSA (arts. 11-12) i secció de moderació (arts. 14, 16-17), si la DSA s'aplica a l'app com a allotjament de publicacions. Afegir-ho costa poc. L'art. 18 (avisar la policia d'amenaces contra la vida) no té exempció. Claude redacta, amb D16 del Mestre i l'aplicabilitat confirmada per l'assessor.
+  - E8 · :80, :87, :108, :127-130 (**PAY-02 ampliat**): el text diu que la IAIA envia text a Google, Anthropic i OpenAI. L'app no crida cap proveïdor. Però el bot de WhatsApp de la IAIA (`bot/`, servei `iaia-bot`) envia text, imatges i àudio a Google (Gemini, Imagen) i a fal.ai, i en guarda memòria 90 dies (`bot/cervell.mjs:5,18,201,333,362`; `bot/memoria/episodica.mjs:8,16`). Si el bot funciona en producció [NO VERIFICAT], cal declarar-lo; si no, cal llevar la frase. Mestre.
+  - E9 · :106-109, :114, :173: falta Firebase Hosting (Google) com a encarregat, i el text diu que el lloc s'allotja a Sollutia. Mestre.
+  - E11 · :76-77: falta l'identificador de Sign in with Apple, que ara usa iOS, i també les dades de moderació i el consentiment del padró. Claude, amb les tries del Mestre.
+  - E12 · :96, :157-158 i `DetallPrivacitat.jsx:313,335`: una sola frase d'esborrat que diga la veritat. Depén de C-02 i C-03.
+  - E13 · :49: edat mínima 14 anys, però hi ha una via per a menors amb tutor i cap control d'edat. Mestre o assessor; cal alinear-ho amb la classificació d'edat d'Apple i el públic de Play.
+  - E14 · :42: una referència creuada.
+  - Publicació: versió 2.2 a :13, amb nou consentiment.
+
+### 10. Esborrany de les esmenes E4, E6, E7, E11 i E14 (pegat P3, sense aplicar)
+
+Encàrrec del Mestre (2026-10-24, al xat): redactar com a proposta les esmenes que no depenen de les seues decisions, sense aplicar-les al codi.
+
+**El pegat:** `02_investigacio_ia/261003_1330_empaquetat_mobil_claude/PEGAT_261024_P3_TEXT_LEGAL_E4_E6_E7_E11_E14.patch` (SHA-256 `b5b539946a8365af…`). Només toca `src/sections/text/legalContent.js`. `git apply --check` passa sobre l'arbre viu (HEAD `0bf4fbf08`). No s'ha aplicat.
+
+**Què diu:**
+- **E4 (§1).** «Nosaltres» i «el responsable» volen dir la persona titular. «Sóc de Poble» és el projecte i l'aplicació, i en respon eixa persona. No toca El Rentonar (E2).
+- **E6 (§1).** Punt únic de contacte DSA (arts. 11-12): el correu que ja hi ha, per a autoritats i persones usuàries, en valencià, castellà o anglés, atés per una persona.
+- **E7 (§3, nou `h5` sense àncora).** Copia de l'app:
+  - les quatre normes de convivència (`ca.js:626-630`);
+  - com denunciar (botó ⋮, també sense compte, motius) i qui ho fa no es revela, llevat d'obligació legal;
+  - denúncia per correu amb els elements de l'art. 16.2, l'excepció per a abús o explotació sexual de menors i l'avís de recepció i de decisió (16.4-16.5);
+  - què fa bloquejar i què no, i on es desfà;
+  - revisió per una persona en menys de 24 hores i els dos filtres automàtics de seguretat que existixen;
+  - «Tolerància zero» tal com la diu l'app (`ca.js:631`);
+  - la motivació de l'art. 17.3 per correu, amb els jutjats com a via;
+  - l'avís a les autoritats de l'art. 18.
+- **E11 (§8, §9, §10, §20).**
+  - **§8.** Les dades reals de Google (identificador, correu, nom i foto que inicien el perfil) i d'Apple (identificador, correu o adreça de reenviament, nom la primera vegada). Lleva «o número de telèfon», perquè no hi ha entrada per telèfon. Afig els consentiments (amb les empremtes d'IP i de correu), la moderació (denúncies fetes i rebudes, bloquejos) i el motiu de baixa.
+  - **§9.** Una base jurídica per a cada dada nova, inclòs l'art. 7.1 del RGPD per a la prova del consentiment.
+  - **§10.** Què s'esborra amb el compte i què es conserva. Ara concorda amb els 3 anys del §16.
+  - **§20.** La clau `sdp_embed_normes-convivencia:*`, perquè la llista continue sent completa.
+- **E14 (§2).** «apartat 21» passa a «apartat 20».
+
+**Verificació.**
+- Es va aplicar sobre una còpia neta de HEAD.
+- `vitest run src/sections/text` + `editorial` + `formaDelGrup`: 215/215. ESLint 0.
+- La pàgina conserva una sola `data-sdp-ancora`, i no apareix «conta».
+- Tres revisors independents (workflow `wf_de1a0fa7-3d3`: fets contra el codi, DSA i RGPD contra EUR-Lex i BOE, llengua): 47 incidències, totes incorporades a la versió final o anotades ací.
+  - Es va retirar una sanció graduada que contradeia la tolerància zero de l'app.
+  - Es va retirar una revisió interna a petició, perquè era un compromís nou.
+  - Es va treure una segona àncora, que trencava `legal.esborraCompte.test.jsx`.
+
+**Condicions per a publicar-lo (Mestre o MarIA):**
+1. **La migració `2610201500` ha d'estar aplicada a producció.** Sense ella, les denúncies diuen «no disponible», els bloquejos duren una sessió i les normes només es guarden al dispositiu, així que E7 i E11 serien falsos.
+2. **Versió 2.2** a :13, amb fila nova a `public.politiques_privacitat` amb un `vigent_des_de` futur, per avisar abans de l'efecte (§18 i DSA art. 14.2).
+3. **Registrar socdepoble.org a l'Apple Private Email Relay.** Si no, els correus de motivació no arriben a qui ha amagat el correu.
+
+**El Mestre ha de confirmar (ara l'esborrany ja ho diu):**
+- les **24 hores** i qui revisa la cua, que és manual i sense avís;
+- l'**expulsió per tolerància zero** (si prefereix sancions graduades, art. 14.4, cal canviar-ho alhora a `ca.js:631`);
+- el **criteri de conservació de les denúncies** («mentre facen falta per a respondre reclamacions o requeriments»), perquè el codi no en té cap purga ni termini;
+- els **tres idiomes** del punt de contacte;
+- l'avís al notificant (art. 16.4-16.5), que només es promet per a les denúncies per correu.
+
+**Fora d'este pegat:**
+- un segon canal de contacte (art. 12.1, per exemple el xat privat), que és decisió del Mestre;
+- les altres claus del §20, que es llisten sense el prefix real `sdp_embed_` (auditoria a banda);
+- el nom d'Apple que el connector natiu guarda a UserDefaults d'iOS;
+- E1-E3, E5, E8, E9, E12, E13, i també publicar o no el NIF i el domicili.
 
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
