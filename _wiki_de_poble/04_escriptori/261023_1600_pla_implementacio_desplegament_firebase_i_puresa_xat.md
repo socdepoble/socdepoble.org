@@ -66,6 +66,14 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 - Validar via HTTP que `https://socdepoble.org/` serveix el nou hash del bundle.
 - Confirmar que la ruta canònica és `/xat` i que no hi ha cap petició errònia 401 ni rastres de `/chats`.
 
+#### T5 · Recerca d'Estructura Jurídica, Fiscal i Subvencions (Horitzó Institucional)
+- **Objectiu:** Mapejar les opcions legals per a l'escalat de Sóc de Poble com a xarxa social i entitat receptora d'ajudes públiques (línia de 50.000 € de la Generalitat / fons rurals / europeus):
+  * **Associació Cultural El Rentonar:** Diagnosi del NIF/CIF vigent (que atorga accés a Canva Pro ONG); estat de la junta directiva (Javi Llinares com a tresorer) i tràmits d'actualització d'actes/junta.
+  * **Javi Llinares (Autònom):** Règim actual de facturació per fites/lots i compatibilitat amb ajudes o encàrrecs de desenvolupament.
+  * **Projecció Mercantil / Cooperativa:** Valorar cooperativa de consumidors i usuaris o societat comunitària per a garantir que la xarxa pertany al comú dels pobles.
+  * **Relació amb Sollutia:** Mantenir el blindatge del Model B (soci tecnològic d'infraestructura, API en lectura per la Frontissa) sense dilució de governança.
+  * **Marca Sóc de Poble:** Estat del registre a l'Oficina Espanyola de Patents i Marques (OEPM).
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
