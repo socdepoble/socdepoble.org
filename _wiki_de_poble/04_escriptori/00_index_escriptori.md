@@ -34,10 +34,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261023_1608_auditoria_gemini]]
-- [[261023_1610_auditoria_claude]]
-- [[261023_1600_prompt_claude_gemini_desplegament_firebase_i_puresa_xat]]
-- [[261023_1600_pla_implementacio_desplegament_firebase_i_puresa_xat]]
+- [[261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio]]
+- [[261023_2245_pla_implementacio_botigues_i_auditoria_trio]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
@@ -768,6 +766,10 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261023_1610_auditoria_claude]]
+- [[../90_arxiu_historic/261023_1608_auditoria_gemini]]
+- [[../90_arxiu_historic/261023_1600_prompt_claude_gemini_desplegament_firebase_i_puresa_xat]]
+- [[../90_arxiu_historic/261023_1600_pla_implementacio_desplegament_firebase_i_puresa_xat]]
 - [[../90_arxiu_historic/261023_1450_auditoria_claude]]
 - [[../90_arxiu_historic/261023_1418_auditoria_gemini]]
 - [[../90_arxiu_historic/261023_1345_prompt_claude_gemini_botigues_mobil]]

@@ -7600,9 +7600,10 @@ details[open] summary.accordion-header svg:last-child {
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
-  .sdp-cal-setmana__bloc--dues-linies .sdp-cal-setmana__titol { -webkit-line-clamp: 2; }
-  .sdp-cal-setmana__bloc--una-linia .sdp-cal-setmana__titol { -webkit-line-clamp: 1; }
+  .sdp-cal-setmana__bloc--dues-linies .sdp-cal-setmana__titol { -webkit-line-clamp: 2; line-clamp: 2; }
+  .sdp-cal-setmana__bloc--una-linia .sdp-cal-setmana__titol { -webkit-line-clamp: 1; line-clamp: 1; }
   /* Curt (menys de 50 minuts visibles, o de 54 en compacta: no hi caben dos
      línies): una sola línia «HH:MM Títol», amb punts suspensius; ací el títol
      sí que encongix, en amplada. */
