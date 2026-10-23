@@ -33,7 +33,7 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 | Modificació | 2026-10-23T20:44:00.000Z |
 | Propietari | IAIA MarIA (Directora Tècnica) |
 | Aprovació humana | Mestre Javi Llinares |
-| Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v3.8.0) |
+| Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v3.10.0) |
 | Model IA | Claude Opus 5.5 + Gemini 4 Argon + Codex Sol Ultra |
 | Tokens consumits | ~ |
 
