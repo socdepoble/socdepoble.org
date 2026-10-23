@@ -7,6 +7,33 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-24T00:35:00+02:00 · IAIA MarIA · Consens del Trio per a Botigues, AAB Fresc de Release Compilat i Creació de l'Oficina de Poble
+
+Torn: `torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b`. Acta viva: [[261024_0035_acta_marmota_consens_trio_botigues_i_oficina_de_poble]].
+
+- **Consens Històric a Tres Bandes (Claude, Gemini, Codex):**
+  - Execució reeixida de la plantilla v3.10.0 en paral·lel. Auditories canòniques dipositades a l'Escriptori: `261023_2328_auditoria_codex.md`, `261023_2330_auditoria_claude.md` i `261023_2331_auditoria_gemini.md`. Porta Olivera mantinguda en Codi 0.
+- **Decisions Canòniques D-1 i D-2 del Mestre:**
+  - `D-1`: Confirmat Bundle ID canònic **`org.socdepoble.app`** per a totes les plataformes (registrat al Llibre Mestre Permanent com a `P0-08b`).
+  - `D-2`: Confirmada publicació sota l'equip individual d'Apple Developer **`9KNUA4JR8P`** (*FRANCISCO JAVIER LLINARES GARCIA*), actualitzant `SDP_APPLE_TEAM_ID`.
+- **Android: AAB de Release Fresc Compilat:**
+  - Compilat amb JDK 21 nadiu (`BUILD SUCCESSFUL` en 15s). Dipositat a `_builds_de_poble/android/261023_socdepoble_1.0.0+1.aab` (39 MB), 100% sincronitzat amb Capacitor i paritat de codi verificada.
+- **Resolució de Bloqueig P1 (CSP):**
+  - Afegida directiva `media-src 'self' data: blob: https:;` a `firebase.json` per desbloquejar àudios i vídeos remots. 41/41 proves de botigues i natiu en verd.
+- **Infraestructura de Claus i Higiene:**
+  - Creada la carpeta oficial `_oficina_de_poble/claus/` fora del repositori amb permisos `chmod 700` per a keystores i certificats privats. Purgada la carpeta errònia `~` cap a `.sdp-paperera-mestre/`.
+
+## ESTAT_ACTUAL · 2026-10-23T23:36:38+02:00 · Codex · Auditoria adversarial de botigues: NO-GO públic
+
+Torn: `torn_94df0b65-86cb-4a5d-8647-3e6e7e15dfe3`. Informe viu: [[261023_2328_auditoria_codex]].
+
+- Llegits el prompt i pla aprovats del trio, el Llibre Mestre i els relleus de Claude i Gemini; tall inicial `01ef70dcc`, sense canvis de producte respecte de `b082b13` a les superfícies auditades.
+- Set prioritats altes: controls incomplets, UGC personal conservat després de la baixa, worker de Storage absent, revocació Apple absent, CSP Firebase que bloqueja mitjans remots, filtre previ UGC absent i candidata Android sense signar. Una incidència P2 de referències documentals.
+- Prevol real: eixida 5 per credencials absents. ESLint complet: eixida 0. Suites focalitzades verdes; suite Vitest general acabada: 21.059 passen, 2 fallen (precondicions desfasades) i 100 omeses, eixida 1. Document propi vàlid i Olivera 0; tancament global 1/planned per checksum preexistent de LEDGER i deute Wiki/SCC (1.271 incidències), cap atribuïda a l'informe. Cap procés propi de proves actiu.
+- AAB de Claude verificat en lectura: 40.986.252 bytes, SHA-256 `474256acc407ec25594692ae149368c6fbe9a737d568b2d538d91e52c872082a`, sense entrades de signatura. La pista interna també requerix signatura vàlida.
+- Cap codi, SQL, credencial o artefacte de compilació modificat per Codex. Cap desplegament, cap cron creat. L'Acta Marmota general queda per a l'orquestradora.
+
+
 ## ESTAT_ACTUAL · 2026-10-23T22:50:00+02:00 · IAIA MarIA · Convocatòria a Tres Bandes (Claude, Gemini, Codex) per a Pujada a Botigues Mòbils, Correcció CSS i Preflight Llest
 
 Torn: `torn_db5a99fd-b6c3-40c7-a1c1-bde6439dd49b`.

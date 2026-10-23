@@ -4,9 +4,9 @@
   "actor": "maria",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 6,
+  "revision": 9,
   "createdAt": "2026-10-23T20:39:28.732Z",
-  "updatedAt": "2026-10-23T20:41:52.007Z",
+  "updatedAt": "2026-10-23T21:31:41.199Z",
   "expiresAt": "2026-10-24T20:39:28.732Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3668,6 +3668,32 @@
         "committedAt": "2026-10-23T20:41:52.007Z",
         "documentHash": "74083d67bba904c66b54de5c2a208e7d599a0a481eb4893eff24098eb424ec3d"
       }
+    },
+    "8a443d83-9996-4655-b64a-e71203e66e7e": {
+      "id": "8a443d83-9996-4655-b64a-e71203e66e7e",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261023_2331_auditoria_gemini.md",
+      "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-23T21:31:31.862Z"
+    },
+    "b3ccb535-2d11-4f67-8edf-e5f3f46ba136": {
+      "id": "b3ccb535-2d11-4f67-8edf-e5f3f46ba136",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261023_2331_auditoria_gemini.md",
+      "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-23T21:31:41.157Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-23T21:31:41.158Z",
+        "committedAt": "2026-10-23T21:31:41.199Z",
+        "documentHash": "abaa82628a5780f62e582b3704619c3af3c8e8a5d46320f750ba1e5333ab5031"
+      }
     }
   },
   "plan": null,
@@ -3711,6 +3737,23 @@
       "file": "_wiki_de_poble/04_escriptori/261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio.md",
       "at": "2026-10-23T20:41:52.007Z",
       "hash": "74083d67bba904c66b54de5c2a208e7d599a0a481eb4893eff24098eb424ec3d"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-23T21:31:31.868Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-23T21:31:41.158Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "b3ccb535-2d11-4f67-8edf-e5f3f46ba136",
+      "file": "_wiki_de_poble/04_escriptori/261023_2331_auditoria_gemini.md",
+      "at": "2026-10-23T21:31:41.199Z",
+      "hash": "abaa82628a5780f62e582b3704619c3af3c8e8a5d46320f750ba1e5333ab5031"
     }
   ]
 }

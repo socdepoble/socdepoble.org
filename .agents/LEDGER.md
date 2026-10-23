@@ -1003,4 +1003,9 @@ Encàrrec 261018_1220 (Tasques 0–4) i encàrrecs d'harmonització del Mestre. 
 
 Les imatges del perfil (capçalera i avatar) es desen en mode de proves com a data URL dels mateixos bytes (PerfilContext.pujaMitja, ajudant compartit amb el Bloc); la guarda UUID de storage.js no s'afluixa. Verificat al navegador amb la persona pilot. Barra «Edició avançada de la fitxa» amb accent --sdp-accio, icona i subtítol. Bateria 19.242/1 prèvia/89. Segell previ verificat. Cap commit encara.
 
+## 2026-10-23T21:38:44+00:00 · Codex · Auditoria botigues · torn_94df0b65-86cb-4a5d-8647-3e6e7e15dfe3
+
+Informe `261023_2328_auditoria_codex`, encàrrec del prompt i pla aprovats 2026-10-23 22:45. NO-GO públic: controls incomplets, retenció d'UGC personal després de baixa, purga Storage sense consumidor, revocació Apple absent, CSP Firebase de mitjans, filtratge previ UGC pendent i AAB actual sense signar; referència documental a migració inexistent. Verificació, proves, fonts i límits a l'informe; diàleg amb Claude/Gemini incorporat. Sense canvis de producte, SQL, credencials ni desplegaments. ESTAT i àncora actualitzats; cap cron creat. El checksum del LEDGER ja falla en HEAD abans d'esta entrada: es preserva el segell anterior i no es certifica ni resegella silenciosament el cos preexistent. Tancament global amb deute Wiki/SCC preexistent; no es declara sessió segellada.
+
+
 <!-- HASH: c1042d8d5bcb510c40328e20428c7ba2d68c8fc9a266bba4ebdaef8d921a57e7 -->
