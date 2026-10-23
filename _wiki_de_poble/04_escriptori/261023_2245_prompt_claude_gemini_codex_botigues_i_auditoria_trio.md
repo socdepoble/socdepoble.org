@@ -75,15 +75,16 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 
 Ordre directa del Mestre Javi Llinares (Convocatòria a Tres Bandes):
 1. **Codex Sol Ultra (Auditor Adversarial · El Tercer Ull):**
-   - Executar una gran auditoria forense adversarial del repositori complet en el seu estat actual (`b93cc2972`).
-   - Avaluar conformitat amb les polítiques d'Apple App Store (Guideline 2.1 controles inerts, 5.1.1 privacitat) i Google Play.
-   - Detectar qualsevol punt cec, risc de seguretat o inconsistència estructural. Emetre informe canònic a `_wiki_de_poble/04_escriptori/`.
-2. **Gemini 4 Argon (Verificació de Potència i Integritat):**
-   - Comprovar la paritat dels binaris natius i les mides d'empaquetat (`dist-natiu/`, `socdepoble.zip` a 2.8 MB, APK de release).
-   - Validar les suites de proves i el rendiment d'arrencada. Emetre informe canònic a `_wiki_de_poble/04_escriptori/`.
-3. **Claude Opus 5.5 (Execució i Prevol de Botigues):**
+   - Executar una auditoria forense adversarial implacable de l'estat actual del repositori (`b082b13`). Donar «una altra visió» desapassionada i crítica de tot el sistema després de les últimes novetats (desplegament viu a Firebase, curació del Service Worker R1+R2, aprimament del connector WordPress a 2.8 MB, i puresa visual del xat).
+   - Avaluar conformitat amb les polítiques estrictes d'Apple App Store (Guideline 2.1 controls inerts/pantalles incompletes, 5.1.1 privacitat i flux d'esborrat de compte a `/legal#esborra-compte`, Guideline 4.0/4.2 valor natiu) i Google Play Console.
+   - Detectar qualsevol punt cec, risc de seguretat o inconsistència estructural. Emetre informe canònic a `_wiki_de_poble/04_escriptori/AAMMDD_HHMM_auditoria_codex.md`.
+2. **Gemini 4 Argon (Verificació de Potència, Binaris i Integritat):**
+   - Avaluar amb la seua potència d'anàlisi l'impacte de totes les novetats en la salut global del sistema.
+   - Comprovar la paritat dels binaris natius i les mides d'empaquetat (`dist-natiu/`, `dist/`, `socdepoble.zip` a 2.8 MB, AAB de release).
+   - Validar que els actius gràfics natius (`Assets.xcassets` vs `res/mipmap`) no contenen canal alfa i respecten el verd canònic `#0F672F`. Emetre informe canònic a `_wiki_de_poble/04_escriptori/AAMMDD_HHMM_auditoria_gemini.md`.
+3. **Claude Opus 5.5 (Execució Tècnica i Prevol de Botigues):**
    - Dirigir la configuració de `.env.botigues.local` amb el Mestre i executar el prevol `node scripts/botigues/preflight.mjs --plataforma totes`.
-   - Executar `./gradlew bundleRelease` per generar l'AAB d'Android i guiar l'obertura d'Xcode (`npx cap open ios`) per a la pujada a TestFlight / App Store Connect.
+   - Executar `./gradlew bundleRelease` per generar l'AAB d'Android (`android/app/build/outputs/bundle/release/app-release.aab`) i guiar l'obertura d'Xcode (`npx cap open ios`) per a la pujada a TestFlight / App Store Connect esta mateixa nit.
 4. **Consens a l'Escriptori:** Totes tres IAs comparteixen les seues troballes a `04_escriptori/` de forma coordinada i sense xafar-se el treball.
 
 <!-- SDP:SECTION prompt.local.s4 -->
