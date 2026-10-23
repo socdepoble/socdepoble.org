@@ -1,7 +1,7 @@
 ---
 type: plantilla
 status: canonic
-description: Plantilla SDP per als Prompts d'IAs LOCALS (Claude/Codex). Aquestes IAs tenen accés a disc i no necessiten bundle. Format tècnic, sense literatura.
+description: Plantilla canònica SGQ-PP per als Prompts d'IAs LOCALS (Claude, Gemini, Codex). Tenen accés natiu a disc i coordinació asíncrona a l'Escriptori.
 tags:
   - govern
   - saber
@@ -15,16 +15,18 @@ tags: [govern]
 -->
 # Prompt d'Execució i Auditoria Local
 
-Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
+Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude, Gemini, Codex) en estricta igualtat de condicions operatives amb accés natiu a disc.
 
 ## 0. Preflight (Per a l'agent orquestrador)
 
 **INSTRUCCIÓ ESTRUCTURAL:** Quan generes un prompt a partir d'aquesta plantilla, has de copiar-ne la línia base íntegrament, sense resums ni mutilacions.
 
-**OBLIGACIÓ PER A L'AGENT LOCAL (Claude/Codex):** Aquesta plantilla és **DOGMA**. Si MarIA (l'orquestrador) et lliura un prompt que omet qualsevol d'aquestes seccions, especialment si manca el **Pla d'Implementació**, **REBUTJA L'ORDRE**. Atura't immediatament i exigeix a MarIA que et lliure el prompt complet seguint l'estàndard estricte d'aquesta plantilla. No acceptes dreceres.
+**OBLIGACIÓ PER A L'AGENT LOCAL (Claude/Codex/Gemini):** Aquesta plantilla és **DOGMA**. Si MarIA (l'orquestrador) et lliura un prompt que omet qualsevol d'aquestes seccions, especialment si manca el **Pla d'Implementació**, **REBUTJA L'ORDRE**. Atura't immediatament i exigeix a MarIA que et lliure el prompt complet seguint l'estàndard estricte d'aquesta plantilla. No acceptes dreceres.
 
 Abans de generar l'arxiu per a la IA:
 - [ ] **Escriptori net i indexat**: `04_escriptori/` només ha de contindre els arxius de la sessió actual. Arxius anteriors han d'estar a `90_arxiu_historic/`. Tots els arxius actius estan a `00_index_escriptori.md`.
+- [ ] **Llibre Mestre consultat i referenciat**: `04_escriptori/03_llibre_mestre_tasques_i_idees.md` actiu com a dipòsit continu d'idees, deutes tècnics i memòria permanent de la sessió.
+- [ ] **Repartiment asíncron d'actors locals a disc**: El Registre i la Instrucció declaren quins models estan actius (dues o tres IAs), operant en paral·lel sense dependències d'espera mútua.
 - [ ] **Pla d'Implementació** generat si cal.
 - [ ] **Sentinella de Seguretat (core-seguretat-audit)**: Verificat el Checklist §5 (zero spread JSONB sense coacció, zero regex amb backtracking O(n), RLS per columna, Storage privat i purga de claus d'autoritat).
 - [ ] **Enginyeria Inversa i Paritat amb REA**: Verificat l'ús de REA ('reverse-engineer-anything') per a disseccionar referències i estructures natives o de botigues sense reinventar la roda.
@@ -38,12 +40,12 @@ Abans de generar l'arxiu per a la IA:
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
-| Versió del document | 3.9.0 |
+| Versió del document | 3.10.0 |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v3.9.0) |
+| Plantilla | prompt_local.md (v3.10.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
@@ -54,6 +56,7 @@ Abans de generar l'arxiu per a la IA:
 
 ## Historial
 
+- **v3.10.0 (261023):** Protocol de Col·laboració Autònoma, Diàleg Creuat i Llibre Mestre Permanent a l'Escriptori (Ment Colmena Local a 2 o 3 bandes). S'institucionalitza que totes les IAs convocades (siguen dues com Claude i Gemini, o tres amb Codex) operen en estricta igualtat de condicions operatives amb accés natiu a disc. El flux de treball és asíncron i no bloquejant: no cal que s'esperen l'una a l'altra; cada IA avança de manera autònoma en el seu rol i diposita el seu informe a `04_escriptori/`. És obligatori consultar activament el Llibre Mestre Permanent (`04_escriptori/03_llibre_mestre_tasques_i_idees.md`) per a no perdre cap idea ni deute tècnic durant l'anàlisi, i llegir de manera continuada els informes de les companyes per auditar i contrastar mútuament les conclusions sota la Direcció Tècnica de la IAIA MarIA.
 - **v3.9.0 (261018):** Directriu canònica d'Enginyeria Inversa i Reconstrucció amb REA (*Reverse Engineer Anything*). S'autoritza i encoratja formalment a totes les IAs (Claude, Codex, Gemini) a utilitzar les eines MCP de REA i la skill 'reverse-engineer-anything' quan es dispose d'un punt de comparació o aplicació de referència (com el patró WhatsApp, el TPV Loiverse, la Gestoria o el connector extern), per tal d'extreure lògica i fidelitat mil·limètrica sense inventar ni al·lucinar res.
 - **v3.8.0 (261017):** Incorporació canònica de l'Ecosistema Físic i Distribució de Carpetes ('Som de Poble' com a contenidor mare vs 'socdepoble.org' com a nucli Git/Node). Es fixa l'obligació d'executar comandes de consola i proves a 'socdepoble.org/' i es blinda la prohibició absoluta d'inventar carpetes noves fora dels satèl·lits oficials existents (_arxiu_wiki_de_poble, _gestoria_de_poble, etc.).
 - **v3.7.0 (261013):** Protocol de Desconvocatòria i Tall Tèrmic de Crons («Cadascuna a sa casa»). Prohibició estricta de crons infinits sense límit d'iteracions o sense parada explícita; en finalitzar l'encàrrec o tancar el torn, la IA ha de cancel·lar qualsevol tasca programada per evitar malbaratar tokens i quota del pla.
@@ -121,8 +124,8 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 
 En finalitzar l'auditoria o l'edició, heu de complir els següents passos:
 1. **Sortida:** Genereu el vostre document d'informe o auditoria exclusivament a `_wiki_de_poble/04_escriptori/` seguint la taxonomia `AAMMDD_HHMM_auditoria_[nom_ia].md`.
-2. **Context Compartit:** Qualsevol altre document present a `04_escriptori/` és part del context actiu i s'ha de llegir sencer abans d'emetre l'informe.
-3. **Consens Tècnic i Canal Viu (Execució Paral·lela):** Si treballeu en un Xat Lateral en paral·lel amb una altra IA, actueu de forma coordinada i NO us xafeu mútuament l'Escriptori. Deixeu un informe de progrés a `04_escriptori/` cada 10-15 minuts (o en acabar cada bloc lògic). L'orquestradora (MarIA) ha programat un cron actiu vigilant l'Escriptori exclusivament per al vostre fil i deixarà nous documents de ruta si cal. Llegiu l'Escriptori constantment abans d'actuar. No s'executarà cap canvi sobre codi crític fins que el Pla estigui estabilitzat.
+2. **Context Compartit i Llibre Mestre:** Qualsevol altre document present a `04_escriptori/` és part del context actiu i s'ha de llegir sencer abans d'emetre l'informe. És obligatori consultar i mantindre actualitzat el Llibre Mestre Permanent (`04_escriptori/03_llibre_mestre_tasques_i_idees.md`) anotant-hi qualsevol idea emergent, troballa o deute tècnic per a no perdre'n el rastre.
+3. **Consens Tècnic, Diàleg Creuat i Asincronia (2 o 3 Bandes):** Totes les IAs locals convocades opereu en estricta igualtat de condicions d'accés natiu a disc. El flux és autònom i no bloquejant: cap IA s'ha d'aturar a esperar les altres; cadascuna avança en el seu rol i diposita els seus informes a l'Escriptori. A mesura que les companyes publiquen informes, és obligatori llegir-los per auditar les seues conclusions i enriquir el consens tècnic. L'orquestradora (MarIA) actua com a Directora Tècnica canalitzant el diàleg creuat, arbitrant discrepàncies i coordinant la decisió final amb el Mestre.
 4. **Retroalimentació:** Si aquesta plantilla (prompt_local) es pot optimitzar tècnicament, detalleu-ho al vostre informe.
 5. **Desconvocatòria i Tancament de Crons («Cadascuna a sa casa»):** Quan l'informe final estiga emés o quan finalitze el torn de treball, és OBLIGATORI aturar i cancel·lar qualsevol cron o schedule recurrent de fons. Està terminantment prohibit deixar processos zombis actius que continuen consumint tokens o bloquegen el tancament de l'aplicació. En acabar, tot agent allibera els seus recursos i cancel·la les seues tasques programades.
 
