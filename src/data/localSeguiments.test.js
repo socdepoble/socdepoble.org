@@ -197,6 +197,62 @@ describe('l’esborrat suau: el límit i l’avís no es reinicien seguint i dei
   });
 });
 
+/* T2 (261024_1800, P2-10; auditoria Codex 261024_1800 C6-01) · El límit per hora compta les altes i
+   represes acceptades (el registre de les altes), no les files: una parella represa diverses vegades
+   en una hora hi compta cada vegada. Abans, 59 parelles i dues represes donaven 61 altes en una hora. */
+describe('T2 · el registre de les altes: cap combinació d’altes, baixes i represes passa de 60 per hora', () => {
+  test('la reproducció de Codex C6-01: 59 parelles noves i dues represes immediates; la segona represa és la 61a i topa amb el límit', () => {
+    const { local } = adaptador({ n: LIMIT_PER_HORA });
+    for (let i = 0; i < LIMIT_PER_HORA - 1; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+    local.deixaDeSeguir({ tipus: 'persona', id: 'p0' }, de(JO));
+    expect(local.segueix({ tipus: 'persona', id: 'p0' }, de(JO))).toMatchObject({ seguint: true, primer: false });
+    local.deixaDeSeguir({ tipus: 'persona', id: 'p1' }, de(JO));
+    expect(codi(() => local.segueix({ tipus: 'persona', id: 'p1' }, de(JO)))).toBe('SDP-SEG-006');
+    expect(local.estatSeguiment({ tipus: 'persona', id: 'p1' }, de(JO))).toEqual({ seguint: false, creatAl: null });
+  });
+
+  test('una sola parella represa cada ESPERA_DE_REPRESA hi compta cada vegada: amb 55 parelles més, la sisena represa ja no passa', () => {
+    const { local, rellotge } = adaptador({ n: 60 });
+    for (let i = 1; i <= 55; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+    local.segueix({ tipus: 'persona', id: 'p0' }, de(JO));
+    /* 56 altes. Quatre represes de p0 (60), i la cinquena (61) topa. */
+    for (let vegada = 0; vegada < 4; vegada += 1) {
+      local.deixaDeSeguir({ tipus: 'persona', id: 'p0' }, de(JO));
+      rellotge.avança(ESPERA_DE_REPRESA + 1);
+      expect(local.segueix({ tipus: 'persona', id: 'p0' }, de(JO)), `represa ${vegada + 1}`).toMatchObject({ seguint: true, primer: false });
+    }
+    local.deixaDeSeguir({ tipus: 'persona', id: 'p0' }, de(JO));
+    rellotge.avança(ESPERA_DE_REPRESA + 1);
+    expect(codi(() => local.segueix({ tipus: 'persona', id: 'p0' }, de(JO)))).toBe('SDP-SEG-006');
+  });
+
+  test('la finestra llisca: una alta surt del compte quan fa una hora, ni abans ni després; seguir el que ja seguixes no compta', () => {
+    const { local, rellotge } = adaptador({ n: LIMIT_PER_HORA + 2 });
+    local.segueix({ tipus: 'persona', id: 'p0' }, de(JO));
+    rellotge.avança(30 * 60 * 1000);
+    for (let i = 1; i < LIMIT_PER_HORA; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+    /* Cap no-res: tornar a seguir-ne una de viva no és cap alta. */
+    for (let i = 0; i < 10; i += 1) expect(local.segueix({ tipus: 'persona', id: 'p5' }, de(JO))).toMatchObject({ nou: false });
+    expect(codi(() => local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO)))).toBe('SDP-SEG-006');
+    /* Un mil·lisegon abans de l'hora de la primera alta encara compta; a l'hora justa, ja no (com
+       segueix: al > now() - interval '1 hour'). */
+    rellotge.avança(30 * 60 * 1000 - 1);
+    expect(codi(() => local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO)))).toBe('SDP-SEG-006');
+    rellotge.avança(1);
+    expect(local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO))).toMatchObject({ primer: true });
+    expect(codi(() => local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA + 1}` }, de(JO)))).toBe('SDP-SEG-006');
+  });
+
+  test('el registre és de cada persona i reinicia() l’oblida', () => {
+    const { local } = adaptador({ n: LIMIT_PER_HORA + 1 });
+    for (let i = 0; i < LIMIT_PER_HORA; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+    expect(codi(() => local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO)))).toBe('SDP-SEG-006');
+    expect(local.segueix({ tipus: 'persona', id: 'p0' }, de(PEPA))).toMatchObject({ primer: true });
+    local.reinicia();
+    expect(local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO))).toMatchObject({ primer: true });
+  });
+});
+
 describe('quiEmSegueix', () => {
   test('qui seguix la persona que crida (també pels àlies de la persona pilot), la més nova primer, amb el nom de cada sessió', () => {
     const { local, rellotge } = adaptador();

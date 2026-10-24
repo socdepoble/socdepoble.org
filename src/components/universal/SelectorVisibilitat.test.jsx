@@ -141,7 +141,7 @@ test('el text «reversible» només ix on és cert: fitxa sí, nota publicada no
   cleanup();
   render(<Arnes esPublica textos={textosDeNota()} bloqueig={bloqueigDeNota({ publicada: true })} onTria={vi.fn()} />);
   expect(within(dialeg()).queryByText(/tornar a fer privada quan vulgues/)).toBeNull();
-  expect(radio(/Privada al teu MAS/).disabled).toBe(true);
+  expect(radio(/Privada \(només visible per a tu\)/).disabled).toBe(true);
   expect(primari().textContent).toBe('Actualitzar al Mur');
   expect(within(dialeg()).getByRole('status').textContent).toMatch(/encara no té contracte de dades/);
 });

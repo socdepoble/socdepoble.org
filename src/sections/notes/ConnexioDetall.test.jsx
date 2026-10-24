@@ -393,11 +393,12 @@ test('Compartir al Mur: el selector de visibilitat i compartirNota del context, 
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-test('Compartir al Mur: deixar-la al MAS no crida res; una fallada de xarxa es diu en línia', async () => {
+/* Actualitzada a posta (261024_1800, T3 P2-11): el botó i l'opció privada ja no diuen «MAS». */
+test('Compartir al Mur: deixar-lo privat no crida res; una fallada de xarxa es diu en línia', async () => {
   render(<ConnexioDetall nota={nota(ORIGEN_MERCAT)} />);
   const obri = () => fireEvent.click(within(screen.getByRole('group', { name: 'Recopilació de la connexió' })).getByRole('button', { name: 'Compartir al Mur' }));
   obri();
-  await act(async () => { fireEvent.click(within(selector()).getByRole('button', { name: 'Deixar-lo al MAS' })); });
+  await act(async () => { fireEvent.click(within(selector()).getByRole('button', { name: 'Deixar-lo privat' })); });
   expect(mocks.notes.compartirNota).not.toHaveBeenCalled();
   mocks.notes.compartirNota.mockResolvedValue(false);
   obri();
@@ -427,7 +428,7 @@ test('una connexió ja compartida: la tira diu «Actualitzar al Mur», com el se
   expect(within(tira).queryByRole('button', { name: 'Compartir al Mur' })).toBeNull();
   fireEvent.click(within(tira).getByRole('button', { name: 'Actualitzar al Mur' }));
   // Retirar-la no té contracte: «privada» està bloquejada, amb el motiu.
-  expect(within(selector()).getByRole('radio', { name: /Només al teu MAS/ }).disabled).toBe(true);
+  expect(within(selector()).getByRole('radio', { name: /Privat \(només visible per a tu\)/ }).disabled).toBe(true);
   await act(async () => { fireEvent.click(within(selector()).getByRole('button', { name: 'Actualitzar al Mur' })); });
   expect(mocks.notes.compartirNota).toHaveBeenCalledWith(connexio);
   expect(screen.queryByRole('dialog')).toBeNull();

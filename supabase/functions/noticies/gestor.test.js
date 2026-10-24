@@ -33,7 +33,7 @@ import {
   LIMIT_PERSONALS, MAXIM_BYTES, MAXIM_BYTES_CAU_IMATGES, MAXIM_BYTES_IMATGE, MAXIM_BYTES_PERSONAL, MAXIM_CAU_PERSONALS, MAXIM_EMPREMTES,
   MAXIM_IMATGES_CAU, MAXIM_IMATGES_EN_CUA, MAXIM_IMATGES_EN_VOL, MAXIM_PERSONALS_EN_VOL, MAXIM_URL_PERSONAL, MAX_AGE_IMATGE_S, OBSOLET_MS,
   TEMPS_ORIGEN_MS, TIPUS_IMATGE, VIDA_IMATGES_MS, adrecaPersonal, clauAmple, clauDeQui, clauDeXarxa, creaEmpremtador, creaGestor, creaLimit,
-  descodificaFeed, esFeed, esIpNoPublica, imatgesDelFeed, validaCataleg
+  HOSTS_DEL_SISTEMA, descodificaFeed, esFeed, esIpNoPublica, imatgesDelFeed, validaCataleg
 } from './gestor.js';
 
 const ARREL = process.cwd();
@@ -149,10 +149,14 @@ describe('la llista blanca: l’únic que entra és un id', () => {
     expect(AGENT_USUARI).toBe('SocDePoble/1.0 (+https://socdepoble.org/projecte)');
   });
 
+  /* Actualitzada a posta (261024_1800, T1): el duplicat es prova amb dues fonts d'hosts de la llista
+     blanca nativa (amb example.org, ara petaria pel host abans que per l'id repetit). */
   test('el catàleg es valida en crear el gestor: ids nets i únics, feeds https', () => {
     expect(() => validaCataleg({ categories: [], fonts: [{ id: 'x', feed: 'http://example.org/feed' }] })).toThrow(TypeError);
     expect(() => validaCataleg({ categories: [], fonts: [{ id: 'X Y', feed: 'https://example.org/feed' }] })).toThrow(TypeError);
-    expect(() => validaCataleg({ categories: [], fonts: [{ id: 'a', feed: 'https://example.org/a' }, { id: 'a', feed: 'https://example.org/b' }] })).toThrow(TypeError);
+    const bona = (id) => ({ id, feed: 'https://ayudawp.com/feed/', lloc: 'https://ayudawp.com' });
+    expect(() => validaCataleg({ categories: [], fonts: [bona('a')] })).not.toThrow();
+    expect(() => validaCataleg({ categories: [], fonts: [bona('a'), bona('a')] })).toThrow(/repetit/);
     expect(() => validaCataleg({ fonts: [] })).toThrow(TypeError);
     expect(validaCataleg(CATALEG).fonts).toHaveLength(CATALEG.fonts.length);
   });
@@ -210,7 +214,10 @@ describe('l’origen', () => {
     const massa = vi.fn(async () => salt('/rss/altra'));
     expect((await errorDe(await prepara({ fetchImpl: massa }).demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_origen_caigut');
     expect(massa).toHaveBeenCalledTimes(3);
-    for (const fora of ['https://example.org/feed', `http://${HOST}/rss/`, `https://usuari:x@${HOST}/rss/`]) {
+    /* T1 (261024_1800, Codex C6-03): un altre port del mateix host, tampoc; ni un altre host aprovat
+       (revisió adversarial T1-01: cap prova no fixava que el salt és dins del MATEIX host). */
+    for (const fora of ['https://example.org/feed', `http://${HOST}/rss/`, `https://usuari:x@${HOST}/rss/`, `https://${HOST}:8443/servei-intern`, `https://${HOST}:444/rss/`,
+      'https://www.youtube.com/feeds/videos.xml', 'https://i3.ytimg.com/x.xml']) {
       const fetchImpl = vi.fn().mockResolvedValueOnce(salt(fora)).mockResolvedValue(origen(RSS));
       expect((await errorDe(await prepara({ fetchImpl }).demana('/feed?font=ayudawp'))).code, fora).toBe('sdp_noticies_origen_caigut');
       expect(fetchImpl, fora).toHaveBeenCalledTimes(1);
@@ -338,6 +345,14 @@ describe('el codi', () => {
     /* Cap «sense resoledor, és pública» (D-08), i cap empremta sense clau (R5-04). */
     expect(codi).not.toMatch(/return 'publica';|0x811c9dc5|Math\.imul/);
     expect(codi).toContain("if (!teResoledor) return 'sense-dns';");
+    /* T1 (261024_1800, Codex C6-02) · Cap salt sense regles: el primer també, i un host aprovat passa
+       per aprovatVetat (mai un «return null» directe). */
+    expect(codi).not.toContain('if (regles.confiats?.has(neta.hostname)) return null;');
+    expect(codi).not.toMatch(/if \(regles\) \{\s*const error = await valida\(actual/);
+    expect(codi).toContain("if (nom.adreces.some(esIpNoPublica)) return 'adreca_vetada';");
+    /* Codex C6-02, segona passada · allSettled: cap Promise.all en la resolució. */
+    expect(codi).toContain('await Promise.allSettled([resol(\'A\'), resol(\'AAAA\')])');
+    expect(codi).not.toMatch(/Promise\.all\(\[resol\(/);
     expect(index).toContain("import cataleg from './fonts.json' with { type: 'json' };");
     expect(index).toContain('Deno.serve(');
     expect(index).toContain("personals: variable('SDP_NOTICIES_PERSONALS') === '1'");
@@ -946,12 +961,16 @@ describe('les imatges (/imatge?u=)', () => {
     expect(Object.keys(init.headers).sort()).toEqual(['Accept', 'User-Agent']);
   });
 
-  test('el host d’una font del catàleg no es resol; qualsevol altre, sí (enclosure i media:thumbnail)', async () => {
+  /* Actualitzada a posta (261024_1800, T1; Codex C6-02): el que fixava era el defecte. Un nom aprovat
+     no acredita la IP: amb resoledor, el host d'una font del catàleg també es resol (el feed i la
+     imatge), i una resposta pública el deixa passar; qualsevol altre, igual que abans. */
+  test('amb resoledor, el host d’una font del catàleg també es resol (el feed i la imatge); qualsevol altre, també (enclosure i media:thumbnail)', async () => {
     const resolDns = resoledor();
     const entorn = preparaImatges({ resolDns });
     await entorn.demana('/feed?font=ayudawp');
     expect((await entorn.demana(ambU(DEL_CATALEG))).status).toBe(200);
-    expect(resolDns).not.toHaveBeenCalled();
+    expect(resolDns.mock.calls.map(([host, tipus]) => `${host} ${tipus}`)).toEqual([`${HOST} A`, `${HOST} AAAA`, `${HOST} A`, `${HOST} AAAA`]);
+    resolDns.mockClear();
     const fora = await entorn.demana(ambU(DE_FORA));
     expect([fora.status, fora.headers.get('content-type')]).toEqual([200, 'image/jpeg']);
     expect((await entorn.demana(ambU(MINIATURA))).status).toBe(200);
@@ -970,7 +989,9 @@ describe('les imatges (/imatge?u=)', () => {
       expect(JSON.stringify(cos)).not.toContain(adreca);
     }
     expect(entorn.fetchImpl.mock.calls.map(([url]) => url)).toEqual([FEED]);
-    expect(resolDns.mock.calls.map(([host]) => host)).toEqual(['intern.example.org', 'intern.example.org']);
+    /* Actualitzada a posta (261024_1800, T1): el feed del sistema també es resol (els dos primers);
+       la IP literal no es resol mai. */
+    expect(resolDns.mock.calls.map(([host]) => host)).toEqual([HOST, HOST, 'intern.example.org', 'intern.example.org']);
   });
 
   test('sense resoledor: les del catàleg encara es servixen; les de fora, 503 imatge_sense_dns, sense cap petició', async () => {
@@ -1102,16 +1123,20 @@ describe('R6 L-12 · les imatges de fora del catàleg, apagades per defecte', ()
     for (const adreca of [DE_FORA, 'https://example.org/qualsevol.png']) {
       expect(await errorDe(await demana(ambU(adreca)))).toEqual({ status: 403, code: 'sdp_noticies_imatge_de_fora', message: expect.any(String), data: { status: 403 } });
     }
-    expect(resolDns).not.toHaveBeenCalled();
+    /* Actualitzada a posta (261024_1800, T1): només es resol el host del feed del sistema (T1, C6-02);
+       el de la imatge de fora, mai. */
+    expect(resolDns.mock.calls.map(([host]) => host)).toEqual([HOST, HOST]);
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([FEED]);
   });
 
-  test('les del host d’una font del catàleg i dels seus CDN es servixen sense resoldre, i sense haver-les vistes (una instància nova)', async () => {
+  /* Actualitzada a posta (261024_1800, T1; Codex C6-02): el que fixava era el defecte («sense
+     resoldre»). Amb resoledor, el nom d'un host aprovat es resol igual; sense, encara es servixen. */
+  test('les del host d’una font del catàleg i dels seus CDN es servixen sense haver-les vistes (una instància nova); amb resoledor, el seu nom es resol', async () => {
     const resolDns = vi.fn(async () => ['93.184.216.34']);
     const fetchImpl = vi.fn(async () => png());
     const { demana } = prepara({ fetchImpl, resolDns });
     for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await demana(ambU(adreca))).status, adreca).toBe(200);
-    expect(resolDns).not.toHaveBeenCalled();
+    expect(resolDns.mock.calls.map(([host, tipus]) => `${host} ${tipus}`)).toEqual([`${HOST} A`, `${HOST} AAAA`, 'i3.ytimg.com A', 'i3.ytimg.com AAAA']);
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([DEL_CATALEG, DEL_CDN]);
     /* També sense resoledor a l'entorn. */
     const senseDns = prepara({ fetchImpl: vi.fn(async () => png()), resolDns: null });
@@ -1291,5 +1316,161 @@ describe('imatgesDelFeed (pura)', () => {
     expect(performance.now() - inici).toBeLessThan(10000);
     const moltes = `<rss>${Array.from({ length: 700 }, (_, i) => `<media:thumbnail url="https://example.org/${i}.png"/>`).join('')}</rss>`;
     expect(imatgesDelFeed(moltes)).toHaveLength(500);
+  });
+});
+
+/* T1 (261024_1800, P1-07; auditoria Codex 261024_1800 C6-02, C6-03) · L'anti-SSRF a tots els salts:
+   cap baixada no ix sense que el seu nom passe les regles, tampoc la d'un host aprovat (el catàleg i
+   els seus CDN). Un resoledor fals diu què respon cada nom; cap petició de veres. */
+describe('T1 · anti-SSRF a tots els salts, també dels hosts aprovats', () => {
+  const PNG = Uint8Array.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13]);
+  const png = () => new Response(PNG, { headers: { 'content-type': 'image/png' } });
+  const DEL_CATALEG = `https://${HOST}/wp-content/portada.png`;
+  const DEL_CDN = 'https://i3.ytimg.com/vi/Wjit5lnEiIY/hqdefault.jpg';
+  const ambU = (adreca) => `/imatge?u=${encodeURIComponent(adreca)}`;
+  /* Els rangs que nomena T1, amb els seus extrems, i formes IPv6 que en porten una IPv4. */
+  const PRIVADES = Object.freeze([
+    ['A', '127.0.0.1'], ['A', '127.255.255.254'], ['A', '10.0.0.1'], ['A', '10.255.255.255'], ['A', '172.16.0.1'],
+    ['A', '172.31.255.254'], ['A', '192.168.0.1'], ['A', '192.168.255.254'], ['A', '169.254.169.254'],
+    ['AAAA', '::1'], ['AAAA', 'fc00::1'], ['AAAA', 'fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'],
+    ['AAAA', '::ffff:169.254.169.254'], ['AAAA', '::ffff:7f00:1'], ['AAAA', 'fe80::1']
+  ]);
+  /* Un resoledor que respon el mateix a tots els noms: A pública, i la privada al seu tipus. */
+  const ambPrivada = ([tipus, ip]) => vi.fn(async (host, demanat) => (demanat === tipus ? [ip] : (demanat === 'A' ? ['93.184.216.34'] : [])));
+
+  test('esIpNoPublica: cada rang de T1, extrems inclosos, no és públic; els veïns de fora dels rangs, sí', () => {
+    for (const [, ip] of PRIVADES) expect(esIpNoPublica(ip), ip).toBe(true);
+    for (const ip of ['126.255.255.255', '11.0.0.1', '172.15.255.255', '172.32.0.1', '192.167.255.255', '192.169.0.1', '169.253.255.255',
+      '169.255.0.1', '93.184.216.34', '2001:4860:4860::8888', '2606:4700:4700::1111']) {
+      expect(esIpNoPublica(ip), ip).toBe(false);
+    }
+  });
+
+  test.each(PRIVADES)('el feed d’una font del sistema que es resol a %s %s: 422 adreca_vetada, sense baixar res ni dir l’adreça', async (tipus, ip) => {
+    const resolDns = ambPrivada([tipus, ip]);
+    const fetchImpl = vi.fn(async () => origen(RSS));
+    const { demana } = prepara({ fetchImpl, resolDns });
+    const cos = await errorDe(await demana('/feed?font=ayudawp'));
+    expect(cos).toMatchObject({ status: 422, code: 'sdp_noticies_adreca_vetada' });
+    expect(JSON.stringify(cos)).not.toContain(ip);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(resolDns.mock.calls.map(([host]) => host)).toEqual([HOST, HOST]);
+  });
+
+  test.each(PRIVADES)('una imatge del catàleg o d’un CDN aprovat que es resol a %s %s: adreca_vetada, sense baixar res', async (tipus, ip) => {
+    const fetchImpl = vi.fn(async () => png());
+    const { demana } = prepara({ fetchImpl, resolDns: ambPrivada([tipus, ip]) });
+    for (const adreca of [DEL_CATALEG, DEL_CDN]) {
+      expect(await errorDe(await demana(ambU(adreca))), adreca).toMatchObject({ status: 422, code: 'sdp_noticies_adreca_vetada' });
+    }
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  test('una sola resposta privada entre moltes de públiques ja la veta (A i AAAA)', async () => {
+    const resolDns = vi.fn(async (host, tipus) => (tipus === 'A' ? ['93.184.216.34', '10.1.2.3'] : ['2606:4700:4700::1111']));
+    const fetchImpl = vi.fn(async () => origen(RSS));
+    const { demana } = prepara({ fetchImpl, resolDns });
+    expect((await errorDe(await demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_adreca_vetada');
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  test('cada salt torna a resoldre: un nom que canvia de resposta entre el primer salt i la redirecció (rebinding entre salts) es veta abans del segon', async () => {
+    let respostes = 0;
+    const resolDns = vi.fn(async (host, tipus) => {
+      if (tipus !== 'A') return [];
+      respostes += 1;
+      return respostes === 1 ? ['93.184.216.34'] : ['169.254.169.254'];
+    });
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(null, { status: 301, headers: { location: '/rss' } })).mockResolvedValue(origen(RSS));
+    const { demana } = prepara({ fetchImpl, resolDns });
+    expect((await errorDe(await demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_adreca_vetada');
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([FEED]);
+  });
+
+  test('una redirecció d’una imatge aprovada cap a un altre host aprovat que es resol privat: vetada, sense seguir-la', async () => {
+    const resolDns = vi.fn(async (host, tipus) => (tipus !== 'A' ? [] : (host === 'i3.ytimg.com' ? ['192.168.1.1'] : ['93.184.216.34'])));
+    const fetchImpl = vi.fn(async (url) => (url === DEL_CATALEG ? new Response(null, { status: 302, headers: { location: DEL_CDN } }) : png()));
+    const { demana } = prepara({ fetchImpl, resolDns });
+    expect((await errorDe(await demana(ambU(DEL_CATALEG)))).code).toBe('sdp_noticies_adreca_vetada');
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([DEL_CATALEG]);
+  });
+
+  test('si el nom d’una font del sistema es torna privat, el Lector rep la còpia de reserva (obsoleta) sense cap baixada nova', async () => {
+    let privada = false;
+    const resolDns = vi.fn(async (host, tipus) => (tipus === 'A' ? [privada ? '10.0.0.9' : '93.184.216.34'] : []));
+    const fetchImpl = vi.fn(async () => origen(RSS));
+    const entorn = prepara({ fetchImpl, resolDns });
+    expect((await entorn.demana('/feed?font=ayudawp')).status).toBe(200);
+    privada = true;
+    entorn.avança(FRESC_MS);
+    const cos = await (await entorn.demana('/feed?font=ayudawp')).json();
+    expect(cos).toMatchObject({ font: 'ayudawp', obsoleta: true });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  /* Codex C6-02, segona passada (261024_1800) · Amb Promise.all, una família privada i l'altra amb
+     error donava 'desconeguda' i un host aprovat passava (200, una baixada). */
+  test.each([['A', '127.0.0.1', 'AAAA'], ['AAAA', '::1', 'A'], ['A', '169.254.169.254', 'AAAA'], ['AAAA', 'fd00::5', 'A']])(
+    'una família %s privada (%s) i l’altra (%s) amb error: vetada, sense baixar res (feed, imatge del catàleg i CDN)', async (tipus, ip) => {
+      const resolDns = vi.fn(async (host, demanat) => { if (demanat === tipus) return [ip]; throw new Error('SERVFAIL'); });
+      const fetchImpl = vi.fn(async (url) => (url === FEED ? origen(RSS) : png()));
+      const { demana } = prepara({ fetchImpl, resolDns, personals: true });
+      expect((await errorDe(await demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_adreca_vetada');
+      for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await errorDe(await demana(ambU(adreca)))).code, adreca).toBe('sdp_noticies_adreca_vetada');
+      expect((await errorDe(await demana(`/feed?url=${encodeURIComponent('https://blog.example.org/feed')}`))).code).toBe('sdp_noticies_adreca_vetada');
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+  test('un host aprovat sense cap adreça (cap resposta, o les dues famílies amb error) no es baixa: 502 origen_caigut', async () => {
+    for (const resolDns of [vi.fn(async () => []), vi.fn(async () => { throw new Error('SERVFAIL'); }), vi.fn(async () => 'no és una llista')]) {
+      const fetchImpl = vi.fn(async (url) => (url === FEED ? origen(RSS) : png()));
+      const { demana } = prepara({ fetchImpl, resolDns });
+      expect((await errorDe(await demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_origen_caigut');
+      for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await errorDe(await demana(ambU(adreca)))).code, adreca).toBe('sdp_noticies_origen_caigut');
+      expect(fetchImpl).not.toHaveBeenCalled();
+    }
+  });
+
+  test('un host aprovat amb una adreça pública i l’altra família amb error passa (un host sense IPv6 no cau); una font personal, no', async () => {
+    const resolDns = vi.fn(async (host, tipus) => { if (tipus === 'A') return ['93.184.216.34']; throw new Error('SERVFAIL'); });
+    const fetchImpl = vi.fn(async (url) => (url === FEED ? origen(RSS) : png()));
+    const { demana } = prepara({ fetchImpl, resolDns, personals: true });
+    expect((await demana('/feed?font=ayudawp')).status).toBe(200);
+    for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await demana(ambU(adreca))).status, adreca).toBe(200);
+    expect((await errorDe(await demana(`/feed?url=${encodeURIComponent('https://blog.example.org/feed')}`))).code).toBe('sdp_noticies_origen_caigut');
+  });
+
+  test('disponibilitat: només sense resoledor a l’entorn els hosts aprovats es servixen sense resoldre; les personals es tanquen', async () => {
+    const fetchImpl = vi.fn(async (url) => (url === FEED ? origen(RSS) : png()));
+    const { demana } = prepara({ fetchImpl, resolDns: null, personals: true, imatgesExternes: true });
+    expect((await demana('/feed?font=ayudawp')).status).toBe(200);
+    for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await demana(ambU(adreca))).status, adreca).toBe(200);
+    expect((await errorDe(await demana(`/feed?url=${encodeURIComponent('https://blog.example.org/feed')}`))).code).toBe('sdp_noticies_personals_sense_dns');
+  });
+
+  test('HOSTS_DEL_SISTEMA: la instantània de la llista blanca nativa (un de nou la posa en roig: és decisió del Mestre); és exactament la dels feeds de fonts.json', () => {
+    expect(HOSTS_DEL_SISTEMA).toEqual(['ayudawp.com', 'emowe.com', 'iaenaccion.com', 'www.jonhernandez.education', 'www.youtube.com']);
+    expect(Object.isFrozen(HOSTS_DEL_SISTEMA)).toBe(true);
+    expect([...new Set(CATALEG.fonts.map((font) => new URL(font.feed).hostname))].sort()).toEqual([...HOSTS_DEL_SISTEMA]);
+    /* Ni el domini curt dels vídeos ni la forma sense www: cap host sense feed. */
+    for (const host of ['youtu.be', 'youtube.com', 'jonhernandez.education']) expect(HOSTS_DEL_SISTEMA).not.toContain(host);
+  });
+
+  test('validaCataleg: el feed i el lloc, només d’un host de la llista blanca nativa, https net i sense port; cap IP literal ni subdomini per extensió', () => {
+    const font = (feed, lloc = feed) => ({ categories: [], fonts: [{ id: 'f', feed, lloc }] });
+    for (const feed of ['https://127.0.0.1/feed', 'https://[::1]/feed', 'https://2130706433/feed', 'https://169.254.169.254/latest/meta-data/',
+      'https://example.org/feed', 'https://emowe.com.example.org/rss.xml', 'https://sub.ayudawp.com/feed/', 'https://ayudawp.com./feed/',
+      'https://youtube.com/feeds/videos.xml?channel_id=UCX_dT6nVtCIHRo_GFOsWK2A', 'https://youtu.be/x', 'https://ayudawp.com:8443/feed/',
+      'http://ayudawp.com/feed/', 'https://u:p@ayudawp.com/feed/', 'https://ayudawp.com/feed/#x', 'file:///etc/passwd', 'gopher://ayudawp.com/', 'no és una adreça',
+      /* Un CDN aprovat per a les imatges no és cap host de feeds. */
+      'https://i.ytimg.com/feed']) {
+      expect(() => validaCataleg(font(feed)), feed).toThrow(TypeError);
+    }
+    /* El lloc: del mateix host que el feed, i amb les mateixes regles. */
+    for (const lloc of ['https://emowe.com', 'http://ayudawp.com', 'https://ayudawp.com:8443', 'https://127.0.0.1', null]) {
+      expect(() => validaCataleg(font('https://ayudawp.com/feed/', lloc)), String(lloc)).toThrow(TypeError);
+    }
+    expect(() => validaCataleg(font('https://ayudawp.com:443/feed/', 'https://ayudawp.com'))).not.toThrow();
+    expect(() => creaGestor({ cataleg: font('https://127.0.0.1/feed') })).toThrow(TypeError);
   });
 });

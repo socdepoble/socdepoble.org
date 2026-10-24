@@ -208,16 +208,22 @@ test('segueix: tu mateix i les entitats que administres, abans; veïnatge, el te
   const fila = cos.indexOf('select s.id, s.creat_al, s.reactivat_al, s.deixat_al into v_fila, v_al, v_represa, v_deixat from public.seguiments s where s.seguidor = v_jo and ((');
   const repetit = cos.indexOf("if v_fila is not null and v_deixat is null then return jsonb_build_object('seguint', true, 'creat_al', coalesce(v_represa, v_al), 'nou', false, 'primer', false);");
   const espera = cos.indexOf("if v_fila is not null and v_represa > now() - interval '10 minutes' then raise exception 'sdp-seg-006:");
-  /* El compte per hora no mira deixat_al: una fila deixada continua comptant. El total, només els vius. */
-  const compte = cos.indexOf("select count(*) filter (where s.creat_al > now() - interval '1 hour' or s.reactivat_al > now() - interval '1 hour'), "
-    + 'count(*) filter (where s.deixat_al is null) into v_hora, v_total from public.seguiments s where s.seguidor = v_jo;');
+  /* Actualitzada a posta (261024_1800, T2; Codex C6-01): el que fixava era el defecte. El compte per
+     hora ja no és de files de public.seguiments (una parella represa tres vegades hi pesava una): és
+     del registre de les altes, podat de més d'una hora; el total, només els vius. I l'anotació de
+     l'alta va abans de la represa i de l'alta, dins del pany. */
+  const instant = cos.indexOf('v_ara := clock_timestamp();');
+  const poda = cos.indexOf("delete from private.seguiments_altes a where a.seguidor = v_jo and a.al <= v_ara - interval '1 hour';");
+  const compte = cos.indexOf("select count(*) into v_hora from private.seguiments_altes a where a.seguidor = v_jo and a.al > v_ara - interval '1 hour';");
+  const vius = cos.indexOf('select count(*) into v_total from public.seguiments s where s.seguidor = v_jo and s.deixat_al is null;');
   const hora = cos.indexOf("if v_hora >= 60 then raise exception 'sdp-seg-006:");
   const total = cos.indexOf("if v_total >= 1000 then raise exception 'sdp-seg-006:");
+  const anota = cos.indexOf('insert into private.seguiments_altes (seguidor, al) values (v_jo, v_ara);');
   const represa = cos.indexOf('if v_fila is not null then update public.seguiments s set deixat_al = null, reactivat_al = now(), tenant_id = v_poble where s.id = v_fila returning s.reactivat_al into v_al; '
     + "return jsonb_build_object('seguint', true, 'creat_al', v_al, 'nou', false, 'primer', false);");
   const alta = cos.indexOf('insert into public.seguiments (tenant_id, seguidor, seguit_tipus, seguit_persona, seguit_entitat)');
   const primer = cos.indexOf("return jsonb_build_object('seguint', true, 'creat_al', v_al, 'nou', true, 'primer', true);");
-  const ordre = [valida, propi, veina, entitat, bloqueig, meu, absent, pany, fila, repetit, espera, compte, hora, total, represa, alta, primer];
+  const ordre = [valida, propi, veina, entitat, bloqueig, meu, absent, pany, instant, fila, repetit, espera, poda, compte, vius, hora, total, anota, represa, alta, primer];
   expect(ordre.every((posicio) => posicio > 0), JSON.stringify(ordre)).toBe(true);
   expect([...ordre].sort((a, b) => a - b)).toEqual(ordre);
   /* primer: true (i nou: true, el mateix valor) només hi és una vegada: el de la fila nova. */
@@ -321,4 +327,61 @@ test('higiene de fitxer: una sola línia buida final i cap vocabulari prohibit',
   expect(SQL).not.toMatch(/offline[- ]first|local[- ]first/i);
   /* Ni el correu de les organitzacions ni la taula d'organitzacions membres (2610181915). */
   expect(SQL).not.toMatch(/contact_email|organization_member_organizations/);
+});
+
+/* T2 (261024_1800, P2-10; auditoria Codex 261024_1800 C6-01) · El registre de les altes: el límit per
+   hora no depén de les files vives ni de les deixades de public.seguiments, sinó d'una fila per alta o
+   represa acceptada, que cap baixa ni cap represa no esborra ni sobreescriu. */
+test('T2 · private.seguiments_altes: qui i quan (mai a qui), a l’esquema private, RLS activa, cap política i cap permís per a ningú', () => {
+  const codi = SENSE_ESPAIS(CODI);
+  expect(codi).toContain('create table if not exists private.seguiments_altes ( id uuid primary key default gen_random_uuid(), '
+    + 'seguidor uuid not null references auth.users (id) on delete cascade, al timestamptz not null default now() );');
+  const taula = CODI.slice(CODI.indexOf('create table if not exists private.seguiments_altes'), CODI.indexOf('create index if not exists idx_seguiments_altes_seguidor_al'));
+  expect(taula).not.toMatch(/seguit_|tenant_id|organizations/);
+  expect(codi).toContain('create index if not exists idx_seguiments_altes_seguidor_al on private.seguiments_altes (seguidor, al desc);');
+  expect(CODI).toContain('alter table private.seguiments_altes enable row level security;');
+  expect(CODI).toContain('revoke all on table private.seguiments_altes from public, anon, authenticated, service_role;');
+  expect(CODI).not.toMatch(/grant[^;]*seguiments_altes/i);
+  expect(CODI).not.toMatch(/public\.seguiments_altes/);
+  /* Només segueix hi escriu (i la purga horària); cap UPDATE, i cap lectura del client. */
+  const queLaToquen = FUNCIONS.filter((f) => f.cos.includes('seguiments_altes')).map((f) => `${f.esquema}.${f.nom}`);
+  expect(queLaToquen).toEqual(['public.segueix']);
+  expect(CODI).not.toMatch(/update\s+private\.seguiments_altes/i);
+  /* Una sola anotació, i abans de les dues eixides que donen seguint: true per una alta o una represa. */
+  const segueix = funcio('public', 'segueix').cos;
+  expect(segueix.match(/insert into private\.seguiments_altes/g)).toHaveLength(1);
+  expect(segueix.indexOf('insert into private.seguiments_altes')).toBeLessThan(segueix.indexOf('update public.seguiments s'));
+  /* La tornada idempotent (ja la seguies) ix abans de comptar ni d'anotar res. */
+  expect(segueix.indexOf("if v_fila is not null and v_deixat is null then")).toBeLessThan(segueix.indexOf('delete from private.seguiments_altes'));
+  /* El compte és de l'hora lliscant i ja no mira public.seguiments per a v_hora. */
+  expect(SENSE_ESPAIS(segueix)).not.toMatch(/s\.creat_al > now\(\) - interval '1 hour'|s\.reactivat_al > now\(\) - interval '1 hour'/);
+  /* segueix és volatile: cada sentència, després del pany, veu les anotacions de l'anterior. */
+  expect(funcio('public', 'segueix').capcalera).toContain('volatile');
+  /* Codex 261024_1800 · L'instant d'admissió és clock_timestamp() pres després del pany, una sola vegada,
+     i el registre no fa servir now() (l'inici de la transacció, potser abans d'esperar el pany). */
+  expect(segueix.match(/clock_timestamp\(\)/g)).toHaveLength(1);
+  expect(segueix.indexOf('v_ara := clock_timestamp();')).toBeGreaterThan(segueix.indexOf('perform pg_advisory_xact_lock('));
+  const delRegistre = segueix.split('\n').filter((linia) => /seguiments_altes|a\.al\b/.test(linia) || /v_ara - interval/.test(linia)).join('\n');
+  expect(delRegistre).not.toMatch(/now\(\)/);
+});
+
+/* Codex 261024_1800 (observació secundària) · La branca d'entitat de segueix mira, com seguiment_viu,
+   que qui seguix no haja demanat la baixa: si no, admetria una fila que cap lectura no mostraria. */
+test('segueix d’una entitat: qui seguix sense la baixa demanada, com seguiment_viu', () => {
+  const cos = SENSE_ESPAIS(funcio('public', 'segueix').cos);
+  expect(cos).toContain("select o.tenant_id into v_poble from public.organizations o where o.id = p_id and (o.visibility = 'public' or exists ( "
+    + 'select 1 from public.organization_memberships m where m.organization_id = o.id and m.user_id = v_jo)) '
+    + 'and exists (select 1 from public.profiles p where p.id = v_jo and p.baixa_demanada_at is null);');
+});
+
+test('T2 · la purga del registre cada 10 minuts, programada només si pg_cron hi és, abans del notify', () => {
+  const codi = SENSE_ESPAIS(CODI);
+  /* Revisió adversarial T2 · skip locked: la purga no espera mai la poda d'una alta (cap interbloqueig). */
+  const purga = codi.indexOf("perform cron.schedule('sdp-purga-altes-seguiments', '*/10 * * * *', $cron$delete from private.seguiments_altes where id in "
+    + "(select a.id from private.seguiments_altes a where a.al <= now() - interval '1 hour' for update skip locked)$cron$);");
+  expect(purga).toBeGreaterThan(0);
+  expect(codi.lastIndexOf("if exists (select 1 from pg_catalog.pg_extension where extname = 'pg_cron') then", purga)).toBeGreaterThan(0);
+  expect(purga).toBeLessThan(codi.indexOf("notify pgrst, 'reload schema';"));
+  expect(CAPCALERA).toMatch(/private\.seguiments_altes/);
+  expect(CAPCALERA).toMatch(/l'exportació\n?-- *\(2610241410\) no el dona|l'exportació \(2610241410\) no el dona/);
 });

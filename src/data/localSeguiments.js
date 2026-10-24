@@ -21,8 +21,12 @@
  *     Tornar-la a seguir la reprén (`reactivatAl`) com a molt una vegada cada
  *     ESPERA_DE_REPRESA, i `primer` (i `nou`, el mateix valor) només és true
  *     la primera vegada de totes que la parella se seguix;
- *   · LIMIT_PER_HORA altes o represes per hora (les files creades o represes
- *     en l'última hora, també si després s'han deixat) i LIMIT_TOTAL vius;
+ *   · LIMIT_PER_HORA altes o represes per hora, en una finestra lliscant i
+ *     comptades al registre de les altes (`altes`: un moment per cada alta o
+ *     represa acceptada, que ni deixar de seguir ni tornar a seguir no
+ *     esborren; T2 261024_1800, Codex C6-01: abans es comptaven files, i una
+ *     parella represa diverses vegades en una hora hi pesava una sola), i
+ *     LIMIT_TOTAL vius;
  *   · quiEmSegueix({ orgId }) només per a qui administra l'entitat.
  * Una lectura només torna seguiments vius, amaga el que tapa un bloqueig de
  * qui crida, com el servidor, i va per data (des de quan se seguix ara, la
@@ -61,6 +65,8 @@ const despresDe = (iso, limit) => Boolean(iso) && Date.parse(iso) > limit;
 export function createLocalSeguimentsAdapter({ perfils = localPerfils, persones = PERSONES_SEED, ara = () => new Date() } = {}) {
   /* qui seguix → Map(clau del seguit → { tipus, id, nom, creatAl, reactivatAl, deixatAl, nomSeguidor }). */
   let files = new Map();
+  /* T2 · qui seguix → [ms de cada alta o represa de l'última hora] (private.seguiments_altes). */
+  let altes = new Map();
 
   const delPadro = (id) => persones.find((p) => String(p.id) === String(id)) || null;
   /* Els identificadors de qui crida: el seu id i, amb sessió, els de la persona pilot. */
@@ -118,9 +124,11 @@ export function createLocalSeguimentsAdapter({ perfils = localPerfils, persones 
       const moment = ara();
       const ms = moment.getTime();
       if (ja && despresDe(ja.reactivatAl, ms - ESPERA_DE_REPRESA)) throw errorDeSeguiment('SDP-SEG-006');
-      const llista = [...meues.values()];
-      const daltDeLHora = llista.filter((fila) => despresDe(fila.creatAl, ms - UNA_HORA) || despresDe(fila.reactivatAl, ms - UNA_HORA)).length;
-      if (daltDeLHora >= LIMIT_PER_HORA || llista.filter(viva).length >= LIMIT_TOTAL) throw errorDeSeguiment('SDP-SEG-006');
+      /* La poda i el compte del registre (com segueix: les de més d'una hora se'n van). */
+      const delRegistre = (altes.get(String(qui)) || []).filter((al) => al > ms - UNA_HORA);
+      altes.set(String(qui), delRegistre);
+      if (delRegistre.length >= LIMIT_PER_HORA || [...meues.values()].filter(viva).length >= LIMIT_TOTAL) throw errorDeSeguiment('SDP-SEG-006');
+      delRegistre.push(ms);
       if (ja) {
         Object.assign(ja, { nom: seguit.nom, reactivatAl: moment.toISOString(), deixatAl: null, nomSeguidor: nomDeQuiSeguix(usuari) });
         return { seguint: true, creatAl: ja.reactivatAl, nou: false, primer: false };
@@ -191,7 +199,7 @@ export function createLocalSeguimentsAdapter({ perfils = localPerfils, persones 
     },
 
     /** Per a les proves: oblida els seguiments. */
-    reinicia() { files = new Map(); }
+    reinicia() { files = new Map(); altes = new Map(); }
   };
 }
 

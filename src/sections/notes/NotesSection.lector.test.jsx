@@ -167,7 +167,7 @@ const senseTria = () => screen.queryByRole('group', { name: 'Per a què és este
 const triaLlesta = () => screen.findByRole('group', { name: 'Per a què és este enllaç?' });
 const opcio = (nom) => within(tria()).getByRole('radio', { name: nom });
 const nomFont = () => screen.findByRole('textbox', { name: /^Nom de la font/ });
-const categoria = () => screen.getByRole('combobox', { name: /^Categoria del poble/ });
+const categoria = () => screen.getByRole('combobox', { name: /^Categoria al Lector/ });
 
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });

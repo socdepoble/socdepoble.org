@@ -26,7 +26,8 @@ export async function verifyPreparedTree(receiptPath) {
   fs.chmodSync(dir,0o700);
   try {
     const prepared = await materializePendingTree(receiptPath,dir);
-    const env = {...process.env, SDP_ARREL:dir};
+    // SDP_PRE_COMMIT: the gates know they run on the prepared tree (tractor-build-previ does not build there).
+    const env = {...process.env, SDP_ARREL:dir, SDP_PRE_COMMIT:'1'};
     for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
     runChecked('git',['init','--quiet'],dir,env);
     const objects = runChecked('git',['rev-parse','--git-path','objects'],PROJECT_DIR,process.env).trim();
@@ -37,11 +38,14 @@ export async function verifyPreparedTree(receiptPath) {
     // Reuse frozen installed dependencies, never install or run lifecycle scripts from the hook.
     fs.symlinkSync(path.join(PROJECT_DIR,'node_modules'),path.join(dir,'node_modules'),'dir');
     const before = snapshotPreparedFiles(dir,env);
-    for (const args of [['tooling/gates/porta-documents.mjs','--staged'],['tooling/gates/tancament.mjs','--check'],['tooling/gates/run-portes.mjs']]) {
+    for (const args of [['tooling/gates/porta-documents.mjs','--staged'],['tooling/gates/tancament.mjs','--check'],['tooling/gates/run-portes.mjs','--nomes-portes']]) {
       runChecked(process.execPath,args,dir,env);
     }
-    runChecked('npm',['run','lint'],dir,env);
-    runChecked('npm',['run','test','--','--run'],dir,env);
+    // T4 (261024_1800, P1-10): run-portes --nomes-portes runs the gates and the linter, and skips its
+    // test batteries (documental, node, the full Vitest of ~9 min, which never fit the 120 s cap of a
+    // step). The fast suite replaces them here (vitest.precommit.config.js plus the node security,
+    // migration and documental tests). The full suite is still run per wave.
+    runChecked('npm',['run','test:precommit'],dir,env);
     if (before !== snapshotPreparedFiles(dir,env) || runChecked('git',['write-tree'],dir,env).trim() !== prepared.tree) throw new Error('Un validador ha modificat fonts de l’arbre preparat');
     const current = await pendingTreeForReceipt(receiptPath);
     if (current.tree !== prepared.tree) throw new Error('Índex canviat després de validar');

@@ -67,6 +67,11 @@ const ARTEFACTES = [
 ];
 
 const avisos = [];
+/* T4 (261024_1800, P1-10) · Dins del pre-commit (git-staged.mjs posa SDP_PRE_COMMIT=1) l'arbre és el
+   preparat, que no porta mai els artefactes (dist/ és a .gitignore): un absent només s'avisa, sense
+   construir. El build tardaria minuts i reescriuria fonts versionades (src/data/wikiManifest.js), i el
+   hook ho rebutja. Un artefacte present però invàlid o caducat continua sent un error. */
+const DINS_DEL_PRECOMMIT = process.env.SDP_PRE_COMMIT === '1';
 
 /** Comprova cada artefacte i torna la llista de problemes. Pura: es pot repetir després del build. */
 function comprovaArtefactes() {
@@ -74,7 +79,7 @@ function comprovaArtefactes() {
   for (const a of ARTEFACTES) {
     const abs = R(a.cami);
     if (!fs.existsSync(abs)) {
-      trobats.push({ a, què: 'absent', com: `s'hauria d'executar: ${a.ordre}` });
+      (DINS_DEL_PRECOMMIT ? avisos : trobats).push({ a, què: 'absent', com: `s'hauria d'executar: ${a.ordre}` });
       continue;
     }
     let text;

@@ -47,8 +47,20 @@
  *
  * LES FONTS DEL SISTEMA (?font=<id>)
  *   · L'únic que entra és l'id d'una font de la llista blanca (fonts.json): cap
- *     adreça de la consulta. Les redireccions, només dins del mateix host i en
- *     https. Cache-Control: public, max-age=300.
+ *     adreça de la consulta. Les redireccions, només dins del mateix host, en
+ *     https i sense port (T1 261024_1800, Codex C6-03). Cache-Control: public,
+ *     max-age=300.
+ *   · T1 (261024_1800, P1-07; Codex C6-02) · fonts.json no pot afegir cap host:
+ *     el feed i el lloc de cada font han de ser d'HOSTS_DEL_SISTEMA, la llista
+ *     blanca nativa (noms exactes, cap subdomini per extensió), en https net i
+ *     sense port; si no, el gestor no es crea (validaCataleg).
+ *   · I un nom aprovat no acredita la IP: amb resoledor, cada salt dels hosts
+ *     aprovats (el catàleg i CDN_IMATGES) també es resol, i una sola resposta
+ *     no pública el veta (adreca_vetada, sense baixar res), encara que l'altra
+ *     família (A o AAAA) falle; sense cap adreça, tampoc no passa
+ *     (origen_caigut). Només sense resoledor a l'entorn un host aprovat val
+ *     sense resoldre (la llista blanca nativa; decisió del Mestre, README); un
+ *     de fora, mai.
  *
  * LES FONTS PERSONALS (?url=<adreça>) · T5b, i D-08 de Codex (261024)
  *   Una adreça qualsevol és un risc de SSRF (fer que el servei demane una cosa
@@ -89,7 +101,9 @@
  *   · D'un host del catàleg o d'un dels seus CDN (CDN_IMATGES, les miniatures
  *     de YouTube), qualsevol imatge, encara que la instància no l'haja vista
  *     (L-08: una notícia desada conserva la miniatura quan la instància es
- *     recicla); eixos hosts no es resolen (els aprova el Mestre).
+ *     recicla). Els aprova el Mestre; amb resoledor, igualment es resolen, i
+ *     una resposta no pública o cap adreça els veta (T1 261024_1800, Codex
+ *     C6-02).
  *   · D'un altre host, APAGADES per defecte (L-12: el DNS rebinding de les
  *     personals hi valdria igual): 403 imatge_de_fora, sense resoldre ni baixar
  *     res; només amb `imatgesExternes: true` (index.ts:
@@ -161,11 +175,21 @@ export const MAXIM_IMATGES_PER_FEED = 500;
 /**
  * R6 L-08 i L-12 (Lector final) · Els CDN d'imatges de les fonts del catàleg: els hosts on les dues
  * fonts de vídeo (www.youtube.com) posen les miniatures, comprovats el 261024 amb un GET dels feeds
- * (i1–i4.ytimg.com; i.ytimg.com, el seu nom canònic). Com els hosts del catàleg, no es resolen i
- * se'n servix qualsevol imatge (no cal haver-la vista en un feed). Aprovar-los és del Mestre, un
- * per un, com els hosts de fonts.json (gestor.test.js en porta la instantània).
+ * (i1–i4.ytimg.com; i.ytimg.com, el seu nom canònic). Com dels hosts del catàleg, se'n servix
+ * qualsevol imatge (no cal haver-la vista en un feed), i amb resoledor el nom es resol igual (T1
+ * 261024_1800: una resposta no pública, o cap adreça, el veta). Aprovar-los és del Mestre, un per un, com els
+ * hosts de fonts.json (gestor.test.js en porta la instantània).
  */
 export const CDN_IMATGES = Object.freeze(['i.ytimg.com', 'i1.ytimg.com', 'i2.ytimg.com', 'i3.ytimg.com', 'i4.ytimg.com']);
+/**
+ * T1 (261024_1800, P1-07; Codex C6-02) · La llista blanca NATIVA: els únics hosts on poden viure
+ * el feed i el lloc d'una font del catàleg, els dels sis referents del §23 que el Mestre ha aprovat
+ * un per un (261024; les dues fonts de vídeo comparteixen www.youtube.com). Noms exactes: cap
+ * subdomini per extensió, i cap host sense feed (youtu.be només porta a vídeos, mai a un feed).
+ * Ha de dir el mateix que HOSTS_DEL_CATALEG de src/data/adaptadors/noticies/cataleg.test.js, i
+ * aprovar-ne un de nou és del Mestre (gestor.test.js en porta la instantània).
+ */
+export const HOSTS_DEL_SISTEMA = Object.freeze(['ayudawp.com', 'emowe.com', 'iaenaccion.com', 'www.jonhernandez.education', 'www.youtube.com']);
 /* Els segons que diu Retry-After quan el servei ja està ocupat (ocupat). */
 export const ESPERA_OCUPAT_S = 2;
 export const TIPUS_IMATGE = Object.freeze(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
@@ -209,6 +233,19 @@ const DESCODIFICADORS = Object.freeze({
   'iso-8859-15': 'iso-8859-15', latin9: 'iso-8859-15', 'utf-16': 'utf-16le', 'utf-16le': 'utf-16le', 'utf-16be': 'utf-16be'
 });
 
+/* T1 (261024_1800) · Una adreça del catàleg (el feed o el lloc d'una font): https net, sense port,
+   d'un host d'HOSTS_DEL_SISTEMA; o null. */
+function adrecaDelSistema(text) {
+  let adreca;
+  try {
+    adreca = new URL(text);
+  } catch {
+    return null;
+  }
+  if (adreca.protocol !== 'https:' || adreca.username || adreca.password || adreca.hash || adreca.port !== '') return null;
+  return esNomPublic(adreca.hostname) && HOSTS_DEL_SISTEMA.includes(adreca.hostname) ? adreca : null;
+}
+
 /** Valida i congela el catàleg (fonts.json): { categories, fonts: [{ id, nom, categoriaId, descripcio, lloc, feed, llengua }] }. */
 export function validaCataleg(cataleg) {
   const fonts = Array.isArray(cataleg?.fonts) ? cataleg.fonts : null;
@@ -218,9 +255,11 @@ export function validaCataleg(cataleg) {
   for (const font of fonts) {
     if (!PATRO_ID.test(font?.id ?? '') || vistos.has(font.id)) throw new TypeError(`noticies: id de font invàlid o repetit: ${font?.id}`);
     vistos.add(font.id);
-    const adreca = new URL(font.feed);
-    if (adreca.protocol !== 'https:' || adreca.username || adreca.password || adreca.hash) {
-      throw new TypeError(`noticies: el feed de ${font.id} ha de ser https net`);
+    const feed = adrecaDelSistema(font.feed);
+    if (!feed) throw new TypeError(`noticies: el feed de ${font.id} ha de ser https net, sense port, d'un host de HOSTS_DEL_SISTEMA`);
+    /* El lloc fa de base de les imatges del feed i el Lector l'enllaça: del mateix host que el feed. */
+    if (adrecaDelSistema(font.lloc)?.hostname !== feed.hostname) {
+      throw new TypeError(`noticies: el lloc de ${font.id} ha de ser https net, sense port, del host del seu feed`);
     }
   }
   return Object.freeze({
@@ -857,9 +896,10 @@ export function creaGestor({
   const perId = new Map(fonts.map((font) => [font.id, font]));
   const teResoledor = typeof resolDns === 'function';
   const ambPersonals = personals === true && teResoledor;
-  /* Els hosts del catàleg i els seus CDN d'imatges: les seues imatges no es resolen (el Mestre els
-     aprova un per un) i se'n servix qualsevol, encara que esta instància no l'haja vista (R6 L-08:
-     una notícia desada «per a després» conserva la miniatura quan la instància es recicla). */
+  /* Els hosts del catàleg i els seus CDN d'imatges (el Mestre els aprova un per un): se'n servix
+     qualsevol imatge, encara que esta instància no l'haja vista (R6 L-08: una notícia desada «per a
+     després» conserva la miniatura quan la instància es recicla). Amb resoledor, el nom es resol
+     igual i una resposta no pública, o cap adreça, el veta (T1, aprovatVetat). */
   const hostsDelCataleg = new Set(fonts.map((font) => new URL(font.feed).hostname));
   const hostsAprovats = new Set([...hostsDelCataleg, ...CDN_IMATGES]);
   const ambExternes = imatgesExternes === true;
@@ -891,20 +931,27 @@ export function creaGestor({
   const limitPersonals = creaLimit(LIMIT_PERSONALS, maximEmpremtes);
   const limitImatges = creaLimit(LIMIT_IMATGES, maximEmpremtes);
 
-  /* Si el nom d'una adreça de fora només porta a la xarxa pública: 'publica', 'privada',
-     'desconeguda' (no s'ha pogut resoldre) o 'sense-dns' (l'entorn no té resoledor: mai pública). */
+  /* Les adreces d'un nom, { adreces, fallades } (fallades: les famílies, A i AAAA, que no han
+     respost), o null si l'entorn no té resoledor. T1 (261024_1800; Codex C6-02, segona passada):
+     allSettled i no all, perquè una resposta privada d'una família no es perda si l'altra falla. */
+  async function resolNom(host, senyal) {
+    if (!teResoledor) return null;
+    const resol = (tipus) => Promise.race([Promise.resolve().then(() => resolDns(host, tipus, { signal: senyal })), finsQueSAvorte(senyal)]);
+    const respostes = await Promise.allSettled([resol('A'), resol('AAAA')]);
+    return {
+      adreces: respostes.flatMap((resposta) => (resposta.status === 'fulfilled' && Array.isArray(resposta.value) ? resposta.value : [])),
+      fallades: respostes.filter((resposta) => resposta.status === 'rejected').length
+    };
+  }
+
+  /* Si el nom d'una adreça de fora només porta a la xarxa pública: 'publica', 'privada' (una sola
+     resposta no pública, encara que l'altra família falle), 'desconeguda' (alguna família no ha
+     respost, o cap adreça) o 'sense-dns' (l'entorn no té resoledor: mai pública). */
   async function xarxaDe(host, senyal) {
     if (!teResoledor) return 'sense-dns';
-    let adreces;
-    try {
-      const resol = (tipus) => Promise.race([Promise.resolve(resolDns(host, tipus, { signal: senyal })), finsQueSAvorte(senyal)]);
-      const [a, aaaa] = await Promise.all([resol('A'), resol('AAAA')]);
-      adreces = [...(Array.isArray(a) ? a : []), ...(Array.isArray(aaaa) ? aaaa : [])];
-    } catch {
-      return 'desconeguda';
-    }
-    if (adreces.length === 0) return 'desconeguda';
-    return adreces.some(esIpNoPublica) ? 'privada' : 'publica';
+    const { adreces, fallades } = await resolNom(host, senyal);
+    if (adreces.some(esIpNoPublica)) return 'privada';
+    return fallades > 0 || adreces.length === 0 ? 'desconeguda' : 'publica';
   }
 
   /* Les regles d'una adreça de fora: les personals es resolen sempre; les imatges, si el seu
@@ -914,15 +961,34 @@ export function creaGestor({
     vetats, confiats: hostsAprovats, senseDns: 'imatge_sense_dns', fora: ambExternes ? null : 'imatge_de_fora'
   });
 
-  /* Les regles d'un salt (el primer o una redirecció): null si val; si no, el codi d'error. */
+  /* T1 (261024_1800; Codex C6-02, i la segona passada) · Un host aprovat (el catàleg i CDN_IMATGES),
+     amb resoledor: una sola resposta no pública el veta (adreca_vetada), també si l'altra família
+     ha fallat; cap adreça (cap resposta, o les dues famílies fallades) tampoc no passa
+     (origen_caigut: el Lector rep la còpia de reserva si en té); passa amb una adreça pública com a
+     mínim i cap de privada, encara que l'altra família no haja respost (un host sense IPv6 no cau
+     per l'AAAA). Sense resoledor a l'entorn, passa per la llista blanca nativa: és l'única porta
+     oberta, i la decisió és del Mestre (supabase/README.md). */
+  async function aprovatVetat(host, senyal) {
+    const nom = await resolNom(host, senyal);
+    if (!nom) return null;
+    if (nom.adreces.some(esIpNoPublica)) return 'adreca_vetada';
+    return nom.adreces.length === 0 ? 'origen_caigut' : null;
+  }
+
+  /* Les regles d'un salt (el primer o una redirecció): null si val; si no, el codi d'error.
+     Sense `regles`, una font del sistema: el mateix host, en https, sense port ni credencials
+     (T1, Codex C6-03: abans, una redirecció podia canviar el port), i el seu nom resolt. */
   function regleDelSalt(regles, host) {
     return async function valida(seguent, senyal) {
       if (!regles) {
-        return seguent.protocol !== 'https:' || seguent.hostname !== host || seguent.username || seguent.password ? 'origen_caigut' : null;
+        if (seguent.protocol !== 'https:' || seguent.hostname !== host || seguent.port !== '' || seguent.username || seguent.password) {
+          return 'origen_caigut';
+        }
+        return aprovatVetat(seguent.hostname, senyal);
       }
       const neta = adrecaPersonal(seguent.href, regles.vetats);
       if (!neta) return 'adreca_vetada';
-      if (regles.confiats?.has(neta.hostname)) return null;
+      if (regles.confiats?.has(neta.hostname)) return aprovatVetat(neta.hostname, senyal);
       /* Una redirecció d'imatge cap a un host de fora, amb l'interruptor apagat: tampoc. */
       if (regles.fora) return regles.fora;
       const xarxa = await xarxaDe(neta.hostname, senyal);
@@ -933,19 +999,17 @@ export function creaGestor({
   }
 
   /* Una baixada de l'origen: el que torna `llig` ({ xml }, { bytes, tipus }) o { error } (un codi
-     d'ERRORS). Mai llança. Amb `regles` (una adreça de fora), cada salt, també el primer, passa les
-     regles; sense, és una font del sistema (redireccions només dins del seu host). */
+     d'ERRORS). Mai llança. Cada salt, també el primer, passa les regles: amb `regles`, les d'una
+     adreça de fora; sense, les d'una font del sistema (redireccions només dins del seu host). */
   async function baixa(adreca, { regles = null, maxim = MAXIM_BYTES, accepta = ACCEPTA, llig = lligFeed } = {}) {
     const controlador = new AbortController();
     const rellotge = temporitzador.posa(() => controlador.abort(), TEMPS_ORIGEN_MS);
     try {
       let actual = new URL(adreca);
       const valida = regleDelSalt(regles, actual.hostname);
-      if (regles) {
-        const error = await valida(actual, controlador.signal);
-        if (controlador.signal.aborted) return { error: 'origen_temps' };
-        if (error) return { error };
-      }
+      const primer = await valida(actual, controlador.signal);
+      if (controlador.signal.aborted) return { error: 'origen_temps' };
+      if (primer) return { error: primer };
       for (let salts = 0; ; salts += 1) {
         const resposta = await fetchImpl(actual.href, {
           method: 'GET', redirect: 'manual', headers: { 'User-Agent': AGENT_USUARI, Accept: accepta }, signal: controlador.signal

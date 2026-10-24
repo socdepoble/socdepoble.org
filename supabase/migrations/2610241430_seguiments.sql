@@ -19,6 +19,14 @@
 --      sola fila per parella (dos índexs únics parcials). RLS activa i cap
 --      política: anon i authenticated no hi tenen cap permís de taula; tot
 --      passa per les RPC.
+--      I private.seguiments_altes (T2 261024_1800, P2-10; auditoria Codex
+--      261024_1800 C6-01) · El registre de les altes: una fila per cada alta
+--      o represa acceptada (qui seguix i quan, mai a qui), que cap baixa ni
+--      cap represa no esborra ni sobreescriu. El límit per hora el compta
+--      ací: abans comptava files de public.seguiments, i una parella
+--      represa diverses vegades en una hora hi pesava una sola. A l'esquema
+--      private (PostgREST no l'exposa), amb la RLS activa i cap permís per
+--      a ningú: només segueix hi escriu.
 --   2. Tres funcions privades (SECURITY DEFINER, search_path buit; cap client
 --      no les pot cridar): private.poble_compartit (el poble de dues persones
 --      que no han demanat la baixa, la regla de veïnatge de perfil_public),
@@ -45,13 +53,23 @@
 --   4. Les regles de segueix: una persona, només si sou del mateix poble
 --      (town_memberships, com public.perfil_public, 2610021520) i cap de les
 --      dues no ha demanat la baixa; una entitat, si existix i és pública (o
---      en formes part), de qualsevol poble; mai tu mateix ni una entitat que
+--      en formes part), de qualsevol poble, si qui seguix no ha demanat la
+--      baixa (com a seguiment_viu; Codex 261024_1800); mai tu mateix ni una entitat que
 --      administres; cap bloqueig teu (una persona o una entitat que has
---      bloquejat: SDP-SEG-004); 60 altes o represes per hora (les files
---      creades o tornades a seguir en l'última hora, també si després s'han
---      deixat), una represa de la mateixa parella com a molt cada 10 minuts,
---      i 1.000 seguiments vius per persona, comptats sota el seu pany
---      (pg_advisory_xact_lock).
+--      bloquejat: SDP-SEG-004); 60 altes o represes per hora, en una
+--      finestra lliscant (les files de private.seguiments_altes de l'última
+--      hora: seguir, deixar i tornar a seguir no en salta cap), una represa
+--      de la mateixa parella com a molt cada 10 minuts, i 1.000 seguiments
+--      vius per persona, comptats sota el seu pany (pg_advisory_xact_lock):
+--      el compte i l'anotació de l'alta van dins del pany i de la mateixa
+--      transacció (dues crides alhora de la mateixa persona van en fila), i
+--      l'instant de l'alta és el d'admetre-la (clock_timestamp() després del
+--      pany), no el de començar la transacció: una crida que espera el pany
+--      no anota una alta que ja ix de la finestra abans d'hora.
+--      Tornar a seguir el que ja seguixes no és cap alta: idempotent, ni
+--      compta ni avisa. El pany i el compte depenen del nivell READ
+--      COMMITTED (el de PostgREST): cada sentència de segueix (volatile), un
+--      cop té el pany, veu les altes de la crida anterior.
 --   5. Les lectures només tornen seguiments vius (deixat_al null), amaguen
 --      el que ara mateix tapen un bloqueig (del sentit del punt 6), una baixa
 --      demanada o un canvi de poble, i van per data (des de quan se seguix
@@ -77,11 +95,22 @@
 --     (punt 6) i, si es desbloqueja, torna.
 --   · No esborra cap fila en deixar de seguir: la marca amb deixat_al. Les
 --     files deixades no les veu ningú (cap lectura les torna) i només
---     compten per al límit per hora i per a primer; se'n van amb la baixa
---     del compte (on delete cascade). En naixen com a molt 60 per hora, i
---     mai més que les persones i entitats que es poden seguir. Quant de
+--     compten per a primer i per a l'espera de represa; se'n van amb la
+--     baixa del compte (on delete cascade). En naixen com a molt 60 per
+--     hora, i mai més que les persones i entitats que es poden seguir. Quant de
 --     temps es guarden, i si l'exportació les ha de donar, ho decidix el
 --     Mestre (el text legal ho ha de dir).
+--   · No guarda el registre de les altes gaire més enllà de l'hora que
+--     compta: cada alta poda les de més d'una hora de qui seguix, i una purga
+--     cada 10 minuts (pg_cron, si hi és) les de tothom, de manera que cap fila
+--     no dura més d'una hora i deu minuts. Sense pg_cron, una fila vella es
+--     queda fins a la pròxima alta de la mateixa persona o fins a la baixa
+--     del compte (on delete cascade); la quota no la compta igualment. No diu
+--     a qui has seguit, i l'exportació (2610241410) no el dona: és el
+--     comptador del límit, no un historial.
+--   · No compta els intents rebutjats (un error desfà la transacció
+--     sencera, també la seua anotació): el límit és de les altes que
+--     canvien alguna cosa i que poden fer avisar.
 --   · No és mutu ni demana acceptació: és d'un sol sentit.
 --   · No toca public.bloquejos ni cap altra taula, funció o política.
 --   · L'exportació de dades (2610241410, T7) el llig amb to_regclass per les
@@ -105,7 +134,9 @@
 -- public.organizations, public.organization_memberships i
 -- private.can_manage_organization() (2609080000), i
 -- public.profiles.baixa_demanada_at (2609261500); i, si hi és,
--- public.bloquejos (2610201500): sense ella, cap bloqueig no compta.
+-- public.bloquejos (2610201500): sense ella, cap bloqueig no compta. La
+-- purga horària del registre de les altes, de pg_cron si hi és (si no,
+-- només la poda de cada alta: supabase/README.md).
 --
 -- Additiva i idempotent. Revisada i NO aplicada a cap base de dades.
 -- L'aplica el Mestre, mai un agent.
@@ -149,11 +180,26 @@ create index if not exists idx_seguiments_seguidor_creat
 
 alter table public.seguiments enable row level security;
 
+-- T2 (261024_1800, P2-10; Codex C6-01) · El registre de les altes: una fila
+-- per alta o represa acceptada. Cap columna diu a qui; cap UPDATE no la
+-- toca; només la poda i la purga de més d'una hora l'esborren.
+create table if not exists private.seguiments_altes (
+  id        uuid primary key default gen_random_uuid(),
+  seguidor  uuid not null references auth.users (id) on delete cascade,
+  al        timestamptz not null default now()
+);
+create index if not exists idx_seguiments_altes_seguidor_al
+  on private.seguiments_altes (seguidor, al desc);
+alter table private.seguiments_altes enable row level security;
+
 -- ── 2 · Permisos (mandat Supabase 30-Oct-2026): la llista sencera ──────────
 -- Cap permís de taula per a anon ni authenticated, i cap política: el client
 -- només hi entra per les RPC de la secció 4.
 revoke all on table public.seguiments from public, anon, authenticated, service_role;
 grant select, insert, update, delete on public.seguiments to service_role;
+-- El registre de les altes: cap permís per a ningú, ni service_role (com
+-- private.autoritzacions_apple, 2610241420); només segueix (definer) hi entra.
+revoke all on table private.seguiments_altes from public, anon, authenticated, service_role;
 
 -- ── 3 · Les funcions privades ───────────────────────────────────────────────
 -- El primer poble que compartixen dues persones (town_memberships), si cap de
@@ -256,6 +302,7 @@ declare
   v_deixat   timestamptz;
   v_hora     integer;
   v_total    integer;
+  v_ara      timestamptz;
 begin
   if v_jo is null then
     raise exception 'SDP-SEG-000: cal la sessió iniciada.' using errcode = '42501';
@@ -275,7 +322,9 @@ begin
      where o.id = p_id
        and (o.visibility = 'public' or exists (
              select 1 from public.organization_memberships m
-              where m.organization_id = o.id and m.user_id = v_jo));
+              where m.organization_id = o.id and m.user_id = v_jo))
+       and exists (select 1 from public.profiles p
+                    where p.id = v_jo and p.baixa_demanada_at is null);
   end if;
   v_bloqueig := private.bloqueig_de_seguiment(v_jo, p_tipus, p_id);
   if v_bloqueig = 'seguidor' then
@@ -290,6 +339,10 @@ begin
   -- Sota el pany de qui seguix: la fila de la parella, el compte i l'alta (o
   -- la represa) van en fila.
   perform pg_advisory_xact_lock(hashtextextended('seguiments:' || v_jo::text, 0));
+  -- L'instant d'admissió, una sola vegada i després del pany (now() és el de
+  -- començar la transacció, potser abans d'esperar-lo): la poda, el compte i
+  -- l'anotació del registre de les altes el fan servir.
+  v_ara := clock_timestamp();
   select s.id, s.creat_al, s.reactivat_al, s.deixat_al into v_fila, v_al, v_represa, v_deixat
     from public.seguiments s
    where s.seguidor = v_jo
@@ -302,19 +355,31 @@ begin
   if v_fila is not null and v_represa > now() - interval '10 minutes' then
     raise exception 'SDP-SEG-006: has fet massa seguiments nous en poc de temps.' using errcode = '42900';
   end if;
-  -- Les files creades o represes en l'última hora, també les deixades
-  -- després: deixar de seguir no torna cap seguiment al compte.
-  select count(*) filter (where s.creat_al > now() - interval '1 hour' or s.reactivat_al > now() - interval '1 hour'),
-         count(*) filter (where s.deixat_al is null)
-    into v_hora, v_total
+  -- T2 (261024_1800, P2-10; Codex C6-01) · El compte per hora és el del
+  -- registre de les altes, una fila per alta o represa acceptada: ni deixar
+  -- de seguir ni tornar a seguir no el reinicien, i una parella represa tres
+  -- vegades hi compta tres. Primer es poden les de més d'una hora de qui
+  -- seguix (sota el seu pany: només ell hi escriu).
+  delete from private.seguiments_altes a
+   where a.seguidor = v_jo
+     and a.al <= v_ara - interval '1 hour';
+  select count(*) into v_hora
+    from private.seguiments_altes a
+   where a.seguidor = v_jo
+     and a.al > v_ara - interval '1 hour';
+  select count(*) into v_total
     from public.seguiments s
-   where s.seguidor = v_jo;
+   where s.seguidor = v_jo
+     and s.deixat_al is null;
   if v_hora >= 60 then
     raise exception 'SDP-SEG-006: has fet massa seguiments nous en poc de temps.' using errcode = '42900';
   end if;
   if v_total >= 1000 then
     raise exception 'SDP-SEG-006: has arribat al màxim de 1.000 seguiments.' using errcode = '42900';
   end if;
+  -- L'alta o la represa, anotada dins del pany i de la mateixa transacció:
+  -- si alguna cosa d'ací avall falla, l'anotació també es desfà.
+  insert into private.seguiments_altes (seguidor, al) values (v_jo, v_ara);
   if v_fila is not null then
     update public.seguiments s
        set deixat_al = null, reactivat_al = now(), tenant_id = v_poble
@@ -471,6 +536,22 @@ end;
 $$;
 revoke all on function public.qui_em_segueix(uuid) from public, anon, authenticated, service_role;
 grant execute on function public.qui_em_segueix(uuid) to authenticated;
+
+-- ── 5 · La purga del registre de les altes, cada 10 minuts ─────────────────
+-- Programada només si pg_cron ja està actiu (com 2610220240). Si no, cada
+-- alta ja poda les velles de qui seguix; la de tothom es programa a mà
+-- (supabase/README.md). Salta les files que una poda té bloquejades (skip
+-- locked): la purga no espera mai la poda, i no s'interbloquegen.
+do $$
+begin
+  if exists (select 1 from pg_catalog.pg_extension where extname = 'pg_cron') then
+    perform cron.schedule('sdp-purga-altes-seguiments', '*/10 * * * *',
+      $cron$delete from private.seguiments_altes where id in (select a.id from private.seguiments_altes a where a.al <= now() - interval '1 hour' for update skip locked)$cron$);
+  else
+    raise notice 'pg_cron no està actiu: la purga de private.seguiments_altes queda sense programar.';
+  end if;
+end
+$$;
 
 notify pgrst, 'reload schema';
 

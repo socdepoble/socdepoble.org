@@ -600,12 +600,25 @@ description: "Documentació canònica de Sóc de Poble."
   `qui_em_segueix(p_org_id)` (sense entitat, qui et seguix a tu; amb entitat,
   qui la seguix, només per a qui l'administra). Regles: una persona, només si
   sou del mateix poble i cap de les dues no ha demanat la baixa; una entitat,
-  pública (o de la qual formes part), de qualsevol poble; mai tu mateix ni
+  pública (o de la qual formes part), de qualsevol poble, si no has demanat la
+  baixa; mai tu mateix ni
   una entitat que administres; cap bloqueig teu de `public.bloquejos` (es
-  llig amb `to_regclass`); 60 altes o represes per hora (també les deixades
-  després: deixar de seguir no reinicia el compte), una represa de la mateixa
+  llig amb `to_regclass`); 60 altes o represes per hora en una finestra
+  lliscant, comptades al registre `private.seguiments_altes` (T2 261024_1800,
+  P2-10; auditoria Codex 261024_1800 C6-01: una fila per alta o represa
+  acceptada, només qui i quan, que ni deixar de seguir ni tornar a seguir no
+  esborren; abans es comptaven files i una parella represa diverses vegades
+  en una hora hi pesava una sola; RLS activa i cap permís per a ningú, ni
+  `service_role`; l'instant de cada alta és el d'admetre-la, `clock_timestamp()`
+  després del pany; cada alta poda les de més d'una hora de qui seguix, i una
+  purga de pg_cron cada 10 minuts, `sdp-purga-altes-seguiments`, si pg_cron hi
+  és, les de tothom, de manera que cap fila no dura més d'una hora i deu
+  minuts; sense pg_cron, una fila vella es queda fins a la pròxima alta de la
+  mateixa persona o la baixa del compte, i la quota no la compta igualment;
+  l'exportació no el dona), una represa de la mateixa
   parella cada 10 minuts i 1.000 seguiments vius per persona, sota el seu
-  pany. El bloqueig de l'altra banda és a l’ombra: seguir funciona igual i les
+  pany i en la mateixa transacció (depén del nivell READ COMMITTED de
+  PostgREST; la purga salta les files bloquejades, `skip locked`). El bloqueig de l'altra banda és a l’ombra: seguir funciona igual i les
   lectures de qui seguix no l'amaguen; només `qui_em_segueix`, la llista de
   qui és seguit, deixa fora qui seguix si hi ha un bloqueig en qualsevol
   sentit (també d'algú que administra l'entitat). Les lectures només tornen
@@ -628,7 +641,10 @@ description: "Documentació canònica de Sóc de Poble."
   (`baixa_demanada_at`); 2610201500 és opcional (sense ella, cap bloqueig no
   compta). La prova estàtica és `src/data/supabase/seguiments.migracio.test.js`.
   Verificació posterior (lectura):
-  `select seguit_tipus, count(*) from public.seguiments group by 1;`.
+  `select seguit_tipus, count(*) from public.seguiments group by 1;`,
+  `select count(*) from private.seguiments_altes;` i
+  `select jobname, schedule from cron.job where jobname = 'sdp-purga-altes-seguiments';`
+  (sense pg_cron, programar-la a mà amb el mateix `delete` de la migració).
   Pendent del Mestre (el «QUÈ NO FA» de la capçalera): el servidor no
   notifica res (l'únic avís és el del client, un per parella); un bloqueig no
   esborra el seguiment, només l'amaga a qui bloqueja; les files deixades es
@@ -1362,7 +1378,8 @@ rep mai la còpia d'una altra), fitada (64 entrades, 16 M caràcters, 24 h).
 Les regles de les imatges (`?u=`; R6, passada final): d'un host aprovat (el
 del feed de cada font del catàleg i els CDN de `CDN_IMATGES`, hui
 `i.ytimg.com` i `i1`–`i4.ytimg.com`), qualsevol imatge, encara que la
-instància no l'haja vista (L-08), sense resoldre el nom; d'un altre host,
+instància no l'haja vista (L-08); amb resoledor, el nom també es resol (T1,
+261024_1800) i una resposta no pública el veta; d'un altre host,
 APAGADES per defecte: 403 `imatge_de_fora`, sense resoldre ni baixar res
 (L-12), també per a una redirecció cap a fora. Enceses
 (`SDP_NOTICIES_IMATGES_EXTERNES=1`), només les que han eixit les últimes 24 h
@@ -1390,6 +1407,32 @@ Supabase guarden l'adreça de cada petició amb la consulta (`?url=` amb
 l'adreça personal, `?u=` amb la imatge) i la IP de qui la fa, amb la seua
 retenció. Que el gestor no registre res no ho impedix.
 
+T1 (261024_1800, P1-07; auditoria Codex 261024_1800 C6-02 i C6-03), les fonts
+del sistema i els hosts aprovats: la llista blanca NATIVA és
+`HOSTS_DEL_SISTEMA` de `gestor.js` (`ayudawp.com`, `emowe.com`,
+`iaenaccion.com`, `www.jonhernandez.education` i `www.youtube.com`: noms
+exactes, cap subdomini per extensió); el feed i el lloc de cada font de
+`fonts.json` n'han de ser, en `https:` net i sense port, o la funció no
+arrenca (`validaCataleg`). Un nom aprovat no acredita la IP: amb resoledor,
+cada salt d'una font del sistema, d'una imatge del catàleg o d'un CDN de
+`CDN_IMATGES` també es resol, i una sola resposta privada, de bucle,
+d'enllaç local (amb 169.254.169.254) o ULA el veta (422 `adreca_vetada`,
+sense baixar res; el Lector rep la còpia de reserva si en té), encara que
+l'altra família (A o AAAA) falle (Codex C6-02, segona passada: abans
+`Promise.all` en perdia la resposta privada); sense cap adreça (cap resposta,
+o les dues famílies fallades), tampoc no passa (502 `origen_caigut`). Passa
+amb una adreça pública com a mínim i cap de privada. Només si el runtime no
+té `Deno.resolveDns`, un host aprovat es servix sense resoldre: és l'única
+porta oberta, i tancar-la també (el catàleg deixaria de funcionar en eixe
+runtime) és decisió del Mestre. Després del desplegament, el `curl` de
+`?font=ayudawp` de més avall ha de donar 200: si dona 502 o 504 sempre, pot
+ser el resoledor del runtime (502 si falla de seguida; 504 si no respon dins
+dels 6 s del salt, que compartixen la resolució i la baixada). Una adreça de
+fora, mai sense resoldre.
+Les redireccions d'una font del sistema, només dins del mateix host, en
+`https:` i sense port (abans, una redirecció podia canviar-lo). `youtu.be` no
+hi és: cap feed ni cap imatge del catàleg no hi viu.
+
 Risc residual, que el Mestre ha de tancar ABANS d'encendre les personals: el
 nom pot canviar de resposta entre la comprovació i la baixada (DNS
 rebinding); el `fetch` de Deno torna a resoldre i la IP no es pot fixar sense
@@ -1399,7 +1442,9 @@ tanquen. Ho tanca un egrés aïllat a la plataforma (que la funció només puga
 eixir a Internet pública, mai a la xarxa interna ni a les metadades). Les
 imatges de fora del catàleg porten el mateix risc: per això estan apagades
 per defecte (`SDP_NOTICIES_IMATGES_EXTERNES`, R6 L-12) i s'encenen en les
-mateixes condicions que les personals. Que
+mateixes condicions que les personals. Per als hosts aprovats (T1), el
+rebinding només el podria fer qui controlara el DNS d'un nom aprovat, i també
+el tanca l'egrés aïllat. Que
 `Deno.resolveDns` hi siga al runtime de Supabase no s'ha verificat ací (cap
 CLI de Supabase ni de Deno en este equip); si no hi és, les personals i les
 imatges de fora del catàleg es queden tancades soles.

@@ -153,3 +153,18 @@ test('revisió de P4 · el motiu de la preparada segueix la seua creació', () =
   // El mode local continua manant.
   expect(bloqueigDeNota({ preparada: 'error', modeLocal: true })).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL });
 });
+
+/* T3 (261024_1800, P2-11) · Cap text del selector diu el jargó intern «MAS» (el salfumant de /connectar):
+   ni la nota ni la connexió, ni les etiquetes, les accions, les descripcions o els avisos. */
+test('T3 · cap text del selector de visibilitat diu «MAS»; la privada diu a qui és visible', () => {
+  const textos = (objecte) => Object.values(objecte || {}).flatMap((valor) => (typeof valor === 'string' ? [valor] : (valor && typeof valor === 'object' ? textos(valor) : [])));
+  for (const connexio of [false, true]) {
+    const tots = textos(textosAmbDrets(textosDeNota({ connexio }), true));
+    expect(tots.length, `connexio=${connexio}`).toBeGreaterThan(8);
+    for (const text of tots) expect(text, text).not.toMatch(/\bMAS\b/i);
+    expect(textosDeNota({ connexio }).privada.etiqueta).toMatch(/\(només visible per a tu\)$/);
+  }
+  expect(textosDeNota().privada.etiqueta).toBe('Privada (només visible per a tu)');
+  expect(textosDeNota({ connexio: true }).privada).toMatchObject({ etiqueta: 'Privat (només visible per a tu)', accio: 'Deixar-lo privat' });
+  expect(textosDeNota({ connexio: true }).irreversible).toBe('Una vegada al Mur, encara no es pot retirar: el podràs actualitzar, però no tornar a fer privat.');
+});

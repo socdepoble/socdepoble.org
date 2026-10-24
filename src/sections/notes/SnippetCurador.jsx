@@ -23,7 +23,7 @@
  * targetes (GrupOpcions, el patró de «Privacitat de la connexió» de
  * /connectar), el «Bloc de notes» (per defecte: tot el que hi ha davall és
  * el d'abans) o el «Lector de notícies». Amb el Lector: el nom proposat (el
- * títol o el domini), la categoria del poble (les del port del Lector) i
+ * títol o el domini), la categoria al Lector (les del seu port) i
  * «Afegir al Lector», que l'apunta com una font personal PENDENT DEL
  * CONNECTOR (l'app no baixa res: Model B) i porta a la gestió de fonts del
  * Lector. Sense destinació resolta (l'app apagada, sense port, o el mòdul
@@ -115,7 +115,9 @@ const OPCIONS_DESTI = Object.freeze([
 ]);
 const AJUDA_LECTOR = 'L’app no baixa res per ella mateixa: la font queda pendent del connector fins que l’amfitrió o el servidor la servisquen.';
 const NOTA_LECTOR = 'Arriba al Lector com una font teua, només en este dispositiu.';
-const AJUDA_CATEGORIA = 'Les categories del poble al Lector. Pots deixar-la sense.';
+/* T3 (261024_1800, P2-11) · Les categories del Lector ja no són «del poble» (són les dels referents
+   del §23: coneixement obert i vídeos per a aprendre): l'etiqueta diu on va, no d'on venia. */
+const AJUDA_CATEGORIA = 'Les categories del Lector de notícies. Pots deixar-la sense.';
 const SENSE_CATEGORIA = Object.freeze({ valor: '', etiqueta: 'Sense categoria' });
 /* Correcció SN-R1 · Només per a fallades de pas (el mòdul o el port no han
    respost): una app sense destinació ja no arriba ací, no s'oferix. */
@@ -364,7 +366,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
                         }}
                       />
                     </Camp>
-                    <Camp etiqueta="Categoria del poble" ajuda={AJUDA_CATEGORIA} error={errorCamp?.categoria}>
+                    <Camp etiqueta="Categoria al Lector" ajuda={AJUDA_CATEGORIA} error={errorCamp?.categoria}>
                       <Selector
                         opcions={[SENSE_CATEGORIA, ...lector.categories.map((c) => ({ valor: c.id, etiqueta: c.nom }))]}
                         value={categoriaTriada}

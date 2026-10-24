@@ -107,6 +107,7 @@
     "porta:segella:update": "node tooling/gates/segella.mjs --update",
     "brain:cens": "node tooling/brain/cens_cromatic.mjs",
     "test:unit": "vitest run --maxWorkers=2",
+    "test:precommit": "vitest run -c vitest.precommit.config.js && node --test tests/fortificacio.test.mjs tests/dist-secrets.test.mjs tests/migracio-*.test.mjs tests/tractor-rls-realtime.test.mjs tests/xat_f0_migracio.test.mjs tests/documental.test.mjs tests/porta-reflex.test.mjs",
     "test:ci": "node tooling/tests/run-node-tests.mjs --ci",
     "test:node:inventory": "node tooling/tests/run-node-tests.mjs --list",
     "test:node:laboratory": "node tooling/tests/run-node-tests.mjs --suite laboratory",

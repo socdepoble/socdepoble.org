@@ -121,8 +121,10 @@ const NOTA = Object.freeze({
     accio: 'Publicar al Mur',
     accioIgual: 'Actualitzar al Mur',
   }),
+  /* T3 (261024_1800, P2-11) · Sense el jargó intern «MAS» (el mateix salfumant de /connectar):
+     la persona veu «privada» i a qui, no el nom de la peça. */
   privada: Object.freeze({
-    etiqueta: 'Privada al teu MAS',
+    etiqueta: 'Privada (només visible per a tu)',
     explicacio: 'Amb el candau, només la veus tu al teu Bloc: escriu i prova el que vulgues.',
     accio: 'Deixar-la privada',
     accioIgual: 'Deixar-la privada',
@@ -136,7 +138,7 @@ const CONNEXIO = Object.freeze({
   titol: 'Qui pot vore este contingut?',
   /* D4 (excepció del Mestre, 260930) · la connexió s'obri a l'editor: és una
      còpia editable, però l'obra continua sent d'altri i es cita en compartir. */
-  descripcio: 'És contingut d’altri: al teu MAS el llegixes i el canvies de carpeta, i el pots editar com una còpia teua; compartir-lo el porta al teu Mur citant-ne l’origen i l’autoria.',
+  descripcio: 'És contingut d’altri: a les teues notes el llegixes i el canvies de carpeta, i el pots editar com una còpia teua; compartir-lo el porta al teu Mur citant-ne l’origen i l’autoria.',
   llegenda: 'Visibilitat del contingut',
   publica: Object.freeze({
     etiqueta: 'Compartit al teu Mur',
@@ -147,14 +149,15 @@ const CONNEXIO = Object.freeze({
     accio: 'Compartir al Mur',
     accioIgual: 'Actualitzar al Mur',
   }),
+  /* T3 (261024_1800, P2-11) · Com la nota, sense «MAS»: el contingut és privat i només el veus tu. */
   privada: Object.freeze({
-    etiqueta: 'Només al teu MAS',
+    etiqueta: 'Privat (només visible per a tu)',
     explicacio: 'Amb el candau, només el veus tu, ordenat i etiquetat al teu Bloc.',
-    accio: 'Deixar-lo al MAS',
-    accioIgual: 'Deixar-lo al MAS',
+    accio: 'Deixar-lo privat',
+    accioIgual: 'Deixar-lo privat',
   }),
   reversible: null,
-  irreversible: 'Una vegada al Mur, encara no es pot retirar: el podràs actualitzar, però no tornar a deixar-lo només al MAS.',
+  irreversible: 'Una vegada al Mur, encara no es pot retirar: el podràs actualitzar, però no tornar a fer privat.',
   avisPublica: null,
 });
 
