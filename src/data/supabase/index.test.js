@@ -48,6 +48,10 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(teCapacitat('moderacio')).toBe(true);
   expect(teCapacitat('normesConvivencia')).toBe(true);
   for (const nom of [...CAPACITATS.moderacio, ...CAPACITATS.normesConvivencia]) expect(typeof supabase[nom], nom).toBe('function');
+  /* T6b (IDEA-14; decisió del Mestre, 261024) · «Connectar / Seguir» (migració 2610241430). */
+  expect(presents).toEqual(expect.arrayContaining(['seguiments']));
+  expect(teCapacitat('seguiments')).toBe(true);
+  for (const nom of CAPACITATS.seguiments) expect(typeof supabase[nom], nom).toBe('function');
   /* Fase D (261020, tasca 1) · entrar amb el testimoni del full natiu d'Apple o de Google. */
   expect(presents).toEqual(expect.arrayContaining(['entradaAmbToken']));
   expect(teCapacitat('entradaAmbToken')).toBe(true);

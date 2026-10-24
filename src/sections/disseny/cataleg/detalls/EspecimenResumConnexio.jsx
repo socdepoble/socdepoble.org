@@ -7,15 +7,17 @@ import { Llinatge } from '../Llinatge.jsx';
 const res = () => {};
 
 /* T43 (ordre del Mestre, 260928) · La visibilitat d'una connexió i el resum
-   del que s'ha fet de veres. Dades fixes: cap context ni xarxa. */
-const MAS = { clau: 'mas', nom: 'El teu MAS', estat: 'fet', detall: 'Connectada a «Safata d’Entrada».' };
+   del que s'ha fet de veres. Dades fixes: cap context ni xarxa.
+   261024 correccions (directiva del Mestre 15:05, Gemini G2-02) · els textos
+   de la vista, sense «MAS»: «Les teues notes». */
+const MAS = { clau: 'mas', nom: 'Les teues notes', estat: 'fet', detall: 'Connectada a «Safata d’Entrada».' };
 const CASOS = [
   ['Tot enviat', [MAS, { clau: 'p1', nom: 'Toni Ferrer', estat: 'fet', detall: 'Enviat per xat.' }]],
   ['Un enviament fallat', [MAS,
     { clau: 'g1', nom: 'Comissió de Festes', estat: 'fet', detall: 'Enviat per xat.' },
     { clau: 'g2', nom: 'La Torre', estat: 'error', detall: 'No s’ha enviat. El trobaràs al xat per a tornar-ho a provar.' }]],
   ['Tot el poble: falta un pas', [MAS,
-    { clau: 'mur', nom: 'El teu mur', estat: 'pendent', detall: 'Obri la connexió al teu MAS i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' }]]
+    { clau: 'mur', nom: 'El teu mur', estat: 'pendent', detall: 'Obri la connexió a les teues notes i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' }]]
 ];
 const GRUPS = [{ id: 'g1', nom: 'Comissió de Festes' }];
 
@@ -24,11 +26,11 @@ export default function EspecimenResumConnexio() {
     <>
     <Llinatge id="resum-connexio" />
     <Especimen id="resum-connexio" nom="ResumConnexio · qui ho pot vore i què s’ha fet" fitxer="src/sections/connectar/ResumConnexio.jsx"
-      descripcio="Connectar crea sempre una nota privada al MAS de la persona, a la Safata d’Entrada si no se’n tria una altra carpeta. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des de la connexió, al MAS, amb «Compartir al Mur»; la llig la gent registrada del poble, no Internet). Després de connectar, el resum diu fila per fila què s’ha fet."
+      descripcio="Connectar crea sempre una nota privada a les notes de la persona, a la Safata d’Entrada si no se’n tria una altra carpeta. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups de xat (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des de la connexió, a les notes, amb «Compartir al Mur»; la llig la gent registrada del poble, no Internet). Després de connectar, el resum diu fila per fila què s’ha fet."
       contracte={[
-        ['resultats', "[{ clau, nom, estat: 'fet' | 'error' | 'pendent', detall? }]", '[]', 'Una fila per destinatari. La primera sol ser «El teu MAS».'],
+        ['resultats', "[{ clau, nom, estat: 'fet' | 'error' | 'pendent', detall? }]", '[]', 'Una fila per destinatari. La primera sol ser «Les teues notes».'],
         ['titol', 'string', 'segons el pitjor estat', "Si no ve: «Connectat», «Connectat, però no tot s’ha enviat» o «Connectat: et falta un pas»."],
-        ['accions', 'node', 'null', 'Botons de l’Alerta (p. ex. «Obrir la connexió al teu MAS»).'],
+        ['accions', 'node', 'null', 'Botons de l’Alerta (p. ex. «Obrir la connexió a les teues notes»).'],
         ['opcionsDAbast({ dataMode, teSessio, grups })', 'funció pura', '—', 'Les quatre opcions de GrupOpcions amb el motiu de les desactivades.'],
       ]}
       a11y={['L’Alerta és role="status": s’anuncia sense interrompre.', 'L’estat de cada fila es llig en text («Fet», «No enviat», «Pendent»); la icona és decorativa (aria-hidden).', 'Una opció desactivada diu per què en el seu detall, que forma part de la descripció del ràdio.']}
@@ -46,7 +48,7 @@ export default function EspecimenResumConnexio() {
       {CASOS.map(([titol, resultats]) => (
         <div key={titol}>
           <h4>{titol}</h4>
-          <ResumConnexio resultats={resultats} accions={<Boto varietat="primari" onClick={res}>Obrir la connexió al teu MAS</Boto>} />
+          <ResumConnexio resultats={resultats} accions={<Boto varietat="primari" onClick={res}>Obrir la connexió a les teues notes</Boto>} />
         </div>
       ))}
     </Especimen>

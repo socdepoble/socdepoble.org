@@ -5,7 +5,8 @@
  * Snippet Curador del Bloc). Viu només en este dispositiu, en un registre a
  * banda de l'estat, i queda PENDENT DEL CONNECTOR: l'app no baixa res per
  * ella mateixa (Model B). Quan l'amfitrió o el servidor la servisquen, les
- * seues notícies entraran pel port com les de qualsevol altra font.
+ * seues notícies entraran pel port com les de qualsevol altra font (T5b,
+ * 261024: el servei de notícies del poble ja ho fa, fontRemota.js).
  *
  *   font personal { id, nom, url, categoriaId }
  *     id           determinista per l'adreça: «meva-<16 hex>» (ids.js). La
@@ -34,7 +35,8 @@ export const MOTIUS_PERSONAL = Object.freeze({
     text: `Només es poden afegir adreces web (http o https), sense usuari ni contrasenya i de ${MAX_URL} caràcters com a màxim.`
   }),
   nom: Object.freeze({ camp: 'nom', text: 'Cal un nom per a la font.' }),
-  categoria: Object.freeze({ camp: 'categoria', text: 'Esta categoria no és del poble: tria’n una de la llista.' }),
+  /* Gemini G2-02.1 (261024) · Les categories són les del catàleg de fonts, no «del poble». */
+  categoria: Object.freeze({ camp: 'categoria', text: 'Esta categoria no és del catàleg de fonts: tria’n una de la llista.' }),
   repetida: Object.freeze({ camp: null, text: 'Esta font ja és al teu Lector.' }),
   plena: Object.freeze({ camp: null, text: `El Lector admet ${LIMITS_PERSONALS.fonts} fonts teues com a màxim: lleva’n alguna abans.` }),
   /* Correcció SN-R2 · Sense base local (navegació privada, dades del lloc

@@ -130,6 +130,8 @@ test('D1 · es pot triar una altra carpeta i afegir etiquetes; el botó i el toa
   expect(to).toBe('success');
   expect(text).toContain('«Mur»');
   expect(text).not.toContain(SAFATA);
+  /* 261024 correccions (Gemini G2-02) · el toast diu «a les teues notes», mai «MAS». */
+  expect(text).toBe('Element connectat a les teues notes: el trobaràs a «Mur».');
 });
 
 /* Correcció C16 (260928) · WCAG 2.4.3: cap dels tres camins deixa el focus al <body>. */
@@ -282,7 +284,7 @@ test('T43 · la vista diu què es connecta i que la connexió és personal, tamb
   expect(container.querySelector('header.page-title h1').textContent).toBe('Connectar');
   expect(container.querySelector('header.bar-blue .btn-connectar')).toBeNull();
   expect(screen.getByText('Producte del Mercat')).toBeTruthy();
-  expect(screen.getByText('Es connecta al MAS de Pepa Soler.')).toBeTruthy();
+  expect(screen.getByText('Es connecta a Pepa Soler.')).toBeTruthy();
   expect(screen.getByText('Actues com a Forn de la Torre, però les connexions són personals.')).toBeTruthy();
 });
 
@@ -293,7 +295,8 @@ test('T43 · les opcions diuen la veritat: en seed «Tot el poble» està desact
   const poble = screen.getByRole('radio', { name: 'Tot el poble' });
   expect(poble.disabled).toBe(true);
   expect(screen.getByText('Sense servidor no es pot compartir al Mur.')).toBeTruthy();
-  expect(screen.getByRole('radio', { name: 'Grups' }).disabled).toBe(true);
+  /* Actualitzada a posta (261024 T6a): l'opció es diu «Grups de xat» (IDEA-14), per no confondre-la amb les entitats de tipus grup. */
+  expect(screen.getByRole('radio', { name: 'Grups de xat' }).disabled).toBe(true);
   expect(screen.getByRole('radio', { name: 'Persones concretes' }).disabled).toBe(false);
 });
 
@@ -320,7 +323,10 @@ test('T43 · persones concretes: tria del padró, desa la tria, envia l’enlla�
   expect(mocks.update.mock.calls[0][1].origen.abast.aplicat).toMatchObject({ persones: ['u1'] });
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(screen.getByRole('status').textContent).toContain(`Connectada a «${SAFATA}».`);
-  fireEvent.click(screen.getByRole('button', { name: 'Obrir la connexió al teu MAS' }));
+  /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS» a la interfície. */
+  expect(screen.getByRole('status').textContent).toContain('Les teues notes');
+  expect(screen.getByRole('status').textContent).not.toMatch(/\bMAS\b/);
+  fireEvent.click(screen.getByRole('button', { name: 'Obrir la connexió a les teues notes' }));
   expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true });
 });
 
@@ -333,7 +339,8 @@ test('T43 · grups de xat: només els grups on ja eres, i una fallada es diu per
   ];
   mocks.xat.sendChatMessage.mockImplementation(async (fil) => (fil.id === 'g2' ? [] : [{ id: 'm' }]));
   render(<ConnectarSection />);
-  fireEvent.click(screen.getByRole('radio', { name: 'Grups' }));
+  /* Actualitzada a posta (261024 T6a): «Grups de xat» (IDEA-14). */
+  fireEvent.click(screen.getByRole('radio', { name: 'Grups de xat' }));
   expect(screen.queryByRole('checkbox', { name: 'Pepa' })).toBeNull();
   expect(screen.queryByRole('checkbox', { name: 'Sóc de Poble' })).toBeNull();
   fireEvent.click(screen.getByRole('checkbox', { name: 'Comissió de Festes' }));
@@ -350,7 +357,8 @@ test('T43 · grups de xat: només els grups on ja eres, i una fallada es diu per
 test('T43a-2 · «Grups» diu si el xat carrega o ha fallat, i no promet que no n’hi ha cap', () => {
   mocks.xat.status = 'loading';
   const vista = render(<ConnectarSection />);
-  expect(screen.getByRole('radio', { name: 'Grups' }).disabled).toBe(true);
+  /* Actualitzada a posta (261024 T6a): «Grups de xat» (IDEA-14). */
+  expect(screen.getByRole('radio', { name: 'Grups de xat' }).disabled).toBe(true);
   expect(screen.getByText('Carregant els teus grups de xat…')).toBeTruthy();
   expect(screen.queryByText('Encara no eres en cap grup de xat.')).toBeNull();
   vista.unmount();
@@ -370,8 +378,10 @@ test('T43 · tot el poble (remot amb sessió): connecta, no publica sol i diu qu
   const avis = screen.getByText(/El Mur el llig la gent registrada del poble, no Internet/, { selector: '.sdp-alerta__text' });
   expect(avis.textContent).toContain('prem «Compartir al Mur»');
   expect(avis.textContent).not.toContain('prem «Compartir»');
+  /* Actualitzada a posta (261024 correccions): «a les teues notes», sense «MAS» (Gemini G2-02). */
+  expect(avis.textContent).toContain('obri-la a les teues notes');
   fireEvent.click(screen.getByRole('button', { name: CONNECTA }));
-  const obrir = await screen.findByRole('button', { name: 'Obrir la connexió al teu MAS' });
+  const obrir = await screen.findByRole('button', { name: 'Obrir la connexió a les teues notes' });
   expect(mocks.crea.mock.calls[0][0].origen.abast).toEqual({ mode: 'poble', persones: [], grups: [] });
   expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
   expect(mocks.update).not.toHaveBeenCalled();
@@ -556,7 +566,8 @@ test('D1 · amb sessió i el Bloc carregant, el contingut de fora també espera 
    el peu ja no diu que només es llig ni que les etiquetes es trien ara. */
 test('D4 · el peu diu el que es podrà fer al MAS: llegir-la i editar-la com una nota teua', () => {
   render(<ConnectarSection />);
-  const nota = screen.getByText(/Al teu MAS la llegiràs/);
+  /* Actualitzada a posta (261024 correccions): «A les teues notes», sense «MAS» (Gemini G2-02). */
+  const nota = screen.getByText(/A les teues notes la llegiràs/);
   expect(nota.textContent).toContain('editar');
   expect(nota.textContent).not.toMatch(/etiquetar|compartir|tria-les ara/);
 });

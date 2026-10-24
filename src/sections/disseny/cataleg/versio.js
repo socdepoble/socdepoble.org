@@ -15,7 +15,17 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenCercaFiltres.jsx, 2026-10-22T22:48:40+02:00, pla 261022_1955
+ * Darrera posada al dia: EspecimenIdentitat.jsx, 2026-10-24T14:14:07+02:00, pla 261024_1315 (T6a,
+ * IDEA-14; auditoria Gemini 261024, G-04): administrar no és connectar. La mostra 'pot-connectar'
+ * amb revisió diu «Pot demanar administrar-la (amb revisió)», com el botó «Demanar administrar-la»
+ * de TargetaAdministrar, i el «No facis» deixa de dir «connectar» a administrar una organització
+ * (connectar és el MAS; formar-ne part, un altre camí). La posa al dia la integració del mateix pla:
+ * l'espècimen es va tocar després de la versió de T4. Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenVisorImatges.jsx, 2026-10-24T14:10:56+02:00, pla 261024_1315 (T4,
+ * P1-06; auditoria Gemini 261024, G-01): «Tancar» del visor és la ✕ i un clic al fons fosc buit
+ * també tanca (motiu 'vel'); la capçalera, la descripció, la fila obert / onTanca del contracte i
+ * la primera regla d'accessibilitat ho diuen. Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenCercaFiltres.jsx, 2026-10-22T22:48:40+02:00, pla 261022_1955
  * (Cercador Universal, T3): la mostra «Una font ha fallat» és ara una font que no ha respost a
  * temps (el directori d'entitats), perquè el padró tancat d'un foraster (SDP-XAT-003) ja no pinta
  * cap avís. Cap espècimen ni entrada de manifest nous.
@@ -190,4 +200,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-22T22:48:40+02:00';
+export const VERSIO_CATALEG = '2026-10-24T14:14:07+02:00';

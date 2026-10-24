@@ -308,15 +308,25 @@ const macDelSeedSql = () => {
   }
   return null;
 };
-const MAC_CRU = macDelSeedSql();
+/* Actualitzada a posta (261024, P1-10): des de 2e230dd9c (261023) la fila del
+   seed.sql ja porta author_avatar. El cas que es protegix continua sent la fila
+   CRUA sense author_avatar (la que pot servir app_content en remot), i ara es
+   deriva explícitament de la del seed; la del seed es prova a part. */
+const MAC_SEED = macDelSeedSql();
+const { author_avatar: AVATAR_DEL_SEED, ...MAC_CRU } = MAC_SEED ?? {};
 const variantsDelMacCru = () => [
-  ['la fila crua del seed.sql', MAC_CRU],
+  ['la fila del seed.sql, amb author_avatar', MAC_SEED],
+  ['la fila crua del seed.sql sense author_avatar', MAC_CRU],
   ['la fila crua amb el quadrat verd a avatar_url', { ...MAC_CRU, avatar_url: QUADRAT_VERD_SVG }],
   ['la fila crua amb el logotip PNG a avatar_url', { ...MAC_CRU, avatar_url: LOGO }],
   ['la fila crua sense cap avatar', { ...MAC_CRU, avatar_url: undefined }]
 ];
 
-test('la fila crua del Mac Mini al seed.sql no porta author_avatar (és el cas que es protegix)', () => {
+test('la fila del Mac Mini al seed.sql porta la foto de la pilot a author_avatar, i la crua que es protegix no en porta', () => {
+  expect(MAC_SEED).toMatchObject({ id: 'mac-mini-m4', author_name: 'Javi Llinares', author_id: 'javillinares' });
+  /* És la foto de la pilot (el seed porta el bessó WebP del .jpg), mai el logotip. */
+  const senseFormat = (ruta) => String(ruta).replace(/\.(?:webp|jpe?g|png)$/, '');
+  expect(senseFormat(AVATAR_DEL_SEED)).toBe(senseFormat(PERSONA_PILOT.avatar));
   expect(MAC_CRU).toMatchObject({ id: 'mac-mini-m4', author_name: 'Javi Llinares', author_id: 'javillinares' });
   expect(MAC_CRU).not.toHaveProperty('author_avatar');
 });

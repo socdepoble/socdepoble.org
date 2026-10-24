@@ -293,8 +293,14 @@ test('F7 · el catàleg supabase/README.md la nomena després de 2610211715 i ab
   expect(entrada).toMatch(/va ABANS de publicar el\s+client/);
   expect(entrada).toContain(GRANT_SERVEI);
   const prosa = SENSE_ESPAIS(entrada);
+  /* Actualitzada a posta (261024 integració del pla 261024_1315): el worker
+     amb service_role ja existix (T8, supabase/functions/purga-fitxers): la
+     frase apunta a la secció «Funció `purga-fitxers`» i diu que no corre fins
+     que el Mestre la desplega i la programa. */
+  expect(prosa).not.toContain('que encara no existix');
   for (const text of ['2609261500', '2609282100', '2610081543', 'sdp-xat-903', '`022`', 'la durada del vídeo i de la veu és la que declara el client',
-    'el worker amb `service_role`, que encara no existix', 'continuen comptant en la quota', 'envia multipart i storage el rebutja amb 403',
+    'el worker amb `service_role`, la funció `purga-fitxers` (vegeu «funció `purga-fitxers`» al final;',
+    'fins que el mestre no la desplega i la programa, no corre', 'continuen comptant en la quota', 'envia multipart i storage el rebutja amb 403',
     'la llista de converses en diu «cap missatge.»', 'el disparador `private.xat_escriptura_final`', 'node tests/xat-multimedia-postgres.audit.mjs',
     "select cron.schedule('sdp-neteja-xat-adjunts', '23 * * * *', $cron$select private.xat_neteja_adjunts(500)$cron$);"]) {
     expect(prosa, text).toContain(text.toLowerCase());

@@ -53,8 +53,9 @@ const CARPETA_DE_PROVA = path.join(ARREL, 'src/apps/plataforma/__fixtures__/modu
 const sri384 = (text) => `sha384-${createHash('sha384').update(text).digest('base64')}`;
 const NOMES_ASCII = /^[\u0000-~]*$/;
 /* El rang que demana un mòdul compilat contra este nucli. Actualitzat a posta (261016): l'1.2.0,
-   que afig la porta 'workspace'; abans, l'1.1.0 de l'Onada 7. */
-const RANG = '^1.2';
+   que afig la porta 'workspace'; abans, l'1.1.0 de l'Onada 7.
+   Actualitzada a posta (261024 T5): l'1.3.0, que afig useServeiNoticies a la porta 'plataforma'. */
+const RANG = '^1.3';
 
 describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => {
   test.each(['gestoria', 'bar', 'salut', 'nevera', 'lector'])('%s: dada pura, sense carrega, i el manifest de mòdul és vàlid', (id) => {
@@ -72,7 +73,7 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
-    expect(VERSIO_NUCLI).toBe('1.2.0');
+    expect(VERSIO_NUCLI).toBe('1.3.0');
     expect(rangDelNucli()).toBe(RANG);
     expect(rangDelNucli('1.4.2')).toBe('^1.4');
   });
@@ -385,11 +386,13 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
    càrrega; el pont del Lector, que importa la llavor): la prova mira de veres eixa part de l'arbre.
    `nous`: noms que el cos compilat importa i que el nucli 1.0.0 no exposava (per això no passava).
    `workspace` (nucli 1.2.0, 261016): els de la porta de l'espai de treball; només el Lector, que
-   munta el flux de Notícies sobre UniversalWorkspace per la seua façana. */
+   munta el flux de Notícies sobre UniversalWorkspace per la seua façana.
+   `plataforma` (nucli 1.3.0, 261024, T5): el nom que l'1.3.0 afig a la porta de la plataforma;
+   només el Lector, que llig el servei de notícies (useServeiNoticies). */
 const APPS_DE_LA_FASE_1 = Object.freeze({
   bar: Object.freeze({
     base: 'sdp-bar',
-    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'], workspace: [] },
+    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'], workspace: [], plataforma: [] },
     llavor: {
       fitxers: ['src/apps/bar/llavors/laParroquia.js', 'src/apps/bar/llavors/la-parroquia-loyverse.csv'],
       textos: ['Vendido por peso', 'b5-malibu'],
@@ -398,17 +401,25 @@ const APPS_DE_LA_FASE_1 = Object.freeze({
   }),
   nevera: Object.freeze({
     base: 'sdp-nevera',
-    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'], workspace: [] },
+    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'], workspace: [], plataforma: [] },
     llavor: { fitxers: [], textos: [], viatja: [] }
   }),
   salut: Object.freeze({
     base: 'sdp-salut',
-    nous: { router: [], pedraSeca: ['Fila', 'GraellaArticles', 'LlistaArticles', 'Pila'], workspace: [] },
+    nous: { router: [], pedraSeca: ['Fila', 'GraellaArticles', 'LlistaArticles', 'Pila'], workspace: [], plataforma: [] },
     llavor: { fitxers: [], textos: [], viatja: [] }
   }),
+  /* Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, la pàgina de fonts se'n va
+     amb les seues targetes (NavTargetes, sobre GraellaTargetes) i amb l'esquelet comú de catàleg i
+     col·lecció (ColumnaCataleg, useVistesEsquelet, que portava useRouter): el Lector ja no importa ni
+     GraellaTargetes ni useRouter (la Nevera i l'esquelet comú continuen fent-los servir,
+     guardesDelModul.test.js). */
   lector: Object.freeze({
     base: 'sdp-lector',
-    nous: { router: ['useRouter'], pedraSeca: ['GraellaTargetes', 'LiniesColleccio', 'MarcColumna'], workspace: ['UniversalWorkspace'] },
+    nous: {
+      router: [], pedraSeca: ['LiniesColleccio', 'MarcColumna'], workspace: ['UniversalWorkspace'],
+      plataforma: ['useServeiNoticies']
+    },
     llavor: {
       fitxers: ['src/apps/lector/llavor/'],
       textos: ['example.org', 'Club de Pilota del Trinquet', 'Colla de Dimonis'],
@@ -463,10 +474,11 @@ describe.each(Object.keys(APPS_DE_LA_FASE_1))(`Onada 7 · %s compilat com a mòd
     expect(moduls()).toEqual(expect.arrayContaining([`src/apps/${id}/magatzem.js`, 'src/utils/magatzemLocal.js']));
   });
 
-  test('la porta mira de veres: el cos importa noms que l’1.1.0 i l’1.2.0 afigen al nucli, i el nucli els exposa', () => {
+  /* Actualitzada a posta (261024 T5): també el nom de l'1.3.0 (useServeiNoticies, el Lector). */
+  test('la porta mira de veres: el cos importa noms que l’1.1.0, l’1.2.0 i l’1.3.0 afigen al nucli, i el nucli els exposa', () => {
     for (const [font, noms] of [
       ['src/app/contexts/RouterContext.jsx', nous.router], ['src/components/PedraSeca/index.js', nous.pedraSeca],
-      ['src/components/universal/workspace/index.js', nous.workspace]
+      ['src/components/universal/workspace/index.js', nous.workspace], ['src/apps/plataforma/index.js', nous.plataforma]
     ]) {
       expect(cos.importedBindings[font] || [], font).toEqual(expect.arrayContaining(noms));
       for (const nom of noms) expect(exposaElNom(portaDeLaFont(font), nom), nom).toBe(true);

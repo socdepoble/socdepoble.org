@@ -10,7 +10,7 @@ export const legalContent = {
     { "text": "RGPD i LSSI-CE", "className": "sdp-badge-category" }
   ],
   "html": `
-    <p><em>Versió 2.1 · En vigor des del 16 d'octubre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
+    <p><em>Versió 2.2 · En vigor des del 24 d'octubre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
 
     <h3>0. Com llegir aquest document</h3>
     <p>Ací dins hi ha quatre coses, en aquest ordre. Primer, <strong>l'avís legal</strong>: qui hi ha darrere d'aquesta web i de què respon. Segon, la <strong>política de privacitat</strong>: què fem amb les teues dades i quins drets tens. Tercer, l'<strong>emmagatzematge al teu dispositiu</strong>: què deixem al teu navegador i per què. I quart, els <strong>reconeixements</strong>: les fonts, comunitats i divulgadors dels quals ens nodrim i aprenem.</p>
@@ -33,13 +33,15 @@ export const legalContent = {
       <strong>Correu electrònic de contacte:</strong> <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>
     </p>
     <p>No s'ha designat Delegat de Protecció de Dades perquè aquest tractament no encaixa en cap dels tres supòsits de l'article 37.1 del RGPD. Per a qualsevol qüestió de dades, el contacte és el correu de dalt.</p>
+    <p><strong>Qui és «nosaltres».</strong> En aquest text, quan diem «nosaltres» o «el responsable», o parlem en primera persona del plural, ens referim a la persona titular que acabem d'identificar. «Sóc de Poble» és el nom del projecte i de l'aplicació: quan diem que Sóc de Poble fa alguna cosa o es compromet a fer-la, qui ho fa i qui en respon és aquesta mateixa persona.</p>
+    <p><strong>Punt únic de contacte.</strong> Els articles 11 i 12 del Reglament (UE) 2022/2065, de Serveis Digitals, ens obliguen a tindre un punt únic de contacte. El nostre és el correu <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>. Hi poden escriure les autoritats dels Estats membres, la Comissió Europea i la Junta Europea de Serveis Digitals, i també tu. Ens pots escriure en valencià, en castellà o en anglés. Aquest correu l'atén una persona: no depén només d'eines automàtiques.</p>
 
     <h4>2. Com funciona això, de veritat</h4>
     <p>Volem ser francs, perquè hi ha molt de màrqueting tecnològic que promet coses que no compleix. <strong>Sóc de Poble és una aplicació connectada.</strong> Concretament:</p>
     <ul>
       <li>Necessita connexió a internet per a funcionar. Sense cobertura, no funciona.</li>
       <li>Les teues dades s'emmagatzemen en <strong>servidors nostres allotjats a proveïdors externs</strong> (els trobaràs nomenats a l'apartat 11). No viuen al teu telèfon.</li>
-      <li>El teu navegador guarda algunes coses tècniques xicotetes, que t'enumerem una per una a l'apartat 21. Cap d'elles és la teua informació del poble: això és al servidor.</li>
+      <li>El teu navegador guarda algunes coses tècniques xicotetes, que t'enumerem una per una a l'apartat 20. Cap d'elles és la teua informació del poble: això és al servidor.</li>
     </ul>
     <p><strong>Cap on volem anar (i açò no és una promesa legal).</strong> L'horitzó del projecte és la sobirania tecnològica rural, amb arquitectures on cada poble controle la seua pròpia infraestructura. Hui no és així i no volem que cap frase bonica t'ho faça creure. Quan canvie, canviarem aquest text abans, no després.</p>
 
@@ -47,7 +49,24 @@ export const legalContent = {
     <p>Entrar i utilitzar Sóc de Poble et dona la condició d'Usuari i implica que acceptes aquest text sencer. Si no l'acceptes, no utilitzes l'aplicació.</p>
     <p>La finalitat de la plataforma és servir d'espai de comunicació, intercanvi d'informació, preservació etnogràfica i cohesió per a les comunitats rurals. Et compromets a fer-la servir per a això i a no publicar continguts il·lícits, ofensius, ni dades personals d'altres persones sense el seu permís.</p>
     <p><strong>Edat mínima: 14 anys</strong>, d'acord amb l'article 7 de la Llei Orgànica 3/2018 (LOPDGDD). Si tens menys de 14 anys, necessites que et done d'alta la persona que exercisca la teua pàtria potestat o tutela. Si detectem un compte d'una persona menor de 14 anys sense aquest consentiment, el donarem de baixa.</p>
-    <p>Ens reservem el dret de suspendre l'accés a qui incomplisca aquestes condicions, avisant-lo prèviament sempre que siga possible.</p>
+    <p>Si incompleixes aquestes condicions, retirarem sempre el contingut que les incompleix. Amb el teu compte, la mesura dependrà de la gravetat i de si es repeteix: un avís, una suspensió temporal o la baixa definitiva; si publiques contingut il·legal greu, et donarem de baixa a la primera. T'ho direm com a molt tard quan apliquem la mesura, com expliquem tot seguit a «Normes de convivència i moderació».</p>
+    <h5>Normes de convivència i moderació</h5>
+    <p>Abans de publicar per primera vegada, et demanem que acceptes les <strong>normes de convivència del poble</strong>:</p>
+    <ul>
+      <li>Respecta les persones: res d'insults, amenaces, assetjament ni discriminació.</li>
+      <li>Res de contingut sexual explícit, violent o il·legal, ni res que pose ningú en perill.</li>
+      <li>Res d'enganys: ni spam, ni estafes, ni suplantar ningú, ni escampar desinformació.</li>
+      <li>Publica només el que és teu o tens permís per a compartir, i respecta la intimitat dels altres.</li>
+    </ul>
+    <p>Així les fem complir, d'acord amb els articles 14, 16, 17 i 18 del Reglament (UE) 2022/2065, de Serveis Digitals:</p>
+    <ul>
+      <li><strong>Denunciar dins de l'aplicació, també sense compte:</strong> toca el botó <strong>⋮</strong> d'una publicació del Mur, del Mercat o de l'Agenda, d'un missatge del xat o de la fitxa d'una persona o d'una entitat, i tria l'opció de denunciar. Després tria el motiu (contingut ofensiu, spam o frau, desinformació o un altre motiu) i, si vols, afegeix-hi un detall. No direm a qui l'ha publicat, ni a la persona denunciada, que la denúncia és teua, llevat que ens hi obligue la llei o un jutjat.</li>
+      <li><strong>Denunciar per correu, també sense compte:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Den%C3%BAncia%20de%20contingut">socdepoble@socdepoble.org</a>. Posa-hi l'enllaç exacte del contingut, per què creus que és il·legal o que incompleix aquestes normes, el teu nom i el teu correu, i una frase que diga que creus de bona fe que el que ens expliques és exacte i complet. Si denuncies abús o explotació sexual de menors, no cal que t'identifiques. Si ens deixes el teu correu, et confirmarem que hem rebut la denúncia i, quan decidim, et direm què hem fet i com pots reclamar.</li>
+      <li><strong>Bloquejar:</strong> amb la sessió oberta, pots bloquejar una persona o una entitat. Deixaràs de veure les seues publicacions al Mur, al Mercat i a l'Agenda i, si és una persona, els seus missatges al xat; si et seguix, tampoc no la veuràs a la teua llista de qui et seguix. Qui bloqueges no en rebrà cap avís. Bloquejar només t'ho amaga a tu: no li impedeix veure el que publiques ni escriure't. Ho pots desfer quan vulgues a <strong>Perfil</strong>, <strong>Privacitat i dades</strong>, o al <strong>Control</strong> del xat, a <strong>Privacitat i seguretat</strong>.</li>
+      <li><strong>Com ho revisem:</strong> cada denúncia la revisa una persona responsable de la moderació, <strong>en menys de 24 hores</strong>. No fem servir cap sistema automàtic per a decidir què es retira. Els únics filtres automàtics són de seguretat, per a evitar abusos: el que impedeix carregar imatges d'altres llocs dins de les publicacions (apartat 21), un límit de missatges al xat en pocs segons i uns límits de denúncies per hora: per a cada compte, per a cada connexió sense compte i, entre totes les denúncies sense compte, un sostre comú. A més, si amb el teu compte ja has denunciat un contingut i aquella denúncia encara està pendent, no se'n guarda una altra. <strong>Tolerància zero amb el contingut:</strong> el contingut que incompleix aquestes normes o la llei el retirem sempre. Amb qui l'ha publicat, la mesura depén de la gravetat i de si es repeteix: un avís, una suspensió temporal del compte o l'expulsió. Qui publica contingut il·legal greu, l'expulsem a la primera. És la mateixa regla que diuen les normes que acceptes a l'aplicació.</li>
+      <li><strong>Si retirem un contingut teu</strong> o limitem el teu compte, t'ho direm al correu del teu compte, com a molt tard quan apliquem la mesura, llevat que la llei ens ho impedisca. Et direm què hem fet, fins quan i on s'aplica (si no diem res més, a tota l'aplicació), quin contingut és, si ho hem sabut per una denúncia o per una revisió nostra, quina norma o quina llei creiem que incompleix i per què, que ho ha decidit una persona i no un sistema automàtic, i que, si no hi estàs d'acord, pots acudir als jutjats.</li>
+      <li><strong>Si hi ha un perill:</strong> si un contingut ens fa sospitar un delicte que posa en perill la vida o la seguretat d'una persona, ho comunicarem de seguida a la policia o a l'autoritat judicial del país afectat o, si no sabem quin és, a la policia d'Espanya o a Europol.</li>
+    </ul>
 
     <h4>4. Propietat intel·lectual i industrial</h4>
     <div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta"><div data-sdp-targeta="pagina:drets-autor" class="sdp-targeta" data-ruta="/page/drets-autor" data-titol="Drets d'autor" data-subtitol="Totes les llicències, explicades amb paraules de poble" data-entradilla="Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra." data-autor="Sóc de Poble" data-autor-ruta="/projecte"><a href="/page/drets-autor" rel="noopener noreferrer nofollow">Drets d'autor</a></div></div>
@@ -73,30 +92,39 @@ export const legalContent = {
 
     <h4>8. Quines dades tractem</h4>
     <ul>
-      <li><strong>Dades d'identificació i accés:</strong> adreça de correu electrònic o número de telèfon amb què inicies sessió i, si entres amb Google, l'identificador que ens retorna aquest servei.</li>
+      <li><strong>Dades d'identificació i accés:</strong> adreça de correu electrònic amb què inicies sessió. Si entres amb Google, l'identificador, el correu, el nom i la foto del teu compte de Google; el nom i la foto els fem servir per a començar el teu perfil, i els pots canviar. Si entres amb Apple, l'identificador que ens retorna Apple, el correu associat (o l'adreça privada de reenviament, si tries amagar-lo) i, la primera vegada, el nom, si decideixes compartir-lo, que posem com a nom del teu perfil i que pots canviar.</li>
       <li><strong>Dades de perfil:</strong> nom o pseudònim, imatge d'avatar i poble al qual pertanys.</li>
       <li><strong>Contingut que publiques:</strong> textos, imatges, notes, publicacions al Mur, anuncis del Mercat i missatges de xat.</li>
+      <li><strong>Seguiments:</strong> a qui seguixes i qui et seguix (persones o entitats), i des de quan.</li>
       <li><strong>Dades tècniques:</strong> adreça IP, data i hora de connexió i tipus de navegador, que queden als registres del servidor.</li>
+      <li><strong>Consentiments i normes:</strong> quan acceptes aquesta política, o dones o retires algun altre consentiment, guardem la data, la versió del text i, quan el servidor els rep, el tipus de navegador i una empremta (<em>hash</em>) de l'adreça IP; també una empremta del teu correu. Una empremta és un codi calculat amb una clau secreta, que guardem en lloc de l'adreça o del correu. Quan acceptes les normes de convivència, guardem la data, la versió de les normes i l'empremta de l'adreça IP. És la prova del teu consentiment.</li>
+      <li><strong>Moderació:</strong> les denúncies que fas (què denuncies, el motiu, el detall que hi afegeixes i una empremta de l'adreça IP, per a frenar abusos; si denuncies per correu, també el teu nom, el teu correu i el que ens hi expliques), les denúncies que altres persones fan sobre tu o sobre el teu contingut, les persones o entitats que bloqueges (amb el nom que tenien quan les vas bloquejar) i els bloquejos que altres persones et fan a tu.</li>
+      <li><strong>Permís d'Apple:</strong> si entres amb Apple a l'aplicació de l'iPhone, el permís que dones a Sóc de Poble des del teu compte d'Apple, guardat xifrat, i la data en què el vam guardar. Només el fem servir per a retirar-lo quan et dones de baixa. Quan el retirem, o si no el podem retirar, en guardem constància amb una empremta del teu compte, no amb el teu identificador: en quin pas es va intentar, el resultat i la data.</li>
+      <li><strong>Si et dones de baixa:</strong> el motiu, si en vols escriure un.</li>
       <li><strong>Consultes a la IAIA MarIA:</strong> el text que li escrius, si decideixes fer-la servir.</li>
     </ul>
     <p>No demanem ni volem dades de categories especials (salut, ideologia, religió, orientació sexual, afiliació sindical). Si en publiques dins d'un contingut lliure, ho fas sota la teua responsabilitat.</p>
 
     <h4>9. Per a què les fem servir i amb quina base jurídica</h4>
     <ul>
-      <li><strong>Donar-te el servei</strong> (crear el compte, autenticar-te, publicar, xatejar, guardar notes): base jurídica <em>execució del contracte</em>, article 6.1.b del RGPD. Les condicions d'ús de l'apartat 3 són aquest contracte. Sense aquestes dades no hi ha servei.</li>
-      <li><strong>Coses opcionals</strong> (imatge de perfil, ús de la IAIA MarIA, comunicacions no imprescindibles): base jurídica <em>consentiment</em>, article 6.1.a. El pots retirar quan vulgues i sense donar explicacions.</li>
-      <li><strong>Mantindre això segur</strong> (prevenir suplantacions, abusos i atacs; conservar registres tècnics): base jurídica <em>interés legítim</em>, article 6.1.f. Hem valorat que el teu dret a la intimitat no queda per damunt de la necessitat de mantindre la xarxa del poble neta i operativa. Si vols que t'expliquem aquesta ponderació, demana-la i te la donem.</li>
-      <li><strong>Complir la llei</strong> (atendre requeriments judicials o policials formals, obligacions comptables o de la LSSI-CE): base jurídica <em>obligació legal</em>, article 6.1.c.</li>
+      <li><strong>Donar-te el servei</strong> (crear el compte, autenticar-te, publicar, xatejar, seguir persones i entitats, guardar notes): base jurídica <em>execució del contracte</em>, article 6.1.b del RGPD. Les condicions d'ús de l'apartat 3 són aquest contracte. Sense aquestes dades no hi ha servei.</li>
+      <li><strong>Coses opcionals</strong> (imatge de perfil, ús de la IAIA MarIA, comunicacions no imprescindibles, el motiu de la baixa si en vols escriure un): base jurídica <em>consentiment</em>, article 6.1.a. El pots retirar quan vulgues i sense donar explicacions.</li>
+      <li><strong>Mantindre això segur</strong> (prevenir suplantacions, abusos i atacs; atendre les denúncies i fer complir les normes de convivència; conservar registres tècnics): base jurídica <em>interés legítim</em>, article 6.1.f. Hem valorat que el teu dret a la intimitat no queda per damunt de la necessitat de mantindre la xarxa del poble neta i operativa. Si vols que t'expliquem aquesta ponderació, demana-la i te la donem.</li>
+      <li><strong>Complir la llei</strong> (atendre requeriments judicials o policials formals, obligacions comptables, de la LSSI-CE o del Reglament (UE) 2022/2065, de Serveis Digitals, i poder demostrar els consentiments que ens has donat, com exigeix l'article 7.1 del RGPD): base jurídica <em>obligació legal</em>, article 6.1.c.</li>
     </ul>
     <p><strong>El que no fem, en cap cas:</strong> publicitat comportamental, perfilat comercial, venda ni lloguer de dades a corredors de dades o agències de màrqueting.</p>
 
     <h4>10. Quant de temps guardem cada cosa</h4>
     <ul>
       <li><strong>Compte i perfil:</strong> mentre el compte estiga actiu.</li>
-      <li><strong>Després de demanar la baixa:</strong> esborrem les teues dades en un termini màxim de <strong>30 dies naturals</strong>.</li>
+      <li><strong>Després de demanar la baixa:</strong> esborrem les teues dades en un termini màxim de <strong>30 dies naturals</strong>. Si vas entrar amb Apple a l'aplicació de l'iPhone i encara no hem pogut retirar el permís d'Apple, l'esborrat pot esperar fins a <strong>7 dies més</strong>.</li>
       <li><strong>Còpies de seguretat:</strong> el cicle de rotació és de <strong>30 dies</strong>; passat aquest termini, el que hages esborrat desapareix també d'ací.</li>
       <li><strong>Registres tècnics de seguretat</strong> (IP, marques de temps): <strong>12 mesos</strong>.</li>
       <li><strong>Missatges de xat:</strong> mentre el teu compte existisca. Si et dones de baixa, passats els 30 dies els missatges que has escrit s'esborren amb ell, també de les converses de les altres persones.</li>
+      <li><strong>Bloquejos, acceptació de les normes de convivència i motiu de la baixa:</strong> s'esborren quan s'esborra definitivament el teu compte (o abans, si desfàs el bloqueig o cancel·les la baixa). El registre dels consentiments d'aquesta política, en canvi, es guarda bloquejat fins a 3 anys, com expliquem a l'apartat 16.</li>
+      <li><strong>Seguiments</strong> (a qui seguixes i qui et seguix): s'esborren, com a molt tard, quan s'esborra definitivament el teu compte. Mentrestant, a qui seguixes és dins de la còpia de les teues dades que pots descarregar; de qui et seguix, només hi ha quantes persones són.</li>
+      <li><strong>Permís d'Apple:</strong> l'esborrem quan l'hem retirat o, com a molt tard, quan s'esborra definitivament el teu compte. La constància de cada retirada, amb l'empremta del teu compte, la guardem mentre faça falta per a demostrar que el vam retirar o per què no el vam poder retirar; ara mateix no té cap termini d'esborrat fixat.</li>
+      <li><strong>Denúncies:</strong> quan s'esborra definitivament el teu compte, les que has fet perden el vincle amb ell, però no queden anònimes del tot: en queden el que vas denunciar, el motiu, el detall que hi vas escriure, la data i l'empremta de l'adreça IP des d'on la vas enviar, que mentre guardem els registres tècnics encara es podria relacionar amb tu. Les que altres persones han fet sobre tu o sobre el teu contingut es conserven amb l'identificador intern que tenia el teu compte. Les guardem com a part de l'historial de moderació, mentre facen falta per a respondre reclamacions o requeriments sobre aquella decisió.</li>
       <li><strong>Dades bloquejades per a atendre possibles responsabilitats legals:</strong> durant els terminis de prescripció que marque la llei, i només per a això.</li>
     </ul>
 
@@ -117,6 +145,7 @@ export const legalContent = {
     <p>Perquè el poble puga parlar, cal que et veja. Concretament:</p>
     <ul>
       <li>El teu <strong>nom o pseudònim</strong> i la teua <strong>imatge de perfil</strong> són visibles per a la resta de membres verificats del teu poble.</li>
+      <li>Si <strong>seguixes</strong> una persona, ella veu el teu nom i des de quan la seguixes. Si seguixes una entitat, les persones que l'administren veuen el teu nom i des de quan la seguixes, siga quin siga el teu poble.</li>
       <li>El que publiques al <strong>Mur</strong> o al <strong>Mercat</strong> és visible segons la visibilitat que hages triat en publicar-ho.</li>
       <li>Els <strong>missatges de xat</strong> els veuen les persones del fil.</li>
       <li>Les teues <strong>notes</strong> són privades fins que decidisques publicar-les.</li>
@@ -150,12 +179,13 @@ export const legalContent = {
     <h5 id="esborra-compte" data-sdp-ancora="esborra-compte">Com esborrar el teu compte</h5>
     <p>Pots esborrar el teu compte de <strong>Sóc de Poble</strong> (el web socdepoble.org i l'aplicació Sóc de Poble per a Android i iPhone) quan vulgues i sense cap cost. Hi ha dos camins:</p>
     <ul>
-      <li><strong>Amb la sessió oberta, a l'aplicació o al web:</strong> obri <strong>Perfil</strong>, després <strong>Privacitat i dades</strong> i, a l'apartat <strong>Donar-se de baixa</strong>, toca <strong>«Donar-me de baixa»</strong>. En aquell moment el teu perfil s'anonimitza i la sessió es tanca a tots els teus dispositius.</li>
+      <li><strong>Amb la sessió oberta, a l'aplicació o al web:</strong> obri <strong>Perfil</strong>, després <strong>Privacitat i dades</strong> i, a l'apartat <strong>Donar-se de baixa</strong>, toca <strong>«Donar-me de baixa»</strong>. En aquell moment amaguem el teu perfil: deixa d'aparéixer al padró del poble, hi posem un nom genèric en lloc del teu i li llevem la foto. La sessió es tanca a tots els teus dispositius.</li>
       <li><strong>Sense l'aplicació, o si ja no hi pots entrar:</strong> escriu a <a href="mailto:socdepoble@socdepoble.org?subject=Esborrar%20el%20meu%20compte">socdepoble@socdepoble.org</a> <strong>des del correu del teu compte</strong>, amb l'assumpte «Esborrar el meu compte». Si vas entrar amb Apple i vas amagar el teu correu, digues-nos-ho al missatge: et demanarem la confirmació a l'adreça privada que Apple ens va donar. Et responem en <strong>un mes</strong> com a màxim.</li>
     </ul>
-    <p><strong>Trenta dies per a fer-te arrere:</strong> durant <strong>30 dies naturals</strong> pots cancel·lar la baixa. Torna a entrar com ho feies (amb el teu correu, amb Apple o amb Google) i, a <strong>Privacitat i dades</strong>, toca «Cancel·lar la baixa». Passat aquest termini, el compte s'esborra definitivament i ja no es pot recuperar.</p>
-    <p><strong>Què s'esborra:</strong> el compte i el perfil, les notes privades, els missatges que has escrit al xat, les teues pertinences a grups i entitats, i les fotos i els fitxers que només eren teus.</p>
-    <p><strong>Què es conserva, i per què:</strong> les publicacions que vas fer públiques al Mur, al Mercat o a l'Agenda es queden <strong>sense el teu nom ni la teua foto</strong>, perquè formen part de la memòria del poble; si vols que també les esborrem, demana-ho al mateix correu. El que vas publicar en nom d'una entitat és de l'entitat. Les còpies de seguretat ho perden en 30 dies més, els registres tècnics de seguretat es guarden 12 mesos i el registre dels teus consentiments es guarda bloquejat fins a 3 anys, només per si una autoritat ens el demana (apartat 10).</p>
+    <p><strong>Trenta dies per a fer-te arrere:</strong> durant <strong>30 dies naturals</strong> pots cancel·lar la baixa. Torna a entrar com ho feies (amb el teu correu, amb Apple o amb Google) i, a <strong>Privacitat i dades</strong>, toca «Cancel·lar la baixa». Passat aquest termini, el compte s'esborra definitivament i ja no es pot recuperar. Si vas entrar amb Apple, pot tardar fins a 7 dies més, com t'expliquem tot seguit.</p>
+    <p><strong>Si entres amb Apple:</strong> quan demanes la baixa, intentem retirar (revocar) el permís que vas donar a Sóc de Poble des del teu compte d'Apple. Si l'hem retirat i durant aquests 30 dies tornes a entrar amb Apple, Apple et tornarà a demanar permís. Mentre la retirada quede pendent, l'esborrat definitiu pot esperar fins a 7 dies més. Si no tenim aquest permís guardat (per exemple, perquè vas entrar amb Apple abans que el guardàrem) o no el podem retirar, el pots retirar tu: a l'iPhone, a <strong>Configuració › el teu nom › Inici de sessió amb Apple</strong>, o a <strong>account.apple.com</strong>.</p>
+    <p><strong>Què s'esborra, passats els 30 dies:</strong> el compte i el perfil, les publicacions que vas fer en nom teu (al Mur, al Mercat o a l'Agenda), les notes privades, els missatges que has escrit al xat, el títol de les teues publicacions a les converses que s'hi havien obert, les teues pertinences a grups i entitats, els teus seguiments, el permís d'Apple que guardàvem, i les fotos i els fitxers que havies pujat, llevat dels que encara fa servir una entitat (a la seua fitxa o en una publicació) o una publicació d'una altra persona.</p>
+    <p><strong>Què es conserva, i per què:</strong> el que vas publicar en nom d'una entitat és de l'entitat i es queda amb ella, amb les fotos que hi fa servir. Si eres l'única persona que quedava en un grup, el grup desapareix amb tu i el que hi vas publicar s'esborra amb la resta. Els missatges que altres persones van escriure a la conversa d'una publicació teua es queden a la conversa, sense el títol de la publicació. Les còpies de seguretat ho perden en 30 dies més, els registres tècnics de seguretat es guarden 12 mesos, el registre dels teus consentiments es guarda bloquejat fins a 3 anys, només per si una autoritat ens el demana, i l'historial de moderació i la constància de la retirada del permís d'Apple es conserven com expliquem a l'apartat 10.</p>
 
     <h4>17. Seguretat i bretxes</h4>
     <p>Apliquem mesures tècniques proporcionades: xifrat de les comunicacions (HTTPS/TLS), autenticació per testimoni de sessió, aïllament de dades per files al servidor perquè cadascú només veja el que li pertoca, i principi de mínim privilegi en els accessos.</p>
@@ -189,6 +219,7 @@ export const legalContent = {
     <p><strong>Emmagatzematge local</strong> (<em>localStorage</em>) — <strong>persisteix fins que l'esborres tu</strong>:</p>
     <ul>
       <li><code>socdepoble-language</code> — l'idioma que has triat.</li>
+      <li><code>sdp_embed_normes-convivencia:*</code> — la versió de les normes de convivència que has acceptat, amb l'identificador del teu compte, quan el servidor ja l'ha guardada, perquè en aquest dispositiu no te les tornem a demanar cada vegada.</li>
       <li><code>sdp-theme</code> i <code>sdp-grid-widths</code> — si vols la pantalla clara o fosca, i la grandària de les columnes.</li>
       <li><code>socdepoble-guest-session-id</code> — un identificador anònim per a poder mirar l'aplicació sense compte.</li>
       <li><code>socdepoble-iaia-level</code> i <code>socdepoble-iaia-companions</code> — el teu progrés i els personatges triats a la secció de la IAIA.</li>

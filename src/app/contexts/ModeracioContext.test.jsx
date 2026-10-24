@@ -29,7 +29,7 @@ vi.mock('../../data/backendPort.js', () => ({
 import { ProveidorModeracio } from './ModeracioContext.jsx';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { getVal, setVal } from '../../config/storage.js';
-import { CODI_MODERACIO, errorDeModeracio } from '../../data/contracte.js';
+import { CODI_MODERACIO, VERSIO_NORMES_CONVIVENCIA, errorDeModeracio } from '../../data/contracte.js';
 
 const POBLE = '7a1b2c3d-4e5f-4a60-8b71-c2d3e4f5a6b7';
 const REMOT = Object.freeze({ dataMode: 'remote', supabaseUrl: 'http://localhost:54321', tenantId: POBLE });
@@ -65,8 +65,11 @@ beforeEach(() => {
   m.session = { currentUser: { id: 'A' }, generacio: 1 };
   m.caps = new Set(['moderacio', 'normesConvivencia']);
   m.llistaBloquejos.mockResolvedValue([PEPA]);
-  m.estatNormes.mockResolvedValue({ versio: '2026-10-20', acceptadaAl: null });
+  m.estatNormes.mockResolvedValue({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: null });
 });
+/* Actualitzada a posta (261024 T2): el record del dispositiu és { versio, servidor: true }
+   i la versió es llig del contracte (2026-10-24), no d'una data copiada. */
+const RECORD = Object.freeze({ versio: VERSIO_NORMES_CONVIVENCIA, servidor: true });
 afterEach(() => { cleanup(); });
 
 describe('bloquejos', () => {
@@ -237,22 +240,22 @@ describe('normes de convivència', () => {
     act(() => { primera = valor.asseguraNormes(); segona = valor.asseguraNormes(); });
     expect(segona).toBe(primera);
     expect(dialegs.normes.obert).toBe(true);
-    m.acceptaNormes.mockResolvedValueOnce({ versio: '2026-10-20', acceptadaAl: '2026-10-20T12:00:00Z' });
+    m.acceptaNormes.mockResolvedValueOnce({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T12:00:00Z' });
     let despres;
     await act(async () => {
       await dialegs.normes.onAccepta();
       despres = valor.asseguraNormes();   // encara el valor d'abans del pintat
     });
-    expect(m.acceptaNormes).toHaveBeenCalledWith('2026-10-20', REMOT);
+    expect(m.acceptaNormes).toHaveBeenCalledWith(VERSIO_NORMES_CONVIVENCIA, REMOT);
     await expect(primera).resolves.toBe(true);
     await expect(despres).resolves.toBe(true);
-    expect(getVal('normes-convivencia:A', null)).toBe('2026-10-20');
+    expect(getVal('normes-convivencia:A', null)).toEqual(RECORD);
     expect(dialegs.normes.obert).toBe(false);
     expect(valor.normesPendents).toBe(false);
   });
 
-  test('ja acceptades en este dispositiu: resol true sense obrir res ni preguntar al servidor', async () => {
-    setVal('normes-convivencia:A', '2026-10-20');
+  test('ja acceptades i confirmades pel servidor en este dispositiu: resol true sense obrir res ni preguntar al servidor', async () => {
+    setVal('normes-convivencia:A', RECORD);
     await munta();
     expect(valor.normesPendents).toBe(false);
     await expect(valor.asseguraNormes()).resolves.toBe(true);
@@ -260,12 +263,31 @@ describe('normes de convivència', () => {
     expect(m.estatNormes).not.toHaveBeenCalled();
   });
 
+  /* T2 (261024; Codex C-02) · El record antic (la versió sola, de quan sense
+     migració s'acceptava només al dispositiu) i el d'una versió anterior ja no
+     obrin la porta: es pregunta al servidor i, si no la té, es torna a demanar. */
+  test('un record antic o d’una altra versió no compta: es pregunta al servidor i la porta continua tancada', async () => {
+    for (const record of [VERSIO_NORMES_CONVIVENCIA, { versio: '2026-10-20', servidor: true }, { versio: VERSIO_NORMES_CONVIVENCIA }]) {
+      m.estatNormes.mockClear();
+      setVal('normes-convivencia:A', record);
+      const vista = await munta();
+      await waitFor(() => expect(m.estatNormes).toHaveBeenCalled());
+      expect(valor.normesPendents, JSON.stringify(record)).toBe(true);
+      let promesa;
+      act(() => { promesa = valor.asseguraNormes(); });
+      expect(dialegs.normes.obert).toBe(true);
+      act(() => dialegs.normes.onTanca());
+      await expect(promesa).resolves.toBe(false);
+      vista.unmount();
+    }
+  });
+
   test('el servidor diu que ja les havia acceptades: es recorda sense obrir res', async () => {
-    m.estatNormes.mockResolvedValue({ versio: '2026-10-20', acceptadaAl: '2026-10-19T09:00:00Z' });
+    m.estatNormes.mockResolvedValue({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T09:00:00Z' });
     await munta();
     await waitFor(() => expect(valor.normesPendents).toBe(false));
     expect(m.estatNormes).toHaveBeenCalledWith(expect.objectContaining({ signal: expect.any(AbortSignal) }));
-    expect(getVal('normes-convivencia:A', null)).toBe('2026-10-20');
+    expect(getVal('normes-convivencia:A', null)).toEqual(RECORD);
   });
 
   test('«Ara no» i l’enllaç a /legal declinen: false', async () => {
@@ -281,19 +303,44 @@ describe('normes de convivència', () => {
     expect(getVal('normes-convivencia:A', null)).toBeNull();
   });
 
-  test('un error en desar continua obert i rebutja amb el code; sense migració s’accepta en este dispositiu', async () => {
+  /* Actualitzada a posta (261024 T2): Codex C-02. Abans, sense migració
+     ('no-disponible') l'acceptació es quedava al dispositiu i la porta s'obria;
+     ara rebutja, el diàleg continua obert, no es desa res i la porta espera. */
+  test('un error en desar, també sense migració (no-disponible), continua obert, rebutja amb el code i no desa res', async () => {
+    await munta();
+    let promesa;
+    let resolta = false;
+    act(() => { promesa = valor.asseguraNormes(); promesa.then(() => { resolta = true; }); });
+    for (const codi of [CODI_MODERACIO.DESCONEGUT, CODI_MODERACIO.NO_DISPONIBLE]) {
+      m.acceptaNormes.mockRejectedValueOnce(errorDeModeracio(codi));
+      let error;
+      await act(async () => { error = await dialegs.normes.onAccepta().catch((e) => e); });
+      expect(error).toMatchObject({ code: codi });
+      expect(dialegs.normes.obert).toBe(true);
+      expect(getVal('normes-convivencia:A', null)).toBeNull();
+      expect(valor.normesPendents).toBe(true);
+      expect(resolta).toBe(false);
+    }
+    /* Quan el servidor ja la desa, la mateixa porta pendent s'obri. */
+    m.acceptaNormes.mockResolvedValueOnce({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T12:00:00Z' });
+    await act(async () => { await dialegs.normes.onAccepta(); });
+    await expect(promesa).resolves.toBe(true);
+    expect(getVal('normes-convivencia:A', null)).toEqual(RECORD);
+  });
+
+  test('en remot sense la capacitat normesConvivencia no hi ha on desar-la: rebutja amb no-disponible sense cridar el port', async () => {
+    m.caps = new Set(['moderacio']);
     await munta();
     let promesa;
     act(() => { promesa = valor.asseguraNormes(); });
-    m.acceptaNormes.mockRejectedValueOnce(errorDeModeracio(CODI_MODERACIO.DESCONEGUT));
     let error;
     await act(async () => { error = await dialegs.normes.onAccepta().catch((e) => e); });
-    expect(error).toMatchObject({ code: 'desconegut' });
+    expect(error).toMatchObject({ code: CODI_MODERACIO.NO_DISPONIBLE });
+    expect(m.acceptaNormes).not.toHaveBeenCalled();
     expect(dialegs.normes.obert).toBe(true);
-    m.acceptaNormes.mockRejectedValueOnce(errorDeModeracio(CODI_MODERACIO.NO_DISPONIBLE));
-    await act(async () => { await dialegs.normes.onAccepta(); });
-    await expect(promesa).resolves.toBe(true);
-    expect(getVal('normes-convivencia:A', null)).toBe('2026-10-20');
+    expect(getVal('normes-convivencia:A', null)).toBeNull();
+    act(() => dialegs.normes.onTanca());
+    await expect(promesa).resolves.toBe(false);
   });
 
   test('una resposta tardana de l’estat per a A no accepta per a B; canviar de persona resol la pendent amb false', async () => {
@@ -305,7 +352,7 @@ describe('normes de convivència', () => {
     m.session = { currentUser: { id: 'B' }, generacio: 2 };
     vista.rerender(arbre());
     await expect(promesa).resolves.toBe(false);
-    await act(async () => { tardana.resol({ versio: '2026-10-20', acceptadaAl: '2026-10-19T09:00:00Z' }); });
+    await act(async () => { tardana.resol({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T09:00:00Z' }); });
     await waitFor(() => expect(valor.estatBloquejos).toBe('llest'));
     expect(valor.normesPendents).toBe(true);
     expect(getVal('normes-convivencia:B', null)).toBeNull();
@@ -320,5 +367,76 @@ describe('normes de convivència', () => {
       vista.unmount();
     }
     expect(m.estatNormes).not.toHaveBeenCalled();
+  });
+});
+
+/* Integració 261024 (Codex C-02) · El servidor rebutja igualment (SDP-MOD-428,
+   2610241400_normes_exigides_ugc.sql): qui rep el rebuig crida
+   asseguraNormes({ rebutjades: true }). El record d'este dispositiu per a la
+   versió vigent s'oblida, l'estat del servidor ja no les accepta (el
+   disparador mana) i el diàleg es torna a obrir; només una acceptació
+   explícita torna a obrir la porta. Sense porta, false: ningú no reintenta. */
+describe('normes de convivència · el rebuig del servidor (SDP-MOD-428)', () => {
+  test('oblida el record, torna a obrir el diàleg i, acceptades, ho desa i resol true', async () => {
+    setVal('normes-convivencia:A', RECORD);
+    await munta();
+    expect(valor.normesPendents).toBe(false);
+    /* L'estat del servidor diria que sí (una altra versió, una altra base): no compta. */
+    m.estatNormes.mockResolvedValue({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T09:00:00Z' });
+    let promesa;
+    let segona;
+    act(() => { promesa = valor.asseguraNormes({ rebutjades: true }); segona = valor.asseguraNormes({ rebutjades: true }); });
+    expect(segona).toBe(promesa);
+    expect(dialegs.normes.obert).toBe(true);
+    expect(getVal('normes-convivencia:A', null)).toBeNull();
+    await act(async () => {});
+    expect(valor.normesPendents).toBe(true);
+    expect(m.estatNormes).not.toHaveBeenCalled();
+    /* La porta de sempre també espera la mateixa resposta. */
+    expect(valor.asseguraNormes()).toBe(promesa);
+    m.acceptaNormes.mockResolvedValueOnce({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T12:00:00Z' });
+    await act(async () => { await dialegs.normes.onAccepta(); });
+    await expect(promesa).resolves.toBe(true);
+    expect(m.acceptaNormes).toHaveBeenCalledWith(VERSIO_NORMES_CONVIVENCIA, REMOT);
+    expect(getVal('normes-convivencia:A', null)).toEqual(RECORD);
+    expect(valor.normesPendents).toBe(false);
+    await expect(valor.asseguraNormes()).resolves.toBe(true);
+  });
+
+  test('declinar resol false i el record continua oblidat: la crida següent torna a preguntar', async () => {
+    setVal('normes-convivencia:A', RECORD);
+    await munta();
+    let promesa;
+    act(() => { promesa = valor.asseguraNormes({ rebutjades: true }); });
+    act(() => dialegs.normes.onTanca());
+    await expect(promesa).resolves.toBe(false);
+    expect(getVal('normes-convivencia:A', null)).toBeNull();
+    expect(valor.normesPendents).toBe(true);
+    act(() => { promesa = valor.asseguraNormes(); });
+    expect(dialegs.normes.obert).toBe(true);
+    act(() => dialegs.normes.onTanca());
+    await expect(promesa).resolves.toBe(false);
+  });
+
+  test('un esdeveniment o qualsevol altra opció no és cap rebuig', async () => {
+    setVal('normes-convivencia:A', RECORD);
+    await munta();
+    for (const opcions of [{ type: 'click' }, { rebutjades: 'si' }, null]) {
+      await expect(valor.asseguraNormes(opcions)).resolves.toBe(true);
+    }
+    expect(dialegs.normes.obert).toBe(false);
+    expect(getVal('normes-convivencia:A', null)).toEqual(RECORD);
+  });
+
+  test('sense porta (llavor, sense sessió o sense amfitrió) resol false sense obrir res ni oblidar res', async () => {
+    for (const [config, sessio, ambDialegs] of [[{ dataMode: 'seed' }, { id: 'A' }, true], [REMOT, null, true], [REMOT, { id: 'A' }, false]]) {
+      m.session = { currentUser: sessio, generacio: 1 };
+      setVal('normes-convivencia:A', RECORD);
+      const vista = await munta(config, { ambDialegs });
+      await expect(valor.asseguraNormes({ rebutjades: true })).resolves.toBe(false);
+      expect(dialegs?.normes?.obert ?? false).toBe(false);
+      expect(getVal('normes-convivencia:A', null)).toEqual(RECORD);
+      vista.unmount();
+    }
   });
 });

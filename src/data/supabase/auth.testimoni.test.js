@@ -112,6 +112,56 @@ describe('la petició i la coreografia', () => {
   });
 });
 
+/* T1 (261024; P0-04, App Store 5.1.1(v)) · El codi d'autorització d'Apple va a
+   la funció compte-apple, mai a GoTrue, i mai fa fallar l'entrada. */
+const CUSTODIA = 'POST /functions/v1/compte-apple';
+const CODI_APPLE = 'c0d1.0.apple-sintetic';
+describe('la custòdia del codi d’Apple', () => {
+  test('el cos de GoTrue no canvia; la custòdia ix DESPRÉS de desar la sessió, amb { accio, codi } i un topall', async () => {
+    ambRutes({ [CUSTODIA]: { ok: true, resultat: 'desat' } });
+    await entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: ` ${CODI_APPLE} ` }), CONFIG);
+    await buida();
+    expect(request.mock.calls[0][2].body).toEqual({ provider: 'apple', id_token: JWT, nonce: NONCE });
+    const custodia = request.mock.calls.filter(([ruta]) => ruta === '/functions/v1/compte-apple');
+    expect(custodia).toHaveLength(1);
+    expect(custodia[0][2]).toMatchObject({ method: 'POST', body: { accio: 'custodia', codi: CODI_APPLE } });
+    expect(custodia[0][2].timeoutMs).toBeGreaterThanOrEqual(10000);
+    expect(m.ordre.indexOf(CUSTODIA)).toBeGreaterThan(m.ordre.indexOf('reset'));
+    expect(m.ordre.indexOf('reset')).toBeGreaterThan(m.ordre.indexOf('desa'));
+    expect(JSON.stringify(request.mock.calls.filter(([ruta]) => ruta !== '/functions/v1/compte-apple'))).not.toContain(CODI_APPLE);
+  });
+
+  test('si la custòdia falla o penja, l’entrada ja s’ha completat igual i l’avís no porta el codi', async () => {
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const penjada = promesaOberta();
+    ambRutes({ [CUSTODIA]: () => penjada.promesa });
+    await expect(entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: CODI_APPLE }), CONFIG)).resolves.toEqual({ user: m.user });
+    ambRutes({ [CUSTODIA]: () => { throw Object.assign(new Error(`Supabase 502: ${CODI_APPLE}`), { status: 502 }); } });
+    await expect(entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: CODI_APPLE }), CONFIG)).resolves.toEqual({ user: m.user });
+    await buida();
+    expect(avis).toHaveBeenCalled();
+    expect(JSON.stringify(avis.mock.calls)).not.toContain(CODI_APPLE);
+    penjada.resol(null);
+    avis.mockRestore();
+  });
+
+  test('Google, un codi sense forma o cap codi: cap crida a la funció', async () => {
+    await entraAmbTokenDeProveidor('google', { testimoni: JWT, nonce: null, codiAutoritzacio: CODI_APPLE }, CONFIG);
+    await entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: 'amb espais dins' }), CONFIG);
+    await entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: 'curt' }), CONFIG);
+    await entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: 'x'.repeat(1025) }), CONFIG);
+    await entraAmbTokenDeProveidor('apple', apple(), CONFIG);
+    await buida();
+    expect(request.mock.calls.filter(([ruta]) => ruta === '/functions/v1/compte-apple')).toEqual([]);
+  });
+
+  test('un GoTrue que rebutja el testimoni no envia cap codi', async () => {
+    ambRutes({ [TOKEN]: () => { throw errorDeGoTrue(400, { error: 'invalid_grant', error_description: 'Bad ID token' }); } });
+    await expect(entraAmbTokenDeProveidor('apple', apple({ codiAutoritzacio: CODI_APPLE }), CONFIG)).rejects.toMatchObject({ code: CODI_ENTRADA.TOKEN_REBUTJAT });
+    expect(request.mock.calls.filter(([ruta]) => ruta === '/functions/v1/compte-apple')).toEqual([]);
+  });
+});
+
 describe('el nom d’Apple, només la primera vegada', () => {
   test('amb el nom de reserva (Veí/na): PATCH i PUT amb data.full_name, tots dos abans de l’avís', async () => {
     ambRutes({

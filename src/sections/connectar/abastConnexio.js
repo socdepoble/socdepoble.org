@@ -104,8 +104,10 @@ export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [
     {
       valor: 'privada',
       etiqueta: 'Privada',
-      /* D1 (ordre del Mestre, 260930) · el verb és connectar, no guardar. */
-      ajuda: 'Queda al teu MAS. Ningú més la veu.',
+      /* D1 (ordre del Mestre, 260930) · el verb és connectar, no guardar.
+         261024 correccions (directiva del Mestre 15:05, Gemini G2-02) · res de
+         «MAS» a la interfície: «a les teues notes». */
+      ajuda: 'Queda a les teues notes. Ningú més la veu.',
       detall: remot ? undefined : 'Sense servidor, queda només en este dispositiu.'
     },
     {
@@ -117,7 +119,8 @@ export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [
     },
     {
       valor: 'grups',
-      etiqueta: 'Grups',
+      /* IDEA-14 (261024) · «de xat»: no són les entitats de tipus grup (el camí «Formar part»). */
+      etiqueta: 'Grups de xat',
       ajuda: 'Enviarem l’enllaç als grups de xat on ja eres. És un missatge, no un permís: no es pot desfer.',
       desactivada: !teSessio || senseGrups,
       detall: !teSessio ? senseComptes
@@ -127,7 +130,7 @@ export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [
     {
       valor: 'poble',
       etiqueta: 'Tot el poble',
-      ajuda: 'No ix sola: obri la connexió al teu MAS i prem «Compartir al Mur». La veurà la gent registrada del poble, no Internet.',
+      ajuda: 'No ix sola: obri la connexió a les teues notes i prem «Compartir al Mur». La veurà la gent registrada del poble, no Internet.',
       desactivada: !remot || !teSessio,
       detall: !remot ? 'Sense servidor no es pot compartir al Mur.'
         : (!teSessio ? 'Entra amb el teu compte per a compartir-la al Mur.' : undefined)
@@ -180,7 +183,8 @@ export function missatgeDeConnexio({ titol = '', autorNom = '' } = {}, url = '')
   const nom = String(titol || 'un element').trim().slice(0, MAXIM_TITOL);
   const de = autorNom ? ` (de ${String(autorNom).trim().slice(0, MAXIM_TITOL)})` : '';
   const on = url ? ` Ho pots vore ací: ${url}` : '';
-  return `T’envie «${nom}»${de}, que he connectat al meu MAS.${on}`.slice(0, MAXIM_MISSATGE);
+  /* 261024 correccions (G2-02) · qui el rep no sap què és el «MAS»: les meues notes. */
+  return `T’envie «${nom}»${de}, que he guardat a les meues notes.${on}`.slice(0, MAXIM_MISSATGE);
 }
 
 /**

@@ -37,7 +37,8 @@ beforeEach(() => {
 test('seed: connectar dona l’alta, espera que la pertinença arribe i llavors ofereix «Actua com a»', async () => {
   const vista = render(<BlocAdministrarOrganitzacio orgId="forn" config={{ dataMode: 'seed' }} />);
   expect(screen.getByRole('heading', { level: 3, name: 'Administrar l’organització' })).toBeTruthy();
-  const boto = await screen.findByRole('button', { name: 'Connectar-me com a administradora' });
+  /* Actualitzada a posta (261024 T6a): administrar no és connectar (IDEA-14); en seed, «Administrar-la ara». */
+  const boto = await screen.findByRole('button', { name: 'Administrar-la ara' });
   expect(screen.queryByRole('textbox')).toBeNull();
   await act(async () => { fireEvent.click(boto); });
   expect(m.reclama).toHaveBeenCalledWith('forn', { justificacio: '' }, { dataMode: 'seed' });
@@ -57,10 +58,11 @@ test('C17 · enviar i «Actua com a» porten el focus al títol del bloc', async
   const vista = render(<BlocAdministrarOrganitzacio orgId="forn" config={{ dataMode: 'seed' }} />);
   const titol = screen.getByRole('heading', { level: 3, name: 'Administrar l’organització' });
   expect(titol.getAttribute('tabindex')).toBe('-1');
-  const boto = await screen.findByRole('button', { name: 'Connectar-me com a administradora' });
+  /* Actualitzada a posta (261024 T6a): en seed, «Administrar-la ara» (IDEA-14). */
+  const boto = await screen.findByRole('button', { name: 'Administrar-la ara' });
   boto.focus();
   await act(async () => { fireEvent.click(boto); });
-  expect(screen.queryByRole('button', { name: 'Connectar-me com a administradora' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Administrar-la ara' })).toBeNull();
   expect(document.activeElement).toBe(titol);
   m.identitat = { ...m.identitat, memberships: [FORN] };
   vista.rerender(<BlocAdministrarOrganitzacio orgId="forn" config={{ dataMode: 'seed' }} />);
@@ -99,12 +101,14 @@ test('remot: llig només la petició pròpia d’esta organització i la mostra 
   expect(m.reclama).not.toHaveBeenCalled();
 });
 
+/* Actualitzada a posta (261024 T6a): administrar no és connectar (IDEA-14). D'ací avall, en remot
+   (amb revisió), el botó és «Demanar administrar-la» (abans «Connectar-me com a administradora»). */
 test('remot: la justificació viatja i «ja té propietària» es diu com a estat, sense el text del servidor', async () => {
   m.perfil.mockResolvedValue({ tipus: 'entitat', id: 'o-1', nom: 'Forn' });
   m.reclama.mockRejectedValue(Object.assign(new Error('Esta organització ja té qui l’administra.'), { code: 'SDP-CLAIM-003' }));
   render(<BlocAdministrarOrganitzacio orgId="o-1" config={{}} />);
   fireEvent.change(await screen.findByRole('textbox', { name: 'Explica breument qui eres (opcional)' }), { target: { value: 'Soc la fornera.' } });
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar-me com a administradora' })); });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Demanar administrar-la' })); });
   expect(m.reclama).toHaveBeenCalledWith('o-1', { justificacio: 'Soc la fornera.' }, {});
   await waitFor(() => expect(screen.getByText('Forn ja té qui l’administra')).toBeTruthy());
   expect(screen.queryByRole('alert')).toBeNull();
@@ -114,7 +118,8 @@ test('remot: la justificació viatja i «ja té propietària» es diu com a esta
 test('sense la capacitat no crida res i ho diu; sense sessió porta a entrar', () => {
   m.capacitat = false;
   const vista = render(<BlocAdministrarOrganitzacio orgId="o-1" />);
-  expect(screen.getByText('Este poble encara no permet connectar-se a organitzacions des de l’app.')).toBeTruthy();
+  /* Actualitzada a posta (261024 T6a): administrar no és connectar-s'hi (IDEA-14). */
+  expect(screen.getByText('Este poble encara no permet demanar l’administració d’una organització des de l’app.')).toBeTruthy();
   expect(m.llista).not.toHaveBeenCalled();
   vista.unmount();
   m.user = null;
@@ -139,7 +144,7 @@ test('el nom ve del directori; si no n’hi ha (o no és una organització) es d
   for (const resposta of [() => Promise.resolve(null), () => Promise.resolve({ tipus: 'persona', nom: 'Ajuntament fals' }), () => Promise.reject(new Error('xarxa'))]) {
     m.perfil.mockImplementationOnce(resposta);
     const altra = render(<BlocAdministrarOrganitzacio orgId="o-2" config={{}} />);
-    await screen.findByRole('button', { name: 'Connectar-me com a administradora' });
+    await screen.findByRole('button', { name: 'Demanar administrar-la' });
     expect(altra.container.textContent).toContain('Vols administrar esta organització?');
     expect(altra.container.textContent).toContain('les converses d’esta organització');
     expect(altra.container.textContent).not.toContain('Ajuntament fals');
@@ -170,7 +175,7 @@ test('mentre es llig la petició pròpia no hi ha formulari; un error de lectura
   expect(lectura.container.textContent).not.toContain('No s’ha pogut enviar');
   expect(lectura.container.textContent).not.toContain('Supabase');
   /* Acabada la lectura, es pot demanar: un duplicat eixiria com a «pendent». */
-  expect(screen.getByRole('button', { name: 'Connectar-me com a administradora' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Demanar administrar-la' })).toBeTruthy();
   lectura.unmount();
 
   m.llista.mockRejectedValue(Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }));
@@ -181,7 +186,7 @@ test('mentre es llig la petició pròpia no hi ha formulari; un error de lectura
 test('un TimeoutError en enviar es diu com a xarxa, no com una fallada genèrica', async () => {
   m.reclama.mockRejectedValue(Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }));
   render(<BlocAdministrarOrganitzacio orgId="o-1" config={{}} />);
-  const boto = await screen.findByRole('button', { name: 'Connectar-me com a administradora' });
+  const boto = await screen.findByRole('button', { name: 'Demanar administrar-la' });
   await act(async () => { fireEvent.click(boto); });
   const alerta = await screen.findByRole('alert');
   expect(alerta.textContent).toContain('No s’ha pogut enviar');
@@ -198,17 +203,17 @@ test('canviar d’organització o de persona no arrossega la petició ni l’err
   /* Una altra organització: ni un instant amb la petició d'o-1. */
   vista.rerender(<BlocAdministrarOrganitzacio orgId="o-2" config={{}} />);
   expect(screen.queryByText(/Petició enviada/)).toBeNull();
-  expect(await screen.findByRole('button', { name: 'Connectar-me com a administradora' })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: 'Demanar administrar-la' })).toBeTruthy();
   /* Tornar a o-1 amb una altra persona: la petició era d'u-1. */
   m.user = { id: 'u-2' };
   vista.rerender(<BlocAdministrarOrganitzacio orgId="o-1" config={{}} />);
   expect(screen.queryByText(/Petició enviada/)).toBeNull();
-  expect(await screen.findByRole('button', { name: 'Connectar-me com a administradora' })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: 'Demanar administrar-la' })).toBeTruthy();
 
   /* Un error d'enviament d'o-2 no es pinta a o-3. */
   m.reclama.mockRejectedValue(Object.assign(new Error('Supabase 500: boom'), { code: 'ALTRE' }));
   vista.rerender(<BlocAdministrarOrganitzacio orgId="o-2" config={{}} />);
-  const boto = await screen.findByRole('button', { name: 'Connectar-me com a administradora' });
+  const boto = await screen.findByRole('button', { name: 'Demanar administrar-la' });
   await act(async () => { fireEvent.click(boto); });
   expect(await screen.findByRole('alert')).toBeTruthy();
   vista.rerender(<BlocAdministrarOrganitzacio orgId="o-3" config={{}} />);

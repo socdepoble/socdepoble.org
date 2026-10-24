@@ -59,7 +59,9 @@ export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = fals
         </button>}
       </div>
 
-      <p className="sdp-app-barra__titol">
+      {/* Correcció R5-09 (261024) · L'id de l'app, perquè apps.css puga donar
+          el fons verd només al títol del Lector (ordre del Mestre, 14:40). */}
+      <p className="sdp-app-barra__titol" data-sdp-app={app.id}>
         <IconaApp className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">{titol}</span>
       </p>

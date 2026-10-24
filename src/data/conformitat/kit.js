@@ -14,7 +14,7 @@
    amb un fetch de mentida que servisca les seues captures reals.
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */
-import { CAPACITATS, CODI_MODERACIO, CONTRACTE_NUCLI, SECCIONS_PAGINABLES, TIPUS_BLOQUEJAT } from '../contracte.js';
+import { CAPACITATS, CODI_MODERACIO, CONTRACTE_NUCLI, SECCIONS_PAGINABLES, TIPUS_BLOQUEJAT, TIPUS_SEGUIT } from '../contracte.js';
 
 /* ── Ajudants de forma: cada un torna la llista de falles (buida = conforme). ── */
 
@@ -115,6 +115,16 @@ const fallesDePaginaDeSeccio = (pagina) => [
   ...(typeof pagina?.complete === 'boolean' ? [] : ['complete havia de ser boolean']),
   ...(pagina?.complete === (pagina?.nextCursor === null) ? [] : ['complete i nextCursor null han d’anar junts']),
   ...(pagina?.nextCursor === null || esTextNoBuit(pagina?.nextCursor) ? [] : ['nextCursor havia de ser null o text no buit'])
+];
+
+/* T6b (IDEA-14) · Un seguiment o un seguidor: id de text, nom de text o
+   null, creatAl ISO o null. L'id del seguit de conformitat té forma d'UUID
+   perquè en remot arribe al servidor, i no és de ningú. */
+const ID_SEGUIT_DE_CONFORMITAT = '00000000-0000-4000-8000-00000000c0f0';
+const fallesDeSeguidor = (s, nom) => [
+  ...(esTextNoBuit(s?.id) ? [] : [`un ${nom} sense id de text`]),
+  ...(s?.nom === null || typeof s?.nom === 'string' ? [] : [`el ${nom} ${s?.id} té un nom que no és text ni null`]),
+  ...(s?.creatAl === null || esTextNoBuit(s?.creatAl) ? [] : [`el ${nom} ${s?.id} té un creatAl que no és text ni null`])
 ];
 
 /* Els fils on la interfície pot escriure: una comunitat no té missatges propis
@@ -570,6 +580,62 @@ export const CASOS = Object.freeze([
     titol: "acceptaNormes('no-es-cap-versio', config) rebutja amb code versio-invalida sense xarxa",
     arguments: (ctx) => ['no-es-cap-versio', ctx.config],
     comprova: rebuigAmbCodi(CODI_MODERACIO.VERSIO_INVALIDA)
+  }),
+  /* T6b (IDEA-14; decisió del Mestre, 261024) · Els seguiments (capacitat
+     'seguiments'). Cap cas no escriu: el kit no coneix cap persona ni cap
+     entitat de veres que es puga seguir. Les lectures es comproven per la
+     forma, i els rebuigs ixen de la regla d'entrada del contracte
+     (seguitDelContracte, SDP-SEG-001), abans de cap xarxa. Una entitat que no
+     existix no l'administra ningú: rebutja amb code. */
+  cas({
+    metode: 'estatSeguiment', capacitat: 'seguiments',
+    titol: "estatSeguiment({ tipus: 'persona', id }, config) d’algú que no seguixes → { seguint: false, creatAl: null }",
+    arguments: (ctx) => [{ tipus: 'persona', id: ID_SEGUIT_DE_CONFORMITAT }, ctx.config],
+    comprova: (estat) => {
+      if (!esObjecte(estat)) return [`havia de ser un objecte i és ${tipusDe(estat)}`];
+      return [
+        ...(estat.seguint === false ? [] : [`seguint havia de ser false i és ${JSON.stringify(estat.seguint)}`]),
+        ...(estat.creatAl === null ? [] : [`creatAl havia de ser null i és ${JSON.stringify(estat.creatAl)}`])
+      ];
+    }
+  }),
+  cas({
+    metode: 'elsMeusSeguiments', capacitat: 'seguiments',
+    titol: "elsMeusSeguiments(config) → [{ tipus: 'persona' | 'entitat', id, nom: text | null, creatAl: ISO | null }]",
+    arguments: (ctx) => [ctx.config],
+    comprova: (llista) => {
+      if (!Array.isArray(llista)) return [`havia de ser una llista i és ${tipusDe(llista)}`];
+      return llista.flatMap((s) => [
+        ...(TIPUS_SEGUIT.includes(s?.tipus) ? [] : [`un seguiment té tipus ${JSON.stringify(s?.tipus)}`]),
+        ...fallesDeSeguidor(s, 'seguiment')
+      ]);
+    }
+  }),
+  cas({
+    metode: 'quiEmSegueix', capacitat: 'seguiments',
+    titol: 'quiEmSegueix({}, config) → [{ id, nom: text | null, creatAl: ISO | null }]',
+    arguments: (ctx) => [{}, ctx.config],
+    comprova: (llista) => (Array.isArray(llista)
+      ? llista.flatMap((s) => fallesDeSeguidor(s, 'seguidor'))
+      : [`havia de ser una llista i és ${tipusDe(llista)}`])
+  }),
+  cas({
+    metode: 'quiEmSegueix', capacitat: 'seguiments', espera: 'rebutja',
+    titol: 'quiEmSegueix({ orgId }, config) d’una entitat que no existix rebutja amb un code',
+    arguments: (ctx) => [{ orgId: 'conformitat-sense-organitzacio' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'segueix', capacitat: 'seguiments', espera: 'rebutja',
+    titol: "segueix({ tipus: 'inventat', id }, config) rebutja amb code SDP-SEG-001 sense xarxa",
+    arguments: (ctx) => [{ tipus: 'inventat', id: ID_SEGUIT_DE_CONFORMITAT }, ctx.config],
+    comprova: rebuigAmbCodi('SDP-SEG-001')
+  }),
+  cas({
+    metode: 'deixaDeSeguir', capacitat: 'seguiments', espera: 'rebutja',
+    titol: "deixaDeSeguir({ tipus: 'persona', id: '' }, config) rebutja amb code SDP-SEG-001 sense xarxa",
+    arguments: (ctx) => [{ tipus: 'persona', id: '' }, ctx.config],
+    comprova: rebuigAmbCodi('SDP-SEG-001')
   })
 ]);
 

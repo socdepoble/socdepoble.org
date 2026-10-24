@@ -318,3 +318,51 @@ describe('el kit veu una falla', () => {
       .toMatchObject({ estat: 'falla', falles: ["el canal ha avisat d'un error: CHANNEL_ERROR"] });
   });
 });
+
+/* ── T6b (IDEA-14; decisió del Mestre, 261024) · Els seguiments (capacitat
+   'seguiments'): cap cas no escriu, i el kit veu una forma mal feta. ── */
+describe('T6b · els casos de seguiments', () => {
+  const ctx = () => contextDeConformitat({ config: { dataMode: 'seed' } });
+
+  test('cobrixen els cinc mètodes de la capacitat, sense escriure', () => {
+    const casos = CASOS.filter((c) => c.capacitat === 'seguiments');
+    expect([...new Set(casos.map((c) => c.metode))].sort()).toEqual([...CAPACITATS.seguiments].sort());
+    expect(casos.every((c) => c.escriu === false)).toBe(true);
+    for (const metode of CAPACITATS.seguiments) expect(metodesSenseCas()).not.toContain(metode);
+  });
+
+  test('estatSeguiment conforme amb { seguint: false, creatAl: null }; un seguiment inventat o una forma trencada és una falla', async () => {
+    const estat = cas('estatSeguiment');
+    const crides = [];
+    expect(await executaCas(estat, { estatSeguiment: async (...args) => { crides.push(args); return { seguint: false, creatAl: null }; } }, ctx()))
+      .toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toEqual([[{ tipus: 'persona', id: '00000000-0000-4000-8000-00000000c0f0' }, { dataMode: 'seed' }]]);
+    expect(await executaCas(estat, { estatSeguiment: async () => ({ seguint: true, creatAl: '2026-10-24T12:00:00Z' }) }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['seguint havia de ser false i és true', 'creatAl havia de ser null i és "2026-10-24T12:00:00Z"'] });
+    expect((await executaCas(estat, { estatSeguiment: async () => null }, ctx())).estat).toBe('falla');
+  });
+
+  test('les llistes: conformes buides o ben formades; un tipus, un id o un nom estranys són una falla', async () => {
+    const bona = [{ tipus: 'entitat', id: 'e1', nom: 'Forn', creatAl: '2026-10-24T12:00:00Z' }, { tipus: 'persona', id: 'p1', nom: null, creatAl: null }];
+    expect(await executaCas(cas('elsMeusSeguiments'), { elsMeusSeguiments: async () => bona }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(cas('elsMeusSeguiments'), { elsMeusSeguiments: async () => [{ tipus: 'ia', id: 'x', nom: 'IAIA', creatAl: null }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['un seguiment té tipus "ia"'] });
+    const qui = cas('quiEmSegueix', 'quiEmSegueix({}, config)');
+    expect(await executaCas(qui, { quiEmSegueix: async () => [] }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(qui, { quiEmSegueix: async () => [{ id: '', nom: 7, creatAl: 3 }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['un seguidor sense id de text', 'el seguidor  té un nom que no és text ni null', 'el seguidor  té un creatAl que no és text ni null'] });
+  });
+
+  test('els rebuigs: segueix i deixaDeSeguir amb SDP-SEG-001; una entitat que no existix, amb un code', async () => {
+    const amb = (code) => async () => { throw Object.assign(new Error('No.'), { code }); };
+    expect(await executaCas(cas('segueix'), { segueix: amb('SDP-SEG-001') }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(cas('segueix'), { segueix: amb('SDP-SEG-002') }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['el code havia de ser SDP-SEG-001 i és "SDP-SEG-002"'] });
+    expect(await executaCas(cas('deixaDeSeguir'), { deixaDeSeguir: async () => ({ seguint: false }) }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    const entitat = cas('quiEmSegueix', 'no existix');
+    expect(await executaCas(entitat, { quiEmSegueix: amb('SDP-SEG-005') }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(entitat, { quiEmSegueix: async () => [] }, ctx())).toMatchObject({ estat: 'falla' });
+    expect(await executaCas(cas('segueix'), {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat seguiments absent' });
+  });
+});

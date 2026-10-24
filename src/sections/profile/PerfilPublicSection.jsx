@@ -64,6 +64,8 @@ import { ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte } from '../../data/xats
 import { useXat } from '../xat/XatContext';
 import SelectorRealitat from '../realitat/SelectorRealitat.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
+/* T6b (IDEA-14; decisió del Mestre, 261024) · «Gent que et seguix», a la fitxa pròpia d'una persona. */
+import { GentQueEtSegueix } from './Seguidors.jsx';
 
 /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
    · Només una entitat, un grup o una IA porten la píndola del seu tipus. Una
@@ -481,7 +483,8 @@ export function PaginaDeLAgent({ identitat }) {
  */
 export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
   const { t } = useUIActions();
-  const { externalConfig } = useUIState();
+  /* T6b · `locale`: la data de «Gent que et seguix», en la llengua de la fitxa. */
+  const { externalConfig, locale } = useUIState();
   const navigate = useNavigate();
   const { memberships = [], actor, setActor } = useIdentitat();
   /* Onada 11 (261010; refutació del front C, D12) · En remot, el directe
@@ -708,6 +711,12 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
           presentació de la IAIA, el Selector de Realitat dels 4 nivells: fora
           de l'article de la presentació i sense cap regió viva. */}
       {esLaIAIA ? <SelectorRealitat /> : null}
+      {/* T6b (IDEA-14; decisió del Mestre, 261024) · Qui és seguit ho sap: a
+          la fitxa pròpia d'una persona, qui la seguix (quiEmSegueix), al peu.
+          Mai a la d'una altra persona, ni a la d'una entitat, un grup o una IA
+          (qui seguix una entitat ho veu qui l'administra, a «El compte»).
+          Sense la capacitat 'seguiments', res. */}
+      {esPersona && perfil.propietari ? <GentQueEtSegueix config={externalConfig} t={t} locale={locale} /> : null}
     </UniversalPage>
   );
 }

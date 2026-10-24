@@ -1,0 +1,74 @@
+{
+  "contracte": "sdp.noticies.v1",
+  "nota": "Llista blanca del servei de notícies: les fonts del sistema són els referents de coneixement obert del §23 del text legal (ordre del Mestre, 261024). Ha de dir el mateix que src/data/adaptadors/noticies/cataleg.js (paritat.test.js). Cada host, aprovat pel Mestre un per un.",
+  "categories": [
+    {
+      "id": "coneixement",
+      "nom": "Coneixement obert",
+      "ordre": 0,
+      "icona": "BookOpen"
+    },
+    {
+      "id": "videos",
+      "nom": "Vídeos per a aprendre",
+      "ordre": 1,
+      "icona": "Sprout"
+    }
+  ],
+  "fonts": [
+    {
+      "id": "emowe",
+      "nom": "Emowe (Marcos)",
+      "categoriaId": "coneixement",
+      "descripcio": "Codi obert i mètodes per a treballar amb agents d’intel·ligència artificial i projectes amb IA.",
+      "lloc": "https://emowe.com",
+      "feed": "https://emowe.com/rss.xml",
+      "llengua": "es"
+    },
+    {
+      "id": "ayudawp",
+      "nom": "Fernando Tellado · AyudaWP",
+      "categoriaId": "coneixement",
+      "descripcio": "WordPress en castellà: optimització, seguretat i allotjament web.",
+      "lloc": "https://ayudawp.com",
+      "feed": "https://ayudawp.com/feed/",
+      "llengua": "es"
+    },
+    {
+      "id": "xavier-mitjana",
+      "nom": "Xavier Mitjana · IA en Acción",
+      "categoriaId": "coneixement",
+      "descripcio": "Formació i divulgació pràctica d’intel·ligència artificial, models de llenguatge i fluxos de treball.",
+      "lloc": "https://iaenaccion.com",
+      "feed": "https://iaenaccion.com/feed/",
+      "llengua": "es"
+    },
+    {
+      "id": "jon-hernandez",
+      "nom": "Jon Hernández",
+      "categoriaId": "coneixement",
+      "descripcio": "Les novetats, l’impacte i les eines de la intel·ligència artificial, explicades amb esperit crític.",
+      "lloc": "https://www.jonhernandez.education",
+      "feed": "https://www.jonhernandez.education/feed/atom/",
+      "llengua": "es"
+    },
+    {
+      "id": "migue-baena",
+      "nom": "Migue Baena",
+      "categoriaId": "videos",
+      "descripcio": "Vídeos d’intel·ligència artificial aplicada: prompts, projectes i fluxos de treball amb Claude.",
+      "lloc": "https://www.youtube.com/@MigueBaenaIA",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCX_dT6nVtCIHRo_GFOsWK2A",
+      "llengua": "es"
+    },
+    {
+      "id": "ben-cord",
+      "nom": "Ben Cord (Benjamín Cordero)",
+      "categoriaId": "videos",
+      "descripcio": "Vídeos d’automatitzacions, agents autònoms i vibe coding, amb un enfocament pràctic.",
+      "lloc": "https://www.youtube.com/@bencord",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpq8lHHliCS3oBt-gfL0bKQ",
+      "llengua": "es"
+    }
+  ]
+}

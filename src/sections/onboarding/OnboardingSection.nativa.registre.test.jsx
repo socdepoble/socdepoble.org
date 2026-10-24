@@ -96,7 +96,9 @@ describe('«Cancel·la l’entrada» amb el registre de veres', () => {
     expect(viu()).toBe(true);
     await act(async () => { full.resol({ testimoni: 'a.b.c', nonce: 'n'.repeat(64) }); });
     expect(m.entra).toHaveBeenCalledTimes(1);
-    expect(m.entra).toHaveBeenCalledWith('google', { testimoni: 'a.b.c', nonce: 'n'.repeat(64), testimoniAcces: null, nom: null }, m.config);
+    /* Actualitzada a posta (261024 T1): la credencial neta porta codiAutoritzacio (null amb Google). */
+    expect(m.entra).toHaveBeenCalledWith('google', { testimoni: 'a.b.c', nonce: 'n'.repeat(64), testimoniAcces: null, nom: null, codiAutoritzacio: null },
+      m.config);
     expect(m.toast).toHaveBeenCalledWith('Sessió iniciada.', 'success');
     expect(adaptador.oblida).toHaveBeenCalledWith('google');
   });

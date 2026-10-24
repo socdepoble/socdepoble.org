@@ -137,7 +137,10 @@ describe('/mercat/mac-mini-m4: la foto sola obri el visor', () => {
     const img = boto.querySelector('img');
     expect(img.getAttribute('src')).toBe(mac.images[0]);
     expect(img.getAttribute('alt')).toBe(mac.title);
-    expect([...img.attributes].map((a) => a.name).sort()).toEqual(['alt', 'src']);
+    /* Actualitzada a posta (261024 T4): la portada és la candidata a LCP de
+       la fitxa (Gemini G-02) i porta fetchpriority="high"; mai loading. */
+    expect([...img.attributes].map((a) => a.name).sort()).toEqual(['alt', 'fetchpriority', 'src']);
+    expect(img.getAttribute('fetchpriority')).toBe('high');
     expect(visor()).toBeNull();
   });
 
@@ -160,6 +163,26 @@ describe('/mercat/mac-mini-m4: la foto sola obri el visor', () => {
     act(() => tancar().click());
     expect(obert()).toBe(false);
     expect(document.activeElement).toBe(boto);
+  });
+
+  /* Correccions del 261024 (R4-03) · El segon clic d'un doble clic (detail 2)
+     que cau damunt de la portada no torna a obrir el visor (com a
+     CosAmbVisor); el primer (detail 1) i Intro o Espai (detail 0), sí. */
+  test('el segon clic d’un doble clic (detail 2) no torna a obrir el visor; un clic i Intro, sí', async () => {
+    const container = pinta(llavor('mac-mini-m4'));
+    const boto = within(portada(container)).getByRole('button', { name: OBRI });
+    await clica(boto);
+    esc();
+    expect(obert()).toBe(false);
+    act(() => { fireEvent.click(boto, { detail: 2, clientX: 51, clientY: 50 }); });
+    expect(obert()).toBe(false);
+    act(() => { fireEvent.click(boto, { detail: 3, clientX: 51, clientY: 50 }); });
+    expect(obert()).toBe(false);
+    act(() => { fireEvent.click(boto, { detail: 1, clientX: 51, clientY: 50 }); });
+    expect(obert()).toBe(true);
+    esc();
+    act(() => { fireEvent.click(boto, { detail: 0 }); });
+    expect(obert()).toBe(true);
   });
 
   test('Intro i Espai també l’obrin (un clic sense punter)', async () => {

@@ -466,8 +466,10 @@ description: "Documentació canònica de Sóc de Poble."
   `select cron.schedule('sdp-neteja-xat-adjunts', '23 * * * *', $cron$select private.xat_neteja_adjunts(500)$cron$);`.
   Límits coneguts: la durada del vídeo i de la veu és la que declara el client
   (el servidor no descodifica el fitxer); els binaris alliberats esperen a
-  `private.purga_storage_pendent` el worker amb `service_role`, que encara no
-  existix, i fins que el worker no els purga continuen comptant en la quota
+  `private.purga_storage_pendent` el worker amb `service_role`, la funció
+  `purga-fitxers` (vegeu «Funció `purga-fitxers`» al final; fins que el Mestre
+  no la desplega i la programa, no corre), i fins que el worker no els purga
+  continuen comptant en la quota
   de qui els va pujar; un adjunt sense peu es desa amb `text` null i, fins que
   el client llija `ultim_tipus`, la llista de converses en diu «Cap missatge.».
   Verificació posterior (lectura):
@@ -476,6 +478,207 @@ description: "Documentació canònica de Sóc de Poble."
   després, una pujada real des del client. La prova és
   `node tests/xat-multimedia-postgres.audit.mjs`: storage-api real si les
   imatges de Supabase són locals i, si no, la fixture, i diu quina ha corregut.
+
+- `migrations/2610241420_revocacio_apple.sql`
+  T1 (P0-04; App Store 5.1.1(v), Apple TN3194; auditoria Codex 261024_1315
+  C-01): la custòdia i la revocació de Sign in with Apple quan una persona es
+  dona de baixa. Crea `private.autoritzacions_apple` (el refresh token
+  d'Apple xifrat amb AES-256-GCM per la funció `compte-apple`, amb la persona
+  com a dades associades: la base no veu mai el text clar ni la clau), el
+  registre `private.revocacions_apple` (empremta pseudònima, origen i
+  resultat; sense clau forana, sobreviu a la purga), l'ajust
+  `dies_espera_revocacio_apple` = `7` i quatre RPC SECURITY DEFINER només per
+  a `service_role`: `apple_desa_autoritzacio` (només si el subjecte és la
+  identitat d'Apple de la persona a `auth.identities`), `apple_autoritzacio_de`,
+  `apple_revocacions_pendents` (primer les no provades i després les provades
+  fa més temps: una fila que falla no tapa la cua) i `apple_registra_revocacio`
+  (esborra la fila només quan Apple ha confirmat la revocació del mateix
+  xifrat; un `sense_testimoni` només s'anota si la baixa ja existix i com a
+  molt un per persona cada 24 hores). Permisos del
+  mandat Supabase 30-Oct-2026: les dues taules, RLS activa i
+  `revoke all ... from public, anon, authenticated, service_role` sense cap
+  grant (només hi entren les RPC); cada RPC, el mateix `revoke all` i
+  `grant execute on function ... to service_role`, i a dins la porta
+  `auth.role()`. Codis `SDP-APPLE-000`, `001` i `002`. No crida cap URL ni
+  toca `private.purga_una_baixa` (la porta de la purga és de 2610241440, T8).
+  Prerequisit aplicat de veres: 2609261500 (`private.baixes`,
+  `private.hash_subjecte`). Va ABANS de desplegar la funció `compte-apple`
+  (secció «Funció `compte-apple`», al final) i ABANS de 2610241440.
+  Verificació posterior (lectura):
+  `select count(*) from private.autoritzacions_apple;`,
+  `select origen, resultat, count(*) from private.revocacions_apple group by 1, 2;`
+  i `select valor from private.ajustos where clau = 'dies_espera_revocacio_apple';`.
+  Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610241410_exporta_dades_moderacio.sql`
+  P2-08 (pla 261024_1315, T7; auditoria Codex C-04): torna a crear
+  `public.exporta_les_meues_dades()` amb el cos de 2609261500 al peu de la
+  lletra (la mateixa signatura i el format `socdepoble.exportacio.v1`; només
+  l'executa `authenticated`, ara després de revocar-ho tot a `public`, `anon`,
+  `authenticated` i `service_role`) i hi afig `moderacio` (`denuncies_fetes`,
+  `denuncies_rebudes` només amb `amb_mesura`, quantes de les que t'afecten han
+  acabat retirant el contingut: cap recompte de les pendents, revisades o
+  desestimades, ni per tipus ni per motiu, perquè comparant dues exportacions
+  delataria qui denuncia, i el detall es respon per correu (RGPD, art. 15.4),
+  els `bloquejos` que has fet tu i
+  `normes_acceptades`), el xat sencer (`id`, `seq`, `tipus`, `metadades` i
+  `esborrat_per_mi` dels missatges propis, el subjecte i els teus ajustos de
+  cada conversa, i `adjunts_propis` amb el bucket i el nom de cada objecte: un
+  àudio sense peu conserva la referència), `seguiments` (a qui seguixes ara i
+  quantes persones et seguixen ara: només les files amb `deixat_al` null, i
+  una 2610241430 sense eixa columna deixa la clau amb l'error),
+  `apple` (només la data del permís desat, mai
+  el testimoni xifrat) i `no_inclou` (qui t'ha denunciat o bloquejat, qui et
+  seguix, les empremtes d'IP i el testimoni d'Apple, i per què). Cap taula,
+  política ni permís de taula nou. Cada lectura nova va dins d'un
+  `to_regclass`: sense 2610201500, 2610220240, 2610241420 (T1) o 2610241430
+  (T6b), la clau ix null (`adjunts_propis`, buida) i l'exportació no falla; es
+  comprova en cridar-la, i l'ordre entre elles no importa. La prova estàtica
+  és `src/data/supabase/exportacio.migracio.test.js`. Verificació posterior,
+  amb la sessió d'una persona de prova a l'editor SQL:
+  `select jsonb_object_keys(public.exporta_les_meues_dades());`. Idempotent;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610241400_normes_exigides_ugc.sql`
+  T2 (P0-18; auditoria Codex 261024_1315 C-02; Google Play UGC i App Store
+  1.2): el servidor exigix les normes de convivència abans d'admetre
+  publicacions i missatges dels veïns. Crea `private.versio_normes_vigent()`
+  (`'2026-10-24'`, la de `VERSIO_NORMES_CONVIVENCIA` de
+  `src/data/contracte.js`; pujar-la vol dir redefinir-la en una migració
+  nova), `private.ha_acceptat_normes(uuid)`, `private.he_acceptat_normes()`
+  (SECURITY DEFINER i sense paràmetre: només respon per la persona de la
+  sessió) i dos disparadors. `section_submissions_exigix_normes` salta abans
+  d'inserir (també l'upsert) i abans d'actualitzar `section_id`, `tenant_id`,
+  `title`, `description` o `payload`, fora de les notes privades; en una
+  actualització, només per a les escriptures directes per l'API
+  (`current_user = 'authenticated'`; la funció és SECURITY INVOKER a posta) i
+  només si alguna d'eixes columnes canvia: així un PATCH directe que reescriu
+  una publicació també passa per la porta (auditoria Codex D-07.2), i
+  `demana_baixa` i `cancela_baixa`, SECURITY DEFINER, continuen retirant i
+  tornant les claus personals del payload. `xat_missatges_exigix_normes`
+  (SECURITY DEFINER) salta abans d'inserir, només amb els missatges `text`
+  que envia la persona amb la seua sessió, que no són de la IAIA, i fora del
+  xat privat amb la IAIA. Qui no ha acceptat la versió vigent rep
+  `SDP-MOD-428` (42501); `service_role`, els seeds i el sistema (sense
+  `auth.uid()`) queden fora. Cap taula, política ni permís de taula nou; les
+  cinc funcions, `revoke execute ... from public, anon, authenticated,
+  service_role`, i un sol grant:
+  `grant execute on function private.he_acceptat_normes() to authenticated;`
+  (la crida el disparador de publicacions amb el rol de qui escriu). En
+  aplicar-la, `SDP-MOD-901` si falta 2610201500. Prerequisit aplicat de
+  veres: 2610201500 (`private.normes_acceptades`), amb el mateix rol
+  propietari. Va DESPRÉS de publicar el client amb
+  `VERSIO_NORMES_CONVIVENCIA = '2026-10-24'` (un client antic només sap
+  acceptar `'2026-10-20'`). El xat públic de la pàgina `/iaia` també les
+  exigix, i el client hi passa la porta. Pendent del Mestre (el «QUÈ NO FA»
+  de la capçalera): la resta del contingut dels veïns no hi passa (els camps
+  del perfil que mostra `perfil_public`, els textos de les entitats i les
+  pujades a Storage). La prova estàtica és
+  `src/data/supabase/normesExigides.migracio.test.js`. Verificació posterior
+  (lectura):
+  `select tgname from pg_trigger where tgname in ('section_submissions_exigix_normes', 'xat_missatges_exigix_normes');`
+  i `select private.versio_normes_vigent();`. Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610241430_seguiments.sql`
+  T6b (IDEA-14; decisió del Mestre, 261024): «Connectar / Seguir», el
+  seguiment d'un sol sentit. Pots seguir una veïna o una entitat; qui és
+  seguit ho sap i veu qui el seguix; cap algoritme. Crea `public.seguiments`
+  (`seguidor`, `seguit_tipus` 'persona' o 'entitat', `seguit_persona` o
+  `seguit_entitat`, `tenant_id`, `creat_al`, `reactivat_al` i `deixat_al`; un
+  sol seguit del seu tipus, ningú no se seguix a si mateix i una sola fila
+  per parella, per sempre, amb dos índexs únics parcials), amb la RLS activa i
+  cap política; tres funcions privades
+  (`private.poble_compartit`, `private.bloqueig_de_seguiment` i
+  `private.seguiment_viu`) i cinc RPC SECURITY DEFINER amb `search_path` buit,
+  només per a `authenticated`: `segueix(p_tipus, p_id)` (idempotent: torna
+  `primer` true només la primera vegada de totes que la parella se seguix, i
+  `nou`, conservat per compatibilitat, val el mateix; tornar a seguir dona
+  false a tots dos, i el client només avisa al xat amb `primer`),
+  `deixa_de_seguir(p_tipus, p_id)` (esborrat suau: marca `deixat_al`, mai
+  esborra la fila; un seguiment viu és `deixat_al is null`),
+  `estat_seguiment(p_tipus, p_id)`, `els_meus_seguiments()` i
+  `qui_em_segueix(p_org_id)` (sense entitat, qui et seguix a tu; amb entitat,
+  qui la seguix, només per a qui l'administra). Regles: una persona, només si
+  sou del mateix poble i cap de les dues no ha demanat la baixa; una entitat,
+  pública (o de la qual formes part), de qualsevol poble; mai tu mateix ni
+  una entitat que administres; cap bloqueig teu de `public.bloquejos` (es
+  llig amb `to_regclass`); 60 altes o represes per hora (també les deixades
+  després: deixar de seguir no reinicia el compte), una represa de la mateixa
+  parella cada 10 minuts i 1.000 seguiments vius per persona, sota el seu
+  pany. El bloqueig de l'altra banda és a l’ombra: seguir funciona igual i les
+  lectures de qui seguix no l'amaguen; només `qui_em_segueix`, la llista de
+  qui és seguit, deixa fora qui seguix si hi ha un bloqueig en qualsevol
+  sentit (també d'algú que administra l'entitat). Les lectures només tornen
+  seguiments vius, amaguen el que tapa ara una baixa o un canvi de poble, i
+  van per data. Codis
+  `SDP-SEG-000` (sense sessió), `001` (tipus o identificador), `002` (no
+  existix, no és del teu poble o no la pots seguir; mai per un bloqueig de
+  l'altra banda), `003` (tu mateix o una entitat que administres),
+  `004` (l'has bloquejada tu), `005` (només qui administra veu qui seguix
+  l'entitat) i `006` (el límit). Els permisos del mandat Supabase
+  30-Oct-2026, després de revocar-ho tot a `public`, `anon`, `authenticated`
+  i `service_role`: `grant select, insert, update, delete on public.seguiments to service_role;`
+  (el client només hi entra per les RPC; cap permís per a `anon`).
+  L'exportació de dades (2610241410, T7) en llig `seguidor`, `seguit_tipus`,
+  `seguit_persona`, `seguit_entitat`, `creat_al` i `deixat_al` amb
+  `to_regclass`.
+  Additiva i idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**, i
+  va ABANS de publicar el client: sense ella, Seguir diu `NO-DISPONIBLE`.
+  Prerequisits aplicats de veres: 2609080000 i 2609261500
+  (`baixa_demanada_at`); 2610201500 és opcional (sense ella, cap bloqueig no
+  compta). La prova estàtica és `src/data/supabase/seguiments.migracio.test.js`.
+  Verificació posterior (lectura):
+  `select seguit_tipus, count(*) from public.seguiments group by 1;`.
+  Pendent del Mestre (el «QUÈ NO FA» de la capçalera): el servidor no
+  notifica res (l'únic avís és el del client, un per parella); un bloqueig no
+  esborra el seguiment, només l'amaga a qui bloqueja; les files deixades es
+  queden fins a la baixa del compte; qui administra una entitat veu el nom de
+  qui la seguix, també si és d'un altre poble.
+
+- `migrations/2610241440_baixa_completa_ugc_i_fitxers.sql`
+  T8 (P0-20; pla 261024_1315; auditoria Codex 261024_1315 C-06): la baixa
+  completa. Torna a crear `private.purga_una_baixa`, la de 2609282100 literal
+  amb tres canvis i prou (els comprova
+  `src/data/supabase/baixaCompleta.migracio.test.js`): la porta d'Apple, just
+  després de tornar a bloquejar la baixa (mentre quede una fila a
+  `private.autoritzacions_apple`, la purga espera fins a
+  `dies_espera_revocacio_apple` dies després de la data prevista, amb
+  `SDP-BAIXA-030`; passada l'espera, purga i deixa una fila `purga` /
+  `purgat_sense_revocar` a `private.revocacions_apple`); la neteja dels fils
+  de pàgina de les publicacions que s'esborren (auditoria Codex D-02: el fil i
+  els missatges d'altres persones es queden, però `titol` passa a
+  `'Publicació esborrada'` i `subjecte_titol`, `subjecte_ruta` i
+  `subjecte_uri` a null), i l'esborrat de les publicacions personals
+  (`author_org_id` null), que abans passaven a l'uuid zero amb el títol, la
+  descripció i el cos; les d'una entitat no es toquen. Torna a crear també
+  `private.purga_baixes_vencudes`, la de 2609261500 literal amb un sol canvi:
+  el lot va primer per les baixes que no han fallat mai (`ultim_intent_al`
+  null) i després per les que ja han fallat, primer la que fa més temps que
+  ho va provar; així qui espera Apple (`SDP-BAIXA-030` cada dia) no ocupa el
+  lot de 100 i la resta es purga a temps. Afig a `private.purga_storage_pendent` les columnes `intents`,
+  `ultim_error` i `ultim_intent_al` i l'índex `purga_storage_pendent_cua`, els
+  ajustos `dies_espera_revocacio_apple` (7) i `purga_fitxers_max_intents` (10)
+  si no hi són, i les tres RPC del worker `purga-fitxers`
+  (`purga_fitxers_reclama`, `purga_fitxers_fets` i `purga_fitxers_fallits`),
+  SECURITY DEFINER amb la guarda `auth.role()`. Codis: `SDP-BAIXA-030`,
+  `SDP-PURGA-000`, `001` i `002`. Els permisos del mandat Supabase
+  30-Oct-2026, després de revocar-ho tot a `public`, `anon`, `authenticated`
+  i `service_role` (també la taula de la cua, sense cap permís nou):
+  `grant execute on function public.purga_fitxers_reclama(integer) to service_role;`,
+  `grant execute on function public.purga_fitxers_fets(bigint[]) to service_role;`
+  i `grant execute on function public.purga_fitxers_fallits(bigint[], text) to service_role;`.
+  Cap pg_net, cap URL i cap secret. Va després de 2609261500 i 2609282100 i,
+  per a la porta d'Apple, de 2610241420 (sense ella, `to_regclass` deixa la
+  porta apagada i la purga fa com abans), i ABANS de desplegar la funció
+  `purga-fitxers` (vegeu «Funció `purga-fitxers`» al final). Pendent del
+  Mestre (el «QUÈ NO FA» de la capçalera, custòdia legal): si cal conservar
+  les publicacions d'un grup que desapareix amb la persona (ara s'esborren),
+  si cal esborrar sencers els fils de pàgina de les publicacions esborrades
+  (es conserven, amb els missatges d'altres persones i sense el títol), el nom
+  d'aquell grup als seus fils (es conserva) i les denúncies sobre elles (es
+  conserven). Verificació posterior (lectura):
+  `select count(*) filter (where intents = 0) as noves, count(*) filter (where ultim_error is not null) as amb_error, count(*) filter (where referenciat) as conservades from private.purga_storage_pendent;`.
+  Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `seed.sql`
   Contingut inicial del portal.
@@ -566,21 +769,62 @@ programa:
   s'esborra mai.
 - Els errors de purga no la paren: queden a `private.baixes` (`intents`,
   `ultim_error`, `ultim_intent_al`). Cal verificar en staging que `postgres`
-  pot esborrar d'`auth.users`; si no, cada intent hi deixarà l'error.
+  pot esborrar d'`auth.users`; si no, cada intent hi deixarà l'error. Des de
+  2610241440, el lot de cada dia va primer per les baixes que no han fallat
+  mai i després per les que ja han fallat (primer la que fa més temps que ho
+  va provar): una baixa que falla cada dia no ocupa el lloc de les altres.
 - `private.purga_una_baixa()` torna a llegir i bloqueja la fila de
   `private.baixes` abans d'esborrar res (i torna `false` si ja no hi és o no
   ha vençut): una cancel·lació confirmada mentre la purga corre no acaba
   esborrant el compte. Només es compten les purgades de veres.
 
-**Els fitxers de Storage no s'esborren des de SQL.** La purga només posa a
-la cua `private.purga_storage_pendent` els fitxers de la carpeta de la
-persona, i marca `referenciat = true` els que encara usa una entitat (logotip,
-capçalera o una imatge del cos de la fitxa) o una publicació. Es compara amb
-`<bucket>/<nom>`: la còpia pública d'un adjunt té el mateix nom que l'original
-privat, i l'original no queda referenciat per ella. Falta la peça que buida la cua: una funció amb
-`service_role` que esborre per l'API de Storage les files amb
-`referenciat = false` i `feta_al is null`, i en marque `feta_al`. Fins que
-existisca, els fitxers de qui se'n va es queden al bucket.
+**La porta d'Apple** (2610241440, T8; la custòdia és de 2610241420, T1).
+Si la persona té una autorització d'Apple custodiada
+(`private.autoritzacions_apple`), la purga no esborra el compte mentre la
+funció `compte-apple` no la revoque i n'esborre la fila. L'espera té sostre:
+`dies_espera_revocacio_apple` dies (`private.ajustos`, 7 per defecte, de 0 a
+30) després de la data prevista. Mentrestant, cada intent deixa
+`SDP-BAIXA-030` a `private.baixes.ultim_error` i la resta del lot continua.
+Passada l'espera, purga igualment i en deixa una fila `purga` /
+`purgat_sense_revocar` a `private.revocacions_apple`, amb l'empremta i
+l'últim error (mai l'uid): el compte no es pot retindre per sempre perquè
+Apple o els secrets fallen. Consulta (lectura):
+`select resultat, count(*) from private.revocacions_apple where origen = 'purga' group by 1;`.
+
+**Què esborra la purga.** El compte (i, en cascada, el perfil, les
+pertinences, els missatges i les lectures del xat, les incidències, la baixa
+i els consentiments, que passen a bloqueig), les notes i, des de 2610241440,
+també les publicacions personals (les que no signa cap entitat, de qualsevol
+secció); abans es quedaven a l'uuid zero amb el títol, la descripció i el
+cos. Les signades per una entitat que continua són de l'entitat i es queden.
+Els fils de pàgina d'una publicació esborrada es queden amb els missatges
+d'altres persones, però sense la còpia del títol: `titol` passa a
+`'Publicació esborrada'` i `subjecte_titol`, `subjecte_ruta` i
+`subjecte_uri`, a null. Decisions pendents del Mestre (custòdia legal): les
+publicacions d'un grup que desapareix amb la persona (n'era l'única membre
+que no estava de baixa) perden l'entitat per la clau forana i ara s'esborren
+amb les personals; si cal esborrar sencers els fils de pàgina d'una
+publicació esborrada; i què es fa amb les denúncies sobre ella, que es
+conserven com a historial de moderació. Les publicacions que una
+purga d'abans de 2610241440 ja havia passat a l'uuid zero no s'esborren
+soles; quantes n'hi ha (lectura):
+`select count(*) from public.section_submissions where owner_user_id = '00000000-0000-0000-0000-000000000000' and author_org_id is null;`.
+Esborrar-les és decisió del Mestre.
+
+**Els fitxers de Storage no s'esborren des de SQL.** La purga posa a la cua
+`private.purga_storage_pendent` els fitxers de la carpeta de la persona, i
+marca `referenciat = true` els que encara usa una entitat (logotip,
+capçalera o una imatge del cos de la fitxa) o una publicació que es queda.
+Es compara amb `<bucket>/<nom>`: la còpia pública d'un adjunt té el mateix
+nom que l'original privat, i l'original no queda referenciat per ella. Les
+publicacions personals s'esborren abans, i les imatges que només usaven elles
+hi entren amb `referenciat = false`. La cua la buida la funció
+`purga-fitxers` (vegeu «Funció `purga-fitxers`» al final): esborra per l'API
+de Storage les files amb `referenciat = false` i `feta_al` null, amb
+reintents, i lleva cada fila quan el seu objecte ja no és a
+`storage.objects`. Fins que el Mestre la desplegue i la programe, els fitxers
+de qui se'n va (i els adjunts del xat alliberats, que continuen comptant en la
+quota) es queden al bucket.
 
 **El consentiment és versionat.** `public.politiques_privacitat` guarda cada
 versió del text legal. La `v1` heretada no té empremta perquè el text no es
@@ -809,3 +1053,401 @@ comptes temporals i els retira en `finally`; no admet una URL remota.
 ## Vincles
 
 - [[00_index]]
+
+## Funció `compte-apple` (revocació d'Apple)
+
+T1 (261024; P0-04, App Store Review Guideline 5.1.1(v), Apple TN3194;
+auditoria Codex 261024_1315 C-01). Una Edge Function de Supabase:
+`supabase/functions/compte-apple/index.ts` (l'embolcall Deno, dues línies),
+`supabase/functions/compte-apple/gestor.js` (la lògica, provada a
+`gestor.test.js`) i `supabase/functions/_shared/apple.js` (el protocol
+d'Apple, provat a `apple.test.js`; una carpeta que comença per `_` no es
+desplega sola). No hi ha `supabase/config.toml` a posta. Necessita
+`migrations/2610241420_revocacio_apple.sql` aplicada.
+
+Què fa, i en quin ordre:
+
+1. **Custòdia.** Quan algú entra amb Apple a l'iPhone, l'app envia el codi
+   d'autorització d'un sol ús (dura uns cinc minuts) a
+   `POST /functions/v1/compte-apple` amb `{ "accio": "custodia", "codi": … }`
+   i la seua sessió; mai a GoTrue. La funció comprova la sessió amb
+   `/auth/v1/user`, canvia el codi a Apple amb un client secret ES256 de cinc
+   minuts, comprova que l'`id_token` és d'Apple, per al nostre client i del
+   mateix subjecte que la identitat d'Apple de la sessió (vincle A/B; la RPC
+   ho torna a comprovar a `auth.identities`), xifra el refresh token i el desa.
+   Si falla (sense xarxa, la funció sense desplegar), l'entrada no falla: no
+   hi haurà res a revocar. Com que la revocació va ABANS de `demana_baixa`,
+   la primera baixa d'eixa persona no deixa cap `sense_testimoni` (no s'ha
+   revocat res); si la torna a demanar amb la baixa ja feta, se n'anota un,
+   com a molt un cada 24 hores.
+2. **Baixa.** Just abans de `demana_baixa`, que esborra les sessions, el
+   client crida `{ "accio": "revoca" }` (de millor esforç, 10 s) amb el
+   testimoni de la sessió que ha passat la comprovació, i només si eixa
+   persona té Apple: primer Apple i després `apple_registra_revocacio`. Si
+   la sessió canvia entremig, no s'envia res. Si no arriba, la baixa
+   continua igual i ho fa el buidatge.
+3. **Buidatge, cada hora.** `{ "accio": "buida" }` amb la capçalera
+   `x-sdp-cron` revoca els pendents de les baixes: els desats abans de
+   demanar-la i, quan falta un dia per a la purga, també els d'una entrada
+   nova durant la quarantena (si la persona cancel·la la baixa, no se li
+   revoca res). Una fallida espera mitja hora; 50 pendents per crida, primer
+   els que no s'han provat mai i després els provats fa més temps. Cada
+   testimoni es revoca amb el `client_id` amb què es va desar (el client
+   secret es fa per a eixe client). Un error d'una sola fila (un xifrat que
+   no es desxifra, un 400 d'un testimoni, un `client_id` d'abans) queda com
+   a fallida d'eixa fila i el lot continua.
+4. **Porta de la purga** (2610241440, T8). `private.purga_una_baixa` no
+   esborra `auth.users` mentre quede una fila a `private.autoritzacions_apple`,
+   com a molt `dies_espera_revocacio_apple` dies (7) passada la purga
+   prevista; després purga i ho registra com a `purgat_sense_revocar`. Cap
+   retenció indefinida.
+
+Secrets. Els posa el Mestre amb `supabase secrets set … --project-ref <ref>`;
+mai en cap `.env`, cap `VITE_*`, cap xat ni cap commit:
+
+- `APPLE_TEAM_ID` · l'equip de desenvolupament (`9KNUA4JR8P`).
+- `APPLE_KEY_ID` · els 10 caràcters de la clau de Sign in with Apple.
+- `APPLE_CLIENT_ID` · el bundle `org.socdepoble.app` (no hi ha cap Services ID web).
+- `APPLE_PRIVATE_KEY` · el contingut de la `.p8`.
+- `APPLE_TESTIMONIS_CLAU` · 32 bytes aleatoris en base64 (`openssl rand -base64 32`).
+  Si es perd o es canvia, els testimonis desats ja no es poden desxifrar ni
+  revocar (acaben en `purgat_sense_revocar`): guardeu-la al gestor de
+  contrasenyes. La rotació és una decisió del Mestre.
+- `SDP_CRON_SECRET` · 32 caràcters com a mínim (`openssl rand -hex 32`); només
+  el coneix el buidatge.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY` i `SUPABASE_SERVICE_ROLE_KEY` els
+  injecta Supabase (la clau nova `sb_secret_…` també val).
+
+La clau `.p8`: Apple Developer → Certificates, IDs & Profiles → Keys → + →
+Sign in with Apple → Configure (Primary App ID `org.socdepoble.app`) →
+Download. Només es pot descarregar una vegada: guardeu-la fora del
+repositori (`*.p8` ja és a `.gitignore`, però no ha d'entrar mai a l'arbre)
+i carregueu-la directament des d'eixa ruta:
+
+```
+supabase secrets set APPLE_PRIVATE_KEY="$(cat /ruta/fora/del/repositori/AuthKey_XXXXXXXXXX.p8)" --project-ref <ref>
+```
+
+Desplegament (cal la sessió de la CLI; la funció autoritza ella mateixa cada
+acció: la sessió amb `/auth/v1/user`, el buidatge amb `x-sdp-cron`):
+
+```
+supabase functions deploy compte-apple --no-verify-jwt --project-ref <ref>
+```
+
+L'ordre: 2610241420 aplicada → secrets → desplegament → buidatge programat →
+client publicat. A Supabase Auth, el proveïdor Apple ha d'estar actiu amb
+Client IDs = `org.socdepoble.app`.
+
+El buidatge de cada hora: Integrations → Cron → Create job → Supabase Edge
+Function `compte-apple`, mètode POST, horari `7 * * * *` (al minut 7, abans
+de `sdp-purga-baixes` de les 03:17), capçalera `x-sdp-cron: <SDP_CRON_SECRET>`
+i cos `{"accio":"buida"}`. L'alternativa és pg_cron amb pg_net i el secret a
+Vault, mai dins d'una migració. Un `503 config` vol dir secrets dolents
+(la clau `.p8`, la clau dels testimonis, o `invalid_client` del client
+configurat) i para el lot. Verificació (lectura):
+`select jobname, schedule from cron.job;` i
+`select origen, resultat, count(*) from private.revocacions_apple group by 1, 2;`.
+
+Revocació manual de qui va entrar amb Apple abans de la custòdia (TestFlight
+i proves): no hi ha cap testimoni ni res a revocar, i la primera baixa no
+deixa cap fila a `private.revocacions_apple`.
+Qui són (lectura, com a `postgres`):
+
+```
+select i.user_id from auth.identities i where i.provider = 'apple' and not exists (select 1 from private.autoritzacions_apple a where a.user_id = i.user_id);
+```
+
+Dos camins: que entren una vegada amb Apple després del desplegament (la
+custòdia desa el testimoni i la baixa ja el revoca), o que retiren el permís
+ells mateixos des de l'iPhone (Configuració › el seu nom › Inici de sessió i
+seguretat › Inici de sessió amb Apple › Sóc de Poble; el nom exacte canvia
+amb la versió d'iOS) o des d'account.apple.com. La purga no els espera: sense
+fila custodiada no hi ha porta.
+
+Regla: mai esborreu un usuari d'Apple des del tauler (Authentication → Users
+→ Delete). La cascada s'emporta la fila custodiada sense revocar res a Apple.
+Una baixa passa sempre per `demana_baixa` i la purga.
+
+## Funció `purga-fitxers` (cua de fitxers de la baixa)
+
+T8 (261024; P0-20; auditoria Codex 261024_1315 C-06). Buida
+`private.purga_storage_pendent`, la cua que omplin la purga d'una baixa i la
+neteja dels adjunts del xat (`private.xat_neteja_adjunts`, 2610220240).
+Fitxers: `supabase/functions/purga-fitxers/index.ts` (l'embolcall Deno, que
+només li passa tres variables) i `supabase/functions/purga-fitxers/gestor.js`
+(la lògica, provada a `gestor.test.js`). Necessita
+`migrations/2610241440_baixa_completa_ugc_i_fitxers.sql` aplicada.
+
+Què fa cada passada (un POST amb la capçalera `x-sdp-cron`):
+
+1. Reclama un lot de 50 files amb `purga_fitxers_reclama` (`FOR UPDATE SKIP
+   LOCKED`; només `referenciat = false`, `feta_al` null i per davall del
+   sostre d'intents). Reclamar suma l'intent i en fixa l'hora: eixa és la
+   reserva, i dos passades alhora no es reparteixen mai la mateixa fila.
+2. Per a cada bucket, `DELETE /storage/v1/object/<bucket>` amb
+   `{"prefixes": [...]}` (100 noms per petició; el mateix cos que el
+   `remove()` de storage-js) i la clau de servei.
+3. Si Storage respon 2xx, o 404 (no hi havia res a esborrar),
+   `purga_fitxers_fets` lleva les files l'objecte de les quals ja no és a
+   `storage.objects`; una que hi continua es queda amb `SDP-PURGA-002`. Si
+   no, `purga_fitxers_fallits` hi anota l'error (`storage <estat>`, `xarxa` o
+   `temps`), mai el nom.
+4. Torna a reclamar fins que la cua es buida, 20 lots o 50 s de pressupost
+   (8 s de topall per petició; no comença res que no hi càpia). Respon
+   `{ok, fets, fallits, pendents, sense_provar, lots, esgotat}`: només
+   recomptes, i el registre igual. Cap nom d'objecte ix de la funció.
+
+Reintents. Una fila reclamada no torna fins que passa l'espera exponencial:
+10 minuts després del primer intent, el doble a cada intent i un dia com a
+molt, també si la passada cau a mitges (l'esborrat es pot repetir). Al sostre
+`purga_fitxers_max_intents` (`private.ajustos`, 10 per defecte, d'1 a 100) la
+fila ja no es reclama: es revisa a mà. Les files amb `referenciat = true` (les
+usa una entitat o una publicació que es queda) i les que porten `feta_al`
+(marques a mà d'abans del worker) no es reclamen mai.
+
+Secrets. `SUPABASE_URL` i `SUPABASE_SERVICE_ROLE_KEY` els injecta Supabase (la
+clau nova `sb_secret_…` també val: llavors només va a `apikey`).
+`SDP_CRON_SECRET` és el mateix de `compte-apple` (32 caràcters com a mínim,
+`openssl rand -hex 32`): si ja hi és, no cal tornar-lo a posar. Sense un dels
+tres, la funció respon `503 config` i no fa res; sense la capçalera bona,
+`401`.
+
+Desplegament (la funció autoritza ella mateixa amb `x-sdp-cron`):
+
+```
+supabase functions deploy purga-fitxers --no-verify-jwt --project-ref <ref>
+```
+
+L'ordre: 2610241440 aplicada → secret → desplegament → programació.
+
+Programació: Integrations → Cron → Create job → Supabase Edge Function
+`purga-fitxers`, mètode POST, horari `47 * * * *` (cada hora al minut 47: la
+primera passada després de `sdp-purga-baixes`, de les 03:17 UTC, és la de les
+03:47, i els adjunts del xat que allibera `sdp-neteja-xat-adjunts`, al minut
+23, deixen de comptar en la quota abans d'una hora), capçalera
+`x-sdp-cron: <SDP_CRON_SECRET>`, cos `{}` i un temps d'espera de 60 s com a
+mínim. L'alternativa és pg_cron amb pg_net i el secret a Vault, mai dins
+d'una migració. Verificació (lectura): `select jobname, schedule from cron.job;`.
+
+Les files encallades (lectura, com a `postgres`; els recomptes no ensenyen
+cap nom):
+
+```
+select bucket_id, intents, ultim_error, count(*) from private.purga_storage_pendent where not referenciat and feta_al is null group by 1, 2, 3 order by 2 desc;
+```
+
+`SDP-PURGA-002` vol dir que Storage ha dit que sí però l'objecte encara hi és;
+`storage 401` o `storage 403`, la clau de servei; `temps` o `xarxa`, Storage
+lent o caigut. Per a tornar a provar una fila arribada al sostre, quan la
+causa ja estiga resolta:
+
+```
+update private.purga_storage_pendent set intents = 0, ultim_error = null, ultim_intent_al = null where id = <id>;
+```
+
+Límits coneguts: un fitxer `referenciat = true` es queda encara que l'entitat
+el deixe d'usar més avant (la marca es fixa en purgar); si storage-api lleva
+la fila de `storage.objects` i després li falla el binari al backend (l'ordre
+intern de storage-api, no verificat ací), eixe residu ja no el veu cap fila de
+la cua; les còpies de seguretat del proveïdor seguixen el seu cicle de 30
+dies.
+
+## Funció `noticies` (lector territorial)
+
+T5 (261024; P1-07, auditoria Gemini 261024_1315 G-03), T5b (ordre del
+Mestre, 261024), la passada del Lector de 261024 (troballes R5, D-08 de
+Codex i G2-03 de Gemini) i la passada final del Lector (troballes R6 del
+servei, 261024). El servei de notícies del poble per a
+`/app/lector`: llig els feeds RSS i Atom de les fonts del Lector, i les seues
+imatges, perquè el navegador del veí no toque mai l'origen d'una font. Les
+fonts del sistema són EXACTAMENT els referents de coneixement obert del §23
+del text legal (Emowe, AyudaWP, IA en Acción, Jon Hernández i els canals de
+vídeo de Migue Baena i Ben Cord); les deu territorials del T5 ja no són
+actives i queden documentades com a candidates a
+`src/data/adaptadors/noticies/README.md`. La persona les pot apagar una per
+una (el Lector ja no les demana). Les fonts personals (adreces que afig la
+persona) també les pot llegir este servei, però estan **apagades per
+defecte**. Una Edge Function de Supabase:
+`supabase/functions/noticies/index.ts` (l'embolcall de `Deno.serve`),
+`supabase/functions/noticies/gestor.js` (la lògica, pura i provada a
+`gestor.test.js`) i `supabase/functions/noticies/fonts.json` (la llista
+blanca). `paritat.test.js` vigila que `fonts.json` diga el mateix que el
+catàleg del frontend, `src/data/adaptadors/noticies/cataleg.js`, id per id i
+adreça per adreça. Cap migració, cap taula i cap secret. Tres variables, cap
+secreta: `SDP_NOTICIES_PERSONALS` (només `'1'` encén les fonts personals;
+sense valor, o un altre, apagades), `SDP_NOTICIES_IMATGES_EXTERNES` (R6
+L-12: només `'1'` encén les imatges de hosts de fora del catàleg; sense
+valor, o un altre, apagades) i `SUPABASE_URL` (la posa la plataforma; només
+se'n pren el host, que cap adreça de fora no pot demanar).
+
+El contracte (`sdp.noticies.v1`, detallat a
+`src/data/adaptadors/noticies/README.md`):
+
+- `GET /functions/v1/noticies/fonts` → `{ categories, fonts, personals }`,
+  sense les adreces dels feeds; `personals` és cert només amb
+  `SDP_NOTICIES_PERSONALS=1` i un resoledor de noms a l'entorn. El client
+  guarda tota la sessió de pàgina una resposta definitiva (un 200 del
+  contracte, o un 404 que no és del servei: la funció no hi és, i el Lector
+  no demana cap feed més); una de passada (la xarxa que no arriba, 5xx, 429,
+  temps), només 30–60 s, i després torna a preguntar (R6 L-01: una fallada de
+  passada ja no apaga el Lector tota la sessió). Com a molt una petició
+  fallida per ronda, no sis. Si diu `personals: false`, el navegador no envia
+  cap adreça personal.
+- `GET /functions/v1/noticies/feed?font=<id>` → `{ font, xml, obtingut,
+  obsoleta }`, el feed en UTF-8.
+- `GET /functions/v1/noticies/feed?url=<adreça https>` → `{ url, xml,
+  obtingut, obsoleta }`, una font personal (`Cache-Control: private,
+  max-age=300`; `obtingut` és l'hora de la petició).
+- `GET /functions/v1/noticies/imatge?u=<adreça https>` → els bytes d'una
+  imatge d'un host del catàleg o dels seus CDN (`CDN_IMATGES`), o, amb
+  `SDP_NOTICIES_IMATGES_EXTERNES=1`, d'un altre host si ha eixit en un feed
+  que la instància ha baixat les últimes 24 h (`Cache-Control: public,
+  max-age=86400`, cap galeta).
+- Error → `{ code: 'sdp_noticies_<codi>', message, data: { status } }`:
+  `font_desconeguda`, `ruta` i `imatge_desconeguda` 404, `peticio` 400
+  (també `url` amb les personals apagades), `metode` 405, `adreca_vetada`
+  422, `limit` i `ocupat` 429 (amb `Retry-After`), `origen_temps` 504,
+  `origen_buit` 504 (R6 L-06: un 304 a una petició sense condicions; el
+  Lector hi diu «temps», mai «font»), `origen_caigut`, `origen_format` i
+  `origen_mida` 502, `personals_sense_dns` i `imatge_sense_dns` 503,
+  `imatge_de_fora` 403 (R6 L-12), `intern` 500. L'adreça demanada no torna
+  mai en un error.
+
+Les regles de les fonts del sistema: l'únic que entra és l'id d'una font de
+`fonts.json` (cap adreça de la consulta); a l'origen, GET amb l'agent honest
+`SocDePoble/1.0 (+https://socdepoble.org/projecte)`, 6 s, com a molt 2
+redireccions dins del mateix host i en https, i 2 MiB; el text passa a UTF-8
+(el BOM primer, després la capçalera i el pròleg; també ISO-8859-1 i
+windows-1252) i l'arrel ha de ser `rss`, `feed` o `RDF`, sense cap
+`<!ENTITY>`; memòria cau de la instància, fresca 15 min i de reserva fins a
+24 h (`obsoleta: true`); `Cache-Control: public, max-age=300`; CORS `*` sense
+credencials. La memòria i els límits són de cada instància: si la plataforma
+n'arranca diverses, cadascuna porta els seus.
+
+El límit per connexió: la connexió és `cf-connecting-ip`; si no, l'ÚLTIM salt
+de `x-forwarded-for` (el que posa el proxy de la plataforma; el primer el pot
+escriure qualsevol); si no, l'adreça remota; una IPv6 compta per la seua /64.
+120 peticions cada 10 min per a `/fonts` i `/feed`, 60 per a les personals (a
+banda) i 600 per a les imatges (a banda). R6 L-05: amb la taula mig plena
+(2500 de 5000 finestres), una IPv6 compta per la seua /48; amb la taula
+plena, una connexió nova fa lloc traient la finestra viva menys gastada (mai
+una que ja és al límit), i només espera (429) si totes ho són. Abans, una
+sola /48 que omplia la taula deixava fora tots els visitants nous 10 min.
+No es guarda cap IP: només una empremta HMAC-SHA-256 amb una clau aleatòria
+de la instància (naix i mor amb ella; no es pot exportar), i les finestres
+vençudes s'esborren a cada petició.
+
+Les regles de les fonts personals (`?url=`, contra el SSRF; totes a
+`gestor.js` i provades una per una a `gestor.test.js`): APAGADES si
+`SDP_NOTICIES_PERSONALS` no és `'1'`; enceses però sense `Deno.resolveDns`,
+tancades (503 `personals_sense_dns`; mai «sense resoledor, és pública»);
+només `https:`, port buit (443), cap usuari ni contrasenya, com a molt 2048
+caràcters, sense fragment; el host ha de ser un nom DNS amb un punt, mai una
+IP literal (el parser WHATWG normalitza `2130706433`, `0x7f000001` o
+`0177.0.0.1` a quatre xifres, que no passen; `[::1]` porta claudàtors) ni un
+nom local (`localhost`, `*.localhost`, `*.local`, `*.internal`, `*.arpa` amb
+`*.home.arpa`, `*.localdomain`, `*.lan`…), ni el host del projecte ni el de
+la petició; el nom es resol (A i AAAA) i cap resposta pot ser privada, de
+bucle, d'enllaç local (169.254/16, amb 169.254.169.254), CGNAT (100.64/10),
+ULA (`fc00::/7`), `fe80::/10`, `::1`, 0.0.0.0/8, de documentació, de
+traducció (`64:ff9b:1::/48`, `::ffff:0:0:0/96`) ni de protocol
+(`2001::/23`) (si no es pot resoldre, no es baixa res); cada redirecció
+(manual, com a molt 2) torna a passar-ho tot; els mateixos 6 s (la resolució
+inclosa), arrel de feed, agent honest i cap galeta, però 512 KiB; com a molt
+4 baixades personals alhora en tota la instància i 1 per connexió (429
+`ocupat`); memòria cau per connexió i adreça normalitzada (una connexió no
+rep mai la còpia d'una altra), fitada (64 entrades, 16 M caràcters, 24 h).
+
+Les regles de les imatges (`?u=`; R6, passada final): d'un host aprovat (el
+del feed de cada font del catàleg i els CDN de `CDN_IMATGES`, hui
+`i.ytimg.com` i `i1`–`i4.ytimg.com`), qualsevol imatge, encara que la
+instància no l'haja vista (L-08), sense resoldre el nom; d'un altre host,
+APAGADES per defecte: 403 `imatge_de_fora`, sense resoldre ni baixar res
+(L-12), també per a una redirecció cap a fora. Enceses
+(`SDP_NOTICIES_IMATGES_EXTERNES=1`), només les que han eixit les últimes 24 h
+en un feed del sistema baixat per la instància o en una font personal de la
+mateixa connexió (L-11), mai una adreça qualsevol (404
+`imatge_desconeguda`), i el nom es resol (sense resoledor, 503
+`imatge_sense_dns`). Les imatges d'un feed (`enclosure` d'imatge,
+`media:thumbnail`, `media:content` d'imatge, `itunes:image` i la primera
+`<img>` de cada contingut) es trien i es resolen com al nucli del Lector,
+relatives i de protocol relatiu incloses (L-09; `paritat.test.js`). Les
+mateixes regles del nom per a tots; tipus `image/jpeg`, `png`, `webp`, `gif`
+o `avif` (cap SVG) i una signatura de bytes que ho diga; 1 MiB; 6 s. Com a
+molt 8 baixades alhora; la resta espera el seu torn en una cua (64 i 6 s com
+a molt) i només si la cua és plena o el torn no arriba és 429 `ocupat` (L-02);
+una memòria menuda dels bytes (64 imatges, 8 MiB, 15 min), compartida només
+per a les imatges dels feeds del sistema.
+
+El que es veu de qui demana, sense dir-ne més del que és: el gestor no
+escriu a la consola ni guarda cap IP, però la memòria personal sí que lliga,
+dins de la instància i com a molt 24 h, l'empremta d'una connexió amb les
+adreces que ha demanat i amb les imatges d'eixes fonts (i, 15 min com a
+molt, amb els bytes de les imatges que no són d'un feed del sistema). I **la
+plataforma registra**: els registres d'accés de
+Supabase guarden l'adreça de cada petició amb la consulta (`?url=` amb
+l'adreça personal, `?u=` amb la imatge) i la IP de qui la fa, amb la seua
+retenció. Que el gestor no registre res no ho impedix.
+
+Risc residual, que el Mestre ha de tancar ABANS d'encendre les personals: el
+nom pot canviar de resposta entre la comprovació i la baixada (DNS
+rebinding); el `fetch` de Deno torna a resoldre i la IP no es pot fixar sense
+trencar el TLS. Ho fiten que només es torna un feed de 512 KiB com a molt,
+que la funció no té cap secret i el límit de baixades alhora, però no ho
+tanquen. Ho tanca un egrés aïllat a la plataforma (que la funció només puga
+eixir a Internet pública, mai a la xarxa interna ni a les metadades). Les
+imatges de fora del catàleg porten el mateix risc: per això estan apagades
+per defecte (`SDP_NOTICIES_IMATGES_EXTERNES`, R6 L-12) i s'encenen en les
+mateixes condicions que les personals. Que
+`Deno.resolveDns` hi siga al runtime de Supabase no s'ha verificat ací (cap
+CLI de Supabase ni de Deno en este equip); si no hi és, les personals i les
+imatges de fora del catàleg es queden tancades soles.
+
+Desplegament (el fa el Mestre, mai un agent), sense verificar el JWT perquè
+el Lector la crida sense sessió:
+
+```
+supabase functions deploy noticies --no-verify-jwt
+```
+
+No cal cap secret. No hi ha `supabase/config.toml` a posta: la bandera va en
+l'ordre. Les fonts personals i les imatges de fora del catàleg queden
+apagades. Per a encendre-les (decisió del Mestre, i només amb l'egrés aïllat
+ja posat):
+
+```
+supabase secrets set SDP_NOTICIES_PERSONALS=1
+supabase secrets set SDP_NOTICIES_IMATGES_EXTERNES=1
+```
+
+Comprovació després de desplegar (lectura, des de qualsevol terminal):
+
+```
+curl -s https://<ref>.supabase.co/functions/v1/noticies/fonts
+curl -s -o /dev/null -w '%{http_code}\n' 'https://<ref>.supabase.co/functions/v1/noticies/feed?font=ayudawp'
+curl -s -o /dev/null -w '%{http_code}\n' 'https://<ref>.supabase.co/functions/v1/noticies/feed?url=https%3A%2F%2F127.0.0.1%2F'
+curl -s -o /dev/null -w '%{http_code}\n' 'https://<ref>.supabase.co/functions/v1/noticies/imatge?u=https%3A%2F%2Fexample.org%2Fqualsevol.png'
+```
+
+La primera ha de dir `"personals":false` (apagades); la tercera ha de tornar
+400 (apagades) o, enceses, 422 (una IP literal) o 503 (sense resoledor); la
+quarta, 403 (`imatge_de_fora`: les imatges de fora del catàleg, apagades) o,
+enceses, 404 (cap feed no ha portat eixa imatge).
+
+Abans de desplegar-la, el Mestre aprova els hosts de `fonts.json` un per un
+(`src/data/adaptadors/noticies/cataleg.test.js` en porta la instantània): un
+host nou és una decisió seua, i cal posar-lo a les dues llistes; i també els
+CDN d'imatges de `CDN_IMATGES` (`gestor.test.js` en porta la instantània). El
+feed d'Emowe és `https://emowe.com/rss.xml` i no el `/feed/` de l'encàrrec
+(404 a la comprovació HEAD del 261024), i el de Jon Hernández és
+`https://www.jonhernandez.education/feed/atom/` i no `/feed/` (R6 L-06: a tot
+GET sense condicions respon 304 i cap byte, la memòria cau de la seua web,
+comprovat amb GET el 261024; un HEAD deia 200): el Mestre ha de confirmar les
+dues substitucions. Les comprovacions del catàleg es fan amb GET, com les fa
+el servei, mai només amb HEAD. Fins que la funció no hi és, el Lector (on
+estiga encés) diu «Ara mateix no arriben les notícies», amb les portes a la
+resta del poble, després d'una sola petició fallida (per sessió, o una cada
+30–60 s quan torna a demanar, si el navegador veu el 404 com una xarxa que
+no arriba); obrir-lo en producció (`VITE_SDP_APP_LECTOR=1` i l'entorn del
+manifest) també és decisió del Mestre.

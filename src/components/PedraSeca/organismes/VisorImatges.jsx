@@ -12,18 +12,23 @@
  * d'un <soc-de-poble>, la capa local ocupa la caixa de .sdp-root. Estils a
  * src/css/components.css (§ VISOR D'IMATGES).
  *
- * COM ÉS. Dalt, una franja amb «Tancar» (la fletxa d'arrere, a l'esquerra, com
- * a Google Fotos), el comptador «3 / 20» i, a la dreta, Reduir, Ampliar i
- * Informació. Al mig, la foto sencera sobre el fons fosc del crom
- * (--sdp-crom-fons, el mateix en clar i en fosc) i, als costats, «Imatge
- * anterior» i «Imatge següent», que donen la volta com el CarruselImatges. A la
- * dreta (en mòbil, a baix), el panell plegable amb les dades de la foto.
+ * COM ÉS. Dalt, una franja amb «Tancar» (a l'esquerra, com a Google Fotos), el
+ * comptador «3 / 20» i, a la dreta, Reduir, Ampliar i Informació. Al mig, la
+ * foto sencera sobre el fons fosc del crom (--sdp-crom-fons, el mateix en clar
+ * i en fosc) i, als costats, «Imatge anterior» i «Imatge següent», que donen
+ * la volta com el CarruselImatges. A la dreta (en mòbil, a baix), el panell
+ * plegable amb les dades de la foto.
+ * T4 (pla 261024_1315, P1-06; auditoria Gemini 261024, G-01) · «Tancar» és la
+ * ✕ (la X de lucide, la mateixa del Dialeg), no la fletxa d'arrere: l'ordre
+ * del Mestre del 261024 la demana inequívoca. El nom i la drecera, els de
+ * sempre.
  *
  * ZOOM. Fluid, d'1× a 4×, amb transform: scale() i translate() sobre la imatge
  * (tres propietats CSS, --sdp-visor-escala, --sdp-visor-x i --sdp-visor-y,
  * escrites des d'una ref amb usePropietatsCss: cap atribut style). La roda
  * (un listener propi, no passiu, que es lleva en tancar), el doble clic (1× ↔
- * 2×), els botons ± (×1,5), el pessic amb dos dits i les tecles + − i 0. Amb
+ * 2×, a la foto i al fons fosc: vegeu TANCAR AMB UN CLIC AL FONS), els botons
+ * ± (×1,5), el pessic amb dos dits i les tecles + − i 0. Amb
  * la foto ampliada, arrossegar-la la mou, dins dels seus límits; sense
  * ampliar, lliscar el dit a un costat passa de foto. Canviar de foto torna a 1×.
  * Gauntlet 261017 · La roda amplia en proporció al gir: un pas de ratolí (100
@@ -31,7 +36,7 @@
  * menuts i seguits, ja no salta a 4× d'una revolada.
  *
  * CONTRACTE
- *   obert (controlat) · onTanca(motiu: 'esc'|'boto', info?) · imatges
+ *   obert (controlat) · onTanca(motiu: 'esc'|'boto'|'vel', info?) · imatges
  *   [{ src, alt, titol }] (els src ja resolts: la peça no sap res
  *   d'amfitrions) · index (la foto oberta) · onCanvi(nouIndex) · titol (el nom
  *   accessible del diàleg; per defecte «Visor d'imatges») · metadades
@@ -49,6 +54,23 @@
  *   Tancat, no pinta cap imatge: el <dialog> és buit i no es demana res.
  *   L'estat de l'URL (?foto=) és de qui el munta.
  *
+ * TANCAR AMB UN CLIC AL FONS. T4 (pla 261024_1315; Gemini G-01) · Un clic net
+ * al fons fosc buit de l'escenari (no a la foto ni a cap control, sense
+ * arrossegar ni pessigar i amb la foto a 1×) tanca amb el motiu 'vel'. Es
+ * decidix pel pointerdown, no pel destí del clic: amb la captura del punter,
+ * el clic que comença a la foto arriba a l'escenari. Correccions del 261024
+ * (R4-02) · El tancament s'ajorna la finestra d'un doble clic
+ * (FINESTRA_DEL_DOBLE_CLIC, 300 ms): el primer clic d'un doble clic al fons ja
+ * no tanca, i el doble clic hi amplia, com a la foto. Qualsevol gest nou dins
+ * del visor abans que passe (un punter que baixa, el segon del doble clic
+ * inclòs, la roda, una tecla, el dblclick) l'anul·la; un altre tancament
+ * ('esc', 'boto') o tancar-lo des del pare, també: el pare no rep mai dos
+ * avisos (a /multimedia, cada avís és un navigate(-1)). El segon clic d'un
+ * doble clic (detail 2) tampoc no compta. Ampliada, el fons arrossega la
+ * foto, com abans. Sense closedby: el
+ * Dialeg no el passa, i a pantalla completa no queda cap vora fora de la
+ * caixa on clicar.
+ *
  * ACCESSIBILITAT. El diàleg porta el nom; el focus comença a «Tancar» i, en
  * tancar, torna a la foto que l'havia obert (Dialeg). Escape tanca. Les
  * fletxes passen de foto des de qualsevol control del visor, també després
@@ -62,8 +84,8 @@
  * Dins de PedraSeca/, esta peça importa per camí directe (mai per index.js):
  * la porta de dependències circulars de Pedra Seca ho exigix.
  */
-import { useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Info, ZoomIn, ZoomOut } from 'lucide-react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Info, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { Dialeg } from './Dialeg.jsx';
 import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
@@ -94,6 +116,12 @@ const PIXELS_PER_LINIA = 40;
 const PIXELS_PER_PAGINA = 800;
 /* Quant ha de córrer el dit (en píxels de pantalla) perquè un lliscament passe de foto. */
 const LLINDAR_LLISCAMENT = 48;
+/* T4 (pla 261024_1315) · El que pot córrer el punter perquè un toc al fons
+   encara siga un clic net, i no un arrossegament, que tanque el visor. */
+const MARGE_DEL_TOC = 10;
+/* Correccions del 261024 (R4-02) · Quant s'espera el tancament del fons: la
+   finestra en què un segon clic encara fa un doble clic. */
+const FINESTRA_DEL_DOBLE_CLIC = 300;
 
 const textDe = (valor, reserva) => (typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : reserva);
 const posicioDe = (plantilla, n, total) => plantilla.replace('{n}', () => String(n)).replace('{total}', () => String(total));
@@ -144,18 +172,41 @@ export function VisorImatges({
      encastat: no depén de com cada navegador tria el primer focus de
      showModal(). */
   const alObrir = () => marc.current?.querySelector('[data-sdp-focus-inicial]')?.focus();
+  /* Correccions del 261024 (R4-02) · El tancament del fons, ajornat (vegeu la
+     capçalera). Tot avís al pare passa per `tanca`, que anul·la el pendent. */
+  const tancaRef = useRef(onTanca);
+  tancaRef.current = onTanca;
+  const velPendent = useRef(null);
+  const anulaElVel = useCallback(() => {
+    clearTimeout(velPendent.current);
+    velPendent.current = null;
+  }, []);
+  const tanca = useCallback((...motiu) => {
+    anulaElVel();
+    tancaRef.current?.(...motiu);
+  }, [anulaElVel]);
+  const ajornaElVel = useCallback(() => {
+    anulaElVel();
+    velPendent.current = setTimeout(() => {
+      velPendent.current = null;
+      tancaRef.current?.('vel');
+    }, FINESTRA_DEL_DOBLE_CLIC);
+  }, [anulaElVel]);
+  /* Tancat pel pare (obert=false) o desmuntat: cap 'vel' pendent. */
+  useEffect(() => anulaElVel, [visible, anulaElVel]);
   return (
-    <Dialeg obert={visible} onTanca={onTanca} titol={nom} variant="sense-marc" mida="completa" tancaEnVel={false}
+    <Dialeg obert={visible} onTanca={tanca} titol={nom} variant="sense-marc" mida="completa" tancaEnVel={false}
       className={['sdp-visor', className].filter(Boolean).join(' ')} onObert={alObrir}>
       {visible ? (
-        <ContingutVisor marcRef={marc} llista={llista} actual={actual} onCanvi={onCanvi} onTanca={onTanca} text={text}
-          metadades={metadades} infoInicial={infoInicial} onCarrega={onCarrega} />
+        <ContingutVisor marcRef={marc} llista={llista} actual={actual} onCanvi={onCanvi} onTanca={tanca} text={text}
+          metadades={metadades} infoInicial={infoInicial} onCarrega={onCarrega} ajornaElVel={ajornaElVel}
+          anulaElVel={anulaElVel} />
       ) : null}
     </Dialeg>
   );
 }
 
-function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metadades, infoInicial, onCarrega }) {
+function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metadades, infoInicial, onCarrega, ajornaElVel, anulaElVel }) {
   const idPanell = useId();
   const total = llista.length;
   const imatge = llista[actual];
@@ -168,6 +219,8 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   const imatgeRef = useRef(null);
   const punters = useRef(new Map());
   const gest = useRef(null);
+  /* T4 (pla 261024_1315) · El toc al fons buit: { id, x, y, net }. */
+  const toc = useRef(null);
   const clauRef = useRef(clau);
   clauRef.current = clau;
   const carregaRef = useRef(onCarrega);
@@ -216,6 +269,7 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
     const enRoda = (event) => {
       if (!event.deltaY) return;
       event.preventDefault();
+      anulaElVel();
       const factor = factorDeRoda(event);
       setVista((previa) => {
         const base = previa.clau === clauRef.current ? previa : vistaInicial(clauRef.current);
@@ -225,9 +279,11 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
     };
     node.addEventListener('wheel', enRoda, { passive: false });
     return () => node.removeEventListener('wheel', enRoda);
-  }, []);
+  }, [anulaElVel]);
 
   const enPremer = (event) => {
+    /* T4 (pla 261024_1315) · Qualsevol punter nou anul·la el toc d'abans. */
+    toc.current = null;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     if (event.target?.closest?.('button')) return;
     punters.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -240,6 +296,9 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
     }
     gest.current = { tipus: ampliada ? 'arrossega' : 'llisca', x0: event.clientX, y0: event.clientY, dx: v.x, dy: v.y };
     if (ampliada) setArrossegant(true);
+    /* El fons buit és l'escenari mateix (els controls no reben el punter:
+       components.css); la foto i l'avís, no. */
+    else if (event.target === event.currentTarget) toc.current = { id: event.pointerId, x: event.clientX, y: event.clientY, net: false };
   };
 
   const enMoure = (event) => {
@@ -265,13 +324,33 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
       const dy = event.clientY - g.y0;
       if (Math.abs(dx) >= LLINDAR_LLISCAMENT && Math.abs(dx) > Math.abs(dy) * 1.5) vesA(actual + (dx < 0 ? 1 : -1));
     }
+    /* T4 (pla 261024_1315) · El toc al fons és net si el punter s'alça on
+       havia baixat (dins de MARGE_DEL_TOC) i és l'únic. */
+    const t = toc.current;
+    if (t && t.id === event.pointerId) {
+      toc.current = event.type === 'pointerup' && punters.current.size === 0
+        && Math.hypot(event.clientX - t.x, event.clientY - t.y) <= MARGE_DEL_TOC ? { ...t, net: true } : null;
+    }
     if (punters.current.size === 0 || g?.tipus === 'pessic') gest.current = null;
     if (punters.current.size === 0) setArrossegant(false);
   };
 
+  /* T4 (pla 261024_1315; Gemini G-01) · El clic d'un toc net al fons buit
+     tanca ('vel'). Amb la foto ampliada, mai (el fons l'arrossega); el segon
+     clic d'un doble clic, tampoc. Correccions del 261024 (R4-02) · Tanca
+     passada la finestra del doble clic (ajornaElVel), mai en el primer clic. */
+  const enClicAlFons = (event) => {
+    const t = toc.current;
+    toc.current = null;
+    if (!t?.net || ampliada || event.detail > 1) return;
+    ajornaElVel();
+  };
+
   /* Les fletxes, + − 0 i «i», des de qualsevol control del visor. Escape és
-     del Dialeg. Amb una tecla modificadora no es toca res. */
+     del Dialeg. Amb una tecla modificadora no es toca res.
+     Correccions del 261024 (R4-02) · Una tecla anul·la el 'vel' pendent. */
   const enTecla = (event) => {
+    anulaElVel();
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     const accions = {
       ArrowLeft: () => vesA(actual - 1),
@@ -289,8 +368,10 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   };
 
   /* El doble clic amplia o torna a 1×; sobre «anterior» o «següent», no
-     (dos clics ràpids passen dues fotos). */
+     (dos clics ràpids passen dues fotos). Correccions del 261024 (R4-02) ·
+     També al fons fosc: el primer clic no ha tancat (el 'vel' s'anul·la). */
   const enDobleClic = (event) => {
+    anulaElVel();
     if (event.target?.closest?.('button')) return;
     fixaEscala((escala) => (escala > ESCALA_MINIMA ? ESCALA_MINIMA : 2));
   };
@@ -304,11 +385,14 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
      tecles hi continuen arribant; Tab no s'hi para mai.
      Revisió del Gauntlet 261017 (M1, A11Y-1) · Des del marc, Maj+Tab no ix del
      visor: encastat, la guarda de modalLocal.js el compta com a vora i dona
-     la volta a l'últim control; a la SPA, showModal() deixa inert la resta. */
+     la volta a l'últim control; a la SPA, showModal() deixa inert la resta.
+     Correccions del 261024 (R4-02) · Un punter que baixa a qualsevol lloc del
+     marc (en captura: el segon d'un doble clic, un control, la foto) anul·la
+     el 'vel' pendent. */
   return (
-    <div ref={marcRef} className="sdp-visor__marc" tabIndex={-1} onKeyDown={enTecla}>
+    <div ref={marcRef} className="sdp-visor__marc" tabIndex={-1} onKeyDown={enTecla} onPointerDownCapture={anulaElVel}>
       <div className="sdp-visor__barra">
-        <Boto varietat="secundari" className="sdp-visor__boto" icona={ArrowLeft} aria-label={text.tanca}
+        <Boto varietat="secundari" className="sdp-visor__boto" icona={X} aria-label={text.tanca}
           aria-keyshortcuts="Escape" data-sdp-focus-inicial onClick={() => onTanca?.('boto')} />
         <p className="sdp-visor__comptador" aria-live="polite" aria-atomic="true">
           <span aria-hidden="true">{`${actual + 1} / ${total}`}</span>
@@ -323,7 +407,7 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
       </div>
       <div className="sdp-visor__cos">
         <div ref={escenariRef} className={classesEscenari} onPointerDown={enPremer} onPointerMove={enMoure}
-          onPointerUp={enAlcar} onPointerCancel={enAlcar} onDoubleClick={enDobleClic}>
+          onPointerUp={enAlcar} onPointerCancel={enAlcar} onClick={enClicAlFons} onDoubleClick={enDobleClic}>
           {imatge.src && !ambAvis ? (
             <img ref={imatgeRef} className="sdp-visor__imatge" src={imatge.src} alt={imatge.alt || ''} draggable="false"
               onLoad={(event) => onCarrega?.(actual, midesDe(event.currentTarget))}

@@ -19,7 +19,7 @@ const mock = vi.hoisted(() => ({
   session: { currentUser: { id: 'A' }, generacio: 1 }, actorKey: 'persona::A', pathname: '/mur', showToast: vi.fn(),
   loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(),
   creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(),
-  obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
+  obriFilDePagina: vi.fn(), teCapacitat: vi.fn(), publicaAdjuntXat: vi.fn()
 }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => mock.session }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: mock.actorKey, identitats: undefined }) }));
@@ -99,6 +99,121 @@ describe('la porta de les normes, a l’únic sendChatMessage', () => {
     await waitFor(() => expect(value.status).toBe('ready'));
     await act(async () => { await value.sendChatMessage(fil('f-joan'), 'Sense porta'); });
     expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
+  });
+
+  /* Integració 261024 (Codex C-02) · El xat PÚBLIC de la pàgina /iaia el llig
+     el poble i el servidor hi exigix les normes (2610241400): ara també hi
+     passa la porta. El privat amb la IAIA (dalt), no. */
+  test('el xat públic de la pàgina /iaia passa per la porta', async () => {
+    const pagina = { id: 'p-iaia', tipus: 'grup', titol: 'L’ànima de la iaia', subjecte: { tipus: 'pagina', id: '/iaia' }, altres: [],
+      ultimSeq: 0, llegitFinsSeq: 0, noLlegits: 0, ultimAutorId: null, ultimAl: ara };
+    mock.loadFils.mockResolvedValue([...filsDelServidor(), pagina]);
+    const asseguraNormes = vi.fn(async () => false);
+    munta({ esPersonaBloquejada: () => false, asseguraNormes });
+    await waitFor(() => expect(fil('p-iaia')).toBeTruthy());
+    await act(async () => {
+      await expect(value.sendChatMessage(fil('p-iaia'), 'Bon dia, poble')).rejects.toMatchObject({ name: 'AbortError' });
+    });
+    expect(asseguraNormes).toHaveBeenCalledTimes(1);
+    expect(mock.enviaMissatge).not.toHaveBeenCalled();
+  });
+});
+
+/* Integració 261024 (Codex C-02) · El servidor rebutja igualment el missatge
+   (SDP-MOD-428: el record d'este dispositiu ja no valia). L'adaptador ho porta
+   a la causa; XatContext torna a obrir la porta amb { rebutjades: true } i,
+   acceptades, reenvia el MATEIX missatge (el mateix id) una sola vegada. Mai en
+   bucle: declinades, o rebutjat de nou, la bombolla queda en error amb el
+   motiu i el codi. */
+const rebuigNormes = () => Object.assign(new Error('No s’ha pogut enviar el missatge.'), {
+  code: 'XAT', retriable: false,
+  cause: { status: 403, message: 'Supabase 403: {"code":"42501","message":"SDP-MOD-428: cal acceptar les normes de convivència."}' }
+});
+const MOTIU = 'Per a publicar, cal acceptar les normes de convivència.';
+
+describe('el rebuig del servidor per les normes (SDP-MOD-428)', () => {
+  test('torna a obrir la porta i, acceptades, reenvia el mateix missatge una sola vegada', async () => {
+    const asseguraNormes = vi.fn(async () => true);
+    mock.enviaMissatge.mockRejectedValueOnce(rebuigNormes());
+    munta({ esPersonaBloquejada: () => false, asseguraNormes });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    let enviats;
+    await act(async () => { enviats = await value.sendChatMessage(fil('f-joan'), 'Hola, Joan'); });
+    expect(asseguraNormes.mock.calls).toEqual([[], [{ rebutjades: true }]]);
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
+    const [primer, segon] = mock.enviaMissatge.mock.calls.map(([, entrada]) => entrada.id);
+    expect(segon).toBe(primer);
+    expect(enviats).toHaveLength(1);
+    expect(value.getThreadMessages('f-joan')).toEqual([expect.objectContaining({ id: primer, text: 'Hola, Joan' })]);
+    expect(value.getThreadMessages('f-joan')[0].estatEnviament).not.toBe('error');
+  });
+
+  test('declinades, la bombolla queda en error amb el motiu i el codi, sense cap altre intent', async () => {
+    const asseguraNormes = vi.fn(async (opcions) => !opcions?.rebutjades);
+    mock.enviaMissatge.mockRejectedValue(rebuigNormes());
+    munta({ esPersonaBloquejada: () => false, asseguraNormes });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    await act(async () => { await value.sendChatMessage(fil('f-joan'), 'Hola, Joan'); });
+    expect(asseguraNormes).toHaveBeenCalledTimes(2);
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(1);
+    expect(value.getThreadMessages('f-joan')).toEqual([
+      expect.objectContaining({ text: 'Hola, Joan', estatEnviament: 'error', error: MOTIU, codiError: 'SDP-MOD-428' })
+    ]);
+  });
+
+  test('acceptades però rebutjat de nou: cap tercer intent ni cap segon diàleg (mai en bucle)', async () => {
+    const asseguraNormes = vi.fn(async () => true);
+    mock.enviaMissatge.mockRejectedValue(rebuigNormes());
+    munta({ esPersonaBloquejada: () => false, asseguraNormes });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    await act(async () => { await value.sendChatMessage(fil('f-joan'), 'Hola, Joan'); });
+    expect(asseguraNormes).toHaveBeenCalledTimes(2);
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
+    expect(value.getThreadMessages('f-joan')).toEqual([expect.objectContaining({ estatEnviament: 'error', codiError: 'SDP-MOD-428' })]);
+  });
+
+  test('un altre error definitiu no obri cap porta; sense proveïdor, la bombolla de sempre', async () => {
+    const asseguraNormes = vi.fn(async () => true);
+    mock.enviaMissatge.mockRejectedValue(Object.assign(new Error('No pots escriure ací.'), { code: 'SDP-XAT-011', retriable: false }));
+    const vista = munta({ esPersonaBloquejada: () => false, asseguraNormes });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    await act(async () => { await value.sendChatMessage(fil('f-joan'), 'Hola'); });
+    expect(asseguraNormes).toHaveBeenCalledTimes(1);
+    expect(value.getThreadMessages('f-joan')).toEqual([expect.objectContaining({ estatEnviament: 'error', codiError: 'SDP-XAT-011' })]);
+    vista.unmount();
+    mock.enviaMissatge.mockReset().mockRejectedValue(rebuigNormes());
+    munta(undefined);
+    await waitFor(() => expect(value.status).toBe('ready'));
+    await act(async () => { await value.sendChatMessage(fil('f-joan'), 'Sense porta'); });
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(1);
+    expect(value.getThreadMessages('f-joan')).toEqual([expect.objectContaining({ estatEnviament: 'error', codiError: 'SDP-MOD-428' })]);
+  });
+
+  test('un adjunt rebutjat per les normes: torna a preguntar, el reenvia una vegada i, declinades, l’AbortError de sempre', async () => {
+    const adjunt = { id: '9b2c3d4e-5f60-4a71-8b92-c3d4e5f6a7b8', fitxer: new Blob(['x'], { type: 'image/webp' }), tipus: 'foto' };
+    const desat = { id: adjunt.id, filId: 'f-joan', usuariId: 'A', text: null, tipus: 'foto', seq: 10, creatAl: ara };
+    const asseguraNormes = vi.fn(async () => true);
+    mock.publicaAdjuntXat.mockRejectedValueOnce(Object.assign(new Error('servidor'), { code: 'servidor', cause: rebuigNormes().cause }))
+      .mockResolvedValueOnce(desat);
+    const vista = munta({ esPersonaBloquejada: () => false, asseguraNormes });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    let resultat;
+    await act(async () => { resultat = await value.sendChatMedia(fil('f-joan'), adjunt); });
+    expect(asseguraNormes.mock.calls).toEqual([[], [{ rebutjades: true }]]);
+    expect(mock.publicaAdjuntXat).toHaveBeenCalledTimes(2);
+    expect(mock.publicaAdjuntXat.mock.calls.map(([filId, entrada]) => [filId, entrada.id])).toEqual([['f-joan', adjunt.id], ['f-joan', adjunt.id]]);
+    expect(resultat).toEqual([expect.objectContaining({ id: adjunt.id })]);
+    vista.unmount();
+
+    const declina = vi.fn(async (opcions) => !opcions?.rebutjades);
+    mock.publicaAdjuntXat.mockReset().mockRejectedValue(Object.assign(new Error('servidor'), { code: 'servidor', cause: rebuigNormes().cause }));
+    munta({ esPersonaBloquejada: () => false, asseguraNormes: declina });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    await act(async () => {
+      await expect(value.sendChatMedia(fil('f-joan'), adjunt)).rejects.toMatchObject({ name: 'AbortError' });
+    });
+    expect(declina).toHaveBeenCalledTimes(2);
+    expect(mock.publicaAdjuntXat).toHaveBeenCalledTimes(1);
   });
 });
 

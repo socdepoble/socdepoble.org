@@ -9,6 +9,10 @@ import {
 } from './moderacio.js';
 import { configuraBackendSessio, desaSessio, esborraSessio, getDefaultUserId } from '../identitat.js';
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
+/* Actualitzada a posta (261024 T2): la versió vigent de les normes es llig del
+   contracte (VERSIO_NORMES_CONVIVENCIA puja a 2026-10-24 amb les mesures
+   proporcionades), no d'una data copiada. */
+import { VERSIO_NORMES_CONVIVENCIA as VERSIO } from '../contracte.js';
 
 const ORIGEN = 'http://localhost:54321';
 const POBLE = '7a1b2c3d-4e5f-4a60-8b71-c2d3e4f5a6b7';
@@ -159,20 +163,21 @@ describe('remot · denúncies i normes per RPC', () => {
     await expect(denunciaContingut({ objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'altre' }, REMOT)).rejects.toMatchObject({ code: 'motiu-invalid' });
   });
 
-  test('l’estat de les normes demana la versió vigent: { p_versio: \'2026-10-20\' }', async () => {
-    fetchDeProva.mockResolvedValueOnce(resposta({ versio: '2026-10-20', acceptada_al: '2026-10-20T09:00:00+00:00' }));
-    expect(await estatNormes(REMOT)).toEqual({ versio: '2026-10-20', acceptadaAl: '2026-10-20T09:00:00+00:00' });
+  test('l’estat de les normes demana la versió vigent: { p_versio: VERSIO_NORMES_CONVIVENCIA }', async () => {
+    expect(VERSIO).toBe('2026-10-24');
+    fetchDeProva.mockResolvedValueOnce(resposta({ versio: VERSIO, acceptada_al: '2026-10-24T09:00:00+00:00' }));
+    expect(await estatNormes(REMOT)).toEqual({ versio: VERSIO, acceptadaAl: '2026-10-24T09:00:00+00:00' });
     expect(crida().url.pathname).toBe('/rest/v1/rpc/estat_normes_convivencia');
-    expect(crida().cos).toEqual({ p_versio: '2026-10-20' });
-    fetchDeProva.mockResolvedValueOnce(resposta({ versio: '2026-10-20', acceptada_al: null }));
-    expect(await estatNormes(REMOT)).toEqual({ versio: '2026-10-20', acceptadaAl: null });
+    expect(crida().cos).toEqual({ p_versio: VERSIO });
+    fetchDeProva.mockResolvedValueOnce(resposta({ versio: VERSIO, acceptada_al: null }));
+    expect(await estatNormes(REMOT)).toEqual({ versio: VERSIO, acceptadaAl: null });
   });
 
   test('acceptar les normes crida accepta_normes_convivencia amb la versió', async () => {
-    fetchDeProva.mockResolvedValueOnce(resposta({ versio: '2026-10-20', acceptada_al: '2026-10-20T09:00:00+00:00' }));
-    expect(await acceptaNormes('2026-10-20', REMOT)).toEqual({ versio: '2026-10-20', acceptadaAl: '2026-10-20T09:00:00+00:00' });
+    fetchDeProva.mockResolvedValueOnce(resposta({ versio: VERSIO, acceptada_al: '2026-10-24T09:00:00+00:00' }));
+    expect(await acceptaNormes(VERSIO, REMOT)).toEqual({ versio: VERSIO, acceptadaAl: '2026-10-24T09:00:00+00:00' });
     expect(crida().url.pathname).toBe('/rest/v1/rpc/accepta_normes_convivencia');
-    expect(crida().cos).toEqual({ p_versio: '2026-10-20' });
+    expect(crida().cos).toEqual({ p_versio: VERSIO });
   });
 });
 
@@ -180,10 +185,10 @@ describe('remot · sense sessió i la regla d’entrada, abans de cap xarxa', ()
   test('sense sessió: la llista és buida i l’estat no acceptat, sense cap petició; bloquejar i acceptar demanen entrar', async () => {
     esborraSessio({ abast: 'tot' });
     expect(await llistaBloquejos(REMOT)).toEqual([]);
-    expect(await estatNormes(REMOT)).toEqual({ versio: '2026-10-20', acceptadaAl: null });
+    expect(await estatNormes(REMOT)).toEqual({ versio: VERSIO, acceptadaAl: null });
     await expect(bloquejaAutor({ tipus: 'persona', id: VEINA }, REMOT)).rejects.toMatchObject({ code: 'sense-sessio' });
     await expect(desbloquejaAutor({ tipus: 'persona', id: VEINA }, REMOT)).rejects.toMatchObject({ code: 'sense-sessio' });
-    await expect(acceptaNormes('2026-10-20', REMOT)).rejects.toMatchObject({ code: 'sense-sessio' });
+    await expect(acceptaNormes(VERSIO, REMOT)).rejects.toMatchObject({ code: 'sense-sessio' });
     expect(fetchDeProva).not.toHaveBeenCalled();
   });
 
@@ -229,8 +234,8 @@ describe.each(['seed', 'local'])('mode %s · el magatzem en memòria, sense xarx
     const denuncia = { objecte: { tipus: 'publicacio', id: 'p1' }, motiu: 'spam_frau' };
     expect(await denunciaContingut(denuncia, config)).toEqual({ rebuda: true, repetida: false });
     expect(await denunciaContingut(denuncia, config)).toEqual({ rebuda: true, repetida: true });
-    expect(await estatNormes(config)).toEqual({ versio: '2026-10-20', acceptadaAl: null });
-    const acceptada = await acceptaNormes('2026-10-20', config);
+    expect(await estatNormes(config)).toEqual({ versio: VERSIO, acceptadaAl: null });
+    const acceptada = await acceptaNormes(VERSIO, config);
     expect(acceptada.acceptadaAl).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(await estatNormes(config)).toEqual(acceptada);
     await expect(acceptaNormes('no-es-cap-versio', config)).rejects.toMatchObject({ code: 'versio-invalida' });

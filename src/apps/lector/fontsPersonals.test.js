@@ -159,15 +159,21 @@ describe('llevaDelMagatzem: l’única manera de llevar una font personal', () =
 });
 
 describe('destinacioDe: la forma de la plataforma', () => {
-  test('nomMaxim, categories i afig, que torna l’id, el nom i els trams de la gestió de fonts', async () => {
+  /* Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, la gestió de fonts ja no és
+     cap pàgina (/fonts/colleccio): les fonts viuen a l'arbre de les notícies, i els trams porten a la
+     font nova, dins de la seua carpeta (o de «Hui», sense carpeta). */
+  test('nomMaxim, categories i afig, que torna l’id, el nom i els trams de la font a l’arbre de les notícies', async () => {
     const { api } = prepara();
     const desti = destinacioDe(api);
     expect(Object.isFrozen(desti)).toBe(true);
     expect(desti.nomMaxim).toBe(80);
     expect((await desti.categories()).map((c) => c.id)).toEqual(['ajuntament', 'festes', 'camp', 'esports']);
     expect(await desti.afig({ url: URL_FONT, nom: 'La Veu', categoriaId: 'camp' }))
-      .toEqual({ id: idFontPersonal(URL_FONT), nom: 'La Veu', trams: ['fonts', 'colleccio'] });
-    expect(TRAMS_GESTIO).toEqual(['fonts', 'colleccio']);
+      .toEqual({ id: idFontPersonal(URL_FONT), nom: 'La Veu', trams: ['noticies', 'camp', idFontPersonal(URL_FONT)] });
+    const sense = 'https://example.org/sense-carpeta';
+    expect(await desti.afig({ url: sense, nom: 'Sense' }))
+      .toEqual({ id: idFontPersonal(sense), nom: 'Sense', trams: ['noticies', 'hui', idFontPersonal(sense)] });
+    expect(TRAMS_GESTIO).toEqual(['noticies']);
     await expect(desti.afig({ url: 'ftp://example.org', nom: 'X' })).rejects.toMatchObject({ codi: 'url-no-web' });
   });
 });

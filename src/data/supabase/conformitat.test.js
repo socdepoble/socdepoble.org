@@ -335,7 +335,15 @@ function fetchDelServidor(entrada, opcions = {}) {
     /* Fase D (261020, tasca 2) · La moderació (2610201500): la persona de
        conformitat no ha bloquejat ningú ni ha acceptat encara les normes. */
     '/rest/v1/bloquejos': () => resposta([]),
-    '/rest/v1/rpc/estat_normes_convivencia': () => resposta({ versio: cos?.p_versio ?? null, acceptada_al: null })
+    '/rest/v1/rpc/estat_normes_convivencia': () => resposta({ versio: cos?.p_versio ?? null, acceptada_al: null }),
+    /* T6b (IDEA-14) · Els seguiments (2610241430): la persona de conformitat
+       no seguix ningú i no la seguix ningú. Com Postgres, un p_id que no és
+       cap UUID és un 22P02. */
+    '/rest/v1/rpc/estat_seguiment': () => (RE_UUID.test(String(cos?.p_id ?? ''))
+      ? resposta({ seguint: false, creat_al: null })
+      : resposta({ code: '22P02', message: 'invalid input syntax for type uuid' }, { status: 400 })),
+    '/rest/v1/rpc/els_meus_seguiments': () => resposta([]),
+    '/rest/v1/rpc/qui_em_segueix': () => resposta([])
   }[url.pathname];
   if (!ruta) {
     estat.rutesDesconegudes.push(`${metode} ${url.pathname}`);

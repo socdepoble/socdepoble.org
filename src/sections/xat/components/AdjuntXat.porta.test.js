@@ -4,7 +4,15 @@
    als cinc diccionaris i, en valencià, diu el text de reserva del codi; cada
    classe és declarada; el full arriba al Shadow DOM per index.css; i les CSP
    deixen sonar les notes de veu i els vídeos (URL signades https del
-   Storage, blob: de la previsualització). */
+   Storage, blob: de la previsualització).
+   Gauntlet 261024 (P0-19, Codex C-05) · Qui servix socdepoble.org és
+   Firebase Hosting, i de capçaleres la porta només llegia vercel.json: el 23/10 la
+   capçalera de firebase.json va eixir sense media-src i, com que el navegador
+   aplica alhora la meta i la capçalera, els mitjans https queien a
+   default-src i no sonaven. Ara la porta llig també firebase.json i exigix que
+   la seua regla cobrisca totes les rutes, que siga idèntica a la de
+   vercel.json, que cap capçalera estrenga la meta i que el servidor de
+   desenvolupament només hi pose frame-ancestors. */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -66,11 +74,36 @@ describe('CSP: media-src', () => {
   }));
   const meta = /<meta http-equiv="Content-Security-Policy" content="([^"]*)">/.exec(llig('index.html'))[1];
   const vercel = JSON.parse(llig('vercel.json')).headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy').value;
-  test.each([['index.html', meta], ['vercel.json', vercel]])('%s deixa sonar les URL signades, blob: i data:', (_on, csp) => {
+  const reglesFirebase = JSON.parse(llig('firebase.json')).hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Security-Policy'));
+  const firebase = reglesFirebase.flatMap((r) => r.headers).find((h) => h.key === 'Content-Security-Policy')?.value ?? '';
+  test.each([['index.html', meta], ['vercel.json', vercel], ['firebase.json', firebase]])('%s deixa sonar les URL signades, blob: i data:', (_on, csp) => {
     const d = directives(csp);
     expect(d['media-src']).toEqual(expect.arrayContaining(["'self'", 'data:', 'blob:', 'https:']));
     // Amb la mateixa amplària que img-src: res que img-src no admeta.
     expect(d['media-src'].filter((font) => !d['img-src'].includes(font))).toEqual([]);
+  });
+  test('la CSP de firebase.json és una sola regla i cobrix totes les rutes (també /xat)', () => {
+    expect(reglesFirebase.map((r) => r.source)).toEqual(['**']);
+    expect(reglesFirebase[0].headers.filter((h) => h.key === 'Content-Security-Policy')).toHaveLength(1);
+  });
+  test('firebase.json i vercel.json porten la mateixa CSP de capçalera', () => {
+    expect(firebase).toBe(vercel);
+  });
+  /* Una directiva de recurs (*-src) que la meta declara i la capçalera no, en
+     la capçalera cau a default-src i bloqueja el que la meta admet: és el
+     forat del P0-19. Si la meta n'estrena una, les dos capçaleres l'han de
+     declarar també. */
+  test.each([['vercel.json', vercel], ['firebase.json', firebase]])('%s no estreny la meta: declara cada directiva de recurs que la meta declara', (_on, csp) => {
+    const capcalera = directives(csp);
+    const absents = Object.keys(directives(meta)).filter((nom) => nom.endsWith('-src') && !capcalera[nom]);
+    expect(absents).toEqual([]);
+  });
+  test('la capçalera del servidor de desenvolupament només porta frame-ancestors', () => {
+    const vite = llig('vite.config.js');
+    const csps = [...vite.matchAll(/['"`]Content-Security-Policy['"`]\s*:\s*(['"`])([\s\S]*?)\1/g)].map((m) => m[2]);
+    // Cap CSP més que no es puga llegir ací (una constant, un altre bloc de preview).
+    expect(csps).toHaveLength(vite.split('Content-Security-Policy').length - 1);
+    expect(csps.map((csp) => Object.keys(directives(csp)))).toEqual([['frame-ancestors']]);
   });
   test('el literal que substituïx el build natiu és el mateix que la meta d’index.html', () => {
     const natiu = llig('vite.natiu.config.js');

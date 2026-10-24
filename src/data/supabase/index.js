@@ -49,5 +49,10 @@ export {
 /* Pla 261022_1955 (Cercador Universal, T1) · Capacitat 'directoriEntitats', el
    directori públic de /cerca. Explícita pel mateix motiu. */
 export { listPublicOrganizations } from './organizations.js';
+/* T6b (IDEA-14; decisió del Mestre, 261024) · Capacitat 'seguiments',
+   «Connectar / Seguir». Explícita pel mateix motiu. */
+export {
+  segueix, deixaDeSeguir, estatSeguiment, elsMeusSeguiments, quiEmSegueix
+} from './seguiments.js';
 
 

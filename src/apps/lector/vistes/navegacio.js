@@ -6,7 +6,8 @@
  *   /app/lector/noticies/<carpeta>          les notícies d'una carpeta
  *   /app/lector/noticies/<carpeta>/<font>   les notícies d'una font
  *   ?article=<id>                           la notícia oberta, al detall
- *   /app/lector/fonts[/colleccio]           el catàleg de fonts i les que seguixes
+ * Ordre del Mestre (261024, 15:05) · /app/lector/fonts ja no és cap pàgina:
+ * les fonts viuen a l'arbre i la seua gestió és un diàleg (GestioFonts.jsx).
  * La carpeta és 'hui', 'despres' o l'id d'una categoria. Res de text lliure
  * a la URL (Clàusula dels Slugs): només ids opacs.
  *
@@ -26,7 +27,6 @@ import { esIdOpac } from '../../plataforma/index.js';
 import { DESPRES, HUI, llocDe } from '../nucli/index.js';
 
 export const NOTICIES = 'noticies';
-export const FONTS = 'fonts';
 /* El tram de les fonts d'una carpeta en estret, de les columnes del 261004: ja
    només el porta l'enllaç vell, que AppLector canonitza a la carpeta. */
 export const TRAM_FONTS = 'fonts';
@@ -34,10 +34,7 @@ export const TOTES = 'totes';
 
 export const NOM_CARPETA_FIXA = Object.freeze({ [HUI]: 'Hui', [DESPRES]: 'Per a després' });
 
-/* La font signa la seua targeta de «Les que seguixes» (GestioFonts.jsx; sense enllaç: la
-   targeta sencera ja porta a les seues notícies) i la descriu ella o el seu lloc web. */
-export const autoriaDeFont = (font) => ({ nom: font.nom, avatar: font.imatge || undefined });
-
+/* Una font es descriu ella o pel seu lloc web (el domini, sense camí). */
 export const entradetaDeFont = (font) => font.descripcio || llocDe(font.lloc) || undefined;
 
 export const PREFIX_CARPETA = 'carpeta:';

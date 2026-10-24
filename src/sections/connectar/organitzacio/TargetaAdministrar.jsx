@@ -7,6 +7,12 @@
  * que passa de veres en cada estat: què vol dir administrar, que les
  * converses de l'organització també es veuran, qui llegirà la justificació i
  * que canviar d'identitat és sempre una tria a part.
+ * IDEA-14 (Directiva del Mestre, 261024; G-04) · Administrar no és connectar:
+ * el botó diu «Demanar administrar-la» (amb revisió) o «Administrar-la ara»
+ * (poble de proves), i l'explicació, «Si l'administres…». Formar-ne part és
+ * el bloc germà (BlocFormarPart). Cap botó d'ací és primari: a Connectar,
+ * l'únic primari és el del MAS (D1, «una per vista» de Pedra Seca), i
+ * demanar l'administració és una acció secundària (G-04).
  */
 import { useState } from 'react';
 import { Alerta, AreaText, Boto, Camp, Carregant } from '../../../components/PedraSeca/index.js';
@@ -38,14 +44,14 @@ export function TargetaAdministrar({
         </Camp>
       ) : null}
       <div className="sdp-alerta__accions">
-        <Boto varietat="primari" tipus="submit" carregant={carregant}>{etiquetaBoto}</Boto>
+        <Boto varietat="secundari" tipus="submit" carregant={carregant}>{etiquetaBoto}</Boto>
       </div>
     </form>
   );
 
   const explicacio = (
     <>
-      <p>{`Si t’hi connectes per a administrar-la, podràs editar la seua fitxa i publicar en el seu nom. El que publiques com a ${org} anirà signat per ${org}, no per tu.`}</p>
+      <p>{`Si l’administres, podràs editar la seua fitxa i publicar en el seu nom. El que publiques com a ${org} anirà signat per ${org}, no per tu.`}</p>
       <p>{`Com a administradora veuràs també les converses ${deOrg} amb la gent del poble.`}</p>
       <p>Actuar com a l’organització no és automàtic: ho tries tu, i pots tornar a ser tu quan vullgues des de l’avatar de la barra de dalt.</p>
       {ambRevisio
@@ -59,7 +65,7 @@ export function TargetaAdministrar({
     case 'sense-sessio':
       cos = (
         <Alerta to="info" titol={`Vols administrar ${org}?`}
-          accions={<Boto varietat="primari" onClick={onEntra}>Entrar</Boto>}>
+          accions={<Boto varietat="secundari" onClick={onEntra}>Entrar</Boto>}>
           <p>Per a administrar una organització has d’entrar amb el teu compte.</p>
         </Alerta>
       );
@@ -67,7 +73,7 @@ export function TargetaAdministrar({
     case 'no-disponible':
       cos = (
         <Alerta to="info" titol={`Administrar ${org}`}>
-          <p>Este poble encara no permet connectar-se a organitzacions des de l’app.</p>
+          <p>Este poble encara no permet demanar l’administració d’una organització des de l’app.</p>
         </Alerta>
       );
       break;
@@ -76,7 +82,7 @@ export function TargetaAdministrar({
         <Alerta to="exit" titol="Ja l’administres"
           accions={(
             <>
-              {actiu ? null : <Boto varietat="primari" onClick={onActua}>{`Actua com a ${org}`}</Boto>}
+              {actiu ? null : <Boto varietat="secundari" onClick={onActua}>{`Actua com a ${org}`}</Boto>}
               <Boto varietat="secundari" onClick={onEditaFitxa}>{`Edita la fitxa ${deOrg}`}</Boto>
             </>
           )}>
@@ -143,7 +149,7 @@ export function TargetaAdministrar({
       cos = (
         <Alerta to="info" titol={`Vols administrar ${org}?`} viva={false}>
           {explicacio}
-          {formulari('Connectar-me com a administradora')}
+          {formulari(ambRevisio ? 'Demanar administrar-la' : 'Administrar-la ara')}
         </Alerta>
       );
   }

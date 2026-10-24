@@ -34,7 +34,7 @@ const RegistreContext = createContext(null);
 
 /**
  * `registre`: un registre de creaRegistre (per defecte, el del document).
- * `entorn`: substitucions per a proves ({ produccio, teDret, teCapacitat, amaDelDocument, sessio }).
+ * `entorn`: substitucions per a proves ({ produccio, teDret, teCapacitat, amaDelDocument, sessio, serveis }).
  *   `sessio`: { estat, esSuperadmin?, marca?, titular?, enLinia?, modeProves?, recuperable? }.
  *   Si hi és (un objecte), useSessioApp (sessioApp.js) la pren en lloc de la
  *   instantània de la ruta (fontSessio.js, que llig SessionContext i
@@ -44,6 +44,9 @@ const RegistreContext = createContext(null);
  *   avatar, poble }; ordre del Mestre, 13-10-2026, pla 261013_1405, front B)
  *   passa pel mateix filtre (titularNet) i només arriba a l'app que el declara
  *   al manifest (permisos.titular 'sessio').
+ *   `serveis` (T5, 261024): { noticies }, els serveis neutrals que rep l'app
+ *   (fontServeis.js), amb el mateix criteri d'app. Amb un entorn, només
+ *   valen els d'ací: una prova no crea mai el client de veres ni toca la xarxa.
  */
 export function ProveidorPlataforma({ registre, entorn, children }) {
   return (

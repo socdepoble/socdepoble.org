@@ -4,7 +4,13 @@
    compacte de veres, la plataforma de veres (UIProvider, ProveidorPlataforma,
    RutaApps) i el Lector de veres sobre el navegador fals de P2: la font
    s'afig des del snippet i apareix a la gestió de fonts del Lector. Dades
-   sintètiques; adreces d'exemple. */
+   sintètiques; adreces d'exemple.
+   Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, la
+   gestió de fonts ja no és cap pàgina (/app/lector/fonts/colleccio): el snippet
+   porta a la font nova, a l'arbre de les notícies, i el seu detall diu que és
+   pendent. I els contextos simulats porten també les dues lectures opcionals
+   que la plataforma fa servir des de T47 (useSessioOpcional, useIdentitatOpcional:
+   fontSessio.js), amb la mateixa persona sintètica. */
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -41,8 +47,14 @@ vi.mock('./NotesContext', async (importOriginal) => ({
   })
 }));
 vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config }) }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] }) }));
-vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: dades.usuari }) }));
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => {
+  const identitat = () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] });
+  return { useIdentitat: identitat, useIdentitatOpcional: identitat, ROLS_QUE_SIGNEN: Object.freeze(['owner', 'admin']) };
+});
+vi.mock('../../app/contexts/SessionContext', () => ({
+  useSession: () => ({ currentUser: dades.usuari }),
+  useSessioOpcional: () => ({ currentUser: dades.usuari })
+}));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: dades.toast }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: dades.buit, sortedEvents: dades.buit, sortedMarketItems: dades.buit }) }));
 vi.mock('./NotesDetail.jsx', () => ({ default: ({ activeNote }) => <p data-testid="detall">{activeNote?.id ?? 'cap'}</p> }));
@@ -67,6 +79,7 @@ import AppLector from '../../apps/lector/AppLector.jsx';
 import manifestLector from '../../apps/lector/manifest.js';
 import { creaFontNoticies } from '../../apps/lector/fontNoticies.js';
 import { creaFontsPersonals, destinacioDe } from '../../apps/lector/fontsPersonals.js';
+import { idFontPersonal } from '../../apps/lector/nucli/index.js';
 import { creaAdaptadorLlavor } from '../../apps/lector/llavor/fontLlavor.js';
 import { creaMagatzemLector } from '../../apps/lector/magatzem.js';
 import { creaCanalFals, creaIdbFals, creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
@@ -263,26 +276,35 @@ describe('la tria es pinta', () => {
 });
 
 describe('afegir al Lector', () => {
-  test('una adreça vàlida es desa com a font personal pendent i apareix a la gestió de fonts del Lector', async () => {
+  test('una adreça vàlida es desa com a font personal pendent i apareix a l’arbre del Lector, triada', async () => {
     const { api } = munta(LECTOR);
+    const desti = `/app/lector/noticies/festes/${idFontPersonal(URL_PROVA)}`;
     fireEvent.change(await nomFont(), { target: { value: 'La Veu del Barri' } });
     fireEvent.change(categoria(), { target: { value: 'festes' } });
     expect(consulta().get('categoria-font')).toBe('festes');
     fireEvent.click(screen.getByRole('button', { name: 'Afegir al Lector' }));
-    await waitFor(() => expect(url()).toBe('/app/lector/fonts/colleccio'));
+    await waitFor(() => expect(url()).toBe(desti));
     expect(dades.toast).toHaveBeenCalledWith('Afegida al Lector: «La Veu del Barri». Queda pendent del connector.', 'success');
     expect(await api.llistaFontsPersonals()).toEqual([
       expect.objectContaining({ url: URL_PROVA, nom: 'La Veu del Barri', categoriaId: 'festes' })
     ]);
     /* Cap nota al Bloc. */
     expect(dades.creades).toEqual([]);
-    /* El Lector, a la gestió de fonts: la font, pendent del connector. */
-    const llista = await screen.findByRole('list', { name: 'Les teues fonts' });
+    /* El Lector, a l'arbre: la font, triada dins de la seua carpeta i pendent, amb el seu detall. */
+    const arbre = within(document.querySelector('#app-grid-sidebar nav.sdp-workspace-column__body'));
+    const fila = await arbre.findByRole('button', { name: 'La Veu del Barri · pendent' });
+    expect(fila.getAttribute('aria-current')).toBe('page');
+    expect(await screen.findByRole('region', { name: 'La Veu del Barri' })).toBeTruthy();
+    expect(screen.getByText('Esta font encara no es llig')).toBeTruthy();
+    expect(screen.getByText(/^Queda guardada en este dispositiu\./)).toBeTruthy();
+    /* La gestió de fonts de l'arbre la porta amb el domini i la carpeta. */
+    fireEvent.click(screen.getByRole('button', { name: 'Gestiona les fonts' }));
+    const llista = within(await screen.findByRole('dialog', { name: 'Gestiona les fonts' })).getByRole('list', { name: 'Les teues fonts' });
     expect(within(llista).getByText('La Veu del Barri')).toBeTruthy();
-    expect(within(llista).getByText('Pendent del connector · exemple.org · Cultura i festes')).toBeTruthy();
+    expect(within(llista).getByText('Pendent · exemple.org · Cultura i festes')).toBeTruthy();
     /* replace: Arrere no torna al snippet ja consumit. */
     act(() => { fireEvent.click(screen.getByRole('button', { name: 'Arrere de prova' })); });
-    expect(url()).toBe('/app/lector/fonts/colleccio');
+    expect(url()).toBe(desti);
   });
 
   test('sense nom: l’error al camp, amb el focus (correcció SN-R7), i res desat', async () => {

@@ -41,6 +41,11 @@
  * signats per una entitat no s'anoten mai (config/moderacio.js). L'únic
  * `sendChatMessage` que s'exposa passa per la porta de les normes
  * (asseguraNormes); el relleu intern (accionsRef) continua cru.
+ * Integració 261024 (Codex C-02) · Si el servidor rebutja igualment un
+ * missatge o un adjunt per les normes (SDP-MOD-428), la porta es torna a obrir
+ * (asseguraNormes({ rebutjades: true })) i, si les accepta, s'envia de nou
+ * UNA sola vegada amb el mateix id; mai en bucle. El xat públic de /iaia ja
+ * passa per la porta; el privat amb la IAIA, no.
  *
  * TEMPS REAL I SONDEIG (ARQ-A06, ARQ-F03)
  * ───────────────────────────────────────
@@ -224,6 +229,15 @@ import { recordaOrigenDelXat } from './origenDelXat.js';
 import { clauDia } from './temps.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { anotaFilsBloquejats, anotaMissatgesBloquejats, senseDirectesBloquejats } from '../../config/moderacio.js';
+import { CODI_NORMES_SERVIDOR, esRebuigDeNormes } from '../../data/errorsBackend.js';
+import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
+import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+
+/* Integració 261024 (Codex C-02) · El xat PRIVAT amb la IAIA no passa per la
+   porta de les normes (no és cap publicació per al poble), com al servidor
+   (2610241400_normes_exigides_ugc.sql). El xat públic de la pàgina /iaia sí:
+   el llig el poble i el servidor ja l'exigix. */
+const esXatPrivatDeLaIAIA = (fil) => esXatDeLaIAIA(fil) && fil?.subjecte?.tipus !== 'pagina';
 
 export const XatContext = createContext(null);
 let hostPromise;
@@ -490,6 +504,9 @@ export function XatProvider({ children, config }) {
      joId i el xat de mostra en té cura. */
   const convidat = !usuari?.id && Boolean(joId);
   const { t } = useUIActions();
+  /* Integració 261024 · El text d'una bombolla rebutjada per les normes, sense refer l'enviament. */
+  const traductorRef = useRef(t);
+  useLayoutEffect(() => { traductorRef.current = t; }, [t]);
   const avisDeLaMostra = t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!");
   const [araDeLaMostra] = useState(() => new Date().toISOString());
   const filDeMostra = useMemo(() => (convidat ? filDeMostraDeJavi({ avis: avisDeLaMostra }) : null), [convidat, avisDeLaMostra]);
@@ -1129,6 +1146,9 @@ export function XatProvider({ children, config }) {
        (enviaMissatge(filId, { id, text, respostaA })). Sense resposta, el cos
        és el de sempre. */
     const entrada = respostaA ? { id, text: cos, respostaA } : { id, text: cos };
+    /* Integració 261024 (Codex C-02) · Un rebuig per les normes (SDP-MOD-428)
+       torna a obrir la porta UNA sola vegada per enviament. */
+    let normesReobertes = false;
     for (let intent = 0; ; intent += 1) {
       try {
         /* T63.2 · En un fil de pàgina que llegixes com a visitant, el primer missatge hi entra. */
@@ -1159,12 +1179,28 @@ export function XatProvider({ children, config }) {
           if (!seguir || !vigent(op)) return [];
           continue;
         }
+        /* Integració 261024 (Codex C-02) · El servidor no troba acceptada la
+           versió vigent de les normes, encara que este dispositiu ho
+           recordara: s'oblida el record i es torna a preguntar
+           (asseguraNormes({ rebutjades: true })). Si les accepta, el mateix
+           missatge (el mateix id: el disparador l'ha rebutjat abans
+           d'inserir-lo) es reenvia una sola vegada; si les declina, o el
+           servidor el torna a rebutjar, la bombolla queda en error amb el
+           motiu. Mai en bucle. Sense proveïdor, la bombolla de sempre. */
+        const perNormes = esRebuigDeNormes(error);
+        const moderacio = moderacioRef.current;
+        if (perNormes && !normesReobertes && typeof moderacio?.asseguraNormes === 'function') {
+          normesReobertes = true;
+          const acceptades = await moderacio.asseguraNormes({ rebutjades: true });
+          if (!vigent(op)) return [];
+          if (acceptades === true) continue;
+        }
         /* Onada 6 · `codiError` deixa que la bombolla diga en la llengua de
            la interfície els codis SDP que té traduïts (errorsXat.js). */
         mutaPendents((previs) => actualitzaPendent(previs, id, {
           estatEnviament: 'error',
-          error: error?.message || 'No s\'ha enviat.',
-          codiError: error?.code || null
+          error: perNormes ? tradueix(traductorRef.current, TEXTOS_MODERACIO.calAcceptar) : error?.message || 'No s\'ha enviat.',
+          codiError: perNormes ? CODI_NORMES_SERVIDOR : error?.code || null
         }));
         return [];
       }
@@ -1217,15 +1253,17 @@ export function XatProvider({ children, config }) {
      s'exposa, també el que fa servir Connectar (useAplicaAbast). Abans de
      res, i abans de pintar cap bombolla: si la persona no les accepta, llança
      un AbortError i no s'envia ni es pinta res (Conversa torna a posar el
-     text al camp). El xat de la IAIA no hi passa: no és cap publicació per
-     al poble. Sense proveïdor, o amb la porta que no s'aplica (llavor,
-     local, sense sessió), és l'enviament de sempre. El relleu intern
+     text al camp). El xat privat de la IAIA no hi passa: no és cap
+     publicació per al poble. Integració 261024 (Codex C-02) · El xat públic
+     de la pàgina /iaia, sí: el llig el poble i el servidor també l'exigix
+     (esXatPrivatDeLaIAIA). Sense proveïdor, o amb la porta que no s'aplica
+     (llavor, local, sense sessió), és l'enviament de sempre. El relleu intern
      (accionsRef) continua cru: una crida guardada d'abans d'una renovació ja
      ha passat la porta. */
   const enviaAmbNormes = useCallback(async (fil, text, opcions) => {
     const moderacio = moderacioRef.current;
     const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
-    if (typeof moderacio?.asseguraNormes === 'function' && String(text ?? '').trim() && !esXatDeLaIAIA(complet)
+    if (typeof moderacio?.asseguraNormes === 'function' && String(text ?? '').trim() && !esXatPrivatDeLaIAIA(complet)
       && !(await moderacio.asseguraNormes())) {
       throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
     }
@@ -1252,7 +1290,21 @@ export function XatProvider({ children, config }) {
     signal?.addEventListener('abort', avorta, { once: true });
     op.controller.signal.addEventListener('abort', avorta, { once: true });
     let desat;
-    try { desat = await publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal }); }
+    /* Integració 261024 (Codex C-02) · Un rebuig per les normes (SDP-MOD-428,
+       a la causa de l'error de l'adjunt) torna a obrir la porta UNA vegada; si
+       les accepta, es publica de nou amb el mateix id (la reserva ja pujada no
+       es torna a pujar); si les declina, l'AbortError de sempre. */
+    const publica = () => publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal });
+    try {
+      try { desat = await publica(); }
+      catch (error) {
+        if (!esRebuigDeNormes(error) || typeof moderacio?.asseguraNormes !== 'function') throw error;
+        const acceptades = await moderacio.asseguraNormes({ rebutjades: true });
+        if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
+        if (acceptades !== true) throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
+        desat = await publica();
+      }
+    }
     finally { signal?.removeEventListener('abort', avorta); op.controller.signal.removeEventListener('abort', avorta); }
     if (!vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
     const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };

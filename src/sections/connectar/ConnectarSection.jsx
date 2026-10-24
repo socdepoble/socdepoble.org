@@ -46,6 +46,14 @@
  *     és http o https no es connecta.
  *   · D4 · Els drets de l'original (origen.drets) només es prenen de
  *     l'element resolt (item.copyright), mai de l'URL.
+ *   · IDEA-14 (Directiva del Mestre, 261024; auditoria Gemini G-04) · Tres
+ *     camins separats, cadascun amb el seu botó: «Entre persones» (seguir i
+ *     escriure a l'autor o a la persona o l'entitat d'un perfil,
+ *     BlocRelacio), «Formar part» (la sol·licitud estructurada al xat de
+ *     l'entitat, BlocFormarPart, i administrar-la, BlocAdministrarOrganitzacio)
+ *     i «A les teues notes» (la connexió de sempre; abans «Al teu MAS», 261024
+ *     correccions, Gemini G2-02). Des d'un perfil, el nom i l'id
+ *     són els de la fitxa pública (useFitxaDeConnexio), mai els de l'URL.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
@@ -57,14 +65,14 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext.jsx';
 import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
-import { autorDe, esRutaInterna, getSectionItemPath, objecteDe, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
+import { autorDe, esRutaInterna, getSectionItemPath, objecteDe, objecteDePerfil, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esBackendInabastable } from '../../data/errorsBackend.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
-import { interlocutorDelPrivat, urlPerCompartir, useComentaEnPrivat, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
+import { Alerta, Boto, Camp, CampText, Carregant, Casella, Divisor, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
+import { interlocutorDelPrivat, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { useXatSocDePoble } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { netejaDrets, normalitzaAbast, teDretsReservats } from '../../data/origenNota.js';
 import { useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
@@ -83,6 +91,11 @@ import { useAplicaAbast } from './useAplicaAbast.js';
 import { ResumConnexio } from './ResumConnexio.jsx';
 /* T43b (ordre del Mestre, 260928) · administrar l'organització (?organitzacio=ID). */
 import { BlocAdministrarOrganitzacio } from './organitzacio/BlocAdministrarOrganitzacio.jsx';
+/* IDEA-14 (Directiva del Mestre, 261024; G-04) · els camins «Entre persones» i
+   «Formar part», i la fitxa de confiança d'un perfil o d'una organització. */
+import { BlocRelacio } from './BlocRelacio.jsx';
+import { BlocFormarPart } from './organitzacio/BlocFormarPart.jsx';
+import { useFitxaDeConnexio } from './useFitxaDeConnexio.js';
 
 const SUGGESTED_TAGS = ['Història local', 'Interessant', 'Patrimoni', 'Gent del Poble', 'Debat'];
 /* Les mateixes categories de sèrie que el Bloc (NotesSection): Onada 11
@@ -233,27 +246,76 @@ const esIdDeLaLlavor = ({ id }) => IDS_DE_LA_LLAVOR.has(String(id));
  *  · En remot, un autor amb un id de la llavor no té xat (esIdDeLaLlavor).
  *  · En llavor, l'id del padró que torna directeAmb (el Mac Mini, '0001'); un
  *    autor que el xat local no pot obrir no té botó.
- *  · `nom` és el de l'element resolt (objecteDe), mai el de l'URL. */
-export function autorPerConnectar(item, {
-  seccio = '', currentUser = null, actor = null, identitats = [], dataMode = 'remote', xat = null
-} = {}) {
+ *  · `nom` és el de l'element resolt (objecteDe), mai el de l'URL.
+ * IDEA-14 (Directiva del Mestre, 261024) · També { tipus, id, deFitxa,
+ * seguiment }: `seguiment` és a qui se seguiria ({ tipus: 'persona' |
+ * 'entitat', id }, el de l'interlocutor si n'hi ha) o null si des d'ací no es
+ * pot (en remot, un id de la llavor). Les guardes són les de contacteDe. */
+export function autorPerConnectar(item, { seccio = '', ...opcions } = {}) {
   const autor = autorDe(item);
   if (!autor || !['persona', 'entitat'].includes(autor.tipus)) return null;
-  if (!autor.id.trim() || autor.id.length > 200 || /[\s\u0000-\u001f\u007f]/.test(autor.id)) return null;
-  const propis = idsDeQuiConnecta({ currentUser, actor, identitats, dataMode });
-  const esDeQuiMira = (id) => propis.has(String(id ?? '')) || xat?.esDeQuiMira?.(id) === true;
-  if (esDeQuiMira(autor.id)) return null;
   const objecte = objecteDe(item, seccio);
   const nom = objecte?.autor?.nom.trim() || '';
-  if (!nom) return null;
-  if (objecte.autor.projecte) return xat?.href || typeof xat?.resol === 'function' ? { interlocutor: null, nom } : null;
-  if (dataMode === 'remote' && esIdDeLaLlavor(autor)) return null;
-  const interlocutor = interlocutorDelPrivat(objecte, { directeAmb: xat?.directeAmb, esDeQuiMira });
-  return interlocutor ? { interlocutor, nom } : null;
+  return contacteDe({ ...autor, nom, projecte: objecte?.autor?.projecte === true }, objecte, opcions);
 }
 
-/** El text d'una clau amb el nom de qui obri el xat. */
-const ambNom = (text, nom) => text.replaceAll('{nom}', () => nom);
+/** IDEA-14 (Directiva del Mestre, 261024; G-04) · El contacte humà d'un
+ * PERFIL (/gent/:id, /empresa/:id, /grup/:id → Connectar): la fitxa pública
+ * de confiança (useFitxaDeConnexio), mai la query. El descriptor és el
+ * d'objecteDePerfil (porta la marca `projecte` del pilot) i les guardes, les
+ * mateixes de l'autor (contacteDe): ni qui mira ni una entitat que
+ * representa, cap id de la llavor en remot i el pilot pel xat de Sóc de
+ * Poble. Una IA no és cap persona (té el seu «Parla amb…»): cap contacte. */
+export function perfilPerConnectar(perfil, opcions = {}) {
+  const objecte = objecteDePerfil(perfil);
+  if (!objecte || !['persona', 'entitat', 'grup'].includes(objecte.tipus)) return null;
+  const qui = { tipus: objecte.tipus, id: objecte.id, nom: objecte.titol.trim(), projecte: objecte.projecte === true };
+  const contacte = contacteDe(qui, objecte, opcions);
+  return contacte ? { ...contacte, deFitxa: true } : null;
+}
+
+/* Les guardes del contacte humà, una sola còpia per a l'autor i per al perfil
+   (CA-1, CA-2, CN-R2): `qui` és { tipus, id, nom, projecte } i `objecte`, el
+   descriptor d'on es trau l'interlocutor (interlocutorDelPrivat). */
+function contacteDe(qui, objecte, { currentUser = null, actor = null, identitats = [], dataMode = 'remote', xat = null } = {}) {
+  const id = String(qui?.id ?? '');
+  if (!id.trim() || id.length > 200 || /[\s\u0000-\u001f\u007f]/.test(id)) return null;
+  const propis = idsDeQuiConnecta({ currentUser, actor, identitats, dataMode });
+  const esDeQuiMira = (candidat) => propis.has(String(candidat ?? '')) || xat?.esDeQuiMira?.(candidat) === true;
+  if (esDeQuiMira(id)) return null;
+  const nom = qui.nom || '';
+  if (!nom) return null;
+  const tipusDeSeguiment = qui.tipus === 'persona' ? 'persona' : 'entitat';
+  const base = { nom, tipus: qui.tipus, id, deFitxa: false };
+  if (qui.projecte) {
+    if (!xat?.href && typeof xat?.resol !== 'function') return null;
+    const seguible = dataMode !== 'remote' || !esIdDeLaLlavor({ id });
+    return { ...base, interlocutor: null, seguiment: seguible ? { tipus: tipusDeSeguiment, id } : null };
+  }
+  if (dataMode === 'remote' && esIdDeLaLlavor({ id })) return null;
+  const interlocutor = interlocutorDelPrivat(objecte, { directeAmb: xat?.directeAmb, esDeQuiMira });
+  return interlocutor ? { ...base, interlocutor, seguiment: { tipus: tipusDeSeguiment, id: interlocutor.id } } : null;
+}
+
+const TIPUS_DE_FITXA = new Set(['persona', 'entitat', 'grup']);
+
+/** IDEA-14 · Quines fitxes de confiança cal demanar per a esta consulta: la
+ * del perfil (?sectionId=perfil amb objecte persona, entitat o grup) i la de
+ * l'organització (?organitzacio=ID), si no és la mateixa. La query només
+ * diu QUINA fitxa: el nom i l'id són els que torna loadPerfilPublic. En
+ * remot i sense sessió, la fitxa d'una altra persona no es pot llegir
+ * (perfil_public): ni es demana. */
+export function fitxesDeLaConnexio(params, { teSessio = false, dataMode = 'remote' } = {}) {
+  const sectionId = params.get('sectionId') || '';
+  const itemId = (params.get('item_id') || '').trim();
+  const objecte = params.get('objecte') || '';
+  const orgId = (params.get('organitzacio') || '').trim();
+  const personaIlegible = objecte === 'persona' && !teSessio && dataMode === 'remote';
+  const perfil = sectionId === 'perfil' && itemId && TIPUS_DE_FITXA.has(objecte) && !personaIlegible
+    ? { id: itemId, tipus: objecte } : null;
+  const mateixa = Boolean(perfil) && perfil.tipus !== 'persona' && perfil.id === orgId;
+  return { perfil, organitzacio: orgId && !mateixa ? { id: orgId, tipus: 'entitat' } : null, orgId };
+}
 
 function ConnectarElementIntern() {
   const { showToast } = useToast();
@@ -286,12 +348,27 @@ function ConnectarElementIntern() {
   const teSessio = Boolean(currentUser);
   const dataMode = useMemo(() => modeResolt(config), [config]);
   /* Gauntlet 261022_0225 (CA-1) · El xat amb l'autor és el de «En privat»:
-     el mateix destí (autorPerConnectar) i el mateix clic (useComentaEnPrivat). */
+     el mateix destí (autorPerConnectar) i el mateix clic (useComentaEnPrivat,
+     ara dins de BlocRelacio).
+     IDEA-14 (Directiva del Mestre, 261024; G-04) · Des d'un perfil, el
+     contacte és el de la seua fitxa pública de confiança (perfilPerConnectar),
+     i amb ?organitzacio, la de l'organització per a «Formar part». */
   const xatSocDePoble = useXatSocDePoble();
-  const contacte = autorPerConnectar(itemOriginal, {
-    seccio: origenDeLURL.sectionId, currentUser, actor, identitats, dataMode, xat: xatSocDePoble
-  });
-  const obriXatAmbLAutor = useComentaEnPrivat(contacte?.interlocutor ?? null);
+  const opcionsDelContacte = { currentUser, actor, identitats, dataMode, xat: xatSocDePoble };
+  const peticions = useMemo(() => fitxesDeLaConnexio(params, { teSessio, dataMode }), [params, teSessio, dataMode]);
+  const fitxaDelPerfil = useFitxaDeConnexio(peticions.perfil, { config });
+  const fitxaDeLaOrganitzacio = useFitxaDeConnexio(peticions.organitzacio, { config });
+  const contacte = autorPerConnectar(itemOriginal, { seccio: origenDeLURL.sectionId, ...opcionsDelContacte })
+    ?? perfilPerConnectar(fitxaDelPerfil.perfil, opcionsDelContacte);
+  /* En remot sense sessió, la fitxa d'una altra persona no es llig: el camí es mostra sense nom i porta a entrar. */
+  const personaSenseNom = !contacte && !teSessio && dataMode === 'remote' && origenDeLURL.sectionId === 'perfil'
+    && origenDeLURL.objecte === 'persona' && Boolean((params.get('item_id') || '').trim());
+  const orgId = peticions.orgId;
+  const fitxaOrg = !orgId ? null : (peticions.organitzacio ? fitxaDeLaOrganitzacio : fitxaDelPerfil);
+  const contacteOrg = !orgId ? null
+    : (peticions.organitzacio ? perfilPerConnectar(fitxaDeLaOrganitzacio.perfil, opcionsDelContacte) : (contacte?.deFitxa ? contacte : null));
+  const ambRelacio = Boolean(contacte) || personaSenseNom;
+  const ambCamins = ambRelacio || Boolean(orgId);
   /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
      del dispositiu: es connecta igual. En remot cal entrar (calEntrar): cap
      simulació. Amb el Bloc encara carregant (canCreate exigix 'ready'), el
@@ -462,7 +539,7 @@ function ConnectarElementIntern() {
       const rutaNota = nota?.id ? `/notes?nota=${encodeURIComponent(nota.id)}` : '/notes';
       if (mode === 'privada') {
         /* D1 · el toast diu la carpeta triada, no sempre la Safata. */
-        showToast(t('section.connectar.connectada', 'Element connectat al teu MAS: el trobaràs a «{carpeta}».').replace('{carpeta}', () => nomCarpeta), 'success');
+        showToast(t('section.connectar.connectada', 'Element connectat a les teues notes: el trobaràs a «{carpeta}».').replace('{carpeta}', () => nomCarpeta), 'success');
         /* T54 · replace: «arrere» des de la nota torna a l'original, no a este formulari ja fet. */
         navigate(rutaNota, { replace: true });
         return;
@@ -471,7 +548,8 @@ function ConnectarElementIntern() {
       const { resultats } = await aplica({ nota, origen: origenDesat, abast: tria, missatge });
       setResum({
         ruta: rutaNota,
-        resultats: [{ clau: 'mas', nom: 'El teu MAS', estat: 'fet', detall: `Connectada a «${nomCarpeta}».` }, ...resultats]
+        /* 261024 correccions (directiva del Mestre 15:05, Gemini G2-02) · cap «MAS» a la interfície. */
+        resultats: [{ clau: 'mas', nom: 'Les teues notes', estat: 'fet', detall: `Connectada a «${nomCarpeta}».` }, ...resultats]
       });
     } catch (err) {
       setError(missatgeDeLError(err));
@@ -487,13 +565,19 @@ function ConnectarElementIntern() {
         : mode === 'persones' ? `Connectar i enviar a ${n} ${n === 1 ? 'persona' : 'persones'}`
           : mode === 'grups' ? `Connectar i enviar a ${n} ${n === 1 ? 'grup' : 'grups'}`
             : `${t('section.connectar.connect', 'Connectar a')} «${nomCarpeta}»`;
+  /* D1 · Sense sessió en remot, a entrar; en tornar, esta mateixa consulta. */
+  const entra = () => navigate(rutaPerAEntrar(params));
 
   return (
     <UniversalPage
       chrome="system"
       title="Connectar"
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
-      lead="Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després."
+      lead={/* IDEA-14 · Amb més d'un camí, l'entradeta diu que són accions distintes.
+             261024 correccions (R3-05) · i diu el mateix que «Qui ho pot vore?»: en
+             privat no avisa ningú; a persones o grups de xat els arriba l'enllaç. */ ambCamins
+        ? t('section.connectar.leadCamins', 'Cada camí té el seu botó: seguir o escriure a algú no et fa membre de res. Si guardes la connexió en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')
+        : t('section.connectar.lead', 'Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després.')}
       onConnect={false}
     >
       <div className="sdp-connectar">
@@ -525,7 +609,7 @@ function ConnectarElementIntern() {
             />
           </div>
           {autorVisible ? <p className="sdp-connectar__autor">{`De ${autorVisible}`}</p> : null}
-          {persona ? <p className="sdp-connectar__identitat">{`Es connecta al MAS de ${persona}.`}</p> : null}
+          {persona ? <p className="sdp-connectar__identitat">{`Es connecta a ${persona}.`}</p> : null}
           {actuaComEntitat ? (
             <p className="sdp-connectar__identitat">{`Actues com a ${actor.nom}, però les connexions són personals.`}</p>
           ) : null}
@@ -537,26 +621,51 @@ function ConnectarElementIntern() {
             </Alerta>
           ) : null}
         </section>
-        {/* Gauntlet 261022_0225 · CA-4: en remot, obrir el xat ja crea la
-            conversa, i l'autor la veu a la seua llista abans de cap missatge;
-            en llavor (CN-R4) la conversa és d'este dispositiu i l'autor no la
-            veu: un altre text. CA-6: el botó diu amb qui (el nom de l'element
-            resolt), i tot passa per t(). */}
-        {contacte ? (
-          <section className="sdp-connectar__seccio" aria-labelledby={`${id}-autor`}>
-            <h3 id={`${id}-autor`} className="sdp-connectar__titol-seccio">{t('section.connectar.autor.titol', 'Connectar amb l’autor')}</h3>
-            <p>{ambNom(dataMode === 'remote'
-              ? t('section.connectar.autor.text', 'Obri una conversa privada amb {nom}. Li apareixerà de seguida a la seua llista de converses, però no rebrà cap missatge fins que l’escrigues.')
-              : t('section.connectar.autor.textLlavor', 'Obri una conversa privada amb {nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.'), contacte.nom)}</p>
-            <Boto varietat="secundari" onClick={() => (calEntrar ? navigate(rutaPerAEntrar(params)) : obriXatAmbLAutor())}>
-              {ambNom(calEntrar
-                ? t('section.connectar.autor.entra', 'Entra per a escriure-li a {nom}')
-                : t('section.connectar.autor.boto', 'Escriu-li a {nom}'), contacte.nom)}
-            </Boto>
-          </section>
+        {/* IDEA-14 (Directiva del Mestre, 261024; auditoria Gemini G-04) · Tres
+            camins, cadascun amb el seu botó: «Entre persones» (seguir i
+            escriure a l'autor o al perfil), «Formar part» (la sol·licitud al
+            xat de l'entitat i, a banda, administrar-la) i «A les teues notes»
+            (la còpia al Bloc, el botó gran del peu, l'únic primari, D1). Els dos
+            primers només hi són quan toca. */}
+        {ambRelacio ? (
+          <>
+            <Divisor />
+            <div className="sdp-connectar__cami" role="group" aria-labelledby={`${id}-cami-relacio`}>
+              <div className="sdp-connectar__cami-cap">
+                <p id={`${id}-cami-relacio`} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Entre persones')}</p>
+              </div>
+              <BlocRelacio contacte={contacte} deFitxa={contacte?.deFitxa === true} calEntrar={calEntrar} onEntra={entra}
+                dataMode={dataMode} config={config} />
+            </div>
+          </>
         ) : null}
-        {/* T43b-3 · el nom de l'organització no ve de l'URL (title): el resol el bloc d'una font de confiança. */}
-        {params.get('organitzacio') ? <BlocAdministrarOrganitzacio orgId={params.get('organitzacio')} config={config} /> : null}
+        {orgId ? (
+          <>
+            <Divisor />
+            <div className="sdp-connectar__cami" role="group" aria-labelledby={`${id}-cami-formar-part`}>
+              <div className="sdp-connectar__cami-cap">
+                <p id={`${id}-cami-formar-part`} className="sdp-connectar__tipus">{t('section.connectar.camins.formarPart', 'Formar part')}</p>
+              </div>
+              <BlocFormarPart orgId={orgId} contacte={contacteOrg} nom={fitxaOrg?.perfil?.nom || null}
+                carregant={fitxaOrg?.estat === 'carregant'} onEntra={entra} />
+              {/* T43b-3 · el nom de l'organització no ve de l'URL (title): el resol el bloc d'una font de confiança. */}
+              <BlocAdministrarOrganitzacio orgId={orgId} config={config} />
+            </div>
+          </>
+        ) : null}
+        {ambCamins ? (
+          <>
+            <Divisor />
+            <div className="sdp-connectar__cami-cap">
+              {/* 261024 correccions (G2-02 i R3-05) · «A les teues notes», i l'ajuda diu el
+                  que fan les opcions de davall: només la privada no avisa ningú. */}
+              <p className="sdp-connectar__tipus">{t('section.connectar.camins.mas', 'A les teues notes')}</p>
+              <p className="sdp-connectar__ajuda">
+                {t('section.connectar.mas.ajuda', 'Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.')}
+              </p>
+            </div>
+          </>
+        ) : null}
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-privacitat`}>
           <h3 id={`${id}-privacitat`} className="sdp-connectar__titol-seccio">Privacitat de la connexió</h3>
@@ -633,7 +742,7 @@ function ConnectarElementIntern() {
               quin és el pas. */}
           {mode === 'poble' ? (
             <Alerta to="info" titol="Compartir al Mur, un pas més">
-              La tria queda amb la connexió, però el Mur no la rep sola: obri-la al teu MAS i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.
+              La tria queda amb la connexió, però el Mur no la rep sola: obri-la a les teues notes i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.
             </Alerta>
           ) : null}
         </section>
@@ -730,7 +839,7 @@ function ConnectarElementIntern() {
                 resultats={resum.resultats}
                 accions={(
                   <Boto varietat="primari" onClick={() => navigate(resum.ruta, { replace: true })}>
-                    Obrir la connexió al teu MAS
+                    Obrir la connexió a les teues notes
                   </Boto>
                 )}
               />
@@ -746,7 +855,7 @@ function ConnectarElementIntern() {
                   ? (faltenDestins
                     ? (mode === 'persones' ? 'Tria almenys una persona del padró.' : 'Tria almenys un grup.')
                     : 'L’enviament per xat no es pot desfer.')
-                  : 'Al teu MAS la llegiràs i la podràs editar com una nota teua.'}
+                  : 'A les teues notes la llegiràs i la podràs editar com una nota teua.'}
               </p>
             </>
           )}

@@ -34,9 +34,20 @@
  * contingut de fora: cap xat comú (objecte={null}). El logo de la font no va
  * a la barra taronja: l'avatar de la barra no es demana sense referent, i fins
  * que ho faça val més el cercle de reserva que avisar la font.
+ *
+ * Ordre del Mestre (261024, 15:05) · «Per a un feed de vídeo (Migue Baena o
+ * Benjamín Cordero) la vista integra el reproductor directament.» Si el
+ * servei de notícies reconeix el vídeo de l'enllaç (mitjans.js · video), la
+ * lectura porta una FAÇANA (VideoDeLArticle): el títol, «Mira el vídeo ací» i
+ * l'avís que, en prémer, YouTube rebrà l'adreça IP. Res no es demana a YouTube
+ * abans del clic: només després es pinta l'iframe, amb l'adreça d'incrustació
+ * que dona el servei (cap adreça a l'app), sandbox, sense més permisos que els
+ * del vídeo i amb el referent retallat a l'origen. I sempre, l'enllaç a
+ * l'original. Amb el servei, la portada és la imatge que dona el servei (mai
+ * l'origen de la font); sense, la de sempre, amb el filtre de l'amfitrió.
  */
-import { useEffect, useLayoutEffect, useRef } from 'react';
-import { Bookmark, BookmarkCheck, ExternalLink, MailOpen, X } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Bookmark, BookmarkCheck, CirclePlay, ExternalLink, MailOpen, Play, X } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, PaginaApp } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
@@ -137,9 +148,63 @@ function autoriaDe(article, font, ruta) {
   return { nom: font.nom, poble: article.autor || '', href: ruta(NOTICIES, font.categoriaId || HUI, font.id) };
 }
 
+/* Els permisos de l'iframe del vídeo: reproduir (amb DRM), imatge sobre imatge i pantalla
+   completa; i el sandbox mínim perquè el reproductor funcione. */
+const PERMISOS_VIDEO = 'encrypted-media; picture-in-picture; fullscreen';
+const SANDBOX_VIDEO = 'allow-scripts allow-same-origin allow-presentation';
+
+/* Ordre del Mestre (261024, 15:05) · El vídeo dins de la lectura, darrere d'una façana: abans del
+   clic no hi ha cap iframe ni cap adreça de YouTube al document. `video`: el de mitjans.js.
+   Correcció L-04 (261024 Lector final, WCAG 2.4.3) · «Mira el vídeo ací» es desmunta en prémer-lo i
+   el seu lloc el pren el reproductor: el focus hi va (l'iframe s'enfoca com un control més), si
+   encara és lliure, i no es queda al <body>. */
+function VideoDeLArticle({ video, titol }) {
+  const [mira, setMira] = useState(false);
+  const reproductor = useRef(null);
+  const enfocaElReproductor = useRef(false);
+  useLayoutEffect(() => {
+    const iframe = reproductor.current;
+    if (!mira || !enfocaElReproductor.current || !iframe) return;
+    enfocaElReproductor.current = false;
+    if (focusLliure(iframe, iframe.closest(CLOSCA))) iframe.focus();
+  }, [mira]);
+  const mirar = () => {
+    enfocaElReproductor.current = true;
+    setMira(true);
+  };
+  const original = video.enllac ? (
+    <p>
+      <a href={video.enllac} target="_blank" rel="noopener noreferrer">Obri’l a YouTube</a>
+      {' '}
+      <span className="sdp-nomes-lector">(s’obri en una pestanya nova)</span>
+    </p>
+  ) : null;
+  if (!mira) {
+    return (
+      <>
+        <EstatBuit icona={CirclePlay} titol={titol}
+          accio={<Boto varietat="primari" icona={Play} onClick={mirar}>Mira el vídeo ací</Boto>}>
+          En prémer, YouTube rebrà la teua adreça IP.
+        </EstatBuit>
+        {original}
+      </>
+    );
+  }
+  return (
+    <>
+      <div className="embed-container">
+        <iframe src={video.incrustacio} title={`Vídeo: ${titol}`} allow={PERMISOS_VIDEO} referrerPolicy="strict-origin-when-cross-origin"
+          sandbox={SANDBOX_VIDEO} ref={reproductor} />
+      </div>
+      {original}
+    </>
+  );
+}
+
 function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) {
-  const { ruta } = useVistaLector();
+  const { ruta, mitjans } = useVistaLector();
   const boina = dataDeBoina(article.data, desfas);
+  const video = mitjans.video(article.enllac);
   return (
     <PaginaApp
       title={senseFinal(article.titol)}
@@ -162,6 +227,7 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
           Per a protegir la teua privacitat, ací no es carreguen les imatges ni els vídeos d’altres webs. Els trobaràs al lloc web.
         </Alerta>
       ) : null}
+      {video ? <VideoDeLArticle key={video.id} video={video} titol={senseFinal(article.titol)} /> : null}
       {article.contingutHtml ? <Contingut html={article.contingutHtml} /> : <p>{article.resum}</p>}
       {article.enllac ? (
         <p>
@@ -181,7 +247,7 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
    i la closca ({ fitxa, closca }). Qui el munta hi torna el focus en tancar-lo, també amb l'arrere
    del navegador, que no passa per onTanca. */
 export function Lector({ id, onTanca, retorn = null }) {
-  const { lector, noticies, font: port, desfas } = useVistaLector();
+  const { lector, noticies, font: port, desfas, delServei, mitjans } = useVistaLector();
   const { estat, article: sencer, rellegix } = useArticle(port, id);
   const desat = lector.estat.despres.find((resum) => resum.id === id) || null;
   const resum = noticies.articles.find((a) => a.id === id) || desat;
@@ -263,9 +329,12 @@ export function Lector({ id, onTanca, retorn = null }) {
 
   let cos;
   if (article) {
-    /* La portada és la imatge de la targeta: la de l'article o, si no en porta, la del resum de la llista. */
+    /* La portada és la imatge de la targeta: la de l'article o, si no en porta, la del resum de la llista.
+       261024 (Lector) · Amb el servei de notícies, la que dona el servei (mitjans.js), mai l'origen de la font. */
+    const original = article.imatge || resum?.imatge || null;
+    const portada = delServei ? mitjans.imatge(original) : original;
     cos = (
-      <Cos article={article} portada={article.imatge || resum?.imatge || undefined} font={fontInfo} desfas={desfas}
+      <Cos article={article} portada={portada || undefined} font={fontInfo} desfas={desfas}
         titolRef={titolRef} nomesResum={!sencer} onTanca={onTanca} />
     );
   } else if (estat === 'carregant') {

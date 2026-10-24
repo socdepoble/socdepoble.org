@@ -25,6 +25,10 @@
  *                            'sessio', 'mode-proves', 'fora-de-linia' o
  *                            'comprovant-desada' (escriu); 'comprovant',
  *                            'sense-permis' o 'sense-sessio' (no)
+ *   useServeiNoticies()    · T5 (261024, nucli 1.3.0) · el servei de notícies del
+ *                            poble que la plataforma dona a l'app ({ fonts(),
+ *                            feed(id, { signal }) }), o null; l'app no en sap
+ *                            l'origen ni fa cap petició: el servei és neutral
  *   validaTaulaDeClosa     · la validació de la taula de ClosaAplicacio
  *   useParametresConsulta  · llig i escriu la consulta (push) amb validadors
  *   useRutaApp(rutes)      · la ruta interna que casa amb la URL, amb els paràmetres validats
@@ -37,6 +41,7 @@
 export { useApp, useInterruptorsApp } from './ContextApp.jsx';
 export { ClosaAplicacio, useClosaAplicacio, validaTaulaDeClosa } from './ClosaAplicacio.jsx';
 export { useSessioApp } from './sessioApp.js';
+export { useServeiNoticies } from './serveiNoticies.js';
 export {
   PANELLS_ESTRET, VALIDADORS, coincidixRuta, esData, esIdOpac, esSegmentSegur, esSlug, esUuid,
   useParametresConsulta, useRutaApp, validaRutes

@@ -434,7 +434,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
            selector obert i diu per què, en línia (crítica 261020, 10). Ací
            s'hi podrà endollar el filtre previ que demana Apple 1.2. */
         if (asseguraNormes && !(await asseguraNormes())) throw new Error(tradueix(t, TEXTOS_MODERACIO.calAcceptar));
-        return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota : publishNote)(doc));
+        /* Integració 261024 (Codex C-02) · Si el servidor la rebutja igualment
+           per les normes (SDP-MOD-428), la porta es torna a obrir i, si les
+           accepta, es publica una sola vegada més (publicaAmbMotiu). */
+        return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota : publishNote)(doc), {
+          tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
+          motiuNormes: tradueix(t, TEXTOS_MODERACIO.calAcceptar)
+        });
       },
     };
 

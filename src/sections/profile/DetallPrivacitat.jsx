@@ -32,7 +32,18 @@ import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx'
 /* Decisió D12: la purga arriba 30 dies després de demanar la baixa. La data
    exacta la dona el servidor en confirmar-la. */
 const DIES_GRACIA = 30;
+/* Correccions 261024 (revisió R3-04) · Si queda una autorització d'Apple per
+   retirar, la purga espera fins a dies_espera_revocacio_apple dies més: el 7
+   de private.ajustos (migracions 2610241420 i 2610241440). Si el Mestre el
+   canvia, ha de canviar ací. */
+const DIES_ESPERA_APPLE = 7;
 const TIPUS_RGPD = 'rgpd_acepta';
+/* Correccions 261024 (revisió R3-10) · L'excepció dels fitxers, la de la
+   purga de 2610241440: es conserven els que encara usa una entitat (el logo,
+   la portada, la fitxa o una publicació seua) o una publicació d'una altra
+   persona. */
+const FITXERS_EN_US = 'que encara fa servir una entitat (la seua fitxa o una publicació) o una publicació d’una altra persona';
+const ESPERA_APPLE = `Si vas entrar amb Apple i encara no hem pogut retirar el permís, l’esborrat pot esperar fins a ${DIES_ESPERA_APPLE} dies més.`;
 
 /** socdepoble-dades-AAAA-MM-DD.json amb la data local de hui (diaIso,
     el mateix dia que compon la pastilla: cap còpia pròpia de les xifres). */
@@ -95,9 +106,16 @@ function BlocDades({ config }) {
 
   return (
     <Bloc titol="Les meues dades">
+      {/* P2-08 (pla 261024_1315, T7; auditoria Codex C-04) · La llista honesta
+          del que porta l'exportació (migració 2610241410) i el que no hi diu. */}
       <p className="perfil-compte__text">
-        Descarrega una còpia de tot el que Sóc de Poble guarda del teu compte: perfil, organitzacions,
-        publicacions, notes, converses i consentiments. És un fitxer JSON que pots obrir amb qualsevol editor de text.
+        Descarrega una còpia de les dades que Sóc de Poble guarda del teu compte: perfil, organitzacions,
+        publicacions, notes, converses, la llista dels teus fitxers i adjunts, consentiments, les denúncies que has
+        fet, les persones i entitats que has bloquejat o que seguixes i les normes que has acceptat. Per a protegir
+        altres persones, no hi diem qui t’ha denunciat, qui t’ha bloquejat ni qui et seguix: de les denúncies sobre tu
+        només hi ha quantes han acabat amb una mesura (si en vols el detall, demana-nos-el per correu) i, de qui et
+        seguix, quantes persones són. Tampoc no hi posem les empremtes de l’adreça IP ni el permís xifrat d’Apple. És
+        un fitxer JSON que pots obrir amb qualsevol editor de text.
       </p>
       {estat.fase === 'error' ? <Alerta to="error">{estat.text}</Alerta> : null}
       {estat.fase === 'fet' ? <Alerta to="exit">{`Ja tens el fitxer ${estat.nom} a les descàrregues.`}</Alerta> : null}
@@ -264,7 +282,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
          dispositiu. Amb la configuració del perfil: la dels esborranys. */
       if (sessio?.eixAmb) await sessio.eixAmb(baixa, configRef.current);
       else await baixa();
-      /* El servidor ha anonimitzat el perfil i el port ha tancat totes les
+      /* El servidor ha amagat el perfil i el port ha tancat totes les
          sessions: res d'esta pantalla continua sent vàlid. */
       setDialeg(false);
       onSessioTancada?.();
@@ -304,13 +322,18 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
             <Boto varietat="primari" onClick={cancela} carregant={treballant}>Cancel·lar la baixa</Boto>
           )}
         >
-          {`L’has demanada el ${dataLlegible(baixa.demanadaAl)}. El compte i les dades s’esborraran definitivament el ${dataLlegible(baixa.purgaPrevistaAl)}.`}
+          {`L’has demanada el ${dataLlegible(baixa.demanadaAl)}. El compte, les teues publicacions personals i els teus fitxers s’esborraran definitivament el ${dataLlegible(baixa.purgaPrevistaAl)}, llevat dels fitxers ${FITXERS_EN_US}. ${ESPERA_APPLE}`}
         </Alerta>
       ) : null}
       {!carregant && baixa && !baixa.demanada ? (
         <>
+          {/* P2-08 (T7; auditoria Codex C-06, migració 2610241440 de T8) · Què
+              passa de veres: durant els dies de gràcia amaguem el perfil (nom
+              genèric i sense foto; cancela_baixa ho torna tot, per això no es
+              diu que queda anònim); després s'esborra el que és personal, i el que
+              es va publicar en nom d'una entitat es queda a l'entitat. */}
           <p className="perfil-compte__text">
-            {`Si te’n vas, el perfil s’anonimitza en el moment i tens ${DIES_GRACIA} dies per a penedir-te’n. Passat eixe termini, el compte i les dades s’esborren per sempre.`}
+            {`Si te’n vas, en el moment amaguem el teu perfil: deixa d’aparéixer al padró, hi posem un nom genèric en lloc del teu i li llevem la foto. Tens ${DIES_GRACIA} dies per a penedir-te’n. Passat eixe termini, s’esborren per sempre el compte, les teues publicacions personals i els teus fitxers, llevat dels ${FITXERS_EN_US}; el que vas publicar en nom d’una entitat es queda a l’entitat. ${ESPERA_APPLE}`}
           </p>
           <div className="sdp-alerta__accions perfil-compte__accions">
             <Boto varietat="perill" onClick={() => setDialeg(true)}>Donar-me de baixa</Boto>
@@ -329,10 +352,19 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
       >
         {error ? <Alerta to="error">{error}</Alerta> : null}
         <ul className="perfil-compte__llista">
-          <li>Ara mateix el perfil s’anonimitza: el teu nom es canvia per un d’anònim, la fitxa deixa de ser pública i les teues publicacions deixen de mostrar el teu nom i la teua foto.</li>
+          {/* Correccions 261024 (revisió R3-03; Codex C-06) · S'amaga, no queda anònim: cancela_baixa ho torna tot. */}
+          <li>Ara mateix amaguem el teu perfil: deixa d’aparéixer al padró, hi posem un nom genèric en lloc del teu i li llevem la foto, i les teues publicacions deixen de mostrar el teu nom i la teua foto.</li>
           {/* Fase D (261020, tasca 1) · Qui va entrar amb Apple o Google no té contrasenya: torna a entrar com sempre. */}
           <li>{`Durant ${DIES_GRACIA} dies pots cancel·lar-la: entra de nou com sempre (amb el correu, Apple o Google), torna a «Privacitat i dades» i prem «Cancel·lar la baixa».`}</li>
-          <li>{`Passats els ${DIES_GRACIA} dies, el compte i totes les dades s’esborren definitivament.`}</li>
+          {/* P2-08 (T7; T1, revocació d'Apple) · Qui va entrar amb Apple ho ha de saber abans de confirmar.
+              Correccions 261024 (revisions R3-01, R1-02 i R3-04) · Només ho intentem: sense el permís custodiat
+              (entrades d'abans de la custòdia) o si Apple falla, no es retira, i la purga espera fins a 7 dies més. */}
+          <li>{`Si vas entrar amb Apple, en demanar la baixa intentem retirar el permís que vas donar a Sóc de Poble; si no ho aconseguim, el pots retirar tu a Configuració › el teu nom › Inici de sessió amb Apple, o a account.apple.com. Si quan passen els ${DIES_GRACIA} dies encara no l’hem pogut retirar, l’esborrat definitiu pot esperar fins a ${DIES_ESPERA_APPLE} dies més. Si l’hem retirat i tornes a entrar amb Apple per a cancel·lar la baixa, Apple et tornarà a demanar permís.`}</li>
+          {/* Correccions 261024 (revisió R3-10) · Amb l'excepció dels fitxers que encara fa servir algú altre. */}
+          <li>{`Passats els ${DIES_GRACIA} dies, s’esborren definitivament el compte, les teues publicacions personals i els teus fitxers, llevat dels ${FITXERS_EN_US}. El que vas publicar en nom d’una entitat es queda a l’entitat.`}</li>
+          {/* Auditoria Codex C-06 · El que es guarda no es presenta com a anònim del tot.
+              Correccions 261024 (revisió R3-10) · Com diu el §10 de la política: també les denúncies sobre tu. */}
+          <li>Es guarden, ja sense el teu compte però no del tot anònimes, la prova del consentiment, que la llei ens obliga a conservar, i, per a l’historial de moderació, les denúncies que vas fer i les que altres persones han fet sobre tu o sobre el teu contingut, amb l’identificador intern que tenia el teu compte.</li>
           <li>Es tancarà la sessió en tots els teus dispositius.</li>
         </ul>
         <Camp etiqueta="Per què te’n vas? (opcional)" ajuda="Ens ajuda a millorar. Com a màxim 500 caràcters.">

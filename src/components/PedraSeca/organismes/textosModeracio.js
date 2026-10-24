@@ -13,6 +13,8 @@
  * tal qual). El termini de revisió és UNA sola clau (crítica 261020, 7): el
  * text de la denúncia rebuda i el de les normes el porten de la mateixa font.
  */
+import { esRebuigDeNormes } from '../../../data/errorsBackend.js';
+
 export { omple } from '../../../config/moderacio.js';
 
 const clau = (nom, reserva) => Object.freeze([`section.moderacio.${nom}`, reserva]);
@@ -36,7 +38,7 @@ export const TEXTOS_MODERACIO = Object.freeze({
   denunciaTitolMissatge: clau('denuncia.titolMissatge', 'Denuncia este missatge'),
   denunciaTitolPersona: clau('denuncia.titolPersona', 'Denuncia esta persona o entitat'),
   denunciaDescripcio: clau('denuncia.descripcio',
-    'Ho revisarà l’equip de moderació de Sóc de Poble. Qui l’ha publicat no sabrà qui l’ha denunciat.'),
+    'Ho revisarà una persona responsable de la moderació de Sóc de Poble. Qui l’ha publicat no sabrà qui l’ha denunciat.'),
   denunciaLlegenda: clau('denuncia.llegenda', 'Per què el denuncies?'),
   denunciaEnvia: clau('denuncia.envia', 'Envia la denúncia'),
   denunciaRebuda: clau('denuncia.rebuda', 'Gràcies. Hem rebut la denúncia i la revisarem {termini}.'),
@@ -67,8 +69,11 @@ export const TEXTOS_MODERACIO = Object.freeze({
   normesContingut: clau('normes.contingut', 'Res de contingut sexual explícit, violent o il·legal, ni res que pose ningú en perill.'),
   normesEnganys: clau('normes.enganys', 'Res d’enganys: ni spam, ni estafes, ni suplantar ningú, ni escampar desinformació.'),
   normesDrets: clau('normes.drets', 'Publica només el que és teu o tens permís per a compartir, i respecta la intimitat dels altres.'),
+  /* T2 (261024; DSA art. 14.4, Codex C-03) · Mesures proporcionades: el
+     contingut, sempre fora; la persona, segons la gravetat i si es repetix.
+     La mateixa regla que l'apartat 3 de /legal (legal.dsa.test.js). */
   normesToleranciaZero: clau('normes.toleranciaZero',
-    'Tolerància zero: retirem el contingut que incomplix estes normes i expulsem qui el publica. Revisem cada denúncia {termini}.'),
+    'Tolerància zero amb el contingut que incomplix estes normes: el retirem sempre. A qui el publica, segons la gravetat i si es repetix, li donem un avís, li suspenem el compte un temps o l’expulsem; si és contingut il·legal greu, l’expulsem a la primera. Revisem cada denúncia {termini}.'),
   normesEines: clau('normes.eines',
     'Des del botó ⋮ de cada publicació i de cada missatge pots denunciar un contingut o bloquejar una persona.'),
   normesAccepte: clau('normes.accepte', 'He llegit les normes de convivència i les accepte.'),
@@ -77,6 +82,10 @@ export const TEXTOS_MODERACIO = Object.freeze({
   normesLegal: clau('normes.legal', 'Avís legal i privacitat'),
   normesError: clau('normes.error', 'No s’ha pogut desar l’acceptació. Torna-ho a provar.'),
   calAcceptar: clau('normes.calAcceptar', 'Per a publicar, cal acceptar les normes de convivència.'),
+  /* T2 (261024; Codex C-02) · En remot, sense la migració, l'acceptació no
+     es desa i el diàleg continua obert: ho diu este text, no el de les denúncies. */
+  normesNoDisponible: clau('normes.noDisponible',
+    'Ara mateix no podem desar l’acceptació de les normes, i sense ella no es pot publicar. Torna-ho a provar més tard o escriu-nos a socdepoble@socdepoble.org.'),
 
   /* El contingut amagat i la llista de bloquejos */
   bloquejatMissatge: clau('bloquejat.missatge', 'Missatge amagat: has bloquejat esta persona.'),
@@ -132,5 +141,9 @@ export const TEXTOS_ERROR_MODERACIO = Object.freeze({
   desconegut: clau('error.desconegut', 'No s’ha pogut completar. Torna-ho a provar.')
 });
 
-/** El parell [clau, reserva] del text d'un error de moderació (pel `code`; un altre, «desconegut»). */
-export const textDErrorDeModeracio = (error) => TEXTOS_ERROR_MODERACIO[error?.code] ?? TEXTOS_ERROR_MODERACIO.desconegut;
+/** El parell [clau, reserva] del text d'un error de moderació (pel `code`; un altre, «desconegut»).
+ *  T2 (261024; Codex C-02) · El rebuig del servidor per les normes
+ *  (SDP-MOD-428, errorsBackend.js · esRebuigDeNormes) diu «cal acceptar les normes». */
+export const textDErrorDeModeracio = (error) => (esRebuigDeNormes(error)
+  ? TEXTOS_MODERACIO.calAcceptar
+  : TEXTOS_ERROR_MODERACIO[error?.code] ?? TEXTOS_ERROR_MODERACIO.desconegut);

@@ -25,6 +25,10 @@
  *           treball del Bloc de notes (UniversalWorkspace i DefaultItemCard),
  *           perquè el Lector s'hi munte. Només s'afig una porta: un mòdul de
  *           '^1.0' o de '^1.1' continua valent.
+ *   1.3.0 · T5 (P1-07, 261024): useServeiNoticies a la porta 'plataforma',
+ *           el servei de notícies neutral que la plataforma dona al Lector.
+ *           Només s'afig un nom: un mòdul de '^1.0', '^1.1' o '^1.2' continua
+ *           valent (un mòdul no rep el servei: torna null).
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -32,7 +36,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.2.0';
+export const VERSIO_NUCLI = '1.3.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -123,8 +127,8 @@ export const PORTES_DEL_NUCLI = congela([
     fonts: ['src/apps/plataforma/index.js'],
     noms: ['ClosaAplicacio', 'ENTITAT_PROJECTE', 'ESDEVENIMENT_NAVEGA', 'ESQUEMA_APP', 'NOMS_ICONES', 'PANELLS_ESTRET', 'VALIDADORS',
       'autoriaDe', 'coincidixRuta', 'esData', 'esIdOpac', 'esSegmentSegur', 'esSlug', 'esUuid', 'lazyRoute', 'rutaDeApp', 'titolDe',
-      'useApp', 'useClosaAplicacio', 'useInterruptorsApp', 'useParametresConsulta', 'useRutaApp', 'useSessioApp', 'validaRutes',
-      'validaTaulaDeClosa']
+      'useApp', 'useClosaAplicacio', 'useInterruptorsApp', 'useParametresConsulta', 'useRutaApp', 'useServeiNoticies', 'useSessioApp',
+      'validaRutes', 'validaTaulaDeClosa']
   },
   {
     clau: 'pedraSeca',

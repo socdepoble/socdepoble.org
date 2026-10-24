@@ -12,9 +12,10 @@ export async function entraAmbProveidorNatiu(proveidor, entra, config,
   { demana = demanaCredencialNativa, oblida = oblidaCredencialNativa, viu = () => true } = {}) {
   /* Fase D (261020, revisió) · viu també baixa a la fase 1: un full que encara no
      s'ha obert ja no s'obri si la vista ha deixat l'intent. */
-  const { testimoni, nonce, testimoniAcces, nom } = await demana(proveidor, { viu });
+  /* T1 (261024; P0-04) · El codi d'autorització d'Apple també baixa al port: la baixa el necessita per a revocar. */
+  const { testimoni, nonce, testimoniAcces, nom, codiAutoritzacio } = await demana(proveidor, { viu });
   try {
     if (!viu()) throw Object.assign(new Error('Entrada cancel·lada.'), { code: CODI_ENTRADA_NATIVA.CANCELADA });
-    return await entra(proveidor, { testimoni, nonce, testimoniAcces, nom }, config);
+    return await entra(proveidor, { testimoni, nonce, testimoniAcces, nom, codiAutoritzacio }, config);
   } finally { oblida(proveidor); }
 }

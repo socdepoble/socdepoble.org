@@ -32,7 +32,7 @@ import { NOMS_PER_FITXER_DE_PEDRA_SECA, VERSIO_NUCLI, exposaElNom, portaDeLaFont
 import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
-import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
@@ -497,6 +497,18 @@ describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre app
     for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_2)) {
       expect(noms.filter((nom) => !usats[clau].has(nom) && !delModul.has(nom)), clau).toEqual([]);
       expect(noms.filter((nom) => usats[clau].has(nom)).length, clau).toBeGreaterThan(0);
+    }
+  });
+
+  /* T5 (P1-07, 261024) · El nom que l'1.3.0 afig a la porta 'plataforma' (useServeiNoticies) té
+     ús en una app de veres, el Lector (AppLector.jsx), i el pren per l'API pública. */
+  test('la porta mira de veres: cada nom que el nucli 1.3.0 afig el fa servir el Lector, per la porta de la plataforma', () => {
+    const delLector = new Set(fitxersDe('src/apps/lector').flatMap((ruta) => importacions(llig(ruta))
+      .filter(({ especificador }) => portaDeLaFont(resol(ruta, especificador) || '')?.clau === 'plataforma')
+      .flatMap(({ noms }) => noms)));
+    for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_3)) {
+      expect(clau).toBe('plataforma');
+      expect(noms.filter((nom) => !delLector.has(nom)), clau).toEqual([]);
     }
   });
 });

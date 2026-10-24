@@ -89,7 +89,10 @@ const AGENTS = 'src/sections/tractors/PanellAgents.jsx';
 
 describe.skipIf(!commitsDisponibles)('El reagrupament de la Wiki als commits de la branca', () => {
   test('només 76947e5d porta WikiDePobleSection.jsx i PanellAgents.jsx des de 44e2b8e2', () => {
-    expect(git('log', '--format=%h', '44e2b8e2..76947e5d', '--', WIKI, AGENTS).trim().split('\n')).toEqual(['76947e5d']);
+    /* Actualitzada a posta (261024, P1-10): %h s'allarga quan el repositori creix
+       (ja ix «76947e5d7»); es compara el SHA sencer del mateix commit. */
+    expect(git('log', '--format=%H', '44e2b8e2..76947e5d', '--', WIKI, AGENTS).trim().split('\n'))
+      .toEqual([git('rev-parse', '76947e5d^{commit}').trim()]);
     const abans = git('show', `44e2b8e2:${WIKI}`);
     const despres = git('show', `76947e5d:${WIKI}`);
     /* Abans, la Consola tenia entrada pròpia amb FileText i la seua fitxa l'heretava. */

@@ -44,9 +44,23 @@
  * Només en remot, amb sessió, amb alguna de les dues capacitats i amb un
  * amfitrió de diàlegs (sense ell ningú no podria respondre i la porta
  * penjaria l'enviament). En llavor i en local és una demostració sense
- * comunitat: la porta no s'aplica. L'acceptació es recorda per persona a
- * storage.js ('normes-convivencia:<id>'), es contrasta amb el servidor
- * (estatNormes) i s'hi desa (acceptaNormes). asseguraNormes només llig refs:
+ * comunitat: la porta no s'aplica. L'acceptació es desa al servidor
+ * (acceptaNormes) i es contrasta amb ell (estatNormes); este dispositiu la
+ * recorda per persona a storage.js ('normes-convivencia:<id>') NOMÉS quan el
+ * servidor l'ha confirmada: { versio, servidor: true }.
+ * T2 (261024; Codex C-02) · En remot, sense la migració ('no-disponible') o
+ * sense la capacitat normesConvivencia, acceptar rebutja amb el `code`: el
+ * diàleg continua obert, no es desa res i la porta no s'obri. Un record antic
+ * (la versió sola, de quan s'acceptava només al dispositiu) ja no compta: es
+ * torna a preguntar al servidor. El servidor també ho exigix (SDP-MOD-428,
+ * 2610241400_normes_exigides_ugc.sql). Integració 261024 (Codex C-02) · Quan
+ * el servidor rebutja igualment (SDP-MOD-428: el record d'este dispositiu o
+ * l'estat del servidor no valien), qui l'ha rebut crida
+ * asseguraNormes({ rebutjades: true }): s'oblida el record de la versió
+ * vigent, l'estat del servidor ja no les dona per acceptades fins a una
+ * acceptació explícita i el diàleg es torna a obrir. Sense porta (llavor,
+ * local, sense sessió o sense amfitrió) resol false: qui crida no reintenta.
+ * Qui crida ho reintenta UNA sola vegada. asseguraNormes només llig refs:
  * és estable, dues crides alhora comparteixen la MATEIXA promesa, una
  * resposta tardana d'una altra persona no accepta per a la nova, i després
  * d'acceptar la crida següent resol a l'instant, encara abans del pintat.
@@ -60,7 +74,7 @@ import { CODI_MODERACIO, VERSIO_NORMES_CONVIVENCIA, errorDeModeracio } from '../
 /* De la font, identitat.js, com XatContext: appSeed.js només el reexporta. */
 import { getDefaultUserId } from '../../data/identitat.js';
 import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
-import { getVal, setVal } from '../../config/storage.js';
+import { delVal, getVal, setVal } from '../../config/storage.js';
 import {
   afigAlCanvi, canviBuit, clauDeBloqueig, elementBloquejat, firmaDeClaus, fotoDelCanvi, fusionaBloquejos, llevaDelCanvi,
   objectiuDeContrapart, objectiuDeMissatge, objectiuDeTargeta, omple, revertix
@@ -96,6 +110,11 @@ function capacitat(nom) {
 const carregaBloquejos = async (_actor, config) => (capacitat('moderacio') ? llistaBloquejos(config) : []);
 
 const clauDeNormes = (usuariId) => `normes-convivencia:${usuariId}`;
+/* T2 (261024; Codex C-02) · El record d'este dispositiu, només després que
+   el servidor haja confirmat la versió vigent; el que no té eixa forma (la
+   cadena antiga, una altra versió) no val. */
+const recordDeNormes = () => ({ versio: VERSIO_NORMES_CONVIVENCIA, servidor: true });
+const esRecordVerificat = (record) => record?.versio === VERSIO_NORMES_CONVIVENCIA && record?.servidor === true;
 const ESTAT_DEL_RECURS = Object.freeze({ loading: 'carregant', ready: 'llest', error: 'error' });
 
 /* L'element amb el focus, també dins d'un shadow root (la incrustació); mai
@@ -277,9 +296,14 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
   /* ── Les normes de convivència (només refs: asseguraNormes és estable) ── */
   const normesActives = modeDades === 'remote' && Boolean(usuariId) && (disponible || ambNormes) && Boolean(Dialegs);
   const [acceptadesPer, setAcceptadesPer] = useState(null);
+  /* Integració 261024 (Codex C-02) · La persona a qui el servidor ha dit que
+     no (SDP-MOD-428): fins que les torne a acceptar, ni el record d'este
+     dispositiu ni l'estat del servidor no les donen per acceptades. */
+  const [rebutjadesPer, setRebutjadesPer] = useState(null);
   const acceptades = useMemo(
-    () => Boolean(usuariId) && (acceptadesPer === usuariId || getVal(clauDeNormes(usuariId), null) === VERSIO_NORMES_CONVIVENCIA),
-    [usuariId, acceptadesPer]
+    () => Boolean(usuariId) && (acceptadesPer === usuariId
+      || (rebutjadesPer !== usuariId && esRecordVerificat(getVal(clauDeNormes(usuariId), null)))),
+    [usuariId, acceptadesPer, rebutjadesPer]
   );
   const estatRef = useRef({ normesActives, acceptades, usuariId });
   useLayoutEffect(() => {
@@ -294,21 +318,34 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
 
   /* El servidor pot saber que ja les havia acceptades (un altre dispositiu). */
   useEffect(() => {
-    if (!normesActives || !ambNormes || acceptades) return undefined;
+    /* Integració 261024 · Després d'un rebuig del servidor, l'estat no les accepta: el disparador mana. */
+    if (!normesActives || !ambNormes || acceptades || rebutjadesPer === usuariId) return undefined;
     const uid = usuariId;
     const controller = new AbortController();
     estatNormes({ ...configRef.current, signal: controller.signal }).then((estat) => {
       if (controller.signal.aborted || estatRef.current.usuariId !== uid || !estat?.acceptadaAl) return;
-      setVal(clauDeNormes(uid), VERSIO_NORMES_CONVIVENCIA);
+      setVal(clauDeNormes(uid), recordDeNormes());
       estatRef.current = { ...estatRef.current, acceptades: true };
       setAcceptadesPer(uid);
     }).catch(() => {});
     return () => controller.abort();
-  }, [normesActives, ambNormes, acceptades, usuariId]);
+  }, [normesActives, ambNormes, acceptades, usuariId, rebutjadesPer]);
 
-  const asseguraNormes = useCallback(() => {
+  /* Integració 261024 (Codex C-02) · `{ rebutjades: true }`: el servidor ha
+     rebutjat una publicació o un missatge per les normes (SDP-MOD-428,
+     errorsBackend.js · esRebuigDeNormes). El record d'esta versió s'oblida i
+     el diàleg es torna a obrir; sense porta, false (ningú no pot respondre).
+     Qualsevol altra crida (sense opcions, o amb un esdeveniment) és la de
+     sempre. */
+  const asseguraNormes = useCallback((opcions) => {
     const estat = estatRef.current;
-    if (!estat.normesActives || estat.acceptades) return Promise.resolve(true);
+    if (opcions?.rebutjades === true) {
+      if (!estat.normesActives || !estat.usuariId) return Promise.resolve(false);
+      delVal(clauDeNormes(estat.usuariId));
+      estatRef.current = { ...estat, acceptades: false };
+      setRebutjadesPer(estat.usuariId);
+      setAcceptadesPer((actual) => (actual === estat.usuariId ? null : actual));
+    } else if (!estat.normesActives || estat.acceptades) return Promise.resolve(true);
     if (pendent.current) return pendent.current.promesa;
     let resol;
     const promesa = new Promise((r) => { resol = r; });
@@ -324,21 +361,20 @@ export function ProveidorModeracio({ config, children, Dialegs = null }) {
       resolNormes(false);
       return;
     }
-    if (capacitat('normesConvivencia')) {
-      try {
-        await acceptaNormes(VERSIO_NORMES_CONVIVENCIA, configRef.current);
-      } catch (error) {
-        /* Sense la migració, l'acceptació es queda en este dispositiu. */
-        if (error?.code !== CODI_MODERACIO.NO_DISPONIBLE) {
-          if (desmuntat.current || estatRef.current.usuariId !== uid) return;
-          throw error;
-        }
-      }
+    /* T2 (261024; Codex C-02) · Sense on desar-la (la capacitat o la
+       migració), cap acceptació: el diàleg continua obert i diu per què. */
+    if (!capacitat('normesConvivencia')) throw errorDeModeracio(CODI_MODERACIO.NO_DISPONIBLE);
+    try {
+      await acceptaNormes(VERSIO_NORMES_CONVIVENCIA, configRef.current);
+    } catch (error) {
+      if (desmuntat.current || estatRef.current.usuariId !== uid) return;
+      throw error;
     }
     if (desmuntat.current || estatRef.current.usuariId !== uid) return;
-    setVal(clauDeNormes(uid), VERSIO_NORMES_CONVIVENCIA);
+    setVal(clauDeNormes(uid), recordDeNormes());
     estatRef.current = { ...estatRef.current, acceptades: true };
     setAcceptadesPer(uid);
+    setRebutjadesPer((actual) => (actual === uid ? null : actual));
     setDialeg(null);
     resolNormes(true);
   }, [resolNormes]);

@@ -45,7 +45,8 @@ import { CODI_ENTRADA_NATIVA } from '../../config/entradaNativa.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 
 const TENANT = '00000000-0000-4000-8000-0000000000de';
-const CREDENCIAL = Object.freeze({ testimoni: 'a.b.c', nonce: 'n'.repeat(64), testimoniAcces: null, nom: 'Maria' });
+/* Actualitzada a posta (261024 T1): la credencial porta el camp codiAutoritzacio (el codi d'Apple). */
+const CREDENCIAL = Object.freeze({ testimoni: 'a.b.c', nonce: 'n'.repeat(64), testimoniAcces: null, nom: 'Maria', codiAutoritzacio: 'c0d1.0.apple-sintetic' });
 const promesaOberta = () => {
   let resol;
   let rebutja;

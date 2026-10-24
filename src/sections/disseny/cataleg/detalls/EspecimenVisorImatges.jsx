@@ -7,6 +7,9 @@
  * mateixes cel·les-botó de /multimedia); un clic obri el visor en eixa foto,
  * amb el panell d'informació desplegat. A l'app el munta VisorDeLArxiu
  * (src/sections/multimedia), amb l'estat a ?foto=<id>.
+ * T4 (pla 261024_1315, P1-06) · «Tancar» és la ✕ i un clic al fons fosc buit
+ * també tanca (motiu 'vel'): la mostra munta l'organisme de veres i ho
+ * ensenya; el contracte i l'accessibilitat ho diuen.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -40,9 +43,9 @@ export default function EspecimenVisorImatges() {
   const [oberta, setOberta] = useState(-1);
   return (
     <Especimen id="visor-imatges" nom="VisorImatges" fitxer="src/components/PedraSeca/organismes/VisorImatges.jsx"
-      descripcio="El visor de fotos a pantalla completa, a l’estil de Google Fotos: la foto sencera sobre el fons fosc del crom, «Tancar» a dalt a l’esquerra, el comptador, el zoom i el botó d’Informació, que desplega el panell amb les dades de la foto (data i hora, GPS, càmera, autor, poble, drets i on s’ha publicat). Anterior i següent donen la volta. És un Dialeg de mida completa: a la SPA tapa l’App sencera; dins d’un amfitrió, només la caixa de l’App."
+      descripcio="El visor de fotos a pantalla completa, a l’estil de Google Fotos: la foto sencera sobre el fons fosc del crom, «Tancar» (la ✕) a dalt a l’esquerra, el comptador, el zoom i el botó d’Informació, que desplega el panell amb les dades de la foto (data i hora, GPS, càmera, autor, poble, drets i on s’ha publicat). Anterior i següent donen la volta. És un Dialeg de mida completa: a la SPA tapa l’App sencera; dins d’un amfitrió, només la caixa de l’App."
       contracte={[
-        ['obert / onTanca', "boolean / (motiu: 'esc'|'boto') => void", '—', 'Controlat pel pare. Tancat, el <dialog> és buit i no es demana cap imatge. A /multimedia l’estat és ?foto=<id>: el botó Arrere del navegador també tanca.'],
+        ['obert / onTanca', "boolean / (motiu: 'esc'|'boto'|'vel') => void", '—', 'Controlat pel pare. Tancat, el <dialog> és buit i no es demana cap imatge. A /multimedia l’estat és ?foto=<id>: el botó Arrere del navegador també tanca. «vel»: un clic net al fons fosc buit, amb la foto a 1×.'],
         ['imatges', '[{ src, alt, titol }]', '—', 'Les fotos, en l’ordre de la vista, amb el src ja resolt. Sense cap, no s’obri.'],
         ['index / onCanvi', 'number / (nouIndex) => void', '0', 'La foto oberta i el canvi que demanen anterior, següent, les fletxes o el lliscament (amb la volta).'],
         ['metadades', '[{ clau, etiqueta, valor }]', '[]', 'Les files del panell de la foto oberta; valor pot ser un node (un enllaç intern). El que no se sap es diu «Desconegut», mai s’inventa.'],
@@ -54,7 +57,7 @@ export default function EspecimenVisorImatges() {
         ['className', 'string', '—', 'Classes de més per al <dialog>.']
       ]}
       a11y={[
-        'El focus comença a «Tancar» i, en tancar, torna a la foto que l’havia obert. Escape tanca.',
+        'El focus comença a «Tancar» (la ✕) i, en tancar, torna a la foto que l’havia obert. Escape tanca, i un clic al fons fosc buit també (mai si s’ha arrossegat o la foto és ampliada).',
         'Les fletxes passen de foto des de qualsevol control del visor; + − i 0 amplien, redueixen i tornen a 1×; «i» plega i desplega el panell.',
         'El comptador és una regió viva educada («Imatge 3 de 20»). El panell és un <aside> amb nom, i el seu botó porta aria-expanded i aria-controls.',
         'Tots els botons tenen l’àrea tàctil de --sdp-touch. Amb moviment reduït, el zoom salta en lloc de lliscar.'

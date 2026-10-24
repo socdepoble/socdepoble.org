@@ -596,20 +596,41 @@ const rebutjaToken = () => ambCodi(new Error(MISSATGE_ENTRADA[CODI_ENTRADA.TOKEN
 const nomNet = (v) => Array.from(textNet(v).replace(CARACTERS_FORA, '').replace(/\s+/g, ' ').trim()).slice(0, 120).join('').trim();
 const nomPropi = (v) => { const n = textNet(v); return n && n !== NOM_DE_RESERVA_DEL_SERVIDOR ? n : ''; };
 
+/* T1 (261024; P0-04, App Store 5.1.1(v); auditoria Codex C-01) · El codi
+   d'autorització d'Apple (d'un sol ús, uns cinc minuts): l'alfabet dels codis
+   d'Apple i un sostre. Un codi sense forma es descarta en silenci: mai fa
+   fallar l'entrada. */
+const FORMA_CODI_APPLE = /^[A-Za-z0-9._-]{8,1024}$/;
+const TOPALL_CUSTODIA_APPLE_MS = 15000;
+
 /* Pura i abans de res: un rebuig ací no toca ni la sessió ni la xarxa (cas del kit). */
-function credencialNeta(proveidor, { testimoni, nonce, testimoniAcces, nom } = {}) {
+function credencialNeta(proveidor, { testimoni, nonce, testimoniAcces, nom, codiAutoritzacio } = {}) {
   if (!PROVEIDORS_AMB_TOKEN.includes(proveidor)) throw ambCodi(new Error('Proveïdor d’identitat desconegut.'), CODI_ENTRADA.DESCONEGUT);
   const t = textNet(testimoni);
   if (!FORMA_JWT.test(t) || t.length > 16384) throw rebutjaToken();
   const n = textNet(nonce);
   if (n && !FORMA_NONCE.test(n)) throw rebutjaToken();
-  /* L'accés només de Google (at_hash); el d'Apple seria el codi d'autorització. */
+  /* L'accés només de Google (at_hash); el d'Apple seria el codi d'autorització,
+     que va a part (codi) i mai a GoTrue. */
   const a = proveidor === 'google' ? textNet(testimoniAcces) : '';
   if (a.length > 8192 || /\s/.test(a)) throw rebutjaToken();
+  const c = proveidor === 'apple' ? textNet(codiAutoritzacio) : '';
   return {
     cos: { provider: proveidor, id_token: t, ...(n ? { nonce: n } : {}), ...(a ? { access_token: a } : {}) },
-    nom: nomNet(nom) || null
+    nom: nomNet(nom) || null,
+    codi: FORMA_CODI_APPLE.test(c) ? c : null
   };
+}
+
+/* T1 (261024) · La custòdia del codi d'Apple, amb la sessió que s'acaba de
+   desar: la funció compte-apple el canvia per un testimoni revocable, el
+   vincula a esta persona i el guarda xifrat al servidor, perquè la baixa el
+   puga revocar (compte.js). Ni s'espera ni falla mai l'entrada; el codi no es
+   guarda enlloc del client i l'avís no el porta. */
+function custodiaCodiApple(codi, config) {
+  request('/functions/v1/compte-apple', config,
+    { method: 'POST', body: { accio: 'custodia', codi }, timeoutMs: TOPALL_CUSTODIA_APPLE_MS })
+    .catch((error) => { console.warn('[supabase] Custòdia d’Apple pendent:', error?.status ?? error?.name ?? 'error'); });
 }
 
 /* El vocabulari de token_oidc.go de GoTrue: 400 amb error «invalid …» (Bad ID
@@ -648,7 +669,7 @@ async function desaNomDePrimeraVegada(nom, usuari, config) {
 }
 
 export async function entraAmbTokenDeProveidor(proveidor, credencial = {}, config = {}) {
-  const { cos, nom } = credencialNeta(proveidor, credencial);
+  const { cos, nom, codi } = credencialNeta(proveidor, credencial);
   exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
@@ -663,6 +684,7 @@ export async function entraAmbTokenDeProveidor(proveidor, credencial = {}, confi
       throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
     }
     resetClient();
+    if (codi) custodiaCodiApple(codi, config);   // T1 (261024): ni s'espera ni fa fallar l'entrada
     if (nom) await esperaAmbTopall(desaNomDePrimeraVegada(nom, result.user, config), TOPALL_NOM_MS);
     const user = getCurrentUser() ?? result.user;
     emetCanvi(user);

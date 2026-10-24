@@ -239,3 +239,13 @@ export const bloquejaAutor = asseguraMetode('bloquejaAutor');
 export const desbloquejaAutor = asseguraMetode('desbloquejaAutor');
 export const estatNormes = asseguraMetode('estatNormes');
 export const acceptaNormes = asseguraMetode('acceptaNormes');
+
+/* T6b (IDEA-14; decisió del Mestre, 261024) · «Connectar / Seguir», el
+   seguiment d'un sol sentit d'una persona o d'una entitat (capacitat
+   'seguiments'). No és nucli: /connectar i el Perfil pregunten abans amb
+   teCapacitat i, sense ella, no pinten «Seguir» ni qui et seguix. */
+export const segueix = asseguraMetode('segueix');
+export const deixaDeSeguir = asseguraMetode('deixaDeSeguir');
+export const estatSeguiment = asseguraMetode('estatSeguiment');
+export const elsMeusSeguiments = asseguraMetode('elsMeusSeguiments');
+export const quiEmSegueix = asseguraMetode('quiEmSegueix');

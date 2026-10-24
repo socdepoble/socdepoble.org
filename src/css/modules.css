@@ -7979,6 +7979,29 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-connectar__entrada > .sdp-camp { flex: 1 1 14rem; margin: 0; }
   .sdp-connectar__peu { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
   .sdp-connectar__nota { margin: 0; text-align: center; font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
+  /* IDEA-14 (Directiva del Mestre, 261024; auditoria Gemini G-04) · Els
+     camins de Connectar («Entre persones», «Formar part», «A les teues notes»),
+     separats pel Divisor de Pedra Seca. Cada un porta la seua capçalera (la
+     mateixa etiqueta .sdp-connectar__tipus de l'objecte), a prop del que
+     encapçala; dins d'un camí, els blocs guarden l'espai de la vista. */
+  .sdp-connectar > .sdp-divisor { margin: 0; }
+  .sdp-connectar__cami { display: flex; flex-direction: column; gap: var(--sdp-space-8); }
+  .sdp-connectar__cami-cap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin-bottom: calc(-1 * var(--sdp-space-5));
+  }
+  .sdp-connectar__cami-cap > p { margin: 0; }
+  /* La sol·licitud de «Formar part» tal com arribarà al xat, dins de la confirmació. */
+  .sdp-connectar__sollicitud {
+    margin: 0 0 var(--sdp-space-3);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-inline-start: 3px solid var(--sdp-accent);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    overflow-wrap: anywhere;
+  }
 
   /* Resum per destinatari (ResumConnexio): l'estat es llig en text; la
      icona, decorativa, porta el color de l'estat. */

@@ -12,7 +12,11 @@
  * D4 (excepció del Mestre, 260930) · La connexió és una còpia editable, i si
  * l'original porta els drets reservats («©», origen.drets) el selector i
  * l'editor ho avisen abans de republicar-la (textosAmbDrets).
+ *
+ * Integració 261024 · L'únic import és el detector pur del rebuig per les
+ * normes (data/errorsBackend.js, la capa neutral d'errors del port).
  */
+import { esRebuigDeNormes } from '../../data/errorsBackend.js';
 
 /** D4 · L'avís dels drets reservats de l'original (a /connectar, a l'editor i al selector). */
 export const TITOL_DRETS_RESERVATS = 'Contingut amb drets reservats';
@@ -38,6 +42,10 @@ const MOTIUS_PREPARADA = Object.freeze({
 /* Publicar és un upsert amb un id estable (publishNote): tornar-ho a provar no
    duplica res. Només per a la xarxa: la resta de motius van amb ErrorPublicacio. */
 export const ERROR_PUBLICAR = 'No s’ha pogut publicar al Mur. Torna-ho a provar: si ja havia arribat, s’actualitzarà la mateixa publicació, sense duplicats.';
+/* Integració 261024 (Codex C-02) · El rebuig del servidor per les normes: la
+   reserva valenciana de section.moderacio.normes.calAcceptar (textosModeracio.js),
+   que qui crida pot passar traduïda (publicaAmbMotiu · motiuNormes). */
+export const MOTIU_NORMES = 'Per a publicar, cal acceptar les normes de convivència.';
 
 /** T47 (ordre del Mestre, 260928) · publishNote no ha arribat ni a provar-ho, i
  * tornar-ho a provar tal qual no servix (desat pendent en conflicte, validació,
@@ -56,16 +64,25 @@ export class ErrorPublicacio extends Error {
  *   · false: la xarxa (ERROR_PUBLICAR: tornar-ho a provar servix);
  *   · ErrorPublicacio: el motiu de veres (desat en conflicte, sense servidor…),
  *     que no es tapa amb «torna-ho a provar». Qualsevol altre error és tècnic
- *     i també es diu ERROR_PUBLICAR. */
-export async function publicaAmbMotiu(publica) {
-  let fet;
-  try {
-    fet = await publica();
-  } catch (error) {
-    throw new Error(error?.name === 'ErrorPublicacio' ? error.message : ERROR_PUBLICAR);
+ *     i també es diu ERROR_PUBLICAR.
+ * Integració 261024 (Codex C-02) · El rebuig del servidor per les normes de
+ * convivència (SDP-MOD-428, esRebuigDeNormes) no és cap xarxa: amb
+ * `tornaAPreguntar` (asseguraNormes({ rebutjades: true }) de qui crida), es
+ * pregunta de nou i, si les accepta, es publica UNA vegada més; si no, o si
+ * el servidor ho torna a rebutjar, el motiu és `motiuNormes`. Mai en bucle. */
+export async function publicaAmbMotiu(publica, { tornaAPreguntar = null, motiuNormes = MOTIU_NORMES } = {}) {
+  for (let intent = 0; ; intent += 1) {
+    let fet;
+    try {
+      fet = await publica();
+    } catch (error) {
+      if (!esRebuigDeNormes(error)) throw new Error(error?.name === 'ErrorPublicacio' ? error.message : ERROR_PUBLICAR);
+      if (intent === 0 && typeof tornaAPreguntar === 'function' && (await tornaAPreguntar()) === true) continue;
+      throw new Error(motiuNormes);
+    }
+    if (fet === false) throw new Error(ERROR_PUBLICAR);
+    return true;
   }
-  if (fet === false) throw new Error(ERROR_PUBLICAR);
-  return true;
 }
 
 /* Grup E de l'Onada 4 (prompt 261008_1201, risc «que estiga clavat el

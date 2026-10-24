@@ -9,8 +9,9 @@
           l'amfitrió (fora de .sdp-root), no.
      Focus  El de l'amfitrió no es furta; des de l'entrada de l'app, l'H1 el rep en obrir i la
           fila d'origen, en tornar.
-     B0   /noticies no porta cap UniversalCard ni la vora de la carpeta oberta de l'arreglo 6;
-          «Les que seguixes» (la gestió de fonts) continua en UniversalCard amb boina.
+     B0   /noticies no porta cap UniversalCard ni la vora de la carpeta oberta de l'arreglo 6.
+          261024 (Lector) · «Les que seguixes» en UniversalCard amb boina se'n va amb la pàgina de
+          fonts (ordre del Mestre de les 15:05): la gestió és el diàleg de l'arbre, sense targetes.
    Totes les dades són inventades (la llavor sintètica). */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -268,11 +269,11 @@ describe('Focus', () => {
 
 /* Bloc 0 (261016) · Deroga l'arreglo 6 (les columnes de navegació de les notícies en
    UniversalCard): les carpetes i les fonts són l'arbre de l'espai, i la vora de la carpeta oberta
-   de modules.css se'n va amb elles. «Les que seguixes», a la gestió de fonts, continua. */
-describe('B0 · les notícies són l’espai de treball; «Les que seguixes» continua en UniversalCard', () => {
-  const columna = (id) => within(document.getElementById(id));
-  const text = (targeta, classe) => targeta.querySelector(classe)?.textContent ?? null;
-
+   de modules.css se'n va amb elles. «Les que seguixes», a la gestió de fonts, continua.
+   Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05 i Gemini G2-01. «Les que
+   seguixes» (UniversalCard amb boina taronja a la pàgina /fonts) se'n va amb la pàgina: la gestió de
+   fonts és el diàleg de l'arbre, amb interruptors de Pedra Seca i cap targeta. */
+describe('B0 · les notícies són l’espai de treball; la gestió de fonts, sense cap targeta', () => {
   test('cap UniversalCard a /noticies, ni la vora de la carpeta oberta de l’arreglo 6 al full', async () => {
     munta('/app/lector/noticies');
     await screen.findByRole('region', { name: 'Hui' });
@@ -282,15 +283,14 @@ describe('B0 · les notícies són l’espai de treball; «Les que seguixes» co
     expect(MODULES).not.toContain('[data-sdp-app="lector"]');
   });
 
-  test('«Les que seguixes»: la font signa la seua targeta (sense enllaç: la targeta ja hi porta) i la descriu', async () => {
-    munta('/app/lector/fonts');
-    await screen.findByRole('region', { name: 'Fonts del poble' });
-    const seguida = (await columna('app-grid-list').findByRole('link', { name: 'Cooperativa de l’Horta Vella' })).closest('article.sp-card');
-    expect(text(seguida, '.sp-card-author-name')).toBe('Cooperativa de l’Horta Vella');
-    expect(within(seguida.querySelector('header.sp-card-header')).queryByRole('link')).toBeNull();
-    expect(text(seguida, '.sp-card-text')).toBe('La collita, els preus i el temps.');
-    expect(columna('app-grid-list').getByRole('group', { name: 'Les que seguixes' }).className).toBe('sdp-card-llista');
-    /* La targeta oberta ja no es marca: cap aria-current a «Les que seguixes». */
-    expect(document.querySelectorAll('#app-grid-list .sp-card-link-overlay[aria-current]')).toHaveLength(0);
+  test('la gestió de fonts: un diàleg de l’arbre, cap targeta ni boina taronja, i les fonts per carpetes', async () => {
+    munta('/app/lector/noticies');
+    await screen.findByRole('region', { name: 'Hui' });
+    fireEvent.click(screen.getByRole('button', { name: 'Gestiona les fonts' }));
+    const dialeg = await screen.findByRole('dialog', { name: 'Gestiona les fonts' });
+    expect(dialeg.querySelectorAll('.sp-card, .sp-card-header, .sdp-card-llista, .sdp-card-grid, img')).toHaveLength(0);
+    expect(within(dialeg).getAllByRole('group').map((grup) => grup.querySelector('legend')?.textContent))
+      .toEqual(['Ajuntament i serveis', 'Cultura i festes', 'Camp i temps', 'Esports', 'Afig una font']);
+    expect(within(within(dialeg).getByRole('group', { name: 'Camp i temps' })).getByRole('switch', { name: 'Cooperativa de l’Horta Vella' })).toBeTruthy();
   });
 });

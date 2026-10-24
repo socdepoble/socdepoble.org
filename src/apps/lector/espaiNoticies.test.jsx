@@ -28,10 +28,12 @@ import { delVal, setVal } from '../../config/storage.js';
 import { validaRutes } from '../plataforma/index.js';
 import { validaManifestApp } from '../plataforma/manifestApp.js';
 import { ARA, munta, prepara, tancats } from './__fixtures__/muntaLector.jsx';
+import { creaAdaptadorRemot } from './fontRemota.js';
+import { CATEGORIES_LLAVOR, FONTS_LLAVOR } from './llavor/cataleg.js';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { NOM_BASE, STORE } from './magatzem.js';
 import manifestLector from './manifest.js';
-import { CAMI_FONTS_VELL, CAMI_TOTES, RUTES, RUTES_NOTICIES } from './rutes.js';
+import { CAMI_FONTS_VELL, CAMI_TOTES, RUTES_NOTICIES } from './rutes.js';
 import { accioDeTecla, ordreDeLArbre } from './vistes/dreceres.js';
 import {
   PREFIX_CARPETA, PREFIX_FONT, carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, rutaDeSeleccio, seleccioDeRuta
@@ -83,12 +85,15 @@ afterEach(() => {
 });
 
 describe('les rutes i la traducció camí ↔ selecció (navegacio.js)', () => {
-  test('les rutes de notícies són vàlides, sense columnes; amb les de la closca, cobrixen les entrades', () => {
+  /* Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, la gestió de fonts deixa de
+     ser una pàgina i la taula de la closca (RUTES) se'n va: les rutes de notícies, totes soles,
+     cobrixen les entrades del manifest (una: les notícies). */
+  test('les rutes de notícies són vàlides, sense columnes, i cobrixen les entrades', () => {
     const { manifest } = validaManifestApp(manifestLector);
     expect(validaRutes(RUTES_NOTICIES)).toEqual({ ok: true, errors: [] });
     expect(RUTES_NOTICIES.every((ruta) => !('Mig' in ruta) && !('Detall' in ruta) && !('Esquerra' in ruta))).toBe(true);
     expect(RUTES_NOTICIES.map((ruta) => ruta.path)).toEqual(expect.arrayContaining([CAMI_TOTES, CAMI_FONTS_VELL]));
-    expect(new Set([...RUTES, ...RUTES_NOTICIES].map((ruta) => ruta.path.split('/')[0]))).toEqual(new Set(manifest.entrades.map((e) => e.slug)));
+    expect(new Set(RUTES_NOTICIES.map((ruta) => ruta.path.split('/')[0]))).toEqual(new Set(manifest.entrades.map((e) => e.slug)));
   });
 
   test('el camí dona la selecció; la selecció, el camí; «Totes» és la categoria null', () => {
@@ -1045,5 +1050,152 @@ describe('en estret (375 px): el mestre-detall de l’espai', () => {
     await titolDelLector(CORREFOC);
     await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
     expect(closca().dataset.panell).toBe('');
+  });
+});
+
+/* T5 (P1-07, 261024) · Les fonts territorials (fontRemota.js) que no responen, amb un servei fals
+   que servix els feeds de la llavor. Si no respon cap de les que se seguixen, el detall ho diu
+   (FontsSenseResposta.jsx: per què, «Torna-ho a provar» i les portes a la resta del poble) i la
+   llista també; si en cauen algunes, la resta es veu i el detall avisa (AvisFonts). Sense xarxa al
+   dispositiu, el motiu és sempre la connexió, i quan torna es tornen a demanar soles. L'error del
+   port (status 'error'), el de sempre: «els estats del port», més amunt, no es toca. */
+describe('les fonts callades', () => {
+  const CATALEG = Object.freeze({
+    categories: CATEGORIES_LLAVOR,
+    fonts: FONTS_LLAVOR.map(({ id, nom, categoriaId, descripcio }) => ({ id, nom, categoriaId, descripcio, lloc: null }))
+  });
+  const XML = Object.fromEntries(FONTS_LLAVOR.map((font) => [font.id, font.xml]));
+  const PORTES = Object.freeze([['Passa pel Mur', '/mur'], ['Mira l’Agenda', '/calendari'], ['Fes una volta pel Mercat', '/mercat'],
+    ['Coneix els pobles', '/pobles']]);
+  /* `motiuDe(id)`: per què no respon la font, o null si respon. Es pot canviar enmig de la prova. */
+  function remot(motiuDe, opcions = {}) {
+    const servei = {
+      fonts: async () => CATALEG,
+      feed: vi.fn(async (id) => {
+        const motiu = motiuDe(id);
+        if (motiu) throw Object.assign(new Error('caiguda'), { motiu });
+        return { font: id, xml: XML[id], obtingut: null, obsoleta: false };
+      })
+    };
+    return { servei, entorn: prepara({ adaptador: creaAdaptadorRemot({ servei, ...opcions }) }) };
+  }
+  /* navigator.onLine és un getter del prototip: es tapa a la instància (sessioApp.test.jsx). */
+  const posaEnLinia = (valor) => act(() => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => valor });
+    window.dispatchEvent(new Event(valor ? 'online' : 'offline'));
+  });
+  afterEach(() => {
+    delete window.navigator.onLine;
+  });
+
+  test('si no respon cap: el motiu, les quatre portes al poble i «Torna-ho a provar», que les torna a demanar', async () => {
+    let motiu = 'temps';
+    const { servei, entorn } = remot(() => motiu);
+    munta('/app/lector/noticies/festes', entorn);
+    await screen.findByText('Ara mateix no arriben les notícies');
+    expect(detall().getByText('Les fonts han tardat massa a contestar. Pot ser la cobertura o que la seua web va carregada.')).toBeTruthy();
+    expect(detall().getByText('Mentrestant, el poble no s’atura:')).toBeTruthy();
+    const portes = PORTES.map(([nom]) => detall().getByRole('link', { name: nom }));
+    expect(portes.map((porta) => porta.getAttribute('href'))).toEqual(PORTES.map(([, cami]) => cami));
+    expect(portes.every((porta) => porta.className === 'sdp-boto sdp-boto--secundari')).toBe(true);
+    expect(detall().queryByText('Alguna font no ha contestat')).toBeNull();
+    expect(detall().queryByText(/desat per a després/)).toBeNull();
+    /* La llista, buida, ho diu; l'arbre i la carpeta continuen allí. */
+    expect(fitxes()).toHaveLength(0);
+    expect(mig().getByText('Les fonts no responen ara mateix.')).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Cultura i festes' })).toBeTruthy();
+    motiu = null;
+    const abans = servei.feed.mock.calls.length;
+    fireEvent.click(detall().getByRole('button', { name: 'Torna-ho a provar' }));
+    await waitFor(() => expect(fitxes()).toHaveLength(3));
+    expect(servei.feed.mock.calls.length - abans).toBe(FONTS_LLAVOR.length);
+    expect(detall().queryByText('Ara mateix no arriben les notícies')).toBeNull();
+    expect(mig().queryByText('Les fonts no responen ara mateix.')).toBeNull();
+  });
+
+  /* Actualitzada a posta (261024 Lector): Gemini G2-02.1, sense «del poble» quan es parla del servei.
+     I els dos motius nous de la interfície amb el servei: una adreça que el servei no llig (no s'ha
+     demanat res: correcció R5-08, mai «les fonts han enviat») i les teues quan el servei les té apagades. */
+  test.each([
+    ['servidor', 'El servei de notícies no respon. Pot ser cosa d’un moment.'],
+    ['adreca', 'El servei de notícies no llig estes adreces (no són públiques o no són segures), i no ha demanat res a cap web.'],
+    ['personals-off', 'Les fonts teues queden guardades en este dispositiu. El servei de notícies encara no les llig: les llegirà quan el servei les active.'],
+    ['font', 'Les fonts han enviat una cosa que no sabem llegir com a notícies.'],
+    ['limit', 'Hem demanat les notícies massa vegades seguides. Espera un moment i torna-ho a provar.'],
+    ['sense-connexio', 'Sembla que este dispositiu no té connexió. Quan torne, les notícies arribaran soles.']
+  ])('el motiu %s, en paraules de la gent', async (motiu, text) => {
+    munta('/app/lector/noticies/esports', remot(() => motiu).entorn);
+    await screen.findByText('Ara mateix no arriben les notícies');
+    expect(detall().getByText(text)).toBeTruthy();
+  });
+
+  test('si en cauen algunes: la resta es veu i el detall diu quines, amb «Torna-ho a provar»', async () => {
+    let caigudes = new Set(['pregoner', 'cooperativa']);
+    const { entorn } = remot((id) => (caigudes.has(id) ? 'servidor' : null));
+    munta('/app/lector/noticies/festes', entorn);
+    await waitFor(() => expect(fitxes()).toHaveLength(3));
+    const avis = await screen.findByText('Alguna font no ha contestat');
+    expect(avis.closest('[role="status"]').textContent).toContain(
+      'El Pregoner del Carrer Major i Cooperativa de l’Horta Vella no han respost ara mateix. La resta de notícies estan al dia.'
+    );
+    expect(detall().queryByText('Ara mateix no arriben les notícies')).toBeNull();
+    caigudes = new Set(['pregoner']);
+    fireEvent.click(detall().getByRole('button', { name: 'Torna-ho a provar' }));
+    await waitFor(() => expect(detall().getByText(/^El Pregoner del Carrer Major no ha respost ara mateix\./)).toBeTruthy());
+    caigudes = new Set();
+    fireEvent.click(detall().getByRole('button', { name: 'Torna-ho a provar' }));
+    await waitFor(() => expect(detall().queryByText('Alguna font no ha contestat')).toBeNull());
+  });
+
+  test('n’hi ha prou que en responga una: és l’avís, no el detall de les callades, també en una carpeta buida', async () => {
+    const { entorn } = remot((id) => (id === 'club-pilota' ? null : 'temps'));
+    munta('/app/lector/noticies/festes', entorn);
+    /* Cultura i festes es queda buida (la Colla no respon), però el Club de Pilota sí: és l'avís. */
+    await screen.findByText('Alguna font no ha contestat');
+    expect(detall().queryByText('Ara mateix no arriben les notícies')).toBeNull();
+    expect(detall().getByText('No hi ha cap notícia ací')).toBeTruthy();
+    expect(mig().getByText('No hi ha cap notícia ací.')).toBeTruthy();
+  });
+
+  test('sense xarxa al dispositiu, el motiu és la connexió; quan torna, les notícies es tornen a demanar soles', async () => {
+    let sensexarxa = true;
+    const { servei, entorn } = remot(() => (sensexarxa ? 'servidor' : null));
+    posaEnLinia(false);
+    munta('/app/lector/noticies/festes', entorn);
+    await screen.findByText('Sembla que este dispositiu no té connexió. Quan torne, les notícies arribaran soles.');
+    const abans = servei.feed.mock.calls.length;
+    sensexarxa = false;
+    posaEnLinia(true);
+    await waitFor(() => expect(fitxes()).toHaveLength(3));
+    expect(servei.feed.mock.calls.length - abans).toBe(FONTS_LLAVOR.length);
+    /* Una sola volta: tornar a tindre xarxa no fa cap bucle. */
+    await act(async () => {});
+    expect(servei.feed.mock.calls.length - abans).toBe(FONTS_LLAVOR.length);
+  });
+
+  test('les desades continuen a «Per a després», i el detall de les callades ho diu', async () => {
+    let caigudes = new Set(['pregoner']);
+    /* Sense memòria (ttlMs 0): la segona ronda torna a demanar-les totes, i totes cauen. */
+    const { entorn } = remot((id) => (caigudes.has(id) ? 'temps' : null), { ttlMs: 0 });
+    munta('/app/lector/noticies/festes', entorn);
+    await waitFor(() => expect(fitxes()).toHaveLength(3));
+    fireEvent.click(fitxa(CORREFOC));
+    await titolDelLector(CORREFOC);
+    fireEvent.click(detall().getByRole('button', { name: 'Desa per a després' }));
+    fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
+    await screen.findByText('Alguna font no ha contestat');
+    caigudes = new Set(FONTS_LLAVOR.map((font) => font.id));
+    fireEvent.click(detall().getByRole('button', { name: 'Torna-ho a provar' }));
+    /* «Cultura i festes» encara porta la desada: es veu com sempre. */
+    await waitFor(() => expect(titolsDeLaLlista()).toEqual([CORREFOC]));
+    fireEvent.click(filaDeLArbre('Esports'));
+    await screen.findByRole('region', { name: 'Esports' });
+    expect(detall().getByText('Ara mateix no arriben les notícies')).toBeTruthy();
+    expect(detall().getByText(/^Les notícies que has desat per a després continuen ací\./)).toBeTruthy();
+    const obri = detall().getByRole('link', { name: 'Obri-les' });
+    expect(obri.getAttribute('href')).toBe('/app/lector/noticies/despres');
+    fireEvent.click(obri);
+    await screen.findByRole('region', { name: 'Per a després' });
+    expect(titolsDeLaLlista()).toEqual([CORREFOC]);
   });
 });

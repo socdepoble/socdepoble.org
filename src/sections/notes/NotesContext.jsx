@@ -22,7 +22,7 @@ import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
 import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
-import { CODI_ENTRADA } from '../../data/errorsBackend.js';
+import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
 /* P4 (revisió, 261003) · El sanejador del canal viu a netejaCamp.js: la nota
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
@@ -207,6 +207,8 @@ export function NotesProvider({ children }) {
      ERROR_PUBLICAR, tornar-ho a provar servix). Quan no ha arribat ni a provar-ho
      (sense servidor, desat previ sense confirmar) rebutja amb ErrorPublicacio i
      el motiu del toast: el selector de visibilitat el diu en línia.
+     Integració 261024 (Codex C-02) · El rebuig del servidor per les normes
+     (SDP-MOD-428) rebutja amb l'error original i sense toast.
      T71b · Una nota amb origen (connexió o contingut de fora) mai es publica
      com a pròpia: es compartix encara que la crida no ho demane. */
   const publishNote = useCallback((activeNote, { mode = 'publicar' } = {}) => {
@@ -407,6 +409,11 @@ export function NotesProvider({ children }) {
     showToast(compartir ? 'Compartit al teu mur, citant l’origen.' : 'Nota publicada correctament al mur!', 'success');
     return true;
   } catch (error) {
+    /* Integració 261024 (Codex C-02) · El servidor no troba acceptades les
+       normes vigents (SDP-MOD-428): no és cap xarxa ni cap «pendent de
+       confirmar». L'error passa tal qual, sense toast: l'editor torna a obrir
+       la porta i ho reintenta una vegada (visibilitatNota.js · publicaAmbMotiu). */
+    if (operationRef.current === operation && esRebuigDeNormes(error)) throw error;
     if (operationRef.current === operation) {
       /* T2 · En mode de proves el port rebutja sense xarxa (code 'mode-local'):
          dir «pendent de confirmar» faria creure que s'ha enviat. */
@@ -419,6 +426,8 @@ export function NotesProvider({ children }) {
     }).catch((error) => {
       // La sessió ha canviat abans d'entrar: l'editor és d'una altra operació.
       if (error?.name === 'AbortError' || operationRef.current !== operation) return false;
+      /* Integració 261024 · El rebuig per les normes ve de dins (vegeu dalt): passa tal qual. */
+      if (esRebuigDeNormes(error)) throw error;
       /* T47 · El desat previ no s'ha confirmat: el motiu és el de la ploma
          (conflicte D01, validació, sense còpia al dispositiu…), no «torna-ho a provar». */
       const motiu = motiuDesatPendent(estatPerAlEditor(bgSaveManager.estat(scopeKey, activeNote.id)).detall);

@@ -37,7 +37,7 @@ async function executaPas(pas, missatge, { creaFil, sendChatMessage }) {
   const { tipus, desti } = pas;
   const base = { clau: `${tipus}:${desti.id}`, tipus, id: desti.id, nom: desti.nom };
   if (tipus === 'mur') {
-    return { ...base, estat: 'pendent', detall: 'Obri la connexió al teu MAS i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' };
+    return { ...base, estat: 'pendent', detall: 'Obri la connexió a les teues notes i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' };
   }
   try {
     let filId = desti.id;

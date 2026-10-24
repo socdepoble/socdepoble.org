@@ -477,6 +477,14 @@
   --sdp-crom-scroll-puny:       rgba(0, 0, 0, 0.21);
   --sdp-crom-scroll-puny-viu:   rgba(0, 0, 0, 0.35);
   --sdp-crom-ombra:             0 18px 44px rgba(14, 13, 12, 0.16);
+  /* Ordre del Mestre (261024, 14:40; correcció R5-09, 261024 Lector) · El fons
+     del títol de la barra del Lector, i de cap altra app: el verd de Sóc de
+     Poble (el de la icona i la pantalla d'inici natives). El consumix només
+     .sdp-app-barra__titol[data-sdp-app="lector"] (apps.css). La lletra hi
+     continua en --sdp-crom-text (blanc pur): 6,996 a 1, AA amb escreix i a un
+     pèl de l'AAA de 7 a 1; el títol és de 700. Va en línia pròpia: C2
+     (tractor-cromatic) mesura contra la targeta blanca. */
+  --sdp-crom-barra-lector:      #0f672f;
 
 
   /* === ANELLS DE FOCUS I VALIDACIO ==============================

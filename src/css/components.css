@@ -3128,6 +3128,10 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
        s'arrossega, sense transició.
      · Llei de Scroll: només el panell desborda; l'escenari retalla.
      · En mòbil (fins a 720px), el panell és un full de baix, damunt de la foto.
+     · T4 (pla 261024_1315, P1-06; Gemini G-01) · Un clic al fons buit de
+       l'escenari tanca el visor: la lupa és de la foto, ja no del fons. Les
+       fotos del cos d'un detall que l'obrin (data-sdp-ampliable, CosAmbVisor)
+       porten la lupa del disparador de la portada i l'anell per dins.
    Prova: PedraSeca/organismes/VisorImatges.test.jsx i PedraSeca/qualitat.visor.test.js. */
 @layer components {
   .sdp-dialeg.sdp-visor.sdp-dialeg--sense-marc {
@@ -3190,7 +3194,6 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
-    cursor: zoom-in;
   }
   .sdp-visor__escenari--ampliat { cursor: grab; }
   .sdp-visor__escenari--arrossega { cursor: grabbing; }
@@ -3204,7 +3207,10 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     object-fit: contain;
     transform: translate(var(--sdp-visor-x), var(--sdp-visor-y)) scale(var(--sdp-visor-escala));
     transition: transform var(--sdp-durada-base) var(--sdp-corba-eixida);
+    cursor: zoom-in;
   }
+  /* Ampliada, la foto es mou: la mà de l'escenari, també damunt d'ella. */
+  .sdp-visor__escenari--ampliat .sdp-visor__imatge { cursor: inherit; }
   .sdp-visor__escenari--arrossega .sdp-visor__imatge { transition: none; }
   .sdp-visor__avis {
     margin: 0;
@@ -3316,6 +3322,21 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     outline-offset: calc(-1 * var(--sdp-focus-gruix));
     min-block-size: var(--sdp-touch);
   }
+  /* T4 (pla 261024_1315, P1-06) · Les fotos del cos d'un detall que obrin el
+     visor (CosAmbVisor, detail/VisorDePublicacio.jsx, les marca després de
+     pintar): la lupa, com el disparador de la portada, i l'anell del focus de
+     teclat per dins, com el seu: la figura de l'article
+     (.detail-content__figura) retalla el que ix de la foto. Sense focus, ni
+     un píxel més. */
+  .detail-content img[data-sdp-ampliable] { cursor: zoom-in; }
+  .detail-content img[data-sdp-ampliable]:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+  /* El lector del MAS (notes/PublicacioDetall.jsx): la UniversalPage no deixa
+     cap contenidor propi per al cos, i l'embolcall de CosAmbVisor no pinta
+     cap caixa (els fills són de l'article de sempre). */
+  .sdp-visor-cos { display: contents; }
   @media (max-width: 720px) {
     .sdp-visor__panell {
       position: absolute;

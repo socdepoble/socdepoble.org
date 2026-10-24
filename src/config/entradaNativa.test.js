@@ -82,11 +82,12 @@ describe('demanaCredencialNativa', () => {
   test('torna la credencial neta i congelada; un proveïdor sense botó diu NO_DISPONIBLE sense cridar l’adaptador', async () => {
     const r = await carrega();
     const a = adaptador('ios', ['apple'], {
-      demana: vi.fn(async () => ({ testimoni: '  a.b.c ', nonce: ' cru ', testimoniAcces: '', nom: '  Na Maria ' }))
+      demana: vi.fn(async () => ({ testimoni: '  a.b.c ', nonce: ' cru ', testimoniAcces: '', nom: '  Na Maria ', codiAutoritzacio: ' c0d1.0.x ' }))
     });
     r.registraEntradaNativa(a);
     const credencial = await r.demanaCredencialNativa('apple');
-    expect(credencial).toEqual({ testimoni: 'a.b.c', nonce: 'cru', testimoniAcces: null, nom: 'Na Maria' });
+    /* Actualitzada a posta (261024 T1): la credencial congelada també porta el codi d'autorització d'Apple. */
+    expect(credencial).toEqual({ testimoni: 'a.b.c', nonce: 'cru', testimoniAcces: null, nom: 'Na Maria', codiAutoritzacio: 'c0d1.0.x' });
     expect(Object.isFrozen(credencial)).toBe(true);
     expect(a.demana).toHaveBeenCalledWith('apple', { viu: expect.any(Function) });
     await expect(r.demanaCredencialNativa('google')).rejects.toMatchObject({ code: r.CODI_ENTRADA_NATIVA.NO_DISPONIBLE });

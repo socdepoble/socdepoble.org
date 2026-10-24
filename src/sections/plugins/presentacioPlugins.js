@@ -69,9 +69,11 @@
  *            i nucli/alertes.js).
  *   gestoria · «Identitat i Finestreta» i «Facturació» (apps/gestoria/
  *            manifest.js, entrades). Gauntlet 261022_0225, F8.
- *   rss    · «Fonts» i «Notícies» (apps/lector/manifest.js, entrades). Que
- *            encara no hi ha cap font connectada ho diu l'estat buit de
- *            l'app (apps/lector/AppLector.jsx).
+ *   rss    · «Notícies» (apps/lector/manifest.js, entrada) i «Gestiona les
+ *            fonts» (el diàleg de l'arbre, apps/lector/vistes/GestioFonts.jsx;
+ *            261024, la pàgina «Fonts» ja no existix). Que encara no hi ha
+ *            cap font connectada ho diu l'estat buit de l'app
+ *            (apps/lector/AppLector.jsx).
  * Si l'app canvia un d'eixos textos, este s'ha de canviar amb ell.
  *
  * Cap consell mèdic i cap promesa: el text de Salut diu el mateix que l'avís
@@ -133,7 +135,7 @@ const RSS = [
   '<h3>Les notícies, en un mateix lloc</h3>',
   '<p>El <strong>Lector RSS</strong> està pensat per a llegir, tot junt, el que publiquen l’ajuntament, la cooperativa, el club o la comissió de festes. Així no has d’anar de web en web. Cada web que publica notícies és una <strong>font</strong>.</p>',
   '<h3>Com es fa servir</h3>',
-  '<p>Si ací baix tens el botó <strong>«Obrir el Lector»</strong>, prem-lo. A <strong>«Fonts»</strong> triaràs les webs que t’interessen i a <strong>«Notícies»</strong> llegiràs el que publiquen.</p>',
+  '<p>Si ací baix tens el botó <strong>«Obrir el Lector»</strong>, prem-lo. A la columna de les carpetes, <strong>«Gestiona les fonts»</strong> et deixa triar les webs que t’interessen i afegir-ne de teues, i a <strong>«Notícies»</strong> llegiràs el que publiquen.</p>',
   '<h3>Com està ara</h3>',
   '<p>El lector encara està <strong>en proves</strong>: de moment no hi ha cap font connectada i no arriba cap notícia, així que les dues pestanyes ixen buides. Quan les webs del poble estiguen connectades, les notícies arribaran ací soles.</p>',
   '<h3>Un exemple de cada dia</h3>',

@@ -100,7 +100,9 @@ describe('una publicació del Mur o un acte, al lector del MAS: la portada obri 
     expect([...boto.children].map((fill) => fill.tagName)).toEqual(['IMG']);
     const img = boto.querySelector('img');
     expect([img.getAttribute('src'), img.getAttribute('alt')]).toEqual([src, element.title]);
-    expect([...img.attributes].map((a) => a.name).sort()).toEqual(['alt', 'src']);
+    /* Actualitzada a posta (261024 T4): la portada porta fetchpriority="high"
+       (candidata a LCP, Gemini G-02). */
+    expect([...img.attributes].map((a) => a.name).sort()).toEqual(['alt', 'fetchpriority', 'src']);
     expect(visor()).toBeNull();
     await obri(boto);
     expect(fotoDelVisor().getAttribute('src')).toBe(src);
@@ -149,6 +151,53 @@ describe('una portada pujada (sdp-media://), pel port', () => {
     expect(marc).not.toBeNull();
     expect([...marc.children]).toEqual([]);
     expect(container.querySelector('img[src*="sdp-media"]')).toBeNull();
+  });
+});
+
+/* T4 (pla 261024_1315, P1-06; Gemini G-01) · Al lector del MAS, les fotos
+   del cos també obrin el visor (CosAmbVisor), com a la pàgina de la ruta:
+   dins d'un embolcall que no pinta cap caixa (.sdp-visor-cos, display:
+   contents), l'únic node nou. La Multimèdia, sense cap embolcall. */
+describe('les fotos del cos, al lector del MAS', () => {
+  const COS = '<p>Hola</p><p><img src="/assets/mur/a.webp" alt="Plaça"></p><p><img src="/assets/mur/b.webp" alt="Font"></p>';
+  const fotosDelCos = (container) => [...container.querySelectorAll('.detail-content img')];
+
+  test.each([
+    ['mur', persona({ content: COS })],
+    ['events', persona({ id: 'fira', title: 'Fira de Tibi', description: COS })]
+  ])('%s · les fotos pròpies del cos porten la marca i obrin el visor a la foto clicada; el focus hi torna', async (seccio, element) => {
+    const container = pinta(element, seccio);
+    const [a, b] = fotosDelCos(container);
+    const embolcall = container.querySelector('.detail-content').parentElement;
+    expect([embolcall.tagName, embolcall.className]).toEqual(['DIV', 'sdp-visor-cos']);
+    expect([a, b].map((img) => [img.getAttribute('role'), img.getAttribute('tabindex'), img.getAttribute('aria-label')])).toEqual([
+      ['button', '0', 'Vore a pantalla completa: Plaça'], ['button', '0', 'Vore a pantalla completa: Font']
+    ]);
+    expect(visor()).toBeNull();
+    act(() => { fireEvent.click(b, { detail: 1 }); });
+    await waitFor(() => expect(obert()).toBe(true));
+    expect(fotoDelVisor().getAttribute('src')).toBe('/assets/mur/b.webp');
+    expect(visor().querySelector('.sdp-visor__comptador').textContent).toBe('2 / 2Imatge 2 de 2');
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    expect(fila('Autor').textContent).toBe('Pepa');
+    act(() => { visor().dispatchEvent(new Event('cancel', { cancelable: true })); });
+    expect(obert()).toBe(false);
+    expect(document.activeElement).toBe(b);
+  });
+
+  test('un producte: la foto de la descripció obri el visor', async () => {
+    const container = pinta({ id: 'mel', title: 'Mel de romer', images: ['/assets/mel.png'], description: '<p><img src="/assets/mercat/pot.webp" alt="Pot"></p>', created_at: CREAT }, 'mercat');
+    const [pot] = fotosDelCos(container);
+    expect(pot.getAttribute('aria-label')).toBe('Vore a pantalla completa: Pot');
+    act(() => { fireEvent.click(pot, { detail: 1 }); });
+    await waitFor(() => expect(obert()).toBe(true));
+    expect(fotoDelVisor().getAttribute('src')).toBe('/assets/mercat/pot.webp');
+  });
+
+  test('la Multimèdia: cap embolcall ni cap marca', () => {
+    const container = pinta(persona({ id: 'era', title: 'Era', src: '/assets/era.png', kind: 'image', description: COS }), 'multimedia');
+    expect(container.querySelector('.sdp-visor-cos')).toBeNull();
+    expect(container.querySelector('[data-sdp-ampliable]')).toBeNull();
   });
 });
 

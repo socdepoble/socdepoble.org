@@ -51,8 +51,23 @@ const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
    és la Pàgina Universal (PaginaApp). La igualtat de davall continua exacta.
    Bloc 0 del Gauntlet (ordre del Mestre, 261016) · .sdp-boto--secundari se'n
    va amb els enllaços «Ves a Hui» i «Fonts» de la graella de notícies retirada
-   (els Link amb pell de botó): ja no la escriu cap fitxer. */
-const CLASSES_GLOBALS = Object.freeze(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--gran', 'sdp-nomes-lector']);
+   (els Link amb pell de botó): ja no la escriu cap fitxer.
+   Actualitzada a posta (261024 T5): .sdp-boto--secundari torna amb les quatre portes a la resta del
+   poble (el Mur, l'Agenda, el Mercat i els Pobles) de vistes/FontsSenseResposta.jsx, Link amb pell
+   de botó secundari quan cap font no respon. La igualtat de davall continua exacta.
+   Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, «la targeta de notícia de la
+   columna del mig ha de tindre el mateix patró visual que el Bloc de notes»: la fila de
+   vistes/FilaNoticia.jsx escriu les classes de la fitxa del Bloc (sections/notes/NotaFitxa.jsx:
+   .sdp-gestor-fitxa i els seus elements de media, imatge, text, títol i subtítol); i el vídeo de la
+   lectura (vistes/Lector.jsx) va dins de la caixa 16:9 global (.embed-container, modules.css). Totes
+   existixen a src/css, cap és nova. La igualtat de davall continua exacta. La variant de la llista
+   del Bloc (listClassName, una prop de l'espai i no un className) la comprova «no inventar
+   targetes», més avall. */
+const CLASSES_GLOBALS = Object.freeze([
+  'sdp-boto', 'sdp-boto--primari', 'sdp-boto--secundari', 'sdp-boto--gran', 'sdp-nomes-lector',
+  'sdp-gestor-fitxa', 'sdp-gestor-fitxa__media', 'sdp-gestor-fitxa__imatge', 'sdp-gestor-fitxa__text', 'sdp-gestor-fitxa__titol',
+  'sdp-gestor-fitxa__subtitol', 'embed-container'
+]);
 
 /* Bloc 0 (261016) · Les columnes de les carpetes i de les fonts (261004) s'han retirat, però l'entorn
    de l'executor no pot esborrar fitxers: queden com a làpides sense codi fins que es trauen del
@@ -72,7 +87,12 @@ describe('el cens', () => {
       'nucli/personals.js', 'fontsPersonals.js', 'useFontsPersonals.js',
       'nucli/personals.test.js', 'fontsPersonals.test.js', 'fontsPersonals.vista.test.jsx',
       /* Bloc 0 (261016) · Les notícies sobre l'espai de treball. */
-      'espaiNoticies.test.jsx'
+      'espaiNoticies.test.jsx',
+      /* T5 (261024) · Les fonts territorials: l'adaptador remot i el que es veu quan no responen. */
+      'fontRemota.js', 'fontRemota.test.js', 'vistes/FontsSenseResposta.jsx',
+      /* 261024 (Lector) · Ordre del Mestre de les 15:05: la fila del Bloc, les fonts a l'arbre, els
+         mitjans del servei (miniatura i vídeo) i les seues proves. */
+      'vistes/FilaNoticia.jsx', 'vistes/fontsDelLector.js', 'mitjans.js', 'lector261024.test.jsx'
     ]) expect(existsSync(path.join(ARREL, APP, fitxer)), fitxer).toBe(true);
   });
 
@@ -143,11 +163,14 @@ describe('estil visual 100% Pedra Seca (ordre del Mestre, 261003)', () => {
 
   /* Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Actualitzada a posta: a més de l'única
      ClosaAplicacio (la gestió de fonts), un sol UniversalWorkspace, el de les notícies, per la
-     façana de l'espai (la porta 'workspace' del nucli 1.2.0) i amb un sol nom. */
-  test('cap AppGridShell a mà: una sola ClosaAplicacio (AppLector) i un sol UniversalWorkspace (les notícies), per la façana', () => {
+     façana de l'espai (la porta 'workspace' del nucli 1.2.0) i amb un sol nom.
+     Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, «el Lector ha de ser
+     exclusivament un UniversalWorkspace pur i fluid de tres columnes»: la pàgina de fonts (l'única
+     ClosaAplicacio) se'n va i cap fitxer de l'app munta cap closca de columnes. */
+  test('cap AppGridShell a mà: cap ClosaAplicacio i un sol UniversalWorkspace (les notícies), per la façana', () => {
     const closca = /components\/layout\/AppGridShell/;
     expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => closca.test(e)))).toEqual([]);
-    expect(PRODUCCIO.filter((f) => /<ClosaAplicacio\b/.test(llig(f)))).toEqual([`${APP}/AppLector.jsx`]);
+    expect(PRODUCCIO.filter((f) => /<ClosaAplicacio\b|\bClosaAplicacio\s*[,}]/.test(senseComentaris(llig(f))))).toEqual([]);
     expect(PRODUCCIO.filter((f) => /<UniversalWorkspace\b/.test(llig(f)))).toEqual([`${APP}/vistes/Noticies.jsx`]);
     const delEspai = PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => e.includes('components/universal/workspace')).map((e) => [f, e]));
     expect(delEspai).toEqual([[`${APP}/vistes/Noticies.jsx`, '../../../components/universal/workspace/index.js']]);
@@ -159,39 +182,53 @@ describe('estil visual 100% Pedra Seca (ordre del Mestre, 261003)', () => {
      Cap peça pròpia de files o rajoles.
      Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Reescrita a posta: «Prohibit crear noves
      targetes inventades o jerarquies caòtiques a /app/lector/noticies». Les notícies ja no són
-     UniversalCard dins de GraellaTargetes: són l'espai de treball (l'arbre i la fila per defecte),
-     i al seu flux (vistes/Noticies.jsx) no hi torna cap targeta, graella, pastilla de vista ni
-     targeta de navegació, cap fila pròpia (renderItem) ni cap imatge a les files (`image`: la
-     pintaria ItemMedia sense política de referent). L'única UniversalCard que queda és la de
-     «Les que seguixes» (la gestió de fonts), sense telemetria, sense xat comú i amb la imatge
-     privada. */
-  test('no inventar targetes: l’espai de treball a les notícies, PaginaApp al detall i cap targeta, graella ni fila pròpia', () => {
+     UniversalCard dins de GraellaTargetes: són l'espai de treball.
+     Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, «la targeta de notícia ha
+     de tindre el mateix patró visual elegant, net i matemàtic que el Bloc de notes, sense targetes
+     deformades ni jerarquies estranyes», i «adeu a la pàgina inflada de /app/lector/fonts». La fila
+     ja no és la per defecte de l'espai: és la del Bloc (renderItem → vistes/FilaNoticia.jsx, una
+     sola), sense targeta, boina ni pastilla. La pàgina de fonts se'n va amb les seues targetes
+     (ColumnaCataleg forma="targetes", NavTargetes, UniversalCard): cap al Lector. La miniatura de la
+     fila no és `image` (ItemMedia la demanaria sense política de referent): és `miniatura`, la del
+     servei (privacitat.test.jsx). */
+  test('no inventar targetes: l’espai de treball a les notícies amb la fila del Bloc, PaginaApp al detall i cap targeta ni graella', () => {
     const importats = (f) => [...llig(f).matchAll(/import\s*\{([^}]+)\}\s*from/g)].flatMap((m) => m[1].split(',').map((s) => s.trim()));
-    const vetades = /^(?:GraellaArticles|LlistaArticles|Rajola|Avatar)$/;
+    const vetades = /^(?:GraellaArticles|LlistaArticles|Rajola|Avatar|UniversalCard|GraellaTargetes|PillToggle|SeccionsCategoria|DefaultItemCard|useVistaCataleg|ColumnaCataleg|TargetesColleccions)$/;
     expect(PRODUCCIO.flatMap((f) => importats(f).filter((nom) => vetades.test(nom)).map((nom) => `${f}: ${nom}`))).toEqual([]);
-    /* El flux de notícies: l'espai, i res de les targetes. */
+    for (const nom of ['UniversalCard', 'GraellaTargetes', 'NavTargetes', 'ColumnaCataleg', 'TargetesColleccions']) {
+      expect(PRODUCCIO.filter((f) => new RegExp(`<${nom}\\b`).test(llig(f))), nom).toEqual([]);
+    }
+    /* El flux de notícies: l'espai, amb una sola fila pròpia, la del Bloc. */
     const delFlux = importats(`${APP}/vistes/Noticies.jsx`);
     const noticies = senseComentaris(llig(`${APP}/vistes/Noticies.jsx`));
     expect(delFlux).toContain('UniversalWorkspace');
-    for (const nom of ['UniversalCard', 'GraellaTargetes', 'PillToggle', 'NavTargetes', 'SeccionsCategoria', 'DefaultItemCard', 'useVistaCataleg']) {
-      expect(delFlux, nom).not.toContain(nom);
-      expect(noticies, nom).not.toMatch(new RegExp(`<${nom}\\b`));
-    }
+    expect(delFlux).toContain('FilaNoticia');
     expect(noticies).not.toMatch(/\bimage\s*:/);
-    expect(noticies).not.toMatch(/\brenderItem\b/);
-    /* Les targetes de navegació, només a «Les que seguixes»; la UniversalCard, només a la seua peça. */
-    expect(PRODUCCIO.filter((f) => /<NavTargetes\b/.test(llig(f)))).toEqual([`${APP}/vistes/GestioFonts.jsx`]);
-    expect(PRODUCCIO.filter((f) => /<UniversalCard\b/.test(llig(f)))).toEqual([`${APP}/vistes/comunes.jsx`]);
-    const comunes = llig(`${APP}/vistes/comunes.jsx`);
-    for (const literal of ['SENSE_TELEMETRIA = Object.freeze({ comptar: false })', 'telemetria={SENSE_TELEMETRIA}', 'objecte={null}', 'imatgePrivada']) {
-      expect(comunes, literal).toContain(literal);
-    }
+    expect(noticies.match(/\brenderItem=\{/g)).toHaveLength(1);
+    expect(noticies).toContain('renderItem={filaDeNoticia}');
+    expect(noticies).toContain('listClassName="sdp-bloc-list--notes"');
+    expect(fitxersDe('src/css', /\.css$/).some((f) => /\.sdp-bloc-list--notes\s+\.sdp-gestor-fitxa\b/.test(senseComentaris(llig(f))))).toBe(true);
+    const fila = senseComentaris(llig(`${APP}/vistes/FilaNoticia.jsx`));
+    expect(fila).not.toMatch(/sp-card|sdp-card|<(?:article|header|footer|h[1-6]|p)[\s>]/);
+    expect(fila.match(/<img\b/g)).toHaveLength(1);
+    expect(fila).toContain('referrerPolicy="no-referrer"');
     /* El detall: la Pàgina Universal, una, i sense xat comú (la notícia és de fora). */
     expect(importats(`${APP}/vistes/Lector.jsx`)).toContain('PaginaApp');
     expect(llig(`${APP}/vistes/Lector.jsx`).match(/<PaginaApp\b/g)).toHaveLength(1);
     expect(llig(`${APP}/vistes/Lector.jsx`)).toContain('objecte={null}');
-    const catalegs = PRODUCCIO.flatMap((f) => [...llig(f).matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
-    expect(catalegs).toEqual([[`${APP}/vistes/GestioFonts.jsx`, true]]);
+  });
+
+  /* 261024 (Lector) · El vídeo: un sol iframe, darrere de la façana, amb l'adreça que dona el servei
+     (cap literal), sandbox i els permisos i el referent fixats. */
+  test('el vídeo: un sol iframe a Lector.jsx, amb l’adreça del servei, sandbox, permisos i referent fixats', () => {
+    expect(PRODUCCIO.filter((f) => /<iframe\b/.test(llig(f)))).toEqual([`${APP}/vistes/Lector.jsx`]);
+    const lector = llig(`${APP}/vistes/Lector.jsx`);
+    expect(lector.match(/<iframe\b/g)).toHaveLength(1);
+    expect(lector).toContain('<iframe src={video.incrustacio}');
+    expect(lector).toContain("const SANDBOX_VIDEO = 'allow-scripts allow-same-origin allow-presentation';");
+    expect(lector).toContain("const PERMISOS_VIDEO = 'encrypted-media; picture-in-picture; fullscreen';");
+    expect(lector).toContain('referrerPolicy="strict-origin-when-cross-origin"');
+    expect(PRODUCCIO.filter((f) => new RegExp(['you', 'tube-no', 'cookie'].join('')).test(llig(f)))).toEqual([]);
   });
 
   test('cap HTML cru, tampoc a les proves', () => {

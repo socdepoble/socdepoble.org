@@ -111,7 +111,13 @@ const CENS = Object.freeze([
   'src/data/identitat.avatarPropi.test.js',
   'src/data/identitatsSeed.pilot.test.js',
   'src/data/supabase/auth.avatarPropi.test.js',
-  'src/data/supabase/perfilPublicPerDefecte.migracio.test.js'
+  'src/data/supabase/perfilPublicPerDefecte.migracio.test.js',
+  /* Integració del pla 261024_1315 · Els fitxers de producció nous d'esta capa
+     (T6b, la capacitat 'seguiments'): el servidor de llavor i local, i
+     l'adaptador de Supabase. Esta passada només afig els de producció nous;
+     els de src/data/adaptadors/noticies/ (T5) queden per a qui els edita ara. */
+  'src/data/localSeguiments.js',
+  'src/data/supabase/seguiments.js'
 ]);
 
 describe('el cens', () => {

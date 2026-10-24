@@ -4,7 +4,8 @@
    (contracteNucli.js) no porta cap historial, que seria API nova.
    nucliModuls.test.js hi lliga el contracte: cap porta ni cap nom de
    l'1.0.0 s'ha llevat, i el que s'hi ha afegit és exactament
-   NOMS_DEL_NUCLI_1_1 més NOMS_DEL_NUCLI_1_2. guardesDelModul.test.js
+   NOMS_DEL_NUCLI_1_1 més NOMS_DEL_NUCLI_1_2 i, des del 261024 (T5),
+   NOMS_DEL_NUCLI_1_3. guardesDelModul.test.js
    comprova que cada nom de l'1.1.0 el fa servir alguna app i, des del
    Gauntlet 261016, que l'1.2.0 té ús en una app de veres (el Lector munta
    UniversalWorkspace) i que cada nom seu el fa servir una app o el mòdul de
@@ -45,4 +46,11 @@ export const NOMS_DEL_NUCLI_1_1 = congela({
    l'espai de treball del Bloc de notes, perquè el Lector s'hi munte. */
 export const NOMS_DEL_NUCLI_1_2 = congela({
   workspace: ['DefaultItemCard', 'UniversalWorkspace']
+});
+
+/* El que l'1.3.0 (T5, P1-07, 261024) afig a l'1.2.0: un nom a la porta
+   'plataforma', el servei de notícies neutral que la plataforma dona al
+   Lector. guardesDelModul.test.js comprova que el Lector el fa servir. */
+export const NOMS_DEL_NUCLI_1_3 = congela({
+  plataforma: ['useServeiNoticies']
 });

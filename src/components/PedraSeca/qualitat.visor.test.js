@@ -54,7 +54,9 @@ const PROVES = [
   `${MM}/lecturaExifWebp.test.js`, `${MM}/useMetadadesFoto.test.js`, `${MM}/rutesMultimedia.test.js`,
   'src/sections/detail/ItemDetailSection.redireccio.test.jsx', 'src/config/navigation.multimedia.test.js',
   /* Revisió del Gauntlet 261017 (R3, M2) · el visor en diferit i el del lector del MAS. */
-  'src/sections/detail/VisorDePublicacio.diferit.test.jsx', 'src/sections/notes/PublicacioDetall.visor.test.jsx'
+  'src/sections/detail/VisorDePublicacio.diferit.test.jsx', 'src/sections/notes/PublicacioDetall.visor.test.jsx',
+  /* T4 (pla 261024_1315, P1-06) · les fotos del cos al visor (CosAmbVisor). */
+  'src/sections/detail/CosAmbVisor.test.jsx'
 ];
 /* Fitxers compartits que el front toca en un punt (lint, sense les regles de text de Pedra Seca). */
 const COMPARTITS = ['src/config/navigation.js', 'src/config/i18n.js', 'src/components/PedraSeca/index.js',

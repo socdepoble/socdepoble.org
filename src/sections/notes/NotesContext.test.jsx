@@ -296,3 +296,42 @@ describe('Grup E · la guarda de re-signatura de publishNote', () => {
     expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'info')).toEqual([]);
   });
 });
+
+/* Integració 261024 (Codex C-02) · El servidor rebutja la publicació de qui no
+   ha acceptat la versió vigent de les normes (SDP-MOD-428,
+   2610241400_normes_exigides_ugc.sql). No és cap xarxa: publishNote rebutja
+   amb l'error original i sense el toast de «pendent de confirmar», i el
+   selector (publicaAmbMotiu) torna a preguntar i publica UNA vegada més. */
+describe('Integració 261024 · el rebuig del servidor per les normes', () => {
+  const REBUIG = 'Supabase 403: {"code":"42501","message":"SDP-MOD-428: cal acceptar les normes de convivència."}';
+  const nota = () => ({ id: 'n-normes', title: 'Fira', content: '<p>Cos</p>', revision: 1 });
+
+  beforeEach(() => {
+    mocks.toast.mockReset();
+    mocks.send.mockReset();
+    mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: (revision ?? 1) + 1 }));
+  });
+
+  test('publishNote rebutja amb l’error del servidor, sense «pendent de confirmar» ni cap toast d’error', async () => {
+    mocks.send.mockRejectedValueOnce(new Error(REBUIG));
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    let error;
+    await act(async () => { error = await result.current.publishNote(nota()).catch((motiu) => motiu); });
+    expect(error?.message).toBe(REBUIG);
+    expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'error')).toEqual([]);
+    /* Els camps es desen abans (com sempre); la nota no es marca publicada. */
+    expect(mocks.update.mock.calls.filter(([, canvis]) => canvis?.isPublished)).toEqual([]);
+  });
+
+  test('acceptades de nou, el selector publica una sola vegada més amb el mateix id', async () => {
+    mocks.send.mockRejectedValueOnce(new Error(REBUIG)).mockResolvedValueOnce(undefined);
+    const tornaAPreguntar = vi.fn(async () => true);
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    await act(async () => {
+      await expect(publicaAmbMotiu(() => result.current.publishNote(nota()), { tornaAPreguntar })).resolves.toBe(true);
+    });
+    expect(tornaAPreguntar).toHaveBeenCalledTimes(1);
+    expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['n-normes', 'n-normes']);
+    expect(mocks.update.mock.calls.at(-1)[1]).toEqual({ isPublished: true, publishedSubmissionId: 'n-normes' });
+  });
+});

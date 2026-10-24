@@ -81,6 +81,37 @@ test('acceptar-les publica una sola vegada; triar «privada» no les demana', as
   expect(asseguraNormes).not.toHaveBeenCalled();
 });
 
+/* Integració 261024 (Codex C-02) · Si el servidor la rebutja igualment per les
+   normes (SDP-MOD-428: el record d'este dispositiu ja no valia), la porta es
+   torna a obrir amb { rebutjades: true } i, acceptades, es publica UNA vegada
+   més; declinades, el motiu en línia. Mai en bucle. */
+const REBUIG_NORMES = () => new Error('Supabase 403: {"code":"42501","message":"SDP-MOD-428: cal acceptar les normes de convivència."}');
+
+test('C-02 · el rebuig del servidor torna a obrir la porta i, acceptades, publica una sola vegada més', async () => {
+  const asseguraNormes = vi.fn().mockResolvedValue(true);
+  mocks.publish.mockReset().mockRejectedValueOnce(REBUIG_NORMES()).mockResolvedValueOnce(true);
+  render(ambModeracio(asseguraNormes));
+  expect(await mocks.adapter.visibilitat.onTria(true, NOTA)).toBe(true);
+  expect(asseguraNormes.mock.calls).toEqual([[], [{ rebutjades: true }]]);
+  expect(mocks.publish).toHaveBeenCalledTimes(2);
+});
+
+test('C-02 · declinades en tornar a preguntar, o rebutjada de nou, el motiu en línia i cap tercer intent', async () => {
+  const declina = vi.fn().mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+  mocks.publish.mockReset().mockRejectedValue(REBUIG_NORMES());
+  render(ambModeracio(declina));
+  await expect(mocks.adapter.visibilitat.onTria(true, NOTA)).rejects.toThrow('Per a publicar, cal acceptar les normes de convivència.');
+  expect(declina).toHaveBeenCalledTimes(2);
+  expect(mocks.publish).toHaveBeenCalledTimes(1);
+  cleanup();
+
+  const accepta = vi.fn().mockResolvedValue(true);
+  render(ambModeracio(accepta));
+  await expect(mocks.adapter.visibilitat.onTria(true, NOTA)).rejects.toThrow('Per a publicar, cal acceptar les normes de convivència.');
+  expect(accepta).toHaveBeenCalledTimes(2);
+  expect(mocks.publish).toHaveBeenCalledTimes(3);
+});
+
 test('sense proveïdor de moderació, publicar és el de sempre', async () => {
   render(<NotesEditor activeNote={NOTA} />);
   expect(await mocks.adapter.visibilitat.onTria(true, NOTA)).toBe(true);

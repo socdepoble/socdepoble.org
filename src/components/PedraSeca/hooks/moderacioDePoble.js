@@ -29,6 +29,10 @@
  *  · asseguraNormes() → Promise<boolean> · true si ja estan acceptades (o la
  *    porta no s'aplica: llavor, local, sense sessió); si no, obri el diàleg i
  *    resol amb la tria. Estable: es pot posar a les dependències d'un memo.
+ *    asseguraNormes({ rebutjades: true }) (integració 261024, Codex C-02): el
+ *    servidor ha rebutjat per les normes (SDP-MOD-428); s'oblida el record i
+ *    es torna a preguntar (false si la porta no s'aplica). Qui l'ha rebut
+ *    reintenta UNA sola vegada.
  *
  * Sense proveïdor (una peça muntada sola, un espècimen del catàleg, una
  * prova) useModeracio torna null: cap targeta, bombolla ni editor no canvia.

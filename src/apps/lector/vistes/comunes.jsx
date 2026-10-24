@@ -2,84 +2,26 @@
  * Lector de notícies · peces que fan servir diverses vistes. Cap classe
  * pròpia: tot és de Pedra Seca.
  *
- *   NavTargetes      les targetes de «Les que seguixes» (la gestió de fonts,
- *                    GestioFonts.jsx): UniversalCard amb enllaços de veres;
- *                    el clic normal navega (push) i, en mitjana, tanca el panell
  *   MarcaTotLlegit   «Marca-ho tot com a llegit» per a les notícies que es
  *                    veuen: el ✓ de la capçalera de la llista de Feedly (amb
  *                    una cerca, els resultats, i el text ho diu)
  *   AvisLector       el disc: només en memòria, una altra pestanya o un error
+ *   AvisFonts        T5 (261024) · alguna de les fonts que se seguixen no ha
+ *                    respost (però no totes: llavors és FontsSenseResposta.jsx)
  * Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Les notícies són l'espai de
  * treball del Bloc (Noticies.jsx): l'obridor de la columna de les carpetes
  * (ObridorCarpetes) i les targetes de navegació de les carpetes i de les fonts
  * se'n van amb les columnes del 261004. L'arbre de l'espai porta els seus
  * obridors, i MarcaTotLlegit rep la llista que es veu (els ids), també la de
  * «Totes», que el nucli no té com a carpeta.
+ * Ordre del Mestre (261024, 15:05) · «Sense targetes deformades»: NavTargetes
+ * (les UniversalCard amb boina de «Les que seguixes») se'n va amb la pàgina de
+ * fonts. Cap UniversalCard al Lector: les fonts són a l'arbre.
  */
 import { CheckCheck } from 'lucide-react';
-import { Alerta, Boto, GraellaTargetes, UniversalCard } from '../../../components/PedraSeca/index.js';
-import { useClosaAplicacio } from '../../plataforma/index.js';
+import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
+import { seguix } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
-
-/* Les apps no entren a la telemetria (frontera.test.js): el Connectar del peu no compta. */
-const SENSE_TELEMETRIA = Object.freeze({ comptar: false });
-const textDe = (valor) => (typeof valor === 'string' && valor.trim() !== '' ? valor : undefined);
-
-/**
- * Ordre del Mestre, 261004 (integració final, arreglo 6; arreglo del verificador, «front roig i
- * verificació emmascarada») · La columna «Les que seguixes» (la gestió de fonts) va en
- * UniversalCard, la targeta de tot Sóc de Poble: boina, títol, subtítol i entradeta, amb dades
- * reals. Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Les carpetes i les fonts de les
- * notícies ja no hi passen: són l'arbre de l'espai de treball (Noticies.jsx). Amb elles se'n va
- * `actiu` (la targeta oberta, aria-current) i la seua vora de modules.css: «Les que seguixes» no
- * en marcava mai cap (actiu={null}), i cap píxel canvia.
- *   element   { id, nom, comptador, secundari?, entradeta?, autoria? }
- *     · títol: el nom; subtítol: el comptador i el seu text («6 sense llegir»), que també és la
- *       descripció accessible de l'element principal (el nom és el títol);
- *     · entradeta: la descripció o el lloc web de la font (navegacio.js);
- *     · boina: `autoria` { nom, href?, avatar?, poble? }: la font mateixa, sense enllaç (la
- *       targeta sencera ja hi porta; navegacio.js). Sense, cap boina: no se n'inventa cap.
- *   camiDe(e) el camí de l'app on porta (mainHref): enllaç de veres, també en pestanya nova
- * El peu, el per defecte de les apps (TargetesArticles de l'esquelet): sense Compartir (el que
- * se seguix és l'estat d'este dispositiu), sense xat comú i el Connectar no compta. El Mestre
- * decidirà què s'apaga. Cap className ni element de llista escrit a mà: GraellaTargetes. La
- * targeta de sempre, amb fons, no la plana (comprovat al navegador: la plana no s'hi llegia).
- */
-export function NavTargetes({ elements, etiqueta, camiDe, buit = null }) {
-  const { mida, tancaPanells } = useClosaAplicacio();
-  const llista = Array.isArray(elements) ? elements : [];
-  /* En mitjana la columna és un panell superposat: triar-ne una el tanca (navega el Link). */
-  const enTriar = mida === 'mitja' ? () => tancaPanells() : undefined;
-  return (
-    <GraellaTargetes elements={llista} variant="llista" etiqueta={etiqueta} buit={buit}>
-      {(element) => {
-        const n = Number.isSafeInteger(element.comptador) && element.comptador > 0 ? element.comptador : 0;
-        const subtitol = [String(n), textDe(element.secundari)].filter(Boolean).join(' ');
-        const boina = element.autoria || null;
-        return (
-          <UniversalCard
-            key={element.id}
-            title={element.nom}
-            subtitle={subtitol}
-            body={textDe(element.entradeta)}
-            author={textDe(boina?.nom)}
-            authorHref={textDe(boina?.href)}
-            avatarUrl={textDe(boina?.avatar)}
-            location={textDe(boina?.poble)}
-            imatgePrivada
-            mainHref={camiDe(element)}
-            onMainClick={enTriar}
-            descripcioAccessible={subtitol}
-            objecte={null}
-            hasFooter
-            showShare={false}
-            telemetria={SENSE_TELEMETRIA}
-          />
-        );
-      }}
-    </GraellaTargetes>
-  );
-}
 
 /* F2 del Gauntlet (261016, defecte L1-2) · Amb una cerca, el botó diu l'abast, com a Feedly: els
    resultats que es veuen a la llista, no la carpeta sencera. */
@@ -117,4 +59,43 @@ export function AvisLector() {
     return <Alerta to="avis" titol="Només en la memòria">Este navegador no deixa guardar: el que llegixes es perdrà en tancar la pestanya.</Alerta>;
   }
   return null;
+}
+
+/* «A», «A i B», «A, B i C». */
+const enumeracio = (noms) => (noms.length < 2 ? noms.join('') : `${noms.slice(0, -1).join(', ')} i ${noms[noms.length - 1]}`);
+
+/* Interfície amb el servei (261024) · Ni una adreça que el servei no llig (no s'hi ha demanat res:
+   correcció R5-08) ni una font teua mentre el servei no les llig no «han deixat de respondre». */
+const NO_SON_SILENCIS = new Set(['adreca', 'personals-off']);
+
+/**
+ * T5 (P1-07, 261024) · Alguna de les fonts que se seguixen no ha respost a l'última ronda, i la
+ * resta sí: les seues notícies es veuen, i ací es diu quines falten i es pot tornar a provar.
+ * Quan no ha respost cap, no es pinta: el detall és FontsSenseResposta.jsx.
+ * 261024 (Lector) · Les adreces vetades es diuen a part, amb el que de veres ha passat; les fonts
+ * teues pendents, ni ací: l'arbre les marca «pendent».
+ */
+export function AvisFonts() {
+  const { lector, noticies } = useVistaLector();
+  if (noticies.estat !== 'llest' || !noticies.caigudes?.length) return null;
+  const motius = new Map(noticies.caigudes.map((caiguda) => [caiguda.fontId, caiguda.motiu]));
+  const seguides = noticies.fonts.filter((font) => seguix(lector.estat, font.id));
+  const caigudes = seguides.filter((font) => motius.has(font.id));
+  if (caigudes.length === 0 || caigudes.length === seguides.length) return null;
+  const callades = caigudes.filter((font) => !NO_SON_SILENCIS.has(motius.get(font.id)));
+  const vetades = caigudes.filter((font) => motius.get(font.id) === 'adreca');
+  if (callades.length === 0 && vetades.length === 0) return null;
+  const verb = callades.length === 1 ? 'no ha respost' : 'no han respost';
+  const frases = [
+    callades.length ? `${enumeracio(callades.map((font) => font.nom))} ${verb} ara mateix. La resta de notícies estan al dia.` : null,
+    vetades.length
+      ? `El servei de notícies no llig l’adreça de ${enumeracio(vetades.map((font) => font.nom))}: no és pública o no és segura, i no s’hi ha demanat res.`
+      : null
+  ].filter(Boolean);
+  return (
+    <Alerta to="avis" titol={callades.length ? 'Alguna font no ha contestat' : 'Alguna adreça no es pot llegir'}
+      accions={callades.length ? <Boto varietat="secundari" onClick={noticies.rellegix}>Torna-ho a provar</Boto> : null}>
+      {frases.join(' ')}
+    </Alerta>
+  );
 }

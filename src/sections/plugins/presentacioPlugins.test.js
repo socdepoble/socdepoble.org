@@ -169,8 +169,10 @@ describe('els literals citats són els de l’app', () => {
       ['Identitat i Finestreta', 'src/apps/gestoria/manifest.js', "ca: 'Identitat i Finestreta'"],
       ['Facturació', 'src/apps/gestoria/manifest.js', "ca: 'Facturació'"]
     ],
+    /* Actualitzada a posta (261024 Lector): per ordre del Mestre (15:05) la pàgina
+       «Fonts» ja no existix; la gestió és el diàleg «Gestiona les fonts» de l'arbre. */
     rss: [
-      ['Fonts', 'src/apps/lector/manifest.js', "ca: 'Fonts'"],
+      ['Gestiona les fonts', 'src/apps/lector/vistes/GestioFonts.jsx', 'titol="Gestiona les fonts"'],
       ['Notícies', 'src/apps/lector/manifest.js', "ca: 'Notícies'"]
     ]
   };

@@ -52,6 +52,7 @@ import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { SelectorVisibilitat } from '../../components/universal/SelectorVisibilitat.jsx';
 import { Alerta, Boto, Carregant } from '../../components/PedraSeca/index.js';
 import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
+import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
@@ -146,7 +147,14 @@ export function ConnexioDetall({ nota }) {
   const pucCompartirAlMur = Boolean(currentUser && compartirNota && nota?.id && bloqueigMur?.opcio !== 'publica');
   const autoria = autoriaDeLActor(actor, currentUser);
   const accioMur = compartida ? TEXTOS_MUR.publica.accioIgual : TEXTOS_MUR.publica.accio;
-  const triaMur = async (publica) => (publica ? publicaAmbMotiu(() => compartirNota(nota)) : true);
+  /* Integració 261024 (Codex C-02) · Si el servidor rebutja la publicació per
+     les normes (SDP-MOD-428), la porta de ModeracioContext es torna a obrir i,
+     si les accepta, es compartix una sola vegada més. Sense proveïdor, el
+     motiu en línia i prou. */
+  const asseguraNormes = useModeracio()?.asseguraNormes ?? null;
+  const triaMur = async (publica) => (publica ? publicaAmbMotiu(() => compartirNota(nota), {
+    tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null
+  }) : true);
 
   const tira = (
     <div className="sdp-connexio-lector__tira" role="group" aria-label="Recopilació de la connexió">

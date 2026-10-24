@@ -144,6 +144,25 @@ export const errorDeSegonFactor = (code, cause) => errorTraduit(MISSATGE_SEGON_F
 /** Onada 11 · Un Error amb el `code` i la frase de MISSATGE_PERSONALITZACIO. Pura. */
 export const errorDePersonalitzacio = (code, cause) => errorTraduit(MISSATGE_PERSONALITZACIO, code, cause);
 
+/** T2 (261024; P0-18, auditoria Codex 261024_1315 C-02) · El rebuig del
+ * servidor a una publicació o a un missatge de qui no ha acceptat la versió
+ * vigent de les normes de convivència
+ * (supabase/migrations/2610241400_normes_exigides_ugc.sql). Els adaptadors de
+ * publicar i del xat encara no el traduïxen a cap `code` propi: arriba al
+ * `code`, dins del missatge («Supabase 403: {…"message":"SDP-MOD-428: …"}»)
+ * o a la causa (l'error del xat porta l'original a `cause`). */
+export const CODI_NORMES_SERVIDOR = 'SDP-MOD-428';
+
+/** Cert si `error` (o una de les seues causes, com a molt quatre baules) és el rebuig per les normes. Pura. */
+export function esRebuigDeNormes(error) {
+  let baula = error;
+  for (let pas = 0; baula && typeof baula === 'object' && pas < 4; pas += 1) {
+    if (`${baula.code ?? ''} ${baula.message ?? ''}`.includes(CODI_NORMES_SERVIDOR)) return true;
+    baula = baula.cause;
+  }
+  return false;
+}
+
 // El TypeError cru que llancen els navegadors quan fetch no arriba al servidor.
 const RE_FETCH = /Failed to fetch|NetworkError|Load failed|Network request failed/i;
 

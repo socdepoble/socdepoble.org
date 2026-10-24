@@ -27,7 +27,8 @@ export const ESTATS = [
   ['Petició rebutjada', { estat: 'rebutjada' }],
   ['Ja té propietària', { estat: 'te-propietaria' }],
   ['No és del poble', { estat: 'no-del-poble' }],
-  ['Pot connectar-se (amb revisió)', { estat: 'pot-connectar', ambRevisio: true }]
+  /* IDEA-14 (Directiva del Mestre, 261024) · administrar no és connectar: el botó diu «Demanar administrar-la». */
+  ['Pot demanar administrar-la (amb revisió)', { estat: 'pot-connectar', ambRevisio: true }]
 ];
 
 export default function EspecimenIdentitat() {
@@ -53,7 +54,7 @@ export default function EspecimenIdentitat() {
       ]}
       a11y={['Amb sessió, l’avatar és el botó sencer: redó i de 56px (Avatar lg), mai per davall de --sdp-touch, amb :focus-visible de crom.', 'Nom accessible del botó: «El teu perfil: {nom}» amb una sola identitat; «Identitat activa: {nom}. Canviar identitat» quan obri el calaix. L’avatar és decoració (alt="", sense títol propi).', 'El calaix és un <dialog> germà del header: no hereta el crom i torna el focus al botó.', 'Les files del calaix són botons de 44px amb :focus-visible; l’activa es diu amb aria-current i amb text («Activa»).']}
       fes={['Dir amb qui actues en tot moment, també a la barra de dalt.', 'Separar «Actua com a» d’«Edita la fitxa»: editar no canvia la identitat.', 'Avisar que qui administra veurà també les converses de l’organització.']}
-      noFacis={['Pintar la foto de la persona quan actua com una entitat.', 'Canviar d’identitat en silenci en connectar-se.', 'Mostrar el correu d’una altra persona a qui no n’és titular.']}>
+      noFacis={['Pintar la foto de la persona quan actua com una entitat.', 'Canviar d’identitat en silenci en demanar administrar-la.', 'Mostrar el correu d’una altra persona a qui no n’és titular.', 'Dir «connectar» a administrar una organització: connectar és guardar-la a les teues notes, i formar-ne part és un altre camí.']}>
 
       <h4>Botó de la barra negra</h4>
       <section className="bar-black" aria-label="Mostra de la barra negra">

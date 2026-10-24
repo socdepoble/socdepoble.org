@@ -62,15 +62,21 @@ export const opcionsDeLogin = (plataforma, proveidor, nonceXifrat) =>
 const CANCELACIO_TEXT = /AuthorizationError error 1001\b|\bcancell?ed by (?:the )?user\b/i;
 export const esCancelacio = (e) => String(e?.code ?? '') === 'USER_CANCELLED' || CANCELACIO_TEXT.test(String(e?.message ?? ''));
 
-/** La credencial per al port. El nom només d'Apple (no és dins del testimoni); l'accés només de Google (at_hash). */
+/**
+ * La credencial per al port. El nom només d'Apple (no és dins del testimoni); l'accés només de Google (at_hash).
+ * T1 (261024; P0-04, App Store 5.1.1(v)) · El codi d'autorització, només d'Apple: amb
+ * useProperTokenExchange i sense redirectUrl el connector el torna cru i sense gastar,
+ * i el backend el canvia al servidor per un testimoni que la baixa pot revocar.
+ */
 export function credencialDe(proveidor, resultat, nonce) {
   const testimoni = textNet(resultat?.idToken);
   if (!testimoni) throw errorNatiu(CODI_ENTRADA_NATIVA.FALLIDA, 'El telèfon no ha tornat cap identificació.');
   const nom = proveidor === 'apple'
     ? [resultat?.profile?.givenName, resultat?.profile?.familyName].map(textNet).filter(Boolean).join(' ')
     : '';
-  const acces = proveidor === 'google' ? textNet(resultat?.accessToken?.token) : '';   // Apple: mai (seria el codi)
-  return { testimoni, nonce, testimoniAcces: acces || null, nom: nom || null };
+  const acces = proveidor === 'google' ? textNet(resultat?.accessToken?.token) : '';   // Apple: mai com a accés
+  const codi = proveidor === 'apple' ? textNet(resultat?.authorizationCode) : '';
+  return { testimoni, nonce, testimoniAcces: acces || null, nom: nom || null, codiAutoritzacio: codi || null };
 }
 
 const carregaPerDefecte = () => import('@capgo/capacitor-social-login').then((m) => m.SocialLogin);

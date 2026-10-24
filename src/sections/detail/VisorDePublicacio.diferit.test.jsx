@@ -67,7 +67,9 @@ describe('el visor, en diferit: res fins al primer gest', () => {
     expect(boto.className).toBe('sdp-visor__obridor');
     expect([...boto.attributes].map((a) => a.name).sort()).toEqual(['aria-haspopup', 'aria-label', 'class', 'type']);
     expect([...boto.children].map((fill) => fill.tagName)).toEqual(['IMG']);
-    expect([...boto.querySelector('img').attributes].map((a) => a.name).sort()).toEqual(['alt', 'src']);
+    /* Actualitzada a posta (261024 T4): la portada porta fetchpriority="high"
+       (candidata a LCP, Gemini G-02). */
+    expect([...boto.querySelector('img').attributes].map((a) => a.name).sort()).toEqual(['alt', 'fetchpriority', 'src']);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -113,6 +115,76 @@ describe('el visor, en diferit: res fins al primer gest', () => {
     act(() => { fireEvent.click(screen.getByRole('button', { name: 'B' })); });
     const visor = await screen.findByRole('dialog', { name: 'Visor de prova' });
     expect(visor.dataset).toMatchObject({ index: '1', src: '/b.jpg' });
+  });
+});
+
+/* T4 (pla 261024_1315, P1-06) · Les fotos del cos (CosAmbVisor) comparteixen
+   el tros diferit de la portada: res fins al primer gest, el punter o el
+   focus que arriba a una foto del cos el precarrega, i sense xarxa el focus
+   es queda a la foto. */
+const PLANTILLA = 'Vore a pantalla completa: {alt}';
+const cosAmbFotos = (CosAmbVisor) => (
+  <CosAmbVisor className="content-wrapper" dades={DADES} etiquetaObri={OBRI} etiquetaObriFoto={PLANTILLA}>
+    <article className="detail-content">
+      <p>Hola</p>
+      <img src="/assets/mur/a.webp" alt="Plaça" />
+      <img src="/assets/mur/b.webp" alt="Font" />
+    </article>
+  </CosAmbVisor>
+);
+
+describe('les fotos del cos (CosAmbVisor), en diferit', () => {
+  test('pintar el cos no avalua cap mòdul del visor; el punter que passa pel text tampoc; el que entra a una foto, sí', async () => {
+    const { CosAmbVisor } = await modul();
+    const { container } = render(cosAmbFotos(CosAmbVisor));
+    await espera();
+    expect([registre.visor, registre.cens]).toEqual([0, 0]);
+    expect(screen.getAllByRole('button', { name: /^Vore a pantalla completa: / })).toHaveLength(2);
+    fireEvent.pointerOver(container.querySelector('p'));
+    await espera();
+    expect([registre.visor, registre.cens]).toEqual([0, 0]);
+    fireEvent.pointerOver(screen.getByRole('button', { name: 'Vore a pantalla completa: Font' }));
+    await espera();
+    expect([registre.visor, registre.cens]).toEqual([1, 1]);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const font = screen.getByRole('button', { name: 'Vore a pantalla completa: Font' });
+    act(() => { fireEvent.click(font, { detail: 1 }); });
+    const visor = await screen.findByRole('dialog', { name: 'Visor de prova' });
+    expect(visor.dataset).toMatchObject({ index: '1', src: '/assets/mur/b.webp', cens: 'si' });
+    expect(document.activeElement).toBe(font);
+    expect(container.contains(visor)).toBe(false);
+  });
+
+  test('el focus que arriba a una foto del cos (Tab) el precarrega', async () => {
+    const { CosAmbVisor } = await modul();
+    render(cosAmbFotos(CosAmbVisor));
+    act(() => screen.getByRole('button', { name: 'Vore a pantalla completa: Plaça' }).focus());
+    await espera();
+    expect([registre.visor, registre.cens]).toEqual([1, 1]);
+  });
+
+  test('sense xarxa: el visor no s’obri, el cos continua i el focus es queda a la foto; un segon clic, igual', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const calla = (event) => event.preventDefault();
+    window.addEventListener('error', calla);
+    try {
+      const { CosAmbVisor } = await modul({ senseXarxa: true });
+      render(<main>{cosAmbFotos(CosAmbVisor)}</main>);
+      const placa = screen.getByRole('button', { name: 'Vore a pantalla completa: Plaça' });
+      act(() => { fireEvent.click(placa, { detail: 1 }); });
+      await espera();
+      await espera();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(within(screen.getByRole('main')).getByRole('button', { name: 'Vore a pantalla completa: Plaça' })).toBe(placa);
+      expect(document.activeElement).toBe(placa);
+      act(() => { fireEvent.click(placa, { detail: 1 }); });
+      await espera();
+      await espera();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(document.activeElement).toBe(placa);
+    } finally {
+      window.removeEventListener('error', calla);
+    }
   });
 });
 

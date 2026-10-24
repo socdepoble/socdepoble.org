@@ -181,8 +181,13 @@ export function cosAmbImatgesPropies(text) {
  * només resol el port) ja no es queda sense visor: VisorDePublicacio la
  * resol pel port com ImatgeDePortada de PageFrame i, mentre no la té, no pinta
  * res (la portada buida de sempre). El lector del MAS (PublicacioDetall)
- * també la munta, per a les publicacions i els actes. Les imatges del cos
- * (el text enriquit) encara no obrin el visor.
+ * també la munta, per a les publicacions i els actes.
+ * T4 (pla 261024_1315, P1-06; auditoria Gemini 261024, G-01) · Derogat «Les
+ * imatges del cos (el text enriquit) encara no obrin el visor». Les fotos
+ * pròpies del cos d'una publicació, un producte, un acte o una nota també
+ * l'obrin (visorDelCosDElement, davall, i CosAmbVisor de
+ * VisorDePublicacio.jsx), amb les fotos del cos com a galeria, a part de la
+ * portada. El cos no canvia ni un byte: les marca CosAmbVisor al DOM.
  */
 const SECCIO_DE_LA_LLISTA = new Map([...LLISTA_DE_SECCIO_DEL_MUR].map(([seccio, llista]) => [llista, seccio]));
 
@@ -235,6 +240,27 @@ export function portadaDElement(section, item, pagina, t) {
         <CarruselImatges key={clau} imatges={imatges} etiqueta={etiqueta} etiquetes={etiquetes} />
       )
     }
+  };
+}
+
+/* T4 (pla 261024_1315, P1-06) · Les seccions on les fotos del cos obrin el
+   visor: les del Mur (els seus cossos ja només porten fotos pròpies,
+   cosAmbImatgesPropies) i les notes. Pobles no té cos amb fotos i
+   /multimedia/:id ja no és cap detall. */
+const LLISTES_AMB_VISOR_DEL_COS = new Set([...LLISTES_DEL_MUR, '/notes']);
+/* Una nota no és de cap article de l'Arxiu: sense la fila «Publicat a», que
+   diria «Cap article: és de l'arxiu». */
+const FILES_FORA_DEL_MUR = Object.freeze(['publicat']);
+
+/** Les props de CosAmbVisor (VisorDePublicacio.jsx) per al cos d'un element,
+ *  o null (el contenidor de sempre, sense visor). */
+export function visorDelCosDElement(section, item, pagina, t) {
+  if (!LLISTES_AMB_VISOR_DEL_COS.has(section?.listPath) || item?.id == null || String(item.id) === '') return null;
+  return {
+    dades: dadesDeLaPublicacio(section, item, pagina || {}),
+    etiquetaObri: t('section.multimedia.visor.obri', 'Veure la imatge a pantalla completa'),
+    etiquetaObriFoto: t('section.multimedia.visor.obriFoto', 'Vore a pantalla completa: {alt}'),
+    ...(esSeccioDelMur(section) ? {} : { ometFiles: FILES_FORA_DEL_MUR })
   };
 }
 

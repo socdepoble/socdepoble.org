@@ -17,7 +17,7 @@ import {
   globalDeLaPorta, nucliSatisfa, portaDeLaFont
 } from './contracteNucli.js';
 import { NUCLI } from './nucliModuls.js';
-import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const ordenat = (llista) => [...llista].sort();
@@ -118,6 +118,9 @@ describe('el contracte (contracteNucli.js)', () => {
     ['^1.1', '1.1.0', true],
     ['^1.1', '1.2.0', true],
     ['^1.3', '1.2.0', false],
+    ['^1.3', '1.3.0', true],
+    ['^1.2', '1.3.0', true],
+    ['^1.4', '1.3.0', false],
     ['^2', '1.0.0', false],
     ['^0', '1.0.0', false],
     ['1', '1.0.0', false],
@@ -131,13 +134,16 @@ describe('el contracte (contracteNucli.js)', () => {
   /* El rang i prou: que cada menor només afig ho diu la de sota, amb els noms.
      Gauntlet nocturn (261016) · Actualitzat a posta: amb l'1.1.0 un mòdul de
      '^1.2' no entrava, i la porta 'workspace' (1.2.0) és exactament el que
-     ho canvia. El que no entra ara és un de '^1.3'. */
-  test('el rang: amb el nucli 1.2.0, un mòdul compilat contra l’1.0 o l’1.1 continua entrant, i un de l’1.3 encara no', () => {
-    expect(VERSIO_NUCLI).toBe('1.2.0');
+     ho canvia. El que no entra ara és un de '^1.3'.
+     Actualitzada a posta (261024 T5): l'1.3.0 afig useServeiNoticies a la porta 'plataforma'; un
+     mòdul de '^1.3' ja entra, i el primer que no, el de '^1.4'. */
+  test('el rang: amb el nucli 1.3.0, un mòdul compilat contra l’1.0, l’1.1 o l’1.2 continua entrant, i un de l’1.4 encara no', () => {
+    expect(VERSIO_NUCLI).toBe('1.3.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
-    expect(nucliSatisfa('^1.3')).toBe(false);
+    expect(nucliSatisfa('^1.3')).toBe(true);
+    expect(nucliSatisfa('^1.4')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -146,11 +152,14 @@ describe('el contracte (contracteNucli.js)', () => {
      és exactament NOMS_DEL_NUCLI_1_1 (Onada 7, 261009), que
      guardesDelModul.test.js obliga a estar en ús, més NOMS_DEL_NUCLI_1_2
      (261016), una porta sencera que cap versió d'abans no tenia i que
-     modulDeBuild.test.jsx compila de veritat. */
-  test('el nucli 1.2.0 conserva cada porta i cada nom de l’1.0.0, i només afig els de l’1.1.0 i la porta de l’1.2.0', () => {
+     modulDeBuild.test.jsx compila de veritat.
+     Actualitzada a posta (261024 T5): i NOMS_DEL_NUCLI_1_3, un nom nou a una porta que ja hi era
+     (useServeiNoticies, a la de la plataforma), cap porta nova. */
+  test('el nucli 1.3.0 conserva cada porta i cada nom de l’1.0.0, i només afig els de l’1.1.0, la porta de l’1.2.0 i el nom de l’1.3.0', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
+    for (const clau of Object.keys(NOMS_DEL_NUCLI_1_3)) expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau), `${clau}: porta de l’1.0.0`).toBe(true);
     const actuals = Object.fromEntries(PORTES_DEL_NUCLI.map(({ clau, noms }) => [clau, noms]));
     expect(Object.keys(NOMS_DEL_NUCLI_1_0).filter((clau) => !Object.hasOwn(actuals, clau))).toEqual([]);
     const afegits = {};
@@ -165,6 +174,6 @@ describe('el contracte (contracteNucli.js)', () => {
       const nous = noms.filter((nom) => !abans.includes(nom));
       if (nous.length) afegits[clau] = ordenat(nous);
     }
-    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2));
+    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3));
   });
 });

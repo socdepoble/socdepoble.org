@@ -12,6 +12,8 @@ import {
   CODI_MODERACIO, MAXIM_DETALL_DENUNCIA, MAXIM_NOM_BLOQUEJAT, MISSATGE_MODERACIO, MOTIUS_DENUNCIA, TIPUS_BLOQUEJAT,
   TIPUS_OBJECTE_DENUNCIA, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, denunciaDelContracte, errorDeModeracio, esIdDeModeracio
 } from './contracte.js';
+/* T6b (IDEA-14) · Els seguiments: import a banda, pel mateix motiu. */
+import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, errorDeSeguiment, seguitDelContracte } from './contracte.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
    tractor-enxufe no deixa importar-lo des d'ací, tampoc en una prova. */
 
@@ -498,6 +500,58 @@ describe('Fase D · la regla d’entrada de la moderació', () => {
     expect(autorDelContracte({ tipus: 'persona', id: 'u1', nom: 'Pep' }, { ambNom: false })).toEqual({ tipus: 'persona', id: 'u1' });
     for (const dolent of [{ tipus: 'grup', id: 'g1' }, { tipus: 'persona', id: '' }, { tipus: 'persona', id: 'a b' }, null]) {
       expect(() => autorDelContracte(dolent)).toThrow(expect.objectContaining({ code: 'objectiu-invalid' }));
+    }
+  });
+});
+
+/* ── T6b (IDEA-14; decisió del Mestre, 261024) · Els seguiments ── */
+test('T6b · seguiments és una capacitat opcional de cinc mètodes, fora del nucli, i congelada', () => {
+  expect(CAPACITATS.seguiments).toEqual(['segueix', 'deixaDeSeguir', 'estatSeguiment', 'elsMeusSeguiments', 'quiEmSegueix']);
+  expect(Object.isFrozen(CAPACITATS.seguiments)).toBe(true);
+  for (const nom of CAPACITATS.seguiments) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CONTRACTE_BACKEND).toContain(nom);
+    expect(CAPACITATS.moderacio).not.toContain(nom);
+    expect(typeof port[nom], nom).toBe('function');
+  }
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('seguiments', 4) })).toThrow('Capacitat parcial: seguiments');
+});
+
+test('T6b · un backend sense seguiments continua sent vàlid i no els pot cridar; amb ells, el port hi delega', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('seguiments')).toBe(false);
+  expect(() => port.quiEmSegueix({}, {})).toThrow('no està implementat');
+  expect(() => port.segueix({ tipus: 'persona', id: 'p' }, {})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('seguiments') });
+  expect(port.teCapacitat('seguiments')).toBe(true);
+  expect(port.segueix({ tipus: 'persona', id: 'p' }, {})).toBe('segueix');
+  expect(port.elsMeusSeguiments({})).toBe('elsMeusSeguiments');
+});
+
+describe('T6b · la regla d’entrada dels seguiments', () => {
+  it('la llista blanca és la del CHECK de la migració, i els codis són SDP-SEG-000…006 més NO-DISPONIBLE i DESCONEGUT', () => {
+    expect(TIPUS_SEGUIT).toEqual(['persona', 'entitat']);
+    expect(Object.isFrozen(TIPUS_SEGUIT) && Object.isFrozen(MISSATGES_SEGUIMENTS)).toBe(true);
+    expect(Object.keys(MISSATGES_SEGUIMENTS)).toEqual([
+      ...Array.from({ length: 7 }, (_, i) => `SDP-SEG-00${i}`), 'NO-DISPONIBLE', 'DESCONEGUT'
+    ]);
+    for (const text of Object.values(MISSATGES_SEGUIMENTS)) expect(text).toMatch(/^[A-ZÀ-Ú].*\.$/);
+  });
+
+  it('errorDeSeguiment porta el code, el missatge i la causa; un codi desconegut és DESCONEGUT', () => {
+    const causa = new Error('cru');
+    expect(errorDeSeguiment('SDP-SEG-004', causa)).toMatchObject({ code: 'SDP-SEG-004', message: MISSATGES_SEGUIMENTS['SDP-SEG-004'], cause: causa });
+    expect(errorDeSeguiment('SDP-SEG-999')).toMatchObject({ code: 'DESCONEGUT', message: MISSATGES_SEGUIMENTS.DESCONEGUT });
+    expect(errorDeSeguiment('SDP-SEG-000')).toBeInstanceOf(Error);
+  });
+
+  it('seguitDelContracte normalitza i rebutja amb SDP-SEG-001 el que no és persona ni entitat, o un id buit o estrany', () => {
+    expect(seguitDelContracte({ tipus: ' entitat ', id: ' socdepoble ' })).toEqual({ tipus: 'entitat', id: 'socdepoble' });
+    expect(seguitDelContracte({ tipus: 'persona', id: '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5', nom: 'sobra' }))
+      .toEqual({ tipus: 'persona', id: '1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5' });
+    for (const dolent of [{ tipus: 'grup', id: 'g1' }, { tipus: 'ia', id: 'iaia' }, { tipus: 'persona', id: '' }, { tipus: 'persona', id: 'a b' },
+      { tipus: 'entitat', id: 'x'.repeat(201) }, null]) {
+      expect(() => seguitDelContracte(dolent)).toThrow(expect.objectContaining({ code: 'SDP-SEG-001' }));
     }
   });
 });

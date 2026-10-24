@@ -7,7 +7,10 @@ import { useNotesData } from '../../sections/notes/NotesDataContext';
 import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSession } from '../../app/contexts/SessionContext';
-import { avatarAutorDElement, buildDetailSectionMeta, portadaDElement } from './detailSectionMeta.jsx';
+import { avatarAutorDElement, buildDetailSectionMeta, portadaDElement, visorDelCosDElement } from './detailSectionMeta.jsx';
+/* T4 (pla 261024_1315, P1-06) · Les fotos del cos, al visor: el mateix mòdul
+   del disparador de la portada, que detailSectionMeta.jsx ja porta. */
+import { CosAmbVisor } from './VisorDePublicacio.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
@@ -192,6 +195,10 @@ function DetallDElement() {
      la barra taronja de la mateixa pàgina. */
   const avatarAutor = avatarAutorDElement(item, pagina.authorName, section);
   const portadaAmbCarrusel = portadaDElement(section, item, pagina, t);
+  /* T4 (pla 261024_1315, P1-06; Gemini G-01) · Les fotos del cos obrin el
+     visor (CosAmbVisor): el mateix div.content-wrapper de sempre, cap node
+     nou. Fora del Mur i de les notes, null: el contenidor tal qual. */
+  const visorDelCos = visorDelCosDElement(section, item, pagina, t);
 
   return (
     <UniversalPage
@@ -199,6 +206,10 @@ function DetallDElement() {
       objecte={objecteXat}
       {...pagina}
       {...portadaAmbCarrusel}
+      /* T4 (pla 261024_1315; Gemini G-02) · La portada és la candidata a LCP
+         de la fitxa: prioritat alta (PageFrame, heroFetchPriority). La del
+         visor ja la porta al seu <img> (VisorDePublicacio). */
+      heroFetchPriority="high"
       /* Ordre E (261007) · El logotip propi resolt pel port mana sobre el de
          paginaDElement, que només coneix els que es pinten sense el port. */
       {...(logoPropi ? { logoEntitat: logoPropi } : null)}
@@ -214,12 +225,12 @@ function DetallDElement() {
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
           incrustades del cos, sincronitzades amb el seu original. */}
       <ProveidorSincronitzacioTargetes>
-        <div className="content-wrapper">
+        <CosAmbVisor className="content-wrapper" {...visorDelCos}>
           {/* Onada 6 · { detall: true }: el cos de la pàgina de la ruta. La
               meta de Pobles hi afig la barra de pestanyes, que el lector de
               connexions del MAS (ConnexioDetall, sense l'opció) no pinta. */}
           {section.renderBody(item, { detall: true })}
-        </div>
+        </CosAmbVisor>
       </ProveidorSincronitzacioTargetes>
     </UniversalPage>
   );

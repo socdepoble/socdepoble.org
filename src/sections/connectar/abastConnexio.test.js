@@ -31,8 +31,15 @@ test.each([
 test('els textos no prometen cap permís: Privada, missatges de xat i «no Internet»', () => {
   const opcions = perValor(opcionsDAbast({ dataMode: 'remote', teSessio: true, grups: GRUPS }));
   /* D1 (ordre del Mestre, 260930) · el verb és connectar: «Es guarda» passa a «Queda». */
-  expect(opcions.privada.ajuda).toBe('Queda al teu MAS. Ningú més la veu.');
+  /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS» a la interfície. */
+  expect(opcions.privada.ajuda).toBe('Queda a les teues notes. Ningú més la veu.');
   expect(opcions.persones.ajuda).toContain('És un missatge, no un permís');
+  /* 261024 correccions (G2-02) · cap opció, en cap mode, parla del «MAS». */
+  for (const mode of ['remote', 'seed']) {
+    for (const opcio of opcionsDAbast({ dataMode: mode, teSessio: true, grups: GRUPS })) {
+      expect(`${opcio.etiqueta} ${opcio.ajuda} ${opcio.detall ?? ''}`).not.toMatch(/\bMAS\b/);
+    }
+  }
   expect(opcions.grups.ajuda).toContain('És un missatge, no un permís');
   expect(opcions.poble.ajuda).toContain('la gent registrada del poble, no Internet');
   const seed = perValor(opcionsDAbast({ dataMode: 'seed', teSessio: true, grups: GRUPS }));
@@ -104,9 +111,10 @@ test('passos: privada no fa res; persones i grups amb límits i sense repetits; 
 });
 
 test('el missatge diu què és, de qui és i on es veu; mai passa de 4096 caràcters', () => {
+  /* Actualitzada a posta (261024 correccions): qui rep el missatge no sap què és el «MAS» (Gemini G2-02). */
   expect(missatgeDeConnexio({ titol: 'Sella', autorNom: 'Gent de Sella' }, 'https://poble.example/pobles/sella'))
-    .toBe('T’envie «Sella» (de Gent de Sella), que he connectat al meu MAS. Ho pots vore ací: https://poble.example/pobles/sella');
-  expect(missatgeDeConnexio({ titol: 'Fira' })).toBe('T’envie «Fira», que he connectat al meu MAS.');
+    .toBe('T’envie «Sella» (de Gent de Sella), que he guardat a les meues notes. Ho pots vore ací: https://poble.example/pobles/sella');
+  expect(missatgeDeConnexio({ titol: 'Fira' })).toBe('T’envie «Fira», que he guardat a les meues notes.');
   expect(missatgeDeConnexio({}, '')).toContain('«un element»');
   expect(missatgeDeConnexio({ titol: 'x'.repeat(5000) }, `https://a.example/${'y'.repeat(5000)}`).length).toBeLessThanOrEqual(MAXIM_MISSATGE);
 });

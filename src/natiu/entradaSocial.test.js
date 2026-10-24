@@ -16,7 +16,10 @@ const IOS = '123456-iossintetic.apps.googleusercontent.com';
 const CLIENTS = Object.freeze({ googleWeb: WEB, googleIos: IOS });
 const JWT = 'eyJh.eyJz.c2ln';
 
-function connectorFals({ resultat = { idToken: JWT, accessToken: { token: 'acces-google' }, profile: { givenName: 'Maria', familyName: 'Ferrer' } } } = {}) {
+/* Actualitzada a posta (261024 T1): el resultat fals porta authorizationCode, com el del connector d'Apple. */
+const CODI_APPLE = 'c0d1.0.apple-sintetic';
+function connectorFals({ resultat = { idToken: JWT, accessToken: { token: 'acces-google' }, profile: { givenName: 'Maria', familyName: 'Ferrer' },
+  authorizationCode: CODI_APPLE } } = {}) {
   const social = {
     initialize: vi.fn(async () => undefined),
     login: vi.fn(async ({ provider }) => ({ provider, result: resultat })),
@@ -137,14 +140,22 @@ describe('login', () => {
     expect(Object.keys(options)).toEqual(['nonce']);
     expect(credencial.nonce).toMatch(/^[0-9a-f]{64}$/);
     expect(options.nonce).toBe(sha256HexPur(credencial.nonce));
-    expect(credencial).toEqual({ testimoni: JWT, nonce: credencial.nonce, testimoniAcces: null, nom: 'Maria Ferrer' });
+    /* Actualitzada a posta (261024 T1): el codi d'autorització d'Apple ja no es perd; l'accés d'Apple, sí. */
+    expect(credencial).toEqual({ testimoni: JWT, nonce: credencial.nonce, testimoniAcces: null, nom: 'Maria Ferrer', codiAutoritzacio: CODI_APPLE });
+  });
+
+  test('T1 (261024) · el codi d’autorització només és d’Apple: sense codi, null; Google no en porta mai', () => {
+    expect(credencialDe('apple', { idToken: JWT, authorizationCode: `  ${CODI_APPLE} ` }, 'n').codiAutoritzacio).toBe(CODI_APPLE);
+    expect(credencialDe('apple', { idToken: JWT }, 'n').codiAutoritzacio).toBeNull();
+    expect(credencialDe('apple', { idToken: JWT, authorizationCode: '   ' }, 'n').codiAutoritzacio).toBeNull();
+    expect(credencialDe('google', { idToken: JWT, authorizationCode: CODI_APPLE }, 'n').codiAutoritzacio).toBeNull();
   });
 
   test('Google a iOS porta forcePrompt; a Android només el nonce; l’accés de Google es conserva i el nom no', async () => {
     const ios = connectorFals();
     const credencial = await creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector: ios.carregaConnector }).demana('google');
     expect(ios.social.login.mock.calls[0][0].options).toEqual({ nonce: sha256HexPur(credencial.nonce), forcePrompt: true });
-    expect(credencial).toMatchObject({ testimoni: JWT, testimoniAcces: 'acces-google', nom: null });
+    expect(credencial).toMatchObject({ testimoni: JWT, testimoniAcces: 'acces-google', nom: null, codiAutoritzacio: null });
     const android = connectorFals();
     await creaEntradaSocial({ plataforma: 'android', clients: CLIENTS, carregaConnector: android.carregaConnector }).demana('google');
     expect(Object.keys(android.social.login.mock.calls[0][0].options)).toEqual(['nonce']);

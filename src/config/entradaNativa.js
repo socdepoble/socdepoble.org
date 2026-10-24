@@ -7,7 +7,10 @@
    mai al natiu (src/natiu/frontera.test.js).
    Contracte de l'adaptador:
      { plataforma: 'ios'|'android', proveidors: ('apple'|'google')[],
-       demana(p, { viu }) → Promise<{ testimoni, nonce, testimoniAcces?, nom? }>, oblida?(p) }
+       demana(p, { viu }) → Promise<{ testimoni, nonce, testimoniAcces?, nom?, codiAutoritzacio? }>, oblida?(p) }
+   T1 (261024; P0-04) · codiAutoritzacio és el codi d'un sol ús que torna el full
+   d'Apple (null amb Google): el backend el pot canviar al servidor per a poder
+   revocar l'autorització quan la persona es dona de baixa.
    Errors amb `code`: CANCELADA quan la persona tanca el full; qualsevol altre és FALLIDA.
    Fase D (261020, revisió) · viu() fals vol dir que ja no l'espera ningú: si el
    full encara no s'ha obert, l'adaptador no l'obri (CANCELADA). Un dispositiu
@@ -98,7 +101,8 @@ export const esSilenciNatiu = (e) => esCancelacioNativa(e);
  *     abandonada («Cancel·la l'entrada»), en comença una de nova (un full penjat
  *     no bloqueja mai l'altre proveïdor);
  *   · viu() es passa a l'adaptador com «algú encara l'espera».
- * @returns {Promise<Readonly<{ testimoni: string, nonce: string|null, testimoniAcces: string|null, nom: string|null }>>}
+ * @returns {Promise<Readonly<{ testimoni: string, nonce: string|null, testimoniAcces: string|null, nom: string|null,
+ *   codiAutoritzacio: string|null }>>}
  */
 export async function demanaCredencialNativa(proveidor, { viu = () => true } = {}) {
   if (!registrat || !registrat.botons.includes(proveidor)) {
@@ -131,7 +135,8 @@ export async function demanaCredencialNativa(proveidor, { viu = () => true } = {
       testimoni,
       nonce: textNet(credencial.nonce),
       testimoniAcces: textNet(credencial.testimoniAcces),
-      nom: textNet(credencial.nom)
+      nom: textNet(credencial.nom),
+      codiAutoritzacio: textNet(credencial.codiAutoritzacio)
     });
   })();
   enCurs = entrada;

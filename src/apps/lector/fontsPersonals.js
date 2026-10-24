@@ -4,7 +4,9 @@
  * Per ací entra al Lector un enllaç de fora (el Snippet Curador del Bloc): la
  * persona l'apunta com una font seua, que queda PENDENT DEL CONNECTOR. L'app
  * no baixa res per ella mateixa (Model B): quan l'amfitrió o el servidor la
- * servisquen, les seues notícies entraran pel port.
+ * servisquen, les seues notícies entraran pel port. T5b (261024) · El servei
+ * de notícies del poble ja les servix: el port del servei (fontRemota.js) les
+ * llig d'este mateix registre i les demana pel servei, mai pel navegador.
  *
  *   creaFontsPersonals({ obriMagatzem, font }) → {
  *     nomMaxim                        el límit del nom (LIMITS_MODEL.nom)
@@ -21,7 +23,8 @@
  *   destinacioDe(api)      la forma que espera la plataforma
  *                          (plataforma/destinacions.js): { nomMaxim,
  *                          categories(), afig() → { id, nom, trams } }; els
- *                          trams porten a la gestió de fonts, on es veu.
+ *                          trams porten a la font, a l'arbre de les notícies
+ *                          (261024: la gestió de fonts ja no és cap pàgina)
  *                          AppLector l'exporta com a `destinacioEnllac`
  *   llevaDelMagatzem(magatzem, id) → { llevada, registre }
  *                          Peça C (ordre del Mestre, 261007, prompt
@@ -44,11 +47,13 @@
  * Res ix del dispositiu: cap crida de xarxa.
  */
 import {
-  LIMITS_MODEL, MOTIUS_PERSONAL, afigPersonal, llevaPersonal, validaFontPersonal
+  HUI, LIMITS_MODEL, MOTIUS_PERSONAL, afigPersonal, llevaPersonal, validaFontPersonal
 } from './nucli/index.js';
 
-/** On es veu una font personal dins de l'app: la gestió de fonts (rutes.js). */
-export const TRAMS_GESTIO = Object.freeze(['fonts', 'colleccio']);
+/** On es veu una font personal dins de l'app: l'arbre de les notícies (rutes.js · RUTES_NOTICIES).
+    Ordre del Mestre (261024, 15:05) · Abans, la gestió de fonts (/fonts/colleccio), que ja no és
+    cap pàgina: les fonts viuen a l'arbre. La destinació hi afig la carpeta i la font. */
+export const TRAMS_GESTIO = Object.freeze(['noticies']);
 
 /** Un error amb el motiu dit a la persona, el seu `codi` i el `camp` del formulari. */
 function errorDe(codi) {
@@ -143,7 +148,7 @@ export function destinacioDe(api) {
     categories: () => api.categories(),
     async afig(entrada) {
       const font = await api.afigFontPersonal(entrada);
-      return { id: font.id, nom: font.nom, trams: [...TRAMS_GESTIO] };
+      return { id: font.id, nom: font.nom, trams: [...TRAMS_GESTIO, font.categoriaId || HUI, font.id] };
     }
   });
 }

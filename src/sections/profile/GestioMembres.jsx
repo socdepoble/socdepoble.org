@@ -3,6 +3,7 @@ import { Boto, Camp, CampText, DialegConfirmacio, GrupCamps, Selector, Taula } f
 import { AvatarResolt } from '../../components/universal/identitat/AvatarResolt.jsx';
 import { etiquetaDeRol } from '../../components/universal/identitat/rols.js';
 import { ETIQUETES_TIPUS, MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres } from './membresModel.js';
+import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
 
 /* ═══════════════════════════════════════════════════════════════════
    Ordre del Mestre (261008, grup C) · GESTIÓ DELS MEMBRES
@@ -305,6 +306,11 @@ export function GestioMembres({ organitzacio, accions }) {
           </GrupCamps>
         </form>
       ) : null}
+
+      {/* T6b (IDEA-14; decisió del Mestre, 261024) · Qui seguix l'organització:
+          la constància per a qui l'administra. Sense la capacitat
+          'seguiments', res. */}
+      <QuiSegueixOrganitzacio orgId={orgId} nom={nomOrg} />
 
       <DialegConfirmacio
         obert={Boolean(aLlevar)}

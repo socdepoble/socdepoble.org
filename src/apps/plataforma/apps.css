@@ -28,6 +28,15 @@
   font-weight: 700;
 }
 
+/* Ordre del Mestre (261024, 14:40; correcció R5-09) · La barra verda és només
+   del Lector: BarraApp posa l'id de l'app al títol (data-sdp-app) i el fons ve
+   del token del crom --sdp-crom-barra-lector (tokens.css: este full no declara
+   tokens ni porta colors en brut). Les altres apps conserven la roca, i la
+   lletra continua sent la de dalt (blanca). */
+.sdp-app-barra__titol[data-sdp-app="lector"] {
+  background-color: var(--sdp-crom-barra-lector);
+}
+
 /* Títol de grup (Operacions, Diners i impostos…; també els del Bar i de
    Salut): taronja del cànon sobre la roca, 7,12:1 (tokens.css). Abans, el
    blanc al 78 % dels enllaços, i no s'hi distingia. */

@@ -23,13 +23,18 @@ test('pot-connectar (remot): diu què vol dir, les converses, qui llig la justif
   const camp = screen.getByRole('textbox', { name: 'Explica breument qui eres (opcional)' });
   expect(camp.getAttribute('maxlength')).toBe('1000');
   fireEvent.change(camp, { target: { value: '  Porte la botiga des de 2019.  ' } });
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar-me com a administradora' })); });
+  /* Actualitzada a posta (261024 T6a): administrar no és connectar (IDEA-14); amb revisió, «Demanar administrar-la». */
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Demanar administrar-la' })); });
   expect(onConnecta).toHaveBeenCalledWith('Porte la botiga des de 2019.');
 });
 
 test('pot-connectar (seed): alta immediata, sense justificació', () => {
   const { container } = pinta({ estat: 'pot-connectar', ambRevisio: false });
   expect(container.textContent).toContain('En este poble de proves l’alta és immediata.');
+  /* IDEA-14 (261024 T6a) · sense revisió, el botó ho diu: «Administrar-la ara», i l'explicació no parla de connectar-s'hi. */
+  expect(screen.getByRole('button', { name: 'Administrar-la ara' })).toBeTruthy();
+  expect(container.textContent).toContain('Si l’administres, podràs editar la seua fitxa');
+  expect(container.textContent).not.toMatch(/connect/i);
   expect(screen.queryByRole('textbox')).toBeNull();
 });
 
@@ -113,4 +118,18 @@ test('rebutjada deixa tornar-ho a demanar; un error genèric ix en una alerta se
   expect(screen.getByRole('alert').textContent).not.toContain('Supabase');
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Tornar a demanar-ho' })); });
   expect(onConnecta).toHaveBeenCalledWith('');
+});
+
+/* IDEA-14 (Directiva del Mestre, 261024; G-04) · A Connectar l'únic primari és
+   el del MAS (D1): demanar o fer l'administració és secundari, en tots els estats. */
+test('IDEA-14 · cap estat de la targeta porta un botó primari', () => {
+  for (const props of [
+    { estat: 'pot-connectar', ambRevisio: true }, { estat: 'pot-connectar', ambRevisio: false }, { estat: 'rebutjada' },
+    { estat: 'sense-sessio' }, { estat: 'administres', rol: 'owner' }
+  ]) {
+    const { container, unmount } = pinta(props);
+    expect(container.querySelectorAll('button').length, props.estat).toBeGreaterThan(0);
+    expect(container.querySelector('.sdp-boto--primari'), props.estat).toBeNull();
+    unmount();
+  }
 });

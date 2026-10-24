@@ -3,7 +3,7 @@
    (llavor/fontLlavor.js). Els feeds de la llavor es llegixen amb ?raw, com
    a l'app. */
 import { describe, expect, test, vi } from 'vitest';
-import { MAX_ARTICLES_PORT, creaFontNoticies } from './fontNoticies.js';
+import { MAX_ARTICLES_PORT, MOTIUS_NOTICIES, creaFontNoticies, motiuDominant } from './fontNoticies.js';
 import { CATEGORIES_LLAVOR, FONTS_LLAVOR } from './llavor/cataleg.js';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { FINESTRA_HUI, ICONES_CATEGORIA, esIdLector, msDeData } from './nucli/index.js';
@@ -75,6 +75,80 @@ describe('el port no es fia de l’adaptador', () => {
   test('si l’adaptador falla, la promesa es rebutja (la UI ho diu)', async () => {
     const port = creaFontNoticies({ llistaFonts: async () => { throw new Error('caigut'); }, llistaArticles: async () => [], article: async () => null });
     await expect(port.llistaFonts()).rejects.toThrow('caigut');
+  });
+
+  /* T5 (261024) · El motiu del rebuig, només si és de la llista tancada; res més de l'adaptador. */
+  test('el rebuig porta el motiu només si és de MOTIUS_NOTICIES, i cap altre camp de l’adaptador', async () => {
+    const ambMotiu = (motiu) => Object.assign(new Error('caigut'), { motiu, code: 'SECRET', url: 'https://example.org/feed' });
+    const port = (motiu) => creaFontNoticies({
+      llistaFonts: async () => { throw ambMotiu(motiu); }, llistaArticles: async () => { throw ambMotiu(motiu); }, article: async () => { throw ambMotiu(motiu); }
+    });
+    for (const motiu of MOTIUS_NOTICIES) {
+      const error = await port(motiu).llistaFonts().catch((e) => e);
+      expect(error.motiu, motiu).toBe(motiu);
+      expect(error.message).toBe('caigut');
+      expect(error.code).toBeUndefined();
+      expect(error.url).toBeUndefined();
+      expect((await port(motiu).llistaArticles().catch((e) => e)).motiu).toBe(motiu);
+      expect((await port(motiu).article('a').catch((e) => e)).motiu).toBe(motiu);
+    }
+    expect('motiu' in await port('inventat').llistaFonts().catch((e) => e)).toBe(false);
+    /* Actualitzada a posta (261024 Lector): dos motius nous del servei, 'adreca' (una adreça personal
+       que no es llig, cap font contactada; R5-08) i 'personals-off' (el servei no llig personals;
+       R5-01). Els cinc d'abans, igual i en el mateix ordre. */
+    expect(MOTIUS_NOTICIES).toEqual(['sense-connexio', 'temps', 'servidor', 'font', 'limit', 'adreca', 'personals-off']);
+  });
+
+  test('salut(): sense salut a l’adaptador, cap caiguda; amb, neta i congelada', async () => {
+    expect(await creaFontNoticies(adaptadorFals()).salut()).toEqual({ caigudes: [], motiu: null });
+    const port = creaFontNoticies({
+      ...adaptadorFals(),
+      salut: async () => ({
+        caigudes: [
+          { fontId: 'veu', motiu: 'temps' }, { fontId: 'radio', motiu: 'inventat' }, { fontId: 'hui', motiu: 'temps' },
+          { fontId: 'B@d', motiu: 'temps' }, { fontId: 'veu', motiu: 'font' }, { fontId: 'tv', motiu: 'temps' }, null
+        ],
+        comprovat: 1
+      })
+    });
+    const salut = await port.salut();
+    expect(salut).toEqual({
+      caigudes: [{ fontId: 'veu', motiu: 'temps' }, { fontId: 'radio', motiu: 'servidor' }, { fontId: 'tv', motiu: 'temps' }], motiu: 'temps'
+    });
+    expect(Object.isFrozen(salut)).toBe(true);
+    expect(Object.isFrozen(salut.caigudes[0])).toBe(true);
+    const caiguda = creaFontNoticies({ ...adaptadorFals(), salut: async () => { throw new Error('no'); } });
+    expect(await caiguda.salut()).toEqual({ caigudes: [], motiu: null });
+  });
+
+  test('motiuDominant: el que més es repetix; els empats, sense connexió i el límit primer', () => {
+    const de = (...motius) => motius.map((motiu, i) => ({ fontId: `f${i}`, motiu }));
+    expect(motiuDominant([])).toBeNull();
+    expect(motiuDominant(de('temps', 'temps', 'servidor'))).toBe('temps');
+    expect(motiuDominant(de('font', 'sense-connexio'))).toBe('sense-connexio');
+    expect(motiuDominant(de('font', 'limit', 'temps'))).toBe('limit');
+  });
+
+  /* 261024 (Lector final) · Els dos motius nous també poden manar: abans, motiuDominant no els
+     comptava i unes caigudes que només eren d'ells donaven null. Darrere en els empats. */
+  test('motiuDominant: adreca i personals-off compten, i en els empats van darrere dels cinc de sempre', () => {
+    const de = (...motius) => motius.map((motiu, i) => ({ fontId: `f${i}`, motiu }));
+    expect(motiuDominant(de('adreca'))).toBe('adreca');
+    expect(motiuDominant(de('personals-off', 'personals-off'))).toBe('personals-off');
+    expect(motiuDominant(de('personals-off', 'adreca', 'adreca'))).toBe('adreca');
+    expect(motiuDominant(de('adreca', 'personals-off'))).toBe('adreca');
+    expect(motiuDominant(de('font', 'adreca'))).toBe('font');
+    expect(motiuDominant(de('personals-off', 'personals-off', 'temps'))).toBe('personals-off');
+  });
+
+  test('salut(): unes caigudes que només són adreca o personals-off porten el seu motiu, no null', async () => {
+    const port = creaFontNoticies({
+      ...adaptadorFals(),
+      salut: async () => ({ caigudes: [{ fontId: 'meva-a', motiu: 'personals-off' }, { fontId: 'meva-b', motiu: 'personals-off' }] })
+    });
+    expect((await port.salut()).motiu).toBe('personals-off');
+    const vetada = creaFontNoticies({ ...adaptadorFals(), salut: async () => ({ caigudes: [{ fontId: 'meva-c', motiu: 'adreca' }] }) });
+    expect((await vetada.salut()).motiu).toBe('adreca');
   });
 
   test('com a molt MAX_ARTICLES_PORT resums', async () => {

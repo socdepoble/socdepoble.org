@@ -6,12 +6,15 @@
    tecles, doble clic, roda i pessic) escriu tres propietats CSS des d'una
    ref, cap atribut style. jsdom no té showModal: el Dialeg posa `open`. */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { VisorImatges, limitaEscala } from './VisorImatges.jsx';
 
 /* El sostre del zoom (privat a l'organisme: la porta del catàleg registra tot
    export en majúscula). */
 const ESCALA_MAXIMA = 4;
+/* Correccions del 261024 (R4-02) · La finestra del doble clic (privada a
+   l'organisme, per la mateixa porta). */
+const FINESTRA_DEL_DOBLE_CLIC = 300;
 
 afterEach(() => {
   cleanup();
@@ -81,11 +84,194 @@ describe('obrir i tancar', () => {
     expect(onTanca).toHaveBeenLastCalledWith('esc');
   });
 
+  /* T4 (pla 261024_1315, P1-06; ordre del Mestre del 261024: un botó ✕) ·
+     «Tancar» és la X de lucide, no la fletxa d'arrere; el nom i la drecera,
+     els de sempre. */
+  test('«Tancar» porta la ✕ (lucide-x), mai la fletxa d’arrere, amb el nom i la drecera de sempre', () => {
+    const { dialeg } = pinta();
+    const tanca = within(dialeg).getByRole('button', { name: 'Tancar el visor' });
+    const glifs = [...tanca.querySelectorAll('svg')].flatMap((svg) => [...svg.classList].filter((classe) => classe.startsWith('lucide-')));
+    expect(glifs).toEqual(['lucide-x']);
+    expect(tanca.getAttribute('aria-keyshortcuts')).toBe('Escape');
+    expect(tanca.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
+  });
+
   test('les etiquetes arriben traduïdes per qui el munta', () => {
     const { dialeg } = pinta({ etiquetes: { tanca: 'Close the viewer', posicio: 'Image {n} of {total}', seguent: 'Next image' } });
     expect(within(dialeg).getByRole('button', { name: 'Close the viewer' })).not.toBeNull();
     expect(within(dialeg).getByRole('button', { name: 'Next image' })).not.toBeNull();
     expect(dialeg.querySelector('.sdp-nomes-lector').textContent).toBe('Image 1 of 3');
+  });
+});
+
+/* T4 (pla 261024_1315, P1-06; auditoria Gemini 261024, G-01.5: «tancament
+   per clic al fons fosc») · Un toc net al fons buit de l'escenari tanca amb
+   'vel'. Es decidix pel pointerdown: amb la captura del punter, el clic que
+   comença a la foto arriba a l'escenari (com ací, on es dispara a
+   l'escenari). Escape continua sent del Dialeg ('esc'). */
+describe('tancar amb un clic al fons fosc', () => {
+  /* Actualitzada a posta (261024 correccions): R4-02, el tancament del fons
+     s'ajorna la finestra d'un doble clic. Rellotge fals i `toca` deixa passar
+     la finestra després del clic: les asserts de sempre no canvien. */
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+  const escenariDe = (dialeg) => dialeg.querySelector('.sdp-visor__escenari');
+  /* Un toc complet: baixa a `desde`, s'alça a `fins`, el clic arriba a
+     l'escenari i passa la finestra del doble clic. */
+  const toca = (dialeg, { desde, fins = null, x = 40, y = 40, dx = 0, dy = 0, pointerType = 'mouse', detail = 1 } = {}) => {
+    const escenari = escenariDe(dialeg);
+    fireEvent.pointerDown(desde || escenari, { pointerId: 9, pointerType, button: 0, clientX: x, clientY: y });
+    fireEvent.pointerUp(fins || escenari, { pointerId: 9, pointerType, button: 0, clientX: x + dx, clientY: y + dy });
+    act(() => { fireEvent.click(escenari, { detail, clientX: x + dx, clientY: y + dy }); });
+    act(() => { vi.advanceTimersByTime(FINESTRA_DEL_DOBLE_CLIC); });
+  };
+  /* Un clic de ratolí al fons, sense deixar passar la finestra. */
+  const clicAlFons = (escenari, detail, pointerId = 9) => {
+    fireEvent.pointerDown(escenari, { pointerId, pointerType: 'mouse', button: 0, clientX: 40, clientY: 40 });
+    fireEvent.pointerUp(escenari, { pointerId, pointerType: 'mouse', button: 0, clientX: 40, clientY: 40 });
+    act(() => { fireEvent.click(escenari, { detail, clientX: 40, clientY: 40 }); });
+  };
+
+  /* Correccions del 261024 (R4-02) · El primer clic d'un doble clic al fons
+     no tanca: el tancament espera la finestra i un punter nou l'anul·la. */
+  test('un clic net tanca passada la finestra del doble clic, no abans; només una vegada', () => {
+    const { dialeg, onTanca } = pinta();
+    clicAlFons(escenariDe(dialeg), 1);
+    expect(onTanca).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(FINESTRA_DEL_DOBLE_CLIC - 1); });
+    expect(onTanca).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(onTanca.mock.calls).toEqual([['vel']]);
+    act(() => { vi.advanceTimersByTime(5000); });
+    expect(onTanca).toHaveBeenCalledTimes(1);
+  });
+
+  test('dins de la finestra, un altre tancament o un gest nou anul·la el «vel»: el pare rep un sol avís', () => {
+    const { dialeg, onTanca, rerender } = pinta();
+    const escenari = escenariDe(dialeg);
+    const marc = dialeg.querySelector('.sdp-visor__marc');
+    // «Tancar» (un clic de programa: sense punter ni tecla que l'anul·le): només 'boto'.
+    clicAlFons(escenari, 1);
+    act(() => within(dialeg).getByRole('button', { name: 'Tancar el visor' }).click());
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTanca.mock.calls).toEqual([['boto']]);
+    // Escape (el cancel del Dialeg, sense cap tecla abans): només 'esc'.
+    clicAlFons(escenari, 1);
+    act(() => { dialeg.dispatchEvent(new Event('cancel', { cancelable: true })); });
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTanca.mock.calls.map(([motiu]) => motiu)).toEqual(['boto', 'esc']);
+    // Una tecla, la roda o un altre punter dins del visor: cap avís.
+    clicAlFons(escenari, 1);
+    fireEvent.keyDown(marc, { key: 'ArrowRight' });
+    clicAlFons(escenari, 1);
+    fireEvent.wheel(escenari, { deltaY: 1 });
+    clicAlFons(escenari, 1);
+    fireEvent.pointerDown(imatge(dialeg), { pointerId: 4, pointerType: 'touch', button: 0, clientX: 50, clientY: 50 });
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTanca.mock.calls.map(([motiu]) => motiu)).toEqual(['boto', 'esc']);
+    // El pare el tanca pel seu compte: cap 'vel' tardà.
+    clicAlFons(escenari, 1);
+    rerender(<VisorImatges obert={false} imatges={FOTOS} index={0} onTanca={onTanca} />);
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTanca.mock.calls.map(([motiu]) => motiu)).toEqual(['boto', 'esc']);
+  });
+
+  test('desmuntat dins de la finestra: cap «vel» tardà', () => {
+    const { dialeg, onTanca, unmount } = pinta();
+    clicAlFons(escenariDe(dialeg), 1);
+    unmount();
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTanca).not.toHaveBeenCalled();
+  });
+
+  test('un clic net al fons buit tanca amb «vel», també amb el dit', () => {
+    const { dialeg, onTanca } = pinta();
+    toca(dialeg);
+    expect(onTanca).toHaveBeenCalledTimes(1);
+    expect(onTanca).toHaveBeenLastCalledWith('vel');
+    toca(dialeg, { pointerType: 'touch', dx: 6, dy: -4 });
+    expect(onTanca).toHaveBeenCalledTimes(2);
+    expect(onTanca).toHaveBeenLastCalledWith('vel');
+  });
+
+  test('a la foto, a l’avís o a un control, no tanca', () => {
+    const { dialeg, onTanca } = pinta();
+    toca(dialeg, { desde: imatge(dialeg) });
+    act(() => within(dialeg).getByRole('button', { name: 'Imatge següent' }).click());
+    toca(dialeg, { desde: within(dialeg).getByRole('button', { name: 'Imatge anterior' }) });
+    act(() => within(dialeg).getByRole('button', { name: 'Informació de la imatge' }).click());
+    fireEvent.error(imatge(dialeg));
+    toca(dialeg, { desde: dialeg.querySelector('.sdp-visor__avis') });
+    expect(onTanca).not.toHaveBeenCalled();
+  });
+
+  test('arrossegar o lliscar, pessigar, el segon clic d’un doble clic o un clic sense toc: no tanca', () => {
+    const { dialeg, onTanca, onCanvi } = pinta();
+    // Un lliscament passa de foto i no tanca.
+    toca(dialeg, { x: 300, y: 200, dx: -180, dy: 5, pointerType: 'touch' });
+    expect(onCanvi).toHaveBeenLastCalledWith(1);
+    // Un arrossegament curt, més enllà del marge del toc.
+    toca(dialeg, { dx: 20 });
+    // El pessic: dos dits.
+    const escenari = escenariDe(dialeg);
+    fireEvent.pointerDown(escenari, { pointerId: 1, pointerType: 'touch', button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(escenari, { pointerId: 2, pointerType: 'touch', button: 0, clientX: 140, clientY: 100 });
+    fireEvent.pointerUp(escenari, { pointerId: 2, pointerType: 'touch', clientX: 140, clientY: 100 });
+    fireEvent.pointerUp(escenari, { pointerId: 1, pointerType: 'touch', clientX: 100, clientY: 100 });
+    act(() => { fireEvent.click(escenari, { detail: 1 }); });
+    // El segon clic d'un doble clic.
+    toca(dialeg, { detail: 2 });
+    // Un clic que no ve de cap toc (un click() de programa).
+    act(() => { fireEvent.click(escenari, { detail: 1 }); });
+    // Un punter cancel·lat.
+    fireEvent.pointerDown(escenari, { pointerId: 4, pointerType: 'touch', button: 0, clientX: 40, clientY: 40 });
+    fireEvent.pointerCancel(escenari, { pointerId: 4, pointerType: 'touch', clientX: 40, clientY: 40 });
+    act(() => { fireEvent.click(escenari, { detail: 1 }); });
+    // El botó dret del ratolí.
+    fireEvent.pointerDown(escenari, { pointerId: 5, pointerType: 'mouse', button: 2, clientX: 40, clientY: 40 });
+    fireEvent.pointerUp(escenari, { pointerId: 5, pointerType: 'mouse', button: 2, clientX: 40, clientY: 40 });
+    act(() => { fireEvent.click(escenari, { detail: 1 }); });
+    expect(onTanca).not.toHaveBeenCalled();
+  });
+
+  test('amb la foto ampliada, el fons l’arrossega i no tanca; tornada a 1×, sí', () => {
+    const { dialeg, onTanca } = pinta();
+    act(() => within(dialeg).getByRole('button', { name: 'Ampliar' }).click());
+    expect(escala(dialeg)).toBe('1.5');
+    toca(dialeg);
+    expect(onTanca).not.toHaveBeenCalled();
+    act(() => within(dialeg).getByRole('button', { name: 'Reduir' }).click());
+    toca(dialeg);
+    expect(onTanca).toHaveBeenLastCalledWith('vel');
+  });
+
+  test('Escape continua tancant amb «esc» (el Dialeg); el fons no canvia el motiu', () => {
+    const { dialeg, onTanca } = pinta();
+    toca(dialeg);
+    expect(onTanca).toHaveBeenLastCalledWith('vel');
+    const cancel = new Event('cancel', { cancelable: true });
+    act(() => { dialeg.dispatchEvent(cancel); });
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(onTanca).toHaveBeenLastCalledWith('esc');
+    expect(onTanca.mock.calls.map(([motiu]) => motiu)).toEqual(['vel', 'esc']);
+  });
+
+  test('encastat (dins d’un <soc-de-poble>): el fons tanca amb «vel» i Escape amb «esc»', () => {
+    const host = document.createElement('soc-de-poble');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const root = document.createElement('div');
+    root.className = 'sdp-root';
+    shadow.append(root);
+    const muntatge = document.createElement('div');
+    root.append(muntatge);
+    const onTanca = vi.fn();
+    render(<VisorImatges obert imatges={FOTOS} index={0} onTanca={onTanca} />, { container: muntatge, baseElement: root });
+    const dialeg = root.querySelector('dialog.sdp-visor');
+    toca(dialeg);
+    expect(onTanca).toHaveBeenLastCalledWith('vel');
+    act(() => { root.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
+    expect(onTanca).toHaveBeenLastCalledWith('esc');
   });
 });
 
@@ -176,15 +362,49 @@ describe('zoom', () => {
     expect(dialeg.querySelector('.sdp-visor__escenari').classList.contains('sdp-visor__escenari--ampliat')).toBe(false);
   });
 
-  test('el doble clic amplia a 2× i torna a 1×; sobre un botó, no', () => {
-    const { dialeg } = pinta();
-    const escenari = dialeg.querySelector('.sdp-visor__escenari');
-    fireEvent.doubleClick(escenari);
-    expect(escala(dialeg)).toBe('2');
-    fireEvent.doubleClick(escenari);
-    expect(imatge(dialeg).getAttribute('style')).toBeFalsy();
-    fireEvent.doubleClick(within(dialeg).getByRole('button', { name: 'Imatge següent' }));
-    expect(imatge(dialeg).getAttribute('style')).toBeFalsy();
+  /* Actualitzada a posta (261024 correccions): R4-02. Abans es disparava un
+     dblclick sol, que cap navegador no fa; ara la seqüència de veres
+     (pointerdown/up i click amb detail 1, pointerdown/up i click amb detail 2,
+     dblclick), amb el rellotge fals: al fons fosc el primer clic no tanca i el
+     doble clic amplia; a la foto, igual. */
+  test('el doble clic de veres, al fons fosc i a la foto, amplia a 2× i torna a 1×, sense tancar; sobre un botó, no', () => {
+    vi.useFakeTimers();
+    try {
+      const { dialeg, onTanca } = pinta();
+      const escenari = dialeg.querySelector('.sdp-visor__escenari');
+      /* El destí del pointerdown decidix (la captura porta el clic a
+         l'escenari); el click i el dblclick arriben a `desti`. */
+      const dobleClic = (desti, baixa = desti) => {
+        for (const detail of [1, 2]) {
+          fireEvent.pointerDown(baixa, { pointerId: 7, pointerType: 'mouse', button: 0, clientX: 40, clientY: 40 });
+          fireEvent.pointerUp(escenari, { pointerId: 7, pointerType: 'mouse', button: 0, clientX: 40, clientY: 40 });
+          act(() => { fireEvent.click(desti, { detail, button: 0, clientX: 40, clientY: 40 }); });
+          act(() => { vi.advanceTimersByTime(120); });
+        }
+        act(() => { fireEvent.doubleClick(desti, { detail: 2, button: 0, clientX: 40, clientY: 40 }); });
+      };
+      dobleClic(escenari);
+      expect(dialeg.hasAttribute('open')).toBe(true);
+      expect(escala(dialeg)).toBe('2');
+      act(() => { vi.advanceTimersByTime(5000); });
+      expect(onTanca).not.toHaveBeenCalled();
+      dobleClic(escenari);
+      expect(imatge(dialeg).getAttribute('style')).toBeFalsy();
+      act(() => { vi.advanceTimersByTime(5000); });
+      expect(onTanca).not.toHaveBeenCalled();
+      // A la foto: el pointerdown hi baixa i el clic arriba a l'escenari.
+      dobleClic(escenari, imatge(dialeg));
+      expect(escala(dialeg)).toBe('2');
+      dobleClic(escenari, imatge(dialeg));
+      expect(imatge(dialeg).getAttribute('style')).toBeFalsy();
+      // Sobre «Imatge següent»: dos clics passen dues fotos, cap zoom.
+      fireEvent.doubleClick(within(dialeg).getByRole('button', { name: 'Imatge següent' }));
+      expect(imatge(dialeg).getAttribute('style')).toBeFalsy();
+      act(() => { vi.advanceTimersByTime(5000); });
+      expect(onTanca).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('les tecles + − i 0', () => {

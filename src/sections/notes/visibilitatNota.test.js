@@ -3,12 +3,13 @@
    poble (private.is_town_member), el Mur no és Internet. */
 import { expect, test, vi } from 'vitest';
 import {
-  AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, MOTIU_FORASTER, MOTIU_LOCAL, MOTIU_PREPARADA,
+  AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, MOTIU_FORASTER, MOTIU_LOCAL, MOTIU_NORMES, MOTIU_PREPARADA,
   MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA, SIGNANT_DESCONEGUT, bloqueigDeNota, motiuSignaturaAliena, publicaAmbMotiu,
   textosAmbDrets, textosDeNota
 } from './visibilitatNota.js';
 import { cosDeConnexioPerAlMur } from './connexions.js';
 import { objecteDePagina } from '../../config/objecteConnectable.js';
+import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 
 /* Grup E (261008) · La guarda de re-signatura (NotesContext · publishNote) diu
    qui signa la publicació i què cal fer; sense nom, cap text buit. */
@@ -79,6 +80,52 @@ test('publicaAmbMotiu: un ErrorPublicacio passa el seu motiu, sense «torna-ho a
   const error = await publicaAmbMotiu(async () => { throw new ErrorPublicacio(motiu); }).catch((e) => e);
   expect(error.message).toBe(motiu);
   expect(error.message).not.toBe(ERROR_PUBLICAR);
+});
+
+/* Integració 261024 (Codex C-02) · El rebuig del servidor per les normes
+   (SDP-MOD-428), en les formes en què arriba (el missatge de runtime.request
+   o la causa), no és cap xarxa: es torna a preguntar UNA vegada i, si les
+   accepta, es publica de nou; mai en bucle. */
+const REBUIG_NORMES = 'Supabase 403: {"code":"42501","message":"SDP-MOD-428: cal acceptar les normes de convivència."}';
+const rebuigNormes = () => new Error(REBUIG_NORMES);
+
+test('C-02 · MOTIU_NORMES és la reserva valenciana de section.moderacio.normes.calAcceptar', () => {
+  expect(MOTIU_NORMES).toBe(TEXTOS_MODERACIO.calAcceptar[1]);
+  expect(TEXTOS_MODERACIO.calAcceptar[0]).toBe('section.moderacio.normes.calAcceptar');
+});
+
+test('C-02 · sense ningú que torne a preguntar, el rebuig per les normes diu el seu motiu, no «torna-ho a provar»', async () => {
+  for (const error of [rebuigNormes(), Object.assign(new Error('XAT'), { cause: rebuigNormes() })]) {
+    const publica = vi.fn().mockRejectedValue(error);
+    await expect(publicaAmbMotiu(publica)).rejects.toThrow(MOTIU_NORMES);
+    expect(publica).toHaveBeenCalledTimes(1);
+  }
+});
+
+test('C-02 · acceptades de nou, es publica UNA vegada més', async () => {
+  const publica = vi.fn().mockRejectedValueOnce(rebuigNormes()).mockResolvedValueOnce(true);
+  const tornaAPreguntar = vi.fn(async () => true);
+  await expect(publicaAmbMotiu(publica, { tornaAPreguntar, motiuNormes: 'Hay que aceptar las normas.' })).resolves.toBe(true);
+  expect(tornaAPreguntar).toHaveBeenCalledTimes(1);
+  expect(publica).toHaveBeenCalledTimes(2);
+});
+
+test('C-02 · declinades, o rebutjada de nou, el motiu traduït; mai un segon diàleg ni un tercer intent', async () => {
+  const declinades = vi.fn(async () => false);
+  const una = vi.fn().mockRejectedValue(rebuigNormes());
+  await expect(publicaAmbMotiu(una, { tornaAPreguntar: declinades, motiuNormes: 'Hay que aceptar las normas.' }))
+    .rejects.toThrow('Hay que aceptar las normas.');
+  expect(una).toHaveBeenCalledTimes(1);
+
+  const acceptades = vi.fn(async () => true);
+  const sempre = vi.fn().mockRejectedValue(rebuigNormes());
+  await expect(publicaAmbMotiu(sempre, { tornaAPreguntar: acceptades })).rejects.toThrow(MOTIU_NORMES);
+  expect(acceptades).toHaveBeenCalledTimes(1);
+  expect(sempre).toHaveBeenCalledTimes(2);
+
+  /* Un error que no és de les normes, després d'acceptar-les, és el de sempre. */
+  const xarxa = vi.fn().mockRejectedValueOnce(rebuigNormes()).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+  await expect(publicaAmbMotiu(xarxa, { tornaAPreguntar: acceptades })).rejects.toThrow(ERROR_PUBLICAR);
 });
 
 /* P4 (ordre del Mestre, 261003) · La «Nota sense títol» encara no és al

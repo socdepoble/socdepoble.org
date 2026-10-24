@@ -226,9 +226,12 @@ export function DialegNormes({ obert = false, onTanca, onAccepta }) {
   };
 
   /* Un code conegut diu què passa (la versió, el límit); la resta, «no s'ha
-     pogut desar l'acceptació». */
-  const textError = error && Object.hasOwn(TEXTOS_ERROR_MODERACIO, error.code) && error.code !== 'desconegut'
-    ? textDErrorDeModeracio(error) : TEXTOS_MODERACIO.normesError;
+     pogut desar l'acceptació». T2 (261024; Codex C-02) · 'no-disponible' (en
+     remot, sense la migració) porta el seu text: sense acceptació desada no
+     es publica, i el de les denúncies no tocaria ací. */
+  const textError = error?.code === 'no-disponible' ? TEXTOS_MODERACIO.normesNoDisponible
+    : error && Object.hasOwn(TEXTOS_ERROR_MODERACIO, error.code) && error.code !== 'desconegut'
+      ? textDErrorDeModeracio(error) : TEXTOS_MODERACIO.normesError;
   const termini = tradueix(t, TEXTOS_MODERACIO.termini);
   return (
     <Dialeg obert={obert} onTanca={tanca} titol={tradueix(t, TEXTOS_MODERACIO.normesTitol)}

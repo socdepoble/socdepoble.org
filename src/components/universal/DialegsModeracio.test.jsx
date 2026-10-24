@@ -14,7 +14,8 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
 import { CODI_MODERACIO, errorDeModeracio } from '../../data/contracte.js';
-import { TEXTOS_ERROR_MODERACIO, textDErrorDeModeracio } from '../PedraSeca/organismes/textosModeracio.js';
+import { TEXTOS_ERROR_MODERACIO, TEXTOS_MODERACIO, textDErrorDeModeracio } from '../PedraSeca/organismes/textosModeracio.js';
+import { CODI_NORMES_SERVIDOR, esRebuigDeNormes } from '../../data/errorsBackend.js';
 import { DialegBloqueig, DialegDenuncia, DialegNormes, DialegsModeracio } from './DialegsModeracio.jsx';
 
 const focusNatiu = HTMLElement.prototype.focus;
@@ -161,6 +162,25 @@ describe('els textos d’error', () => {
     expect(textDErrorDeModeracio({ code: 'inventat' })).toBe(TEXTOS_ERROR_MODERACIO.desconegut);
     expect(textDErrorDeModeracio(null)).toBe(TEXTOS_ERROR_MODERACIO.desconegut);
   });
+
+  /* T2 (261024; Codex C-02) · El rebuig del servidor per les normes
+     (2610241400_normes_exigides_ugc.sql) en les tres formes en què arriba. */
+  test('SDP-MOD-428 (al code, dins del missatge de runtime.js o a la causa de l’error del xat) diu «cal acceptar les normes»', () => {
+    const servidor = 'SDP-MOD-428: cal acceptar les normes de convivència.';
+    const formes = [
+      { code: CODI_NORMES_SERVIDOR },
+      new Error(`Supabase 403: {"code":"42501","details":null,"hint":null,"message":"${servidor}"}`),
+      Object.assign(new Error('No s’ha pogut enviar el missatge.'), { code: 'XAT', cause: new Error(servidor) })
+    ];
+    for (const error of formes) {
+      expect(esRebuigDeNormes(error), String(error.message ?? error.code)).toBe(true);
+      expect(textDErrorDeModeracio(error)).toBe(TEXTOS_MODERACIO.calAcceptar);
+    }
+    expect(TEXTOS_MODERACIO.calAcceptar).toEqual(['section.moderacio.normes.calAcceptar', 'Per a publicar, cal acceptar les normes de convivència.']);
+    for (const altre of [null, undefined, {}, new Error('SDP-MOD-429: massa denúncies.'), { code: 'no-disponible' }]) {
+      expect(esRebuigDeNormes(altre)).toBe(false);
+    }
+  });
 });
 
 describe('DialegBloqueig', () => {
@@ -235,6 +255,26 @@ describe('DialegNormes', () => {
     expect(within(dialeg()).getByRole('alert').textContent).toBe('La versió de les normes no és la vigent. Recarrega l’aplicació.');
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Accepte i continue' })); });
     expect(within(dialeg()).getByRole('alert').textContent).toBe('No s’ha pogut desar l’acceptació. Torna-ho a provar.');
+  });
+
+  /* T2 (261024; Codex C-02) · Sense la migració, el diàleg de les normes diu
+     que no es pot desar l'acceptació ni publicar, mai el text de les denúncies. */
+  test('no-disponible diu que l’acceptació no es pot desar i el diàleg continua obert', async () => {
+    const onAccepta = vi.fn().mockRejectedValueOnce(errorDeModeracio(CODI_MODERACIO.NO_DISPONIBLE));
+    pinta(<DialegNormes {...props({ onAccepta })} />);
+    act(() => { fireEvent.click(screen.getByRole('checkbox')); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Accepte i continue' })); });
+    const alerta = within(dialeg()).getByRole('alert').textContent;
+    expect(alerta).toBe('Ara mateix no podem desar l’acceptació de les normes, i sense ella no es pot publicar. Torna-ho a provar més tard o escriu-nos a socdepoble@socdepoble.org.');
+    expect(alerta).not.toMatch(/denúncies/);
+    expect(screen.getByRole('dialog', { name: 'Normes de convivència del poble' })).toBeTruthy();
+  });
+
+  test('la tolerància zero és proporcionada: el contingut, sempre fora; la persona, segons la gravetat (DSA art. 14.4)', () => {
+    pinta(<DialegNormes {...props()} />);
+    const zero = within(dialeg()).getAllByRole('listitem')[4].textContent;
+    for (const mesura of ['el retirem sempre', 'avís', 'suspenem', 'expulsem', 'greu', 'a la primera']) expect(zero, mesura).toContain(mesura);
+    expect(zero).not.toMatch(/retirem el contingut que incomplix estes normes i expulsem/);
   });
 
   test('«Ara no» declina; l’enllaç a l’avís legal declina abans de navegar (crítica 261020, 21)', () => {

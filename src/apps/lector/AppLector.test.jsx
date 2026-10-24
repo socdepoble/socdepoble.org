@@ -11,12 +11,14 @@
    la fila de la llista, no des de la targeta), les de la lectura immersiva, la
    gestió de fonts i l'instant de la vista. Les que fixaven la graella, les
    targetes de notícia, la Revista i les Targetes, els obridors de columna i
-   «Torna» queden derogades: eixes peces ja no hi són. */
+   «Torna» queden derogades: eixes peces ja no hi són.
+   261024 (Lector) · Ordre del Mestre de les 15:05: la gestió de fonts deixa de
+   ser una pàgina (ClosaAplicacio de /fonts) i passa a l'arbre (el diàleg
+   «Gestiona les fonts»); les proves de la gestió s'hi adapten a posta. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { validaTaulaDeClosa } from '../plataforma/index.js';
 import { validaManifestApp } from '../plataforma/manifestApp.js';
 import { creaRegistre } from '../plataforma/registreApps.js';
 import { ARA, munta, prepara, tancats } from './__fixtures__/muntaLector.jsx';
@@ -25,7 +27,7 @@ import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { NOM_BASE, STORE } from './magatzem.js';
 import manifestLector from './manifest.js';
 import { FINESTRA_HUI, ICONES_CATEGORIA, esDeHui, msDeData, senseFinal } from './nucli/index.js';
-import { RUTES, esCarpeta, esFont } from './rutes.js';
+import { esCarpeta, esFont } from './rutes.js';
 import { NOMS_ICONES_CATEGORIA, iconaDeCategoria } from './vistes/icones.js';
 
 const CORREFOC = 'El correfoc de les festes passarà pel barranc';
@@ -86,13 +88,16 @@ afterEach(() => {
 describe('el contracte amb la plataforma', () => {
   /* Bloc 0 (261016) · Actualitzada a posta: la taula de ClosaAplicacio ja només porta la gestió
      de fonts; les notícies tenen la seua (RUTES_NOTICIES, sense columnes) i la cobertura de les
-     entrades del manifest es comprova amb les dues (espaiNoticies.test.jsx). */
-  test('el manifest és vàlid i la taula de la closca (la gestió de fonts) passa validaTaulaDeClosa', () => {
+     entrades del manifest es comprova amb les dues (espaiNoticies.test.jsx).
+     Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, «adeu a la pàgina inflada
+     de /app/lector/fonts»: el manifest porta una sola entrada, les notícies, i l'app ja no porta
+     cap taula de ClosaAplicacio. Les rutes de notícies cobrixen l'entrada (espaiNoticies.test.jsx). */
+  test('el manifest és vàlid, amb una sola entrada: les notícies', () => {
     const { ok, errors, manifest } = validaManifestApp(manifestLector);
     expect(errors).toEqual([]);
     expect(ok).toBe(true);
-    expect(validaTaulaDeClosa(RUTES, manifest)).toEqual({ ok: true, errors: [] });
-    expect(new Set(RUTES.map((ruta) => ruta.path.split('/')[0]))).toEqual(new Set(['fonts']));
+    expect(manifest.entrades.map((entrada) => entrada.slug)).toEqual(['noticies']);
+    expect(manifest.entradaPerDefecte).toBe('noticies');
   });
 
   test('les icones de categoria: la llista tancada del nucli i la de la UI són la mateixa', () => {
@@ -479,43 +484,67 @@ describe('la lectura immersiva', () => {
 
 describe('les fonts que se seguixen', () => {
   /* Bloc 0 (261016) · Actualitzada a posta la segona meitat: «Hui» és la llista de l'espai, i la
-     categoria sense cap font seguida no porta recompte a l'arbre (ni la font, que ja no hi és). */
-  test('el catàleg: totes seguides; tocar-ne una la deixa de seguir, es desa i «Hui» ja no en porta', async () => {
-    const { idb } = munta('/app/lector/fonts');
-    await screen.findByRole('region', { name: 'Fonts del poble' });
-    const cooperativa = detall().getByRole('button', { name: /^Cooperativa de l’Horta Vella/ });
-    expect(cooperativa.getAttribute('aria-pressed')).toBe('true');
-    /* Els logos de les fonts són quadrats: l'excepció 16:9 és només per a les notícies. */
-    expect(document.querySelector('.sdp-panoramica')).toBeNull();
-    expect(mig().getByRole('link', { name: /^Cooperativa de l’Horta Vella/ }).getAttribute('href')).toBe('/app/lector/noticies/camp/cooperativa');
-    fireEvent.click(cooperativa);
-    expect(detall().getByRole('button', { name: /^Cooperativa de l’Horta Vella/ }).getAttribute('aria-pressed')).toBe('false');
-    expect(mig().queryByRole('link', { name: /^Cooperativa de l’Horta Vella/ })).toBeNull();
-    await waitFor(() => expect(desat(idb)?.noSeguides).toEqual(['cooperativa']));
-    window.history.pushState(null, '', '/app/lector/noticies/hui');
-    await act(async () => { window.dispatchEvent(new PopStateEvent('popstate')); });
+     categoria sense cap font seguida no porta recompte a l'arbre (ni la font, que ja no hi és).
+     Actualitzada a posta (261024 Lector): ordre del Mestre de les 15:05, la gestió de fonts és el
+     diàleg de l'arbre («Gestiona les fonts»), amb un interruptor per font, i no el catàleg en
+     targetes de /fonts. Apagar-ne una es desa i «Hui» ja no en porta, com abans; ara la font
+     continua a l'arbre, marcada («· apagada»), per a tornar-la a encendre. */
+  test('la gestió de l’arbre: totes seguides; apagar-ne una es desa, «Hui» ja no en porta i l’arbre la marca', async () => {
+    const { idb } = munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    expect(fitxes()).toHaveLength(5);
+    await waitFor(() => expect(fitxes()).toHaveLength(6));
+    fireEvent.click(screen.getByRole('button', { name: 'Gestiona les fonts' }));
+    const dialeg = await screen.findByRole('dialog', { name: 'Gestiona les fonts' });
+    const interruptors = within(dialeg).getAllByRole('switch');
+    expect(interruptors.length).toBe(5);
+    expect(interruptors.every((interruptor) => interruptor.getAttribute('aria-checked') === 'true')).toBe(true);
+    /* Cap targeta ni boina: els interruptors de Pedra Seca, per carpetes. */
+    expect(dialeg.querySelectorAll('.sp-card, .sp-card-header, .sdp-card-llista')).toHaveLength(0);
+    expect(within(dialeg).getByRole('group', { name: 'Camp i temps' })).toBeTruthy();
+    fireEvent.click(within(dialeg).getByRole('switch', { name: 'Cooperativa de l’Horta Vella' }));
+    expect(within(dialeg).getByRole('switch', { name: 'Cooperativa de l’Horta Vella' }).getAttribute('aria-checked')).toBe('false');
+    await waitFor(() => expect(desat(idb)?.noSeguides).toEqual(['cooperativa']));
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
+    await waitFor(() => expect(fitxes()).toHaveLength(5));
     expect(recompteDe('Camp i temps')).toBeNull();
     fireEvent.click(filaDeLArbre('Camp i temps'));
-    expect(screen.queryByRole('button', { name: /^Cooperativa de l’Horta Vella/ })).toBeNull();
+    await screen.findByRole('region', { name: 'Camp i temps' });
+    const apagada = filaDeLArbre('Cooperativa de l’Horta Vella · apagada');
+    expect(apagada.querySelector('svg').getAttribute('class')).toMatch(/lucide-eye-off/);
+    /* Triar-la a l'arbre diu que no se seguix i la torna a encendre des del detall. */
+    fireEvent.click(apagada);
+    await screen.findByRole('region', { name: 'Cooperativa de l’Horta Vella' });
+    expect(detall().getByText('No seguixes esta font')).toBeTruthy();
+    expect(mig().getByText('No seguixes esta font.')).toBeTruthy();
+    fireEvent.click(detall().getByRole('button', { name: 'Torna a seguir-la' }));
+    await waitFor(() => expect(desat(idb)?.noSeguides).toEqual([]));
+    await waitFor(() => expect(fitxes().length).toBeGreaterThan(0));
+    expect(filaDeLArbre('Cooperativa de l’Horta Vella')).toBeTruthy();
+    /* I seguida, el detall l'apaga a les eines. */
+    expect(detall().getByRole('button', { name: 'Deixa de seguir-la' })).toBeTruthy();
   });
 });
 
-describe('la boina de les targetes de font (REGLA D’OR 1, ordre del Mestre del 261004)', () => {
-  test('cada targeta del catàleg de fonts porta la boina: la font mateixa, enllaçada a les seues notícies', async () => {
-    munta('/app/lector/fonts');
-    await screen.findByRole('region', { name: 'Fonts del poble' });
-    const targetes = [...document.getElementById('app-grid-main').querySelectorAll('article.sp-card')];
-    expect(targetes.length).toBeGreaterThan(3);
-    for (const targeta of targetes) {
-      expect(targeta.querySelector('header.sp-card-header .sp-card-author-name'), targeta.textContent).not.toBeNull();
-    }
-    const cooperativa = detall().getByRole('button', { name: /^Cooperativa de l’Horta Vella/ }).closest('article.sp-card');
-    const autor = within(cooperativa.querySelector('header.sp-card-header')).getByRole('link', { name: /^Cooperativa de l’Horta Vella/ });
-    expect(autor.getAttribute('href')).toBe('/app/lector/noticies/camp/cooperativa');
-    /* El logo de la llavor és d'un origen que l'amfitrió no ha permés: ni a la boina. */
-    expect(document.querySelectorAll('#app-grid-main img')).toHaveLength(0);
+/* REGLA D'OR 1 (ordre del Mestre, 261004) · Cada targeta del catàleg de fonts portava la boina.
+   Derogada a posta (261024 Lector): ordre del Mestre de les 15:05, «adeu a la pàgina inflada de
+   /app/lector/fonts», i Gemini G2-01 (dotze .sp-card amb boina taronja). El catàleg en targetes ja
+   no hi és; ací es prova el que en queda: l'enllaç vell porta a les notícies, sense cap pas
+   d'historial, i no hi ha cap targeta ni cap boina enlloc. */
+describe('l’enllaç vell de la gestió de fonts', () => {
+  test.each(['/app/lector/fonts', '/app/lector/fonts/colleccio'])('%s porta a /app/lector/noticies (replace), sense cap targeta', async (vell) => {
+    munta(vell);
+    const abans = window.history.length;
+    await waitFor(() => expect(ubicacio()).toBe('/app/lector/noticies'));
+    expect(window.history.length).toBe(abans);
+    await screen.findByRole('region', { name: 'Hui' });
+    expect(document.querySelectorAll('.sp-card, .sp-card-header, .sdp-card-llista, .sdp-card-grid')).toHaveLength(0);
+  });
+
+  test('un camí de notícies que no casa: el text de la pàgina inexistent i el camí a les notícies', async () => {
+    munta('/app/lector/noticies/hui/veu-placa/sobrant');
+    expect(await screen.findByText('Esta pàgina de l’app no existix')).toBeTruthy();
+    expect(screen.getByText('Pot ser que l’enllaç siga antic o estiga mal copiat.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Ves a les notícies' }).getAttribute('href')).toBe('/app/lector/noticies');
   });
 });
 

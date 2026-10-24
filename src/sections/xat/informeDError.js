@@ -21,6 +21,8 @@
  * correu (enllacDeCorreu) a l'adreça pública del projecte.
  * Pur, llevat de les lectures de l'entorn (`entorn`), que es poden injectar.
  */
+import { CORREU_CONTACTE } from '../../config/contacte.js';
+
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /* La secció és una paraula de ruta: minúscules, xifres i guionets. */
 const RE_SECCIO = /^[a-z][a-z0-9-]*$/;
@@ -44,8 +46,9 @@ export function rutaSenseDades(ruta) {
 }
 
 /* L'adreça pública de contacte del projecte (l'Avís legal, legalContent.js):
-   la reserva quan el xat no es pot obrir. */
-export const CORREU_DE_RESERVA = 'socdepoble@socdepoble.org';
+   la reserva quan el xat no es pot obrir. T2 (261024) · De la font única,
+   config/contacte.js (sense dependències: no porta el document legal). */
+export const CORREU_DE_RESERVA = CORREU_CONTACTE;
 
 /**
  * L'enllaç mailto: amb l'informe al cos i `assumpte`. Els salts de línia van

@@ -289,13 +289,18 @@ export const CAPACITATS = Object.freeze({
      backend (config/entradaNativa.js). Opcional a posta: un backend sense ella
      continua sent vàlid i /registre no pinta els botons natius. La interfície
      ho pregunta amb teCapacitat('entradaAmbToken'). Forma (config sempre l'últim):
-       entraAmbTokenDeProveidor(proveidor, { testimoni, nonce, testimoniAcces, nom }, config) → Promise<{ user }>
+       entraAmbTokenDeProveidor(proveidor, { testimoni, nonce, testimoniAcces, nom, codiAutoritzacio }, config) → Promise<{ user }>
          proveidor 'apple' | 'google'; testimoni el JWT; nonce el CRU (el
          proveïdor n'ha rebut el SHA-256 en hex) o null; testimoniAcces l'access
          token de Google (at_hash) o null; nom el que el proveïdor dona fora del
          testimoni (Apple) o null, desat NOMÉS si la persona encara no en té cap
-         de propi. Coreografia de loginWithPassword (sdp:auth-change, alta
-         completada). Mai torna testimonis de sessió. Errors amb `code` de
+         de propi; codiAutoritzacio (T1, 261024; P0-04) el codi d'autorització
+         d'un sol ús d'Apple (uns cinc minuts) o null: el backend el pot
+         canviar al servidor per a revocar l'autorització d'Apple quan la
+         persona es dona de baixa. Mai es guarda al client ni va a GoTrue, i
+         si no es pot custodiar l'entrada no falla. Coreografia de
+         loginWithPassword (sdp:auth-change, alta completada). Mai torna
+         testimonis de sessió. Errors amb `code` de
          CODI_ENTRADA (TOKEN_REBUTJAT, PROVEIDOR_INACTIU…); en seed o local, MODE_LOCAL. */
   entradaAmbToken: Object.freeze([
     'entraAmbTokenDeProveidor'
@@ -413,6 +418,46 @@ export const CAPACITATS = Object.freeze({
   normesConvivencia: Object.freeze([
     'estatNormes',
     'acceptaNormes'
+  ]),
+  /* T6b (IDEA-14; decisió del Mestre, 261024) · «Connectar / Seguir»: el
+     seguiment d'un sol sentit d'una persona o d'una entitat. Qui és seguit ho
+     sap i veu qui el seguix; cap algoritme (les llistes van per data, la més
+     nova primer). Opcional a posta: un node sense ella continua sent vàlid i
+     /connectar i el Perfil no pinten «Seguir» ni «Gent que et seguix». La
+     interfície ho pregunta amb teCapacitat('seguiments'). Formes (config
+     sempre l'últim; el seguit és { tipus: 'persona' | 'entitat', id }):
+       segueix({ tipus, id }, config) → Promise<{ seguint: true, creatAl, nou, primer }>
+         Idempotent: false si ja el seguies (creatAl, el d'aleshores).
+         `primer` true NOMÉS la primera vegada de totes que seguixes eixa
+         persona o entitat; tornar-la a seguir després de deixar-ho és
+         false. `nou` es conserva per compatibilitat i val el mateix que
+         `primer`: l'avís al xat ix una sola vegada per parella.
+       deixaDeSeguir({ tipus, id }, config) → Promise<{ seguint: false }>
+         Idempotent: també si no el seguies. Al servidor, un esborrat suau
+         (la fila es queda amb deixat_al): no reinicia el límit per hora.
+       estatSeguiment({ tipus, id }, config) → Promise<{ seguint: boolean, creatAl: ISO | null }>
+         Sense sessió, { seguint: false, creatAl: null } i cap petició.
+       elsMeusSeguiments(config) → Promise<[{ tipus, id, nom, creatAl }]>
+       quiEmSegueix({ orgId } = {}, config) → Promise<[{ id, nom, creatAl }]>
+         Sense orgId, les persones que et seguixen; amb orgId, les que
+         seguixen eixa entitat, només per a qui l'administra (owner o admin).
+         Sense sessió, les dues llistes són [] i cap petició.
+     Regles, iguals a tots els adaptadors (2610241430_seguiments.sql): una
+     persona, només si sou del mateix poble; una entitat, si és pública; mai
+     tu mateix ni una entitat que administres; cap bloqueig teu (moderacio);
+     un límit d'altes o represes per hora. El bloqueig de l'altra banda és a
+     l'ombra: seguir funciona igual i les lectures de qui seguix no l'amaguen;
+     només quiEmSegueix, la de qui és seguit, deixa fora qui seguix. Una
+     lectura amaga el que el bloqueig del seu sentit o una baixa tapen. Els
+     errors porten `code`: els de
+     MISSATGES_SEGUIMENTS (SDP-SEG-000…006), o NO-DISPONIBLE si el servidor
+     encara no té l'esquema. */
+  seguiments: Object.freeze([
+    'segueix',
+    'deixaDeSeguir',
+    'estatSeguiment',
+    'elsMeusSeguiments',
+    'quiEmSegueix'
   ])
 });
 
@@ -588,7 +633,7 @@ export const TIPUS_BLOQUEJAT = Object.freeze(['persona', 'entitat']);
 export const MAXIM_DETALL_DENUNCIA = 1000;
 export const MAXIM_NOM_BLOQUEJAT = 120;
 /* Canviar el text de les normes vol dir pujar esta data: tothom les torna a acceptar. */
-export const VERSIO_NORMES_CONVIVENCIA = '2026-10-20';
+export const VERSIO_NORMES_CONVIVENCIA = '2026-10-24';
 const RE_ID_MODERACIO = /^[A-Za-z0-9._:~-]{1,200}$/;
 /** Cert si `id` és un identificador que el servidor accepta (el CHECK de la migració). Pura. */
 export const esIdDeModeracio = (id) => typeof id === 'string' && RE_ID_MODERACIO.test(id);
@@ -651,4 +696,43 @@ export function autorDelContracte(dades, { ambNom = true } = {}) {
   if (!ambNom) return { tipus, id };
   const nom = typeof dades?.nom === 'string' ? dades.nom.trim().slice(0, MAXIM_NOM_BLOQUEJAT) : '';
   return { tipus, id, nom: nom || null };
+}
+
+/* ── T6b (IDEA-14; decisió del Mestre, 261024) · Els seguiments ──────────
+   Una sola llista blanca, una sola taula de codis i una sola regla d'entrada
+   per a tots els adaptadors de 'seguiments' (Supabase, la llavor i qualsevol
+   node federat), com MISSATGES_MEMBRES_ORGANITZACIO: la interfície decidix
+   pel `code`, mai pel text. Són el CHECK i els codis de
+   supabase/migrations/2610241430_seguiments.sql, i
+   src/data/supabase/seguiments.migracio.test.js els contrasta. */
+export const TIPUS_SEGUIT = Object.freeze(['persona', 'entitat']);
+export const MISSATGES_SEGUIMENTS = Object.freeze({
+  'SDP-SEG-000': 'Cal entrar al compte per a seguir algú.',
+  'SDP-SEG-001': 'La persona o l’entitat no són vàlides.',
+  'SDP-SEG-002': 'No trobem esta persona o esta entitat, o no la pots seguir.',
+  'SDP-SEG-003': 'No et pots seguir a tu mateix ni seguir una entitat que administres.',
+  'SDP-SEG-004': 'L’has bloquejada: desbloqueja-la abans de seguir-la.',
+  'SDP-SEG-005': 'Només qui administra l’entitat veu qui la seguix.',
+  'SDP-SEG-006': 'Massa seguiments en poc de temps. Torna-ho a provar d’ací a una estona.',
+  'NO-DISPONIBLE': 'El servidor encara no té els seguiments. Cal aplicar la migració pendent.',
+  DESCONEGUT: 'No s’ha pogut completar. Torna-ho a provar.'
+});
+const RE_ID_SEGUIT = /^[A-Za-z0-9._:~-]{1,200}$/;
+
+/** Un Error amb el `code` de MISSATGES_SEGUIMENTS (un codi desconegut és DESCONEGUT) i, si n'hi ha, la causa. Pura. */
+export function errorDeSeguiment(codi, cause) {
+  const code = Object.hasOwn(MISSATGES_SEGUIMENTS, codi) ? codi : 'DESCONEGUT';
+  return Object.assign(new Error(MISSATGES_SEGUIMENTS[code], cause ? { cause } : undefined), { code });
+}
+
+/**
+ * El seguit ({ tipus, id }) normalitzat; si el tipus no és de TIPUS_SEGUIT o
+ * l'id no és cap identificador, llança SDP-SEG-001. No valida si l'id és un
+ * UUID: cada adaptador sap quins ids són seus. Pura.
+ */
+export function seguitDelContracte(dades) {
+  const tipus = String(dades?.tipus ?? '').trim();
+  const id = String(dades?.id ?? '').trim();
+  if (!TIPUS_SEGUIT.includes(tipus) || !RE_ID_SEGUIT.test(id)) throw errorDeSeguiment('SDP-SEG-001');
+  return { tipus, id };
 }

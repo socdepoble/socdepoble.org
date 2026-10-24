@@ -161,6 +161,16 @@ const FITXERS = [
   'src/sections/connectar/organitzacio/estatAdministracio.js',
   'src/sections/connectar/organitzacio/estatAdministracio.test.js',
   'src/sections/connectar/organitzacio/useAdministrarOrganitzacio.js',
+  /* T6a (261024, IDEA-14; G-04) · els camins «Entre persones» i «Formar part» de Connectar. */
+  'src/sections/connectar/BlocRelacio.jsx',
+  'src/sections/connectar/ConnectarSection.relacions.test.jsx',
+  'src/sections/connectar/missatgeAlXat.js',
+  'src/sections/connectar/useFitxaDeConnexio.js',
+  'src/sections/connectar/useFitxaDeConnexio.test.jsx',
+  'src/sections/connectar/useSeguiment.js',
+  'src/sections/connectar/organitzacio/BlocFormarPart.jsx',
+  'src/sections/connectar/organitzacio/estatFormarPart.js',
+  'src/sections/connectar/organitzacio/estatFormarPart.test.js',
   'src/sections/mur/MurSection.jsx',
   'src/sections/pobles/PoblesSection.jsx',
   'src/sections/profile/contacteOrganitzacio.js',
@@ -907,6 +917,16 @@ const FITXERS = [
   'src/apps/plataforma/RutaApps.jsx',
   'src/apps/plataforma/ClosaAplicacio.jsx',
   'src/apps/plataforma/BarraLateral.jsx',
+  /* Integració del pla 261024_1315 · Els fitxers de producció nous del torn
+     que esta llista no nomenava: el contacte únic (T2) i el seguiment (T6b:
+     el servidor de llavor i local, l'adaptador de Supabase i el bloc del
+     Perfil). Els de T6a ja són dalt; els de src/apps els linta
+     src/apps/plataforma/qualitat.test.js (tot src/apps); els de
+     src/data/adaptadors/noticies/ (T5) queden per a qui els edita ara. */
+  'src/config/contacte.js',
+  'src/data/localSeguiments.js',
+  'src/data/supabase/seguiments.js',
+  'src/sections/profile/Seguidors.jsx',
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

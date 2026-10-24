@@ -4,7 +4,8 @@ import { describe, expect, test, vi } from 'vitest';
 import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
 import { CODI_ENTRADA_NATIVA } from '../../config/entradaNativa.js';
 
-const CREDENCIAL = Object.freeze({ testimoni: 'a.b.c', nonce: 'n'.repeat(64), testimoniAcces: null, nom: 'Maria' });
+/* Actualitzada a posta (261024 T1): la credencial porta el camp codiAutoritzacio (null fora d'Apple). */
+const CREDENCIAL = Object.freeze({ testimoni: 'a.b.c', nonce: 'n'.repeat(64), testimoniAcces: null, nom: 'Maria', codiAutoritzacio: null });
 const CONFIG = Object.freeze({ dataMode: 'remote' });
 const dobles = (extra = {}) => ({
   demana: vi.fn(async () => CREDENCIAL),
@@ -21,6 +22,14 @@ describe('entraAmbProveidorNatiu', () => {
     expect(d.entra).toHaveBeenCalledWith('apple', { ...CREDENCIAL }, CONFIG);
     expect(d.oblida).toHaveBeenCalledWith('apple');
     expect(d.entra.mock.invocationCallOrder[0]).toBeLessThan(d.oblida.mock.invocationCallOrder[0]);
+  });
+
+  test('T1 (261024) · el codi d’autorització d’Apple baixa al port tal qual, i cap altre camp de més', async () => {
+    const ambCodi = Object.freeze({ ...CREDENCIAL, codiAutoritzacio: 'c0d1.0.apple-sintetic', extra: 'no-viatja' });
+    const d = dobles({ demana: vi.fn(async () => ambCodi) });
+    await entraAmbProveidorNatiu('apple', d.entra, CONFIG, d);
+    expect(d.entra).toHaveBeenCalledWith('apple', { ...CREDENCIAL, codiAutoritzacio: 'c0d1.0.apple-sintetic' }, CONFIG);
+    expect(Object.keys(d.entra.mock.calls[0][1])).not.toContain('extra');
   });
 
   test('si el port rebutja, l’error puja i també s’oblida', async () => {

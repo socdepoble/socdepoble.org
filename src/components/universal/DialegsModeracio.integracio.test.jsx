@@ -31,6 +31,9 @@ import { useModeracio } from '../PedraSeca/hooks/moderacioDePoble.js';
 import { UniversalCard } from '../PedraSeca/organismes/UniversalCard.jsx';
 import { objecteDe } from '../../config/navigation.js';
 import { DialegsModeracio } from './DialegsModeracio.jsx';
+/* Actualitzada a posta (261024 T2): la versió de les normes es llig del
+   contracte (puja a 2026-10-24 amb les mesures proporcionades). */
+import { CODI_MODERACIO, VERSIO_NORMES_CONVIVENCIA, errorDeModeracio } from '../../data/contracte.js';
 
 const REMOT = Object.freeze({ dataMode: 'remote', supabaseUrl: 'http://localhost:54321', tenantId: '7a1b2c3d-4e5f-4a60-8b71-c2d3e4f5a6b7' });
 const PUBLICACIO = objecteDe({ id: 'p1', title: 'Fira de tardor', ownerUserId: 'pepa', author_name: 'Pepa' }, 'mur');
@@ -58,7 +61,7 @@ beforeEach(() => {
   valor = null;
   m.session = { currentUser: { id: 'A' }, generacio: 1 };
   m.llistaBloquejos.mockResolvedValue([]);
-  m.estatNormes.mockResolvedValue({ versio: '2026-10-20', acceptadaAl: null });
+  m.estatNormes.mockResolvedValue({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: null });
 });
 afterEach(cleanup);
 
@@ -117,13 +120,32 @@ test('les normes: dues preguntes alhora, un sol diàleg; acceptar desa la versi�
   act(() => { primera = valor.asseguraNormes(); segona = valor.asseguraNormes(); });
   expect(segona).toBe(primera);
   const normes = screen.getByRole('dialog', { name: 'Normes de convivència del poble' });
-  m.acceptaNormes.mockResolvedValueOnce({ versio: '2026-10-20', acceptadaAl: '2026-10-20T12:00:00Z' });
+  m.acceptaNormes.mockResolvedValueOnce({ versio: VERSIO_NORMES_CONVIVENCIA, acceptadaAl: '2026-10-24T12:00:00Z' });
   act(() => { fireEvent.click(within(normes).getByRole('checkbox')); });
   await act(async () => { fireEvent.click(within(normes).getByRole('button', { name: 'Accepte i continue' })); });
   await expect(primera).resolves.toBe(true);
-  expect(m.acceptaNormes).toHaveBeenCalledWith('2026-10-20', REMOT);
+  expect(m.acceptaNormes).toHaveBeenCalledWith(VERSIO_NORMES_CONVIVENCIA, REMOT);
   expect(screen.queryByRole('dialog')).toBeNull();
   await expect(valor.asseguraNormes()).resolves.toBe(true);
+});
+
+/* T2 (261024; Codex C-02) · Tot el camí: sense la migració, el diàleg diu
+   que no es pot desar, continua obert i la porta no s'obri. */
+test('les normes sense la migració (no-disponible): el diàleg ho diu, continua obert i la porta espera', async () => {
+  await munta();
+  let resposta;
+  let resolta = false;
+  act(() => { resposta = valor.asseguraNormes(); resposta.then(() => { resolta = true; }); });
+  const normes = screen.getByRole('dialog', { name: 'Normes de convivència del poble' });
+  m.acceptaNormes.mockRejectedValueOnce(errorDeModeracio(CODI_MODERACIO.NO_DISPONIBLE));
+  act(() => { fireEvent.click(within(normes).getByRole('checkbox')); });
+  await act(async () => { fireEvent.click(within(normes).getByRole('button', { name: 'Accepte i continue' })); });
+  expect(within(normes).getByRole('alert').textContent).toMatch(/^Ara mateix no podem desar l’acceptació de les normes/);
+  expect(screen.getByRole('dialog', { name: 'Normes de convivència del poble' })).toBe(normes);
+  expect(resolta).toBe(false);
+  expect(valor.normesPendents).toBe(true);
+  act(() => { fireEvent.click(within(normes).getByRole('button', { name: 'Ara no' })); });
+  await expect(resposta).resolves.toBe(false);
 });
 
 test('les normes: «Ara no» resol false i no desa res', async () => {

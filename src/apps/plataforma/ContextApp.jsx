@@ -21,7 +21,10 @@
  * backend) es queda a PlataformaContext.jsx, que importa d'ací EntornContext
  * i reexporta estos ganxos.
  *
- *   ProveidorApp          · RutaApps el posa al voltant de cada app: { manifest, fontSessio }
+ *   ProveidorApp          · RutaApps el posa al voltant de cada app: { manifest, fontSessio, serveis }
+ *   ServeisAppContext     · els serveis neutrals que la plataforma dona a l'app
+ *                           (T5, 261024: { noticies }), o null; només el llig
+ *                           serveiNoticies.js (useServeiNoticies)
  *   useApp()              · DINS d'una app: { manifest, base, ruta(...trams) }
  *   useInterruptorsApp()  · DINS d'una app: { avalua(id), actiu(id), apaga(id, apagat) }
  *   useSessioDeLEntorn()  · la sessió fixada a l'entorn de proves (entorn.sessio), o null
@@ -40,6 +43,8 @@ import { rutaDeApp } from './manifestApp.js';
 export const EntornContext = createContext(null);
 const AppContext = createContext(null);
 const FontSessioContext = createContext(null);
+/** T5 (261024) · Els serveis que la plataforma dona a l'app ({ noticies }), o null. */
+export const ServeisAppContext = createContext(null);
 
 const SEMPRE = () => true;
 const MAI = () => false;
@@ -78,17 +83,24 @@ export function useSessioDeLEntorn() {
  * useSessioApp no toca SessionContext ni IdentitatContext. Va en un context
  * propi, no al de useApp: l'app no el veu mai; només el crida el pont
  * (useSessioDeLaRuta → sessioApp.js). No canvia mai mentre l'app viu.
+ * T5 (P1-07, 261024) · `serveis`: els serveis neutrals que la plataforma ha
+ * construït per a esta app (fontServeis.js, que només importa RutaApps.jsx),
+ * com { noticies }, o null. Van en un context propi; l'app els llig amb un
+ * ganxo pur de l'API pública (useServeiNoticies) i mai en veu l'origen.
  */
-export function ProveidorApp({ manifest, fontSessio = null, children }) {
+export function ProveidorApp({ manifest, fontSessio = null, serveis = null, children }) {
   const valor = useMemo(() => Object.freeze({
     manifest,
     base: rutaDeApp(manifest.id),
     ruta: (...trams) => rutaDeApp(manifest.id, ...trams)
   }), [manifest]);
   const font = typeof fontSessio === 'function' ? fontSessio : null;
+  const delsServeis = serveis !== null && typeof serveis === 'object' ? serveis : null;
   return (
     <AppContext.Provider value={valor}>
-      <FontSessioContext.Provider value={font}>{children}</FontSessioContext.Provider>
+      <FontSessioContext.Provider value={font}>
+        <ServeisAppContext.Provider value={delsServeis}>{children}</ServeisAppContext.Provider>
+      </FontSessioContext.Provider>
     </AppContext.Provider>
   );
 }

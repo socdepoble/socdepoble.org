@@ -43,9 +43,12 @@ import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/Ped
 import { renderRichText } from '../detail/detailRichText.jsx';
 import {
   avatarAutorDElement, buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildMurDetailSectionMeta, cosAmbImatgesPropies,
-  esSeccioDelMur, imatgePropiaDelDetall, portadaDElement
+  esSeccioDelMur, imatgePropiaDelDetall, portadaDElement, visorDelCosDElement
 } from '../detail/detailSectionMeta.jsx';
 import { paginaDElement, useLogoEntitatDElement } from '../detail/elementDeSeccio.js';
+/* T4 (pla 261024_1315, P1-06) · Les fotos del cos, al visor, com a la pàgina
+   de la ruta (ItemDetailSection). */
+import { CosAmbVisor } from '../detail/VisorDePublicacio.jsx';
 import { dataDElement } from '../../components/universal/editorial.js';
 import { objecteDe, objecteDePagina, RUTA_PERFIL_PROJECTE, rutaDePerfilDAutor } from '../../config/navigation.js';
 import { accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
@@ -267,6 +270,16 @@ export function PublicacioDetall({ item }) {
         ...paginaDElement(seccioAmbVisor, publicacio), title: item.title, heroImage: heroDelLector, heroAlt: item.title
       }, t)
       : null;
+  /* T4 (pla 261024_1315, P1-06; Gemini G-01) · Les fotos del cos d'un
+     producte, una publicació o un acte obrin el visor, amb les mateixes dades
+     que la portada (títol del lector i autoria declarada de la pàgina). La
+     Multimèdia, com abans: cap embolcall. */
+  const visorDelCos = esProducte
+    ? visorDelCosDElement(seccioMercat, publicacio, pagina, t)
+    : seccioAmbVisor
+      ? visorDelCosDElement(seccioAmbVisor, publicacio, { ...paginaDElement(seccioAmbVisor, publicacio), title: item.title }, t)
+      : null;
+  const cosDeLaPublicacio = esProducte ? seccioMercat.renderBody(publicacio) : renderRichText(cosDelLector);
   /* Compartir · l'enllaç de la publicació, mai /notes?… (només l'obri qui la
      té). Sense ruta, el de sèrie de la UniversalPage. */
   const onShare = ruta ? () => compartix(item.title, urlPerCompartir(ruta, router), showToast) : undefined;
@@ -320,8 +333,11 @@ export function PublicacioDetall({ item }) {
       </div>
       {/* Esmena 3 (261007_1645) · Un producte, el cos de la seua pàgina
           (descripció i variacions); la resta, el text com abans.
-          Decisió 3 (261007) · El cos, sense cap <img> de tercers (cosDelLector). */}
-      {esProducte ? seccioMercat.renderBody(publicacio) : renderRichText(cosDelLector)}
+          Decisió 3 (261007) · El cos, sense cap <img> de tercers (cosDelLector).
+          T4 (pla 261024_1315) · Amb visor, dins de CosAmbVisor: la UniversalPage
+          no hi deixa cap contenidor propi, i l'embolcall (.sdp-visor-cos,
+          display: contents) no pinta cap caixa. */}
+      {visorDelCos ? <CosAmbVisor className="sdp-visor-cos" {...visorDelCos}>{cosDeLaPublicacio}</CosAmbVisor> : cosDeLaPublicacio}
     </UniversalPage>
   );
 }
