@@ -100,7 +100,8 @@ describe('segueix, estatSeguiment, elsMeusSeguiments i deixaDeSeguir', () => {
   });
 
   test('els sostres: LIMIT_PER_HORA nous per hora i LIMIT_TOTAL en total', () => {
-    expect([LIMIT_PER_HORA, LIMIT_TOTAL]).toEqual([60, 1000]);
+    /* Actualitzada a posta (Gauntlet 261024_1945, Codex G-01, Gemini G1945-02): el sostre per hora és 30. */
+    expect([LIMIT_PER_HORA, LIMIT_TOTAL]).toEqual([30, 1000]);
     const { local, rellotge } = adaptador({ n: LIMIT_TOTAL + 1 });
     for (let i = 0; i < LIMIT_PER_HORA; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
     expect(codi(() => local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO)))).toBe('SDP-SEG-006');
@@ -126,7 +127,7 @@ describe('segueix, estatSeguiment, elsMeusSeguiments i deixaDeSeguir', () => {
    seguir era un DELETE i tornar a seguir donava `nou: true` cada vegada; el
    límit per hora comptava files vives. Ara és un esborrat suau. */
 describe('l’esborrat suau: el límit i l’avís no es reinicien seguint i deixant de seguir', () => {
-  test('60 altes en una hora, cada una deixada de seguida: la 61a topa amb el límit', () => {
+  test(`${LIMIT_PER_HORA} altes en una hora, cada una deixada de seguida: la ${LIMIT_PER_HORA + 1}a topa amb el límit`, () => {
     const { local, rellotge } = adaptador({ n: LIMIT_PER_HORA + 1 });
     for (let i = 0; i < LIMIT_PER_HORA; i += 1) {
       expect(local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO))).toMatchObject({ primer: true });
@@ -157,20 +158,28 @@ describe('l’esborrat suau: el límit i l’avís no es reinicien seguint i dei
     expect(local.segueix({ tipus: 'persona', id: 'p1' }, de(PEPA))).toMatchObject({ primer: true });
   });
 
-  test('una represa de la mateixa parella com a molt cada ESPERA_DE_REPRESA; la primera desfeta és lliure', () => {
+  /* Actualitzada a posta (Gauntlet 261024_1945, Gemini G1945-03): el que fixava era el defecte («la primera
+     desfeta és lliure»). L'espera es compta des de l'última represa o, si no n'hi ha cap, des de l'alta. */
+  test('una represa de la mateixa parella com a molt cada ESPERA_DE_REPRESA, comptada des de l’alta: la primera tampoc no és lliure', () => {
     expect(ESPERA_DE_REPRESA).toBe(10 * 60 * 1000);
     const { local, rellotge } = adaptador();
     local.segueix({ tipus: 'persona', id: 'p1' }, de(JO));
     local.deixaDeSeguir({ tipus: 'persona', id: 'p1' }, de(JO));
-    /* Un clic de més i tornar-hi: es pot, de seguida. */
+    /* Un clic de més i tornar-hi de seguida: ja no es pot. */
     rellotge.avança(1000);
-    const represa = local.segueix({ tipus: 'persona', id: 'p1' }, de(JO));
-    expect(represa).toEqual({ seguint: true, creatAl: '2026-10-24T10:00:01.000Z', nou: false, primer: false });
-    local.deixaDeSeguir({ tipus: 'persona', id: 'p1' }, de(JO));
-    rellotge.avança(ESPERA_DE_REPRESA - 1000);
     expect(codi(() => local.segueix({ tipus: 'persona', id: 'p1' }, de(JO)))).toBe('SDP-SEG-006');
     expect(local.estatSeguiment({ tipus: 'persona', id: 'p1' }, de(JO))).toEqual({ seguint: false, creatAl: null });
-    rellotge.avança(1001);
+    /* Un mil·lisegon abans dels 10 minuts de l'alta, encara no; als 10 minuts justos, sí (com segueix:
+       coalesce(v_represa, v_al) > v_ara - interval '10 minutes'). */
+    rellotge.avança(ESPERA_DE_REPRESA - 1000 - 1);
+    expect(codi(() => local.segueix({ tipus: 'persona', id: 'p1' }, de(JO)))).toBe('SDP-SEG-006');
+    rellotge.avança(1);
+    expect(local.segueix({ tipus: 'persona', id: 'p1' }, de(JO))).toEqual({ seguint: true, creatAl: '2026-10-24T10:10:00.000Z', nou: false, primer: false });
+    /* I la següent, des d'esta represa. */
+    local.deixaDeSeguir({ tipus: 'persona', id: 'p1' }, de(JO));
+    rellotge.avança(ESPERA_DE_REPRESA - 1);
+    expect(codi(() => local.segueix({ tipus: 'persona', id: 'p1' }, de(JO)))).toBe('SDP-SEG-006');
+    rellotge.avança(1);
     expect(local.segueix({ tipus: 'persona', id: 'p1' }, de(JO))).toMatchObject({ seguint: true, primer: false });
   });
 
@@ -184,13 +193,14 @@ describe('l’esborrat suau: el límit i l’avís no es reinicien seguint i dei
     expect(local.estatSeguiment({ tipus: 'persona', id: 'p1' }, de(PEPA))).toEqual({ seguint: false, creatAl: null });
     expect(local.elsMeusSeguiments(de(PEPA)).map((s) => s.id)).toEqual(['p2']);
     expect(local.quiEmSegueix({}, deP1)).toEqual([]);
-    rellotge.avança(60 * 1000);
+    /* Actualitzada a posta (Gauntlet 261024_1945, Gemini G1945-03): la represa espera ESPERA_DE_REPRESA des de l'alta. */
+    rellotge.avança(ESPERA_DE_REPRESA);
     local.segueix({ tipus: 'persona', id: 'p1' }, de(PEPA));
-    expect(local.estatSeguiment({ tipus: 'persona', id: 'p1' }, de(PEPA))).toEqual({ seguint: true, creatAl: '2026-10-24T10:01:01.000Z' });
+    expect(local.estatSeguiment({ tipus: 'persona', id: 'p1' }, de(PEPA))).toEqual({ seguint: true, creatAl: '2026-10-24T10:10:01.000Z' });
     expect(local.elsMeusSeguiments(de(PEPA)).map((s) => [s.id, s.creatAl])).toEqual([
-      ['p1', '2026-10-24T10:01:01.000Z'], ['p2', '2026-10-24T10:00:01.000Z']
+      ['p1', '2026-10-24T10:10:01.000Z'], ['p2', '2026-10-24T10:00:01.000Z']
     ]);
-    expect(local.quiEmSegueix({}, deP1)).toEqual([{ id: 'u-pepa', nom: 'Pepa Garcia', creatAl: '2026-10-24T10:01:01.000Z' }]);
+    expect(local.quiEmSegueix({}, deP1)).toEqual([{ id: 'u-pepa', nom: 'Pepa Garcia', creatAl: '2026-10-24T10:10:01.000Z' }]);
     /* Deixar de seguir dues vegades no mou la marca ni falla. */
     local.deixaDeSeguir({ tipus: 'persona', id: 'p2' }, de(PEPA));
     expect(local.deixaDeSeguir({ tipus: 'persona', id: 'p2' }, de(PEPA))).toEqual({ seguint: false });
@@ -200,10 +210,14 @@ describe('l’esborrat suau: el límit i l’avís no es reinicien seguint i dei
 /* T2 (261024_1800, P2-10; auditoria Codex 261024_1800 C6-01) · El límit per hora compta les altes i
    represes acceptades (el registre de les altes), no les files: una parella represa diverses vegades
    en una hora hi compta cada vegada. Abans, 59 parelles i dues represes donaven 61 altes en una hora. */
-describe('T2 · el registre de les altes: cap combinació d’altes, baixes i represes passa de 60 per hora', () => {
-  test('la reproducció de Codex C6-01: 59 parelles noves i dues represes immediates; la segona represa és la 61a i topa amb el límit', () => {
-    const { local } = adaptador({ n: LIMIT_PER_HORA });
+describe(`T2 · el registre de les altes: cap combinació d’altes, baixes i represes passa de ${LIMIT_PER_HORA} per hora`, () => {
+  /* Actualitzada a posta (Gauntlet 261024_1945): el sostre és 30 i la primera represa espera 10 minuts des de
+     l'alta. La reproducció de Codex C6-01, adaptada: LIMIT_PER_HORA − 1 parelles noves i, passada l'espera,
+     dues represes; la segona és l'alta LIMIT_PER_HORA + 1 i topa amb el límit. */
+  test(`la reproducció de Codex C6-01 amb el sostre de ${LIMIT_PER_HORA}: ${LIMIT_PER_HORA - 1} parelles noves i dues represes passada l’espera; la segona és la ${LIMIT_PER_HORA + 1}a i topa amb el límit`, () => {
+    const { local, rellotge } = adaptador({ n: LIMIT_PER_HORA });
     for (let i = 0; i < LIMIT_PER_HORA - 1; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+    rellotge.avança(ESPERA_DE_REPRESA);
     local.deixaDeSeguir({ tipus: 'persona', id: 'p0' }, de(JO));
     expect(local.segueix({ tipus: 'persona', id: 'p0' }, de(JO))).toMatchObject({ seguint: true, primer: false });
     local.deixaDeSeguir({ tipus: 'persona', id: 'p1' }, de(JO));
@@ -211,11 +225,22 @@ describe('T2 · el registre de les altes: cap combinació d’altes, baixes i re
     expect(local.estatSeguiment({ tipus: 'persona', id: 'p1' }, de(JO))).toEqual({ seguint: false, creatAl: null });
   });
 
-  test('una sola parella represa cada ESPERA_DE_REPRESA hi compta cada vegada: amb 55 parelles més, la sisena represa ja no passa', () => {
-    const { local, rellotge } = adaptador({ n: 60 });
-    for (let i = 1; i <= 55; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+  test('una represa immediata després de l’alta topa amb l’espera i no gasta cap alta del registre', () => {
+    const { local } = adaptador({ n: LIMIT_PER_HORA + 1 });
     local.segueix({ tipus: 'persona', id: 'p0' }, de(JO));
-    /* 56 altes. Quatre represes de p0 (60), i la cinquena (61) topa. */
+    local.deixaDeSeguir({ tipus: 'persona', id: 'p0' }, de(JO));
+    for (let vegada = 0; vegada < 5; vegada += 1) expect(codi(() => local.segueix({ tipus: 'persona', id: 'p0' }, de(JO))), `intent ${vegada + 1}`).toBe('SDP-SEG-006');
+    /* El registre només té l'alta de p0: encara hi caben LIMIT_PER_HORA − 1 parelles noves, i ni una més. */
+    for (let i = 1; i < LIMIT_PER_HORA; i += 1) expect(local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO)), `p${i}`).toMatchObject({ primer: true });
+    expect(codi(() => local.segueix({ tipus: 'persona', id: `p${LIMIT_PER_HORA}` }, de(JO)))).toBe('SDP-SEG-006');
+  });
+
+  /* Actualitzada a posta (Gauntlet 261024_1945): el sostre és 30, de manera que hi caben 25 parelles més. */
+  test(`una sola parella represa cada ESPERA_DE_REPRESA hi compta cada vegada: amb ${LIMIT_PER_HORA - 5} parelles més, la cinquena represa ja no passa`, () => {
+    const { local, rellotge } = adaptador({ n: LIMIT_PER_HORA });
+    for (let i = 1; i <= LIMIT_PER_HORA - 5; i += 1) local.segueix({ tipus: 'persona', id: `p${i}` }, de(JO));
+    local.segueix({ tipus: 'persona', id: 'p0' }, de(JO));
+    /* LIMIT_PER_HORA − 4 altes. Quatre represes de p0 (LIMIT_PER_HORA), i la cinquena topa. */
     for (let vegada = 0; vegada < 4; vegada += 1) {
       local.deixaDeSeguir({ tipus: 'persona', id: 'p0' }, de(JO));
       rellotge.avança(ESPERA_DE_REPRESA + 1);

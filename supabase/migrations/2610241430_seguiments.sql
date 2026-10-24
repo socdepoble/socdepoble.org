@@ -56,16 +56,21 @@
 --      en formes part), de qualsevol poble, si qui seguix no ha demanat la
 --      baixa (com a seguiment_viu; Codex 261024_1800); mai tu mateix ni una entitat que
 --      administres; cap bloqueig teu (una persona o una entitat que has
---      bloquejat: SDP-SEG-004); 60 altes o represes per hora, en una
---      finestra lliscant (les files de private.seguiments_altes de l'última
---      hora: seguir, deixar i tornar a seguir no en salta cap), una represa
---      de la mateixa parella com a molt cada 10 minuts, i 1.000 seguiments
+--      bloquejat: SDP-SEG-004); 30 altes o represes per hora (Gauntlet
+--      261024_1945: Codex G-01, Gemini G1945-02), en una finestra lliscant
+--      (les files de private.seguiments_altes de l'última hora: seguir,
+--      deixar i tornar a seguir no en salta cap), una represa de la mateixa
+--      parella com a molt cada 10 minuts, comptats des de l'última represa
+--      o, si no n'hi ha cap, des de l'alta (Gemini G1945-03: la primera
+--      represa ja no és lliure), i 1.000 seguiments
 --      vius per persona, comptats sota el seu pany (pg_advisory_xact_lock):
 --      el compte i l'anotació de l'alta van dins del pany i de la mateixa
 --      transacció (dues crides alhora de la mateixa persona van en fila), i
 --      l'instant de l'alta és el d'admetre-la (clock_timestamp() després del
 --      pany), no el de començar la transacció: una crida que espera el pany
---      no anota una alta que ja ix de la finestra abans d'hora.
+--      no anota una alta que ja ix de la finestra abans d'hora. El mateix
+--      instant marca creat_al i reactivat_al i mesura l'espera de represa:
+--      segueix no usa now() enlloc.
 --      Tornar a seguir el que ja seguixes no és cap alta: idempotent, ni
 --      compta ni avisa. El pany i el compte depenen del nivell READ
 --      COMMITTED (el de PostgREST): cada sentència de segueix (volatile), un
@@ -96,7 +101,7 @@
 --   · No esborra cap fila en deixar de seguir: la marca amb deixat_al. Les
 --     files deixades no les veu ningú (cap lectura les torna) i només
 --     compten per a primer i per a l'espera de represa; se'n van amb la
---     baixa del compte (on delete cascade). En naixen com a molt 60 per
+--     baixa del compte (on delete cascade). En naixen com a molt 30 per
 --     hora, i mai més que les persones i entitats que es poden seguir. Quant de
 --     temps es guarden, i si l'exportació les ha de donar, ho decidix el
 --     Mestre (el text legal ho ha de dir).
@@ -125,8 +130,9 @@
 --   SDP-SEG-003 no et pots seguir a tu mateix ni una entitat que administres (22023)
 --   SDP-SEG-004 l'has bloquejada tu: cal desbloquejar-la abans (22023)
 --   SDP-SEG-005 només qui administra l'entitat veu qui la seguix (42501)
---   SDP-SEG-006 massa seguiments: 60 altes o represes per hora, una represa
---               de la mateixa parella cada 10 minuts, o 1.000 vius (42900)
+--   SDP-SEG-006 massa seguiments: 30 altes o represes per hora, una represa
+--               de la mateixa parella cada 10 minuts (també des de l'alta),
+--               o 1.000 vius (42900)
 --   Un bloqueig de l'altra banda no dona cap codi: és a l'ombra (punt 6).
 --   Cap codi no és 404 (PostgREST el donaria per «esquema absent»).
 --
@@ -351,8 +357,10 @@ begin
   if v_fila is not null and v_deixat is null then
     return jsonb_build_object('seguint', true, 'creat_al', coalesce(v_represa, v_al), 'nou', false, 'primer', false);
   end if;
-  -- Tornar a seguir la mateixa parella: com a molt una vegada cada 10 minuts.
-  if v_fila is not null and v_represa > now() - interval '10 minutes' then
+  -- Tornar a seguir la mateixa parella: com a molt una vegada cada 10 minuts,
+  -- des de l'última represa o, si no n'hi ha cap, des de l'alta (v_al és el
+  -- creat_al de la fila; Gauntlet 261024_1945, Gemini G1945-03).
+  if v_fila is not null and coalesce(v_represa, v_al) > v_ara - interval '10 minutes' then
     raise exception 'SDP-SEG-006: has fet massa seguiments nous en poc de temps.' using errcode = '42900';
   end if;
   -- T2 (261024_1800, P2-10; Codex C6-01) · El compte per hora és el del
@@ -371,7 +379,7 @@ begin
     from public.seguiments s
    where s.seguidor = v_jo
      and s.deixat_al is null;
-  if v_hora >= 60 then
+  if v_hora >= 30 then
     raise exception 'SDP-SEG-006: has fet massa seguiments nous en poc de temps.' using errcode = '42900';
   end if;
   if v_total >= 1000 then
@@ -382,15 +390,16 @@ begin
   insert into private.seguiments_altes (seguidor, al) values (v_jo, v_ara);
   if v_fila is not null then
     update public.seguiments s
-       set deixat_al = null, reactivat_al = now(), tenant_id = v_poble
+       set deixat_al = null, reactivat_al = v_ara, tenant_id = v_poble
      where s.id = v_fila
     returning s.reactivat_al into v_al;
     return jsonb_build_object('seguint', true, 'creat_al', v_al, 'nou', false, 'primer', false);
   end if;
-  insert into public.seguiments (tenant_id, seguidor, seguit_tipus, seguit_persona, seguit_entitat)
+  insert into public.seguiments (tenant_id, seguidor, seguit_tipus, seguit_persona, seguit_entitat, creat_al)
   values (v_poble, v_jo, p_tipus,
           case when p_tipus = 'persona' then p_id end,
-          case when p_tipus = 'entitat' then p_id end)
+          case when p_tipus = 'entitat' then p_id end,
+          v_ara)
   returning creat_al into v_al;
   return jsonb_build_object('seguint', true, 'creat_al', v_al, 'nou', true, 'primer', true);
 end;

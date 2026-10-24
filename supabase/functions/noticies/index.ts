@@ -23,8 +23,8 @@
  * Si no el té, el gestor TANCA les personals (503 personals_sense_dns) i les
  * imatges de fora dels hosts del catàleg (503 imatge_sense_dns): mai «sense
  * resoledor, és pública». T1 (261024_1800): amb resoledor, també es resolen
- * els hosts aprovats (el catàleg i els seus CDN), i una resposta privada, o cap
- * adreça, els veta; sense, valen per la llista blanca nativa
+ * els hosts aprovats (el catàleg i els seus CDN), i una resposta privada, una
+ * família fallada o cap adreça els veta; sense, valen per la llista blanca nativa
  * (HOSTS_DEL_SISTEMA, gestor.js).
  * Abans d'encendre unes o altres, el Mestre ha de
  * tancar el DNS rebinding amb un egrés aïllat (README). Cap registre: ni la consola ni

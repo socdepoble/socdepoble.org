@@ -193,9 +193,11 @@ describe.each(['seed', 'local'])('mode %s · localSeguiments fa de servidor, sen
     expect(await deixaDeSeguir({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false });
     expect(await deixaDeSeguir({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false });
     expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false, creatAl: null });
-    /* Tornar a seguir no és cap primera vegada: l'avís al xat no torna a eixir (R4-01). */
-    expect(await segueix({ tipus: 'entitat', id: 'rentonar' }, config)).toMatchObject({ seguint: true, nou: false, primer: false });
-    expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar' }, config)).toMatchObject({ seguint: true });
+    /* Actualitzada a posta (Gauntlet 261024_1945, Gemini G1945-03): tornar a seguir de seguida topa amb l'espera de
+       represa, comptada des de l'alta, i res no canvia. Que passada l'espera la represa no és cap primera vegada
+       (l'avís al xat no torna a eixir, R4-01) ho prova localSeguiments.test.js amb el rellotge injectat. */
+    await expect(segueix({ tipus: 'entitat', id: 'rentonar' }, config)).rejects.toMatchObject({ code: 'SDP-SEG-006' });
+    expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false, creatAl: null });
     expect(fetchDeProva).not.toHaveBeenCalled();
   });
 

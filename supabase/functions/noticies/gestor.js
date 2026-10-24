@@ -57,8 +57,8 @@
  *   · I un nom aprovat no acredita la IP: amb resoledor, cada salt dels hosts
  *     aprovats (el catàleg i CDN_IMATGES) també es resol, i una sola resposta
  *     no pública el veta (adreca_vetada, sense baixar res), encara que l'altra
- *     família (A o AAAA) falle; sense cap adreça, tampoc no passa
- *     (origen_caigut). Només sense resoledor a l'entorn un host aprovat val
+ *     família (A o AAAA) falle; si una família falla, o sense cap adreça,
+ *     tampoc no passa (origen_caigut). Només sense resoledor a l'entorn un host aprovat val
  *     sense resoldre (la llista blanca nativa; decisió del Mestre, README); un
  *     de fora, mai.
  *
@@ -963,16 +963,17 @@ export function creaGestor({
 
   /* T1 (261024_1800; Codex C6-02, i la segona passada) · Un host aprovat (el catàleg i CDN_IMATGES),
      amb resoledor: una sola resposta no pública el veta (adreca_vetada), també si l'altra família
-     ha fallat; cap adreça (cap resposta, o les dues famílies fallades) tampoc no passa
-     (origen_caigut: el Lector rep la còpia de reserva si en té); passa amb una adreça pública com a
-     mínim i cap de privada, encara que l'altra família no haja respost (un host sense IPv6 no cau
-     per l'AAAA). Sense resoledor a l'entorn, passa per la llista blanca nativa: és l'única porta
-     oberta, i la decisió és del Mestre (supabase/README.md). */
+     ha fallat; una família que falla, o cap adreça, tampoc no passa (origen_caigut: el Lector rep la
+     còpia de reserva si en té; Gauntlet 261024_1945, Gemini G1945-01: abans, una adreça pública i
+     l'altra família amb error passaven). Un host sense IPv6 no cau per l'AAAA: un nom que no
+     existix (NotFound) és cap resposta, no una fallada (index.ts). Sense resoledor a l'entorn,
+     passa per la llista blanca nativa: és l'única porta oberta, i la decisió és del Mestre
+     (supabase/README.md). */
   async function aprovatVetat(host, senyal) {
     const nom = await resolNom(host, senyal);
     if (!nom) return null;
     if (nom.adreces.some(esIpNoPublica)) return 'adreca_vetada';
-    return nom.adreces.length === 0 ? 'origen_caigut' : null;
+    return nom.fallades > 0 || nom.adreces.length === 0 ? 'origen_caigut' : null;
   }
 
   /* Les regles d'un salt (el primer o una redirecció): null si val; si no, el codi d'error.

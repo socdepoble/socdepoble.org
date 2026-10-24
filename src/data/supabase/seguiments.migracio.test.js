@@ -207,7 +207,9 @@ test('segueix: tu mateix i les entitats que administres, abans; veïnatge, el te
   const pany = cos.indexOf("perform pg_advisory_xact_lock(hashtextextended('seguiments:' || v_jo::text, 0));");
   const fila = cos.indexOf('select s.id, s.creat_al, s.reactivat_al, s.deixat_al into v_fila, v_al, v_represa, v_deixat from public.seguiments s where s.seguidor = v_jo and ((');
   const repetit = cos.indexOf("if v_fila is not null and v_deixat is null then return jsonb_build_object('seguint', true, 'creat_al', coalesce(v_represa, v_al), 'nou', false, 'primer', false);");
-  const espera = cos.indexOf("if v_fila is not null and v_represa > now() - interval '10 minutes' then raise exception 'sdp-seg-006:");
+  /* Actualitzada a posta (Gauntlet 261024_1945, Gemini G1945-03): l'espera de represa es compta des de
+     l'última represa o, si no n'hi ha cap, des de l'alta (v_al, el creat_al de la fila), i amb v_ara. */
+  const espera = cos.indexOf("if v_fila is not null and coalesce(v_represa, v_al) > v_ara - interval '10 minutes' then raise exception 'sdp-seg-006:");
   /* Actualitzada a posta (261024_1800, T2; Codex C6-01): el que fixava era el defecte. El compte per
      hora ja no és de files de public.seguiments (una parella represa tres vegades hi pesava una): és
      del registre de les altes, podat de més d'una hora; el total, només els vius. I l'anotació de
@@ -216,12 +218,14 @@ test('segueix: tu mateix i les entitats que administres, abans; veïnatge, el te
   const poda = cos.indexOf("delete from private.seguiments_altes a where a.seguidor = v_jo and a.al <= v_ara - interval '1 hour';");
   const compte = cos.indexOf("select count(*) into v_hora from private.seguiments_altes a where a.seguidor = v_jo and a.al > v_ara - interval '1 hour';");
   const vius = cos.indexOf('select count(*) into v_total from public.seguiments s where s.seguidor = v_jo and s.deixat_al is null;');
-  const hora = cos.indexOf("if v_hora >= 60 then raise exception 'sdp-seg-006:");
+  /* Actualitzada a posta (Gauntlet 261024_1945, Codex G-01, Gemini G1945-02): 30 altes o represes per hora. */
+  const hora = cos.indexOf("if v_hora >= 30 then raise exception 'sdp-seg-006:");
   const total = cos.indexOf("if v_total >= 1000 then raise exception 'sdp-seg-006:");
   const anota = cos.indexOf('insert into private.seguiments_altes (seguidor, al) values (v_jo, v_ara);');
-  const represa = cos.indexOf('if v_fila is not null then update public.seguiments s set deixat_al = null, reactivat_al = now(), tenant_id = v_poble where s.id = v_fila returning s.reactivat_al into v_al; '
+  const represa = cos.indexOf('if v_fila is not null then update public.seguiments s set deixat_al = null, reactivat_al = v_ara, tenant_id = v_poble where s.id = v_fila returning s.reactivat_al into v_al; '
     + "return jsonb_build_object('seguint', true, 'creat_al', v_al, 'nou', false, 'primer', false);");
-  const alta = cos.indexOf('insert into public.seguiments (tenant_id, seguidor, seguit_tipus, seguit_persona, seguit_entitat)');
+  const alta = cos.indexOf("insert into public.seguiments (tenant_id, seguidor, seguit_tipus, seguit_persona, seguit_entitat, creat_al) values (v_poble, v_jo, p_tipus, "
+    + "case when p_tipus = 'persona' then p_id end, case when p_tipus = 'entitat' then p_id end, v_ara) returning creat_al into v_al;");
   const primer = cos.indexOf("return jsonb_build_object('seguint', true, 'creat_al', v_al, 'nou', true, 'primer', true);");
   const ordre = [valida, propi, veina, entitat, bloqueig, meu, absent, pany, instant, fila, repetit, espera, poda, compte, vius, hora, total, anota, represa, alta, primer];
   expect(ordre.every((posicio) => posicio > 0), JSON.stringify(ordre)).toBe(true);
@@ -363,6 +367,11 @@ test('T2 · private.seguiments_altes: qui i quan (mai a qui), a l’esquema priv
   expect(segueix.indexOf('v_ara := clock_timestamp();')).toBeGreaterThan(segueix.indexOf('perform pg_advisory_xact_lock('));
   const delRegistre = segueix.split('\n').filter((linia) => /seguiments_altes|a\.al\b/.test(linia) || /v_ara - interval/.test(linia)).join('\n');
   expect(delRegistre).not.toMatch(/now\(\)/);
+  /* Gauntlet 261024_1945 (Codex, Gemini G1945-03) · segueix no usa now() enlloc: l'espera de represa,
+     reactivat_al i creat_al són de v_ara, el mateix instant d'admissió que el registre. */
+  expect(segueix).not.toMatch(/now\(\)/);
+  expect(CAPCALERA).toMatch(/30 altes o represes per hora/);
+  expect(CAPCALERA).not.toMatch(/\b60 (altes|per)\b/);
 });
 
 /* Codex 261024_1800 (observació secundària) · La branca d'entitat de segueix mira, com seguiment_viu,

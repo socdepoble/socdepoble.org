@@ -603,8 +603,9 @@ description: "Documentació canònica de Sóc de Poble."
   pública (o de la qual formes part), de qualsevol poble, si no has demanat la
   baixa; mai tu mateix ni
   una entitat que administres; cap bloqueig teu de `public.bloquejos` (es
-  llig amb `to_regclass`); 60 altes o represes per hora en una finestra
-  lliscant, comptades al registre `private.seguiments_altes` (T2 261024_1800,
+  llig amb `to_regclass`); 30 altes o represes per hora (Gauntlet
+  261024_1945: Codex G-01, Gemini G1945-02) en una finestra lliscant,
+  comptades al registre `private.seguiments_altes` (T2 261024_1800,
   P2-10; auditoria Codex 261024_1800 C6-01: una fila per alta o represa
   acceptada, només qui i quan, que ni deixar de seguir ni tornar a seguir no
   esborren; abans es comptaven files i una parella represa diverses vegades
@@ -616,7 +617,10 @@ description: "Documentació canònica de Sóc de Poble."
   minuts; sense pg_cron, una fila vella es queda fins a la pròxima alta de la
   mateixa persona o la baixa del compte, i la quota no la compta igualment;
   l'exportació no el dona), una represa de la mateixa
-  parella cada 10 minuts i 1.000 seguiments vius per persona, sota el seu
+  parella cada 10 minuts, comptats des de l'última represa o, si no n'hi ha
+  cap, des de l'alta (Gemini G1945-03: la primera represa ja no és lliure;
+  `creat_al`, `reactivat_al` i l'espera usen el mateix instant
+  d'admissió), i 1.000 seguiments vius per persona, sota el seu
   pany i en la mateixa transacció (depén del nivell READ COMMITTED de
   PostgREST; la purga salta les files bloquejades, `skip locked`). El bloqueig de l'altra banda és a l’ombra: seguir funciona igual i les
   lectures de qui seguix no l'amaguen; només `qui_em_segueix`, la llista de
@@ -1420,8 +1424,11 @@ d'enllaç local (amb 169.254.169.254) o ULA el veta (422 `adreca_vetada`,
 sense baixar res; el Lector rep la còpia de reserva si en té), encara que
 l'altra família (A o AAAA) falle (Codex C6-02, segona passada: abans
 `Promise.all` en perdia la resposta privada); sense cap adreça (cap resposta,
-o les dues famílies fallades), tampoc no passa (502 `origen_caigut`). Passa
-amb una adreça pública com a mínim i cap de privada. Només si el runtime no
+o les dues famílies fallades), tampoc no passa (502 `origen_caigut`), i una
+sola família fallada tampoc (Gauntlet 261024_1945, Gemini G1945-01: abans,
+una adreça pública i l'altra família amb error passaven). Un host sense IPv6
+no cau: el `NotFound` de l'AAAA és cap resposta, no una fallada. Passa amb
+una adreça pública com a mínim, cap de privada i cap família fallada. Només si el runtime no
 té `Deno.resolveDns`, un host aprovat es servix sense resoldre: és l'única
 porta oberta, i tancar-la també (el catàleg deixaria de funcionar en eixe
 runtime) és decisió del Mestre. Després del desplegament, el `curl` de

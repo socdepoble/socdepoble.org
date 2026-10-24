@@ -19,7 +19,9 @@
  *     seguix);
  *   · deixar de seguir és un esborrat suau: la fila es queda amb `deixatAl`.
  *     Tornar-la a seguir la reprén (`reactivatAl`) com a molt una vegada cada
- *     ESPERA_DE_REPRESA, i `primer` (i `nou`, el mateix valor) només és true
+ *     ESPERA_DE_REPRESA, comptada des de l'última represa o, si no n'hi ha
+ *     cap, des de l'alta (Gauntlet 261024_1945, Gemini G1945-03: la primera
+ *     represa ja no és lliure), i `primer` (i `nou`, el mateix valor) només és true
  *     la primera vegada de totes que la parella se seguix;
  *   · LIMIT_PER_HORA altes o represes per hora, en una finestra lliscant i
  *     comptades al registre de les altes (`altes`: un moment per cada alta o
@@ -40,8 +42,9 @@ import { PERSONA_PILOT } from './identitatsSeed.js';
 import { PERSONES_SEED, localPerfils } from './localPerfils.js';
 import { errorDeSeguiment, seguitDelContracte } from './contracte.js';
 
-/* Els sostres de public.segueix (2610241430). */
-export const LIMIT_PER_HORA = 60;
+/* Els sostres de public.segueix (2610241430). 30 altes o represes per hora: Gauntlet 261024_1945
+   (Codex G-01, Gemini G1945-02). */
+export const LIMIT_PER_HORA = 30;
 export const LIMIT_TOTAL = 1000;
 export const ESPERA_DE_REPRESA = 10 * 60 * 1000;
 const UNA_HORA = 60 * 60 * 1000;
@@ -123,7 +126,7 @@ export function createLocalSeguimentsAdapter({ perfils = localPerfils, persones 
       if (viva(ja)) return { seguint: true, creatAl: desDe(ja), nou: false, primer: false };
       const moment = ara();
       const ms = moment.getTime();
-      if (ja && despresDe(ja.reactivatAl, ms - ESPERA_DE_REPRESA)) throw errorDeSeguiment('SDP-SEG-006');
+      if (ja && despresDe(ja.reactivatAl || ja.creatAl, ms - ESPERA_DE_REPRESA)) throw errorDeSeguiment('SDP-SEG-006');
       /* La poda i el compte del registre (com segueix: les de més d'una hora se'n van). */
       const delRegistre = (altes.get(String(qui)) || []).filter((al) => al > ms - UNA_HORA);
       altes.set(String(qui), delRegistre);

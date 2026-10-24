@@ -350,6 +350,8 @@ describe('el codi', () => {
     expect(codi).not.toContain('if (regles.confiats?.has(neta.hostname)) return null;');
     expect(codi).not.toMatch(/if \(regles\) \{\s*const error = await valida\(actual/);
     expect(codi).toContain("if (nom.adreces.some(esIpNoPublica)) return 'adreca_vetada';");
+    /* Gauntlet 261024_1945, Gemini G1945-01 · una família fallada també tanca un host aprovat. */
+    expect(codi).toContain("return nom.fallades > 0 || nom.adreces.length === 0 ? 'origen_caigut' : null;");
     /* Codex C6-02, segona passada · allSettled: cap Promise.all en la resolució. */
     expect(codi).toContain('await Promise.allSettled([resol(\'A\'), resol(\'AAAA\')])');
     expect(codi).not.toMatch(/Promise\.all\(\[resol\(/);
@@ -1431,13 +1433,27 @@ describe('T1 · anti-SSRF a tots els salts, també dels hosts aprovats', () => {
     }
   });
 
-  test('un host aprovat amb una adreça pública i l’altra família amb error passa (un host sense IPv6 no cau); una font personal, no', async () => {
-    const resolDns = vi.fn(async (host, tipus) => { if (tipus === 'A') return ['93.184.216.34']; throw new Error('SERVFAIL'); });
+  /* Actualitzada a posta (Gauntlet 261024_1945, Gemini G1945-01): el que fixava era el defecte. Una adreça
+     pública i l'altra família amb error ja no passen: una família que no ha respost no acredita res. */
+  test.each(['A', 'AAAA'])('un host aprovat amb una adreça pública i la família %s amb error no es baixa (502 origen_caigut); una font personal, tampoc', async (falla) => {
+    const resolDns = vi.fn(async (host, tipus) => {
+      if (tipus === falla) throw new Error('SERVFAIL');
+      return tipus === 'A' ? ['93.184.216.34'] : ['2606:4700:4700::1111'];
+    });
     const fetchImpl = vi.fn(async (url) => (url === FEED ? origen(RSS) : png()));
     const { demana } = prepara({ fetchImpl, resolDns, personals: true });
+    expect((await errorDe(await demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_origen_caigut');
+    for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await errorDe(await demana(ambU(adreca)))).code, adreca).toBe('sdp_noticies_origen_caigut');
+    expect((await errorDe(await demana(`/feed?url=${encodeURIComponent('https://blog.example.org/feed')}`))).code).toBe('sdp_noticies_origen_caigut');
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  test('un host sense IPv6 no cau: l’AAAA sense resposta (el NotFound d’index.ts és una llista buida) no és cap fallada', async () => {
+    const resolDns = vi.fn(async (host, tipus) => (tipus === 'A' ? ['93.184.216.34'] : []));
+    const fetchImpl = vi.fn(async (url) => (url === FEED ? origen(RSS) : png()));
+    const { demana } = prepara({ fetchImpl, resolDns });
     expect((await demana('/feed?font=ayudawp')).status).toBe(200);
     for (const adreca of [DEL_CATALEG, DEL_CDN]) expect((await demana(ambU(adreca))).status, adreca).toBe(200);
-    expect((await errorDe(await demana(`/feed?url=${encodeURIComponent('https://blog.example.org/feed')}`))).code).toBe('sdp_noticies_origen_caigut');
   });
 
   test('disponibilitat: només sense resoledor a l’entorn els hosts aprovats es servixen sense resoldre; les personals es tanquen', async () => {
