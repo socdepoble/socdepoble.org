@@ -34,13 +34,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261024_0130_pla_implementacio_auditoria_adversarial_claude_i_dsa]]
-- [[261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa]]
-- [[261023_2331_auditoria_gemini]]
-- [[261023_2330_auditoria_claude]]
-- [[261023_2328_auditoria_codex]]
-- [[261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio]]
-- [[261023_2245_pla_implementacio_botigues_i_auditoria_trio]]
+- [[261024_1800_prompt_claude_gemini_codex_fortificacio_total_i_blindatge_sistema]]
+- [[261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
@@ -771,6 +766,18 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261024_1315_prompt_claude_gemini_codex_fortificacio_i_auditoria_adversarial_trio]]
+- [[../90_arxiu_historic/261024_1315_pla_implementacio_fortificacio_i_auditoria_adversarial_trio]]
+- [[../90_arxiu_historic/261024_1315_auditoria_gemini]]
+- [[../90_arxiu_historic/261024_1315_auditoria_codex]]
+- [[../90_arxiu_historic/261024_1315_auditoria_claude]]
+- [[../90_arxiu_historic/261023_2245_pla_implementacio_botigues_i_auditoria_trio]]
+- [[../90_arxiu_historic/261023_2245_prompt_claude_gemini_codex_botigues_i_auditoria_trio]]
+- [[../90_arxiu_historic/261023_2328_auditoria_codex]]
+- [[../90_arxiu_historic/261023_2330_auditoria_claude]]
+- [[../90_arxiu_historic/261023_2331_auditoria_gemini]]
+- [[../90_arxiu_historic/261024_0130_pla_implementacio_auditoria_adversarial_claude_i_dsa]]
+- [[../90_arxiu_historic/261024_0130_prompt_codex_gemini_auditoria_adversarial_claude_i_dsa]]
 - [[../90_arxiu_historic/261023_1610_auditoria_claude]]
 - [[../90_arxiu_historic/261023_1608_auditoria_gemini]]
 - [[../90_arxiu_historic/261023_1600_prompt_claude_gemini_desplegament_firebase_i_puresa_xat]]
@@ -983,6 +990,7 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Àncores sense destí (Porta Olivera)
 
+- 261024 · `261024_1445_prompt_codex_gemini_gauntlet_revisio_adversarial`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261020 · `261020_2355_prompt_gemini_auditoria_llancament_apps_i_sollutia`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261020 · `261020_2235_prompt_gemini_auditoria_salfumant_sistema_i_android`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261019 · `261019_1715_prompt_gemini_auditoria_skills_i_laboratori`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.

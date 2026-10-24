@@ -1,0 +1,22 @@
+{
+  "id": "f78554cb-2791-4577-bdf8-74bc5eedf9db",
+  "session": "7da3358d-526d-4939-aa5c-99c9f1078615",
+  "operationId": "codex-gauntlet-segon-registre-261024",
+  "claim": "7da3358d-526d-4939-aa5c-99c9f1078615:governance-write",
+  "planHash": "eef2bc7231731e331365dbfbf78a8af2f3b6e39d7b22d4fe73d925772b889e3f",
+  "beforeSeal": "ec3ab303f9ef63c21fa26e2a1f9ff6e6f595a3277755eced44060713f399c81b",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "3b5f45f54d753ea8f2aa4b98bb471bfc3ea6e4261d51ec87c4ff1ef1cc054219",
+      "after": "36041f3d14cebd44a0b0c4a387f59c3b033dfde97a3f5c7544857eae96978f22"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "7055f2c058e7ad5ac0662ab0710078c3a325c300dab326ff622d931decbbb772",
+      "after": "c32e3984a227acd4c5ae39f29e7eb9ae1a194b0e5df0a4c34b2dbd00ee5ba602"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

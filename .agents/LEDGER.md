@@ -1013,4 +1013,14 @@ Informe `261023_2328_auditoria_codex`, encàrrec del prompt i pla aprovats 2026-
 Encàrrec directe del prompt261024_0130. Addenda a261023_2328_auditoria_codex, pla vinculat i Llibre Mestre actualitzat amb deutes i transcripció correcta de D-2. P3 no aplicat viu:215/215 en còpia temporal, ESLint0;54/54 fluxos i41/41 botigues. No aprovat per publicar sense completar contacte, proporcionalitat i execució de compromisos; AAB/iOS presents sense signar. CSP local corregida però capçalera viva pendent. Sense codi, SQL, signatures, credencials, desplegaments ni correus; cap cron creat. Checksum previ del LEDGER vàlid=False; es preserva el cos i el segell anterior sense resegellar deute alié. Resultats i tancament global a l’addenda.
 
 
+## 2026-10-24T11:28:26.305Z · Codex · Auditoria de fortificació i dades · torn_1ecae505-dfdb-4b44-8b6a-417c476248b4
+
+Informe 261024_1315_auditoria_codex i Llibre Mestre actualitzats; pla 1315 vinculat. Tall a4e562bc, sis troballes altes, sense vistiplau públic. Node primari:1.028 passen/3 TODO, ESLint0; Vitest general en curs al registre i resultat final a l'informe. RLS només estàtica i mocks; cap SQL remot. Només documentació: cap font de producte, secret, compte real, commit o desplegament tocat. Cap cron propi, automacions locals existents PAUSED. Checksum previ LEDGER valid=false; es conserva íntegrament el cos i el hash anterior, sense resegellar deute alié.
+
+
+## 2026-10-24T13:03:19.390Z · Codex · Segon Gauntlet de Claude · torn_1d352a66-df43-46f4-91c5-c67a532fb7fa
+
+Informe1315_codex v2.0.0 i Llibre Mestre actualitzats. NO VISTIPLAU per carrera Apple, títols persistents de baixa, DNS personal incomplet, versió legal, alta personal i targetes rebutjades. Catàleg/tests RSS i copy/verd corregits durant la revisió i revalidats; D-03 retirat. Proves dirigides verdes amb recomptes/solapament al document; regressió Apple falla amb expectativa correcta. SQL sense runtime PostgreSQL; CSP pública encara antiga14:52CEST. Només documentació i lectures/proves locals: cap font, secret, remot, commit o publicació. Cap cron propi. Checksum del LEDGER ja invàlid abans de l’entrada, cos i footer preservats sense reconciliació fictícia.
+
+
 <!-- HASH: c1042d8d5bcb510c40328e20428c7ba2d68c8fc9a266bba4ebdaef8d921a57e7 -->

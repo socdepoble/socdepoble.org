@@ -7,6 +7,100 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-24T17:45:00+02:00 · IAIA MarIA / Mestre Javi Llinares · Triomf del Trio, Commit Atòmic f54baa09c, 21.756 Proves en Verd, Fortificació P0 i Unificació Lector-Bloc de Notes
+
+Torn: `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Acta canònica de la jornada: [[261024_1745_acta_marmota_triomf_fortificacio_trio_adversarial_i_unificacio_lector_bloc_de_notes]]. Commit consolidat a `backup-notes-publish`: `f54baa09c` («feat(fortificacio): T1-T8 del torn 261024_1315 i directives del Mestre»).
+
+- **Veredicte Final:** **VISTIPLAU DE PUBLICACIÓ ASSOLIT EN CODI (21.756 proves passant, 0 fallades)**. Aprovació humana del Text Legal 2.2 formalitzada pel Mestre Javi Llinares a `.agents/contingut_estructural.json`.
+- **Fortificació P0 Segellada:**
+  - Revocació d'Apple (`P0-04`) immutabilitzada a `compte.js:114` i migració `2610241420_revocacio_apple.sql`.
+  - Moderació forçada DSA (`P0-18`) amb Text Legal 2.2 i trigger d'edició protegit (`2610241400_normes_exigides_ugc.sql`).
+  - CSP amb `media-src` (`P0-19`) verificada a `firebase.json` i `index.html`.
+  - Baixa completa d'UGC i fitxers (`P0-20`) amb purga de publicacions i neutralització de títols de fils de discussió a «Publicació esborrada» (`2610241440_baixa_completa_ugc_i_fitxers.sql`).
+  - Ordre de desplegament estricte definit a `P0-21` del Llibre Mestre.
+- **Unificació del Lector amb el Bloc de Notes (Pedra Seca):**
+  - Eliminada la pàgina redundant de targetes inflades `/app/lector/fonts`. El Lector és un `UniversalWorkspace` pur.
+  - La columna del mig utilitza la nova `FilaNoticia.jsx` seguint el patró de Pedra Seca de les notes.
+  - Fons verd canònic `#0F672F` (`--sdp-crom-barra-lector`) al títol de la barra lateral.
+  - Els canals de YouTube incorporen façana de consentiment per reproduir directament.
+- **Neteja a `/connectar` (`P2-11`):** Rètol canviat a `Es connecta a ${persona}.` i accions d'arxiu en privat sense exposar acrònims interns.
+- **Escriptori i Portes:** Porta Olivera en Codi 0. Zero processos orfes.
+
+## ESTAT_ACTUAL · 2026-10-24T15:05:00+02:00 · Gemini 4 Argon / IAIA MarIA · Segona Passada Gauntlet Loop Adversarial (`261024_1440`) sobre T1–T8 i T5b: 762/762 Tests Verds, NO-GO Condicional per Targetes a `/app/lector/fonts` (`G2-01`) i Residu «MAS»/«del poble» (`G2-02`)
+
+Torn: `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Informe canònic actualitzat (v1.1.0): [[261024_1315_auditoria_gemini]]. Contrast creuat amb [[261024_1315_auditoria_codex]] i [[261024_1315_auditoria_claude]].
+
+- **Veredicte de la Segona Passada (`261024_1440`):** **NO CONCEDIM EL VISTIPLAU DE PUBLICACIÓ (`NO-GO` condicional)** fins que Claude resolga les troballes `G2-01`..`G2-06`.
+- **Verificacions en Verd (Aterrades i Polides per Claude entre 14:45 i 15:01 CEST):**
+  - **Bateria dirigida Vitest:** **42 fitxers de test en verd (`42/42`), 762 proves en verd (`762/762`)** en `53,57s` (`src/apps/lector`, `src/data/adaptadors/noticies`, `supabase/functions/noticies`, `src/sections/connectar`, `CosAmbVisor.test.jsx`, `compte.test.js`, i les 5 migracions `2610241400`..`2610241440`).
+  - **Directiva 1 (Identitat a `/connectar`):** `src/sections/connectar/ConnectarSection.jsx:608` ja renderitza `Es connecta a ${persona}.` (eliminat `"al MAS de"`).
+  - **Directiva 2.1, 2.2 i 2.3 (`/app/lector/noticies`):** `manifest.js:21` canviat a `'Lector de notícies'`. En DOM viu (`1440×900`), `.sdp-app-barra__titol` mostra `"Lector de notícies"` amb fons `#0F672F` (`rgb(15, 103, 47)`) i lletra `#FFFFFF` (`48px` d'alt), i les 3 capçaleres de columna (`CARPETES`, `NOTÍCIES`, `Hui`) s'alineen matemàticament a `y = 64px` i `height = 58px`.
+  - **Visor Lightbox (`T4` / `P1-06`):** `CosAmbVisor` obri `<VisorImatges>` en les fotos del cos d'article amb `✕` (`lucide-x`), `Escape` i clic al fons fosc (`tancaEnVel`), i aplica `heroFetchPriority="high"` a la portada.
+- **Troballes Bloquejants i d'Alta Severitat Pendents per a Claude (`G2-01` a `G2-06`):**
+  - **`G2-01` (BLOQUEJANT · Directiva 3):** `/app/lector/fonts` (`src/apps/lector/vistes/GestioFonts.jsx:180–192,220–225`) continua renderitzant **12 targetes `.sp-card` amb boina taronja** (`<ColumnaCataleg forma="targetes">` i `<NavTargetes>`) en comptes de la llista/arbre net estil Feedly (`../_arxiu_wiki_de_poble/01_Produccio/feedly_clon/`).
+  - **`G2-02` (BLOQUEJANT · Directives 1 i 2.1):** `GestioFonts.jsx:118,157,182,224` i `FontsSenseResposta.jsx:30` encara mostren `"Fonts del poble"` i `"servei de notícies del poble"`; i `ConnectarSection.jsx:541,550,575,656,739,836,852` + `src/config/idiomes/*.js` encara exposen el terme intern `"al teu MAS"` (`"Al teu MAS"`, `"Ho guardes al teu MAS"`, `"Obrir la connexió al teu MAS"`).
+  - **`G2-03` (ALTA · `P0-16`):** Navegar a `/app/lector/noticies` genera **6 errors `404`** a la consola perquè `/functions/v1/noticies` encara no està desplegada al Supabase remot.
+  - **`G2-04` (ALTA · `P0-04` / `D-01`):** Condició de cursa a `src/data/supabase/compte.js:114–117`: `revocaAppleAbansDeLaBaixa(capturat)` s'executa abans de comprovar `current()` i torna a llegir `getSession()` en lloc d'usar el token capturat.
+  - **`G2-05` (ALTA · `P0-20` / `D-02` i `D-05`):** `2610241440_baixa_completa_ugc_i_fitxers.sql` conserva `public.xat_fils.titol` i `subjecte_titol` d'una publicació personal esborrada si algú altre hi havia comentat; i `src/sections/text/legalContent.js:13` continua declarant `Versió 2.1` del 16 d'octubre.
+  - **`G2-06` (MITJANA · `D-07`):** El límit de 60 seguiments/hora a `2610241430_seguiments.sql:259` compta només files vives (permetent bucle `seguir`/`deixar_de_seguir`), i el trigger de `2610241400_normes_exigides_ugc.sql:137` no cobreix `UPDATE` de `title`/`description`/`payload`.
+
+## ESTAT_ACTUAL · 2026-10-24T13:03:19.390Z · Codex · Segon Gauntlet sobre Claude: NO VISTIPLAU
+
+Torn: `torn_1d352a66-df43-46f4-91c5-c67a532fb7fa`. Informe viu: [[261024_1315_auditoria_codex]], v2.0.0; pla 1315 vinculat.
+
+- Implementacions aterrides al worktree sobre HEAD a4e562bc8. Correccions de la primera passada reconegudes; ja no es diu que Apple/exportació/worker o visor estiguen absents.
+- Bloquejants actuals: D-01 carrera de sessió que pot revocar Apple del compte nou; D-02 còpies de títols propis retingudes al xat; D-04 gestió de fonts en targetes rebutjades; D-05 versió legal antiga; D-06 alta personal inaccessible; D-08 fonts personals que admeten absència de resoledor DNS. D-07 quota evadible i UPDATE fora de normes, severitat P2. RLS/SQL només estàtics; cap intrusió remota demostrada.
+- Proves dirigides verdes: Apple/baixa235/235; moderació/exportació/seguiments100/100; UI/visor/legal/fixtures277/277; revalidació d’integració211/211; lector final190/190. Hi ha solapament, no se sumen. D-03 roja intermèdia corregida per Claude i retirada. Regressió sintètica de carrera continua reproduint el defecte; proposta mínima verificada només en còpia temporal.
+- Navegador local: cos Aplec amb galeria/zoom/Escape/focus validat; tres capçaleres58px alineades en el fallback observat. Text Connectar, títol lector i verd #0F672F/blanc pur corregits i revalidats durant la revisió. Fonts encara en targetes. Cap playback ni WebPerf inventat. CSP pública capturada14:52:08CEST sense media-src; no desplegada.
+- Llibre Mestre actualitzat per substituir diagnòstics històrics superats i registrar P2-10. Cap codi de producte, test, SQL, secret, compte real, commit o desplegament canviat per Codex. Cap cron creat; recollida de recursos propis, servidor compartit preservat. Tancament global pendent de comprovació, deute LEDGER/Wiki/SCC heretat conservat. Acta Marmota general per a l’orquestradora.
+
+
+## ESTAT_ACTUAL · 2026-10-24T13:39:00+02:00 · Gemini 4 Argon / IAIA MarIA · Auditoria Adversarial de Rendiment, UI/UX Pedra Seca (58px), Lightbox, Lector RSS, Connectar i Síntesi del Trio
+
+Torn: `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Informe canònic viu: [[261024_1315_auditoria_gemini]]. Contrast creuat amb [[261024_1315_auditoria_codex]] i [[261024_1315_auditoria_claude]].
+
+- **Auditoria en viu via Chrome DevTools MCP (`http://localhost:3340` · `viewport: 500×844`):**
+  - **Consola i CSP (`T3` / `P0-19`):** 0 errors i 0 avisos a `/mur`, `/events/aplec-2023`, `/app/lector` i `/connectar`. Confirmada la troballa `C-05` de Codex: `firebase.json` local ja té `media-src 'self' data: blob: https:;`, però cal executar `firebase deploy --only hosting` perquè la capçalera viva de `https://socdepoble.org` l'entregue.
+  - **Estètica Pedra Seca (`58px`) i Touch Targets (`G-05`):** `.bar-blue` (`58px`), `.bar-orange` (`58px`), `.sp-card-header` (`58px` a les 15 targetes) i tots els botons interactius (`48×48px`, `0` infraccions sota `44px`, `horizontalOverflow: false`). Única divergència: `.bar-black` mesura `64px` d'alçada (`requires_human_decision: true`).
+  - **Visor Lightbox (`T4` / `P1-06` · `G-01`):** La imatge de portada (`HeroImageWithLightbox`) obri `<dialog open class="sdp-dialeg sdp-dialeg--completa sdp-visor sdp-dialeg--sense-marc">` amb botons de `48×48px`, però les imatges del cos d'articles (`detailRichText.jsx`, `Aplec2023Article.jsx`, `buildMultimediaDetailSectionMeta` línia 679) són `<img>` crus sense delegació al visor (i `buildMultimediaDetailSectionMeta` duplica `item.src` a portada i cos). A més, cal `tancaEnVel={true}` (`closedby="any"`).
+  - **WebPerf, LCP i Puresa WebP (`G-02`):** En `/mur`, el candidat real a LCP (`xat_portada.webp`, `445×445px`) té `loading="lazy"` i `fetchpriority=null`, mentre que `fetchpriority="high"` s'aplica a 2 logotips de capçalera (un d'ells ocult amb `0×0px`). Al disc coexisteixen `208` `.webp` amb `108` `.png` i `69` `.jpg`.
+  - **Lector RSS Territorial (`T5` / `P1-07` · `G-03`):** `/app/lector` mostra estat buit (*«Encara no hi ha cap font connectada»*) perquè `AppLector.jsx:79` exigeix `VITE_SDP_LECTOR_LLAVOR === '1'` i `manifest.js` té `entorn: 'desenvolupament'`. Cal connectar l'adaptador per defecte amb *fallback* determinista a `FONT_LLAVOR` (`dadesLlavor.js`) sense *fetch* directe al navegador (Model B).
+  - **Xarxa Humana Rural `/connectar` (`T6` / `IDEA-14` · `G-04`):** Actualment `/connectar` només ofereix xat privat amb l'autor (`Escriu-li a {nom}`), desar nota al MAS i reclamar l'administració d'una organització (`TargetaAdministrar.jsx` / `organization_claims`), bloquejant l'usuari quan l'organització ja té propietària (`estat === 'te-propietaria'`) sense cap flux per demanar **membreia ordinària** (`role: 'member'`).
+- **Contrast Creuat amb Codex i Claude (`G-06`, `G-07`):**
+  - Ratificades independentment en codi totes les troballes de Codex (`C-01` a `C-06`: baixa d'Apple `demanaBaixa` sense `authorizationCode`, `NO_DISPONIBLE` acceptant normes en local, P3 pendent d'aplicar, `exporta_les_meues_dades()` sense moderació ni `xat_adjunts`).
+  - L'esborrany de Claude (`261024_1315_auditoria_claude.md`, `torn_ce4819fc`) roman en plantilla al tall de les `13:39 CEST` sense canvis encara a `src/` o `supabase/`.
+- **Llibre Mestre, Portes i Higiene de Processos:**
+  - Actualitzats `IDEA-14`, `P1-06` i `P1-07` a `03_llibre_mestre_tasques_i_idees.md`.
+  - `document.mjs check` i `porta-olivera.mjs` en **Codi 0**. Zero crons o tasques en segon pla actives.
+
+## ESTAT_ACTUAL · 2026-10-24T11:28:26.305Z · Codex · Auditoria de fortificació P0, DSA, RLS i exportació: sense vistiplau de publicació
+
+Torn: `torn_1ecae505-dfdb-4b44-8b6a-417c476248b4`; encàrrec del torn mare `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Informe viu: [[261024_1315_auditoria_codex]]. Pla 1315 vinculat.
+
+- Tall de producte `a4e562bc8d166228055a4a63a9affeff7c0f245f`. Sis troballes altes documentades: revocació Apple absent i codi descartat; acceptació de normes només client; P3 encara separat i filtre UGC pendent; exportació sense moderació ni adjunts; CSP pública antiga a les 13:17:15 CEST; baixa que conserva UGC i cua Storage sense worker acreditat.
+- RLS de moderació coherent per inspecció; cap bypass RLS entre usuaris demostrat. No hi ha PostgreSQL local ni prova d'esquema remot. Frontissa GET conforme al Model B, catàleg real encara buit.
+- Verificacions finals: **Vitest eixida 1: 21.059 passen, 2 fallen i 100 omeses** (1.248 fitxers; 923,23 s). Fallades heretades: abreviació Git a laboratori-telefonades:92 i fixture Mac Mini amb author_avatar a MercatSection.autoria:321. Node primari eixida 0 (1.028 passen, 3 TODO), ESLint 0. Cap verd global; comprovacions focalitzades i límits complets a l’informe. Tots els processos propis de proves han acabat.
+- Llibre Mestre actualitzat: P0-04/18/19, nou P0-20 (supressió UGC/Storage), P2-08 (també adjunts) i P2-09 (captura d'esquema de federació, risc no demostrat). Informe Claude llegit quan encara és plantilla; revisió creuada futura no inventada.
+- Tancament previ roig: checksum LEDGER i deute Wiki/SCC heretats; quatre metadades del Llibre idèntiques a HEAD. Informe propi validat. Detall de la passada final al mateix informe; no s'ha reparat deute alié per donar verd.
+- Cap font de producte, SQL remot, secret, compte real, commit o desplegament canviat. Tres subagents Codex acabats. Cap cron creat; les cinc automacions Codex locals existents estan PAUSED i no són d'este torn. Els processos one-shot propis es recullen abans d'acabar; no s'atura el servidor compartit. Acta Marmota general pendent de consolidació per l'orquestradora.
+
+
+## ESTAT_ACTUAL · 2026-10-24T13:15:00+02:00 · IAIA MarIA · Obertura d'Ofensiva a Tres Bandes (Claude, Gemini, Codex): Neteja Radical Escriptori, Pla d'Implementació i Convocatòria de Fortificació P0, Usabilitat i UI/UX
+
+Torn: `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Pla viu: [[261024_1315_pla_implementacio_fortificacio_i_auditoria_adversarial_trio]]. Prompt canònic: [[261024_1315_prompt_claude_gemini_codex_fortificacio_i_auditoria_adversarial_trio]].
+
+- **Higiene i Neteja Radical de l'Escriptori (Porta Olivera en 0):**
+  - Arxivats netament a `_wiki_de_poble/90_arxiu_historic/` els 7 documents consumits de la nit (`261023_2245_pla...`, `261023_2245_prompt...`, `261023_2328_auditoria_codex`, `261023_2330_auditoria_claude`, `261023_2331_auditoria_gemini`, `261024_0130_pla...` i `261024_0130_prompt...`).
+  - L'Escriptori queda 100% net amb exclusivament el Llibre Mestre permanent (`03_llibre_mestre_tasques_i_idees.md`) i els 2 nous documents de torn.
+- **Instrucció Suprema del Mestre Javi Llinares (Àudio 13:08):**
+  - Mandat explícit per a coordinar a les 3 IAs en un repartiment clar: Claude pica el codi com a agent actiu, mentre Gemini i Codex executen auditories adversarials extremes sobre el seu treball.
+  - Prioritats: 1) Fortificació de bloquejants P0 (Apple token revoke `P0-04`, DSA / pegat legal `P0-18`, CSP `P0-19`). 2) Usabilitat frontend (Visor d'imatges lightbox `P1-06`, Lector RSS territorial `P1-07`). 3) Xarxa Humana Rural (`IDEA-14`): diferenciació neta a `/connectar` entre relació personal amb l'autor i membresia d'un grup/associació. 4) Exportació de dades personals (`P2-08`).
+- **Documents Canònics Validats (`document.mjs check` en verd):**
+  - Creats i segellats amb el reflex del torn tant el Pla d'Implementació com el Prompt a Tres Bandes.
+- **Estat de Serveis:**
+  - Servidor de desenvolupament Vite actiu en segon pla a `http://localhost:3340` (HTTP 200).
+  - Porta Olivera validada en Codi 0.
+
 ## ESTAT_ACTUAL · 2026-10-24T01:36:48+02:00 · Codex · Revisió adversarial Claude §9–§10, DSA i P3
 
 Torn: `torn_0b08c39b-2bf0-4275-be82-0ed0c59efc56`; addenda a [[261023_2328_auditoria_codex]]. Pla del prompt 2026-10-24 01:30 vinculat.

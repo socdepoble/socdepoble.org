@@ -1,0 +1,17 @@
+{
+  "id": "b12295e7-c2db-4379-a2d9-e0b0548d53c7",
+  "session": "fe43f68e-407a-4ed7-87fd-fc0a7612e795",
+  "operationId": "codex-final-stats-261024-1315",
+  "claim": "fe43f68e-407a-4ed7-87fd-fc0a7612e795:governance-write",
+  "planHash": "20166405a2fcae2ae9299aa095d4f91d3b16885abd5123594d971e9d7d537e23",
+  "beforeSeal": "3c3c0dc3aefa804dd5bbf849fac427aa7b4aff12f48d3144a06f2922118e2451",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "e5cda517fa349d791d77aa629e2f936d2ce767c279a3d59140b664fdf98bfbea",
+      "after": "b736aea659773bec9999642de9329863c067750ed3ba9b3433c5578ef3876256"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

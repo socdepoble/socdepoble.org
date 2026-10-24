@@ -1,0 +1,22 @@
+{
+  "id": "0b7f0454-e659-43e1-bea0-78610242e90d",
+  "session": "5d854f04-ab16-453c-80fa-5b4267f6faf0",
+  "operationId": "codex-audit-closeout-261024-1315",
+  "claim": "5d854f04-ab16-453c-80fa-5b4267f6faf0:governance-write",
+  "planHash": "ec70402680b9617f572867af1568866b5ec78ade2708fb2ee3829a9a505f6a72",
+  "beforeSeal": "3061ad1e2c958c29d9ae32b399e09d38b66aca4968f6eb9a8b236c11051d9f03",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "d3965d055fd979fa877ef53973659cb460e7f3e9734dd56be77dd4146c124ca1",
+      "after": "e5cda517fa349d791d77aa629e2f936d2ce767c279a3d59140b664fdf98bfbea"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "bfacd5f045327a7f341c6c831b066affadfa502a10fc016547e4461d30cca9fa",
+      "after": "7055f2c058e7ad5ac0662ab0710078c3a325c300dab326ff622d931decbbb772"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}
