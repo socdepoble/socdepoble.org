@@ -38,6 +38,8 @@ export const ICONES_APARTATS = Object.freeze({
   multimedia: '\u{1F5BC}\u{FE0F}', // 🖼️
   /* Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · «La pàgina» d'un agent IA. */
   pagina: '\u{1F4C4}', // 📄
+  /* P1-11 (pla 261024_2230, T5B-03) · «Membres i connexions» d'una organització (Unicode 6). */
+  membres: '\u{1F465}', // 👥
 });
 
 /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · El subtítol
@@ -216,12 +218,28 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         categoryIds,
         title: 'El compte',
         /* Pla 261016 (Bloc 3.1) · La persona tria ací els drets de sèrie de les seues notes. */
-        subtitle: persona ? 'Correu, contrasenya, sessió, estat del perfil i drets de sèrie de les notes' : 'Correu, identificador, membres i eixida',
+        subtitle: persona ? 'Correu, contrasenya, sessió, estat del perfil i drets de sèrie de les notes' : 'Correu, identificador i eixida',
         icon: ICONES_APARTATS.compte,
         searchText: `compte ${nom}`,
         data: { vista: 'compte', identitatId: identitat.id },
       },
     ];
+    /* P1-11 (pla 261024_2230, T5B-03; G2230-04 de Gemini) · Una organització
+       porta, just després d'«El compte», la seua vista «Membres i
+       connexions» (DetallCompte amb lloc 'membres'): qui en forma part i el
+       veïnat connectat, en una sola llista (GestioMembres ja inclou
+       QuiSegueixOrganitzacio). Abans, un bloc més d'«El compte». */
+    if (!persona) {
+      fills.push({
+        id: `${identitat.id}-membres`,
+        categoryIds,
+        title: 'Membres i connexions',
+        subtitle: 'Qui en forma part i el veïnat connectat',
+        icon: ICONES_APARTATS.membres,
+        searchText: `membres connexions veinat ${nom}`,
+        data: { vista: 'membres', identitatId: identitat.id },
+      });
+    }
     if (persona && ambPrivacitat) {
       fills.push({
         id: `${identitat.id}-privacitat`,

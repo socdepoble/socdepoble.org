@@ -49,6 +49,7 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useUIState } from '../../app/contexts/UIContext';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { autorDe } from '../../config/navigation.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { itemsPublicatsDe } from '../notes/masDeLUsuari.js';
 import { useMur } from './MurContext';
@@ -126,15 +127,21 @@ export const titolDeLHistoric = (seccio, t) => textosDeLHistoric(seccio, t)?.tit
  * són), l'element cru (`item`, el que pinta la targeta canònica) i, per a un
  * acte, el seu model (`esdeveniment`).
  */
-export function publicacionsDeLaSeccio(llista, seccio, alies, { exclouId = null } = {}) {
+export function publicacionsDeLaSeccio(llista, seccio, alies, { exclouId = null, tipusAutor = null } = {}) {
   if (!teHistoric(seccio) || !Array.isArray(llista) || !llista.length) return CAP;
   const exclos = exclouId == null ? null : String(exclouId);
   /* itemsPublicatsDe ja salta els elements sense id i, des del grup E
      (261008), les pàgines de sistema de qui no és l'entitat pilot; data.item
-     és l'element cru que porta cada fitxa del MAS. */
+     és l'element cru que porta cada fitxa del MAS.
+     P1-11 (pla 261024_2230, T5B-02) · `tipusAutor` ('persona' | 'entitat'),
+     per a la fitxa pública d'una altra identitat: només el que signa una
+     identitat d'eixe tipus (autorDe; una pàgina del sistema és de l'entitat
+     pilot). Un id de persona que coincidira amb el d'una entitat no s'emporta
+     les seues publicacions. Sense, com sempre. */
   return itemsPublicatsDe({ [FONT_DEL_MAS[seccio]]: llista }, alies)
     .map((publicacio) => publicacio.data.item)
     .filter((item) => exclos === null || String(item.id) !== exclos)
+    .filter((item) => tipusAutor === null || (item.isSystem ? tipusAutor === 'entitat' : autorDe(item)?.tipus === tipusAutor))
     .map((item) => {
       const esdeveniment = item.type === 'event' ? acteAEsdeveniment(item) : null;
       return { item, esdeveniment, moment: momentDeLaTargeta(item, esdeveniment) };
@@ -229,10 +236,25 @@ export function usePublicacionsDeLActor(seccio, { exclouId = null } = {}) {
   const identitat = useIdentitatSiNHiHa();
   const actor = identitat?.actor ?? null;
   const dataMode = modeDeDades(useEstatDeLApp()?.externalConfig);
+  const ambActor = esActorAmbHistoric(actor);
+  const alies = useMemo(() => aliesDeLActor(actor, { dataMode }), [actor, dataMode]);
+  const font = usePublicacionsDelsAlies(seccio, alies, { exclouId, actiu: ambActor });
+  return useMemo(() => ({ ...font, ambActor }), [font, ambActor]);
+}
+
+/**
+ * P1-11 (pla 261024_2230, T5B-02; reserva de Codex 1945: el DTO de
+ * VistaPublicacionsDeLActor) · El cos d'usePublicacionsDeLActor per a
+ * qualsevol conjunt d'àlies: el de l'actor actiu o el de la fitxa pública
+ * d'una altra identitat (profile/usePublicacionsDeLaFitxa.js). Torna
+ * { elements, estat, error, refresh }, la forma que pinta la vista
+ * ({ id, item, esdeveniment }, publicacionsDeLaSeccio). `actiu` fals no
+ * calcula res; `tipusAutor`, el de publicacionsDeLaSeccio.
+ */
+export function usePublicacionsDelsAlies(seccio, alies, { exclouId = null, actiu = true, tipusAutor = null } = {}) {
   const mur = useMur();
   const { targetes: sistema, carregant: paginesCarregant } = usePaginesDelSistema();
   const ambHistoric = teHistoric(seccio);
-  const ambActor = esActorAmbHistoric(actor);
   const delMur = (ambHistoric ? mur?.[LLISTA_DEL_MUR[seccio]] : null) || CAP;
   const estatDelMur = ambHistoric ? (mur?.status ?? 'ready') : 'ready';
   /* Revisió del grup E (troballa 1) · La regla del Bloc (NotesSection ·
@@ -242,13 +264,12 @@ export function usePublicacionsDeLActor(seccio, { exclouId = null } = {}) {
      intercalaven en arribar. */
   const ambSistema = seccio === 'mur' && sistema.length > 0 && estatDelMur === 'ready';
   const llista = useMemo(() => (ambSistema ? [...delMur, ...sistema] : delMur), [ambSistema, delMur, sistema]);
-  const alies = useMemo(() => aliesDeLActor(actor, { dataMode }), [actor, dataMode]);
   const elements = useMemo(
-    () => (ambHistoric && ambActor ? publicacionsDeLaSeccio(llista, seccio, alies, { exclouId }) : CAP),
-    [ambHistoric, ambActor, llista, seccio, alies, exclouId]
+    () => (ambHistoric && actiu ? publicacionsDeLaSeccio(llista, seccio, alies, { exclouId, tipusAutor }) : CAP),
+    [ambHistoric, actiu, llista, seccio, alies, exclouId, tipusAutor]
   );
   const estat = seccio === 'mur' && estatDelMur === 'ready' && paginesCarregant ? 'loading' : estatDelMur;
   const error = ambHistoric ? (mur?.error ?? null) : null;
   const refresh = typeof mur?.refresh === 'function' ? mur.refresh : null;
-  return useMemo(() => ({ elements, estat, error, refresh, ambActor }), [elements, estat, error, refresh, ambActor]);
+  return useMemo(() => ({ elements, estat, error, refresh }), [elements, estat, error, refresh]);
 }

@@ -46,11 +46,23 @@
  * (Llei del Píxel: el retallador de les Notes no canvia).
  *   senzill (false) · Títol curt i la línia d'ajuda davall (descripcio); el
  *     visor sol, centrat; una fila de zoom (−, lliscador «Ampliació», +) i la
- *     roda del ratolí; sense lliscadors de posició, sense «Forma» i sense
+ *     roda del ratolí; sense lliscadors de posició, sense «Forma» (si només
+ *     n'hi ha una: vegeu la Directiva 261024, davall) i sense
  *     geolocalització. Peu: «Restablir» a l'esquerra; «Cancel·lar» i
  *     «Guardar» a la dreta. Sense la X: Escape continua tancant.
  *   mascara (null | 'cercle') · Amb 'cercle', el vel enfosquix el que queda
  *     fora del cercle (l'avatar es pinta redó). El fitxer continua quadrat.
+ *   Directiva del Mestre (261024, àudio 22:47) · «El quadrat únic és una
+ *     limitació inacceptable»: si `formats` en porta més d'una (la capçalera,
+ *     FORMES.capcalera), el mode senzill pinta davall de la fila de zoom, i
+ *     abans de la casella de l'EXIF, la mateixa «Forma» del T46 (GrupOpcions).
+ *     Amb una sola forma (l'avatar, el logotip) el DOM és exactament el
+ *     d'abans. El visor seguix la forma triada: el <canvas> pren la mida de
+ *     midaVisor (atributs) i la caixa (.sdp-enquadrament__visor-caixa,
+ *     fit-content) i el canvas (width i height auto amb els dos max, bloc T46
+ *     de modules.css) en conserven la proporció; només el cercle de la
+ *     màscara és redó. L'eixida és `sortida` (amb `costatLlarg`, 1.200 pel
+ *     costat llarg) sobre el retall de la forma triada.
  *
  * GAUNTLET 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · L'EXIF de la
  * foto es conserva de sèrie, amb la tria de la persona. Sense esta prop, el
@@ -702,6 +714,10 @@ export function DialegEnquadrament({
                   <Plus size={20} aria-hidden="true" focusable="false" />
                 </button>
               </div>
+              {/* Directiva del Mestre (261024, àudio 22:47) · La forma, només si n'hi ha més d'una (la capçalera). */}
+              {formats.length > 1 ? (
+                <GrupOpcions llegenda="Forma" opcions={formats} valor={estat.format} onCanvi={canviaForma} disabled={desant} />
+              ) : null}
               {casellaExif}
             </>
           ) : null}

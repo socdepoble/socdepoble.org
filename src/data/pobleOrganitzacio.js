@@ -26,3 +26,24 @@ export function pobleDOrganitzacio(valor) {
   if ([...nom].length > MAXIM_NOM_POBLE) throw new Error(ERROR_POBLE_MASSA_LLARG);
   return nom;
 }
+
+/* P1-11 (pla 261024_2230, T5B-01; reserva de Codex 1945: «listPublicOrganizations
+   no admet town_name i talla a 500 abans d'un filtre local») · El poble d'un
+   filtre del directori públic (listPublicOrganizations({ poble })): el NOM,
+   el mateix que desa el selector (organizations.town_name), sense espais als
+   extrems; null si no n'hi ha cap, i llavors no es filtra res. No llança: un
+   filtre no és cap alta. */
+export function pobleDelFiltre(valor) {
+  if (typeof valor !== 'string') return null;
+  const nom = valor.trim();
+  return nom || null;
+}
+
+/** P1-11 · Si una fila del directori és del poble `nom` (pobleDelFiltre, ja retallat): igualtat exacta del valor DESAT, com el
+ *  town_name=eq. del servidor (revisió adversarial 261024: el valor desat no es retalla, o local i remot divergirien). */
+export function esDelPobleDelFiltre(fila, nom) {
+  return Boolean(nom) && typeof fila?.town_name === 'string' && fila.town_name === nom;
+}
+
+/** P1-11 · Un nom de filtre que cap fila pot portar (passa del CHECK de la columna): la resposta és buida sense preguntar. */
+export const esPobleImpossible = (nom) => [...String(nom ?? '')].length > MAXIM_NOM_POBLE;

@@ -62,3 +62,16 @@ test('Gauntlet · la consulta local plega accents, la ç, la ŀ i la forma desco
   expect(ids('collectiu')).toEqual(['regants']);
   expect(local.listPublicOrganizations({ consulta: 'placa' }).map((fila) => fila.id)).toEqual(['forn-proves']);
 });
+
+/* P1-11 (pla 261024_2230, T5B-01) · El poble, abans del límit i amb el nom exacte. */
+test('P1-11 · amb `poble`, només les públiques d’eixe poble (el filtre es retalla; el valor desat, mai, com town_name=eq.), abans del límit', () => {
+  const VEINA = Object.freeze({ ...FORN, id: 'veina', slug: 'veina', name: 'Associació veïna', town_name: 'Benilloba' });
+  const AMB_ESPAIS = Object.freeze({ ...FORN, id: 'espais', slug: 'espais', name: 'Agrupació amb espais', town_name: '  Benifallim ' });
+  local = createLocalPerfilsAdapter({ entitats: [...ENTITATS_SEED, FORN, AMAGADA, VEINA, AMB_ESPAIS] });
+  expect(local.listPublicOrganizations({ poble: ' Benifallim ' }).map((fila) => fila.id)).toEqual(['forn-proves']);
+  expect(local.listPublicOrganizations({ poble: 'Benifallim', limit: 1 }).map((fila) => fila.id)).toEqual(['forn-proves']);
+  expect(local.listPublicOrganizations({ poble: 'benifallim' })).toEqual([]);
+  expect(local.listPublicOrganizations({ poble: 'Benilloba' }).map((fila) => fila.id)).toEqual(['veina']);
+  /* Un poble buit no filtra: el directori sencer. */
+  expect(local.listPublicOrganizations({ poble: '  ' }).length).toBe(local.listPublicOrganizations().length);
+});

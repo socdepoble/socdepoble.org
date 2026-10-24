@@ -126,16 +126,22 @@ it('K1 · el peu només diu «sense tornar-la a codificar» quan el fitxer és d
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat, i Bloc 1.2, mandat de l'EXIF) ·
    El catàleg encara deia «capçalera 1.200 × 675 / 16:9» i «fins a 400 px», i
    no documentava la casella de l'EXIF (ofereixConservarExif) ni la clau
-   metadades.exif d'onDesa. */
-it('Bloc 1 · el contracte diu la capçalera quadrada de 1.200 × 1.200, l’avatar de 400 × 400 i la casella de l’EXIF', () => {
+   metadades.exif d'onDesa.
+   Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: la
+   capçalera ja no és quadrada per força. El contracte diu la forma lliure
+   (el quadrat de sèrie) i la seua eixida, 1.200 pel costat llarg
+   (sortida.costatLlarg), i ja no la diu quadrada de 1.200 × 1.200. */
+it('Directiva 261024 · el contracte diu la capçalera de forma lliure (1.200 pel costat llarg), l’avatar de 400 × 400 i la casella de l’EXIF', () => {
   const { container } = munta();
   const text = container.textContent;
-  expect(text).not.toMatch(/1\.200 × 675|16:9 \(1\.200|capçalera 16:9/);
-  expect(text).toContain('la capçalera, 1.200 × 1.200');
+  expect(text).not.toMatch(/capçalera quadrada|la capçalera, 1\.200 × 1\.200|només oferix el quadrat|capçalera 16:9/);
+  expect(text).toContain('sortida.costatLlarg');
+  expect(text).toContain('la capçalera, 1.200 pel costat llarg (1.200 × 1.200 en quadrat, 1.200 × 675 en 16:9, 675 × 1.200 en 9:16)');
+  expect(text).toContain("'1:1' | 'original' | '4:3' | '3:2' | '16:9' | '21:9' | '4:5' | '3:4' | '9:16'");
   expect(text).toContain('l’avatar, 400 × 400');
   expect(text).toContain('ofereixConservarExif');
   expect(text).toContain('metadades.exif: { conservaExif: true, original } (marcada) o { conservaExif: false } (desmarcada)');
   expect(text).toContain('Conserva la ubicació i la data de la foto');
-  expect(screen.getByRole('button', { name: 'Capçalera quadrada (1.200 × 1.200)' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: /16:9/ })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Capçalera de forma lliure (1.200 pel costat llarg)' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /Capçalera quadrada|16:9/ })).toBeNull();
 });

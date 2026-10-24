@@ -19,8 +19,17 @@ export const MIDA_MINIMA_RETALL = 200;
 export const LLARG_VISOR = 960;
 
 /* Pedra Seca §8: el quadrat va primer i és el de sèrie. Per a afegir-ne un
-   altre (3:4, per exemple) n'hi ha prou amb una fila nova. `ratio` null =
-   la proporció de la mateixa foto. */
+   altre n'hi ha prou amb una fila nova. `ratio` null = la proporció de la
+   mateixa foto.
+   Directiva del Mestre (261024, àudio 22:47) · «El quadrat únic és una
+   limitació inacceptable»: la primera usuària real (una artesana de joies)
+   no podia pujar la panoràmica de les seues joies. Excepció a §8 validada
+   pel Mestre per a la CAPÇALERA (deroga la Llei del Quadrat del Gauntlet
+   261016, Bloc 1, només per a ella): la persona tria entre superpanoràmic,
+   panoràmic, apaisat, quadrat, vertical o l'original. El quadrat continua
+   primer i de sèrie; l'avatar i el logotip no reben cap fila (FORMES de
+   useEnquadramentImatge). Les files noves, 3:2, 21:9, 4:5, 3:4 i 9:16,
+   amplien també el retallador T46 de les Notes, que llig esta taula. */
 export const FORMATS = Object.freeze([
   Object.freeze({
     valor: '1:1', etiqueta: 'Quadrat (1:1)', ratio: 1,
@@ -33,7 +42,12 @@ export const FORMATS = Object.freeze([
     ajuda: 'Manté la forma de la foto. Les miniatures quadrades la retallaran soles.',
   }),
   Object.freeze({ valor: '4:3', etiqueta: 'Apaisat (4:3)', ratio: 4 / 3 }),
+  Object.freeze({ valor: '3:2', etiqueta: 'Apaisat (3:2)', ratio: 3 / 2 }),
   Object.freeze({ valor: '16:9', etiqueta: 'Panoràmic (16:9)', ratio: 16 / 9 }),
+  Object.freeze({ valor: '21:9', etiqueta: 'Superpanoràmic (21:9)', ratio: 21 / 9 }),
+  Object.freeze({ valor: '4:5', etiqueta: 'Vertical (4:5)', ratio: 4 / 5 }),
+  Object.freeze({ valor: '3:4', etiqueta: 'Foli (3:4)', ratio: 3 / 4 }),
+  Object.freeze({ valor: '9:16', etiqueta: 'Vertical llarg (9:16)', ratio: 9 / 16 }),
 ]);
 
 const EPSILON = 1e-6;
@@ -127,6 +141,23 @@ function midaExacta(mida) {
   return amplada > 0 && alcada > 0 ? { amplada, alcada } : null;
 }
 
+/* Directiva del Mestre (261024, àudio 22:47) · El costat llarg que demana
+   el pare (un enter positiu) o null: com midaExacta, un valor a mitges no
+   s'aplica. */
+function costatLlargValid(valor) {
+  const costat = Math.round(Number(valor));
+  return costat > 0 ? costat : null;
+}
+
+/* El costat llarg fa exactament `costat` (també si cal ampliar) i l'altre
+   seguix la proporció del retall, arrodonit i mai menys d'1 px. */
+function midaPelCostatLlarg(rect, costat) {
+  const k = costat / Math.max(rect.w, rect.h);
+  return rect.w >= rect.h
+    ? { amplada: costat, alcada: Math.max(1, Math.round(rect.h * k)) }
+    : { amplada: Math.max(1, Math.round(rect.w * k)), alcada: costat };
+}
+
 /**
  * Onada 4, T3a · Les opcions de l'exportador.
  *   · Sense `sortida` (contracte T46): exactament les d'abans, 1.200 px pel
@@ -138,18 +169,25 @@ function midaExacta(mida) {
  *   · Onada 4 (retallador senzill, 261008) · Amb `sortida.exacta` =
  *     { amplada, alcada }, el fitxer fa EXACTAMENT eixa mida, també si cal
  *     ampliar el retall: el logotip ix a 600 × 600 i (Gauntlet 261016, Bloc 1,
- *     Llei del Quadrat) la capçalera a 1.200 × 1.200 i l'avatar a 400 × 400.
- *     L'alçada no es deriva del retall (arrodonit al píxel), que podria
- *     donar-ne un de més o de menys.
+ *     Llei del Quadrat) l'avatar a 400 × 400. L'alçada no es deriva del retall
+ *     (arrodonit al píxel), que podria donar-ne un de més o de menys.
+ *   · Directiva del Mestre (261024, àudio 22:47) · Amb `sortida.costatLlarg`
+ *     (un enter positiu), el COSTAT LLARG del fitxer fa exactament eixa mida,
+ *     també si cal ampliar el retall (com `exacta`), i l'altre seguix la
+ *     proporció del retall: la capçalera de forma lliure ix a 1.200 pel costat
+ *     llarg (1.200 × 1.200 en 1:1, 1.200 × 675 en 16:9, 675 × 1.200 en 9:16).
+ *     Precedència: exacta > costatLlarg > ampladaMaxima. Sense, com abans.
  */
 export function opcionsSortida(rect, tipusOriginal, sortida = null) {
   if (!sortida) return { ...midaSortida(rect), tipus: tipusDeSortida(tipusOriginal) };
   const maxim = Number(sortida.ampladaMaxima) > 0 ? Number(sortida.ampladaMaxima) : MIDA_SORTIDA;
   const k = Math.min(1, maxim / rect.w);
   const exacta = midaExacta(sortida.exacta);
+  const llarg = exacta ? null : costatLlargValid(sortida.costatLlarg);
+  const mida = exacta || (llarg ? midaPelCostatLlarg(rect, llarg) : null);
   const opcions = {
-    amplada: exacta ? exacta.amplada : Math.max(1, Math.round(rect.w * k)),
-    alcada: exacta ? exacta.alcada : Math.max(1, Math.round(rect.h * k)),
+    amplada: mida ? mida.amplada : Math.max(1, Math.round(rect.w * k)),
+    alcada: mida ? mida.alcada : Math.max(1, Math.round(rect.h * k)),
     tipus: sortida.format === FORMAT_DE_LA_FONT ? tipusDeSortida(tipusOriginal)
       : FORMATS_SORTIDA.includes(sortida.format) ? sortida.format : FORMAT_SORTIDA,
   };

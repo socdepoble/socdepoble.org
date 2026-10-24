@@ -276,7 +276,11 @@ export function ajustosOrganitzacio(org = {}, contacte = org.contacte, { pobles 
     { id: 'poble', lloc: 'compte', titol: 'Poble', camp: 'town_name', tipus: 'selector', valor: org.town_name || '',
       opcions: opcionsDePoble(pobles, org.town_name), obert: mana, motiu: tancat },
     ...ajustosCorreu(mana, contacte),
-    { id: 'membres', lloc: 'compte', titol: 'Membres', tipus: 'accio', accio: 'membres', pendent: !ambMembres, obert: mana, motiu: tancat },
+    /* P1-11 (pla 261024_2230, T5B-03; G2230-04 de Gemini) · Els membres
+       viuen a la seua vista, «Membres i connexions» (lloc 'membres'), fora
+       d'«El compte». GestioMembres ja hi porta el veïnat connectat
+       (QuiSegueixOrganitzacio): una sola llista. */
+    { id: 'membres', lloc: 'membres', titol: 'Membres', tipus: 'accio', accio: 'membres', pendent: !ambMembres, obert: mana, motiu: tancat },
     { id: 'identificador', lloc: 'compte', titol: 'Identificador', tipus: 'text', valor: org.slug || '', obert: false,
       motiu: 'L’identificador és permanent: hi ha enllaços publicats que hi apunten.' },
     /* Pendent fins a I7: hui la ruta pública no troba cap organització real. */

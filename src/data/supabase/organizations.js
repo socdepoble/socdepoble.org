@@ -1,7 +1,7 @@
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
 import { LIMIT_DIRECTORI_ENTITATS, errorDeMembre, membreDOrganitzacio } from '../contracte.js';
-import { pobleDOrganitzacio } from '../pobleOrganitzacio.js';
+import { esPobleImpossible, pobleDOrganitzacio, pobleDelFiltre } from '../pobleOrganitzacio.js';
 
 /* Lògica d'Usuari · en seed i local les organitzacions on la persona mana són
    les del padró pilot (localPerfils). Comprovació explícita: sense mode, remot. */
@@ -169,6 +169,12 @@ const CAMPS_DE_CERCA_DIRECTORI = Object.freeze(['name', 'slug', 'lema', 'descrip
 const MAXIM_PARAULES_DIRECTORI = 5;
 const MAXIM_PARAULA_DIRECTORI = 40;
 
+/* P1-11 (C11-01 de Codex) · El directori d'este servidor no porta el poble de les organitzacions. */
+const errorSensePobleAlDirectori = () => Object.assign(
+  new Error('El directori d’este servidor encara no diu de quin poble és cada organització (cal la migració 2610081401).'),
+  { code: 'NO-DISPONIBLE' },
+);
+
 /** El `limit` d'una crida, entre 1 i LIMIT_DIRECTORI_ENTITATS. */
 const limitDelDirectori = (valor) => {
   const n = Math.trunc(Number(valor));
@@ -206,18 +212,35 @@ function patroTolerant(paraula) {
 export async function listPublicOrganizations(filtre = {}, config = {}) {
   const consulta = typeof filtre?.consulta === 'string' ? filtre.consulta.trim() : '';
   const limit = limitDelDirectori(filtre?.limit);
-  if (esModeLocal(config)) return (await perfilsLocals()).listPublicOrganizations({ consulta, limit });
+  /* P1-11 (pla 261024_2230, T5B-01) · `poble`: només les organitzacions
+     d'eixe poble, filtrades AL SERVIDOR abans del límit (town_name=eq.),
+     mai al client després de tallar a LIMIT_DIRECTORI_ENTITATS (reserva de
+     Codex 1945). Un nom que passa del CHECK de la columna no el pot portar
+     cap fila: buit sense preguntar. */
+  const poble = pobleDelFiltre(filtre?.poble);
+  if (poble && esPobleImpossible(poble)) return [];
+  if (esModeLocal(config)) return (await perfilsLocals()).listPublicOrganizations({ consulta, limit, ...(poble ? { poble } : {}) });
   if (!getResolvedConfig(config).hasSupabaseConfig) return [];
+  /* Un servidor d'abans de 2610081401 no té town_name a la vista: no sap de
+     quin poble és cap organització. Mai la llista de tots els pobles com si
+     fora la del poble, ni un buit mut (C11-01 de Codex: «propagar un error
+     explicable»): NO-DISPONIBLE, com un esquema absent. */
+  if (poble && columnesDirectoriAbsents.has('town_name')) throw errorSensePobleAlDirectori();
   const signal = filtre?.signal ?? config.signal;
   const cerca = filtreDeCercaDirectori(consulta);
+  const delPoble = poble ? `&town_name=eq.${encodeURIComponent(poble)}` : '';
   for (;;) {
     const columnes = COLUMNES_DIRECTORI.filter((columna) => !columnesDirectoriAbsents.has(columna)).join(',');
     try {
-      const files = await request(`/rest/v1/organization_directory?select=${columnes}${cerca}&order=name.asc,id.asc&limit=${limit}`,
+      const files = await request(`/rest/v1/organization_directory?select=${columnes}${cerca}${delPoble}&order=name.asc,id.asc&limit=${limit}`,
         config, { signal });
       return Array.isArray(files) ? files : [];
     } catch (error) {
       const columna = columnaAbsentDelSelect(error);
+      if (poble && columna === 'town_name') {
+        columnesDirectoriAbsents.add('town_name');
+        throw errorSensePobleAlDirectori();
+      }
       const nomesDelSelect = columna && COLUMNES_DIRECTORI.includes(columna) && !COLUMNES_DIRECTORI_FIXES.has(columna)
         && !CAMPS_DE_CERCA_DIRECTORI.includes(columna) && !columnesDirectoriAbsents.has(columna);
       if (!nomesDelSelect) throw error;

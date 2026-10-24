@@ -3349,6 +3349,26 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   }
 }
 
+/* ── IDEA-20 (Directiva del Mestre 261024, àudio 22:47; revisió adversarial
+   261024) · PORTADA VERTICAL ─────────────────────────────────────────────
+   La portada vertical d'una publicació (VisorDePublicacio, ranura
+   heroComponent de PageFrame), amb la mateixa guarda que hero-image--vertical
+   de layout.css: mai més d'una pantalla ni de 720px, centrada i amb la
+   proporció de la foto; als costats, el fons de la pàgina (el botó cobrix
+   l'amplada de .hero-image). És maquetació de la portada, no del visor: viu
+   fora del bloc VISOR D'IMATGES, que no admet unitats de viewport
+   (qualitat.visor.test.js). A la capa components, perquè guanye a
+   .hero-image img (legacy) i al fons transparent de .sdp-visor__obridor. */
+@layer components {
+  .hero-image .sdp-visor__obridor--vertical { background: var(--sdp-fons-app); }
+  .hero-image .sdp-visor__obridor--vertical > img {
+    width: auto;
+    max-width: 100%;
+    max-height: min(75vh, 720px);
+    margin-inline: auto;
+  }
+}
+
 /* ── Fase D (261020, tasca 2; pla 261020_1300) · MODERACIÓ: «Més opcions»
    de la boina (la caputxa de la targeta i la barra taronja), les normes de
    convivència i la llista de bloquejos ─────────────────────────────────────

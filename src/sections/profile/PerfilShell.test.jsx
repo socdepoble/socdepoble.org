@@ -153,8 +153,9 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   /* Expectativa actualitzada a propòsit: ordre del Mestre (18-10-2026, relleu del
      Pla 2000, punt 3) · «Multimèdia» també és l'últim apartat de l'organització
      que la persona pot editar; la Colla (membre), no. */
-  expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-multimedia']);
-  expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte».
+  expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-membres', 'O-multimedia']);
+  expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte', 'G-membres']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
   for (const id of ['rebost', 'salut', 'lector-rss', 'tpv', 'snippet']) {
     expect(filsDe(`app-${id}`)).toEqual([`app-${id}-sobre`]);
@@ -194,9 +195,10 @@ test('261008 · «Les vistes»: l’apartat, la icona de l’ull i la seua pàgi
 
 test('261008 · «Les vistes» no hi és per a qui no pot editar la fitxa: un membre, una baixa en curs o la fila de reserva', () => {
   const ids = (identitats) => itemsDePerfil(identitats).map((i) => i.id);
-  expect(ids([colla, botiga])).toEqual(['G-fitxa', 'G-compte', 'B-fitxa', 'B-compte']);
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte».
+  expect(ids([colla, botiga])).toEqual(['G-fitxa', 'G-compte', 'G-membres', 'B-fitxa', 'B-compte', 'B-membres']);
   // Expectativa actualitzada a propòsit: relleu del Pla 2000, punt 3 («Multimèdia», l'últim de l'organització).
-  expect(ids([{ ...forn, dades: { role: 'admin' } }])).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-multimedia']);
+  expect(ids([{ ...forn, dades: { role: 'admin' } }])).toEqual(['O-fitxa', 'O-vistes', 'O-compte', 'O-membres', 'O-multimedia']);
   expect(ids([{ ...jo, dades: { baixa_demanada_at: '2026-09-26T10:00:00Z' } }])).not.toContain('jo-vistes');
   expect(ids([{ ...jo, dades: { reserva: true } }])).not.toContain('jo-vistes');
 });

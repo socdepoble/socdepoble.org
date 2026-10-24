@@ -301,9 +301,12 @@ function PerfilManagerInner({ config, aplicacions, preferides, recuperacio = nul
     if (vista === 'multimedia') {
       return ambFitxaPublica(<DetallMultimedia key={identitat.id} identitat={identitat} config={config} />);
     }
+    /* P1-11 (pla 261024_2230, T5B-03) · «Membres i connexions» d'una
+       organització: el mateix DetallCompte, amb els ajustos del lloc 'membres'. */
     return ambFitxaPublica(
       <DetallCompte
-        key={identitat.id}
+        key={`${identitat.id}-${vista === 'membres' ? 'membres' : 'compte'}`}
+        lloc={vista === 'membres' ? 'membres' : 'compte'}
         identitat={identitat}
         guardarAjust={guardarAjust}
         pujaMitja={pujaMitja}

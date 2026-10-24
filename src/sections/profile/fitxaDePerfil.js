@@ -238,3 +238,9 @@ export function etiquetesDeFitxa(identitat) {
   if (menaDeFitxa(identitat) === 'agent') return [...rol, { text: ETIQUETA_IA }];
   return rol;
 }
+
+/* «de» davant del nom, amb l'apòstrof davant de vocal o d'una h muda (mai
+   davant d'una i o una u semiconsonants: «de IAIA MarIA»). P1-11 (revisió
+   adversarial 261024) · Abans vivia a DetallMultimedia.jsx; ara el llig també
+   «Membres i connexions» (DetallCompte.jsx). */
+export const deNom = (nom) => (/^h?(?![iu][aeiouàèéíòóú])[aeiouàèéíòóú]/i.test(nom) ? `d’${nom}` : `de ${nom}`);

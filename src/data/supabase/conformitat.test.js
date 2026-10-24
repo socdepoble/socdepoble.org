@@ -292,6 +292,8 @@ const FILA_DEL_DIRECTORI = Object.freeze({
 });
 function rutaDelDirectori(p) {
   if (p.has('slug') || p.has('id') || p.has('or')) return resposta([]);
+  /* P1-11 (pla 261024_2230) · El filtre per poble, com PostgREST: town_name=eq.<nom>. */
+  if (p.has('town_name') && p.get('town_name') !== `eq.${FILA_DEL_DIRECTORI.town_name}`) return resposta([]);
   const select = p.get('select') || '*';
   if (select === '*') return resposta([FILA_DEL_DIRECTORI]);
   const columnes = select.split(',').filter((columna) => Object.hasOwn(FILA_DEL_DIRECTORI, columna));

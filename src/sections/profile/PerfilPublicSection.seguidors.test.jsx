@@ -2,11 +2,13 @@ import React from 'react';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-/* T6b (IDEA-14; decisió del Mestre, 261024) · Qui és seguit ho sap: la fitxa
-   PRÒPIA d'una persona porta «Gent que et seguix» al peu, amb la llista de
-   quiEmSegueix (sense entitat) i la configuració de la fitxa. La d'una altra
-   persona, la d'una entitat i la d'una IA, no; i sense la capacitat, cap.
-   Els mateixos dobles que PerfilPublicSection.moderacio.test.jsx. */
+/* T6b (IDEA-14; decisió del Mestre, 261024) · L'altra banda ho sap: la fitxa
+   PRÒPIA d'una persona porta «Veïnat connectat amb tu» al peu, amb la llista
+   de quiEmSegueix (sense entitat) i la configuració de la fitxa. La d'una
+   altra persona, la d'una entitat i la d'una IA, no; i sense la capacitat, cap.
+   Els mateixos dobles que PerfilPublicSection.moderacio.test.jsx.
+   Actualitzada a posta (P1-11, pla 261024_2230; G1945-04 de Gemini, ordre del
+   Mestre): el títol nou del bloc. */
 const mocks = vi.hoisted(() => ({
   id: 'pepa', navigate: vi.fn(), load: vi.fn(), qui: vi.fn(), seo: vi.fn(), toast: vi.fn(),
   config: { dataMode: 'seed' }, t: (_, alternativa) => alternativa, resolveAsset: (v) => v, agents: [],
@@ -43,7 +45,7 @@ const PEPA = {
   presentacioHtml: '', poble: 'La Torre de les Maçanes', esIA: false, publicat: true, propietari: false, copyright: ''
 };
 const FORN = { ...PEPA, tipus: 'entitat', id: 'forn', slug: 'forn', nom: 'Forn de la Torre', propietari: true };
-const titol = () => screen.queryByRole('heading', { level: 3, name: 'Gent que et seguix' });
+const titol = () => screen.queryByRole('heading', { level: 3, name: 'Veïnat connectat amb tu' });
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -55,7 +57,7 @@ beforeEach(() => {
   oblidaEntitatDelProjecte();
 });
 
-test('la fitxa pròpia d’una persona porta «Gent que et seguix» amb qui la seguix, des de la configuració de la fitxa', async () => {
+test('la fitxa pròpia d’una persona porta «Veïnat connectat amb tu» amb la seua llista, des de la configuració de la fitxa', async () => {
   mocks.load.mockResolvedValue({ ...PEPA, propietari: true });
   render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Pepa Garcia' })).toBeTruthy();

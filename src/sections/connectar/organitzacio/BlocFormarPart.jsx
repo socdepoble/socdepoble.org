@@ -151,7 +151,8 @@ export function BlocFormarPart({ orgId, contacte = null, nom = null, carregant =
     default:
       cos = (
         <>
-          <p>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que seguir-la.')}</p>
+          {/* P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · formar part no és connectar-s'hi. */}
+          <p>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
           <p className="sdp-connectar__ajuda">{ambNom('section.connectar.formarPart.onArriba', 'La sol·licitud arribarà al xat privat de {nom}, i en parlareu abans de cap alta.')}</p>
           <Boto varietat="secundari" icona={Users} onClick={() => { setFallada(null); setObert(true); }}>
             {ambNom('section.connectar.formarPart.boto', 'Demanar formar part de {nom}')}

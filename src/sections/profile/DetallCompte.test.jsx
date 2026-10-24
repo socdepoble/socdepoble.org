@@ -93,7 +93,8 @@ test('Onada 11 · sense ser superadmin, o sense sessió, el compte és el d’ab
   cleanup();
   m.sessio = { esSuperadmin: true, nivell: 'aal2', calSegonFactor: false };
   pinta(forn);
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres» viu a la vista «Membres i connexions» (lloc 'membres'), fora d'«El compte».
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
   expect(screen.queryByText('el segon factor, en línia')).toBeNull();
 });
 
@@ -255,15 +256,32 @@ test('una organització mostra el poble, el correu, l’identificador i les acci
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
   /* T43 (ordre del Mestre, 260928) · el correu opcional de l'organització;
      grup C (ordre del Mestre, 261008) · el poble, abans. */
-  expect(titols).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres» viu a la vista «Membres i connexions» (lloc 'membres'), fora d'«El compte».
+  expect(titols).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
   expect(within(seccio('Identificador')).getByText('forn')).toBeTruthy();
-  expect(screen.getByText('Poble, correu, identificador, membres i eixida de Forn.')).toBeTruthy();
-  /* Sense el port de membres (ni el context del Perfil), «Membres» és pendent, com abans. */
-  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
-  expect(within(seccio('Membres')).getByText('Aquesta acció encara no està implementada en aquesta versió.')).toBeTruthy();
+  expect(screen.getByText('Poble, correu, identificador i eixida de Forn.')).toBeTruthy();
   /* Sense el correu llegit encara, els dos ajustos es pinten tancats i ho diuen. */
   expect(within(seccio('Correu de l’organització')).queryByRole('textbox')).toBeNull();
   expect(within(seccio('Correu de l’organització')).getByText('Carregant el correu de l’organització…')).toBeTruthy();
+  cleanup();
+  /* La vista «Membres i connexions»: sense el port de membres (ni el context del Perfil), «Membres» és pendent, com abans. */
+  pinta(forn, { lloc: 'membres' });
+  expect(screen.getByRole('heading', { level: 1, name: 'Membres i connexions' })).toBeTruthy();
+  expect(screen.getByText('Qui forma part de Forn i el veïnat connectat amb l’entitat.')).toBeTruthy();
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Membres']);
+  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
+  expect(within(seccio('Membres')).getByText('Aquesta acció encara no està implementada en aquesta versió.')).toBeTruthy();
+});
+
+test('P1-11 · el lead de «Membres i connexions» apostrofa davant de vocal (deNom)', () => {
+  pinta({ ...forn, nom: 'Associació de la Serra' }, { lloc: 'membres' });
+  expect(screen.getByText('Qui forma part d’Associació de la Serra i el veïnat connectat amb l’entitat.')).toBeTruthy();
+});
+
+test('P1-11 · una persona no té vista de membres: amb lloc «membres», el seu compte de sempre', () => {
+  pinta(jo, { lloc: 'membres' });
+  expect(screen.getByRole('heading', { level: 1, name: 'El compte' })).toBeTruthy();
+  expect(screen.queryByRole('heading', { level: 2, name: 'Membres' })).toBeNull();
 });
 
 /* ── T43 · el correu opcional de l'organització ── */
@@ -480,9 +498,13 @@ const accionsDeMembres = () => ({
 
 test('grup C · amb ambMembres i el context del Perfil, «Membres» pinta la gestió i «Eixir» demana confirmació', async () => {
   m.perfil = accionsDeMembres();
-  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres» viu a la vista «Membres i connexions» (lloc 'membres'), fora d'«El compte»; «Eixir» es queda al compte.
+  const vista = pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true, lloc: 'membres' });
   expect(await within(seccio('Membres')).findByRole('region', { name: 'Membres de Forn' })).toBeTruthy();
   expect(m.perfil.llistaMembres).toHaveBeenCalledWith('O', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  vista.unmount();
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
+  expect(screen.queryByRole('heading', { level: 2, name: 'Membres' })).toBeNull();
   const eixir = within(seccio('Eixir de l’organització')).getByRole('button', { name: 'Eixir de l’organització' });
   expect(eixir.disabled).toBe(false);
   fireEvent.click(eixir);
@@ -495,18 +517,21 @@ test('grup C · amb ambMembres i el context del Perfil, «Membres» pinta la ges
 });
 
 test('grup C · ambMembres sense el context del Perfil, o amb un port que no en sap, continua pendent', () => {
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres» viu a la vista «Membres i connexions» (lloc 'membres'), fora d'«El compte».
   pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
-  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
   expect(within(seccio('Eixir de l’organització')).getByRole('button', { name: 'Eixir de l’organització' }).disabled).toBe(true);
   cleanup();
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true, lloc: 'membres' });
+  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
+  cleanup();
   m.perfil = { ...accionsDeMembres(), ambMembres: false };
-  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true, lloc: 'membres' });
   expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
   expect(m.perfil.llistaMembres).not.toHaveBeenCalled();
   cleanup();
   /* I el context amb capacitat, però sense que PerfilShell ho declare (undefined), tampoc. */
   m.perfil = accionsDeMembres();
-  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } });
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { lloc: 'membres' });
   expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
   expect(m.perfil.llistaMembres).not.toHaveBeenCalled();
 });

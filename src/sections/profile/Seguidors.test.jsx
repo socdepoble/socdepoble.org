@@ -3,12 +3,14 @@ import path from 'node:path';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-/* T6b (IDEA-14; decisió del Mestre, 261024) · Qui és seguit ho sap: «Gent
-   que et seguix» a la fitxa pròpia d'una persona i «Qui seguix {nom}» a la
-   gestió dels membres d'una organització. Sense la capacitat, res i cap
-   crida; amb ella, quiEmSegueix amb la configuració i el senyal, la llista
-   tal com la torna el port (per data), el buit i els errors honestos. Les
-   claus section.perfil.seguidors.* són a les cinc llengües. */
+/* T6b (IDEA-14; decisió del Mestre, 261024) · L'altra banda ho sap: «Veïnat
+   connectat amb tu» a la fitxa pròpia d'una persona i «Veïnat connectat amb
+   {nom}» a la gestió dels membres d'una organització. Sense la capacitat, res
+   i cap crida; amb ella, quiEmSegueix amb la configuració i el senyal, la
+   llista tal com la torna el port (per data), el buit i els errors honestos.
+   Les claus section.perfil.seguidors.* són a les cinc llengües.
+   Actualitzada a posta (P1-11, pla 261024_2230; G1945-04 de Gemini, ordre del
+   Mestre): només canvien els textos, no el model ni els noms de les peces. */
 const m = vi.hoisted(() => ({ caps: new Set(['seguiments']), qui: vi.fn() }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (cap) => m.caps.has(cap),
@@ -39,12 +41,12 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
     expect(m.qui).not.toHaveBeenCalled();
   });
 
-  test('demana qui et seguix (sense entitat) amb la configuració i el senyal, i pinta la llista en l’ordre del port', async () => {
+  test('demana el veïnat connectat amb tu (sense entitat) amb la configuració i el senyal, i pinta la llista en l’ordre del port', async () => {
     render(<GentQueEtSegueix config={{ dataMode: 'seed' }} />);
-    const seccio = screen.getByRole('region', { name: 'Gent que et seguix' });
-    expect(within(seccio).getByText('Carregant qui et seguix…')).toBeTruthy();
+    const seccio = screen.getByRole('region', { name: 'Veïnat connectat amb tu' });
+    expect(within(seccio).getByText('Carregant el veïnat connectat amb tu…')).toBeTruthy();
     await waitFor(() => expect(m.qui).toHaveBeenCalledWith({}, expect.objectContaining({ dataMode: 'seed', signal: expect.any(AbortSignal) })));
-    const llista = await within(seccio).findByRole('list', { name: 'Gent que et seguix' });
+    const llista = await within(seccio).findByRole('list', { name: 'Veïnat connectat amb tu' });
     const files = within(llista).getAllByRole('listitem').map((li) => li.textContent);
     expect(files).toEqual([`Pepa Garcia · ${dataDelSeguiment('2026-10-24T09:00:00Z')}`, 'Sense nom']);
     expect(llista.querySelector('time').getAttribute('datetime')).toBe('2026-10-24T09:00:00Z');
@@ -56,27 +58,27 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
   test('el buit, el servidor sense l’esquema i una fallada qualsevol', async () => {
     m.qui.mockResolvedValueOnce([]);
     render(<GentQueEtSegueix />);
-    expect(await screen.findByText('Encara no et seguix ningú.')).toBeTruthy();
+    expect(await screen.findByText('Encara no s’ha connectat ningú amb tu.')).toBeTruthy();
     cleanup();
     m.qui.mockRejectedValueOnce(ambCodi('NO-DISPONIBLE'));
     render(<GentQueEtSegueix />);
-    expect(await screen.findByText('Este servidor encara no guarda qui et seguix.')).toBeTruthy();
+    expect(await screen.findByText('Este servidor encara no guarda el veïnat connectat amb tu.')).toBeTruthy();
     cleanup();
     m.qui.mockRejectedValueOnce(new Error('cru'));
     render(<GentQueEtSegueix />);
-    expect(await screen.findByText('No s’ha pogut llegir qui et seguix. Torna-ho a provar més tard.')).toBeTruthy();
+    expect(await screen.findByText('No s’ha pogut llegir el veïnat connectat amb tu. Torna-ho a provar més tard.')).toBeTruthy();
   });
 
   test('un port sense el mètode (llança de manera síncrona) és un error honest, no una pantalla trencada', async () => {
     m.qui.mockImplementation(() => { throw new Error('[backendPort] El mètode "quiEmSegueix" no està implementat al backend actual.'); });
     render(<GentQueEtSegueix />);
-    expect(await screen.findByText(/No s’ha pogut llegir qui et seguix/)).toBeTruthy();
+    expect(await screen.findByText(/No s’ha pogut llegir el veïnat connectat amb tu/)).toBeTruthy();
   });
 
   test('parla la llengua de la fitxa: el traductor i el locale arriben per props', async () => {
-    const t = vi.fn((clau, reserva) => (clau === 'section.perfil.seguidors.titol' ? 'People who follow you' : reserva));
+    const t = vi.fn((clau, reserva) => (clau === 'section.perfil.seguidors.titol' ? 'Neighbours connected with you' : reserva));
     render(<GentQueEtSegueix t={t} locale="en-GB" />);
-    expect(screen.getByRole('heading', { level: 3, name: 'People who follow you' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Neighbours connected with you' })).toBeTruthy();
     await screen.findByRole('list');
     expect(screen.getByText(/Pepa Garcia/).textContent).toBe(`Pepa Garcia · ${dataDelSeguiment('2026-10-24T09:00:00Z', 'en-GB')}`);
     expect(t).toHaveBeenCalledWith('section.perfil.seguidors.ajuda', expect.any(String));
@@ -97,15 +99,15 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
 });
 
 describe('QuiSegueixOrganitzacio · per a qui administra', () => {
-  test('demana qui seguix l’entitat i pinta la taula «Qui seguix {nom}»', async () => {
+  test('demana el veïnat connectat amb l’entitat i pinta la taula «Veïnat connectat amb {nom}»', async () => {
     render(<QuiSegueixOrganitzacio orgId="O" nom="Forn" />);
-    expect(screen.getByRole('heading', { level: 3, name: 'Qui seguix Forn' })).toBeTruthy();
-    expect(screen.getByText('Carregant qui seguix Forn…')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Veïnat connectat amb Forn' })).toBeTruthy();
+    expect(screen.getByText('Carregant el veïnat connectat amb Forn…')).toBeTruthy();
     await waitFor(() => expect(m.qui).toHaveBeenCalledWith({ orgId: 'O' }, expect.objectContaining({ signal: expect.any(AbortSignal) })));
-    const taula = await screen.findByRole('region', { name: 'Qui seguix Forn' });
+    const taula = await screen.findByRole('region', { name: 'Veïnat connectat amb Forn' });
     const files = [...taula.querySelectorAll('tbody tr')].map((tr) => [...tr.querySelectorAll('td')].map((td) => td.textContent));
     expect(files).toEqual([['Pepa Garcia', dataDelSeguiment('2026-10-24T09:00:00Z')], ['Sense nom', '']]);
-    expect(screen.getByText('Cada persona que seguix Forn ho ha triat. Esta llista només la veu qui l’administra.')).toBeTruthy();
+    expect(screen.getByText('Cada persona d’esta llista ha triat connectar amb Forn. Esta llista només la veu qui l’administra.')).toBeTruthy();
   });
 
   /* Actualitzada a posta (261024 correccions): motiu, R3-12. El text de l'error ve del
@@ -113,7 +115,7 @@ describe('QuiSegueixOrganitzacio · per a qui administra', () => {
   test('el buit i els errors pel seu codi: cap error no pinta el seu message', async () => {
     m.qui.mockResolvedValueOnce([]);
     render(<QuiSegueixOrganitzacio orgId="O" nom="Forn" />);
-    expect(await screen.findByText('Encara ningú no seguix Forn.')).toBeTruthy();
+    expect(await screen.findByText('Encara no s’ha connectat ningú amb Forn.')).toBeTruthy();
     cleanup();
     m.qui.mockRejectedValueOnce(ambCodi('SDP-SEG-005', 'Només qui administra l’entitat veu qui la seguix.'));
     render(<QuiSegueixOrganitzacio orgId="O" nom="Forn" />);
@@ -121,12 +123,12 @@ describe('QuiSegueixOrganitzacio · per a qui administra', () => {
     cleanup();
     m.qui.mockRejectedValueOnce(errorDeSeguiment('NO-DISPONIBLE'));
     render(<QuiSegueixOrganitzacio orgId="O" nom="Forn" />);
-    expect(await screen.findByText('Este servidor encara no guarda qui seguix Forn.')).toBeTruthy();
+    expect(await screen.findByText('Este servidor encara no guarda el veïnat connectat amb Forn.')).toBeTruthy();
     expect(screen.queryByText(/migració/)).toBeNull();
     cleanup();
     m.qui.mockRejectedValueOnce(new Error('[vitest] sense codi'));
     render(<QuiSegueixOrganitzacio orgId="O" nom="Forn" />);
-    expect(await screen.findByText('No s’ha pogut llegir qui seguix Forn.')).toBeTruthy();
+    expect(await screen.findByText('No s’ha pogut llegir el veïnat connectat amb Forn.')).toBeTruthy();
   });
 
   test('R3-12 · cap codi del contracte (ni un de desconegut amb text de servidor) no arriba en cru a cap de les dues llistes', async () => {
@@ -145,9 +147,9 @@ describe('QuiSegueixOrganitzacio · per a qui administra', () => {
   });
 
   test('textDErrorDeSeguidors: un text per codi, i el genèric per a la resta', () => {
-    expect(textDErrorDeSeguidors({ code: 'SDP-SEG-000' }, 'Forn')).toBe('Cal entrar al compte per a vore qui seguix Forn.');
-    expect(textDErrorDeSeguidors({ code: 'DESCONEGUT', message: 'No s’ha pogut completar. Torna-ho a provar.' }, 'Forn')).toBe('No s’ha pogut llegir qui seguix Forn.');
-    expect(textDErrorDeSeguidors(null, 'Forn')).toBe('No s’ha pogut llegir qui seguix Forn.');
+    expect(textDErrorDeSeguidors({ code: 'SDP-SEG-000' }, 'Forn')).toBe('Cal entrar al compte per a vore el veïnat connectat amb Forn.');
+    expect(textDErrorDeSeguidors({ code: 'DESCONEGUT', message: 'No s’ha pogut completar. Torna-ho a provar.' }, 'Forn')).toBe('No s’ha pogut llegir el veïnat connectat amb Forn.');
+    expect(textDErrorDeSeguidors(null, 'Forn')).toBe('No s’ha pogut llegir el veïnat connectat amb Forn.');
   });
 
   test('sense capacitat o sense organització, res', () => {
@@ -167,7 +169,7 @@ describe('QuiSegueixOrganitzacio · per a qui administra', () => {
     };
     render(<GestioMembres organitzacio={{ id: 'O', mena: 'empresa', nom: 'Forn', dades: { id: 'O', name: 'Forn', role: 'owner' } }} accions={accions} />);
     expect(await screen.findByRole('region', { name: 'Membres de Forn' })).toBeTruthy();
-    expect(await screen.findByRole('region', { name: 'Qui seguix Forn' })).toBeTruthy();
+    expect(await screen.findByRole('region', { name: 'Veïnat connectat amb Forn' })).toBeTruthy();
     expect(m.qui).toHaveBeenCalledWith({ orgId: 'O' }, expect.any(Object));
     /* L'únic role="status" continua sent el de la gestió («Carregant els membres…» o els avisos). */
     expect(screen.queryAllByRole('status')).toHaveLength(0);

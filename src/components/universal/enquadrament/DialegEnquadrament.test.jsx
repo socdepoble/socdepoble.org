@@ -34,11 +34,14 @@ const carregat = async (vista) => {
 };
 const radios = (container) => [...container.querySelectorAll('input[type="radio"]')];
 
+/* Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: el
+   model porta ara també 3:2, 21:9, 4:5, 3:4 i 9:16 (abans, 1:1, Original,
+   4:3 i 16:9); el quadrat continua primer i marcat. */
 test('T46 · per defecte, el quadrat està marcat i les formes van en l’ordre del model', async () => {
   const vista = munta();
   expect(vista.getByRole('dialog', { name: 'Enquadrar la imatge' })).toBeTruthy();
   await carregat(vista);
-  expect(radios(vista.container).map((r) => r.value)).toEqual(['1:1', 'original', '4:3', '16:9']);
+  expect(radios(vista.container).map((r) => r.value)).toEqual(['1:1', 'original', '4:3', '3:2', '16:9', '21:9', '4:5', '3:4', '9:16']);
   expect(radios(vista.container).find((r) => r.checked).value).toBe('1:1');
   expect(vista.container.querySelector('legend').textContent).toBe('Forma');
   // El visor pinta el quadrat central de la foto.

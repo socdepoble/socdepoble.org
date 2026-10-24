@@ -198,7 +198,7 @@ export const CAPACITATS = Object.freeze({
      fitxa pública deixaria d'obrir-se. Opcional: sense ella, /cerca només
      troba les organitzacions que ja porten les altres fonts. La interfície ho
      pregunta amb teCapacitat('directoriEntitats'). Forma (config sempre l'últim):
-       listPublicOrganizations({ consulta?, limit?, signal? }, config) → Promise<Fila[]>
+       listPublicOrganizations({ consulta?, poble?, limit?, signal? }, config) → Promise<Fila[]>
          Les organitzacions amb visibility 'public' de TOTS els pobles del node
          (el poble actiu el pondera qui busca, no el filtra), per nom i id.
          Sense consulta, les primeres `limit` (≤ LIMIT_DIRECTORI_ENTITATS, per
@@ -206,6 +206,16 @@ export const CAPACITATS = Object.freeze({
          (com a molt cinc) al nom, al slug, al lema o a la descripció. Pot
          tornar-ne de més (un patró tolerant als accents, mai de menys): qui
          busca torna a plegar i filtrar. Sense servidor, [].
+         P1-11 (pla 261024_2230, T5B-01) · Amb `poble` (el NOM del poble, el
+         que desa el selector a town_name; pobleOrganitzacio.js ·
+         pobleDelFiltre), només les d'eixe poble: town_name (el valor desat,
+         tal qual) igual al nom del filtre sense espais als extrems, filtrat ABANS del límit (al servidor, mai
+         al client després de tallar). Ni de més ni de menys. Un servidor
+         que no sap el poble de les organitzacions (sense la columna
+         town_name) rebutja amb un error de `code` 'NO-DISPONIBLE' (C11-01 de
+         Codex: mai les de tots els pobles ni un buit mut); és l'única
+         excepció a «cap codi més» i només amb `poble`. Un `poble` buit o
+         que no és text no filtra res.
        Fila: la de la vista organization_directory, i mai cap correu:
          { id, tenant_id, slug, name, kind ('company' | 'entity' | 'group'),
          parent_organization_id, lema, description, logo_url (URL, ruta
@@ -423,7 +433,7 @@ export const CAPACITATS = Object.freeze({
      seguiment d'un sol sentit d'una persona o d'una entitat. Qui és seguit ho
      sap i veu qui el seguix; cap algoritme (les llistes van per data, la més
      nova primer). Opcional a posta: un node sense ella continua sent vàlid i
-     /connectar i el Perfil no pinten «Seguir» ni «Gent que et seguix». La
+     /connectar i el Perfil no pinten «Connectar amb {nom}» ni «Veïnat connectat amb tu». La
      interfície ho pregunta amb teCapacitat('seguiments'). Formes (config
      sempre l'últim; el seguit és { tipus: 'persona' | 'entitat', id }):
        segueix({ tipus, id }, config) → Promise<{ seguint: true, creatAl, nou, primer }>

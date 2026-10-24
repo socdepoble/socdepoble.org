@@ -700,6 +700,24 @@ description: "Documentació canònica de Sóc de Poble."
   `select count(*) filter (where intents = 0) as noves, count(*) filter (where ultim_error is not null) as amb_error, count(*) filter (where referenciat) as conservades from private.purga_storage_pendent;`.
   Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2610242320_correu_propietaria_nomes_titular.sql`
+  C11-02 (auditoria Codex 261024_2254, CWE-200; full de ruta P1-11 del
+  Mestre): `contacte_organitzacio` (2610181915) tornava a QUALSEVOL persona
+  que administra l'organització, com a `correu_per_defecte`, el correu d'accés
+  (`auth.users.email`) de la propietària. Torna a crear la funció amb el
+  mateix contracte i una sola condició més (`m.user_id = v_uid`): el correu
+  d'accés només el rep la mateixa propietària; una administradora rep `''`
+  (el client ja ho llig com «sense correu per defecte»). El correu corporatiu
+  (`contact_email`) i l'opt-in públic, com abans. `desa_contacte_organitzacio`
+  no es toca: crida esta funció i hereta la correcció. Cap columna, política
+  ni permís nou; els mateixos REVOKE/GRANT d'execució. Va després de
+  2610181915 i de 2610211715. Verificació posterior, amb la propietària A i
+  una administradora B de prova: com B,
+  `select correu_per_defecte from public.contacte_organitzacio('<org>');`
+  torna `''`; com A, el seu correu. Pendents fora d'esta migració: la carrera
+  de l'alta concurrent de membres (C11-03) i la projecció pública del contacte
+  (C11-05). Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 

@@ -444,6 +444,14 @@ describe('Pla 2000 · ajusta, finestra i tanca', () => {
     expect(vista.onError).not.toHaveBeenCalled();
   });
 
+  test('IDEA-20 · ajusta(adreça) de la capçalera obri en «Original» (la imatge que ja hi ha, mai retallada en quadrat de sèrie)', async () => {
+    const p = { onImageUpload: vi.fn(async () => URL_MITJA), onDesaCamp: vi.fn(async () => true), onError: vi.fn(), onDesat: vi.fn() };
+    render(<ProvaAjust camp="heroImage" forma="capcalera" font={ADRECA} finestra={null} {...p} />);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });
+    const d = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+    expect(within(d).getByRole('radio', { name: /^Original/ }).checked).toBe(true);
+  });
+
   test('ajusta sense adreça no obri res (qui crida obri el selector)', async () => {
     muntaAjust({ font: '' });
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Ajustar' })); });

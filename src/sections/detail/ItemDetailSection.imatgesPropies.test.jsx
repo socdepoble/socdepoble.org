@@ -511,8 +511,10 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     expect(boto.textContent).toBe('Parlar amb la Gent de la Torre');
     // El primer del cos, just després de l'entradilla.
     expect(container.querySelector('.page-intro').nextElementSibling.firstElementChild.className).toBe('sdp-pagina-accio');
-    const pindoles = [...container.querySelectorAll('.page-intro ~ * .pill')].map((pill) => pill.textContent.trim());
-    expect(pindoles).toEqual(['700 hab', 'La Torre de les Maçanes']);
+    /* Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-01;
+       ordre del Mestre 261024 18:21) · fora les píndoles HTML duplicades
+       (.badge-row/.pill) de la població i del nom del poble. */
+    expect(container.querySelectorAll('.page-intro ~ * .pill, .page-intro ~ * .badge-row')).toHaveLength(0);
   });
 
   test('una entitat que no és «Gent …»: el verb de la porta d’El Xat', () => {
@@ -532,16 +534,18 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     return render(<ItemDetailSection />).container;
   };
 
-  test('Onada 6 · la barra de pestanyes centrada, després del botó blau i de les píndoles, amb «Gent de la Torre» seleccionada', () => {
+  test('Onada 6 · la barra de pestanyes centrada, just després del botó blau, amb «Gent de la Torre» seleccionada i «Empreses i entitats» al costat', () => {
     const container = pinta('pobles', POBLE);
     const barra = container.querySelector('.sdp-pestanyes');
     expect(barra.className).toBe('sdp-pestanyes sdp-pestanyes--centrades');
     const llista = barra.querySelector('[role="tablist"]');
     expect(llista.getAttribute('aria-label')).toBe('Continguts del poble');
+    /* Expectativa actualitzada a propòsit: P1-11 (T5B-01) · la segona pestanya,
+       «Empreses i entitats», i sense les píndoles la barra va just després del botó blau. */
     expect([...llista.querySelectorAll('[role="tab"]')].map((p) => [p.textContent, p.getAttribute('aria-selected')]))
-      .toEqual([['Gent de la Torre', 'true']]);
+      .toEqual([['Gent de la Torre', 'true'], ['Empreses i entitats', 'false']]);
     expect(container.querySelector('.page-intro').nextElementSibling.firstElementChild.className).toBe('sdp-pagina-accio');
-    expect(container.querySelector('.content-wrapper > .badge-row').nextElementSibling).toBe(barra);
+    expect(container.querySelector('.content-wrapper > .sdp-pagina-accio').nextElementSibling).toBe(barra);
   });
 
   test('Onada 6 · el panell porta totes les targetes del poble (incloses les del sistema) en l’ordre del Mur, i cap d’un altre poble', async () => {

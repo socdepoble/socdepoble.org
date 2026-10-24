@@ -10,7 +10,7 @@ import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
-import { avatarDeLaBarraDeFitxa, avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
+import { avatarDeLaBarraDeFitxa, avatarDeLaFitxa, deNom, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    EL COMPTE · el que no és la fitxa pública
@@ -68,8 +68,18 @@ function rutaDeLaFitxa(identitat) {
   return rutaDAutoria({ tipus: identitat.mena === 'grup' ? 'grup' : 'entitat', id: identitat.id });
 }
 
-export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = null, ambMembres = false }) {
+/* P1-11 (pla 261024_2230, T5B-03; G2230-04 de Gemini i reserva de Codex
+   1945) · `lloc` tria quins ajustos del catàleg pinta: 'compte' (el de
+   sempre) o 'membres', la vista «Membres i connexions» d'una organització
+   (perfilModel.js · itemsDePerfil). La mateixa peça per a totes dues (les
+   accions de membres, la barra taronja, la data): cap còpia. «Eixir» es queda
+   al compte i continua usant les accions de membres. */
+const TITOLS = Object.freeze({ compte: 'El compte', membres: 'Membres i connexions' });
+
+export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = null, ambMembres = false, lloc = 'compte' }) {
   const persona = identitat?.mena === 'persona';
+  /* Una persona no té vista de membres: sempre el seu compte. */
+  const llocDelDetall = !persona && lloc === 'membres' ? 'membres' : 'compte';
   const dades = identitat?.dades;
   const { towns } = useCoreContent();
   const perfil = usePerfilOpcional();
@@ -113,8 +123,8 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
     const cataleg = persona
       ? ajustosPersona(dades || {}, { superadmin, pobles: towns })
       : ajustosOrganitzacio(dades || {}, contacte, { pobles: towns, ambMembres: Boolean(membres) });
-    return cataleg.filter((ajust) => ajust.lloc === 'compte');
-  }, [persona, dades, contacte, towns, membres, superadmin]);
+    return cataleg.filter((ajust) => ajust.lloc === llocDelDetall);
+  }, [persona, dades, contacte, towns, membres, superadmin, llocDelDetall]);
 
   if (!identitat) return null;
 
@@ -122,10 +132,12 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
     <UniversalPage
       chrome="context"
       layout="contained"
-      title="El compte"
+      title={TITOLS[llocDelDetall]}
       lead={persona
         ? 'Les dades d’accés (correu, contrasenya, sessió i estat del perfil) i els drets de sèrie de les teues notes.'
-        : `Poble, correu, identificador, membres i eixida de ${identitat.nom}.`}
+        : llocDelDetall === 'membres'
+          ? `Qui forma part ${deNom(identitat.nom)} i el veïnat connectat amb l’entitat.`
+          : `Poble, correu, identificador i eixida de ${identitat.nom}.`}
       /* T51 · la data real del compte: creació o última modificació de la
          fila (profiles o l'organització). */
       {...dataDeFila(dades)}

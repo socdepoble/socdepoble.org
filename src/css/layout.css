@@ -444,6 +444,21 @@ header.bar-blue > * { min-width: 0; }
   width: 100%;
   height: auto;
 }
+/* Directiva del Mestre (261024, àudio 22:47) · Una capçalera vertical (4:5,
+   3:4, 9:16; PageFrame hi posa la classe) a tota l'amplada seria més alta que
+   la pantalla: centrada i com a molt el 80 % de l'alçada de la finestra. Un
+   <img> amb width i height auto conserva la proporció amb els dos max. vh i
+   no dvh (Baseline Safari 16). Sense fons: als costats es veu la pàgina. Les
+   quadrades i les apaïsades no porten la classe (Llei del Píxel). */
+.hero-image--vertical { background: transparent; }
+.hero-image--vertical img {
+  width: auto;
+  max-width: 100%;
+  /* Consens del Trio (Gemini G2230 «Doble Escala Harmònica», full de ruta del
+     Mestre 261024): mai més d'una pantalla ni de 720px en escriptori. */
+  max-height: min(75vh, 720px);
+  margin-inline: auto;
+}
 
 /* Barra taronja (context: autor i poble) */
 section.bar-orange {

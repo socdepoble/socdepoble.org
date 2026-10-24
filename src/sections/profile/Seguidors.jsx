@@ -4,17 +4,21 @@ import { backendScope } from '../../config/backendConfig.js';
 import { quiEmSegueix, teCapacitat } from '../../data/backendPort.js';
 
 /* ═══════════════════════════════════════════════════════════════════
-   T6b (IDEA-14; decisió del Mestre, 261024) · QUI ET SEGUIX
+   T6b (IDEA-14; decisió del Mestre, 261024) · EL VEÏNAT CONNECTAT
 
-   «Connectar / Seguir» és d'un sol sentit, i qui és seguit ho sap: la
-   constància és la llista de qui el seguix, sense cap algoritme (el port la
-   torna per data, la més nova primer). Dos llocs:
+   «Connectar amb {nom}» és d'un sol sentit, i l'altra banda ho sap: la
+   constància és la llista del veïnat que s'hi ha connectat, sense cap
+   algoritme (el port la torna per data, la més nova primer). Dos llocs:
    · GentQueEtSegueix: a la fitxa pròpia d'una persona (FitxaPublica),
-     «Gent que et seguix», amb el traductor com la resta de la fitxa.
+     «Veïnat connectat amb tu», amb el traductor com la resta de la fitxa.
    · QuiSegueixOrganitzacio: a la gestió dels membres d'una organització
-     (GestioMembres), «Qui seguix {nom}», en literal com la resta de la
-     gestió; només per a qui l'administra (el servidor ho torna a dir:
+     (GestioMembres), «Veïnat connectat amb {nom}», en literal com la resta
+     de la gestió; només per a qui l'administra (el servidor ho torna a dir:
      SDP-SEG-005).
+   P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · «A Sóc de
+   Poble no se seguix, es connecta»: només canvien els textos. El model és el
+   de sempre (quiEmSegueix, un seguiment d'un sol sentit), i els noms de les
+   peces i les claus section.perfil.seguidors.* es queden.
    Sense la capacitat 'seguiments' (un node sense seguiments és vàlid),
    cap dels dos pinta res ni crida el port. Cap regió viva: és una llista que
    es llig en obrir-se, no la resposta a cap acció.
@@ -45,7 +49,7 @@ export function dataDelSeguiment(iso, locale = 'ca-ES') {
 }
 
 /**
- * La llista de qui seguix la persona que mira (sense orgId) o l'entitat
+ * La llista del veïnat connectat amb la persona que mira (sense orgId) o amb l'entitat
  * orgId: { estat: 'inactiu' | 'carregant' | 'llest' | 'error', seguidors,
  * error }. 'inactiu' sense la capacitat. `config` (opcional): la de la vista;
  * sense ella, {}.
@@ -82,7 +86,7 @@ export function useSeguidors({ orgId = null, config = null } = {}) {
 /* Sense traductor (una peça muntada sola), el valencià de reserva. */
 const senseTraductor = (_clau, reserva) => reserva;
 
-/** «Gent que et seguix», a la fitxa pròpia d'una persona. `t` i `locale`, els de la fitxa. */
+/** «Veïnat connectat amb tu», a la fitxa pròpia d'una persona. `t` i `locale`, els de la fitxa. */
 export function GentQueEtSegueix({ config = null, t: traductor = null, locale: llengua = null }) {
   const id = useId();
   const t = typeof traductor === 'function' ? traductor : senseTraductor;
@@ -92,13 +96,13 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
   const titolId = `${id}-titol`;
   let cos;
   if (estat === 'carregant') {
-    cos = <p className="sdp-buit">{t('section.perfil.seguidors.carregant', 'Carregant qui et seguix…')}</p>;
+    cos = <p className="sdp-buit">{t('section.perfil.seguidors.carregant', 'Carregant el veïnat connectat amb tu…')}</p>;
   } else if (estat === 'error') {
     cos = (
       <p className="sdp-camp__error">
         {error?.code === 'NO-DISPONIBLE'
-          ? t('section.perfil.seguidors.noDisponible', 'Este servidor encara no guarda qui et seguix.')
-          : t('section.perfil.seguidors.error', 'No s’ha pogut llegir qui et seguix. Torna-ho a provar més tard.')}
+          ? t('section.perfil.seguidors.noDisponible', 'Este servidor encara no guarda el veïnat connectat amb tu.')
+          : t('section.perfil.seguidors.error', 'No s’ha pogut llegir el veïnat connectat amb tu. Torna-ho a provar més tard.')}
       </p>
     );
   } else if (seguidors.length) {
@@ -118,13 +122,13 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
       </ul>
     );
   } else {
-    cos = <p className="sdp-buit">{t('section.perfil.seguidors.buit', 'Encara no et seguix ningú.')}</p>;
+    cos = <p className="sdp-buit">{t('section.perfil.seguidors.buit', 'Encara no s’ha connectat ningú amb tu.')}</p>;
   }
   return (
     <section aria-labelledby={titolId}>
-      <h3 id={titolId}>{t('section.perfil.seguidors.titol', 'Gent que et seguix')}</h3>
+      <h3 id={titolId}>{t('section.perfil.seguidors.titol', 'Veïnat connectat amb tu')}</h3>
       <p className="sdp-camp__ajuda">
-        {t('section.perfil.seguidors.ajuda', 'Cada persona que et seguix ho ha triat: cap algoritme no hi decidix res. Esta llista només la veus tu.')}
+        {t('section.perfil.seguidors.ajuda', 'Cada persona d’esta llista ha triat connectar amb tu: cap algoritme no hi decidix res. Esta llista només la veus tu.')}
       </p>
       {cos}
     </section>
@@ -132,29 +136,31 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
 }
 
 /**
- * Correcció 261024 (R3-12) · El text d'un error de «Qui seguix {nom}», pel
- * `code` i mai pel `message`: el de NO-DISPONIBLE («Cal aplicar la migració
- * pendent») i el d'un error sense codi són per a qui desplega, no per a qui
- * administra. En literal, com la resta de la gestió dels membres. Pura.
+ * Correcció 261024 (R3-12) · El text d'un error de «Veïnat connectat amb
+ * {nom}», pel `code` i mai pel `message`: el de NO-DISPONIBLE («Cal aplicar
+ * la migració pendent») i el d'un error sense codi són per a qui desplega, no
+ * per a qui administra. En literal, com la resta de la gestió dels membres.
+ * P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · amb el
+ * vocabulari de connectar. Pura.
  */
 export function textDErrorDeSeguidors(error, nomOrg) {
   switch (error?.code) {
     case 'SDP-SEG-005': return `Només qui administra ${nomOrg} pot vore esta llista.`;
-    case 'SDP-SEG-000': return `Cal entrar al compte per a vore qui seguix ${nomOrg}.`;
-    case 'NO-DISPONIBLE': return `Este servidor encara no guarda qui seguix ${nomOrg}.`;
-    default: return `No s’ha pogut llegir qui seguix ${nomOrg}.`;
+    case 'SDP-SEG-000': return `Cal entrar al compte per a vore el veïnat connectat amb ${nomOrg}.`;
+    case 'NO-DISPONIBLE': return `Este servidor encara no guarda el veïnat connectat amb ${nomOrg}.`;
+    default: return `No s’ha pogut llegir el veïnat connectat amb ${nomOrg}.`;
   }
 }
 
-/** «Qui seguix {nom}», a la gestió dels membres, per a qui administra l'organització. */
+/** «Veïnat connectat amb {nom}», a la gestió dels membres, per a qui administra l'organització. */
 export function QuiSegueixOrganitzacio({ orgId, nom = '', config = null }) {
   const { estat, seguidors, error } = useSeguidors({ orgId, config });
   if (estat === 'inactiu' || orgId === null || orgId === undefined || orgId === '') return null;
   const nomOrg = nom || 'esta organització';
-  const titol = `Qui seguix ${nomOrg}`;
+  const titol = `Veïnat connectat amb ${nomOrg}`;
   let cos;
   if (estat === 'carregant') {
-    cos = <p className="sdp-buit">{`Carregant qui seguix ${nomOrg}…`}</p>;
+    cos = <p className="sdp-buit">{`Carregant el veïnat connectat amb ${nomOrg}…`}</p>;
   } else if (estat === 'error') {
     cos = <p className="sdp-camp__error">{textDErrorDeSeguidors(error, nomOrg)}</p>;
   } else if (seguidors.length) {
@@ -177,13 +183,13 @@ export function QuiSegueixOrganitzacio({ orgId, nom = '', config = null }) {
       </Taula>
     );
   } else {
-    cos = <p className="sdp-buit">{`Encara ningú no seguix ${nomOrg}.`}</p>;
+    cos = <p className="sdp-buit">{`Encara no s’ha connectat ningú amb ${nomOrg}.`}</p>;
   }
   /* Un div i no una regió: la regió amb nom és la Taula, com «Membres de {nom}». */
   return (
     <div>
       <h3>{titol}</h3>
-      <p className="sdp-camp__ajuda">{`Cada persona que seguix ${nomOrg} ho ha triat. Esta llista només la veu qui l’administra.`}</p>
+      <p className="sdp-camp__ajuda">{`Cada persona d’esta llista ha triat connectar amb ${nomOrg}. Esta llista només la veu qui l’administra.`}</p>
       {cos}
     </div>
   );

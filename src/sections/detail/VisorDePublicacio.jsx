@@ -190,6 +190,13 @@ const urlDelPort = (url) => (!esMitjaOpac(url) && isSafeAsset(url) ? url : '');
 
 export function VisorDePublicacio({ fotos, dades, etiquetaObri, alt = '', children }) {
   const [visor, setVisor] = useState({ capa: null, obert: false, index: 0 });
+  /* IDEA-20 (revisió adversarial 261024, lent multiformat) · La portada sola
+     d'una publicació va per la ranura heroComponent de PageFrame, on no hi
+     arriba hero-image--vertical: la mateixa detecció (naturalWidth i
+     naturalHeight en carregar, lligada al src) marca el botó d'una portada
+     vertical, i components.css la limita en alçada. Quadrades i apaïsades,
+     com abans. */
+  const [carregada, setCarregada] = useState(null);
   const delModel = useMemo(() => fotosDeLaPublicacio(fotos, dades), [fotos, dades]);
   /* La portada sola, si és una pujada: el port la resol (el carrusel no en
      demana res: ref buida, cap petició). */
@@ -217,11 +224,17 @@ export function VisorDePublicacio({ fotos, dades, etiquetaObri, alt = '', childr
   const VisorAmbCens = visor.capa ? elVisorDiferit() : null;
   /* Correccions del 261024 (R4-03) · El segon clic d'un doble clic (detail 2)
      no torna a obrir, com a CosAmbVisor; Intro i Espai (detail 0), sempre. */
+  const vertical = Boolean(carregada && carregada.src === font && carregada.vertical);
+  const onCarrega = (ev) => {
+    const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
+    if (amplada > 0 && alcada > 0) setCarregada({ src: font, vertical: alcada > amplada });
+  };
   const disparador = typeof children === 'function' ? children(obri) : ref && !font ? null : (
-    <button type="button" className="sdp-visor__obridor" aria-haspopup="dialog" aria-label={etiquetaObri}
+    <button type="button" className={vertical ? 'sdp-visor__obridor sdp-visor__obridor--vertical' : 'sdp-visor__obridor'}
+      aria-haspopup="dialog" aria-label={etiquetaObri}
       onPointerEnter={precarregaElVisor} onFocus={precarregaElVisor}
       onClick={(event) => { if (event.detail <= 1) obri(0, event.currentTarget); }}>
-      <img alt={alt} src={font} fetchpriority="high" />
+      <img alt={alt} src={font} fetchpriority="high" onLoad={onCarrega} />
     </button>
   );
 

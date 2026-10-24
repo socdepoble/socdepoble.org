@@ -17,7 +17,7 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { documentDeFitxa, menaDeFitxa, valorPerDesar } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import {
-  avatarDeLaBarraDeFitxa, avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
+  avatarDeLaBarraDeFitxa, avatarDeLaFitxa, deNom, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
 } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -459,9 +459,7 @@ export function construeixGaleria({
   return { fotos, sobreres, grupsRepetits };
 }
 
-/* «de» davant del nom, amb l'apòstrof davant de vocal o d'una h muda (mai
-   davant d'una i o una u semiconsonants: «de IAIA MarIA»). */
-const deNom = (nom) => (/^h?(?![iu][aeiouàèéíòóú])[aeiouàèéíòóú]/i.test(nom) ? `d’${nom}` : `de ${nom}`);
+/* «de» davant del nom: deNom, de fitxaDePerfil.js. */
 
 /**
  * Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · Els textos de

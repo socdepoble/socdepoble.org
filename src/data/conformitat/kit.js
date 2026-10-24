@@ -408,6 +408,24 @@ export const CASOS = Object.freeze([
       return falles;
     }
   }),
+  /* P1-11 (pla 261024_2230, T5B-01) · El filtre per poble (la pestanya
+     «Empreses i entitats» de /pobles/:id): un poble que cap fila porta torna
+     una llista buida, mai les organitzacions de tots els pobles. Un amfitrió
+     que ignorara `poble` pintaria a la pestanya d'un poble les entitats dels
+     altres. */
+  cas({
+    metode: 'listPublicOrganizations', capacitat: 'directoriEntitats',
+    titol: 'listPublicOrganizations({ poble }, config) → només files d’eixe poble (cap per a un poble inexistent)',
+    arguments: (ctx) => [{ poble: 'Poble de conformitat que no existix', limit: 5 }, ctx.config],
+    comprova: (llista) => {
+      const falles = exigixLlistaAmbId(llista, 'organitzacions');
+      if (falles.length) return falles;
+      for (const fila of llista) {
+        if (fila.town_name !== 'Poble de conformitat que no existix') falles.push(`la fila ${fila.id} és d’un altre poble (${JSON.stringify(fila.town_name)})`);
+      }
+      return falles;
+    }
+  }),
   cas({
     metode: 'listMyAgents', capacitat: 'agents', titol: 'listMyAgents(config) → Agent[]',
     arguments: (ctx) => [ctx.config],

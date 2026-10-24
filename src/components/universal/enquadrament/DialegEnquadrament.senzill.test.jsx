@@ -8,8 +8,15 @@ vi.mock('./imatgeCanvas.js', () => ({
   dibuixaVisor: () => true,
   exportaRetall: dobles.exportaRetall,
 }));
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { DialegEnquadrament } from './DialegEnquadrament.jsx';
-import { AJUDA_RETALL, FORMES, configDeForma } from './useEnquadramentImatge.jsx';
+import { FORMATS } from './enquadrament.js';
+import { ETIQUETA_CONSERVA_EXIF } from './exifIncrustat.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from './jpegProva.js';
+import {
+  AJUDA_CAPCALERA_LLIURE, AJUDA_CAPCALERA_QUADRADA, AJUDA_RETALL, FORMES, configDeForma, costatDeSortida
+} from './useEnquadramentImatge.jsx';
 import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';
 import EspecimenEnquadrament from '../../../sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx';
 
@@ -255,23 +262,153 @@ describe('mode senzill · l’eixida exacta de cada forma', () => {
     }
   });
 
+  /* Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: la
+     capçalera ja no és exacta ni d'una sola forma. Oferix tots els FORMATS
+     (el quadrat de sèrie) i porta `costatLlarg` (1.200). L'avatar i el
+     logotip, idèntics. */
   test('la taula de formes: proporció, màscara i títol', () => {
     expect(Object.keys(FORMES)).toEqual(['avatar', 'logotip', 'capcalera']);
     expect(FORMES.avatar).toMatchObject({ format: '1:1', mascara: 'cercle', titol: 'Retalla la foto', midaSortida: 400, exacta: { amplada: 400, alcada: 400 } });
     expect(FORMES.logotip).toMatchObject({ format: '1:1', mascara: null, titol: 'Retalla el logotip', exacta: { amplada: 600, alcada: 600 } });
-    expect(FORMES.capcalera).toMatchObject({ format: '1:1', mascara: null, titol: 'Retalla la capçalera', exacta: { amplada: 1200, alcada: 1200 } });
-    expect(FORMES.capcalera.formats.map((f) => [f.valor, f.ratio])).toEqual([['1:1', 1]]);
+    expect(FORMES.avatar.formats.map((f) => [f.valor, f.ratio])).toEqual([['1:1', 1]]);
+    expect(FORMES.logotip.formats.map((f) => [f.valor, f.ratio])).toEqual([['1:1', 1]]);
+    expect(FORMES.capcalera).toMatchObject({ format: '1:1', mascara: null, titol: 'Retalla la capçalera', midaSortida: 1200, costatLlarg: 1200 });
+    expect('exacta' in FORMES.capcalera).toBe(false);
+    /* Actualitzada a posta (P1-11, integració 261024): les mateixes formes que
+       FORMATS, en el mateix ordre, amb les ajudes pròpies de la fitxa (no les de les Notes). */
+    expect(FORMES.capcalera.formats.map((f) => [f.valor, f.etiqueta, f.ratio])).toEqual(FORMATS.map((f) => [f.valor, f.etiqueta, f.ratio]));
+    expect(FORMES.capcalera.formats.map((f) => f.ajuda)).toEqual(FORMATS.map((f) => (f.ratio === 1 ? AJUDA_CAPCALERA_QUADRADA : AJUDA_CAPCALERA_LLIURE)));
+    expect(FORMES.capcalera.formats.some((f) => /nota/i.test(f.ajuda))).toBe(false);
+    expect(Object.isFrozen(FORMES.capcalera.formats) && FORMES.capcalera.formats.every(Object.isFrozen)).toBe(true);
     expect(Object.isFrozen(FORMES) && Object.isFrozen(FORMES.capcalera) && Object.isFrozen(FORMES.avatar.exacta)).toBe(true);
+  });
+
+  test('Directiva 261024 · l’eixida de la capçalera porta costatLlarg; la de l’avatar i la del logotip, la mida exacta de sempre', () => {
+    const fitxer = foto();
+    expect(configDeForma('capcalera').sortida(fitxer)).toEqual({ ampladaMaxima: 1200, format: 'image/png', costatLlarg: 1200 });
+    expect(configDeForma('avatar').sortida(fitxer)).toEqual({ ampladaMaxima: 400, format: 'image/png', exacta: { amplada: 400, alcada: 400 } });
+    expect(configDeForma('logotip').sortida(fitxer)).toEqual({ ampladaMaxima: 600, format: 'image/png', exacta: { amplada: 600, alcada: 600 } });
+    expect(['capcalera', 'avatar', 'logotip'].map(costatDeSortida)).toEqual([1200, 400, 600]);
+    expect(configDeForma('capcalera').formats).toBe(FORMES.capcalera.formats);
+  });
+});
+
+/* Directiva del Mestre (261024, àudio 22:47) · «El quadrat únic és una
+   limitació inacceptable»: la capçalera del mode senzill tria la forma (la
+   mateixa «Forma» del T46), davall del zoom i abans de la casella de l'EXIF.
+   L'avatar i el logotip (una sola forma) no canvien gens. */
+describe('mode senzill · la forma de la capçalera', () => {
+  const fotoGps = () => new File([jpegAmbExif({ exif: dataOriginal('2017:05:14 10:22:33'), gps: gpsTorre() })], 'arbre.jpg', { type: 'image/jpeg' });
+  const tria = (vista, valor) => act(() => { fireEvent.click(vista.container.ownerDocument.querySelector(`input[type="radio"][value="${valor}"]`)); });
+  const guarda = (vista) => act(async () => { fireEvent.click(boto(vista, 'Guardar')); });
+  const exportadorAmbMida = () => vi.fn(async (_element, _rect, { amplada, alcada, tipus }) => (
+    Object.assign(new File(['y'], 'enquadrament.png', { type: tipus }), { amplada, alcada })
+  ));
+
+  test('capçalera: «Forma» amb tots els formats, el quadrat marcat, davall de la fila de zoom i abans de la casella de l’EXIF', async () => {
+    const vista = munta({ forma: 'capcalera', font: fotoGps(), ofereixConservarExif: true });
+    await carregat(vista);
+    const casella = await within(dialeg(vista)).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+    const grup = dialeg(vista).querySelector('fieldset');
+    expect(grup.querySelector('legend').textContent).toBe('Forma');
+    const formes = within(grup).getAllByRole('radio');
+    expect(formes.map((r) => r.value)).toEqual(FORMATS.map((f) => f.valor));
+    expect(formes.filter((r) => r.checked).map((r) => r.value)).toEqual(['1:1']);
+    const zoom = dialeg(vista).querySelector('.sdp-enquadrament__zoom');
+    expect(zoom.compareDocumentPosition(grup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(grup.compareDocumentPosition(casella) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Mentre desa, la forma no es pot canviar.
+    expect(grup.disabled).toBe(false);
+    expect(document.querySelector('[style]')).toBeNull();
+  });
+
+  test('avatar i logotip: cap «Forma», el DOM del mode senzill de sempre', async () => {
+    for (const forma of ['avatar', 'logotip']) {
+      const vista = munta({ forma });
+      await carregat(vista);
+      expect(dialeg(vista).querySelector('fieldset'), forma).toBeNull();
+      expect(within(dialeg(vista)).queryByRole('radio'), forma).toBeNull();
+      const cos = dialeg(vista).querySelector('.sdp-enquadrament--senzill');
+      expect([...cos.children].map((e) => e.className), forma).toEqual([
+        `sdp-enquadrament__visor-caixa${forma === 'avatar' ? ' sdp-enquadrament__visor-caixa--cercle' : ''}`,
+        'sdp-nomes-lector',
+        'sdp-enquadrament__zoom',
+      ]);
+      cleanup();
+    }
+  });
+
+  test('el visor seguix la forma triada (16:9, 9:16, 21:9) i el dibuix pinta el seu retall; Restablir no la canvia', async () => {
+    const vista = munta({ forma: 'capcalera' });
+    await carregat(vista);
+    const canvas = () => dialeg(vista).querySelector('canvas');
+    expect([canvas().getAttribute('width'), canvas().getAttribute('height')]).toEqual(['960', '960']);
+    const casos = [
+      ['16:9', ['960', '540'], { x: 222, y: 0, w: 3556, h: 2000 }],
+      ['9:16', ['540', '960'], { x: 1438, y: 0, w: 1125, h: 2000 }],
+      ['21:9', ['960', '411'], { x: 0, y: 143, w: 4000, h: 1714 }],
+    ];
+    for (const [valor, mida, rect] of casos) {
+      tria(vista, valor);
+      expect([canvas().getAttribute('width'), canvas().getAttribute('height')], valor).toEqual(mida);
+      expect(vista.dibuixant, valor).toHaveBeenLastCalledWith(canvas(), vista.img.element, rect);
+    }
+    // La caixa no porta cap cercle: només l'avatar es pinta redó.
+    expect(dialeg(vista).querySelector('.sdp-enquadrament__visor-caixa--cercle')).toBeNull();
+    act(() => { fireEvent.click(boto(vista, 'Apropar')); });
+    act(() => { fireEvent.click(boto(vista, 'Restablir')); });
+    expect(dialeg(vista).querySelector('input[type="radio"][value="21:9"]').checked).toBe(true);
+    expect(vista.dibuixant).toHaveBeenLastCalledWith(canvas(), vista.img.element, { x: 0, y: 143, w: 4000, h: 1714 });
+  });
+
+  test('el CSS de la caixa del visor no força cap quadrat: cap aspect-ratio ni cap mida fixa (bloc T46 de modules.css)', () => {
+    const css = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const regles = [...css.matchAll(/([^{}]*\.sdp-enquadrament__visor-caixa[^{}]*)\{([^{}]*)\}/g)];
+    expect(regles.length).toBeGreaterThan(0);
+    for (const [, selector, cos] of regles) {
+      if (selector.includes('--cercle')) continue;
+      expect(cos, selector.trim()).not.toMatch(/aspect-ratio|(?<![-\w])(width|height)\s*:(?!\s*(?:auto|fit-content)\s*;)/);
+    }
+  });
+
+  test('capçalera en 16:9: onDesa rep un fitxer de 1.200 × 675 (l’exportador, amb costatLlarg); en 1:1, 1.200 × 1.200 com abans', async () => {
+    const casos = [['16:9', 1200, 675], ['9:16', 675, 1200], ['21:9', 1200, 514], ['1:1', 1200, 1200]];
+    for (const [valor, amplada, alcada] of casos) {
+      const exportador = exportadorAmbMida();
+      const vista = munta({ forma: 'capcalera', exportador });
+      await carregat(vista);
+      if (valor !== '1:1') tria(vista, valor);
+      await guarda(vista);
+      const [fitxer, info] = vista.onDesa.mock.calls[0];
+      expect([fitxer.amplada, fitxer.alcada], valor).toEqual([amplada, alcada]);
+      expect(info.format, valor).toBe(valor);
+      expect(exportador.mock.calls[0][2], valor).toEqual({ amplada, alcada, tipus: 'image/png' });
+      cleanup();
+    }
+  });
+
+  test('un retall de capçalera més menut que l’eixida s’amplia fins a 1.200 pel costat llarg, en qualsevol forma', async () => {
+    const xicoteta = { amplada: 400, alcada: 300 };
+    const casos = [['1:1', 1200, 1200], ['original', 1200, 900], ['3:4', 900, 1200]];
+    for (const [valor, amplada, alcada] of casos) {
+      const vista = munta({ forma: 'capcalera', imatge: xicoteta });
+      await carregat(vista);
+      if (valor !== '1:1') tria(vista, valor);
+      await guarda(vista);
+      expect(vista.exportador.mock.calls[0][2], valor).toMatchObject({ amplada, alcada });
+      cleanup();
+    }
   });
 });
 
 describe('l’espècimen del catàleg · els tres modes senzills', () => {
   /* Gauntlet 261016 (Bloc 1) · L'avatar en cercle ix ara a 400 × 400
-     exactes i la capçalera a 1.200 × 1.200 exactes: la llegenda de
-     l'espècimen la calcula de la taula FORMES. El nom del botó de la
-     capçalera és text de l'espècimen (EspecimenEnquadrament.jsx): ja no diu
-     16:9 sinó «Capçalera quadrada (1.200 × 1.200)», i es clica per eixe nom. */
-  test('cercle de 400 × 400, quadrat de 600 × 600 i capçalera de 1.200 × 1.200, amb la imatge del repositori; sense style=', async () => {
+     exactes: la llegenda de l'espècimen la calcula de la taula FORMES.
+     Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: el
+     botó de la capçalera ja no diu «Capçalera quadrada (1.200 × 1.200)» sinó
+     «Capçalera de forma lliure (1.200 pel costat llarg)», i la llegenda diu
+     la forma triada (el quadrat de sèrie: 1.200 × 1.200). */
+  test('cercle de 400 × 400, quadrat de 600 × 600 i capçalera de 1.200 × 1.200 en 1:1, amb la imatge del repositori; sense style=', async () => {
     dobles.carregaImatge.mockReset().mockResolvedValue({ amplada: 1024, alcada: 1024, tipus: 'image/png', element: {}, allibera: vi.fn() });
     dobles.exportaRetall.mockReset().mockResolvedValue(new File(['y'], 'enquadrament.png', { type: 'image/png' }));
     URL.createObjectURL = vi.fn(() => 'blob:prova');
@@ -283,7 +420,7 @@ describe('l’espècimen del catàleg · els tres modes senzills', () => {
       const casos = [
         ['Avatar en cercle', 'Retalla la foto', true, '400 × 400 px exactes, avatar en cercle'],
         ['Logotip quadrat (600 × 600)', 'Retalla el logotip', false, '600 × 600 px exactes, logotip quadrat'],
-        ['Capçalera quadrada (1.200 × 1.200)', 'Retalla la capçalera', false, '1200 × 1200 px exactes, capçalera'],
+        ['Capçalera de forma lliure (1.200 pel costat llarg)', 'Retalla la capçalera', false, '1200 × 1200 px, 1200 pel costat llarg, capçalera en 1:1'],
       ];
       for (const [boto, finestra, cercle, text] of casos) {
         await act(async () => { fireEvent.click(screen.getByRole('button', { name: boto })); });

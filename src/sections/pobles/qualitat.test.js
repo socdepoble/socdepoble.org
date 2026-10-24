@@ -22,13 +22,17 @@ const MODULS_NOUS = Object.freeze([
   'src/sections/pobles/publicacionsDelPoble.js',
   'src/sections/pobles/xatDelPoble.js',
   'src/sections/pobles/usePublicacionsDelPoble.js',
-  'src/sections/pobles/PublicacionsDelPoble.jsx'
+  'src/sections/pobles/PublicacionsDelPoble.jsx',
+  /* P1-11 (pla 261024_2230, T5B-01) · La pestanya «Empreses i entitats». */
+  'src/sections/pobles/useEntitatsDelPoble.js',
+  'src/sections/pobles/EntitatsDelPoble.jsx'
 ]);
 const FITXERS = Object.freeze([
   ...MODULS_NOUS,
   'src/sections/pobles/publicacionsDelPoble.test.js',
   'src/sections/pobles/xatDelPoble.test.js',
   'src/sections/pobles/PublicacionsDelPoble.test.jsx',
+  'src/sections/pobles/EntitatsDelPoble.test.jsx',
   'src/sections/pobles/PoblesSection.jsx',
   'src/sections/pobles/PoblesSection.test.jsx',
   'src/sections/pobles/nomsDelPoble.js',

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { DialegEnquadrament } from './DialegEnquadrament.jsx';
-import { FORMAT_DE_LA_FONT, tipusDeSortida } from './enquadrament.js';
+import { FORMATS, FORMAT_DE_LA_FONT, tipusDeSortida } from './enquadrament.js';
 import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujadaImatge.js';
 
 /**
@@ -10,10 +10,18 @@ import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujada
  *   · avatar (persona, agent): cercle 1:1, el vel fora del cercle, exportat
  *     a 400 × 400 exactes (MIDA_AVATAR, Gauntlet 261016, Bloc 1);
  *   · logotip (organització): quadrat 1:1, exportat a 600 × 600 exactes;
- *   · capçalera: quadrat 1:1, exportat a 1.200 × 1.200 exactes, la mateixa
- *     imatge que la targeta (Gauntlet 261016, Bloc 1, Llei del Quadrat; abans
- *     16:9 i 1.200 × 675, ordre 261008). PROPORCIO_CAPCALERA i
- *     AMPLADA_CAPCALERA: una sola constant per a canviar-la.
+ *   · capçalera: forma lliure, la que tria la persona entre tots els FORMATS
+ *     (superpanoràmic, panoràmic, apaisat, quadrat, vertical o l'original),
+ *     amb el quadrat 1:1 de sèrie, exportada a 1.200 pel costat llarg
+ *     (costatLlarg; l'altre costat seguix la forma): en 1:1, 1.200 × 1.200
+ *     com abans; en 16:9, 1.200 × 675; en 9:16, 675 × 1.200. Directiva del
+ *     Mestre (261024, àudio 22:47): «el quadrat únic és una limitació
+ *     inacceptable». Deroga, només per a la capçalera, la «capçalera quadrada
+ *     1.200 × 1.200 exactes» (Gauntlet 261016, Bloc 1, Llei del Quadrat; abans
+ *     16:9 i 1.200 × 675, ordre 261008). PROPORCIO_CAPCALERA diu la forma de
+ *     sèrie i AMPLADA_CAPCALERA, el costat llarg. L'enquadrament es continua
+ *     coent dins del fitxer (principi T46): cap camp ni migració al servidor.
+ *     L'avatar i el logotip no canvien (Llei del Píxel).
  * Totes: el mode senzill del diàleg, sense geolocalitzar, el fitxer SEMPRE
  * recodificat i 10 MB d'entrada, dits abans de triar la foto (AJUDA_FOTO).
  * Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · L'avatar i la
@@ -73,22 +81,35 @@ export const ERROR_TIPUS_FOTO = 'Només pots pujar fotos PNG, JPEG o WebP.';
 export const ERROR_PES_FOTO = 'Esta foto ocupa més de 10 MB. Tria’n una de més lleugera.';
 
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Les mides ixen de la font
-   única (utils/pujadaImatge.js), la mateixa que llig la pujada: l'amplada de
-   la capçalera (MIDA_CAPCALERA, 1.200), el costat de l'avatar (MIDA_AVATAR,
-   400) i el del logotip (MIDA_LOGOTIP, 600), que ja no són el mateix. */
-/** La capçalera: proporció i amplada del fitxer. Canviar-la és canviar estes dues línies (l'amplada, a la font única). */
+   única (utils/pujadaImatge.js), la mateixa que llig la pujada: el costat
+   llarg de la capçalera (MIDA_CAPCALERA, 1.200), el costat de l'avatar
+   (MIDA_AVATAR, 400) i el del logotip (MIDA_LOGOTIP, 600), que ja no són el
+   mateix. */
+/** La capçalera: la forma de sèrie i el costat llarg del fitxer (el costat, a la font única). */
 export const PROPORCIO_CAPCALERA = Object.freeze({ valor: '1:1', ratio: 1 });
 export const AMPLADA_CAPCALERA = MIDA_CAPCALERA;
 
 const QUADRAT = Object.freeze([Object.freeze({ valor: '1:1', etiqueta: 'Quadrat (1:1)', ratio: 1 })]);
-const FORMATS_CAPCALERA = Object.freeze([
-  Object.freeze({ valor: PROPORCIO_CAPCALERA.valor, etiqueta: `Capçalera (${PROPORCIO_CAPCALERA.valor})`, ratio: PROPORCIO_CAPCALERA.ratio }),
-]);
 
 /* La taula pura de les tres formes. `exacta`: el fitxer fa exactament eixa
    mida (també si cal ampliar el retall); sense, `midaSortida` és el màxim.
-   Gauntlet 261016 (Bloc 1) · Les tres són exactes: l'avatar també ix a
-   400 × 400 quan el retall és més menut (abans quedava a la mida del retall). */
+   Gauntlet 261016 (Bloc 1) · L'avatar i el logotip són exactes: l'avatar
+   també ix a 400 × 400 quan el retall és més menut (abans quedava a la mida
+   del retall).
+   Directiva del Mestre (261024, àudio 22:47) · La capçalera ja no és exacta:
+   oferix tots els FORMATS i porta `costatLlarg`, el costat llarg exacte del
+   fitxer (també si cal ampliar), amb l'altre costat a la proporció triada. */
+/* P1-11 (integració 261024) · Les files de FORMATS porten les ajudes del
+   retallador de les Notes («Si la nota ja és al Mur…»), que no escauen a una
+   fitxa del Perfil: la capçalera porta les seues, amb el que fa hui la
+   targeta (.sp-card-media-container 1:1, object-fit cover; Gemini G2230,
+   «Doble Escala Harmònica»). Les formes, les mateixes. */
+export const AJUDA_CAPCALERA_QUADRADA = 'Recomanat: la fitxa i la seua targeta ensenyen la mateixa imatge sencera.';
+export const AJUDA_CAPCALERA_LLIURE = 'A la fitxa es veu sencera, amb esta forma; a les targetes es retalla en quadrat.';
+const FORMATS_CAPCALERA = Object.freeze(FORMATS.map((f) => Object.freeze({
+  ...f, ajuda: f.ratio === 1 ? AJUDA_CAPCALERA_QUADRADA : AJUDA_CAPCALERA_LLIURE,
+})));
+
 export const FORMES = Object.freeze({
   avatar: Object.freeze({
     format: '1:1', formats: QUADRAT, mascara: 'cercle', titol: 'Retalla la foto', midaSortida: MIDA_AVATAR,
@@ -100,9 +121,7 @@ export const FORMES = Object.freeze({
   }),
   capcalera: Object.freeze({
     format: PROPORCIO_CAPCALERA.valor, formats: FORMATS_CAPCALERA, mascara: null, titol: 'Retalla la capçalera',
-    midaSortida: AMPLADA_CAPCALERA,
-    exacta: Object.freeze({ amplada: AMPLADA_CAPCALERA, alcada: Math.round(AMPLADA_CAPCALERA / PROPORCIO_CAPCALERA.ratio) }),
-    conservaExif: true,
+    midaSortida: AMPLADA_CAPCALERA, costatLlarg: AMPLADA_CAPCALERA, conservaExif: true,
   }),
 });
 
@@ -112,7 +131,9 @@ export const formaDe = (forma) => FORMES[forma] || FORMES.avatar;
 /** El costat llarg del fitxer que ix d'una forma (el que la pujada no ha de tornar a reduir). */
 export function costatDeSortida(forma) {
   const f = formaDe(forma);
-  return f.exacta ? Math.max(f.exacta.amplada, f.exacta.alcada) : f.midaSortida;
+  // Directiva 261024 · La capçalera: el seu costat llarg (1.200), siga quina siga la forma triada.
+  if (f.exacta) return Math.max(f.exacta.amplada, f.exacta.alcada);
+  return f.costatLlarg || f.midaSortida;
 }
 
 /**
@@ -143,7 +164,11 @@ export function configDeForma(forma) {
     titol: f.titol,
     descripcio: AJUDA_RETALL,
     valida: validaFotoDeFitxa,
-    sortida: (font) => ({ ampladaMaxima: f.midaSortida, format: tipusDe(font), ...(f.exacta ? { exacta: f.exacta } : null) }),
+    /* Directiva 261024 · `costatLlarg` (la capçalera) passa a l'eixida quan la forma el porta. */
+    sortida: (font) => ({
+      ampladaMaxima: f.midaSortida, format: tipusDe(font),
+      ...(f.exacta ? { exacta: f.exacta } : null), ...(f.costatLlarg ? { costatLlarg: f.costatLlarg } : null),
+    }),
     conservaExif: f.conservaExif !== false,
   };
 }
@@ -189,7 +214,11 @@ export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnqua
     <DialegEnquadrament
       {...extres}
       font={sessio.font}
-      formatInicial={cfg.formatInicial}
+      /* IDEA-20 (revisió adversarial 261024) · La imatge que ja hi ha
+         (formatDeLaFont) es re-enquadra des de la seua forma («Original») si la
+         forma n'oferix més d'una (la capçalera): mai el quadrat de sèrie, que la
+         tornaria a tallar. L'avatar i el logotip, només quadrats, com sempre. */
+      formatInicial={sessio.formatDeLaFont && cfg.formats.some((f) => f.valor === 'original') ? 'original' : cfg.formatInicial}
       formats={cfg.formats}
       sortida={sessio.formatDeLaFont ? { ...cfg.sortida(sessio.font), format: FORMAT_DE_LA_FONT } : cfg.sortida(sessio.font)}
       permetGeolocalitzacio={false}

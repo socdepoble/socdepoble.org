@@ -181,7 +181,8 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Forn' }));
   // Expectativa actualitzada a propòsit: relleu del Pla 2000, punt 3 («Multimèdia», l'últim apartat de l'organització).
-  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Multimèdia']);
+  // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte».
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Membres i connexions', 'Multimèdia']);
   expect(within(detall(container)).getByText('fitxa de Forn')).toBeTruthy();
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Gestoria de Poble' }));

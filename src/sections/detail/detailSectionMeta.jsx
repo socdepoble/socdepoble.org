@@ -45,6 +45,9 @@ import { SelectorDeVariacions } from '../mercat/SelectorDeVariacions.jsx';
 import { variacioActiva, variacionsDelProducte } from '../mercat/variacionsDeProducte.js';
 
 const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPoble.jsx'));
+/* P1-11 (pla 261024_2230, T5B-01) · El panell «Empreses i entitats», també en
+   diferit: la targeta del directori arrossega UniversalCard. */
+const EntitatsDelPoble = lazyRoute(() => import('../pobles/EntitatsDelPoble.jsx'));
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
@@ -536,21 +539,38 @@ export class BarreraDelPanellDelPoble extends React.Component {
    primera, «Gent de …» (l'H1), amb totes les targetes publicades des del
    poble (Mur, Agenda i Mercat), casades per dades: cap nom de poble al codi.
    El panell es carrega en diferit; mentre arriba, el Carregant de Pedra Seca,
-   i si no arriba, l'avís dins de la pestanya (BarreraDelPanellDelPoble). */
+   i si no arriba, l'avís dins de la pestanya (BarreraDelPanellDelPoble).
+   P1-11 (pla 261024_2230, T5B-01; ordre del Mestre 261024 18:21) · La
+   segona, «Empreses i entitats»: les organitzacions públiques que declaren el
+   poble (EntitatsDelPoble, el directori filtrat pel poble al servidor). Les
+   Pestanyes munten tots els panells; este només es munta quan la persona
+   l'obri (i es queda): cap petició al directori si ningú no el mira. */
+const PESTANYA_DE_LA_GENT = 'gent';
+const PESTANYA_DE_LES_ENTITATS = 'entitats';
+
 function PestanyesDelPoble({ poble, gent, t }) {
+  const [activa, setActiva] = useState(PESTANYA_DE_LA_GENT);
+  const [entitatsObertes, setEntitatsObertes] = useState(false);
+  const tria = (id) => {
+    setActiva(id);
+    if (id === PESTANYA_DE_LES_ENTITATS) setEntitatsObertes(true);
+  };
+  const fallada = t('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.');
   return (
     <Pestanyes
       centrades
       etiqueta={t('section.detail.pobles.pestanyes', 'Continguts del poble')}
+      activa={activa}
+      onCanvi={tria}
       pestanyes={[{
-        id: 'gent',
+        id: PESTANYA_DE_LA_GENT,
         etiqueta: gent,
         contingut: (
           <BarreraDelPanellDelPoble
             resetKey={String(poble?.id ?? '')}
             fallback={(
               <Alerta to="error" titol={t('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')}>
-                {t('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.')}
+                {fallada}
               </Alerta>
             )}
           >
@@ -559,6 +579,23 @@ function PestanyesDelPoble({ poble, gent, t }) {
             </React.Suspense>
           </BarreraDelPanellDelPoble>
         )
+      }, {
+        id: PESTANYA_DE_LES_ENTITATS,
+        etiqueta: t('section.detail.pobles.entitats', 'Empreses i entitats'),
+        contingut: entitatsObertes ? (
+          <BarreraDelPanellDelPoble
+            resetKey={String(poble?.id ?? '')}
+            fallback={(
+              <Alerta to="error" titol={t('section.detail.pobles.entitats.error', 'No s’han pogut carregar les empreses i entitats del poble')}>
+                {fallada}
+              </Alerta>
+            )}
+          >
+            <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.entitats.carregant', 'Carregant les empreses i entitats del poble…')} />}>
+              <EntitatsDelPoble poble={poble} />
+            </React.Suspense>
+          </BarreraDelPanellDelPoble>
+        ) : null
       }]}
     />
   );
@@ -612,17 +649,18 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
        Onada 6 · Davall, la barra de pestanyes (PestanyesDelPoble), només a la
        pàgina del poble ({ detall: true }, ItemDetailSection): el lector de
        connexions del MAS (ConnexioDetall) crida renderBody(item) i no la
-       pinta. */
+       pinta.
+       P1-11 (pla 261024_2230, T5B-01; ordre del Mestre 261024 18:21) ·
+       Fora les píndoles HTML (.badge-row/.pill) de la població i del nom del
+       poble: repetien a la vista el que ja diuen l'H1 («Gent de …»), la
+       barra taronja i les etiquetes de la capçalera. Les pestanyes es
+       tornen a muntar per a cada poble (key): un altre poble obri per «Gent». */
     renderBody: (item, { detall = false } = {}) => (
       <>
         <div className="sdp-pagina-accio">
           <PortaDePagina porta={{ id: 'xat-del-poble', verb: verbDelXat(item), desti: rutaXatDelPoble(item), varietat: 'primari' }} />
         </div>
-        <div className="badge-row">
-          <span className="pill">{item.population || item.type || t('section.detail.pobles.itemTitle', 'Poble')}</span>
-          <span className="pill"><MapPin size={14} /> {item.town_name || item.title || ''}</span>
-        </div>
-        {detall ? <PestanyesDelPoble poble={item} gent={getTitle(item)} t={t} /> : null}
+        {detall ? <PestanyesDelPoble key={String(item?.id ?? '')} poble={item} gent={getTitle(item)} t={t} /> : null}
       </>
     )
   };

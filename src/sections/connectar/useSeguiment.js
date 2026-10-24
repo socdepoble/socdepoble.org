@@ -1,24 +1,29 @@
 /**
- * useSeguiment.js — «Connectar / Seguir» una persona o una entitat des de
+ * useSeguiment.js — «Connectar amb {nom}», una persona o una entitat, des de
  * /connectar (IDEA-14, Directiva del Mestre, 261024; auditoria Gemini G-04).
  *
- *   · Seguir és una relació humana: no et fa membre de res i no és connectar
- *     un element al MAS. Es desa amb la capacitat 'seguiments' del port
+ *   · P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · «A Sóc
+ *     de Poble no se seguix, es connecta»: la gent llig «Connectar amb {nom}»,
+ *     «Connectat amb {nom}.» i «veïnat connectat». Per davall, el model no
+ *     canvia: és un seguiment d'un sol sentit, i els noms d'ací (segueix,
+ *     deixa, estats, avisos) i les claus section.connectar.seguir.* es queden.
+ *   · Connectar és una relació humana: no et fa membre de res i no és posar
+ *     un element a les teues notes. Es desa amb la capacitat 'seguiments' del port
  *     (segueix, deixaDeSeguir, estatSeguiment), sempre a través de
  *     backendPort.js. Sense la capacitat (un port sense implementació, un
  *     mock) no es crida res i l'estat ho diu ('no-disponible').
- *   · L'altra banda ho sap: la PRIMERA vegada que la seguixes, UN missatge
+ *   · L'altra banda ho sap: la PRIMERA vegada que t'hi connectes, UN missatge
  *     curt al xat privat (missatgeAlXat.js), amb el text que la vista ja ha
  *     dit abans del clic. 261024 correccions (R4-01) · deixar_de_seguir
  *     esborra la fila, i un segon seguiment torna `nou: true`: per això
  *     l'avís va només amb `primer: true` (cap seguiment abans, mai); un
- *     servidor que encara no diu `primer` cau a `nou`. Tornar a seguir
+ *     servidor que encara no diu `primer` cau a `nou`. Tornar-s'hi a connectar
  *     ('represa', o 'ja-seguies' si no s'havia deixat) no envia res. Un avís
- *     que no ix no desfà el seguiment: es diu ('sense-avis').
- *   · Deixar de seguir no avisa ningú.
+ *     que no ix no desfà la connexió: es diu ('sense-avis').
+ *   · Deixar la connexió no avisa ningú.
  *   · Qui: `contacte.seguiment` ({ tipus: 'persona'|'entitat', id }), que la
  *     vista deriva del contacte de confiança (autorPerConnectar o
- *     perfilPerConnectar), mai de l'URL. Sense sessió no se segueix ningú.
+ *     perfilPerConnectar), mai de l'URL. Sense sessió no es connecta amb ningú.
  *   · Tot el que es llig o es fa porta la CLAU (persona de la sessió + tipus +
  *     id): si canvia, el que hi havia no es pinta.
  *
@@ -52,17 +57,17 @@ const esNoDisponible = (error) => error?.code === 'NO-DISPONIBLE';
  * (MISSATGES_SEGUIMENTS de contracte.js, el mateix joc de codis) com a
  * [clau, reserva] de t(): les cinc llengües, i per a NO-DISPONIBLE un text
  * per a la gent, no el del desenvolupador. La reserva valenciana és la del
- * diccionari ca.
+ * diccionari ca (P1-11, pla 261024_2230: amb el vocabulari de connectar).
  */
 export const TEXTOS_ERROR_SEGUIMENT = Object.freeze({
-  'SDP-SEG-000': ['section.connectar.seguir.error.SDP-SEG-000', 'Cal entrar al compte per a seguir algú.'],
+  'SDP-SEG-000': ['section.connectar.seguir.error.SDP-SEG-000', 'Cal entrar al compte per a connectar amb algú.'],
   'SDP-SEG-001': ['section.connectar.seguir.error.SDP-SEG-001', 'La persona o l’entitat no són vàlides.'],
-  'SDP-SEG-002': ['section.connectar.seguir.error.SDP-SEG-002', 'No trobem esta persona o esta entitat, o no la pots seguir.'],
-  'SDP-SEG-003': ['section.connectar.seguir.error.SDP-SEG-003', 'No et pots seguir a tu mateix ni seguir una entitat que administres.'],
-  'SDP-SEG-004': ['section.connectar.seguir.error.SDP-SEG-004', 'L’has bloquejada: desbloqueja-la abans de seguir-la.'],
-  'SDP-SEG-005': ['section.connectar.seguir.error.SDP-SEG-005', 'Només qui administra l’entitat veu qui la seguix.'],
-  'SDP-SEG-006': ['section.connectar.seguir.error.SDP-SEG-006', 'Massa seguiments en poc de temps. Torna-ho a provar d’ací a una estona.'],
-  'NO-DISPONIBLE': ['section.connectar.seguir.error.NO-DISPONIBLE', 'Este poble encara no permet seguir ningú des de l’app.'],
+  'SDP-SEG-002': ['section.connectar.seguir.error.SDP-SEG-002', 'No trobem esta persona o esta entitat, o no t’hi pots connectar.'],
+  'SDP-SEG-003': ['section.connectar.seguir.error.SDP-SEG-003', 'No pots connectar amb el teu propi perfil ni amb una entitat que administres.'],
+  'SDP-SEG-004': ['section.connectar.seguir.error.SDP-SEG-004', 'L’has bloquejada: desbloqueja-la abans de connectar-t’hi.'],
+  'SDP-SEG-005': ['section.connectar.seguir.error.SDP-SEG-005', 'Només qui administra l’entitat veu el veïnat connectat amb ella.'],
+  'SDP-SEG-006': ['section.connectar.seguir.error.SDP-SEG-006', 'Massa connexions en poc de temps. Torna-ho a provar d’ací a una estona.'],
+  'NO-DISPONIBLE': ['section.connectar.seguir.error.NO-DISPONIBLE', 'Este poble encara no permet connectar amb ningú des de l’app.'],
   DESCONEGUT: ['section.connectar.seguir.error.DESCONEGUT', 'No s’ha pogut completar. Torna-ho a provar.']
 });
 
@@ -70,7 +75,7 @@ export const TEXTOS_ERROR_SEGUIMENT = Object.freeze({
  * El codi concret d'un error del port (una clau de TEXTOS_ERROR_SEGUIMENT), o
  * null si no n'hi ha cap de concret (DESCONEGUT, xarxa, un error sense codi):
  * aleshores la vista diu el seu text de sempre, que nomena l'acció i la
- * persona («No s’ha pogut seguir {nom}…»). Mai el text cru del servidor.
+ * persona («No s’ha pogut connectar amb {nom}…»). Mai el text cru del servidor.
  */
 export function codiDelSeguiment(error) {
   const codi = error?.code;

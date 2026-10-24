@@ -191,22 +191,32 @@ export const AJUDA_IMATGE_PER_DEFECTE = "Pots pujar qualsevol tipus d'imatge o a
 export const AJUDA_IMATGE_PUJANT = 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.';
 
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat; pla §0.1.1) · La capçalera d'un
-   document i la seua targeta (la miniatura del llistat i la del Mur) són la
-   MATEIXA imatge: un quadrat de 1.200 × 1.200 exactes. El diàleg T46 de la
-   closca ja no oferix «Original», «Apaisat» ni «Panoràmic» (una capçalera
-   apaïsada no seria la imatge de la targeta): només la fila del quadrat del
-   model, amb una ajuda pròpia, com l'avatar (FORMATS_AVATAR). El fitxer ix
-   amb la forma i la mida de la capçalera del Perfil (FORMES.capcalera de
-   useEnquadramentImatge, una sola constant per a les dues), també si cal
-   ampliar el retall, i sempre recodificat. La panoràmica del poble (secció
-   Pobles), l'única capçalera apaïsada, no passa per esta closca. */
+   document i la seua targeta (la miniatura del llistat i la del Mur) eren la
+   MATEIXA imatge: un quadrat de 1.200 × 1.200 exactes, i el diàleg T46 de la
+   closca només oferia la fila del quadrat.
+   Directiva del Mestre (261024, àudio 22:47) · «El quadrat únic és una
+   limitació inacceptable»: deroga la Llei del Quadrat per a la capçalera. El
+   diàleg torna a oferir totes les formes del model (FORMATS: superpanoràmic,
+   panoràmic, apaisat, quadrat, vertical o l'original), amb el quadrat de
+   sèrie i recomanat (AJUDA_FORMA_CAPCALERA: la miniatura i la targeta
+   ensenyen la mateixa imatge sencera) i, a la resta, l'ajuda que diu el que
+   fa hui la targeta (AJUDA_FORMA_LLIURE: .sp-card-media-container la retalla
+   en quadrat amb object-fit: cover; la targeta no canvia). El fitxer ix amb
+   l'eixida de la capçalera del Perfil (FORMES.capcalera de
+   useEnquadramentImatge, una sola constant per a les dues): 1.200 pel costat
+   llarg (costatLlarg), també si cal ampliar el retall, i sempre recodificat.
+   La panoràmica del poble (secció Pobles) no passa per esta closca. */
 const CAPCALERA = configDeForma('capcalera');
-const QUADRAT_CAPCALERA = FORMATS.find((f) => f.valor === CAPCALERA.formatInicial) || CAPCALERA.formats[0];
-export const AJUDA_FORMA_CAPCALERA = 'La capçalera sempre és quadrada: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.';
-export const FORMATS_CAPCALERA = Object.freeze([Object.freeze({ ...QUADRAT_CAPCALERA, ajuda: AJUDA_FORMA_CAPCALERA })]);
-/* Sense «Tria la forma» (la de sèrie del diàleg): només n'hi ha una. */
-export const DESCRIPCIO_ENQUADRAMENT_CAPCALERA = 'Mou la foto i amplia-la fins que el que importa quede dins del quadrat. Només es guarda el que hi ha dins.';
-/** L'eixida exacta del diàleg de la capçalera per a una foto (File) o una adreça ja resolta. */
+/* IDEA-20 · La forma amb què es re-enquadra una capçalera ja desada (vegeu obriEnquadrament). */
+const FORMAT_ORIGINAL = 'original';
+export const AJUDA_FORMA_CAPCALERA = 'Recomanat: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge sencera. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.';
+export const AJUDA_FORMA_LLIURE = 'La pàgina l’ensenya sencera; la miniatura del llistat i la targeta del Mur la retallen en quadrat.';
+export const FORMATS_CAPCALERA = Object.freeze(FORMATS.map((f) => Object.freeze({
+  ...f, ajuda: f.valor === CAPCALERA.formatInicial ? AJUDA_FORMA_CAPCALERA : AJUDA_FORMA_LLIURE,
+})));
+/* Directiva 261024 · Torna «Tria la forma»: n'hi ha més d'una. */
+export const DESCRIPCIO_ENQUADRAMENT_CAPCALERA = 'Tria la forma, mou la foto i amplia-la fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.';
+/** L'eixida del diàleg de la capçalera (1.200 pel costat llarg) per a una foto (File) o una adreça ja resolta. */
 export const sortidaCapcalera = (font) => CAPCALERA.sortida(font);
 
 export function UniversalEditorShell({
@@ -891,8 +901,15 @@ function useEditorShell({
     if (pujant) return;
     setEnfocaHero(false);
     /* Cada obertura és una sessió pròpia (objecte nou): el desat tanca només la seua.
-       Gauntlet 261016 (Bloc 1) · Amb l'eixida exacta de la capçalera (sortidaCapcalera). */
-    setEnquadrament({ font, sortida: sortidaCapcalera(font) });
+       Gauntlet 261016 (Bloc 1) · Amb l'eixida de la capçalera (sortidaCapcalera; des
+       de la Directiva 261024, 1.200 pel costat llarg de la forma triada). */
+    /* IDEA-20 (revisió adversarial 261024) · Re-enquadrar la capçalera que ja
+       hi ha (una adreça, no un fitxer nou) obri en «Original»: si obria en el
+       quadrat de sèrie, desar una panoràmica ja retallada la tornava a tallar
+       en quadrat sense remei (els costats perduts no tornen). Una foto nova
+       continua començant pel quadrat. */
+    const formatInicial = typeof font === 'string' ? FORMAT_ORIGINAL : CAPCALERA.formatInicial;
+    setEnquadrament({ font, sortida: sortidaCapcalera(font), formatInicial });
   };
 
   const triaHero = (e) => {
@@ -914,7 +931,8 @@ function useEditorShell({
      forma ('capcalera', el contracte opcions.forma de useHeroImageHandler) i
      el costat del retall que ja ix exacte (costatDeSortida): la foto es
      comprimix a eixa mateixa mida, dins del pressupost, sense dependre del nom
-     del camp. */
+     del camp. Directiva 261024 · costatDeSortida és el costat llarg (1.200),
+     que compressImage (maxSize) no torna a reduir en cap forma. */
   const desaEnquadrament = async (fitxer, info, metadades) => {
     // La sessió d'este diàleg: en acabar es tanca ella, mai una altra.
     const sessio = enquadrament;
@@ -1004,10 +1022,11 @@ function useEditorShell({
         </>
       )
     },
-    /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Només el quadrat
-       (FORMATS_CAPCALERA) i l'eixida exacta de 1.200 × 1.200 de la sessió. */
+    /* Directiva del Mestre (261024, àudio 22:47) · Totes les formes
+       (FORMATS_CAPCALERA, el quadrat de sèrie) i l'eixida de la sessió, 1.200
+       pel costat llarg (derogada la Llei del Quadrat per a la capçalera). */
     dialegEnquadrament: enquadrament ? (
-      <DialegEnquadrament font={enquadrament.font} formatInicial={CAPCALERA.formatInicial} formats={FORMATS_CAPCALERA}
+      <DialegEnquadrament font={enquadrament.font} formatInicial={enquadrament.formatInicial ?? CAPCALERA.formatInicial} formats={FORMATS_CAPCALERA}
         descripcio={DESCRIPCIO_ENQUADRAMENT_CAPCALERA} sortida={enquadrament.sortida}
         onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} ofereixConservarExif />
     ) : null

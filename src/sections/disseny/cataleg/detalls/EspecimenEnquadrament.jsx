@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Circle, CircleUserRound, Crop, ImageUp, MapPin, Square } from 'lucide-react';
+import { Circle, CircleUserRound, Crop, ImageUp, MapPin, Proportions, Square } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { Alerta, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { DialegEnquadrament } from '../../../../components/universal/enquadrament/DialegEnquadrament.jsx';
@@ -14,7 +14,8 @@ import { Llinatge } from '../Llinatge.jsx';
 
 /* T46 (ordre del Mestre, 260928) · Re-enquadrar la capçalera. Una foto
    apaisada del mateix origen (1376×768): en quadrat es veu que el marc talla i
-   que es pot moure. El diàleg només es munta obert: allLoaders el pinta tancat
+   que es pot moure; en 16:9 o 21:9, que la panoràmica hi cap (Directiva del
+   Mestre, 261024, àudio 22:47). El diàleg només es munta obert: allLoaders el pinta tancat
    en jsdom, que no té canvas.
    Ordre del Mestre (261021, pla 261021_0015 §13, P1-05) · La bessona .webp
    (99 KB, també de 1376×768): l'original .jpg (764 KB) ja no ha de viatjar
@@ -62,14 +63,20 @@ function textMetadades(meta) {
 
 /* Onada 4 (retallador senzill, ordre del Mestre 261008) · El text del fitxer
    que ix de la finestra senzilla: la mida la decidix la forma (FORMES). Des
-   del Gauntlet 261016 (Bloc 1, Llei del Quadrat), les tres són exactes:
-   l'avatar 400 × 400 (MIDA_AVATAR), el logotip 600 × 600 i la capçalera
-   1.200 × 1.200. Només diu «exactes» si la forma porta `exacta`. */
+   del Gauntlet 261016 (Bloc 1, Llei del Quadrat), l'avatar 400 × 400
+   (MIDA_AVATAR) i el logotip 600 × 600 són exactes. Només diu «exactes» si
+   la forma porta `exacta`.
+   Directiva del Mestre (261024, àudio 22:47) · La capçalera tria la forma i
+   ix a 1.200 pel costat llarg (`costatLlarg`): el text diu la forma triada. */
 const NOMS_FORMA = Object.freeze({ avatar: 'avatar en cercle', logotip: 'logotip quadrat', capcalera: 'capçalera' });
-function descriuSenzill(forma, fitxer, { rect }) {
+function descriuSenzill(forma, fitxer, { rect, format }) {
   const f = FORMES[forma];
-  const mida = opcionsSortida(rect, fitxer.type, { ampladaMaxima: f.midaSortida, ...(f.exacta ? { exacta: f.exacta } : null) });
-  return `${mida.amplada} × ${mida.alcada} px${f.exacta ? ' exactes' : ''}, ${NOMS_FORMA[forma]}, ${Math.max(1, Math.round(fitxer.size / 1024))} KB`;
+  const mida = opcionsSortida(rect, fitxer.type, {
+    ampladaMaxima: f.midaSortida, ...(f.exacta ? { exacta: f.exacta } : null), ...(f.costatLlarg ? { costatLlarg: f.costatLlarg } : null),
+  });
+  const detall = f.exacta ? ' exactes' : (f.costatLlarg ? `, ${f.costatLlarg} pel costat llarg` : '');
+  const nom = f.costatLlarg ? `${NOMS_FORMA[forma]} en ${format}` : NOMS_FORMA[forma];
+  return `${mida.amplada} × ${mida.alcada} px${detall}, ${nom}, ${Math.max(1, Math.round(fitxer.size / 1024))} KB`;
 }
 
 /** Un resultat amb la seua vista (objectURL), que es revoca en canviar-lo i en eixir. */
@@ -152,20 +159,21 @@ export default function EspecimenEnquadrament() {
     <Llinatge id="enquadrament" />
     <Especimen id="enquadrament" nom="DialegEnquadrament · re-enquadrar una foto"
       fitxer="src/components/universal/enquadrament/DialegEnquadrament.jsx · src/components/universal/enquadrament/useEnquadramentImatge.jsx · src/sections/profile/useEnquadramentAvatar.jsx"
-      descripcio={`La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur: la mateixa imatge, un quadrat de 1.200 × 1.200 (Llei del Quadrat). Abans de desar-la, este diàleg deixa moure-la i ampliar-la perquè el que importa no quede tallat. Sense props deixa triar la forma (quadrat de sèrie); la closca de les Notes només oferix el quadrat i en demana l’eixida exacta. El retall es guarda dins de l’arxiu: la resta de la foto no es conserva. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar. Si la foto porta la ubicació o la data, la casella «${ETIQUETA_CONSERVA_EXIF}» les conserva de sèrie. L’avatar de l’ajust d’imatge hi passa sempre amb una sola forma, el quadrat de 400 × 400, i sense l’opció de geolocalitzar. Les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera) passen per la finestra senzilla, calcada de la de Claude.`}
+      descripcio={`La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur. Abans de desar-la, este diàleg deixa triar-ne la forma (superpanoràmic, panoràmic, apaisat, quadrat, vertical o l’original; el quadrat, de sèrie i recomanat), moure-la i ampliar-la perquè el que importa no quede tallat. En quadrat, la miniatura i la targeta ensenyen la mateixa imatge sencera; en una altra forma, la pàgina l’ensenya sencera i la miniatura i la targeta la retallen en quadrat. La closca de les Notes i la fitxa del Perfil en demanen l’eixida de la capçalera: 1.200 px pel costat llarg (Directiva del Mestre, 261024). El retall es guarda dins de l’arxiu: la resta de la foto no es conserva. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar. Si la foto porta la ubicació o la data, la casella «${ETIQUETA_CONSERVA_EXIF}» les conserva de sèrie. L’avatar de l’ajust d’imatge hi passa sempre amb una sola forma, el quadrat de 400 × 400, i sense l’opció de geolocalitzar. Les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera) passen per la finestra senzilla, calcada de la de Claude.`}
       contracte={[
         ['obert', 'boolean', 'true', 'El pare el sol muntar només quan cal (la closca, l’espècimen).'],
         ['font', 'File | string', '—', 'Una foto nova (File) o l’adreça ja resolta de la capçalera existent.'],
-        ['formatInicial', "'1:1' | 'original' | '4:3' | '16:9'", "'1:1'", 'Pedra Seca §8: el quadrat és el de sèrie.'],
-        ['formats', '[{ valor, etiqueta, ajuda?, ratio }]', 'FORMATS', 'Per a afegir-ne un n’hi ha prou amb una fila nova (enquadrament.js). L’avatar en passa una sola (FORMATS_AVATAR) i la capçalera de les Notes, també: el quadrat (FORMATS_CAPCALERA de la closca, Llei del Quadrat).'],
+        ['formatInicial', "'1:1' | 'original' | '4:3' | '3:2' | '16:9' | '21:9' | '4:5' | '3:4' | '9:16'", "'1:1'", 'Pedra Seca §8: el quadrat és el de sèrie.'],
+        ['formats', '[{ valor, etiqueta, ajuda?, ratio }]', 'FORMATS', 'Per a afegir-ne un n’hi ha prou amb una fila nova (enquadrament.js). L’avatar en passa una sola (FORMATS_AVATAR); la capçalera de les Notes, totes, amb la seua ajuda (FORMATS_CAPCALERA de la closca: Directiva del Mestre, 261024, que deroga per a la capçalera la Llei del Quadrat).'],
         ['permetGeolocalitzacio', 'boolean', 'false', 'Onada 4 · Oferix «Vull geolocalitzar aquesta imatge» (ADR D5): les coordenades es lligen de l’original i viatgen com a camps. L’avatar no l’oferix mai.'],
         ['onTanca', "(motiu: 'esc'|'boto') => void", '—', 'Cancel·lar, la X i Escape. El vel no el tanca: un arrossegament no perd la feina.'],
-        ['sortida', '{ ampladaMaxima, format, qualitat, exacta? } | null', 'null', 'Onada 4 · Amb sortida, el diàleg sempre recodifica (mai torna l’original). L’avatar (sortidaAvatar) i la capçalera de les Notes (sortidaCapcalera de la closca) en passen una a cada obertura, amb mida exacta.'],
+        ['sortida', '{ ampladaMaxima, format, qualitat, exacta?, costatLlarg? } | null', 'null', 'Onada 4 · Amb sortida, el diàleg sempre recodifica (mai torna l’original). L’avatar (sortidaAvatar, mida exacta) i la capçalera de les Notes (sortidaCapcalera de la closca, costat llarg exacte) en passen una a cada obertura.'],
         ['onDesa', '(fitxer, { format, rect, sencera }, metadades) => Promise<boolean>', '—', 'El pare el tanca. Si llança, el missatge ix dins del diàleg i continua obert. metadades, sempre present: { geolocalitzacio: { lat, lng, precisio_m, origen } | null, dataCaptura | null }. Amb la casella de l’EXIF (ofereixConservarExif), també metadades.exif: { conservaExif: true, original } (marcada) o { conservaExif: false } (desmarcada), a punt per a les opcions de la pujada. Sense casella, cap clau exif.'],
         ['carregador / exportador / dibuixant', 'funcions', 'imatgeCanvas.js', 'Injectables per a les proves (jsdom no té canvas).'],
-        ['senzill', 'boolean', 'false', 'Onada 4 · La finestra de Claude per a les imatges de la fitxa: el visor sol, la fila de zoom (−, lliscador, +) i la roda, i Restablir, Cancel·lar i Guardar. Sense lliscadors de posició, sense Forma, sense geolocalització i sense la X (Escape tanca). Sense la prop, el T46 de sempre.'],
+        ['senzill', 'boolean', 'false', 'Onada 4 · La finestra de Claude per a les imatges de la fitxa: el visor sol, la fila de zoom (−, lliscador, +) i la roda, i Restablir, Cancel·lar i Guardar. Sense lliscadors de posició, sense geolocalització i sense la X (Escape tanca). La Forma, només si n’hi ha més d’una (la capçalera, Directiva del Mestre 261024), davall del zoom. Sense la prop, el T46 de sempre.'],
         ['mascara', "null | 'cercle'", 'null', 'Onada 4 · Amb el mode senzill, el vel enfosquix el que queda fora del cercle (l’avatar). El fitxer continua quadrat.'],
-        ['sortida.exacta', '{ amplada, alcada } | absent', '—', 'Onada 4 · El fitxer fa exactament eixa mida, també si cal ampliar el retall. Gauntlet 261016 (Llei del Quadrat): l’avatar, 400 × 400; el logotip, 600 × 600; la capçalera, 1.200 × 1.200, la mateixa imatge que la targeta.'],
+        ['sortida.exacta', '{ amplada, alcada } | absent', '—', 'Onada 4 · El fitxer fa exactament eixa mida, també si cal ampliar el retall. Gauntlet 261016 (Llei del Quadrat): l’avatar, 400 × 400; el logotip, 600 × 600.'],
+        ['sortida.costatLlarg', 'enter > 0 | absent', '—', 'Directiva del Mestre (261024) · El costat llarg del fitxer fa exactament eixa mida, també si cal ampliar el retall, i l’altre seguix la forma triada: la capçalera, 1.200 pel costat llarg (1.200 × 1.200 en quadrat, 1.200 × 675 en 16:9, 675 × 1.200 en 9:16). Si també hi ha exacta, mana exacta.'],
         ['ofereixConservarExif', 'boolean', 'false', `Gauntlet 261016 (Bloc 1.2) · Si la foto triada (un File) porta la ubicació o la data, la casella «${ETIQUETA_CONSERVA_EXIF}», marcada de sèrie, amb l’avís que es publicaran amb la foto (en els dos modes). La tria arriba a onDesa (metadades.exif) i la compressió de qui puja hi torna a posar l’EXIF publicable de l’original: el fitxer que lliura el diàleg no en porta. L’oferixen la closca de les Notes, la fitxa del Perfil (avatar i capçalera) i l’avatar de l’ajust d’imatge; el logotip, no. lectorExif, injectable per a les proves.`],
       ]}
       a11y={[
@@ -179,16 +187,17 @@ export default function EspecimenEnquadrament() {
       ]}
       fes={[
         'El quadrat de sèrie: capçalera, miniatura i targeta ensenyen el mateix enquadrament (la targeta del Mur d’una nota ja publicada, quan es torna a publicar).',
+        'Deixar triar la forma de la capçalera (Directiva del Mestre, 261024): una panoràmica de joies hi ha de cabre sencera.',
         'Ensenyar el resultat exacte abans de desar (el visor és el retall).',
         'Una sola imatge per diàleg.',
         'L’avatar, sempre per useEnquadramentAvatar: un sol lloc decidix la forma (1:1), el títol i la privacitat.',
-        'Les imatges de la fitxa del Perfil, per useEnquadramentImatge (la taula FORMES): avatar en cercle de 400 × 400, logotip quadrat de 600 × 600 i capçalera quadrada de 1.200 × 1.200 (la mateixa imatge que la targeta), exactes i amb 10 MB d’entrada dits abans de triar.',
+        'Les imatges de la fitxa del Perfil, per useEnquadramentImatge (la taula FORMES): avatar en cercle de 400 × 400 i logotip quadrat de 600 × 600, exactes, i capçalera de forma lliure (el quadrat de sèrie) de 1.200 pel costat llarg, amb 10 MB d’entrada dits abans de triar.',
       ]}
       noFacis={[
         'Retallar sense ensenyar el resultat.',
         'Tornar a posar un diàleg intermedi entre el botó i la finestra: cada imatge té el seu botó.',
         'Oferir a l’avatar una altra forma que el quadrat, o geolocalitzar-lo.',
-        'Oferir a la capçalera d’una nota una forma apaïsada: la capçalera i la targeta són la mateixa imatge quadrada (l’única panoràmica és la del poble, a Pobles).',
+        'Tancar la capçalera en una sola forma, o prometre que la miniatura i la targeta ensenyen sencera una capçalera que no és quadrada: la retallen en quadrat.',
         'Prometre que es pot recuperar la part retallada: no es guarda.',
       ]}>
       <h4>Capçalera</h4>
@@ -202,9 +211,10 @@ export default function EspecimenEnquadrament() {
         <figure className="sdp-enquadrament__resultat">
           {resultat.url ? <img src={resultat.url} alt="El resultat de l’enquadrament" /> : null}
           {/* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La mostra és el diàleg sense
-              props; la closca de les Notes hi passa el quadrat i l'eixida exacta. */}
+              props. Directiva del Mestre (261024) · La closca de les Notes hi passa
+              totes les formes, amb la seua ajuda, i l'eixida de 1.200 pel costat llarg. */}
           <figcaption className="sdp-camp__ajuda">
-            Ha eixit un fitxer de {resultat.text}. És el diàleg sense props: a l’editor de Notes només hi ha el quadrat i el fitxer ix a 1.200 × 1.200 exactes, que la compressió de sempre passa a WebP sense canviar-ne la mida.
+            Ha eixit un fitxer de {resultat.text}. És el diàleg sense props: a l’editor de Notes hi ha les mateixes formes, el quadrat de sèrie, i el fitxer ix a 1.200 px pel costat llarg, que la compressió de sempre passa a WebP sense canviar-ne la mida.
           </figcaption>
         </figure>
       ) : null}
@@ -264,8 +274,9 @@ export default function EspecimenEnquadrament() {
         {/* Encastat, '/assets/…' va per la base del paquet (resolRecursPropi). */}
         <Boto icona={Circle} aria-haspopup="dialog" onClick={() => avatarSenzill.obri(resolRecursPropi(MOSTRA_AVATAR))}>Avatar en cercle</Boto>
         <Boto icona={Square} aria-haspopup="dialog" onClick={() => logotipSenzill.obri(resolRecursPropi(MOSTRA_AVATAR))}>Logotip quadrat (600 × 600)</Boto>
-        {/* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La capçalera ja no és 16:9: quadrada, com el seu nom i la seua icona. */}
-        <Boto icona={Square} aria-haspopup="dialog" onClick={() => capcaleraSenzill.obri(resolRecursPropi(MOSTRA))}>Capçalera quadrada (1.200 × 1.200)</Boto>
+        {/* Directiva del Mestre (261024, àudio 22:47) · La capçalera tria la forma (abans,
+            Gauntlet 261016, només quadrada): el nom i la icona ho diuen. */}
+        <Boto icona={Proportions} aria-haspopup="dialog" onClick={() => capcaleraSenzill.obri(resolRecursPropi(MOSTRA))}>Capçalera de forma lliure (1.200 pel costat llarg)</Boto>
       </div>
       {resultatSenzill ? (
         <figure className="sdp-enquadrament__resultat">

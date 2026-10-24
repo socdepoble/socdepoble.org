@@ -1,6 +1,6 @@
 /**
  * missatgeAlXat.js — Un missatge al xat privat amb la persona o l'entitat
- * de /connectar (IDEA-14, Directiva del Mestre, 261024): l'avís de «Seguir»
+ * de /connectar (IDEA-14, Directiva del Mestre, 261024): l'avís de «Connectar amb {nom}» (abans «Seguir»)
  * (useSeguiment.js) i la sol·licitud de «Formar part de l'entitat»
  * (organitzacio/BlocFormarPart.jsx).
  *

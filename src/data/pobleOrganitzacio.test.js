@@ -24,3 +24,19 @@ test('el límit és el del CHECK (120), comptat com char_length: «🌾» és 1'
   const sql = readFileSync(path.join(process.cwd(), 'supabase/migrations/2610081401_organitzacions_poble.sql'), 'utf8');
   expect(sql).toMatch(/check \(char_length\(town_name\) <= 120\)/);
 });
+
+/* P1-11 (pla 261024_2230, T5B-01) · El poble d'un filtre del directori. */
+test('P1-11 · pobleDelFiltre, esDelPobleDelFiltre i esPobleImpossible', async () => {
+  const { esDelPobleDelFiltre, esPobleImpossible, pobleDelFiltre } = await import('./pobleOrganitzacio.js');
+  expect(pobleDelFiltre('  La Torre  ')).toBe('La Torre');
+  for (const valor of ['', '   ', null, undefined, 3, {}]) expect(pobleDelFiltre(valor)).toBeNull();
+  /* Com el town_name=eq. del servidor: el valor desat no es retalla (només el filtre). */
+  expect(esDelPobleDelFiltre({ town_name: 'La Torre' }, 'La Torre')).toBe(true);
+  expect(esDelPobleDelFiltre({ town_name: ' La Torre ' }, 'La Torre')).toBe(false);
+  expect(esDelPobleDelFiltre({ town_name: 'la torre' }, 'La Torre')).toBe(false);
+  expect(esDelPobleDelFiltre({ town_name: null }, 'La Torre')).toBe(false);
+  expect(esDelPobleDelFiltre({ town_name: 'La Torre' }, null)).toBe(false);
+  expect(esPobleImpossible('x'.repeat(120))).toBe(false);
+  expect(esPobleImpossible('x'.repeat(121))).toBe(true);
+  expect(esPobleImpossible('🌾'.repeat(120))).toBe(false);
+});

@@ -753,6 +753,23 @@ export function PageFrame({
   const midaHero = dimensionsHero?.every((valor) => Number.isFinite(valor) && valor > 0)
     ? { width: dimensionsHero[0], height: dimensionsHero[1] } : null;
   const prioritatHero = (topBarData.heroFetchPriority ?? heroFetchPriority) === 'high' ? 'high' : undefined;
+  /* Directiva del Mestre (261024, àudio 22:47) · La capçalera ja no és sempre
+     quadrada: pot ser vertical (4:5, 3:4, 9:16). A tota l'amplada, una
+     vertical faria la portada més alta que la pantalla: la classe
+     hero-image--vertical la centra i la limita en alçada (layout.css). Si la
+     pàgina ja en diu la mida (midaHero), es decidix d'ella; si no, en carregar
+     la imatge (naturalWidth/naturalHeight), lligat al seu src: una portada
+     nova torna a començar. Les quadrades i les apaïsades no canvien (Llei
+     del Píxel). Només la portada de lectura (ImatgeDePortada), no la ranura
+     heroComponent de l'editor. */
+  const [portadaCarregada, setPortadaCarregada] = useState(null);
+  const heroVertical = midaHero
+    ? midaHero.height > midaHero.width
+    : Boolean(portadaCarregada && portadaCarregada.src === barHeroImage && portadaCarregada.vertical);
+  const onCarregaPortada = (ev) => {
+    const { naturalWidth: amplada, naturalHeight: alcada } = ev.currentTarget;
+    if (amplada > 0 && alcada > 0) setPortadaCarregada({ src: barHeroImage, vertical: alcada > amplada });
+  };
 
   const resolvedChrome = PAGE_CHROME_MODES.has(chrome) ? chrome : 'page';
   const showBlueBar = resolvedChrome === 'full' || resolvedChrome === 'context' || resolvedChrome === 'system';
@@ -852,8 +869,9 @@ export function PageFrame({
           {topBarData.heroComponent}
         </div>
       ) : barHeroImage ? (
-        <div className="hero-image">
-          <ImatgeDePortada alt={barHeroAlt} src={barHeroImage} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero} />
+        <div className={heroVertical ? 'hero-image hero-image--vertical' : 'hero-image'}>
+          <ImatgeDePortada alt={barHeroAlt} src={barHeroImage} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero}
+            onLoad={onCarregaPortada} />
         </div>
       ) : null}
 

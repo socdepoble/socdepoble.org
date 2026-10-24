@@ -307,7 +307,7 @@ export function GestioMembres({ organitzacio, accions }) {
         </form>
       ) : null}
 
-      {/* T6b (IDEA-14; decisió del Mestre, 261024) · Qui seguix l'organització:
+      {/* T6b (IDEA-14; decisió del Mestre, 261024) · El veïnat connectat amb l'organització (P1-11, abans «Qui seguix»):
           la constància per a qui l'administra. Sense la capacitat
           'seguiments', res. */}
       <QuiSegueixOrganitzacio orgId={orgId} nom={nomOrg} />

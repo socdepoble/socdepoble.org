@@ -4,9 +4,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 /* IDEA-14 (Directiva del Mestre, 261024; auditoria Gemini G-04) · /connectar
    separa la relació humana de la pertinença formal i del MAS:
-     · «Entre persones»: seguir (capacitat 'seguiments', amb l'avís al xat
+     · «Entre persones»: connectar (capacitat 'seguiments', amb l'avís al xat
        una sola vegada) i escriure, també des d'un perfil (la fitxa pública
-       de confiança, mai l'URL);
+       de confiança, mai l'URL). Actualitzada a posta (P1-11, pla
+       261024_2230; G1945-04 de Gemini, ordre del Mestre): els textos diuen
+       «Connectar amb {nom}», «Deixar la connexió amb {nom}», «Connectat amb
+       {nom}.» i «veïnat connectat»; el port continua sent segueix,
+       deixaDeSeguir i estatSeguiment;
      · «Formar part»: la sol·licitud estructurada al xat privat de l'entitat,
        amb confirmació i després a la conversa;
      · «A les teues notes» (abans «Al teu MAS»; 261024 correccions, Gemini
@@ -156,7 +160,7 @@ describe('Entre persones · des d’un perfil', () => {
     const avis = await screen.findByText(AVIS_REMOT('Pepa Soler'));
     expect(avis).toBeTruthy();
     expect(m.estat).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA }, {});
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Seguir Pepa Soler' })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar amb Pepa Soler' })); });
     expect(m.segueix).toHaveBeenCalledTimes(1);
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA }, {});
     expect(m.xat.creaFil).toHaveBeenCalledTimes(1);
@@ -164,36 +168,36 @@ describe('Entre persones · des d’un perfil', () => {
     expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
     const [fil, text] = m.xat.sendChatMessage.mock.calls[0];
     expect(fil).toEqual({ id: `f-${UUID_PEPA}` });
-    expect(text).toBe('Connexió nova: m’he connectat amb tu a Sóc de Poble i ara et seguisc.');
-    expect(screen.getByRole('status').textContent).toBe('Ara seguixes Pepa Soler. Li hem enviat un missatge al xat.');
+    expect(text).toBe('Connexió nova: m’he connectat amb tu a Sóc de Poble.');
+    expect(screen.getByRole('status').textContent).toBe('T’has connectat amb Pepa Soler. Li hem enviat un missatge al xat.');
     /* Correcció C17 · el botó premut se n'ha anat: el focus és al títol del bloc. */
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Connectar amb Pepa Soler' }));
     expect(m.crea).not.toHaveBeenCalled();
     expect(m.navigate).not.toHaveBeenCalled();
 
-    /* Deixar de seguir no avisa ningú. */
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Deixar de seguir Pepa Soler' })); });
+    /* Deixar la connexió no avisa ningú. */
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Deixar la connexió amb Pepa Soler' })); });
     expect(m.deixa).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA }, {});
-    expect(screen.getByRole('status').textContent).toBe('Ja no seguixes Pepa Soler. No li hem dit res.');
+    expect(screen.getByRole('status').textContent).toBe('Has deixat la connexió amb Pepa Soler. No li hem dit res.');
     expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
 
     /* Tornar a seguir després de deixar-ho: el servidor diu nou: true però no primer, i no ix cap missatge més. */
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Seguir Pepa Soler' })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar amb Pepa Soler' })); });
     expect(m.segueix).toHaveBeenCalledTimes(2);
     await expect(m.segueix.mock.results[1].value).resolves.toMatchObject({ nou: true, primer: false });
     expect(m.xat.creaFil).toHaveBeenCalledTimes(1);
     expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('status').textContent).toBe('Tornes a seguir Pepa Soler. Esta vegada no li hem enviat cap missatge: només s’avisa la primera.');
-    expect(screen.getByRole('button', { name: 'Deixar de seguir Pepa Soler' })).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe('T’has tornat a connectar amb Pepa Soler. Esta vegada no li hem enviat cap missatge: només s’avisa la primera.');
+    expect(screen.getByRole('button', { name: 'Deixar la connexió amb Pepa Soler' })).toBeTruthy();
   });
 
   test('R4-01 · tres voltes de seguir i deixar de seguir: un sol missatge al xat', async () => {
     portFidel();
     render(ambXat());
     for (let volta = 0; volta < 3; volta += 1) {
-      const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+      const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
       await act(async () => { fireEvent.click(seguir); });
-      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Deixar de seguir Pepa Soler' })); });
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Deixar la connexió amb Pepa Soler' })); });
     }
     expect(m.segueix).toHaveBeenCalledTimes(3);
     expect(m.deixa).toHaveBeenCalledTimes(3);
@@ -204,10 +208,10 @@ describe('Entre persones · des d’un perfil', () => {
   test('R4-01 · un servidor que encara no diu «primer» avisa amb «nou», com abans', async () => {
     portFidel({ ambPrimer: false });
     render(ambXat());
-    const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
     expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('status').textContent).toBe('Ara seguixes Pepa Soler. Li hem enviat un missatge al xat.');
+    expect(screen.getByRole('status').textContent).toBe('T’has connectat amb Pepa Soler. Li hem enviat un missatge al xat.');
     expect([
       avisaDelSeguiment({ nou: true, primer: true }), avisaDelSeguiment({ nou: true, primer: false }),
       avisaDelSeguiment({ nou: true }), avisaDelSeguiment({ nou: false }), avisaDelSeguiment(null)
@@ -217,9 +221,9 @@ describe('Entre persones · des d’un perfil', () => {
   test('si ja la seguies, ho diu sense cap botó de seguir ni cap missatge', async () => {
     m.estat.mockResolvedValue({ seguint: true, creatAl: '2026-10-01T09:00:00Z' });
     render(ambXat());
-    expect(await screen.findByText('Ja seguixes Pepa Soler.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Seguir Pepa Soler' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Deixar de seguir Pepa Soler' })).toBeTruthy();
+    expect(await screen.findByText('Connectat amb Pepa Soler.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Connectar amb Pepa Soler' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Deixar la connexió amb Pepa Soler' })).toBeTruthy();
     expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
   });
 
@@ -230,56 +234,56 @@ describe('Entre persones · des d’un perfil', () => {
   ])('un avís que no arriba (%s) no desfà el seguiment, i es diu', async (_, prepara) => {
     prepara();
     render(ambXat());
-    const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
-    expect(screen.getByRole('status').textContent).toBe('Ara seguixes Pepa Soler, però el missatge al xat no ha eixit. Si vols, escriu-li tu.');
-    expect(screen.getByRole('button', { name: 'Deixar de seguir Pepa Soler' })).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toBe('T’has connectat amb Pepa Soler, però el missatge al xat no ha eixit. Si vols, escriu-li tu.');
+    expect(screen.getByRole('button', { name: 'Deixar la connexió amb Pepa Soler' })).toBeTruthy();
     expect(m.deixa).not.toHaveBeenCalled();
   });
 
   test('R4-04 · seguir amb les normes declinades: cap conversa oberta, i es diu que el missatge no ha eixit', async () => {
     const asseguraNormes = vi.fn().mockResolvedValue(false);
     render(ambNormes(asseguraNormes));
-    const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
     expect(m.segueix).toHaveBeenCalledTimes(1);
     expect(asseguraNormes).toHaveBeenCalledTimes(1);
     expect(m.xat.creaFil).not.toHaveBeenCalled();
     expect(m.xat.sendChatMessage).not.toHaveBeenCalled();
-    expect(screen.getByRole('status').textContent).toBe('Ara seguixes Pepa Soler, però el missatge al xat no ha eixit. Si vols, escriu-li tu.');
+    expect(screen.getByRole('status').textContent).toBe('T’has connectat amb Pepa Soler, però el missatge al xat no ha eixit. Si vols, escriu-li tu.');
   });
 
   test('si seguir falla, ho diu i no envia res', async () => {
     m.segueix.mockRejectedValue(new Error('Supabase 500: boom'));
     render(ambXat());
-    const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
-    expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut seguir Pepa Soler. Torna-ho a provar.');
+    expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut connectar amb Pepa Soler. Torna-ho a provar.');
     expect(screen.getByRole('alert').textContent).not.toContain('Supabase');
-    expect(screen.getByRole('button', { name: 'Seguir Pepa Soler' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Connectar amb Pepa Soler' })).toBeTruthy();
     expect(m.xat.creaFil).not.toHaveBeenCalled();
   });
 
   test('un error amb codi del contracte diu el seu motiu (mai el text del servidor)', async () => {
     m.segueix.mockRejectedValue(errorDeSeguiment('SDP-SEG-004', new Error('Supabase 400: raw')));
     render(ambXat());
-    const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
-    expect(screen.getByRole('alert').textContent).toBe('L’has bloquejada: desbloqueja-la abans de seguir-la.');
+    expect(screen.getByRole('alert').textContent).toBe('L’has bloquejada: desbloqueja-la abans de connectar-t’hi.');
     expect(m.xat.creaFil).not.toHaveBeenCalled();
   });
 
   /* 261024 correccions (R3-12) · el motiu es diu en la llengua de qui mira, i NO-DISPONIBLE amb un text per a la gent. */
   test.each([
-    ['SDP-SEG-004', 'La has bloqueado: desbloquéala antes de seguirla.'],
-    ['SDP-SEG-006', 'Demasiados seguimientos en poco tiempo. Vuelve a intentarlo dentro de un rato.'],
-    ['NO-DISPONIBLE', 'Este pueblo todavía no permite seguir a nadie desde la app.'],
-    ['DESCONEGUT', 'No se ha podido seguir a Pepa Soler. Vuelve a intentarlo.']
+    ['SDP-SEG-004', 'La has bloqueado: desbloquéala antes de conectar con ella.'],
+    ['SDP-SEG-006', 'Demasiadas conexiones en poco tiempo. Vuelve a intentarlo dentro de un rato.'],
+    ['NO-DISPONIBLE', 'Este pueblo todavía no permite conectar con nadie desde la app.'],
+    ['DESCONEGUT', 'No se ha podido conectar con Pepa Soler. Vuelve a intentarlo.']
   ])('en castellà, un error %s de seguir es diu en castellà', async (codi, text) => {
     m.t = createTranslator('es');
     m.segueix.mockRejectedValue(errorDeSeguiment(codi, new Error('Supabase 400: raw')));
     render(ambXat());
-    const seguir = await screen.findByRole('button', { name: 'Seguir a Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Conectar con Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
     expect(screen.getByRole('alert').textContent).toBe(text);
     expect(screen.getByRole('alert').textContent).not.toMatch(/migraci|Supabase|seguiments/);
@@ -289,9 +293,9 @@ describe('Entre persones · des d’un perfil', () => {
     m.estat.mockResolvedValue({ seguint: true, creatAl: null });
     m.deixa.mockRejectedValue(errorDeSeguiment('NO-DISPONIBLE'));
     render(ambXat());
-    const deixar = await screen.findByRole('button', { name: 'Deixar de seguir Pepa Soler' });
+    const deixar = await screen.findByRole('button', { name: 'Deixar la connexió amb Pepa Soler' });
     await act(async () => { fireEvent.click(deixar); });
-    expect(screen.getByRole('alert').textContent).toBe('Este poble encara no permet seguir ningú des de l’app.');
+    expect(screen.getByRole('alert').textContent).toBe('Este poble encara no permet connectar amb ningú des de l’app.');
     expect(screen.getByRole('alert').textContent).not.toContain(MISSATGES_SEGUIMENTS['NO-DISPONIBLE']);
   });
 
@@ -315,25 +319,25 @@ describe('Entre persones · des d’un perfil', () => {
     render(ambXat(XAT_DE_LLAVOR));
     expect(await screen.findByText('Sense servidor, el missatge per a Sóc de Poble es queda al xat d’este dispositiu: ningú més el rep.')).toBeTruthy();
     expect(screen.queryByText(AVIS_REMOT('Sóc de Poble'))).toBeNull();
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Seguir Sóc de Poble' })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Connectar amb Sóc de Poble' })); });
     expect(m.xat.sendChatMessage).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('status').textContent).toBe('Ara seguixes Sóc de Poble. El missatge s’ha quedat al xat d’este dispositiu: ningú més l’ha rebut.');
+    expect(screen.getByRole('status').textContent).toBe('T’has connectat amb Sóc de Poble. El missatge s’ha quedat al xat d’este dispositiu: ningú més l’ha rebut.');
     expect(screen.getByRole('status').textContent).not.toContain('Li hem enviat');
   });
 
   test('un servidor sense l’esquema dels seguiments (NO-DISPONIBLE en llegir) es diu com sense la capacitat', async () => {
     m.estat.mockRejectedValue(errorDeSeguiment('NO-DISPONIBLE'));
     render(ambXat());
-    expect(await screen.findByText('Este poble encara no permet seguir ningú des de l’app: de moment, la relació és la conversa.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Seguir / })).toBeNull();
+    expect(await screen.findByText('Este poble encara no permet connectar amb ningú des de l’app: de moment, la relació és la conversa.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Connectar amb / })).toBeNull();
     expect(m.segueix).not.toHaveBeenCalled();
   });
 
   test('sense la capacitat de seguir no hi ha botó ni crida: la relació és la conversa', async () => {
     m.capacitats = new Set(['directori']);
     render(ambXat());
-    expect(await screen.findByText('Este poble encara no permet seguir ningú des de l’app: de moment, la relació és la conversa.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Seguir / })).toBeNull();
+    expect(await screen.findByText('Este poble encara no permet connectar amb ningú des de l’app: de moment, la relació és la conversa.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Connectar amb / })).toBeNull();
     expect(screen.getByRole('button', { name: 'Escriu-li a Pepa Soler' })).toBeTruthy();
     expect(m.estat).not.toHaveBeenCalled();
   });
@@ -385,7 +389,7 @@ describe('Entre persones · l’autor d’un element', () => {
     m.mur = MERCAT_AMB({ author_name: 'Sóc de Poble', seller: 'Sóc de Poble', author_entity_id: 'socdepoble' });
     render(ambXat(XAT_DE_LLAVOR));
     expect(screen.getByRole('heading', { name: 'Connectar amb l’autor' })).toBeTruthy();
-    const seguir = await screen.findByRole('button', { name: 'Seguir Sóc de Poble' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Sóc de Poble' });
     await act(async () => { fireEvent.click(seguir); });
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'entitat', id: 'socdepoble' }, { dataMode: 'seed' });
     expect(m.xat.creaFil).toHaveBeenCalledWith('socdepoble', null);
@@ -398,7 +402,7 @@ describe('Entre persones · l’autor d’un element', () => {
     render(ambXat(XAT_REMOT));
     expect(screen.getByRole('button', { name: 'Escriu-li a Sóc de Poble' })).toBeTruthy();
     await act(async () => {});
-    expect(screen.queryByRole('button', { name: /^Seguir / })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Connectar amb / })).toBeNull();
     expect(m.estat).not.toHaveBeenCalled();
   });
 
@@ -406,7 +410,7 @@ describe('Entre persones · l’autor d’un element', () => {
     m.params = new URLSearchParams(SAMARRETA);
     m.mur = MERCAT_AMB({ author_name: 'Pepa Soler', author_user_id: UUID_PEPA });
     render(ambXat(XAT_REMOT));
-    const seguir = await screen.findByRole('button', { name: 'Seguir Pepa Soler' });
+    const seguir = await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' });
     await act(async () => { fireEvent.click(seguir); });
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'persona', id: UUID_PEPA }, {});
     expect(m.xat.creaFil).toHaveBeenCalledWith(UUID_PEPA, null);
@@ -433,7 +437,7 @@ describe('Formar part de l’entitat', () => {
     /* Actualitzada a posta (261024 correccions): directiva del Mestre 15:05 (Gemini G2-02), cap «MAS»; R3-05, l'entradeta
        i l'ajuda del camí diuen el mateix que «Qui ho pot vore?» (en privat no avisa ningú; persones o grups reben l'enllaç). */
     expect(capçaleres).toEqual(['Entre persones', 'Formar part', 'A les teues notes']);
-    expect(screen.getByText('Cada camí té el seu botó: seguir o escriure a algú no et fa membre de res. Si guardes la connexió en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')).toBeTruthy();
+    expect(screen.getByText('Cada camí té el seu botó: connectar amb algú o escriure-li no et fa membre de res. Si guardes l’element a les teues notes en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')).toBeTruthy();
     expect(screen.getByText(/^Una còpia al teu Bloc per a llegir-la després/).textContent)
       .toBe('Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.');
     expect(m.perfil).toHaveBeenCalledTimes(1);
@@ -641,11 +645,12 @@ describe('peces pures', () => {
 });
 
 /* Integració 261024 (T6b · qui_em_segueix amb orgId) · Qui administra una
-   entitat veu el nom de qui la seguix («Qui seguix {nom}» a GestioMembres):
-   abans del clic, el camí ho diu. D'una persona, no (ella veu «Gent que et
-   seguix», i això ja ho diu l'avís del xat). */
+   entitat veu el nom del veïnat connectat («Veïnat connectat amb {nom}» a
+   GestioMembres): abans del clic, el camí ho diu. D'una persona, no (ella veu
+   «Veïnat connectat amb tu», i això ja ho diu l'avís del xat). Actualitzada a
+   posta (P1-11, pla 261024_2230; G1945-04 de Gemini, ordre del Mestre). */
 describe('Entre persones · seguir una entitat diu qui veurà el teu nom', () => {
-  const AVIS_ENTITAT = 'Les persones que administren El Rentonar voran el teu nom a la llista de gent que seguix l’entitat.';
+  const AVIS_ENTITAT = 'Les persones que administren El Rentonar voran el teu nom a la llista del veïnat connectat amb l’entitat.';
 
   test('abans del clic, al costat de l’avís del xat; després de seguir, ja no cal', async () => {
     m.params = new URLSearchParams(PERFIL_RENTONAR);
@@ -656,14 +661,14 @@ describe('Entre persones · seguir una entitat diu qui veurà el teu nom', () =>
     /* Actualitzada a posta (261024 correccions): R3-13, «per a dir-li que t’hi has connectat». */
     expect(within(relacio).getByText(AVIS_REMOT('El Rentonar'))).toBeTruthy();
     expect(m.segueix).not.toHaveBeenCalled();
-    await act(async () => { fireEvent.click(within(relacio).getByRole('button', { name: 'Seguir El Rentonar' })); });
+    await act(async () => { fireEvent.click(within(relacio).getByRole('button', { name: 'Connectar amb El Rentonar' })); });
     expect(m.segueix).toHaveBeenCalledWith({ tipus: 'entitat', id: UUID_ORG }, {});
     expect(screen.queryByText(AVIS_ENTITAT)).toBeNull();
   });
 
   test('seguir una persona no ho diu', async () => {
     render(ambXat());
-    expect(await screen.findByRole('button', { name: 'Seguir Pepa Soler' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Connectar amb Pepa Soler' })).toBeTruthy();
     expect(screen.queryByText(/voran el teu nom/)).toBeNull();
   });
 
@@ -671,7 +676,7 @@ describe('Entre persones · seguir una entitat diu qui veurà el teu nom', () =>
     m.t = createTranslator('es');
     m.params = new URLSearchParams(PERFIL_RENTONAR);
     render(ambXat());
-    expect(await screen.findByText('Las personas que administran El Rentonar verán tu nombre en la lista de gente que sigue a la entidad.')).toBeTruthy();
+    expect(await screen.findByText('Las personas que administran El Rentonar verán tu nombre en la lista del vecindario conectado con la entidad.')).toBeTruthy();
   });
 });
 
@@ -720,8 +725,8 @@ describe('CA-6 · els textos nous de Connectar', () => {
     /* Actualitzada a posta (261024 correccions): «En tus notas», sense «MAS» (Gemini G2-02). */
     expect(screen.getByText('En tus notas')).toBeTruthy();
     expect(await screen.findByText('Pepa Soler recibirá un mensaje en el chat diciendo que has conectado.')).toBeTruthy();
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Seguir a Pepa Soler' })); });
-    expect(m.xat.sendChatMessage.mock.calls[0][1]).toBe('Conexión nueva: he conectado contigo en Sóc de Poble y ahora te sigo.');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Conectar con Pepa Soler' })); });
+    expect(m.xat.sendChatMessage.mock.calls[0][1]).toBe('Conexión nueva: he conectado contigo en Sóc de Poble.');
     expect(screen.getByRole('group', { name: 'Entre personas' }).textContent).not.toContain('Impostora');
   });
 });

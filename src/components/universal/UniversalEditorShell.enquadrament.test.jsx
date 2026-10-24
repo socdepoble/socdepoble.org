@@ -17,7 +17,10 @@ vi.mock('./enquadrament/imatgeCanvas.js', () => ({
   exportaRetall: dobles.exportaRetall,
 }));
 vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
-import { AJUDA_FORMA_CAPCALERA, FORMATS_CAPCALERA, UniversalEditorShell } from './UniversalEditorShell.jsx';
+import {
+  AJUDA_FORMA_CAPCALERA, AJUDA_FORMA_LLIURE, DESCRIPCIO_ENQUADRAMENT_CAPCALERA, FORMATS_CAPCALERA, UniversalEditorShell,
+} from './UniversalEditorShell.jsx';
+import { FORMATS } from './enquadrament/enquadrament.js';
 import { ERROR_PRESSUPOST, QUALITAT_MINIMA } from '../../utils/pujadaImatge.js';
 
 const CURT = 'data:image/webp;base64,AAAA';
@@ -104,6 +107,16 @@ test('T46 · amb capçalera i sense onHeroEdit, el panell d’edició porta «En
   await act(async () => { fireEvent.click(enquadrar); });
   expect(vista.getByRole('dialog', DIALEG)).toBeTruthy();
   expect(dobles.carregaImatge).toHaveBeenCalledWith('/assets/h.webp', expect.any(Object));
+});
+
+test('IDEA-20 · re-enquadrar la capçalera desada obri en «Original» (mai el quadrat, que la tornaria a tallar); una foto nova, en quadrat', async () => {
+  const vista = closca({ heroImage: '/assets/panoramica.webp' });
+  await act(async () => {});
+  fireEvent.click(vista.container.querySelector('img.sdp-hero__imatge'));
+  await act(async () => { fireEvent.click(vista.getByRole('button', { name: 'Enquadrar' })); });
+  const dialeg = vista.getByRole('dialog', DIALEG);
+  expect(within(dialeg).getByRole('radio', { name: /^Original/ }).checked).toBe(true);
+  expect(within(dialeg).getByRole('radio', { name: /^Quadrat \(1:1\)/ }).checked).toBe(false);
 });
 
 test('T46 · una capçalera sdp-media:// que no es pot resoldre no ofereix «Enquadrar»', async () => {
@@ -260,21 +273,55 @@ test('Bloc 1.2 · desmarcada, la crida de sempre (la foto ix neta); sense EXIF, 
 });
 
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat; pla §0.1.1) · La capçalera i la
-   targeta són la MATEIXA imatge de 1.200 × 1.200. Abans el diàleg de la closca
-   oferia «Original», «Apaisat» i «Panoràmic», i el retall ixia a la seua mida
-   (compressImage només limita el costat llarg): la capçalera d'una nota podia
-   ser de 1.200 × 675 i la targeta, una altra imatge. */
-test('Bloc 1 · el diàleg de la capçalera només oferix el quadrat, amb la seua ajuda', async () => {
+   targeta eren la MATEIXA imatge de 1.200 × 1.200, i el diàleg de la closca
+   només oferia el quadrat.
+   Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: «el
+   quadrat únic és una limitació inacceptable». El diàleg torna a oferir totes
+   les formes del model, amb el quadrat marcat de sèrie i la seua ajuda
+   (recomanat), i a la resta l'ajuda que diu el que fa la targeta (la retalla
+   en quadrat). */
+test('Directiva 261024 · el diàleg de la capçalera oferix totes les formes, el quadrat de sèrie, amb les seues ajudes', async () => {
   const vista = closca();
   await tria(vista.container, foto());
   const dialeg = vista.getByRole('dialog', DIALEG);
   const formes = within(dialeg).getAllByRole('radio');
-  expect(formes.map((r) => [r.value, r.checked])).toEqual([['1:1', true]]);
+  expect(formes.map((r) => r.value)).toEqual(['1:1', 'original', '4:3', '3:2', '16:9', '21:9', '4:5', '3:4', '9:16']);
+  expect(formes.filter((r) => r.checked).map((r) => r.value)).toEqual(['1:1']);
   expect(within(dialeg).getByRole('radio', { name: /^Quadrat \(1:1\)/ })).toBeTruthy();
-  expect(within(dialeg).getByText(AJUDA_FORMA_CAPCALERA)).toBeTruthy();
-  expect(within(dialeg).queryByRole('radio', { name: /Original|Apaisat|Panoràmic/ })).toBeNull();
-  expect(FORMATS_CAPCALERA.map((f) => [f.valor, f.ratio])).toEqual([['1:1', 1]]);
-  expect(Object.isFrozen(FORMATS_CAPCALERA) && Object.isFrozen(FORMATS_CAPCALERA[0])).toBe(true);
+  expect(within(dialeg).getByRole('radio', { name: /^Superpanoràmic \(21:9\)/ })).toBeTruthy();
+  expect(within(dialeg).getByRole('radio', { name: /^Vertical llarg \(9:16\)/ })).toBeTruthy();
+  expect(within(dialeg).getAllByText(AJUDA_FORMA_CAPCALERA)).toHaveLength(1);
+  expect(within(dialeg).getAllByText(AJUDA_FORMA_LLIURE)).toHaveLength(FORMATS.length - 1);
+  expect(dialeg.querySelector('.sdp-dialeg__descripcio').textContent).toBe(DESCRIPCIO_ENQUADRAMENT_CAPCALERA);
+  expect(DESCRIPCIO_ENQUADRAMENT_CAPCALERA).not.toMatch(/quadrat/);
+  // Les mateixes files del model (valor, etiqueta i proporció), cadascuna amb la seua ajuda.
+  const senseAjuda = (f) => [f.valor, f.etiqueta, f.ratio];
+  expect(FORMATS_CAPCALERA.map(senseAjuda)).toEqual(FORMATS.map(senseAjuda));
+  expect(FORMATS_CAPCALERA.map((f) => f.ajuda)).toEqual(FORMATS.map((f) => (f.valor === '1:1' ? AJUDA_FORMA_CAPCALERA : AJUDA_FORMA_LLIURE)));
+  expect(Object.isFrozen(FORMATS_CAPCALERA) && FORMATS_CAPCALERA.every((f) => Object.isFrozen(f))).toBe(true);
+});
+
+test('Directiva 261024 · una capçalera en 16:9 ix a 1.200 × 675 i en 9:16 a 675 × 1.200; la pujada no la torna a reduir', async () => {
+  dobles.carregaImatge.mockResolvedValue({ amplada: 4000, alcada: 2000, tipus: 'image/jpeg', element: {}, allibera: vi.fn() });
+  const casos = [
+    ['16:9', { x: 222, y: 0, w: 3556, h: 2000 }, { amplada: 1200, alcada: 675, tipus: 'image/jpeg' }],
+    ['9:16', { x: 1438, y: 0, w: 1125, h: 2000 }, { amplada: 675, alcada: 1200, tipus: 'image/jpeg' }],
+    ['21:9', { x: 0, y: 143, w: 4000, h: 1714 }, { amplada: 1200, alcada: 514, tipus: 'image/jpeg' }],
+  ];
+  for (const [forma, rect, opcions] of casos) {
+    dobles.exportaRetall.mockClear();
+    dobles.compressImage.mockClear();
+    const vista = closca();
+    await tria(vista.container, foto());
+    const dialeg = vista.getByRole('dialog', DIALEG);
+    act(() => { fireEvent.click(within(dialeg).getByRole('radio', { name: new RegExp(`\\(${forma}\\)`) })); });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: DESAR })); });
+    expect(dobles.exportaRetall.mock.calls.map((c) => c.slice(1)), forma).toEqual([[rect, opcions]]);
+    const exportat = await dobles.exportaRetall.mock.results[0].value;
+    expect(dobles.compressImage, forma).toHaveBeenCalledWith(exportat, { maxSize: 1200, format: 'image/webp', quality: 0.8 });
+    expect(vista.onSaveField, forma).toHaveBeenCalledWith('heroImage', CURT, 'd1');
+    cleanup();
+  }
 });
 
 test('Bloc 1 · una foto ja quadrada desada sencera també ix recodificada a 1.200 × 1.200: mai l’original', async () => {
@@ -291,12 +338,21 @@ test('Bloc 1 · una foto ja quadrada desada sencera també ix recodificada a 1.2
   expect(vista.onSaveField).toHaveBeenCalledWith('heroImage', CURT, 'd1');
 });
 
-test('Bloc 1 · una capçalera apaïsada ja desada (1.200 × 675) es torna a enquadrar en quadrat, a 1.200 × 1.200', async () => {
+/* Actualitzada a posta (IDEA-20, revisió adversarial 261024) · Re-enquadrar
+   una capçalera apaïsada ja desada obri en «Original»: desar-la sense tocar
+   res no la torna a tallar (no hi ha res a desar). El quadrat de 1.200 × 1.200
+   només ix si la persona el tria. */
+test('IDEA-20 · una capçalera apaïsada ja desada (1.200 × 675) s’obri en «Original» i no es torna a tallar; triada en quadrat, 1.200 × 1.200', async () => {
   dobles.carregaImatge.mockResolvedValue({ amplada: 1200, alcada: 675, tipus: 'image/webp', element: {}, allibera: vi.fn() });
   const vista = closca({ heroImage: '/assets/h.webp' });
   await act(async () => {});
   fireEvent.click(vista.container.querySelector('img.sdp-hero__imatge'));
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: 'Enquadrar' })); });
+  await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
+  expect(dobles.exportaRetall).not.toHaveBeenCalled();
+  expect(vista.onSaveField).not.toHaveBeenCalled();
+  await act(async () => { fireEvent.click(vista.getByRole('button', { name: 'Enquadrar' })); });
+  await act(async () => { fireEvent.click(within(vista.getByRole('dialog', DIALEG)).getByRole('radio', { name: /^Quadrat \(1:1\)/ })); });
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
   // Una adreça no diu el seu tipus abans de carregar-se: JPEG, com la capçalera del Perfil (configDeForma).
   expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([

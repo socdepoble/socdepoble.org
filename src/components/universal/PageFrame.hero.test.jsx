@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { resolveAsset } from '../../config/assetResolver';
 import { PageFrame } from './PageFrame.jsx';
@@ -81,4 +81,64 @@ test('heroComponent conserva la ranura sense imatge automàtica ni atributs inje
   expect(container.querySelector('.hero-image [data-testid="portada-propia"]').outerHTML)
     .toBe('<div data-testid="portada-propia">Portada de l’editor</div>');
   expect(resolveAsset).not.toHaveBeenCalledWith('/assets/portada.jpg');
+});
+
+/* Directiva del Mestre (261024, àudio 22:47) · La capçalera pot ser
+   vertical (4:5, 3:4, 9:16): la portada de lectura porta llavors
+   hero-image--vertical (centrada i limitada en alçada, layout.css). Les
+   quadrades i les apaïsades, cap classe nova (Llei del Píxel). jsdom no
+   carrega imatges: naturalWidth i naturalHeight es definixen a l'element i
+   es dispara el load a mà. */
+const marc = (img) => img.closest('.hero-image');
+const carrega = (img, amplada, alcada) => {
+  Object.defineProperty(img, 'naturalWidth', { configurable: true, value: amplada });
+  Object.defineProperty(img, 'naturalHeight', { configurable: true, value: alcada });
+  act(() => { fireEvent.load(img); });
+};
+
+test.each([[675, 1200, true], [1200, 1200, false], [1200, 675, false], [960, 1200, true]])(
+  'amb la mida declarada (%s × %s), la portada vertical porta hero-image--vertical: %s',
+  (heroWidth, heroHeight, vertical) => {
+    const img = portada({ heroWidth, heroHeight });
+    expect(marc(img).className).toBe(vertical ? 'hero-image hero-image--vertical' : 'hero-image');
+    expect(img.hasAttribute('style')).toBe(false);
+  },
+);
+
+test('sense mida declarada, es decidix en carregar (naturalWidth/naturalHeight); una apaïsada o quadrada no canvia res', () => {
+  const vertical = portada();
+  expect(marc(vertical).className).toBe('hero-image');
+  carrega(vertical, 900, 1600);
+  expect(marc(vertical).className).toBe('hero-image hero-image--vertical');
+  cleanup();
+  const apaisada = portada();
+  carrega(apaisada, 1200, 514);
+  expect(marc(apaisada).className).toBe('hero-image');
+  cleanup();
+  const quadrada = portada();
+  carrega(quadrada, 1200, 1200);
+  expect(marc(quadrada).className).toBe('hero-image');
+});
+
+test('una portada nova torna a començar: la vertical d’abans no passa a la de després', () => {
+  const vista = render(<PageFrame title="Portada" authorName="Pepa" heroImage="/assets/vertical.jpg" />);
+  const img = vista.container.querySelector('.hero-image img');
+  carrega(img, 900, 1600);
+  expect(marc(img).className).toBe('hero-image hero-image--vertical');
+  vista.rerender(<PageFrame title="Portada" authorName="Pepa" heroImage="/assets/apaisada.jpg" />);
+  const nova = vista.container.querySelector('.hero-image img');
+  expect(nova.getAttribute('src')).toBe('/assets/apaisada.jpg');
+  expect(marc(nova).className).toBe('hero-image');
+  carrega(nova, 1600, 900);
+  expect(marc(nova).className).toBe('hero-image');
+});
+
+test('la mida declarada mana sobre la carregada, i la ranura heroComponent no porta mai la classe', () => {
+  const img = portada({ heroWidth: 1200, heroHeight: 675 });
+  carrega(img, 900, 1600);
+  expect(marc(img).className).toBe('hero-image');
+  cleanup();
+  const { container } = render(<PageFrame title="Editor" authorName="Pepa" heroImage="/assets/portada.jpg" heroWidth={675} heroHeight={1200}
+    topBarData={{ heroComponent: <div data-testid="portada-propia" /> }} />);
+  expect(container.querySelector('.hero-image').className).toBe('hero-image');
 });

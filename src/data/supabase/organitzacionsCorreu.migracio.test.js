@@ -14,6 +14,8 @@ const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const NOM = '2610181915_organitzacions_correu_i_membres.sql';
 /* P0-01 cap avant (261021): si la versió d'abans de NOM ja consta com a aplicada, l'eina no la repetix. */
 const NOU = '2610211715_revoca_correu_organitzacions.sql';
+/* C11-02 (Codex 261024_2254) · La correcció del correu d'accés de la propietària. */
+const CORREU_TITULAR = '2610242320_correu_propietaria_nomes_titular.sql';
 const sensComentaris = (sql) => sql.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
 const sentencies = (sql) => sensComentaris(sql).split(';').map((s) => s.replace(/\s+/g, ' ').trim().toLowerCase()).filter(Boolean);
 const SENTENCIES = sentencies(readFileSync(path.join(MIGRACIONS, NOM), 'utf8'));
@@ -72,8 +74,13 @@ describe('P0-01 · contact_email fora dels rols públics', () => {
   });
 
   test('cap vista ni funció llig contact_email fora de les dues RPC de qui administra', () => {
-    const altres = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql') && f !== NOM && f !== NOU);
+    const altres = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql') && f !== NOM && f !== NOU && f !== CORREU_TITULAR);
     expect(altres.filter((f) => /\bcontact_email\b/i.test(sensComentaris(readFileSync(path.join(MIGRACIONS, f), 'utf8'))))).toEqual([]);
+    /* C11-02 (2610242320) · La correcció només torna a crear contacte_organitzacio:
+       contact_email no hi apareix fora del seu cos (correuPropietaria.migracio.test.js). */
+    const titular = sensComentaris(readFileSync(path.join(MIGRACIONS, CORREU_TITULAR), 'utf8'));
+    expect([...titular.matchAll(/create or replace function public\.(\w+)\(/gi)].map(([, nom]) => nom)).toEqual(['contacte_organitzacio']);
+    expect(titular.replace(/\$\$[\s\S]*?\$\$/g, '$$$$')).not.toMatch(/\bcontact_email\b/i);
     const cru = sensComentaris(readFileSync(path.join(MIGRACIONS, NOM), 'utf8'));
     const cossos = [...cru.matchAll(/create or replace function public\.(\w+)\([\s\S]*?\$\$([\s\S]*?)\$\$/gi)];
     expect(cossos.filter(([, , cos]) => /\bcontact_email\b/i.test(cos)).map(([, nom]) => nom))

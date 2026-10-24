@@ -64,8 +64,11 @@ import { ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte } from '../../data/xats
 import { useXat } from '../xat/XatContext';
 import SelectorRealitat from '../realitat/SelectorRealitat.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
-/* T6b (IDEA-14; decisió del Mestre, 261024) · «Gent que et seguix», a la fitxa pròpia d'una persona. */
+/* T6b (IDEA-14; decisió del Mestre, 261024) · «Veïnat connectat amb tu» (abans «Gent que et seguix»; P1-11, G1945-04), a la fitxa pròpia d'una persona. */
 import { GentQueEtSegueix } from './Seguidors.jsx';
+/* P1-11 (pla 261024_2230, T5B-02) · L'aparador de la fitxa (Mur, Mercat i Agenda). */
+import { PublicacionsDeLaFitxa, textosDeLAparador, useHiHaMur } from './PublicacionsDeLaFitxa.jsx';
+import { teAparador } from './usePublicacionsDeLaFitxa.js';
 
 /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
    · Només una entitat, un grup o una IA porten la píndola del seu tipus. Una
@@ -483,7 +486,7 @@ export function PaginaDeLAgent({ identitat }) {
  */
 export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
   const { t } = useUIActions();
-  /* T6b · `locale`: la data de «Gent que et seguix», en la llengua de la fitxa. */
+  /* T6b · `locale`: la data de «Veïnat connectat amb tu», en la llengua de la fitxa. */
   const { externalConfig, locale } = useUIState();
   const navigate = useNavigate();
   const { memberships = [], actor, setActor } = useIdentitat();
@@ -497,6 +500,8 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
      'remote' també en llavor. */
   const { senseSessio } = useXat();
   const modeDades = normalizeBackendConfig(externalConfig).dataMode;
+  /* P1-11 (T5B-02) · L'aparador del peu: dins del Mur de l'App i per a una fitxa que publica. */
+  const ambAparador = useHiHaMur() && teAparador(perfil);
 
   /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina
      d'una entitat porta dalt el seu logotip. L'entitat del projecte es
@@ -667,6 +672,15 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
          continua sent el directe per a tothom (llevat de la fitxa del paquet
          de la persona pilot, P4b-3). */
       objecte={objecte}
+      /* P1-11 (pla 261024_2230, T5B-02; ordre del Mestre 261024 18:21) · Al
+         peu, fora de l'article (revisió adversarial 261024), l'aparador de la
+         fitxa: el que la persona, l'empresa, l'entitat o el grup ha publicat
+         al Mur, al Mercat i a l'Agenda, en pestanyes (PublicacionsDeLaFitxa).
+         Una IA no en porta, ni una peça fora del Mur de l'App: cap regió
+         buida. Cap botó de seguir: la relació passa per «Connectar»
+         (onConnect, /connectar). */
+      peuDePagina={ambAparador ? <PublicacionsDeLaFitxa perfil={perfil} t={t} /> : null}
+      etiquetaPeuDePagina={ambAparador ? textosDeLAparador(perfil.nom || '', t).regio : undefined}
     >
       {/* Ordre del Mestre (261021) · Botó centrat amb respiració sota el lema, seguit de l'avís */}
       {ambAccions ? (

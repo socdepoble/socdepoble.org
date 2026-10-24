@@ -67,6 +67,7 @@ import {
 } from './identitatsSeed.js';
 import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
 import { errorDeMembre, membreDOrganitzacio } from './contracte.js';
+import { esDelPobleDelFiltre, pobleDelFiltre } from './pobleOrganitzacio.js';
 import { emojiSol } from '../utils/emoji.js';
 
 const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
@@ -322,16 +323,20 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
      * ha un poble). Per nom i id. Amb `consulta`, les que porten totes les
      * paraules al nom, al slug, al lema o a la descripció, com el filtre del
      * servidor (sense plegar accents). Sense sessió també: és públic.
+     * P1-11 (pla 261024_2230, T5B-01) · Amb `poble`, només les del poble
+     * amb eixe nom exacte (el filtre, retallat; el town_name desat, tal
+     * qual), abans del límit, com el town_name=eq. del servidor.
      */
-    listPublicOrganizations({ consulta = '', limit } = {}) {
+    listPublicOrganizations({ consulta = '', limit, poble = null } = {}) {
       const paraules = plegaDelDirectori(consulta).split(/[^\p{L}\p{N}'\u2019-]+/u).filter(Boolean);
       const conte = (org) => {
         const camps = [org.name, org.slug, org.lema, org.description].map(plegaDelDirectori);
         return paraules.every((paraula) => camps.some((camp) => camp.includes(paraula)));
       };
+      const delPoble = pobleDelFiltre(poble);
       const sostre = Number.isFinite(limit) && limit >= 1 ? Math.trunc(limit) : Infinity;
       return [...estat.organitzacions.values()]
-        .filter((org) => org.visibility === 'public' && conte(org))
+        .filter((org) => org.visibility === 'public' && conte(org) && (!delPoble || esDelPobleDelFiltre(org, delPoble)))
         .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ca') || String(a.id).localeCompare(String(b.id)))
         .slice(0, sostre)
         .map((org) => ({ ...COLUMNES_DIRECTORI_BUIDES, ...copiaCamps(org, COLUMNES_DIRECTORI_LOCAL), tenant_id: null }));

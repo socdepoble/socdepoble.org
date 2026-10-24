@@ -575,8 +575,10 @@ function ConnectarElementIntern() {
       subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
       lead={/* IDEA-14 · Amb més d'un camí, l'entradeta diu que són accions distintes.
              261024 correccions (R3-05) · i diu el mateix que «Qui ho pot vore?»: en
-             privat no avisa ningú; a persones o grups de xat els arriba l'enllaç. */ ambCamins
-        ? t('section.connectar.leadCamins', 'Cada camí té el seu botó: seguir o escriure a algú no et fa membre de res. Si guardes la connexió en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')
+             privat no avisa ningú; a persones o grups de xat els arriba l'enllaç.
+             P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · «connectar
+             amb algú», no «seguir»: a Sóc de Poble no se seguix, es connecta. */ ambCamins
+        ? t('section.connectar.leadCamins', 'Cada camí té el seu botó: connectar amb algú o escriure-li no et fa membre de res. Si guardes l’element a les teues notes en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.')
         : t('section.connectar.lead', 'Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després.')}
       onConnect={false}
     >

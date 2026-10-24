@@ -123,3 +123,36 @@ test('Gauntlet · el patró del servidor tolera accents, ç, apòstrofs i la gem
   /* Cap cometa ni apòstrof dins dels valors: només lletres, xifres, '_', '*' i el guionet. */
   for (const [, valor] of and.matchAll(/ilike\."([^"]*)"/g)) expect(valor).toMatch(/^[\p{L}\p{N}_*-]+$/u);
 });
+
+/* P1-11 (pla 261024_2230, T5B-01; reserva de Codex 1945: «talla a 500 abans
+   d'un filtre local») · El poble es filtra AL SERVIDOR, abans del límit. */
+test('P1-11 · amb `poble`, town_name=eq.<nom> codificat abans de l’ordre i del límit; sense, cap filtre', async () => {
+  await listPublicOrganizations({ poble: '  La Torre de les Maçanes  ' }, {});
+  expect(ruta()).toBe(`/rest/v1/organization_directory?select=${SELECT}&town_name=eq.${encodeURIComponent('La Torre de les Maçanes')}&order=name.asc,id.asc&limit=500`);
+  await listPublicOrganizations({ poble: 'Poble & companyia, (sa)' }, {});
+  expect(new URL(`https://poble.test${ruta(1)}`).searchParams.get('town_name')).toBe('eq.Poble & companyia, (sa)');
+  for (const poble of ['', '   ', null, 42, undefined]) await listPublicOrganizations({ poble }, {});
+  for (const n of [2, 3, 4, 5, 6]) expect(ruta(n)).not.toContain('town_name=');
+});
+
+test('P1-11 · un nom de poble que cap fila pot portar (més de 120 caràcters) torna [] sense preguntar', async () => {
+  await expect(listPublicOrganizations({ poble: 'x'.repeat(121) }, {})).resolves.toEqual([]);
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+test('P1-11 (C11-01) · un servidor sense town_name rebutja un poble amb NO-DISPONIBLE (mai les de tots ni un buit mut) i ho recorda', async () => {
+  m.request.mockRejectedValueOnce(columnaAbsent('town_name'));
+  await expect(listPublicOrganizations({ poble: 'Benifallim' }, {})).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(1);
+  await expect(listPublicOrganizations({ poble: 'Benifallim' }, {})).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(1);
+  /* Sense poble, el directori continua llegint-se sense la columna. */
+  await listPublicOrganizations({}, {});
+  expect(ruta(1)).not.toContain('town_name');
+});
+
+test.each(['seed', 'local'])('P1-11 · en %s, el poble el filtra el directori local', async (dataMode) => {
+  const files = await listPublicOrganizations({ poble: 'Poble que no existix' }, { dataMode });
+  expect(files).toEqual([]);
+  expect(m.request).not.toHaveBeenCalled();
+});

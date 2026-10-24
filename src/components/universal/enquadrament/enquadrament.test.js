@@ -8,10 +8,35 @@ import {
 /* T46 (ordre del Mestre, 260928) · la matemàtica del re-enquadrament. */
 
 describe('T46 · formats', () => {
-  test('el quadrat és el de sèrie i va primer; després Original, 4:3 i 16:9', () => {
+  /* Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: el
+     quadrat continua primer i de sèrie, i s'hi afigen 3:2, 21:9 i les tres
+     verticals (4:5, 3:4 i 9:16). Abans: 1:1, Original, 4:3 i 16:9. */
+  test('el quadrat és el de sèrie i va primer; després Original, les apaïsades, les panoràmiques i les verticals', () => {
     expect(FORMAT_PER_DEFECTE).toBe('1:1');
-    expect(FORMATS.map((f) => f.valor)).toEqual(['1:1', 'original', '4:3', '16:9']);
+    expect(FORMATS.map((f) => f.valor)).toEqual(['1:1', 'original', '4:3', '3:2', '16:9', '21:9', '4:5', '3:4', '9:16']);
     expect(estatInicial()).toEqual({ format: '1:1', zoom: 1, cx: 0.5, cy: 0.5 });
+  });
+
+  test('Directiva 261024 · les files noves: etiqueta, proporció i congelades com les altres', () => {
+    const noves = FORMATS.filter((f) => ['3:2', '21:9', '4:5', '3:4', '9:16'].includes(f.valor));
+    expect(noves.map((f) => [f.valor, f.etiqueta, f.ratio])).toEqual([
+      ['3:2', 'Apaisat (3:2)', 3 / 2],
+      ['21:9', 'Superpanoràmic (21:9)', 21 / 9],
+      ['4:5', 'Vertical (4:5)', 4 / 5],
+      ['3:4', 'Foli (3:4)', 3 / 4],
+      ['9:16', 'Vertical llarg (9:16)', 9 / 16],
+    ]);
+    // Les de sempre no canvien: la fila i l'ajuda del quadrat i de l'original, i les etiquetes.
+    expect(FORMATS.filter((f) => ['1:1', 'original', '4:3', '16:9'].includes(f.valor)).map((f) => f.etiqueta))
+      .toEqual(['Quadrat (1:1)', 'Original', 'Apaisat (4:3)', 'Panoràmic (16:9)']);
+    expect(Object.isFrozen(FORMATS) && FORMATS.every((f) => Object.isFrozen(f))).toBe(true);
+  });
+
+  test('Directiva 261024 · una vertical en una foto apaïsada pren tota l’alçada; una superpanoràmica, tota l’amplada', () => {
+    expect(rectDeRetall(estatInicial('9:16'), 4000, 2000)).toEqual({ x: 1438, y: 0, w: 1125, h: 2000 });
+    expect(rectDeRetall(estatInicial('21:9'), 4000, 2000)).toEqual({ x: 0, y: 143, w: 4000, h: 1714 });
+    expect(midaVisor(proporcio('9:16', 4000, 2000))).toEqual({ amplada: 540, alcada: 960 });
+    expect(midaVisor(proporcio('21:9', 4000, 2000))).toEqual({ amplada: 960, alcada: 411 });
   });
 
   test('proporcio: amb ratio, la del format; «original», la de la foto', () => {
@@ -165,6 +190,35 @@ describe('T3a · opcionsSortida', () => {
     expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/png', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/png' });
     expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
     expect(opcionsSortida({ w: 2000, h: 2000 }, '', sortida)).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
+  });
+
+  /* Directiva del Mestre (261024, àudio 22:47) · La capçalera de forma
+     lliure: el costat llarg fa exactament `costatLlarg` i l'altre seguix la
+     proporció del retall. */
+  test('amb `costatLlarg`: el costat llarg exacte i l’altre amb la proporció del retall', () => {
+    const sortida = { ampladaMaxima: 1200, costatLlarg: 1200 };
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg', sortida)).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/webp' });
+    expect(opcionsSortida({ w: 3556, h: 2000 }, 'image/jpeg', sortida)).toEqual({ amplada: 1200, alcada: 675, tipus: 'image/webp' });
+    expect(opcionsSortida({ w: 1125, h: 2000 }, 'image/jpeg', sortida)).toEqual({ amplada: 675, alcada: 1200, tipus: 'image/webp' });
+    expect(opcionsSortida({ w: 4000, h: 1714 }, 'image/jpeg', sortida)).toEqual({ amplada: 1200, alcada: 514, tipus: 'image/webp' });
+  });
+
+  test('amb `costatLlarg`: un retall menut s’amplia (com `exacta`); l’amplada màxima no el retalla', () => {
+    expect(opcionsSortida({ w: 400, h: 300 }, 'image/png', { ampladaMaxima: 1200, costatLlarg: 1200, format: 'image/png' }))
+      .toEqual({ amplada: 1200, alcada: 900, tipus: 'image/png' });
+    expect(opcionsSortida({ w: 300, h: 400 }, 'image/png', { ampladaMaxima: 600, costatLlarg: 1200 }))
+      .toEqual({ amplada: 900, alcada: 1200, tipus: 'image/webp' });
+    // Una proporció extrema: l'altre costat mai baixa d'1 px.
+    expect(opcionsSortida({ w: 5000, h: 1 }, 'image/jpeg', { costatLlarg: 1200 })).toEqual({ amplada: 1200, alcada: 1, tipus: 'image/webp' });
+  });
+
+  test('precedència: `exacta` guanya a `costatLlarg`; un `costatLlarg` invàlid no s’aplica (l’amplada màxima de sempre)', () => {
+    expect(opcionsSortida({ w: 3200, h: 1800 }, 'image/jpeg', { costatLlarg: 1200, exacta: { amplada: 400, alcada: 400 } }))
+      .toEqual({ amplada: 400, alcada: 400, tipus: 'image/webp' });
+    for (const costatLlarg of [0, -5, 'abc', null, undefined, Number.NaN]) {
+      expect(opcionsSortida({ w: 400, h: 300 }, 'image/jpeg', { ampladaMaxima: 1200, costatLlarg }), String(costatLlarg))
+        .toEqual({ amplada: 400, alcada: 300, tipus: 'image/webp' });
+    }
   });
 });
 

@@ -15,8 +15,10 @@ describe('Pla 261015 · les icones dels apartats del Perfil', () => {
     expect(ICONES_APARTATS).toEqual({
       vistes: '\u{1F441}\u{FE0F}', compte: '\u{1F510}', privacitat: '\u{1F6E1}\u{FE0F}', nodes: '\u{1F310}', multimedia: '\u{1F5BC}\u{FE0F}',
       pagina: '\u{1F4C4}',
+      // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte» (👥, la setena).
+      membres: '\u{1F465}',
     });
-    expect(new Set(Object.values(ICONES_APARTATS)).size).toBe(6);
+    expect(new Set(Object.values(ICONES_APARTATS)).size).toBe(7);
     expect(Object.isFrozen(ICONES_APARTATS)).toBe(true);
   });
 

@@ -925,7 +925,10 @@ test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logo
   expect(m.adapter.barAuthorAvatar).toBe('https://poble.test/a.webp');
 });
 
-test('Onada 4 · «Capçalera» obri directament la finestra de retall (quadrada des del Gauntlet 261016); cancel·lar no puja res ni torna la closca a la imatge', async () => {
+/* Directiva del Mestre (261024, àudio 22:47) · Actualitzada a posta: la
+   finestra de la capçalera ja no és només quadrada; oferix totes les formes
+   (la «Forma» del T46) amb el quadrat marcat de sèrie. */
+test('Onada 4 · «Capçalera» obri directament la finestra de retall (el quadrat de sèrie, amb la forma a triar des de la Directiva 261024); cancel·lar no puja res ni torna la closca a la imatge', async () => {
   const acaba = vi.fn();
   render(<PerfilEditor identitat={jo} />);
   act(() => m.adapter.onHeroEdit({ acaba }));
@@ -933,7 +936,9 @@ test('Onada 4 · «Capçalera» obri directament la finestra de retall (quadrada
     fireEvent.change(selector('heroImage'), { target: { files: [new File(['x'], 'pomes.jpg', { type: 'image/jpeg' })] } });
   });
   const finestra = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
-  expect(within(finestra).queryByRole('radio')).toBeNull();
+  const formes = within(finestra).queryAllByRole('radio');
+  expect(formes.map((r) => r.value)).toEqual(['1:1', 'original', '4:3', '3:2', '16:9', '21:9', '4:5', '3:4', '9:16']);
+  expect(formes.find((r) => r.checked)?.value).toBe('1:1');
   fireEvent.click(within(finestra).getByRole('button', { name: 'Cancel·lar' }));
   expect(screen.queryByRole('dialog', { name: 'Retalla la capçalera' })).toBeNull();
   expect(acaba).not.toHaveBeenCalled();

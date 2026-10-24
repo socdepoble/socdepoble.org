@@ -164,7 +164,9 @@ it('cada ajust del catàleg diu si viu a la fitxa o al compte', () => {
   expect(org.filter(a => a.lloc === 'fitxa').map(a => a.id)).toEqual(['nom', 'avatar', 'lema', 'descripcio']);
   /* T43 (ordre del Mestre, 260928) · el correu opcional va al compte; grup C
      (ordre del Mestre, 261008) · el poble, abans del correu. */
-  expect(org.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['poble', 'correu', 'correu-public', 'membres', 'identificador', 'fitxa', 'eixir']);
+  /* Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres i connexions», la vista pròpia dels membres d'una organització, just després d'«El compte». */
+  expect(org.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['poble', 'correu', 'correu-public', 'identificador', 'fitxa', 'eixir']);
+  expect(org.filter(a => a.lloc === 'membres').map(a => a.id)).toEqual(['membres']);
   expect(org.find(a => a.id === 'fitxa').pendent).toBe(true);
 });
 
