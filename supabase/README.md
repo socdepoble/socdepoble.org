@@ -1440,6 +1440,15 @@ Les redireccions d'una font del sistema, només dins del mateix host, en
 `https:` i sense port (abans, una redirecció podia canviar-lo). `youtu.be` no
 hi és: cap feed ni cap imatge del catàleg no hi viu.
 
+G-03 (Gauntlet 261024_1945, Codex; CWE-1333): el recorregut de l'XML per a
+les imatges (`imatgesDelFeed`) és lineal. Abans, un feed trencat a posta
+(un element sense tancar, una etiqueta sense `>`, un CDATA sense `]]>` o una
+`<img>` sense `src`, repetits) feia buscar el terminador des de cada `<`: 1 MB
+costava 7 s de CPU (i fins a 57 s amb obertures sense `>`), ja fora dels 6 s
+de la baixada. Ara són mil·lisegons, i el resultat és el mateix que abans
+(contrast diferencial de 270.000 feeds). L'única fita nova: com a molt 32
+noms de contingut distints sense tancar per tros.
+
 Risc residual, que el Mestre ha de tancar ABANS d'encendre les personals: el
 nom pot canviar de resposta entre la comprovació i la baixada (DNS
 rebinding); el `fetch` de Deno torna a resoldre i la IP no es pot fixar sense

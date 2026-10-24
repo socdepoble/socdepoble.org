@@ -620,11 +620,185 @@ const NO_TEXT = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\u200B-\u200F\u202A-\u202E\
    article. Un <picture> no hi és: el nucli sí que en recull la <img>. Els comentaris, tampoc. */
 const SENSE_IMATGES = 'script|style|textarea|title|xmp|iframe|noembed|noframes|noscript|template|plaintext|svg|math|canvas|video|audio|object'
   + '|applet|frameset|map|form|button|select|datalist|label|fieldset|legend|output|meter|progress|dialog|slot|head|optgroup|option|portal';
-const FORA_DE_LHTML = new RegExp(`<!--[\\s\\S]*?(?:-->|$)|<(${SENSE_IMATGES})\\b[^>]*>[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, 'gi');
-const CDATA = /(<!\[CDATA\[[\s\S]*?\]\]>)/;
+const NOM_SENSE_IMATGES = new RegExp(`(${SENSE_IMATGES})\\b`, 'iy');
 /* Els elements d'una entrada que es lleven abans de buscar-ne l'enllaç (vegeu senseNiats). */
 const NIATS_RSS = 'source|description|encoded|content|summary';
 const NIATS_ATOM = 'entry|source|content|summary|subtitle|title|rights';
+/* Els noms dels continguts sense tancar que es busquen en un tros (continguts): un feed en porta
+   quatre o cinc, i un que en porta més ja no és un feed. */
+const MAXIM_NOMS_SENSE_TANCAR = 32;
+
+/* ── G-03 · Un recorregut lineal de l'XML ─────────────────────────────────────
+   Gauntlet 261024_1945, Codex G-03 (CWE-1333). Les expressions d'abans tornaven a recórrer el text
+   des de cada «<» quan hi faltava el terminador (un element sense tancar, una etiqueta sense «>»,
+   una secció CDATA sense «]]>», una <img> sense src): un feed trencat a posta d'1 MB costava 7 s de
+   CPU, ja fora del temporitzador de la baixada. Estes peces diuen el mateix que aquelles
+   expressions, però cap no torna enrere: el «>» de després d'una posició es memoritza (els «<»
+   d'abans d'eixe «>» el compartixen), un terminador que no hi és no es torna a buscar i els
+   tancaments d'un tros es llisten una sola vegada. L'única fita nova és MAXIM_NOMS_SENSE_TANCAR.
+   gestor.test.js ho prova amb les entrades que abans eren quadràtiques. */
+
+const ESPAI = /\s/;
+
+/* El lector d'un text per a posicions que creixen: fi(posicio), el primer «>» des d'ella (o -1).
+   Cada cerca comença on acabava l'anterior: tots els «<» d'abans d'un «>» el compartixen. */
+function creaLector(text) {
+  let des = Infinity;
+  let fi = -1;
+  return {
+    fi(posicio) {
+      if (posicio < des || (fi >= 0 && posicio > fi)) {
+        des = posicio;
+        fi = text.indexOf('>', posicio);
+      }
+      return fi;
+    }
+  };
+}
+
+/* La pròxima etiqueta `<nom…>` des de `des`: { inici, nom, final, fi } (final: on acaba el nom; fi:
+   el «>»), o null. `nom` és una expressió enganxosa (y) amb el nom en el grup 1, que es prova just
+   després de cada «<»; `valida(final, fi)`, la forma de la resta de l'etiqueta. Sense cap «>» més,
+   cap etiqueta més. */
+function etiquetaDe(text, lector, des, nom, valida) {
+  for (let i = text.indexOf('<', des); i >= 0; i = text.indexOf('<', i + 1)) {
+    nom.lastIndex = i + 1;
+    const trobat = nom.exec(text);
+    if (!trobat) continue;
+    const final = nom.lastIndex;
+    const fi = lector.fi(final);
+    if (fi < 0) return null;
+    if (valida(final, fi)) return { inici: i, nom: trobat[1], final, fi };
+  }
+  return null;
+}
+
+/* Una obertura que no s'autotanca, com <nom(?:\s[^>]*[^/>])?\s*>: el nom seguit d'un espai o del
+   «>» (ho mira l'expressió del nom), i el «>» de seguida o darrere d'un caràcter que no és «/» (un
+   espai hi val: <nom / > és una obertura; <nom /> i <nom a="b"/>, no). */
+const noSAutotanca = (text) => (final, fi) => fi === final || text[fi - 1] !== '/';
+
+/* El nom d'una obertura d'element (sense prefix o amb un), per a un patró de noms. */
+const nomDElement = (noms, banderes = '') => new RegExp(`((?:[\\w.-]+:)?(?:${noms}))(?=[\\s>])`, `y${banderes}`);
+
+/* Els trossos d'un text separant-ne les seccions CDATA, com text.split(/(<!\[CDATA\[[\s\S]*?\]\]>)/):
+   els parells, text; els senars, seccions senceres. Una secció sense «]]>» no és cap secció. */
+function trossosCdata(text) {
+  const trossos = [];
+  let des = 0;
+  for (let i = text.indexOf('<![CDATA['); i >= 0; i = text.indexOf('<![CDATA[', des)) {
+    const fi = text.indexOf(']]>', i + 9);
+    if (fi < 0) break;
+    trossos.push(text.slice(des, i), text.slice(i, fi + 3));
+    des = fi + 3;
+  }
+  trossos.push(text.slice(des));
+  return trossos;
+}
+
+/* Un text sense les seccions CDATA (com text.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '')). */
+const senseCdata = (text) => trossosCdata(text).filter((_, k) => k % 2 === 0).join('');
+
+/* Un text sense etiquetes (com text.replace(/<[^>]*>/g, '')). */
+function senseEtiquetesXml(text) {
+  let eixida = '';
+  let des = 0;
+  for (let i = text.indexOf('<'); i >= 0; i = text.indexOf('<', des)) {
+    const fi = text.indexOf('>', i);
+    if (fi < 0) break;
+    eixida += text.slice(des, i);
+    des = fi + 1;
+  }
+  return eixida + text.slice(des);
+}
+
+/* Els tancaments `</nom\s*>` d'un text, llistats una vegada: tancament(nom, des) torna el primer
+   que comença des de `des`, [inici, final], o null. Per a cada nom, `des` ha de créixer. */
+function creaTancaments(text) {
+  const perNom = new Map();
+  for (const trobat of text.matchAll(/<\/([\w.:-]+)\s*>/g)) {
+    if (!perNom.has(trobat[1])) perNom.set(trobat[1], { llista: [], punter: 0 });
+    perNom.get(trobat[1]).llista.push([trobat.index, trobat.index + trobat[0].length]);
+  }
+  return (nom, des) => {
+    const del = perNom.get(nom);
+    if (!del) return null;
+    while (del.punter < del.llista.length && del.llista[del.punter][0] < des) del.punter += 1;
+    return del.llista[del.punter] ?? null;
+  };
+}
+
+/* L'HTML d'un contingut sense el que el nucli no hi llig (els comentaris i els elements de
+   SENSE_IMATGES, amb el que porten dins, fins al tancament o fins a la fi), com l'expressió
+   <!--[\s\S]*?(?:-->|$)|<(SENSE_IMATGES)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$) (gi). */
+function senseForaDeLHtml(html) {
+  const lector = creaLector(html);
+  let eixida = '';
+  let des = 0;
+  for (let i = html.indexOf('<'); i >= 0; i = html.indexOf('<', i + 1)) {
+    let fi;
+    if (html.startsWith('<!--', i)) {
+      const tanca = html.indexOf('-->', i + 4);
+      fi = tanca < 0 ? html.length : tanca + 3;
+    } else {
+      NOM_SENSE_IMATGES.lastIndex = i + 1;
+      const nom = NOM_SENSE_IMATGES.exec(html);
+      if (!nom) continue;
+      const gt = lector.fi(NOM_SENSE_IMATGES.lastIndex);
+      if (gt < 0) continue;
+      const tancament = new RegExp(`<\\/${nom[1]}\\s*>`, 'gi');
+      tancament.lastIndex = gt + 1;
+      fi = tancament.exec(html) ? tancament.lastIndex : html.length;
+    }
+    eixida += html.slice(des, i);
+    des = fi;
+    i = fi - 1;
+  }
+  return eixida + html.slice(des);
+}
+
+/* Els valors dels src de les <img> d'un HTML, en ordre, com els donava
+   html.matchAll(/<img\b[^>]*?\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi): el src s'ha
+   d'escriure abans del «>» de la <img>, però un valor entre cometes pot passar-lo. */
+function* srcsDeLHtml(html) {
+  const lector = creaLector(html);
+  const img = /img\b/iy;
+  const src = /([^>]*?)\ssrc\s*=\s*/iy;
+  const nu = /[^\s"'>]+/y;
+  const senseCometa = { '"': false, "'": false };
+  let senseSrc = -2;
+  for (let i = html.indexOf('<'); i >= 0; i = html.indexOf('<', i + 1)) {
+    img.lastIndex = i + 1;
+    if (!img.test(html)) continue;
+    const fi = lector.fi(img.lastIndex);
+    if (fi === senseSrc) continue;
+    let valor = null;
+    let final = -1;
+    for (let des = img.lastIndex; valor === null;) {
+      src.lastIndex = des;
+      const trobat = src.exec(html);
+      if (!trobat) break;
+      const inici = src.lastIndex;
+      const cometa = html[inici];
+      if (cometa === '"' || cometa === "'") {
+        const tanca = senseCometa[cometa] ? -1 : html.indexOf(cometa, inici + 1);
+        if (tanca < 0) senseCometa[cometa] = true;
+        else [valor, final] = [html.slice(inici + 1, tanca), tanca + 1];
+      } else {
+        nu.lastIndex = inici;
+        const valorNu = nu.exec(html);
+        if (valorNu) [valor, final] = [valorNu[0], nu.lastIndex];
+      }
+      des = trobat.index + trobat[1].length + 1;
+    }
+    if (valor === null) {
+      senseSrc = fi;
+      continue;
+    }
+    yield valor;
+    i = final - 1;
+  }
+}
 
 /* Una base web absoluta, o undefined (nucli/urls.js · baseValida). */
 function baseWeb(base) {
@@ -667,9 +841,9 @@ function hrefDImatge(absoluta) {
 /* El contingut d'un element com el veu el nucli (xml.js · textDe): les seccions CDATA, crues; la
    resta, sense entitats d'XML. `senseEtiquetes`: el text i prou (un enllaç, un guid). */
 function textXml(cru, { senseEtiquetes = false } = {}) {
-  return cru.split(CDATA).map((tros) => {
+  return trossosCdata(cru).map((tros) => {
     if (tros.startsWith('<![CDATA[')) return tros.slice(9, -3);
-    return desentitza(senseEtiquetes ? tros.replace(/<[^>]*>/g, '') : tros);
+    return desentitza(senseEtiquetes ? senseEtiquetesXml(tros) : tros);
   }).join('');
 }
 
@@ -679,36 +853,43 @@ const plega = (text) => text.replace(NO_TEXT, '').replace(/\s+/g, ' ').trim();
 /* El primer element `nom` sense prefix d'un tros d'XML: { text, etiqueta } (el text, '' si
    s'autotanca; l'etiqueta d'obertura, crua), o null si no n'hi ha cap. */
 function primerElement(tros, nom) {
-  const obertura = new RegExp(`<${nom}(\\s[^>]*)?>`).exec(tros);
+  /* Com <nom(\s[^>]*)?>: el nom i, darrere, el «>» o un espai. */
+  const obertura = etiquetaDe(tros, creaLector(tros), 0, new RegExp(`(${nom})`, 'y'), (final, fi) => fi === final || ESPAI.test(tros[final]));
   if (!obertura) return null;
-  if ((obertura[1] || '').endsWith('/')) return { text: '', etiqueta: obertura[0] };
-  const inici = obertura.index + obertura[0].length;
+  const etiqueta = tros.slice(obertura.inici, obertura.fi + 1);
+  if (obertura.fi > obertura.final && tros[obertura.fi - 1] === '/') return { text: '', etiqueta };
+  const inici = obertura.fi + 1;
   const fi = tros.indexOf(`</${nom}`, inici);
-  return { text: textXml(tros.slice(inici, fi < 0 ? tros.length : fi), { senseEtiquetes: true }), etiqueta: obertura[0] };
+  return { text: textXml(tros.slice(inici, fi < 0 ? tros.length : fi), { senseEtiquetes: true }), etiqueta };
 }
 
 /* L'enllaç d'Atom d'un tros (nucli/analitzador.js · enllacAtom): rel «alternate» o sense rel,
    millor si és text/html (sense tipus, ho és). */
 function enllacAtomDe(tros, base) {
-  const enllacos = [...tros.matchAll(/<(?:atom:)?link\b[^>]*>/g)].map(([etiqueta]) => atributsDe(etiqueta))
-    .filter((a) => a.rel === undefined || a.rel === 'alternate');
+  /* Cada <link> i <atom:link> (com /<(?:atom:)?link\b[^>]*>/g). */
+  const lector = creaLector(tros);
+  const nom = /((?:atom:)?link)\b/y;
+  const enllacos = [];
+  for (let trobat = etiquetaDe(tros, lector, 0, nom, () => true); trobat; trobat = etiquetaDe(tros, lector, trobat.fi + 1, nom, () => true)) {
+    const a = atributsDe(tros.slice(trobat.inici, trobat.fi + 1));
+    if (a.rel === undefined || a.rel === 'alternate') enllacos.push(a);
+  }
   const html = enllacos.find((a) => /html/i.test(a.type || 'text/html'));
   return absolutaWeb((html || enllacos[0])?.href || '', base);
 }
 
-/* Una obertura d'element que no s'autotanca (sense prefix o amb un), per a un patró de noms. */
-const oberturaDe = (noms, banderes) => new RegExp(`<((?:[\\w.-]+:)?(?:${noms}))(?:\\s[^>]*[^/>])?\\s*>`, banderes);
-
 /* Els elements `nom` (item o entry) d'un feed: [{ inici, cos }], en ordre. Una obertura sense
    tancament s'emporta la resta i acaba la cerca (cap cerca quadràtica). */
 function elementsDe(xml, nom) {
-  const obertura = oberturaDe(nom, 'g');
+  const lector = creaLector(xml);
+  const nomDe = nomDElement(nom);
+  const valida = noSAutotanca(xml);
   const eixida = [];
-  for (let trobat = obertura.exec(xml); trobat && eixida.length < MAXIM_IMATGES_PER_FEED; trobat = obertura.exec(xml)) {
-    const fi = xml.indexOf(`</${trobat[1]}`, obertura.lastIndex);
-    eixida.push({ inici: trobat.index, cos: xml.slice(obertura.lastIndex, fi < 0 ? xml.length : fi) });
+  for (let trobat = etiquetaDe(xml, lector, 0, nomDe, valida); trobat && eixida.length < MAXIM_IMATGES_PER_FEED;) {
+    const fi = xml.indexOf(`</${trobat.nom}`, trobat.fi + 1);
+    eixida.push({ inici: trobat.inici, cos: xml.slice(trobat.fi + 1, fi < 0 ? xml.length : fi) });
     if (fi < 0) break;
-    obertura.lastIndex = fi;
+    trobat = etiquetaDe(xml, lector, fi, nomDe, valida);
   }
   return eixida;
 }
@@ -728,7 +909,25 @@ function arrelDe(xml) {
 /* Un tros sense els elements de dins que porten enllaços que no són del canal o de l'element (la
    imatge i el quadre de text del canal; la font; els continguts, amb el seu HTML). */
 function senseNiats(tros, noms) {
-  return tros.replace(new RegExp(`${oberturaDe(noms, '').source}[\\s\\S]*?<\\/\\1\\s*>`, 'g'), '');
+  /* Cada obertura fins al seu primer tancament `</nom\s*>`; una que no es tanca, es queda, i la
+     cerca seguix pel «<» de després (com l'expressió d'abans amb el cos [\s\S]*?). */
+  const lector = creaLector(tros);
+  const nom = nomDElement(noms);
+  const valida = noSAutotanca(tros);
+  const tancament = creaTancaments(tros);
+  let eixida = '';
+  let copiat = 0;
+  for (let trobat = etiquetaDe(tros, lector, 0, nom, valida); trobat;) {
+    const tancat = tancament(trobat.nom, trobat.fi + 1);
+    if (!tancat) {
+      trobat = etiquetaDe(tros, lector, trobat.inici + 1, nom, valida);
+      continue;
+    }
+    eixida += tros.slice(copiat, trobat.inici);
+    copiat = tancat[1];
+    trobat = etiquetaDe(tros, lector, tancat[1], nom, valida);
+  }
+  return eixida + tros.slice(copiat);
 }
 
 /**
@@ -741,7 +940,8 @@ function senseNiats(tros, noms) {
  * el mateix que passa el Lector). La primera <img> és la mateixa que tria el nucli: la primera que
  * es resol (http o https, sense credencials), fora de les que el nucli no llig (script, noscript,
  * svg, vídeo…); si és http, el Lector no demana res i no es guarda. Només es guarden les https,
- * sense fragment. Pura i fitada: no llança mai. La paritat amb el nucli la vigila paritat.test.js.
+ * sense fragment. Pura i fitada: no llança mai, i el recorregut és lineal, també per a un feed trencat
+ * a posta (G-03, Gauntlet 261024_1945). La paritat amb el nucli la vigila paritat.test.js.
  */
 export function imatgesDelFeed(xml, base = null) {
   const eixida = new Set();
@@ -759,9 +959,14 @@ export function imatgesDelFeed(xml, base = null) {
   const baseDelFeed = delFeed || absolutaWeb(base ?? '', null);
   /* Les etiquetes d'imatge (no les de dins d'un contingut en CDATA) d'un tros. */
   const etiquetes = (tros, baseTros) => {
-    for (const [etiqueta, nom] of tros.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '').matchAll(/<(?:[\w.-]+:)?(enclosure|thumbnail|content|image|link)\b[^>]*>/gi)) {
+    /* Com /<(?:[\w.-]+:)?(enclosure|thumbnail|content|image|link)\b[^>]*>/gi, sense el CDATA. */
+    const net = senseCdata(tros);
+    const lector = creaLector(net);
+    const nomDe = /(?:[\w.-]+:)?(enclosure|thumbnail|content|image|link)\b/iy;
+    for (let trobat = etiquetaDe(net, lector, 0, nomDe, () => true); trobat; trobat = etiquetaDe(net, lector, trobat.fi + 1, nomDe, () => true)) {
       if (eixida.size >= MAXIM_IMATGES_PER_FEED) return;
-      const a = atributsDe(etiqueta);
+      const { nom } = trobat;
+      const a = atributsDe(net.slice(trobat.inici, trobat.fi + 1));
       const local = nom.toLowerCase();
       let cru = null;
       if (local === 'enclosure') {
@@ -781,28 +986,33 @@ export function imatgesDelFeed(xml, base = null) {
   /* La primera <img> de cada contingut d'un tros, com la tria el nucli. Cada element es busca fins
      al seu tancament; un nom que no es tanca no es torna a buscar (cap cerca quadràtica). */
   const continguts = (tros, baseTros) => {
-    const obertura = /<((?:[\w.-]+:)?(?:description|encoded|content|summary))\b(?:[^>]*[^/>])?>/gi;
+    /* Com /<((?:[\w.-]+:)?(?:description|encoded|content|summary))\b(?:[^>]*[^/>])?>/gi: el nom, i
+       el «>» de seguida o darrere d'un caràcter que no és «/». */
+    const lector = creaLector(tros);
+    const nomDe = /((?:[\w.-]+:)?(?:description|encoded|content|summary))\b/iy;
+    const valida = (final, fi) => fi === final || tros[fi - 1] !== '/';
     const senseTancar = new Set();
     let comptats = 0;
-    for (let trobat = obertura.exec(tros); trobat && comptats < MAXIM_IMATGES_PER_FEED; trobat = obertura.exec(tros)) {
+    for (let trobat = etiquetaDe(tros, lector, 0, nomDe, valida); trobat && comptats < MAXIM_IMATGES_PER_FEED;) {
       if (eixida.size >= MAXIM_IMATGES_PER_FEED) return;
-      const nom = trobat[1];
-      if (senseTancar.has(nom)) continue;
-      const fi = tros.indexOf(`</${nom}`, obertura.lastIndex);
+      const { nom } = trobat;
+      const fi = senseTancar.has(nom) ? -1 : tros.indexOf(`</${nom}`, trobat.fi + 1);
       if (fi < 0) {
         senseTancar.add(nom);
+        if (senseTancar.size > MAXIM_NOMS_SENSE_TANCAR) return;
+        trobat = etiquetaDe(tros, lector, trobat.fi + 1, nomDe, valida);
         continue;
       }
       comptats += 1;
-      const html = textXml(tros.slice(obertura.lastIndex, fi)).replace(FORA_DE_LHTML, '');
-      for (const [, doble, simple, nu] of html.matchAll(/<img\b[^>]*?\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi)) {
-        const absoluta = absolutaWeb(desentitza(doble ?? simple ?? nu), baseTros);
+      const html = senseForaDeLHtml(textXml(tros.slice(trobat.fi + 1, fi)));
+      for (const cru of srcsDeLHtml(html)) {
+        const absoluta = absolutaWeb(desentitza(cru), baseTros);
         if (absoluta) {
           afig(absoluta);
           break;
         }
       }
-      obertura.lastIndex = fi;
+      trobat = etiquetaDe(tros, lector, fi, nomDe, valida);
     }
   };
   etiquetes(capcalera, baseDelFeed);

@@ -1312,10 +1312,10 @@ describe('imatgesDelFeed (pura)', () => {
     const trencat = '<description>'.repeat(40000);
     const inici = performance.now();
     expect(imatgesDelFeed(trencat)).toEqual([]);
-    /* Actualitzada a posta (261024 suite completa): amb 2 s la prova queia per càrrega
-       (2,8 s dins de la suite sencera). Una cerca quadràtica sobre estos 560.000
-       caràcters tarda minuts, així que 10 s continua separant lineal de quadràtic. */
-    expect(performance.now() - inici).toBeLessThan(10000);
+    /* Actualitzada a posta (Gauntlet 261024_1945, Codex G-03): el que fixava no distingia res. La cerca
+       quadràtica d'abans hi tardava uns 2 s, dins dels 10 s que es donava. Ara és lineal (uns ms), i les
+       entrades de ~1 MB que la separen de veres són al describe «G-03». */
+    expect(performance.now() - inici).toBeLessThan(1000);
     const moltes = `<rss>${Array.from({ length: 700 }, (_, i) => `<media:thumbnail url="https://example.org/${i}.png"/>`).join('')}</rss>`;
     expect(imatgesDelFeed(moltes)).toHaveLength(500);
   });
@@ -1488,5 +1488,63 @@ describe('T1 · anti-SSRF a tots els salts, també dels hosts aprovats', () => {
     }
     expect(() => validaCataleg(font('https://ayudawp.com:443/feed/', 'https://ayudawp.com'))).not.toThrow();
     expect(() => creaGestor({ cataleg: font('https://127.0.0.1/feed') })).toThrow(TypeError);
+  });
+});
+
+/* Gauntlet 261024_1945, Codex G-03 (CWE-1333) · Un feed trencat a posta no gasta la CPU del servei. Les
+   entrades que abans eren quadràtiques (des de cada «<», tornar a buscar fins a la fi un terminador que
+   falta) es lligen ara en temps lineal. Cada una porta de 0,5 a 1,5 MB: amb el recorregut d'abans, de 5 a
+   més de 70 s cada una (la de Codex, 7 s); ara, mil·lisegons. El límit d'1 s deixa marge per a una màquina
+   carregada i continua molt lluny del quadràtic. */
+describe('G-03 · el recorregut de l’XML és lineal: cap feed trencat a posta no fa treball quadràtic', () => {
+  const RSS_ITEM = (cos) => `<rss><channel><item>${cos}</item></channel></rss>`;
+  const CONTINGUT = (html) => RSS_ITEM(`<description><![CDATA[${html}]]></description>`);
+  const FAMILIES = Object.freeze([
+    ['un <description> sense tancar, repetit al canal (la reproducció de Codex G-03)', '<rss><channel>' + '<description>'.repeat(80000) + '</channel></rss>'],
+    ['una obertura sense «>», repetida', '<rss><channel>' + '<description a'.repeat(80000) + '</channel></rss>'],
+    ['un <content:encoded> sense tancar dins d’un item', RSS_ITEM('<content:encoded>'.repeat(60000))],
+    ['un <image> del canal sense tancar', '<rss><channel>' + '<image>'.repeat(120000) + '</channel></rss>'],
+    ['un <item sense cap «>» fins a la fi', '<rss><channel>' + '<item a'.repeat(120000)],
+    ['una secció CDATA sense «]]>»', RSS_ITEM('<description>' + '<![CDATA['.repeat(100000) + '</description>')],
+    ['una <img sense src ni «>»', CONTINGUT('<img a'.repeat(120000))],
+    ['un <script sense «>» a l’HTML d’un contingut', CONTINGUT('<script a'.repeat(100000))],
+    ['molts noms de contingut distints sense tancar', '<rss><channel>' + Array.from({ length: 40000 }, (_, i) => `<p${i}:description>`).join('') + '</channel></rss>'],
+    ['un <link d’Atom sense «>»', '<feed xmlns="http://www.w3.org/2005/Atom">' + '<link a'.repeat(120000)],
+    ['un <link> del canal amb «<» i cap «>»', '<rss><channel><link>' + '<a'.repeat(300000) + '</link></channel></rss>'],
+    ['un <enclosure sense «>» fins a la fi', '<rss><channel><item>' + '<enclosure a'.repeat(80000)]
+  ]);
+
+  test.each(FAMILIES)('%s: menys d’1 s', (nom, xml) => {
+    expect(xml.length, nom).toBeGreaterThan(500 * 1024);
+    const inici = performance.now();
+    expect(() => imatgesDelFeed(xml, 'https://ayudawp.com'), nom).not.toThrow();
+    expect(performance.now() - inici, nom).toBeLessThan(1000);
+  });
+
+  test('pel servei sencer: el feed d’1 MB de Codex torna 200 en menys d’1,5 s', async () => {
+    const xml = '<rss><channel>' + '<description>'.repeat(80000) + '</channel></rss>';
+    expect(xml.length).toBeGreaterThan(1000 * 1024);
+    const { demana } = prepara({ fetchImpl: vi.fn(async () => origen(xml)) });
+    const inici = performance.now();
+    expect((await demana('/feed?font=ayudawp')).status).toBe(200);
+    expect(performance.now() - inici).toBeLessThan(1500);
+  });
+
+  /* Diuen el mateix que les expressions d'abans: un contrast diferencial de 270.000 feeds aleatoris i 1,2
+     milions de trossos (informe 261024_1800_auditoria_claude) no hi va trobar cap diferència. Estes en fixen
+     les vores. */
+  test('les vores de sempre: <description / > és una obertura i <description /> no; un valor entre cometes passa el «>»; un «<» dins d’un atribut', () => {
+    const item = '<item><description><![CDATA[<img src="a.png">]]></description></item>';
+    const canal = (obertura) => `<rss><channel>${obertura}<link>https://dins.example.org/</link></description><link>https://fora.example.org/</link>${item}</channel></rss>`;
+    expect(imatgesDelFeed(canal('<description / >'), 'https://ayudawp.com')).toEqual(['https://fora.example.org/a.png']);
+    expect(imatgesDelFeed(canal('<description />'), 'https://ayudawp.com')).toEqual(['https://dins.example.org/a.png']);
+    expect(imatgesDelFeed(CONTINGUT('<img alt="x" src="a>b.png">'), 'https://ayudawp.com')).toEqual(['https://ayudawp.com/a%3Eb.png']);
+    expect(imatgesDelFeed(RSS_ITEM('<enclosure url="https://cdn.example.org/a<b.jpg" type="image/jpeg"/>'), null)).toEqual(['https://cdn.example.org/a%3Cb.jpg']);
+  });
+
+  test('l’única fita nova: més de 32 noms de contingut distints sense tancar en un tros, i ja no se n’hi busca cap més', () => {
+    const amb = (n) => RSS_ITEM(Array.from({ length: n }, (_, i) => `<p${i}:description>`).join('') + '<description><![CDATA[<img src="https://cdn.example.org/z.png">]]></description>');
+    expect(imatgesDelFeed(amb(32))).toEqual(['https://cdn.example.org/z.png']);
+    expect(imatgesDelFeed(amb(33))).toEqual([]);
   });
 });
