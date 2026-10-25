@@ -4,9 +4,9 @@
   "actor": "maria",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 15,
+  "revision": 17,
   "createdAt": "2026-10-24T23:58:08.405Z",
-  "updatedAt": "2026-10-25T01:44:06.498Z",
+  "updatedAt": "2026-10-25T04:33:28.142Z",
   "expiresAt": "2026-10-25T23:58:08.406Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3818,6 +3818,22 @@
         "committedAt": "2026-10-25T01:44:06.498Z",
         "documentHash": "4029589d5c487f1f7c456e577651aafee8fd2a16beb293001210715a8030960b"
       }
+    },
+    "2e8e9169-dca8-444f-bfc3-8d5dde8bf193": {
+      "id": "2e8e9169-dca8-444f-bfc3-8d5dde8bf193",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261025_0530_acta_marmota_triomf_desplegament_produccio_i_subvencio.md",
+      "contractSnapshot": "c87eb570dea112730a73f1d420d0113fbce4ac8f2ce35522fb57b31fdb42aa92",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-25T04:33:28.105Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-25T04:33:28.106Z",
+        "committedAt": "2026-10-25T04:33:28.142Z",
+        "documentHash": "ce2aaf08f44967f1668c9c14ea9bc5ccd903c2c91dd23ebdf7ff6b0f268eb558"
+      }
     }
   },
   "plan": null,
@@ -3912,6 +3928,18 @@
       "file": "_wiki_de_poble/04_escriptori/261025_0200_auditoria_gemini.md",
       "at": "2026-10-25T01:44:06.498Z",
       "hash": "4029589d5c487f1f7c456e577651aafee8fd2a16beb293001210715a8030960b"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-25T04:33:28.106Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "2e8e9169-dca8-444f-bfc3-8d5dde8bf193",
+      "file": "_wiki_de_poble/10_actes/261025_0530_acta_marmota_triomf_desplegament_produccio_i_subvencio.md",
+      "at": "2026-10-25T04:33:28.142Z",
+      "hash": "ce2aaf08f44967f1668c9c14ea9bc5ccd903c2c91dd23ebdf7ff6b0f268eb558"
     }
   ]
 }

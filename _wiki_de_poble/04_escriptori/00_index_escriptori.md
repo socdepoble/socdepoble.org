@@ -1042,3 +1042,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261022_2330_acta_marmota_consens_cercador_i_preparacio_botigues]]
 - [[../10_actes/261024_1945_acta_marmota_triomf_commit_472f704d0_fortificacio_i_obertura_gauntlet]]
 - [[../10_actes/261025_0255_acta_marmota_triomf_commits_i_reforma_editorial]]
+- [[../10_actes/261025_0530_acta_marmota_triomf_desplegament_produccio_i_subvencio]]
