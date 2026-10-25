@@ -148,7 +148,7 @@ describe('llista i detall', () => {
     expect(element('Incomplet de prova').textContent).toContain('Incomplet');
 
     const article = within(detall());
-    expect(article.getByRole('heading', { level: 3, name: 'Lector de prova' })).toBeTruthy();
+    expect(article.getByRole('heading', { level: 4, name: 'Lector de prova' })).toBeTruthy();
     expect(article.getByText('Llig una carpeta de prova i en fa un resum.')).toBeTruthy();
     expect(article.getByText('La carpeta que tries')).toBeTruthy();
     expect(article.getByText('Un full de resum')).toBeTruthy();
@@ -167,11 +167,11 @@ describe('llista i detall', () => {
     expect(fonts.querySelector('pre code').textContent).toBe('export const lector = 1;\n');
   });
 
-  test('la fitxa es pinta sanejada i penja de l\'h3: cap h1 ni h2 dins del panell', async () => {
+  test('la fitxa es pinta sanejada i penja de l\'h4 del tractor: cap h1 ni h2 dins del panell', async () => {
     const { container } = await munta();
     const fitxa = within(screen.getByRole('region', { name: 'Fitxa explicativa' }));
-    expect(fitxa.getByRole('heading', { level: 4, name: 'Lector de prova' })).toBeTruthy();
-    expect(fitxa.getByRole('heading', { level: 5, name: 'Què no fa mai' })).toBeTruthy();
+    expect(fitxa.getByRole('heading', { level: 5, name: 'Lector de prova' })).toBeTruthy();
+    expect(fitxa.getByRole('heading', { level: 6, name: 'Què no fa mai' })).toBeTruthy();
     expect(fitxa.getByText('No envia res.')).toBeTruthy();
     expect(fitxa.getByText('# açò és codi, no un títol')).toBeTruthy();
     expect(container.querySelector('h1')).toBeNull();
@@ -182,7 +182,7 @@ describe('llista i detall', () => {
 
   test('rebaixaTitols no toca el codi i no passa de h6', () => {
     expect(rebaixaTitols('# Un\n## Dos\n##### Cinc\n```\n# codi\n```\n#sense-espai'))
-      .toBe('### Un\n#### Dos\n###### Cinc\n```\n# codi\n```\n#sense-espai');
+      .toBe('#### Un\n##### Dos\n###### Cinc\n```\n# codi\n```\n#sense-espai');
     expect(rebaixaTitols(null)).toBe('');
   });
 
@@ -467,12 +467,24 @@ describe('exportar i oblidar', () => {
 });
 
 describe('el que diu de l’empremta és exacte', () => {
-  /* Què cobrix (cada línia de les fonts llistades: el tractor, la seua
-     interfície i la porta) ho diu l'entradilla de la pàgina de la Wiki, i es
-     prova a WikiDePobleSection.einesLocals.test.jsx; el panell diu què no. */
-  test('els components comuns no hi entren', async () => {
+  /* Què cobrix l'empremta (cada línia de les fonts llistades: el tractor, la
+     seua interfície i la porta) i què no (els components comuns de l'app) ho
+     diu l'entradilla de la pàgina de la Wiki, i es prova a
+     WikiDePobleSection.einesLocals.test.jsx. IDEA-27 (ordre del Mestre,
+     261025): el panell ja no ho repetix davall de l'h3. */
+  test('el panell no repetix l’entradilla de la pàgina', async () => {
     const { container } = await munta();
-    const panell = container.querySelector('.sdp-tractors-panell').textContent;
-    expect(panell).toMatch(/Els components comuns de l’app .* no hi entren/);
+    expect(container.querySelector('.sdp-tractors-panell').textContent).not.toMatch(/Els components comuns de l’app/);
+  });
+
+  test('IDEA-27: davall de l’h3, el paràgraf de cos que explica el botó DEV i, després, el botó', async () => {
+    await munta();
+    const boto = screen.getByRole('button', { name: 'Aprovar tots els pendents (DEV)' });
+    const explicacio = document.getElementById(boto.getAttribute('aria-describedby'));
+    expect(explicacio.tagName).toBe('P');
+    expect(explicacio.className).toBe('');
+    expect(explicacio.previousElementSibling).toBe(screen.getByRole('heading', { level: 3, name: 'Porta d’aprovació de tractors' }));
+    expect(explicacio.compareDocumentPosition(boto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(boto.closest('.sdp-accions')).toBe(explicacio.nextElementSibling);
   });
 });

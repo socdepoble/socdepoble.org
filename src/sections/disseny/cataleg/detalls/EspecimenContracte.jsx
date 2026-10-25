@@ -34,7 +34,9 @@ export default function EspecimenContracte() {
         <dt><strong>Mitjà (720–1089 px)</strong></dt><dd>Llista + contingut; Carpetes apareix com a panell superposat.</dd>
         <dt><strong>Estret (&lt; 720 px)</strong></dt><dd>Un panell visible cada vegada; els panells fora de pantalla són <code>inert</code>.</dd>
       </dl>
-      <pre><code>{`<UniversalWorkspace
+      {/* IDEA-26 (directriu del Mestre, 261025) · El bloc es desplaça dins de la
+          seua caixa: amb el teclat també (tabIndex i nom, com Taula). */}
+      <pre tabIndex={0} role="region" aria-label="Exemple d’ús d’UniversalWorkspace"><code>{`<UniversalWorkspace
   model={{ navigationGroups, items }}
   labels={{ categories: 'CARPETES', items: 'NOTES' }}
   renderItem={(ctx) => <NotaFitxa {...ctx} />}

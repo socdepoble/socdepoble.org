@@ -487,6 +487,42 @@ export const CAPACITATS = Object.freeze({
     'estatSeguiment',
     'elsMeusSeguiments',
     'quiEmSegueix'
+  ]),
+  /* IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla
+     261025_0200) · «Si connectes amb una empresa i la persona propietària té
+     el perfil públic, t'hi pots connectar també a la mateixa pantalla». El
+     servidor no diu mai qui administra una entitat (2610250100): la titular
+     només es mostra si ELLA ho ha triat (consentimentTitular, davall).
+     Capacitat a banda a posta, i no dins de 'directori' (el control de
+     capacitat parcial de backendPort.js tombaria la fitxa pública en un
+     amfitrió que no la té, com 'directoriEntitats'), ni amb la tria (un
+     amfitrió pot mostrar la titular sense gestionar-ne la tria). Opcional:
+     sense ella, /connectar no en diu res. Forma (config sempre l'últim):
+       loadTitularPublic(orgId, config) → Promise<{ tipus: 'persona', id, nom, avatar } | null>
+         La propietària (role 'owner'; mai una administradora ni qui ha
+         publicat res) d'una organització pública, NOMÉS si ha triat
+         mostrar-se, té el perfil públic, no ha demanat la baixa i cap
+         bloqueig no la separa de qui mira; si no, null (també d'una
+         organització que no existix), sense dir per què. Mai cap correu ni
+         cap rol. Sense sessió, null i cap petició. Un servidor sense la
+         migració, null. Els errors només són els de no arribar (un tall,
+         una cancel·lació). Ho servix 2610250300_titular_public.sql. */
+  titularPublic: Object.freeze([
+    'loadTitularPublic'
+  ]),
+  /* IDEA-22, punt 2 · La tria de la propietària: només ella (role 'owner' i
+     la seua sessió) la llig o la canvia; una administradora no la pot fer per
+     ella. Opcional: sense ella, la gestió dels membres no pinta la casella.
+     Formes (config sempre l'últim):
+       estatTitularPublic(orgId, config) → Promise<{ titularPublic: boolean }>
+       marcaTitularPublic(orgId, titularPublic, config) → Promise<{ titularPublic: boolean }>
+         titularPublic és un booleà (si no, SDP-TIT-002); torna el valor desat.
+     Els errors porten `code` de MISSATGES_TITULAR (SDP-TIT-000 sense sessió,
+     SDP-TIT-001 si no n'és la propietària o l'organització no existix), o
+     NO-DISPONIBLE si el servidor encara no té la migració. */
+  consentimentTitular: Object.freeze([
+    'estatTitularPublic',
+    'marcaTitularPublic'
   ])
 });
 
@@ -783,4 +819,36 @@ export function comDelContracte(dades) {
   if (!id) return null;
   if (!RE_ID_SEGUIT.test(id)) throw errorDeSeguiment('SDP-SEG-001');
   return id;
+}
+
+/* IDEA-22, punt 2 (pla 261025_0200) · Els codis de la tria de la titular
+   (capacitat 'consentimentTitular'), els mateixos que
+   supabase/migrations/2610250300_titular_public.sql, que contrasta
+   src/data/supabase/titularPublic.migracio.test.js. La lectura
+   (loadTitularPublic) no en té cap: torna null sense dir per què. */
+export const MISSATGES_TITULAR = Object.freeze({
+  'SDP-TIT-000': 'Cal entrar al compte per a triar si et mostrem com a titular.',
+  'SDP-TIT-001': 'Només la propietària de l’organització pot triar si es mostra com a titular.',
+  'SDP-TIT-002': 'La tria no és vàlida.',
+  'NO-DISPONIBLE': 'El servidor encara no sap mostrar la titular. Cal aplicar la migració pendent.',
+  DESCONEGUT: 'No s’ha pogut completar. Torna-ho a provar.'
+});
+
+/** Un Error amb el `code` de MISSATGES_TITULAR (un codi desconegut és DESCONEGUT) i, si n'hi ha, la causa. Pura. */
+export function errorDeTitular(codi, cause) {
+  const code = Object.hasOwn(MISSATGES_TITULAR, codi) ? codi : 'DESCONEGUT';
+  return Object.assign(new Error(MISSATGES_TITULAR[code], cause ? { cause } : undefined), { code });
+}
+
+/**
+ * La titular de loadTitularPublic amb la forma del contracte, i res més (cap
+ * correu ni cap rol encara que l'adaptador en porte): { tipus: 'persona', id,
+ * nom, avatar } o null. Pura.
+ */
+export function titularDelContracte(valor) {
+  if (!valor || typeof valor !== 'object' || valor.tipus !== 'persona') return null;
+  const id = typeof valor.id === 'string' || typeof valor.id === 'number' ? String(valor.id).trim() : '';
+  const nom = typeof valor.nom === 'string' ? valor.nom.trim() : '';
+  if (!id || !nom) return null;
+  return { tipus: 'persona', id, nom, avatar: typeof valor.avatar === 'string' ? valor.avatar : '' };
 }

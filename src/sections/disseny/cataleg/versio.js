@@ -15,7 +15,23 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenIdentitat.jsx, 2026-10-24T14:14:07+02:00, pla 261024_1315 (T6a,
+ * Darrera posada al dia: Especimen.jsx, EspecimenContracte.jsx, EspecimenDialeg.jsx, EspecimenConfirmacio.jsx i
+ * EspecimenCalaix.jsx, 2026-10-25T04:51:24+01:00, pla 261025_0200 (IDEA-26 i IDEA-27, ordre del Mestre; auditories
+ * Gemini G0200-01 i Codex C0200-05, i la revisió adversarial del torn): el bloc d'accions
+ * canònic, Accions (PedraSeca/composicio, entrada nova al registre i mostra a EspecimenComposicio),
+ * va després del paràgraf que l'explica a EspecimenSelectorVisibilitat.jsx, EspecimenIdentitat.jsx,
+ * EspecimenShell.jsx, EspecimenEnquadrament.jsx (també les seues tres files d'accions, i el pla
+ * 261025_0045 del retall compacte, que ja hi era), EspecimenXat.jsx, EspecimenToast.jsx i
+ * EspecimenDetallArticle.jsx; els casos embolicats en un <div> nu (EspecimenResumConnexio.jsx,
+ * EspecimenEstatDesament.jsx i els de dalt) són Fragments i l'h4 recupera els
+ * 32px de dalt; els diàlegs tancats van fora de la caixa de mostra; la taula de ritme
+ * d'EspecimenTipografia diu --sdp-mb-h4 16px; Boto i EspecimenBoto diuen 48 i 58px. A
+ * Especimen.jsx (observacions del Mestre del mateix torn), el capçal respira 16px fins al
+ * text i la taula del contracte es desplaça dins de la seua caixa (una regió amb el nom del
+ * contracte i de la fitxa), amb els noms sencers; a EspecimenContracte.jsx el bloc de codi
+ * d'UniversalWorkspace es desplaça dins de la seua caixa i s'hi arriba amb el teclat. Cap
+ * espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenIdentitat.jsx, 2026-10-24T14:14:07+02:00, pla 261024_1315 (T6a,
  * IDEA-14; auditoria Gemini 261024, G-04): administrar no és connectar. La mostra 'pot-connectar'
  * amb revisió diu «Pot demanar administrar-la (amb revisió)», com el botó «Demanar administrar-la»
  * de TargetaAdministrar, i el «No facis» deixa de dir «connectar» a administrar una organització
@@ -200,4 +216,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-24T14:14:07+02:00';
+export const VERSIO_CATALEG = '2026-10-25T04:51:24+01:00';

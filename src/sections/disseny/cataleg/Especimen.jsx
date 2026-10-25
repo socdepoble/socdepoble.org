@@ -13,9 +13,13 @@ export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [
       </header>
       {descripcio ? <p>{descripcio}</p> : null}
       <div className="sdp-especimen__viu">{children}</div>
+      {/* IDEA-26 (observació del Mestre, 261025) · Els noms del contracte no es
+          parteixen mai: si la taula no cap a la columna, es desplaça dins de la
+          seua caixa (com Taula de Pedra Seca), no la pàgina sencera. */}
       {contracte.length ? (
+        <div className="sdp-especimen__contracte" role="region" aria-labelledby={`${id}-contracte ${id}-nom`} tabIndex={0}>
         <table>
-          <caption>Contracte</caption>
+          <caption id={`${id}-contracte`}>Contracte</caption>
           <thead><tr><th scope="col">Prop</th><th scope="col">Tipus</th><th scope="col">Per defecte</th><th scope="col">Què fa</th></tr></thead>
           <tbody>
             {contracte.map(([prop, tipus, defecte, que]) => (
@@ -23,6 +27,7 @@ export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [
             ))}
           </tbody>
         </table>
+        </div>
       ) : null}
       {a11y.length ? (
         <>

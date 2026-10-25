@@ -1,0 +1,27 @@
+{
+  "id": "014a9f4f-91c6-4cfa-96f4-50d62fff09f4",
+  "session": "94d149d1-642f-49ef-a41e-aefafadbd5eb",
+  "operationId": "sdp-t4-precommit-b-261024-94d149d1",
+  "claim": "94d149d1-642f-49ef-a41e-aefafadbd5eb:governance-write",
+  "planHash": "bf60db80db267b692aee41c7fb26926802a6cb797ca70722e3a41663d6241936",
+  "beforeSeal": "36c3703a3d1c9fe98d66243f0ce995497a4d8359667d20362bea9e9eb44dc6d8",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "70ca3ae79a1efb60d39025294a0fac4862fd7d996ba2a67704e0460e2a8ab937",
+      "after": "96541d96c760d690a8a9f3dadb467bbdfec90053fdb5e3f62156f8b243358cd5"
+    },
+    {
+      "path": "tooling/gates/git-staged.mjs",
+      "before": "b357601aeb2909bf4ae24048fc326d60081d5a4efffcfb3dfea53cad5d9ad337",
+      "after": "cbcf8b851be85e79d5d3765943e5307a243e8389c659cc6d74793a64f39e5f6c"
+    },
+    {
+      "path": "tooling/gates/tractor-build-previ.mjs",
+      "before": "da86a246797ab46dc3ef95e5667406a82444c1cc197b577ccfda1c2c665d2c5b",
+      "after": "0b4cd0f35ad904fe3e5cc669c7730f556d497fce184ef8d4662995f0abfd0d3d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

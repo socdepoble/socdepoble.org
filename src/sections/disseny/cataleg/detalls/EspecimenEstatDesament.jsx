@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { Fragment, useLayoutEffect, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Alerta, Boto, SelectorDataHora } from '../../../../components/PedraSeca/index.js';
 import { EstatDesament } from '../../../../components/universal/EstatDesament.jsx';
@@ -55,8 +55,10 @@ export default function EspecimenEstatDesament() {
       fes={['Un sol lloc per a l’estat del desament: la barra taronja.', 'Dir on es guarda el text de veres: «en este dispositiu» (IndexedDB) o «en esta pestanya».']}
       noFacis={['Avisar amb un toast efímer d’un error de desat: el text es perdria en eixir.', 'Retallar un text en silenci perquè càpiga: la persona ha de decidir.', 'Dir «desat» abans que el servidor ho haja confirmat.', 'Fer desaparéixer el check amb un temporitzador: la certesa ha de durar fins al canvi següent.']}>
 
+      {/* IDEA-26 (261025) · Sense embolcall: l'h4 de cada estat conserva els seus
+          32px de dalt i ja no toca la barra de l'estat d'abans. */}
       {ESTATS.map(([estat, text]) => (
-        <div key={estat}>
+        <Fragment key={estat}>
           <h4>{estat}</h4>
           <p>{text}</p>
           <div className="sdp-especimen__barres">
@@ -69,7 +71,7 @@ export default function EspecimenEstatDesament() {
                 </>
               )} />
           </div>
-        </div>
+        </Fragment>
       ))}
 
       <h4>Error en línia d’un camp</h4>

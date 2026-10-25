@@ -57,6 +57,20 @@
  *     lectura (catàleg d'agents) no es modifiquen mai ací: porten el
  *     naixement del magatzem.
  * Cap data fixa escrita a mà: el rellotge és injectable (`ara`) per a les proves.
+ *
+ * IDEA-22, punt 2 (Directiva del Mestre; pla 261025_0200) · La titular que
+ * ha triat mostrar-se a Connectar (capacitats 'titularPublic' i
+ * 'consentimentTitular'), amb les regles de titular_public (2610250300):
+ *   · només la propietària (rolDe 'owner', mai una administradora) tria, i la
+ *     tria es queda en memòria (`titulars`);
+ *   · una pertinença owner que declare la llavor amb `titularPublic: true`
+ *     també compta, i la persona del padró ha de portar `publica: true`. A
+ *     posta, CAP entitat de la llavor no ho declara: la persona pilot és de
+ *     veres, i la seua tria és seua;
+ *   · es mostra si la persona té la fitxa pública i sense la baixa, si
+ *     l'organització és pública i si qui mira no l'ha bloquejada (la
+ *     moderació local només coneix els bloquejos de qui mira). Mai cap correu
+ *     ni cap rol; sense sessió, null.
  */
 /* Gauntlet 261016 (Bloc 3) · `tipusDAgent`: la font única del tipus de perfil
    d'un agent del catàleg (un personatge ANIMAL és una IA). Abans n'hi havia
@@ -66,7 +80,7 @@ import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
 } from './identitatsSeed.js';
 import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
-import { errorDeMembre, membreDOrganitzacio } from './contracte.js';
+import { errorDeMembre, errorDeTitular, membreDOrganitzacio } from './contracte.js';
 import { esDelPobleDelFiltre, pobleDelFiltre } from './pobleOrganitzacio.js';
 import { emojiSol } from '../utils/emoji.js';
 
@@ -128,7 +142,10 @@ function creaMagatzem(entitats, naixement) {
     connexions: new Map(),
     contactes: new Map(),
     /* Grup C · orgId → membreOrgId → desDe. */
-    organitzacionsMembre: new Map()
+    organitzacionsMembre: new Map(),
+    /* IDEA-22, punt 2 · orgId → usuariId de la propietària que ha triat
+       mostrar-se, o null si ha dit que no (mana sobre la marca de la llavor). */
+    titulars: new Map()
   };
 }
 
@@ -251,6 +268,34 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
   /* L'ordre de membres_organitzacio: les persones primer, i per nom i id. */
   const ordenaMembres = (llista) => llista.sort((a, b) => (a.tipus === b.tipus ? 0 : a.tipus === 'persona' ? -1 : 1)
     || a.nom.localeCompare(b.nom, 'ca') || a.id.localeCompare(b.id));
+
+  /* IDEA-22, punt 2 · La titular d'una organització: la tria de la
+     propietària (si encara n'és) o, sense cap tria, la marca de la llavor. */
+  const declaratsDe = (orgId) => entitats.find((entitat) => String(entitat.id) === String(orgId))?.membres || [];
+  const titularDe = (org) => {
+    const clau = String(org.id);
+    if (estat.titulars.has(clau)) {
+      const triada = estat.titulars.get(clau);
+      return triada && rolDe(org.id, { id: triada }) === 'owner' ? triada : null;
+    }
+    const declarada = declaratsDe(org.id).find((m) => m.role === 'owner' && m.titularPublic === true);
+    return declarada ? String(declarada.usuariId) : null;
+  };
+  /* La fitxa local de la persona (pública i sense baixa; la de qui mira naix com en entrar) o, si no
+     n'hi ha, la del padró marcada `publica`. */
+  const fitxaDeTitular = (personaId, usuari) => {
+    const fitxa = estat.perfils.get(personaId) || (usuari?.id != null && String(usuari.id) === personaId ? perfilDe(usuari) : null);
+    if (fitxa) return fitxa.is_public === true && !fitxa.baixa_demanada_at ? { id: fitxa.id, nom: fitxa.full_name, avatar: fitxa.avatar_url } : null;
+    const delPadroLocal = delPadro(personaId);
+    return delPadroLocal?.publica === true ? { id: delPadroLocal.id, nom: delPadroLocal.nom, avatar: delPadroLocal.avatar } : null;
+  };
+  /* Només la propietària llig o canvia la seua tria (SDP-TIT-001 també si l'organització no existix). */
+  const orgDeLaPropietaria = (orgId, usuari) => {
+    if (!usuari?.id) throw errorDeTitular('SDP-TIT-000');
+    const org = trobaOrg(orgId);
+    if (!org || rolDe(org.id, usuari) !== 'owner') throw errorDeTitular('SDP-TIT-001');
+    return org;
+  };
 
   const publicDePersona = (perfil, usuari) => ({
     tipus: 'persona', id: perfil.id, slug: perfil.slug || null, nom: perfil.full_name, avatar: perfil.avatar_url || '',
@@ -505,6 +550,36 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       }
       const membreOrg = trobaOrg(membre.id);
       return { llevat: Boolean(membreOrg) && estat.organitzacionsMembre.get(String(org.id))?.delete(membreOrg.id) === true };
+    },
+
+    /**
+     * IDEA-22, punt 2 · La titular que ha triat mostrar-se, o null sense dir
+     * per què (també d'una organització que no existix). `bloquejos`: els de
+     * qui mira (la moderació local).
+     */
+    loadTitularPublic(orgId, usuari, { bloquejos = [] } = {}) {
+      if (!usuari?.id) return null;
+      const org = trobaOrg(orgId);
+      if (!org || org.visibility !== 'public') return null;
+      const personaId = titularDe(org);
+      const fitxa = personaId ? fitxaDeTitular(personaId, usuari) : null;
+      if (!fitxa?.nom) return null;
+      const bloquejada = (Array.isArray(bloquejos) ? bloquejos : [])
+        .some((bloqueig) => bloqueig?.tipus === 'persona' && String(bloqueig.id) === String(fitxa.id));
+      return bloquejada ? null : { tipus: 'persona', id: String(fitxa.id), nom: fitxa.nom, avatar: fitxa.avatar || '' };
+    },
+
+    /** IDEA-22, punt 2 · La tria de la propietària, només per a ella. */
+    estatTitularPublic(orgId, usuari) {
+      const org = orgDeLaPropietaria(orgId, usuari);
+      return { titularPublic: titularDe(org) === String(usuari.id) };
+    },
+
+    marcaTitularPublic(orgId, titularPublic, usuari) {
+      if (typeof titularPublic !== 'boolean') throw errorDeTitular('SDP-TIT-002');
+      const org = orgDeLaPropietaria(orgId, usuari);
+      estat.titulars.set(String(org.id), titularPublic ? String(usuari.id) : null);
+      return { titularPublic };
     },
 
     /** Per a les proves: oblida els canvis. */

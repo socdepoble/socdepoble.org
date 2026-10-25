@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
-import { Boto } from '../../../../components/PedraSeca/index.js';
+import { Accions, Boto } from '../../../../components/PedraSeca/index.js';
 import { BotoIdentitatActiva } from '../../../../components/universal/identitat/BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from '../../../../components/universal/identitat/CalaixIdentitats.jsx';
 import { TargetaAdministrar } from '../../../connectar/organitzacio/TargetaAdministrar.jsx';
@@ -66,16 +66,26 @@ export default function EspecimenIdentitat() {
         </div>
       </section>
 
+      {/* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · El títol, el paràgraf que
+          diu per a què és el botó i el botó dins d'Accions. */}
       <h4>Calaix «Amb qui actues?»</h4>
-      <Boto onClick={() => setObert(true)}>Obrir el calaix d’identitats</Boto>
+      <p>Deixa canviar d’identitat. A la barra negra l’obri l’avatar quan hi ha més d’una identitat; amb una sola, l’avatar porta directament al perfil.</p>
+      <Accions>
+        <Boto onClick={() => setObert(true)}>Obrir el calaix d’identitats</Boto>
+      </Accions>
       <CalaixIdentitats obert={obert} onTanca={() => setObert(false)} identitats={IDENTITATS}
         onTria={() => setObert(false)} onConnectar={() => setObert(false)} onFitxa={() => setObert(false)} />
 
+      {/* IDEA-26 (261025) · L'h4 de cada estat, fora de la seua regió: com a
+          primer fill es quedava sense els 32px de dalt i tocava l'estat d'abans.
+          La regió conserva el nom (aria-label) i embolcalla la targeta. */}
       {ESTATS.map(([titol, props]) => (
-        <section key={titol} aria-label={titol}>
+        <Fragment key={titol}>
           <h4>{titol}</h4>
-          <TargetaAdministrar nom="Forn de la Torre" {...props} onConnecta={res} onActua={res} onEditaFitxa={res} onEntra={res} />
-        </section>
+          <section aria-label={titol}>
+            <TargetaAdministrar nom="Forn de la Torre" {...props} onConnecta={res} onActua={res} onEditaFitxa={res} onEntra={res} />
+          </section>
+        </Fragment>
       ))}
     </Especimen>
     </>

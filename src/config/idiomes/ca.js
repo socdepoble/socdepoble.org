@@ -519,6 +519,10 @@ export default {
   'section.connectar.autor.textLlavor': 'Obri una conversa privada amb {nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.',
   'section.connectar.autor.boto': 'Escriu-li a {nom}',
   'section.connectar.autor.entra': 'Entra per a escriure-li a {nom}',
+  /* C0200-02 (auditoria Codex 261025_0200) · Amb el barret d’una entitat, el xat continua sent el de la persona; IDEA-22 (punt 2) · la titular que ha triat mostrar-se. */
+  'section.connectar.autor.botoCom': 'Escriu-li a {nom} com a {persona}',
+  'section.connectar.autor.textCom': 'El xat és personal: {nom} veurà que li escriu {persona}, no {entitat}, que ací no té xat propi.',
+  'section.connectar.titular.intro': '{nom} és titular de {entitat} i ha triat que es veja ací.',
   'section.connectar.lead': 'Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després.',
   'section.connectar.leadCamins': 'Cada camí té el seu botó: connectar amb algú o escriure-li no et fa membre de res. Si guardes l’element a les teues notes en privat, no avisa ningú; si tries persones o grups de xat, els enviarem l’enllaç.',
   'section.connectar.camins.relacio': 'Connexió directa',
@@ -551,6 +555,7 @@ export default {
   'section.connectar.seguir.avisatCom': 'Has connectat {entitat} amb {nom}. No li hem enviat cap missatge al xat: ho veurà a la llista del veïnat connectat.',
   'section.connectar.seguir.deixat': 'Has deixat la connexió amb {nom}. No li hem dit res.',
   'section.connectar.seguir.noDisponible': 'Este poble encara no permet connectar amb ningú des de l’app: de moment, la relació és la conversa.',
+  'section.connectar.seguir.noDisponiblePropia': 'Este poble encara no permet connectar les teues identitats entre elles des de l’app.',
   'section.connectar.seguir.senseSessio': 'Per a connectar amb {nom} has d’entrar amb el teu compte.',
   'section.connectar.seguir.comprovant': 'Comprovant la connexió amb {nom}…',
   'section.connectar.seguir.errorLectura': 'No s’ha pogut comprovar la connexió amb {nom}.',
@@ -1059,6 +1064,14 @@ export default {
   'section.perfil.public.aparador.agenda.buit': '{nom} no té cap acte recent a l’Agenda d’este poble.',
   /* T6b (IDEA-14; decisió del Mestre, 261024) · «Veïnat connectat amb tu», a la fitxa pròpia (Seguidors.jsx).
      P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · el vocabulari de connectar, no el d'una xarxa social. */
+  /* IDEA-22 (punt 2; pla 261025_0200) · La propietària tria si es mostra com a titular a Connectar (titular_public, 2610250300). */
+  'section.perfil.titular.etiqueta': 'Mostra’m com a titular de {nom} a Connectar',
+  'section.perfil.titular.ajuda': 'Qui connecte amb {nom} també podrà connectar amb tu, a la mateixa pantalla. Només es veu mentre el teu perfil i l’entitat siguen públics; ho pots llevar quan vulgues, i ningú més no ho pot triar per tu.',
+  'section.perfil.titular.desant': 'Desant la tria…',
+  'section.perfil.titular.desat': 'Desat: et mostrarem com a titular de {nom} a Connectar mentre el teu perfil i l’entitat siguen públics.',
+  'section.perfil.titular.llevat': 'Ja no et mostrem com a titular de {nom}.',
+  'section.perfil.titular.error': 'No s’ha pogut desar la tria. Torna-ho a provar.',
+  'section.perfil.titular.errorLectura': 'No s’ha pogut llegir si et mostrem com a titular.',
   'section.perfil.seguidors.titol': 'Veïnat connectat amb tu',
   'section.perfil.seguidors.ajuda': 'Cada persona o entitat d’esta llista ha triat connectar amb tu: cap algoritme no hi decidix res. Esta llista només la veus tu.',
   'section.perfil.seguidors.carregant': 'Carregant el veïnat connectat amb tu…',

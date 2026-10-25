@@ -49,13 +49,21 @@ import { TEXTOS_ERROR_SEGUIMENT, useSeguiment } from './useSeguiment.js';
    entitat no ix cap missatge al xat (el xat personal diria quina persona
    l'administra; revisió adversarial 261025): es diu abans del clic i
    després. La conversa privada («Escriu-li») continua sent de la persona.
-   Sense `com`, la persona, com sempre. */
-export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = false, onEntra, dataMode = 'remote', config = {}, com = null, nomCom = '' }) {
+   Sense `com`, la persona, com sempre.
+   C0200-02 (auditoria Codex 261025_0200) · Amb `com`, el xat continua sent
+   el personal de qui mira (`nomPersona`), i es diu ABANS del clic: el botó
+   «Escriu-li a {nom} com a {persona}» i una línia que el xat és personal
+   (l'entitat no en té cap de propi ací). Cap missatgeria d'entitat.
+   C0200-06 · Un contacte que és de qui mira (`propia`) no té xat: mai un
+   directe amb tu mateixa. I sense `com` no es connecta: persona → ella
+   mateixa o → una entitat que administra no val (SDP-SEG-003). */
+export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = false, onEntra, dataMode = 'remote', config = {}, com = null, nomCom = '', nomPersona = '' }) {
   const id = useId();
   const { t } = useUIActions();
   const obriXat = useComentaEnPrivat(contacte?.interlocutor ?? null);
   const ambEntitat = Boolean(com) && Boolean(nomCom);
-  const seguiment = useSeguiment(contacte, {
+  const propi = Boolean(contacte?.propia);
+  const seguiment = useSeguiment(propi && !ambEntitat ? null : contacte, {
     config,
     com: ambEntitat ? com : null,
     missatgeAvis: t('section.connectar.seguir.missatge', 'Connexió nova: m’he connectat amb tu a Sóc de Poble.')
@@ -91,6 +99,8 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
 
   /* R3-11 · En llavor i en local el xat és d'este dispositiu: ningú no rep res. */
   const remot = dataMode === 'remote';
+  /* C0200-02 · Amb el barret d'una entitat, el xat és el de la persona: el botó ho diu. */
+  const xatComPersona = ambEntitat && Boolean(nomPersona) && !calEntrar;
   const textDelResultat = {
     avisat: () => (remot
       ? ambNom('section.connectar.seguir.avisat', 'T’has connectat amb {nom}. Li hem enviat un missatge al xat.')
@@ -112,7 +122,13 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
   let seguir;
   switch (seguiment.estat) {
     case 'no-disponible':
-      seguir = (
+      /* C0200-06 · Amb una identitat pròpia no hi ha conversa que fer de
+         relació (cap xat amb tu mateixa): el text ho diu sense prometre-la. */
+      seguir = propi ? (
+        <p className="sdp-connectar__ajuda">
+          {t('section.connectar.seguir.noDisponiblePropia', 'Este poble encara no permet connectar les teues identitats entre elles des de l’app.')}
+        </p>
+      ) : (
         <p className="sdp-connectar__ajuda">
           {t('section.connectar.seguir.noDisponible', 'Este poble encara no permet connectar amb ningú des de l’app: de moment, la relació és la conversa.')}
         </p>
@@ -187,15 +203,26 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           conversa, i l'autor la veu a la seua llista abans de cap missatge;
           en llavor (CN-R4) la conversa és d'este dispositiu i l'autor no la
           veu: un altre text. CA-6: el botó diu amb qui (el nom de l'element
-          resolt), i tot passa per t(). */}
-      <p>{remot
-        ? ambNom('section.connectar.autor.text', 'Obri una conversa privada amb {nom}. Li apareixerà de seguida a la seua llista de converses, però no rebrà cap missatge fins que l’escrigues.')
-        : ambNom('section.connectar.autor.textLlavor', 'Obri una conversa privada amb {nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.')}</p>
-      <Boto varietat="secundari" onClick={() => (calEntrar ? onEntra?.() : obriXat())}>
-        {calEntrar
-          ? ambNom('section.connectar.autor.entra', 'Entra per a escriure-li a {nom}')
-          : ambNom('section.connectar.autor.boto', 'Escriu-li a {nom}')}
-      </Boto>
+          resolt), i tot passa per t().
+          C0200-06 · Amb tu mateixa (o una entitat teua), cap xat. */}
+      {propi ? null : (
+        <>
+          <p>{remot
+            ? ambNom('section.connectar.autor.text', 'Obri una conversa privada amb {nom}. Li apareixerà de seguida a la seua llista de converses, però no rebrà cap missatge fins que l’escrigues.')
+            : ambNom('section.connectar.autor.textLlavor', 'Obri una conversa privada amb {nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.')}</p>
+          {/* C0200-02 · El barret d'entitat no val per al xat: es diu abans del clic, amb el nom de la persona. */}
+          {xatComPersona && remot ? (
+            <p>{omple(t('section.connectar.autor.textCom', 'El xat és personal: {nom} veurà que li escriu {persona}, no {entitat}, que ací no té xat propi.'), { nom, persona: nomPersona, entitat: nomCom })}</p>
+          ) : null}
+          <Boto varietat="secundari" onClick={() => (calEntrar ? onEntra?.() : obriXat())}>
+            {calEntrar
+              ? ambNom('section.connectar.autor.entra', 'Entra per a escriure-li a {nom}')
+              : xatComPersona
+                ? omple(t('section.connectar.autor.botoCom', 'Escriu-li a {nom} com a {persona}'), { nom, persona: nomPersona })
+                : ambNom('section.connectar.autor.boto', 'Escriu-li a {nom}')}
+          </Boto>
+        </>
+      )}
     </section>
   );
 }

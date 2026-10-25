@@ -32,6 +32,27 @@
   .sdp-costat { display: grid; }
   .sdp-centre { margin-inline: auto; max-width: var(--sdp-measure); box-sizing: content-box; }
   .sdp-superficie { background: var(--sdp-fons-superficie); }
+  /* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · El bloc d'accions canònic
+     (composicio · Accions): centrat i a 24px del text de dalt i del de baix.
+     En el flux de la prosa el marge col·lapsa amb el del títol o el paràgraf
+     veí i guanya el major, de manera que la distància és la mateixa davall
+     d'un h2, d'un h4 o d'un paràgraf. Dins d'un contenidor amb gap, el pare
+     li posa el marge a zero. */
+  .sdp-accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-6);
+  }
+  .sdp-accions:first-child { margin-block-start: 0; }
+  .sdp-accions:last-child { margin-block-end: 0; }
+  /* IDEA-26 (261025) · La taula d'un document en Markdown (parseMarkdown.js)
+     es desplaça dins de la seua caixa a qualsevol amplària: la columna de la
+     Wiki és estreta fins i tot en una pantalla ampla, i en talla el sobrant. */
+  .sdp-taula-prosa { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+  .sdp-taula-prosa > :where(table) { display: table; overflow: visible; }
 
   .sdp-wrap { flex-wrap: wrap; }
   .sdp-align-center { align-items: center; }
@@ -502,16 +523,52 @@
     from { opacity: 0; transform: translateX(-50%) scale(var(--sdp-escala-aparicio)); }
   }
 
-  /* ── CATÀLEG (només /disseny) ─────────────────────────────────────── */
-  .sdp-especimen { margin-bottom: var(--sdp-space-10); padding-top: var(--sdp-space-6); border-top: 2px solid var(--sdp-vora); }
-  .sdp-especimen__cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sdp-space-3); }
+  /* IDEA-26 (ordre directa del Mestre, 261025) · Erradicació de la línia
+     divisòria invasiva (border-top): el ritme de les fitxes el dona l'espaiat
+     vertical noble de Pedra Seca, sense línies que trenquen el disseny ni
+     envaeixin l'espai damunt de l'H3. */
+  .sdp-especimen { margin-bottom: var(--sdp-space-8); }
+  .sdp-especimen__cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sdp-space-3); margin-bottom: var(--sdp-space-4); }
+  /* La taula del contracte es desplaça dins de la seua caixa quan la columna
+     és estreta: els noms no es parteixen i la pàgina no corre de costat. */
+  .sdp-especimen__contracte { overflow-x: auto; overscroll-behavior-inline: contain; }
+  .sdp-especimen__contracte:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  /* La caixa és l'única que es desplaça, també en mòbil (on sdp.css fa de
+     cada taula nua el seu propi desplaçament). El nom d'una prop, a la
+     primera columna, és un identificador: no es parteix mai (observació del
+     Mestre del 261025). */
+  .sdp-especimen__contracte :where(table) { display: table; overflow: visible; }
+  .sdp-especimen__contracte :where(td:first-child > code:not([class])) { white-space: nowrap; }
   .sdp-especimen__nom { margin: 0; }
-  .sdp-especimen__fitxer { font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
-  .sdp-especimen__viu {
-    margin-block: var(--sdp-space-4); padding: var(--sdp-space-6); border: 1px dashed var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-m); background: var(--sdp-fons-app);
+  /* IDEA-26 (àudio del Mestre de 01:47, 261025) · La ruta del fitxer és una
+     píndola de codi, la mateixa del <code> en línia (sdp.css), no text
+     monoespai solt. Les rutes llargues tallen per on calga. */
+  .sdp-especimen__fitxer {
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    overflow-wrap: anywhere;
   }
-  .sdp-especimen__fila { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-3); }
+  /* IDEA-26 (àudio del Mestre 04:29, 261025) · Erradicació del filet puntejat
+     (dashed): el component viu reposa sobre una superfície noble de targeta
+     (fons blanquet pur en clar, vora sòlida subtil), mai un quadre decoratiu
+     amb línies puntejades que sembla una alerta o una gàbia provisional. */
+  .sdp-especimen__viu {
+    margin-block: var(--sdp-space-4);
+    padding: var(--sdp-space-6);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  /* IDEA-26 (261025) · La caixa de mostra és un escenari: les files de
+     controls van centrades, i dues peces seguides (fila, mostra o paràgraf)
+     ja no es toquen a 0px. */
+  .sdp-especimen__fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sdp-space-3); }
+  .sdp-especimen__fila + :is(.sdp-especimen__fila, .sdp-especimen__mostra, p) { margin-block-start: var(--sdp-space-4); }
   /* Barres de color mostrades com a espècimen: mai sticky dins del catàleg. */
   .sdp-especimen__barres { margin-bottom: var(--sdp-space-4); border-radius: var(--sdp-radi-s); overflow: hidden; }
   .sdp-especimen__barres > .bar-blue,

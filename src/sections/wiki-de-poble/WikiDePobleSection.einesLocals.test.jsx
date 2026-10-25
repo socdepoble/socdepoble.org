@@ -249,6 +249,22 @@ describe('en desenvolupament', () => {
     const entradilla = arrel.querySelector('.page-intro p.lead').textContent;
     expect(entradilla).toMatch(/cada línia de les fonts llistades/);
     expect(entradilla).toMatch(/el codi del tractor, el de la seua interfície i el d’esta porta/);
+    expect(entradilla).toMatch(/Els components comuns de l’app \(botons, diàlegs, navegació\) no hi entren\. Si en canvia una línia, torna a «pendent»\.$/);
+  });
+
+  /* IDEA-27 (ordre del Mestre, àudio de 01:54 del 261025) · L'entradilla de
+     Sentinelles estava perduda al cos, davall de l'h3 de la porta. Ara és de la
+     pàgina: centrada davall de l'H2, i diu què és un sentinella i què no
+     cobrix l'empremta. */
+  test('Sentinelles: l’entradilla és de la pàgina, davall de l’H2', async () => {
+    const arrel = obri('sentinelles_panell');
+    await screen.findByText('Doble dels Sentinelles');
+    const intro = arrel.querySelector('.page-intro');
+    expect(intro.querySelector('h2').textContent).toBe('Els set sentinelles d’autonomia: aprova’ls i mira què observen');
+    expect(intro.querySelector('h2').nextElementSibling).toBe(intro.querySelector('p.lead'));
+    const entradilla = intro.querySelector('p.lead').textContent;
+    expect(entradilla).toMatch(/^Un sentinella és un tractor que només observa/);
+    expect(entradilla).toMatch(/Els components comuns de l’app \(botons, diàlegs, navegació\) no hi entren/);
   });
 
   test('Traduir no envia el text de l’eina enlloc: ho diu i no obri cap menú', async () => {

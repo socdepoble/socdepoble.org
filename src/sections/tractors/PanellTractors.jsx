@@ -98,9 +98,10 @@ function EmpremtaCurta({ curta }) {
   );
 }
 
-/* La fitxa penja de l'h3 del tractor: els seus títols baixen dos esglaons
-   («#» ix com a h4). Les tanques de codi no es toquen. */
-export function rebaixaTitols(md, salts = 2) {
+/* La fitxa penja de l'h4 del tractor (IDEA-27, 261025: la porta és l'h3 de la
+   pàgina i cada tractor, un h4 dins d'ella): els seus títols baixen tres
+   esglaons («#» ix com a h5). Les tanques de codi no es toquen. */
+export function rebaixaTitols(md, salts = 3) {
   let dinsCodi = false;
   return String(md ?? '').split('\n').map((linia) => {
     if (/^[ \t]*(`{3,}|~{3,})/.test(linia)) {
@@ -283,23 +284,26 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
 
   return (
     <section ref={arrel} className="sdp-tractors-panell" aria-labelledby={idPorta}>
+      {/* IDEA-27 (ordre del Mestre, àudio de 01:54 del 261025) · H3, paràgraf de
+          cos que explica i, després, el botó. L'entradilla («Els components
+          comuns…») és de la pàgina (WikiDePobleSection.jsx), davall de l'H2. */}
       <h3 id={idPorta} ref={titolPorta} tabIndex={-1} className="sdp-tractors-panell__titol">Porta d’aprovació de tractors</h3>
-      <p>
-        Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».
-      </p>
       {import.meta.env.DEV ? (
         <>
-          <div ref={blocTots} className="sdp-tractors-panell__accions">
+          <p id={idBloc}>
+            {pendents ? `${pendents} ${pendents === 1 ? 'pendent' : 'pendents'} d’aprovar. ` : 'Cap tractor pendent. '}
+            Aprovació tècnica del servidor de desenvolupament: no substituïx la lectura de la fitxa ni la revisió
+            reflexiva. La primera aprovació després d’un canvi a la porta mateixa es fa d’una en una.
+          </p>
+          {/* La classe canònica d'Accions (composicio), sense el component: este
+              arbre compila com a mòdul contra el nucli 1.3.0, que no l'exposa
+              (guardesDelModul.test.js). */}
+          <div ref={blocTots} className="sdp-accions">
             <Boto varietat="secundari" onClick={aprovaTots} carregant={aprovantTots}
               disabled={carregant || !pendents} aria-describedby={idBloc}>
               Aprovar tots els pendents (DEV)
             </Boto>
           </div>
-          <p id={idBloc} className="sdp-tractors-panell__motiu">
-            {pendents ? `${pendents} ${pendents === 1 ? 'pendent' : 'pendents'} d’aprovar. ` : 'Cap tractor pendent. '}
-            Aprovació tècnica del servidor de desenvolupament: no substituïx la lectura de la fitxa ni la revisió
-            reflexiva. La primera aprovació després d’un canvi a la porta mateixa es fa d’una en una.
-          </p>
         </>
       ) : null}
       {persistent ? null : (
@@ -331,11 +335,11 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
 
           <article className="sdp-tractors-panell__detall" aria-labelledby={idNom}>
             <div className="sdp-tractors-panell__cap">
-              <h3 id={idNom} className="sdp-tractors-panell__nom">{m.nom}</h3>
+              <h4 id={idNom} className="sdp-tractors-panell__nom">{m.nom}</h4>
               <Insignia to={insignia(triat).to}>{insignia(triat).text}</Insignia>
             </div>
             <p>{m.descripcio}</p>
-            <p className="sdp-tractors-panell__motiu">{motiuLlegible(triat)}</p>
+            <p>{motiuLlegible(triat)}</p>
 
             {triat.estat === 'incomplet' ? (
               <Alerta to="avis" viva={false} titol="Versió incompleta">
@@ -363,7 +367,7 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
             </dl>
 
             <section className="sdp-tractors-panell__empremta" aria-labelledby={idEmpremta}>
-              <h4 id={idEmpremta} className="sdp-tractors-panell__subtitol">Empremta d’esta versió</h4>
+              <h5 id={idEmpremta} className="sdp-tractors-panell__subtitol">Empremta d’esta versió</h5>
               {triat.empremta ? (
                 <>
                   <EmpremtaCurta curta={triat.curta} />
@@ -397,7 +401,7 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
                 : <p>Falta la fitxa explicativa: <code>{m.fitxa}</code>.</p>}
             </section>
 
-            <div className="sdp-tractors-panell__accions">
+            <div className="sdp-accions">
               <Boto varietat="primari" onClick={obriAprovacio} disabled={!triat.empremta || aprovantTots}>Aprova esta versió</Boto>
               <Boto varietat="secundari" onClick={revocaTriat} carregant={revocant}
                 disabled={triat.registre?.decisio !== 'aprovat' || aprovantTots}>
@@ -406,7 +410,7 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
             </div>
 
             <section aria-labelledby={idHistorial}>
-              <h4 id={idHistorial} className="sdp-tractors-panell__subtitol">Historial d’aprovacions</h4>
+              <h5 id={idHistorial} className="sdp-tractors-panell__subtitol">Historial d’aprovacions</h5>
               {triat.registres.length ? (
                 <ol className="sdp-tractors-panell__historial">
                   {[...triat.registres].reverse().map((r) => (
@@ -429,8 +433,10 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
             ? 'Les aprovacions es guarden només en este navegador: empremtes, dates i claus públiques, cap dada personal.'
             : 'Les aprovacions no es guarden enlloc.'}
         </p>
-        <Boto varietat="secundari" onClick={exportaRegistre}>Exporta el registre</Boto>
-        <Boto varietat="perill" onClick={() => setOblidant(true)}>Oblida les aprovacions d’este navegador</Boto>
+        <div className="sdp-accions">
+          <Boto varietat="secundari" onClick={exportaRegistre}>Exporta el registre</Boto>
+          <Boto varietat="perill" onClick={() => setOblidant(true)}>Oblida les aprovacions d’este navegador</Boto>
+        </div>
       </div>
 
       {triat ? (

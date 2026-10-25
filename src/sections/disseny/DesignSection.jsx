@@ -81,7 +81,6 @@ function CatalogDetail({ item }) {
         labels={page.labels}
         copyright={COPYRIGHT_SDP}
         {...data}
-        onConnect={false}
       >
         {/* SPEC G · les imatges del copy, amb la base de l'amfitrió en pintar-lo. */}
         <div
@@ -115,7 +114,6 @@ function CatalogDetail({ item }) {
       ])}
       copyright={COPYRIGHT_SDP}
       {...data}
-      onConnect={false}
     >
       <Suspense fallback={<Carregant etiqueta="Carregant l’espècimen…" />}>
         <Detail />

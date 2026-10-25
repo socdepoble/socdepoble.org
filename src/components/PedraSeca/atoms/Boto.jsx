@@ -5,7 +5,9 @@
  *
  * varietat: primari (acció principal, una per vista) · secundari · accent
  *           (identitat taronja, publicar) · perill (destructiu) · fantasma
- * mida:     normal (44px) · gran (56px, accions de bancal)
+ * mida:     normal (48px, --sdp-touch-min) · gran (58px, --sdp-alt-accio,
+ *           accions de bancal). IDEA-26 (261025) · les xifres són les del
+ *           CSS de veres (components.css): abans deien 44 i 56.
  * carregant: desactiva, anuncia "Treballant…" i conserva l'amplada.
  */
 import { LoaderCircle } from 'lucide-react';

@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Boto, Camp, CampText, DialegConfirmacio, GrupCamps, Selector, Taula } from '../../components/PedraSeca';
+import { Boto, Camp, CampText, Casella, DialegConfirmacio, GrupCamps, Selector, Taula } from '../../components/PedraSeca';
 import { AvatarResolt } from '../../components/universal/identitat/AvatarResolt.jsx';
 import { etiquetaDeRol } from '../../components/universal/identitat/rols.js';
+import { useUIActionsOpcional } from '../../app/contexts/UIContext';
+import { omple } from '../../config/moderacio.js';
+/* IDEA-22, punt 2 (pla 261025_0200) · La tria de la propietària (capacitat 'consentimentTitular'). */
+import { estatTitularPublic, marcaTitularPublic, teCapacitat } from '../../data/backendPort.js';
 import { ETIQUETES_TIPUS, MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres } from './membresModel.js';
 import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
 
@@ -29,6 +33,106 @@ const ROLS_D_ALTA = Object.freeze([
 /* Un error del port ja ve en valencià i amb `code`; sense text, el genèric. */
 const textDError = (error, generic) => (typeof error?.message === 'string' && error.message.trim() ? error.message : generic);
 const esCancel = (error) => error?.name === 'AbortError';
+
+/* ═══════════════════════════════════════════════════════════════════
+   IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla
+   261025_0200) · MOSTRAR-SE COM A TITULAR A CONNECTAR
+
+   Qui connecta amb una entitat a /connectar pot connectar també amb la seua
+   persona titular, però NOMÉS si ella ho ha triat: el servidor no diu mai
+   qui administra una entitat, i un perfil públic no és cap permís. La
+   casella només la veu la propietària (rol 'owner'; el servidor ho torna a
+   dir, SDP-TIT-001), i cap administradora no la pot marcar per ella. Diu
+   abans del clic que cal el perfil públic. Sense la capacitat
+   'consentimentTitular', o amb un servidor sense la migració 2610250300
+   (NO-DISPONIBLE), no pinta res. Els textos, per t() (cinc diccionaris):
+   fora de l'App (les proves soltes), la reserva valenciana.
+   ═══════════════════════════════════════════════════════════════════ */
+const teConsentimentTitular = () => {
+  try { return teCapacitat('consentimentTitular') === true; } catch { return false; }
+};
+const traduccioDeReserva = (_clau, reserva) => reserva;
+/* Un servidor que no la sap fer, o que diu que no n'ets la propietària: la casella no hi és. */
+const SENSE_CASELLA = new Set(['NO-DISPONIBLE', 'SDP-TIT-001']);
+
+export function TriaTitular({ orgId, nomOrg }) {
+  const t = useUIActionsOpcional()?.t || traduccioDeReserva;
+  const disponible = teConsentimentTitular() && Boolean(orgId);
+  const [estat, setEstat] = useState({ orgId: null, carregant: true, valor: false, error: null });
+  const [desant, setDesant] = useState(false);
+  /* El valor que s'està desant: la casella el mostra de seguida (si no, la
+     controlada tornaria a l'anterior fins que contestara el servidor). */
+  const [pendent, setPendent] = useState(null);
+  const [missatge, setMissatge] = useState(null);
+  const viu = useRef(true);
+  useEffect(() => { viu.current = true; return () => { viu.current = false; }; }, []);
+
+  useEffect(() => {
+    if (!disponible) return undefined;
+    const control = new AbortController();
+    setEstat({ orgId, carregant: true, valor: false, error: null });
+    setMissatge(null);
+    Promise.resolve()
+      .then(() => estatTitularPublic(orgId, { signal: control.signal }))
+      .then((resposta) => {
+        if (!control.signal.aborted) setEstat({ orgId, carregant: false, valor: resposta?.titularPublic === true, error: null });
+      })
+      .catch((error) => {
+        if (control.signal.aborted || esCancel(error)) return;
+        setEstat({ orgId, carregant: false, valor: false, error: { code: error?.code ?? null } });
+      });
+    return () => control.abort();
+  }, [disponible, orgId]);
+
+  if (!disponible || estat.orgId !== orgId || SENSE_CASELLA.has(estat.error?.code)) return null;
+
+  async function canvia(e) {
+    const nou = e.target.checked === true;
+    if (desant) return;
+    setDesant(true);
+    setPendent(nou);
+    setMissatge({ tipus: 'desant', text: t('section.perfil.titular.desant', 'Desant la tria…') });
+    try {
+      const resposta = await marcaTitularPublic(orgId, nou, {});
+      if (!viu.current) return;
+      const valor = resposta?.titularPublic === true;
+      setEstat((previ) => ({ ...previ, valor, error: null }));
+      setMissatge({
+        tipus: 'exit',
+        text: omple(valor
+          ? t('section.perfil.titular.desat', 'Desat: et mostrarem com a titular de {nom} a Connectar mentre el teu perfil i l’entitat siguen públics.')
+          : t('section.perfil.titular.llevat', 'Ja no et mostrem com a titular de {nom}.'), { nom: nomOrg })
+      });
+    } catch (error) {
+      if (viu.current && !esCancel(error)) setMissatge({ tipus: 'error', text: t('section.perfil.titular.error', 'No s’ha pogut desar la tria. Torna-ho a provar.') });
+    } finally {
+      if (viu.current) {
+        setDesant(false);
+        setPendent(null);
+      }
+    }
+  }
+
+  /* Revisió del torn 261025_0200 · La casella no es desactiva mentre desa:
+     la que té el focus el perdria. canvia() ja ignora un segon toc, i com
+     que és controlada, el valor torna al que diu el servidor. */
+  return (
+    <div aria-busy={desant || undefined}>
+      <Casella
+        etiqueta={omple(t('section.perfil.titular.etiqueta', 'Mostra’m com a titular de {nom} a Connectar'), { nom: nomOrg })}
+        ajuda={omple(t('section.perfil.titular.ajuda', 'Qui connecte amb {nom} també podrà connectar amb tu, a la mateixa pantalla. Només es veu mentre el teu perfil i l’entitat siguen públics; ho pots llevar quan vulgues, i ningú més no ho pot triar per tu.'), { nom: nomOrg })}
+        checked={desant && pendent !== null ? pendent : estat.valor} disabled={estat.carregant || Boolean(estat.error)} onChange={canvia} />
+      {estat.error ? (
+        <p className="sdp-camp__error" role="alert">{t('section.perfil.titular.errorLectura', 'No s’ha pogut llegir si et mostrem com a titular.')}</p>
+      ) : null}
+      {missatge ? (
+        <p className={{ exit: 'sdp-text-exit', desant: 'sdp-camp__ajuda' }[missatge.tipus] ?? 'sdp-camp__error'} role={missatge.tipus === 'error' ? 'alert' : 'status'}>
+          {missatge.text}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export function GestioMembres({ organitzacio, accions }) {
   const orgId = organitzacio?.id;
@@ -306,6 +410,9 @@ export function GestioMembres({ organitzacio, accions }) {
           </GrupCamps>
         </form>
       ) : null}
+
+      {/* IDEA-22, punt 2 · Només la propietària tria si es mostra com a titular a Connectar. */}
+      {propietaria ? <TriaTitular orgId={orgId} nomOrg={nomOrg} /> : null}
 
       {/* T6b (IDEA-14; decisió del Mestre, 261024) · El veïnat connectat amb l'organització (P1-11, abans «Qui seguix»):
           la constància per a qui l'administra. Sense la capacitat

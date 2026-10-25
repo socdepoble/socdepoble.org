@@ -771,6 +771,38 @@ description: "Documentació canònica de Sóc de Poble."
   seguix l'entitat». Idempotent i en una sola transacció; **NO aplicada:
   l'aplica el Mestre, mai un agent**.
 
+- `migrations/2610250300_titular_public.sql`
+  IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla
+  261025_0200): a `/connectar`, amb una entitat, la seua persona titular,
+  NOMÉS si ella ho ha triat (opt-in). Cap lectura no torna qui administra una
+  entitat (2610250100), i un perfil públic no és cap permís per a lligar-lo a
+  un negoci. Afig `public.organization_memberships.titular_public` (`boolean
+  not null default false`: ningú no es mostra sense triar-ho) i un disparador
+  (`private.titular_public_nomes_owner`) que la torna a `false` en tota fila
+  que no és d'owner (si la propietat canvia de mans, la tria no hi passa).
+  Reafirma els permisos de la taula: `anon` i `authenticated` no hi escriuen
+  (`revoke insert, update, delete on table public.organization_memberships from public, anon, authenticated;`).
+  Tres RPC `SECURITY DEFINER` amb el `search_path` buit i execució només per
+  a `authenticated`: `marca_titular_public(p_org_id, p_public)` i
+  `estat_titular_public(p_org_id)`, NOMÉS per a la propietària (`user_id =
+  auth.uid()` i `role = 'owner'`; una administradora no la pot fer per ella),
+  i `titular_public(p_org_id)` → com a molt una fila `{ id, full_name,
+  avatar_url }` si la pertinença és d'owner, ella ho ha triat, el seu perfil
+  és públic (`is_public`) i sense la baixa demanada, l'organització és
+  pública i cap bloqueig no separa qui mira i la titular. Mai cap correu ni
+  cap rol. Codis nous `SDP-TIT-000` i `SDP-TIT-001` (42501) i `SDP-TIT-002`
+  (22023). El client la llig amb les capacitats `titularPublic` i
+  `consentimentTitular` (contracte.js); sense la migració, no mostra cap
+  titular. La prova estàtica és
+  `src/data/supabase/titularPublic.migracio.test.js`. Va després de
+  2610250100. Verificació posterior (lectura):
+  `select count(*) filter (where titular_public) from public.organization_memberships;`
+  (0 just després d'aplicar-la). Pendent del Mestre: opt-in o «perfil públic
+  és prou», només la propietària o també les administradores, els grups, i la
+  via que ja existix de `owner_user_id` a les publicacions signades com a
+  entitat. Idempotent i en una sola transacció; **NO aplicada: l'aplica el
+  Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 

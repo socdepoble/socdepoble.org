@@ -5,13 +5,28 @@ import { ESLint } from 'eslint';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { escaneja } from '../../../tooling/gates/tractor-vocabulari.mjs';
+/* IDEA-22, punt 2 (pla 261025_0200) · El port, parcial: la tria de la titular
+   es simula; sense cap capacitat (per defecte), com abans, cap casella ni cap
+   veïnat connectat. */
+const mp = vi.hoisted(() => ({ capacitats: new Set(), estat: vi.fn(), marca: vi.fn() }));
+vi.mock('../../data/backendPort.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  teCapacitat: (cap) => mp.capacitats.has(cap),
+  estatTitularPublic: (...args) => mp.estat(...args),
+  marcaTitularPublic: (...args) => mp.marca(...args)
+}));
 import { GestioMembres, ESPERA_CERCA } from './GestioMembres.jsx';
 
 /* Ordre del Mestre (261008, grup C) · La gestió dels membres d'una
    organització a «El compte»: llista, alta directa, canvi de rol i baixa,
    amb les decisions del Mestre (només la propietària gestiona les
    administradores; una organització membre sempre és membre). */
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  mp.capacitats = new Set();
+  mp.estat.mockReset();
+  mp.marca.mockReset();
+});
 
 const persona = (id, nom, rol = 'member') => ({ tipus: 'persona', id, nom, avatar: '', rol, desDe: null });
 const org = (id, nom) => ({ tipus: 'organitzacio', id, nom, avatar: '', rol: 'member', desDe: null });
@@ -339,3 +354,100 @@ test('qualitat · ESLint sense cap missatge als fitxers de la interfície del gr
   const [sonda] = await eslint.lintText('const sobrant = 1;', { filePath: path.join(arrel, 'src/sections/profile/sonda.jsx') });
   expect(sonda.messages.map((mis) => mis.ruleId)).toContain('no-unused-vars');
 }, 120000);
+
+/* IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla 261025_0200)
+   · Mostrar-se com a titular a Connectar: només la propietària ho tria, i ho
+   llig abans del clic (cal el perfil públic). Una administradora no en veu res. */
+const ETIQUETA_TITULAR = 'Mostra’m com a titular de Forn a Connectar';
+const casellaTitular = () => screen.queryByRole('checkbox', { name: new RegExp(`^${ETIQUETA_TITULAR}`) });
+
+test('IDEA-22 · la propietària tria mostrar-se com a titular, i ho pot desfer; el port rep la tria i res més', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  mp.estat.mockResolvedValue({ titularPublic: false });
+  mp.marca.mockImplementation(async (_orgId, valor) => ({ titularPublic: valor }));
+  pinta();
+  await taula();
+  await waitFor(() => expect(casellaTitular()).toBeTruthy());
+  expect(mp.estat).toHaveBeenCalledWith('O', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  const casella = casellaTitular();
+  expect(casella.checked).toBe(false);
+  /* Abans del clic: el perfil i l'entitat han de ser públics (el servidor ho
+     exigix tot dos) i ningú més no ho tria per ella. */
+  expect(screen.getByText(/^Qui connecte amb Forn també podrà connectar amb tu/).textContent)
+    .toBe('Qui connecte amb Forn també podrà connectar amb tu, a la mateixa pantalla. Només es veu mentre el teu perfil i l’entitat siguen públics; ho pots llevar quan vulgues, i ningú més no ho pot triar per tu.');
+  await act(async () => { fireEvent.click(casella); });
+  expect(mp.marca).toHaveBeenCalledWith('O', true, {});
+  expect(screen.getByRole('status').textContent).toBe('Desat: et mostrarem com a titular de Forn a Connectar mentre el teu perfil i l’entitat siguen públics.');
+  expect(casellaTitular().checked).toBe(true);
+  await act(async () => { fireEvent.click(casellaTitular()); });
+  expect(mp.marca).toHaveBeenLastCalledWith('O', false, {});
+  expect(screen.getByRole('status').textContent).toBe('Ja no et mostrem com a titular de Forn.');
+  expect(casellaTitular().checked).toBe(false);
+});
+
+test('IDEA-22 · mentre desa, la casella no es desactiva (no perd el focus) i un segon toc no torna a escriure', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  mp.estat.mockResolvedValue({ titularPublic: false });
+  let acaba;
+  mp.marca.mockImplementation(() => new Promise((resol) => { acaba = resol; }));
+  pinta();
+  await taula();
+  await waitFor(() => expect(casellaTitular()).toBeTruthy());
+  const casella = casellaTitular();
+  casella.focus();
+  await act(async () => { fireEvent.click(casella); });
+  expect(casellaTitular().disabled).toBe(false);
+  /* La tria es veu de seguida i es diu que s'està desant. */
+  expect(casellaTitular().checked).toBe(true);
+  expect(screen.getByRole('status').textContent).toBe('Desant la tria…');
+  expect(casellaTitular().closest('[aria-busy="true"]')).toBeTruthy();
+  expect(document.activeElement).toBe(casellaTitular());
+  await act(async () => { fireEvent.click(casellaTitular()); });
+  expect(mp.marca).toHaveBeenCalledTimes(1);
+  await act(async () => { acaba({ titularPublic: true }); });
+  expect(casellaTitular().checked).toBe(true);
+  expect(casellaTitular().closest('[aria-busy="true"]')).toBeNull();
+});
+
+test('IDEA-22 · una administradora no en veu cap casella ni en pregunta l’estat', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  mp.estat.mockResolvedValue({ titularPublic: true });
+  pinta({ rol: 'admin' });
+  await taula();
+  await act(async () => {});
+  expect(casellaTitular()).toBeNull();
+  expect(mp.estat).not.toHaveBeenCalled();
+});
+
+test('IDEA-22 · sense la capacitat, o amb un servidor sense la migració o que diu que no n’ets la propietària, cap casella', async () => {
+  pinta();
+  await taula();
+  await act(async () => {});
+  expect(casellaTitular()).toBeNull();
+  expect(mp.estat).not.toHaveBeenCalled();
+  cleanup();
+  for (const code of ['NO-DISPONIBLE', 'SDP-TIT-001']) {
+    mp.capacitats = new Set(['consentimentTitular']);
+    mp.estat.mockRejectedValue(Object.assign(new Error('No.'), { code }));
+    pinta();
+    await taula();
+    await waitFor(() => expect(mp.estat).toHaveBeenCalled());
+    await act(async () => {});
+    expect(casellaTitular(), code).toBeNull();
+    cleanup();
+    mp.estat.mockReset();
+  }
+});
+
+test('IDEA-22 · si la tria no es desa, ho diu i la casella no canvia', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  mp.estat.mockResolvedValue({ titularPublic: false });
+  mp.marca.mockRejectedValue(Object.assign(new Error('Supabase 500: boom'), { code: 'DESCONEGUT' }));
+  pinta();
+  await taula();
+  await waitFor(() => expect(casellaTitular()).toBeTruthy());
+  await act(async () => { fireEvent.click(casellaTitular()); });
+  expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut desar la tria. Torna-ho a provar.');
+  expect(screen.getByRole('alert').textContent).not.toContain('Supabase');
+  expect(casellaTitular().checked).toBe(false);
+});

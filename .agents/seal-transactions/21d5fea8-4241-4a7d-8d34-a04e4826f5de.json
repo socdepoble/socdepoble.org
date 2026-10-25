@@ -1,0 +1,22 @@
+{
+  "id": "21d5fea8-4241-4a7d-8d34-a04e4826f5de",
+  "session": "284a95f8-6dea-4fa9-bd46-81becea49e90",
+  "operationId": "sdp-t4-precommit-261024-284a95f8",
+  "claim": "284a95f8-6dea-4fa9-bd46-81becea49e90:governance-write",
+  "planHash": "2ec84bf8e7e46ab3d55fae73ffce246d9a046c205cfa264fe2a78897c61beaf3",
+  "beforeSeal": "c10184b33aa79a75f9e41bd24ef5f4949d99b107c706c6fc506dec84f5da5235",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "6b15f92550eae9c7be3bf7bc941682af3587f24a6cc7aa4fd63b0d222ad1dd04",
+      "after": "70ca3ae79a1efb60d39025294a0fac4862fd7d996ba2a67704e0460e2a8ab937"
+    },
+    {
+      "path": "tooling/gates/git-staged.mjs",
+      "before": "3e91c2d8b4404d28856c6bb60fb1490473fd950cd07b0e7c01fb3a426f399486",
+      "after": "b357601aeb2909bf4ae24048fc326d60081d5a4efffcfb3dfea53cad5d9ad337"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

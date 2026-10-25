@@ -8991,6 +8991,10 @@ details[open] summary.accordion-header svg:last-child {
     padding-block-end: var(--sdp-space-8);
   }
   .sdp-tractors-panell > p { margin: 0; }
+  /* G0200-03 (Gemini, 261025) · La regió viva buida no ha de sumar un segon gap
+     de 16px. Es queda a l'arbre (si no, l'avís que hi entra no es llegiria): un
+     marge negatiu d'un gap la fa ocupar zero. */
+  .sdp-tractors-panell > p[role="status"]:empty { margin-block-start: calc(var(--sdp-space-4) * -1); }
   .sdp-tractors-panell__titol {
     margin: 0;
     font-size: var(--sdp-text-h4);
@@ -9067,10 +9071,6 @@ details[open] summary.accordion-header svg:last-child {
     border: 0;
     font-size: var(--sdp-text-h4);
   }
-  .sdp-tractors-panell__motiu {
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
-  }
   .sdp-tractors-panell__dades {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
@@ -9141,29 +9141,32 @@ details[open] summary.accordion-header svg:last-child {
     padding-block-start: var(--sdp-space-2);
     border-block-start: 1px solid var(--sdp-vora);
   }
-  .sdp-tractors-panell__fitxa :is(h4, h5, h6) {
+  /* IDEA-27 (261025) · El tractor és un h4: la fitxa baixa a h5 i h6, amb
+     la mida i el color que tenien quan eren h4 i h5. */
+  .sdp-tractors-panell__fitxa :is(h5, h6) {
     margin: var(--sdp-space-4) 0 var(--sdp-space-2);
     padding: 0;
     border: 0;
+    color: var(--sdp-accio-text);
     font-size: var(--sdp-text-h5);
     text-align: left;
     text-transform: none;
     letter-spacing: normal;
   }
-  .sdp-tractors-panell__fitxa h4 { font-size: var(--sdp-text-h4); }
-  .sdp-tractors-panell__accions,
+  .sdp-tractors-panell__fitxa h5 { font-size: var(--sdp-text-h4); }
+  /* IDEA-27 (ordre del Mestre, 261025) · Els botons van en Accions
+     (composicio), després del text que els explica: al peu, el paràgraf
+     amb la mida de cos i, davall, els dos botons. Dins d'un contenidor amb
+     gap de 16px, 8px de marge fan els 24px del bloc d'accions. */
   .sdp-tractors-panell__peu {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--sdp-space-3);
+    flex-direction: column;
+    gap: var(--sdp-space-4);
   }
-  .sdp-tractors-panell__peu > p {
-    flex-basis: 100%;
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-small);
-  }
+  .sdp-tractors-panell__peu > p { margin: 0; }
+  .sdp-tractors-panell > .sdp-accions,
+  .sdp-tractors-panell__detall > .sdp-accions,
+  .sdp-tractors-panell__peu > .sdp-accions { margin-block: var(--sdp-space-2); }
   .sdp-tractors-panell__historial {
     margin: 0;
     padding-inline-start: var(--sdp-space-5);
@@ -9511,6 +9514,17 @@ details[open] summary.accordion-header svg:last-child {
     font-size: var(--sdp-text-small);
     overflow-wrap: anywhere;
   }
+  /* IDEA-26 (261025) · El codi que ja viu dins d'una caixa no porta la píndola
+     del codi en línia (sdp.css): seria una caixa dins d'una altra. */
+  .sdp-gestoria-panell__fitxer-generat > code,
+  .sdp-gestoria-cofre__codi > code {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+  }
+  /* El codi del cofre es copia a mà: la mida gran és la de la caixa. */
+  .sdp-gestoria-cofre__codi > code { font-size: var(--sdp-text-h5); }
   .sdp-gestoria-panell__nota {
     margin: 0;
     color: var(--sdp-text-suau);

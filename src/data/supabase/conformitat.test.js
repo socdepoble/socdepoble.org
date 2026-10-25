@@ -351,7 +351,13 @@ function fetchDelServidor(entrada, opcions = {}) {
        (SDP-SEG-007, 42501, el 403 de PostgREST) ni té cap veïna (SDP-SEG-002). */
     '/rest/v1/rpc/segueix': () => (cos?.p_com
       ? resposta({ code: '42501', details: null, hint: null, message: "SDP-SEG-007: no administres l'entitat amb què vols connectar." }, { status: 403 })
-      : resposta({ code: '22023', details: null, hint: null, message: 'SDP-SEG-002: no trobem esta persona o esta entitat, o no la pots seguir.' }, { status: 400 }))
+      : resposta({ code: '22023', details: null, hint: null, message: 'SDP-SEG-002: no trobem esta persona o esta entitat, o no la pots seguir.' }, { status: 400 })),
+    /* IDEA-22, punt 2 (pla 261025_0200) · La titular (2610250300): cap
+       organització no ha triat mostrar la seua (cap fila), i la persona de
+       conformitat no és propietària de res (SDP-TIT-001, 42501, el 403). */
+    '/rest/v1/rpc/titular_public': () => resposta([]),
+    '/rest/v1/rpc/estat_titular_public': () => resposta({ code: '42501', details: null, hint: null, message: "SDP-TIT-001: només la propietària de l'organització pot triar si es mostra com a titular." }, { status: 403 }),
+    '/rest/v1/rpc/marca_titular_public': () => resposta({ code: '42501', details: null, hint: null, message: "SDP-TIT-001: només la propietària de l'organització pot triar si es mostra com a titular." }, { status: 403 })
   }[url.pathname];
   if (!ruta) {
     estat.rutesDesconegudes.push(`${metode} ${url.pathname}`);

@@ -164,7 +164,9 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
     const tbody = '<tbody>' + body.trim().split('\n').map(row => {
       return '<tr>' + row.trim().split('|').slice(1, -1).map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
     }).join('') + '</tbody>';
-    return `<div><table>\n${thead}\n${tbody}\n</table></div>`;
+    /* IDEA-26 (261025) · La taula es desplaça dins de la seua caixa: la columna
+       de la Wiki talla el que la desborda (overflow-x: hidden). */
+    return `<div class="sdp-taula-prosa"><table>\n${thead}\n${tbody}\n</table></div>`;
   });
 
   // Paragraphs (grouping hard-wrapped lines)

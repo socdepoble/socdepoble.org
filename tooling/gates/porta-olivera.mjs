@@ -111,7 +111,7 @@ export const BANDERA_FASE = `${CAMINS.agents}/olivera-fase.json`;
 export const LLINDAR_SEDIMENT = 300;
 
 /** Categories de treball d'un torn: naixen, servixen i se'n van a l'arxiu. */
-export const TRANSITORIES = /^(prompt|macro_prompt|micro_prompt|petorreta|auditoria|informe|bundle|macro_bundle|micro_bundle|pla|acta|tasques)$/;
+export const TRANSITORIES = /^(prompt|macro_prompt|micro_prompt|petorreta|auditoria|informe|implementacio|bundle|macro_bundle|micro_bundle|pla|acta|tasques)$/;
 /** Per nom ixen també l'evidència de producció i les avaluacions; l'envelliment no les toca. */
 export const PER_NOM = /^(produccio|avaluacio)$/;
 

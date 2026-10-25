@@ -63,6 +63,15 @@
  *     còpia «A les teues notes» continua sent del teu Bloc. Administrar
  *     l'organització (membres i rols) ja no viu ací: és del Perfil, «Membres
  *     i connexions» (BlocAdministrarOrganitzacio ja no es munta).
+ *   · C0200-06 (auditoria Codex 261025_0200) · Les regles de 2610250100, també
+ *     a la vista: el destí que és de qui mira (ella o una entitat que
+ *     administra) es pot connectar com a una ALTRA identitat seua (entitat A →
+ *     entitat B, entitat → la persona que l'administra), mai com a persona ni
+ *     com a ell mateix; i mai s'hi oferix el xat (cap directe amb tu mateixa).
+ *   · IDEA-22, punt 2 (Directiva del Mestre, àudios 01:14-01:16; pla
+ *     261025_0200) · Amb una entitat, la seua persona titular, al mateix grup
+ *     «Connexió directa», només si ella ho ha triat i té el perfil públic
+ *     (useTitularDeConnexio, 2610250300). Mai qui ha publicat un element.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
@@ -107,6 +116,9 @@ import { omple } from '../../config/moderacio.js';
 import { BlocRelacio } from './BlocRelacio.jsx';
 import { BlocFormarPart } from './organitzacio/BlocFormarPart.jsx';
 import { useFitxaDeConnexio } from './useFitxaDeConnexio.js';
+/* IDEA-22 (punt 2) · La titular que ha triat mostrar-se (capacitat 'titularPublic'). */
+import { useTitularDeConnexio } from './useTitularDeConnexio.js';
+import { teSeguiments } from './useSeguiment.js';
 
 const SUGGESTED_TAGS = ['Història local', 'Interessant', 'Patrimoni', 'Gent del Poble', 'Debat'];
 /* Les mateixes categories de sèrie que el Bloc (NotesSection): Onada 11
@@ -263,6 +275,46 @@ export function idsDeQuiConnecta({ currentUser = null, actor = null, identitats 
   return propis;
 }
 
+/**
+ * C0200-06 (auditoria Codex 261025_0200) · QUINA de les identitats de qui
+ * mira és un destí, amb les mateixes fonts que idsDeQuiConnecta:
+ * { tipus: 'entitat', id } (una organització que administra; `identitats`
+ * només en porta d'owner o admin, IdentitatContext · potSignarPer, i `id` és
+ * el seu, no l'àlies), { tipus: 'persona' } (ella: la sessió, la persona i els
+ * seus àlies, el compte pilot acreditat), { tipus: 'desconeguda' } si només el
+ * xat la diu seua, o null si no és seua. Pura.
+ */
+export function identitatPropiaDe(idDesti, { currentUser = null, actor = null, identitats = [], dataMode = 'remote', xat = null } = {}) {
+  const id = String(idDesti ?? '');
+  if (!id) return null;
+  const totes = [actor, ...(Array.isArray(identitats) ? identitats : [])].filter((identitat) => identitat?.id != null);
+  const entitat = totes.find((identitat) => identitat.tipus === 'entitat' && aliesDeLActor(identitat, { dataMode }).has(id));
+  if (entitat) return { tipus: 'entitat', id: String(entitat.id) };
+  if ((currentUser?.id != null && String(currentUser.id) === id)
+    || totes.some((identitat) => identitat.tipus !== 'entitat' && aliesDeLActor(identitat, { dataMode }).has(id))
+    || (esComptePersonaPilot(currentUser) && PERSONA_PILOT.alies.includes(id))) return { tipus: 'persona' };
+  return xat?.esDeQuiMira?.(id) === true ? { tipus: 'desconeguda' } : null;
+}
+
+/**
+ * C0200-06 · Amb quins barrets de «Connectar com a» (actorsPerConnectar) es
+ * pot connectar amb un destí, com les regles de public.segueix
+ * (2610250100): un destí que no és de qui mira, amb tots (la llista buida
+ * vol dir la persona, sense selector). Un destí seu (identitatPropiaDe), mai
+ * com a persona (persona → ella mateixa o → entitat que administra:
+ * SDP-SEG-003) ni com a ell mateix (entitat → ella mateixa); sí com a una
+ * ALTRA entitat que administra (A → B, i entitat → la persona que
+ * l'administra). Una identitat desconeguda, cap. Una llista buida per a un
+ * destí seu vol dir: cap relació. Pura.
+ */
+export function actorsPerAlDesti(actors = [], propia = null) {
+  const llista = Array.isArray(actors) ? actors : [];
+  if (!propia) return llista;
+  if (propia.tipus !== 'persona' && propia.tipus !== 'entitat') return [];
+  const ella = propia.tipus === 'entitat' ? String(propia.id ?? '') : null;
+  return llista.filter((opcio) => opcio.valor !== COM_PERSONA && opcio.valor !== ella);
+}
+
 /* Gauntlet 261022_0225 (CA-1) · En remot, un id de la llavor (un àlies de la
    persona pilot, una entitat del padró) no és l'id de cap persona ni entitat
    del servidor (W4-09): crea_fil_directe no hi pot obrir cap xat. El format
@@ -305,9 +357,10 @@ export function autorPerConnectar(item, { seccio = '', ...opcions } = {}) {
  * PERFIL (/gent/:id, /empresa/:id, /grup/:id → Connectar): la fitxa pública
  * de confiança (useFitxaDeConnexio), mai la query. El descriptor és el
  * d'objecteDePerfil (porta la marca `projecte` del pilot) i les guardes, les
- * mateixes de l'autor (contacteDe): ni qui mira ni una entitat que
- * representa, cap id de la llavor en remot i el pilot pel xat de Sóc de
- * Poble. Una IA no és cap persona (té el seu «Parla amb…»): cap contacte. */
+ * mateixes de l'autor (contacteDe): qui mira o una entitat que representa,
+ * sense xat i amb `propia` (C0200-06), cap id de la llavor en remot i el
+ * pilot pel xat de Sóc de Poble. Una IA no és cap persona (té el seu «Parla
+ * amb…»): cap contacte. */
 export function perfilPerConnectar(perfil, opcions = {}) {
   const objecte = objecteDePerfil(perfil);
   if (!objecte || !['persona', 'entitat', 'grup'].includes(objecte.tipus)) return null;
@@ -318,17 +371,29 @@ export function perfilPerConnectar(perfil, opcions = {}) {
 
 /* Les guardes del contacte humà, una sola còpia per a l'autor i per al perfil
    (CA-1, CA-2, CN-R2): `qui` és { tipus, id, nom, projecte } i `objecte`, el
-   descriptor d'on es trau l'interlocutor (interlocutorDelPrivat). */
-function contacteDe(qui, objecte, { currentUser = null, actor = null, identitats = [], dataMode = 'remote', xat = null } = {}) {
+   descriptor d'on es trau l'interlocutor (interlocutorDelPrivat).
+   C0200-06 (auditoria Codex 261025_0200) · Abans un destí de qui mira (ella
+   o una entitat que administra) no tenia cap contacte, i A → B o entitat →
+   la persona que l'administra no es podien fer. Ara en té un amb `propia`
+   (identitatPropiaDe), sense interlocutor i sense xat: mai un directe amb tu
+   mateixa. Qui hi pot connectar ho decidix actorsPerAlDesti. */
+function contacteDe(qui, objecte, opcions = {}) {
+  const { currentUser = null, actor = null, identitats = [], dataMode = 'remote', xat = null } = opcions;
   const id = String(qui?.id ?? '');
   if (!id.trim() || id.length > 200 || /[\s\u0000-\u001f\u007f]/.test(id)) return null;
   const propis = idsDeQuiConnecta({ currentUser, actor, identitats, dataMode });
   const esDeQuiMira = (candidat) => propis.has(String(candidat ?? '')) || xat?.esDeQuiMira?.(candidat) === true;
-  if (esDeQuiMira(id)) return null;
   const nom = qui.nom || '';
   if (!nom) return null;
   const tipusDeSeguiment = qui.tipus === 'persona' ? 'persona' : 'entitat';
   const base = { nom, tipus: qui.tipus, id, deFitxa: false };
+  if (esDeQuiMira(id)) {
+    const propia = identitatPropiaDe(id, opcions);
+    /* Una identitat que no casa amb el tipus del destí, o que no se sap quina és: res, com abans. */
+    if (!propia || propia.tipus !== tipusDeSeguiment) return null;
+    if (dataMode === 'remote' && esIdDeLaLlavor({ id })) return null;
+    return { ...base, interlocutor: null, propia, seguiment: { tipus: tipusDeSeguiment, id: propia.tipus === 'entitat' ? propia.id : id } };
+  }
   if (qui.projecte) {
     if (!xat?.href && typeof xat?.resol !== 'function') return null;
     const seguible = dataMode !== 'remote' || !esIdDeLaLlavor({ id });
@@ -400,15 +465,35 @@ function ConnectarElementIntern() {
   const peticions = useMemo(() => fitxesDeLaConnexio(params, { teSessio, dataMode }), [params, teSessio, dataMode]);
   const fitxaDelPerfil = useFitxaDeConnexio(peticions.perfil, { config });
   const fitxaDeLaOrganitzacio = useFitxaDeConnexio(peticions.organitzacio, { config });
-  const contacte = autorPerConnectar(itemOriginal, { seccio: origenDeLURL.sectionId, ...opcionsDelContacte })
+  /* IDEA-22 (T5) · Els barrets amb què qui mira es pot connectar. */
+  const actorsConnectar = useMemo(() => actorsPerConnectar(identitats, t), [identitats, t]);
+  const contacteDelDesti = autorPerConnectar(itemOriginal, { seccio: origenDeLURL.sectionId, ...opcionsDelContacte })
     ?? perfilPerConnectar(fitxaDelPerfil.perfil, opcionsDelContacte);
+  /* C0200-06 (auditoria Codex 261025_0200) · Un destí de qui mira (ella o una
+     entitat que administra) només es connecta com a una ALTRA identitat seua;
+     si no en té cap, o si el node no sap connectar (no hi ha xat amb tu
+     mateixa), no hi ha relació, com abans. */
+  const actorsDelDesti = actorsPerAlDesti(actorsConnectar, contacteDelDesti?.propia ?? null);
+  const contacte = contacteDelDesti?.propia && (!actorsDelDesti.length || !teSeguiments()) ? null : contacteDelDesti;
   /* En remot sense sessió, la fitxa d'una altra persona no es llig: el camí es mostra sense nom i porta a entrar. */
   const personaSenseNom = !contacte && !teSessio && dataMode === 'remote' && origenDeLURL.sectionId === 'perfil'
     && origenDeLURL.objecte === 'persona' && Boolean((params.get('item_id') || '').trim());
   const orgId = peticions.orgId;
   const fitxaOrg = !orgId ? null : (peticions.organitzacio ? fitxaDeLaOrganitzacio : fitxaDelPerfil);
+  /* C0200-06 · «Formar part» d'una organització que administres no hi té res a demanar: cap contacte. */
+  const senseLaPropia = (candidat) => (candidat?.propia ? null : candidat);
   const contacteOrg = !orgId ? null
-    : (peticions.organitzacio ? perfilPerConnectar(fitxaDeLaOrganitzacio.perfil, opcionsDelContacte) : (contacte?.deFitxa ? contacte : null));
+    : senseLaPropia(peticions.organitzacio ? perfilPerConnectar(fitxaDeLaOrganitzacio.perfil, opcionsDelContacte) : (contacte?.deFitxa ? contacte : null));
+  /* IDEA-22 (punt 2 de la Directiva; pla 261025_0200) · La persona titular
+     d'una entitat que no és de qui mira, NOMÉS si ella ho ha triat i té el
+     perfil públic (titular_public, 2610250300): el servidor no diu mai qui
+     administra una entitat. Passa per les guardes de sempre: si qui mira n'és
+     la titular, res. Sense la capacitat, sense sessió o amagada, ni rastre. */
+  const titularDe = contacte && !contacte.propia && ['entitat', 'grup'].includes(contacte.tipus) ? contacte.seguiment?.id ?? null : null;
+  const titular = useTitularDeConnexio(titularDe, { config, teSessio });
+  const contacteTitular = titular.titular
+    ? senseLaPropia(perfilPerConnectar({ tipus: 'persona', id: titular.titular.id, nom: titular.titular.nom }, opcionsDelContacte))
+    : null;
   const ambRelacio = Boolean(contacte) || personaSenseNom;
   const ambCamins = ambRelacio || Boolean(orgId);
   /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
@@ -434,13 +519,17 @@ function ConnectarElementIntern() {
     || (actor?.tipus === 'persona' ? actor.nom : null);
   /* IDEA-22 (T5) · «Connectar com a»: d'entrada, l'actor de la sessió si és una
      organització que administres; si no, la persona. Triar-ne un altre NO canvia
-     l'actor global (estat d'esta vista). */
-  const actorsConnectar = useMemo(() => actorsPerConnectar(identitats, t), [identitats, t]);
-  const comPerDefecte = actor?.tipus === 'entitat' && actorsConnectar.some((opcio) => opcio.valor === String(actor.id))
-    ? String(actor.id) : COM_PERSONA;
+     l'actor global (estat d'esta vista).
+     C0200-06 · Només els barrets legítims per a este destí (actorsPerAlDesti):
+     per a un destí teu, la primera entitat que pot, mai la persona. */
+  const potComPersona = !actorsDelDesti.length || actorsDelDesti.some((opcio) => opcio.valor === COM_PERSONA);
+  const comPerDefecte = actor?.tipus === 'entitat' && actorsDelDesti.some((opcio) => opcio.valor === String(actor.id))
+    ? String(actor.id) : (potComPersona ? COM_PERSONA : actorsDelDesti[0].valor);
   const [comTriat, setComTriat] = useState(null);
-  const comValor = comTriat !== null && actorsConnectar.some((opcio) => opcio.valor === comTriat) ? comTriat : comPerDefecte;
-  const comEntitat = comValor === COM_PERSONA ? null : actorsConnectar.find((opcio) => opcio.valor === comValor) || null;
+  const comValor = comTriat !== null && actorsDelDesti.some((opcio) => opcio.valor === comTriat) ? comTriat : comPerDefecte;
+  const comEntitat = comValor === COM_PERSONA ? null : actorsDelDesti.find((opcio) => opcio.valor === comValor) || null;
+  /* C0200-02 · El nom de la persona: el xat («Escriu-li») és seu, encara que es connecte com a entitat. */
+  const nomPersona = actorsConnectar.find((opcio) => opcio.valor === COM_PERSONA)?.nom || '';
 
   const grups = useMemo(() => grupsDeXat(chatThreads), [chatThreads]);
   /* Una llista buida mentre el xat carrega (o si ha fallat) no vol dir «cap grup». */
@@ -684,13 +773,23 @@ function ConnectarElementIntern() {
               <div className="sdp-connectar__cami-cap">
                 <p id={`${id}-cami-relacio`} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Connexió directa')}</p>
               </div>
-              {/* IDEA-22 (T5) · Amb quin barret et connectes, només si administres alguna organització. */}
+              {/* IDEA-22 (T5) · Amb quin barret et connectes, només si administres alguna organització.
+                  C0200-06 · Les opcions, només les legítimes per a este destí (per a un de teu, també una sola). */}
               {actorsConnectar.length > 1 && !calEntrar ? (
                 <SelectorDeVariacions llegenda={t('section.connectar.com.llegenda', 'Connectar com a')}
-                  opcions={actorsConnectar} valor={comValor} onCanvi={setComTriat} />
+                  opcions={actorsDelDesti} valor={comValor} onCanvi={setComTriat} />
               ) : null}
               <BlocRelacio contacte={contacte} deFitxa={contacte?.deFitxa === true} calEntrar={calEntrar} onEntra={entra}
-                dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} />
+                dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona} />
+              {/* IDEA-22 (punt 2) · La titular que ho ha triat, al mateix grup i amb el mateix barret:
+                  cap capçalera de camí nova ni cap botó primari. */}
+              {contacteTitular ? (
+                <>
+                  <p>{omple(t('section.connectar.titular.intro', '{nom} és titular de {entitat} i ha triat que es veja ací.'), { nom: contacteTitular.nom, entitat: contacte.nom })}</p>
+                  <BlocRelacio contacte={contacteTitular} deFitxa calEntrar={calEntrar} onEntra={entra}
+                    dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona} />
+                </>
+              ) : null}
             </div>
           </>
         ) : null}

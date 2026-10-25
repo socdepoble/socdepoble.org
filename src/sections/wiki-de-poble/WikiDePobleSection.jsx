@@ -103,8 +103,13 @@ export function modulsLocalsActius(env) {
     categories: [],
     items: [
       einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'maquinaria_cat', ['tractors'],
-        'Un tractor és un automatisme que processa dades. Cap s’executa si no n’has aprovat la versió exacta: l’empremta cobrix el manifest, la fitxa i cada línia de les fonts llistades, que són el codi del tractor, el de la seua interfície i el d’esta porta.'),
-      einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'maquinaria_cat', ['sentinelles']),
+        'Un tractor és un automatisme que processa dades. Cap s’executa si no n’has aprovat la versió exacta: l’empremta cobrix el manifest, la fitxa i cada línia de les fonts llistades, que són el codi del tractor, el de la seua interfície i el d’esta porta. Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».'),
+      /* IDEA-27 (ordre del Mestre, àudio de 01:54 del 261025) · Anatomia de
+         pàgina: H1, H2 i l'entradilla centrada davall de l'H2. La de Sentinelles
+         estava perduda al cos, davall de l'h3 de la porta («Els components
+         comuns…»); ara la pinta UniversalPage, i el panell ja no la repetix. */
+      einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'maquinaria_cat', ['sentinelles'],
+        'Un sentinella és un tractor que només observa: llig el que tries, alça banderes i proposa, però no aplica, no esborra, no envia i no paga res. Només treballa si n’has aprovat la versió exacta, i l’empremta d’eixa versió cobrix el seu codi, el de la seua interfície i el de la porta. Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».'),
       einaLocal('agents_panell', 'Agents (BIOS)', 'EL BIOS COGNITIU i directrius dels agents (AGENTS.md)', 'maquinaria_cat', ['agents'])
     ]
   };

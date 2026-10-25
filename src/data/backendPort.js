@@ -249,3 +249,11 @@ export const deixaDeSeguir = asseguraMetode('deixaDeSeguir');
 export const estatSeguiment = asseguraMetode('estatSeguiment');
 export const elsMeusSeguiments = asseguraMetode('elsMeusSeguiments');
 export const quiEmSegueix = asseguraMetode('quiEmSegueix');
+
+/* IDEA-22, punt 2 (Directiva del Mestre; pla 261025_0200) · La persona
+   titular d'una entitat, només si ella ho ha triat (capacitat
+   'titularPublic'), i la seua tria (capacitat 'consentimentTitular'). Cap és
+   nucli: /connectar i la gestió dels membres pregunten abans amb teCapacitat. */
+export const loadTitularPublic = asseguraMetode('loadTitularPublic');
+export const estatTitularPublic = asseguraMetode('estatTitularPublic');
+export const marcaTitularPublic = asseguraMetode('marcaTitularPublic');

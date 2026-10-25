@@ -54,5 +54,9 @@ export { listPublicOrganizations } from './organizations.js';
 export {
   segueix, deixaDeSeguir, estatSeguiment, elsMeusSeguiments, quiEmSegueix
 } from './seguiments.js';
+/* IDEA-22, punt 2 (pla 261025_0200) · Capacitats 'titularPublic' i
+   'consentimentTitular': la titular que ha triat mostrar-se i la seua tria.
+   Explícites pel mateix motiu. */
+export { loadTitularPublic, estatTitularPublic, marcaTitularPublic } from './perfils.js';
 
 

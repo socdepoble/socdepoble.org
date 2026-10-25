@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Boto, GrupOpcions } from '../../../../components/PedraSeca/index.js';
 import { ResumConnexio } from '../../../connectar/ResumConnexio.jsx';
@@ -45,11 +46,13 @@ export default function EspecimenResumConnexio() {
       <GrupOpcions llegenda="Qui ho pot vore?" nom="especimen-abast-seed" aspecte="targetes" textTriada="Triada"
         opcions={opcionsDAbast({ dataMode: 'seed', teSessio: true, grups: [] })} valor="privada" onCanvi={res} />
 
+      {/* IDEA-26 (261025) · Sense embolcall: l'h4 de cada cas conserva els seus
+          32px de dalt i ja no toca el resum d'abans. */}
       {CASOS.map(([titol, resultats]) => (
-        <div key={titol}>
+        <Fragment key={titol}>
           <h4>{titol}</h4>
           <ResumConnexio resultats={resultats} accions={<Boto varietat="primari" onClick={res}>Obrir la connexió a les teues notes</Boto>} />
-        </div>
+        </Fragment>
       ))}
     </Especimen>
     </>

@@ -568,3 +568,29 @@ describe('T6b · la regla d’entrada dels seguiments', () => {
     }
   });
 });
+
+/* IDEA-22, punt 2 (Directiva del Mestre; pla 261025_0200) · La titular que ha
+   triat mostrar-se i la seua tria: dues capacitats opcionals, fora de
+   'directori' (un amfitrió amb la fitxa pública i sense la titular continua
+   sent vàlid), i la lectura mai no porta cap correu ni cap rol. */
+test('titularPublic i consentimentTitular: capacitats a banda, fora del nucli i de directori; a mitges, la tria para la validació', async () => {
+  const { MISSATGES_TITULAR, errorDeTitular, titularDelContracte } = await import('./contracte.js');
+  expect(CAPACITATS.titularPublic).toEqual(['loadTitularPublic']);
+  expect(CAPACITATS.consentimentTitular).toEqual(['estatTitularPublic', 'marcaTitularPublic']);
+  for (const nom of [...CAPACITATS.titularPublic, ...CAPACITATS.consentimentTitular]) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CAPACITATS.directori).not.toContain(nom);
+  }
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('directori'), ...capacitat('titularPublic') })).not.toThrow();
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('consentimentTitular', 1) }))
+    .toThrow('Capacitat parcial: consentimentTitular');
+  expect(Object.keys(MISSATGES_TITULAR)).toEqual(['SDP-TIT-000', 'SDP-TIT-001', 'SDP-TIT-002', 'NO-DISPONIBLE', 'DESCONEGUT']);
+  expect(errorDeTitular('SDP-TIT-001')).toMatchObject({ code: 'SDP-TIT-001', message: MISSATGES_TITULAR['SDP-TIT-001'] });
+  expect(errorDeTitular('inventat').code).toBe('DESCONEGUT');
+  expect(titularDelContracte({ tipus: 'persona', id: ' p1 ', nom: ' Pepa ', avatar: '/p.webp', email: 'pepa@poble.invalid', role: 'owner' }))
+    .toEqual({ tipus: 'persona', id: 'p1', nom: 'Pepa', avatar: '/p.webp' });
+  expect(titularDelContracte({ tipus: 'persona', id: 'p1', nom: 'Pepa' }).avatar).toBe('');
+  for (const dolenta of [null, 'Pepa', { tipus: 'entitat', id: 'e', nom: 'Forn' }, { tipus: 'persona', id: '', nom: 'Pepa' }, { tipus: 'persona', id: 'p', nom: '  ' }]) {
+    expect(titularDelContracte(dolenta)).toBeNull();
+  }
+});

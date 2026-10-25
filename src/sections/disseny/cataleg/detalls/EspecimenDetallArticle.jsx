@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Coffee, Sandwich } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
-import { Boto, DetallArticle } from '../../../../components/PedraSeca/index.js';
+import { Accions, Boto, DetallArticle } from '../../../../components/PedraSeca/index.js';
 
 /* Esquelet comú T4/T8 · el detall d'un article. Preus d'exemple. */
 const CAFE = { id: 'cafe-llet', nom: 'Cafè amb llet', categoriaId: 'cafes', secundari: 'Amb llet de la casa', valor: '2 variants' };
@@ -37,9 +37,12 @@ export default function EspecimenDetallArticle() {
       a11y={['És un Dialeg: trampa de focus, Escape i el focus torna al botó que l’ha obert.', 'Les variants són ràdios natius dins d’un fieldset amb llegenda; en la tria directa, botons natius dins del mateix fieldset.']}
       fes={['Obrir-lo des de l’acció secundària d’una rajola.', 'Fer servir triaDirecta quan el producte té un grup obligatori: dos tocs per producte.']}
       noFacis={['Fer un diàleg de variants propi a cada app.', 'Obrir el detall sencer a cada toc d’un producte amb variants: el toc afig la per defecte.']}>
-      <Boto onClick={() => setObert('detall')}>Obri el detall de mostra</Boto>
-      {' '}
-      <Boto onClick={() => setObert('directa')}>Obri la tria directa de mostra</Boto>
+      {/* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Els dos botons, dins
+          d'Accions: l'espai el fa el bloc, no un {' '}. */}
+      <Accions>
+        <Boto onClick={() => setObert('detall')}>Obri el detall de mostra</Boto>
+        <Boto onClick={() => setObert('directa')}>Obri la tria directa de mostra</Boto>
+      </Accions>
       <DetallArticle obert={obert === 'detall'} article={CAFE} categoria={CAFES} variants={VARIANTS} onTanca={tanca}
         onAccepta={({ variant, quantitat, nota }) => {
           setAvis(`Acceptat: ${quantitat} × ${variant}${nota ? ` (${nota})` : ''}.`);

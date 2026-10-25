@@ -367,7 +367,10 @@
   --sdp-mt-h1: 0;    --sdp-mb-h1: 16px;
   --sdp-mt-h2: 48px; --sdp-mb-h2: 12px;   /* corregit: h2 domina h3 */
   --sdp-mt-h3: 40px; --sdp-mb-h3: 12px;
-  --sdp-mt-h4: 32px; --sdp-mb-h4: 8px;
+  /* IDEA-26 (ordre del Mestre, àudio 01:47 del 261025) · Cap control enganxat a
+     un h4: de 8 a 16px, el primer graó de la reixeta de 4px que passa dels 14px
+     que va demanar el Mestre. */
+  --sdp-mt-h4: 32px; --sdp-mb-h4: 16px;
   /* D-C (ordre del Mestre, 261004) · a la reixeta de 4px: l'h5 i l'h6, de 6 a 8px. */
   --sdp-mt-h5: 24px; --sdp-mb-h5: 8px;
   --sdp-mt-h6: 20px; --sdp-mb-h6: 8px;

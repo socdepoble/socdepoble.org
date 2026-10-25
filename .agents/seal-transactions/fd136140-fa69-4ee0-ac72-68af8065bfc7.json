@@ -1,0 +1,22 @@
+{
+  "id": "fd136140-fa69-4ee0-ac72-68af8065bfc7",
+  "session": "f7eeadc8-0f55-4ff6-b1b8-efef4da10ee2",
+  "operationId": "sdp-relleu-claude-261024-f7eeadc8",
+  "claim": "f7eeadc8-0f55-4ff6-b1b8-efef4da10ee2:governance-write",
+  "planHash": "d89ece82e4efe53bcc0c4c69888ff820ce12ed015ae219352086858c9fd6ad02",
+  "beforeSeal": "373d15c9ddca9b1d26b4509b3a62c288388a1d1a75d9ae19423dfbb1f2e8baa5",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "ea6677e5dfe8cb9e7433db740c023948de49e0f0477af1dffc43bbca509259dd",
+      "after": "8b5e26e73edc534bdbc5e18ec8bbfd949844a9d6ba1e4ec4d21180c3f86e7e90"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "c32e3984a227acd4c5ae39f29e7eb9ae1a194b0e5df0a4c34b2dbd00ee5ba602",
+      "after": "6c1ec7d5183ac4d3f92bd5abd1beeceb420a754bd3106005f2b5c33088f6f74a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4a1546c39b2589515238514af00c375eb79d29abf54eabb06acb96f81ebe89ae"
+}

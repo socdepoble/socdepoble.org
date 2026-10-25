@@ -1,7 +1,7 @@
 import { Especimen } from '../Especimen.jsx';
 import { useState } from 'react';
 import { Dialeg } from '../../../../components/PedraSeca/index.js';
-import { Boto } from '../../../../components/PedraSeca/index.js';
+import { Accions, Boto } from '../../../../components/PedraSeca/index.js';
 import { Camp, CampText } from '../../../../components/PedraSeca/index.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Llinatge } from '../Llinatge.jsx';
@@ -21,19 +21,25 @@ export default function EspecimenDialeg() {
         a11y={['showModal(): la resta de la pàgina queda inert.', 'El focus torna a qui l’ha obert.', 'Títol en <h2> amb aria-labelledby.']}
         fes={['Un diàleg, una tasca.', 'Formularis curts (≤ 3 camps).']}
         noFacis={['Diàlegs dins de diàlegs.', 'Obrir-lo sense acció de la persona (finestres molestes).']}>
-        <Boto varietat="primari" onClick={() => setModal(true)}>Obrir un diàleg</Boto>
-        <Dialeg obert={modal} onTanca={() => setModal(false)} titol="Canviar el nom de la carpeta"
-          descripcio="El nou nom es veurà a totes les notes d’aquesta carpeta."
-          accions={<><Boto onClick={() => setModal(false)}>Cancel·lar</Boto><Boto varietat="primari" onClick={() => { setModal(false); showToast('Nom desat', 'success'); }}>Desar</Boto></>}>
-          <Camp etiqueta="Nom de la carpeta"><CampText defaultValue="Mur" /></Camp>
-        </Dialeg>
-        <Boto onClick={() => setBarra(true)} aria-haspopup="dialog">Obrir la finestra de la barra</Boto>
-        <Dialeg obert={barra} onTanca={() => setBarra(false)} lloc="barra" mida="s" titol="Finestra de la barra taronja"
-          descripcio="La mateixa anatomia per a la data de publicació i per a la visibilitat: títol, descripció, cos i peu d’accions."
-          accions={<><Boto onClick={() => setBarra(false)}>Cancel·lar</Boto><Boto varietat="primari" onClick={() => setBarra(false)}>Fet</Boto></>}>
-          <p>En escriptori s’ancora dalt a la dreta, davall de les barres, prop dels botons que l’obrin. En mòbil és el full inferior de sempre.</p>
-        </Dialeg>
+        {/* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Els dos botons, junts dins
+            d'Accions, sols a la caixa; els diàlegs van fora (tancats no es veuen, i un
+            <dialog> germà desfaria el primer i l'últim fill de la caixa). Cadascun
+            torna el focus al botó que l'ha obert. */}
+        <Accions>
+          <Boto varietat="primari" onClick={() => setModal(true)}>Obrir un diàleg</Boto>
+          <Boto onClick={() => setBarra(true)} aria-haspopup="dialog">Obrir la finestra de la barra</Boto>
+        </Accions>
     </Especimen>
+    <Dialeg obert={modal} onTanca={() => setModal(false)} titol="Canviar el nom de la carpeta"
+      descripcio="El nou nom es veurà a totes les notes d’aquesta carpeta."
+      accions={<><Boto onClick={() => setModal(false)}>Cancel·lar</Boto><Boto varietat="primari" onClick={() => { setModal(false); showToast('Nom desat', 'success'); }}>Desar</Boto></>}>
+      <Camp etiqueta="Nom de la carpeta"><CampText defaultValue="Mur" /></Camp>
+    </Dialeg>
+    <Dialeg obert={barra} onTanca={() => setBarra(false)} lloc="barra" mida="s" titol="Finestra de la barra taronja"
+      descripcio="La mateixa anatomia per a la data de publicació i per a la visibilitat: títol, descripció, cos i peu d’accions."
+      accions={<><Boto onClick={() => setBarra(false)}>Cancel·lar</Boto><Boto varietat="primari" onClick={() => setBarra(false)}>Fet</Boto></>}>
+      <p>En escriptori s’ancora dalt a la dreta, davall de les barres, prop dels botons que l’obrin. En mòbil és el full inferior de sempre.</p>
+    </Dialeg>
     </>
   );
 }

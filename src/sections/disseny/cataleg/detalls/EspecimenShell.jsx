@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
+import { Accions } from '../../../../components/PedraSeca/index.js';
 import {
   FranjaAmfitrio, TitolAmfitrio, etiquetesDeLaFranja, textDelNode
 } from '../../../../components/universal/MarcaAmfitrio.jsx';
@@ -28,7 +29,11 @@ const ESTATS_DE_MOSTRA = [
    desa a sessionStorage (storage.js) i porta el focus a main; ací només
    l'amaga, i el focus passa al botó que la torna a mostrar. En tornar-la a
    mostrar, el focus va a la seua X: el botó desapareix i, sense, cauria al
-   body (WCAG 2.4.3). En muntar la pàgina no s'enfoca res. */
+   body (WCAG 2.4.3). En muntar la pàgina no s'enfoca res.
+   IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Sense embolcall al voltant
+   de l'h4 (com a primer fill perdia els 32px de dalt): la ref de la mostra
+   embolcalla només la franja, i el botó va dins d'Accions. És un <button>
+   cru perquè Boto no passa la ref (React 18) i el focus la necessita. */
 function FranjaDeMostra({ estat, titol }) {
   const [tancada, setTancada] = useState(false);
   const mostraRef = useRef(null);
@@ -47,23 +52,27 @@ function FranjaDeMostra({ estat, titol }) {
     setTancada(false);
   };
   return (
-    <div ref={mostraRef}>
+    <>
       <h4>{titol}</h4>
       {tancada ? (
-        <button type="button" ref={tornaRef} className="sdp-boto sdp-boto--secundari" onClick={torna}>
-          Tornar a mostrar la franja
-        </button>
+        <Accions>
+          <button type="button" ref={tornaRef} className="sdp-boto sdp-boto--secundari" onClick={torna}>
+            Tornar a mostrar la franja
+          </button>
+        </Accions>
       ) : (
-        <FranjaAmfitrio
-          nomPoble={NOM_DE_MOSTRA}
-          text={textDelNode(T_CA, NOM_DE_MOSTRA, estat)}
-          estat={estat}
-          etiquetaRuta={ETIQUETES_FRANJA.mesInfo}
-          etiquetaTanca={ETIQUETES_FRANJA.tanca}
-          onTanca={() => setTancada(true)}
-        />
+        <div ref={mostraRef}>
+          <FranjaAmfitrio
+            nomPoble={NOM_DE_MOSTRA}
+            text={textDelNode(T_CA, NOM_DE_MOSTRA, estat)}
+            estat={estat}
+            etiquetaRuta={ETIQUETES_FRANJA.mesInfo}
+            etiquetaTanca={ETIQUETES_FRANJA.tanca}
+            onTanca={() => setTancada(true)}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 }
 

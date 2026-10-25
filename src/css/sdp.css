@@ -240,4 +240,50 @@
     border-radius: var(--sdp-radi-s);
     padding: 0 var(--sdp-space-1);
   }
+  /* IDEA-26 (ordre del Mestre, àudio 01:47 del 261025) · El codi en línia (una
+     ruta, una prop, el `codi` del Markdown de la Wiki) és una píndola com la
+     tecla: fons subtil, vora i radi petit. Només el <code> nu i fora de <pre>:
+     el que porta classe és un component i decidix el seu aspecte, i el de dins
+     d'un <pre> és un bloc. Especificitat zero: qualsevol regla el desfà.
+     Una ruta llarga només es parteix si no cap sencera en la seua línia
+     (break-word, no anywhere: anywhere rebaixa l'amplària mínima i una
+     columna estreta de taula trossejava els noms, observació del Mestre del
+     261025), i la píndola es tanca a cada línia. */
+  :where(code:not([class], pre code)) {
+    font-family: var(--sdp-font-mono);
+    font-size: max(var(--sdp-text-meta), 0.9em);
+    color: var(--sdp-text-titol);
+    background: var(--sdp-fons-subtil);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    padding: 0 var(--sdp-space-1);
+    overflow-wrap: break-word;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  /* A les files parelles de les taules el fons ja és --sdp-fons-subtil (i en
+     fosc la vora també): la píndola hi pren el fons de targeta. */
+  :where(tbody tr:nth-child(even) code:not([class], pre code)) {
+    background: var(--sdp-fons-targeta);
+  }
+  /* Directriu del Mestre (261025) · Un bloc de codi (<pre>) no es talla per la
+     dreta: es desplaça dins de la seua caixa, amb el fons, la vora i el radi
+     de la píndola del codi en línia. La tipografia monoespai és la del
+     sistema: amb la genèrica del navegador baixaria a 13px, per davall del
+     sòl de 14px; el <code> de dins l'hereta (amb la genèrica, el navegador el
+     baixa a 13px). Davall, el ritme del paràgraf. Només el <pre> sense classe:
+     el que en porta (consola, tractors, errors, diagrames) decidix el seu. */
+  :where(pre:not([class])) {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-block: 0 var(--sdp-mb-p);
+    padding: var(--sdp-space-3);
+    background: var(--sdp-fons-subtil);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    font-family: var(--sdp-font-mono);
+  }
+  :where(pre:not([class]):last-child) { margin-block-end: 0; }
+  :where(pre code) { font-family: inherit; font-size: inherit; }
+  :where(pre[tabindex]:focus-visible) { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
 }

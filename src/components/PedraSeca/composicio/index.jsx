@@ -37,6 +37,21 @@ export const Fila = ({ children, gap = 4, wrap = true, align = 'center', justify
 };
 
 /**
+ * Accions (bloc d'accions)
+ * IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Els botons van DESPRÉS del
+ * text que els explica, en un bloc propi i centrat que respira sempre el
+ * mateix (24px) del text de dalt i del de baix. Un títol mai porta un botó
+ * enganxat: primer el paràgraf que diu per a què és, després <Accions>.
+ */
+export const Accions = React.forwardRef(function Accions({ children, className = '', as: Component = 'div', ...props }, ref) {
+  return (
+    <Component ref={ref} className={`sdp-accions ${className}`} {...props}>
+      {children}
+    </Component>
+  );
+});
+
+/**
  * Graella (Grid)
  * Contenidor Grid amb Container Queries per defecte per ser auto-responsive.
  */

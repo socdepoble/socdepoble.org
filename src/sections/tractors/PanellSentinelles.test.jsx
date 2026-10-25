@@ -52,7 +52,7 @@ const delLlistat = (regio, llista, nom) => within(within(regio).getByRole('list'
 async function aprovaPerConfirmacio(nom) {
   fireEvent.click(delLlistat(porta(), 'Tractors', nom));
   const article = within(within(porta()).getByRole('article'));
-  await waitFor(() => expect(article.getByRole('heading', { level: 3, name: nom })).toBeTruthy());
+  await waitFor(() => expect(article.getByRole('heading', { level: 4, name: nom })).toBeTruthy());
   const curta = article.getByText(/^[0-9A-F]{4}-[0-9A-F]{4}$/).textContent;
   fireEvent.click(within(porta()).getByRole('button', { name: 'Aprova esta versió' }));
   const dialeg = screen.getByRole('dialog', { name: `Aprova «${nom}»` });
@@ -77,7 +77,7 @@ describe('abans d’aprovar', () => {
   test('el detall diu què observa i no deixa triar cap fitxer', async () => {
     await munta();
     const regio = within(sentinelles());
-    expect(regio.getByRole('heading', { level: 3, name: SENTINELLES[0].nom })).toBeTruthy();
+    expect(regio.getByRole('heading', { level: 4, name: SENTINELLES[0].nom })).toBeTruthy();
     expect(regio.getByText('Consola')).toBeTruthy();
     expect(regio.getByText(/^L0 · diagnostica i proposa/)).toBeTruthy();
     expect(regio.getByText('Cal aprovar-lo abans d’observar')).toBeTruthy();
@@ -138,7 +138,7 @@ describe('aprovat a la porta de dalt', () => {
 });
 
 describe('la Clàusula dels Slugs: el sentinella triat viu a la URL', () => {
-  const titol = () => within(sentinelles()).getByRole('heading', { level: 3 }).textContent;
+  const titol = () => within(sentinelles()).getByRole('heading', { level: 4 }).textContent;
   const CONSOL = SENTINELLES.find((s) => s.id === 'sentinella.consol-vendes');
   const DETECTIU = SENTINELLES.find((s) => s.id === 'sentinella.detectiu-poble');
 

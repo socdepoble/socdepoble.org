@@ -32,7 +32,7 @@
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
-import { Avatar, Boto } from '../../../../components/PedraSeca/index.js';
+import { Accions, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import FilaConversa from '../../../xat/components/FilaConversa.jsx';
 import Bombolla from '../../../xat/components/Bombolla.jsx';
@@ -231,7 +231,9 @@ function CompositorsDePagina() {
 }
 
 /* T1 · El compositor porta la barra de resposta damunt quan es respon: la ✕
-   o Escape la tanquen, i enviar la buida. */
+   o Escape la tanquen, i enviar la buida.
+   IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Els dos botons de la mostra,
+   dins d'Accions i darrere del paràgraf que els explica (al pare). */
 function CompositorDeMostra() {
   const [valor, setValor] = useState('');
   const [mida, setMida] = useState('ample');
@@ -240,14 +242,14 @@ function CompositorDeMostra() {
   const tanca = () => setResposta(null);
   return (
     <AppGridContext.Provider value={{ mida }}>
-      <div className="sdp-especimen__fila">
+      <Accions>
         <Boto varietat="secundari" aria-pressed={estret} onClick={() => setMida(estret ? 'ample' : 'estret')}>
           {estret ? 'Mode estret: Retorn fa salt de línia' : 'Mode ample: Retorn envia'}
         </Boto>
         <Boto varietat="secundari" disabled={Boolean(resposta)} onClick={() => setResposta(GRUP[1])}>
           Respon a Pepica
         </Boto>
-      </div>
+      </Accions>
       <Compositor
         valor={valor}
         onCanvia={setValor}
@@ -322,6 +324,7 @@ export default function EspecimenXat() {
       <ConversaAgrupadaDeMostra />
 
       <h4>Compositor (UX-B03) amb la barra de resposta (T1)</h4>
+      <p>Els dos botons canvien la mostra: el mode (en ample, Retorn envia; en estret, fa salt de línia) i la resposta a Pepica, que posa la barra damunt del camp. La ✕, Escape o enviar la tanquen.</p>
       <CompositorDeMostra />
 
       <h4>Adjunts: previsualitza abans d’enviar</h4>

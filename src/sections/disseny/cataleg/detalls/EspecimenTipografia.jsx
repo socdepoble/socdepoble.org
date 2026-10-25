@@ -37,7 +37,7 @@ export const RITME = [
   ['h1', '--sdp-mt-h1', '0', '--sdp-mb-h1', '16px'],
   ['h2', '--sdp-mt-h2', '48px', '--sdp-mb-h2', '12px'],
   ['h3', '--sdp-mt-h3', '40px', '--sdp-mb-h3', '12px'],
-  ['h4', '--sdp-mt-h4', '32px', '--sdp-mb-h4', '8px'],
+  ['h4', '--sdp-mt-h4', '32px', '--sdp-mb-h4', '16px'],
   ['h5', '--sdp-mt-h5', '24px', '--sdp-mb-h5', '8px'],
   ['h6', '--sdp-mt-h6', '20px', '--sdp-mb-h6', '8px'],
   ['p', null, '0', '--sdp-mb-p', '20px'],

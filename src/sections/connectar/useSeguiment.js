@@ -49,6 +49,10 @@ function capacitat(nom) {
   try { return teCapacitat(nom); } catch { return false; }
 }
 
+/* C0200-06 (auditoria Codex 261025_0200) · Si este node sap connectar: un
+   destí de qui mira no té xat, i sense la capacitat no hi hauria res a fer. */
+export const teSeguiments = () => capacitat('seguiments');
+
 /* El servidor encara no té l'esquema (2610241430_seguiments.sql, NO aplicada): com sense la capacitat. */
 const esNoDisponible = (error) => error?.code === 'NO-DISPONIBLE';
 

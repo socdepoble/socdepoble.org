@@ -7,6 +7,179 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-25T04:05:33+00:00 · Codex · Gauntlet 0200 segona passada: SQL i port verificats, tres P2 oberts
+
+Torn documental `torn_68333fac-debb-4924-9a1d-e3edd6e89d0b` reutilitzat, pla 0200 vinculat. Informe [[261025_0200_auditoria_codex]] v1.1.0. HEAD `1c110f954f6e9191ff04ffeaa8e32a0821149267`; reforma sense commit. Cap canvi de producte, migració aplicada, push ni desplegament per Codex.
+
+- SQL `2610250300`: 20 PASS independents en PGlite/PostgreSQL17.5 amb esquema mínim, rols i RLS; opt-in/owner/perfil/baixa/visibilitat/bloquejos/ACL/DTO i crear/llevar bloquejos sense 42P01. No prova producció ni dues connexions concurrents. C0200-01/02/05/06 corregits en codi; port i capacitats opcionals conformes.
+- P2 oberts C2-01 (resultat de titular travessa host/sessió), C2-02 (operació i tria optimista d’A falsegen consentiment de B), C2-04 (taules nues desborden columna estreta en escriptori; falta jerarquia cromàtica). PoC React/jsdom reproduïxen els dos primers. Taula canònica existent és la solució preferida; C2-03 corregit en codi, teclat posterior pendent.
+- Precommit propi **3.046 Vitest + 259 Node, 0 fallades, 37,061s de paret**, 156 fitxers. Dirigides 1.108; delta taules/Markdown/CSS 886, GestioMembres 26, claus i18n 246; lint final 0. Hi ha solapament; no es repetix ni certifica la suite global declarada per Claude. Arbre compartit no congelat; manifest final 60 fitxers, SHA dels bytes `0c4da5aadf493af3e04a43f63a7f45a1e730bd07465ef3867456e7c02a61afea`.
+- Mesures pròpies de contractes/pre a 1280/375/385 i caixa sòlida blanca; segona passada de Gemini v2.1.0 llegida i contrastada, amb mesures seues de Gestor/Inventari atribuïdes. Chrome ha fallat dos reconnects; no es declara mesura pròpia posterior de Gestor ni teclat després de l’esmena.
+- Llibre Mestre actualitzat IDEA-22/26/27, P1-10/14, P2-12; nous P1-15/16. No s’arxiven informes que encara han de consumir Claude/MarIA. Informe valid:true, taxonomia/Olivera/diff-check codi 0. Tancament global de només lectura codi 1, planned, 1.350 registres: LEDGER (signatura trencada i falta relleu), segell, Wiki/SCC, metadades heretades del Llibre i codi compartit fora de l’abast documental; no resegellat ni portes relaxades.
+- Cap cron/schedule creat; tres subagents i proves propis acabats. Primer tab tancat/reset; el segon tab temporal queda sense confirmació de tancament manual per timeout. Servidor compartit :3340 preservat.
+
+
+## ESTAT_ACTUAL · 2026-10-25T02:35:16+01:00 · Codex · Gauntlet 0200: SQL/cache conformes en codi, reserves de contracte i editorial encara pendent
+
+Torn documental `torn_68333fac-debb-4924-9a1d-e3edd6e89d0b`, pla 0200 vinculat. Informe [[261025_0200_auditoria_codex]] sobre HEAD `1c110f954f6e9191ff04ffeaa8e32a0821149267`, arbre `bf1751a4db34e599fa3909df87f611cab275581f`. Cap codi de producte, migració, commit ni desplegament aplicat per Codex.
+
+- Quota 30/h per auth.uid(), pany de persona+entitat i permisos owner/admin correctes per inspecció; PostgreSQL real pendent. G-P11-01 revalidat en Supabase, no en la ruta inexistent Sollutia del prompt.
+- C0200-01 P2: kit quiEmSegueix accepta tipus absent/invàlid (PoC executat). C0200-06 P2: UI veta entitat A→B amb administradora comuna encara que SQL ho admet. C0200-02 P3: barret del xat personal poc explícit.
+- C0200-03 P2: categoria implementacio rebutjada per taxonomia T3 tot i regex Olivera nova. C0200-04 P2: skill d'higiene exclou informes vius i ordena arxiu abans de consolidar. C0200-05 P3: pla cita radi-xs absent i confon text-cos color amb mida.
+- Precommit propi: 2.999 Vitest + 259 Node, 0 fallades, **60,675 s** (no s'assolix 30s). Dirigides 477/477, 23 fitxers, 25,017s; lint codi 0. Solapament entre bateries. Reforma editorial/destí dual encara absents; esborrany 0200 de Claude aparegut al tancament i llegit íntegre, encara amb seccions pendents; Gemini absent al tall.
+- Llibre Mestre enriquit en IDEA-22/26/27, P1-10/11, P2-10; P1-14 i P2-12 nous. Proposta documental per estat+hash+consumidors amb consolidació abans d'arxiu, manifest recuperable i handoff integrat. Sense activar tractors.
+- Informe valid:true, taxonomia/Olivera/diff-check codi 0. Tancament global codi 1, estat planned i 1.344 registres: LEDGER (relleu propi absent i signatura trencada), segell discordant, Wiki/SCC i metadades heretades del Llibre. No resegellat. Cinc automatitzacions locals PAUSED, guarda inactiva/finalitzada; proves i dos subagents propis acabats. Acta Marmota conjunta per a MarIA en consolidar el Trio.
+
+
+## ESTAT_ACTUAL · 2026-10-25T03:20:00+02:00 · IAIA MarIA · Parella Termodinàmica Única 0200 (Pla + Prompt Tripartit) i Escriptori Impol·lut (2 Documents)
+
+Torn `torn_e8d882de-7a49-4c0e-aaf9-696c1d8beef7` (abast documents). Commit de Claude consolidat sobre `47eb2fa00`: **`1c110f954f6e9191ff04ffeaa8e32a0821149267`**. Arbre `bf1751a4`, 38 fitxers (+2.371 / -180). Assaig en còpia congelada: **2.999 Vitest + 259 Node nets (28.9s), lint 0**.
+
+- **Escriptori Clar i Emparellat Termodinàmicament a les 02:00 (Sense dispersió de prompts):**
+  1. **Pla d'Implementació Únic:** [[261025_0200_pla_implementacio_maquetacio_editorial_didactica_i_ritme_pedra_seca]] (Editorial, HIG, `--sdp-mb-h4`, `<code>` estilitzat, flex `.sdp-especimen__viu`, `einaLocal` lead, `PanellTractors` i Dret de Destí Dual a `/connectar` `IDEA-22`).
+  2. **Prompt Tripartit Únic per a Tot l'Equip:** [[261025_0200_prompt_claude_gemini_codex_maquetacio_editorial_didactica_i_ritme_pedra_seca]] (repartiment clar de tasques: Claude pica la UI, Gemini audita DevTools en viu i el commit `1c110f954`, Codex audita forense SQL/contractes de `1c110f954` i el nou diff de Claude, i tot el Trio aborda la consulta d'automillora i maduració de l'orquestració).
+  3. **Llibre Mestre Permanent:** [[03_llibre_mestre_tasques_i_idees]].
+- **Higiene i Portes:** `node tooling/gates/porta-olivera.mjs` codi 0 (**2 documents de torn solts**, cap document consumit ni de jornades anteriors damunt la taula, safata buida). Arxivats els 9 documents consumits precedents i el prompt redundant de les 02:30 a `90_arxiu_historic/`. Zero processos zombi. Preparat per al reinici net dels xats.
+
+
+Torn `torn_00ed98d6-10f9-4dcc-8f6f-62e6a39d8e84`, abast documental; informe actualitzat i validat amb `document.mjs check` (`valid: true, errors: []`): [[261024_2230_auditoria_gemini]]. Contrastats [[261024_2315_implementacio_claude]], [[261025_0031_auditoria_codex]] i [[261025_0045_pla_implementacio_disseny_usabilitat_dialegs]].
+
+- **Verificació Empírica en Viu a `http://localhost:3340` (Chrome DevTools MCP) sobre `47eb2fa00` (`b957185c`) i `IDEA-21`:**
+  1. **Finestra de retallada amb 9 proporcions (`IDEA-20`) i Selector Compacte (`IDEA-21`):** Comprovades en viu a `/notes` i `/disseny` (`Capçalera de forma lliure`, `senzill: true`) les 9 proporcions (`1:1`, `original`, `4:3`, `3:2`, `16:9`, `21:9`, `4:5`, `3:4`, `9:16`), el redimensionament en temps real del `<canvas>` (`960×960` -> `960×411` en `21:9` -> `540×960` en `9:16`), l'exportació real (`1200×515 px` en `21:9` i `675×1200 px` en `9:16`), i les 9 pastilles compactes `.sdp-enquadrament__format-pindola` (`height: 48 px`, `fieldsetRect: 511×104 px` vs `867 px` anteriors) amb didàctica dinàmica `aria-live="polite"`. Reportats 2 poliments: `G21-01` (`52 px` d'scroll residual a `.sdp-enquadrament--formes`) i `G21-02` (unificar pastilles compactes també a la branca T46 de Notes a `DialegEnquadrament.jsx:846`).
+  2. **Fi del Doble Scroll i Finestres Adaptatives (`IDEA-21`):** Verificat `.sdp-dialeg` amb `overflow: "hidden"` i `SelectorVisibilitat` (`sdp-dialeg--g sdp-dialeg--barra`) amb `rect: 640×709 px`, `cosScrollHeight: 498 px`, `cosClientHeight: 498 px` (**`zeroScroll: true`**).
+  3. **Guarda d'alçada vertical i Targetes `1:1`:** Verificat al DOM viu que `.hero-image--vertical img` i `.hero-image .sdp-visor__obridor--vertical > img` computen `maxHeight: "675px"` (`min(75vh, 720px)` sobre viewport de `900px`) i que `.sp-card-media-container` manté `500×500 px` (`aspectRatio: "1 / 1"`, `objectFit: "cover"`).
+  4. **2a Pestanya «Empreses i entitats» i Aparador Públic (`P1-11`):** Verificat a `/pobles/la-torre-de-les-macanes` (`badgeRows: 0`, 2a pestanya `48px` mostra **La Figuera** amb `Anar al xat` i `CONNECTAR`), a `/empresa/socdepoble` i `/gent/javi-llinares` (`section.sdp-pagina-peu` fora d'`<article>`, 3 pestanyes `Mur`/`Mercat`/`Agenda` amb obertura automàtica a `Mercat` per al `Mac Mini Apple M4`), a `/el-meu-perfil?organitzacio=socdepoble` (vista `"Membres i connexions"` sense duplicar `QuiSegueixOrganitzacio`) i a `/connectar` (`hasSeguirWord: false`).
+- **Dictamen Arquitectònic sobre `IDEA-22` (`/connectar` i Contracte de `seguiments` amb Actor d'Origen):**
+  1. **`G22-01` (Polimorfisme Simètric d'Origen ↔ Destí en `seguiments`):** Tant `useSeguiment.js:118` com `localSeguiments.js`, `supabase/seguiments.js` i `2610241430_seguiments.sql:157-186` modelen l'origen (`seguidor`) com a `auth.uid()` personal. Perquè la multirepresentació B2B a `/connectar` (`Connectar com a: Javi Llinares | Sóc de Poble | Rentonar`) persisteixi connexions empresa↔empresa independents de les personals, cal afegir `comOrgId` opcional al contracte de `seguiments` i `seguidor_entitat uuid` a `public.seguiments` (verificant `private.can_manage_organization(p_com_org_id)` i mantenint la quota de 30 altes/h ancorada a `auth.uid()` a `private.seguiments_altes`).
+  2. **`G22-02` (Accés directe al Xat d'Entitat):** `ConnectarSection.jsx:295` descartava entitats de `ENTITATS_SEED` sense `projecte: true` (com `rentonar`) en mode remot, disparant `'sense-xat'` a `BlocFormarPart.jsx:144-149`. Cal encaminar-les al xat d'administració o al canal de comunitat (`rutaXatDePagina`) i eliminar l'estat mudo `'sense-xat'`.
+  3. **`G22-03` (Purga d'Administrar l'Organització):** Retirar `<BlocAdministrarOrganitzacio>` de `ConnectarSection.jsx:93,654`; la gestió viu exclusivament al Workspace intern (`DetallCompte.jsx` / `GestioMembres.jsx`).
+- **Proves i Consola:** `npm run test:precommit` verd (152 fitxers / 2.959 proves Vitest + 259 proves Node, 0 fallades). Consola de Chrome amb **0 errors i 0 avisos**. `porta-olivera.mjs` i `document.mjs check` en codi `0`. Zero processos zombi.
+
+
+## ESTAT_ACTUAL · 2026-10-25T00:37:01+02:00 · Codex · Gauntlet post-commit 47eb2fa00: conformitat parcial, nova reserva de memòria entre hosts
+
+Torn documental `torn_95ad7afe-7aaa-4eb0-99cc-8007bff05eb0`, pla 2230 vinculat. Informe [[261025_0031_auditoria_codex]]. Commit auditat `47eb2fa005bc20025723a6ca8a765fdb8b328617`, arbre `b957185c0f8f4783ac804000591aedb1dfc2d9e4`, pare `d7aa77350`; inventari real de 70 fitxers. Cap codi de producte, migració, commit o desplegament aplicat per Codex.
+
+- C11-02 corregit en SQL nou amb `m.user_id = v_uid`, auth/ACL i delegació de desat correctes; no aplicada ni provada en PostgreSQL real. C11-04 corregit amb DTO canònic i àlies de la fitxa visitada. T5B-03 i Connectar revisats sense canvi de privacitat/autoritat.
+- C11-01 corregit en host estable, però **G-P11-01 P2** reproduït: memòria global de town_name absent en servidor A bloqueja servidor B compatible sense petició. Cal cache per URL efectiva i invalidació d’esquema; prova A→B pendent d’esmena. C11-03 i C11-05 continuen pendents i reconeguts, sense regressió nova atribuïda al commit.
+- Multiformat: nou formats i costat llarg 1200 revalidats. Perfil/Notes sí reben guarda vertical; alerta inicial d’editor refutada. P3 heretats/genèrics i L-6 al document; navegador/CLS/Safari no certificats per Codex. Informe Gemini2230 i Claude2315 llegits i contrastats; cap informe nou de navegador al tall.
+- Precommit propi **22,71 s**, 152 fitxers, 2.959 Vitest + 259 Node, zero fallades. ESLint dels 66 JS/JSX del diff: codi 0. Dirigides 52/52, 166/166, 240/240, 363/363 i 404/404, amb solapament. No s’ha repetit la suite global de 21.889 declarada per Claude.
+- Llibre Mestre P1-11/P1-13/P1-10/IDEA-20 actualitzat. Informe validat amb codi 0, Olivera 0 i diff-check 0. Tancament global codi 1, 1.329 registres, estat planned: LEDGER (signatura i relleu propi absent), Wiki/SCC i metadades heretades del Llibre. No s’emet vistiplau incondicional ni es resegella el registre.
+- Cap cron ni schedule creat; cinc automatitzacions locals PAUSED i guarda inactiva/finalitzada. Bateries i tres subagents propis acabats. Acta Marmota conjunta per a MarIA en consolidar el Trio.
+
+
+## ESTAT_ACTUAL · 2026-10-25T00:28:00+02:00 · IAIA MarIA / Claude Opus 5.5 · Consolidació Commit 47eb2fa00 (70 Fitxers · P1-11, IDEA-20, C11-02), Assaig Impecable i Convocatòria del Gauntlet Loop
+
+Torn `torn_08793431-2505-4da7-8248-15e373802748` (Claude) i torn `torn_00ed98d6-10f9-4dcc-8f6f-62e6a39d8e84` (MarIA). Informe canònic de Claude: [[261024_2315_implementacio_claude]]. Commit consolidat a `backup-notes-publish`: **`47eb2fa005bc20025723a6ca8a765fdb8b328617`** (`feat(p1-11): actors rurals, multiformat de capçalera i correu de la propietària (torn 261024_2254)`).
+
+- **Arbre de Codi `b957185c` Consolidat:** 70 fitxers lliurats (+2.482 / −498). Assajat en còpia congelada prèvia amb **ZERO fallades a Vitest sencer, test:node, lint i test:precommit**.
+  1. **Llibertat Multiformat (`IDEA-20`):** Desbloquejades les 9 proporcions (`original`, `21:9`, `16:9`, `3:2`, `4:3`, `1:1`, `3:4`, `4:5`, `9:16`) integrades al selector de forma tàctil de 44px (`.sdp-casella`), costat llarg limitat a 1200px i guarda `max-height: min(75vh, 720px); object-fit: contain;` per a verticals. Targetes `1:1` conservades.
+  2. **Pàgines de Poble (`P1-11` · `C11-01`):** Suprimides píndoles duplicades a la capçalera de poble. Activada la 2a pestanya «Empreses i entitats» amb filtratge real per `town_name` a `listPublicOrganizations` (`organizations.js` i `localPerfils.js`).
+  3. **Aparador d'Actores:** Muntat `<VistaPublicacionsDeLActor>` al peu de la fitxa pública adaptant el DTO amb `publicacionsDeLaSeccio`.
+  4. **Puresa Lèxica de Connectar (`G2230-03`):** Eradicat «Seguir» en favor de «Connectar amb {nom}» en els 5 idiomes de la plataforma.
+  5. **Membres i Seguretat (`C11-02`):** Separada la vista «Membres i connexions» a `DetallCompte.jsx`. Creada la migració `supabase/migrations/2610242320_correu_propietaria_nomes_titular.sql` (`m.user_id = v_uid`).
+- **Convocatòria Gauntlet Loop Post-Commit:** Convocades Codex Sol Ultra i Gemini 4 Argon per auditar el commit `47eb2fa00`. Porta Olivera en codi `0`.
+
+## ESTAT_ACTUAL · 2026-10-24T23:06:00+02:00 · Gemini 4 Argon (IAIA MarIA) · Auditoria dels 4 Actors Rurals (P1-11), Dictamen «Doble Escala Harmònica» (IDEA-20) i Revisió Creuada amb Codex
+
+Torn `torn_00ed98d6-10f9-4dcc-8f6f-62e6a39d8e84`, abast documental; pla [[261024_2230_pla_implementacio_logica_actors_i_disseny_interior_pedra_seca]] i prompt [[261024_2230_prompt_claude_gemini_codex_logica_actors_i_disseny_interior_pedra_seca]]. Informe validat amb `document.mjs check` (`valid: true, errors: []`): [[261024_2230_auditoria_gemini]].
+
+- **Bloc A · Auditoria dels 4 Actors Rurals (`P1-11` vs Estudi de Mercat):** Certificada la diferenciació funcional i visual dels 4 actors (*Veí/Veïna* amb refugi privat a `/notes`, *Comerç/Empresa* amb aparador KM 0 i passarel·la TPV/Menjar a Casa, *Col·lectiu/Grup* amb pertinença «Formar part» i captura d'acords, i *Pàgina de Poble* «Gent de la Torre» *bottom-up* sense dependència d'ajuntament). Confirmades 4 precondicions tècniques en convergència amb Codex (`261024_2254_auditoria_codex`): `G2230-01`/`C11-01` (filtre per poble a `listPublicOrganizations` amb normalització `clausDeLaFitxaDelPoble`), `G2230-02`/`C11-04` (desempaquetat DTO amb `publicacionsDeLaSeccio` per a `<VistaPublicacionsDeLActor>`), `G2230-03` (paritat lèxica «Connectar amb {nom}» / «Veïnat connectat» en `BlocRelacio.jsx`, `Seguidors.jsx` i els 5 diccionaris i18n per superar `i18n.claus.test.js`) i `G2230-04` (evitar duplicar `<QuiSegueixOrganitzacio>`, ja muntat dins de `<GestioMembres>`).
+- **Bloc B · Resolució del Dilema Ràtio Targeta vs Portada (`IDEA-20`, Àudio 22:47):** Establert el patró de **«Doble Escala Harmònica» (Opció C)**:
+  1. **Llibertat de les 9 proporcions a la Fitxa (`PageFrame` `.hero-image`) i al Lightbox (`VisorImatges`):** `original`, `21:9`, `16:9`, `3:2`, `4:3`, `1:1`, `3:4`, `4:5` i `9:16` obrint `senzill: false` per a `capcalera` a `useEnquadramentImatge.jsx:139`, eliminant `exacta: 1200×1200` i limitant el costat llarg a `1200px` (zero migracions SQL sota `T46`), amb guarda `max-height: min(75vh, 720px)` per a formats verticals.
+  2. **Finestra Matemàtica `1:1` (`aspect-ratio: 1 / 1; object-fit: cover; object-position: center`) a `UniversalCard`:** Preserva `CLS = 0`, l'alineació horitzontal de boines taronges (`58px`) i peus blaus, i la superació de les portes `kowalskiMurConsola.capes.test.js` i `imatgesASang.capes.test.js`.
+- **Verificació i Higiene:** `document.mjs check` en codi `0`, `porta-olivera.mjs` en codi `0`. Zero crons, timers ni processos zombi creats (`manage_task list` buit).
+
+
+## ESTAT_ACTUAL · 2026-10-24T23:01:00+02:00 · Codex · Auditoria P1-11: filtre, correu i carrera de membres pendents
+
+Torn `torn_6a830962-0b9e-4bd0-9391-7f62869a0a2c`, abast documental; pla 2230 vinculat. Informe [[261024_2254_auditoria_codex]], sobre HEAD `d7aa77350`, branca `backup-notes-publish`. Cap codi de producte modificat, migració aplicada, commit ni desplegament per Codex.
+
+- C11-01: `listPublicOrganizations` continua global; selectors de poble ignorats, filtre necessari abans del límit. C11-04: reutilitzar conversió `publicacionsDeLaSeccio` per al perfil visitat; no endollar directament les notes virtuals al visor.
+- C11-02: SQL RPC de contacte retorna `auth.users.email` de l’owner a coadmins; model local ja evita esta exposició. C11-03: carrera de candidat absent→UPSERT pot degradar un admin sense owner; contrast independent de dos agents, pendent d’execució PostgreSQL concurrent. C11-05: contacte corporatiu públic sense projecció coherent (booleà/text).
+- T46: el retall ja queda als bytes i hero_url és suficient. Multiformat pendent de selector senzill, formats complets i eliminació d’exacta1200×1200 de capçalera. Hero CSS ja conserva proporció natural. Proposta de card fixa amb contain, pendent de consens visual.
+- Precommit independent aïllat: **28,18 s**, 151 fitxers, 2.945 Vitest + 259 Node, zero fallades. Bateries dirigides85/85, 51/51, 18/18 i 138/138, amb solapament; no se sumen. No certifica PostgreSQL ni les funcionalitats noves. Llibre Mestre P1-11/P1-10/IDEA-20 actualitzats i P1-13 creat.
+- Informe validat (`valid:true`, cap error), Olivera0 i diff-check0. Tancament global: codi 1, 1.329 registres, estat planned; fallen LEDGER (signatura i relleu propi absent), Wiki/SCC i metadades heretades del Llibre. No es resegella ni es fabrica verd. Al tall no hi ha informes nous de Claude/Gemini; no s’inventa consens del Trio.
+- Cap cron ni schedule creat; cinc automatitzacions Codex locals PAUSED i guarda nocturna inactiva/finalitzada. Recursos de proves propis acabats; serveis compartits preservats. Acta Marmota conjunta correspon a MarIA en consolidar la convocatòria.
+
+
+## ESTAT_ACTUAL · 2026-10-24T22:15:00+02:00 · IAIA MarIA / Mestre Javi Llinares · Triomf del Gauntlet Loop: Commits 5502c466 i d7aa7735 (21.826 Proves en Verd), Parser Lineal G-03 i Blindatge Total
+
+Torn `torn_3689cd84-71ae-4e08-abe8-a3c886f2c3bf`. Commits consolidats consecutius a la branca `backup-notes-publish`:
+1. `472f704d0`: Fortificació inicial T1–T4.
+2. `5502c4669`: Correccions del Gauntlet 1945 (quota estricta a 30/hora amb tall a la 31a, espera de represa de 10 minuts amb `coalesce(v_represa, v_creat)` i rebuig de DNS fallat a hosts aprovats).
+3. `d7aa77350`: Resolució completa de `G-03` / CWE-1333: parser síncron de `gestor.js` reescrit a complexitat estrictament lineal $O(n)$, eliminant el bloqueig de CPU per feeds malformats d'1 MB tant al servei de Supabase com protegint el nucli del Lector.
+
+- **Proves:** Suite sencera de Vitest amb **21.826 proves passant, ZERO fallades** (15 proves de linealitat noves). `test:node` amb 1.023 proves en verd. `test:precommit` ràpid en 28–32 segons. Linter i portes de git-staged en codi 0.
+- **Estat del Repositori:** Codi 100% commitejat i net a l'índex. Branca 12 commits per davant de `fork`. Porta Olivera en Codi 0.
+- **Relleu per al Nou Xat:** Tancament de la sessió de fortificació d'infraestructura. El següent cicle s'obrirà en un nou xat net d'artefactes per abordar la **Privacitat Sagrada i Xifratge E2EE al Xat Rural (`P1-12`)** i el **Plànol Atòmic de Pobles i Entitats (`P1-11`)**.
+
+
+Torn `torn_87cf11b4-29f5-4e9f-aac2-7ab291c1d1b1`; informe MCR [[261024_1945_auditoria_codex]], prompt1945 i pla1800 vinculats com a context. Cap font de producte modificada per Codex.
+
+- G-01: contracte nou30 admissions/hora NO FET, SQL/local60,31a represa admesa. El registre independent i l’instant post-pany sí estan corregits; no es declara regressió respecte del pla1800 de60.
+- G-02: fonts aprovades obertes sense resoledor i egrés/rebinding sense acreditar. Privada retornada+error altra família ara es veta: cas antic corregit.
+- G-03 P2 heretada: parser senseNiats quadràtic fora del timer;1.040.030 B retorna200 en7.080,922ms, timer retirat als12,906ms. Requerix contingut d’origen aprovat/controlat; cap atac remot demostrable ni regressió nova atribuïda al commit.
+- Precommit independent25,402s:2.927 Vitest+259 Node,0 fallades. SQL/local56/56, notes/UI209/209, xarxa152/152 (solapament, no se sumen). PostgreSQL i Deno reals no acreditats.
+- Notes visibles sense MAS; dos comentaris residuals. Cap botó solt Seguir en fitxes/targetes; llenguatge de seguiment encara visible. T5b necessita correccions de contracte/DTO/components abans d’executar.
+- Informe Gemini1945 llegit íntegre i contrastat: coincidència en quota i lèxic; precisions sobre DNS parcial, primera represa i termini de CPU al nostre informe. Cap consens total inventat.
+- Llibre Mestre actualitzat; informe validat codi 0. Tancament executat: codi 1, estat planned,1.297 registres heretats/de torn (graf Wiki/SCC, metadades del Llibre i LEDGER); Olivera 0. LEDGER preservat sense resegellar. El dictamen passa a l’Acta conjunta de MarIA. Cap cron creat; cinc automacions Codex PAUSED i guarda inactiva/finalitzada. Processos puntuals propis acabats.
+
+
+## ESTAT_ACTUAL · 2026-10-24T19:53:00+02:00 · Gemini 4 Argon (IAIA MarIA) · Gauntlet Loop Adversarial Post-Commit (`472f704d0`): Veredicte Parcial i Matriu MCR Emesa
+
+Torn `torn_3689cd84-71ae-4e08-abe8-a3c886f2c3bf`; prompt [[261024_1945_prompt_codex_gemini_gauntlet_loop_revisio_adversarial_postcommit]] i acta [[261024_1945_acta_marmota_triomf_commit_472f704d0_fortificacio_i_obertura_gauntlet]]. Informe validat amb `document.mjs check` (`valid: true, errors: []`): [[261024_1945_auditoria_gemini]].
+
+- **Veredicte del Gauntlet Loop sobre `472f704d0`:** **REBUIG PARCIAL DE CONFORMITAT** (`[FET]` en T1.1, T1.2, T1.4, T2.3, T3 i T4; `[PARCIAL]` en T1.3, T2.1, T2.2 i rètols interns de Connectar):
+  1. **`G1945-01` (P2 · T1.3 Anti-SSRF `aprovatVetat`):** a `supabase/functions/noticies/gestor.js:971-976`, `aprovatVetat` ignora `nom.fallades > 0` (a diferència de `xarxaDe` a `:954`). Com que `index.ts:58` ja convertix `Deno.errors.NotFound` en `[]` (`fallades === 0`), si `AAAA` té una IP privada però falla amb `SERVFAIL`/timeout i `A` és pública, `aprovatVetat` retorna `null` i permet el fetch.
+  2. **`G1945-02` (P1 · T2.1 Quota horària 30 vs 60):** el prompt `261024_1945:95-96` i l'Acta `261024_1945:53` exigeixen un tall estricte de **30 altes/hora**, però `2610241430_seguiments.sql:374` i `localSeguiments.js:44` mantenen **60 altes/hora**.
+  3. **`G1945-03` (P1 · T2.2 Buit en la 1a represa `reactivat_al IS NULL`):** en una alta inicial (`reactivat_al IS NULL`, línia 390), si l'usuari fa baixa tova i es reactiva immediatament, el control `v_represa > now() - interval '10 minutes'` (`2610241430_seguiments.sql:355` i `localSeguiments.js:126`) avalua a fals i permet reactivar sense esperar els 10 minuts; a més, les línies `355` i `385` usen `now()` en lloc de `v_ara` (`clock_timestamp()`).
+  4. **`G1945-04` (P2 · Doctrina del Connectar):** zero botons solts de seguir a targetes i fitxes públiques (`[FET]`), però dins de `/connectar` (`BlocRelacio.jsx:45,80-85,100-139`), `Seguidors.jsx:125,154` i `SnippetCurador.jsx:112` els rètols interns encara diuen «Seguir {nom}» en lloc de «Connectar amb {nom}».
+- **Verificació en viu:** `npm run test:precommit` verd en **27,6s** (2.927 proves Vitest + 259 proves Node, 0 fallades). Porta Olivera en codi `0`. Zero crons ni tasques en segon pla.
+
+## ESTAT_ACTUAL · 2026-10-24T19:45:00+02:00 · IAIA MarIA / Mestre Javi Llinares · Commit Atòmic 472f704d0 Consolidat (21.808 Proves en Verd), Llei del Connectar i Convocatòria del Gauntlet Loop
+
+Torn `torn_3689cd84-71ae-4e08-abe8-a3c886f2c3bf`. Acta canònica: [[261024_1945_acta_marmota_triomf_commit_472f704d0_fortificacio_i_obertura_gauntlet]]. Prompt local per a Codex i Gemini: [[261024_1945_prompt_codex_gemini_gauntlet_loop_revisio_adversarial_postcommit]]. Commit consolidat a `backup-notes-publish`: `472f704d0` («feat(fortificacio): T1-T4 del torn 261024_1800 (anti-SSRF, quota de seguiments, notes sense MAS i pre-commit ràpid)»).
+
+- **Codi Consolidat a l'Arbre (`472f704d0`):** 18 rutes de codi T1–T4 aplicades. 21.808 proves de Vitest passant, 0 fallades. `test:node` 1.022 passant, lint en codi 0. Nova suite `npm run test:precommit` executant 2.927 + 259 proves en 32 segons.
+- **Directives del Mestre Javi Llinares:**
+  1. *Llei Suprema del Connectar (Àudio 18:21):* A Sóc de Poble no se seguix, es connecta. Prohibit escampar botons solts de seguir per targetes públiques; tota la relació es concentra a `/connectar`.
+  2. *Privacitat Sagrada i Xifratge E2EE al Xat (`P1-12`, Àudio 18:49):* Mandat ètic innegociable: ni el Mestre ni ningú amb accés a la base de dades pot llegir mai els missatges privats de dos veïns. Web Crypto API (`crypto.subtle` / AES-GCM 256) per a la fase següent.
+  3. *Protocol Gauntlet Loop (Àudio 19:38):* Convocatòria extrema per a Codex i Gemini per auditar `472f704d0` sense complaença i emetre la Matriu MCR.
+- **Escriptori i Portes:** Porta Olivera passa amb Codi 0 (6 documents vius ancorats a `## Activitat en curs`). Zero crons ni processos de fons orfes.
+
+
+Torn `torn_483710d4-afff-4198-a204-755bfbff1db1`; pla [[261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema]] vinculat. Informe validat (`document.mjs check`: cap error): [[261024_1800_auditoria_claude]]. Base `fe14e1756`, branca `backup-notes-publish`; res commitejat, desplegat ni aplicat.
+
+- **T1 (P1-07):** llista blanca nativa `HOSTS_DEL_SISTEMA` (els cinc hosts exactes dels sis referents del §23); cada salt passa les regles, també el primer i el de les fonts del sistema; els hosts aprovats i els CDN es resolen, i una resposta privada (també si l'altra família falla, `allSettled`: la troballa restant de Codex) o cap adreça els veta; redireccions del sistema sense canvi de host, esquema ni port. Oberta i del Mestre: sense `Deno.resolveDns` al runtime. Residual: DNS rebinding fins a l'egrés aïllat.
+- **T2 (P2-10):** registre `private.seguiments_altes` (qui i quan) dins del pany, amb l'instant `clock_timestamp()` pres després del pany; purga de pg_cron cada 10 minuts amb `skip locked`; la branca d'entitat mira la baixa; el model local, amb la mateixa finestra. Migració 2610241430 NO aplicada.
+- **T3 (P2-11):** cap «MAS» als textos de les Notes; queda «DIAGNÒSTIC DEL MAS» a l'exportació de la Consola (ordre del Mestre).
+- **T4 (P1-10):** `npm run test:precommit` (2.927 + 259 proves, 23,3 s); `git-staged.mjs` crida `run-portes --nomes-portes` i la suite ràpida, sense lint duplicat; la Porta Build no construix dins del pre-commit. Escrit per l'executor amb les leases Reflex `284a95f8` i `94d149d1`, consumides. El hook continua bloquejat pel deute heretat (lease de commit, porta-documents, tancament, portes sobre l'arbre preparat).
+- **Proves:** Vitest sencer en còpia congelada, 21.797 passen, 1 fallada que només es dona en còpia, 109 omeses; `test:node`, 1.018 passen i 3 fallades de còpia; lint 0; bateries dirigides i `test:precommit` en verd sobre l'estat final. Revisió adversarial de 6 agents: T1-01, T1-02 i B1–B4 corregides; T2-01 refutada.
+- **Següent:** el Mestre decidix el commit i les sis decisions dels Límits de l'informe. Cap cron ni tasca de fons activa.
+
+## ESTAT_ACTUAL · 2026-10-24T18:16:00+02:00 · Gemini 4 Argon (IAIA MarIA) · T5a Auditoria Wiki v2.2 i T5b Plànol Atòmic de Disseny Interior Pedra Seca completats
+
+Torn `torn_a73cc73f-9aac-4d02-aba1-03a1da4290eb`; pla [[261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema]] i prompt [[261024_1800_prompt_claude_gemini_codex_fortificacio_total_i_blindatge_sistema]]. Informe validat amb `document.mjs check` (`valid: true, errors: []`): [[261024_1800_auditoria_gemini]].
+
+- **T5a (Documentació Wiki v2.2):** Validat que `supabase/README.md` i `src/data/adaptadors/noticies/README.md` reflectixen fidelment la v2.2 (migracions `2610241400..1440`, 3 Edge Functions, 6 referents §23). Documentats a `T5A-01` els punts pendents de propagació a `00_arquitectura_tecnica_unificada.md:22,49,51`, `ADR-2026-10-APPS-DEL-DISPOSITIU.md:102-114`, `README.md:28,79-90` i `260913_0635_arquitectura_perfil_universal.md`. A `T5A-02`, diagnosticats els 2 bloquejos `P1 B-1` de `porta:cognitiu` (`core-gauntlet-loop/SKILL.md` i `core-salfumant-radical/SKILL.md`) i les 4 Actes Marmota pendents a `00_index.md`.
+- **T5b (Disseny Interior Pedra Seca per a Pobles, Empreses, Entitats i Usuaris):** Dissenyat el plànol d'execució atòmica (`P1-11` al Llibre Mestre) reutilitzant 100% components existents de Pedra Seca:
+  1. `T5B-01` (`/pobles/:id`, `detailSectionMeta.jsx:540-628`): purgar píndoles HTML duplicades `.badge-row`/`.pill` i activar la 2a pestanya «Empreses i entitats» a `PestanyesDelPoble` (`listPublicOrganizations`).
+  2. `T5B-02` (`FitxaPublica`, `PerfilPublicSection.jsx:671-720`): muntar `<Pestanyes>` + `<VistaPublicacionsDeLActor>` al peu de les fitxes d'empresa, entitat i persona com a aparador viu de Mercat, Agenda i Mur, i afegir el botó directe «Seguir / Seguint» (`useSeguiment`).
+  3. `T5B-03` (`/el-meu-perfil`, `perfilModel.js` i `DetallCompte.jsx`): separar `<GestioMembres>` i `<QuiSegueixOrganitzacio>` en una vista pròpia de 2a columna (`vista: 'membres'`, «Membres i seguidors»).
+- **Contrast T1–T4 i T6:** Verificat l'avanç en viu de Claude a `supabase/functions/noticies/gestor.js` (que ja resol els punts `C6-02` i `C6-03` de Codex i preserva els 6 canals de la §23). Porta Olivera en codi `0`. Zero crons ni tasques en segon pla.
+
+## ESTAT_ACTUAL · 2026-10-24T18:21:12+02:00 · Codex · T6 reauditada: quota i port corregits; DNS parcial i PostgreSQL pendent
+
+Torn `torn_7b14119b-d6d2-474c-8f3b-0f2c812786c2`; pla 261024_1800 vinculat. Informe viu: [[261024_1800_auditoria_codex]]. Tall de codi `fe14e175634cdab44a5dd6e111931ad9a1f7ed02`, branca `backup-notes-publish`.
+
+- C6-01 P2 corregida en codi: private.seguiments_altes i paritat local amb registre independent; PoC118/413 ara admeten60 i rebutgen61a, suite final55/55. SQL revisat amb recompte/insert sota el mateix pany, sense FK al destinatari/poble. Execució PostgreSQL concurrent, bootstrap i retenció física pendents; no s’afirma413 vigent.
+- Pegat T1 reauditat: C6-03 (canvi de port) corregida. C6-02 P1 parcial: privades ordinàries rebutjades, però A privada+AAAA error o invers encara fa fetch i dona200; DNS desconegut dels aprovats continua obert. Nova suite xarxa146/146 en2,77s. Cap intrusió remota ni accés privat real demostrat. Rebinding/eixida de xarxa encara sense acreditar.
+- RLS i sessió: controls coherents per lectura, cap bypass entre usuaris trobat. Sense PostgreSQL local ni daemon Docker; cap prova SQL real/concurrent o desplegament acreditat.
+- Proves dirigides verdes: xarxa108/108; SQL/client/local49/49; client/sessió/UI75/75, amb solapament. Cap suite global repetida ni codi de producte modificat. PoC exactes i criteris de reauditoria per a Claude dins de l'informe.
+- Reflex documental i Llibre Mestre actualitzats; informe validat amb codi0. Tancament final executat18:21:12CEST: codi1, 1.299 registres (LEDGER, metadades heretades del Llibre, graf Wiki/SCC i delta concurrent de codi alié al torn documental); Olivera0. Signatura LEDGER ja trencada i fitxer idèntic a HEAD: no s'ha resegellat ni canviat el registre per fabricar verd. El torn continua planned. Informe Gemini llegit com a plantilla encara pendent; cap consens inventat.
+- Cap cron creat; cinc automatitzacions locals trobades PAUSED, guarda inactiva/finalitzada. Processos de proves propis acabats; serveis compartits preservats. Acta Marmota general correspon a MarIA en consolidar el Trio.
+
 ## ESTAT_ACTUAL · 2026-10-24T17:45:00+02:00 · IAIA MarIA / Mestre Javi Llinares · Triomf del Trio, Commit Atòmic f54baa09c, 21.756 Proves en Verd, Fortificació P0 i Unificació Lector-Bloc de Notes
 
 Torn: `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Acta canònica de la jornada: [[261024_1745_acta_marmota_triomf_fortificacio_trio_adversarial_i_unificacio_lector_bloc_de_notes]]. Commit consolidat a `backup-notes-publish`: `f54baa09c` («feat(fortificacio): T1-T8 del torn 261024_1315 i directives del Mestre»).

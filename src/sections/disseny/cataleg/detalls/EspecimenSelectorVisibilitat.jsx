@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Globe, Lock } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
-import { Boto } from '../../../../components/PedraSeca/index.js';
+import { Accions, Boto } from '../../../../components/PedraSeca/index.js';
 import { SelectorVisibilitat } from '../../../../components/universal/SelectorVisibilitat.jsx';
 import { bloqueigDeFitxa, textosDeFitxa } from '../../../profile/visibilitatFitxa.js';
 import { bloqueigDeNota, textosDeNota } from '../../../notes/visibilitatNota.js';
@@ -11,7 +11,12 @@ import { Llinatge } from '../Llinatge.jsx';
    barra taronja i PUBLICAR obrin esta finestra (la mateixa finestra de barra
    que el calendari de T40). Tres casos reals, amb els textos de cada
    consumidor: una fitxa privada, una nota ja publicada (no es pot retirar
-   del Mur) i la fitxa d'un agent IA (sempre pública). */
+   del Mur) i la fitxa d'un agent IA (sempre pública).
+   IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Cada cas, en l'ordre
+   canònic: el títol, el paràgraf que l'explica (la descripció de veres del
+   consumidor) i el botó dins d'Accions. Sense embolcall: l'h4 de cada cas
+   conserva els seus 32px de dalt. La finestra tancada no es veu i va davant
+   del botó, perquè Accions siga l'últim de la caixa. */
 const CASOS = [
   { id: 'persona', nom: 'Fitxa privada d’una persona', publica: false, textos: textosDeFitxa('persona'), bloqueig: bloqueigDeFitxa('persona') },
   { id: 'nota', nom: 'Nota publicada al Mur', publica: true, textos: textosDeNota(), bloqueig: bloqueigDeNota({ publicada: true }), comNom: 'Sóc de Poble' },
@@ -46,11 +51,9 @@ export default function EspecimenSelectorVisibilitat() {
       {CASOS.map((cas) => {
         const Icona = estats[cas.id] ? Globe : Lock;
         return (
-          <div key={cas.id}>
+          <Fragment key={cas.id}>
             <h4>{cas.nom}</h4>
-            <Boto onClick={() => setObert(cas.id)} icona={Icona} aria-haspopup="dialog">
-              {estats[cas.id] ? cas.textos.publica.etiqueta : cas.textos.privada.etiqueta}: canviar
-            </Boto>
+            <p>{cas.textos.descripcio}</p>
             <SelectorVisibilitat
               obert={obert === cas.id}
               onTanca={() => setObert(null)}
@@ -63,7 +66,12 @@ export default function EspecimenSelectorVisibilitat() {
                 return true;
               }}
             />
-          </div>
+            <Accions>
+              <Boto onClick={() => setObert(cas.id)} icona={Icona} aria-haspopup="dialog">
+                {estats[cas.id] ? cas.textos.publica.etiqueta : cas.textos.privada.etiqueta}: canviar
+              </Boto>
+            </Accions>
+          </Fragment>
         );
       })}
     </Especimen>

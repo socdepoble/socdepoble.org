@@ -125,10 +125,10 @@ function Eixida({ eixida }) {
   return (
     <section aria-labelledby={id}>
       <div className="sdp-tractors-panell__cap">
-        <h4 id={id} className="sdp-tractors-panell__subtitol">Eixida</h4>
+        <h5 id={id} className="sdp-tractors-panell__subtitol">Eixida</h5>
         <Insignia to={bandera.to}>{bandera.text}</Insignia>
       </div>
-      <p className="sdp-tractors-panell__motiu">
+      <p>
         {`${eixida.resum.roja} roges, ${eixida.resum.groga} grogues i ${eixida.resum.info} informatives.`}
       </p>
       {eixida.avisos.length ? (
@@ -215,10 +215,14 @@ export default function PanellSentinelles({
     <>
       <PanellTractors magatzem={desti} subtle={subtle} tractors={tractors} entorn={entorn} rellotge={rellotge} />
       <section className="sdp-tractors-panell" aria-labelledby={idTitol}>
-        <h2 id={idTitol} className="sdp-tractors-panell__titol">Sentinelles: què observen</h2>
+        {/* IDEA-27 (ordre del Mestre, 261025) · Una secció de la pàgina és un h3,
+            com la porta de dalt, i cada sentinella un h4. Què és un sentinella
+            ho diu l'entradilla de la pàgina (WikiDePobleSection.jsx); ací, com
+            es fa servir. */}
+        <h3 id={idTitol} className="sdp-tractors-panell__titol">Sentinelles: què observen</h3>
         <p>
-          Un sentinella és un tractor que només observa: llig el que tries, alça banderes i proposa. No aplica, no
-          esborra, no envia i no paga res. Abans d’observar comprova que n’has aprovat la versió exacta a la porta de dalt.
+          Tria un sentinella de la llista per a vore quan es dispara, què llig i què en trau. Abans d’observar
+          comprova que n’has aprovat la versió exacta a la porta de dalt.
         </p>
         {porta.error ? <Alerta to="error">{porta.error}</Alerta> : null}
         {porta.carregant ? <Carregant etiqueta="Comprovant les aprovacions…" /> : null}
@@ -240,7 +244,7 @@ export default function PanellSentinelles({
 
             <article className="sdp-tractors-panell__detall" aria-labelledby={idNom}>
               <div className="sdp-tractors-panell__cap">
-                <h3 id={idNom} className="sdp-tractors-panell__nom">{triat.nom}</h3>
+                <h4 id={idNom} className="sdp-tractors-panell__nom">{triat.nom}</h4>
                 <Insignia to={insigniaDe(triat.id).to}>{insigniaDe(triat.id).text}</Insignia>
               </div>
               <p>{triat.descripcio}</p>

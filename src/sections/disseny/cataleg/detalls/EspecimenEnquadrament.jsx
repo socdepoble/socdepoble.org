@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Circle, CircleUserRound, Crop, ImageUp, MapPin, Proportions, Square } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
-import { Alerta, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
+import { Accions, Alerta, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { DialegEnquadrament } from '../../../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { opcionsSortida } from '../../../../components/universal/enquadrament/enquadrament.js';
 import { ETIQUETA_CONSERVA_EXIF } from '../../../../components/universal/enquadrament/exifIncrustat.js';
@@ -200,13 +200,16 @@ export default function EspecimenEnquadrament() {
         'Tancar la capçalera en una sola forma, o prometre que la miniatura i la targeta ensenyen sencera una capçalera que no és quadrada: la retallen en quadrat.',
         'Prometre que es pot recuperar la part retallada: no es guarda.',
       ]}>
+      {/* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Cap botó enganxat a l'h4:
+          primer el paràgraf, després els botons dins d'Accions (també als casos
+          de baix, que ja anaven darrere del seu text). */}
       <h4>Capçalera</h4>
-      <div className="sdp-alerta__accions">
+      <p className="sdp-camp__ajuda">La foto teua no ix del navegador: l’espècimen no puja ni desa res.</p>
+      <Accions>
         <Boto icona={Crop} aria-haspopup="dialog" onClick={() => setFont(MOSTRA)}>Enquadrar una foto apaisada</Boto>
         <Boto icona={ImageUp} aria-haspopup="dialog" onClick={() => input.current?.click()}>Provar amb una foto teua</Boto>
         <input ref={input} type="file" accept="image/*" onChange={tria} className="sdp-nomes-lector" tabIndex={-1} aria-hidden="true" />
-      </div>
-      <p className="sdp-camp__ajuda">La foto teua no ix del navegador: l’espècimen no puja ni desa res.</p>
+      </Accions>
       {resultat ? (
         <figure className="sdp-enquadrament__resultat">
           {resultat.url ? <img src={resultat.url} alt="El resultat de l’enquadrament" /> : null}
@@ -226,12 +229,12 @@ export default function EspecimenEnquadrament() {
           L’avatar d’avui de la IAIA és l’escena sencera. Amplia-la fins a la cara: sense ampliar, el quadrat ja és la foto sencera i no hi ha res a retallar.
         </p>
       </div>
-      <div className="sdp-alerta__accions">
+      <Accions>
         {/* Encastat, '/assets/…' va per la base del paquet (resolRecursPropi), no a l'arrel del domini. */}
         <Boto icona={CircleUserRound} aria-haspopup="dialog" onClick={() => { setAvisAvatar(null); avatar.obri(resolRecursPropi(MOSTRA_AVATAR)); }}>Enquadrar l’avatar de la IAIA</Boto>
         <Boto icona={ImageUp} aria-haspopup="dialog" onClick={() => inputAvatar.current?.click()}>Provar un avatar amb una foto teua</Boto>
         <input ref={inputAvatar} type="file" accept="image/*" onChange={triaAvatar} className="sdp-nomes-lector" tabIndex={-1} aria-hidden="true" />
-      </div>
+      </Accions>
       {avisAvatar ? <Alerta to="error">{avisAvatar}</Alerta> : null}
       {resultatAvatar ? (
         <figure className="sdp-enquadrament__resultat">
@@ -253,10 +256,10 @@ export default function EspecimenEnquadrament() {
       <p className="sdp-camp__ajuda">
         Només en fotos de treball de camp i mai en un avatar. L’opció ve apagada; si la marques, les coordenades es lligen de l’original abans del canvas i el fitxer retallat ix sense EXIF.
       </p>
-      <div className="sdp-alerta__accions">
+      <Accions>
         <Boto icona={MapPin} aria-haspopup="dialog" onClick={() => inputGeo.current?.click()}>Provar amb una foto teua, amb l’opció de geolocalitzar</Boto>
         <input ref={inputGeo} type="file" accept="image/*" onChange={triaGeo} className="sdp-nomes-lector" tabIndex={-1} aria-hidden="true" />
-      </div>
+      </Accions>
       {resultatGeo ? (
         <figure className="sdp-enquadrament__resultat">
           {resultatGeo.url ? <img src={resultatGeo.url} alt="El resultat de l’enquadrament amb l’opció de geolocalitzar" /> : null}
@@ -270,14 +273,14 @@ export default function EspecimenEnquadrament() {
       <p className="sdp-camp__ajuda">
         Al Perfil, «Capçalera» i «Avatar» (o «Logotip») són dos botons separats i obrin la mateixa finestra, calcada de la de Claude: arrossegar, el zoom amb − i +, el lliscador o la roda, i Restablir, Cancel·lar i Guardar. Abans de triar la foto es diu què s’admet: {AJUDA_FOTO}
       </p>
-      <div className="sdp-alerta__accions">
+      <Accions>
         {/* Encastat, '/assets/…' va per la base del paquet (resolRecursPropi). */}
         <Boto icona={Circle} aria-haspopup="dialog" onClick={() => avatarSenzill.obri(resolRecursPropi(MOSTRA_AVATAR))}>Avatar en cercle</Boto>
         <Boto icona={Square} aria-haspopup="dialog" onClick={() => logotipSenzill.obri(resolRecursPropi(MOSTRA_AVATAR))}>Logotip quadrat (600 × 600)</Boto>
         {/* Directiva del Mestre (261024, àudio 22:47) · La capçalera tria la forma (abans,
             Gauntlet 261016, només quadrada): el nom i la icona ho diuen. */}
         <Boto icona={Proportions} aria-haspopup="dialog" onClick={() => capcaleraSenzill.obri(resolRecursPropi(MOSTRA))}>Capçalera de forma lliure (1.200 pel costat llarg)</Boto>
-      </div>
+      </Accions>
       {resultatSenzill ? (
         <figure className="sdp-enquadrament__resultat">
           {resultatSenzill.url ? (

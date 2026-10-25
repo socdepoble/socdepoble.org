@@ -349,8 +349,23 @@ describe('T6b · els casos de seguiments', () => {
       .toMatchObject({ estat: 'falla', falles: ['un seguiment té tipus "ia"'] });
     const qui = cas('quiEmSegueix', 'quiEmSegueix({}, config)');
     expect(await executaCas(qui, { quiEmSegueix: async () => [] }, ctx())).toMatchObject({ estat: 'ok' });
-    expect(await executaCas(qui, { quiEmSegueix: async () => [{ id: '', nom: 7, creatAl: 3 }] }, ctx()))
+    expect(await executaCas(qui, { quiEmSegueix: async () => [{ tipus: 'persona', id: '', nom: 7, creatAl: 3 }] }, ctx()))
       .toMatchObject({ estat: 'falla', falles: ['un seguidor sense id de text', 'el seguidor  té un nom que no és text ni null', 'el seguidor  té un creatAl que no és text ni null'] });
+  });
+
+  /* C0200-01 (auditoria Codex 261025_0200) · Les dues files de la
+     reproducció de Codex, que el kit donava per conformes. */
+  test('quiEmSegueix: un seguidor persona o entitat és conforme; sense tipus o amb un tipus estrany és una falla', async () => {
+    const qui = cas('quiEmSegueix', 'quiEmSegueix({}, config)');
+    expect(qui.titol).toContain("tipus: 'persona' | 'entitat'");
+    const bona = [{ tipus: 'entitat', id: 'e1', nom: 'Forn', creatAl: null }, { tipus: 'persona', id: 'p1', nom: 'Pepa', creatAl: '2026-10-24T12:00:00Z' }];
+    expect(await executaCas(qui, { quiEmSegueix: async () => bona }, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(await executaCas(qui, { quiEmSegueix: async () => [{ id: 'e1', nom: 'Forn', creatAl: null }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['un seguidor té tipus undefined'] });
+    expect(await executaCas(qui, { quiEmSegueix: async () => [{ id: 'e1', nom: 'Forn', creatAl: null, tipus: 'ia' }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['un seguidor té tipus "ia"'] });
+    expect(await executaCas(qui, { quiEmSegueix: async () => [{ id: 'e1', nom: 'Forn', creatAl: null, tipus: null }, ...bona] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['un seguidor té tipus null'] });
   });
 
   test('els rebuigs: segueix i deixaDeSeguir amb SDP-SEG-001; una entitat que no existix, amb un code', async () => {
@@ -382,5 +397,71 @@ describe('T6b · els casos de seguiments', () => {
       .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
     /* El primer cas de segueix continua sent el de SDP-SEG-001. */
     expect(cas('segueix').titol).toContain('SDP-SEG-001');
+  });
+});
+
+/* ── IDEA-22, punt 2 (Directiva del Mestre; pla 261025_0200) · La titular
+   que ha triat mostrar-se (capacitat 'titularPublic') i la seua tria
+   ('consentimentTitular'): cap cas no escriu, i el kit veu un correu o un
+   rol que no hi havien de ser. ── */
+describe('IDEA-22 · els casos de la titular', () => {
+  const ctx = () => contextDeConformitat({ config: { dataMode: 'seed' } });
+  const amb = (code) => async () => { throw Object.assign(new Error('No.'), { code }); };
+
+  test('cobrixen els mètodes de les dues capacitats, sense escriure', () => {
+    for (const capacitat of ['titularPublic', 'consentimentTitular']) {
+      const casos = CASOS.filter((c) => c.capacitat === capacitat);
+      expect([...new Set(casos.map((c) => c.metode))].sort(), capacitat).toEqual([...CAPACITATS[capacitat]].sort());
+      expect(casos.every((c) => c.escriu === false), capacitat).toBe(true);
+    }
+  });
+
+  test('d’una organització que no existix, null; una persona inventada és una falla', async () => {
+    const absent = cas('loadTitularPublic', 'no existix');
+    const crides = [];
+    expect(await executaCas(absent, { loadTitularPublic: async (...args) => { crides.push(args); return null; } }, ctx()))
+      .toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toEqual([['00000000-0000-4000-8000-00000000c0f1', { dataMode: 'seed' }]]);
+    expect((await executaCas(absent, { loadTitularPublic: async () => ({ tipus: 'persona', id: 'p', nom: 'Pepa', avatar: '' }) }, ctx())).estat).toBe('falla');
+  });
+
+  test('d’una organització pública: null o una persona amb { tipus, id, nom, avatar }, mai cap correu ni cap rol', async () => {
+    const publica = cas('loadTitularPublic', 'pública');
+    expect(publica.requerix).toEqual(['orgPublica']);
+    expect(await executaCas(publica, { loadTitularPublic: async () => null }, ctx()))
+      .toMatchObject({ estat: 'omés' });
+    const c = { ...ctx(), orgPublica: 'org-1' };
+    expect(await executaCas(publica, { loadTitularPublic: async () => null }, c)).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(publica, { loadTitularPublic: async () => ({ tipus: 'persona', id: 'p1', nom: 'Pepa', avatar: '' }) }, c))
+      .toMatchObject({ estat: 'ok', falles: [] });
+    expect(await executaCas(publica, {
+      loadTitularPublic: async () => ({ tipus: 'persona', id: 'p1', nom: 'Pepa', avatar: '', email: 'pepa@poble.invalid', role: 'owner' })
+    }, c)).toMatchObject({ estat: 'falla', falles: ['la titular porta un correu (email)', 'la titular porta un rol (role)'] });
+    expect(await executaCas(publica, { loadTitularPublic: async () => ({ tipus: 'entitat', id: '', nom: '', avatar: null }) }, c))
+      .toMatchObject({ estat: 'falla', falles: ['la titular té tipus "entitat"', 'la titular no té id de text', 'la titular no té nom', 'l’avatar de la titular no és text'] });
+  });
+
+  test('el directori deixa al context una organització pública per a la titular', async () => {
+    const c = ctx();
+    const directori = cas('listPublicOrganizations', 'sense correu');
+    expect(await executaCas(directori, { listPublicOrganizations: async () => [{ id: 'org-1', name: 'Forn' }] }, c)).toMatchObject({ estat: 'ok' });
+    expect(c.orgPublica).toBe('org-1');
+  });
+
+  test('la tria: estat d’una organització que no existix rebutja amb code; marcar un valor que no és booleà, SDP-TIT-002', async () => {
+    const estat = cas('estatTitularPublic');
+    expect(await executaCas(estat, { estatTitularPublic: amb('SDP-TIT-001') }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(estat, { estatTitularPublic: async () => ({ titularPublic: false }) }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    const invalida = cas('marcaTitularPublic', 'SDP-TIT-002');
+    const crides = [];
+    expect(await executaCas(invalida, { marcaTitularPublic: async (...args) => { crides.push(args); throw Object.assign(new Error('No.'), { code: 'SDP-TIT-002' }); } }, ctx()))
+      .toMatchObject({ estat: 'ok' });
+    expect(crides).toEqual([['00000000-0000-4000-8000-00000000c0f1', 'sí', { dataMode: 'seed' }]]);
+    expect(await executaCas(invalida, { marcaTitularPublic: amb('SDP-TIT-001') }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['el code havia de ser SDP-TIT-002 i és "SDP-TIT-001"'] });
+    const absent = cas('marcaTitularPublic', 'no existix');
+    expect(await executaCas(absent, { marcaTitularPublic: amb('SDP-TIT-001') }, ctx())).toMatchObject({ estat: 'ok' });
+    expect(await executaCas(absent, { marcaTitularPublic: async () => ({ titularPublic: true }) }, ctx())).toMatchObject({ estat: 'falla' });
   });
 });

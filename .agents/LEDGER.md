@@ -1023,4 +1023,9 @@ Informe 261024_1315_auditoria_codex i Llibre Mestre actualitzats; pla 1315 vincu
 Informe1315_codex v2.0.0 i Llibre Mestre actualitzats. NO VISTIPLAU per carrera Apple, títols persistents de baixa, DNS personal incomplet, versió legal, alta personal i targetes rebutjades. Catàleg/tests RSS i copy/verd corregits durant la revisió i revalidats; D-03 retirat. Proves dirigides verdes amb recomptes/solapament al document; regressió Apple falla amb expectativa correcta. SQL sense runtime PostgreSQL; CSP pública encara antiga14:52CEST. Només documentació i lectures/proves locals: cap font, secret, remot, commit o publicació. Cap cron propi. Checksum del LEDGER ja invàlid abans de l’entrada, cos i footer preservats sense reconciliació fictícia.
 
 
-<!-- HASH: c1042d8d5bcb510c40328e20428c7ba2d68c8fc9a266bba4ebdaef8d921a57e7 -->
+## 2026-10-24T17:20:00.000Z · Claude · Fortificació T1–T4 del torn 261024_1800 · torn_483710d4-afff-4198-a204-755bfbff1db1
+
+Informe 261024_1800_auditoria_claude validat i Llibre Mestre (P1-07, P1-10, P2-10, P2-11) actualitzat; pla 1800 vinculat. T1 anti-SSRF a tots els salts (C6-02 i C6-03, amb la segona passada de Codex), T2 registre d'altes de seguiments (C6-01), T3 sense «MAS» a les Notes, T4 test:precommit de 23,3 s i hook amb run-portes --nomes-portes (leases 284a95f8 i 94d149d1 consumides). Vitest sencer en còpia: 21.797 passen, 1 fallada de còpia; lint 0. Res commitejat, desplegat ni aplicat. La signatura del LEDGER ja era trencada abans d'esta entrada i no s'ha resegellat.
+
+
+<!-- HASH: 2b6a33a8c79b948722387211b16357fd6005e4cb48fb6b5ed02233a588d907a3 -->

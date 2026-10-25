@@ -129,6 +129,24 @@ const fallesDeSeguidor = (s, nom) => [
   ...(s?.creatAl === null || esTextNoBuit(s?.creatAl) ? [] : [`el ${nom} ${s?.id} té un creatAl que no és text ni null`])
 ];
 
+/* IDEA-22, punt 2 (pla 261025_0200) · La titular de loadTitularPublic: null o
+   { tipus: 'persona', id, nom, avatar } i res més. Mai cap correu ni cap rol:
+   qui administra una entitat no es dedueix mai d'esta lectura. */
+const CAMPS_DE_TITULAR = Object.freeze(['tipus', 'id', 'nom', 'avatar']);
+const motiuDelCampDeMes = (camp) => (/mail|correu/i.test(camp) ? `la titular porta un correu (${camp})`
+  : /^(role|rol)$/i.test(camp) ? `la titular porta un rol (${camp})` : `la titular porta un camp de més: ${camp}`);
+const fallesDeTitular = (valor) => {
+  if (valor === null) return [];
+  if (!esObjecte(valor)) return [`havia de ser null o un objecte i és ${tipusDe(valor)}`];
+  return [
+    ...(valor.tipus === 'persona' ? [] : [`la titular té tipus ${JSON.stringify(valor.tipus)}`]),
+    ...(esTextNoBuit(valor.id) ? [] : ['la titular no té id de text']),
+    ...(esTextNoBuit(valor.nom) ? [] : ['la titular no té nom']),
+    ...(typeof valor.avatar === 'string' ? [] : ['l’avatar de la titular no és text']),
+    ...Object.keys(valor).filter((camp) => !CAMPS_DE_TITULAR.includes(camp)).map(motiuDelCampDeMes)
+  ];
+};
+
 /* Els fils on la interfície pot escriure: una comunitat no té missatges propis
    i al canal només hi escriuen els administradors (contracte del Xat §1-§3). */
 const ESCRIVIBLE = (fil) => !['comunitat', 'canal'].includes(fil?.tipus);
@@ -408,7 +426,9 @@ export const CASOS = Object.freeze([
         }
       }
       return falles;
-    }
+    },
+    /* IDEA-22, punt 2 · Una organització pública de veres per a loadTitularPublic. */
+    desa: (llista, ctx) => { ctx.orgPublica = llista[0]?.id ?? null; }
   }),
   /* P1-11 (pla 261024_2230, T5B-01) · El filtre per poble (la pestanya
      «Empreses i entitats» de /pobles/:id): un poble que cap fila porta torna
@@ -631,12 +651,19 @@ export const CASOS = Object.freeze([
       ]);
     }
   }),
+  /* C0200-01 (auditoria Codex 261025_0200) · Un seguidor també porta tipus
+     de TIPUS_SEGUIT, com un seguiment: sense ell, Seguidors no sap dir que
+     qui et seguix és una entitat, i un adaptador antic que no el mapeja
+     passava per conforme. */
   cas({
     metode: 'quiEmSegueix', capacitat: 'seguiments',
-    titol: 'quiEmSegueix({}, config) → [{ id, nom: text | null, creatAl: ISO | null }]',
+    titol: "quiEmSegueix({}, config) → [{ tipus: 'persona' | 'entitat', id, nom: text | null, creatAl: ISO | null }]",
     arguments: (ctx) => [{}, ctx.config],
     comprova: (llista) => (Array.isArray(llista)
-      ? llista.flatMap((s) => fallesDeSeguidor(s, 'seguidor'))
+      ? llista.flatMap((s) => [
+        ...(TIPUS_SEGUIT.includes(s?.tipus) ? [] : [`un seguidor té tipus ${JSON.stringify(s?.tipus)}`]),
+        ...fallesDeSeguidor(s, 'seguidor')
+      ])
       : [`havia de ser una llista i és ${tipusDe(llista)}`])
   }),
   cas({
@@ -667,6 +694,42 @@ export const CASOS = Object.freeze([
     titol: "deixaDeSeguir({ tipus: 'persona', id: '' }, config) rebutja amb code SDP-SEG-001 sense xarxa",
     arguments: (ctx) => [{ tipus: 'persona', id: '' }, ctx.config],
     comprova: rebuigAmbCodi('SDP-SEG-001')
+  }),
+  /* IDEA-22, punt 2 (Directiva del Mestre; pla 261025_0200) · La titular que
+     ha triat mostrar-se (capacitat 'titularPublic') i la seua tria
+     ('consentimentTitular'). Cap cas no escriu: el kit no és la propietària de
+     res. D'una organització que no existix, la lectura és null (sense dir per
+     què) i la tria rebutja amb un code; d'una pública del directori (si un cas
+     anterior n'ha deixat cap), null o una persona i res més. */
+  cas({
+    metode: 'loadTitularPublic', capacitat: 'titularPublic',
+    titol: 'loadTitularPublic(orgId, config) → null per a una organització que no existix',
+    arguments: (ctx) => [ID_ENTITAT_DE_CONFORMITAT, ctx.config],
+    comprova: (valor) => (valor === null ? [] : [`havia de ser null: ${JSON.stringify(valor)?.slice(0, 120)}`])
+  }),
+  cas({
+    metode: 'loadTitularPublic', capacitat: 'titularPublic', requerix: ['orgPublica'],
+    titol: "loadTitularPublic(orgId, config) d’una organització pública → null | { tipus: 'persona', id, nom, avatar }, mai cap correu ni cap rol",
+    arguments: (ctx) => [ctx.orgPublica, ctx.config],
+    comprova: fallesDeTitular
+  }),
+  cas({
+    metode: 'estatTitularPublic', capacitat: 'consentimentTitular', espera: 'rebutja',
+    titol: 'estatTitularPublic(orgId, config) d’una organització que no existix rebutja amb un code: no n’ets la propietària',
+    arguments: (ctx) => [ID_ENTITAT_DE_CONFORMITAT, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'marcaTitularPublic', capacitat: 'consentimentTitular', espera: 'rebutja',
+    titol: "marcaTitularPublic(orgId, 'sí', config) rebutja amb code SDP-TIT-002 sense xarxa",
+    arguments: (ctx) => [ID_ENTITAT_DE_CONFORMITAT, 'sí', ctx.config],
+    comprova: rebuigAmbCodi('SDP-TIT-002')
+  }),
+  cas({
+    metode: 'marcaTitularPublic', capacitat: 'consentimentTitular', espera: 'rebutja',
+    titol: 'marcaTitularPublic(orgId, true, config) d’una organització que no existix rebutja amb un code i no desa res',
+    arguments: (ctx) => [ID_ENTITAT_DE_CONFORMITAT, true, ctx.config],
+    comprova: rebuigAmbCode
   })
 ]);
 
@@ -678,7 +741,7 @@ export function contextDeConformitat({ config = {}, escriptures = false } = {}) 
   return {
     config, escriptures,
     ownerUserId: null, filId: null, filEscrivible: null, subscripcio: null, subscrit: false, avisos: [],
-    notaId: null, seqEnviat: null,
+    notaId: null, seqEnviat: null, orgPublica: null,
     /* Un id per passada: la idempotència es prova amb el MATEIX id dues voltes.
        UUID aleatori i no derivat del rellotge (L3 de tractor-persistencia): dues
        passades contra un servidor compartit no han de compartir id. */
