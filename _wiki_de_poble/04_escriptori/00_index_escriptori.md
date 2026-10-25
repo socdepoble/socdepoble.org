@@ -34,12 +34,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261025_0200_prompt_codex_gemini_gauntlet_loop_segona_passada]]
-- [[261025_0200_auditoria_gemini]]
-- [[261025_0200_auditoria_claude]]
-- [[261025_0200_auditoria_codex]]
-- [[261025_0200_prompt_claude_gemini_codex_maquetacio_editorial_didactica_i_ritme_pedra_seca]]
-- [[261025_0200_pla_implementacio_maquetacio_editorial_didactica_i_ritme_pedra_seca]]
+- [[261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid]]
+- [[261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
 - [[02_investigacio_ia/261018_1405_estudi_obsidian_rea_gemini4_iaia]] · Mestre 261018: referència d'enginyeria inversa d'Obsidian i REA
 - [[02_investigacio_ia/261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
@@ -770,6 +766,11 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261025_0200_prompt_codex_gemini_gauntlet_loop_segona_passada]]
+- [[../90_arxiu_historic/261025_0200_prompt_claude_gemini_codex_maquetacio_editorial_didactica_i_ritme_pedra_seca]]
+- [[../90_arxiu_historic/261025_0200_pla_implementacio_maquetacio_editorial_didactica_i_ritme_pedra_seca]]
+- [[../90_arxiu_historic/261025_0200_auditoria_gemini]]
+- [[../90_arxiu_historic/261025_0200_auditoria_codex]]
 - [[../90_arxiu_historic/261025_0230_prompt_codex_gemini_gauntlet_loop_revisio_commit_1c110f954]]
 - [[../90_arxiu_historic/261024_2230_auditoria_gemini]]
 - [[../90_arxiu_historic/261024_2230_pla_implementacio_logica_actors_i_disseny_interior_pedra_seca]]
@@ -1012,6 +1013,7 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Àncores sense destí (Porta Olivera)
 
+- 261025 · `261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261025 · `261025_0430_prompt_codex_gemini_gauntlet_loop_revisio_adversarial_segona_passada`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261024 · `261024_1445_prompt_codex_gemini_gauntlet_revisio_adversarial`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261020 · `261020_2355_prompt_gemini_auditoria_llancament_apps_i_sollutia`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
