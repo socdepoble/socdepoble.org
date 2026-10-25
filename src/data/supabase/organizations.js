@@ -163,7 +163,29 @@ const COLUMNES_DIRECTORI = Object.freeze(['id', 'tenant_id', 'slug', 'name', 'ki
   'description', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at']);
 /* Sense estes no hi ha fila que es puga pintar ni enllaçar: mai es lleven del select. */
 const COLUMNES_DIRECTORI_FIXES = new Set(['id', 'slug', 'name']);
-const columnesDirectoriAbsents = new Set();
+/* G-P11-01 (auditoria Codex 261025_0031) · La memòria de les columnes que
+   falten és PER SERVIDOR (la URL efectiva de Supabase: els pobles d'un mateix
+   servidor compartixen esquema) i CADUCA (MEMORIA_COLUMNES_MS). Abans era un
+   Set únic del mòdul: un servidor antic sense town_name deixava sense
+   «Empreses i entitats» qualsevol altre amfitrió de la mateixa càrrega de
+   l'app, sense preguntar-li res, i el mateix servidor ja migrat fins a
+   recarregar. Ara l'absència només val per al servidor on s'ha vist, i torna a
+   preguntar-se passats uns minuts. */
+const MEMORIA_COLUMNES_MS = 5 * 60 * 1000;
+const columnesDirectoriAbsents = new Map(); // url del servidor → Map(columna → instant en què es va vore)
+
+/** Les columnes que falten a la vista del servidor de `config`: { has, add }, sense les caducades. */
+function absentsDelServidor(config) {
+  const url = getResolvedConfig(config).supabaseUrl || '';
+  let delServidor = columnesDirectoriAbsents.get(url);
+  if (!delServidor) {
+    delServidor = new Map();
+    columnesDirectoriAbsents.set(url, delServidor);
+  }
+  const ara = Date.now();
+  for (const [columna, quan] of delServidor) if (ara - quan > MEMORIA_COLUMNES_MS) delServidor.delete(columna);
+  return { has: (columna) => delServidor.has(columna), add: (columna) => { delServidor.set(columna, Date.now()); } };
+}
 /* Les columnes on el servidor busca una paraula (ilike), totes de la primera vista pública. */
 const CAMPS_DE_CERCA_DIRECTORI = Object.freeze(['name', 'slug', 'lema', 'description']);
 const MAXIM_PARAULES_DIRECTORI = 5;
@@ -221,16 +243,18 @@ export async function listPublicOrganizations(filtre = {}, config = {}) {
   if (poble && esPobleImpossible(poble)) return [];
   if (esModeLocal(config)) return (await perfilsLocals()).listPublicOrganizations({ consulta, limit, ...(poble ? { poble } : {}) });
   if (!getResolvedConfig(config).hasSupabaseConfig) return [];
+  const absents = absentsDelServidor(config);
   /* Un servidor d'abans de 2610081401 no té town_name a la vista: no sap de
      quin poble és cap organització. Mai la llista de tots els pobles com si
      fora la del poble, ni un buit mut (C11-01 de Codex: «propagar un error
-     explicable»): NO-DISPONIBLE, com un esquema absent. */
-  if (poble && columnesDirectoriAbsents.has('town_name')) throw errorSensePobleAlDirectori();
+     explicable»): NO-DISPONIBLE, com un esquema absent. Només per a ESTE
+     servidor (G-P11-01). */
+  if (poble && absents.has('town_name')) throw errorSensePobleAlDirectori();
   const signal = filtre?.signal ?? config.signal;
   const cerca = filtreDeCercaDirectori(consulta);
   const delPoble = poble ? `&town_name=eq.${encodeURIComponent(poble)}` : '';
   for (;;) {
-    const columnes = COLUMNES_DIRECTORI.filter((columna) => !columnesDirectoriAbsents.has(columna)).join(',');
+    const columnes = COLUMNES_DIRECTORI.filter((columna) => !absents.has(columna)).join(',');
     try {
       const files = await request(`/rest/v1/organization_directory?select=${columnes}${cerca}${delPoble}&order=name.asc,id.asc&limit=${limit}`,
         config, { signal });
@@ -238,13 +262,13 @@ export async function listPublicOrganizations(filtre = {}, config = {}) {
     } catch (error) {
       const columna = columnaAbsentDelSelect(error);
       if (poble && columna === 'town_name') {
-        columnesDirectoriAbsents.add('town_name');
+        absents.add('town_name');
         throw errorSensePobleAlDirectori();
       }
       const nomesDelSelect = columna && COLUMNES_DIRECTORI.includes(columna) && !COLUMNES_DIRECTORI_FIXES.has(columna)
-        && !CAMPS_DE_CERCA_DIRECTORI.includes(columna) && !columnesDirectoriAbsents.has(columna);
+        && !CAMPS_DE_CERCA_DIRECTORI.includes(columna) && !absents.has(columna);
       if (!nomesDelSelect) throw error;
-      columnesDirectoriAbsents.add(columna);
+      absents.add(columna);
     }
   }
 }

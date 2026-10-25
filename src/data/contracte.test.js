@@ -13,7 +13,7 @@ import {
   TIPUS_OBJECTE_DENUNCIA, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, denunciaDelContracte, errorDeModeracio, esIdDeModeracio
 } from './contracte.js';
 /* T6b (IDEA-14) · Els seguiments: import a banda, pel mateix motiu. */
-import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, errorDeSeguiment, seguitDelContracte } from './contracte.js';
+import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, comDelContracte, errorDeSeguiment, seguitDelContracte } from './contracte.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
    tractor-enxufe no deixa importar-lo des d'ací, tampoc en una prova. */
 
@@ -529,12 +529,15 @@ test('T6b · un backend sense seguiments continua sent vàlid i no els pot crida
 });
 
 describe('T6b · la regla d’entrada dels seguiments', () => {
-  it('la llista blanca és la del CHECK de la migració, i els codis són SDP-SEG-000…006 més NO-DISPONIBLE i DESCONEGUT', () => {
+  /* Actualitzada a posta (IDEA-22, pla 261025_0045, T5; Directiva del Mestre 261025): el joc de codis
+     guanya SDP-SEG-007 (connectar com una entitat que no administres, 2610250100). */
+  it('la llista blanca és la del CHECK de la migració, i els codis són SDP-SEG-000…007 més NO-DISPONIBLE i DESCONEGUT', () => {
     expect(TIPUS_SEGUIT).toEqual(['persona', 'entitat']);
     expect(Object.isFrozen(TIPUS_SEGUIT) && Object.isFrozen(MISSATGES_SEGUIMENTS)).toBe(true);
     expect(Object.keys(MISSATGES_SEGUIMENTS)).toEqual([
-      ...Array.from({ length: 7 }, (_, i) => `SDP-SEG-00${i}`), 'NO-DISPONIBLE', 'DESCONEGUT'
+      ...Array.from({ length: 8 }, (_, i) => `SDP-SEG-00${i}`), 'NO-DISPONIBLE', 'DESCONEGUT'
     ]);
+    expect(MISSATGES_SEGUIMENTS['SDP-SEG-007']).toBe('No administres l’entitat amb què vols connectar.');
     for (const text of Object.values(MISSATGES_SEGUIMENTS)) expect(text).toMatch(/^[A-ZÀ-Ú].*\.$/);
   });
 
@@ -552,6 +555,16 @@ describe('T6b · la regla d’entrada dels seguiments', () => {
     for (const dolent of [{ tipus: 'grup', id: 'g1' }, { tipus: 'ia', id: 'iaia' }, { tipus: 'persona', id: '' }, { tipus: 'persona', id: 'a b' },
       { tipus: 'entitat', id: 'x'.repeat(201) }, null]) {
       expect(() => seguitDelContracte(dolent)).toThrow(expect.objectContaining({ code: 'SDP-SEG-001' }));
+    }
+  });
+
+  /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · `com`: l'entitat amb què es connecta. */
+  it('comDelContracte: sense com (absent, null o buit) és null; un id es retalla; un id estrany és SDP-SEG-001', () => {
+    for (const sense of [{}, { com: null }, { com: undefined }, { com: '' }, { com: '   ' }, null, undefined]) expect(comDelContracte(sense)).toBeNull();
+    expect(comDelContracte({ tipus: 'persona', id: 'p', com: ' socdepoble ' })).toBe('socdepoble');
+    expect(comDelContracte({ com: '5b6c7d8e-9fa0-4b1c-8d2e-3f4051627384' })).toBe('5b6c7d8e-9fa0-4b1c-8d2e-3f4051627384');
+    for (const dolent of [{ com: 'a b' }, { com: 'x'.repeat(201) }, { com: 'ç' }]) {
+      expect(() => comDelContracte(dolent), JSON.stringify(dolent)).toThrow(expect.objectContaining({ code: 'SDP-SEG-001' }));
     }
   });
 });

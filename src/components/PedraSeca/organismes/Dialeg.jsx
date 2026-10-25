@@ -23,11 +23,17 @@
  *   ambTanca (true) · Onada 4 (retallador senzill, 261008) · Amb false, la
  *   capçalera no porta la X: el peu ja diu com eixir i Escape continua
  *   tancant. Sense la prop, el DOM de sempre.
+ *   lloc 'barra' adaptatiu (Directiva del Mestre 261025, pla 261025_0045, T2)
+ *   · La finestra s'ancora davall de les barres només si hi cap sencera. Si el
+ *   cos no hi cap (fa scroll), porta sdp-dialeg--barra-amunt: puja dalt de tot
+ *   i guanya l'alçada de les barres (modules.css). No torna a baixar fins que es
+ *   tanca (cap salt mentre s'hi tria). Es revisa en obrir, a cada pintada i en
+ *   canviar la mida de la finestra.
  *
  * LLEI DE LA POR ORGÀNICA: en <DialegConfirmacio destructiu> el focus inicial
  * va a «Cancel·lar». Un Intro distret no esborra res.
  */
-import { useEffect, useId, useInsertionEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useInsertionEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
@@ -71,6 +77,27 @@ function ContingutDialeg({
   obertRef.current = obert;
   const id = useId();
 
+  /* T2 (pla 261025_0045) · La finestra de la barra que no hi cap sencera, amunt. */
+  /* En l'encastat (local) la capa modal ja dimensiona el diàleg (layout.css): no s'hi puja res. */
+  const ambBarra = !local && !costat && lloc === 'barra' && variant !== 'sense-marc';
+  const [barraAmunt, setBarraAmunt] = useState(false);
+  const avaluaBarra = useCallback(() => {
+    const d = ref.current;
+    if (!ambBarra || !d?.open) return;
+    const cos = d.querySelector(':scope > .sdp-dialeg__marc > .sdp-dialeg__cos');
+    if (cos && cos.scrollHeight - cos.clientHeight > 1) setBarraAmunt(true);
+  }, [ambBarra]);
+  /* Els efectes d'obrir el criden pel ref: no han de tornar a córrer (ni a reobrir) si canvia. */
+  const avaluaBarraRef = useRef(avaluaBarra);
+  avaluaBarraRef.current = avaluaBarra;
+  useLayoutEffect(() => { avaluaBarra(); });
+  useEffect(() => { if (!obert) setBarraAmunt(false); }, [obert]);
+  useEffect(() => {
+    if (!ambBarra || !obert) return undefined;
+    window.addEventListener('resize', avaluaBarra);
+    return () => window.removeEventListener('resize', avaluaBarra);
+  }, [ambBarra, obert, avaluaBarra]);
+
   useInsertionEffect(() => {
     // El destí del portal ja existix. Els refs del diàleg nou encara no:
     // capturar ací precedix autoFocus dels fills en la fase de layout.
@@ -83,6 +110,7 @@ function ContingutDialeg({
     if (local && obert && ref.current) {
       const tancaLocal = obriModalLocal(ref.current, (...args) => tancaRef.current?.(...args), retorn.current);
       alObrirRef.current?.();
+      avaluaBarraRef.current();
       return tancaLocal;
     }
   }, [obert, local]);
@@ -105,6 +133,8 @@ function ContingutDialeg({
          després, encara té l'última paraula. */
       d.querySelector('[autofocus],[data-sdp-focus-inicial]')?.focus();
       alObrirRef.current?.();
+      /* T2 · Obert, ja es pot mesurar (en el commit encara era tancat). */
+      avaluaBarraRef.current();
     } else if (!obert && d.open) {
       if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
       retorn.current?.focus?.();
@@ -145,7 +175,8 @@ function ContingutDialeg({
      barra taronja (data de publicació i visibilitat): el mateix <dialog>,
      amb la classe que l'ancora (modules.css, bloc T40–T41). Un calaix mana. */
   const classes = ['sdp-dialeg', `sdp-dialeg--${mida}`, costat && `sdp-dialeg--calaix sdp-dialeg--${costat}`,
-    !costat && lloc === 'barra' && 'sdp-dialeg--barra', className, variant === 'sense-marc' && 'sdp-dialeg--sense-marc']
+    !costat && lloc === 'barra' && 'sdp-dialeg--barra', ambBarra && barraAmunt && 'sdp-dialeg--barra-amunt',
+    className, variant === 'sense-marc' && 'sdp-dialeg--sense-marc']
     .filter(Boolean).join(' ');
 
   if (variant === 'sense-marc') {

@@ -345,7 +345,13 @@ function fetchDelServidor(entrada, opcions = {}) {
       ? resposta({ seguint: false, creat_al: null })
       : resposta({ code: '22P02', message: 'invalid input syntax for type uuid' }, { status: 400 })),
     '/rest/v1/rpc/els_meus_seguiments': () => resposta([]),
-    '/rest/v1/rpc/qui_em_segueix': () => resposta([])
+    '/rest/v1/rpc/qui_em_segueix': () => resposta([]),
+    /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · segueix
+       (2610250100): la persona de conformitat no administra cap entitat
+       (SDP-SEG-007, 42501, el 403 de PostgREST) ni té cap veïna (SDP-SEG-002). */
+    '/rest/v1/rpc/segueix': () => (cos?.p_com
+      ? resposta({ code: '42501', details: null, hint: null, message: "SDP-SEG-007: no administres l'entitat amb què vols connectar." }, { status: 403 })
+      : resposta({ code: '22023', details: null, hint: null, message: 'SDP-SEG-002: no trobem esta persona o esta entitat, o no la pots seguir.' }, { status: 400 }))
   }[url.pathname];
   if (!ruta) {
     estat.rutesDesconegudes.push(`${metode} ${url.pathname}`);

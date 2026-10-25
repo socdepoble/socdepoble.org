@@ -6826,6 +6826,15 @@ details[open] summary.accordion-header svg:last-child {
       margin: var(--sdp-alt-barres) var(--sdp-space-4) auto auto;
       max-height: min(calc(100vh - var(--sdp-alt-barres) - var(--sdp-space-8)), 48rem);
     }
+    /* Directiva del Mestre (261025, pla 261025_0045, T2) · Si davall de les
+       barres no hi cap sencera (el cos fa scroll), la finestra puja dalt de
+       tot i pren tota l'alçada de la pantalla (Dialeg.jsx la marca amb
+       sdp-dialeg--barra-amunt): els 180px de les barres ja no l'esclafen a
+       mitja pantalla. Només fa scroll si ni així hi cap, i només el cos. */
+    .sdp-dialeg.sdp-dialeg--barra.sdp-dialeg--barra-amunt {
+      margin-top: var(--sdp-space-4);
+      max-height: calc(100vh - var(--sdp-space-8));
+    }
   }
   /* Correcció C20 (260928) · En una pantalla curta, ancorada davall de les
      barres, la finestra deixava l'«Hora» i els avisos davall del plec: quan
@@ -6993,6 +7002,11 @@ details[open] summary.accordion-header svg:last-child {
      i, davant, qui signa la publicació. */
   .sdp-selector-visibilitat__com { margin: 0 0 var(--sdp-space-3); }
   .sdp-selector-visibilitat .sdp-grup--targetes { margin-bottom: var(--sdp-space-3); }
+  /* Directiva del Mestre (261025, pla 261025_0045, T2) · La mida g de veres en
+     escriptori: :where(dialog) de sdp.css la tallava a 40rem (com al retallador). */
+  @media (min-width: 721px) {
+    .sdp-dialeg.sdp-selector-visibilitat { max-width: none; }
+  }
 }
 
 /* T10 · vistes Setmana i Mes del calendari (esquelet) */
@@ -7803,12 +7817,15 @@ details[open] summary.accordion-header svg:last-child {
      components.css és 2px més alt, per la vora). */
   .sdp-print-dialog .sdp-dialeg__marc { height: 100%; max-height: 100%; }
   /* Sense scroll propi i sense min-height: 0: el cos no s'encongix per
-     davall de la casella i l'iframe mínim, i la reserva és la del diàleg. */
+     davall de la casella i l'iframe mínim, i la reserva és la del diàleg.
+     min-height: auto torna a posar el mínim que ara el cos de base
+     (components.css, T1 261025) porta a 0. */
   .sdp-print-dialog .sdp-dialeg__cos {
     display: flex;
     flex-direction: column;
     flex: 1;
     gap: var(--sdp-space-3);
+    min-height: auto;
     overflow: visible;
   }
   /* min-height: en pantalla molt curta el diàleg fa scroll de reserva abans
@@ -8761,6 +8778,83 @@ details[open] summary.accordion-header svg:last-child {
     max-width: 22rem;
   }
   .sdp-enquadrament__zoom > .sdp-enquadrament__lliscador { flex: 1; min-width: 0; }
+  /* Directiva del Mestre (261025, pla 261025_0045, T3) · La forma de la
+     capçalera, en píndoles d'un sol toc davall del zoom (DialegEnquadrament
+     senzill amb més d'una forma), com el selector de variants del Mercat:
+     el ràdio natiu amagat (.sdp-nomes-lector, però enfocable) i la píndola,
+     el seu label, mai menys de --sdp-touch; la triada des del :checked (sense
+     :has(), Safari 16), amb el blau ple de la píndola de Pedra Seca. Una sola
+     línia de didàctica davall, centrada. Les nou caben en una fila a la mida
+     m (padding horitzontal --sdp-space-2, «Orig.»). El visor es limita també
+     per l'alçada de la pantalla (32rem ≈ el marge del diàleg, la capçalera,
+     el zoom, la fila de píndoles, dues línies de didàctica i el peu; mesurat
+     a 1280 × 800): la foto no ix de la vista mentre es tria i el cos no fa
+     scroll. Amb un sòl de 10rem (revisió adversarial 261025): en una
+     pantalla molt curta fa scroll el cos abans que la foto desaparega.
+     Només tokens. */
+  .sdp-enquadrament--formes .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
+    max-height: max(10rem, min(45vh, 22rem, calc(100vh - 32rem)));
+  }
+  .sdp-enquadrament__formats {
+    align-self: center;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .sdp-enquadrament__formats-pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-enquadrament__format { position: relative; display: flex; }
+  .sdp-enquadrament__format-pindola {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 2px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: var(--sdp-leading-tight);
+    cursor: pointer;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-enquadrament__format-control:not(:disabled):not(:checked) + .sdp-enquadrament__format-pindola:hover { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-enquadrament__format-control:checked + .sdp-enquadrament__format-pindola {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-enquadrament__format-control:focus-visible + .sdp-enquadrament__format-pindola {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-enquadrament__format-control:disabled + .sdp-enquadrament__format-pindola { cursor: not-allowed; }
+  @media (forced-colors: active) {
+    .sdp-enquadrament__format-control:checked + .sdp-enquadrament__format-pindola {
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+  .sdp-enquadrament__didactica {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    text-align: center;
+  }
   /* − i +: la zona tàctil sencera i, a la vista, només la icona. */
   .sdp-enquadrament__pas {
     display: inline-flex;
@@ -8793,6 +8887,19 @@ details[open] summary.accordion-header svg:last-child {
   }
   @media (hover: hover) and (pointer: fine) {
     .sdp-dialeg__peu .sdp-enquadrament__restablir:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
+  /* Directiva del Mestre (261025, pla 261025_0045, T3) · Mòbil: el full
+     inferior apilava els tres botons del peu (uns 200 px) i les píndoles
+     quedaven davall del cos, fora de la vista amb la foto. Ací el peu va en
+     una fila (Restablir, Cancel·lar, Guardar; si no hi caben, salten), i el
+     visor pren el que deixen la capçalera, el zoom, dues files de píndoles,
+     la didàctica i el peu (39rem; mesurat a 375 × 812): sense scroll. */
+  @media (max-width: 720px) {
+    .sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu { flex-direction: row; flex-wrap: wrap; gap: var(--sdp-space-2); }
+    .sdp-enquadrament__dialeg--senzill .sdp-dialeg__peu .sdp-boto { width: auto; flex: 1 1 auto; padding-inline: var(--sdp-space-3); }
+    .sdp-enquadrament--formes .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
+      max-height: max(10rem, min(45vh, 22rem, calc(100vh - 39rem)));
+    }
   }
 }
 

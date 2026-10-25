@@ -42,12 +42,22 @@ import { useComentaEnPrivat } from '../../components/PedraSeca/hooks/useAccions.
 import { omple } from '../../config/moderacio.js';
 import { TEXTOS_ERROR_SEGUIMENT, useSeguiment } from './useSeguiment.js';
 
-export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = false, onEntra, dataMode = 'remote', config = {} }) {
+/* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · `com` i
+   `nomCom`: l'entitat que la persona administra i amb la qual es connecta
+   (ConnectarSection, «Connectar com a»), sense canviar l'actor de la sessió.
+   El seguiment és d'ella (useSeguiment), i l'ajuda la nomena. Com a
+   entitat no ix cap missatge al xat (el xat personal diria quina persona
+   l'administra; revisió adversarial 261025): es diu abans del clic i
+   després. La conversa privada («Escriu-li») continua sent de la persona.
+   Sense `com`, la persona, com sempre. */
+export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = false, onEntra, dataMode = 'remote', config = {}, com = null, nomCom = '' }) {
   const id = useId();
   const { t } = useUIActions();
   const obriXat = useComentaEnPrivat(contacte?.interlocutor ?? null);
+  const ambEntitat = Boolean(com) && Boolean(nomCom);
   const seguiment = useSeguiment(contacte, {
     config,
+    com: ambEntitat ? com : null,
     missatgeAvis: t('section.connectar.seguir.missatge', 'Connexió nova: m’he connectat amb tu a Sóc de Poble.')
   });
   const titolRef = useRef(null);
@@ -87,6 +97,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
       : ambNom('section.connectar.seguir.avisatLlavor', 'T’has connectat amb {nom}. El missatge s’ha quedat al xat d’este dispositiu: ningú més l’ha rebut.')),
     represa: () => ambNom('section.connectar.seguir.represa', 'T’has tornat a connectar amb {nom}. Esta vegada no li hem enviat cap missatge: només s’avisa la primera.'),
     'sense-avis': () => ambNom('section.connectar.seguir.senseAvis', 'T’has connectat amb {nom}, però el missatge al xat no ha eixit. Si vols, escriu-li tu.'),
+    'com-entitat': () => omple(t('section.connectar.seguir.avisatCom', 'Has connectat {entitat} amb {nom}. No li hem enviat cap missatge al xat: ho veurà a la llista del veïnat connectat.'), { nom, entitat: nomCom }),
     deixat: () => ambNom('section.connectar.seguir.deixat', 'Has deixat la connexió amb {nom}. No li hem dit res.')
   };
   /* 'ja-seguies' (o cap acció) no té línia de resultat: ho diu l'estat. */
@@ -130,14 +141,22 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
             <p className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.errorLectura', 'No s’ha pogut comprovar la connexió amb {nom}.')}</p>
           ) : null}
           {/* Directiva del Mestre (261024) · l'avís a l'altra banda es diu ABANS del clic. */}
-          <p className="sdp-connectar__ajuda">{remot
-            ? ambNom('section.connectar.seguir.avis', '{nom} rebrà un missatge al xat per a dir-li que t’hi has connectat.')
-            : ambNom('section.connectar.seguir.avisLlavor', 'Sense servidor, el missatge per a {nom} es queda al xat d’este dispositiu: ningú més el rep.')}</p>
+          {/* IDEA-22 · Com a entitat, cap missatge al xat: ho diu la línia de l'entitat (davall) o esta. */}
+          {ambEntitat && seguitEntitat ? null : (
+            <p className="sdp-connectar__ajuda">{ambEntitat
+              ? omple(t('section.connectar.seguir.avisCom', 'Com a {entitat}, no li enviarem cap missatge al xat: {nom} ho veurà a la llista del veïnat connectat.'), { nom, entitat: nomCom })
+              : remot
+                ? ambNom('section.connectar.seguir.avis', '{nom} rebrà un missatge al xat per a dir-li que t’hi has connectat.')
+                : ambNom('section.connectar.seguir.avisLlavor', 'Sense servidor, el missatge per a {nom} es queda al xat d’este dispositiu: ningú més el rep.')}</p>
+          )}
           {/* Integració 261024 (T6b · qui_em_segueix amb orgId) · qui administra
               l'entitat veu el nom del veïnat connectat: es diu abans del clic. */}
           {seguitEntitat ? (
             <p className="sdp-connectar__ajuda">
-              {ambNom('section.connectar.seguir.avisEntitat', 'Les persones que administren {nom} voran el teu nom a la llista del veïnat connectat amb l’entitat.')}
+              {/* IDEA-22 (T5) · connectant com a entitat, a la llista hi ix l'entitat, no la persona. */}
+              {ambEntitat
+                ? omple(t('section.connectar.seguir.avisEntitatCom', 'Les persones que administren {nom} voran {entitat} a la llista del veïnat connectat amb l’entitat, sense cap missatge al xat.'), { nom, entitat: nomCom })
+                : ambNom('section.connectar.seguir.avisEntitat', 'Les persones que administren {nom} voran el teu nom a la llista del veïnat connectat amb l’entitat.')}
             </p>
           ) : null}
           <Boto varietat="secundari" icona={UserPlus} onClick={segueix} carregant={seguiment.ocupat === 'segueix'}>
@@ -155,7 +174,9 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
     <section className="sdp-connectar__seccio" aria-labelledby={`${id}-relacio`}>
       <h3 ref={titolRef} tabIndex={-1} id={`${id}-relacio`} className="sdp-connectar__titol-seccio">{titol}</h3>
       <p className="sdp-connectar__ajuda">
-        {ambNom('section.connectar.relacio.ajuda', 'Una relació directa entre tu i {nom}, sense algoritmes ni intermediaris. No et fa membre de res.')}
+        {ambEntitat
+          ? omple(t('section.connectar.relacio.ajudaEntitat', 'Una relació directa entre {entitat} i {nom}, sense algoritmes ni intermediaris. No fa ningú membre de res.'), { nom, entitat: nomCom })
+          : ambNom('section.connectar.relacio.ajuda', 'Una relació directa entre tu i {nom}, sense algoritmes ni intermediaris. No et fa membre de res.')}
       </p>
       {seguir}
       {resultat ? <p role="status">{resultat}</p> : null}

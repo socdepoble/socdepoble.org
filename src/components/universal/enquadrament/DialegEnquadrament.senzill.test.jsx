@@ -10,7 +10,7 @@ vi.mock('./imatgeCanvas.js', () => ({
 }));
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { DialegEnquadrament } from './DialegEnquadrament.jsx';
+import { DialegEnquadrament, didacticaDeForma, etiquetaCurtaDeForma } from './DialegEnquadrament.jsx';
 import { FORMATS } from './enquadrament.js';
 import { ETIQUETA_CONSERVA_EXIF } from './exifIncrustat.js';
 import { dataOriginal, gpsTorre, jpegAmbExif } from './jpegProva.js';
@@ -322,11 +322,48 @@ describe('mode senzill · la forma de la capçalera', () => {
     expect(document.querySelector('[style]')).toBeNull();
   });
 
+  /* Directiva del Mestre (261025, pla 261025_0045, T3) · Píndoles d'un sol
+     toc i una sola línia de didàctica: el visor no ix de la vista. */
+  test('T3 · capçalera: píndoles curtes amb el nom sencer accessible, una sola didàctica que canvia amb la tria, diàleg m', async () => {
+    const vista = munta({ forma: 'capcalera' });
+    await carregat(vista);
+    expect(dialeg(vista).classList.contains('sdp-dialeg--m')).toBe(true);
+    const grup = within(dialeg(vista)).getByRole('radiogroup', { name: 'Forma' });
+    expect([...grup.querySelectorAll('label')].map((l) => l.textContent))
+      .toEqual(FORMATS.map((f) => (f.valor === 'original' ? 'Orig.' : f.valor)));
+    expect(within(grup).getByRole('radio', { name: 'Panoràmic (16:9)' })).toBeTruthy();
+    /* Cap llista d'ajudes: una sola línia, la de la triada, lligada al grup. */
+    const didactica = dialeg(vista).querySelector('.sdp-enquadrament__didactica');
+    expect(grup.getAttribute('aria-describedby')).toBe(didactica.id);
+    expect(dialeg(vista).querySelectorAll('.sdp-casella__ajuda')).toHaveLength(0);
+    const quadrat = FORMES.capcalera.formats.find((f) => f.valor === '1:1');
+    expect(didactica.textContent).toBe(`${quadrat.etiqueta} · ${quadrat.ajuda}`);
+    /* Un sol toc a la píndola (el label) tria la forma. */
+    act(() => { fireEvent.click(within(grup).getByText('16:9')); });
+    expect(within(grup).getByRole('radio', { name: 'Panoràmic (16:9)' }).checked).toBe(true);
+    const panoramic = FORMES.capcalera.formats.find((f) => f.valor === '16:9');
+    expect(didactica.textContent).toBe(`${panoramic.etiqueta} · ${panoramic.ajuda}`);
+    expect(didactica.getAttribute('aria-live')).toBe('polite');
+    /* El visor, davant de tot: la caixa del visor és el primer fill del cos i el grup va després del zoom. */
+    const cos = dialeg(vista).querySelector('.sdp-enquadrament--senzill');
+    expect(cos.classList.contains('sdp-enquadrament--formes')).toBe(true);
+    expect(cos.firstElementChild.className).toBe('sdp-enquadrament__visor-caixa');
+  });
+
+  test('T3 · les etiquetes curtes i la didàctica, pures', () => {
+    expect(etiquetaCurtaDeForma({ valor: 'original', etiqueta: 'Original' })).toBe('Orig.');
+    expect(etiquetaCurtaDeForma({ valor: '21:9', etiqueta: 'Superpanoràmic (21:9)' })).toBe('21:9');
+    expect(didacticaDeForma({ etiqueta: 'Foli (3:4)', ajuda: 'Ajuda.' })).toBe('Foli (3:4) · Ajuda.');
+    expect(didacticaDeForma({ etiqueta: 'Foli (3:4)' })).toBe('Foli (3:4)');
+    expect(didacticaDeForma(null)).toBe('');
+  });
+
   test('avatar i logotip: cap «Forma», el DOM del mode senzill de sempre', async () => {
     for (const forma of ['avatar', 'logotip']) {
       const vista = munta({ forma });
       await carregat(vista);
       expect(dialeg(vista).querySelector('fieldset'), forma).toBeNull();
+      expect(dialeg(vista).classList.contains('sdp-dialeg--s'), forma).toBe(true);
       expect(within(dialeg(vista)).queryByRole('radio'), forma).toBeNull();
       const cos = dialeg(vista).querySelector('.sdp-enquadrament--senzill');
       expect([...cos.children].map((e) => e.className), forma).toEqual([

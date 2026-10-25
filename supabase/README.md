@@ -718,6 +718,59 @@ description: "Documentació canònica de Sóc de Poble."
   de l'alta concurrent de membres (C11-03) i la projecció pública del contacte
   (C11-05). Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2610250100_seguiments_des_d_entitat.sql`
+  IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025, àudios
+  00:53-00:55): connectar des d'una entitat (B2B rural). Qui administra una
+  organització (owner o admin) la connecta, com a eixa organització, amb una
+  persona o amb una altra entitat, sense canviar la sessió global. Afig a
+  `public.seguiments` la columna `seguidor_entitat` (null: la fila és de la
+  persona `seguidor`, com totes les d'abans; amb valor: qui seguix és
+  l'entitat, i `seguidor` és qui l'administra i hi ha fet l'última alta o
+  represa, que cap lectura no torna). Refà els índexs únics per a separar
+  persona i entitat (`seguiments_persona_a_persona_unic`,
+  `seguiments_persona_a_entitat_unic`, `seguiments_entitat_a_persona_unic` i
+  `seguiments_entitat_a_entitat_unic`, creats abans de llevar
+  `seguiments_persona_unic` i `seguiments_entitat_unic`): una persona seguix
+  cada destí com a molt una vegada, com ara, i una entitat també, siga qui
+  siga l'admin que ho haja fet. Els CHECK: ningú no se seguix a si mateix
+  (files de persona) i una entitat no se seguix a ella mateixa. Tres funcions
+  privades noves (`private.poble_d_entitat_i_persona`,
+  `private.seguiment_d_entitat_viu` i `private.entitat_bloquejada_pel_seguit`)
+  i les RPC `segueix`, `deixa_de_seguir` i `estat_seguiment` amb `p_com uuid
+  default null`: es llança la signatura `(text, uuid)` i es crea la `(text,
+  uuid, uuid)` (PostgREST no tria entre dues sobrecàrregues), amb els
+  REVOKE/GRANT de la signatura nova, només per a `authenticated`. Sense
+  `p_com`, el comportament d'ara. Amb `p_com`, `private.can_manage_organization`
+  després del pany de la persona que actua (que ara va abans de cap porta) i,
+  si no l'administra, `SDP-SEG-007`; després, el pany de l'entitat. Una
+  persona, si és del poble de l'entitat; una altra entitat, si és pública;
+  mai ella mateixa (`SDP-SEG-003`); entitat A → entitat B val encara que la
+  persona també administre B. La quota (30 altes o represes per hora i 10
+  minuts de represa) la compta la persona que actua, mai l'entitat; els
+  bloquejos, els seus, com ara; els 1.000 vius, de qui seguix (la persona o
+  l'entitat). Deixar de seguir com a entitat el pot fer qualsevol admin.
+  `qui_em_segueix(p_org_id)` es torna a crear amb `seguidor_tipus`
+  ('persona' o 'entitat'): d'una entitat seguidora, el seu id i el seu nom,
+  mai els de la persona que el va fer; `els_meus_seguiments()` no canvia de
+  forma (només els de la persona). La taula continua amb la RLS activa, cap
+  política i cap permís de taula per a `anon` ni `authenticated`
+  (`grant select, insert, update, delete on public.seguiments to service_role;`):
+  qui administra l'entitat en veu els seguiments per les RPC. Codi nou
+  `SDP-SEG-007` (42501). Va després de 2610241430; no es pot tornar a aplicar
+  2610241430 després d'esta (tornaria a crear les signatures velles i els
+  índexs vells: cal tornar a aplicar esta just després). La prova estàtica és
+  `src/data/supabase/seguimentsEntitat.migracio.test.js`. Verificació
+  posterior (lectura):
+  `select (seguidor_entitat is not null) as d_entitat, count(*) from public.seguiments group by 1;`
+  i `select p.oid::regprocedure from pg_proc p where p.proname in ('segueix', 'deixa_de_seguir', 'estat_seguiment');`
+  (una sola signatura de cada, amb tres `uuid`/`text`). Pendent del Mestre (el
+  «QUÈ NO FA» de la capçalera): l'exportació (2610241410) llig
+  `seguidor = v_uid` i hi eixiran, com a «a qui seguixes», també els
+  seguiments fets com a entitat; si la persona que va fer l'última alta es
+  dona de baixa, la fila de l'entitat se'n va amb ella; cap llista de «a qui
+  seguix l'entitat». Idempotent i en una sola transacció; **NO aplicada:
+  l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 

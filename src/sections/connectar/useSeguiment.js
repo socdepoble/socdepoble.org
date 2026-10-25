@@ -31,7 +31,7 @@
  *   estat · 'no-disponible' | 'no-seguible' | 'sense-sessio' | 'comprovant'
  *           | 'no-segueix' | 'segueix'
  *   avis  · el resultat de l'última acció: 'avisat' | 'sense-avis' |
- *           'represa' | 'ja-seguies' | 'deixat' | null
+ *           'represa' | 'ja-seguies' | 'com-entitat' | 'deixat' | null
  *   error · { accio: 'segueix' | 'deixa', codi } de l'acció que ha fallat, o
  *           null. `codi` és un de TEXTOS_ERROR_SEGUIMENT (codiDelSeguiment)
  *           o null; la vista el traduïx (261024 correccions, R3-12).
@@ -67,6 +67,8 @@ export const TEXTOS_ERROR_SEGUIMENT = Object.freeze({
   'SDP-SEG-004': ['section.connectar.seguir.error.SDP-SEG-004', 'L’has bloquejada: desbloqueja-la abans de connectar-t’hi.'],
   'SDP-SEG-005': ['section.connectar.seguir.error.SDP-SEG-005', 'Només qui administra l’entitat veu el veïnat connectat amb ella.'],
   'SDP-SEG-006': ['section.connectar.seguir.error.SDP-SEG-006', 'Massa connexions en poc de temps. Torna-ho a provar d’ací a una estona.'],
+  /* IDEA-22 (pla 261025_0045, T5) · Connectar com a una entitat que no administres. */
+  'SDP-SEG-007': ['section.connectar.seguir.error.SDP-SEG-007', 'No administres l’entitat amb què vols connectar.'],
   'NO-DISPONIBLE': ['section.connectar.seguir.error.NO-DISPONIBLE', 'Este poble encara no permet connectar amb ningú des de l’app.'],
   DESCONEGUT: ['section.connectar.seguir.error.DESCONEGUT', 'No s’ha pogut completar. Torna-ho a provar.']
 });
@@ -109,14 +111,28 @@ export function objectiuDelSeguiment(contacte) {
   return id ? { tipus: objectiu.tipus, id } : null;
 }
 
-export function useSeguiment(contacte, { config = {}, missatgeAvis = '' } = {}) {
+/**
+ * IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · `com`: l'id
+ * d'una organització que la persona administra, per a connectar-se COM A ella
+ * (B2B rural: una empresa amb una altra), sense canviar l'actor global de la
+ * sessió. Sense, la persona, com sempre. Entra a la clau: canviar de barret
+ * torna a llegir l'estat del seguiment d'eixe actor, i el que acaba una acció
+ * començada amb l'altre barret ja no s'hi escriu (revisió adversarial 261025).
+ * Com a entitat no ix cap missatge al xat ('com-entitat'): el xat personal
+ * diria quina persona l'administra, i el servidor no ho torna mai
+ * (2610250100); l'altra banda ho veu a la llista del seu veïnat connectat.
+ */
+export function useSeguiment(contacte, { config = {}, missatgeAvis = '', com = null } = {}) {
   const { currentUser } = useSession();
   const disponible = capacitat('seguiments');
   const objectiu = objectiuDelSeguiment(contacte);
   const tipus = objectiu?.tipus ?? null;
   const id = objectiu?.id ?? null;
+  const comId = com == null || String(com).trim() === '' ? null : String(com).trim();
   const usuariId = currentUser?.id != null ? String(currentUser.id) : null;
-  const clau = disponible && usuariId && tipus && id ? [usuariId, tipus, id].join('\u0000') : null;
+  const clau = disponible && usuariId && tipus && id ? [usuariId, tipus, id, comId ?? ''].join('\u0000') : null;
+  /* El destí del port, amb l'actor triat si n'hi ha. */
+  const dades = useCallback(() => (comId ? { tipus, id, com: comId } : { tipus, id }), [tipus, id, comId]);
 
   /* { clau, seguint, error } · { clau, avis, error } · { clau, accio }: vegeu la capçalera. */
   const [lectura, setLectura] = useState(null);
@@ -127,6 +143,9 @@ export function useSeguiment(contacte, { config = {}, missatgeAvis = '' } = {}) 
   configRef.current = config;
   const missatgeRef = useRef(missatgeAvis);
   missatgeRef.current = missatgeAvis;
+  /* La clau d'ara: el que torna tard d'una altra clau no hi escriu. */
+  const clauRef = useRef(clau);
+  clauRef.current = clau;
   const envia = useMissatgeAlXat(contacte);
 
   useEffect(() => {
@@ -134,59 +153,69 @@ export function useSeguiment(contacte, { config = {}, missatgeAvis = '' } = {}) 
     let viu = true;
     const perA = clau;
     Promise.resolve()
-      .then(() => estatSeguiment({ tipus, id }, configRef.current))
+      .then(() => estatSeguiment(dades(), configRef.current))
       .then((estat) => { if (viu) setLectura({ clau: perA, seguint: estat?.seguint === true, error: null }); })
       /* També un error acaba la lectura: mai 'comprovant' per sempre. */
       .catch((error) => { if (viu) setLectura({ clau: perA, seguint: false, error }); });
     return () => { viu = false; };
-  }, [clau, tipus, id]);
+  }, [clau, dades]);
 
   const segueix = useCallback(async () => {
     if (!clau || ocupatVigent) return false;
     const perA = clau;
+    /* El text i el barret, els del clic: canviar de barret mentre es fa no els canvia. */
+    const missatge = missatgeRef.current;
+    const ambCom = Boolean(comId);
+    const vigent = () => clauRef.current === perA;
     setOcupat({ clau: perA, accio: 'segueix' });
     setResultat(null);
     let fet;
     try {
-      fet = await segueixAlPort({ tipus, id }, configRef.current);
+      fet = await segueixAlPort(dades(), configRef.current);
     } catch (error) {
-      setResultat({ clau: perA, avis: null, error: { accio: 'segueix', codi: codiDelSeguiment(error) } });
+      if (vigent()) setResultat({ clau: perA, avis: null, error: { accio: 'segueix', codi: codiDelSeguiment(error) } });
       allibera(setOcupat, perA);
       return false;
     }
-    setLectura({ clau: perA, seguint: fet?.seguint !== false, error: null });
+    if (vigent()) setLectura({ clau: perA, seguint: fet?.seguint !== false, error: null });
     /* R4-01 · 'represa': l'havia deixat i hi torna, sense cap altre avís. */
     let avis = fet?.nou === true ? 'represa' : 'ja-seguies';
-    if (avisaDelSeguiment(fet)) {
+    if (ambCom) {
+      /* IDEA-22 · Com a entitat, cap missatge des del xat personal de qui l'administra. */
+      if (fet?.nou === true) avis = 'com-entitat';
+    } else if (avisaDelSeguiment(fet)) {
       /* L'avís a l'altra banda, una sola vegada: el seguiment ja està fet i no es desfà si l'avís no ix. */
       try {
-        avis = (await envia(missatgeRef.current)).enviat ? 'avisat' : 'sense-avis';
+        avis = (await envia(missatge)).enviat ? 'avisat' : 'sense-avis';
       } catch {
         avis = 'sense-avis';
       }
     }
-    setResultat({ clau: perA, avis, error: null });
+    if (vigent()) setResultat({ clau: perA, avis, error: null });
     allibera(setOcupat, perA);
     return true;
-  }, [clau, ocupatVigent, tipus, id, envia]);
+  }, [clau, ocupatVigent, dades, envia, comId]);
 
   const deixa = useCallback(async () => {
     if (!clau || ocupatVigent) return false;
     const perA = clau;
+    const vigent = () => clauRef.current === perA;
     setOcupat({ clau: perA, accio: 'deixa' });
     setResultat(null);
     try {
-      await deixaDeSeguir({ tipus, id }, configRef.current);
+      await deixaDeSeguir(dades(), configRef.current);
     } catch (error) {
-      setResultat({ clau: perA, avis: null, error: { accio: 'deixa', codi: codiDelSeguiment(error) } });
+      if (vigent()) setResultat({ clau: perA, avis: null, error: { accio: 'deixa', codi: codiDelSeguiment(error) } });
       allibera(setOcupat, perA);
       return false;
     }
-    setLectura({ clau: perA, seguint: false, error: null });
-    setResultat({ clau: perA, avis: 'deixat', error: null });
+    if (vigent()) {
+      setLectura({ clau: perA, seguint: false, error: null });
+      setResultat({ clau: perA, avis: 'deixat', error: null });
+    }
     allibera(setOcupat, perA);
     return true;
-  }, [clau, ocupatVigent, tipus, id]);
+  }, [clau, ocupatVigent, dades]);
 
   const lecturaVigent = lectura?.clau === clau ? lectura : null;
   const resultatVigent = clau && resultat?.clau === clau ? resultat : null;

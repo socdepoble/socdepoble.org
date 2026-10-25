@@ -99,8 +99,10 @@ describe('remot · les RPC de 2610241430', () => {
       { tipus: 'persona', id: VEINA, nom: null, creatAl: null }
     ]);
     expect([crida(0).url.pathname, crida(0).cos]).toEqual(['/rest/v1/rpc/els_meus_seguiments', {}]);
+    /* Actualitzada a posta (IDEA-22, pla 261025_0045, T5; Directiva del Mestre 261025): cada fila porta el
+       `tipus` de qui seguix; un servidor sense 2610250100 no dona seguidor_tipus, i la fila és d'una persona. */
     fetchDeProva.mockResolvedValueOnce(resposta([{ id: VEINA, nom: 'Veïna', creat_al: ARA }, { nom: 'sense id' }]));
-    expect(await quiEmSegueix({}, REMOT)).toEqual([{ id: VEINA, nom: 'Veïna', creatAl: ARA }]);
+    expect(await quiEmSegueix({}, REMOT)).toEqual([{ tipus: 'persona', id: VEINA, nom: 'Veïna', creatAl: ARA }]);
     expect([crida(1).url.pathname, crida(1).cos]).toEqual(['/rest/v1/rpc/qui_em_segueix', { p_org_id: null }]);
     fetchDeProva.mockResolvedValueOnce(resposta([]));
     expect(await quiEmSegueix({ orgId: ENTITAT }, REMOT)).toEqual([]);
@@ -151,6 +153,70 @@ describe('remot · les RPC de 2610241430', () => {
       await expect(promesa).rejects.toMatchObject({ name: 'AbortError' });
     }
     expect(fetchDeProva).toHaveBeenCalledTimes(3);
+  });
+});
+
+/* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Connectar des d'una entitat
+   (2610250100_seguiments_des_d_entitat.sql): `com` viatja com a p_com, només quan hi és. */
+describe('remot · com a entitat (p_com, 2610250100)', () => {
+  test('segueix, deixa_de_seguir i estat_seguiment porten p_com amb com; sense com (o null, o buit), el cos de sempre', async () => {
+    fetchDeProva.mockResolvedValueOnce(resposta({ seguint: true, creat_al: ARA, nou: true, primer: true }));
+    expect(await segueix({ tipus: 'persona', id: VEINA, com: ` ${ENTITAT} ` }, REMOT)).toEqual({ seguint: true, creatAl: ARA, nou: true, primer: true });
+    expect([crida(0).url.pathname, crida(0).cos]).toEqual(['/rest/v1/rpc/segueix', { p_tipus: 'persona', p_id: VEINA, p_com: ENTITAT }]);
+    fetchDeProva.mockResolvedValueOnce(resposta({ seguint: true, creat_al: ARA }));
+    expect(await estatSeguiment({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).toEqual({ seguint: true, creatAl: ARA });
+    expect([crida(1).url.pathname, crida(1).cos]).toEqual(['/rest/v1/rpc/estat_seguiment', { p_tipus: 'persona', p_id: VEINA, p_com: ENTITAT }]);
+    fetchDeProva.mockResolvedValueOnce(resposta({ seguint: false }));
+    expect(await deixaDeSeguir({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).toEqual({ seguint: false });
+    expect([crida(2).url.pathname, crida(2).cos]).toEqual(['/rest/v1/rpc/deixa_de_seguir', { p_tipus: 'persona', p_id: VEINA, p_com: ENTITAT }]);
+    for (const [n, com] of [[3, null], [4, ''], [5, undefined]]) {
+      fetchDeProva.mockResolvedValueOnce(resposta({ seguint: true, creat_al: ARA, nou: false, primer: false }));
+      await segueix({ tipus: 'persona', id: VEINA, com }, REMOT);
+      expect(crida(n).cos, JSON.stringify(com)).toEqual({ p_tipus: 'persona', p_id: VEINA });
+    }
+  });
+
+  test('SDP-SEG-007 del servidor es llig pel prefix, amb el seu missatge; un com que no és cap UUID és SDP-SEG-001 sense cap petició', async () => {
+    const no007 = () => errorDelServidor('42501', "SDP-SEG-007: no administres l'entitat amb què vols connectar.", 403);
+    fetchDeProva.mockResolvedValueOnce(no007());
+    await expect(segueix({ tipus: 'entitat', id: ENTITAT, com: VEINA }, REMOT))
+      .rejects.toMatchObject({ code: 'SDP-SEG-007', message: MISSATGES_SEGUIMENTS['SDP-SEG-007'], status: 403 });
+    fetchDeProva.mockResolvedValueOnce(no007());
+    await expect(deixaDeSeguir({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).rejects.toMatchObject({ code: 'SDP-SEG-007' });
+    fetchDeProva.mockResolvedValueOnce(no007());
+    await expect(estatSeguiment({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).rejects.toMatchObject({ code: 'SDP-SEG-007' });
+    /* Sense la migració, PostgREST no troba la signatura amb p_com: NO-DISPONIBLE. */
+    fetchDeProva.mockResolvedValueOnce(errorDelServidor('PGRST202', 'Could not find the function public.segueix(p_com, p_id, p_tipus) in the schema cache', 404));
+    await expect(segueix({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+    expect(fetchDeProva).toHaveBeenCalledTimes(4);
+    fetchDeProva.mockReset();
+    for (const fes of [segueix, estatSeguiment, deixaDeSeguir]) {
+      for (const com of ['socdepoble', 'amb espai']) {
+        await expect(fes({ tipus: 'persona', id: VEINA, com }, REMOT), `${fes.name} ${com}`).rejects.toMatchObject({ code: 'SDP-SEG-001' });
+      }
+    }
+    expect(fetchDeProva).not.toHaveBeenCalled();
+  });
+
+  test('qui_em_segueix: seguidor_tipus és el tipus de cada fila; d’una entitat, el seu id i el seu nom; un tipus estrany no passa', async () => {
+    fetchDeProva.mockResolvedValueOnce(resposta([
+      { id: ENTITAT, nom: 'Forn de la Torre', creat_al: ARA, seguidor_tipus: 'entitat' },
+      { id: VEINA, nom: 'Veïna', creat_al: null, seguidor_tipus: 'persona' },
+      { id: PERSONA, nom: 'IA', creat_al: ARA, seguidor_tipus: 'ia' }
+    ]));
+    expect(await quiEmSegueix({ orgId: ENTITAT }, REMOT)).toEqual([
+      { tipus: 'entitat', id: ENTITAT, nom: 'Forn de la Torre', creatAl: ARA },
+      { tipus: 'persona', id: VEINA, nom: 'Veïna', creatAl: null }
+    ]);
+    expect(crida(0).cos).toEqual({ p_org_id: ENTITAT });
+  });
+
+  test('sense sessió, com tampoc no fa cap petició: l’estat buit, i seguir o deixar-ho demanen entrar', async () => {
+    esborraSessio({ abast: 'tot' });
+    expect(await estatSeguiment({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).toEqual({ seguint: false, creatAl: null });
+    await expect(segueix({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).rejects.toMatchObject({ code: 'SDP-SEG-000' });
+    await expect(deixaDeSeguir({ tipus: 'persona', id: VEINA, com: ENTITAT }, REMOT)).rejects.toMatchObject({ code: 'SDP-SEG-000' });
+    expect(fetchDeProva).not.toHaveBeenCalled();
   });
 });
 
@@ -224,15 +290,33 @@ describe.each(['seed', 'local'])('mode %s · localSeguiments fa de servidor, sen
     expect(await segueix({ tipus: 'persona', id: '0001' }, config)).toMatchObject({ seguint: true, nou: true });
     expect(await segueix({ tipus: 'entitat', id: 'socdepoble' }, config)).toMatchObject({ seguint: true, nou: true });
     entra();
+    /* Actualitzada a posta (IDEA-22, pla 261025_0045, T5; Directiva del Mestre 261025): cada fila porta el `tipus` de qui seguix. */
     const meus = await quiEmSegueix({}, config);
-    expect(meus).toEqual([{ id: expect.any(String), nom: 'Veí/na', creatAl: expect.stringMatching(/^\d{4}-/) }]);
+    expect(meus).toEqual([{ tipus: 'persona', id: expect.any(String), nom: 'Veí/na', creatAl: expect.stringMatching(/^\d{4}-/) }]);
     const seus = await quiEmSegueix({ orgId: 'socdepoble' }, config);
-    expect(seus).toEqual([{ id: meus[0].id, nom: 'Veí/na', creatAl: expect.stringMatching(/^\d{4}-/) }]);
+    expect(seus).toEqual([{ tipus: 'persona', id: meus[0].id, nom: 'Veí/na', creatAl: expect.stringMatching(/^\d{4}-/) }]);
     await expect(quiEmSegueix({ orgId: 'rentonar' }, config)).rejects.toMatchObject({ code: 'SDP-SEG-005' });
     await expect(quiEmSegueix({ orgId: 'cap-entitat' }, config)).rejects.toMatchObject({ code: 'SDP-SEG-005' });
     /* Qui el bloqueja ja no el veu entre qui el seguix. */
     await bloquejaAutor({ tipus: 'persona', id: meus[0].id }, config);
     expect(await quiEmSegueix({}, config)).toEqual([]);
+    expect(fetchDeProva).not.toHaveBeenCalled();
+  });
+
+  /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Amb sessió, la llavor fa propietària de
+     l'entitat pilot (socdepoble), i no de rentonar: com socdepoble val, com rentonar és SDP-SEG-007. */
+  test('com a entitat: l’entitat pilot es connecta amb una altra, la persona no s’hi barreja, i qui la seguix la veu com a entitat', async () => {
+    expect(await segueix({ tipus: 'entitat', id: 'rentonar', com: 'socdepoble' }, config)).toMatchObject({ seguint: true, primer: true });
+    expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar', com: 'socdepoble' }, config)).toMatchObject({ seguint: true });
+    expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar' }, config)).toEqual({ seguint: false, creatAl: null });
+    expect(await elsMeusSeguiments(config)).toEqual([]);
+    await expect(segueix({ tipus: 'entitat', id: 'socdepoble', com: 'rentonar' }, config)).rejects.toMatchObject({ code: 'SDP-SEG-007' });
+    await expect(segueix({ tipus: 'entitat', id: 'socdepoble', com: 'socdepoble' }, config)).rejects.toMatchObject({ code: 'SDP-SEG-003' });
+    /* La persona pilot, seguida per la seua pròpia entitat: la veu com a entitat. */
+    expect(await segueix({ tipus: 'persona', id: '0001', com: 'socdepoble' }, config)).toMatchObject({ seguint: true, primer: true });
+    expect(await quiEmSegueix({}, config)).toEqual([{ tipus: 'entitat', id: 'socdepoble', nom: expect.any(String), creatAl: expect.stringMatching(/^\d{4}-/) }]);
+    expect(await deixaDeSeguir({ tipus: 'entitat', id: 'rentonar', com: 'socdepoble' }, config)).toEqual({ seguint: false });
+    expect(await estatSeguiment({ tipus: 'entitat', id: 'rentonar', com: 'socdepoble' }, config)).toEqual({ seguint: false, creatAl: null });
     expect(fetchDeProva).not.toHaveBeenCalled();
   });
 });

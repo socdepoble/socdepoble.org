@@ -122,7 +122,10 @@ export function SelectorVisibilitat({
 
   return (
     <Dialeg obert={obert} onTanca={tanca} titol={textos.titol} descripcio={textos.descripcio}
-      mida="m" lloc="barra" className="sdp-selector-visibilitat" tancaEnVel={!ocupat}
+      /* Directiva del Mestre (261025, pla 261025_0045, T2) · Mida g: les dues
+         targetes i els avisos respiren a l'ample (menys línies, menys alçada) i,
+         si davall de les barres no hi caben, la finestra puja (Dialeg, lloc barra). */
+      mida="g" lloc="barra" className="sdp-selector-visibilitat" tancaEnVel={!ocupat}
       accions={(
         <>
           <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={ocupat}>Cancel·lar</Boto>

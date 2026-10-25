@@ -26,6 +26,10 @@ import { quiEmSegueix, teCapacitat } from '../../data/backendPort.js';
    props (FitxaPublica ja els té). Sense configuració, {}: el port la
    completa amb la de l'amfitrió i el mode triat (normalizeBackendConfig),
    la mateixa que pren el Perfil fora del Mercat i del Calendari.
+   IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Una entitat
+   també es connecta (B2B, des de /connectar): la fila porta `tipus:
+   'entitat'` i el seu nom, i es diu «Nom (entitat)». La clau de la fila
+   és el tipus i l'id: una persona i l'entitat que administra són dues files.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* teCapacitat sense llançar, com useAdministrarOrganitzacio.js. */
@@ -38,6 +42,7 @@ const abastDe = (config) => {
   try { return backendScope(config || {}); } catch { return 'sense-abast'; }
 };
 const esCancel = (error) => error?.name === 'AbortError';
+const clauDeFila = (seguidor) => `${seguidor.tipus === 'entitat' ? 'entitat' : 'persona'}:${seguidor.id}`;
 
 /** Una data ISO en format llarg de la llengua (per defecte, valencià), o ''. Pura. */
 export function dataDelSeguiment(iso, locale = 'ca-ES') {
@@ -109,8 +114,9 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
     cos = (
       <ul aria-labelledby={titolId}>
         {seguidors.map((seguidor) => (
-          <li key={seguidor.id}>
+          <li key={clauDeFila(seguidor)}>
             {seguidor.nom || t('section.perfil.seguidors.senseNom', 'Sense nom')}
+            {seguidor.tipus === 'entitat' ? ` (${t('section.perfil.seguidors.entitat', 'entitat')})` : null}
             {seguidor.creatAl ? (
               <>
                 {' · '}
@@ -128,7 +134,7 @@ export function GentQueEtSegueix({ config = null, t: traductor = null, locale: l
     <section aria-labelledby={titolId}>
       <h3 id={titolId}>{t('section.perfil.seguidors.titol', 'Veïnat connectat amb tu')}</h3>
       <p className="sdp-camp__ajuda">
-        {t('section.perfil.seguidors.ajuda', 'Cada persona d’esta llista ha triat connectar amb tu: cap algoritme no hi decidix res. Esta llista només la veus tu.')}
+        {t('section.perfil.seguidors.ajuda', 'Cada persona o entitat d’esta llista ha triat connectar amb tu: cap algoritme no hi decidix res. Esta llista només la veus tu.')}
       </p>
       {cos}
     </section>
@@ -168,14 +174,14 @@ export function QuiSegueixOrganitzacio({ orgId, nom = '', config = null }) {
       <Taula titol={titol}>
         <thead>
           <tr>
-            <th scope="col">Persona</th>
+            <th scope="col">Persona o entitat</th>
             <th scope="col">Des de</th>
           </tr>
         </thead>
         <tbody>
           {seguidors.map((seguidor) => (
-            <tr key={seguidor.id}>
-              <td>{seguidor.nom || 'Sense nom'}</td>
+            <tr key={clauDeFila(seguidor)}>
+              <td>{seguidor.tipus === 'entitat' ? `${seguidor.nom || 'Sense nom'} (entitat)` : seguidor.nom || 'Sense nom'}</td>
               <td>{seguidor.creatAl ? <time dateTime={seguidor.creatAl}>{dataDelSeguiment(seguidor.creatAl)}</time> : ''}</td>
             </tr>
           ))}
@@ -189,7 +195,7 @@ export function QuiSegueixOrganitzacio({ orgId, nom = '', config = null }) {
   return (
     <div>
       <h3>{titol}</h3>
-      <p className="sdp-camp__ajuda">{`Cada persona d’esta llista ha triat connectar amb ${nomOrg}. Esta llista només la veu qui l’administra.`}</p>
+      <p className="sdp-camp__ajuda">{`Cada persona o entitat d’esta llista ha triat connectar amb ${nomOrg}. Esta llista només la veu qui l’administra.`}</p>
       {cos}
     </div>
   );

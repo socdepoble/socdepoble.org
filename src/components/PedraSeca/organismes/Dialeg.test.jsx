@@ -387,3 +387,71 @@ test('C5 · calaix sense marc manté nom accessible, focus, Escape i vel locals'
   fireEvent.click(dialeg.parentElement);
   expect(onTanca).toHaveBeenLastCalledWith('vel');
 });
+
+/* Directiva del Mestre (261025, pla 261025_0045, T2) · La finestra de la
+   barra s'ancora davall de les barres només si hi cap sencera: si el cos fa
+   scroll, puja (sdp-dialeg--barra-amunt) i no torna a baixar fins que es
+   tanca. Una finestra del centre o un calaix, mai. jsdom no maqueta: la mida
+   del cos es fixa a mà. */
+const fesQueNoHiCapia = (cos) => {
+  Object.defineProperty(cos, 'scrollHeight', { configurable: true, value: 900 });
+  Object.defineProperty(cos, 'clientHeight', { configurable: true, value: 600 });
+};
+
+function ArnesBarra({ lloc = 'barra', costat = null, text = 'Cos' }) {
+  const [obert, setObert] = useState(true);
+  return (
+    <>
+      <button type="button" onClick={() => setObert((o) => !o)}>Commuta</button>
+      <Dialeg obert={obert} titol="Barra" lloc={lloc} costat={costat} onTanca={() => setObert(false)}><p>{text}</p></Dialeg>
+    </>
+  );
+}
+
+test('T2 · la finestra de la barra que no hi cap puja; la que hi cap, s’ancora; en tancar torna a l’ancoratge', () => {
+  const { rerender, container } = render(<ArnesBarra />);
+  const dialeg = () => container.querySelector('dialog');
+  expect(dialeg().className).toBe('sdp-dialeg sdp-dialeg--m sdp-dialeg--barra');
+  fesQueNoHiCapia(dialeg().querySelector('.sdp-dialeg__cos'));
+  rerender(<ArnesBarra text="Cos més llarg" />);
+  expect(dialeg().classList.contains('sdp-dialeg--barra-amunt')).toBe(true);
+  /* Cap salt mentre s'hi tria: encara que el cos torne a cabre, es queda dalt. */
+  Object.defineProperty(dialeg().querySelector('.sdp-dialeg__cos'), 'scrollHeight', { configurable: true, value: 600 });
+  rerender(<ArnesBarra text="Cos curt" />);
+  expect(dialeg().classList.contains('sdp-dialeg--barra-amunt')).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Commuta', hidden: true }));
+  expect(dialeg().classList.contains('sdp-dialeg--barra-amunt')).toBe(false);
+});
+
+test('T2 · en canviar la mida de la finestra es torna a mirar; una finestra del centre o un calaix no pugen mai', () => {
+  const { container, unmount } = render(<ArnesBarra />);
+  fesQueNoHiCapia(container.querySelector('.sdp-dialeg__cos'));
+  act(() => { window.dispatchEvent(new Event('resize')); });
+  expect(container.querySelector('dialog').classList.contains('sdp-dialeg--barra-amunt')).toBe(true);
+  unmount();
+  for (const props of [{ lloc: 'centre' }, { lloc: 'barra', costat: 'dreta' }]) {
+    const vista = render(<ArnesBarra {...props} />);
+    fesQueNoHiCapia(vista.container.querySelector('.sdp-dialeg__cos'));
+    act(() => { window.dispatchEvent(new Event('resize')); });
+    vista.rerender(<ArnesBarra {...props} text="Més" />);
+    expect(vista.container.querySelector('dialog').classList.contains('sdp-dialeg--barra-amunt')).toBe(false);
+    vista.unmount();
+  }
+});
+
+/* Revisió adversarial 261025 · En l'encastat la capa modal ja dimensiona el diàleg (layout.css,
+   :host .sdp-capa-modal > .sdp-dialeg): la regla de pujar li hauria guanyat i el diàleg hauria
+   crescut més que la caixa de l'amfitrió, sense títol ni peu. Ací no puja mai. */
+test('T2 · en l’encastat la finestra de la barra no puja mai: la capa modal ja la dimensiona', () => {
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    show: { configurable: true, value: vi.fn(function () { this.setAttribute('open', ''); }) },
+    showModal: { configurable: true, value: vi.fn(function () { this.setAttribute('open', ''); }) }
+  });
+  const { root, rerender } = muntaLocal(<ArnesBarra />);
+  const dialeg = () => root.querySelector('dialog');
+  expect(dialeg().classList.contains('sdp-dialeg--barra')).toBe(true);
+  fesQueNoHiCapia(dialeg().querySelector('.sdp-dialeg__cos'));
+  act(() => { window.dispatchEvent(new Event('resize')); });
+  rerender(<ArnesBarra text="Cos més llarg" />);
+  expect(dialeg().classList.contains('sdp-dialeg--barra-amunt')).toBe(false);
+});

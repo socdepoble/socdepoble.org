@@ -365,4 +365,22 @@ describe('T6b · els casos de seguiments', () => {
     expect(await executaCas(entitat, { quiEmSegueix: async () => [] }, ctx())).toMatchObject({ estat: 'falla' });
     expect(await executaCas(cas('segueix'), {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat seguiments absent' });
   });
+
+  /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Connectar com una entitat que no administres. */
+  test('segueix amb un com que no administres: SDP-SEG-007, amb el com i el seguit de conformitat; un altre codi o resoldre és una falla', async () => {
+    const amb = (code) => async () => { throw Object.assign(new Error('No.'), { code }); };
+    const com = cas('segueix', 'SDP-SEG-007');
+    expect(com).toBeTruthy();
+    expect(com.escriu).toBe(false);
+    const crides = [];
+    const adaptador = { segueix: async (...args) => { crides.push(args); throw Object.assign(new Error('No.'), { code: 'SDP-SEG-007' }); } };
+    expect(await executaCas(com, adaptador, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toEqual([[{ tipus: 'persona', id: '00000000-0000-4000-8000-00000000c0f0', com: '00000000-0000-4000-8000-00000000c0f1' }, { dataMode: 'seed' }]]);
+    expect(await executaCas(com, { segueix: amb('SDP-SEG-002') }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['el code havia de ser SDP-SEG-007 i és "SDP-SEG-002"'] });
+    expect(await executaCas(com, { segueix: async () => ({ seguint: true, creatAl: null, nou: true, primer: true }) }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    /* El primer cas de segueix continua sent el de SDP-SEG-001. */
+    expect(cas('segueix').titol).toContain('SDP-SEG-001');
+  });
 });

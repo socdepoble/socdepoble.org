@@ -50,10 +50,19 @@
  *     camins separats, cadascun amb el seu botó: «Entre persones» (seguir i
  *     escriure a l'autor o a la persona o l'entitat d'un perfil,
  *     BlocRelacio), «Formar part» (la sol·licitud estructurada al xat de
- *     l'entitat, BlocFormarPart, i administrar-la, BlocAdministrarOrganitzacio)
- *     i «A les teues notes» (la connexió de sempre; abans «Al teu MAS», 261024
- *     correccions, Gemini G2-02). Des d'un perfil, el nom i l'id
- *     són els de la fitxa pública (useFitxaDeConnexio), mai els de l'URL.
+ *     l'entitat, BlocFormarPart) i «A les teues notes» (la connexió de
+ *     sempre; abans «Al teu MAS», 261024 correccions, Gemini G2-02). Des d'un
+ *     perfil, el nom i l'id són els de la fitxa pública (useFitxaDeConnexio),
+ *     mai els de l'URL.
+ *   · IDEA-22 (pla 261025_0045, T5; Directiva del Mestre, àudios 00:53-00:55)
+ *     · DEROGAT «Actues com a …, però les connexions són personals» (D6): qui
+ *     administra una empresa, una entitat o un grup tria, al camí de la
+ *     relació, «Connectar com a» (la persona o eixa organització) sense
+ *     canviar l'actor de la sessió, i el seguiment és de l'actor triat
+ *     (BlocRelacio → useSeguiment, `com`): B2B rural, empresa amb empresa. La
+ *     còpia «A les teues notes» continua sent del teu Bloc. Administrar
+ *     l'organització (membres i rols) ja no viu ací: és del Perfil, «Membres
+ *     i connexions» (BlocAdministrarOrganitzacio ja no es munta).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
@@ -89,8 +98,10 @@ import { aHtml, contingutDeLaConnexio } from '../notes/connexions.js';
 import { TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS } from '../notes/visibilitatNota.js';
 import { useAplicaAbast } from './useAplicaAbast.js';
 import { ResumConnexio } from './ResumConnexio.jsx';
-/* T43b (ordre del Mestre, 260928) · administrar l'organització (?organitzacio=ID). */
-import { BlocAdministrarOrganitzacio } from './organitzacio/BlocAdministrarOrganitzacio.jsx';
+/* IDEA-22 (T5) · «Connectar com a»: les píndoles de tria única del Mercat (radiogroup), no una peça nova. */
+import { SelectorDeVariacions } from '../mercat/SelectorDeVariacions.jsx';
+import { esRolQueMana } from '../../components/universal/identitat/rols.js';
+import { omple } from '../../config/moderacio.js';
 /* IDEA-14 (Directiva del Mestre, 261024; G-04) · els camins «Entre persones» i
    «Formar part», i la fitxa de confiança d'un perfil o d'una organització. */
 import { BlocRelacio } from './BlocRelacio.jsx';
@@ -202,6 +213,37 @@ export function origenAmbOriginal(origen, targeta, item = null) {
     autorTipus: autor?.tipus || '',
     ...(drets ? { drets } : {})
   };
+}
+
+/* IDEA-22 (pla 261025_0045, T5) · El valor de la píndola de la persona: cap id d'organització. */
+export const COM_PERSONA = '__persona';
+const ETIQUETA_DE_KIND = Object.freeze({
+  company: ['section.connectar.com.empresa', '{nom} (empresa)'],
+  entity: ['section.connectar.com.entitat', '{nom} (entitat)'],
+  group: ['section.connectar.com.grup', '{nom} (grup)']
+});
+
+/**
+ * IDEA-22 (pla 261025_0045, T5) · Els barrets amb què qui mira es pot
+ * connectar: la persona i les organitzacions que ADMINISTRA (owner o admin;
+ * un membre no hi parla en nom de ningú). Opcions per a SelectorDeVariacions
+ * ({ valor, etiqueta, nom }). Sense cap organització que administre, cap
+ * opció: no hi ha res a triar i no es pinta cap selector. Pura.
+ */
+export function actorsPerConnectar(identitats = [], t = (_clau, reserva) => reserva) {
+  const llista = Array.isArray(identitats) ? identitats : [];
+  const persona = llista.find((identitat) => identitat?.tipus === 'persona' && identitat.id != null && identitat.nom);
+  const organitzacions = llista.filter((identitat) => identitat?.tipus === 'entitat' && identitat.id != null
+    && identitat.nom && esRolQueMana(identitat.rol));
+  if (!persona || !organitzacions.length) return [];
+  return [
+    { valor: COM_PERSONA, etiqueta: omple(t('section.connectar.com.persona', '{nom} (persona)'), { nom: persona.nom }), nom: persona.nom },
+    ...organitzacions.map((org) => ({
+      valor: String(org.id),
+      etiqueta: omple(t(...(ETIQUETA_DE_KIND[org.kind] || ETIQUETA_DE_KIND.entity)), { nom: org.nom }),
+      nom: org.nom
+    }))
+  ];
 }
 
 /** Els ids amb què signa qui mira: el de la sessió, l'actor i les identitats
@@ -386,10 +428,19 @@ function ConnectarElementIntern() {
   /* D4 · l'original porta els drets reservats (només si s'ha resolt, mai de l'URL). */
   const dretsReservats = teDretsReservats(origen);
 
-  /* D6 · la connexió és sempre de la persona, encara que actue com a entitat. */
+  /* D6 · la còpia de la connexió (A les teues notes) és sempre del Bloc de la persona.
+     IDEA-22 (T5) · La relació, en canvi, pot ser d'una organització que administres. */
   const persona = (identitats || []).find((identitat) => identitat.tipus === 'persona')?.nom
     || (actor?.tipus === 'persona' ? actor.nom : null);
-  const actuaComEntitat = actor?.tipus === 'entitat' && actor?.nom;
+  /* IDEA-22 (T5) · «Connectar com a»: d'entrada, l'actor de la sessió si és una
+     organització que administres; si no, la persona. Triar-ne un altre NO canvia
+     l'actor global (estat d'esta vista). */
+  const actorsConnectar = useMemo(() => actorsPerConnectar(identitats, t), [identitats, t]);
+  const comPerDefecte = actor?.tipus === 'entitat' && actorsConnectar.some((opcio) => opcio.valor === String(actor.id))
+    ? String(actor.id) : COM_PERSONA;
+  const [comTriat, setComTriat] = useState(null);
+  const comValor = comTriat !== null && actorsConnectar.some((opcio) => opcio.valor === comTriat) ? comTriat : comPerDefecte;
+  const comEntitat = comValor === COM_PERSONA ? null : actorsConnectar.find((opcio) => opcio.valor === comValor) || null;
 
   const grups = useMemo(() => grupsDeXat(chatThreads), [chatThreads]);
   /* Una llista buida mentre el xat carrega (o si ha fallat) no vol dir «cap grup». */
@@ -612,9 +663,6 @@ function ConnectarElementIntern() {
           </div>
           {autorVisible ? <p className="sdp-connectar__autor">{`De ${autorVisible}`}</p> : null}
           {persona ? <p className="sdp-connectar__identitat">{`Es connecta a ${persona}.`}</p> : null}
-          {actuaComEntitat ? (
-            <p className="sdp-connectar__identitat">{`Actues com a ${actor.nom}, però les connexions són personals.`}</p>
-          ) : null}
           {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
               amb les mateixes claus que l'avís de l'editor (NotesEditor). */}
           {dretsReservats ? (
@@ -634,10 +682,15 @@ function ConnectarElementIntern() {
             <Divisor />
             <div className="sdp-connectar__cami" role="group" aria-labelledby={`${id}-cami-relacio`}>
               <div className="sdp-connectar__cami-cap">
-                <p id={`${id}-cami-relacio`} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Entre persones')}</p>
+                <p id={`${id}-cami-relacio`} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Connexió directa')}</p>
               </div>
+              {/* IDEA-22 (T5) · Amb quin barret et connectes, només si administres alguna organització. */}
+              {actorsConnectar.length > 1 && !calEntrar ? (
+                <SelectorDeVariacions llegenda={t('section.connectar.com.llegenda', 'Connectar com a')}
+                  opcions={actorsConnectar} valor={comValor} onCanvi={setComTriat} />
+              ) : null}
               <BlocRelacio contacte={contacte} deFitxa={contacte?.deFitxa === true} calEntrar={calEntrar} onEntra={entra}
-                dataMode={dataMode} config={config} />
+                dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} />
             </div>
           </>
         ) : null}
@@ -648,10 +701,9 @@ function ConnectarElementIntern() {
               <div className="sdp-connectar__cami-cap">
                 <p id={`${id}-cami-formar-part`} className="sdp-connectar__tipus">{t('section.connectar.camins.formarPart', 'Formar part')}</p>
               </div>
+              {/* IDEA-22 (T5) · Administrar l'organització ja no viu ací: és del Perfil («Membres i connexions»). */}
               <BlocFormarPart orgId={orgId} contacte={contacteOrg} nom={fitxaOrg?.perfil?.nom || null}
-                carregant={fitxaOrg?.estat === 'carregant'} onEntra={entra} />
-              {/* T43b-3 · el nom de l'organització no ve de l'URL (title): el resol el bloc d'una font de confiança. */}
-              <BlocAdministrarOrganitzacio orgId={orgId} config={config} />
+                tipusOrg={fitxaOrg?.perfil?.tipus || 'entitat'} carregant={fitxaOrg?.estat === 'carregant'} onEntra={entra} />
             </div>
           </>
         ) : null}

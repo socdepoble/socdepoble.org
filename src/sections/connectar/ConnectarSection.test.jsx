@@ -42,7 +42,8 @@ vi.mock('../notes/NotesDataContext', () => ({
     canCreate: mocks.canCreate, config: mocks.config, status: mocks.statusBloc, error: mocks.errorBloc, refresh: mocks.refresh
   })
 }));
-/* T43b · el bloc d'administrar té les seues proves; ací només es mira on es munta. */
+/* T43b · el bloc d'administrar té les seues proves. Actualitzada a posta (IDEA-22, pla 261025_0045 T5):
+   ja no es munta a /connectar; el simulacre es queda de guarda perquè no hi torne. */
 vi.mock('./organitzacio/BlocAdministrarOrganitzacio.jsx', () => ({
   BlocAdministrarOrganitzacio: ({ orgId, nom, config }) => React.createElement('p', { 'data-bloc-administrar': orgId, 'data-mode': config?.dataMode || '', 'data-nom': nom ?? '' }, 'Administrar')
 }));
@@ -275,7 +276,9 @@ test('T43 · l’objecte i la ruta arriben per URL; una ruta que no és interna 
   expect(contingutDeLaConnexio(perfil)).toContain('des del directori');
 });
 
-test('T43 · la vista diu què es connecta i que la connexió és personal, també actuant com a entitat', () => {
+/* Actualitzada a posta (IDEA-22, pla 261025_0045 T5; Directiva del Mestre 261025): fora «les connexions són
+   personals». Qui administra una entitat tria amb quin barret connecta (ConnectarSection.relacions.test.jsx). */
+test('T43 · la vista diu què es connecta i, actuant com a entitat, ja no diu que la connexió és personal', () => {
   mocks.identitat = {
     actor: { tipus: 'entitat', nom: 'Forn de la Torre' },
     identitats: [{ tipus: 'persona', nom: 'Pepa Soler' }, { tipus: 'entitat', nom: 'Forn de la Torre' }]
@@ -285,7 +288,7 @@ test('T43 · la vista diu què es connecta i que la connexió és personal, tamb
   expect(container.querySelector('header.bar-blue .btn-connectar')).toBeNull();
   expect(screen.getByText('Producte del Mercat')).toBeTruthy();
   expect(screen.getByText('Es connecta a Pepa Soler.')).toBeTruthy();
-  expect(screen.getByText('Actues com a Forn de la Torre, però les connexions són personals.')).toBeTruthy();
+  expect(container.textContent).not.toMatch(/connexions són personals|Actues com a/);
 });
 
 test('T43 · les opcions diuen la veritat: en seed «Tot el poble» està desactivada amb el motiu', () => {
@@ -665,15 +668,11 @@ test('T43 · categories del Bloc com a destí de la connexió', async () => {
   expect(mocks.crea.mock.calls[0][0].categories).toEqual(['Receptes', 'Festes']);
 });
 
-test('T43b · amb ?organitzacio=ID apareix el bloc d’administrar, i guardar la connexió continua sent una acció a banda', async () => {
+test('T43b · amb ?organitzacio=ID no es munta cap bloc d’administrar, i guardar la connexió continua sent una acció a banda', async () => {
   mocks.config = { dataMode: 'seed' };
   mocks.params = new URLSearchParams('item_id=socdepoble&title=S%C3%B3c%20de%20Poble&sectionId=perfil&objecte=entitat&ruta=%2Fempresa%2Fsocdepoble&organitzacio=socdepoble');
   const { container } = render(<ConnectarSection />);
-  const bloc = container.querySelector('[data-bloc-administrar]');
-  expect(bloc.getAttribute('data-bloc-administrar')).toBe('socdepoble');
-  expect(bloc.getAttribute('data-mode')).toBe('seed');
-  /* T43b-3 · el title de l'URL no arriba al consentiment: el bloc resol el nom d'una font de confiança. */
-  expect(bloc.getAttribute('data-nom')).toBe('');
+  expect(container.querySelector('[data-bloc-administrar]')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: CONNECTA }));
   await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
   expect(mocks.crea.mock.calls[0][0].origen).toMatchObject({ objecte: 'entitat', ruta: '/empresa/socdepoble' });

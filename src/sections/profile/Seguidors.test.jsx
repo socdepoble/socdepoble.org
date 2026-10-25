@@ -24,6 +24,12 @@ const SEGUIDORS = [
   { id: 'u-2', nom: 'Pepa Garcia', creatAl: '2026-10-24T09:00:00Z' },
   { id: 'u-1', nom: null, creatAl: null }
 ];
+/* IDEA-22 (pla 261025_0045, T5) · Una entitat també s'hi connecta (B2B): la fila porta tipus 'entitat'.
+   La persona que l'administra i l'entitat són dues files, encara que compartiren id. */
+const AMB_ENTITAT = [
+  { tipus: 'entitat', id: 'o-forn', nom: 'Forn de la Torre', creatAl: '2026-10-25T08:00:00Z' },
+  { tipus: 'persona', id: 'o-forn', nom: 'Toni Ferrer', creatAl: '2026-10-24T09:00:00Z' }
+];
 const ambCodi = (code, message = 'Missatge del port.') => Object.assign(new Error(message), { code });
 
 afterEach(cleanup);
@@ -53,6 +59,17 @@ describe('GentQueEtSegueix · a la fitxa pròpia', () => {
     expect(within(seccio).getByText(/cap algoritme no hi decidix res/)).toBeTruthy();
     /* Cap regió viva: és una lectura, no la resposta a cap acció. */
     expect(seccio.querySelector('[role="status"], [role="alert"], [aria-live]')).toBeNull();
+  });
+
+  test('IDEA-22 · una entitat connectada es diu entitat, en la llengua de la fitxa', async () => {
+    m.qui.mockResolvedValue(AMB_ENTITAT);
+    render(<GentQueEtSegueix t={(_clau, reserva) => reserva} />);
+    const llista = await screen.findByRole('list', { name: 'Veïnat connectat amb tu' });
+    expect(within(llista).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      `Forn de la Torre (entitat) · ${dataDelSeguiment('2026-10-25T08:00:00Z')}`,
+      `Toni Ferrer · ${dataDelSeguiment('2026-10-24T09:00:00Z')}`
+    ]);
+    expect(screen.getByText(/^Cada persona o entitat d’esta llista/)).toBeTruthy();
   });
 
   test('el buit, el servidor sense l’esquema i una fallada qualsevol', async () => {
@@ -107,11 +124,20 @@ describe('QuiSegueixOrganitzacio · per a qui administra', () => {
     const taula = await screen.findByRole('region', { name: 'Veïnat connectat amb Forn' });
     const files = [...taula.querySelectorAll('tbody tr')].map((tr) => [...tr.querySelectorAll('td')].map((td) => td.textContent));
     expect(files).toEqual([['Pepa Garcia', dataDelSeguiment('2026-10-24T09:00:00Z')], ['Sense nom', '']]);
-    expect(screen.getByText('Cada persona d’esta llista ha triat connectar amb Forn. Esta llista només la veu qui l’administra.')).toBeTruthy();
+    expect(taula.querySelector('thead th').textContent).toBe('Persona o entitat');
+    /* Actualitzada a posta (IDEA-22, T5): una entitat també s'hi connecta. */
+    expect(screen.getByText('Cada persona o entitat d’esta llista ha triat connectar amb Forn. Esta llista només la veu qui l’administra.')).toBeTruthy();
   });
 
   /* Actualitzada a posta (261024 correccions): motiu, R3-12. El text de l'error ve del
      `code`, mai del `message`: el de NO-DISPONIBLE era per a qui desplega. */
+  test('IDEA-22 · una entitat connectada amb l’entitat es diu entitat', async () => {
+    m.qui.mockResolvedValue(AMB_ENTITAT);
+    render(<QuiSegueixOrganitzacio orgId="O" nom="El Rentonar" />);
+    const taula = await screen.findByRole('region', { name: 'Veïnat connectat amb El Rentonar' });
+    expect([...taula.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent)).toEqual(['Forn de la Torre (entitat)', 'Toni Ferrer']);
+  });
+
   test('el buit i els errors pel seu codi: cap error no pinta el seu message', async () => {
     m.qui.mockResolvedValueOnce([]);
     render(<QuiSegueixOrganitzacio orgId="O" nom="Forn" />);
@@ -192,7 +218,8 @@ describe('section.perfil.seguidors.* a les cinc llengües', () => {
   const usades = new Map([...font.matchAll(/t\('(section\.perfil\.seguidors\.[\w.]+)', '([^']*)'\)/g)].map((x) => [x[1], x[2]]));
 
   test('totes les claus que llig el bloc són a les cinc llengües, cap de buida, i el valencià és la reserva del codi', () => {
-    expect([...usades.keys()].sort()).toEqual(['ajuda', 'buit', 'carregant', 'error', 'noDisponible', 'senseNom', 'titol'].map((c) => `section.perfil.seguidors.${c}`));
+    /* IDEA-22 (T5) · 'entitat': la marca d'una fila d'entitat (B2B). */
+    expect([...usades.keys()].sort()).toEqual(['ajuda', 'buit', 'carregant', 'entitat', 'error', 'noDisponible', 'senseNom', 'titol'].map((c) => `section.perfil.seguidors.${c}`));
     const ca = clausDe('ca');
     for (const [clau, reserva] of usades) expect(ca.get(clau), clau).toBe(reserva);
     for (const llengua of LLENGUES) {

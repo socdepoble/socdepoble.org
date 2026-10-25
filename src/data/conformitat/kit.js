@@ -121,6 +121,8 @@ const fallesDePaginaDeSeccio = (pagina) => [
    null, creatAl ISO o null. L'id del seguit de conformitat té forma d'UUID
    perquè en remot arribe al servidor, i no és de ningú. */
 const ID_SEGUIT_DE_CONFORMITAT = '00000000-0000-4000-8000-00000000c0f0';
+/* IDEA-22 · Una entitat amb forma d'UUID que no existix: no l'administra ningú. */
+const ID_ENTITAT_DE_CONFORMITAT = '00000000-0000-4000-8000-00000000c0f1';
 const fallesDeSeguidor = (s, nom) => [
   ...(esTextNoBuit(s?.id) ? [] : [`un ${nom} sense id de text`]),
   ...(s?.nom === null || typeof s?.nom === 'string' ? [] : [`el ${nom} ${s?.id} té un nom que no és text ni null`]),
@@ -648,6 +650,17 @@ export const CASOS = Object.freeze([
     titol: "segueix({ tipus: 'inventat', id }, config) rebutja amb code SDP-SEG-001 sense xarxa",
     arguments: (ctx) => [{ tipus: 'inventat', id: ID_SEGUIT_DE_CONFORMITAT }, ctx.config],
     comprova: rebuigAmbCodi('SDP-SEG-001')
+  }),
+  /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Connectar
+     com una entitat (`com`) que no administres: SDP-SEG-007. Tampoc no
+     escriu. Com quiEmSegueix({ orgId }), demana qui crida: la sessió en
+     remot (la del doble) o el convidat en local; sense cap sessió, un
+     adaptador remot diu SDP-SEG-000 abans de cap xarxa. */
+  cas({
+    metode: 'segueix', capacitat: 'seguiments', espera: 'rebutja',
+    titol: "segueix({ tipus: 'persona', id, com }, config) com una entitat que no administres rebutja amb code SDP-SEG-007",
+    arguments: (ctx) => [{ tipus: 'persona', id: ID_SEGUIT_DE_CONFORMITAT, com: ID_ENTITAT_DE_CONFORMITAT }, ctx.config],
+    comprova: rebuigAmbCodi('SDP-SEG-007')
   }),
   cas({
     metode: 'deixaDeSeguir', capacitat: 'seguiments', espera: 'rebutja',

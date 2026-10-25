@@ -18,12 +18,20 @@
      és un esborrat suau al servidor, segueix torna `primer` (nou = primer) i
      el bloqueig de l'altra banda és a l'ombra; res d'això canvia les
      crides, només la forma de segueix.
+   · IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Connectar
+     des d'una entitat (2610250100_seguiments_des_d_entitat.sql): `com` (al
+     mateix objecte que el seguit) viatja com a p_com, NOMÉS quan hi és, amb
+     la mateixa regla d'id (comDelContracte, i en remot un UUID: si no,
+     SDP-SEG-001 abans de cap xarxa). Sense `com`, el cos és el de sempre.
+     Si no l'administres, el servidor diu SDP-SEG-007, que es llig pel prefix
+     com els altres. qui_em_segueix porta seguidor_tipus; un servidor sense
+     la migració no el dona, i la fila és d'una persona (totes ho eren).
    La comprovació de mode és explícita (no `!== 'remote'`), com moderacio.js:
    una configuració sense mode és remota. El `signal` de la configuració
    arriba sempre a fetch (rpc() el pren de les opcions, el 4t argument). */
 import { getCurrentUser, getResolvedConfig, rpc } from './runtime.js';
 import { getDefaultUserId } from '../identitat.js';
-import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, errorDeSeguiment, seguitDelContracte } from '../contracte.js';
+import { MISSATGES_SEGUIMENTS, TIPUS_SEGUIT, comDelContracte, errorDeSeguiment, seguitDelContracte } from '../contracte.js';
 import { llistaBloquejos } from './moderacio.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
@@ -87,12 +95,20 @@ function seguitRemot(dades) {
   if (!RE_UUID.test(seguit.id)) throw errorDeSeguiment('SDP-SEG-001');
   return seguit;
 }
+/* IDEA-22 · L'entitat amb què es connecta, en remot amb un id del servidor (o null). */
+function comRemot(com) {
+  if (com !== null && !RE_UUID.test(com)) throw errorDeSeguiment('SDP-SEG-001');
+  return com;
+}
+/* El cos de segueix, deixa_de_seguir i estat_seguiment: p_com només amb `com`. */
+const cosDelSeguit = ({ tipus, id }, com) => (com ? { p_tipus: tipus, p_id: id, p_com: com } : { p_tipus: tipus, p_id: id });
 const cridaRpc = (nom, cos, config) => rpc(nom, cos, config, { signal: signalDe(config) }).catch((error) => { throw traduix(error); });
 const unaFila = (resposta) => (Array.isArray(resposta) ? resposta[0] : resposta);
 const textONull = (valor) => (typeof valor === 'string' && valor.trim() ? valor : null);
 
 /**
- * Seguix una persona o una entitat ({ tipus, id }). Idempotent: si ja la
+ * Seguix una persona o una entitat ({ tipus, id, com? }; amb `com`, com eixa
+ * entitat, que has d'administrar: si no, SDP-SEG-007). Idempotent: si ja la
  * seguies, { seguint: true, creatAl, nou: false, primer: false } amb la data
  * d'aleshores. `primer` és true NOMÉS la primera vegada de totes que la
  * parella se seguix (el servidor no hi tenia cap fila); tornar a seguir
@@ -101,31 +117,38 @@ const textONull = (valor) => (typeof valor === 'string' && valor.trim() ? valor 
  */
 export async function segueix(dades = {}, config = {}) {
   const seguit = seguitDelContracte(dades);
-  if (esModeLocal(config)) return (await seguimentsLocals()).segueix(seguit, await contextLocal(config));
+  const com = comDelContracte(dades);
+  if (esModeLocal(config)) return (await seguimentsLocals()).segueix({ ...seguit, com }, await contextLocal(config));
   if (!getCurrentUser()?.id) throw errorDeSeguiment('SDP-SEG-000');
-  const { tipus, id } = seguitRemot(seguit);
-  const fila = unaFila(await cridaRpc('segueix', { p_tipus: tipus, p_id: id }, config));
+  const cos = cosDelSeguit(seguitRemot(seguit), comRemot(com));
+  const fila = unaFila(await cridaRpc('segueix', cos, config));
   const primer = fila?.primer === true;
   return { seguint: true, creatAl: fila?.creat_al ?? null, nou: primer, primer };
 }
 
-/** Deixa de seguir ({ tipus, id }). Idempotent: { seguint: false } també si no la seguies. */
+/**
+ * Deixa de seguir ({ tipus, id, com? }; amb `com`, el de l'entitat, per a
+ * qualsevol que l'administra). Idempotent: { seguint: false } també si no la seguies.
+ */
 export async function deixaDeSeguir(dades = {}, config = {}) {
   const seguit = seguitDelContracte(dades);
-  if (esModeLocal(config)) return (await seguimentsLocals()).deixaDeSeguir(seguit, await contextLocal(config));
+  const com = comDelContracte(dades);
+  if (esModeLocal(config)) return (await seguimentsLocals()).deixaDeSeguir({ ...seguit, com }, await contextLocal(config));
   if (!getCurrentUser()?.id) throw errorDeSeguiment('SDP-SEG-000');
-  const { tipus, id } = seguitRemot(seguit);
-  await cridaRpc('deixa_de_seguir', { p_tipus: tipus, p_id: id }, config);
+  await cridaRpc('deixa_de_seguir', cosDelSeguit(seguitRemot(seguit), comRemot(com)), config);
   return { seguint: false };
 }
 
-/** Si qui crida seguix ({ tipus, id }) ara. Sense sessió en remot, { seguint: false, creatAl: null } i cap petició. */
+/**
+ * Si qui crida (o, amb `com`, l'entitat que administra) seguix ({ tipus, id })
+ * ara. Sense sessió en remot, { seguint: false, creatAl: null } i cap petició.
+ */
 export async function estatSeguiment(dades = {}, config = {}) {
   const seguit = seguitDelContracte(dades);
-  if (esModeLocal(config)) return (await seguimentsLocals()).estatSeguiment(seguit, await contextLocal(config));
+  const com = comDelContracte(dades);
+  if (esModeLocal(config)) return (await seguimentsLocals()).estatSeguiment({ ...seguit, com }, await contextLocal(config));
   if (!getCurrentUser()?.id) return { seguint: false, creatAl: null };
-  const { tipus, id } = seguitRemot(seguit);
-  const fila = unaFila(await cridaRpc('estat_seguiment', { p_tipus: tipus, p_id: id }, config));
+  const fila = unaFila(await cridaRpc('estat_seguiment', cosDelSeguit(seguitRemot(seguit), comRemot(com)), config));
   return { seguint: fila?.seguint === true, creatAl: fila?.seguint === true ? fila?.creat_al ?? null : null };
 }
 
@@ -141,8 +164,10 @@ export async function elsMeusSeguiments(config = {}) {
 
 /**
  * Qui seguix qui crida (sense orgId) o l'entitat orgId (només per a qui
- * l'administra; si no, SDP-SEG-005): [{ id, nom, creatAl }], la més nova
- * primer. Sense sessió en remot, [].
+ * l'administra; si no, SDP-SEG-005): [{ tipus, id, nom, creatAl }], la més
+ * nova primer. IDEA-22 · `tipus` és el de qui seguix (seguidor_tipus): d'una
+ * entitat, id i nom són els seus; sense seguidor_tipus (un servidor sense
+ * 2610250100), 'persona'. Sense sessió en remot, [].
  */
 export async function quiEmSegueix(opcions = {}, config = {}) {
   const orgId = opcions?.orgId ?? null;
@@ -153,6 +178,7 @@ export async function quiEmSegueix(opcions = {}, config = {}) {
   if (entitat && !RE_UUID.test(entitat)) throw errorDeSeguiment('SDP-SEG-001');
   const files = await cridaRpc('qui_em_segueix', { p_org_id: entitat }, config);
   return (Array.isArray(files) ? files : [])
-    .filter((fila) => fila?.id)
-    .map((fila) => ({ id: String(fila.id), nom: textONull(fila.nom), creatAl: fila.creat_al ?? null }));
+    .map((fila) => ({ fila, tipus: fila?.seguidor_tipus ?? 'persona' }))
+    .filter(({ fila, tipus }) => fila?.id && TIPUS_SEGUIT.includes(tipus))
+    .map(({ fila, tipus }) => ({ tipus, id: String(fila.id), nom: textONull(fila.nom), creatAl: fila.creat_al ?? null }));
 }

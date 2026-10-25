@@ -57,7 +57,10 @@ test('T42 · el marc ompli el diàleg i el cos és una columna que cedix l’esp
   }
   // Sense min-height: 0 el cos no s'encongix per davall de la casella i
   // l'iframe mínim: en pantalla curta fa scroll el diàleg, no un cos de 20px.
-  expect(cos).not.toContain('min-height');
+  // Actualitzada a posta (revisió adversarial 261025): el cos de base porta
+  // ara min-height: 0 (T1), i ací es torna a posar el mínim (auto).
+  expect(cos).toContain('min-height: auto;');
+  expect(cos).not.toContain('min-height: 0');
 });
 
 test('T42 · l’iframe pren la resta, sense alçada fixa en vh ni token inventat', () => {

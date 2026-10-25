@@ -63,6 +63,18 @@
  *     de modules.css) en conserven la proporció; només el cercle de la
  *     màscara és redó. L'eixida és `sortida` (amb `costatLlarg`, 1.200 pel
  *     costat llarg) sobre el retall de la forma triada.
+ *   Directiva del Mestre (261025, pla 261025_0045, T3: «el disseny és com el
+ *     soroll per a allò usable») · DEROGADA la llista vertical de GrupOpcions
+ *     en el mode senzill: nou ràdios amb la seua ajuda empenyien el visor fora
+ *     de la vista. Ara, davall del zoom, una fila de píndoles d'un sol toc
+ *     (ràdios natius en un fieldset role="radiogroup", com el selector de
+ *     variants del Mercat: Tab entra per la triada i les fletxes canvien, cap
+ *     JS de teclat) amb l'etiqueta curta («1:1», «16:9», «Original»…) i el nom
+ *     sencer com a nom accessible («Panoràmic (16:9)»), i UNA línia de
+ *     didàctica amb la forma triada i la seua ajuda. El diàleg passa a mida m
+ *     i el visor es limita també per l'alçada de la pantalla
+ *     (.sdp-enquadrament--formes, modules.css): la foto no ix mai de la vista
+ *     mentre es tria. Amb una sola forma, el DOM de sempre (mida s).
  *
  * GAUNTLET 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · L'EXIF de la
  * foto es conserva de sèrie, amb la tria de la persona. Sense esta prop, el
@@ -133,6 +145,14 @@ import { ERROR_UBICACIO, PRECISIO_PER_DEFECTE, geolocalitzacio, llegixCoordenada
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
 import { ERROR_HEIC, ERROR_PIXELS, comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
 import { UbicacioImatge } from './UbicacioImatge.jsx';
+
+/* T3 (pla 261025_0045) · L'etiqueta curta d'una forma a la seua píndola: la
+   proporció («16:9») o «Original». El nom accessible és l'etiqueta sencera. */
+/* «Orig.» (prompt 261025_0045, T3): les nou píndoles caben en una fila a la mida m; el nom sencer el diu
+   l'aria-label del ràdio i la didàctica. */
+export const etiquetaCurtaDeForma = (forma) => (forma?.valor === 'original' ? 'Orig.' : String(forma?.valor ?? ''));
+/** T3 · La línia de didàctica de la forma triada: «Panoràmic (16:9) · <ajuda>», o només el nom. */
+export const didacticaDeForma = (forma) => (forma ? [forma.etiqueta, forma.ajuda].filter(Boolean).join(' · ') : '');
 
 export const ERROR_CARREGA_FITXER = 'No s’ha pogut obrir esta foto. Prova amb una imatge JPEG, PNG o WebP.';
 export const ERROR_CARREGA_URL = 'No s’ha pogut obrir esta imatge per a enquadrar-la. Torna-la a pujar des del dispositiu.';
@@ -656,13 +676,17 @@ export function DialegEnquadrament({
   if (senzill) {
     const caixa = ['sdp-enquadrament__visor-caixa', mascara === 'cercle' && 'sdp-enquadrament__visor-caixa--cercle']
       .filter(Boolean).join(' ');
+    /* T3 (pla 261025_0045) · Amb més d'una forma (la capçalera): les píndoles i la didàctica. */
+    const ambFormes = formats.length > 1;
+    const triada = formats.find((f) => f.valor === estat.format) || null;
+    const idDidactica = `${id}-didactica`;
     return (
       <Dialeg
         obert={obert}
         onTanca={tanca}
         titol={titol}
         descripcio={descripcio}
-        mida="s"
+        mida={ambFormes ? 'm' : 's'}
         className="sdp-enquadrament__dialeg sdp-enquadrament__dialeg--senzill"
         tancaEnVel={false}
         ambTanca={false}
@@ -675,7 +699,7 @@ export function DialegEnquadrament({
           </>
         )}
       >
-        <div ref={arrelRef} className="sdp-enquadrament sdp-enquadrament--senzill">
+        <div ref={arrelRef} className={ambFormes ? 'sdp-enquadrament sdp-enquadrament--senzill sdp-enquadrament--formes' : 'sdp-enquadrament sdp-enquadrament--senzill'}>
           {errorCarrega ? <Alerta to="error">{errorCarrega}</Alerta> : null}
           {errorDesat ? <Alerta key={errorDesat.intent} to="error">{errorDesat.text}</Alerta> : null}
           {!errorCarrega && !imatge ? <Carregant etiqueta="Obrint la imatge…" /> : null}
@@ -714,9 +738,29 @@ export function DialegEnquadrament({
                   <Plus size={20} aria-hidden="true" focusable="false" />
                 </button>
               </div>
-              {/* Directiva del Mestre (261024, àudio 22:47) · La forma, només si n'hi ha més d'una (la capçalera). */}
-              {formats.length > 1 ? (
-                <GrupOpcions llegenda="Forma" opcions={formats} valor={estat.format} onCanvi={canviaForma} disabled={desant} />
+              {/* Directiva del Mestre (261024, àudio 22:47; 261025, T3) · La forma, només si n'hi ha
+                  més d'una (la capçalera): píndoles d'un sol toc i una línia de didàctica. */}
+              {ambFormes ? (
+                <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-forma-llegenda`}
+                  aria-describedby={idDidactica} disabled={desant}>
+                  <legend id={`${id}-forma-llegenda`} className="sdp-nomes-lector">Forma</legend>
+                  <div className="sdp-enquadrament__formats-pindoles">
+                    {formats.map((f) => {
+                      const idForma = `${id}-forma-${f.valor}`;
+                      return (
+                        <div key={f.valor} className="sdp-enquadrament__format">
+                          <input type="radio" id={idForma} name={`${id}-forma`} value={f.valor}
+                            className="sdp-enquadrament__format-control sdp-nomes-lector" aria-label={f.etiqueta}
+                            checked={estat.format === f.valor} onChange={() => canviaForma(f.valor)} />
+                          <label htmlFor={idForma} className="sdp-enquadrament__format-pindola">{etiquetaCurtaDeForma(f)}</label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              ) : null}
+              {ambFormes ? (
+                <p id={idDidactica} className="sdp-enquadrament__didactica" aria-live="polite">{didacticaDeForma(triada)}</p>
               ) : null}
               {casellaExif}
             </>

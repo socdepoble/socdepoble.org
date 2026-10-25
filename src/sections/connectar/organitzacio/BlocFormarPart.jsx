@@ -15,8 +15,14 @@
  *     principi és l'estructura de la petició.
  *   · Estats (estatFormarPart.js): sense sessió porta a entrar; qui ja en
  *     forma part (IdentitatContext · memberships) ho llig, com a membre o
- *     com a qui l'administra; una entitat sense xat on arribar ho diu i no
- *     té botó.
+ *     com a qui l'administra.
+ *   · IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · DEROGAT
+ *     «una entitat sense xat on arribar ho diu i no té botó» («Des d'ací encara
+ *     no es pot arribar al xat d'esta entitat…»). Sense xat privat on arribar
+ *     ('sense-xat'), un botó directe al xat de la pàgina de l'entitat (el
+ *     canal comú de «Comentar», rutaXatDePagina sobre el seu descriptor), on
+ *     es pot preguntar i demanar. I qui l'administra ja no l'administra ací:
+ *     un botó la porta al seu Perfil («Membres i connexions»).
  *   · El nom és de confiança: el de la pertinença, el del contacte de la
  *     fitxa pública o el de la fitxa; mai el title de l'URL (T43b-3).
  *   · Si l'enviament falla, la confirmació es tanca (correcció 261008 de
@@ -30,7 +36,8 @@
  * Tots els textos passen per t() (CA-6): section.connectar.formarPart.*.
  */
 import { useEffect, useId, useRef, useState } from 'react';
-import { Users } from 'lucide-react';
+import { MessageCircle, Settings, Users } from 'lucide-react';
+import { objecteDePerfil, rutaFitxaOrganitzacio, rutaXatDePagina } from '../../../config/navigation.js';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useUbicacioApp } from '../../../components/PedraSeca/hooks/useAccions.js';
 import { useUIActions } from '../../../app/contexts/UIContext';
@@ -54,7 +61,7 @@ function onEs(router) {
   return `${window.location.pathname}${window.location.search}`;
 }
 
-export function BlocFormarPart({ orgId, contacte = null, nom = null, carregant = false, onEntra }) {
+export function BlocFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'entitat', carregant = false, onEntra }) {
   const id = useId();
   const { t } = useUIActions();
   const navigate = useNavigate();
@@ -128,8 +135,16 @@ export function BlocFormarPart({ orgId, contacte = null, nom = null, carregant =
       );
       break;
     case 'administres':
-      /* Les accions d'administrar són al bloc germà (BlocAdministrarOrganitzacio). */
-      cos = <p>{ambNom('section.connectar.formarPart.administres', 'Ja formes part de {nom} i l’administres.')}</p>;
+      /* IDEA-22 (T5) · Administrar-la (membres i rols) és del Perfil, «Membres i connexions». */
+      cos = (
+        <>
+          <p>{ambNom('section.connectar.formarPart.administres', 'Ja formes part de {nom} i l’administres.')}</p>
+          <p className="sdp-connectar__ajuda">{t('section.connectar.formarPart.onSAdministra', 'Els membres i els rols es gestionen al teu Perfil, a «Membres i connexions».')}</p>
+          <Boto varietat="secundari" icona={Settings} onClick={() => navigate(rutaFitxaOrganitzacio(membership.id))}>
+            {ambNom('section.connectar.formarPart.gestiona', 'Gestionar {nom}')}
+          </Boto>
+        </>
+      );
       break;
     case 'membre':
       cos = (
@@ -141,13 +156,27 @@ export function BlocFormarPart({ orgId, contacte = null, nom = null, carregant =
     case 'comprovant':
       cos = <Carregant etiqueta={t('section.connectar.formarPart.comprovant', 'Buscant el xat de l’entitat…')} />;
       break;
-    case 'sense-xat':
+    case 'sense-xat': {
+      /* IDEA-22 (T5) · Sense xat privat on arribar: el canal de la pàgina de l'entitat. */
+      const desti = rutaXatDePagina(objecteDePerfil({ tipus: tipusOrg === 'grup' ? 'grup' : 'entitat', id: orgId, nom: nomDeConfianca }));
       cos = (
-        <Alerta to="info" viva={false}>
-          <p>{t('section.connectar.formarPart.senseXat', 'Des d’ací encara no es pot arribar al xat d’esta entitat: parla directament amb qui l’administra.')}</p>
-        </Alerta>
+        <>
+          <p>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
+          {/* Sense directori no hi ha nom de confiança (mai el de l'URL): els textos sense {nom}. */}
+          <p className="sdp-connectar__ajuda">{nomDeConfianca
+            ? ambNom('section.connectar.formarPart.senseXat', 'Demana-ho al xat de la pàgina de {nom}: és el seu canal per a preguntar i parlar amb qui l’administra.')
+            : t('section.connectar.formarPart.senseXatSenseNom', 'Demana-ho al xat de la pàgina de l’entitat: és el seu canal per a preguntar i parlar amb qui l’administra.')}</p>
+          {desti ? (
+            <Boto varietat="secundari" icona={MessageCircle} onClick={() => navigate(desti)}>
+              {nomDeConfianca
+                ? ambNom('section.connectar.formarPart.obriXat', 'Obrir el xat de {nom}')
+                : t('section.connectar.formarPart.obriXatSenseNom', 'Obrir el xat de l’entitat')}
+            </Boto>
+          ) : null}
+        </>
       );
       break;
+    }
     default:
       cos = (
         <>

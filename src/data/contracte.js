@@ -448,10 +448,29 @@ export const CAPACITATS = Object.freeze({
        estatSeguiment({ tipus, id }, config) → Promise<{ seguint: boolean, creatAl: ISO | null }>
          Sense sessió, { seguint: false, creatAl: null } i cap petició.
        elsMeusSeguiments(config) → Promise<[{ tipus, id, nom, creatAl }]>
-       quiEmSegueix({ orgId } = {}, config) → Promise<[{ id, nom, creatAl }]>
-         Sense orgId, les persones que et seguixen; amb orgId, les que
-         seguixen eixa entitat, només per a qui l'administra (owner o admin).
-         Sense sessió, les dues llistes són [] i cap petició.
+         Només els de la persona (els fets amb `com` no hi són).
+       quiEmSegueix({ orgId } = {}, config) → Promise<[{ tipus, id, nom, creatAl }]>
+         Sense orgId, qui et seguix; amb orgId, qui seguix eixa entitat,
+         només per a qui l'administra (owner o admin). Sense sessió, les
+         dues llistes són [] i cap petició. `tipus` és 'persona' o
+         'entitat' (TIPUS_SEGUIT): d'un seguiment fet com a entitat, `id` i
+         `nom` són els de l'ENTITAT seguidora, mai els de la persona que el
+         va fer.
+     IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Connectar
+     des d'una entitat (B2B rural), sense canviar la sessió global:
+     segueix, deixaDeSeguir i estatSeguiment admeten `com` al mateix objecte
+     ({ tipus, id, com }): l'id d'una organització que la persona de la
+     sessió ADMINISTRA (owner o admin; en remot, un UUID; en local, l'id de
+     la llavor). Sense `com` (o null, o ''), exactament el de sempre: la
+     persona. Amb `com`, la connexió és de l'entitat, amb les mateixes
+     respostes; si no l'administres, SDP-SEG-007. Una entitat no es connecta
+     amb ella mateixa (SDP-SEG-003); entitat A → entitat B val encara que la
+     persona també administre B, i persona → entitat que administra
+     continua sent SDP-SEG-003. La quota (altes per hora i espera de represa)
+     la compta la PERSONA que actua, mai l'entitat, i els bloquejos són els
+     seus. Una entitat seguix cada destí com a molt una vegada, siga qui siga
+     qui l'administra que ho haja fet, i qualsevol d'elles la pot deixar.
+     Ho servix supabase/migrations/2610250100_seguiments_des_d_entitat.sql.
      Regles, iguals a tots els adaptadors (2610241430_seguiments.sql): una
      persona, només si sou del mateix poble; una entitat, si és pública; mai
      tu mateix ni una entitat que administres; cap bloqueig teu (moderacio);
@@ -460,7 +479,7 @@ export const CAPACITATS = Object.freeze({
      només quiEmSegueix, la de qui és seguit, deixa fora qui seguix. Una
      lectura amaga el que el bloqueig del seu sentit o una baixa tapen. Els
      errors porten `code`: els de
-     MISSATGES_SEGUIMENTS (SDP-SEG-000…006), o NO-DISPONIBLE si el servidor
+     MISSATGES_SEGUIMENTS (SDP-SEG-000…007), o NO-DISPONIBLE si el servidor
      encara no té l'esquema. */
   seguiments: Object.freeze([
     'segueix',
@@ -714,7 +733,10 @@ export function autorDelContracte(dades, { ambNom = true } = {}) {
    node federat), com MISSATGES_MEMBRES_ORGANITZACIO: la interfície decidix
    pel `code`, mai pel text. Són el CHECK i els codis de
    supabase/migrations/2610241430_seguiments.sql, i
-   src/data/supabase/seguiments.migracio.test.js els contrasta. */
+   src/data/supabase/seguiments.migracio.test.js els contrasta. SDP-SEG-007
+   és d'IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025):
+   2610250100_seguiments_des_d_entitat.sql, que contrasta
+   src/data/supabase/seguimentsEntitat.migracio.test.js. */
 export const TIPUS_SEGUIT = Object.freeze(['persona', 'entitat']);
 export const MISSATGES_SEGUIMENTS = Object.freeze({
   'SDP-SEG-000': 'Cal entrar al compte per a seguir algú.',
@@ -724,6 +746,7 @@ export const MISSATGES_SEGUIMENTS = Object.freeze({
   'SDP-SEG-004': 'L’has bloquejada: desbloqueja-la abans de seguir-la.',
   'SDP-SEG-005': 'Només qui administra l’entitat veu qui la seguix.',
   'SDP-SEG-006': 'Massa seguiments en poc de temps. Torna-ho a provar d’ací a una estona.',
+  'SDP-SEG-007': 'No administres l’entitat amb què vols connectar.',
   'NO-DISPONIBLE': 'El servidor encara no té els seguiments. Cal aplicar la migració pendent.',
   DESCONEGUT: 'No s’ha pogut completar. Torna-ho a provar.'
 });
@@ -745,4 +768,19 @@ export function seguitDelContracte(dades) {
   const id = String(dades?.id ?? '').trim();
   if (!TIPUS_SEGUIT.includes(tipus) || !RE_ID_SEGUIT.test(id)) throw errorDeSeguiment('SDP-SEG-001');
   return { tipus, id };
+}
+
+/**
+ * IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · L'entitat amb
+ * què es connecta (`com` de { tipus, id, com }), normalitzada: null si no n'hi
+ * ha (absent, null o ''), i si no és cap identificador, SDP-SEG-001, com l'id.
+ * Si l'administres ho diu cada adaptador (SDP-SEG-007). Pura.
+ */
+export function comDelContracte(dades) {
+  const com = dades?.com;
+  if (com === undefined || com === null) return null;
+  const id = String(com).trim();
+  if (!id) return null;
+  if (!RE_ID_SEGUIT.test(id)) throw errorDeSeguiment('SDP-SEG-001');
+  return id;
 }

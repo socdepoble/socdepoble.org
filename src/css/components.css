@@ -254,17 +254,34 @@
      (`*, ::before, ::after { margin: 0 }`, @layer reset) guanya al full del
      navegador i el deixava a dalt a l'esquerra. El calaix i el full inferior
      del mòbil el tornen a fixar més avall. */
+  /* Directiva del Mestre (261025, pla 261025_0045, T1: «el disseny és com el
+     soroll per a allò usable») · UN sol scroll, el del cos. El <dialog> del
+     navegador porta overflow: auto, i amb box-sizing: border-box el marc
+     heretava els 88dvh sencers en una caixa 2px més menuda (la vora): el
+     diàleg feia el seu propi scroll de 2px al costat del del cos. Ara, obert
+     i amb marc, el <dialog> és una columna flex on el marc s'encongix fins a
+     la seua caixa, com el modal encastat (layout.css, :host .sdp-capa-modal >
+     .sdp-dialeg): el diàleg ja no desborda i no fa scroll. overflow-y: auto
+     és només la reserva de pantalla molt curta (apaïsat, zoom del 400 %):
+     si la capçalera, la descripció i el peu no hi caben, fa scroll el diàleg
+     sencer i el peu sempre és abastable (revisió adversarial 261025), com al
+     diàleg d'impressió. Els diàlegs «sense marc» (pantalla completa, visor,
+     ajustos del xat, el calaix del menú) porten el seu propi scroll i el seu
+     display. */
   .sdp-dialeg {
     margin: auto; width: min(92vw, 36rem); max-height: min(88dvh, 48rem); padding: 0;
     border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-g);
     background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); box-shadow: var(--sdp-ombra-3);
+    overflow-y: auto;
   }
+  .sdp-dialeg[open]:not(.sdp-dialeg--sense-marc) { display: flex; flex-direction: column; }
   .sdp-dialeg--s { width: min(92vw, 28rem); }
   .sdp-dialeg--g { width: min(94vw, 56rem); }
   .sdp-dialeg::backdrop { background: var(--sdp-fons-vel); }
-  .sdp-dialeg__marc { display: flex; flex-direction: column; max-height: inherit; }
+  .sdp-dialeg__marc { display: flex; flex-direction: column; flex: 1 1 auto; height: 100%; max-height: inherit; min-height: 0; }
   .sdp-dialeg__cap {
     display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-3);
+    flex-shrink: 0;
     padding: var(--sdp-space-4) var(--sdp-space-4) var(--sdp-space-2) var(--sdp-space-6);
   }
   .sdp-dialeg__titol { margin: 0; font-size: var(--sdp-text-base); font-weight: 800; color: var(--sdp-text-titol); }
@@ -277,10 +294,12 @@
     .sdp-dialeg__tanca:hover { background: var(--sdp-fons-subtil); }
   }
   .sdp-dialeg__tanca:focus-visible { outline: 3px solid var(--sdp-focus); }
-  .sdp-dialeg__descripcio { margin: 0; padding: 0 var(--sdp-space-6); color: var(--sdp-text-cos); }
-  .sdp-dialeg__cos { padding: var(--sdp-space-4) var(--sdp-space-6); overflow-y: auto; overscroll-behavior: contain; }
+  .sdp-dialeg__descripcio { flex-shrink: 0; margin: 0; padding: 0 var(--sdp-space-6); color: var(--sdp-text-cos); }
+  /* min-height: 0 · sense, el cos no s'encongix per davall del contingut i el marc desborda. */
+  .sdp-dialeg__cos { flex: 1 1 auto; min-height: 0; padding: var(--sdp-space-4) var(--sdp-space-6); overflow-y: auto; overscroll-behavior: contain; }
   .sdp-dialeg__peu {
     display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sdp-space-3);
+    flex-shrink: 0;
     padding: var(--sdp-space-4) var(--sdp-space-6); border-top: 1px solid var(--sdp-vora);
   }
   /* Llei de la Por Orgànica al peu: secundari blanc, perill roig. PerfilShell.css

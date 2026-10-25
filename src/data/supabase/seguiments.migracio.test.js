@@ -79,13 +79,16 @@ test('la capçalera: QUÈ FA, QUÈ NO FA, CODIS, Depén de, NO aplicada i l’ap
   expect(CAPCALERA).toMatch(/Decisió del Mestre \(261024/);
 });
 
-test('els codis SDP-SEG-000…006 són a la capçalera, al codi i al contracte, i cap altre', () => {
+/* Actualitzada a posta (IDEA-22, pla 261025_0045, T5; Directiva del Mestre 261025): el contracte guanya
+   SDP-SEG-007, que és de 2610250100_seguiments_des_d_entitat.sql (la contrasta
+   seguimentsEntitat.migracio.test.js); esta migració continua portant només 000…006. */
+test('els codis SDP-SEG-000…006 són a la capçalera, al codi i al contracte, i cap altre (el contracte, a més, el 007 de 2610250100)', () => {
   for (const codi of CODIS_SEG) {
     expect(CAPCALERA, `capçalera ${codi}`).toContain(codi);
     expect(CODI, `codi ${codi}`).toContain(codi);
   }
   expect([...new Set([...CODI.matchAll(/SDP-SEG-\d{3}/g)].map((m) => m[0]))].sort()).toEqual(CODIS_SEG);
-  expect(Object.keys(MISSATGES_SEGUIMENTS).filter((codi) => codi.startsWith('SDP-SEG-')).sort()).toEqual(CODIS_SEG);
+  expect(Object.keys(MISSATGES_SEGUIMENTS).filter((codi) => codi.startsWith('SDP-SEG-')).sort()).toEqual([...CODIS_SEG, 'SDP-SEG-007']);
   expect(CODI).toMatch(/SDP-SEG-006[^;]*errcode = '42900'/);
 });
 

@@ -3,10 +3,10 @@
  * l'adaptador de Supabase: la vista organization_directory, sense filtre de
  * poble, amb columnes explícites, i la consulta neta abans de PostgREST.
  */
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ request: vi.fn(), ambServidor: true }));
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => null, request: m.request,
-  getResolvedConfig: (config = {}) => ({ tenantId: '00000000-0000-4000-8000-000000000000', supabaseUrl: 'https://poble.test',
+  getResolvedConfig: (config = {}) => ({ tenantId: '00000000-0000-4000-8000-000000000000', supabaseUrl: config.supabaseUrl || 'https://poble.test',
     hasSupabaseConfig: m.ambServidor, runtimeDataMode: config.dataMode || 'remote' }) }));
 import { listPublicOrganizations, reiniciaMemoriaDirectori } from './organizations.js';
 import { reiniciaLocalPerfils } from '../localPerfils.js';
@@ -155,4 +155,54 @@ test.each(['seed', 'local'])('P1-11 · en %s, el poble el filtra el directori lo
   const files = await listPublicOrganizations({ poble: 'Poble que no existix' }, { dataMode });
   expect(files).toEqual([]);
   expect(m.request).not.toHaveBeenCalled();
+});
+
+/* G-P11-01 (auditoria Codex 261025_0031) · La memòria de columnes és per
+   servidor i caduca: un servidor antic no tanca el directori d'un altre. */
+const ANTIC = Object.freeze({ supabaseUrl: 'https://antic.invalid' });
+const NOU = Object.freeze({ supabaseUrl: 'https://nou.invalid' });
+const ORXETA = Object.freeze({ id: 'org1', slug: 'forn', name: 'Forn', town_name: 'Orxeta' });
+const perServidor = () => m.request.mockImplementation(async (cami, config) => {
+  if (config.supabaseUrl === ANTIC.supabaseUrl) throw columnaAbsent('town_name');
+  return [ORXETA];
+});
+afterEach(() => vi.useRealTimers());
+
+test('G-P11-01 · un servidor antic sense town_name no bloqueja un altre servidor que sí la té', async () => {
+  perServidor();
+  await expect(listPublicOrganizations({ poble: 'Orxeta' }, ANTIC)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(listPublicOrganizations({ poble: 'Orxeta' }, NOU)).resolves.toEqual([ORXETA]);
+  expect(m.request.mock.calls.map(([, config]) => config.supabaseUrl)).toEqual([ANTIC.supabaseUrl, NOU.supabaseUrl]);
+  expect(ruta(1)).toContain(`town_name=eq.Orxeta`);
+  /* L'antic continua dient-ho, sense tornar-li a preguntar dins de la finestra. */
+  await expect(listPublicOrganizations({ poble: 'Orxeta' }, ANTIC)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(2);
+});
+
+test('G-P11-01 · crides concurrents als dos servidors: cadascun amb la seua resposta', async () => {
+  perServidor();
+  const [antic, nou] = await Promise.allSettled([
+    listPublicOrganizations({ poble: 'Orxeta' }, ANTIC),
+    listPublicOrganizations({ poble: 'Orxeta' }, NOU)
+  ]);
+  expect(antic).toMatchObject({ status: 'rejected', reason: { code: 'NO-DISPONIBLE' } });
+  expect(nou).toEqual({ status: 'fulfilled', value: [ORXETA] });
+  /* I sense poble, el directori del servidor nou continua demanant town_name. */
+  await listPublicOrganizations({}, NOU);
+  expect(ruta(m.request.mock.calls.length - 1)).toContain('town_name');
+});
+
+test('G-P11-01 · l’absència caduca: un servidor migrat torna a respondre sense recarregar', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-25T00:00:00Z'));
+  m.request.mockRejectedValueOnce(columnaAbsent('town_name'));
+  await expect(listPublicOrganizations({ poble: 'Orxeta' }, ANTIC)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  vi.setSystemTime(new Date('2026-10-25T00:04:59Z'));
+  await expect(listPublicOrganizations({ poble: 'Orxeta' }, ANTIC)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(1);
+  /* El Mestre aplica 2610081401: passada la finestra, es torna a preguntar. */
+  vi.setSystemTime(new Date('2026-10-25T00:05:02Z'));
+  m.request.mockResolvedValueOnce([ORXETA]);
+  await expect(listPublicOrganizations({ poble: 'Orxeta' }, ANTIC)).resolves.toEqual([ORXETA]);
+  expect(m.request).toHaveBeenCalledTimes(2);
 });
