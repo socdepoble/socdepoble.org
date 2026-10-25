@@ -313,3 +313,20 @@ describe('mapSectionSubmissionToItem · la foto de qui signa una publicació del
     expect(acte({ image_url: ref }).image_url).toBeNull();
   });
 });
+
+/* Auditoria Port Neutral 261025 (omissió del verificador) · mergeById feia la
+   clau amb String(item.id): tots els elements sense id queien a «undefined» i
+   només en sobrevivia l'últim, i un primitiu es fusionava en un objecte estrany
+   ([7, 'x', true] donava [{ 0: 'x' }]). Una pèrdua silenciosa de dades. */
+describe('mergeById · els elements sense id i els que no són objectes', () => {
+  test('els que no porten un id de veres passen tal qual, al seu lloc, sense fusionar-se', () => {
+    const fusionats = mergeById([{ title: 'A' }, { id: 'p1', title: 'U' }, { title: 'B' }], [{ title: 'C' }, { id: 'p1', title: 'U2' }]);
+    expect(fusionats).toEqual([{ title: 'A' }, { id: 'p1', title: 'U2' }, { title: 'B' }, { title: 'C' }]);
+    expect(mergeById([{ id: null, title: 'A' }, { id: { x: 1 }, title: 'B' }], [])).toHaveLength(2);
+  });
+
+  test('un primitiu, una llista o un null no hi entren; els ids de número es fusionen com sempre', () => {
+    expect(mergeById([7, 'x', true, null, ['a']], [])).toEqual([]);
+    expect(mergeById([{ id: 3, title: 'A' }], [{ id: '3', title: 'B' }])).toEqual([{ id: '3', title: 'B' }]);
+  });
+});

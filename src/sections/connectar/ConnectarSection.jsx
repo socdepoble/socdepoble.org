@@ -126,12 +126,16 @@ const SUGGESTED_TAGS = ['Història local', 'Interessant', 'Patrimoni', 'Gent del
    classificacioBloc.js i, dins del component, passa per categoriesBase amb la
    taxonomia del poble (sense personalització, la mateixa llista). */
 const TIPUS_DE_PERFIL = new Set(['persona', 'entitat', 'grup', 'ia']);
+/* PS-11 (auditoria Pedra Seca 261025) · L'identificador de reserva d'un element
+   que arriba sense títol ni item_id: l'itemId i el títol que la nota recorda,
+   com sempre. És una dada, no el text de la targeta. */
+export const ELEMENT_DESCONEGUT = 'element-desconegut';
 
 /** El que la nota recordarà de l'element connectat. */
 export function origenDeLaConnexio(params) {
   const sectionId = params.get('sectionId') || '';
   const itemId = params.get('item_id') || '';
-  const titol = params.get('title') || itemId || 'element-desconegut';
+  const titol = params.get('title') || itemId || ELEMENT_DESCONEGUT;
   const autorTipus = params.get('autorTipus') || '';
   /* T43 · la ruta ve escrita (pàgines, perfils) o es deduïx de la secció; en
      els dos casos només si és interna i segura. */
@@ -442,6 +446,10 @@ function ConnectarElementIntern() {
     [origenDeLURL, original, itemOriginal]
   );
   const contextTitle = origen.titol;
+  /* PS-11 · Sense títol a l'URL ni original resolt, la targeta no ensenya
+     l'identificador de reserva: una etiqueta llegible. La nota es desa igual. */
+  const titolDeLaTargeta = contextTitle === ELEMENT_DESCONEGUT && !params.get('title')
+    ? t('section.connectar.senseTitol', 'Element sense títol') : contextTitle;
   const imatgeOriginal = original?.imatge || '';
   const autorVisible = original ? original.autor.nom : origen.autorNom;
 
@@ -463,8 +471,11 @@ function ConnectarElementIntern() {
   const xatSocDePoble = useXatSocDePoble();
   const opcionsDelContacte = { currentUser, actor, identitats, dataMode, xat: xatSocDePoble };
   const peticions = useMemo(() => fitxesDeLaConnexio(params, { teSessio, dataMode }), [params, teSessio, dataMode]);
-  const fitxaDelPerfil = useFitxaDeConnexio(peticions.perfil, { config });
-  const fitxaDeLaOrganitzacio = useFitxaDeConnexio(peticions.organitzacio, { config });
+  /* P1-15 (auditoria Port Neutral 261025) · La fitxa i la titular depenen de
+     qui mira: la persona entra a la clau de cada lectura. */
+  const usuariId = currentUser?.id ?? null;
+  const fitxaDelPerfil = useFitxaDeConnexio(peticions.perfil, { config, usuariId });
+  const fitxaDeLaOrganitzacio = useFitxaDeConnexio(peticions.organitzacio, { config, usuariId });
   /* IDEA-22 (T5) · Els barrets amb què qui mira es pot connectar. */
   const actorsConnectar = useMemo(() => actorsPerConnectar(identitats, t), [identitats, t]);
   const contacteDelDesti = autorPerConnectar(itemOriginal, { seccio: origenDeLURL.sectionId, ...opcionsDelContacte })
@@ -490,7 +501,7 @@ function ConnectarElementIntern() {
      administra una entitat. Passa per les guardes de sempre: si qui mira n'és
      la titular, res. Sense la capacitat, sense sessió o amagada, ni rastre. */
   const titularDe = contacte && !contacte.propia && ['entitat', 'grup'].includes(contacte.tipus) ? contacte.seguiment?.id ?? null : null;
-  const titular = useTitularDeConnexio(titularDe, { config, teSessio });
+  const titular = useTitularDeConnexio(titularDe, { config, teSessio, usuariId });
   const contacteTitular = titular.titular
     ? senseLaPropia(perfilPerConnectar({ tipus: 'persona', id: titular.titular.id, nom: titular.titular.nom }, opcionsDelContacte))
     : null;
@@ -741,7 +752,7 @@ function ConnectarElementIntern() {
               targeta no quede en una línia de text nua. */}
           <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
             <UniversalCard
-              title={contextTitle}
+              title={titolDeLaTargeta}
               imageUrl={imatgeOriginal || undefined}
               imageAlt=""
               icon={imatgeOriginal ? undefined : <Layers size={32} aria-hidden="true" focusable="false" />}

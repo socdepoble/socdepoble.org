@@ -10,6 +10,7 @@ import { prepara, resolProtocols, identitatTorn, desaEmissio, verificaEmissio } 
 import { CONTRACTE_NUCLI, CAPACITATS } from '../src/data/contracte.js';
 import { validatePublicCredentials } from '../src/config/publicCredentials.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../src/data/errorsBackend.js';
+import { tempsLimitPujada } from '../src/data/xatMultimedia.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
@@ -207,7 +208,7 @@ test('storage: poble explícit, carpetes validades i prefix coherent amb RLS', a
   const storage = await isolated('src/data/supabase/storage.js', {
     getResolvedConfig: c => c, usuariDeSessio: () => ({id:uid}), handleError: e => e,
     getClient: async () => ({storage:{from:bucket=>({upload:async (name, data, options)=>{sent={bucket,name,options};return resposta;}})}}),
-    CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable,
+    CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable, tempsLimitPujada,
   });
   const blob = new Blob(['x'], {type:'image/png'});
   await assert.rejects(storage.uploadToStorage(blob, {carpeta:'notes'}));

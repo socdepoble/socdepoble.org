@@ -1028,3 +1028,28 @@ test('CA-6 · les claus del xat amb l’autor són als cinc diccionaris, cadascu
     for (const clau of CLAUS_AMB_NOM) expect(t(clau, '')).not.toMatch(/\{nom\}-/);
   }
 });
+
+/* PS-11 (auditoria Pedra Seca 261025) · /connectar sense títol ni item_id
+   ensenyava l'identificador intern «element-desconegut» com a títol gran de
+   la targeta. Ara la targeta diu una etiqueta llegible (per t()), i l'itemId
+   que la nota recorda continua sent el de sempre. */
+test('PS-11 · sense títol ni item_id, la targeta diu «Element sense títol» i l’itemId intern no canvia', async () => {
+  mocks.params = new URLSearchParams('');
+  render(<ConnectarSection />);
+  expect(screen.getByRole('heading', { name: 'Element sense títol' })).toBeTruthy();
+  expect(screen.queryByText('element-desconegut')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: CONNECTA }));
+  await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
+  expect(mocks.crea.mock.calls[0][0].origen).toMatchObject({ itemId: 'element-desconegut', titol: 'element-desconegut' });
+});
+
+test('PS-11 · l’etiqueta passa pel traductor; amb títol a l’URL, la targeta diu el títol de sempre', () => {
+  mocks.t = (clau, alternativa) => (clau === 'section.connectar.senseTitol' ? 'Elemento sin título' : alternativa);
+  mocks.params = new URLSearchParams('');
+  render(<ConnectarSection />);
+  expect(screen.getByRole('heading', { name: 'Elemento sin título' })).toBeTruthy();
+  cleanup();
+  mocks.params = new URLSearchParams('title=element-desconegut');
+  render(<ConnectarSection />);
+  expect(screen.getByRole('heading', { name: 'element-desconegut' })).toBeTruthy();
+});

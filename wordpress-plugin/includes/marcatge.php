@@ -402,14 +402,46 @@ function socdepoble_enxufe_shortcode( $atts = array() ) {
 }
 
 /**
+ * Render del bloc «Sóc de Poble» (socdepoble/app): el mateix marcatge
+ * universal que el shortcode, amb els atributs del bloc com a instància.
+ *
+ * Va com a render_callback de register_block_type, perquè WordPress no llig el
+ * camp "render" de block.json fins a la 6.1: de la 5.8 a la 6.0 el bloc eixia
+ * buit a la pàgina publicada. Des de la 6.1 els arguments de
+ * register_block_type trepitgen el de block.json, i render.php crida esta
+ * mateixa funció: el marcatge del bloc viu en un sol lloc.
+ *
+ * @param array $attributes Atributs del bloc.
+ * @return string HTML filtrat per wp_kses(). Mai fa echo.
+ */
+function socdepoble_enxufe_render_bloc( $attributes = array() ) {
+	$attributes = is_array( $attributes ) ? $attributes : array();
+	return wp_kses(
+		socdepoble_enxufe_marcatge(
+			array(
+				'nomPoble'    => $attributes['nomPoble'] ?? '',
+				'poble'       => $attributes['poble'] ?? '',
+				'rutaInicial' => $attributes['rutaInicial'] ?? '',
+			),
+			get_block_wrapper_attributes( array( 'class' => 'socdepoble-enxufe' ) )
+		),
+		socdepoble_enxufe_html_permes()
+	);
+}
+
+/**
  * Registra el shortcode i el bloc. El bloc només és una altra manera de
  * triar la mateixa instància: el seu render crida socdepoble_enxufe_marcatge().
+ * La ruta de block.json com a primer paràmetre és de WordPress 5.8.
  */
 function socdepoble_enxufe_registra_entrades() {
 	add_shortcode( 'socdepoble_app', 'socdepoble_enxufe_shortcode' );
-	register_block_type( dirname( SOCDEPOBLE_ENXUFE_FITXER ) . '/includes/bloc' );
+	register_block_type(
+		dirname( SOCDEPOBLE_ENXUFE_FITXER ) . '/includes/bloc',
+		array( 'render_callback' => 'socdepoble_enxufe_render_bloc' )
+	);
 	/* Traduccions de l'editor del bloc des de languages/: WordPress busca
-	   socdepoble-enxufe-{locale}-socdepoble-app-editor-script.json. */
+	   socdepoble-{locale}-socdepoble-app-editor-script.json. */
 	wp_set_script_translations( 'socdepoble-app-editor-script', 'socdepoble', plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'languages' );
 }
 add_action( 'init', 'socdepoble_enxufe_registra_entrades' );

@@ -15,7 +15,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   estatTitularPublic: (...args) => mp.estat(...args),
   marcaTitularPublic: (...args) => mp.marca(...args)
 }));
-import { GestioMembres, ESPERA_CERCA } from './GestioMembres.jsx';
+import { GestioMembres, ESPERA_CERCA, TriaTitular } from './GestioMembres.jsx';
 
 /* Ordre del Mestre (261008, grup C) · La gestió dels membres d'una
    organització a «El compte»: llista, alta directa, canvi de rol i baixa,
@@ -450,4 +450,33 @@ test('IDEA-22 · si la tria no es desa, ho diu i la casella no canvia', async ()
   expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut desar la tria. Torna-ho a provar.');
   expect(screen.getByRole('alert').textContent).not.toContain('Supabase');
   expect(casellaTitular().checked).toBe(false);
+});
+
+/* P1-15 del Llibre (auditoria Port Neutral 261025, PN-03) · TriaTitular no es
+   remunta en canviar d'entitat (no porta key). La tria d'A que contestava tard
+   s'escrivia a l'estat de B: la casella de B es desmarcava i deia «Ja no et
+   mostrem com a titular de Forn», i B es quedava «desant» sense poder-se tocar. */
+test('P1-15 · la tria d’A que contesta tard no toca la casella de B, i B es pot triar de seguida', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  mp.estat.mockResolvedValue({ titularPublic: true });
+  const marcaA = deferred();
+  mp.marca.mockReturnValueOnce(marcaA.promise).mockImplementation(async (_orgId, valor) => ({ titularPublic: valor }));
+  const casella = () => screen.queryByRole('checkbox');
+  const { rerender } = render(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(casella()?.checked).toBe(true));
+  await act(async () => { fireEvent.click(casella()); });
+  expect(mp.marca).toHaveBeenCalledWith('A', false, {});
+  rerender(<TriaTitular orgId="B" nomOrg="Bar" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledWith('B', expect.anything()));
+  await waitFor(() => expect(casella()?.checked).toBe(true));
+  /* B no hereta el «desant» d'A: ni ocupada, ni el valor pendent d'A. */
+  expect(casella().closest('[aria-busy="true"]')).toBeNull();
+  await act(async () => { marcaA.resolve({ titularPublic: false }); });
+  expect(casella().checked).toBe(true);
+  expect(screen.queryByText(/Forn/)).toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+  await act(async () => { fireEvent.click(casella()); });
+  expect(mp.marca).toHaveBeenLastCalledWith('B', false, {});
+  expect(screen.getByRole('status').textContent).toBe('Ja no et mostrem com a titular de Bar.');
+  expect(casella().checked).toBe(false);
 });

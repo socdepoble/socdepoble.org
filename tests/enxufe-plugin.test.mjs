@@ -11,6 +11,8 @@
  *   · capçaleres (plugin, readme, block.json) coherents entre elles i amb el
  *     filtre update_plugins_{host};
  *   · text domain únic i traducció valenciana completa;
+ *   · la taula de versions de WordPress: cap API més nova que el sòl de la
+ *     capçalera sense guarda, i el codi ja funciona des de la 5.8;
  *   · ESLint sense cap missatge i cap caràcter invisible als fitxers del torn.
  *  La sintaxi PHP completa i el comportament a WordPress es verifiquen a
  *  WordPress Studio amb Plugin Check (vegeu l'auditoria del torn). */
@@ -22,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { CONTRACTE_AMFITRIO } from '../vite.standalone.config.js';
 import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
-import { patronsActualitzadorEn, requisitsDe, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { patronsActualitzadorEn, requisitsDe, variantDirectori, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = path.join(ARREL, 'wordpress-plugin');
@@ -47,8 +49,9 @@ const PHP = fitxersDe('', '.php');
 /* ─────────────────────── Tokenitzador PHP mínim ─────────────────────── */
 
 /** Codi PHP sense cadenes ni comentaris (cadenes → '', comentaris → espai) i
- *  sense el text fora de <?php … ?>. Suficient per a equilibrar delimitadors. */
-function nomesCodi(text) {
+ *  sense el text fora de <?php … ?>. Suficient per a equilibrar delimitadors.
+ *  Amb `ambCadenes`, les cadenes es conserven: els noms dels ganxos. */
+function nomesCodi(text, ambCadenes = false) {
   let eixida = '';
   let i = 0;
   let php = false;
@@ -70,11 +73,12 @@ function nomesCodi(text) {
       continue;
     }
     if (c === '\'' || c === '"') {
+      const inici = i;
       i += 1;
       while (i < text.length && text[i] !== c) i += text[i] === '\\' ? 2 : 1;
       if (i >= text.length) throw new Error('Cadena sense tancar');
       i += 1;
-      eixida += '\'\'';
+      eixida += ambCadenes ? text.slice(inici, i) : '\'\'';
       continue;
     }
     if (c === '<' && text.startsWith('<<<', i)) throw new Error('Heredoc no previst al plugin');
@@ -328,6 +332,247 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
   assert.ok(idsEditor.length >= 8);
   assert.deepEqual(idsEditor.filter((id) => !SENSE_TRADUCCIO.has(id) && !Array.isArray(missatges[id])), [], 'textos de l\'editor sense traducció');
   assert.match(llig('includes/marcatge.php'), /wp_set_script_translations\(\s*'socdepoble-app-editor-script',\s*'socdepoble',/);
+});
+
+/* ─────────────── Sòl de WordPress: la versió on naix cada API ───────────────
+   WP-07 i WP-10 (auditoria 261025). Cada API de WordPress que crida el plugin,
+   amb el @since del nucli o el de la forma que se'n crida (la ruta de
+   block.json a register_block_type, l'array d'arguments de register_setting).
+   Una API més nova que el sòl de la capçalera només hi cap amb
+   function_exists/class_exists al mateix fitxer, inert (en una versió vella no
+   es dispara i no trenca res) o amb una reserva que la prova troba al codi; el
+   comportament de les reserves s'executa amb PHP a enxufe-pantalla.test.mjs.
+   Una crida que no és a cap taula ni és de PHP fa fallar la prova: la taula no
+   pot quedar arrere, i el sòl no pot tornar a pujar sense que ningú ho veja. */
+
+const FUNCIONS_WP = {
+  __: '2.1', add_action: '1.2', add_filter: '0.71', add_options_page: '1.5', add_query_arg: '1.5',
+  add_settings_field: '2.7', add_settings_section: '2.7', add_shortcode: '2.5', admin_url: '2.6',
+  apply_filters: '0.71', bloginfo: '0.71', body_class: '2.8', check_admin_referer: '1.2', current_user_can: '2.0',
+  delete_option: '1.2', delete_site_option: '2.8', delete_site_transient: '2.9', determine_locale: '5.0',
+  do_settings_sections: '2.7', esc_attr: '2.8', esc_html: '2.8', esc_html__: '2.8', esc_html_e: '2.8', esc_url: '2.8',
+  esc_url_raw: '2.8', get_admin_page_title: '1.5', get_block_wrapper_attributes: '5.6', get_blog_option: '3.0',
+  get_bloginfo: '0.71', get_file_data: '2.9', get_main_site_id: '4.9', get_option: '1.5', get_page_template_slug: '3.4',
+  get_permalink: '1.0', get_queried_object: '3.1', get_queried_object_id: '3.1', get_site_option: '2.8',
+  get_site_transient: '2.9', get_sites: '4.6', get_transient: '2.8', has_block: '5.0', has_shortcode: '3.6',
+  have_posts: '1.5', home_url: '3.0', is_multisite: '3.0', is_page: '1.5', is_php_version_compatible: '5.2',
+  is_singular: '1.5', is_textdomain_loaded: '3.0', is_wp_error: '2.1', is_wp_version_compatible: '5.2',
+  language_attributes: '2.1', load_plugin_textdomain: '1.5', plugin_basename: '1.5', plugin_dir_path: '2.8',
+  plugins_url: '2.6', register_activation_hook: '2.0', register_block_template: '6.7',
+  register_block_type: '5.8', // 5.0; amb la ruta de block.json com a primer paràmetre, 5.8
+  register_rest_route: '4.4',
+  register_setting: '4.7', // 2.7; amb l'array d'arguments (sanitize_callback, default), 4.7
+  remove_filter: '1.2', rest_url: '4.4', restore_current_blog: '3.0', sanitize_text_field: '2.9', sanitize_title: '1.0',
+  set_transient: '2.8', settings_fields: '2.7', shortcode_atts: '2.5', submit_button: '3.1', switch_to_blog: '3.0',
+  the_content: '0.71', the_post: '1.5', trailingslashit: '1.2', untrailingslashit: '2.2', update_option: '1.0',
+  update_site_option: '2.8', wp_add_inline_script: '4.5', wp_add_inline_style: '3.3', wp_body_open: '5.2',
+  wp_cache_delete: '2.0', wp_date: '5.3', wp_delete_file: '4.2', wp_die: '2.0.4', wp_enqueue_script: '2.1',
+  wp_enqueue_style: '2.6', wp_footer: '1.5.1', wp_generate_uuid4: '4.7', wp_get_environment_type: '5.5',
+  wp_head: '1.2', wp_json_encode: '4.1', wp_kses: '1.0', wp_kses_post: '2.9', wp_nonce_field: '2.0.4',
+  wp_parse_url: '4.7', // 4.4; amb el paràmetre $component (PHP_URL_HOST), 4.7
+  wp_register_script: '2.1', wp_register_style: '2.6', wp_remote_post: '2.7', wp_remote_retrieve_body: '2.7',
+  wp_remote_retrieve_response_code: '2.7', wp_safe_redirect: '2.3', wp_safe_remote_get: '3.6', wp_salt: '2.5',
+  wp_set_script_translations: '5.0', wp_tempnam: '2.6', wp_unslash: '3.6'
+};
+const CLASSES_WP = { WP_Error: '2.1', WP_Filesystem_Base: '2.5', WP_REST_Response: '4.4' };
+// De $wpdb, WP_REST_Request, WP_Error i WP_Filesystem_Base.
+const METODES_WP = {
+  esc_like: '4.0', get_body: '4.4', get_error_message: '2.1', get_header: '4.4', get_json_params: '4.4',
+  get_var: '0.71', is_file: '2.5', is_json_content_type: '5.6', prepare: '2.3', query: '0.71'
+};
+// Els que el plugin enganxa o aplica; els dinàmics, amb el nom del nucli: {$…} és la part variable.
+const GANXOS_WP = {
+  admin_init: '2.5', admin_menu: '1.5', 'admin_post_{$action}': '2.6', all_admin_notices: '3.1', body_class: '2.8',
+  'delete_site_transient_{$transient}': '3.0', 'gettext_{$domain}': '5.5', 'gettext_with_context_{$domain}': '5.5',
+  http_allowed_safe_ports: { des_de: '5.9', inert: 'sense ell, només el canal de proves local en un port no estàndard deixa de respondre' },
+  http_request_host_is_external: '3.6', init: '1.5', load_script_translation_file: '5.0.2', load_textdomain_mofile: '2.9',
+  no_texturize_tags: '2.8', 'plugin_action_links_{$plugin_file}': '2.7',
+  plugin_locale: '3.0', // el de load_plugin_textdomain, que la reserva de idioma.php també aplica
+  plugins_api: '2.7', pre_get_document_title: '4.4',
+  rest_api_init: '4.4', script_loader_tag: '4.1', site_status_tests: '5.2', template_include: '3.0',
+  theme_page_templates: '3.9', 'update_plugins_{$hostname}': '5.8', upgrader_pre_download: '3.7',
+  upgrader_source_selection: '2.8', wp: '2.1', wp_head: '1.2',
+  wp_preload_resources: { des_de: '6.1', inert: 'abans de la 6.1 ningú no hi demana preloads, i no hi ha res a llevar' }
+};
+// D'altres plugins, cadascun dins de la guarda del seu plugin (seo.php).
+const GANXOS_EXTERNS = new Set(['jetpack_enable_open_graph', 'rank_math/frontend/show_opengraph', 'wpseo_frontend_presenters']);
+// Els globals wp.* de l'editor del bloc (editor.js, sense pas de compilació).
+const EDITOR_WP = {
+  'wp.blockEditor.InspectorControls': '5.2', 'wp.blockEditor.useBlockProps': '5.6', 'wp.blocks.registerBlockType': '5.0',
+  'wp.components.PanelBody': '5.0', 'wp.components.Placeholder': '5.0', 'wp.components.TextControl': '5.0',
+  'wp.element.Fragment': '5.0', 'wp.element.createElement': '5.0', 'wp.i18n.__': '5.0'
+};
+// Camps de block.json, formats de traducció i dependències d'script.
+const DADES_WP = {
+  'block.json apiVersion 3': { des_de: '6.3', inert: 'les versions anteriors comparen apiVersion > 1 i la tracten com la 2' },
+  'block.json attributes': '5.5', 'block.json category': '5.5', 'block.json description': '5.5',
+  'block.json editorScript': '5.5', 'block.json icon': '5.5', 'block.json keywords': '5.5', 'block.json name': '5.5',
+  'block.json render': {
+    des_de: '6.1',
+    reserva: 'el render_callback de register_block_type (WP-02)',
+    comprova: (t) => /register_block_type\([^;]*'render_callback'\s*=>\s*'socdepoble_enxufe_render_bloc'/.test(t['includes/marcatge.php'])
+  },
+  'block.json supports': '5.5', 'block.json textdomain': '5.7', 'block.json title': '5.5', 'block.json version': '5.8',
+  'traduccions .l10n.php': {
+    des_de: '6.5',
+    reserva: 'els filtres gettext_socdepoble de idioma.php quan no hi ha WP_Translation_Controller (WP-03)',
+    comprova: (t) => /add_filter\(\s*'gettext_socdepoble'/.test(t['includes/idioma.php'])
+  },
+  'traduccions .json de l\'editor': '5.0',
+  'script react': '5.0', 'script react-dom': '5.0',
+  'script react-jsx-runtime': {
+    des_de: '6.6',
+    reserva: 'només amb el runtime wordpress, i eixe paquet (variant del directori) declara ell mateix el 6.6',
+    comprova: (t) => /'wordpress' === \( \$manifest\['runtime'\]\['amfitrio'\] \?\? null \) \? array\( 'react', 'react-dom', 'react-jsx-runtime' \) : array\(\)/.test(t['includes/marcatge.php'])
+      && /'6\.6' !== \( \$runtime\['wordpressMinim'\] \?\? null \)/.test(t['includes/manifest.php'])
+      && comparaVersions(capcalera(variantDirectori(t['socdepoble-enxufe.php']), 'Requires at least'), '6.6') >= 0
+  },
+  'script wp-block-editor': '5.2', 'script wp-blocks': '5.0', 'script wp-components': '5.0', 'script wp-element': '5.0',
+  'script wp-i18n': '5.0'
+};
+const TAULA_WP = [
+  ...Object.keys(FUNCIONS_WP).map((nom) => `funció ${nom}`), ...Object.keys(CLASSES_WP).map((nom) => `classe ${nom}`),
+  ...Object.keys(METODES_WP).map((nom) => `mètode ->${nom}`), ...Object.keys(GANXOS_WP).map((nom) => `ganxo ${nom}`),
+  ...Object.keys(EDITOR_WP).map((nom) => `editor ${nom}`), ...Object.keys(DADES_WP)
+];
+
+// El que crida el plugin i és de PHP, no de WordPress (comprovat amb get_defined_functions de PHP 8.4).
+const PHP_INTERN = new Set([
+  'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_unique', 'array_unshift',
+  'array_values', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
+  'file_exists', 'file_get_contents', 'filemtime', 'filesize', 'filter_var', 'function_exists', 'get_class', 'getenv', 'gmdate',
+  'hash_equals', 'hash_file', 'hash_hmac', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'is_array', 'is_int',
+  'is_link', 'is_object', 'is_readable', 'is_scalar', 'is_string', 'json_decode', 'ksort', 'ltrim', 'max', 'ob_get_clean',
+  'ob_start', 'preg_match', 'preg_match_all', 'preg_replace', 'preg_split', 'printf', 'range', 'rawurlencode',
+  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strlen', 'strpos', 'strtolower', 'substr', 'time', 'trim',
+  'urldecode', 'version_compare'
+]);
+const CLASSES_PHP = new Set(['ZipArchive', 'stdClass']);
+const METODES_PHP = new Set(['close', 'count', 'getNameIndex', 'open']); // ZipArchive
+// Construccions del llenguatge que s'escriuen com una crida.
+const CONSTRUCCIONS = new Set(['array', 'catch', 'die', 'echo', 'elseif', 'empty', 'exit', 'fn', 'for', 'foreach', 'function', 'if', 'include', 'include_once', 'isset', 'list', 'match', 'print', 'require', 'require_once', 'return', 'static', 'switch', 'unset', 'use', 'while']);
+
+/** -1, 0 o 1, com version_compare amb versions de WordPress («0.71», «2.0.4», «5.8»). */
+function comparaVersions(a, b) {
+  const [x, y] = [a, b].map((versio) => versio.split('.').map(Number));
+  for (let i = 0; i < Math.max(x.length, y.length); i += 1) {
+    if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0) ? 1 : -1;
+  }
+  return 0;
+}
+
+const desDe = (entrada) => (typeof entrada === 'string' ? entrada : entrada.des_de);
+const patroDeGanxo = (clau) => new RegExp(`^${clau.split(/\{\$\w+\}/).map((tros) => tros.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')).join('.+')}$`);
+/** El nom del nucli d'un ganxo: el més llarg que hi casa (gettext_with_context_{$domain} abans que gettext_{$domain}). */
+const ganxoDelNucli = (nom) => Object.keys(GANXOS_WP).filter((clau) => patroDeGanxo(clau).test(nom)).sort((a, b) => b.length - a.length)[0];
+
+/** Cada crida del plugin a WordPress amb la seua entrada de la taula, i les que no hi són. */
+function usosDeWordPress(textos) {
+  const usos = [];
+  const fora = [];
+  const anota = (api, entrada, rel, guarda = false) => {
+    if (entrada === undefined) fora.push(`${rel}: ${api}`);
+    else usos.push({ api, entrada, rel, guarda });
+  };
+  const php = Object.entries(textos).filter(([rel]) => rel.endsWith('.php'));
+  const definides = new Set(php.flatMap(([, text]) => [...nomesCodi(text).matchAll(/\bfunction\s+&?\s*(\w+)\s*\(/g)].map((m) => m[1])));
+  const funcio = (nom, rel, text) => {
+    if (definides.has(nom) || PHP_INTERN.has(nom)) return;
+    anota(`funció ${nom}`, FUNCIONS_WP[nom], rel, new RegExp(`\\bfunction_exists\\(\\s*'${nom}'\\s*\\)`).test(text));
+  };
+  for (const [rel, text] of php) {
+    const codi = nomesCodi(text);
+    const ambCadenes = nomesCodi(text, true);
+    for (const [, prefix = '', nom] of codi.matchAll(/(->|::|\bnew\s+|\bfunction\s+&?\s*|\$)?\b([A-Za-z_]\w*)\s*\(/g)) {
+      if (prefix.startsWith('function') || prefix === '$' || prefix === '::' || CONSTRUCCIONS.has(nom)) continue;
+      if (prefix === '->') {
+        if (!METODES_PHP.has(nom)) anota(`mètode ->${nom}`, METODES_WP[nom], rel);
+      } else if (!prefix) funcio(nom, rel, text);
+    }
+    for (const [, nom] of codi.matchAll(/(?:\bnew\s+|\binstanceof\s+|\b(?=\w+::))([A-Za-z_]\w*)/g)) {
+      if (!CLASSES_PHP.has(nom)) anota(`classe ${nom}`, CLASSES_WP[nom], rel, new RegExp(`\\bclass_exists\\(\\s*'${nom}'\\s*\\)`).test(text));
+    }
+    // Callbacks entre cometes que no són del plugin (array_map( 'wp_kses_post' ), …).
+    for (const [, nom] of ambCadenes.matchAll(/(?:array_map\(\s*|_callback'\s*=>\s*|add_(?:filter|action)\(\s*'[^']*',\s*|register_activation_hook\(\s*[^,]+,\s*)'(\w+)'/g)) {
+      funcio(nom, rel, text);
+    }
+    // Un nom que continua amb « . » és el prefix fix d'un ganxo dinàmic.
+    for (const [, fix, concatena] of ambCadenes.matchAll(/\b(?:(?:add|remove)_(?:filter|action)|apply_filters|do_action)\(\s*'([^']+)'(\s*\.)?/g)) {
+      const nom = concatena ? `${fix}…` : fix;
+      if (nom.startsWith('socdepoble') || GANXOS_EXTERNS.has(nom)) continue;
+      const clau = ganxoDelNucli(nom);
+      anota(`ganxo ${clau ?? nom}`, clau && GANXOS_WP[clau], rel);
+    }
+    for (const [, handle] of ambCadenes.matchAll(/'(react(?:-dom|-jsx-runtime)?|wp-[a-z0-9-]+)'/g)) {
+      anota(`script ${handle}`, DADES_WP[`script ${handle}`], rel);
+    }
+  }
+  for (const [, paquet, nom] of textos['includes/bloc/editor.js'].matchAll(/\bwp\.(\w+)\.(\w+)/g)) {
+    anota(`editor wp.${paquet}.${nom}`, EDITOR_WP[`wp.${paquet}.${nom}`], 'includes/bloc/editor.js');
+  }
+  // El $schema només el llegixen els editors de codi.
+  for (const [clau, valor] of Object.entries(JSON.parse(textos['includes/bloc/block.json'])).filter(([clau]) => clau !== '$schema')) {
+    const api = clau === 'apiVersion' ? `block.json apiVersion ${valor}` : `block.json ${clau}`;
+    anota(api, DADES_WP[api], 'includes/bloc/block.json');
+  }
+  const idiomes = Object.keys(textos).filter((rel) => rel.startsWith('languages/'));
+  if (idiomes.some((rel) => rel.endsWith('.l10n.php')) && !idiomes.some((rel) => rel.endsWith('.mo'))) anota('traduccions .l10n.php', DADES_WP['traduccions .l10n.php'], 'languages/');
+  if (idiomes.some((rel) => rel.endsWith('.json'))) anota('traduccions .json de l\'editor', DADES_WP['traduccions .json de l\'editor'], 'languages/');
+  return { usos, fora };
+}
+
+const TEXTOS = Object.fromEntries([...PHP, ...fitxersDe('languages', '.json'), 'includes/bloc/editor.js', 'includes/bloc/block.json'].map((rel) => [rel, llig(rel)]));
+/** Els usos que fixen el sòl: sense guarda, sense ser inerts i sense reserva al codi. */
+const usosSensePont = (textos) => usosDeWordPress(textos).usos.filter(({ entrada, guarda }) => !guarda && !entrada.inert && !entrada.comprova?.(textos));
+/** Les APIs més noves que `sol` sense guarda ni reserva, com a «api (versió) a fitxer». */
+const perDamuntDelSol = (sol, textos = TEXTOS) => [...new Set(usosSensePont(textos)
+  .filter(({ entrada }) => comparaVersions(desDe(entrada), sol) > 0)
+  .map(({ api, entrada, rel }) => `${api} (${desDe(entrada)}) a ${rel}`))].sort();
+/** La versió més baixa de WordPress on funciona el codi. */
+const solMinim = (textos = TEXTOS) => usosSensePont(textos).map(({ entrada }) => desDe(entrada)).reduce((a, b) => (comparaVersions(a, b) >= 0 ? a : b));
+
+test('sòl de WordPress: cada API que crida el plugin té la seua versió a la taula, i cap no passa del sòl de la capçalera sense guarda', () => {
+  assert.equal(comparaVersions('5.8', '5.10'), -1);
+  assert.equal(comparaVersions('2.0.4', '2.0'), 1);
+  assert.equal(comparaVersions('6.5', '6.5.0'), 0);
+  assert.equal(ganxoDelNucli('gettext_with_context_socdepoble'), 'gettext_with_context_{$domain}');
+  assert.equal(ganxoDelNucli('gettext_socdepoble'), 'gettext_{$domain}');
+  assert.equal(ganxoDelNucli('init_tard'), undefined, 'un ganxo sense part variable casa sencer');
+
+  const { usos, fora } = usosDeWordPress(TEXTOS);
+  assert.deepEqual(fora, [], 'crides sense versió: afegiu-les a la taula amb el @since del nucli, o a PHP_INTERN si són de PHP');
+  const usades = new Set(usos.map(({ api }) => api));
+  assert.deepEqual(TAULA_WP.filter((api) => !usades.has(api)), [], 'entrades de la taula que el plugin ja no crida');
+  for (const { api, entrada } of usos) {
+    assert.match(desDe(entrada), /^\d+\.\d+(?:\.\d+)?$/, api);
+    if (typeof entrada !== 'string') assert.ok(entrada.inert || (entrada.reserva && entrada.comprova), `${api}: sense guarda, la taula diu per què`);
+  }
+  assert.ok(usos.some(({ api, guarda }) => api === 'funció register_block_template' && guarda), 'register_block_template (6.7) va amb function_exists');
+
+  const sol = capcalera(llig('socdepoble-enxufe.php'), 'Requires at least');
+  assert.deepEqual(perDamuntDelSol(sol), [], `APIs més noves que el sòl ${sol} sense guarda`);
+});
+
+test('sòl de WordPress 5.8: el codi ja hi funciona, i sense el render_callback o sense la reserva de traduccions tornaria a pujar', () => {
+  /* La capçalera continua en 6.5: baixar-la va amb la variant del paquet
+     (WP-01), i és decisió del Mestre. Ací només es comprova que el codi ja no
+     és el que ho impedix. */
+  assert.deepEqual(perDamuntDelSol('5.8'), []);
+  assert.equal(solMinim(), '5.8', 'register_block_type amb la ruta de block.json, update_plugins_{$hostname} i el camp version de block.json');
+  assert.ok(perDamuntDelSol('5.7').includes('funció register_block_type (5.8) a includes/marcatge.php'));
+
+  // Controls negatius: el codi d'abans de WP-02 i de WP-03.
+  const marcatge = TEXTOS['includes/marcatge.php'];
+  const senseCallback = marcatge.replace(",\n\t\tarray( 'render_callback' => 'socdepoble_enxufe_render_bloc' )\n\t);", "\n\t);");
+  assert.notEqual(senseCallback, marcatge, 'el registre del bloc té la forma que la prova espera');
+  assert.deepEqual(perDamuntDelSol('5.8', { ...TEXTOS, 'includes/marcatge.php': senseCallback }), ['block.json render (6.1) a includes/bloc/block.json']);
+  assert.equal(solMinim({ ...TEXTOS, 'includes/marcatge.php': senseCallback }), '6.1');
+
+  const idioma = TEXTOS['includes/idioma.php'];
+  const senseReserva = idioma.replace(/\n\tif \( class_exists\( 'WP_Translation_Controller' \)[^]*?\n\}\nadd_action\( 'init'/, "\n}\nadd_action( 'init'");
+  assert.notEqual(senseReserva, idioma, 'la reserva té la forma que la prova espera');
+  assert.deepEqual(perDamuntDelSol('5.8', { ...TEXTOS, 'includes/idioma.php': senseReserva }), ['traduccions .l10n.php (6.5) a languages/']);
+  assert.equal(solMinim({ ...TEXTOS, 'includes/idioma.php': senseReserva }), '6.5');
 });
 
 /* ─────────── Guardes de les correccions de la revisió adversarial ───────────

@@ -2,7 +2,11 @@
 /* Gauntlet 261022_0225 (crítica Claude, ADV-MEDIA-14) · Al port,
    urlAdjuntXat(id, config, { renova }?): amb renova=true, una signatura nova
    (cap URL desada no es reutilitza); la interfície la demana després d'un
-   error de càrrega, que sol ser una URL caducada. */
+   error de càrrega, que sol ser una URL caducada.
+   XAT-03 · publicaAdjuntXat(filId, entrada, config) admet config.onProgres
+   (opcional): rep la fracció 0..1 dels bytes ja pujats. Qui no puja res de
+   veres (seed, local) l'ignora. El contracte és a contracte.js; el preu de
+   seguretat (XHR no veta redireccions), al port de Supabase. */
 export const QUOTA_XAT_BYTES = 20_000_000;
 export const MAX_VIDEO_MS = 10_000;
 export const MISSATGE_QUOTA_XAT = "Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!";

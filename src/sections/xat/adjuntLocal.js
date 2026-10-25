@@ -181,8 +181,12 @@ function errorDelMicro(error, { delSistema = false } = {}) {
 
 // Un tros d'un segon a 64 kbit/s en fa uns 8 kB: el marge en deixa més d'una dotzena.
 const MARGE_VEU_BYTES = 100_000;
+/* XAT-07 · El sostre de temps d'una nota de veu: la interfície en compta el
+   que queda i avisa abans d'arribar-hi. */
+export const MAX_VEU_MS = 300_000;
 
-/** Una gravació, un resultat; tots els tracks s'aturen en cancel·lar o acabar. */
+/** Una gravació, un resultat; tots els tracks s'aturen en cancel·lar o acabar.
+ *  Si s'atura sola, el resultat ho diu: `aturada` 'temps' (MAX_VEU_MS) o 'mida' (prop dels 3 MB). */
 export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, Recorder = globalThis.MediaRecorder } = {}) {
   const mimeType = mimeDeGravacio(Recorder);
   if (!mimeType || !mediaDevices?.getUserMedia) throw errorAdjuntXat('sense-gravacio');
@@ -195,7 +199,7 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   let recorder;
   try { recorder = new Recorder(stream, { mimeType, audioBitsPerSecond: 64_000 }); }
   catch (error) { tancaTracks(); throw errorDelMicro(error); }
-  let resolve, reject, acabat = false, bytes = 0;
+  let resolve, reject, acabat = false, bytes = 0, aturada = null;
   const chunks = [];
   let inici = Date.now();
   const resultat = new Promise((resol, rebutja) => { resolve = resol; reject = rebutja; });
@@ -209,8 +213,11 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   const falla = (error) => { if (acabat) return; acabat = true; neteja(); reject(error); };
   const cancella = () => falla(abortat());
   const atura = () => { if (!acabat && recorder.state !== 'inactive') recorder.stop(); };
+  /* XAT-07 · Abans s'aturava sense dir res: ara el resultat porta el motiu i
+     la interfície ho avisa. */
+  const aturaSola = (motiu) => { if (!acabat && recorder.state !== 'inactive') { aturada = motiu; recorder.stop(); } };
   // Cinc minuts eviten mantindre el micròfon o la memòria indefinidament.
-  const timer = setTimeout(atura, 300_000);
+  const timer = setTimeout(() => aturaSola('temps'), MAX_VEU_MS);
   /* MEDIA-7 · La durada és la del rellotge de la gravació, des que el
      gravador comença de veres: el WebM de Chromium no la porta (duration =
      Infinity) i el reproductor la llig de metadades.adjunt.duradaMs. */
@@ -221,7 +228,7 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
     if (bytes > MAXIM_ADJUNT_XAT.veu) { falla(errorAdjuntXat('SDP-XAT-020')); return; }
     chunks.push(data);
     // Prop del sostre de la veu (3 MB), la gravació s'atura sola i la nota es conserva.
-    if (bytes > MAXIM_ADJUNT_XAT.veu - MARGE_VEU_BYTES) atura();
+    if (bytes > MAXIM_ADJUNT_XAT.veu - MARGE_VEU_BYTES) aturaSola('mida');
   };
   recorder.onerror = () => falla(errorAdjuntXat('gravacio'));
   recorder.onstop = () => {
@@ -230,7 +237,7 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
     if (!fitxer.size) { falla(errorAdjuntXat('gravacio-buida')); return; }
     acabat = true;
     neteja();
-    resolve({ id: crypto.randomUUID(), fitxer, tipus: 'veu', duradaMs: Math.max(1, Date.now() - inici) });
+    resolve({ id: crypto.randomUUID(), fitxer, tipus: 'veu', duradaMs: Math.max(1, Date.now() - inici), ...(aturada ? { aturada } : {}) });
   };
   signal?.addEventListener('abort', cancella, { once: true });
   try { recorder.start(1000); } catch (error) { falla(errorDelMicro(error)); }

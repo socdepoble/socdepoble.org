@@ -170,6 +170,33 @@ test('Onada 12 · el límit de l’arrel anota la caiguda sencera', () => {
   expect(rastre()).toEqual([['panell', 'arrel', 'fallback']]);
 });
 
+/* PN-02 (auditoria Port Neutral 261025) · El límit de l'arrel pintava el
+   text cru de l'error també en producció, i el missatge pot portar dades de
+   la persona. El mateix criteri que RouteErrorBoundary: el detall, només en
+   DEV (o amb mostraDetall). */
+test('PN-02 · el límit de l’arrel no pinta el text de l’error fora de DEV', () => {
+  vi.stubEnv('DEV', false);
+  try {
+    render(<ErrorBoundary><Trencada /></ErrorBoundary>);
+    expect(screen.getByText("No s'ha pogut carregar Sóc de Poble")).toBeTruthy();
+    expect(document.body.textContent).not.toContain(SECRET);
+    expect(document.querySelector('pre')).toBeNull();
+    cleanup();
+    render(<ErrorBoundary mostraDetall><Trencada /></ErrorBoundary>);
+    expect(document.querySelector('pre')?.textContent).toContain(SECRET);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+
+test('PN-02 · en DEV, el límit de l’arrel continua pintant el detall (i mostraDetall={false} l’amaga)', () => {
+  render(<ErrorBoundary><Trencada /></ErrorBoundary>);
+  expect(document.querySelector('pre')?.textContent).toContain(SECRET);
+  cleanup();
+  render(<ErrorBoundary mostraDetall={false}><Trencada /></ErrorBoundary>);
+  expect(document.body.textContent).not.toContain(SECRET);
+});
+
 test('un canvi de connexió no pren el focus d’un control fora del panell', async () => {
   const Child = lazyRoute(unavailable);
   const tree = (enLinia) => <><button type="button">Menú exterior</button>{view(Child, { enLinia })}</>;

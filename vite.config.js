@@ -2,6 +2,9 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import consolaIaia from './tooling/vite/consola-iaia.mjs';
 import wikiWatcher from './tooling/vite/wiki-watcher.mjs';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,6 +12,34 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
+
+/* Notes (261025) · La memòria cau de Vite (el pre-empaquetat del servidor de
+   desenvolupament i, davall de /vitest, la de les proves) porta l'empremta de
+   l'arrel real: cap altra arrel no la pot compartir. El crash de Notes («useRef»
+   nul dins de @tiptap/react, dos React a la pàgina, amb un sol React al disc)
+   molt probablement va vindre d'ací (inferència forta, no demostrada): una
+   còpia de treball amb node_modules enllaçat sencer a l'arbre viu va reescriure
+   node_modules/.vite/deps davall del servidor del 3340.
+     · Amb node_modules i node_modules/.vite propis, va a
+       node_modules/.vite/<empremta>. El lloc per defecte (node_modules/.vite)
+       queda per a qui arranque Vite amb un altre config, i ja no xafa el del
+       servidor viu.
+     · Si algun dels dos és un enllaç a una altra arrel (una còpia enllaçada),
+       va a la carpeta temporal del sistema: la còpia no escriu res dins de
+       l'arbre viu.
+   Si torna «useRef» nul o «Invalid hook call» en desenvolupament: reiniciar amb
+   `npm run dev -- --force` i recarregar la pàgina sencera. */
+export function cacheDirPropi(arrel, tmp = os.tmpdir()) {
+  const real = fs.realpathSync(arrel);
+  const empremta = createHash('sha256').update(real).digest('hex').slice(0, 12);
+  const propia = ['node_modules', path.join('node_modules', '.vite')].every((rel) => {
+    try { return fs.realpathSync(path.join(real, rel)) === path.join(real, rel); }
+    catch { return true; } // encara no existix: Vite la crearà dins de l'arrel
+  });
+  return propia
+    ? path.join(real, 'node_modules', '.vite', empremta)
+    : path.join(fs.realpathSync(tmp), 'sdp-vite-cache', empremta);
+}
 
 /* calendari-7 (T5, 260930) · Les proves corren amb la zona del poble. Sense,
    la CI (UTC) no passa mai per un dia de 23 o 25 hores i les proves del canvi
@@ -82,22 +113,49 @@ export default defineConfig(({ command, mode, isPreview }) => {
       ]
     }
   },
+  cacheDir: cacheDirPropi(__dirname),
   resolve: {
+    /* Assegurança barata, la forma que recomana Vite: si un dia apareix una
+       segona còpia de React a node_modules, totes les importacions van a la de
+       l'arrel. Cap àlies de react o react-dom a un camí absolut: salta el mapa
+       `exports`, i al navegador react-dom/server prendria la versió de Node,
+       que peta en carregar. */
+    dedupe: ['react', 'react-dom'],
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
   },
+  /* L'escàner de Vite ja les troba en arrancar. La llista evita que, si un dia
+     falla, @tiptap/react es descobrisca a mitja sessió i force un
+     re-empaquetat amb recàrrega. */
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@tiptap/react', '@tiptap/core']
+  },
   test: {
-    // Evita saturar transformacions i imports del catàleg amb un worker per CPU.
+    /* Proves (261025) · El temps se n'anava en transformar i avaluar en cada
+       fitxer el barril ESM de lucide-react (més de 1.700 mòduls d'icona), no en
+       provar. Ara l'optimitzador de Vitest pre-empaqueta una vegada (dins de
+       cacheDir) l'entrada que resol Node, la CJS del `main`, amb React extern; el
+       build continua amb l'ESM, i totes dues ixen del mateix codi de lucide.
+       Es manté en 2 workers: amb 4 i altres IA provant alhora, tres proves amb
+       esperes de Testing Library d'1 s (PublicacioDetall.sistema,
+       NotesSection.lector:294 i lector261024:193) cauen per contenció. Pujar-ne
+       el nombre, com el pre-commit, vol primer endurir eixes esperes. */
     maxWorkers: 2,
+    /* Una prova pesada pot passar dels 5 s de Vitest per contenció (261025:
+       PublicacioDetall.sistema, 5,3 s amb la màquina a càrrega 39). 15 s, com el
+       pre-commit; cap assertió relaxada. No cobrix les esperes de Testing Library
+       (findBy/waitFor, 1 s): si una d'eixes cau amb la màquina carregada, es
+       repetix la prova a soles abans de donar-la per regressió. */
+    testTimeout: 15000,
     environment: 'jsdom',
-    /* En Node, lucide-react es resol pel `main` CJS. Forcem l'entrada ESM i
-       la processem inline perquè vitest la transforme igual que el build.
-       (Pre-260920 açò tapava un doble React amb preact/compat; ja no.) */
-    alias: { 
-      'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/esm/lucide-react.mjs')
+    deps: {
+      optimizer: {
+        client: { enabled: true, include: ['lucide-react'] },
+        ssr: { enabled: true, include: ['lucide-react'] }
+      }
     },
-    server: { deps: { inline: [/lucide-react/, /react/, /@testing-library/] } },
+    server: { deps: { inline: [/react/, /@testing-library/] } },
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '_wiki_de_poble/**', 'tooling/**', 'tests/**/*.test.mjs']
   },
   build: {

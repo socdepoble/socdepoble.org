@@ -11,6 +11,17 @@ import { useSession } from './SessionContext.jsx';
 
 const CoreContentContext = createContext(null);
 
+/* PN-02 (auditoria Port Neutral 261025) · Defensa en profunditat: este
+   proveïdor viu per damunt de la barrera de ruta (App.jsx), i una llista mal
+   formada d'un adaptador (un objecte on toca una llista, un null o un número
+   dins) el feia petar en pintar (byId, pages.map) i tombava el Mas sencer.
+   Només una llista, i dins, només objectes; la llista neta es torna tal qual. */
+const esFitxa = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
+const nomesFitxes = (valor) => {
+  if (!Array.isArray(valor)) return [];
+  return valor.every(esFitxa) ? valor : valor.filter(esFitxa);
+};
+
 export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
   const { currentUser } = useSession();
@@ -52,16 +63,18 @@ export function CoreContentProvider({ children, config }) {
        Llei del Píxel: sense taxonomia, aplicaPersonalitzacio torna el mateix
        objecte, i el value és el d'abans amb el camp `personalitzacio` a més. */
     const personalitzacio = payload.personalitzacio ?? null;
+    const towns = nomesFitxes(payload.towns);
+    const pages = nomesFitxes(payload.pages);
     return {
       status,
       error,
       errorRevalidacio,
-      towns: payload.towns || [],
-      sortedTowns: payload.towns ? byId(payload.towns) : [],
-      featuredTowns: payload.towns ? byId(payload.towns).filter(t => t.is_featured) : [],
-      pages: payload.pages || [],
-      pageCopy: aplicaPersonalitzacio(Object.fromEntries((payload.pages || []).map(page => [page.id, { ...page }])), personalitzacio?.taxonomia?.payload),
-      agents: payload.agents || [],
+      towns,
+      sortedTowns: byId(towns),
+      featuredTowns: byId(towns).filter(t => t.is_featured),
+      pages,
+      pageCopy: aplicaPersonalitzacio(Object.fromEntries(pages.map(page => [page.id, { ...page }])), personalitzacio?.taxonomia?.payload),
+      agents: nomesFitxes(payload.agents),
       ownerUserId: payload.ownerUserId,
       personalitzacio,
       refresh

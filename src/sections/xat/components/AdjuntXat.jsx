@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Mic, Pause, Play } from 'lucide-react';
 import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
@@ -15,6 +15,43 @@ export const traductorAdjunt = (t) => (typeof t === 'function' ? t : enValencia)
 export function tempsDeVeu(ms, arrodonix = Math.floor) {
   const segons = Math.max(0, arrodonix((Number(ms) || 0) / 1000));
   return `${Math.floor(segons / 60)}:${String(segons % 60).padStart(2, '0')}`;
+}
+
+/* XAT-08 i l'omissió del verificador (261025) · Les notes de veu, com a
+   WhatsApp, coordinades des del mòdul i sense cap context:
+   · una sola sona alhora: la que comença, dins del mateix gest, para la que
+     sonava (i també la que encara esperava la URL, que ja no sonarà);
+   · la velocitat (1× → 1,5× → 2×) és una per a totes durant la sessió;
+   · cada nota recorda on es va quedar (per persona: id → segons): eixir de la
+     conversa o passar pel mode de selecció la reprén d'allí, i acabar-la
+     l'oblida.
+   No s'encadena la nota següent: iOS no deixa fer play() fora d'un gest. */
+const VELOCITATS_VEU = Object.freeze([1, 1.5, 2]);
+const MAXIM_POSICIONS = 300;
+const veus = { activa: null, velocitat: VELOCITATS_VEU[0], oients: new Set(), posicions: new Map() };
+function prenLaVeu(nota) {
+  if (veus.activa && veus.activa !== nota) veus.activa.calla();
+  veus.activa = nota;
+}
+function deixaLaVeu(nota) { if (veus.activa === nota) veus.activa = null; }
+const subscriuVelocitat = (oient) => { veus.oients.add(oient); return () => veus.oients.delete(oient); };
+const velocitatVeu = () => veus.velocitat;
+function seguentVelocitat() {
+  veus.velocitat = VELOCITATS_VEU[(VELOCITATS_VEU.indexOf(veus.velocitat) + 1) % VELOCITATS_VEU.length];
+  veus.oients.forEach((oient) => oient());
+}
+function recordaPosicio(clau, segons) {
+  if (!clau) return;
+  veus.posicions.delete(clau);
+  if (!(segons > 0)) return;
+  veus.posicions.set(clau, segons);
+  if (veus.posicions.size > MAXIM_POSICIONS) veus.posicions.delete(veus.posicions.keys().next().value);
+}
+/** Només per a proves: la veu, la velocitat i les posicions són del mòdul. */
+export function _reiniciaVeus() {
+  veus.activa = null;
+  veus.posicions.clear();
+  if (veus.velocitat !== VELOCITATS_VEU[0]) { veus.velocitat = VELOCITATS_VEU[0]; veus.oients.forEach((oient) => oient()); }
 }
 
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-7) · El reproductor de veu de
@@ -45,31 +82,48 @@ function VeuQuieta({ duradaMs = null, t }) {
   );
 }
 
-function ReproductorActiu({ obteUrl, duradaMs = null, t }) {
+function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = 'ca-ES', t }) {
   const audio = useRef(null);
   const viu = useRef(true);
   const volSonar = useRef(false);
   const recarregant = useRef(false);
   const reintentat = useRef(false);
   const repren = useRef(0);
+  // On anava, en segons: el que es desa en desmuntar-se i es reprén en tornar.
+  const posicio = useRef(veus.posicions.get(memoria) ?? 0);
   const [sona, setSona] = useState(false);
   const [carregant, setCarregant] = useState(false);
   const [teFont, setTeFont] = useState(false);
-  const [posMs, setPosMs] = useState(0);
+  const [posMs, setPosMs] = useState(() => posicio.current * 1000);
   const [duradaReal, setDuradaReal] = useState(null);
   const [error, setError] = useState(null);
+  // S'ha premut almenys una vegada: la pastilla de velocitat ja no se'n va.
+  const [usada, setUsada] = useState(false);
+  const velocitat = useSyncExternalStore(subscriuVelocitat, velocitatVeu, velocitatVeu);
+  // Qui té la veu: una altra nota que comença la para com si es premera Pausa.
+  const [nota] = useState(() => ({
+    calla() { volSonar.current = false; audio.current?.pause(); if (viu.current) setCarregant(false); }
+  }));
   const total = duradaReal ?? (Number.isFinite(duradaMs) && duradaMs > 0 ? duradaMs : 0);
   const etiqueta = t('section.xat.adjunts.veu', 'Missatge de veu');
   const textTotal = tempsDeVeu(total, Math.round);
+  const textVelocitat = `${new Intl.NumberFormat(locale).format(velocitat)}×`;
 
   useEffect(() => {
     viu.current = true;
     const element = audio.current;
     return () => {
       viu.current = false;
+      deixaLaVeu(nota);
+      recordaPosicio(memoria, element?.ended ? 0 : posicio.current);
       if (element) { element.pause(); element.removeAttribute('src'); element.load(); }
     };
-  }, []);
+  }, [nota, memoria]);
+  // La font nova torna a defaultPlaybackRate: es fixen totes dues.
+  useEffect(() => {
+    const element = audio.current;
+    if (element) { element.defaultPlaybackRate = velocitat; element.playbackRate = velocitat; }
+  }, [velocitat]);
 
   const carrega = (renova) => {
     const element = audio.current;
@@ -100,10 +154,14 @@ function ReproductorActiu({ obteUrl, duradaMs = null, t }) {
     if (!element) return;
     if (volSonar.current) { volSonar.current = false; element.pause(); setCarregant(false); return; }
     volSonar.current = true;
+    prenLaVeu(nota);
+    setUsada(true);
     const font = element.getAttribute('src');
     if (font && !error && !element.error) { element.play()?.catch?.(() => {}); return; }
     // Sense font, o després d'un error (el botó «Torna-ho a provar»): signatura nova.
     reintentat.current = false;
+    // La font nova comença a 0: es continua des d'on s'havia quedat la nota.
+    repren.current = posicio.current;
     element.play()?.catch?.(() => {});
     carrega(Boolean(font));
   };
@@ -128,9 +186,15 @@ function ReproductorActiu({ obteUrl, duradaMs = null, t }) {
   const textPosicio = t('section.xat.adjunts.temps', '{posicio} de {durada}')
     .replace('{posicio}', tempsDeVeu(posMs)).replace('{durada}', textTotal);
   const enMarxa = sona || carregant;
+  /* XAT-08 · Amb la pastilla, la fila de 16rem ha de cabre en un mòbil de
+     320px: el temps passa a un sol número, com a WhatsApp (on va mentre sona
+     o s'ha parat a mitges; la durada en tornar a començar). Més estreta, la
+     pastilla baixa de línia (el CSS). En repòs, la fila de sempre. Un cop
+     premuda, la pastilla no se'n va (ni amb l'error): el focus no es perd. */
+  const textTemps = !usada ? `${tempsDeVeu(posMs)} / ${textTotal}` : enMarxa || posMs > 0 ? tempsDeVeu(posMs) : textTotal;
   return (
     <div className="sdp-xat-veu-caixa">
-      <div className="sdp-xat-veu" role="group" aria-label={etiqueta}>
+      <div className={usada ? 'sdp-xat-veu sdp-xat-veu--velocitat' : 'sdp-xat-veu'} role="group" aria-label={etiqueta}>
         <button
           type="button"
           className="sdp-xat-veu__boto"
@@ -153,18 +217,29 @@ function ReproductorActiu({ obteUrl, duradaMs = null, t }) {
           onChange={(e) => {
             const segons = Number(e.target.value);
             if (audio.current) audio.current.currentTime = segons;
+            posicio.current = segons;
             setPosMs(segons * 1000);
           }}
         />
-        <span className="sdp-xat-veu__temps">{tempsDeVeu(posMs)} / {textTotal}</span>
+        <span className="sdp-xat-veu__temps">{textTemps}</span>
+        {usada ? (
+          <button
+            type="button"
+            className="sdp-xat-veu__velocitat"
+            onClick={seguentVelocitat}
+            aria-label={t('section.xat.adjunts.velocitat', 'Velocitat de reproducció: {velocitat}').replace('{velocitat}', textVelocitat)}
+          >
+            {textVelocitat}
+          </button>
+        ) : null}
         <audio
           ref={audio}
           preload="none"
-          onPlay={() => setSona(true)}
+          onPlay={() => { prenLaVeu(nota); setUsada(true); setSona(true); }}
           onPlaying={() => { reintentat.current = false; }}
-          onPause={() => { if (!recarregant.current) volSonar.current = false; setSona(false); }}
-          onEnded={(e) => { volSonar.current = false; setSona(false); setPosMs(0); e.currentTarget.currentTime = 0; }}
-          onTimeUpdate={(e) => setPosMs(e.currentTarget.currentTime * 1000)}
+          onPause={() => { if (!recarregant.current) { volSonar.current = false; deixaLaVeu(nota); } setSona(false); }}
+          onEnded={(e) => { volSonar.current = false; deixaLaVeu(nota); setSona(false); setPosMs(0); posicio.current = 0; recordaPosicio(memoria, 0); e.currentTarget.currentTime = 0; }}
+          onTimeUpdate={(e) => { posicio.current = e.currentTarget.currentTime; setPosMs(e.currentTarget.currentTime * 1000); }}
           onLoadedMetadata={metadades}
           onDurationChange={durada}
           onError={fallaCarrega}
@@ -280,18 +355,18 @@ function VideoAdjunt({ obteUrl, t, interactiu }) {
 }
 
 /** La previsualització local (URL blob:) abans d'enviar. */
-export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, t: tProp }) {
+export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, locale, t: tProp }) {
   const t = traductorAdjunt(tProp);
   const obteUrl = useMemo(() => () => Promise.resolve(url), [url]);
   if (tipus === 'imatge') return <img className="sdp-xat-adjunt__imatge" src={url} alt={t('section.xat.adjunts.foto', 'Foto adjunta')} onError={onError} />;
   if (tipus === 'video') return <video className="sdp-xat-adjunt__video" src={url} controls playsInline preload="metadata" onError={onError} aria-label={t('section.xat.adjunts.video', 'Vídeo adjunt')} />;
-  return <ReproductorVeu key={url} obteUrl={obteUrl} duradaMs={duradaMs} t={t} />;
+  return <ReproductorVeu key={url} obteUrl={obteUrl} duradaMs={duradaMs} locale={locale} t={t} />;
 }
 
 /** La bombolla guarda l'id, mai una URL pública ni una URL signada persistent.
  *  `interactiu` fals (el mode de selecció) la pinta sense controls: la foto i
  *  el vídeo, muntats (el mateix node); la nota de veu, quieta (ADV-MEDIA-10). */
-export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, t: tProp, interactiu = true }) {
+export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, locale, t: tProp, interactiu = true }) {
   const t = traductorAdjunt(tProp);
   const obteUrl = useCallback(({ signal, renova = false } = {}) => (
     urlAdjuntXat(adjunt.id, { ...externalConfig, signal }, { renova })
@@ -303,5 +378,5 @@ export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, t: 
   const clau = String(usuariId ?? '');
   if (tipus === 'imatge') return <ImatgeAdjunta key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
   if (tipus === 'video') return <VideoAdjunt key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
-  return <div className="sdp-xat-adjunt"><ReproductorVeu key={clau} obteUrl={obteUrl} duradaMs={adjunt.duradaMs} t={t} interactiu={interactiu} /></div>;
+  return <div className="sdp-xat-adjunt"><ReproductorVeu key={clau} obteUrl={obteUrl} duradaMs={adjunt.duradaMs} memoria={`${clau}/${adjunt.id}`} locale={locale} t={t} interactiu={interactiu} /></div>;
 }

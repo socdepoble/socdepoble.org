@@ -51,6 +51,17 @@ function cursorDeLaPrimera(payload, seccio) {
   return typeof cursor === 'string' && cursor ? cursor : null;
 }
 
+/* PN-02 (auditoria Port Neutral 261025) · Defensa en profunditat: este
+   proveïdor viu per damunt de la barrera de ruta (App.jsx), i una llista mal
+   formada d'un adaptador (un null, un número, un objecte on toca una llista)
+   el feia petar en pintar (sortPinnedContent) i tombava el Mas sencer. Només
+   una llista, i dins, només objectes; la llista neta es torna tal qual. */
+const esElement = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
+const nomesElements = (valor) => {
+  if (!Array.isArray(valor)) return [];
+  return valor.every(esElement) ? valor : valor.filter(esElement);
+};
+
 /* La primera pàgina mana; de les extres, només les que no hi són. */
 function ambExtres(primera, extres) {
   if (!extres?.length) return primera;
@@ -168,7 +179,7 @@ export function MurProvider({ children, config }) {
      pàgina següent i l'estat de la càrrega. */
   const seccions = useMemo(() => Object.fromEntries(Object.entries(SECCIONS_PAGINABLES).map(([seccio, clau]) => {
     if (!llest) return [seccio, { elements: [], primera: [], cursor: null, base: null, carregant: false, error: null }];
-    const primera = payload[clau] || [];
+    const primera = nomesElements(payload[clau]);
     const base = paginable ? cursorDeLaPrimera(payload, seccio) : null;
     const extra = extres[seccio];
     if (!extra) return [seccio, { elements: primera, primera, cursor: base, base, carregant: false, error: null }];
@@ -215,7 +226,7 @@ export function MurProvider({ children, config }) {
       const pagina = await loadSeccioPage({ seccio, cursor, signal: viu.senyal }, config);
       if (ambitViu.current?.ambit !== ambit) return false;
       if (!Array.isArray(pagina?.elements) || typeof pagina.complete !== 'boolean') throw new Error('Pàgina de la secció amb un format inesperat.');
-      posa((previ) => ({ ...previ, elements: afegixPagina(previ?.elements, pagina.elements),
+      posa((previ) => ({ ...previ, elements: afegixPagina(previ?.elements, nomesElements(pagina.elements)),
         cursor: pagina.complete ? null : (pagina.nextCursor || null), carregant: false, error: null }));
       return true;
     } catch (errorDeCarrega) {

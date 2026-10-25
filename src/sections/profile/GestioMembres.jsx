@@ -66,12 +66,22 @@ export function TriaTitular({ orgId, nomOrg }) {
   const [missatge, setMissatge] = useState(null);
   const viu = useRef(true);
   useEffect(() => { viu.current = true; return () => { viu.current = false; }; }, []);
+  /* P1-15 del Llibre (auditoria Port Neutral 261025, PN-03) · La tria vigent.
+     El component no es remunta en canviar d'entitat (no porta key), i la
+     resposta tardana d'una tria d'A s'escrivia a l'estat de B: la casella de
+     B es desmarcava, deia «Ja no et mostrem com a titular d'A» i es quedava
+     «desant». Cada tria i cada canvi d'entitat pugen el número: només la tria
+     vigent escriu. */
+  const triaVigent = useRef(0);
 
   useEffect(() => {
     if (!disponible) return undefined;
     const control = new AbortController();
+    triaVigent.current += 1;
     setEstat({ orgId, carregant: true, valor: false, error: null });
     setMissatge(null);
+    setDesant(false);
+    setPendent(null);
     Promise.resolve()
       .then(() => estatTitularPublic(orgId, { signal: control.signal }))
       .then((resposta) => {
@@ -89,14 +99,17 @@ export function TriaTitular({ orgId, nomOrg }) {
   async function canvia(e) {
     const nou = e.target.checked === true;
     if (desant) return;
+    const tria = ++triaVigent.current;
+    const orgDeLaTria = orgId;
+    const vigent = () => viu.current && triaVigent.current === tria;
     setDesant(true);
     setPendent(nou);
     setMissatge({ tipus: 'desant', text: t('section.perfil.titular.desant', 'Desant la tria…') });
     try {
-      const resposta = await marcaTitularPublic(orgId, nou, {});
-      if (!viu.current) return;
+      const resposta = await marcaTitularPublic(orgDeLaTria, nou, {});
+      if (!vigent()) return;
       const valor = resposta?.titularPublic === true;
-      setEstat((previ) => ({ ...previ, valor, error: null }));
+      setEstat((previ) => (previ.orgId === orgDeLaTria ? { ...previ, valor, error: null } : previ));
       setMissatge({
         tipus: 'exit',
         text: omple(valor
@@ -104,9 +117,9 @@ export function TriaTitular({ orgId, nomOrg }) {
           : t('section.perfil.titular.llevat', 'Ja no et mostrem com a titular de {nom}.'), { nom: nomOrg })
       });
     } catch (error) {
-      if (viu.current && !esCancel(error)) setMissatge({ tipus: 'error', text: t('section.perfil.titular.error', 'No s’ha pogut desar la tria. Torna-ho a provar.') });
+      if (vigent() && !esCancel(error)) setMissatge({ tipus: 'error', text: t('section.perfil.titular.error', 'No s’ha pogut desar la tria. Torna-ho a provar.') });
     } finally {
-      if (viu.current) {
+      if (vigent()) {
         setDesant(false);
         setPendent(null);
       }

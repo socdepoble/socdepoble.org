@@ -279,7 +279,7 @@ function Bombolla({
                   vista quieta no té <audio>, i el reproductor tornaria amb
                   l'estat d'abans («Pausa») i sense font. La seua URL es demana
                   en prémer, mai en muntar, i el play següent la torna a signar. */}
-              <AdjuntXat key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'} adjunt={missatge.metadades.adjunt} tipus={missatge.tipus} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} interactiu={!triable} />
+              <AdjuntXat key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'} adjunt={missatge.metadades.adjunt} tipus={missatge.tipus} externalConfig={configAdjunts} usuariId={usuariAdjunts} locale={locale} t={t} interactiu={!triable} />
               {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p> : null}
             </>
           ) : (

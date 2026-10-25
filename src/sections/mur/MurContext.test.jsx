@@ -464,3 +464,26 @@ test('Decisió 4 · sense proveïdor, useMur no ofereix cap pàgina més', async
   expect(result.current.errorMes('mur')).toBeNull();
   expect(await result.current.carregaMes('mur')).toBe(false);
 });
+
+/* PN-02 (auditoria Port Neutral 261025) · El MurProvider viu per damunt de la
+   barrera de ruta (App.jsx): una llista mal formada d'un adaptador (un null,
+   un número o un objecte on toca una llista) el feia petar en pintar
+   (sortPinnedContent) i tombava el Mas sencer. Ara només hi entren llistes,
+   i dins, només objectes. */
+test.each([
+  ['un null i un número dins de feedPosts', { feedPosts: [null, { id: 'p1' }, 7], events: [], marketItems: [] }, ['p1']],
+  ['feedPosts és un objecte', { feedPosts: { id: 'p1' }, events: [], marketItems: [] }, []],
+  ['marketItems és un número i events un text', { feedPosts: [{ id: 'p1' }], events: 'x', marketItems: 7 }, ['p1']]
+])('PN-02 · %s: el Mur es pinta amb els objectes i no peta', async (_cas, payload, esperats) => {
+  const { result } = await murLlest(payload);
+  expect(ids(result.current.sortedFeedPosts)).toEqual(esperats);
+  expect(result.current.sortedEvents).toEqual([]);
+  expect(result.current.sortedMarketItems).toEqual([]);
+});
+
+test('PN-02 · una pàgina següent amb forats només afig els objectes', async () => {
+  const { result } = await murLlest(primera(['p1'], { mur: 'c1' }));
+  m.pagina.mockResolvedValueOnce({ elements: [null, { id: 'p2' }, 'x'], complete: true, nextCursor: null });
+  await act(async () => { expect(await result.current.carregaMes('mur')).toBe(true); });
+  expect(ids(result.current.sortedFeedPosts)).toEqual(['p1', 'p2']);
+});

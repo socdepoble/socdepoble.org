@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { CLAUS_ERROR_ADJUNT, duradaLocal, gravaVeu, mimeDeGravacio, preparaAdjunt, senseUbicacioVideo, textDErrorAdjunt } from './adjuntLocal.js';
+import { CLAUS_ERROR_ADJUNT, MAX_VEU_MS, duradaLocal, gravaVeu, mimeDeGravacio, preparaAdjunt, senseUbicacioVideo, textDErrorAdjunt } from './adjuntLocal.js';
 import { ERRORS_ADJUNT_XAT, MISSATGE_QUOTA_XAT, validaAdjuntXat } from '../../data/xatMultimedia.js';
 import ca from '../../config/idiomes/ca.js';
 
@@ -184,6 +184,30 @@ test('prop del sostre de la veu (3 MB) la gravació s’atura sola i conserva la
   gravador.ondataavailable({ data: new Blob([new Uint8Array(2_950_000)]) });
   await expect(gravacio.resultat).resolves.toMatchObject({ tipus: 'veu', fitxer: expect.any(Blob) });
   expect((await gravacio.resultat).fitxer.size).toBe(2_950_000);
+});
+/* XAT-07 · Abans s'aturava sense dir res: el resultat diu si s'ha aturat sola i per què. */
+test('una gravació que s’atura sola diu per què; aturada a mà, no porta cap motiu', async () => {
+  const mida = entornGravacio();
+  const perMida = await gravaVeu(mida);
+  const gravador = mida.Recorder.ultim;
+  gravador.stop = function stop() { this.state = 'inactive'; this.onstop?.(); };
+  gravador.ondataavailable({ data: new Blob([new Uint8Array(2_950_000)]) });
+  await expect(perMida.resultat).resolves.toMatchObject({ tipus: 'veu', aturada: 'mida' });
+  const ama = await gravaVeu(entornGravacio());
+  ama.atura();
+  expect(await ama.resultat).not.toHaveProperty('aturada');
+});
+test('als cinc minuts (MAX_VEU_MS) la gravació s’atura sola amb el motiu «temps»', async () => {
+  vi.useFakeTimers();
+  const e = entornGravacio();
+  const gravacio = await gravaVeu(e);
+  e.Recorder.ultim.onstart?.();
+  expect(MAX_VEU_MS).toBe(300_000);
+  await vi.advanceTimersByTimeAsync(MAX_VEU_MS - 1);
+  expect(e.Recorder.ultim.state).toBe('recording');
+  await vi.advanceTimersByTimeAsync(1);
+  await expect(gravacio.resultat).resolves.toMatchObject({ tipus: 'veu', aturada: 'temps', duradaMs: MAX_VEU_MS });
+  expect(e.track.stop).toHaveBeenCalledOnce();
 });
 /* MEDIA-7 · La durada és la del rellotge, des que el gravador comença. */
 test('la durada de la nota ve del rellotge de la gravació', async () => {

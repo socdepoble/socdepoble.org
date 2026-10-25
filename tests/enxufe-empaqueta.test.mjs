@@ -585,7 +585,7 @@ test('CLI: ajuda, genera-clau fora del repositori i mai sobreescriu una clau', (
 
 test('l\'adaptador real: la llista blanca porta tot el plugin i res de dist/, eines/ ni ocults', () => {
   const rels = fitxersAdaptador(PLUGIN_REAL).map((f) => f.rel);
-  for (const rel of ['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt', 'includes/actualitzador.php', 'includes/bloc/block.json', 'includes/bloc/render.php', 'includes/bloc/editor.js', 'includes/bloc/editor.asset.php', 'templates/pantalla-completa.php', 'languages/socdepoble-enxufe-ca.l10n.php']) {
+  for (const rel of ['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt', 'includes/actualitzador.php', 'includes/bloc/block.json', 'includes/bloc/render.php', 'includes/bloc/editor.js', 'includes/bloc/editor.asset.php', 'templates/pantalla-completa.php', 'languages/socdepoble-ca.l10n.php', 'languages/socdepoble-ca-socdepoble-app-editor-script.json']) {
     assert.ok(rels.includes(rel), rel);
   }
   assert.ok(rels.every((rel) => !rel.startsWith('dist/') && !rel.startsWith('eines/') && !rel.split('/').some((s) => s.startsWith('.'))));

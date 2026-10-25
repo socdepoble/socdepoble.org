@@ -497,25 +497,36 @@ export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedA
   };
 }
 
+/* Auditoria Port Neutral 261025 (omissió del verificador) · Només es fusionen
+   els elements amb un id de veres (un text o un número). Abans, tots els que no
+   en portaven queien a la clau «undefined» i només en sobrevivia l'últim, i un
+   primitiu (un número, un text) es convertia en un objecte estrany en
+   fusionar-se: una pèrdua silenciosa de dades. Ara un element sense id passa
+   tal qual, al seu lloc, i el que no és un objecte no hi entra. */
 export function mergeById(primary = [], secondary = []) {
   const map = new Map();
   [...primary, ...secondary].forEach((item) => {
-    if (!item) return;
-    const existing = map.get(String(item.id));
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return;
+    if (typeof item.id !== 'string' && typeof item.id !== 'number') {
+      map.set(Symbol('sense-id'), item);
+      return;
+    }
+    const clau = String(item.id);
+    const existing = map.get(clau);
     if (existing) {
       // Si tots dos tenen revision (Sollutia Notes), la versió major guanya. F11.
       if (item.revision !== undefined && existing.revision !== undefined) {
         if (item.revision >= existing.revision) {
-          map.set(String(item.id), { ...existing, ...item });
+          map.set(clau, { ...existing, ...item });
         }
       } else {
         const t1 = new Date(existing.updated_at || existing.updatedAt || existing.created_at || existing.createdAt || 0).getTime() || 0;
         const t2 = new Date(item.updated_at || item.updatedAt || item.created_at || item.createdAt || 0).getTime() || 0;
         // En cas d'empat, l'últim (secondary) guanya, combinant els camps
-        if (t2 >= t1) map.set(String(item.id), { ...existing, ...item });
+        if (t2 >= t1) map.set(clau, { ...existing, ...item });
       }
     } else {
-      map.set(String(item.id), item);
+      map.set(clau, item);
     }
   });
   return Array.from(map.values());

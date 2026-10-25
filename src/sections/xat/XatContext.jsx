@@ -1590,8 +1590,9 @@ export function XatProvider({ children, config }) {
   }, [sendChatMessage]);
 
   /* L'adjunt conserva la previsualització local fins a la confirmació.
-     No entra a la cua de text ni desa Blobs/URL temporals en localStorage. */
-  const sendChatMedia = useCallback(async (fil, adjunt, { signal } = {}) => {
+     No entra a la cua de text ni desa Blobs/URL temporals en localStorage.
+     XAT-03 · `onProgres` (opcional) passa tal qual al port: el progrés de la pujada. */
+  const sendChatMedia = useCallback(async (fil, adjunt, { signal, onProgres } = {}) => {
     const op = captura();
     if (!joId || !vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
     const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
@@ -1613,7 +1614,7 @@ export function XatProvider({ children, config }) {
        a la causa de l'error de l'adjunt) torna a obrir la porta UNA vegada; si
        les accepta, es publica de nou amb el mateix id (la reserva ja pujada no
        es torna a pujar); si les declina, l'AbortError de sempre. */
-    const publica = () => publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal });
+    const publica = () => publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal, onProgres });
     try {
       try { desat = await publica(); }
       catch (error) {

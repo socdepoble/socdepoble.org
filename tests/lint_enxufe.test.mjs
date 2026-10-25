@@ -93,6 +93,7 @@ const MODIFICATS_JS = [
   'src/sections/xat/XatControlSection.jsx',
   'src/sections/xat/XatSection.jsx',
   'src/sections/xat/XatSection.test.jsx',
+  'tests/enxufe-empaqueta.test.mjs',
   'tests/enxufe-pantalla.test.mjs',
   'tests/enxufe-plugin.test.mjs',
   'vite.standalone.config.js'

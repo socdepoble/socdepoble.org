@@ -1,7 +1,7 @@
 import '../../../../tests/helpers/diccionaris.js';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import AdjuntXat, { tempsDeVeu } from './AdjuntXat.jsx';
+import AdjuntXat, { _reiniciaVeus, tempsDeVeu } from './AdjuntXat.jsx';
 import { createTranslator } from '../../../config/i18n.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 const m = vi.hoisted(() => ({ urlAdjuntXat: vi.fn(), capacitat: true }));
@@ -24,7 +24,8 @@ beforeEach(() => {
   for (const metode of ['pause', 'load']) vi.spyOn(HTMLMediaElement.prototype, metode).mockImplementation(() => {});
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+// XAT-08 · La velocitat i on es va quedar cada nota són del mòdul: cada prova comença de zero.
+afterEach(() => { cleanup(); _reiniciaVeus(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 const config = { dataMode: 'remote' };
 const foto = { id: 'foto-1', mime: 'image/webp' };
 const veu = { id: 'veu-1', mime: 'audio/webm', duradaMs: 12_400 };
@@ -206,6 +207,166 @@ test('el reproductor parla la llengua de qui llig', () => {
   render(<AdjuntXat adjunt={veu} tipus="veu" externalConfig={config} usuariId="A" t={createTranslator('en')} />);
   expect(screen.getByRole('button', { name: 'Play the voice message' })).toBeTruthy();
   expect(screen.getByRole('slider', { name: 'Voice message position' }).getAttribute('aria-valuetext')).toBe('0:00 of 0:12');
+});
+/* ── XAT-08 i l'omissió del verificador · Les notes de veu com a WhatsApp ── */
+const nota = (id) => ({ id, mime: 'audio/mp4', duradaMs: 12_400 });
+// Prem el botó d'una nota i, quan té la font, el navegador diu que sona.
+const sona = async (audio, nom = 'Reprodueix el missatge de veu') => {
+  fireEvent.click(within(audio.closest('.sdp-xat-veu')).getByRole('button', { name: nom }));
+  await waitFor(() => expect(audio.getAttribute('src')).toBeTruthy());
+  fireEvent.play(audio);
+  return audio;
+};
+test('la velocitat gira 1× → 1,5× → 2× i val per a totes les notes de la sessió', async () => {
+  const vista = render(<><AdjuntXat adjunt={nota('veu-v1')} tipus="veu" externalConfig={config} usuariId="A" /><AdjuntXat adjunt={nota('veu-v2')} tipus="veu" externalConfig={config} usuariId="A" /></>);
+  // En repòs no hi ha pastilla: apareix en prémer Reprodueix, com a WhatsApp.
+  expect(screen.queryByRole('button', { name: /^Velocitat/ })).toBeNull();
+  const [primera, segona] = vista.container.querySelectorAll('audio');
+  await sona(primera);
+  const velocitat = screen.getByRole('button', { name: 'Velocitat de reproducció: 1×' });
+  expect(velocitat.textContent).toBe('1×');
+  fireEvent.click(velocitat);
+  expect(screen.getByRole('button', { name: 'Velocitat de reproducció: 1,5×' }).textContent).toBe('1,5×');
+  expect(primera.playbackRate).toBe(1.5);
+  // La font nova (load) torna a defaultPlaybackRate: també es fixa.
+  expect(primera.defaultPlaybackRate).toBe(1.5);
+  fireEvent.click(screen.getByRole('button', { name: 'Velocitat de reproducció: 1,5×' }));
+  expect(primera.playbackRate).toBe(2);
+  // L'altra nota ja comença a 2×.
+  await sona(segona);
+  expect(segona.playbackRate).toBe(2);
+  expect(screen.getAllByRole('button', { name: 'Velocitat de reproducció: 2×' })).toHaveLength(2);
+  fireEvent.click(screen.getAllByRole('button', { name: 'Velocitat de reproducció: 2×' })[1]);
+  expect(primera.playbackRate).toBe(1);
+  expect(segona.playbackRate).toBe(1);
+  // I una nota nova de la mateixa sessió hereta la triada.
+  fireEvent.click(screen.getAllByRole('button', { name: 'Velocitat de reproducció: 1×' })[0]);
+  vista.unmount();
+  const altra = render(<AdjuntXat adjunt={nota('veu-v3')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const tercera = await sona(altra.container.querySelector('audio'));
+  expect(tercera.playbackRate).toBe(1.5);
+});
+test('la velocitat parla la llengua (i els decimals) de qui llig', async () => {
+  const vista = render(<AdjuntXat adjunt={nota('veu-en')} tipus="veu" externalConfig={config} usuariId="A" t={createTranslator('en')} locale="en-GB" />);
+  await sona(vista.container.querySelector('audio'), 'Play the voice message');
+  fireEvent.click(screen.getByRole('button', { name: 'Playback speed: 1×' }));
+  expect(screen.getByRole('button', { name: 'Playback speed: 1.5×' }).textContent).toBe('1.5×');
+  fireEvent.click(screen.getByRole('button', { name: 'Playback speed: 1.5×' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Playback speed: 2×' }));
+  expect(screen.getByRole('button', { name: 'Playback speed: 1×' })).toBeTruthy();
+});
+test('una nota que comença para la que sonava: una sola veu alhora', async () => {
+  const vista = render(<><AdjuntXat adjunt={nota('veu-e1')} tipus="veu" externalConfig={config} usuariId="A" /><AdjuntXat adjunt={nota('veu-e2')} tipus="veu" externalConfig={config} usuariId="A" /></>);
+  const [primera, segona] = vista.container.querySelectorAll('audio');
+  await sona(primera);
+  expect(screen.getAllByRole('button', { name: 'Pausa el missatge de veu' })).toHaveLength(1);
+  HTMLMediaElement.prototype.pause.mockClear();
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  // La que sonava es para dins del mateix gest, abans que arribe la URL de l'altra.
+  expect(HTMLMediaElement.prototype.pause.mock.contexts).toContain(primera);
+  expect(HTMLMediaElement.prototype.pause.mock.contexts).not.toContain(segona);
+  fireEvent.pause(primera);
+  await waitFor(() => expect(segona.getAttribute('src')).toBeTruthy());
+  fireEvent.play(segona);
+  const botons = screen.getAllByRole('button', { name: /missatge de veu$/ });
+  expect(botons.map((b) => b.getAttribute('aria-label'))).toEqual(['Reprodueix el missatge de veu', 'Pausa el missatge de veu']);
+});
+test('una nota que encara esperava la URL no sona si mentrestant en comença una altra', async () => {
+  const tard = (() => { let resolve; const promise = new Promise((r) => { resolve = r; }); return { promise, resolve }; })();
+  m.urlAdjuntXat.mockImplementationOnce(() => tard.promise);
+  const vista = render(<><AdjuntXat adjunt={nota('veu-t1')} tipus="veu" externalConfig={config} usuariId="A" /><AdjuntXat adjunt={nota('veu-t2')} tipus="veu" externalConfig={config} usuariId="A" /></>);
+  const [primera, segona] = vista.container.querySelectorAll('audio');
+  fireEvent.click(screen.getAllByRole('button', { name: 'Reprodueix el missatge de veu' })[0]);
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  await waitFor(() => expect(segona.getAttribute('src')).toBeTruthy());
+  await act(async () => { tard.resolve(URL_SIGNADA()); });
+  expect(primera.getAttribute('src')).toBeNull();
+  expect(screen.getAllByRole('button', { name: /missatge de veu$/ })[0].getAttribute('aria-label')).toBe('Reprodueix el missatge de veu');
+});
+test('eixir i tornar a la conversa reprén la nota on s’havia quedat; en acabar, l’oblida', async () => {
+  const pinta = (usuariId = 'A') => render(<AdjuntXat adjunt={nota('veu-r1')} tipus="veu" externalConfig={config} usuariId={usuariId} />);
+  const primera = pinta();
+  const audio = await sona(primera.container.querySelector('audio'));
+  Object.defineProperty(audio, 'currentTime', { configurable: true, writable: true, value: 7.3 });
+  fireEvent.timeUpdate(audio);
+  primera.unmount();
+  // Una altra persona, al mateix aparell, no hereta on anava.
+  pinta('B').unmount();
+  const tornada = pinta();
+  expect(screen.getByText('0:07 / 0:12')).toBeTruthy();
+  expect(screen.getByRole('slider').getAttribute('aria-valuetext')).toBe('0:07 de 0:12');
+  const nou = tornada.container.querySelector('audio');
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  await waitFor(() => expect(nou.getAttribute('src')).toBeTruthy());
+  fireEvent.loadedMetadata(nou);
+  expect(nou.currentTime).toBe(7.3);
+  fireEvent.play(nou);
+  fireEvent.ended(nou);
+  // Acabada, la durada (amb la pastilla, un sol número) i res a reprendre.
+  expect(screen.getByText('0:12')).toBeTruthy();
+  expect(screen.getByRole('slider').getAttribute('aria-valuetext')).toBe('0:00 de 0:12');
+  tornada.unmount();
+  pinta();
+  expect(screen.getByText('0:00 / 0:12')).toBeTruthy();
+});
+/* Revisió XAT-08 · Amb la pastilla, la fila de 16rem ha de cabre en un mòbil
+   de 320px: el temps passa a un sol número. En repòs, el de sempre. */
+test('amb la pastilla, el temps és un sol número; en repòs, la fila de sempre', async () => {
+  const vista = render(<AdjuntXat adjunt={veu} tipus="veu" externalConfig={config} usuariId="A" />);
+  const fila = screen.getByRole('group', { name: 'Missatge de veu' });
+  const temps = fila.querySelector('.sdp-xat-veu__temps');
+  expect(fila.className).toBe('sdp-xat-veu');
+  expect(temps.textContent).toBe('0:00 / 0:12');
+  const audio = await sona(vista.container.querySelector('audio'));
+  // La fila es pot partir (la pastilla baixa de línia si no hi cap) i el temps és on va.
+  expect(fila.className).toBe('sdp-xat-veu sdp-xat-veu--velocitat');
+  expect(temps.textContent).toBe('0:00');
+  Object.defineProperty(audio, 'currentTime', { configurable: true, writable: true, value: 3.2 });
+  fireEvent.timeUpdate(audio);
+  expect(temps.textContent).toBe('0:03');
+  // La durada no es perd per als lectors: la diu el lliscant.
+  expect(screen.getByRole('slider').getAttribute('aria-valuetext')).toBe('0:03 de 0:12');
+  fireEvent.pause(audio);
+  expect(temps.textContent).toBe('0:03');
+  fireEvent.ended(audio);
+  expect(temps.textContent).toBe('0:12');
+  expect(screen.getByRole('button', { name: 'Velocitat de reproducció: 1×' })).toBeTruthy();
+});
+/* Revisió XAT-08 (MEDIA-6) · Si la URL falla abans de la primera font, la
+   pastilla no se'n va: qui l'havia enfocada no perd el focus. */
+test('la pastilla enfocada no desapareix quan la URL falla', async () => {
+  const tard = (() => { let reject; const promise = new Promise((_r, j) => { reject = j; }); return { promise, reject }; })();
+  m.urlAdjuntXat.mockImplementationOnce(() => tard.promise);
+  render(<AdjuntXat adjunt={veu} tipus="veu" externalConfig={config} usuariId="A" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  const velocitat = screen.getByRole('button', { name: 'Velocitat de reproducció: 1×' });
+  velocitat.focus();
+  await act(async () => { tard.reject(errorAdjuntXat('SDP-XAT-006')); });
+  expect(await screen.findByText(/No tens accés a esta conversa o el fitxer ja no hi és\./)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' })).toBeTruthy();
+  expect(velocitat.isConnected).toBe(true);
+  expect(document.activeElement).toBe(velocitat);
+});
+/* Revisió XAT-08 · El play pot vindre d'un altre lloc (els controls del
+   sistema, la pantalla de bloqueig): també para la que sonava. */
+test('un play que no ve del botó també para l’altra nota', async () => {
+  const vista = render(<><AdjuntXat adjunt={nota('veu-s1')} tipus="veu" externalConfig={config} usuariId="A" /><AdjuntXat adjunt={nota('veu-s2')} tipus="veu" externalConfig={config} usuariId="A" /></>);
+  const [primera, segona] = vista.container.querySelectorAll('audio');
+  await sona(primera);
+  HTMLMediaElement.prototype.pause.mockClear();
+  fireEvent.play(segona);
+  expect(HTMLMediaElement.prototype.pause.mock.contexts).toContain(primera);
+  expect(HTMLMediaElement.prototype.pause.mock.contexts).not.toContain(segona);
+});
+test('la nota de B no recorda la posició de la nota d’A', async () => {
+  const vista = render(<AdjuntXat adjunt={nota('veu-r2')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = await sona(vista.container.querySelector('audio'));
+  Object.defineProperty(audio, 'currentTime', { configurable: true, writable: true, value: 9 });
+  fireEvent.timeUpdate(audio);
+  vista.rerender(<AdjuntXat adjunt={nota('veu-r2')} tipus="veu" externalConfig={config} usuariId="B" />);
+  expect(screen.getByText('0:00 / 0:12')).toBeTruthy();
+  vista.rerender(<AdjuntXat adjunt={nota('veu-r2')} tipus="veu" externalConfig={config} usuariId="A" />);
+  expect(screen.getByText('0:09 / 0:12')).toBeTruthy();
 });
 test('un vídeo demana la URL en entrar a la vista i no porta controls en selecció', async () => {
   const vista = render(<AdjuntXat adjunt={{ id: 'video-1', mime: 'video/mp4' }} tipus="video" externalConfig={config} usuariId="A" interactiu={false} />);

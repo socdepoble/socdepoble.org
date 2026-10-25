@@ -16,16 +16,28 @@
  *   · Inert sense la capacitat (un port sense implementació, un mock): cap
  *     crida i `estat: 'inactiu'`. La lectura porta la seua clau (tipus + id):
  *     en canviar, la d'abans s'avorta (AbortController) i no es pinta.
+ *   · P1-15 del Llibre (auditoria Port Neutral 261025) · La clau és l'àmbit
+ *     sencer: el backend, la persona que mira (`usuariId`), el tipus i l'id.
+ *     La fitxa depén de qui mira (en llavor, loadPerfilPublic amb la persona
+ *     de la sessió; en remot, l'RLS del JWT): un canvi de persona sense cap
+ *     pintat entremig continuava pintant la fitxa llegida per a l'altra.
  *
  * `peticio`: { id, tipus: 'persona'|'entitat'|'grup' } o null.
  * Torna { estat: 'inactiu'|'carregant'|'llest'|'error', perfil: PerfilPublic|null }.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
+import { backendScope } from '../../config/backendConfig.js';
 
 /* Un port sense la capacitat (o un mock) no ha de fer caure la vista. */
 function capacitat(nom) {
   try { return teCapacitat(nom); } catch { return false; }
+}
+
+/* La clau del backend, com la dels proveïdors (useScopedResource). Una
+   configuració que no es deixa llegir és un àmbit més, mai una excepció en pintar. */
+function ambitDelBackend(config) {
+  try { return backendScope(config); } catch { return 'backend:invàlid'; }
 }
 
 const ORGANITZACIO = Object.freeze(['entitat', 'grup']);
@@ -43,11 +55,11 @@ export function fitxaDelTipus(perfil, tipus) {
 const INACTIU = Object.freeze({ estat: 'inactiu', perfil: null });
 const CARREGANT = Object.freeze({ estat: 'carregant', perfil: null });
 
-export function useFitxaDeConnexio(peticio = null, { config = {} } = {}) {
+export function useFitxaDeConnexio(peticio = null, { config = {}, usuariId = null } = {}) {
   const id = String(peticio?.id ?? '').trim();
   const tipus = Object.hasOwn(TIPUS_ACCEPTATS, peticio?.tipus) ? peticio.tipus : '';
   const actiu = Boolean(id && tipus) && capacitat('directori');
-  const clau = actiu ? `${tipus}\u0000${id}` : null;
+  const clau = actiu ? JSON.stringify([ambitDelBackend(config), usuariId == null ? null : String(usuariId), tipus, id]) : null;
   /* { clau, estat, perfil }: el resultat només val per a la clau que l'ha demanat. */
   const [desat, setDesat] = useState(null);
   const configRef = useRef(config);

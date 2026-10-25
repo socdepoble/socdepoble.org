@@ -38,6 +38,8 @@ const CENS = Object.freeze([
   'src/data/supabase/storage.pujada.test.js',
   /* F2 · La privacitat de la consola de resolveAsset i promoteToPublic. */
   'src/data/supabase/storage.privacitat.test.js',
+  /* PN-04 (auditoria Port Neutral 261025) · El termini de cada crida a Storage. */
+  'src/data/supabase/storage.termini.test.js',
   /* Auditoria 261007 (B) · Els xats d'ajuda per defecte i l'adaptador del xat. */
   'src/data/xatsPerDefecte.js',
   'src/data/xatsPerDefecte.test.js',

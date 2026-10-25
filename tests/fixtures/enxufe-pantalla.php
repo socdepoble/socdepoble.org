@@ -7,7 +7,12 @@
  * Modes ($cas['mode']): pantalla (per defecte), doble (una segona còpia en
  * una altra carpeta, $argv[2]), xarxa (els ganxos d'activació de la còpia,
  * amb $cas['de_xarxa'] com a $network_wide), readme (finestra de detalls),
- * blocs (plantilla de blocs) i l10n (el .l10n.php executat).
+ * blocs (plantilla de blocs), l10n (el .l10n.php executat), bloc (el registre
+ * i el render del bloc com en WordPress 5.8, que no llig el camp "render" de
+ * block.json) i idioma (les traduccions: $cas['llengua'], i amb
+ * $cas['controlador'] hi ha WP_Translation_Controller, com des de la 6.5;
+ * $cas['plugin_locale'] força la llengua del plugin i $cas['canvia'] és un
+ * filtre gettext general, d'un tema o d'un plugin, que canvia uns textos).
  * Multilloc: $cas['multisite'], actius (active_plugins per lloc; el 1 és el
  * principal, el de l'administració de xarxa) i xarxa (active_sitewide_plugins).
  */
@@ -24,6 +29,11 @@ $hooks = array();
 $activacions = array();
 $transients_esborrats = array();
 $plantilles_blocs = array();
+$blocs = array();
+$shortcodes = array();
+$traduccions_script = array();
+$kses = array();
+$textdomains = array();
 if ( isset( $cas['plantilla_actual'] ) ) {
 	$_wp_current_template_id = $cas['plantilla_actual'];
 }
@@ -81,12 +91,20 @@ function register_activation_hook( $fitxer, $callback ) {
 	add_action( 'activate_' . plugin_basename( $fitxer ), $callback );
 }
 function wp_die( $missatge = '', $titol = '', $args = array() ) { throw new FixtureWpDie( $missatge, $titol, $args ); }
-function __( $text, $domini ) { return $text; }
+// Com translate() de WordPress sense cap domini carregat: el filtre general i, després, el del domini.
+function __( $text, $domini ) {
+	$traduccio = apply_filters( 'gettext', $text, $text, $domini );
+	return apply_filters( 'gettext_' . $domini, $traduccio, $text, $domini );
+}
+function _x( $text, $context, $domini ) {
+	$traduccio = apply_filters( 'gettext_with_context', $text, $text, $context, $domini );
+	return apply_filters( 'gettext_with_context_' . $domini, $traduccio, $text, $context, $domini );
+}
 function esc_attr( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 // Com WordPress: esc_html no torna a escapar les entitats que ja ho estan.
 function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8', false ); }
 function esc_url( $text ) { return esc_attr( $text ); }
-function esc_html__( $text, $domini ) { return esc_attr( $text ); }
+function esc_html__( $text, $domini ) { return esc_attr( __( $text, $domini ) ); }
 function wp_kses_post( $html ) { return $html; }
 function is_multisite() { return ! empty( $GLOBALS['cas']['multisite'] ); }
 function trailingslashit( $cami ) { return rtrim( $cami, '/\\' ) . '/'; }
@@ -120,6 +138,30 @@ if ( ! empty( $cas['registre_blocs'] ) ) {
 		return true;
 	}
 }
+if ( ! empty( $cas['controlador'] ) ) {
+	// WordPress 6.5+; sense el cas, la classe no existix, com de la 5.8 a la 6.4.
+	final class WP_Translation_Controller {}
+}
+// Com WordPress 5.8-6.0: register_block_type només desa els arguments; el camp "render" de block.json no es llig.
+function register_block_type( $cami, $args = array() ) {
+	$GLOBALS['blocs'][] = array( $cami, $args );
+	return true;
+}
+function add_shortcode( $nom, $callback ) { $GLOBALS['shortcodes'][ $nom ] = $callback; }
+function wp_set_script_translations( $handle, $domini, $cami ) { $GLOBALS['traduccions_script'][] = array( $handle, $domini, $cami ); return true; }
+function get_block_wrapper_attributes( $extra = array() ) { return 'class="wp-block-socdepoble-app ' . esc_attr( $extra['class'] ?? '' ) . '"'; }
+// La llista permesa arriba a la prova; el filtrat real de wp_kses és de WordPress.
+function wp_kses( $html, $permes ) {
+	$GLOBALS['kses'][] = array_keys( $permes );
+	return $html;
+}
+// Cap .mo enlloc: load_plugin_textdomain no carrega res, com de la 5.8 a la 6.4 amb el paquet.
+function load_plugin_textdomain( $domini, $obsolet = false, $cami = false ) {
+	$GLOBALS['textdomains'][] = array( $domini, $cami );
+	return false;
+}
+function is_textdomain_loaded( $domini ) { return ! empty( $GLOBALS['cas']['carregat'] ); }
+function determine_locale() { return $GLOBALS['cas']['llengua'] ?? 'ca'; }
 function sanitize_text_field( $text ) { return trim( strip_tags( $text ) ); }
 function sanitize_title( $text ) { return strtolower( trim( $text ) ); }
 // L'administració de xarxa és el lloc principal: el seu active_plugins és el del lloc 1.
@@ -250,7 +292,72 @@ if ( 'blocs' === $mode ) {
 }
 
 if ( 'l10n' === $mode ) {
-	echo json_encode( require $argv[1] . '/languages/socdepoble-enxufe-ca.l10n.php', JSON_THROW_ON_ERROR );
+	// El fitxer que WordPress carrega per al text domain 'socdepoble'.
+	echo json_encode( require $argv[1] . '/languages/socdepoble-ca.l10n.php', JSON_THROW_ON_ERROR );
+	exit;
+}
+
+if ( 'bloc' === $mode ) {
+	socdepoble_enxufe_registra_actius();
+	socdepoble_enxufe_registra_entrades();
+	list( $cami, $args ) = $blocs[0];
+	$callback = $args['render_callback'] ?? null;
+	// WordPress passa ($attributes, $content, $block) al render_callback.
+	$html = is_callable( $callback ) ? call_user_func( $callback, $cas['atributs'], '', null ) : null;
+	// Des de la 6.1, el camp "render" de block.json, amb $attributes a l'abast.
+	$attributes = $cas['atributs'];
+	ob_start();
+	require $argv[1] . '/includes/bloc/render.php';
+	$render_php = ob_get_clean();
+	echo json_encode(
+		array(
+			'cami'        => $cami,
+			'callback'    => is_string( $callback ) ? $callback : null,
+			'html'        => $html,
+			'render_php'  => $render_php,
+			'kses'        => $kses,
+			'scripts'     => array_keys( $cua_scripts ),
+			'shortcodes'  => $shortcodes,
+			'traduccions' => $traduccions_script,
+		),
+		JSON_THROW_ON_ERROR
+	);
+	exit;
+}
+
+if ( 'idioma' === $mode ) {
+	if ( isset( $cas['plugin_locale'] ) ) {
+		add_filter(
+			'plugin_locale',
+			static function ( $llengua, $domini ) {
+				return 'socdepoble' === $domini ? $GLOBALS['cas']['plugin_locale'] : $llengua;
+			},
+			10,
+			2
+		);
+	}
+	$canvia = static function ( $traduccio, $text ) {
+		return $GLOBALS['cas']['canvia'][ $text ] ?? $traduccio;
+	};
+	add_filter( 'gettext', $canvia, 10, 2 );
+	add_filter( 'gettext_with_context', $canvia, 10, 2 );
+	socdepoble_enxufe_carrega_traduccions();
+	$llengues = plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'languages/socdepoble-' . determine_locale();
+	echo json_encode(
+		array(
+			'textdomains' => $textdomains,
+			'text'        => __( 'Village name', 'socdepoble' ),
+			'escapat'     => esc_html__( 'Sóc de Poble · full screen', 'socdepoble' ),
+			'context'     => _x( 'Embeds the Sóc de Poble app with the universal host markup.', 'block description', 'socdepoble' ),
+			'desconegut'  => __( 'A text that is not in the catalogue', 'socdepoble' ),
+			'altre'       => __( 'Village name', 'akismet' ),
+			// Els filtres de WordPress amb el fitxer que buscaria per a esta llengua.
+			'mo'          => apply_filters( 'load_textdomain_mofile', $llengues . '.mo', 'socdepoble' ),
+			'mo_altre'    => apply_filters( 'load_textdomain_mofile', $llengues . '.mo', 'akismet' ),
+			'json'        => apply_filters( 'load_script_translation_file', $llengues . '-socdepoble-app-editor-script.json', 'socdepoble-app-editor-script', 'socdepoble' ),
+		),
+		JSON_THROW_ON_ERROR
+	);
 	exit;
 }
 

@@ -3,7 +3,9 @@
  * Studio continua sent necessària per a dvh, scroll i barra d'administració.
  * També el cicle que no es veu en una sola còpia: dues carpetes del plugin en
  * la mateixa petició (activació i desinstal·lació), la finestra de detalls
- * que es servix del readme, la plantilla de blocs i el .l10n.php executat. */
+ * que es servix del readme, la plantilla de blocs, el .l10n.php executat i, com
+ * en WordPress 5.8–6.4, el render del bloc i les traduccions sense
+ * WP_Translation_Controller. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -306,18 +308,113 @@ test('readme: l’analitzador escapa abans de transformar i només enllaça http
   assert.equal(html.match(/<a /g).length, 2, 'ni javascript: ni http:// esdevenen enllaços');
 });
 
+/* WP-09 (auditoria 261025) · el fitxer que WordPress carrega per al text domain
+   'socdepoble', no el de la identitat vella (socdepoble-enxufe-ca.l10n.php,
+   domini 'socdepoble-enxufe'), que cap WordPress no llig. */
 test('la traducció valenciana s’executa amb PHP i té la forma .l10n.php de WordPress', OPCIONS, t => {
   const l10n = executa(t, { mode: 'l10n' });
-  assert.equal(l10n.domain, 'socdepoble-enxufe');
+  assert.equal(l10n.domain, 'socdepoble');
   assert.equal(l10n.language, 'ca');
   assert.match(l10n['plural-forms'], /^nplurals=2; plural=/);
   const valors = Object.values(l10n.messages);
   assert.ok(valors.length > 50);
   assert.ok(valors.every((v) => typeof v === 'string' && v.trim() !== ''), 'cap traducció buida');
   // La prova i18n llig el fitxer per regex: ha de veure cada clau que torna PHP.
-  const text = fs.readFileSync(path.join(PLUGIN, 'languages/socdepoble-enxufe-ca.l10n.php'), 'utf8');
+  const text = fs.readFileSync(path.join(PLUGIN, 'languages/socdepoble-ca.l10n.php'), 'utf8');
   const perRegex = [...text.matchAll(/^\t\t'((?:[^'\\]|\\.)*)' => '/gm)].length;
   assert.equal(Object.keys(l10n.messages).filter((clau) => !clau.includes('\u0004')).length, perRegex);
+});
+
+/* ───────────── WordPress 5.8 a 6.4: el bloc i les traduccions (WP-02, WP-03) ───────────── */
+
+test('bloc a WordPress 5.8–6.0: el render_callback pinta el marcatge universal sense el camp "render" de block.json, i render.php dona el mateix', OPCIONS, t => {
+  const atributs = { nomPoble: 'Penàguila', poble: 'penaguila', rutaInicial: '/mur' };
+  const bloc = executa(t, { mode: 'bloc', atributs }, ['socdepoble']);
+  assert.equal(bloc.cami, path.join(fs.realpathSync(bloc.plugin), 'includes/bloc'), 'el registre per la ruta de block.json (5.8+)');
+  assert.equal(bloc.callback, 'socdepoble_enxufe_render_bloc', 'sense render_callback, de la 5.8 a la 6.0 el bloc ix buit');
+  assert.ok(bloc.html, 'el render_callback pinta alguna cosa');
+  assert.equal(bloc.render_php, bloc.html, 'el camp "render" (6.1+) i el render_callback, el mateix marcatge');
+  const dom = new JSDOM(bloc.html);
+  t.after(() => dom.window.close());
+  const caixa = dom.window.document.body.firstElementChild;
+  assert.deepEqual([...caixa.classList], ['wp-block-socdepoble-app', 'socdepoble-enxufe']);
+  const element = caixa.querySelector('soc-de-poble');
+  assert.equal(element.getAttribute('nom-poble'), 'Penàguila');
+  assert.equal(element.getAttribute('poble'), 'penaguila');
+  assert.equal(element.getAttribute('ruta-inicial'), '/mur');
+  assert.deepEqual(bloc.kses, [['div', 'p', 'soc-de-poble'], ['div', 'p', 'soc-de-poble']], 'cada render passa per wp_kses amb la llista del marcatge');
+  assert.deepEqual(bloc.scripts, ['socdepoble'], 'el bloc encua el bundle, com el shortcode');
+  assert.deepEqual(bloc.shortcodes, { socdepoble_app: 'socdepoble_enxufe_shortcode' });
+  assert.deepEqual(bloc.traduccions, [['socdepoble-app-editor-script', 'socdepoble', `${fs.realpathSync(bloc.plugin)}/languages`]]);
+});
+
+const escapa = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+test('traduccions a WordPress 5.8–6.4: sense WP_Translation_Controller, el .l10n.php es servix pels filtres gettext, també per a ca_valencia', OPCIONS, t => {
+  const { messages } = executa(t, { mode: 'l10n' });
+  const TEXT_BLOC = 'Embeds the Sóc de Poble app with the universal host markup.';
+  const DESCRIPCIO = `block description\u0004${TEXT_BLOC}`;
+  assert.ok(messages['Village name'] && messages['Sóc de Poble · full screen'] && messages[DESCRIPCIO], 'els textos de la prova són al catàleg');
+
+  for (const llengua of ['ca', 'ca_valencia']) {
+    const resultat = executa(t, { mode: 'idioma', llengua }, ['socdepoble']);
+    assert.deepEqual(resultat.textdomains, [['socdepoble', 'socdepoble/languages']], 'primer, load_plugin_textdomain de sempre');
+    assert.equal(resultat.text, messages['Village name'], llengua);
+    assert.equal(resultat.escapat, escapa(messages['Sóc de Poble · full screen']), `${llengua}: esc_html__ també`);
+    assert.equal(resultat.context, messages[DESCRIPCIO], `${llengua}: les dades del bloc, amb context`);
+    assert.equal(resultat.desconegut, 'A text that is not in the catalogue');
+    assert.equal(resultat.altre, 'Village name', 'un altre text domain no es toca');
+  }
+
+  // De la 6.5 ençà ho fa WordPress, i també si un paquet ja ha carregat el domini.
+  for (const cas of [{ controlador: true }, { carregat: true }, { llengua: 'es_ES' }, { llengua: 'ca', plugin_locale: 'es_ES' }]) {
+    assert.equal(executa(t, { mode: 'idioma', ...cas }, ['socdepoble']).text, 'Village name', JSON.stringify(cas));
+  }
+  // La llengua del plugin és la de plugin_locale, com a load_plugin_textdomain.
+  assert.equal(executa(t, { mode: 'idioma', llengua: 'es_ES', plugin_locale: 'ca' }, ['socdepoble']).text, messages['Village name']);
+
+  // Un filtre gettext general (un tema, Say What?) va abans i mana, com amb un .mo de veritat.
+  const canviat = executa(t, { mode: 'idioma', llengua: 'ca', canvia: { 'Village name': 'Municipi', [TEXT_BLOC]: 'Una altra descripció' } }, ['socdepoble']);
+  assert.equal(canviat.text, 'Municipi');
+  assert.equal(canviat.context, 'Una altra descripció');
+  assert.equal(canviat.escapat, escapa(messages['Sóc de Poble · full screen']), 'la resta, del catàleg');
+
+  /* Sense el pegat de la 6.2.1, wp_lang arriba sense sanejar, i include resol
+     els «..» sobre el text de la ruta. is_readable() en POSIX ja para
+     «/../socdepoble-ca» (la carpeta languages/socdepoble- no existix), però no
+     «x/../socdepoble-ca» si languages/socdepoble-x/ existix: només la guarda
+     del codi de llengua ho para. */
+  const arrel = temporal(t);
+  const plugin = copiaPlugin(arrel, 'socdepoble');
+  fs.mkdirSync(path.join(plugin, 'languages/socdepoble-x'));
+  for (const llengua of ['/../socdepoble-ca', 'x/../socdepoble-ca']) {
+    assert.equal(php(FIXTURE, [plugin], { mode: 'idioma', llengua }).text, 'Village name', llengua);
+  }
+});
+
+test('ca_valencia («Català (Valencià)») fa servir els fitxers de ca, si no en té de propis, en qualsevol versió', OPCIONS, t => {
+  const valencia = executa(t, { mode: 'idioma', llengua: 'ca_valencia', controlador: true }, ['socdepoble']);
+  const llengues = path.join(fs.realpathSync(valencia.plugin), 'languages');
+  // Des de la 6.5, WordPress prova primer el .l10n.php germà del .mo que li torna el filtre.
+  assert.equal(valencia.mo, path.join(llengues, 'socdepoble-ca.mo'));
+  assert.ok(fs.existsSync(path.join(llengues, 'socdepoble-ca.l10n.php')));
+  assert.equal(valencia.json, path.join(llengues, 'socdepoble-ca-socdepoble-app-editor-script.json'), 'l’editor del bloc');
+  assert.ok(fs.existsSync(valencia.json));
+  assert.equal(valencia.mo_altre, path.join(llengues, 'socdepoble-ca_valencia.mo'), 'un altre text domain no es toca');
+
+  for (const llengua of ['ca', 'es_ES']) {
+    assert.equal(path.basename(executa(t, { mode: 'idioma', llengua, controlador: true }, ['socdepoble']).mo), `socdepoble-${llengua}.mo`, llengua);
+  }
+
+  // Amb una traducció pròpia de ca_valencia (translate.wordpress.org), WordPress carrega la seua.
+  const arrel = temporal(t);
+  const plugin = copiaPlugin(arrel, 'socdepoble');
+  for (const [de, a] of [['socdepoble-ca.l10n.php', 'socdepoble-ca_valencia.l10n.php'], ['socdepoble-ca-socdepoble-app-editor-script.json', 'socdepoble-ca_valencia-socdepoble-app-editor-script.json']]) {
+    fs.copyFileSync(path.join(plugin, 'languages', de), path.join(plugin, 'languages', a));
+  }
+  const propia = php(FIXTURE, [plugin], { mode: 'idioma', llengua: 'ca_valencia', controlador: true });
+  assert.equal(path.basename(propia.mo), 'socdepoble-ca_valencia.mo');
+  assert.equal(path.basename(propia.json), 'socdepoble-ca_valencia-socdepoble-app-editor-script.json');
 });
 
 /* ─────────────── Desinstal·lació amb una altra còpia del plugin ─────────────── */

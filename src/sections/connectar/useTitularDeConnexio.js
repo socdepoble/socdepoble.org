@@ -20,6 +20,11 @@
  *     seua clau (l'id de l'entitat): en canviar, la d'abans s'avorta
  *     (AbortController) i no es pinta. El patró de useFitxaDeConnexio, en un
  *     fitxer a banda (la prova d'aquell substituïx el port sencer).
+ *   · P1-15 del Llibre (auditoria Port Neutral 261025, PN-03) · La clau és
+ *     l'àmbit sencer: el backend, la persona que mira (`usuariId`) i
+ *     l'entitat. El servidor filtra la titular pels bloquejos entre ella i qui
+ *     mira: amb només l'entitat a la clau, un canvi de persona sense cap
+ *     pintat entremig continuava pintant la titular llegida per a l'altra.
  *
  * `orgId`: l'id de l'entitat (el del servidor en remot) o null.
  * Torna { estat: 'inactiu'|'carregant'|'llest'|'error', titular: { tipus: 'persona', id, nom, avatar } | null }.
@@ -28,19 +33,26 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadTitularPublic, teCapacitat } from '../../data/backendPort.js';
 /* La forma del contracte, una sola còpia: cap correu ni cap rol arriba a la vista. */
 import { titularDelContracte } from '../../data/contracte.js';
+import { backendScope } from '../../config/backendConfig.js';
 
 /* Un port sense la capacitat (o un mock) no ha de fer caure la vista. */
 function capacitat(nom) {
   try { return teCapacitat(nom); } catch { return false; }
 }
 
+/* La clau del backend, com la dels proveïdors (useScopedResource). Una
+   configuració que no es deixa llegir és un àmbit més, mai una excepció en pintar. */
+function ambitDelBackend(config) {
+  try { return backendScope(config); } catch { return 'backend:invàlid'; }
+}
+
 const INACTIU = Object.freeze({ estat: 'inactiu', titular: null });
 const CARREGANT = Object.freeze({ estat: 'carregant', titular: null });
 
-export function useTitularDeConnexio(orgId = null, { config = {}, teSessio = false } = {}) {
+export function useTitularDeConnexio(orgId = null, { config = {}, teSessio = false, usuariId = null } = {}) {
   const id = String(orgId ?? '').trim();
   const actiu = Boolean(id) && teSessio === true && capacitat('titularPublic');
-  const clau = actiu ? id : null;
+  const clau = actiu ? JSON.stringify([ambitDelBackend(config), usuariId == null ? null : String(usuariId), id]) : null;
   /* { clau, estat, titular }: el resultat només val per a la clau que l'ha demanat. */
   const [desat, setDesat] = useState(null);
   const configRef = useRef(config);
@@ -51,11 +63,11 @@ export function useTitularDeConnexio(orgId = null, { config = {}, teSessio = fal
     let viu = true;
     const controlador = new AbortController();
     Promise.resolve()
-      .then(() => loadTitularPublic(clau, { ...configRef.current, signal: controlador.signal }))
+      .then(() => loadTitularPublic(id, { ...configRef.current, signal: controlador.signal }))
       .then((titular) => { if (viu) setDesat({ clau, estat: 'llest', titular: titularDelContracte(titular) }); })
       .catch(() => { if (viu) setDesat({ clau, estat: 'error', titular: null }); });
     return () => { viu = false; controlador.abort(); };
-  }, [clau]);
+  }, [clau, id]);
 
   return useMemo(() => {
     if (!clau) return INACTIU;

@@ -112,7 +112,7 @@ describe('promoteToPublic · la còpia del privat al públic', () => {
     const cru = errorPrivat();
     m.baixa.mockResolvedValue({ data: null, error: cru });
     expect(await promoteToPublic(REF, CONFIG)).toBe(REF);
-    expect(m.baixa).toHaveBeenCalledWith('mitjans_privats', RUTA);
+    expect(m.baixa).toHaveBeenCalledWith('mitjans_privats', RUTA, undefined, { signal: expect.any(AbortSignal) });
     expect(m.puja).not.toHaveBeenCalled();
     comprovaAvis(cru, PERMIS_403);
   });
@@ -136,7 +136,7 @@ describe('promoteToPublic · la còpia del privat al públic', () => {
 
   test('control · l’èxit torna la ruta pública i no avisa', async () => {
     expect(await promoteToPublic(REF, CONFIG)).toBe(`sdp-media://mitjans/${RUTA}`);
-    expect(m.baixa).toHaveBeenCalledWith('mitjans_privats', RUTA);
+    expect(m.baixa).toHaveBeenCalledWith('mitjans_privats', RUTA, undefined, { signal: expect.any(AbortSignal) });
     expect(m.puja).toHaveBeenCalledWith('mitjans', RUTA, FITXER);
     expect(avis).not.toHaveBeenCalled();
   });

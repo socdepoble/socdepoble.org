@@ -18,7 +18,7 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
   m.directori = true;
-  m.perfil.mockResolvedValue(PEPA);
+  m.perfil.mockReset().mockResolvedValue(PEPA);
 });
 
 test('sense petició, o sense la capacitat del directori, no crida res: inactiu', () => {
@@ -76,4 +76,39 @@ test('canviar de fitxa avorta la lectura d’abans i la seua resposta tardana no
   await waitFor(() => expect(result.current.perfil).toEqual(RENTONAR));
   await act(async () => { respon(PEPA); });
   expect(result.current.perfil).toEqual(RENTONAR);
+});
+
+/* P1-15 del Llibre (auditoria Port Neutral 261025; omissió del verificador) ·
+   La fitxa també depén de qui mira: en llavor, loadPerfilPublic(clau,
+   getCurrentUser()); en remot, l'RLS del JWT. Amb només el tipus i l'id a la
+   clau, un canvi de persona sense cap pintat entremig continuava pintant la
+   fitxa llegida per a l'altra. */
+test('P1-15 · un canvi de persona (mateixa fitxa) torna a llegir i la resposta de l’altra no es pinta', async () => {
+  let respon;
+  m.perfil.mockImplementationOnce(() => new Promise((resolve) => { respon = resolve; }));
+  m.perfil.mockImplementationOnce(async () => null);
+  const peticio = { id: 'u-pepa', tipus: 'persona' };
+  const { result, rerender } = renderHook(({ usuariId }) => useFitxaDeConnexio(peticio, { config: {}, usuariId }), {
+    initialProps: { usuariId: 'u-1' }
+  });
+  await waitFor(() => expect(m.perfil).toHaveBeenCalledTimes(1));
+  const primerSenyal = m.perfil.mock.calls[0][1].signal;
+  rerender({ usuariId: 'u-2' });
+  expect(primerSenyal.aborted).toBe(true);
+  await waitFor(() => expect(m.perfil).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(result.current.estat).toBe('llest'));
+  await act(async () => { respon(PEPA); });
+  expect(result.current).toEqual({ estat: 'llest', perfil: null });
+});
+
+test('una configuració nova del mateix àmbit no torna a llegir la fitxa', async () => {
+  const peticio = { id: 'u-pepa', tipus: 'persona' };
+  const { result, rerender } = renderHook(({ config }) => useFitxaDeConnexio(peticio, { config, usuariId: 'u-1' }), {
+    initialProps: { config: { dataMode: 'remote' } }
+  });
+  await waitFor(() => expect(result.current.estat).toBe('llest'));
+  rerender({ config: { dataMode: 'remote' } });
+  await act(async () => {});
+  expect(m.perfil).toHaveBeenCalledTimes(1);
+  expect(result.current.perfil).toEqual(PEPA);
 });

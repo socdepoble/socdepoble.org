@@ -268,3 +268,29 @@ describe('el que has bloquejat, amagat a la font', () => {
     expect(mock.showToast).toHaveBeenCalledWith('Missatge nou de Joan');
   });
 });
+
+/* XAT-03 · Amb el mateix muntatge: el progrés de la pujada que demana
+   ControlsAdjunt arriba al port per sendChatMedia, també en el reenviament
+   després d'acceptar les normes; sense, la crida és la de sempre. */
+describe('el progrés de la pujada passa al port', () => {
+  test('sendChatMedia passa onProgres a publicaAdjuntXat (i el reenviament també)', async () => {
+    const adjunt = { id: '9b2c3d4e-5f60-4a71-8b92-c3d4e5f6a7b9', fitxer: new Blob(['x'], { type: 'image/webp' }), tipus: 'foto' };
+    const desat = { id: adjunt.id, filId: 'f-joan', usuariId: 'A', text: null, tipus: 'foto', seq: 11, creatAl: ara };
+    mock.publicaAdjuntXat.mockRejectedValueOnce(Object.assign(new Error('servidor'), { code: 'servidor', cause: rebuigNormes().cause }))
+      .mockResolvedValueOnce(desat);
+    const vista = munta({ esPersonaBloquejada: () => false, asseguraNormes: async () => true });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const onProgres = vi.fn();
+    await act(async () => { await value.sendChatMedia(fil('f-joan'), adjunt, { onProgres }); });
+    expect(mock.publicaAdjuntXat).toHaveBeenCalledTimes(2);
+    for (const [, , config] of mock.publicaAdjuntXat.mock.calls) {
+      expect(config).toMatchObject({ backendId: 'supabase', signal: expect.any(AbortSignal), onProgres });
+    }
+    vista.unmount();
+    mock.publicaAdjuntXat.mockReset().mockResolvedValue(desat);
+    munta({ esPersonaBloquejada: () => false, asseguraNormes: async () => true });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    await act(async () => { await value.sendChatMedia(fil('f-joan'), adjunt); });
+    expect(mock.publicaAdjuntXat.mock.calls[0][2].onProgres).toBeUndefined();
+  });
+});

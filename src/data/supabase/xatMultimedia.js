@@ -35,7 +35,37 @@ async function crida(nom, params, config) {
 }
 const primera = (valor) => Array.isArray(valor) ? valor[0] : valor;
 
-async function puja(ruta, fitxer, usuari, config) {
+/* XAT-03 · Amb `onProgres`, la pujada va per XMLHttpRequest: fetch no diu
+   quants bytes han eixit. El temps límit, la cancel·lació i els codis són els
+   de sempre (puja), i la resposta es llig com la de fetch.
+   Seguretat (pendent de decisió del Mestre): la interfície sempre passa
+   onProgres, així que tota pujada real va per ací, i XHR seguix les
+   redireccions sense poder-les vetar com redirect: 'error'. Davant d'un 307
+   o 308 del Storage, el cos (la foto o la nota privada) ja ha eixit cap al
+   destí redirigit abans que es mire responseURL: esta comprovació només evita
+   publicar-lo (falla com xarxa). Cal que el Storage del node redirigisca, i
+   eixe node ja rep el cos. La branca fetch queda per a qui no demana progrés. */
+function enviaAmbProgres(url, { method, signal, body, headers }, onProgres) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const avorta = () => xhr.abort();
+    const acaba = (fes) => { signal.removeEventListener('abort', avorta); fes(); };
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && e.total > 0) onProgres(Math.min(1, e.loaded / e.total)); };
+    xhr.onload = () => acaba(() => {
+      if (xhr.responseURL && xhr.responseURL !== new URL(url).href) { reject(new TypeError('Redirecció no admesa.')); return; }
+      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, text: async () => xhr.responseText });
+    });
+    xhr.onerror = () => acaba(() => reject(new TypeError('Failed to fetch')));
+    xhr.onabort = () => acaba(() => reject(new DOMException('Operació cancel·lada.', 'AbortError')));
+    xhr.open(method, url);
+    for (const [nom, valor] of Object.entries(headers)) xhr.setRequestHeader(nom, valor);
+    if (signal.aborted) { reject(new DOMException('Operació cancel·lada.', 'AbortError')); return; }
+    signal.addEventListener('abort', avorta, { once: true });
+    xhr.send(body);
+  });
+}
+
+async function puja(ruta, fitxer, usuari, config, onProgres) {
   const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
   const jwt = jwtPerBackend(config);
   if (!jwt) throw errorAdjuntXat('sessio-caducada');
@@ -48,10 +78,14 @@ async function puja(ruta, fitxer, usuari, config) {
   globalThis.window?.addEventListener('sdp:auth-change', sessioCanvia);
   try {
     vigent(usuari, config);
-    const resposta = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${ruta}`, {
-      method: 'POST', redirect: 'error', signal: controller.signal, body: fitxer,
+    const url = `${supabaseUrl}/storage/v1/object/${BUCKET}/${ruta}`;
+    const peticio = {
+      method: 'POST', signal: controller.signal, body: fitxer,
       headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${jwt}`, 'Content-Type': fitxer.type, 'x-upsert': 'false' }
-    });
+    };
+    const resposta = typeof onProgres === 'function' && typeof XMLHttpRequest === 'function'
+      ? await enviaAmbProgres(url, peticio, onProgres)
+      : await fetch(url, { ...peticio, redirect: 'error' });
     // Reintent amb el mateix ID: la RPC de publicació valida l'objecte existent.
     if (!resposta.ok && resposta.status !== 409) {
       const cos = await resposta.text();
@@ -91,7 +125,8 @@ export async function descartaAdjuntXat(id, config = {}) {
   return true;
 }
 
-export async function publicaAdjuntXat(filId, entrada, config = {}) {
+/* XAT-03 · `onProgres(fraccio 0..1)` és opcional i no passa a les RPC. */
+export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } = {}) {
   const usuari = context(config);
   vigent(usuari, config);
   if (!UUID.test(filId) || !UUID.test(entrada?.id)) throw errorAdjuntXat('format');
@@ -103,7 +138,7 @@ export async function publicaAdjuntXat(filId, entrada, config = {}) {
   vigent(usuari, config);
   if (reserva?.ruta !== id) throw errorAdjuntXat('sense-confirmacio');
   if (!reserva.pujat) {
-    try { await puja(reserva.ruta, fitxer, usuari, config); }
+    try { await puja(reserva.ruta, fitxer, usuari, config, onProgres); }
     catch (error) {
       // Una reserva sense objecte pot alliberar-se. Si Storage ha acabat encara
       // que es perdera la resposta, la RPC la conserva per al reintent.

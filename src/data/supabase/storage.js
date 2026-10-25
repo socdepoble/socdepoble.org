@@ -18,10 +18,41 @@ import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
 import { handleError } from './utils.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../errorsBackend.js';
+import { tempsLimitPujada } from '../xatMultimedia.js';
 
 /* Límits per fitxer (ARQ-G07): 25 MiB al bucket privat, 5 MiB al públic. */
 const MIDA_MAX_PRIVADA = 26214400;
 const MIDA_MAX_PUBLICA = 5242880;
+
+/* PN-04 (auditoria Port Neutral 261025) · Cap crida a Storage no espera per
+   sempre. storage-js 2.112 no hi posa cap termini i el client es crea sense
+   cap fetch propi (config.js): una pujada, una URL signada o un llistat que
+   no tornaven deixaven la vista «carregant» indefinidament. El patró de CUR-02
+   (ambSenyal, xat.js) i de la fitxa pública (perfils.js): la cursa allibera
+   qui espera encara que el transport no sàpia avortar, i on storage-js accepta
+   un senyal (download i list) el termini també talla la petició. Una pujada
+   creix amb la mida (tempsLimitPujada, la regla dels adjunts del xat); una
+   baixada no la sap abans i pren la del fitxer més gran que admet el bucket
+   privat. La resta són respostes curtes: 12 s, com request() (runtime.js).
+   El temps esgotat porta el codi neutral de «no ha arribat al servidor»: és
+   el que la persona pot fer (comprovar la connexió i tornar-ho a provar), i
+   errorDeStorage el traduïx amb la frase de sempre. */
+const TEMPS_STORAGE_MS = 12_000;
+const TEMPS_BAIXADA_MS = tempsLimitPujada(MIDA_MAX_PRIVADA);
+
+function ambTermini(ms, feina) {
+  const controlador = new AbortController();
+  let talla;
+  const tallada = new Promise((_resol, rebutja) => { talla = rebutja; });
+  const perTermini = setTimeout(() => {
+    talla(Object.assign(new Error('Storage no ha respost a temps.'), { name: 'TimeoutError', codi: CODI_BACKEND_INABASTABLE }));
+    controlador.abort();
+  }, ms);
+  /* La feina entra en un then: una excepció síncrona del SDK és un rebuig, i
+     un resultat tardà queda consumit per la cursa. */
+  return Promise.race([Promise.resolve().then(() => feina(controlador.signal)), tallada])
+    .finally(() => clearTimeout(perTermini));
+}
 
 /* Un UUID de poble o d'usuari (uploadToStorage i la biblioteca de fotos pròpies). */
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -208,7 +239,7 @@ function diagnosiDeStorage(error) {
 export const uploadFile = async (bucket, path, file, config = {}) => {
   try {
     const supabase = await getClient(config);
-    return await supabase.storage.from(bucket).upload(path, file);
+    return await ambTermini(tempsLimitPujada(file?.size), () => supabase.storage.from(bucket).upload(path, file));
   } catch (error) {
     return handleError(error);
   }
@@ -224,7 +255,7 @@ export const uploadFile = async (bucket, path, file, config = {}) => {
 export const downloadFile = async (bucket, path, config = {}) => {
   try {
     const supabase = await getClient(config);
-    return await supabase.storage.from(bucket).download(path);
+    return await ambTermini(TEMPS_BAIXADA_MS, (signal) => supabase.storage.from(bucket).download(path, undefined, { signal }));
   } catch (error) {
     return handleError(error);
   }
@@ -241,7 +272,7 @@ export const deleteFile = async (bucket, pathOrPaths, config = {}) => {
   try {
     const supabase = await getClient(config);
     const paths = Array.isArray(pathOrPaths) ? pathOrPaths : [pathOrPaths];
-    return await supabase.storage.from(bucket).remove(paths);
+    return await ambTermini(TEMPS_STORAGE_MS, () => supabase.storage.from(bucket).remove(paths));
   } catch (error) {
     return handleError(error);
   }
@@ -257,7 +288,7 @@ export const deleteFile = async (bucket, pathOrPaths, config = {}) => {
 export const listFiles = async (bucket, path = '', config = {}) => {
   try {
     const supabase = await getClient(config);
-    return await supabase.storage.from(bucket).list(path);
+    return await ambTermini(TEMPS_STORAGE_MS, (signal) => supabase.storage.from(bucket).list(path, undefined, { signal }));
   } catch (error) {
     return handleError(error);
   }
@@ -297,7 +328,14 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
   const bucket = isPrivate ? 'mitjans_privats' : 'mitjans';
   const ruta = `${selectedTenant.toLowerCase()}/${user.id.toLowerCase()}/${carpeta}/${crypto.randomUUID()}.${extensions[fitxer.type]}`;
   const client = await getClient(config);
-  const { error } = await client.storage.from(bucket).upload(ruta, fitxer, { upsert: false });
+  /* PN-04 · El temps esgotat (o una excepció del SDK) passa per la mateixa
+     traducció que un rebuig: la vista diu el motiu pel codi, mai un error cru. */
+  let error;
+  try {
+    ({ error } = await ambTermini(tempsLimitPujada(fitxer.size), () => client.storage.from(bucket).upload(ruta, fitxer, { upsert: false })));
+  } catch (excepcio) {
+    error = excepcio;
+  }
   if (error) {
     const rebuig = errorDePujada(error);
     /* F2 · Per a diagnosi, només dades validades: ni la ruta, ni l'uid, ni el
@@ -349,7 +387,14 @@ export const resolveAsset = async (ref, config = {}) => {
   
   if (bucket === 'mitjans_privats') {
     // URL firmada amb 1 hora de duració (3600 segons)
-    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+    // PN-04 · Una signatura que no torna a temps és una signatura fallida.
+    let data;
+    let error;
+    try {
+      ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, () => supabase.storage.from(bucket).createSignedUrl(path, 3600)));
+    } catch (excepcio) {
+      error = excepcio;
+    }
     if (error) {
       // F2 · Sense la ruta ni l'Error cru (diagnosiDeStorage).
       console.warn("[Storage] No s'ha pogut generar l'URL firmada", diagnosiDeStorage(error));
@@ -479,9 +524,10 @@ function rutaEsborrable(ref, { uid, poble }) {
 async function llistaSencera(cubell, prefix) {
   const entrades = [];
   for (let pagina = 0; pagina < MAX_PAGINES_LLISTAT; pagina += 1) {
-    const { data, error } = await cubell.list(prefix, {
+    // PN-04 · Cada pàgina, el seu termini (i el senyal, que storage-js passa a fetch).
+    const { data, error } = await ambTermini(TEMPS_STORAGE_MS, (signal) => cubell.list(prefix, {
       limit: PAGINA_LLISTAT, offset: pagina * PAGINA_LLISTAT, sortBy: { column: 'name', order: 'asc' }
-    });
+    }, { signal }));
     if (error) throw error;
     const lot = Array.isArray(data) ? data : [];
     entrades.push(...lot);
@@ -595,7 +641,8 @@ export const esborraElMeuMitja = async (ref, config = {}) => {
   let data;
   let error;
   try {
-    ({ data, error } = await (await getClient(config)).storage.from(CUBELL_PUBLIC).remove([ruta]));
+    const cubell = (await getClient(config)).storage.from(CUBELL_PUBLIC);
+    ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, () => cubell.remove([ruta])));
   } catch (excepcio) {
     error = excepcio;
   }

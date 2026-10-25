@@ -21,7 +21,7 @@ beforeEach(() => {
   for (const metode of ['pause', 'load']) vi.spyOn(HTMLMediaElement.prototype, metode).mockImplementation(() => {});
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.useRealTimers(); });
 const tria = async () => {
   await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
   fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
@@ -327,4 +327,142 @@ test('cancel·lar durant la pujada torna a llegir la quota i el pendent es pot d
   expect(await screen.findByRole('button', { name: 'Descarta el fitxer pendent (1,2 MB)' })).toBeTruthy();
   expect(servei.quotaXat).toHaveBeenCalledTimes(2);
   expect(screen.queryByRole('alert')).toBeNull();
+});
+/* ── XAT-07 · La gravadora: el rellotge, els avisos del sostre i l'aturada sola ── */
+const veuGravada = (extra = {}) => ({ id: 'veu', tipus: 'veu', duradaMs: 12_000, fitxer: new Blob(['veu'], { type: 'audio/mp4' }), ...extra });
+const comencaAGravar = async (resultat = new Promise(() => {})) => {
+  ambMicrofon();
+  m.gravaVeu.mockResolvedValueOnce({ atura: vi.fn(), cancella: vi.fn(), resultat });
+  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  const grava = await screen.findByRole('button', { name: 'Grava àudio' });
+  await waitFor(() => expect(grava.disabled).toBe(false));
+  return grava;
+};
+test('mentre grava, un rellotge visible que no parla sol i només dos avisos abans dels 5 minuts', async () => {
+  const grava = await comencaAGravar();
+  // Només el rellotge (setInterval) i Date: la resta de temporitzadors continuen de veres.
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+  await act(async () => { fireEvent.click(grava); });
+  const rellotge = screen.getByRole('timer');
+  expect(rellotge.textContent).toBe('Temps de gravació 0:00');
+  // role=timer és aria-live=off: cap segon no s'anuncia.
+  expect(rellotge.getAttribute('aria-live')).toBeNull();
+  const estats = [screen.getByRole('status').textContent];
+  for (let segon = 1; segon <= 299; segon++) {
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    const ara = screen.getByRole('status').textContent;
+    if (ara !== estats.at(-1)) estats.push(ara);
+    if (segon === 42) expect(screen.getByRole('timer').textContent).toBe('Temps de gravació 0:42');
+    if (segon === 239) expect(ara).toBe('Gravant… Atura per escoltar-la abans d’enviar.');
+  }
+  expect(screen.getByRole('timer').textContent).toBe('Temps de gravació 4:59');
+  // La regió viva canvia dues vegades: queda un minut (4:00) i queden 10 segons (4:50).
+  expect(estats).toEqual([
+    'Gravant… Atura per escoltar-la abans d’enviar.',
+    'Queda un minut: als 5 minuts la gravació s’aturarà sola.',
+    'Queden 10 segons: la gravació s’aturarà sola.'
+  ]);
+});
+test.each([
+  ['temps', 'La gravació s’ha aturat sola en arribar als 5 minuts. Escolta-la abans d’enviar.'],
+  ['mida', 'La gravació s’ha aturat sola perquè ja no hi cap més. Escolta-la abans d’enviar.']
+])('una gravació que s’atura sola (%s) ho diu clarament, i el motiu no viatja amb l’adjunt', async (motiu, text) => {
+  const nota = deferred();
+  ambMicrofon();
+  m.gravaVeu.mockResolvedValueOnce({ atura: vi.fn(), cancella: vi.fn(), resultat: nota.promise });
+  const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
+  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  const grava = await screen.findByRole('button', { name: 'Grava àudio' });
+  await waitFor(() => expect(grava.disabled).toBe(false));
+  fireEvent.click(grava);
+  await screen.findByRole('timer');
+  await act(async () => { nota.resolve(veuGravada({ aturada: motiu })); });
+  const estat = await screen.findByText(text);
+  expect(estat.getAttribute('role')).toBe('status');
+  expect(estat.classList.contains('sdp-xat-adjunts__avis')).toBe(true);
+  expect(screen.queryByRole('timer')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
+  await waitFor(() => expect(envia).toHaveBeenCalledOnce());
+  expect(envia.mock.calls[0][1]).not.toHaveProperty('aturada');
+  expect(envia.mock.calls[0][1]).toMatchObject({ id: 'veu', tipus: 'veu', duradaMs: 12_000 });
+  await waitFor(() => expect(screen.queryByText(text)).toBeNull());
+  expect(screen.getByRole('status').textContent).toBe('');
+});
+test('una gravació aturada a mà no porta cap avís', async () => {
+  const nota = deferred();
+  await comencaAGravar(nota.promise);
+  fireEvent.click(screen.getByRole('button', { name: 'Grava àudio' }));
+  await screen.findByRole('timer');
+  await act(async () => { nota.resolve(veuGravada()); });
+  await screen.findByRole('button', { name: 'Envia el fitxer' });
+  expect(screen.getByRole('status').textContent).toBe('');
+  expect(screen.getByRole('status').classList.contains('sdp-xat-adjunts__avis')).toBe(false);
+});
+
+/* ── XAT-03 · El progrés de la pujada ── */
+test('mentre envia, una barra de progrés amb nom i percentatge; en acabar se’n va', async () => {
+  const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
+  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  await tria(); await screen.findByAltText('Foto adjunta');
+  expect(screen.queryByRole('progressbar')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
+  const barra = await screen.findByRole('progressbar', { name: 'Progrés de l’enviament' });
+  expect(barra.tagName).toBe('PROGRESS');
+  // Abans del primer byte, indeterminada (sense value) i sense cap percentatge inventat.
+  expect(barra.hasAttribute('value')).toBe(false);
+  const { onProgres } = envia.mock.calls[0][2];
+  expect(onProgres).toEqual(expect.any(Function));
+  await act(async () => { onProgres(0.42); });
+  expect(barra.value).toBeCloseTo(0.42);
+  expect(barra.parentElement.textContent).toMatch(/^42\s%$/);
+  await act(async () => { onProgres(1); });
+  expect(barra.parentElement.textContent).toMatch(/^100\s%$/);
+  await act(async () => { tard.resolve([{ id: 'm' }]); });
+  await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
+});
+/* Revisió XAT-03 · La guarda és l'única cosa que separa les pujades: la
+   barra de la pujada nova ja és visible quan arriba el progrés de la vella. */
+test('el progrés d’una pujada cancel·lada o d’una altra conversa no es pinta en la barra de la nova', async () => {
+  // Com el port: la pujada cancel·lada rebutja amb AbortError.
+  const envia = vi.fn((_fil, _adjunt, { signal }) => new Promise((_resol, rebutja) => {
+    signal.addEventListener('abort', () => rebutja(new DOMException('Operació cancel·lada.', 'AbortError')), { once: true });
+  }));
+  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  await tria(); await screen.findByAltText('Foto adjunta');
+  fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
+  await screen.findByRole('progressbar');
+  const cancellada = envia.mock.calls[0][2].onProgres;
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel·la' }));
+  await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
+  // La pujada nova, del mateix fil: la barra hi és i encara no sap res.
+  await tria(); await screen.findByAltText('Foto adjunta');
+  fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
+  const barra = await screen.findByRole('progressbar');
+  await act(async () => { cancellada(0.9); });
+  expect(barra.hasAttribute('value')).toBe(false);
+  const nova = envia.mock.calls[1][2].onProgres;
+  await act(async () => { nova(0.3); });
+  expect(barra.value).toBeCloseTo(0.3);
+  await act(async () => { cancellada(0.9); });
+  expect(barra.value).toBeCloseTo(0.3);
+  // Una altra conversa: la pujada d'abans ja no pinta en la barra de la de B.
+  vista.rerender(<ControlsAdjunt usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={envia} />);
+  await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
+  await tria(); await screen.findByAltText('Foto adjunta');
+  fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
+  const barraB = await screen.findByRole('progressbar');
+  await act(async () => { nova(0.7); cancellada(0.9); });
+  expect(barraB.hasAttribute('value')).toBe(false);
+  await act(async () => { envia.mock.calls[2][2].onProgres(0.5); });
+  expect(barraB.value).toBeCloseTo(0.5);
+});
+test('el percentatge parla la llengua de qui envia', async () => {
+  const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
+  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={createTranslator('en')} locale="en-GB" />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Photo or video' }).disabled).toBe(false));
+  fireEvent.change(screen.getByLabelText('Choose a photo or a video of up to 10 seconds'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
+  fireEvent.click(await screen.findByRole('button', { name: 'Send the file' }));
+  const barra = await screen.findByRole('progressbar', { name: 'Upload progress' });
+  await act(async () => { envia.mock.calls[0][2].onProgres(0.05); });
+  expect(barra.parentElement.textContent).toBe('5%');
 });

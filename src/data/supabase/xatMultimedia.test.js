@@ -85,6 +85,85 @@ test('el temps límit de la pujada és proporcional a la mida i allibera la rese
   expect(await resultat).toMatchObject({ name: 'TimeoutError', code: 'temps-esgotat', message: ERRORS_ADJUNT_XAT['temps-esgotat'] });
   expect(m.rpc.mock.calls.map(([n]) => n)).toContain('xat_cancella_reserva');
 });
+/* ── XAT-03 · Amb onProgres, la pujada va per XMLHttpRequest i diu quant n'ha eixit ── */
+class XhrFals {
+  static tots = [];
+  constructor() {
+    this.upload = {}; this.capcaleres = {}; this.status = 0; this.responseText = ''; this.responseURL = '';
+    this.abort = vi.fn(() => { this.onabort?.(); });
+    XhrFals.tots.push(this);
+  }
+  open(metode, url) { this.metode = metode; this.url = url; }
+  setRequestHeader(nom, valor) { this.capcaleres[nom] = valor; }
+  send(cos) { this.cos = cos; XhrFals.enviat?.(this); }
+  progres(enviats, total) { this.upload.onprogress?.({ lengthComputable: true, loaded: enviats, total }); }
+  respon(status, text = '', url = this.url) { this.status = status; this.responseText = text; this.responseURL = url; this.onload?.(); }
+}
+const ambXhr = (enviat) => { XhrFals.tots = []; XhrFals.enviat = enviat; vi.stubGlobal('XMLHttpRequest', XhrFals); };
+test('amb onProgres, la pujada informa dels bytes enviats i publica igual', async () => {
+  ambXhr((xhr) => { xhr.progres(2, 4); xhr.progres(4, 4); xhr.respon(200, '{}'); });
+  const onProgres = vi.fn();
+  await expect(publicaAdjuntXat(FIL, entrada(), { onProgres })).resolves.toMatchObject({ id: ID, seq: 1 });
+  expect(onProgres.mock.calls.map(([f]) => f)).toEqual([0.5, 1]);
+  expect(fetch).not.toHaveBeenCalled();
+  const [xhr] = XhrFals.tots;
+  expect(xhr.metode).toBe('POST');
+  expect(xhr.url).toBe(`https://node.test/storage/v1/object/xat_adjunts/${RUTA}`);
+  expect(xhr.cos).toBeInstanceOf(Blob);
+  expect(xhr.capcaleres).toEqual({ apikey: 'publica', Authorization: 'Bearer sessio-test', 'Content-Type': 'image/webp', 'x-upsert': 'false' });
+  expect(m.rpc.mock.calls.map(([n]) => n)).toEqual(['xat_reserva_adjunt', 'xat_publica_adjunt']);
+  // La funció no viatja a les RPC: la configuració és la de sempre.
+  for (const [, , config] of m.rpc.mock.calls) expect(config).not.toHaveProperty('onProgres');
+});
+test.each([
+  ['una fallada de xarxa', (xhr) => xhr.onerror?.(), { code: 'xarxa' }],
+  ['un rebuig sense codi conegut', (xhr) => xhr.respon(400, '{"statusCode":"400","error":"InvalidRequest"}'), { code: 'servidor', status: 400 }],
+  ['el disparador de Storage', (xhr) => xhr.respon(400, '{"message":"SDP-XAT-021: el fitxer no coincidix amb la reserva."}'), { code: 'SDP-XAT-021' }],
+  // fetch hi porta redirect: 'error'; XHR la seguix, però la resposta d'una altra URL no val.
+  ['una redirecció', (xhr) => xhr.respon(200, '{}', 'https://forani.test/robat'), { code: 'xarxa' }]
+])('amb onProgres, %s es tradueix com amb fetch i allibera la reserva', async (_cas, falla, esperat) => {
+  ambXhr(falla);
+  const error = await publicaAdjuntXat(FIL, entrada(), { onProgres: vi.fn() }).catch((e) => e);
+  expect(error).toMatchObject(esperat);
+  expect(error.message).not.toMatch(/[{}]/);
+  expect(m.rpc.mock.calls.map(([n]) => n)).toEqual(['xat_reserva_adjunt', 'xat_cancella_reserva']);
+});
+test('amb onProgres, una resposta perduda amb objecte duplicat (409) passa a la validació final', async () => {
+  ambXhr((xhr) => xhr.respon(409, '{"error":"Duplicate"}'));
+  await expect(publicaAdjuntXat(FIL, entrada(), { onProgres: vi.fn() })).resolves.toMatchObject({ id: ID });
+});
+test('amb onProgres, cancel·lar avorta el XHR i no publica', async () => {
+  ambXhr(() => {});
+  const controller = new AbortController();
+  const resultat = publicaAdjuntXat(FIL, entrada(), { signal: controller.signal, onProgres: vi.fn() });
+  await vi.waitFor(() => expect(XhrFals.tots).toHaveLength(1));
+  controller.abort();
+  await expect(resultat).rejects.toMatchObject({ name: 'AbortError' });
+  expect(XhrFals.tots[0].abort).toHaveBeenCalledOnce();
+  expect(m.rpc.mock.calls.map(([n]) => n)).toEqual(['xat_reserva_adjunt', 'xat_cancella_reserva']);
+});
+test('amb onProgres, el temps límit proporcional talla igual i diu temps-esgotat', async () => {
+  vi.useFakeTimers();
+  ambXhr(() => {});
+  const gran = { id: ID, fitxer: new Blob([new Uint8Array(5_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 };
+  let acabat = null;
+  const resultat = publicaAdjuntXat(FIL, gran, { onProgres: vi.fn() }).catch((e) => { acabat = e; return e; });
+  await vi.advanceTimersByTimeAsync(tempsLimitPujada(5_000_000) - 1);
+  expect(acabat).toBeNull();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await resultat).toMatchObject({ name: 'TimeoutError', code: 'temps-esgotat', message: ERRORS_ADJUNT_XAT['temps-esgotat'] });
+  expect(XhrFals.tots[0].abort).toHaveBeenCalledOnce();
+  expect(m.rpc.mock.calls.map(([n]) => n)).toContain('xat_cancella_reserva');
+});
+test('un canvi de sessió a mitja pujada avorta també el XHR', async () => {
+  ambXhr(() => {});
+  const resultat = publicaAdjuntXat(FIL, entrada(), { onProgres: vi.fn() });
+  await vi.waitFor(() => expect(XhrFals.tots).toHaveLength(1));
+  m.user = { id: FIL };
+  window.dispatchEvent(new Event('sdp:auth-change'));
+  await expect(resultat).rejects.toMatchObject({ name: 'AbortError' });
+  expect(XhrFals.tots[0].abort).toHaveBeenCalledOnce();
+});
 test.each([{ usats: -1, limit: 20_000_000 }, { usats: 0, limit: 20971520 }])('quota invàlida no habilita controls: %s', async (quota) => {
   m.rpc.mockResolvedValueOnce(quota); await expect(quotaXat()).rejects.toMatchObject({ code: 'sense-capacitat' });
 });
