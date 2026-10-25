@@ -1,7 +1,7 @@
 import '../../../../tests/helpers/diccionaris.js';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import AdjuntXat, { _reiniciaVeus, tempsDeVeu } from './AdjuntXat.jsx';
+import AdjuntXat, { _reiniciaVeus, callaVeuActiva, tempsDeVeu } from './AdjuntXat.jsx';
 import { createTranslator } from '../../../config/i18n.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 const m = vi.hoisted(() => ({ urlAdjuntXat: vi.fn(), capacitat: true }));
@@ -378,4 +378,131 @@ test('un vídeo demana la URL en entrar a la vista i no porta controls en selecc
   vista.rerender(<AdjuntXat adjunt={{ id: 'video-1', mime: 'video/mp4' }} tipus="video" externalConfig={config} usuariId="A" />);
   expect(screen.getByLabelText('Vídeo adjunt').hasAttribute('controls')).toBe(true);
   expect(m.urlAdjuntXat).toHaveBeenCalledOnce();
+});
+
+/* Consens Gauntlet 2120 (C2120-04 + G2120-04 + G2120-05) · El reproductor de
+   veu amb peticions de signatura que es creuen, i WebKit que torna a 1×. */
+const enEspera = () => { let resolve; let reject; const promise = new Promise((s, r) => { resolve = s; reject = r; }); return { promise, resolve, reject }; };
+test('C2120-04 · l’error tardà d’una signatura antiga no para la càrrega nova', async () => {
+  const primera = enEspera();
+  m.urlAdjuntXat.mockImplementationOnce(() => primera.promise);
+  const vista = render(<AdjuntXat adjunt={nota('veu-c4')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = vista.container.querySelector('audio');
+  // Prem, pausa i torna a prémer abans que arribe la primera signatura: dos peticions.
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Pausa el missatge de veu' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  await waitFor(() => expect(audio.getAttribute('src')).toMatch(/token=1$/));
+  expect(m.urlAdjuntXat).toHaveBeenCalledTimes(2);
+  await act(async () => { primera.reject(errorAdjuntXat('obrir')); });
+  fireEvent.play(audio);
+  expect(screen.getByRole('button', { name: 'Pausa el missatge de veu' })).toBeTruthy();
+  expect(screen.queryByText('No hem pogut obrir el fitxer.')).toBeNull();
+});
+test('C2120-04 · la signatura nova que arriba després de l’error antic encara sona', async () => {
+  const primera = enEspera();
+  const segona = enEspera();
+  m.urlAdjuntXat.mockImplementationOnce(() => primera.promise).mockImplementationOnce(() => segona.promise);
+  const vista = render(<AdjuntXat adjunt={nota('veu-c4b')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = vista.container.querySelector('audio');
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Pausa el missatge de veu' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  await act(async () => { primera.reject(errorAdjuntXat('obrir')); });
+  // La càrrega vigent continua: el botó encara espera, sense error.
+  expect(screen.getByRole('button', { name: 'Pausa el missatge de veu' }).getAttribute('aria-busy')).toBe('true');
+  await act(async () => { segona.resolve(URL_SIGNADA()); });
+  expect(audio.getAttribute('src')).toMatch(/token=1$/);
+  expect(screen.queryByText('No hem pogut obrir el fitxer.')).toBeNull();
+});
+test('G2120-04 · una nota pausada no renova la signatura quan la font falla', async () => {
+  const vista = render(<AdjuntXat adjunt={nota('veu-g4')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = await sona(vista.container.querySelector('audio'));
+  fireEvent.click(screen.getByRole('button', { name: 'Pausa el missatge de veu' }));
+  fireEvent.pause(audio);
+  fireEvent.error(audio);
+  await act(async () => {});
+  expect(m.urlAdjuntXat).toHaveBeenCalledOnce();
+});
+test('G2120-01 · callaVeuActiva para la nota que sona i la deixa en repòs', async () => {
+  const vista = render(<AdjuntXat adjunt={nota('veu-g1')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = await sona(vista.container.querySelector('audio'));
+  HTMLMediaElement.prototype.pause.mockClear();
+  callaVeuActiva();
+  expect(HTMLMediaElement.prototype.pause.mock.contexts).toContain(audio);
+  fireEvent.pause(audio);
+  expect(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' })).toBeTruthy();
+  // Sense cap nota activa, no fa res.
+  expect(() => callaVeuActiva()).not.toThrow();
+});
+test('G2120-05 · en carregar metadades i en sonar es reafirma la velocitat triada', async () => {
+  const vista = render(<AdjuntXat adjunt={nota('veu-g5')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = await sona(vista.container.querySelector('audio'));
+  fireEvent.click(screen.getByRole('button', { name: 'Velocitat de reproducció: 1×' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Velocitat de reproducció: 1,5×' }));
+  // WebKit en carregar una font nova: torna a 1×.
+  audio.playbackRate = 1; audio.defaultPlaybackRate = 1;
+  fireEvent.loadedMetadata(audio);
+  expect([audio.playbackRate, audio.defaultPlaybackRate]).toEqual([2, 2]);
+  audio.playbackRate = 1; audio.defaultPlaybackRate = 1;
+  fireEvent.play(audio);
+  expect([audio.playbackRate, audio.defaultPlaybackRate]).toEqual([2, 2]);
+});
+/* Revisió adversarial del consens 2120 · Les guardes que cap prova no vigilava:
+   la generació en el then, i el «recarregant» que deixen net calla i la pausa
+   (si no, una pausa externa posterior no deixava la nota en repòs). */
+const botoDe = (audio) => within(audio.closest('.sdp-xat-veu')).getAllByRole('button')[0];
+test('C2120-04 · una signatura antiga que arriba bé però tard no posa la seua font', async () => {
+  const primera = enEspera();
+  const segona = enEspera();
+  m.urlAdjuntXat.mockImplementationOnce(() => primera.promise).mockImplementationOnce(() => segona.promise);
+  const vista = render(<AdjuntXat adjunt={nota('veu-r1')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const audio = vista.container.querySelector('audio');
+  fireEvent.click(botoDe(audio)); fireEvent.click(botoDe(audio)); fireEvent.click(botoDe(audio));
+  expect(m.urlAdjuntXat).toHaveBeenCalledTimes(2);
+  await act(async () => { primera.resolve('https://node.test/x?token=VELL'); });
+  expect(audio.getAttribute('src')).toBeNull();
+  await act(async () => { segona.resolve('https://node.test/x?token=NOU'); });
+  expect(audio.getAttribute('src')).toMatch(/token=NOU$/);
+});
+test('C2120-04 · una renovació callada per una altra nota no deixa la nota sense poder-se pausar', async () => {
+  const vista = render(<><AdjuntXat adjunt={nota('veu-r4a')} tipus="veu" externalConfig={config} usuariId="A" /><AdjuntXat adjunt={nota('veu-r4b')} tipus="veu" externalConfig={config} usuariId="A" /></>);
+  const [a, b] = vista.container.querySelectorAll('audio');
+  fireEvent.click(botoDe(a));
+  await waitFor(() => expect(a.getAttribute('src')).toBeTruthy());
+  fireEvent.play(a);
+  const renova = enEspera();
+  m.urlAdjuntXat.mockImplementationOnce(() => renova.promise);
+  fireEvent.error(a);
+  fireEvent.click(botoDe(b)); // B calla A a mitja renovació
+  fireEvent.pause(a);
+  await waitFor(() => expect(b.getAttribute('src')).toBeTruthy());
+  fireEvent.play(b);
+  await act(async () => { renova.resolve('https://node.test/x?token=RENOVA'); });
+  fireEvent.click(botoDe(a));
+  fireEvent.play(a);
+  expect(botoDe(a).getAttribute('aria-label')).toBe('Pausa el missatge de veu');
+  // Una pausa externa (pantalla de bloqueig) la deixa en repòs, i el clic següent torna a sonar.
+  fireEvent.pause(a);
+  expect(botoDe(a).getAttribute('aria-label')).toBe('Reprodueix el missatge de veu');
+  HTMLMediaElement.prototype.play.mockClear();
+  fireEvent.click(botoDe(a));
+  expect(HTMLMediaElement.prototype.play.mock.contexts).toContain(a);
+});
+test('C2120-04 · una renovació pausada pel botó no deixa la nota sense poder-se pausar', async () => {
+  const vista = render(<AdjuntXat adjunt={nota('veu-r5')} tipus="veu" externalConfig={config} usuariId="A" />);
+  const a = vista.container.querySelector('audio');
+  fireEvent.click(botoDe(a));
+  await waitFor(() => expect(a.getAttribute('src')).toBeTruthy());
+  fireEvent.play(a);
+  const renova = enEspera();
+  m.urlAdjuntXat.mockImplementationOnce(() => renova.promise);
+  fireEvent.error(a);
+  fireEvent.click(botoDe(a)); fireEvent.pause(a);
+  await act(async () => { renova.resolve('https://node.test/x?token=RENOVA'); });
+  fireEvent.click(botoDe(a)); fireEvent.play(a);
+  fireEvent.pause(a);
+  HTMLMediaElement.prototype.play.mockClear();
+  fireEvent.click(botoDe(a));
+  expect(HTMLMediaElement.prototype.play.mock.contexts).toContain(a);
 });

@@ -480,3 +480,89 @@ test('P1-15 · la tria d’A que contesta tard no toca la casella de B, i B es p
   expect(screen.getByRole('status').textContent).toBe('Ja no et mostrem com a titular de Bar.');
   expect(casella().checked).toBe(false);
 });
+
+/* Consens Gauntlet 2120 (C2120-01) · A→B→A amb l'escriptura d'A en vol: la
+   lectura en tornar a A pot contestar el valor vell abans o després que
+   confirme l'escriptura. A continua «desant» amb el valor que s'està desant,
+   la confirmació mana sobre la lectura vella, i B no es toca mai. */
+test('C2120-01 · tornar a A mentre la seua alta és en vol: A continua desant i es reconcilia amb el servidor', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  mp.estat.mockResolvedValue({ titularPublic: false });
+  const marcaA = deferred();
+  mp.marca.mockReturnValueOnce(marcaA.promise);
+  const casella = () => screen.queryByRole('checkbox');
+  const ocupada = () => casella()?.closest('[aria-busy="true"]') ?? null;
+  const { rerender } = render(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(casella()?.checked).toBe(false));
+  await act(async () => { fireEvent.click(casella()); });
+  expect(mp.marca).toHaveBeenCalledWith('A', true, {});
+  rerender(<TriaTitular orgId="B" nomOrg="Bar" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledWith('B', expect.anything()));
+  await waitFor(() => expect(casella()?.checked).toBe(false));
+  expect(ocupada()).toBeNull();
+  rerender(<TriaTitular orgId="A" nomOrg="Forn" />);
+  /* La lectura d'A (vella: false) arriba abans que l'escriptura: A continua
+     desant, amb la casella al valor que es desa, i no admet una segona tria. */
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledTimes(3));
+  await waitFor(() => expect(casella()?.checked).toBe(true));
+  expect(ocupada()).not.toBeNull();
+  expect(screen.getByRole('status').textContent).toBe('Desant la tria…');
+  await act(async () => { fireEvent.click(casella()); });
+  expect(mp.marca).toHaveBeenCalledTimes(1);
+  await act(async () => { marcaA.resolve({ titularPublic: true }); });
+  expect(casella().checked).toBe(true);
+  expect(ocupada()).toBeNull();
+  expect(screen.getByRole('status').textContent).toContain('titular de Forn');
+});
+
+test('C2120-01 · la lectura vella que arriba després de confirmar la revocació d’A no torna a marcar A', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  const lecturaVella = deferred();
+  mp.estat
+    .mockResolvedValueOnce({ titularPublic: true })
+    .mockResolvedValueOnce({ titularPublic: false })
+    .mockReturnValueOnce(lecturaVella.promise);
+  const marcaA = deferred();
+  mp.marca.mockReturnValueOnce(marcaA.promise);
+  const casella = () => screen.queryByRole('checkbox');
+  const { rerender } = render(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(casella()?.checked).toBe(true));
+  await act(async () => { fireEvent.click(casella()); });
+  expect(mp.marca).toHaveBeenCalledWith('A', false, {});
+  rerender(<TriaTitular orgId="B" nomOrg="Bar" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledWith('B', expect.anything()));
+  rerender(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledTimes(3));
+  await waitFor(() => expect(casella()?.checked).toBe(false));
+  await act(async () => { marcaA.resolve({ titularPublic: false }); });
+  expect(casella().checked).toBe(false);
+  expect(screen.getByRole('status').textContent).toBe('Ja no et mostrem com a titular de Forn.');
+  await act(async () => { lecturaVella.resolve({ titularPublic: true }); });
+  expect(casella().checked).toBe(false);
+  expect(casella().closest('[aria-busy="true"]')).toBeNull();
+});
+
+test('C2120-01 · la lectura que falla després de confirmar l’alta d’A no desfà el valor confirmat', async () => {
+  mp.capacitats = new Set(['consentimentTitular']);
+  const lecturaVella = deferred();
+  mp.estat
+    .mockResolvedValueOnce({ titularPublic: false })
+    .mockResolvedValueOnce({ titularPublic: false })
+    .mockReturnValueOnce(lecturaVella.promise);
+  const marcaA = deferred();
+  mp.marca.mockReturnValueOnce(marcaA.promise);
+  const casella = () => screen.queryByRole('checkbox');
+  const { rerender } = render(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(casella()?.checked).toBe(false));
+  await act(async () => { fireEvent.click(casella()); });
+  rerender(<TriaTitular orgId="B" nomOrg="Bar" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledWith('B', expect.anything()));
+  rerender(<TriaTitular orgId="A" nomOrg="Forn" />);
+  await waitFor(() => expect(mp.estat).toHaveBeenCalledTimes(3));
+  await act(async () => { marcaA.resolve({ titularPublic: true }); });
+  expect(casella().checked).toBe(true);
+  await act(async () => { lecturaVella.reject(Object.assign(new Error('xarxa'), { code: 'DESCONEGUT' })); });
+  expect(casella().checked).toBe(true);
+  expect(casella().disabled).toBe(false);
+  expect(screen.queryByRole('alert')).toBeNull();
+});

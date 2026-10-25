@@ -66,30 +66,52 @@ export function TriaTitular({ orgId, nomOrg }) {
   const [missatge, setMissatge] = useState(null);
   const viu = useRef(true);
   useEffect(() => { viu.current = true; return () => { viu.current = false; }; }, []);
-  /* P1-15 del Llibre (auditoria Port Neutral 261025, PN-03) · La tria vigent.
-     El component no es remunta en canviar d'entitat (no porta key), i la
-     resposta tardana d'una tria d'A s'escrivia a l'estat de B: la casella de
-     B es desmarcava, deia «Ja no et mostrem com a titular d'A» i es quedava
-     «desant». Cada tria i cada canvi d'entitat pugen el número: només la tria
-     vigent escriu. */
-  const triaVigent = useRef(0);
+  /* P1-15 del Llibre (auditoria Port Neutral 261025, PN-03) · El component no
+     es remunta en canviar d'entitat (no porta key), i la resposta tardana
+     d'una tria d'A s'escrivia a l'estat de B: la casella de B es desmarcava,
+     deia «Ja no et mostrem com a titular d'A» i es quedava «desant».
+     Consens Gauntlet 2120 (C2120-01) · Descartar eixa resposta no bastava:
+     A→B→A amb l'escriptura d'A encara en vol deixava la casella d'A al revés
+     del servidor (la lectura en tornar arribava abans que l'escriptura, i la
+     confirmació ja no escrivia). Ara les escriptures en vol es guarden per
+     entitat, una com a molt per a cadascuna: en tornar a A, A continua
+     «desant» amb el valor que s'està desant, i la confirmació la reconcilia
+     amb el valor del servidor. Només escriu l'entitat que es veu: mai B. */
+  const orgVisible = useRef(null);
+  const enVol = useRef(new Map());
+  // Escriptures confirmades per entitat: una lectura que va començar abans no les desfà.
+  const confirmades = useRef(new Map());
 
   useEffect(() => {
     if (!disponible) return undefined;
     const control = new AbortController();
-    triaVigent.current += 1;
+    orgVisible.current = orgId;
+    const enCurs = enVol.current.get(orgId);
+    const confirmadesEnLlegir = confirmades.current.get(orgId) ?? 0;
     setEstat({ orgId, carregant: true, valor: false, error: null });
-    setMissatge(null);
-    setDesant(false);
-    setPendent(null);
+    setMissatge(enCurs ? enCurs.missatge : null);
+    setDesant(Boolean(enCurs));
+    setPendent(enCurs ? enCurs.valor : null);
     Promise.resolve()
       .then(() => estatTitularPublic(orgId, { signal: control.signal }))
       .then((resposta) => {
-        if (!control.signal.aborted) setEstat({ orgId, carregant: false, valor: resposta?.titularPublic === true, error: null });
+        if (control.signal.aborted) return;
+        const valor = resposta?.titularPublic === true;
+        setEstat((previ) => {
+          if (previ.orgId !== orgId) return previ;
+          // Una escriptura d'esta entitat ha confirmat després de començar la lectura: mana ella.
+          if ((confirmades.current.get(orgId) ?? 0) !== confirmadesEnLlegir) return { ...previ, carregant: false };
+          return { orgId, carregant: false, valor, error: null };
+        });
       })
       .catch((error) => {
         if (control.signal.aborted || esCancel(error)) return;
-        setEstat({ orgId, carregant: false, valor: false, error: { code: error?.code ?? null } });
+        setEstat((previ) => {
+          if (previ.orgId !== orgId) return previ;
+          // Com en l'èxit: si una escriptura d'esta entitat ha confirmat mentrestant, mana ella.
+          if ((confirmades.current.get(orgId) ?? 0) !== confirmadesEnLlegir) return { ...previ, carregant: false };
+          return { orgId, carregant: false, valor: false, error: { code: error?.code ?? null } };
+        });
       });
     return () => control.abort();
   }, [disponible, orgId]);
@@ -98,17 +120,20 @@ export function TriaTitular({ orgId, nomOrg }) {
 
   async function canvia(e) {
     const nou = e.target.checked === true;
-    if (desant) return;
-    const tria = ++triaVigent.current;
     const orgDeLaTria = orgId;
-    const vigent = () => viu.current && triaVigent.current === tria;
+    if (desant || enVol.current.has(orgDeLaTria)) return;
+    const operacio = { valor: nou, missatge: { tipus: 'desant', text: t('section.perfil.titular.desant', 'Desant la tria…') } };
+    enVol.current.set(orgDeLaTria, operacio);
+    // Només pinta qui encara es veu i és l'entitat d'esta tria (en tornar-hi, també).
+    const visible = () => viu.current && orgVisible.current === orgDeLaTria;
     setDesant(true);
     setPendent(nou);
-    setMissatge({ tipus: 'desant', text: t('section.perfil.titular.desant', 'Desant la tria…') });
+    setMissatge(operacio.missatge);
     try {
       const resposta = await marcaTitularPublic(orgDeLaTria, nou, {});
-      if (!vigent()) return;
       const valor = resposta?.titularPublic === true;
+      confirmades.current.set(orgDeLaTria, (confirmades.current.get(orgDeLaTria) ?? 0) + 1);
+      if (!visible()) return;
       setEstat((previ) => (previ.orgId === orgDeLaTria ? { ...previ, valor, error: null } : previ));
       setMissatge({
         tipus: 'exit',
@@ -117,9 +142,10 @@ export function TriaTitular({ orgId, nomOrg }) {
           : t('section.perfil.titular.llevat', 'Ja no et mostrem com a titular de {nom}.'), { nom: nomOrg })
       });
     } catch (error) {
-      if (vigent() && !esCancel(error)) setMissatge({ tipus: 'error', text: t('section.perfil.titular.error', 'No s’ha pogut desar la tria. Torna-ho a provar.') });
+      if (visible() && !esCancel(error)) setMissatge({ tipus: 'error', text: t('section.perfil.titular.error', 'No s’ha pogut desar la tria. Torna-ho a provar.') });
     } finally {
-      if (vigent()) {
+      if (enVol.current.get(orgDeLaTria) === operacio) enVol.current.delete(orgDeLaTria);
+      if (visible()) {
         setDesant(false);
         setPendent(null);
       }

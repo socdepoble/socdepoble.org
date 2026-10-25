@@ -2,6 +2,8 @@ import '../../../../tests/helpers/diccionaris.js';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import ControlsAdjunt from './ControlsAdjunt.jsx';
+import AdjuntXat, { _reiniciaVeus } from './AdjuntXat.jsx';
+import { urlAdjuntXat } from '../../../data/backendPort.js';
 import { createTranslator } from '../../../config/i18n.js';
 import { ERRORS_ADJUNT_XAT, errorAdjuntXat } from '../../../data/xatMultimedia.js';
 const m = vi.hoisted(() => ({ user: 'A', preparaAdjunt: vi.fn(), gravaVeu: vi.fn() }));
@@ -465,4 +467,26 @@ test('el percentatge parla la llengua de qui envia', async () => {
   const barra = await screen.findByRole('progressbar', { name: 'Upload progress' });
   await act(async () => { envia.mock.calls[0][2].onProgres(0.05); });
   expect(barra.parentElement.textContent).toBe('5%');
+});
+
+/* Consens Gauntlet 2120 (G2120-01) · Prémer «Grava àudio» mentre sona una nota
+   de veu rebuda la para abans d'obrir el micròfon: no es grava la resposta
+   damunt de la nota que s'escolta. */
+test('G2120-01 · gravar calla la nota de veu que sonava', async () => {
+  ambMicrofon();
+  urlAdjuntXat.mockResolvedValue('https://node.test/storage/v1/object/sign/xat_adjunts/v?token=1');
+  m.gravaVeu.mockReturnValueOnce(deferred().promise);
+  const vista = render(<><AdjuntXat adjunt={{ id: 'veu-g1', mime: 'audio/mp4', duradaMs: 5_000 }} tipus="veu" externalConfig={{ dataMode: 'remote' }} usuariId="A" /><ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} /></>);
+  const audio = vista.container.querySelector('audio');
+  fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
+  await waitFor(() => expect(audio.getAttribute('src')).toBeTruthy());
+  fireEvent.play(audio);
+  expect(screen.getByRole('button', { name: 'Pausa el missatge de veu' })).toBeTruthy();
+  HTMLMediaElement.prototype.pause.mockClear();
+  fireEvent.click(await screen.findByRole('button', { name: 'Grava àudio' }));
+  expect(HTMLMediaElement.prototype.pause.mock.contexts).toContain(audio);
+  fireEvent.pause(audio);
+  expect(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' })).toBeTruthy();
+  expect(m.gravaVeu).toHaveBeenCalledOnce();
+  _reiniciaVeus();
 });

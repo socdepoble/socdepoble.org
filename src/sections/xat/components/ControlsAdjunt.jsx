@@ -3,7 +3,7 @@ import { ImagePlus, Mic, Send, Square, X } from 'lucide-react';
 import { descartaAdjuntXat, quotaXat, teCapacitat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 import { MAX_VEU_MS, gravaVeu, mimeDeGravacio, preparaAdjunt, textDErrorAdjunt } from '../adjuntLocal.js';
-import { PrevisualitzacioAdjunt, tempsDeVeu, traductorAdjunt } from './AdjuntXat.jsx';
+import { PrevisualitzacioAdjunt, callaVeuActiva, tempsDeVeu, traductorAdjunt } from './AdjuntXat.jsx';
 
 const PORT = { quotaXat, teCapacitat, descartaAdjuntXat };
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-10) · Sense la capacitat o sense
@@ -153,6 +153,8 @@ export default function ControlsAdjunt({ fil, onEnvia, servei = PORT, externalCo
   };
   const grava = async () => {
     if (pujant || ocupat) return;
+    // G2120-01 · La nota de veu que sonava calla abans d'obrir el micròfon.
+    callaVeuActiva();
     const controller = new AbortController(); operacio.current = controller;
     origen.current = 'grava';
     setOcupat('grava'); setError(null);

@@ -34,6 +34,16 @@ function prenLaVeu(nota) {
   veus.activa = nota;
 }
 function deixaLaVeu(nota) { if (veus.activa === nota) veus.activa = null; }
+/* Consens Gauntlet 2120 (G2120-01) · Començar a gravar una nota de veu para
+   la que estiga sonant, com si es premera Pausa: sense, la nota rebuda
+   continuava sonant mentre es gravava la resposta. */
+export function callaVeuActiva() {
+  if (veus.activa) {
+    const anterior = veus.activa;
+    veus.activa = null;
+    anterior.calla();
+  }
+}
 const subscriuVelocitat = (oient) => { veus.oients.add(oient); return () => veus.oients.delete(oient); };
 const velocitatVeu = () => veus.velocitat;
 function seguentVelocitat() {
@@ -87,6 +97,12 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
   const viu = useRef(true);
   const volSonar = useRef(false);
   const recarregant = useRef(false);
+  /* Consens Gauntlet 2120 (C2120-04 + G2120-04) · La generació de la càrrega.
+     Prémer, pausar i tornar a prémer (o A→B→A) abans que arribe la primera
+     signatura en llança dues: l'error tardà de la primera parava la segona,
+     i la segona, en arribar, ja no sonava. Calla, pausa i cada càrrega la
+     pugen: només la càrrega vigent pinta o para. */
+  const intent = useRef(0);
   const reintentat = useRef(false);
   const repren = useRef(0);
   // On anava, en segons: el que es desa en desmuntar-se i es reprén en tornar.
@@ -102,7 +118,7 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
   const velocitat = useSyncExternalStore(subscriuVelocitat, velocitatVeu, velocitatVeu);
   // Qui té la veu: una altra nota que comença la para com si es premera Pausa.
   const [nota] = useState(() => ({
-    calla() { volSonar.current = false; audio.current?.pause(); if (viu.current) setCarregant(false); }
+    calla() { intent.current += 1; recarregant.current = false; volSonar.current = false; audio.current?.pause(); if (viu.current) setCarregant(false); }
   }));
   const total = duradaReal ?? (Number.isFinite(duradaMs) && duradaMs > 0 ? duradaMs : 0);
   const etiqueta = t('section.xat.adjunts.veu', 'Missatge de veu');
@@ -127,11 +143,13 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
 
   const carrega = (renova) => {
     const element = audio.current;
+    const meu = ++intent.current;
+    const vigent = () => intent.current === meu && volSonar.current && viu.current;
     recarregant.current = true;
     setCarregant(true);
     setError(null);
     obteUrl({ renova }).then((url) => {
-      if (!viu.current || !volSonar.current || !element) return undefined;
+      if (!vigent() || !element) return undefined;
       element.src = url;
       setTeFont(true);
       return element.play();
@@ -140,11 +158,16 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
          carrega (CSP, token caducat, còdec) rebutja el play() amb
          NotSupportedError: la gestiona fallaCarrega (renova i, la segona,
          l'error amb codi). Ací només la resta, sempre amb text traduïble. */
-      if (!viu.current || e?.name === 'AbortError' || e?.name === 'NotSupportedError') return;
+      if (!vigent() || e?.name === 'AbortError' || e?.name === 'NotSupportedError') return;
       volSonar.current = false;
       setSona(false);
       setError(e?.code ? e : errorAdjuntXat('obrir'));
     }).finally(() => {
+      /* Només la generació: un error de la càrrega vigent ja ha llevat
+         volSonar, i el botó no es pot quedar «carregant». Una de vella no
+         toca res: qui l'ha invalidada (calla, pausa o una altra càrrega) ja
+         ha deixat recarregant i carregant com toca. */
+      if (intent.current !== meu) return;
       recarregant.current = false;
       if (viu.current) setCarregant(false);
     });
@@ -152,7 +175,7 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
   const commuta = () => {
     const element = audio.current;
     if (!element) return;
-    if (volSonar.current) { volSonar.current = false; element.pause(); setCarregant(false); return; }
+    if (volSonar.current) { intent.current += 1; recarregant.current = false; volSonar.current = false; element.pause(); setCarregant(false); return; }
     volSonar.current = true;
     prenLaVeu(nota);
     setUsada(true);
@@ -166,6 +189,8 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
     carrega(Boolean(font));
   };
   const fallaCarrega = () => {
+    // Una nota que ja no ha de sonar (pausada o callada per una altra) no renova la signatura.
+    if (!volSonar.current) return;
     const element = audio.current;
     if (!element?.getAttribute('src') || !viu.current) return;
     if (reintentat.current) { volSonar.current = false; setSona(false); setCarregant(false); setError(errorAdjuntXat('obrir')); return; }
@@ -178,8 +203,15 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
     const segons = e.currentTarget.duration;
     if (Number.isFinite(segons) && segons > 0) setDuradaReal(segons * 1000);
   };
+  /* Consens Gauntlet 2120 (G2120-05) · WebKit pot tornar a 1× en carregar una
+     font nova: en tindre metadades i en sonar es reafirma la velocitat triada. */
+  const fixaVelocitat = (element) => {
+    element.defaultPlaybackRate = velocitatVeu();
+    element.playbackRate = velocitatVeu();
+  };
   const metadades = (e) => {
     durada(e);
+    fixaVelocitat(e.currentTarget);
     if (repren.current) { e.currentTarget.currentTime = repren.current; repren.current = 0; }
   };
 
@@ -235,7 +267,7 @@ function ReproductorActiu({ obteUrl, duradaMs = null, memoria = null, locale = '
         <audio
           ref={audio}
           preload="none"
-          onPlay={() => { prenLaVeu(nota); setUsada(true); setSona(true); }}
+          onPlay={(e) => { fixaVelocitat(e.currentTarget); prenLaVeu(nota); setUsada(true); setSona(true); }}
           onPlaying={() => { reintentat.current = false; }}
           onPause={() => { if (!recarregant.current) { volSonar.current = false; deixaLaVeu(nota); } setSona(false); }}
           onEnded={(e) => { volSonar.current = false; deixaLaVeu(nota); setSona(false); setPosMs(0); posicio.current = 0; recordaPosicio(memoria, 0); e.currentTarget.currentTime = 0; }}
