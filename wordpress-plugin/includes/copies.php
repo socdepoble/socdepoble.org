@@ -1,7 +1,7 @@
 <?php
 /**
  * Les altres còpies del plugin: altres carpetes amb socdepoble-enxufe.php
- * actives en algun lloc d'esta instal·lació (un zip sense socdepoble-enxufe/
+ * actives en algun lloc d'esta instal·lació (un zip sense socdepoble/
  * a l'arrel s'instal·la en una carpeta nova, al costat de la vella).
  *
  * El carreguen el fitxer principal, per a refusar l'activació a tota la

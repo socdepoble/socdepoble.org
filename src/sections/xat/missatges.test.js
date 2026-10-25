@@ -276,6 +276,29 @@ describe('no llegits i marques locals', () => {
     expect(nou.ultimAutorId).toBe('jo');
     expect(nou.searchText).toBe('pepa després');
   });
+
+  it('conserva la previsualització més recent quan les confirmacions arriben fora d’ordre', () => {
+    const fil = { id: 'f', name: 'Pepa', ultimSeq: 10, llegitFinsSeq: 10, noLlegits: 0 };
+    const recent = actualitzaFilAmbMissatge(fil, m('segon', 12, {
+      text: 'segon', usuariId: 'jo', creatAl: '2026-10-25T05:00:12Z', tipus: 'text'
+    }));
+    const tardana = actualitzaFilAmbMissatge(recent, m('primer', 11, {
+      text: 'primer', usuariId: 'altre', creatAl: '2026-10-25T05:00:11Z', tipus: 'imatge'
+    }));
+    expect(tardana).toBe(recent);
+    expect(tardana).toMatchObject({
+      ultimSeq: 12, ultimText: 'segon', ultimAl: '2026-10-25T05:00:12Z',
+      ultimAutorId: 'jo', ultimTipus: 'text', searchText: 'pepa segon'
+    });
+  });
+
+  it('permet actualitzar el mateix últim missatge i conserva el comportament sense seq', () => {
+    const fil = { id: 'f', name: 'Pepa', ultimSeq: 12, ultimText: 'abans' };
+    const igual = actualitzaFilAmbMissatge(fil, m('x', 12, { text: 'actualitzat' }));
+    expect(igual).toMatchObject({ ultimSeq: 12, ultimText: 'actualitzat', searchText: 'pepa actualitzat' });
+    const senseSeq = actualitzaFilAmbMissatge(igual, m('x', null, { text: 'sense seq' }));
+    expect(senseSeq).toMatchObject({ ultimSeq: 12, ultimText: 'sense seq' });
+  });
 });
 
 describe('esperaReintent', () => {
@@ -445,6 +468,30 @@ describe('creaAgrupadorMarques', () => {
     await Promise.resolve(); await Promise.resolve();
     expect(agrupador.marcatFins('f')).toBe(0);
     expect(agrupador.marca('f', 4)).toBe(true);
+  });
+
+  /* Gauntlet 261025_0545 (MISSED P3) · La pàgina que s'amaga o es tanca no
+     espera els 2 s: les marques pendents ixen ara, i cap temporitzador no les
+     torna a enviar. Després de cancela no queda res per enviar. */
+  it('buidaTot envia ara les marques pendents de cada conversa i lleva els temporitzadors', () => {
+    const envia = vi.fn();
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    agrupador.marca('f', 3);
+    agrupador.marca('f', 5);
+    agrupador.marca('g', 2);
+    expect(r.quants()).toBe(2);
+    agrupador.buidaTot();
+    expect(envia.mock.calls).toEqual([['f', 5], ['g', 2]]);
+    expect(r.quants()).toBe(0);
+    expect(agrupador.marcatFins('f')).toBe(5);
+    agrupador.buidaTot();
+    r.dispara();
+    expect(envia).toHaveBeenCalledTimes(2);
+    agrupador.marca('f', 7);
+    agrupador.cancela();
+    agrupador.buidaTot();
+    expect(envia).toHaveBeenCalledTimes(2);
   });
 });
 

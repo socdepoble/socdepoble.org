@@ -356,6 +356,16 @@ function XatWorkspace({ origen = null }) {
     carregantAntics = mai,
     esperaAntics = senseEspera,
     carregaMesAntics = noop,
+    /* Gauntlet 261025_0545 (XC-14) · Si el fil ja s'ha llegit, l'avís del fil
+       i tornar-lo a llegir: baixen a la Conversa. Un context d'abans no els
+       porta, i la Conversa fa el de sempre.
+       Gauntlet 261025_0545 (D5) · I què ha fallat (tipusAvisFil) i si una
+       lectura del fil vola (llegintFil), amb el mateix «si no hi són». */
+    filCarregat,
+    avisFil,
+    recarregaFil,
+    tipusAvisFil,
+    llegintFil,
     reintenta = noop,
     descartaFallit = noop,
     marcaVist = noop,
@@ -1477,6 +1487,11 @@ function XatWorkspace({ origen = null }) {
           carregantMes={Boolean(carregantAntics(activeThread.id))}
           onCarregaMes={carregaMes}
           esperaAntics={esperaAntics(activeThread.id)}
+          carregat={filCarregat ? filCarregat(activeThread.id) : true}
+          avisFil={avisFil ? avisFil(activeThread.id) : null}
+          onReintentaFil={recarregaFil ? () => recarregaFil(activeThread.id) : null}
+          tipusAvisFil={typeof tipusAvisFil === 'function' ? tipusAvisFil(activeThread.id) ?? undefined : undefined}
+          llegintFil={typeof llegintFil === 'function' ? Boolean(llegintFil(activeThread.id)) : false}
           onReintenta={reintenta}
           onDescarta={descartaFallit}
           onMarcaVist={marcaVistActiu}

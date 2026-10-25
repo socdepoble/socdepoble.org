@@ -8,7 +8,17 @@
 
 const PATRO_URL = /https?:\/\/[^\s<>"'`]+/gi;
 /* Puntuació que sol tancar una frase i no forma part de l'adreça. */
-const PUNTUACIO_FINAL = /[.,;:!?)\]}]+$/;
+const PUNTUACIO_FINAL = '.,;:!?)]}';
+
+/* Gauntlet 261025_0545 (RX-04) · L'adreça sense la puntuació del final, des
+   del final cap arrere. L'expressió d'abans (/[.,;:!?)\]}]+$/, sense àncora a
+   l'esquerra) tornava a recórrer des de cada punt una tira que no acaba
+   l'adreça: quadràtic, i cada bombolla i cada tecla de la cerca ho pagaven. */
+function senseCua(brut) {
+  let fi = brut.length;
+  while (fi > 0 && PUNTUACIO_FINAL.includes(brut[fi - 1])) fi -= 1;
+  return brut.slice(0, fi);
+}
 
 /** Un domini amb etiquetes punycode («xn--») pot imitar-ne un altre. */
 export function esHostSospitos(host) {
@@ -26,10 +36,8 @@ export function segmentaEnllacos(text) {
   let ultim = 0;
 
   for (const coincidencia of font.matchAll(PATRO_URL)) {
-    let brut = coincidencia[0];
+    const brut = senseCua(coincidencia[0]);
     const inici = coincidencia.index;
-    const cua = brut.match(PUNTUACIO_FINAL);
-    if (cua) brut = brut.slice(0, brut.length - cua[0].length);
 
     let url;
     try {

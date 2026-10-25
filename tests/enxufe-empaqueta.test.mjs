@@ -6,6 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -38,6 +39,7 @@ import {
   patronsActualitzadorEn,
   signa,
   slugDelNom,
+  slugDelPlugin,
   variantDirectori,
   variantDirectoriReadme,
   verifica
@@ -265,7 +267,8 @@ test('una release: tres paquets amb dos runtimes explícits i un canal signat qu
     const propi = entradesDe(path.join(f.sortida, '260929_2200_wordpress_enxufe_v0.2.0.zip'));
     const directori = entradesDe(path.join(f.sortida, '260929_2200_wordpress_directori_v0.2.0.zip'));
     const estatic = entradesDe(path.join(f.sortida, '260929_2200_estatic_spa_v0.2.0.zip'));
-    assert.ok([...propi.keys()].every((nom) => nom.startsWith(`${SLUG}/`)), 'arrel socdepoble-enxufe/');
+    assert.ok([...propi.keys()].every((nom) => nom.startsWith(`${SLUG}/`)), `arrel ${SLUG}/`);
+    assert.ok([...directori.keys()].every((nom) => nom.startsWith(`${SLUG}/`)), `arrel ${SLUG}/ també al directori`);
     assert.ok([...estatic.keys()].every((nom) => nom.startsWith('soc-de-poble/')));
     const bundle = propi.get(`${SLUG}/dist/${ENTRADA}`);
     assert.notDeepEqual(directori.get(`${SLUG}/dist/${ENTRADA}`), bundle);
@@ -338,8 +341,215 @@ test('un canal amb nom (rc) per a provar a Studio sense tocar stable.json', () =
 
 test('slugDelNom: l\'slug que WordPress.org trauria del Plugin Name', () => {
   assert.equal(slugDelNom('Sóc de Poble — Enxufe'), 'soc-de-poble-enxufe');
-  assert.equal(slugDelNom('socdepoble-enxufe'), SLUG);
+  // Gauntlet 261025_0545 (WP-01) · l'SLUG ja no és 'socdepoble-enxufe': la mateixa comprovació, amb el valor literal.
+  assert.equal(slugDelNom('socdepoble-enxufe'), 'socdepoble-enxufe');
+  assert.equal(slugDelNom('socdepoble'), SLUG);
   assert.equal(slugDelNom('  Àrea_de  Proves.v2 '), 'area-de-proves-v2');
+});
+
+/* Gauntlet 261025_0545 (WP-01) · 9027265e1 va canviar SOCDEPOBLE_ENXUFE_SLUG a 'socdepoble' i
+   l'empaquetador va continuar amb 'socdepoble-enxufe': el PHP de HEAD rebutjava el canal, la
+   carpeta i el zip que fabricava l'eina de HEAD. Una sola font: la constant del plugin. */
+test('WP-01: l\'SLUG de l\'empaquetador és el SOCDEPOBLE_ENXUFE_SLUG del plugin (decisió del Mestre, 261023)', () => {
+  const php = fs.readFileSync(path.join(PLUGIN_REAL, 'socdepoble-enxufe.php'), 'utf8');
+  const delPlugin = php.match(/^const SOCDEPOBLE_ENXUFE_SLUG\s*=\s*'([^']+)';$/m)?.[1];
+  assert.equal(SLUG, delPlugin, 'arrel dels zips i adaptadors.wordpress.slug han de ser la carpeta que exigix el PHP');
+  assert.equal(SLUG, 'socdepoble', 'una sola variant universal amb l\'slug de WordPress.org');
+  assert.equal(slugDelPlugin(php), SLUG);
+});
+
+test('WP-01: l\'empaquetador no fabrica cap paquet si el plugin exigix una altra carpeta', () => {
+  const { pem, publicaHex } = generaClau();
+  const f = fixture({ clauPublica: publicaHex });
+  try {
+    const principal = path.join(f.plugin, 'socdepoble-enxufe.php');
+    const php = fs.readFileSync(principal, 'utf8');
+    assert.throws(() => slugDelPlugin(php.replace(/^const SOCDEPOBLE_ENXUFE_SLUG\b.*$/m, '')), /no definix SOCDEPOBLE_ENXUFE_SLUG/);
+    fs.writeFileSync(principal, php.replace(/^(const SOCDEPOBLE_ENXUFE_SLUG\s*=\s*')[^']*(';)$/m, '$1socdepoble-enxufe$2'));
+    assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem }), /exigix la carpeta socdepoble-enxufe/);
+    assert.equal(fs.existsSync(f.sortida), false, 'zero paquets parcials');
+    // El lleuger, amb un build que passa totes les altres portes: només l'slug el para.
+    const lleuger = [{ cami: ENTRADA, contingut: Buffer.from('var SocDePoble = 1;\n') }];
+    fs.rmSync(path.join(f.dist, 'assets'), { recursive: true, force: true });
+    const segellat = manifestDeRelease({ versio: '1.1.10-beta.1', node: NODE_BO, fitxers: lleuger,
+      generat: '2026-10-22T00:00:00.000Z', mitjans: { origen: 'https://socdepoble.org', externs: ['assets/'], bessones: [] } });
+    fs.writeFileSync(path.join(f.dist, FITXER_RELEASE), segellat.manifestText);
+    fs.writeFileSync(path.join(f.dist, FITXER_INVENTARI), segellat.inventariText);
+    assert.throws(() => creaPaquetLleuger({ arrelPlugin: f.plugin }), /exigix la carpeta socdepoble-enxufe/);
+    fs.writeFileSync(principal, php);
+    assert.equal(creaPaquetLleuger({ arrelPlugin: f.plugin }).versio, '1.1.10-beta.1', 'amb l\'slug coherent, el mateix build s\'empaqueta');
+  } finally { neteja(f); }
+});
+
+/* Gauntlet 261025_0545 (WP-06) · build:seo escriu dist/seo-routes.json després del build, fora de
+   l'inventari: l'empaquetador el deixa com a resta i cap paquet no el porta. El readme no pot
+   prometre unes previsualitzacions que cap instal·lació pot servir. */
+test('WP-06: seo-routes.json fora de l\'inventari no viatja i el readme dels paquets no en promet les previsualitzacions', () => {
+  const { pem, publicaHex } = generaClau();
+  const f = fixture({ clauPublica: publicaHex });
+  try {
+    fs.writeFileSync(path.join(f.dist, 'seo-routes.json'), '{"/mur":{"titol":"Mur"}}\n');
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem });
+    assert.ok(r.restes.includes('seo-routes.json'), 'resta fora de l\'inventari');
+    for (const nom of r.escrits.filter((n) => n.endsWith('.zip'))) {
+      const entrades = entradesDe(path.join(f.sortida, nom));
+      assert.ok(![...entrades.keys()].some((n) => n.endsWith('/seo-routes.json')), `${nom} no porta la taula`);
+      const readme = entrades.get(`${SLUG}/readme.txt`)?.toString('utf8');
+      if (!readme) continue;
+      const seccio = readme.split(/^== Link previews per route ==$/m)[1]?.split(/^== /m)[0] ?? '';
+      if (seccio) assert.match(seccio, /do not include the route table `dist\/seo-routes\.json`/, `${nom}: el readme diu que la taula no viatja`);
+    }
+  } finally { neteja(f); }
+});
+
+/* ───────── Gauntlet 261025_0545 (WP-01 i MISSED P3) · el canal de punta a punta amb PHP real ─────────
+   El paquet que fabrica l'empaquetador, descomprimit a WP_PLUGIN_DIR i carregat pel seu fitxer
+   principal com faria WordPress, amb el canal signat que l'acompanya. Només els stubs de WordPress
+   que recorre el camí; cap xarxa: wp_safe_remote_get servix el canal i la seua .sig. */
+
+function cercaPhp() {
+  if (process.env.PHP_BIN) return process.env.PHP_BIN;
+  const studio = path.join(os.homedir(), '.studio/php-bin');
+  const instal_lats = fs.existsSync(studio)
+    ? fs.readdirSync(studio).sort().reverse().map((versio) => path.join(studio, versio, 'php'))
+    : [];
+  return ['php', ...instal_lats].find((binari) => spawnSync(binari, ['-v'], { timeout: 5000 }).status === 0);
+}
+
+const PHP = cercaPhp();
+const AMB_PHP = { skip: !PHP && 'PHP absent: instal·la PHP o indica PHP_BIN (també es detecta WordPress Studio).' };
+
+const RUNNER_CANAL = String.raw`<?php
+define( 'ABSPATH', __DIR__ . '/' );
+define( 'WP_PLUGIN_DIR', realpath( $argv[1] ) );
+$cas                = json_decode( (string) file_get_contents( 'php://stdin' ), true );
+$GLOBALS['filtres'] = array();
+$GLOBALS['opcions'] = array();
+$GLOBALS['servit']  = array();
+function add_filter( $nom, $callback, $prioritat = 10, $arguments = 1 ) { $GLOBALS['filtres'][ $nom ][] = $callback; return true; }
+function add_action( $nom, $callback, $prioritat = 10, $arguments = 1 ) { return add_filter( $nom, $callback, $prioritat, $arguments ); }
+function register_activation_hook( $fitxer, $callback ) {}
+function __( $text, $domini = 'default' ) { return $text; }
+function esc_html__( $text, $domini = 'default' ) { return $text; }
+function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
+function esc_url( $url ) { return (string) $url; }
+function esc_url_raw( $url, $protocols = null ) { return (string) $url; }
+function wp_kses_post( $html ) { return $html; }
+function sanitize_text_field( $text ) { return trim( strip_tags( (string) $text ) ); }
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
+function trailingslashit( $text ) { return rtrim( $text, '/' ) . '/'; }
+function untrailingslashit( $text ) { return rtrim( $text, '/' ); }
+function plugin_basename( $fitxer ) { return substr( $fitxer, strlen( trailingslashit( WP_PLUGIN_DIR ) ) ); }
+function plugin_dir_path( $fitxer ) { return trailingslashit( dirname( $fitxer ) ); }
+function is_multisite() { return false; }
+function wp_get_environment_type() { return 'production'; }
+function get_site_option( $clau, $defecte = false ) { return $GLOBALS['opcions'][ $clau ] ?? $defecte; }
+function update_option( $clau, $valor, $autoload = null ) { $GLOBALS['opcions'][ $clau ] = $valor; return true; }
+function is_wp_version_compatible( $versio ) { return true; }
+function is_php_version_compatible( $versio ) { return true; }
+function get_file_data( $fitxer, $capcaleres ) {
+	$text   = (string) file_get_contents( $fitxer );
+	$valors = array();
+	foreach ( $capcaleres as $clau => $nom ) {
+		$valors[ $clau ] = preg_match( '/^[ \t\/*#@]*' . preg_quote( $nom, '/' ) . ':(.*)$/mi', $text, $m ) ? trim( $m[1] ) : '';
+	}
+	return $valors;
+}
+class WP_Error {
+	private $missatge;
+	public function __construct( $codi = '', $missatge = '' ) { $this->missatge = $missatge; }
+	public function get_error_message() { return $this->missatge; }
+}
+function is_wp_error( $valor ) { return $valor instanceof WP_Error; }
+function wp_safe_remote_get( $url, $args = array() ) { return $GLOBALS['servit'][ $url ] ?? new WP_Error( 'sdp_prova', 'sense resposta' ); }
+function wp_remote_retrieve_response_code( $resposta ) { return $resposta['code']; }
+function wp_remote_retrieve_body( $resposta ) { return $resposta['body']; }
+
+$principals = glob( WP_PLUGIN_DIR . '/*/socdepoble-enxufe.php' );
+if ( 1 !== count( $principals ) ) {
+	fwrite( STDERR, 'Esperava una sola carpeta del plugin.' );
+	exit( 1 );
+}
+require $principals[0];
+$fitxer  = plugin_basename( SOCDEPOBLE_ENXUFE_FITXER );
+$sortida = array( 'fitxer' => $fitxer, 'slug' => SOCDEPOBLE_ENXUFE_SLUG, 'filtres' => array_keys( $GLOBALS['filtres'] ), 'zip' => class_exists( 'ZipArchive' ) );
+if ( function_exists( 'socdepoble_enxufe_analitza_canal' ) ) {
+	$cos = (string) file_get_contents( $cas['canal'] );
+	$sig = (string) file_get_contents( $cas['canal'] . '.sig' );
+	$GLOBALS['servit'][ SOCDEPOBLE_ENXUFE_CANAL ]          = array( 'code' => 200, 'body' => $cos );
+	$GLOBALS['servit'][ SOCDEPOBLE_ENXUFE_CANAL . '.sig' ] = array( 'code' => 200, 'body' => $sig );
+	list( $canal, $motiu ) = socdepoble_enxufe_analitza_canal( $cos, $sig );
+	$sortida['canal']    = null !== $canal ? $canal['versio'] : $motiu;
+	$sortida['bloqueig'] = socdepoble_enxufe_bloqueig_instal_lacio();
+	$sortida['arrel']    = socdepoble_enxufe_error_arrel_zip( $cas['zip'] );
+	$origen              = socdepoble_enxufe_seleccio_origen( dirname( SOCDEPOBLE_ENXUFE_FITXER ) . '/', '', null, array( 'plugin' => $fitxer ) );
+	$sortida['origen']   = is_wp_error( $origen ) ? $origen->get_error_message() : '';
+	$sortida['update']   = socdepoble_enxufe_update_plugins( false, array( 'Version' => $cas['installada'] ), $fitxer, array() );
+	foreach ( array( 'directori' => SOCDEPOBLE_ENXUFE_SLUG, 'propi' => $sortida['update']['slug'] ) as $clau => $slug ) {
+		$info                    = socdepoble_enxufe_plugins_api( false, 'plugin_information', (object) array( 'slug' => $slug ) );
+		$sortida['api'][ $clau ] = is_object( $info ) ? array( 'slug' => $info->slug, 'download_link' => $info->download_link ) : $info;
+	}
+}
+echo json_encode( $sortida );
+`;
+
+/** Empaqueta una fixture signada, descomprimix el zip triat a una carpeta de plugins i hi passa el runner. */
+function canalAmbPhp(f, variant, cas = {}) {
+  const { pem, publicaHex } = generaClau();
+  fs.writeFileSync(path.join(f.plugin, NOMES_CANAL_PROPI), fs.readFileSync(path.join(f.plugin, NOMES_CANAL_PROPI), 'utf8')
+    .replace(/define\(\s*'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA'\s*,\s*'[0-9a-fA-F]*'\s*\)/, `define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '${publicaHex}' )`));
+  const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem });
+  const zip = path.join(f.sortida, r.escrits.find((nom) => nom.includes(`_wordpress_${variant}_`)));
+  const plugins = path.join(f.arrel, `plugins-${variant}`);
+  for (const { nom, dades } of llegixZip(fs.readFileSync(zip))) {
+    fs.mkdirSync(path.dirname(path.join(plugins, nom)), { recursive: true });
+    fs.writeFileSync(path.join(plugins, nom), dades);
+  }
+  const runner = path.join(f.arrel, 'canal.php');
+  fs.writeFileSync(runner, RUNNER_CANAL);
+  const p = spawnSync(PHP, [runner, plugins], {
+    encoding: 'utf8', timeout: 15000,
+    input: JSON.stringify({ canal: path.join(f.sortida, 'stable.json'), zip, installada: '0.1.0', ...cas })
+  });
+  assert.equal(p.status, 0, p.error?.message || p.stderr || p.stdout);
+  assert.equal(p.stderr, '');
+  return JSON.parse(p.stdout);
+}
+
+test('WP-01: el PHP del paquet accepta el canal, la carpeta i el zip que fabrica l\'empaquetador', AMB_PHP, () => {
+  const f = fixture();
+  try {
+    const propi = canalAmbPhp(f, 'enxufe');
+    assert.equal(propi.slug, SLUG, 'la mateixa carpeta per al PHP i per a l\'empaquetador');
+    assert.equal(propi.fitxer, `${SLUG}/socdepoble-enxufe.php`, 'el zip s\'instal·la a la carpeta que exigix el PHP');
+    assert.equal(propi.canal, '0.2.0', 'el PHP del paquet accepta el canal signat que l\'acompanya');
+    assert.equal(propi.bloqueig, '', 'instal·lat on el deixa el seu zip, es pot actualitzar');
+    if (propi.zip) assert.equal(propi.arrel, '', 'l\'arrel del zip és la que exigix la primera barrera');
+    assert.equal(propi.origen, '', 'i la segona (upgrader_source_selection)');
+    assert.equal(propi.update.version, '0.2.0');
+    assert.equal(propi.update.package, 'socdepoble-enxufe:0.2.0', 'paquet simbòlic de l\'oferta');
+  } finally { neteja(f); }
+});
+
+/* MISSED P3 (verify-wp.txt) · amb SOCDEPOBLE_ENXUFE_SLUG = 'socdepoble', plugins_api responia per
+   l'slug del plugin de WordPress.org: amb un paquet del canal propi actiu, «Instal·la ara» del
+   plugin oficial rebia un download_link buit o simbòlic. */
+test('MISSED P3: el canal propi només respon per la seua identitat, mai per l\'slug del directori; la variant universal no intercepta res', AMB_PHP, () => {
+  const f = fixture();
+  try {
+    const propi = canalAmbPhp(f, 'enxufe');
+    assert.equal(propi.api.directori, false, 'plugins_api deixa passar l\'slug de WordPress.org');
+    assert.notEqual(propi.update.slug, SLUG, 'update_plugins no s\'anuncia amb l\'slug del directori');
+    assert.equal(propi.api.propi?.slug, propi.update.slug, '«Mostra els detalls» respon amb el mateix slug que update_plugins');
+    assert.ok(propi.filtres.includes('plugins_api') && propi.filtres.includes('update_plugins_socdepoble.org'));
+  } finally { neteja(f); }
+  const g = fixture();
+  try {
+    const directori = canalAmbPhp(g, 'directori');
+    assert.equal(directori.fitxer, `${SLUG}/socdepoble-enxufe.php`);
+    assert.equal(directori.canal, undefined, 'la variant del directori no porta l\'actualitzador');
+    assert.ok(!directori.filtres.includes('plugins_api') && !directori.filtres.some((nom) => nom.startsWith('update_plugins_')), 'cap intercepció a la variant universal');
+  } finally { neteja(g); }
 });
 
 test('errorsDelBuild: una release només surt d\'un build de release', () => {

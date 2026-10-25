@@ -44,8 +44,13 @@ export default function EspecimenUniversalWorkspace() {
           'Embolcallar el Workspace amb una UniversalPage.'
         ]}
       >
+        {/* Gauntlet 261025_0545 (P1-16) · La taula vessava 20px de la caixa de
+            mostra a la columna del detall (1280px). Es desplaça dins de la seua
+            caixa a qualsevol amplada, i la caixa és una regió amb el nom de la
+            llegenda i tabIndex=0, com a EspecimenGestor.jsx. */}
+        <div className="sdp-taula-prosa" role="region" aria-labelledby="universalworkspace-variants" tabIndex={0}>
         <table>
-          <caption>Variants d’ús i anatomia</caption>
+          <caption id="universalworkspace-variants">Variants d’ús i anatomia</caption>
           <thead>
             <tr>
               <th scope="col">Variant</th>
@@ -66,6 +71,7 @@ export default function EspecimenUniversalWorkspace() {
             </tr>
           </tbody>
         </table>
+        </div>
       </Especimen>
     </>
   );

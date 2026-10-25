@@ -51,11 +51,11 @@ This plugin connects to the Sóc de Poble service. Accounts, messages and posts 
 4. Profile images from sign-in providers may load from lh3.googleusercontent.com, platform-lookaside.fbsbx.com, graph.facebook.com or avatars.githubusercontent.com. One design catalogue page embeds a YouTube video (youtube-nocookie.com). Terms: https://www.youtube.com/t/terms
 5. Optional DeepL translation: selected text or HTML is sent to api-free.deepl.com or api.deepl.com when a visitor requests translation. Configuration, retention, terms and privacy are described below.
 
-Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, then downloads the listed package. It queries this channel after api.wordpress.org answers WordPress's own update check. Requests identify the plugin, not the site. Automatic updates remain disabled until enabled in Plugins. The switch appears after an update check with the plugin active; activation clears the update cache so the next Plugins visit triggers a check. Updates are installed only while the plugin is active, in the socdepoble-enxufe directory, with the release channel key, and outside symlinks or Git checkouts. Automatic updates also require WP-Cron and connectivity to WordPress.org. Settings → Sóc de Poble and Site Health explain unmet conditions.
+Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, then downloads the listed package. It queries this channel after api.wordpress.org answers WordPress's own update check. Requests identify the plugin, not the site. Automatic updates remain disabled until enabled in Plugins. The switch appears after an update check with the plugin active; activation clears the update cache so the next Plugins visit triggers a check. Updates are installed only while the plugin is active, in the socdepoble directory, with the release channel key, and outside symlinks or Git checkouts. Automatic updates also require WP-Cron and connectivity to WordPress.org. Settings → Sóc de Poble and Site Health explain unmet conditions.
 
 == Link previews per route ==
 
-Off by default. When the `socdepoble_enxufe_seo` filter returns `true` and `socdepoble_enxufe_ruta_a_url` returns `parametre`, a request with `?sdp=/route` gets that route's Open Graph tags from the static table `dist/seo-routes.json` only; nothing from the request is printed. The page cache must not ignore or strip the `sdp` query parameter.
+Off by default, and not available yet: current packages do not include the route table `dist/seo-routes.json`, so the filters described here have no effect. Once a package includes that table, when the `socdepoble_enxufe_seo` filter returns `true` and `socdepoble_enxufe_ruta_a_url` returns `parametre`, a request with `?sdp=/route` gets that route's Open Graph tags from the table only; nothing from the request is printed. The page cache must not ignore or strip the `sdp` query parameter.
 
 == Optional translation service (DeepL) ==
 
@@ -89,7 +89,7 @@ The directory variant requires WordPress 6.6 or later and loads core React, Reac
 
 == Installation ==
 
-1. In Plugins → Add New → Upload Plugin, upload the package ZIP, or copy its socdepoble-enxufe directory into wp-content/plugins. Keep this directory name.
+1. In Plugins → Add New → Upload Plugin, upload the package ZIP, or copy its socdepoble directory into wp-content/plugins. Keep this directory name.
 2. If another copy is active under a different directory name, deactivate it first. This version refuses activation while another copy is loaded and identifies both directories in its message.
 3. Deactivate the older "soc-de-poble" plugin if active: both define the same custom element.
 4. Activate Sóc de Poble — Enxufe.
@@ -121,7 +121,7 @@ Open Tools → Site Health. The plugin reports missing application scripts or ma
 
 = The plugin is installed twice. What should I do? =
 
-A ZIP without the socdepoble-enxufe directory at its root may install alongside the existing copy under the ZIP's name. Keep one copy: deactivate the other, activate the desired copy, then remove the unused directory. Deleting a copy from Plugins runs that copy's uninstaller. This version preserves shared settings while another copy remains active, but older versions delete the display name and village identifier, so record those settings first.
+A ZIP without the socdepoble directory at its root may install alongside the existing copy under the ZIP's name. Keep one copy: deactivate the other, activate the desired copy, then remove the unused directory. Deleting a copy from Plugins runs that copy's uninstaller. This version preserves shared settings while another copy remains active, but older versions delete the display name and village identifier, so record those settings first.
 
 = Where are generated packages stored? =
 

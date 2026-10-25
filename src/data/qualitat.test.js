@@ -117,7 +117,11 @@ const CENS = Object.freeze([
      l'adaptador de Supabase. Esta passada només afig els de producció nous;
      els de src/data/adaptadors/noticies/ (T5) queden per a qui els edita ara. */
   'src/data/localSeguiments.js',
-  'src/data/supabase/seguiments.js'
+  'src/data/supabase/seguiments.js',
+  /* Gauntlet 261025_0545 (DF-03) · La porta Enxufe torna a verd: les proves
+     de l'adaptador ixen de sessioPilot.test.js cap a la carpeta de supabase. */
+  'src/data/sessioPilot.test.js',
+  'src/data/supabase/auth.sessioPilot.test.js'
 ]);
 
 describe('el cens', () => {

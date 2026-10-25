@@ -375,6 +375,8 @@ export function aplicaMarcaLocal(fil, seq) {
 /** Actualitza la fila de la llista amb l'últim missatge propi confirmat pel servidor. */
 export function actualitzaFilAmbMissatge(fil, m) {
   const s = seqDe(m);
+  // Una confirmació tardana no pot fer recular la previsualització del fil.
+  if (s != null && s < numero(fil.ultimSeq)) return fil;
   const ultimSeq = s == null ? numero(fil.ultimSeq) : Math.max(numero(fil.ultimSeq), s);
   const ultimText = m.text ?? '';
   return {
@@ -544,6 +546,15 @@ export function creaAgrupadorMarques(envia, esperaMs = 2000, temps = globalThis)
      */
     marcatFins(filId) {
       return Math.max(cobert(filId), fins(pendents, filId));
+    },
+    /* Gauntlet 261025_0545 (MISSED P3) · Envia ara les marques que esperaven
+       l'agrupació, sense els `esperaMs`: la pàgina s'amaga o es tanca i el
+       temporitzador ja no arribaria. Cada conversa, una sola escriptura. */
+    buidaTot() {
+      for (const [filId, t] of [...temporitzadors]) {
+        temps.clearTimeout(t);
+        buida(filId);
+      }
     },
     cancela() {
       generacio += 1;

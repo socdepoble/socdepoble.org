@@ -317,22 +317,22 @@ describe('B04 · la conversa oberta no es convertix en un 404', () => {
     expect(document.querySelector('.sdp-workspace-column__body > p[role="status"]')).toBe(regio);
   });
 
-  /* [DEFECTE] B18 (pendent, 261008_1355_auditoria_claude.md) · Un sol `avis`
-     al context: si en ample, amb la conversa oberta, fallen alhora la llista
-     i el fil (ticFil cada 5 s, abans que el tic de 25 s), l'error del fil
-     substituïx la llista conservada per «No s'ha pogut carregar el xat».
-     B04 continua complint el que és seu (cap 404, la conversa a la vista),
-     però l'avís no bloquejant no arriba a vore's. Quan B18 separe avisFil
-     d'avisLlista, esta prova s'ha de girar. */
-  it('[DEFECTE] B18 · si fallen alhora la llista i el fil obert, l’error del fil tapa la llista conservada', async () => {
+  /* B18 (261008_1355_auditoria_claude.md), girada al Gauntlet 261025_0545
+     (XC-13) · Si en ample, amb la conversa oberta, fallen alhora la llista i
+     el fil, cada error va al seu lloc: la llista conservada es queda amb el
+     seu avís no bloquejant (avisLlista) i el fil, amb el seu (avisFil, a la
+     línia de la conversa). Cap alerta substituïx la llista. */
+  it('B18 · si fallen alhora la llista i el fil obert, la llista conservada es queda i el fil avisa al seu lloc', async () => {
     await conversaOberta();
     const xarxa = () => Object.assign(new Error('Load failed'), { code: 'XARXA', retriable: true });
     mocks.port.loadFils.mockRejectedValue(xarxa());
     mocks.port.loadMissatges.mockRejectedValue(xarxa());
     await act(async () => { window.dispatchEvent(new Event('online')); });
-    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
-    expect(within(screen.getByRole('alert')).getByText("No s'ha pogut carregar el xat")).toBeTruthy();
-    expect(screen.queryByRole('list', { name: 'Converses' })).toBeNull();
+    const regio = document.querySelector('.sdp-workspace-column__body > p[role="status"]');
+    await waitFor(() => expect(regio.textContent).toBe('Load failed'));
+    await waitFor(() => expect(screen.getByText("No s'ha pogut actualitzar la conversa.")).toBeTruthy());
+    expect(screen.queryByText("No s'ha pogut carregar el xat")).toBeNull();
+    expect(screen.getByRole('list', { name: 'Converses' })).toBeTruthy();
     expect(noTrobada()).toBeNull();
     expect(screen.getByText('Bon dia')).toBeTruthy();
   });

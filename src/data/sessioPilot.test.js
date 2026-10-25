@@ -1,9 +1,10 @@
 /**
  * Gauntlet 261016_1530 (Bloc 3.6.4; F66) · L'entrada pilot local, a la capa de
  * dades: data/sessioPilot.js i les garanties d'identitat.js, amb la cadena real
- * (identitat → storage) i l'adaptador real de Supabase per a les peticions i
- * l'eixida. La xarxa és un fetch fals que rebutja com un servidor caigut
- * (ERR_EMPTY_RESPONSE): qualsevol crida queda apuntada.
+ * (identitat → storage). Les peticions i l'eixida amb l'adaptador real de
+ * Supabase són a supabase/auth.sessioPilot.test.js (Gauntlet 261025_0545,
+ * DF-03: tractor-enxufe E1). La xarxa és un fetch fals que rebutja com un
+ * servidor caigut (ERR_EMPTY_RESPONSE): qualsevol crida queda apuntada.
  *
  * Proves positives (mode de proves en desenvolupament) i negatives (remot,
  * producció, una configuració falsa, el pas a remot i un document nou).
@@ -16,8 +17,6 @@ import {
 import { CODI_PILOT_NO_DISPONIBLE, PROVEIDOR_PILOT, entraComAPilot, entradaPilotDisponible, usuariPilot } from './sessioPilot.js';
 import { PERSONA_PILOT } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
-import { request } from './supabase/runtime.js';
-import { loginWithPassword, logout } from './supabase/auth.js';
 import { getEfimer, getVal } from '../config/storage.js';
 
 const URL_LOCAL = 'http://127.0.0.1:54321';
@@ -168,48 +167,11 @@ describe('negatives: el mode remot mai no rep la identitat ni els permisos de pi
   });
 });
 
-describe('amb l’adaptador de Supabase: cap petició porta el testimoni i eixir no en fa cap', () => {
-  test('una petició de l’adaptador en mode de proves va amb la clau pública, mai amb el testimoni', async () => {
-    prepara(LLAVOR);
-    entraComAPilot(LLAVOR);
-    xarxa.mockImplementationOnce(async () => ({ ok: true, status: 200, json: async () => [], headers: { get: () => null } }));
-    await request('/rest/v1/prova', LLAVOR);
-    expect(xarxa).toHaveBeenCalledTimes(1);
-    const [, opcions] = xarxa.mock.calls[0];
-    expect(opcions.headers.Authorization).toBe(`Bearer ${CLAU_PUBLICA}`);
-    expect(JSON.stringify(xarxa.mock.calls)).not.toContain(TESTIMONI_PILOT);
-  });
-
-  test('eixir de la sessió pilot la buida sense revocar res al servidor (cap petició)', async () => {
-    prepara(LLAVOR);
-    entraComAPilot(LLAVOR);
-    await logout(LLAVOR);
-    expect(usuariDeSessio()).toBeNull();
-    expect(getEfimer(CLAU_JWT, null)).toBeNull();
-    expect(xarxa).not.toHaveBeenCalled();
-  });
-
-  /* Contrast: les dues proves de dalt tenen sentit perquè, amb una sessió de
-     veres, el mateix fetch sí que veu el JWT i la revocació. */
-  test('contrast · una sessió de veres sí que porta el seu JWT i, en eixir, sí que es revoca', async () => {
-    prepara(REMOT);
-    const real = { id: '00000000-0000-4000-8000-00000000000b' };
-    const jwt = jwtDeVeres(real.id);
-    expect(desaSessio({ access_token: jwt, refresh_token: 'rt', user: real })).toBe(true);
-    xarxa.mockImplementationOnce(async () => ({ ok: true, status: 200, json: async () => [], headers: { get: () => null } }));
-    await request('/rest/v1/prova', REMOT);
-    expect(xarxa.mock.calls[0][1].headers.Authorization).toBe(`Bearer ${jwt}`);
-    await logout(REMOT);
-    expect(xarxa.mock.calls.map(([url]) => String(url))).toContain(`${URL_LOCAL}/auth/v1/logout?scope=local`);
-  });
-
-  test('l’entrada real continua rebutjant en mode de proves: la persona pilot no obri cap porta nova', async () => {
-    prepara(LLAVOR);
-    entraComAPilot(LLAVOR);
-    await expect(loginWithPassword('pilot@poble.test', 'contrasenya-llarga', LLAVOR)).rejects.toMatchObject({ code: 'mode-local' });
-    expect(xarxa).not.toHaveBeenCalled();
-  });
-});
+/* Gauntlet 261025_0545 (DF-03) · «amb l’adaptador de Supabase: cap petició porta
+   el testimoni i eixir no en fa cap» viu ara, tal qual, a
+   supabase/auth.sessioPilot.test.js: prova el transport de l'adaptador
+   (runtime.js · request), que no és cap mètode del port, i tractor-enxufe E1
+   només deixa importar l'adaptador des de src/data/supabase/. */
 
 /* L'última del fitxer: torna a carregar els mòduls. */
 describe('un document nou', () => {

@@ -166,7 +166,9 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
           {hora ? <time className="sdp-xat-fila__hora" dateTime={fil.ultimAl || undefined}>{hora}</time> : null}
         </span>
         <span className="sdp-xat-fila__peu">
-          <span className="sdp-xat-fila__previa">
+          {/* Gauntlet 261025_0545 (XU-14) · dir="auto": l'últim missatge pren
+              la direcció del seu text, com la bombolla. */}
+          <span className="sdp-xat-fila__previa" dir="auto">
             {/* Fase D (261020, tasca 2) · L'últim és d'algú que has bloquejat
                 (XatContext, anotaFilsBloquejats): ni qui ni què. */}
             {fil.ultimAmagat ? t('section.moderacio.bloquejat.previa', 'Missatge amagat') : (

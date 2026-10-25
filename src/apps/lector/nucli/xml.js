@@ -42,7 +42,13 @@ const CONVENCIONALS = Object.freeze({ atom: NS.atom, content: NS.content, media:
 
 /** Un URI d'espai de noms sense esquema ni barra final. */
 export function nsNet(uri) {
-  return String(uri ?? '').trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/\/+$/, '');
+  const net = String(uri ?? '').trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
+  /* Gauntlet 261025_0545 (RX-M2) · Les barres finals, des del final cap arrere:
+     /\/+$/ tornava a recórrer des de cada «/» una tira que no acaba el valor
+     (quadràtic), i ho feia per a cada xmlns d'un feed remot, al fil principal. */
+  let fi = net.length;
+  while (fi > 0 && net[fi - 1] === '/') fi -= 1;
+  return net.slice(0, fi);
 }
 
 const INICI_NOM = /[A-Za-z_:]/;

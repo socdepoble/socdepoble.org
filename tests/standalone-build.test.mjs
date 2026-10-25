@@ -43,7 +43,7 @@ import configStandalone, {
 } from '../vite.standalone.config.js';
 import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
 import { MARCA_DEL_CARREGADOR } from '../src/config/carregadorDelPaquet.js';
-import { ADAPTADOR, LIMIT_DIRECTORI, empaqueta, llegixZip, verificaInventari, verificaPaquet } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { ADAPTADOR, LIMIT_DIRECTORI, SLUG, empaqueta, llegixZip, verificaInventari, verificaPaquet } from '../wordpress-plugin/eines/empaqueta.mjs';
 import { MITJANS_EXTERNS_DEL_DIRECTORI, bessonaDe, bessonesDe, separaRecursos } from '../src/config/politicaDeMitjans.js';
 
 /* public/ de mostra: el que viatja i el que és propi del servidor del lloc. */
@@ -923,7 +923,9 @@ test('empaqueta amb el paquet trossejat: els trossos inventariats entren als zip
     ].map(zip);
     for (const rel of [MODUL_DE_PROVA, 'trossos/Xat-AbCd_123.js']) {
       assert.ok(estatic.has(`soc-de-poble/${rel}`), `estàtic: ${rel}`);
-      assert.ok(wordpress.has(`socdepoble-enxufe/dist/${rel}`), `WordPress: ${rel}`);
+      /* Gauntlet 261025_0545 (WP-01) · l'arrel del zip és la carpeta que exigix el PHP
+         (SOCDEPOBLE_ENXUFE_SLUG), no un literal: tests/enxufe-empaqueta.test.mjs lliga l'SLUG al plugin. */
+      assert.ok(wordpress.has(`${SLUG}/dist/${rel}`), `WordPress: ${rel}`);
     }
     for (const nom of [...estatic.keys(), ...wordpress.keys()]) assert.ok(!nom.includes('Vell-'), nom);
     assert.ok(![...directori.keys()].some((nom) => nom.includes('/trossos/')), 'el directori no porta trossos');

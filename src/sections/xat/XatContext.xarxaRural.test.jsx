@@ -9,7 +9,7 @@
    Calcada de la preparació de XatContext.test.jsx. */
 import { StrictMode, useLayoutEffect } from 'react';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../host.js';
 import { XatProvider, useXat } from './XatContext.jsx';
 
@@ -25,7 +25,7 @@ vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => 
 vi.mock('../../app/contexts/RouterContext', () => ({ useLocation: () => ({ pathname: mock.pathname }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }) }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mock.showToast }) }));
-vi.mock('../../data/backendPort.js', () => mock);
+vi.mock('../../data/backendPort.js', async (importOriginal) => ({ ...await importOriginal(), ...mock }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 
 const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
@@ -275,5 +275,88 @@ describe('B09 · l’historial cap arrere no es demana en bucle quan falla', () 
     await pas(0);
     await act(async () => { await value.carregaMesAntics('fil-A'); });
     expect(value.esperaAntics('fil-A')).toMatchObject({ fallades: 1, manual: false });
+  });
+});
+
+/* CUR-03 · Provider i adaptador de realtime de producte; només el client de
+   transport i la resta de mètodes del port són locals. Cap petició de xarxa. */
+import { getBackendImplementation } from '../../data/backendPort.js';
+/* E1 · El transport continua sent el doble de baix; l'adaptador el compon
+   l'host real i n'extraiem els mètodes des del port neutral. */
+vi.mock('../../PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
+vi.mock('../../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
+let subscribeReal, unsubscribeReal;
+beforeAll(async () => {
+  const { arrenca } = await vi.importActual('../../host.js');
+  await arrenca();
+  ({ subscribeToXat: subscribeReal, unsubscribeFromXat: unsubscribeReal } = getBackendImplementation());
+});
+const rt = vi.hoisted(() => ({ client: null, channels: [], syncError: false }));
+vi.mock('../../data/supabase/config.js', async (importOriginal) => ({ ...await importOriginal(), getClient: async () => rt.client }));
+vi.mock('../../data/supabase/runtime.js', async (importOriginal) => ({ ...await importOriginal(), getResolvedConfig: config => ({ ...config, runtimeDataMode: 'remote' }), generateUUID: () => 'uuid-local' }));
+vi.mock('../../data/supabase/utils.js', () => ({ handleError: error => error }));
+vi.mock('../../data/identitat.js', async (importOriginal) => ({ ...await importOriginal(), usuariDeSessio: () => mock.session.currentUser, getDefaultUserId: () => 'A' }));
+
+const configuraRT = () => {
+  rt.channels = []; rt.syncError = false;
+  rt.client = {
+    removeChannel: vi.fn().mockResolvedValue('ok'),
+    channel: vi.fn(() => {
+      const canal = {
+        on: vi.fn().mockReturnThis(),
+        subscribe: vi.fn(callback => {
+          canal.estat = callback;
+          if (rt.syncError) callback('CHANNEL_ERROR', new Error('durant subscribe'));
+          return canal;
+        })
+      };
+      rt.channels.push(canal); return canal;
+    })
+  };
+  mock.subscribeToXat.mockImplementation(subscribeReal);
+  mock.unsubscribeFromXat.mockImplementation(unsubscribeReal);
+};
+const statusRT = async (canal, estat) => { await act(async () => { canal.estat(estat, new Error(estat)); }); };
+const missatgesCarregats = () => mock.loadMissatges.mock.calls.length;
+describe('CUR-03 · el Provider real recupera la cadència amb l’adaptador real', () => {
+  it('CUR-03 · error → SUBSCRIBED torna del sondeig de 5 s al de 30 s', async () => {
+    configuraRT(); await ambLlistaCarregada();
+    const canal = rt.channels.at(-1);
+    await statusRT(canal, 'CHANNEL_ERROR'); await pas(5000);
+    const despresError = missatgesCarregats(); await pas(5000);
+    expect(missatgesCarregats()).toBe(despresError + 1);
+    const abansRecuperar = missatgesCarregats();
+    await statusRT(canal, 'SUBSCRIBED');
+    expect(missatgesCarregats()).toBe(abansRecuperar + 1);
+    expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 1 }));
+    await pas(5000);
+    const recuperat = missatgesCarregats(); await pas(5000);
+    expect(missatgesCarregats()).toBe(recuperat);
+    await pas(25000); expect(missatgesCarregats()).toBe(recuperat + 1);
+  });
+  it('CUR-03 · l’error síncron abans de resoldre subscribe conserva el mode degradat', async () => {
+    configuraRT(); rt.syncError = true; await ambLlistaCarregada();
+    await pas(5000); const abans = missatgesCarregats(); await pas(5000);
+    expect(missatgesCarregats()).toBe(abans + 1);
+  });
+  it('CUR-03 · la recuperació d’un canal antic després de tancar el fil no crea lectures', async () => {
+    configuraRT(); await ambLlistaCarregada(); const canal = rt.channels.at(-1);
+    await statusRT(canal, 'CHANNEL_ERROR');
+    act(() => value.obriFil(null)); await pas(0); const abans = missatgesCarregats();
+    await statusRT(canal, 'SUBSCRIBED'); await pas(60000);
+    expect(missatgesCarregats()).toBe(abans);
+  });
+  it('CUR-03 · el rebuig tardà d’una obertura antiga no degrada el canal nou', async () => {
+    configuraRT();
+    let rebutja;
+    const pendent = new Promise((_resolve, reject) => { rebutja = reject; });
+    mock.subscribeToXat.mockImplementationOnce(() => pendent);
+    await ambLlistaCarregada();
+    act(() => window.dispatchEvent(new Event('online'))); await pas(0);
+    expect(rt.channels).toHaveLength(1);
+    await pas(30000);
+    await act(async () => { rebutja(new Error('obertura antiga rebutjada')); });
+    await pas(30000); const abans = missatgesCarregats(); await pas(5000);
+    expect(missatgesCarregats()).toBe(abans);
   });
 });

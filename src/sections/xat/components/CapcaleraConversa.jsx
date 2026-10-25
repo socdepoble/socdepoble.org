@@ -121,10 +121,12 @@ export default function CapcaleraConversa({
   const altres = Array.isArray(fil?.altresNoms) ? fil.altresNoms : [];
   const esGrup = fil?.tipus === 'grup';
   const subjecte = fil?.subjecte || null;
+  /* Gauntlet 261025_0545 (TE-03) · Els noms i els títols entren amb una
+     funció de reemplaç: un «Bar $` Co» es pinta tal qual (moderacio.js, omple). */
   let linia = '';
   if (subjecte) linia = participantsDe(fil?.participants, t);
   else if (esGrup || altres.length > 1) linia = altres.join(', ');
-  else if (fil?.comEntitat && fil?.entitatNom) linia = t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', fil.entitatNom);
+  else if (fil?.comEntitat && fil?.entitatNom) linia = t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', () => fil.entitatNom);
   else if (fil?.esIA) linia = t('section.xat.ia.avis', 'Intel·ligència artificial en proves');
 
   /* L'altra part, amb id i tipus: només llavors hi ha perfil on anar. Un fil
@@ -136,7 +138,7 @@ export default function CapcaleraConversa({
   const titolSubjecte = subjecte ? subjecte.titol || nom : '';
   const rutaSubjecte = subjecte ? rutaCanonica || (esRutaInterna(subjecte.ruta) ? subjecte.ruta : null) : null;
   const sobre = subjecte ? (
-    <span className="sdp-xat-capcalera__sobre">{t('section.xat.pagina.sobre', 'Sobre: {titol}').replace('{titol}', titolSubjecte)}</span>
+    <span className="sdp-xat-capcalera__sobre">{t('section.xat.pagina.sobre', 'Sobre: {titol}').replace('{titol}', () => titolSubjecte)}</span>
   ) : null;
 
   const identitat = (
@@ -161,7 +163,7 @@ export default function CapcaleraConversa({
       <Link
         className="sdp-xat-capcalera__enllac"
         to={rutaPerfil}
-        aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', nom)}
+        aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', () => nom)}
       >
         {identitat}
       </Link>
@@ -173,7 +175,7 @@ export default function CapcaleraConversa({
       <Link
         className="sdp-xat-capcalera__enllac"
         to={rutaSubjecte}
-        aria-label={t('section.xat.pagina.obri', 'Obri la pàgina {titol}').replace('{titol}', titolSubjecte)}
+        aria-label={t('section.xat.pagina.obri', 'Obri la pàgina {titol}').replace('{titol}', () => titolSubjecte)}
         aria-describedby={idSub}
       >
         {identitat}

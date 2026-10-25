@@ -574,17 +574,54 @@ export function descodificaFeed(bytes, tipus = '') {
   return text.replace(/^(\s*<\?xml[^>]*?\bencoding\s*=\s*)(["'])[\w.:-]+\2/i, '$1$2UTF-8$2');
 }
 
+/* Gauntlet 261025_0545 (RX-M3) · El final de la peça del pròleg (<?…?>, <!--…--> o <!DOCTYPE…>) que hi ha
+   a `des`, darrere dels seus espais, o -1: com /^\s*(?:<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[^>[]*(?:\[[^\]]*\])?\s*>)/i.
+   En l'expressió, [^>[]* i \s* es disputaven els espais d'un DOCTYPE sense «>» (64 KB, 2 s per baixada).
+   Ací el cos del DOCTYPE va fins al primer «>» o «[» (és l'única tria que acaba bé: abans d'un «>» o d'un
+   «[» no hi pot acabar), i darrere del subconjunt intern […] només hi pot haver espais i el «>». */
+function fiDeLaPecaDelProleg(tros, des) {
+  const espais = /\s*/y;
+  espais.lastIndex = des;
+  espais.test(tros);
+  const inici = espais.lastIndex;
+  if (tros.startsWith('<?', inici)) {
+    const fi = tros.indexOf('?>', inici + 2);
+    return fi < 0 ? -1 : fi + 2;
+  }
+  if (tros.startsWith('<!--', inici)) {
+    const fi = tros.indexOf('-->', inici + 4);
+    return fi < 0 ? -1 : fi + 3;
+  }
+  const doctype = /<!DOCTYPE[^>[]*/iy;
+  doctype.lastIndex = inici;
+  if (!doctype.test(tros)) return -1;
+  let cos = doctype.lastIndex;
+  if (tros[cos] === '[') {
+    const claudator = tros.indexOf(']', cos + 1);
+    if (claudator < 0) return -1;
+    cos = claudator + 1;
+  }
+  const tanca = /\s*>/y;
+  tanca.lastIndex = cos;
+  return tanca.test(tros) ? tanca.lastIndex : -1;
+}
+
+/* El que queda dels primers 64 KB d'un text després del pròleg: com a molt 32 peces (fiDeLaPecaDelProleg). */
+function despresDelProleg(text) {
+  const tros = text.slice(0, 65536);
+  let des = 0;
+  for (let i = 0; i < 32; i += 1) {
+    const fi = fiDeLaPecaDelProleg(tros, des);
+    if (fi < 0) break;
+    des = fi;
+  }
+  return tros.slice(des);
+}
+
 /** Si el text és un feed: l'arrel, després del pròleg, els comentaris i el DOCTYPE, és rss, feed o RDF. */
 export function esFeed(text) {
   if (typeof text !== 'string' || /<!ENTITY/i.test(text)) return false;
-  const salta = /^\s*(?:<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[^>[]*(?:\[[^\]]*\])?\s*>)/i;
-  let resta = text.slice(0, 65536);
-  for (let i = 0; i < 32; i += 1) {
-    const salt = salta.exec(resta);
-    if (!salt) break;
-    resta = resta.slice(salt[0].length);
-  }
-  return /^\s*<(?:[A-Za-z_][\w.-]*:)?(?:rss|feed|RDF)[\s/>]/.test(resta);
+  return /^\s*<(?:[A-Za-z_][\w.-]*:)?(?:rss|feed|RDF)[\s/>]/.test(despresDelProleg(text));
 }
 
 /* ── Les imatges d'un feed ────────────────────────────────────────────────── */
@@ -600,11 +637,32 @@ function desentitza(text) {
   });
 }
 
-/* Els atributs d'una etiqueta (els noms en minúscules, els valors sense entitats). */
-function atributsDe(etiqueta) {
+/**
+ * Els atributs d'una etiqueta (els noms en minúscules, els valors sense entitats), com els donava
+ * etiqueta.matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g). Gauntlet 261025_0545 (RX-01): l'expressió
+ * tornava a llegir el nom sencer des de cada caràcter d'un nom sense «=» darrere, i una sola etiqueta
+ * tancada de 100 KB costava 5 s (la de 500 KB d'una font personal, minuts). Ací cada nom es llig una
+ * vegada: si darrere no hi ha «=» i un valor entre cometes, cap tros seu no en té (el nom acaba on acaba
+ * la tirada); i una cometa que no es tanca no es torna a buscar. Exportada per al contrast de gestor.test.js.
+ */
+export function atributsDe(etiqueta) {
   const atributs = Object.create(null);
-  for (const [, nom, doble, simple] of etiqueta.matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
-    atributs[nom.toLowerCase()] = desentitza(doble ?? simple);
+  const nom = /[\w:.-]+/g;
+  const igual = /\s*=\s*/y;
+  const senseCometa = { '"': false, "'": false };
+  for (let trobat = nom.exec(etiqueta); trobat; trobat = nom.exec(etiqueta)) {
+    igual.lastIndex = nom.lastIndex;
+    if (!igual.test(etiqueta)) continue;
+    const inici = igual.lastIndex;
+    const cometa = etiqueta[inici];
+    if (cometa !== '"' && cometa !== "'") continue;
+    const tanca = senseCometa[cometa] ? -1 : etiqueta.indexOf(cometa, inici + 1);
+    if (tanca < 0) {
+      senseCometa[cometa] = true;
+      continue;
+    }
+    atributs[trobat[0].toLowerCase()] = desentitza(etiqueta.slice(inici + 1, tanca));
+    nom.lastIndex = tanca + 1;
   }
   return atributs;
 }
@@ -894,16 +952,10 @@ function elementsDe(xml, nom) {
   return eixida;
 }
 
-/* L'arrel d'un feed (rss, feed o RDF), o null. */
+/* L'arrel d'un feed (rss, feed o RDF), o null. Gauntlet 261025_0545 (RX-M3): el pròleg es salta com a
+   esFeed, en temps lineal (despresDelProleg). */
 function arrelDe(xml) {
-  const salta = /^\s*(?:<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[^>[]*(?:\[[^\]]*\])?\s*>)/i;
-  let resta = xml.slice(0, 65536);
-  for (let i = 0; i < 32; i += 1) {
-    const salt = salta.exec(resta);
-    if (!salt) break;
-    resta = resta.slice(salt[0].length);
-  }
-  return /^\s*<(?:[A-Za-z_][\w.-]*:)?(rss|feed|RDF)[\s/>]/.exec(resta)?.[1] || null;
+  return /^\s*<(?:[A-Za-z_][\w.-]*:)?(rss|feed|RDF)[\s/>]/.exec(despresDelProleg(xml))?.[1] || null;
 }
 
 /* Un tros sense els elements de dins que porten enllaços que no són del canal o de l'element (la

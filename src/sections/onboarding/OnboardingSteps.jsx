@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
-import { toDeLErrorDEntrada, validateRegistration } from './onboardingModel.js';
+import { LONGITUD_MINIMA_CONTRASENYA, toDeLErrorDEntrada, validateRegistration } from './onboardingModel.js';
 import { Alerta, Boto, ControlContrasenya, PillToggle } from '../../components/PedraSeca/index.js';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { ESTAT_RECUPERACIO_INICIAL, RecuperacioStep } from './RecuperacioSteps.jsx';
+import { createTranslator } from '../../config/i18n.js';
+
+/* Gauntlet 261025_0545 (TE-01) · El formulari parla la llengua triada: els
+   textos passen pel traductor `t` (el de la interfície, des
+   d'OnboardingSection); sense, el valencià de sempre. La reserva escrita al
+   codi és el valor valencià del diccionari, i les claus que ja hi eren
+   (section.login.loginEmail, …) tornen a tindre qui les cride. Els errors de
+   validateRegistration (onboardingModel.js) no són d'ací. */
+const TRADUCTOR_DE_RESERVA = createTranslator('ca');
 
 /* T4 (ordre del Mestre, 260930) · El mode de la consulta (?mode=entrar|crear,
    src/config/rutaEntrada.js) al mode intern del formulari. R2 (261003) ·
@@ -39,8 +48,11 @@ const modeDelFormulari = (modeInicial, potRecuperar = false) => {
  * Fase D (261020, revisió) · L2 · `introEntrada` (opcional): a l'app nativa,
  * l'explicació d'«Entra al teu compte», que nomena el botó de dalt (Apple o
  * Google) en lloc del Google web. Sense, el text de sempre.
+ *
+ * Gauntlet 261025_0545 (TE-01) · `t` (opcional): el traductor de la interfície,
+ * que també rep la vista de recuperació. Sense, el valencià de sempre.
  */
-export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null }) {
+export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null, t = TRADUCTOR_DE_RESERVA }) {
   const potRecuperar = typeof onRecupera === 'function';
   const [mode, setMode] = useState(() => modeDelFormulari(modeInicial, potRecuperar));
   const [modeRebut, setModeRebut] = useState(modeInicial);
@@ -80,10 +92,10 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     if (mode === 'register') {
       const nextErrors = validateRegistration(fields);
       if (fields.password !== fields.confirmPassword) {
-        nextErrors.confirmPassword = 'Les contrasenyes no coincidixen';
+        nextErrors.confirmPassword = t('section.login.registre.errorContrasenyes', 'Les contrasenyes no coincidixen');
       }
       if (!fields.rgpd) {
-        nextErrors.rgpd = 'Has d’acceptar la política de privacitat per continuar.';
+        nextErrors.rgpd = t('section.login.registre.errorRgpd', 'Has d’acceptar la política de privacitat per continuar.');
       }
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length) return;
@@ -96,8 +108,8 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     } else {
       const nextErrors = {};
       const email = fields.email.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = 'Escriu un correu electrònic vàlid.';
-      if (!fields.password) nextErrors.password = 'Contrasenya obligatòria';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = t('section.login.registre.errorCorreu', 'Escriu un correu electrònic vàlid.');
+      if (!fields.password) nextErrors.password = t('section.login.registre.errorContrasenya', 'Contrasenya obligatòria');
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length) return;
       enviant.current = true;
@@ -132,26 +144,28 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
         bloquejat={bloquejat}
         estat={estatRecuperacio}
         onEstat={setEstatRecuperacio}
+        t={t}
       />
     );
   }
 
   if (confirmationEmail) {
+    /* El correu va en <strong> al mig de la frase: es partix pel {forat}, sense String.replace. */
+    const [abansCorreu, despresCorreu] = t('section.login.registre.enviatText', 'Hem enviat l’enllaç de confirmació a {correu}. Quan l’hages confirmat, torna ací i entra amb el teu correu i la contrasenya.').split('{correu}');
     return (
       <UniversalCard
         variant="onboarding"
         icon={<MailCheck size={28} />}
-        subtitle="Correu enviat"
-        title="Confirma el teu compte"
+        subtitle={t('section.login.registre.enviatSubtitol', 'Correu enviat')}
+        title={t('section.login.registre.enviatTitol', 'Confirma el teu compte')}
         body={
           <>
             <p className="sdp-camp" role="status">
-              Hem enviat l’enllaç de confirmació a <strong>{confirmationEmail}</strong>.
-              Quan l’hages confirmat, torna ací i entra amb el teu correu i la contrasenya.
+              {abansCorreu}<strong>{confirmationEmail}</strong>{despresCorreu}
             </p>
             <div className="onboarding-card__action--ple">
               <button type="button" className="sdp-boto sdp-boto--secundari sdp-boto--ple" onClick={jaConfirmat}>
-                Ja l’he confirmat: entrar <ArrowRight size={18} aria-hidden="true" />
+                {t('section.login.registre.jaConfirmat', 'Ja l’he confirmat: entrar')} <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
           </>
@@ -168,34 +182,28 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
   return (
     <UniversalCard
       variant="onboarding"
-      title={entrant ? 'Entra al teu compte' : 'Crea el teu compte'}
+      title={entrant ? t('section.login.registre.titolEntrar', 'Entra al teu compte') : t('section.login.registre.titolCrear', 'Crea el teu compte')}
       body={
         <>
           {entrant ? (
             <p className="onboarding-card__intro">
-              {introEntrada || (
-                <>
-                  Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google,
-                  no té contrasenya: entra amb Google.
-                </>
-              )}
+              {introEntrada || t('section.login.registre.introEntrar', 'Entra amb el correu i la contrasenya del teu compte. Si el vas crear amb Google, no té contrasenya: entra amb Google.')}
             </p>
           ) : (
             <p className="onboarding-card__intro">
-              Primer entra una persona real. El teu perfil queda privat i separat de les
-              organitzacions que crearàs després.
+              {t('section.login.registre.introCrear', 'Primer entra una persona real. El teu perfil queda privat i separat de les organitzacions que crearàs després.')}
             </p>
           )}
 
           <div className="sdp-pindola--centrada onboarding-form__pindola">
             <PillToggle
-              etiqueta="Opcions d’accés"
+              etiqueta={t('section.login.registre.opcions', 'Opcions d’accés')}
               disabled={desactivat}
               valor={mode}
               onCanvi={(v) => { if (desactivat || enviant.current) return; setMode(v); setErrors({}); onClearError?.(); }}
               opcions={[
-                { valor: 'login', text: 'Entrar' },
-                { valor: 'register', text: 'Crear compte' },
+                { valor: 'login', text: t('section.login.loginTitle', 'Entrar') },
+                { valor: 'register', text: t('section.login.registerTitle', 'Crear compte') },
               ]}
             />
           </div>
@@ -205,7 +213,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
           <form className="onboarding-form" onSubmit={submit} noValidate>
             {mode === 'register' && (
               <div className={errors.name ? 'sdp-camp ' : 'sdp-camp'}>
-                <label className="sdp-camp__etiqueta" htmlFor="reg-name">Nom i cognoms</label>
+                <label className="sdp-camp__etiqueta" htmlFor="reg-name">{t('section.login.placeholder.name', 'Nom i cognoms')}</label>
                 <input
                   id="reg-name"
                   className="sdp-control"
@@ -225,7 +233,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             
 
             <div className={errors.email ? 'sdp-camp ' : 'sdp-camp'}>
-              <label className="sdp-camp__etiqueta" htmlFor="reg-email">Correu electrònic</label>
+              <label className="sdp-camp__etiqueta" htmlFor="reg-email">{t('section.login.loginEmail', 'Correu electrònic')}</label>
               <input
                 ref={correuRef}
                 id="reg-email"
@@ -244,9 +252,10 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             </div>
 
             <div className={errors.password ? 'sdp-camp ' : 'sdp-camp'}>
-              <label className="sdp-camp__etiqueta" htmlFor="reg-password">Contrasenya</label>
+              <label className="sdp-camp__etiqueta" htmlFor="reg-password">{t('section.login.loginPassword', 'Contrasenya')}</label>
               <ControlContrasenya
                 id="reg-password"
+                etiquetaUll={t('section.login.registre.ullContrasenya', 'Mostra la contrasenya')}
                 name="password"
                 value={fields.password}
                 onChange={updateField}
@@ -258,7 +267,8 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
               />
               {mode === 'register' && (
                 <p id="onboarding-password-help" className={errors.password ? 'sdp-camp__error' : 'sdp-camp__ajuda'}>
-                  {errors.password || 'Mínim 10 caràcters. No reutilitzes una contrasenya antiga.'}
+                  {errors.password || t('section.login.registre.ajudaContrasenya', 'Mínim {minim} caràcters. No reutilitzes una contrasenya antiga.')
+                    .replace('{minim}', () => String(LONGITUD_MINIMA_CONTRASENYA))}
                 </p>
               )}
               {mode === 'login' && errors.password && (
@@ -268,10 +278,10 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
 
             {mode === 'register' && (
               <div className={errors.confirmPassword ? 'sdp-camp ' : 'sdp-camp'}>
-                <label className="sdp-camp__etiqueta" htmlFor="reg-confirm-password">Confirmar contrasenya</label>
+                <label className="sdp-camp__etiqueta" htmlFor="reg-confirm-password">{t('section.login.registre.confirmaContrasenya', 'Confirmar contrasenya')}</label>
                 <ControlContrasenya
                   id="reg-confirm-password"
-                  etiquetaUll="Mostra la confirmació de la contrasenya"
+                  etiquetaUll={t('section.login.registre.ullConfirmacio', 'Mostra la confirmació de la contrasenya')}
                   name="confirmPassword"
                   value={fields.confirmPassword}
                   onChange={updateField}
@@ -299,7 +309,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                   className="sdp-casella__control"
                 />
                 <label htmlFor="reg-rgpd" className="sdp-casella__etiqueta">
-                  Consent el tractament de dades personals (RGPD Llei 05) exclusivament per a Sóc de Poble.
+                  {t('section.login.registre.consentiment', 'Consent el tractament de dades personals (RGPD Llei 05) exclusivament per a Sóc de Poble.')}
                 </label>
                 {errors.rgpd ? <p id="onboarding-rgpd-error" className="sdp-camp__error">{errors.rgpd}</p> : null}
               </div>
@@ -308,14 +318,14 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             <div className="onboarding-card__action--ple">
               <button type="submit" className="sdp-boto sdp-boto--secundari sdp-boto--ple" disabled={desactivat}>
                 {isBusy ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : <UserRound size={18} aria-hidden="true" />}
-                <span>{mode === 'login' ? 'Entrar al compte' : 'Crear el compte'}</span>
+                <span>{mode === 'login' ? t('section.login.registre.botoEntrar', 'Entrar al compte') : t('section.login.registre.botoCrear', 'Crear el compte')}</span>
               </button>
             </div>
 
             {mode === 'login' && typeof onRecupera === 'function' ? (
               <div className="onboarding-card__action--ple">
                 <Boto varietat="fantasma" ple onClick={obriRecuperacio} disabled={desactivat}>
-                  Has oblidat la contrasenya?
+                  {t('section.login.registre.oblidada', 'Has oblidat la contrasenya?')}
                 </Boto>
               </div>
             ) : null}

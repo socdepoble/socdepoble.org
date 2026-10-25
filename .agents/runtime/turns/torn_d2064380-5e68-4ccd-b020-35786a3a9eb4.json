@@ -3,10 +3,10 @@
   "turn_id": "torn_d2064380-5e68-4ccd-b020-35786a3a9eb4",
   "actor": "iaia-maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "planned",
+  "revision": 10,
   "createdAt": "2026-10-25T04:38:47.633Z",
-  "updatedAt": "2026-10-25T04:44:42.186Z",
+  "updatedAt": "2026-10-25T05:09:16.841Z",
   "expiresAt": "2026-10-26T04:38:47.634Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3733,9 +3733,38 @@
         "committedAt": "2026-10-25T04:44:42.186Z",
         "documentHash": "e1299289d36848e6c99d354b94ff912b5e05ab5c4dd9dd5a9206e79e8eb5074c"
       }
+    },
+    "b9b8a898-fb52-43b9-80c1-9bb8b6085579": {
+      "id": "b9b8a898-fb52-43b9-80c1-9bb8b6085579",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+      "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-25T05:09:08.350Z"
+    },
+    "22137987-14c0-4f51-bbfc-45c5a3afbb77": {
+      "id": "22137987-14c0-4f51-bbfc-45c5a3afbb77",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+      "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-25T05:09:16.754Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-25T05:09:16.755Z",
+        "committedAt": "2026-10-25T05:09:16.796Z",
+        "documentHash": "74798a06895b281386c8b5ad014932a68fc65088ea3a2b9af449a48f6bdee65f"
+      }
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+    "hash": "c37b236f7c159bcc6cb93e8fc5e550a115eddc6066d7d8a1464ec8269bf0f725"
+  },
   "verification": null,
   "history": [
     {
@@ -3778,6 +3807,28 @@
       "file": "_wiki_de_poble/04_escriptori/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md",
       "at": "2026-10-25T04:44:42.186Z",
       "hash": "e1299289d36848e6c99d354b94ff912b5e05ab5c4dd9dd5a9206e79e8eb5074c"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-25T05:09:08.350Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-25T05:09:16.755Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "22137987-14c0-4f51-bbfc-45c5a3afbb77",
+      "file": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+      "at": "2026-10-25T05:09:16.796Z",
+      "hash": "74798a06895b281386c8b5ad014932a68fc65088ea3a2b9af449a48f6bdee65f"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-25T05:09:16.840Z"
     }
   ]
 }

@@ -227,7 +227,8 @@ if ( 'readme' === $mode ) {
 	echo json_encode(
 		array(
 			'seccions' => socdepoble_enxufe_seccions_readme(),
-			'info'     => socdepoble_enxufe_plugins_api( false, 'plugin_information', (object) array( 'slug' => SOCDEPOBLE_ENXUFE_SLUG ) ),
+			// Gauntlet 261025_0545 (MISSED P3) · la fitxa respon per l'slug del canal propi, no pel del directori.
+			'info'     => socdepoble_enxufe_plugins_api( false, 'plugin_information', (object) array( 'slug' => SOCDEPOBLE_ENXUFE_SLUG_CANAL ) ),
 			'aliena'   => socdepoble_enxufe_plugins_api( false, 'plugin_information', (object) array( 'slug' => 'akismet' ) ),
 			'html'     => isset( $cas['linies'] ) ? socdepoble_enxufe_html_readme( $cas['linies'] ) : '',
 		),

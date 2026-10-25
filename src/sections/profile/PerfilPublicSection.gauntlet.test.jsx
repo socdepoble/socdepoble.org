@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({
   host: vi.fn(), fetch: vi.fn(), seo: vi.fn(), titols: [],
@@ -28,9 +28,15 @@ vi.mock('../../components/universal/UniversalPage', () => ({
     return <article><h1>{props.title}</h1>{props.subtitle && <h2>{props.subtitle}</h2>}<p>{props.lead}</p></article>;
   }
 }));
+/* Gauntlet 261025_0545 (DF-03) · L'adaptador ja no s'importa ací: el compon
+   l'arrencada de l'host de veres, l'única porta cap a src/data/supabase
+   (tractor-enxufe E1). <soc-de-poble> no hi pinta res, i a Vitest l'espai de
+   noms del mòdul porta getters que el port no admet: el mock en fa la còpia
+   plana, sense canviar cap mètode. */
+vi.mock('../../PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
+vi.mock('../../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
 import { CONTRACTE_NUCLI } from '../../data/contracte.js';
-import { setBackendImplementation } from '../../data/backendPort.js';
-import { loadPerfilPublic } from '../../data/supabase/perfils.js';
+import { getBackendImplementation, setBackendImplementation } from '../../data/backendPort.js';
 import { MemoryRouter, Routes, Route, useNavigate } from '../../app/contexts/RouterContext.jsx';
 import PerfilPublicSection from './PerfilPublicSection.jsx';
 
@@ -57,11 +63,23 @@ function munta(ruta) {
   </MemoryRouter>);
 }
 
+/* Gauntlet 261025_0545 (DF-03) · El loadPerfilPublic de l'adaptador, tal com
+   el deixa al port host.arrenca(). L'host que veu la pàgina continua sent la
+   fixture de dalt; el de veres només compon. */
+let loadPerfilPublic;
+beforeAll(async () => {
+  const { arrenca } = await vi.importActual('../../host.js');
+  await arrenca();
+  ({ loadPerfilPublic } = getBackendImplementation());
+});
+
 beforeEach(() => {
   vi.useFakeTimers(); vi.clearAllMocks(); m.titols = [];
   m.config = { ...m.config, dataMode: 'remote' };
   const impl = Object.fromEntries(CONTRACTE_NUCLI.map((nom) => [nom, () => { throw new Error(`Fora d’àmbit: ${nom}`); }]));
-  setBackendImplementation({ ...impl, loadPerfilPublic });
+  /* Gauntlet 261025_0545 (DF-03) · L'arrencada ja ha segellat el port: en
+     desenvolupament (Vitest ho és) `force` hi torna a posar el joc reduït. */
+  setBackendImplementation({ ...impl, loadPerfilPublic }, true);
   m.host.mockResolvedValue(undefined);
   m.fetch.mockResolvedValue(resposta([]));
   vi.stubGlobal('fetch', m.fetch);

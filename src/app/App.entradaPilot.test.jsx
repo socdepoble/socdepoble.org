@@ -16,14 +16,17 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import PedraSecaEmbed from '../PedraSecaEmbed';
-import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
-import * as adaptadorSupabase from '../data/supabase/index.js';
 import { esborraSessio, usuariDeSessio } from '../data/identitat.js';
 import { getSessionState } from '../data/sessionService.js';
 import { PERSONA_PILOT } from '../data/identitatsSeed.js';
 import { RUTA_DESPRES_D_ENTRAR } from '../config/rutaEntrada.js';
 
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined }));
+/* Gauntlet 261025_0545 (DF-03) · L'adaptador de veres ja no s'importa ací: el
+   carrega host.arrenca(), l'única porta cap a src/data/supabase (tractor-enxufe
+   E1). A Vitest l'espai de noms del mòdul porta getters i el port exigix
+   mètodes: la còpia plana d'abans la fa ara este mock, sense canviar cap mètode. */
+vi.mock('../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
 vi.mock('../sections/notes/GlobalSaveManager.js', async (importOriginal) => ({
   ...await importOriginal(),
   getDraftsForScope: async () => ({})
@@ -60,17 +63,17 @@ async function muntaLApp(dataMode, cos) {
     throw new TypeError('Failed to fetch');
   });
   vi.stubGlobal('fetch', xarxa);
-  const anterior = { ...getBackendImplementation() };
-  /* Com host.arrenca(), però amb una còpia plana: a Vitest l'espai de noms del
-     mòdul porta getters i el port exigix mètodes. */
-  setBackendImplementation({ ...adaptadorSupabase });
+  /* Gauntlet 261025_0545 (DF-03) · Com en producció: l'host de veres (l'app
+     continua veient el simulat de dalt) posa l'adaptador al port i el segella.
+     És idempotent: les dues proves compartixen el mateix adaptador. */
+  const { arrenca } = await vi.importActual('../host.js');
+  await arrenca();
   window.history.replaceState(null, '', '/registre?mode=entrar');
   try {
     render(<PedraSecaEmbed config={{ ...CONFIG, dataMode }} />);
     await cos(xarxa);
   } finally {
     cleanup();
-    if (Object.keys(anterior).length) setBackendImplementation(anterior);
   }
 }
 

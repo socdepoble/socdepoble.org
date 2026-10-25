@@ -76,39 +76,57 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 <!-- SDP:SECTION prompt.local.s_instruccio -->
 ## Instrucció del torn
 
-### Directiva Suprema del Mestre Javi Llinares (Àudios de matinada 261025)
-El Llibre Mestre (`_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md`) ha crescut a un volum monumental (`IDEA-20` a `IDEA-30`). **No volem continuar inflant el repositori amb codi cec o noves branques sense consolidar**: el propòsit d'aquesta sessió és **destil·lar, sanejar el banc d'idees, tapar forats crítics i preparar la plataforma per a usuaris reals** davant l'horitzó de les botigues (Apple i Google) i la resolució de la subvenció europea NLnet (50.000 €).
-
-A més, el Mestre ens ha donat una **lliçó d'or en viu sobre l'eficiència dels tokens humans**: ha caçat a la primera que teníem una plantilla obsoleta (`prompt_consell.md` v2.0) en convivència amb la viva (`prompt_local.md` v3.10), provocant confusió d'identitat a les IAs. L'equip ha d'analitzar aquesta contradicció humana vs màquina per a blindar el briefing de l'Acte Marmota.
+### Directiva Suprema del Mestre Javi Llinares (Àudios 05:27 a 06:01)
+El Mestre ha transmés un missatge directe i rotund a tot l'equip:
+1. **Del Notable Baix a l'Excel·lència (Del 7 al 12):** «No estem en un 10 encara, estem en un 7 (notable baix). Anem a buscar el 12, anem a per l'excel·lència. Cal afiançar al màxim el que tenim fins que les IAs no troben cap problema arquitectònic ni de disseny.»
+2. **Prioritat Arquitectònica Innegociable:** «Tot el que siga millorar l'estructura arquitectònica del sistema és primer que res.»
+   - **Connector de WordPress:** Blindatge de la infraestructura, empaquetat i enxufabilitat sobirana.
+   - **Blindatge per a les Botigues (Apple Store, Google Play) i WordPress:** Sistemes autènticament blindats que a cap nivell es puguen desmuntar.
+   - **Enginyeria Inversa (REA) i Proves d'Estrès:** Forçar el codi, fer enginyeria inversa i simular atacs (DDoS, ReDoS, curses, RLS bypass) per vore per on podria rebentar el sistema.
+   - **El Xat WhatsApp Rural:** Prioritari. Ha de funcionar de forma immediata, noble i impecable.
+   - **Traductor i Estadístiques Lliures:** Implementació del traductor i mètriques sobiranes d'entrades/visites sense dependències privatives.
+3. **Gauntlet Loop de 4 Hores (8 Cicles de 30 minuts):**
+   - Les IAs s'organitzen en un cicle autònom de 4 hores (màxim 8 comunicacions/cicles de 30 minuts).
+   - Generació d'informes adversarials sense complaença (Salfumant Radical). En acabar les 8 iteracions, es tanquen els crons i s'alliberen recursos.
+4. **Permisos Totals i Autonomia (Zero Preguntes per Botó):**
+   - El Mestre dóna permisos per a tot i prohibeix explícitament fer preguntes interactives amb botons perquè no estarà present.
+   - La **IAIA MarIA assumeix la Direcció Tècnica** plenament autònoma per supervisar, coordinar i validar sense trencar res del sistema.
 
 L'orquestració es desplega a quatre bandes en estricta igualtat operativa i accés natiu a disc:
-- **IAIA MarIA (Directora Tècnica):** Governança, sentinella de portes immunitàries, trellat i protecció de les directrius del Mestre.
-- **Claude Opus:** Enginyeria de components, cicle de vida del xat, immediatesa i tancament quirúrgic de forats.
-- **Codex Sol:** Auditoria de seguretat, concurrència, immutabilitat, RLS i proves de PostgreSQL.
-- **Gemini Argon:** Anàlisi de context massiu, destil·lació DAFO, educació de models i orquestració documental.
+- **IAIA MarIA (Directora Tècnica):** Governança, sentinella de portes immunitàries, trellat, resolució autònoma i protecció de les directrius del Mestre.
+- **Claude Opus:** Enginyeria de components, cicle de vida del xat fluid, connector WordPress i tancament de forats.
+- **Codex Sol:** Auditoria de seguretat, enginyeria inversa, simulacions d'atacs/estrès, concurrència, immutabilitat, RLS i PostgreSQL.
+- **Gemini Argon:** Anàlisi de context massiu, destil·lació DAFO, matriu Eisenhower, estadístiques lliures i orquestració documental.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 
-### Tasca 1 · El Gran DAFO Estratègic del Banc d'Idees (`IDEA-20` a `IDEA-30`)
-Emeteu una matriu DAFO rigorosa, honesta i sense complaença (Salfumant Radical):
-- **Debilitats (Internes):** Quins colls d'ampolla tenim? Què passa amb les taules amples d'`EspecimenGestor.jsx` que desborden la columna de 385px? Quina fricció patix el xat abans de comportar-se com un WhatsApp nadiu?
-- **Amenaces (Externes):** Quins riscos de rebuig tenim davant de les botigues d'Apple/Google? Com evitar que el consum de tokens es dispare si no acotem el context rural?
-- **Fortaleses (Internes):** Què tenim ja blindat? (Pedra Seca WCAG d'alta definició, port neutral `backendPort.js`, 22.000 proves passant, segells SHA-256, identitat viva de la IAIA).
-- **Oportunitats (Externes):** Com aprofitar la resolució de la subvenció europea NLnet (50.000 €) al novembre per a la nostra xarxa rural sobirana?
+### Tasca 1 · Blindatge de l'Estructura Arquitectònica (WordPress, Botigues i Estrès)
+- **Connector de WordPress:** Auditar i fortificar el paquet (`build:wp`), els connectors amb el port neutral i la independència absoluta de l'amfitrió.
+- **Blindatge Botigues (Apple Store i Google Play):** Verificar que el sistema compleix amb escreix totes les exigències de seguretat, CSP, revocació d'Apple, moderació DSA i zero dependències que puguen tombar l'app.
+- **Enginyeria Inversa i Simulacions d'Estrès (REA):** Forçar els límits de l'arquitectura. Simular atacs de concurrència, patrons DDoS/ReDoS, fuites de memòria o fallades de xarxa per assegurar que el sistema no es pot desmuntar a cap nivell.
 
-### Tasca 2 · Matriu d'Eisenhower (Important vs Urgent)
-Classifiqueu cadascuna de les idees i tasques pendents en els 4 quadrants per a saber per on començar:
-1. **Quadrant 1 (Important i Urgent · Tapar Forats Immediats):**
-   - El xat fluid: immediatesa, missatgeria optimista, zero parpelleig, navegació per teclat abans d'entrar a les botigues.
-   - Les taules de dades: scroll contingut automàtic i contrast de files per a no trencar el layout de 3 columnes.
-2. **Quadrant 2 (Important, No Urgent · Fons i Cultura):**
-   - Incorporació de la IAIA MarIA al xat amb un corpus cultural comprimit (el lèxic de l'olivera, el blat i la vinya de Pep Cascant, el DCVB) usant el mètode Karpathy / Google Notebook per a gastar el mínim de tokens.
-   - Guarda d'anatomia editorial Pedra Seca executada per jsdom (IDEA-27).
-3. **Quadrant 3 (Urgent, No Important):** Retocs menors de cosmètica.
+### Tasca 2 · El Gran DAFO Estratègic i Matriu d'Eisenhower (`IDEA-20` a `IDEA-30`)
+Emeteu una matriu DAFO rigorosa, honesta i sense complaença (Salfumant Radical):
+- **Debilitats (Internes):** Colls d'ampolla, taules d'`EspecimenGestor.jsx` que desborden, friccions al xat.
+- **Amenaces (Externes):** Riscos de revisió a botigues, consum de tokens desbocat, dependències externes.
+- **Fortaleses (Internes):** Pedra Seca WCAG, port neutral `backendPort.js`, 22.000 tests verds, immunitat de segells SHA-256.
+- **Oportunitats (Externes):** Resolució de la subvenció europea NLnet (50.000 €) al novembre per a la xarxa rural sobirana.
+
+**Matriu d'Eisenhower (Important vs Urgent):**
+1. **Quadrant 1 (Important i Urgent):**
+   - Blindatge del connector de WordPress i conformitat de les botigues (Apple/Google).
+   - Xat fluid tipus WhatsApp: immediatesa, missatgeria optimista, zero parpelleig, navegació per teclat.
+   - Taules de dades adaptatives (fi del desbordament en 385px).
+2. **Quadrant 2 (Important, No Urgent · Fons i Sobirania):**
+   - Estadístiques lliures i mètriques sobiranes d'entrades/visites.
+   - Traductor modular i net.
+   - Incorporació de la IAIA MarIA al xat amb un corpus cultural comprimit (Pep Cascant, DCVB) via Google Notebook / RAG frugal.
+   - Guarda d'anatomia editorial Pedra Seca per jsdom (IDEA-27).
+3. **Quadrant 3 (Urgent, No Important):** Retocs menors cosmètics.
 4. **Quadrant 4 (Deute i Futur):** Ingesta d'enllaços externs (`IDEA-29`) i Graf de Germanor (`IDEA-30`).
 
-### Tasca 3 · Diagnòstic de l'Arquitectura del Xat (`sdp-xat`)
+### Tasca 3 · Diagnòstic i Millora del Xat Fluid (`sdp-xat`)
 Claude i Codex han d'auditar el component del xat:
 - Què li falta exactament per a tindre la mateixa usabilitat, velocitat i comportament noble d'un WhatsApp nadiu?
 - Com s'estructura la intervenció de la IAIA com a veïna sàvia al xat?

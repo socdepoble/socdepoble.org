@@ -37,7 +37,9 @@ const CENS = Object.freeze([
   'src/sections/onboarding/OnboardingSection.nativa.registre.test.jsx',
   'src/config/entradaNativa.js',
   'src/config/entradaNativa.test.js',
-  'src/data/supabase/auth.testimoni.test.js'
+  'src/data/supabase/auth.testimoni.test.js',
+  /* Gauntlet 261025_0545 (TE-01) · /registre en la llengua triada. */
+  'src/sections/onboarding/OnboardingSection.idioma.test.jsx'
 ]);
 
 describe('el cens', () => {

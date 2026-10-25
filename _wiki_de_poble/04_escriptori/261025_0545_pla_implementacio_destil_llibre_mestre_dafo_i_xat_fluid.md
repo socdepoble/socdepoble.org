@@ -42,37 +42,53 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 ## Canvis proposats
 
 ### 1. Objectiu Estratègic del Torn (Directiva Suprema del Mestre Javi Llinares)
-El Llibre Mestre (`03_llibre_mestre_tasques_i_idees.md`) ha crescut a un ritme gegantí (des d'`IDEA-20` fins a `IDEA-30`). El propòsit d'aquest torn no és inflar el sistema amb implementacions precipitades, sinó **destil·lar, sanejar el banc d'idees, tapar forats crítics i preparar la plataforma per a usuaris reals** davant l'horitzó de les botigues (Apple/Google) i la resolució d'NLnet (50.000 €).
+El Mestre ha marcat una fita d'ambició clara: «No estem en un 10 encara, estem en un notable (un 7, notable baix). Anem a buscar el 12, anem a per l'excel·lència». La prioritat absoluta és **l'estructura arquitectònica del sistema**, forçar el codi i fer simulacions d'estrès abans que res:
+- **Connector de WordPress:** Blindatge de la infraestructura, empaquetat i enxufabilitat sobirana.
+- **Blindatge Botigues (Apple Store, Google Play) i WordPress:** Sistemes autènticament blindats que no es puguen desmuntar a cap nivell.
+- **Enginyeria Inversa i Simulacions d'Estrès (REA):** Atacs simulats (DDoS, ReDoS, curses, RLS bypass) per trobar per on podria fallar el sistema.
+- **El Xat WhatsApp Rural:** Prioritari. Ha de funcionar de forma immediata, fluida i impecable.
+- **Traductor i Estadístiques Lliures:** Implementació del traductor i mètriques sobiranes d'entrades/visites.
+- **Gauntlet Loop de 4 Hores (8 Cicles de 30 minuts):** Cicle autònom d'auditoria adversarial extrema sense preguntes interactives; la IAIA MarIA assumeix la Direcció Tècnica amb permisos totals.
 
 ### 2. Eixos de Treball de la Colmena (Coordinació a 4 Bandes)
 
-#### Eix A · Gran Auditoria DAFO i Matriu d'Eisenhower (Gemini Argon + Codex Sol)
+#### Eix A · Blindatge Estructural, WordPress i Estrès REA (Codex Sol + Claude Opus)
+1. **Connector de WordPress:**
+   - Validar el paquet (`build:wp`), els punts d'enllaç amb el port neutral `backendPort.js` i la independència de l'amfitrió.
+2. **Blindatge de Botigues (Apple Store i Google Play):**
+   - Verificar CSP, gestió de revocació de comptes d'Apple, compliment DSA i zero dependències fràgils.
+3. **Enginyeria Inversa (REA) i Simulació d'Estrès:**
+   - Forçar el sistema amb proves de càrrega, concurrència i resistència davant fallades de xarxa o intents de saturació.
+
+#### Eix B · Gran Auditoria DAFO, Matriu d'Eisenhower i Mètriques (Gemini Argon)
 1. **Anàlisi DAFO Integral del Banc d'Idees:**
-   - **Debilitats (Internes):** Pes de context a les IAs per falta de síntesi cultural, forats en la immediatesa del xat en temps real, taules que desborden la columna de 385px a `EspecimenGestor.jsx`.
-   - **Amenaces (Externes):** Rebuig per sorpresa a les botigues d'Apple/Google si el xat no és 100% fluid o si falten polítiques; dependència d'infraestructura; despesa desbocada de tokens si no s'acota el context rural.
-   - **Fortaleses (Internes):** Arquitectura de Pedra Seca WCAG d'alta definició, model neutral sense *vendor lock-in* (`backendPort.js`), 22.000 proves passant, immunitat i signatura de segells criptogràfics, veu pròpia de la IAIA MarIA.
-   - **Oportunitats (Externes):** Resolució imminent de la subvenció europea NLnet (50.000 €) al novembre; buit de mercat per a xarxes socials rurals i memòria històrica viva; sobirania de dades amb exportació Open Data.
+   - **Debilitats (Internes):** Colls d'ampolla, taules que desborden a `EspecimenGestor.jsx`, fricció al xat.
+   - **Amenaces (Externes):** Riscos davant les botigues, consum desbocat de tokens, dependències externes.
+   - **Fortaleses (Internes):** Pedra Seca WCAG, port neutral, 22.000 tests verds, segells immutables SHA-256.
+   - **Oportunitats (Externes):** Resolució d'NLnet (50.000 €) al novembre per a la xarxa rural sobirana.
 2. **Matriu d'Eisenhower (Priorització Radical):**
-   - **Quadrant 1 · Urgent i Important (Tapar Forats Immediats):** 
-     - Convertir el xat (`sdp-xat`) en una experiència fluida, immediata i sòlida com WhatsApp abans d'entrar a les botigues.
-     - Resoldre l'amplada de taules a `:where(table)` sense dependre del `@media (max-width: 40rem)` per a evitar trencaments en columnes de 385px.
-   - **Quadrant 2 · Important, No Urgent (Construcció de Fons):**
-     - Integració de la IAIA MarIA al xat amb un corpus cultural comprimit (Pep Cascant, lèxic de l'olivera, el blat i la vinya, DCVB) mitjançant Google Notebook / RAG frugal per a reduir consum de tokens.
-     - Creació de la prova d'anatomia editorial executada per jsdom (IDEA-27).
-   - **Quadrant 3 · No Important, Urgent:** Peticions de disseny cosmètic menors.
-   - **Quadrant 4 · Deute / Futur:** `IDEA-28`, `IDEA-29` i `IDEA-30` queden com a banc d'innovació per a quan la base estiga 100% estabilitzada.
+   - **Quadrant 1 · Urgent i Important (Tapar Forats Immediats):**
+     - Blindatge del connector de WordPress i de les botigues (Apple/Google).
+     - Xat fluid tipus WhatsApp: immediatesa, missatgeria optimista, zero parpelleig, navegació per teclat.
+     - Taules de dades adaptatives (fi del desbordament en 385px).
+   - **Quadrant 2 · Important, No Urgent (Construcció de Fons i Sobirania):**
+     - Estadístiques lliures i mètriques sobiranes d'entrades/visites.
+     - Traductor modular i net.
+     - Integració de la IAIA MarIA al xat amb un corpus cultural comprimit (Pep Cascant, DCVB) via Google Notebook / RAG frugal.
+     - Prova d'anatomia editorial executada per jsdom (IDEA-27).
+   - **Quadrant 3 · No Important, Urgent:** Peticions cosmètiques menors.
+   - **Quadrant 4 · Deute / Futur:** `IDEA-28`, `IDEA-29` i `IDEA-30` al banc d'innovació per a quan la base estiga al 12.
 
-#### Eix B · Arquitectura del Xat Fluid i Presència de la IAIA (Claude Opus)
-1. **Diagnòstic de la Immediatesa del Xat:**
-   - Auditar el cicle de vida del missatge a `sdp-xat`: enviament local optimista, recepció per Supabase Realtime, gestió d'estats de connexió i renderitzat sense parpellejos.
+#### Eix C · Arquitectura del Xat Fluid i Presència de la IAIA (Claude Opus)
+1. **Diagnòstic i Millora de la Immediatesa del Xat (`sdp-xat`):**
+   - Cicle de vida del missatge: enviament optimista local, recepció en temps real, gestió d'estats de xarxa sense parpellejos.
 2. **La IAIA al Xat:**
-   - Dissenyar el mecanisme perquè la IAIA MarIA puga rebre mencions o intervindre en fils de conversa del poble de forma assistida i natural.
-   - Optimització termodinàmica: alimentar-la amb càpsules de context cultural local per no cremar tokens en context general.
+   - Intervenció assistida i càpsules de context cultural local per no cremar tokens innecessaris.
 
-#### Eix C · Governança i Sentinella d'Immutabilitat (IAIA MarIA)
-1. **Regla de Zero Destrossa:**
-   - Prohibit tocar `PanellTractors.jsx`, `PanellSentinelles.jsx`, esquemes SQL de Supabase o lògica d'autenticació sense aprovació prèvia.
-   - Les tasques s'executen per torns amb validació de proves a cada pas.
+#### Eix D · Direcció Tècnica Autònoma i Sentinella (IAIA MarIA)
+1. **Supervisió i Protecció Total:**
+   - Zero intervenció humana durant les 4 hores: no s'emet cap pregunta interactiva.
+   - Control de concurrència i validació de portes immunitàries (`test:precommit`, `porta-olivera.mjs`).
 
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació

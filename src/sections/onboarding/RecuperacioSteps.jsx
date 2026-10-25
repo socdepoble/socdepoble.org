@@ -29,6 +29,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, KeyRound, LockKeyhole, LogOut, Send } from 'lucide-react';
 import { Alerta, Boto, ControlContrasenya, UniversalCard } from '../../components/PedraSeca/index.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
+import { createTranslator } from '../../config/i18n.js';
 import {
   LONGITUD_MINIMA_CONTRASENYA, codiDEntrada, esCorreuValid, missatgeDEntrada, toDeLErrorDEntrada, validaContrasenyaNova
 } from './onboardingModel.js';
@@ -37,10 +38,21 @@ import {
    compte: abans, el servidor respondria «massa intents». */
 export const ESPERA_REENVIAMENT_MS = 60000;
 
+/* Gauntlet 261025_0545 (TE-01) · La reserva valenciana de
+   'section.login.recuperacio.enviada'; continua exportada per a les proves. */
 export const MISSATGE_RECUPERACIO_ENVIADA = 'Si hi ha un compte amb eixe correu, t’arribarà un enllaç per a definir una contrasenya nova. Mira també la carpeta de correu brossa.';
 
 /** L'estat que sobreviu a tancar i tornar a obrir la vista: l'avís d'enviat i fins quan s'espera. */
 export const ESTAT_RECUPERACIO_INICIAL = Object.freeze({ enviat: false, esperaFins: 0 });
+
+/* Gauntlet 261025_0545 (TE-01) · Els textos passen pel traductor `t` que
+   reben (el de la interfície, des d'OnboardingSection); sense, el valencià de
+   sempre. La reserva escrita al codi és el valor valencià del diccionari
+   (OnboardingSection.idioma.test.jsx ho guarda). Una frase amb un {forat}
+   on va una peça (un <strong>, un número) es partix amb split, no amb
+   String.replace: cap «$&» d'un correu es reinterpreta. Els errors de
+   onboardingModel.js no són d'ací i continuen com estaven. */
+const TRADUCTOR_DE_RESERVA = createTranslator('ca');
 
 /* Una resposta que arriba amb la vista desmuntada no pinta res. */
 function useViu() {
@@ -60,7 +72,7 @@ function useViu() {
  * la vista; sense ells, la vista els guarda ella mateixa.
  */
 export function RecuperacioStep({
-  correu = '', onCanviCorreu, onEnvia, onTorna, bloquejat = false, estat = null, onEstat = null
+  correu = '', onCanviCorreu, onEnvia, onTorna, bloquejat = false, estat = null, onEstat = null, t = TRADUCTOR_DE_RESERVA
 }) {
   const [enviant, setEnviant] = useState(false);
   const [error, setError] = useState(null);
@@ -96,7 +108,7 @@ export function RecuperacioStep({
     event.preventDefault();
     if (bloquejat || enCurs.current || restants > 0) return;
     if (!esCorreuValid(correu)) {
-      setErrorCorreu('Escriu un correu electrònic vàlid.');
+      setErrorCorreu(t('section.login.registre.errorCorreu', 'Escriu un correu electrònic vàlid.'));
       return;
     }
     setErrorCorreu('');
@@ -117,23 +129,24 @@ export function RecuperacioStep({
   };
 
   const descripcio = errorCorreu ? 'rec-email-error' : undefined;
+  const [abansEspera, despresEspera] = t('section.login.recuperacio.espera', 'Podràs tornar a demanar-lo d’ací a {segons} s.').split('{segons}');
   return (
     <UniversalCard
       variant="onboarding"
       icon={<KeyRound size={28} />}
-      title="Recupera la contrasenya"
+      title={t('section.login.recuperacio.titol', 'Recupera la contrasenya')}
       body={
         <>
           <p className="onboarding-card__intro">
-            Escriu el correu del teu compte i t’enviarem un enllaç per a definir una contrasenya nova.
+            {t('section.login.recuperacio.intro', 'Escriu el correu del teu compte i t’enviarem un enllaç per a definir una contrasenya nova.')}
           </p>
 
-          {enviat ? <Alerta to="exit">{MISSATGE_RECUPERACIO_ENVIADA}</Alerta> : null}
+          {enviat ? <Alerta to="exit">{t('section.login.recuperacio.enviada', MISSATGE_RECUPERACIO_ENVIADA)}</Alerta> : null}
           {error ? <Alerta to={toDeLErrorDEntrada(error.codi)}>{error.text}</Alerta> : null}
 
           <form className="onboarding-form" onSubmit={submit} noValidate>
             <div className="sdp-camp">
-              <label className="sdp-camp__etiqueta" htmlFor="rec-email">Correu electrònic</label>
+              <label className="sdp-camp__etiqueta" htmlFor="rec-email">{t('section.login.loginEmail', 'Correu electrònic')}</label>
               <input
                 ref={correuRef}
                 id="rec-email"
@@ -153,16 +166,16 @@ export function RecuperacioStep({
 
             <div className="onboarding-card__action--ple">
               <Boto tipus="submit" varietat="secundari" ple icona={Send} carregant={enviant} disabled={bloquejat || restants > 0}>
-                {enviat ? 'Torna a enviar l’enllaç' : 'Envia l’enllaç'}
+                {enviat ? t('section.login.recuperacio.reenvia', 'Torna a enviar l’enllaç') : t('section.login.recuperacio.envia', 'Envia l’enllaç')}
               </Boto>
               {restants > 0 ? (
-                <p className="sdp-camp__ajuda">Podràs tornar a demanar-lo d’ací a {restants} s.</p>
+                <p className="sdp-camp__ajuda">{abansEspera}{restants}{despresEspera}</p>
               ) : null}
             </div>
 
             <div className="onboarding-card__action--ple">
               <Boto varietat="fantasma" ple icona={ArrowLeft} onClick={onTorna} disabled={enviant}>
-                Torna a entrar
+                {t('section.login.recuperacio.tornaAEntrar', 'Torna a entrar')}
               </Boto>
             </div>
           </form>
@@ -184,7 +197,7 @@ export function RecuperacioStep({
  * és el del compte, perquè qui obri un enllaç que no és seu veja de qui és, i
  * `onEix()` (promesa) és l'única altra eixida.
  */
-export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna = null, onDemanaUnAltre = null }) {
+export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna = null, onDemanaUnAltre = null, t = TRADUCTOR_DE_RESERVA }) {
   const [fields, setFields] = useState({ password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null);
@@ -240,23 +253,24 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
     }
   };
 
+  const [abansCompte, despresCompte] = t('section.login.recuperacio.novaCompte', 'Compte: {correu}.').split('{correu}');
   return (
     <UniversalCard
       variant="onboarding"
       icon={<LockKeyhole size={28} />}
-      title="Definix la contrasenya nova"
+      title={t('section.login.recuperacio.novaTitol', 'Definix la contrasenya nova')}
       body={
         <>
           <p className="onboarding-card__intro">
-            {correu ? <>Compte: <strong>{correu}</strong>. </> : null}
-            Tria la contrasenya amb què entraràs d’ara endavant.
+            {correu ? <>{abansCompte}<strong>{correu}</strong>{despresCompte} </> : null}
+            {t('section.login.recuperacio.novaIntro', 'Tria la contrasenya amb què entraràs d’ara endavant.')}
           </p>
 
           {error ? (
             <Alerta
               to={toDeLErrorDEntrada(error.codi)}
               accions={enllacMort && typeof onDemanaUnAltre === 'function'
-                ? <Boto varietat="secundari" icona={Send} onClick={onDemanaUnAltre}>Demana un enllaç nou</Boto>
+                ? <Boto varietat="secundari" icona={Send} onClick={onDemanaUnAltre}>{t('section.login.recuperacio.demanaEnllac', 'Demana un enllaç nou')}</Boto>
                 : null}
             >
               {error.text}
@@ -265,9 +279,10 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
 
           <form className="onboarding-form" onSubmit={submit} noValidate>
             <div className="sdp-camp">
-              <label className="sdp-camp__etiqueta" htmlFor="nova-password">Contrasenya nova</label>
+              <label className="sdp-camp__etiqueta" htmlFor="nova-password">{t('section.login.recuperacio.novaCamp', 'Contrasenya nova')}</label>
               <ControlContrasenya
                 id="nova-password"
+                etiquetaUll={t('section.login.registre.ullContrasenya', 'Mostra la contrasenya')}
                 name="password"
                 value={fields.password}
                 onChange={updateField}
@@ -278,15 +293,16 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
                 disabled={ocupat || enllacMort}
               />
               <p id="nova-password-help" className={errors.password ? 'sdp-camp__error' : 'sdp-camp__ajuda'}>
-                {errors.password || `Mínim ${LONGITUD_MINIMA_CONTRASENYA} caràcters. No reutilitzes una contrasenya antiga.`}
+                {errors.password || t('section.login.registre.ajudaContrasenya', 'Mínim {minim} caràcters. No reutilitzes una contrasenya antiga.')
+                  .replace('{minim}', () => String(LONGITUD_MINIMA_CONTRASENYA))}
               </p>
             </div>
 
             <div className="sdp-camp">
-              <label className="sdp-camp__etiqueta" htmlFor="nova-confirm-password">Confirmar contrasenya nova</label>
+              <label className="sdp-camp__etiqueta" htmlFor="nova-confirm-password">{t('section.login.recuperacio.novaConfirma', 'Confirmar contrasenya nova')}</label>
               <ControlContrasenya
                 id="nova-confirm-password"
-                etiquetaUll="Mostra la confirmació de la contrasenya"
+                etiquetaUll={t('section.login.registre.ullConfirmacio', 'Mostra la confirmació de la contrasenya')}
                 name="confirmPassword"
                 value={fields.confirmPassword}
                 onChange={updateField}
@@ -303,14 +319,14 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
 
             <div className="onboarding-card__action--ple">
               <Boto tipus="submit" varietat="secundari" ple icona={LockKeyhole} carregant={enviant} disabled={eixint || enllacMort}>
-                Desa la contrasenya nova
+                {t('section.login.recuperacio.novaDesa', 'Desa la contrasenya nova')}
               </Boto>
             </div>
 
             {typeof onEix === 'function' ? (
               <div className="onboarding-card__action--ple">
                 <Boto varietat="fantasma" ple icona={LogOut} carregant={eixint} disabled={enviant} onClick={eixir}>
-                  Eixir del compte
+                  {t('section.login.recuperacio.eixir', 'Eixir del compte')}
                 </Boto>
               </div>
             ) : null}
@@ -318,7 +334,7 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
             {typeof onTorna === 'function' ? (
               <div className="onboarding-card__action--ple">
                 <Boto varietat="fantasma" ple icona={ArrowLeft} disabled={ocupat} onClick={onTorna}>
-                  Torna a entrar
+                  {t('section.login.recuperacio.tornaAEntrar', 'Torna a entrar')}
                 </Boto>
               </div>
             ) : null}
@@ -335,28 +351,27 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
  * s'havia premut «Desa», el mateix enllaç continua valent. `onDemanaUnAltre()`
  * obri «Recupera la contrasenya»; `onTorna()`, el formulari d'entrada.
  */
-export function EnllacPerdutStep({ onDemanaUnAltre, onTorna }) {
+export function EnllacPerdutStep({ onDemanaUnAltre, onTorna, t = TRADUCTOR_DE_RESERVA }) {
   return (
     <UniversalCard
       variant="onboarding"
       icon={<KeyRound size={28} />}
-      title="Torna a obrir l’enllaç del correu"
+      title={t('section.login.recuperacio.perdutTitol', 'Torna a obrir l’enllaç del correu')}
       body={
         <>
           <p className="onboarding-card__intro">
-            Esta pàgina s’ha recarregat i, per seguretat, ja no guarda l’enllaç per a definir la contrasenya nova.
-            Torna a obrir l’enllaç del correu que t’hem enviat. Si ja no el tens o diu que ja no val, demana’n un altre.
+            {t('section.login.recuperacio.perdutText', 'Esta pàgina s’ha recarregat i, per seguretat, ja no guarda l’enllaç per a definir la contrasenya nova. Torna a obrir l’enllaç del correu que t’hem enviat. Si ja no el tens o diu que ja no val, demana’n un altre.')}
           </p>
 
           <div className="onboarding-form">
             <div className="onboarding-card__action--ple">
               <Boto varietat="secundari" ple icona={Send} onClick={onDemanaUnAltre}>
-                Demana un enllaç nou
+                {t('section.login.recuperacio.demanaEnllac', 'Demana un enllaç nou')}
               </Boto>
             </div>
             <div className="onboarding-card__action--ple">
               <Boto varietat="fantasma" ple icona={ArrowLeft} onClick={onTorna}>
-                Torna a entrar
+                {t('section.login.recuperacio.tornaAEntrar', 'Torna a entrar')}
               </Boto>
             </div>
           </div>

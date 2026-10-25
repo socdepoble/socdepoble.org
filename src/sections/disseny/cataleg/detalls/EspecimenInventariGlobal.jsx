@@ -24,8 +24,17 @@ export default function EspecimenInventariGlobal() {
         <span><Insignia to="info">Fora de la porta: {fora}</Insignia></span>
       </p>
       <p>Qui és el pare universal de cada peça ho diu l’<Link to={rutaEspecimen('estructura-arbre')}>Arbre universal</Link>.</p>
+      {/* Gauntlet 261025_0545 (P1-16) · El registre fa uns 1.100px i la columna
+          del detall, uns 385px en una finestra de 1280px: la taula nua en vessava
+          més de 700px, retallats per l'overflow:hidden del detall. Es desplaça
+          dins de la seua caixa a qualsevol amplada (la de les taules de contingut,
+          com a EspecimenGestor.jsx), i la caixa és una regió amb el nom de la
+          llegenda i tabIndex=0. No és la caixa del contracte: aquella no parteix
+          el nom de la primera columna, i ací noms com «showToast (AvisadorEfimer)»
+          eixamplarien la columna i canviarien la taula també en mòbil. */}
+      <div className="sdp-taula-prosa" role="region" aria-labelledby="inventari-registre" tabIndex={0}>
       <table>
-        <caption>Registre del catàleg ({REGISTRE.length} entrades)</caption>
+        <caption id="inventari-registre">Registre del catàleg ({REGISTRE.length} entrades)</caption>
         <thead><tr><th scope="col">Component</th><th scope="col">Fitxer</th><th scope="col">Pàgina (antiga)</th><th scope="col">Estat</th><th scope="col">Porta</th></tr></thead>
         <tbody>
           {REGISTRE.map((r) => (
@@ -39,6 +48,7 @@ export default function EspecimenInventariGlobal() {
           ))}
         </tbody>
       </table>
+      </div>
       <h3>Deute de migració</h3>
       <ul>
         <li>11 fitxers de secció pinten <code>&lt;input&gt;/&lt;select&gt;/&lt;textarea&gt;</code> a mà: han de passar a <code>&lt;Camp&gt;</code>.</li>

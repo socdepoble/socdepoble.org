@@ -121,8 +121,28 @@ const PARTS_ADRECA = new RegExp(`^(?:(${FORMES_VIA})\\.?\\s+)?(${VIA_DATA}|[a-z]
    ve darrere d'un codi postal ja no és de l'adreça. Revisió adversarial
    13-10-2026, troballa ID-F3: una paraula clau o una lletra sola només valen
    si no les seguix cap altra lletra; una paraula qualsevol (el municipi de la
-   mateixa línia) ja no hi passa lletra a lletra. */
-const COMPLEMENT = /^(?:(?:(?:esc|escalera|escala|bl|bloque|bloc|pis|piso|planta|pta|puerta|porta|portal|izq|izqda|izda|dcha|drcha|dch|esq|esquerra|dreta|bj|bajo|baix|baixos|atico|atic)(?![a-z])|\d{1,3}\s*[ºª]?|[a-z](?![a-z]))[\s.,ºª-]*)+$/;
+   mateixa línia) ja no hi passa lletra a lletra.
+   Gauntlet 261025_0545 (RX-M1) · Abans era una sola expressió,
+   /^(?:(?:CLAU(?![a-z])|\d{1,3}\s*[ºª]?|[a-z](?![a-z]))[\s.,ºª-]*)+$/, de
+   retrocés EXPONENCIAL: el separador podia ser buit i \d{1,3} partia una tira
+   de xifres de moltes maneres, i una línia de 80 caràcters («5 1 1 1 … !»)
+   penjava la pestanya. Diu el mateix en dos passos lineals: (1) comença per
+   una lletra o una xifra i només porta lletres, xifres, blancs i «.,ºª-»
+   (les xifres soltes i els separadors sempre casaven); (2) cada tira de
+   lletres és una paraula clau o una lletra sola (la clau i la lletra havien
+   d'acabar la tira, i la tira no pot començar a mitjan paraula). */
+const CLAUS_COMPLEMENT = new Set(['esc', 'escalera', 'escala', 'bl', 'bloque', 'bloc', 'pis', 'piso', 'planta', 'pta', 'puerta',
+  'porta', 'portal', 'izq', 'izqda', 'izda', 'dcha', 'drcha', 'dch', 'esq', 'esquerra', 'dreta', 'bj', 'bajo', 'baix', 'baixos', 'atico', 'atic']);
+const FORMA_COMPLEMENT = /^[a-z0-9][a-z0-9\s.,ºª-]*$/;
+
+/** Cert si el text plegat té la forma d'un pis, una porta o una escala. */
+export function esComplement(plegat) {
+  if (!FORMA_COMPLEMENT.test(plegat)) return false;
+  for (const [paraula] of plegat.matchAll(/[a-z]+/g)) {
+    if (paraula.length > 1 && !CLAUS_COMPLEMENT.has(paraula)) return false;
+  }
+  return true;
+}
 
 /* «CL MAJOR, 5 2º B» en tipus de via, via, número i complement. Si la línia
    no té esta forma, res: una adreça mal partida és pitjor que cap. */
@@ -139,7 +159,7 @@ function descomponAdreca(tros, plegat) {
   const cp = /(?:^|\s)\d{5}(?:\s|$)/.exec(resta);
   if (cp) resta = resta.slice(0, cp.index);
   resta = resta.replace(/[\s,]+$/, '').trim();
-  const complement = resta !== '' && COMPLEMENT.test(plegaText(resta)) ? resta : null;
+  const complement = resta !== '' && esComplement(plegaText(resta)) ? resta : null;
   return {
     'domicili.tipusVia': tipus ? CANONIC_VIA.get(tipus) : null,
     'domicili.via': via,

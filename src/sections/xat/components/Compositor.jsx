@@ -6,7 +6,8 @@
  *     (data-valor) i marca l'alçada; cap style en línia ni mesura de DOM.
  *   · A l'escriptori, Retorn envia i Maj+Retorn fa salt de línia; en mode
  *     estret Retorn fa salt i s'envia amb el botó, com a les apps de
- *     missatgeria.
+ *     missatgeria. Gauntlet 261025_0545 (XU-03): «estret» vol dir estret i
+ *     tàctil; amb ratolí i teclat, Retorn envia a qualsevol amplària.
  *   · Límit de 4.096 caràcters amb comptador visible a partir de 3.900.
  *   · Cap botó d'adjuntar ni de micròfon: són F1 i la interfície no promet el
  *     que no fa.
@@ -71,6 +72,9 @@ const teElFocus = (node) => Boolean(node) && node.getRootNode?.().activeElement 
 const esTactil = () => Boolean(globalThis.matchMedia?.(CONSULTA_TACTIL)?.matches);
 /* El calaix mai no es fa més baix que les pestanyes i una fila d'emoticones. */
 const ALCADA_MINIMA = 112;
+/* Gauntlet 261025_0545 (XU-16) · El comptador es veu a cada tecla, però el
+   lector de pantalla només l'escolta en passar estos llindars. */
+const LLINDARS_AVIS_COMPTADOR = [LLINDAR_COMPTADOR, 4000, LIMIT_TEXT];
 
 /** Cert si al fil no s'hi pot escriure: potEscriure false o un canal sense permís explícit (D7). */
 export function esNomesLectura(fil) {
@@ -146,10 +150,12 @@ export default function Compositor({
       {signa.tipus === 'entitat'
         ? <Building2 size={16} aria-hidden="true" focusable="false" />
         : <UserRound size={16} aria-hidden="true" focusable="false" />}
+      {/* Gauntlet 261025_0545 (TE-03) · Els noms van amb una funció de
+          reemplaç: un «$&» o un «$'» del nom es pinta tal qual (moderacio.js, omple). */}
       <span>
         {signa.tipus === 'entitat'
-          ? t('section.xat.signa.entitat', 'Escrius com a {nom}.').replace('{nom}', signa.nom)
-          : t('section.xat.signa.persona', 'Escrius com a tu: en esta conversa no parles en nom de {entitat}.').replace('{entitat}', signa.entitat)}
+          ? t('section.xat.signa.entitat', 'Escrius com a {nom}.').replace('{nom}', () => signa.nom)
+          : t('section.xat.signa.persona', 'Escrius com a tu: en esta conversa no parles en nom de {entitat}.').replace('{entitat}', () => signa.entitat)}
       </span>
     </p>
   ) : null;
@@ -168,7 +174,7 @@ export default function Compositor({
     <>
       <p className="sdp-xat-avis-public">
         <Users size={16} aria-hidden="true" focusable="false" />
-        <span>{t('section.xat.pagina.avisPublic', 'Escrius al xat públic de «{titol}».').replace('{titol}', titolPublic)}</span>
+        <span>{t('section.xat.pagina.avisPublic', 'Escrius al xat públic de «{titol}».').replace('{titol}', () => titolPublic)}</span>
       </p>
       {formulari}
     </>
@@ -180,10 +186,27 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   const estret = mida === 'estret';
   /* Pla 261022_1425 · Mòbil o tauleta: el calaix fa de teclat (la mida només
      decidix l'alçada del calaix i el Retorn). */
-  const tactil = estret || esTactil();
+  const pantallaTactil = esTactil();
+  const tactil = estret || pantallaTactil;
+  /* Gauntlet 261025_0545 (XU-03) · Retorn envia llevat d'una pantalla
+     estreta i tàctil (el mòbil, on fa salt i s'envia amb el botó). Una
+     columna de WordPress o mitja finestra amb ratolí i teclat ja no es queda
+     sense manera d'enviar amb el teclat; en ample, com sempre. */
+  const retornEnvia = !estret || !pantallaTactil;
   const buit = !String(valor ?? '').trim();
   const llargada = String(valor ?? '').length;
   const mostraComptador = llargada >= LLINDAR_COMPTADOR;
+  /* Gauntlet 261025_0545 (XU-16) · L'avís del comptador per al lector: el
+     text del llindar que s'acaba de passar (cap amunt o cap avall), fix fins
+     al llindar següent; buit per davall del primer. */
+  const nivellComptador = LLINDARS_AVIS_COMPTADOR.filter((llindar) => llargada >= llindar).length;
+  const textComptador = (n) => t('section.xat.compositor.comptador', '{n} de {max} caràcters')
+    .replace('{n}', String(n))
+    .replace('{max}', String(LIMIT_TEXT));
+  const [avisComptador, setAvisComptador] = useState({ nivell: 0, text: '' });
+  if (avisComptador.nivell !== nivellComptador) {
+    setAvisComptador({ nivell: nivellComptador, text: nivellComptador ? textComptador(llargada) : '' });
+  }
   /* Pla 261014_1450 (front C) · Qui signa i el comptador, cadascun només si es
      pinta: cap id penjat a un element que no existix. */
   const descritPer = [idSigna, mostraComptador ? ID_COMPTADOR : null].filter(Boolean).join(' ') || undefined;
@@ -348,13 +371,34 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     if (!tactil && !perTeclat) tornaAlCamp();
   };
 
+  /* Gauntlet 261025_0545 (XU-01) · Enviar no treu el focus del camp: el
+     ratolí i el dit no el donen al botó (onMouseDown) i el teclat del mòbil
+     no es tanca a cada missatge. Amb el teclat (Tab fins al botó i Retorn),
+     el focus torna al camp: el botó es desactiva en buidar-se el camp i el
+     focus cauria a <body>. Si era en un altre lloc (el calaix), no es toca. */
+  const botoEnvia = useRef(null);
   const envia = () => {
     if (buit || desactivat) return;
+    const boto = botoEnvia.current;
+    const desDelBoto = Boolean(boto) && boto.getRootNode?.().activeElement === boto;
     setCalaix(null);
     onEnvia();
+    if (desDelBoto) camp.current?.focus({ preventScroll: true });
   };
 
+  /* Gauntlet 261025_0545 (XU-06) · Mentre un IME compon (xinés, japonés,
+     coreà), Retorn i Escape són seus: ni s'envia ni es cancel·la res. Safari
+     dispara compositionend abans del keydown que la confirma (isComposing
+     false, keyCode 229): per això també el 229.
+     Revisió 261025 · Cap marge de temps després de compositionend: Chrome
+     amb l'IME coreà i Gboard hi envien un Retorn de veres (13), que és de
+     qui escriu i envia. Eixir del camp desfà una composició que no ha dit
+     mai compositionend, perquè Retorn i Escape no queden morts. */
+  const compon = useRef(false);
+  const delIME = (e) => compon.current || Boolean(e.nativeEvent?.isComposing) || e.keyCode === 229;
+
   const alTeclat = (e) => {
+    if (delIME(e)) return;
     if (e.key === 'Escape' && obert) {
       e.preventDefault();
       tanca(true);
@@ -365,8 +409,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
       onEscapa();
       return;
     }
-    if (e.key !== 'Enter' || estret || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
-    if (e.nativeEvent?.isComposing) return;
+    if (e.key !== 'Enter' || !retornEnvia || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
     e.preventDefault();
     envia();
   };
@@ -374,7 +417,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
   /* Escape des de la carona o des del botó d'enviar també tanca el calaix
      (el camp i el calaix ja l'han consumit abans: defaultPrevented). */
   const alTeclatDelFormulari = (e) => {
-    if (e.key !== 'Escape' || !obert || e.defaultPrevented) return;
+    if (e.key !== 'Escape' || !obert || e.defaultPrevented || delIME(e)) return;
     e.preventDefault();
     tanca(true);
   };
@@ -421,12 +464,18 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
       {/* Només amb el calaix obert (la conversa ja té el seu status): naix
           buida en obrir i el text canvia després, i així s'anuncia. */}
       {obert ? <span className="sdp-nomes-lector" role="status" aria-live="polite">{afegida}</span> : null}
+      {/* Gauntlet 261025_0545 (XU-16) · Sempre muntat i buit per davall de
+          3.900: el text només canvia en passar un llindar, i així s'anuncia. */}
+      <span className="sdp-nomes-lector" aria-live="polite">{avisComptador.text}</span>
       <div className="sdp-xat-compositor__camp" data-valor={valor}>
+        {/* Gauntlet 261025_0545 (XU-14) · dir="auto": un text en àrab o en
+            hebreu s'escriu de dreta a esquerra. (XU-06) La composició de l'IME. */}
         <textarea
           ref={posaCamp}
           id="xat-message-input"
           name="message"
           className="sdp-xat-compositor__textarea"
+          dir="auto"
           rows={1}
           value={valor}
           maxLength={LIMIT_TEXT}
@@ -436,31 +485,32 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
             onCanvia(e.target.value);
           }}
           onSelect={recordaSeleccio}
-          onBlur={recordaSeleccio}
+          onBlur={(e) => { compon.current = false; recordaSeleccio(e); }}
           onFocus={tancaEnEntrar}
           onKeyDown={alTeclat}
+          onCompositionStart={() => { compon.current = true; }}
+          onCompositionEnd={() => { compon.current = false; }}
           placeholder={t('section.xat.composePlaceholder', 'Escriu un missatge...')}
           aria-label={t('section.xat.compositor.etiqueta', 'Escriu un missatge')}
           aria-describedby={descritPer}
-          enterKeyHint={estret ? 'enter' : 'send'}
+          enterKeyHint={retornEnvia ? 'send' : 'enter'}
           disabled={desactivat}
         />
         {mostraComptador ? (
           <span
             id={ID_COMPTADOR}
             className={llargada >= LIMIT_TEXT ? 'sdp-xat-compositor__comptador sdp-xat-compositor__comptador--limit' : 'sdp-xat-compositor__comptador'}
-            aria-live="polite"
           >
-            {t('section.xat.compositor.comptador', '{n} de {max} caràcters')
-              .replace('{n}', String(llargada))
-              .replace('{max}', String(LIMIT_TEXT))}
+            {textComptador(llargada)}
           </span>
         ) : null}
       </div>
       <button
+        ref={botoEnvia}
         type="submit"
         className="sdp-xat-compositor__envia"
         aria-label={t('section.xat.compositor.envia', 'Envia')}
+        onMouseDown={(e) => e.preventDefault()}
         disabled={buit || desactivat}
       >
         <Send size={20} aria-hidden="true" focusable="false" />

@@ -22,8 +22,9 @@ import { quiEmSegueix, teCapacitat } from '../../data/backendPort.js';
    Sense la capacitat 'seguiments' (un node sense seguiments és vàlid),
    cap dels dos pinta res ni crida el port. Cap regió viva: és una llista que
    es llig en obrir-se, no la resposta a cap acció.
-   Cap context: el traductor, la llengua i la configuració arriben per
-   props (FitxaPublica ja els té). Sense configuració, {}: el port la
+   Cap context: el traductor, la llengua, la configuració i qui mira
+   (`visor`, Gauntlet 261025_0545, CUR-01) arriben per props (FitxaPublica
+   ja els té). Sense configuració, {}: el port la
    completa amb la de l'amfitrió i el mode triat (normalizeBackendConfig),
    la mateixa que pren el Perfil fora del Mercat i del Calendari.
    IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · Una entitat
@@ -57,15 +58,20 @@ export function dataDelSeguiment(iso, locale = 'ca-ES') {
  * La llista del veïnat connectat amb la persona que mira (sense orgId) o amb l'entitat
  * orgId: { estat: 'inactiu' | 'carregant' | 'llest' | 'error', seguidors,
  * error }. 'inactiu' sense la capacitat. `config` (opcional): la de la vista;
- * sense ella, {}.
+ * sense ella, {}. `visor` (opcional): la clau de qui mira (la persona i
+ * l'entrada de la sessió, PerfilPublicSection · clauDelVisor).
  */
-export function useSeguidors({ orgId = null, config = null } = {}) {
+export function useSeguidors({ orgId = null, config = null, visor = null } = {}) {
   const configActual = config || {};
   /* La configuració canvia d'identitat a cada render del pare: es llig d'un ref. */
   const configRef = useRef(configActual);
   configRef.current = configActual;
   const entitat = orgId === null || orgId === undefined || orgId === '' ? null : String(orgId);
-  const clau = teSeguiments() ? JSON.stringify([entitat, abastDe(configActual)]) : null;
+  /* Gauntlet 261025_0545 (CUR-01) · Sense entitat, la llista és la de qui té la
+     sessió: qui mira entra a la clau. Si canvia (eixida, renovació fallida,
+     una altra persona), la llista d'abans se'n va en el mateix pintat i una
+     resposta tardana no es pinta (porta la clau vella). */
+  const clau = teSeguiments() ? JSON.stringify([entitat, abastDe(configActual), visor ?? null]) : null;
   const [estat, setEstat] = useState({ clau: null, estat: 'carregant', seguidors: [], error: null });
 
   useEffect(() => {
@@ -91,11 +97,11 @@ export function useSeguidors({ orgId = null, config = null } = {}) {
 /* Sense traductor (una peça muntada sola), el valencià de reserva. */
 const senseTraductor = (_clau, reserva) => reserva;
 
-/** «Veïnat connectat amb tu», a la fitxa pròpia d'una persona. `t` i `locale`, els de la fitxa. */
-export function GentQueEtSegueix({ config = null, t: traductor = null, locale: llengua = null }) {
+/** «Veïnat connectat amb tu», a la fitxa pròpia d'una persona. `t`, `locale` i `visor`, els de la fitxa. */
+export function GentQueEtSegueix({ config = null, t: traductor = null, locale: llengua = null, visor = null }) {
   const id = useId();
   const t = typeof traductor === 'function' ? traductor : senseTraductor;
-  const { estat, seguidors, error } = useSeguidors({ config });
+  const { estat, seguidors, error } = useSeguidors({ config, visor });
   if (estat === 'inactiu') return null;
   const locale = typeof llengua === 'string' && llengua ? llengua : 'ca-ES';
   const titolId = `${id}-titol`;

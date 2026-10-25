@@ -17,7 +17,7 @@
  *     canònica ni el poble del Mestre (clauFundacional estricta).
  */
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({
   usuari: null, tenant: '33333333-3c3c-4000-8000-000000000000', directori: () => [], request: vi.fn(), rpc: vi.fn(),
@@ -25,15 +25,26 @@ const m = vi.hoisted(() => ({
   t: (_, alternativa) => alternativa, identitat: { memberships: [], actor: null, setActor: vi.fn() },
   ui: { externalConfig: { dataMode: 'remote' } }
 }));
-vi.mock('../../data/supabase/runtime.js', () => ({
+/* Gauntlet 261025_0545 (DF-03) · La resta de runtime.js és la de veres perquè
+   l'adaptador sencer es puga carregar (auth.js hi registra el refresc en
+   nàixer); el transport i la configuració resolta continuen simulats. */
+vi.mock('../../data/supabase/runtime.js', async (importOriginal) => ({
+  ...await importOriginal(),
   getCurrentUser: () => m.usuari, request: m.request, rpc: m.rpc,
   getResolvedConfig: () => ({ hasSupabaseConfig: true, runtimeDataMode: 'remote', tenantId: m.tenant })
 }));
-/* El port llig l'adaptador de Supabase de veres: cap resposta inventada. */
-vi.mock('../../data/backendPort.js', async () => {
-  const perfils = await import('../../data/supabase/perfils.js');
-  return { teCapacitat: (capacitat) => capacitat === 'directori', loadPerfilPublic: perfils.loadPerfilPublic };
-});
+/* El port llig l'adaptador de Supabase de veres: cap resposta inventada.
+   Gauntlet 261025_0545 (DF-03) · El port és el de veres (només la capacitat es
+   fixa a 'directori') i l'adaptador hi arriba per l'arrencada de l'host,
+   l'única porta cap a src/data/supabase (tractor-enxufe E1): cap import seu
+   ací. <soc-de-poble> no hi pinta res, i a Vitest l'espai de noms del mòdul
+   porta getters que el port no admet: el mock en fa la còpia plana. */
+vi.mock('../../data/backendPort.js', async (importOriginal) => ({
+  ...await importOriginal(),
+  teCapacitat: (capacitat) => capacitat === 'directori'
+}));
+vi.mock('../../PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
+vi.mock('../../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => m.identitat }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ agentId: m.id }),
@@ -69,6 +80,13 @@ const darrer = (nom) => m.renders.filter((props) => props.title === nom).at(-1);
 const pobleDe = (props) => props.labels.filter((etiqueta) => etiqueta.className === 'sdp-badge-category').map((etiqueta) => etiqueta.text);
 const consultesAlDirectori = () => m.request.mock.calls.map(([ruta]) => ruta).filter((ruta) => ruta.startsWith('/rest/v1/organization_directory'));
 const senseCanonica = () => m.seo.mock.calls.every(([opcions]) => !Object.hasOwn(opcions, 'canonical'));
+
+/* Gauntlet 261025_0545 (DF-03) · L'host de veres compon i segella el port; la
+   pàgina continua veient l'host simulat de dalt. */
+beforeAll(async () => {
+  const { arrenca } = await vi.importActual('../../host.js');
+  await arrenca();
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

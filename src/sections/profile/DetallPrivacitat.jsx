@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila, diaIso } from '../../components/universal/editorial.js';
 import { Alerta, AreaText, Boto, Camp, DialegConfirmacio } from '../../components/PedraSeca';
@@ -16,6 +16,11 @@ import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx';
+/* Gauntlet 261025_0545 (BOT-04) · Dins de l'app nativa (el pont de Capacitor o
+   l'entrada nativa registrada, com l'origen públic) i els textos amb {nom}. */
+import { esAppNativa } from '../../config/origenPublic.js';
+import { capturaSessio } from '../../data/identitat.js';
+import { omple } from '../../config/moderacio.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -67,6 +72,50 @@ function descarregaJson(dades, nom) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/* Gauntlet 261025_0545 (BOT-04; RGPD art. 20) · Dins de l'app nativa el clic
+   de descarregaJson no desa res, i la vista deia que el fitxer era a les
+   descàrregues: iOS passa l'enllaç blob: a UIApplication.open i el
+   cancel·la, i el WebView d'Android no té cap DownloadListener. Sense cap
+   dependència nova, el que sí que funciona: el menú de compartir del sistema
+   amb el fitxer (Web Share amb `files`, si el WebView l'admet per a ESTE
+   fitxer: WKWebView sí, el d'Android no), copiar el text i, sempre, el JSON en
+   un quadre de només lectura. Mai «a les descàrregues» sense descàrrega. Els
+   textos, en parells [clau i18n, reserva en valencià], com TEXTOS_MODERACIO. */
+const textDades = (nom, reserva) => Object.freeze([`section.perfil.privacitat.dades.${nom}`, reserva]);
+const TEXTOS_DADES_NATIU = Object.freeze({
+  preparades: textDades('natiu', 'Les teues dades ja estan preparades. Dins de l’app no es poden desar soles a les descàrregues: guarda-les tu com a {nom}.'),
+  compartix: textDades('compartix', 'Compartir el fitxer'),
+  copia: textDades('copia', 'Copiar el text'),
+  text: textDades('text', 'Les teues dades, en JSON'),
+  textAjuda: textDades('textAjuda', 'Si no pots compartir el fitxer ni copiar el text amb el botó, selecciona’l ací i enganxa’l en una nota o un correu.'),
+  compartit: textDades('compartit', 'Fet: has enviat el fitxer {nom} des del menú de compartir.'),
+  errorCompartir: textDades('errorCompartir', 'No s’ha pogut compartir el fitxer. Copia’n el text i desa’l tu.'),
+  copiat: textDades('copiat', 'Text copiat. Enganxa’l en una nota o un correu i desa’l com a {nom}.'),
+  errorCopiar: textDades('errorCopiar', 'No s’ha pogut copiar el text. Selecciona’l al quadre i copia’l tu.'),
+});
+
+/** El fitxer de l'exportació per al menú de compartir, o null (sense File). */
+function fitxerDeLExportacio(text, nom) {
+  try {
+    return typeof File === 'function' ? new File([text], nom, { type: 'application/json' }) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Si el sistema pot compartir ESTE fitxer. Web Share amb `files` és fora del baseline: es pregunta. */
+function potCompartirFitxer(fitxer) {
+  const nav = typeof navigator === 'undefined' ? null : navigator;
+  if (!fitxer || typeof nav?.share !== 'function' || typeof nav.canShare !== 'function') return false;
+  try {
+    return nav.canShare({ files: [fitxer] }) === true;
+  } catch {
+    return false;
+  }
+}
+
+const potCopiar = () => typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function';
+
 export function dataLlegible(iso) {
   if (!iso) return '';
   const data = new Date(iso);
@@ -88,19 +137,121 @@ function useConfigActual(config) {
 
 /* ── «Les meues dades» ─────────────────────────────────────────────── */
 
+/** BOT-04 · Les dades ja preparades, dins de l'app nativa: compartir el fitxer, copiar-ne el text o seleccionar-lo. */
+function DadesDinsDeLApp({ nom, text, t }) {
+  const [avis, setAvis] = useState(null);
+  const fitxer = useMemo(() => fitxerDeLExportacio(text, nom), [text, nom]);
+  const ambCompartir = potCompartirFitxer(fitxer);
+  const ambCopiar = potCopiar();
+  const diu = (to, parell) => setAvis({ to, text: omple(tradueix(t, parell), { nom }) });
+
+  /* Un clic nou i no el de «Descarregar»: després de la consulta, el gest
+     d'aquell clic ja pot haver caducat i el sistema rebutjaria el menú. */
+  const compartix = async () => {
+    setAvis(null);
+    try {
+      await navigator.share({ files: [fitxer] });
+      diu('exit', TEXTOS_DADES_NATIU.compartit);
+    } catch (e) {
+      /* La persona ha tancat el menú de compartir: no passa res. */
+      if (e?.name !== 'AbortError') diu('error', TEXTOS_DADES_NATIU.errorCompartir);
+    }
+  };
+  const copia = async () => {
+    setAvis(null);
+    try {
+      await navigator.clipboard.writeText(text);
+      diu('exit', TEXTOS_DADES_NATIU.copiat);
+    } catch {
+      diu('error', TEXTOS_DADES_NATIU.errorCopiar);
+    }
+  };
+
+  return (
+    <>
+      <Alerta to="info">{omple(tradueix(t, TEXTOS_DADES_NATIU.preparades), { nom })}</Alerta>
+      {avis ? <Alerta to={avis.to}>{avis.text}</Alerta> : null}
+      {ambCompartir || ambCopiar ? (
+        <div className="sdp-alerta__accions perfil-compte__accions">
+          {ambCompartir ? <Boto varietat="primari" onClick={compartix}>{tradueix(t, TEXTOS_DADES_NATIU.compartix)}</Boto> : null}
+          {ambCopiar ? <Boto varietat="secundari" onClick={copia}>{tradueix(t, TEXTOS_DADES_NATIU.copia)}</Boto> : null}
+        </div>
+      ) : null}
+      <Camp etiqueta={tradueix(t, TEXTOS_DADES_NATIU.text)} ajuda={tradueix(t, TEXTOS_DADES_NATIU.textAjuda)}>
+        <AreaText files={8} readOnly spellCheck={false} value={text} />
+      </Camp>
+    </>
+  );
+}
+
 function BlocDades({ config }) {
   const configRef = useConfigActual(config);
+  const t = useTraductorOpcional();
   const [estat, setEstat] = useState({ fase: 'repos' });
+  /* La sessió i la vista tenen vides distintes: el port comprova la seua
+     resposta, i ací tornem a comprovar abans de descarregar o mostrar-la. */
+  const vidaRef = useRef({ muntat: false, peticio: 0, control: null, deslliga: null });
+  useEffect(() => {
+    const vida = vidaRef.current;
+    vida.muntat = true;
+    return () => {
+      vida.muntat = false;
+      vida.peticio += 1;
+      vida.control?.abort();
+      vida.deslliga?.();
+      vida.control = null;
+      vida.deslliga = null;
+    };
+  }, []);
 
   const descarrega = async () => {
+    const vida = vidaRef.current;
+    const configuracio = configRef.current;
+    const extern = configuracio?.signal;
+    if (!vida.muntat || extern?.aborted) return;
+    const peticio = ++vida.peticio;
+    vida.control?.abort();
+    vida.deslliga?.();
+    const control = new AbortController();
+    vida.control = control;
+    const avorta = () => {
+      control.abort();
+      if (vida.muntat && vida.peticio === peticio) setEstat({ fase: 'repos' });
+    };
+    const deslliga = () => extern?.removeEventListener('abort', avorta);
+    extern?.addEventListener('abort', avorta, { once: true });
+    vida.deslliga = deslliga;
+    const current = capturaSessio();
+    const vigent = () => vida.muntat && vida.peticio === peticio && !control.signal.aborted;
     setEstat({ fase: 'treballant' });
     try {
-      const dades = await exportaLesMeuesDades(configRef.current);
+      const dades = await exportaLesMeuesDades({ ...configuracio, signal: control.signal });
+      if (!vigent()) return;
+      current();
       const nom = nomFitxerExportacio();
+      /* Gauntlet 261025_0545 (BOT-04) · Dins de l'app nativa, cap clic de
+         descàrrega ni cap «a les descàrregues»: les dades es queden a la
+         vista per a compartir-les o copiar-les. A la web, el de sempre. */
+      if (esAppNativa()) {
+        setEstat({ fase: 'natiu', nom, text: JSON.stringify(dades, null, 2) });
+        return;
+      }
       descarregaJson(dades, nom);
       setEstat({ fase: 'fet', nom });
     } catch (e) {
+      if (!vigent()) return;
+      try { current(); } catch { return; }
+      if (e?.name === 'AbortError') {
+        setEstat({ fase: 'repos' });
+        return;
+      }
       setEstat({ fase: 'error', text: missatgeDe(e, 'No s’han pogut preparar les teues dades. Torna-ho a provar.') });
+    } finally {
+      deslliga();
+      if (vida.peticio === peticio) {
+        vida.control = null;
+        vida.deslliga = null;
+      }
     }
   };
 
@@ -119,6 +270,7 @@ function BlocDades({ config }) {
       </p>
       {estat.fase === 'error' ? <Alerta to="error">{estat.text}</Alerta> : null}
       {estat.fase === 'fet' ? <Alerta to="exit">{`Ja tens el fitxer ${estat.nom} a les descàrregues.`}</Alerta> : null}
+      {estat.fase === 'natiu' ? <DadesDinsDeLApp nom={estat.nom} text={estat.text} t={t} /> : null}
       <div className="sdp-alerta__accions perfil-compte__accions">
         <Boto varietat="secundari" onClick={descarrega} carregant={estat.fase === 'treballant'}>
           Descarregar les meues dades

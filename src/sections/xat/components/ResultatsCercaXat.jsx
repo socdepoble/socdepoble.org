@@ -67,7 +67,9 @@ export default function ResultatsCercaXat({
   if (filtreActiu && !missatges.length) {
     buit = t('section.xat.cerca.filtreBuit', "Encara no hi ha cap missatge d'este tipus en les converses obertes.");
   } else if (!converses.length && !persones.length && !missatges.length) {
-    buit = t('section.xat.cerca.capResultat', 'Cap resultat per a «{terme}».').replace('{terme}', netTerme);
+    /* Gauntlet 261025_0545 (TE-03) · Amb una funció de reemplaç: un terme
+       amb «$'» o «$&» es repetix tal qual (moderacio.js, omple). */
+    buit = t('section.xat.cerca.capResultat', 'Cap resultat per a «{terme}».').replace('{terme}', () => netTerme);
   }
 
   return (

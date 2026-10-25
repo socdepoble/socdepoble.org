@@ -110,7 +110,7 @@ return array(
 		'Could not create a temporary file.' => 'No s’ha pogut crear un fitxer temporal.',
 		'The package download answered HTTP %d.' => 'La descàrrega del paquet ha respost HTTP %d.',
 		'The downloaded package does not match the size and SHA-256 of the signed manifest.' => 'El paquet descarregat no té la mida i el SHA-256 del manifest signat.',
-		'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.' => 'El paquet d’actualització ha de contindre la carpeta socdepoble-enxufe amb socdepoble-enxufe.php dins.',
+		'The update package must contain the %1$s folder with %2$s inside.' => 'El paquet d’actualització ha de contindre la carpeta %1$s amb %2$s dins.',
 		'You are not allowed to update plugins.' => 'No tens permís per a actualitzar extensions.',
 		'Channel' => 'Canal',
 		'Signing key' => 'Clau de signatura',

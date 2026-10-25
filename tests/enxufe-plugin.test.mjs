@@ -375,6 +375,26 @@ test('actualitzador: paquet simbòlic al transient, URL real només del manifest
   assert.match(agent, /'user-agent'\s*=>\s*socdepoble_enxufe_agent\(\)/, 'les peticions no porten l\'URL del lloc');
 });
 
+/* Gauntlet 261025_0545 (MISSED P3, WP-01 C) · Sense intèrpret, la forma: update_plugins i plugins_api
+   parlen amb la identitat del canal propi, mai amb l'slug del directori ('socdepoble', el plugin de
+   WordPress.org), i el motiu de l'arrel nomena la carpeta que es comprova. La prova amb PHP real és a
+   enxufe-empaqueta.test.mjs. */
+test('actualitzador: update_plugins i plugins_api responen per l\'slug del canal propi, no pel del directori', () => {
+  const actualitzador = llig('includes/actualitzador.php');
+  const canal = actualitzador.match(/^const SOCDEPOBLE_ENXUFE_SLUG_CANAL\s*=\s*'([^']+)';/m)?.[1];
+  const directori = llig('socdepoble-enxufe.php').match(/^const SOCDEPOBLE_ENXUFE_SLUG\s*=\s*'([^']+)';/m)?.[1];
+  assert.ok(canal, 'falta SOCDEPOBLE_ENXUFE_SLUG_CANAL');
+  assert.notEqual(canal, directori, 'la identitat del canal no pot ser l\'slug de WordPress.org');
+  assert.ok(actualitzador.includes(`const SOCDEPOBLE_ENXUFE_PAQUET_SIMBOLIC = '${canal}:';`), 'la mateixa identitat que el paquet simbòlic');
+  const api = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_plugins_api');
+  assert.match(api, /SOCDEPOBLE_ENXUFE_SLUG_CANAL !== \$args->slug/);
+  assert.match(api, /\$info->slug\s*=\s*SOCDEPOBLE_ENXUFE_SLUG_CANAL;/);
+  assert.doesNotMatch(api, /\bSOCDEPOBLE_ENXUFE_SLUG\b/, 'plugins_api no mira mai l\'slug del directori');
+  assert.match(cosDe('includes/actualitzador.php', 'socdepoble_enxufe_update_plugins'), /'slug'\s*=>\s*SOCDEPOBLE_ENXUFE_SLUG_CANAL,/);
+  assert.doesNotMatch(actualitzador, /__\(\s*'[^']*socdepoble-enxufe folder/, 'cap missatge nomena una carpeta que no es comprova');
+  assert.match(cosDe('includes/actualitzador.php', 'socdepoble_enxufe_motiu_arrel'), /SOCDEPOBLE_ENXUFE_SLUG,/);
+});
+
 test('actualitzador: el commutador d\'automàtiques apareix en activar i la cel·la avisa quan no arribarà cap actualització', () => {
   const actualitzador = llig('includes/actualitzador.php');
   const codi = codiDe['includes/actualitzador.php'];

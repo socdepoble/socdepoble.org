@@ -49,7 +49,11 @@ describe('obriFilDePagina en remot', () => {
     expect(client.rpc).toHaveBeenCalledWith('obri_fil_de_pagina', {
       p_tenant_id: '00000000-0000-4000-8000-000000000000', p_tipus: 'entitat', p_id: 'org-1', p_titol: 'Cooperativa'
     });
-    expect(client.rpc.mock.results[0].value.abortSignal).toHaveBeenCalledWith(signal);
+    expect(client.rpc.mock.results[0].value.abortSignal).toHaveBeenCalledOnce();
+    const intern = client.rpc.mock.results[0].value.abortSignal.mock.calls[0][0];
+    expect(intern).toBeInstanceOf(AbortSignal);
+    expect(intern).not.toBe(signal);
+    expect(intern.aborted).toBe(false);
     expect(obert.filId).toBe('g-1');
     expect(obert.fils.map((f) => [f.id, f.tipus, f.comunitatId, f.participant])).toEqual([
       ['c-1', 'comunitat', null, false], ['a-1', 'canal', 'c-1', false], ['g-1', 'grup', 'c-1', false]

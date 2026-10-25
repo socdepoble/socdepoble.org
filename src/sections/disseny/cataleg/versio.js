@@ -15,7 +15,14 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: Especimen.jsx, EspecimenContracte.jsx, EspecimenDialeg.jsx, EspecimenConfirmacio.jsx i
+ * Darrera posada al dia: EspecimenGestor.jsx, EspecimenUniversalWorkspace.jsx i EspecimenInventariGlobal.jsx,
+ * 2026-10-25T07:16:15+01:00, Gauntlet 261025_0545 (P1-16; DF-04, C2-04 i G0200-R2-01): cap taula
+ * nua a la columna del detall. Les quatre taules del Gestor, la de les variants d'UniversalWorkspace
+ * i el registre de l'Inventari es desplacen dins de la seua caixa a qualsevol amplada (la de les
+ * taules de contingut, .sdp-taula-prosa), i la caixa és una regió amb el nom de la llegenda i
+ * tabIndex=0, com el contracte. A 1280px ja no en vessa cap ni l'overflow:hidden del detall en talla
+ * res; a 375px es veuen igual que abans. Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: Especimen.jsx, EspecimenContracte.jsx, EspecimenDialeg.jsx, EspecimenConfirmacio.jsx i
  * EspecimenCalaix.jsx, 2026-10-25T04:51:24+01:00, pla 261025_0200 (IDEA-26 i IDEA-27, ordre del Mestre; auditories
  * Gemini G0200-01 i Codex C0200-05, i la revisió adversarial del torn): el bloc d'accions
  * canònic, Accions (PedraSeca/composicio, entrada nova al registre i mostra a EspecimenComposicio),
@@ -216,4 +223,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-25T04:51:24+01:00';
+export const VERSIO_CATALEG = '2026-10-25T07:16:15+01:00';

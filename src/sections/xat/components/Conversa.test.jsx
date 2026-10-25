@@ -410,6 +410,48 @@ describe('espècimen del Xat', () => {
 });
 
 describe('esborranys', () => {
+  test.each(['Segon text a mig escriure', ''])('un rebuig tardà no substituïx una edició posterior (%j)', async (posterior) => {
+    let rebutja;
+    const pendent = new Promise((_, reject) => { rebutja = reject; });
+    pinta({ clauEsborrany: 'A:f-1', onSendMessage: () => pendent });
+    fireEvent.change(camp(), { target: { value: 'Primer text' } });
+    fireEvent.keyDown(camp(), { key: 'Enter' });
+    expect(camp().value).toBe('');
+    fireEvent.change(camp(), { target: { value: 'Segon text a mig escriure' } });
+    if (!posterior) fireEvent.change(camp(), { target: { value: '' } });
+
+    await act(async () => { rebutja(new DOMException('Normes declinades', 'AbortError')); });
+
+    expect(camp().value).toBe(posterior);
+    expect(llegixEsborrany('A:f-1')).toBe(posterior);
+  });
+
+  test('un rebuig torna el text si el compositor no ha canviat', async () => {
+    let rebutja;
+    const pendent = new Promise((_, reject) => { rebutja = reject; });
+    pinta({ clauEsborrany: 'A:f-1', onSendMessage: () => pendent });
+    fireEvent.change(camp(), { target: { value: 'Primer text' } });
+    fireEvent.keyDown(camp(), { key: 'Enter' });
+
+    await act(async () => { rebutja(new DOMException('Normes declinades', 'AbortError')); });
+
+    expect(camp().value).toBe('Primer text');
+    expect(llegixEsborrany('A:f-1')).toBe('Primer text');
+  });
+
+  test('un rebuig després de desmuntar no recrea l’esborrany enviat', async () => {
+    let rebutja;
+    const pendent = new Promise((_, reject) => { rebutja = reject; });
+    const vista = pinta({ clauEsborrany: 'A:f-1', onSendMessage: () => pendent });
+    fireEvent.change(camp(), { target: { value: 'Primer text' } });
+    fireEvent.keyDown(camp(), { key: 'Enter' });
+    vista.unmount();
+
+    await act(async () => { rebutja(new DOMException('Normes declinades', 'AbortError')); });
+
+    expect(llegixEsborrany('A:f-1')).toBe('');
+  });
+
   test('amb clauEsborrany el text a mig escriure torna en tornar a la conversa i s’esborra en enviar', async () => {
     const primera = pinta({ clauEsborrany: 'A:f-1', messages: [m('1', 1, 'other')] });
     fireEvent.change(camp(), { target: { value: 'Mig escrit' } });

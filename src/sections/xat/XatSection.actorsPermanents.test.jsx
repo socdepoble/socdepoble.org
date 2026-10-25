@@ -31,7 +31,7 @@
    proves munten la llista REAL que torna l'adaptador (llavor i local), amb
    les comunitats agrupades com al context. */
 import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
@@ -43,7 +43,9 @@ import CapcaleraConversa from './components/CapcaleraConversa.jsx';
 import { AppGridContext } from '../../components/layout/AppGridShell.jsx';
 import { ambXatsPerDefecte, filDeMostraDeJavi, missatgesDeMostraDeJavi } from '../../data/xatsPerDefecte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
-import { loadFils } from '../../data/supabase/xat.js';
+import { arrenca } from '../../host.js';
+import { getBackendImplementation, setBackendImplementation } from '../../data/backendPort.js';
+import { CONTRACTE_NUCLI } from '../../data/contracte.js';
 import { reiniciaLocalXat } from '../../data/localXat.js';
 import { XAT_SEED_IDS } from '../../data/xatSeed.js';
 import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
@@ -126,6 +128,13 @@ vi.mock('./XatContext', async (importOriginal) => ({
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
   useToast: () => ({ showToast: mocks.showToast })
 }));
+/* Gauntlet 261025_0545 (DF-03) · L'adaptador de veres ja no s'importa ací: el
+   compon l'arrencada de l'host, l'única porta cap a src/data/supabase
+   (tractor-enxufe E1). <soc-de-poble> no hi pinta res, i a Vitest l'espai de
+   noms del mòdul porta getters que el port no admet: el mock en fa la còpia
+   plana, sense canviar cap mètode. */
+vi.mock('../../PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
+vi.mock('../../data/supabase/index.js', async (importOriginal) => ({ ...await importOriginal() }));
 
 Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
   configurable: true,
@@ -140,6 +149,17 @@ const ambLesFilesDelPort = () => { mocks.threads = ambXatsPerDefecte([]).map((f)
    Gauntlet 261016_1530 · I les comunitats agrupades com les agrupa el context
    (agrupaComunitats): la de Sóc de Poble de la llavor és UNA fila. */
 const TENANT = '00000000-0000-4000-8000-000000000000';
+/* Gauntlet 261025_0545 (DF-03) · El loadFils de l'adaptador, tal com el deixa
+   al port host.arrenca(). Després el port torna a quedar com el veien estes
+   proves, sense cap capacitat (cap control d'adjunts no consulta res): el nucli
+   és «fora d'àmbit» i, en desenvolupament (Vitest ho és), `force` passa el segell. */
+let loadFils;
+beforeAll(async () => {
+  await arrenca();
+  ({ loadFils } = getBackendImplementation());
+  const foraDAmbit = Object.fromEntries(CONTRACTE_NUCLI.map((nom) => [nom, () => { throw new Error(`Fora d’àmbit: ${nom}`); }]));
+  setBackendImplementation(foraDAmbit, true);
+});
 const ambLaLlistaDe = async (dataMode) => {
   mocks.threads = (await loadFils({ dataMode, tenantId: TENANT })).map((f) => mapejaFil(f));
   mocks.comunitats = agrupaComunitats(mocks.threads);

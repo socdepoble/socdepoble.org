@@ -47,8 +47,11 @@ async function executaPas(pas, missatge, { creaFil, sendChatMessage }) {
     }
     /* sendChatMessage torna el missatge desat o [] si no ha eixit. Fase D
        (261020, tasca 2) · Només llança (AbortError) si es declinen les
-       normes, i això ja s'ha preguntat abans del primer pas (aplica). */
-    const enviats = await sendChatMessage({ id: filId }, missatge);
+       normes, i això ja s'ha preguntat abans del primer pas (aplica).
+       Gauntlet 261025_0545 (D2) · Sense esperar la xarxa (XC-03 és per a la
+       conversa oberta): sense cobertura, els reintents de sempre i 'error',
+       i el destinatari següent i la nota no es queden esperant. */
+    const enviats = await sendChatMessage({ id: filId }, missatge, { esperaLaXarxa: false });
     const fet = Array.isArray(enviats) && enviats.length > 0;
     return { ...base, estat: fet ? 'fet' : 'error', detall: fet ? 'Enviat per xat.' : NO_ENVIAT };
   } catch (error) {

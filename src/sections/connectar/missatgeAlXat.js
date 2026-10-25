@@ -67,7 +67,10 @@ export function useMissatgeAlXat(contacte) {
     }
     const filId = await creaFil(amb, null);
     if (!filId) return { enviat: false, filId: null, ruta: null };
-    const enviats = await sendChatMessage({ id: filId }, cos);
+    /* Gauntlet 261025_0545 (D2) · Qui ho demana espera la resposta (el botó
+       ocupat): sense xarxa, els reintents de sempre i enviat: false, no
+       l'espera de la xarxa de la conversa oberta (XC-03). */
+    const enviats = await sendChatMessage({ id: filId }, cos, { esperaLaXarxa: false });
     return {
       enviat: Array.isArray(enviats) && enviats.length > 0,
       filId,

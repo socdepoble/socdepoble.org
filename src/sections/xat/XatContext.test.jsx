@@ -1467,7 +1467,14 @@ describe('robustesa del xat (auditoria 261007 B)', () => {
     expect(seqs()).toEqual([10, 11, 12]);
   });
 
-  it('una lectura superada no avança el cursor: la vigent torna a demanar el forat', async () => {
+  /* Gauntlet 261025_0545 (XC-01) · Esta prova fixava la lectura SUPERADA: el
+     segon avís en llançava una altra en paral·lel i la resposta de la primera
+     es llençava sense moure el cursor. Eixe era el defecte de la ràfega que
+     congelava la conversa oberta, i l'ítem XC-01 demana el contrari: una sola
+     lectura en vol per fil, aplicada sempre, i una més si l'han tornada a
+     demanar mentre volava. El que la prova vigilava es conserva: el meu 12
+     confirmat no mou el cursor i el forat (l'11 de Pepa) arriba. */
+  it('una lectura en vol no se supera: el segon avís en demana una més quan torna, i el meu confirmat no mou el cursor', async () => {
     const avis = await obert([deLaPepa(10)]);
     const primera = deferred(), segona = deferred();
     mock.loadMissatges.mockReturnValueOnce(primera.promise).mockReturnValueOnce(segona.promise);
@@ -1479,14 +1486,19 @@ describe('robustesa del xat (auditoria 261007 B)', () => {
     await act(async () => { [propi] = await value.sendChatMessage({ id: 'fil-A' }, 'meu'); });
     const crides = mock.loadMissatges.mock.calls.length;
     await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 12 }); });
-    await waitFor(() => expect(mock.loadMissatges.mock.calls.length).toBe(crides + 1));
-    expect(mock.loadMissatges.mock.calls.at(-1)[1]).toMatchObject({ despresDeSeq: 10 });
+    await buidaCua();
+    /* Cap lectura en paral·lel: la que vola queda marcada. */
+    expect(mock.loadMissatges.mock.calls.length).toBe(crides);
     await act(async () => { primera.resolve([deLaPepa(11)]); });
     await buidaCua();
-    expect(seqs()).toEqual([10, 12]);
-    await act(async () => { segona.resolve([deLaPepa(11), message('meu', propi.id, { seq: 12 })]); });
+    /* La primera s'aplica (abans es llençava) i en ix una més, des del seu 11. */
+    expect(seqs()).toEqual([10, 11, 12]);
+    expect(mock.loadMissatges.mock.calls.length).toBe(crides + 1);
+    expect(mock.loadMissatges.mock.calls.at(-1)[1]).toMatchObject({ despresDeSeq: 11 });
+    await act(async () => { segona.resolve([message('meu', propi.id, { seq: 12 })]); });
     await buidaCua();
     expect(seqs()).toEqual([10, 11, 12]);
+    expect(value.getThreadMessages('fil-A').filter((m) => m.id === propi.id)).toHaveLength(1);
     mock.loadMissatges.mockResolvedValueOnce([]);
     await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 12 }); });
     await buidaCua();
@@ -1530,7 +1542,10 @@ describe('robustesa del xat (auditoria 261007 B)', () => {
     expect(value.chatThreads[0].noLlegits).toBe(0);
     await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
     expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
-    expect(value.avis).toBe('No s’ha pogut marcar com a llegit.');
+    /* Gauntlet 261025_0545 (XC-13) · L'avís és del fil (avisFil) i ja no
+       `avis`, que tapava la llista: l'ítem ho demana i esta línia ho fixa. */
+    expect(value.avis).toBeNull();
+    expect(value.avisFil('fil-A')).toBe('No s’ha pogut marcar com a llegit.');
     /* El sondeig torna el que diu el servidor: la marca no hi ha arribat. */
     await act(async () => { await value.recarrega(); });
     expect(value.chatThreads[0].noLlegits).toBe(5);

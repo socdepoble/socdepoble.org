@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, obriFilDePagina, subscribeToXat, unsubscribeFromXat } from './xat.js';
 import { esperaLaIAIA, reiniciaLocalXat } from '../localXat.js';
 import { AGENTS_MAP } from '../agentsSeed.js';
@@ -45,7 +45,11 @@ describe('transport cancel·lable del Xat', () => {
     query.data = _name === 'enviament' ? [{ id: 'm', seq: 1, creat_al: '2026-09-27T08:00:00Z' }] : [];
     const signal = new AbortController().signal;
     await call({ ...REMOT, signal });
-    expect(query.abortSignal).toHaveBeenCalledWith(signal);
+    expect(query.abortSignal).toHaveBeenCalledOnce();
+    const intern = query.abortSignal.mock.calls[0][0];
+    expect(intern).toBeInstanceOf(AbortSignal);
+    expect(intern).not.toBe(signal);
+    expect(intern.aborted).toBe(false);
   });
   it.each(calls)('no despatxa %s si canvia el scope durant getClient', async (_name, call) => {
     const pending = deferred(); mock.getClient.mockReturnValueOnce(pending.promise);
@@ -62,6 +66,107 @@ describe('transport cancel·lable del Xat', () => {
     expect(error.message).toBe('La sessió ha canviat.');
     expect(error.retriable).toBe(false);
     expect(client.rpc).not.toHaveBeenCalled();
+  });
+});
+
+
+/* CUR-02 (261025) · El transport pot ignorar abort: el termini i la
+   cancel·lació han de liquidar igualment la promesa i alliberar la cua. */
+describe('CUR-02 · termini RPC i cancel·lació independents del transport', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => { vi.clearAllTimers(); vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  const penjades = [...calls, ['pagina', config => obriFilDePagina({ tipus: 'publicacio', id: 'x', ruta: '/mur/x' }, config)]];
+  it.each(penjades)('liquida %s als 30 s encara que el SDK ignore abort', async (_nom, call) => {
+    const pendent = deferred();
+    query.then = pendent.promise.then.bind(pendent.promise);
+    const extern = new AbortController();
+    const afig = vi.spyOn(extern.signal, 'addEventListener');
+    const lleva = vi.spyOn(extern.signal, 'removeEventListener');
+    let resultat;
+    const crida = call({ ...REMOT, signal: extern.signal }).then(valor => { resultat = { valor }; }, error => { resultat = { error }; });
+    await vi.advanceTimersByTimeAsync(29999);
+    expect(resultat).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(2);
+    expect(resultat?.error).toMatchObject({ name: 'TimeoutError', code: 'TimeoutError', retriable: true });
+    const intern = query.abortSignal.mock.calls[0][0];
+    expect(intern).not.toBe(extern.signal);
+    expect(intern.aborted).toBe(true);
+    expect(extern.signal.aborted).toBe(false);
+    expect(lleva).toHaveBeenCalledWith('abort', afig.mock.calls.find(([nom]) => nom === 'abort')[1]);
+    expect(vi.getTimerCount()).toBe(0);
+    await crida;
+    pendent.resolve({ data: [], error: null });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(resultat).toHaveProperty('error');
+  });
+
+  it('el termini també existix sense senyal extern i el reintent conserva p_id', async () => {
+    const pendent = deferred();
+    query.then = pendent.promise.then.bind(pendent.promise);
+    const entrada = { id: 'id-que-es-reintenta', text: 'Bon dia' };
+    let error;
+    const crida = enviaMissatge('fil', entrada, REMOT).catch(e => { error = e; });
+    await vi.advanceTimersByTimeAsync(30001);
+    expect(error).toMatchObject({ name: 'TimeoutError', retriable: true });
+    await crida;
+    const segona = { data: [{ id: entrada.id, seq: 7 }], error: null, abortSignal: vi.fn().mockReturnThis() };
+    client.rpc.mockReturnValue(segona);
+    await expect(enviaMissatge('fil', entrada, REMOT)).resolves.toMatchObject({ id: entrada.id, seq: 7 });
+    expect(client.rpc.mock.calls.map(([nom, args]) => [nom, args.p_id])).toEqual([['xat_envia', entrada.id], ['xat_envia', entrada.id]]);
+    pendent.resolve({ data: [{ id: entrada.id, seq: 7 }], error: null });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(penjades)('l’avortament extern liquida %s de seguida amb SDK penjat i es distingix del termini', async (_nom, call) => {
+    const pendent = deferred();
+    query.then = pendent.promise.then.bind(pendent.promise);
+    const extern = new AbortController();
+    const afig = vi.spyOn(extern.signal, 'addEventListener');
+    const lleva = vi.spyOn(extern.signal, 'removeEventListener');
+    let error;
+    const crida = call({ ...REMOT, signal: extern.signal }).catch(e => { error = e; });
+    await vi.advanceTimersByTimeAsync(0);
+    const intern = query.abortSignal.mock.calls[0][0];
+    extern.abort();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(error).toMatchObject({ name: 'AbortError', code: 'AbortError' });
+    expect(intern.aborted).toBe(true);
+    expect(lleva).toHaveBeenCalledWith('abort', afig.mock.calls.find(([nom]) => nom === 'abort')[1]);
+    expect(vi.getTimerCount()).toBe(0);
+    await crida;
+    pendent.resolve({ data: [], error: null });
+    await vi.advanceTimersByTimeAsync(0);
+  });
+
+  it('un rebuig tardà després del termini queda consumit i no torna a liquidar la crida', async () => {
+    let rebutja;
+    const pendent = new Promise((_resol, reject) => { rebutja = reject; });
+    query.then = pendent.then.bind(pendent);
+    const errorRebut = vi.fn();
+    const crida = loadMissatges('fil', REMOT).catch(errorRebut);
+    await vi.advanceTimersByTimeAsync(30001);
+    expect(errorRebut).toHaveBeenCalledOnce();
+    expect(errorRebut.mock.calls[0][0]).toMatchObject({ name: 'TimeoutError' });
+    await crida;
+    rebutja(new Error('Resposta fallida tardana'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(errorRebut).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('èxit o excepció en abortSignal netegen el temporitzador i el listener', async () => {
+    const extern = new AbortController();
+    const afig = vi.spyOn(extern.signal, 'addEventListener');
+    const lleva = vi.spyOn(extern.signal, 'removeEventListener');
+    await expect(loadMissatges('fil', { ...REMOT, signal: extern.signal })).resolves.toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(lleva).toHaveBeenCalledWith('abort', afig.mock.calls[0][1]);
+    query.abortSignal.mockImplementationOnce(() => { throw new TypeError('Transport indisponible'); });
+    await expect(loadMissatges('fil', { ...REMOT, signal: extern.signal })).rejects.toMatchObject({ retriable: true });
+    expect(vi.getTimerCount()).toBe(0);
+    expect(lleva).toHaveBeenLastCalledWith('abort', afig.mock.calls.at(-1)[1]);
   });
 });
 
@@ -774,5 +879,50 @@ describe('mode seed (localXat)', () => {
     expect(noLlegits(fils)).toBe(2);
     const meu = await enviaMissatge(XAT_SEED_IDS.filGeneral, 'Hola des del convidat', SEED);
     expect(meu.usuariId).toBe('convidat-seed');
+  });
+});
+
+/* CUR-03 · El canal recuperat torna a avisar i pot tornar a fallar. */
+describe('CUR-03 · recuperació del canal real', () => {
+  const prepara = async () => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    const callback = vi.fn(), controller = new AbortController();
+    const res = await subscribeToXat('fil', callback, { ...REMOT, signal: controller.signal });
+    return { channel, callback, controller, res, estat: channel.subscribe.mock.calls[0][0] };
+  };
+  it('CUR-03 · SUBSCRIBED després d’un error emet recuperació neutral', async () => {
+    const { estat, callback, res } = await prepara();
+    estat('CHANNEL_ERROR', new Error('fora'));
+    estat('SUBSCRIBED');
+    expect(callback).toHaveBeenLastCalledWith(null, { tipus: 'nous', filId: 'fil', seq: null });
+    await unsubscribeFromXat(res.subscription);
+  });
+  it('CUR-03 · un error nou després de recuperar no queda silenciat', async () => {
+    const { estat, callback, res } = await prepara();
+    estat('CHANNEL_ERROR', new Error('fora'));
+    estat('TIMED_OUT', new Error('mateixa fallada'));
+    expect(callback).toHaveBeenCalledTimes(1);
+    estat('SUBSCRIBED');
+    estat('TIMED_OUT', new Error('una altra fallada'));
+    expect(callback.mock.calls.filter(([error]) => error)).toHaveLength(2);
+    expect(callback.mock.calls.filter(([, dades]) => dades?.tipus === 'nous' && dades.seq === null)).toHaveLength(1);
+    await unsubscribeFromXat(res.subscription);
+  });
+  it('CUR-03 · un avís de nous també rearma la fallada següent', async () => {
+    const { channel, estat, callback, res } = await prepara();
+    estat('CHANNEL_ERROR', new Error('fora'));
+    channel.on.mock.calls[0][2]({ payload: { seq: 9 } });
+    estat('TIMED_OUT', new Error('una altra fallada'));
+    expect(callback.mock.calls.filter(([error]) => error)).toHaveLength(2);
+    expect(callback).toHaveBeenNthCalledWith(2, null, { tipus: 'nous', filId: 'fil', seq: 9 });
+    await unsubscribeFromXat(res.subscription);
+  });
+  it('CUR-03 · un SUBSCRIBED tardà després d’abortar no avisa', async () => {
+    const { estat, callback, controller, res } = await prepara();
+    estat('CHANNEL_ERROR', new Error('fora'));
+    controller.abort(); estat('SUBSCRIBED');
+    expect(callback).toHaveBeenCalledTimes(1);
+    await unsubscribeFromXat(res.subscription);
   });
 });

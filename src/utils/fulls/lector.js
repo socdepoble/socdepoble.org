@@ -94,14 +94,39 @@ function textOoxml(cru) {
   return pla.includes('_x') ? pla.replace(/_x([0-9A-Fa-f]{4})_/g, (sencer, hex) => String.fromCharCode(parseInt(hex, 16))) : pla;
 }
 
-/* Els atributs d'una etiqueta, pel nom sencer i pel nom local (r:id → id). */
-function atributs(text) {
+const CARACTER_NOM = /[\w:.-]/;
+const BLANC = /\s/;
+
+/* Els atributs d'una etiqueta, pel nom sencer i pel nom local (r:id → id).
+   Gauntlet 261025_0545 (RX-M4) · Un recorregut per posicions que casa el
+   mateix que /([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g: l'expressió, dins
+   d'una etiqueta amb una tira llarga de caràcters de nom i cap «=», tornava a
+   recórrer la tira des de cada posició (quadràtic). Un nom sense «=» i una
+   cometa darrere, o amb la cometa sense tancar, no casa des de cap punt de la
+   seua tira: es bota sencer. S'exporta per a la prova diferencial; index.js
+   no la reexporta. */
+export function atributs(text) {
   const resultat = Object.create(null);
-  for (const m of text.matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
-    const valor = desescapa(m[2] ?? m[3]);
-    resultat[m[1]] = valor;
-    const local = m[1].slice(m[1].indexOf(':') + 1);
+  let i = 0;
+  while (i < text.length) {
+    if (!CARACTER_NOM.test(text[i])) { i += 1; continue; }
+    let fiNom = i;
+    while (fiNom < text.length && CARACTER_NOM.test(text[fiNom])) fiNom += 1;
+    let j = fiNom;
+    while (j < text.length && BLANC.test(text[j])) j += 1;
+    let tanca = -1;
+    if (text[j] === '=') {
+      j += 1;
+      while (j < text.length && BLANC.test(text[j])) j += 1;
+      if (text[j] === '"' || text[j] === '\'') tanca = text.indexOf(text[j], j + 1);
+    }
+    if (tanca === -1) { i = fiNom; continue; }
+    const nom = text.slice(i, fiNom);
+    const valor = desescapa(text.slice(j + 1, tanca));
+    resultat[nom] = valor;
+    const local = nom.slice(nom.indexOf(':') + 1);
     if (!(local in resultat)) resultat[local] = valor;
+    i = tanca + 1;
   }
   return resultat;
 }

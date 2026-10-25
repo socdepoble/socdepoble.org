@@ -32,8 +32,18 @@ export default function EspecimenGestor() {
           'Estils en línia a les subbarres (les amplades van a propietats CSS des d’una ref).',
           'Embolcallar el gestor amb una UniversalPage.'
         ]}>
+        {/* Gauntlet 261025_0545 (P1-16) · Cap taula nua a la columna del detall:
+            en una finestra de 1280px fa uns 385px, «Mides» (432px) hi vessava i
+            l'overflow:hidden del detall en tallava un tros que ningú abastava.
+            sdp.css només fa desplaçar una taula nua en una finestra estreta, no
+            en una columna estreta. Cada taula es desplaça dins de la seua caixa
+            a qualsevol amplada (la de les taules de contingut de la Wiki, sense
+            filet: en mòbil es veu igual que abans), i la caixa és una regió amb
+            el nom de la llegenda i tabIndex=0, com el contracte d'Especimen.jsx:
+            s'hi arriba i es desplaça amb el teclat. */}
+        <div className="sdp-taula-prosa" role="region" aria-labelledby="gestor-plegat" tabIndex={0}>
         <table>
-          <caption>Plegat en escriptori (especificació del Mestre, 260911)</caption>
+          <caption id="gestor-plegat">Plegat en escriptori (especificació del Mestre, 260911)</caption>
           <thead><tr><th scope="col">Columna</th><th scope="col">Desplegada</th><th scope="col">Plegada (carril)</th></tr></thead>
           <tbody>
             <tr><td>Navegació</td><td>Barra: títol + replegar. Subbarra: «Tot» + roda dentada. Cos: acordions cap avall.</td><td>Fila barra: botó desplegar. Fila subbarra: roda dentada. Alineats.</td></tr>
@@ -41,8 +51,10 @@ export default function EspecimenGestor() {
             <tr><td>Detall</td><td>Sempre visible; ocupa l’espai restant (320px com a mínim).</td><td>No es plega.</td></tr>
           </tbody>
         </table>
+        </div>
+        <div className="sdp-taula-prosa" role="region" aria-labelledby="gestor-mides" tabIndex={0}>
         <table>
-          <caption>Mides (amplada del contenidor, no de la finestra)</caption>
+          <caption id="gestor-mides">Mides (amplada del contenidor, no de la finestra)</caption>
           <thead><tr><th scope="col">Nom</th><th scope="col">Amplada del contenidor</th><th scope="col">Comportament</th></tr></thead>
           <tbody>
             <tr><td>ample</td><td>Des del màxim entre 900px i la suma navegació + llistat + 320px + 2px (una columna plegada hi compta 56px). Amb les amplades per defecte, 900px.</td><td>Tres columnes; dos separadors; carrils de plegat.</td></tr>
@@ -50,17 +62,21 @@ export default function EspecimenGestor() {
             <tr><td>estret</td><td>&lt; 720px</td><td>Una sola capa cada vegada i cap separador. Amb panellEstret (mestre-detall, com a les apps de missatgeria): primer la navegació, després el llistat i, en triar un element, el detall; la fletxa ← del detall torna al panell d’on es venia. Mai dos panells oberts.</td></tr>
           </tbody>
         </table>
+        </div>
+        <div className="sdp-taula-prosa" role="region" aria-labelledby="gestor-amplades" tabIndex={0}>
         <table>
-          <caption>Amplades de columna (px)</caption>
+          <caption id="gestor-amplades">Amplades de columna (px)</caption>
           <thead><tr><th scope="col">Columna</th><th scope="col">Mínim</th><th scope="col">Per defecte</th><th scope="col">Màxim</th></tr></thead>
           <tbody>
             <tr><td>Navegació</td><td>200</td><td>260</td><td>420</td></tr>
             <tr><td>Llistat</td><td>240</td><td>280</td><td>520</td></tr>
           </tbody>
         </table>
+        </div>
         <p>La roda dentada aplica tres presets (Compacta, Per defecte, Ampla) i l’amplada es desa al dispositiu.</p>
+        <div className="sdp-taula-prosa" role="region" aria-labelledby="gestor-colors" tabIndex={0}>
         <table>
-          <caption>Colors i profunditat (capçaleres de columna)</caption>
+          <caption id="gestor-colors">Colors i profunditat (capçaleres de columna)</caption>
           <thead><tr><th scope="col">Element</th><th scope="col">Estil visual i propòsit</th></tr></thead>
           <tbody>
             <tr><td><strong>Fila 1</strong><br />(CARPETES, COMPONENTS)</td><td>--sdp-workspace-fila1-fons, igual a totes les columnes i a totes les mides: <strong>no passa a negre</strong>.</td></tr>
@@ -68,6 +84,7 @@ export default function EspecimenGestor() {
             <tr><td><strong>Cos de la navegació</strong></td><td>--sdp-workspace-nav-fons, diferent de les dues files.</td></tr>
           </tbody>
         </table>
+        </div>
       </Especimen>
     </>
   );

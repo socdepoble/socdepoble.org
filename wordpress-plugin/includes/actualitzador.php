@@ -30,7 +30,8 @@
  *     descarrega ací (upgrader_pre_download) des del manifest verificat en eixe
  *     moment i ha de tindre la seua mida i el seu sha256. Si no, WP_Error i no
  *     s'instal·la res.
- *   · L'arrel del zip ha de ser socdepoble-enxufe/ (upgrader_source_selection).
+ *   · L'arrel del zip ha de ser la carpeta SOCDEPOBLE_ENXUFE_SLUG, socdepoble/
+ *     (upgrader_source_selection).
  *   · Mai s'envia `autoupdate` ni es filtra auto_update_plugin: l'administrador
  *     decidix. Un paquet segellat contra un backend de desenvolupament no
  *     s'oferix mai a un lloc real.
@@ -38,6 +39,14 @@
  *
  * Esta és l'única peça que no va a la variant per al directori de
  * WordPress.org: allà les actualitzacions ja són natives.
+ *
+ * Gauntlet 261025_0545 (WP-01, WP-03) · Decisió del Mestre (261023): una sola
+ * variant universal, carpeta i slug 'socdepoble', actualitzada per
+ * WordPress.org un cop aprovada. Este fitxer continua al paquet del canal propi
+ * fins que el Mestre decidisca com es retira el canal (WP-03). Els llocs 1.1.x,
+ * a socdepoble-enxufe/ i amb el seu PHP, rebutgen un canal amb l'slug
+ * 'socdepoble' (fallen en tancat): només els mouria una release pont, que
+ * també és decisió seua.
  *
  * @package SocDePobleEnxufe
  */
@@ -60,6 +69,12 @@ if ( ! defined( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA' ) ) {
    inactiu o en pausa) download_url() el rebutja i l'actualització falla en
    tancat. La URL real només ix del manifest verificat en el moment de baixar. */
 const SOCDEPOBLE_ENXUFE_PAQUET_SIMBOLIC = 'socdepoble-enxufe:';
+/* Gauntlet 261025_0545 (MISSED P3) · Identitat del canal propi davant de
+   WordPress (update_plugins i plugins_api): la dels paquets 1.1.x, la del
+   paquet simbòlic i la de l'agent. Mai SOCDEPOBLE_ENXUFE_SLUG: 'socdepoble' és
+   l'slug del plugin de WordPress.org, i respondre per ell segrestaria la seua
+   fitxa i el seu «Instal·la ara». */
+const SOCDEPOBLE_ENXUFE_SLUG_CANAL     = 'socdepoble-enxufe';
 const SOCDEPOBLE_ENXUFE_OPCIO_CANAL    = 'socdepoble_enxufe_canal';
 const SOCDEPOBLE_ENXUFE_CANAL_VIGENCIA = 43200; // 12 h, com les comprovacions de WordPress.
 const SOCDEPOBLE_ENXUFE_CANAL_REINTENT = 3600;  // 1 h després d'un error.
@@ -476,7 +491,8 @@ function socdepoble_enxufe_update_plugins( $update, $plugin_data, $plugin_file, 
 	}
 	$installada = is_array( $plugin_data ) && ! empty( $plugin_data['Version'] ) ? (string) $plugin_data['Version'] : SOCDEPOBLE_ENXUFE_VERSIO;
 	$resposta   = array(
-		'slug'    => SOCDEPOBLE_ENXUFE_SLUG,
+		// Gauntlet 261025_0545 (MISSED P3) · «Mostra els detalls» demana plugins_api amb este slug.
+		'slug'    => SOCDEPOBLE_ENXUFE_SLUG_CANAL,
 		'version' => $installada,
 		'url'     => 'https://socdepoble.org/enxufe/',
 		'package' => '',
@@ -622,13 +638,18 @@ function socdepoble_enxufe_linia_readme( $text ) {
  * requisits ixen del readme i de la capçalera instal·lats; si el canal
  * verificat oferix una versió nova, els requisits i les notes són els seus.
  *
+ * Gauntlet 261025_0545 (MISSED P3) · Només respon per l'slug que anuncia
+ * update_plugins (SOCDEPOBLE_ENXUFE_SLUG_CANAL). L'slug del directori,
+ * 'socdepoble', passa intacte cap a WordPress.org: si no, amb este paquet
+ * actiu, «Instal·la ara» del plugin oficial rebria un enllaç buit o simbòlic.
+ *
  * @param false|object|array $resultat Resultat d'un altre filtre.
  * @param string             $accio    Acció demanada.
  * @param object             $args     Arguments (slug).
  * @return false|object|array
  */
 function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
-	if ( 'plugin_information' !== $accio || ! is_object( $args ) || empty( $args->slug ) || SOCDEPOBLE_ENXUFE_SLUG !== $args->slug ) {
+	if ( 'plugin_information' !== $accio || ! is_object( $args ) || empty( $args->slug ) || SOCDEPOBLE_ENXUFE_SLUG_CANAL !== $args->slug ) {
 		return $resultat;
 	}
 	$canal  = socdepoble_enxufe_canal();
@@ -661,7 +682,7 @@ function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
 
 	$info                = new stdClass();
 	$info->name          = esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble' );
-	$info->slug          = SOCDEPOBLE_ENXUFE_SLUG;
+	$info->slug          = SOCDEPOBLE_ENXUFE_SLUG_CANAL;
 	$info->version       = null !== $oferta ? $oferta['versio'] : SOCDEPOBLE_ENXUFE_VERSIO;
 	$info->author        = '<a href="https://socdepoble.org">Sóc de Poble</a>';
 	$info->homepage      = 'https://socdepoble.org/enxufe/';
@@ -761,10 +782,27 @@ function socdepoble_enxufe_pre_descarrega( $resposta, $paquet, $upgrader, $hook_
 add_filter( 'upgrader_pre_download', 'socdepoble_enxufe_pre_descarrega', 10, 4 );
 
 /**
+ * Gauntlet 261025_0545 (WP-01) · El motiu de les dues barreres de l'arrel
+ * nomena la carpeta que es comprova de veritat (SOCDEPOBLE_ENXUFE_SLUG), no la
+ * dels paquets 1.1.x.
+ *
+ * @return string
+ */
+function socdepoble_enxufe_motiu_arrel() {
+	return sprintf(
+		/* translators: 1: plugin folder, 2: main plugin file. */
+		__( 'The update package must contain the %1$s folder with %2$s inside.', 'socdepoble' ),
+		SOCDEPOBLE_ENXUFE_SLUG,
+		'socdepoble-enxufe.php'
+	);
+}
+
+/**
  * Comprova l'arrel del zip ABANS de tornar-lo a WordPress, quan encara no ha
  * desactivat el plugin ni tocat cap fitxer: totes les entrades dins de
- * socdepoble-enxufe/ i el fitxer principal present. Sense ZipArchive no es pot
- * mirar ací, i queda la segona barrera (upgrader_source_selection).
+ * la carpeta SOCDEPOBLE_ENXUFE_SLUG i el fitxer principal present. Sense
+ * ZipArchive no es pot mirar ací, i queda la segona barrera
+ * (upgrader_source_selection).
  *
  * @param string $fitxer Zip descarregat i verificat.
  * @return string '' si l'arrel és bona; el motiu si no.
@@ -773,7 +811,7 @@ function socdepoble_enxufe_error_arrel_zip( $fitxer ) {
 	if ( ! class_exists( 'ZipArchive' ) ) {
 		return '';
 	}
-	$motiu = __( 'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.', 'socdepoble' );
+	$motiu = socdepoble_enxufe_motiu_arrel();
 	$zip   = new ZipArchive();
 	if ( true !== $zip->open( $fitxer ) ) {
 		return __( 'The package is not a valid zip file.', 'socdepoble' );
@@ -795,8 +833,8 @@ function socdepoble_enxufe_error_arrel_zip( $fitxer ) {
 }
 
 /**
- * Segona barrera: l'arrel del zip ha de ser la carpeta socdepoble-enxufe amb
- * el fitxer principal dins. La primera és a la baixada (abans que WordPress
+ * Segona barrera: l'arrel del zip ha de ser la carpeta SOCDEPOBLE_ENXUFE_SLUG
+ * amb el fitxer principal dins. La primera és a la baixada (abans que WordPress
  * desactive el plugin); esta cobrix els llocs sense ZipArchive. Refusar és
  * millor que reanomenar a cegues.
  *
@@ -818,7 +856,7 @@ function socdepoble_enxufe_seleccio_origen( $origen, $origen_remot, $upgrader, $
 	   engabiats no és la ruta local, i s'ha de preguntar a ell. */
 	$existix = $wp_filesystem instanceof WP_Filesystem_Base ? $wp_filesystem->is_file( $principal ) : file_exists( $principal );
 	if ( SOCDEPOBLE_ENXUFE_SLUG !== basename( $carpeta ) || ! $existix ) {
-		return new WP_Error( 'socdepoble_enxufe_arrel', __( 'The update package must contain the socdepoble-enxufe folder with socdepoble-enxufe.php inside.', 'socdepoble' ) );
+		return new WP_Error( 'socdepoble_enxufe_arrel', socdepoble_enxufe_motiu_arrel() );
 	}
 	return $origen;
 }

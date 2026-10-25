@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { BookOpen, Printer } from 'lucide-react';
 import { Casella, Dialeg } from '../PedraSeca/index.js';
+import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 
 /* El document de l'iframe és autònom (CSP pròpia, sense el full de l'app):
@@ -33,12 +35,21 @@ const plain = value => String(value || '').replace(/<[^>]*>/g, '');
    títol. El Bloc de Notes hi passa «Nota sense títol», el mateix de l'H1 i
    de la targeta; sense, el de sempre. */
 const TITOL_RESERVA_IMPRESSIO = 'Sense títol';
-export function buildPrintDocument(doc, cover = false, author = '', titolReserva = TITOL_RESERVA_IMPRESSIO) {
+/* Gauntlet 261025_0545 (TE-08) · El paper deia sempre <html lang="ca">: una
+   nota impresa amb la interfície en anglés es partia i es llegia en veu alta
+   com a català. Ara el lang és `llengua` (la de la interfície: el document no
+   en porta cap de pròpia) i el rètol de la portada, `rotolPortada`, ja
+   traduït. Només un codi de llengua entra a l'atribut; qualsevol altra cosa
+   torna al valencià. Sense opcions, el paper de sempre, byte a byte. */
+const ROTOL_PORTADA = 'Sóc de Poble · Edició personal';
+const CODI_LLENGUA = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
+const llenguaDelPaper = (llengua) => (typeof llengua === 'string' && CODI_LLENGUA.test(llengua) ? llengua : 'ca');
+export function buildPrintDocument(doc, cover = false, author = '', titolReserva = TITOL_RESERVA_IMPRESSIO, { llengua = 'ca', rotolPortada = ROTOL_PORTADA } = {}) {
   const title = escape(plain(doc.title) || titolReserva || TITOL_RESERVA_IMPRESSIO);
   const copyright = escape(doc.copyright);
   const peu = copyright ? `<footer>${copyright}</footer>` : '';
-  const coverHtml = cover ? `<section class="cover"><p>Sóc de Poble · Edició personal</p><p class="cover-titol">${title}</p><p>${escape(plain(doc.subtitle))}</p><p>${escape(author)}</p>${peu}</section>` : '';
-  return `<!doctype html><html lang="ca"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob: https:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${title}</title><style>
+  const coverHtml = cover ? `<section class="cover"><p>${escape(rotolPortada || ROTOL_PORTADA)}</p><p class="cover-titol">${title}</p><p>${escape(plain(doc.subtitle))}</p><p>${escape(author)}</p>${peu}</section>` : '';
+  return `<!doctype html><html lang="${llenguaDelPaper(llengua)}"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob: https:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${title}</title><style>
 @page { size: A4; margin: 20mm 18mm; }
 * { box-sizing: border-box; } body { margin: 0; color: ${PAPER.tinta}; background: white; font: 11pt/1.6 Georgia, serif; overflow-wrap: anywhere; }
 main { max-width: 174mm; margin: auto; } h1 { font-size: 28pt; line-height: 1.2; } h2,h3,h4 { break-after: avoid; } p,li { orphans: 3; widows: 3; }
@@ -49,12 +60,31 @@ img,svg { max-width: 100%; max-height: 225mm; object-fit: contain; } figure,bloc
 </style></head><body><main>${coverHtml}<article><header class="page-title"><h1>${title}</h1></header>${doc.subtitle ? `<h2>${escape(plain(doc.subtitle))}</h2>` : ''}${sanitizeHtml(doc.lead || '')}${sanitizeHtml(doc.content || '')}${peu}</article></main></body></html>`;
 }
 
-export default function DocumentPrintPreview({ document: doc, author = '', titolReserva = TITOL_RESERVA_IMPRESSIO }) {
+/* Gauntlet 261025_0545 (TE-08) · L'estat de la interfície (d'on ix la llengua
+   del text), o null fora de l'app (sense UIProvider) o amb una prova que simula
+   UIContext sense useUIStateOpcional: el mock llança dins del try. Com
+   useTraductorOpcional, amb la forma `return …` dins del try que rules-of-hooks accepta. */
+function useEstatDeLaInterficie() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
+
+export default function DocumentPrintPreview({ document: doc, author = '', titolReserva = '' }) {
   const [open, setOpen] = useState(false);
   const [cover, setCover] = useState(false);
   const [ready, setReady] = useState(false);
   const frame = useRef(null);
-  const html = useMemo(() => open ? buildPrintDocument(doc, cover, author, titolReserva) : '', [doc, cover, author, titolReserva, open]);
+  /* TE-08 · El paper en la llengua de la interfície; la reserva que passa qui crida (el Bloc de Notes) mana. */
+  const t = useTraductorOpcional();
+  const estatUI = useEstatDeLaInterficie();
+  const llengua = estatUI?.llenguaDelText ?? estatUI?.language ?? 'ca';
+  const reserva = titolReserva || tradueix(t, ['editor.impressio.senseTitol', TITOL_RESERVA_IMPRESSIO]);
+  const rotolPortada = tradueix(t, ['editor.impressio.portada', ROTOL_PORTADA]);
+  const html = useMemo(() => open ? buildPrintDocument(doc, cover, author, reserva, { llengua, rotolPortada }) : '',
+    [doc, cover, author, reserva, llengua, rotolPortada, open]);
   const show = withCover => { setCover(withCover); setReady(false); setOpen(true); };
   return <>
     <button type="button" className="sdp-classificacio-pindola" onClick={() => show(false)}>

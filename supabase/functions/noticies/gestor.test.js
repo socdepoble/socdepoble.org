@@ -25,7 +25,7 @@
    ja no és 'ocupat': espera el seu torn (L-02); (5) les imatges d'una font personal són només de la
    connexió que la llig (L-11); (6) la primera <img> d'un contingut és la que tria el nucli del Lector
    (L-09). Els describes R6 són nous. */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import {
@@ -33,7 +33,7 @@ import {
   LIMIT_PERSONALS, MAXIM_BYTES, MAXIM_BYTES_CAU_IMATGES, MAXIM_BYTES_IMATGE, MAXIM_BYTES_PERSONAL, MAXIM_CAU_PERSONALS, MAXIM_EMPREMTES,
   MAXIM_IMATGES_CAU, MAXIM_IMATGES_EN_CUA, MAXIM_IMATGES_EN_VOL, MAXIM_PERSONALS_EN_VOL, MAXIM_URL_PERSONAL, MAX_AGE_IMATGE_S, OBSOLET_MS,
   TEMPS_ORIGEN_MS, TIPUS_IMATGE, VIDA_IMATGES_MS, adrecaPersonal, clauAmple, clauDeQui, clauDeXarxa, creaEmpremtador, creaGestor, creaLimit,
-  HOSTS_DEL_SISTEMA, descodificaFeed, esFeed, esIpNoPublica, imatgesDelFeed, validaCataleg
+  HOSTS_DEL_SISTEMA, atributsDe, descodificaFeed, esFeed, esIpNoPublica, imatgesDelFeed, validaCataleg
 } from './gestor.js';
 
 const ARREL = process.cwd();
@@ -1546,5 +1546,169 @@ describe('G-03 · el recorregut de l’XML és lineal: cap feed trencat a posta 
     const amb = (n) => RSS_ITEM(Array.from({ length: n }, (_, i) => `<p${i}:description>`).join('') + '<description><![CDATA[<img src="https://cdn.example.org/z.png">]]></description>');
     expect(imatgesDelFeed(amb(32))).toEqual(['https://cdn.example.org/z.png']);
     expect(imatgesDelFeed(amb(33))).toEqual([]);
+  });
+});
+
+/* Gauntlet 261025_0545 (RX-01, RX-M3) · Dos recorreguts que G-03 no va tocar. (1) Els atributs d'una
+   etiqueta TANCADA i enorme: l'expressió d'atributsDe tornava a llegir el nom sencer des de cada caràcter
+   d'un nom sense «=» darrere. Una sola etiqueta de 100 KB costava de 5 a 10 s, i una de 500 KB (la fita
+   d'una font personal), de 3 a 5 minuts; les famílies de G-03 eren totes d'etiquetes sense tancar. (2) El
+   pròleg (esFeed a cada baixada, arrelDe a imatgesDelFeed): «<!DOCTYPE», 64 KB d'espais i cap «>» costaven
+   uns 2 s cada volta, i un feed rebutjat no es desa: cada petició ho tornava a pagar. Ara tots dos són
+   lineals (mil·lisegons). El límit d'1 s deixa marge per a una màquina carregada i continua lluny del
+   quadràtic. I diuen el mateix que les expressions d'abans: els contrastos del final les fan servir
+   d'oracle, amb els feeds de prova del Lector i amb entrades aleatòries de llavor fixa. */
+describe('RX-01 i RX-M3 · els atributs d’una etiqueta enorme i el pròleg d’un feed es lligen en temps lineal', () => {
+  const KB100 = 100 * 1024;
+  const RSS_ITEM = (cos) => `<rss><channel><item>${cos}</item></channel></rss>`;
+  const ATOM = (cos) => `<feed xmlns="http://www.w3.org/2005/Atom">${cos}</feed>`;
+  const ETIQUETES = Object.freeze([
+    ['un <enclosure> tancat amb un nom de 100 KB i cap «=» (la reproducció de RX-01)', RSS_ITEM(`<enclosure ${'a'.repeat(KB100)}></enclosure>`)],
+    ['un <link> de la capçalera d’Atom amb un nom de 100 KB', ATOM(`<link ${'a'.repeat(KB100)}/><entry></entry>`)],
+    ['un <link> d’una entrada d’Atom amb un nom de 100 KB', ATOM(`<entry><link ${'a'.repeat(KB100)}/></entry>`)],
+    ['un <media:content> amb un nom de 50 KB, «="» i 50 KB sense tancar la cometa', RSS_ITEM(`<media:content ${'a'.repeat(KB100 / 2)}="${'b'.repeat(KB100 / 2)}/>`)],
+    ['un <itunes:image> del canal amb un nom de 100 KB de tots els caràcters de nom, «=» i cap cometa',
+      `<rss><channel><itunes:image ${'a:B.c-D_9'.repeat(Math.floor(KB100 / 9))} = /><item></item></channel></rss>`]
+  ]);
+
+  test.each(ETIQUETES)('%s: menys d’1 s', (nom, xml) => {
+    expect(xml.length, nom).toBeGreaterThan(KB100);
+    const inici = performance.now();
+    expect(imatgesDelFeed(xml, 'https://ayudawp.com'), nom).toEqual([]);
+    expect(performance.now() - inici, nom).toBeLessThan(1000);
+  });
+
+  test('un nom de 100 KB davant dels atributs de veres no els amaga: la imatge de l’enclosure ix igual, en menys d’1 s', () => {
+    const xml = RSS_ITEM(`<enclosure ${'a'.repeat(KB100)} url="https://cdn.example.org/a.jpg?w=1&amp;h=2" type='image/jpeg'/>`);
+    const inici = performance.now();
+    expect(imatgesDelFeed(xml)).toEqual(['https://cdn.example.org/a.jpg?w=1&h=2']);
+    expect(performance.now() - inici).toBeLessThan(1000);
+  });
+
+  test('pel servei sencer: un feed del catàleg amb un <enclosure> de 100 KB torna 200 en menys d’1,5 s', async () => {
+    const xml = RSS_ITEM(`<enclosure ${'a'.repeat(KB100)} url="https://cdn.example.org/a.jpg" type="image/jpeg"/>`);
+    const { demana } = prepara({ fetchImpl: vi.fn(async () => origen(xml)) });
+    const inici = performance.now();
+    expect((await demana('/feed?font=ayudawp')).status).toBe(200);
+    expect(performance.now() - inici).toBeLessThan(1500);
+  });
+
+  const PROLEGS = Object.freeze([
+    ['«<!DOCTYPE», 64 KB d’espais i un «[» sense tancar (la reproducció de RX-M3)', '<!DOCTYPE' + ' '.repeat(65000) + '['],
+    ['«<!DOCTYPE» i 64 KB d’espais, tabuladors i salts de línia, sense «>» ni «[»', '<!DOCTYPE' + ' \t\n'.repeat(21600)],
+    ['«<!DOCTYPE», 64 KB d’espais i una lletra', '<!DOCTYPE' + ' '.repeat(65000) + 'x'],
+    ['«<!DOCTYPE», 64 KB d’espais, un subconjunt intern buit i cap «>»', '<!DOCTYPE' + ' '.repeat(65000) + '[]x'],
+    ['un pròleg bo, un comentari i «<!doctype» en minúscules amb 64 KB d’espais', '<?xml version="1.0"?><!-- c -->\n<!doctype' + ' '.repeat(65000) + '['],
+    ['un DOCTYPE que només es tanca passats els 64 KB que es miren', '<!DOCTYPE rss' + ' '.repeat(66000) + '><rss></rss>']
+  ]);
+
+  test.each(PROLEGS)('%s: esFeed no l’accepta i imatgesDelFeed no en trau res, en menys d’1 s', (nom, text) => {
+    const inici = performance.now();
+    expect(esFeed(text), nom).toBe(false);
+    expect(imatgesDelFeed(text), nom).toEqual([]);
+    expect(performance.now() - inici, nom).toBeLessThan(1000);
+  });
+
+  test('pel servei sencer: un rebuig no es desa, i tres peticions seguides d’un pròleg així tornen 502 origen_format en menys d’1,5 s', async () => {
+    const fetchImpl = vi.fn(async () => origen('<!DOCTYPE' + ' '.repeat(65000) + '['));
+    const { demana } = prepara({ fetchImpl });
+    const inici = performance.now();
+    for (let i = 0; i < 3; i += 1) expect((await errorDe(await demana('/feed?font=ayudawp'))).code).toBe('sdp_noticies_origen_format');
+    expect(performance.now() - inici).toBeLessThan(1500);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  test('la mateixa acceptació: un DOCTYPE llarg que es tanca dins dels 64 KB, amb subconjunt intern o sense, es salta i el feed passa', () => {
+    expect(esFeed('<!DOCTYPE rss' + ' '.repeat(65000) + '><rss version="2.0"></rss>')).toBe(true);
+    const atom = '<!DOCTYPE feed [' + ' \n'.repeat(32000) + ']\t >' + ATOM('<entry><link href="https://example.org/e/"/><content type="html">&lt;img src="/a.png"&gt;</content></entry>');
+    expect(esFeed(atom)).toBe(true);
+    expect(imatgesDelFeed(atom)).toEqual(['https://example.org/a.png']);
+  });
+
+  /* Les expressions d'abans (gestor.js fins a 261025_0545), d'oracle: amb entrades curtes i feeds normals
+     no costen res. atributsAbans hi porta el desentitza de sempre, sense tocar. */
+  const ENTITATS_ABANS = Object.freeze({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" });
+  const desentitzaAbans = (text) => String(text).replace(/&(#[xX][0-9a-fA-F]{1,6}|#\d{1,7}|amp|lt|gt|quot|apos);/g, (tot, nom) => {
+    if (nom[0] !== '#') return ENTITATS_ABANS[nom];
+    const codi = nom[1] === 'x' || nom[1] === 'X' ? parseInt(nom.slice(2), 16) : parseInt(nom.slice(1), 10);
+    return codi > 0 && codi <= 0x10FFFF ? String.fromCodePoint(codi) : tot;
+  });
+  function atributsAbans(etiqueta) {
+    const atributs = Object.create(null);
+    for (const [, nom, doble, simple] of etiqueta.matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
+      atributs[nom.toLowerCase()] = desentitzaAbans(doble ?? simple);
+    }
+    return atributs;
+  }
+  const SALTA_ABANS = /^\s*(?:<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[^>[]*(?:\[[^\]]*\])?\s*>)/i;
+  function restaAbans(text) {
+    let resta = text.slice(0, 65536);
+    for (let i = 0; i < 32; i += 1) {
+      const salt = SALTA_ABANS.exec(resta);
+      if (!salt) break;
+      resta = resta.slice(salt[0].length);
+    }
+    return resta;
+  }
+  const esFeedAbans = (text) => !/<!ENTITY/i.test(text) && /^\s*<(?:[A-Za-z_][\w.-]*:)?(?:rss|feed|RDF)[\s/>]/.test(restaAbans(text));
+  const arrelAbans = (xml) => /^\s*<(?:[A-Za-z_][\w.-]*:)?(rss|feed|RDF)[\s/>]/.exec(restaAbans(xml))?.[1] || null;
+
+  /* Els atributs, en ordre, com a text: dos resultats són el mateix si diuen el mateix text. */
+  const parells = (atributs) => JSON.stringify(Object.entries(atributs));
+  /* Cada «<…>» d'un text (el «<» fins al primer «>»). */
+  const etiquetesDe = (text) => {
+    const eixida = [];
+    for (let i = text.indexOf('<'); i >= 0; i = text.indexOf('<', i + 1)) {
+      const fi = text.indexOf('>', i);
+      if (fi < 0) break;
+      eixida.push(text.slice(i, fi + 1));
+    }
+    return eixida;
+  };
+  /* Un generador de llavor fixa (mulberry32): les mateixes entrades a cada passada. */
+  const generador = (llavor) => {
+    let estat = llavor >>> 0;
+    return () => {
+      estat = (estat + 0x6D2B79F5) >>> 0;
+      let t = estat;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const aleatoris = (llavor, quants, peces, maxim) => {
+    const atzar = generador(llavor);
+    return Array.from({ length: quants }, () => Array.from({ length: Math.floor(atzar() * (maxim + 1)) }, () => peces[Math.floor(atzar() * peces.length)]).join(''));
+  };
+  /* Els feeds de prova del Lector (els del nucli i els de la llavor): feeds normals, de veres. */
+  const FEEDS_DEL_LECTOR = ['src/apps/lector/nucli/__fixtures__', 'src/apps/lector/llavor'].flatMap((carpeta) => readdirSync(path.join(ARREL, carpeta))
+    .filter((fitxer) => fitxer.endsWith('.xml')).map((fitxer) => [`${carpeta}/${fitxer}`, readFileSync(path.join(ARREL, carpeta, fitxer), 'utf8')]));
+  const PECES_D_ETIQUETA = Object.freeze(['a', 'Z', '9', '_', ':', '.', '-', 'url', 'TYPE', 'href', '=', '=', '"', '"', "'", ' ', '  ', '\t', '\n',
+    ' ', ' ', '﻿', '&amp;', '&#x41;', '&#65;', '&lt;', '&quot;', 'é', '<', '>', '/', 'image/png', 'https://example.org/a.png']);
+  const PECES_DE_PROLEG = Object.freeze(['<?xml version="1.0"?>', '<?', '?>', '<!--', '-->', '<!-- c -->', '<!DOCTYPE', '<!doctype', '<!DocType', ' rss',
+    ' [', '[', ']', '>', ' ', '\n', '\t', ' ', ' ', '﻿', 'x', '"', "'", '<!ENTITY', '<!', '<', '<rss>', '<rss ', '<feed/>', '<rdf:RDF>',
+    '<a:rss>', '<rssx>', 'RDF', '<feed', '/', '-']);
+
+  test('contrast amb l’expressió d’abans: els mateixos atributs, en el mateix ordre, a cada etiqueta dels feeds del Lector i a 20.000 d’aleatòries', () => {
+    expect(FEEDS_DEL_LECTOR.length).toBeGreaterThanOrEqual(5);
+    const entrades = [
+      ...FEEDS_DEL_LECTOR.flatMap(([, text]) => [text, ...etiquetesDe(text)]),
+      ...[261025, 545].flatMap((llavor) => aleatoris(llavor, 10000, PECES_D_ETIQUETA, 24)).map((cos, i) => (i % 2 ? `<enclosure ${cos}/>` : cos))
+    ];
+    expect(entrades.length).toBeGreaterThan(20000);
+    expect(entrades.filter((etiqueta) => parells(atributsDe(etiqueta)) !== parells(atributsAbans(etiqueta)))).toEqual([]);
+  });
+
+  test('contrast amb l’expressió d’abans: esFeed diu el mateix dels feeds del Lector i de 20.000 pròlegs aleatoris; l’arrel, també', () => {
+    for (const [fitxer, text] of FEEDS_DEL_LECTOR) expect(esFeed(text), fitxer).toBe(esFeedAbans(text));
+    const prolegs = [261025, 545].flatMap((llavor) => aleatoris(llavor, 10000, PECES_DE_PROLEG, 14));
+    expect(prolegs.filter((proleg) => esFeed(proleg) !== esFeedAbans(proleg))).toEqual([]);
+    /* L'arrel només es veu per imatgesDelFeed: amb la d'Atom, l'entrada dona la base i la imatge del
+       contingut es resol; amb una altra (o cap), no hi ha base i no n'ix cap. */
+    const COS = ATOM('<entry><link href="https://example.org/e/"/><content type="html">&lt;img src="/a.png"&gt;</content></entry>');
+    expect(prolegs.filter((proleg) => {
+      const esperades = arrelAbans(proleg + COS) === 'feed' ? ['https://example.org/a.png'] : [];
+      return JSON.stringify(imatgesDelFeed(proleg + COS)) !== JSON.stringify(esperades);
+    })).toEqual([]);
   });
 });

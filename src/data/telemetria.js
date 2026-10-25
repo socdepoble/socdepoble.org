@@ -27,9 +27,11 @@ import { CLAUS_FUNDACIONALS } from './identitatsSeed.js';
  *     el que va després del primer tram de la ruta (`/notes/<id>` ix com a
  *     `/notes/*`), ni el títol de la pestanya (una fitxa de detall hi posa el
  *     títol de la nota), ni identificadors de persona, ni el camí del referent.
- *   - Cada intent, enviat o no, es publica com a `sdp:telemetria` a `window` i
- *     es guarda en memòria (`darrersEnviaments`): el que el navegador envia es
- *     pot vore a la pàgina de privacitat. Transparència, no promesa.
+ *   - Cada intent, iniciat o no, es publica UNA vegada com a `sdp:telemetria`
+ *     a `window` i es guarda en memòria (`darrersEnviaments`). `enviat: true`
+ *     acredita que s'ha iniciat fetch o s'ha delegat a l'amfitrió, mai que la
+ *     petició haja eixit ni que el comptador l'haja rebut o acceptat. El
+ *     resultat HTTP no es comprova. Transparència, no promesa de recepció.
  */
 
 export const CLAU_APAGADA = 'umami.disabled';

@@ -51,15 +51,46 @@ const RE_CODI_SDP = /SDP-XAT-\d{3}/;
 /* W4-10 · Les persones i les entitats de Supabase són UUID (2609272200_xat_entitats.sql). */
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CATEGORIES_CONEGUDES = new Set(['SESSIO_CADUCADA', 'NO_TROBAT', 'DUPLICAT', 'SENSE_PERMIS', 'XARXA']);
-const channelOwners = new WeakMap();
-const channelRemovals = new WeakMap();
+/* CUR-06 · El SDK reutilitza el canal per topic. El handle públic identifica
+   una alta, mai el canal físic compartit. Cap pool reté un client abandonat. */
+const canalsPerClient = new WeakMap();
+const subscripcions = new WeakMap();
 
 function comprovaSenyal(config) {
   if (config.signal?.aborted) throw new DOMException('Operació cancel·lada', 'AbortError');
 }
-function ambSenyal(query, config) {
+/* CUR-02 (261025) · Cada RPC té un termini propi, també sense senyal extern.
+   La cursa liquida qui espera encara que el transport ignore abort; els seus
+   resultats tardans queden consumits i no passen al mapper ni a la cua. */
+const TEMPS_RPC_MS = 30_000;
+async function ambSenyal(query, config) {
   comprovaSenyal(config);
-  return config.signal ? query.abortSignal(config.signal) : query;
+  const extern = config.signal;
+  const controlador = new AbortController();
+  let rebutja;
+  let tall = null;
+  const interrupcio = new Promise((_resol, reject) => { rebutja = reject; });
+  const interromp = (nom, missatge) => {
+    if (tall) return;
+    tall = new DOMException(missatge, nom);
+    rebutja(tall);
+    controlador.abort();
+  };
+  const cancela = () => interromp('AbortError', 'Operació cancel·lada');
+  extern?.addEventListener('abort', cancela, { once: true });
+  const timer = setTimeout(() => interromp('TimeoutError', 'El servidor del xat no ha respost a temps.'), TEMPS_RPC_MS);
+  /* S'enganxen els dos gestors abans d'entrar al SDK: un abort síncron dins
+     d'abortSignal tampoc deixa un rebuig sense consumidor. */
+  const peticio = Promise.resolve().then(() => {
+    if (tall) throw tall;
+    return typeof query.abortSignal === 'function' ? query.abortSignal(controlador.signal) : query;
+  });
+  try {
+    return await Promise.race([interrupcio, peticio]);
+  } finally {
+    clearTimeout(timer);
+    extern?.removeEventListener('abort', cancela);
+  }
 }
 
 /* ─────────────────────────────── Errors ─────────────────────────────── */
@@ -297,85 +328,189 @@ const primeraFila = (data) => (Array.isArray(data) ? data[0] : data) || null;
  * a partir del seq X»); les dades es demanen amb `loadMissatges({ despresDeSeq })`.
  * Si el canal falla, `callback(error, null)` i el context continua amb el sondeig.
  */
+function notifica(consumidor, error, avis) {
+  if (consumidor.tancat || consumidor.signal?.aborted) return;
+  /* Un callback de la interfície no pot interrompre els altres consumidors. */
+  try { consumidor.callback(error, avis); } catch { /* Aïllament del consumidor. */ }
+}
+
+function distribueix(canal, error, avis) {
+  if (canal.fase !== 'obert') return;
+  /* La còpia evita altes durant el mateix avís; notifica revalida les baixes
+     que un altre callback haja fet síncronament. */
+  for (const consumidor of [...canal.consumidors]) notifica(consumidor, error, avis);
+}
+
+function obriCanal(canal) {
+  canal.fisic = canal.client.channel(canal.topic, { config: { private: true, broadcast: { self: false } } });
+  canal.fisic.on('broadcast', { event: 'nous' }, (missatge) => {
+    if (canal.fase !== 'obert') return;
+    /* CUR-03 · Un avís vàlid també prova que el canal s'ha recuperat. */
+    canal.error = null;
+    const seq = numero(missatge?.payload?.seq);
+    distribueix(canal, null, { tipus: 'nous', filId: canal.filId, seq: Number.isFinite(seq) ? seq : null });
+  });
+  canal.fisic.subscribe((estat, error) => {
+    if (canal.fase !== 'obert') return;
+    if (estat === 'CLOSED') {
+      /* El SDK ja ha tret el físic. Invalidem abans d'avisar: una alta nova
+         ha d'obrir-ne un altre; les baixes dels handles vells són innocues. */
+      canal.fase = 'tancat';
+      if (canal.pool.get(canal.topic) === canal) canal.pool.delete(canal.topic);
+      const tancat = errorLocal('El canal del xat s’ha tancat.', 'XARXA', true);
+      for (const consumidor of [...canal.consumidors]) {
+        notifica(consumidor, tancat, null);
+        consumidor.tancat = true;
+        consumidor.callback = null;
+        consumidor.signal = null;
+      }
+      canal.consumidors.clear();
+      return;
+    }
+    /* CUR-03 · Recuperar pot haver perdut avisos: el context rellegix pel seu
+       cursor i una nova fallada torna a ser visible. */
+    if (estat === 'SUBSCRIBED') {
+      if (canal.error) {
+        canal.error = null;
+        distribueix(canal, null, { tipus: 'nous', filId: canal.filId, seq: null });
+      }
+      return;
+    }
+    if (canal.error || (estat !== 'CHANNEL_ERROR' && estat !== 'TIMED_OUT')) return;
+    canal.error = errorDeXat(error || new Error(`El canal del xat ha quedat en estat ${estat}.`), 'No s’ha pogut obrir el canal del xat.');
+    distribueix(canal, canal.error, null);
+  });
+}
+
+/* Cancel·lar un waiter no interromp la baixa física compartida. */
+async function esperaBaixa(canal, config) {
+  comprovaSenyal(config);
+  const signal = config.signal;
+  if (!signal) return canal.tancament;
+  let cancela;
+  const interrupcio = new Promise((_resolve, reject) => {
+    cancela = () => reject(new DOMException('Operació cancel·lada', 'AbortError'));
+  });
+  signal.addEventListener('abort', cancela, { once: true });
+  try {
+    return await Promise.race([canal.tancament, interrupcio]);
+  } finally {
+    signal.removeEventListener('abort', cancela);
+  }
+}
+
 export const subscribeToXat = async (filId, callback, config = {}) => {
-  const viu = () => !config.signal?.aborted;
+  let consumidor;
   try {
     comprovaSenyal(config);
     const seed = await local(config);
     if (seed) return seed.subscribeToXat(filId, callback, config);
-    const supabase = await getClient(config);
+    const client = await getClient(config);
     comprovaSenyal(config);
-    let avisat = false;
-    const channel = supabase
-      .channel(`xat:f:${filId}`, { config: { private: true, broadcast: { self: false } } })
-      .on('broadcast', { event: 'nous' }, (missatge) => {
-        if (!viu()) return;
-        const seq = numero(missatge?.payload?.seq);
-        callback(null, { tipus: 'nous', filId, seq: Number.isFinite(seq) ? seq : null });
-      })
-      .subscribe((estat, error) => {
-        if (!viu() || avisat || (estat !== 'CHANNEL_ERROR' && estat !== 'TIMED_OUT')) return;
-        avisat = true;
-        callback(errorDeXat(error || new Error(`El canal del xat ha quedat en estat ${estat}.`), 'No s’ha pogut obrir el canal del xat.'), null);
-      });
-    channelOwners.set(channel, supabase);
-    return { subscription: channel, error: null };
+    let pool = canalsPerClient.get(client);
+    if (!pool) { pool = new Map(); canalsPerClient.set(client, pool); }
+    const topic = `xat:f:${filId}`;
+    let canal = pool.get(topic);
+    /* Una alta nova és una demanda explícita de reobrir: pot reintentar
+       també una baixa normal fallida si la UI ja ha perdut el handle.
+       Qui esperava el cicle anterior ix amb error, sense autoreintentar. */
+    if (canal?.fase === 'fallit') iniciaBaixa(canal).catch(() => {});
+    /* L'alta espera també el segon intent de baixa, sense tornar a unir un
+       canal que el SDK encara conserva en leaving. Dues fallades fan fallback. */
+    while (canal?.fase === 'tancant') {
+      await esperaBaixa(canal, config);
+      comprovaSenyal(config);
+      canal = pool.get(topic);
+    }
+    if (canal?.fase === 'fallit') throw canal.errorDeBaixa;
+    const nou = !canal;
+    if (nou) {
+      canal = { client, pool, topic, filId, fase: 'obert', consumidors: new Set(), error: null, fisic: null, baixa: null, tancament: null };
+      pool.set(topic, canal);
+    }
+    const subscription = Object.freeze({});
+    consumidor = { canal, callback, signal: config.signal, tancat: false, ultimaBaixa: false };
+    subscripcions.set(subscription, consumidor);
+    canal.consumidors.add(consumidor);
+    /* La primera alta ja és present abans del subscribe: alguns errors del
+       SDK són síncrons. Les altres només s'afigen al fanout existent. */
+    if (nou) obriCanal(canal);
+    else if (canal.error) notifica(consumidor, canal.error, null);
+    return { subscription, error: null };
   } catch (error) {
+    if (consumidor) {
+      const canal = consumidor.canal;
+      consumidor.tancat = true;
+      canal.consumidors.delete(consumidor);
+      if (!canal.consumidors.size) {
+        if (canal.fisic) iniciaBaixa(canal).catch(() => {});
+        else if (canal.pool.get(canal.topic) === canal) canal.pool.delete(canal.topic);
+      }
+    }
     const normalitzat = errorDeXat(error, 'No s’ha pogut obrir el canal del xat.', config);
-    if (viu()) callback(normalitzat, null);
+    if (!config.signal?.aborted) notifica({ callback }, normalitzat, null);
     return { subscription: null, error: normalitzat };
   }
 };
 
-/* Un canal remot es tanca amb el client que el va obrir. Les baixes simultànies
-   comparteixen intent. La resta (seed) va al magatzem local i no crea cap client.
-   Auditoria de Codex 261016 (P2, baixa fallida) · Amb el client instal·lat
-   (@supabase/realtime-js 2.112.4 i @supabase/phoenix 0.4.5), la baixa és
-   efectiva amb qualsevol estat que no siga 'error': amb 'timed out' Phoenix
-   també tanca el canal (phoenix channel.js, leave) i el canal ix del client
-   (RealtimeChannel.ts, _onClose → _remove). Amb 'error' o un rebuig, el canal
-   continua al client: el propietari es conserva i qui crida rep CANAL_NO_TANCAT
-   reintentable. Mai removeAllChannels: el client és compartit.
-   Alliberament acotat · El desmuntatge de XatContext dona de baixa una sola
-   vegada i no reintenta, i el client tornaria eixe canal retingut al pròxim
-   `channel()` del mateix fil. Per això, darrere d'un intent fallit, l'adaptador
-   en fa UN més, sense esperar ningú i compartit amb el reintent de qui crida.
-   Amb el client instal·lat, eixe segon intent tanca en local: el canal ja no
-   està unit i Phoenix respon 'ok' sense servidor (channel.js, leave →
-   trigger('ok')). Si també falla, el propietari es queda per a un reintent
-   explícit, i cap intent més. */
-function intentDeBaixa(subscription, propietari) {
+/* La baixa física manté el client propietari i el contracte existent: tot
+   estat excepte 'error' és efectiu (també 'timed out', que Phoenix tanca).
+   El primer rebuig arriba a qui crida; UN segon intent automàtic allibera el
+   canal. Si també falla, queda per a un reintent explícit, sense cap bucle. */
+function intentDeBaixa(canal) {
   const intent = Promise.resolve()
-    .then(() => propietari.removeChannel(subscription))
+    .then(() => canal.client.removeChannel(canal.fisic))
     .then((estat) => {
       if (estat === 'error') throw new Error(`El canal ha tornat l’estat ${estat} en donar-se de baixa.`);
-      channelOwners.delete(subscription);
+      canal.fase = 'tancat';
+      if (canal.pool.get(canal.topic) === canal) canal.pool.delete(canal.topic);
     })
     .catch((cause) => {
       throw Object.assign(errorLocal('No s’ha pogut tancar el canal del xat.', 'CANAL_NO_TANCAT', true), { cause });
     })
-    .finally(() => { if (channelRemovals.get(subscription) === intent) channelRemovals.delete(subscription); });
-  channelRemovals.set(subscription, intent);
+    .finally(() => { if (canal.baixa === intent) canal.baixa = null; });
+  canal.baixa = intent;
   return intent;
+}
+
+function iniciaBaixa(canal) {
+  if (canal.fase === 'tancat') return Promise.resolve();
+  if (canal.baixa) return canal.baixa;
+  canal.fase = 'tancant';
+  const primera = intentDeBaixa(canal);
+  /* Es registra abans del consumidor: un reintent explícit s'afig al segon
+     intent ja en marxa. Les altes esperen el cicle complet, no el primer. */
+  const complet = primera.catch(() => intentDeBaixa(canal)).catch((error) => {
+    if (canal.tancament === complet) {
+      canal.fase = 'fallit';
+      canal.errorDeBaixa = error;
+    }
+    throw error;
+  });
+  canal.tancament = complet;
+  complet.catch(() => {});
+  return primera;
 }
 
 export const unsubscribeFromXat = async (subscription, config = {}) => {
   if (!subscription) return;
-  const propietari = channelOwners.get(subscription);
-  if (!propietari) {
+  const consumidor = subscripcions.get(subscription);
+  if (!consumidor) {
     await (await local(config))?.unsubscribeFromXat(subscription);
     return;
   }
-  if (channelRemovals.has(subscription)) return channelRemovals.get(subscription);
-  const baixa = intentDeBaixa(subscription, propietari);
-  /* Este manejador es registra abans que el de qui crida: quan li arriba el
-     rebuig, l'intent acotat ja és a channelRemovals i un reintent s'hi suma.
-     La seua fallada no es torna a llançar: qui crida ja ha rebut la primera. */
-  baixa.catch(() => {
-    if (channelOwners.get(subscription) !== propietari || channelRemovals.has(subscription)) return;
-    intentDeBaixa(subscription, propietari).catch(() => {});
-  });
-  return baixa;
+  const canal = consumidor.canal;
+  if (!consumidor.tancat) {
+    consumidor.tancat = true;
+    consumidor.callback = null;
+    consumidor.signal = null;
+    canal.consumidors.delete(consumidor);
+    consumidor.ultimaBaixa = canal.consumidors.size === 0;
+  }
+  /* Només la lease de l'última baixa pot reintentar-ne un tancament fallit:
+     una baixa anterior ja resolta continua sent un no-op per sempre. */
+  if (!consumidor.ultimaBaixa) return;
+  return iniciaBaixa(canal);
 };
 
 /* ─────────────────────────────── Missatges ─────────────────────────────── */

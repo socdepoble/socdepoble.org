@@ -317,7 +317,7 @@ export default function OnboardingSection() {
   const desaContrasenyaNova = async (contrasenya) => {
     await definixContrasenyaNova(contrasenya, externalConfig);
     if (!montat.current) return;
-    showToast('Contrasenya nova desada. Benvingut de nou al Mas!', 'success');
+    showToast(tr('section.login.benvinguda.contrasenyaDesada', 'Contrasenya nova desada. Benvingut de nou al Mas!'), 'success');
     navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
   };
   /* Correcció de la revisió · Compatibilitat: l'única altra eixida d'una
@@ -342,7 +342,7 @@ export default function OnboardingSection() {
       const resultat = await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: normalizedConfig.tenantId }, externalConfig);
       if (!op.viu()) return;
       if (resultat?.access_token) {
-        showToast('Compte creat. Benvinguda al Mas.', 'success');
+        showToast(tr('section.login.benvinguda.compteCreat', 'Compte creat. Benvinguda al Mas.'), 'success');
         window.dispatchEvent(new CustomEvent('sdp:auth-change'));
       } else {
         setConfirmationEmail(String(fields.email || '').trim().toLowerCase());
@@ -360,7 +360,7 @@ export default function OnboardingSection() {
     try {
       await loginWithPassword(fields.email, fields.password, externalConfig);
       if (!op.viu()) return;
-      showToast('Benvingut de nou al Mas!', 'success');
+      showToast(tr('section.login.benvinguda.deNou', 'Benvingut de nou al Mas!'), 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (err) {
       if (op.viu()) mostraError(err);
@@ -419,7 +419,7 @@ export default function OnboardingSection() {
     try {
       await loginWithGoogle(externalConfig);
       if (!op.viu()) return;
-      showToast('Benvingut de nou al Mas!', 'success');
+      showToast(tr('section.login.benvinguda.deNou', 'Benvingut de nou al Mas!'), 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (loginError) {
       if (op.viu() && loginError?.code === CODI_ENTRADA_EN_MARC) setEnMarcAlie(true);
@@ -505,33 +505,39 @@ export default function OnboardingSection() {
      etiquetes ni l'entradeta. El logotip es queda: llevar-lo (senseLogo) només
      es fa per ordre del Mestre (PageFrame.logo.test.jsx, via d'excepció), i en
      un iPhone xicotet (SE) la decisió és seua. A la web, la capçalera de sempre. */
+  /* Gauntlet 261025_0545 (TE-01) · Tot el text de /registre passa per `tr`, i
+     els passos (formulari i recuperació) el reben com a `t`. La reserva escrita
+     al codi és el valor valencià del diccionari. «Online-First» no és valencià
+     i es queda; l'accés pilot (només en desenvolupament) tampoc no es traduïx. */
   const capcalera = esNatiu
     ? { showLogos: true }
     : {
-      lead: "Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses.",
-      labels: ['Online-First', 'Perfil privat', 'RGPD Segur'],
+      lead: tr('section.login.benvinguda.lead', "Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses."),
+      labels: ['Online-First', tr('section.login.benvinguda.perfilPrivat', 'Perfil privat'), tr('section.login.benvinguda.rgpdSegur', 'RGPD Segur')],
       showLogos: true
     };
+  const titolPagina = tr('section.login.benvinguda.titol', 'Benvinguda al Mas Electrònic');
 
   if (recuperacioEnCurs) {
     let pas;
     if (enllac === ESTAT_ENLLAC.PENDENT) {
       /* Genèrica a posta (decisió del Mestre): ni sessió ni compte fins a «Desa». */
-      pas = <ContrasenyaNovaStep onDesa={desaContrasenyaNova} onTorna={tornaAEntrar} onDemanaUnAltre={demanaUnAltre} />;
+      pas = <ContrasenyaNovaStep onDesa={desaContrasenyaNova} onTorna={tornaAEntrar} onDemanaUnAltre={demanaUnAltre} t={tr} />;
     } else if (enllac === ESTAT_ENLLAC.PERDUT) {
-      pas = <EnllacPerdutStep onDemanaUnAltre={demanaUnAltre} onTorna={tornaAEntrar} />;
+      pas = <EnllacPerdutStep onDemanaUnAltre={demanaUnAltre} onTorna={tornaAEntrar} t={tr} />;
     } else {
       pas = (
         <ContrasenyaNovaStep
           correu={currentUser?.email ?? ''}
           onDesa={desaContrasenyaNova}
           onEix={typeof logout === 'function' ? eixDeLaRecuperacio : null}
+          t={tr}
         />
       );
     }
     return (
       <UniversalPage
-        title="Benvinguda al Mas Electrònic"
+        title={titolPagina}
         {...capcalera}
         chrome="system"
       >
@@ -540,21 +546,23 @@ export default function OnboardingSection() {
     );
   }
 
+  /* TE-01 · Una peça (<code>, <strong>) al mig de la frase: es partix pel {forat}, sense String.replace. */
+  const [abansAdreca, despresAdreca] = tr('section.login.google.adreca', 'Si no s’obri, copia l’adreça: {adreca}').split('{adreca}');
   /* Fase D (261020, tasca 1; decisió D2) · A l'app nativa, la benvinguda va
      davall del formulari: els botons d'Apple i Google, a la vista sense desplaçar. */
+  const [abansSegur, despresSegur] = tr('section.login.benvinguda.text', "L'accés és {segur} i les teues dades estan protegides per llei (RGPD Llei 05). Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!").split('{segur}');
   const benvinguda = (
     <div className="onboarding-benvinguda">
-      <h3>Benvinguda a la Beta de Sóc de Poble</h3>
+      <h3>{tr('section.login.benvinguda.beta', 'Benvinguda a la Beta de Sóc de Poble')}</h3>
       <p className="onboarding-card__intro onboarding-card__intro--espaiada">
-        L'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05).
-        Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!
+        {abansSegur}<strong>{tr('section.login.benvinguda.segur', 'totalment segur')}</strong>{despresSegur}
       </p>
     </div>
   );
 
   return (
     <UniversalPage
-      title="Benvinguda al Mas Electrònic"
+      title={titolPagina}
       {...capcalera}
       chrome="system"
     >
@@ -567,22 +575,22 @@ export default function OnboardingSection() {
               <Alerta
                 to="avis"
                 accions={<>
-                  <Boto varietat="secundari" carregant={sondant} onClick={sondaIEntra}>Torna-ho a provar</Boto>
+                  <Boto varietat="secundari" carregant={sondant} onClick={sondaIEntra}>{tr('common.reintenta', 'Torna-ho a provar')}</Boto>
                   {(modeDades === 'local' || modeDades === 'seed') && !pilotDisponible ? (
-                    <Boto varietat="terciari" onClick={() => setSimulaLocal(true)}>Forçar entrada local (Mock)</Boto>
+                    <Boto varietat="terciari" onClick={() => setSimulaLocal(true)}>{tr('section.login.servidor.forcaLocal', 'Forçar entrada local (Mock)')}</Boto>
                   ) : null}
                 </>}
               >
-                El servidor del poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.
+                {tr('section.login.servidor.caigut', 'El servidor del poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.')}
               </Alerta>
             ) : null}
 
             {entradaSuspesa && !servidorCaigut && !simulaLocal ? (
               <Alerta
                 to="avis"
-                accions={<Boto varietat="secundari" carregant={sondant} onClick={decidixEntrada}>Connectar amb el servidor</Boto>}
+                accions={<Boto varietat="secundari" carregant={sondant} onClick={decidixEntrada}>{tr('section.login.servidor.connecta', 'Connectar amb el servidor')}</Boto>}
               >
-                Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor del poble.
+                {tr('section.login.servidor.suspesa', 'Has tornat al mode de proves: pots explorar l’app amb dades de mostra. Per a crear el compte o entrar, connecta amb el servidor del poble.')}
               </Alerta>
             ) : null}
 
@@ -643,7 +651,7 @@ export default function OnboardingSection() {
             {esNatiu ? null : (
             <section className="sp-card sp-card--onboarding">
               <div className="sp-card-body">
-                <h3>Accés ràpid amb Google</h3>
+                <h3>{tr('section.login.google.titol', 'Accés ràpid amb Google')}</h3>
                 {enMarcAlie ? (
                   /* B · L'enllaç obri una pestanya nova (mai la finestra de dalt),
                      sense opener ni referent. Si el marc no deixa obrir-ne,
@@ -652,17 +660,17 @@ export default function OnboardingSection() {
                     to="info"
                     accions={adrecaFora ? (
                       <a className="sdp-boto sdp-boto--secundari" href={adrecaFora} target="_blank" rel="noopener noreferrer">
-                        <span>Obri en una pestanya nova</span>
+                        <span>{tr('section.login.google.pestanya', 'Obri en una pestanya nova')}</span>
                       </a>
                     ) : null}
                   >
-                    <p><strong>Dins d’este marc no es pot entrar amb Google.</strong> Obri Sóc de Poble en una pestanya nova per a entrar.</p>
-                    {adrecaFora ? <p>Si no s’obri, copia l’adreça: <code>{adrecaFora}</code></p> : null}
+                    <p><strong>{tr('section.login.google.marcAvis', 'Dins d’este marc no es pot entrar amb Google.')}</strong> {tr('section.login.google.marcText', 'Obri Sóc de Poble en una pestanya nova per a entrar.')}</p>
+                    {adrecaFora ? <p>{abansAdreca}<code>{adrecaFora}</code>{despresAdreca}</p> : null}
                   </Alerta>
                 ) : (
                   <>
                     <p>
-                      Crea o entra al teu compte amb un sol clic sense contrasenyes.
+                      {tr('section.login.google.entradilla', 'Crea o entra al teu compte amb un sol clic sense contrasenyes.')}
                     </p>
                     {/* Encàrrec 261018_1220 (Tasca 2, ordre del Mestre: «destacar
                         el botó Entrar amb Google com a via preferent d'un sol
@@ -677,15 +685,15 @@ export default function OnboardingSection() {
                         aria-busy={busyStep === 'google' ? 'true' : undefined}
                       >
                         {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : null}
-                        Entrar amb Google
+                        {tr('section.login.google.boto', 'Entrar amb Google')}
                       </button>
                     </div>
                     {busyStep === 'google' ? (
                       <Alerta
                         to="info"
-                        accions={<Boto varietat="secundari" onClick={cancelaGoogle}>Cancel·la l’entrada</Boto>}
+                        accions={<Boto varietat="secundari" onClick={cancelaGoogle}>{tr('section.login.nativa.cancela', 'Cancel·la l’entrada')}</Boto>}
                       >
-                        Acaba l’entrada a la finestra de Google. Si l’has tancada o no la trobes, cancel·la-la ací.
+                        {tr('section.login.google.espera', 'Acaba l’entrada a la finestra de Google. Si l’has tancada o no la trobes, cancel·la-la ací.')}
                       </Alerta>
                     ) : null}
                   </>
@@ -700,7 +708,7 @@ export default function OnboardingSection() {
             )}
 
             {/* Revisió adversarial (261018) · Neutre: davall hi ha Entrar i Crear compte. */}
-            {esNatiu ? null : <Divisor text="O amb el teu correu" />}
+            {esNatiu ? null : <Divisor text={tr('section.login.divisorCorreu', 'O amb el teu correu')} />}
           </>
         )}
 
@@ -715,7 +723,7 @@ export default function OnboardingSection() {
             error={errorEntrada?.text ?? ''}
             codiError={errorEntrada?.codi ?? null}
             accionsError={potTornarAProves
-              ? <Boto varietat="secundari" onClick={tornaAProves}>Tornar al mode de proves</Boto>
+              ? <Boto varietat="secundari" onClick={tornaAProves}>{tr('section.login.servidor.tornaAProves', 'Tornar al mode de proves')}</Boto>
               : null}
             confirmationEmail={confirmationEmail}
             onRegister={handleRegister}
@@ -724,6 +732,7 @@ export default function OnboardingSection() {
             onTornar={() => setConfirmationEmail('')}
             onRecupera={potRecuperar ? demanaRecuperacio : null}
             introEntrada={introEntradaNativa}
+            t={tr}
           />
         ) : null}
         {activeStep === 0 && esNatiu ? benvinguda : null}

@@ -92,8 +92,10 @@ function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
   const fitxaDeLaIA = esIA ? rutaCanonicaDePerfil({ tipus, id: missatge.usuariId }) : null;
   const ruta = !triable && !esEntitat ? (fitxaDeLaIA || rutaDePerfil(tipus, missatge.usuariId)) : null;
   if (!ruta) return <span className="sdp-xat-bombolla__autor">{text}</span>;
+  /* Gauntlet 261025_0545 (TE-03) · El nom amb una funció de reemplaç: un
+     «$&» del nom es diu tal qual (moderacio.js, omple). */
   return (
-    <Link className="sdp-xat-bombolla__autor" to={ruta} aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', nom)}>
+    <Link className="sdp-xat-bombolla__autor" to={ruta} aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', () => nom)}>
       {text}
     </Link>
   );
@@ -122,7 +124,9 @@ function textDeSistema(missatge, t) {
   const generic = t('section.xat.sistema.generic', 'Missatge del sistema');
   if (!clau) return missatge?.text || generic;
   let text = t(`section.xat.sistema.${clau}`, generic);
-  for (const [nom, valor] of Object.entries(parametres)) text = text.replace(`{${nom}}`, String(valor ?? ''));
+  /* Gauntlet 261025_0545 (TE-03) · Els paràmetres (noms de persones i de
+     grups) entren amb una funció de reemplaç: «$'» no s'expandix. */
+  for (const [nom, valor] of Object.entries(parametres)) text = text.replace(`{${nom}}`, () => String(valor ?? ''));
   return text;
 }
 
@@ -276,10 +280,13 @@ function Bombolla({
                   l'estat d'abans («Pausa») i sense font. La seua URL es demana
                   en prémer, mai en muntar, i el play següent la torna a signar. */}
               <AdjuntXat key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'} adjunt={missatge.metadades.adjunt} tipus={missatge.tipus} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} interactiu={!triable} />
-              {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p> : null}
+              {String(text ?? '').trim() ? <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p> : null}
             </>
           ) : (
-            <p className="sdp-xat-bombolla__text"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p>
+            /* Gauntlet 261025_0545 (XU-14) · dir="auto": el text de la gent pren
+               la seua direcció (l'àrab, de dreta a esquerra, amb la puntuació
+               i els números al seu lloc); la làpida és text de la interfície. */
+            <p className="sdp-xat-bombolla__text" dir="auto"><TextAmbEnllacos text={text} t={t} rutesDeLaWiki={rutesDeLaWiki} /></p>
           )}
           <span className="sdp-xat-bombolla__meta">
             {hora ? <time dateTime={missatge.creatAl || undefined}>{hora}</time> : null}

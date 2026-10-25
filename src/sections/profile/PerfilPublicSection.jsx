@@ -26,6 +26,10 @@ import { useEffect, useState } from 'react';
 import { Bot, MessageCircle, PencilLine, UserCheck } from 'lucide-react';
 import { useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+/* Gauntlet 261025_0545 (CUR-01) · Qui mira: la persona i l'entrada de la
+   sessió, la mateixa parella que la clau del PerfilProvider (PerfilContext.jsx). */
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
+import { entradaSessio } from '../../data/identitat.js';
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
 import { rutaFitxaOrganitzacio } from './perfilModel.js';
@@ -199,6 +203,15 @@ function hostReady({ signal } = {}) {
    l'efecte de càrrega i el faria girar sense parar (troballa de la refutació). */
 const AGENTS_BUITS = Object.freeze([]);
 
+/* Gauntlet 261025_0545 (CUR-01) · La clau de qui mira: la persona de la
+   sessió i la seua entrada (entradaSessio: una renovació del JWT no la mou;
+   eixir, tornar a entrar o canviar de compte, sí). `propietari` («La teua
+   fitxa», «Edita la fitxa») i «Veïnat connectat amb tu» són d'eixa persona:
+   el port els calcula amb la sessió de la consulta (supabase/perfils.js), i
+   una fitxa llegida per a una altra clau no es pinta. Sense proveïdor de
+   sessió (una peça muntada sola), ningú. */
+const clauDelVisor = (sessio) => JSON.stringify([sessio?.currentUser?.id ?? null, entradaSessio()]);
+
 /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «socdepoble.org/javillinares»)
    · La URL canònica d'una de les tres identitats del Mestre: la seua ruta neta
    (rutaCanonicaDePerfil) a l'origen canònic del build, el mateix que fa servir
@@ -221,7 +234,12 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const { t } = useUIActions();
   const { externalConfig } = useUIState();
   const navigate = useNavigate();
-  const [estat, setEstat] = useState({ id: null, status: 'loading', perfil: null });
+  /* Gauntlet 261025_0545 (CUR-01) · L'estat porta la clau de qui mira. Si la
+     sessió s'acaba (eixida en una altra pestanya, renovació fallida, expulsió
+     de l'amfitrió) o passa d'A a B sense que la ruta canvie, la fitxa d'A no
+     es queda a la pantalla: es buida en el mateix pintat i es torna a llegir. */
+  const visor = clauDelVisor(useSessioOpcional());
+  const [estat, setEstat] = useState({ id: null, visor: null, status: 'loading', perfil: null });
   /* Gauntlet 261022_0225 (Tasca 1) · «Torna-ho a provar» de l'avís: cada clic
      torna a llançar la càrrega (REV-PERF-2: amb la clau, per al seu termini). */
   const [intent, setIntent] = useState({ clau: null, n: 0 });
@@ -248,8 +266,10 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
        desmuntar o en canviar de clau, l'espera del host i la consulta
        s'avorten, i el termini es lleva. */
     const controlador = new AbortController();
-    /* T9-1 · La mateixa clau ja pintada es revalida sense buidar la pantalla. */
-    setEstat((previ) => (previ.id === clau && previ.status === 'ready' ? previ : { id: clau, status: 'loading', perfil: null }));
+    /* T9-1 · La mateixa clau ja pintada es revalida sense buidar la pantalla.
+       CUR-01 · La mateixa clau i el mateix visor: la d'un altre es buida. */
+    const jaPintada = (previ) => previ.id === clau && previ.visor === visor && previ.status === 'ready';
+    setEstat((previ) => (jaPintada(previ) ? previ : { id: clau, visor, status: 'loading', perfil: null }));
     /* Gauntlet 261022_0225 (Tasca 1) · Si en TERMINI_DEL_PERFIL_MS el host i
        la consulta no han acabat, la càrrega s'avorta (un host que ignore el
        senyal ja no encetarà cap consulta) i es pinta la reserva local o
@@ -264,8 +284,8 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
       const reserva = perfilDeReservaLocal(clau);
       if (reserva && clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(reserva);
       setEstat((previ) => {
-        if (previ.id === clau && previ.status === 'ready') return previ;
-        return reserva ? { id: clau, status: 'ready', perfil: reserva } : { id: clau, status: 'senseResposta', perfil: null };
+        if (jaPintada(previ)) return previ;
+        return reserva ? { id: clau, visor, status: 'ready', perfil: reserva } : { id: clau, visor, status: 'senseResposta', perfil: null };
       });
     }, terminiMs);
     (async () => {
@@ -330,7 +350,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
          reserva, l'avís amb «Torna-ho a provar». Una fitxa ja pintada de la
          mateixa clau es queda. */
       if (!perfil && fallada) {
-        setEstat((previ) => (previ.id === clau && previ.status === 'ready' ? previ : { id: clau, status: 'senseResposta', perfil: null }));
+        setEstat((previ) => (jaPintada(previ) ? previ : { id: clau, visor, status: 'senseResposta', perfil: null }));
         return;
       }
       /* Revisió dels verificadors (front «logo», 261004) · En remot, l'id de
@@ -351,18 +371,24 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
          com el projecte i se'n duia la marca i la identitat oficial. Per id,
          el projecte el registra la resolució de l'app. */
       if (clau === ENTITAT_PILOT_SLUG) registraEntitatDelProjecte(perfil);
-      setEstat({ id: clau, status: 'ready', perfil });
+      setEstat({ id: clau, visor, status: 'ready', perfil });
     })();
+    /* CUR-01 · Un canvi de visor torna a llegir: la neteja d'ací avorta la
+       consulta de l'altra identitat i `viu` en descarta la resposta tardana. */
     return () => {
       viu = false;
       clearTimeout(termini);
       controlador.abort();
     };
-  }, [agentId, agentsDelCataleg, externalConfig, intent]);
+  }, [agentId, agentsDelCataleg, externalConfig, intent, visor]);
 
-  const perfil = estat.status === 'ready' ? estat.perfil : null;
-  const carregant = estat.status === 'loading';
-  const senseResposta = estat.status === 'senseResposta';
+  /* Gauntlet 261025_0545 (CUR-01) · La purga en el mateix pintat (com
+     useScopedResource): una fitxa d'un altre visor no es pinta ni un moment,
+     mentre l'efecte la torna a llegir. */
+  const delVisor = estat.visor === visor;
+  const perfil = delVisor && estat.status === 'ready' ? estat.perfil : null;
+  const carregant = !delVisor || estat.status === 'loading';
+  const senseResposta = delVisor && estat.status === 'senseResposta';
 
   /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · La fitxa d'una de les
      tres identitats del Mestre declara la seua URL canònica neta, s'obriga
@@ -499,6 +525,13 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
      com a la càrrega de la ruta, i no de useXat(), que fora del proveïdor diu
      'remote' també en llavor. */
   const { senseSessio } = useXat();
+  /* Gauntlet 261025_0545 (CUR-01) · «Veïnat connectat amb tu» és la llista
+     de qui té la sessió (quiEmSegueix sense entitat): només a la fitxa de la
+     persona que mira ara, comprovat en este pintat i no només amb el
+     `propietari` de la càrrega. Sense proveïdor de sessió, el `propietari`. */
+  const sessio = useSessioOpcional();
+  const visor = clauDelVisor(sessio);
+  const esDeQuiMira = !sessio || (sessio.currentUser?.id != null && String(sessio.currentUser.id) === String(perfil?.id));
   const modeDades = normalizeBackendConfig(externalConfig).dataMode;
   /* P1-11 (T5B-02) · L'aparador del peu: dins del Mur de l'App i per a una fitxa que publica. */
   const ambAparador = useHiHaMur() && teAparador(perfil);
@@ -729,8 +762,9 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
           la fitxa pròpia d'una persona, qui la seguix (quiEmSegueix), al peu.
           Mai a la d'una altra persona, ni a la d'una entitat, un grup o una IA
           (qui seguix una entitat ho veu qui l'administra, a «El compte»).
-          Sense la capacitat 'seguiments', res. */}
-      {esPersona && perfil.propietari ? <GentQueEtSegueix config={externalConfig} t={t} locale={locale} /> : null}
+          Sense la capacitat 'seguiments', res.
+          Gauntlet 261025_0545 (CUR-01) · I només per a qui mira ara, amb la seua clau. */}
+      {esPersona && perfil.propietari && esDeQuiMira ? <GentQueEtSegueix config={externalConfig} t={t} locale={locale} visor={visor} /> : null}
     </UniversalPage>
   );
 }

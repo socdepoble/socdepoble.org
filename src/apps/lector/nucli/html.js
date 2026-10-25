@@ -201,7 +201,14 @@ function enLinia(items) {
     if (typeof item === 'string') eixida.push(item);
     else if (item === SALT || item.t === 'hr') eixida.push(' ');
     else if (EN_LINIA_T.has(item.t)) eixida.push(item);
-    else eixida.push(' ', ...enLinia(item.c || []), ' ');
+    else {
+      /* Gauntlet 261025_0545 (RX-03) · Un a un, no amb push(...): els textos no
+         compten com a nodes, i un bloc amb més de ~125.000 fills passava del
+         màxim d'arguments d'una crida (RangeError: el feed sencer es perdia). */
+      eixida.push(' ');
+      for (const dins of enLinia(item.c || [])) eixida.push(dins);
+      eixida.push(' ');
+    }
   }
   return eixida;
 }
@@ -356,7 +363,10 @@ function retalla(bloc) {
     while (c.length && esBuit(c[0])) c.shift();
     while (c.length && esBuit(c[c.length - 1])) c.pop();
     if (typeof c[0] === 'string') c[0] = c[0].replace(/^\s+/, '');
-    if (typeof c[c.length - 1] === 'string') c[c.length - 1] = c[c.length - 1].replace(/\s+$/, '');
+    /* Gauntlet 261025_0545 (RX-02) · trimEnd lleva els mateixos blancs que
+       /\s+$/, però en temps lineal: polix ajunta molts nodes d'un espai en una
+       tira, i l'expressió la tornava a recórrer des de cada blanc. */
+    if (typeof c[c.length - 1] === 'string') c[c.length - 1] = c[c.length - 1].trimEnd();
   }
   const net = { t: bloc.t, c };
   return teText(net) ? net : null;

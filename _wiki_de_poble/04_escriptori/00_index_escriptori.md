@@ -34,6 +34,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261025_0610_auditoria_claude]]
+- [[261025_0545_auditoria_gemini]]
+- [[261025_0607_auditoria_codex]]
 - [[261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid]]
 - [[261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre Permanent de Tasques, Deutes Tècnics i Banc d'Idees del Mestre
@@ -1045,3 +1048,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261024_1945_acta_marmota_triomf_commit_472f704d0_fortificacio_i_obertura_gauntlet]]
 - [[../10_actes/261025_0255_acta_marmota_triomf_commits_i_reforma_editorial]]
 - [[../10_actes/261025_0530_acta_marmota_triomf_desplegament_produccio_i_subvencio]]
+- [[../10_actes/261025_1600_acta_marmota_triomf_gauntlet_loop_xat_fluid_i_blindatge_wp]]

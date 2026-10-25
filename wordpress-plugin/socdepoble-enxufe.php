@@ -58,7 +58,7 @@
  *
  * ESTE FITXER NO DECLARA CAP FUNCIÓ NI CAP CLASSE. PHP les vincula en
  * compilar-lo, abans d'executar la primera línia, i una segona còpia del plugin
- * en una altra carpeta (un zip sense socdepoble-enxufe/ a l'arrel s'instal·la
+ * en una altra carpeta (un zip sense socdepoble/ a l'arrel s'instal·la
  * al costat de la vella) peta amb «Cannot redeclare» abans d'arribar a la
  * guarda de davall. Les funcions viuen a includes/; ací només clausures.
  * -----------------------------------------------------------------------

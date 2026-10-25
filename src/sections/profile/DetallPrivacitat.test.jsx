@@ -112,7 +112,7 @@ test('«Les meues dades» descarrega el JSON amb el nom del dia', async () => {
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function clic() { descarregat = { nom: this.download, href: this.getAttribute('href'), penjat: this.isConnected }; });
   pinta();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Descarregar les meues dades' })); });
-  expect(m.exporta).toHaveBeenCalledWith(config);
+  expect(m.exporta).toHaveBeenCalledWith({ ...config, signal: expect.any(AbortSignal) });
   // Llei 06 (encapsulament): l'enllaç no es penja de document.body.
   expect(descarregat).toEqual({ nom: nomFitxerExportacio(), href: 'blob:x', penjat: false });
   expect(blob.type).toBe('application/json');

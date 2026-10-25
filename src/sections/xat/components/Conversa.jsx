@@ -40,9 +40,9 @@
  *     nous d'altres que entren pel final (#11). La cita porta el focus a
  *     l'original (#12).
  */
-import { BENVINGUDA_IAIA } from '../../../data/identitatsSeed.js';
+import { BENVINGUDA_IAIA, IAIA_ID, agentIASeed } from '../../../data/identitatsSeed.js';
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { FileText } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
 import Bombolla from './Bombolla.jsx';
@@ -60,7 +60,59 @@ import {
 } from '../conversa.js';
 import { desaEsborrany, llegixEsborrany } from '../esborranys.js';
 
-const CAP = [];
+/* Gauntlet 261025_0545 (IA-07) · El nom de la IAIA a la seua benvinguda, el
+   del padró (identitatsSeed.js), com a la capçalera i a les bombolles. */
+const NOM_IAIA = agentIASeed(IAIA_ID)?.name || 'IAIA MarIA';
+
+/* Gauntlet 261025_0545 (XU-05) · Els missatges que creixen després de muntar
+   (la foto o el vídeo que carreguen, la llista viva d'«El Comú»): només
+   estes bombolles s'observen per a quedar-se al fons. */
+const CREIXEN_DESPRES = new Set(['imatge', 'video', 'veu', 'llista_comu']);
+
+/* Gauntlet 261025_0545 (XU-05, verificació en Chrome) · Marge d'arredoniment
+   de scrollTop (els navegadors amb zoom en donen fraccions): menys d'un píxel
+   no és que la persona haja pujat. */
+const MARGE_SCROLL_PX = 1;
+
+/* Gauntlet 261025_0545 (XU-05, revisió creuada) · El que la conversa ha vist
+   o ha posat ella a la llista: on era (top) i fins on podia baixar (maxim,
+   scrollHeight − clientHeight). */
+function apuntaVist(vist, ol) {
+  vist.top = ol.scrollTop;
+  vist.maxim = ol.scrollHeight - ol.clientHeight;
+}
+
+/* La persona no ha pujat des de l'últim que s'ha vist: scrollTop no ha
+   baixat més del marge. */
+function noHaPujat(vist, ol) {
+  return ol.scrollTop >= vist.top - MARGE_SCROLL_PX;
+}
+
+/* El contingut ha crescut davall de la persona: no ha pujat I la llista pot
+   baixar més que abans (la foto, el compositor que creix, el teclat que
+   encongix la vista). Sense creixement, un scroll que no baixa és la persona
+   que puja a poc a poc (1 px o menys per scroll), no contingut. */
+function haCrescut(vist, ol) {
+  return noHaPujat(vist, ol) && ol.scrollHeight - ol.clientHeight > vist.maxim + MARGE_SCROLL_PX;
+}
+
+/* Gauntlet 261025_0545 (MISSED de verify-xat-ux) · Els llindars de
+   l'observador de lectura. Amb 0,5 sol, una bombolla més alta que el doble
+   de la llista no hi arribava mai (Chromium: isIntersecting false) i no es
+   marcava mai. Les potències de dos avisen quan se'n veu prou tros: per a
+   tota bombolla fins a 32 vegades la llista, n'hi ha una entre mitja llista
+   i la llista sencera. */
+const LLINDARS_VIST = [0, 1 / 32, 1 / 16, 1 / 8, 1 / 4, 1 / 2, 1];
+
+/* Vista: la meitat de la bombolla o, si és més alta, mitja llista. Un
+   navegador sempre en dona la ràtio; sense (un observador fals), mana
+   isIntersecting. */
+function esVista(entrada, alcadaLlista) {
+  if (typeof entrada.intersectionRatio !== 'number') return Boolean(entrada.isIntersecting);
+  if (!(entrada.intersectionRatio > 0)) return false;
+  return entrada.intersectionRatio >= 0.5
+    || (alcadaLlista > 0 && Number(entrada.intersectionRect?.height) >= alcadaLlista / 2);
+}
 
 /* Desplaça la llista i només la llista. Sense scrollTo (jsdom), el salt és sec. */
 function desplacaLlista(ol, top, behavior) {
@@ -93,10 +145,17 @@ function coixiDalt(ol) {
    l'estat vivia a Conversa, i cada missatge d'altri feia un segon render de
    tota la conversa (20.002 bombolles amb 10.000 missatges). Conversa li
    passa els anunciables per la ref. */
+/* Gauntlet 261025_0545 (XU-13) · Dos anuncis iguals seguits («Pep: ok» i
+   «Pep: ok», o «2 missatges nous» dos vegades) deixaven el text igual i el
+   lector callava el segon. Un espai dur alterna, com l'avís de les
+   emoticones del compositor; un sol anunci per lot, com sempre. */
 const AnunciDeNous = forwardRef(function AnunciDeNous({ t }, ref) {
-  const [perAnunciar, setPerAnunciar] = useState(CAP);
-  useImperativeHandle(ref, () => setPerAnunciar, []);
-  return <p className="sdp-nomes-lector" role="status">{anunciDeNous(perAnunciar, t)}</p>;
+  const [anunci, setAnunci] = useState('');
+  useImperativeHandle(ref, () => (nous) => {
+    const text = anunciDeNous(nous, t);
+    setAnunci((abans) => (text && abans === text ? `${text}\u00A0` : text));
+  }, [t]);
+  return <p className="sdp-nomes-lector" role="status">{anunci}</p>;
 });
 
 /* Gauntlet 261022_0225 (crítica Claude, REV-ESTRES-2) · Cada missatge conserva
@@ -148,10 +207,21 @@ function estabilitza(rebuts, previ) {
 /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · `onTornaAOrigen` baixa
    tal qual a la capçalera: la fletxa torna a la pàgina d'on s'ha entrat
    (origenDelXat.js). Sense, la fletxa de sempre (onBack). */
+/* Gauntlet 261025_0545 (XC-14 / XU-07) · `carregat` (filCarregat del
+   context, per XatSection) diu si el fil ja s'ha llegit alguna vegada:
+   mentre no, una conversa sense missatges diu «Carregant la conversa…» i no
+   «Cap missatge encara». `avisFil` (l'avís del fil, avisFil del context) es
+   veu damunt del compositor sense tapar res, amb «Torna-ho a provar»
+   (`onReintentaFil`, recarregaFil). Sense, el de sempre. */
+/* Gauntlet 261025_0545 (D5, revisió creuada) · `tipusAvisFil` diu què ha
+   fallat ('lectura' o 'marca') i tria el text de l'avís; `llegintFil`, si
+   una lectura del fil vola: «Torna-ho a provar» ho diu i no torna a demanar.
+   Un context d'abans no els porta: 'lectura' i false, el de sempre. */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages: missatgesRebuts, onSendMessage, onSendMedia = null, configAdjunts, usuariAdjunts, onBack, onEnviaAlBloc, onCopia,
   hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
-  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false
+  entitatActiva = null, moderacio = null, actorLlista = null, onMutaLlista = null, onTornaAOrigen = null, peu = null, cortesiaIAIA = false, consultaIAIA = false,
+  carregat = true, avisFil = null, onReintentaFil = null, tipusAvisFil = 'lectura', llegintFil = false
 }) {
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
      guarda la de l'últim render confirmat. */
@@ -194,11 +264,25 @@ export default function Conversa({
   const [noLlegits, setNoLlegits] = useState(() => (potFixar ? separadorAra() : undefined));
   if (noLlegits === undefined && potFixar) setNoLlegits(separadorAra());
   const llesta = noLlegits !== undefined;
+  /* Gauntlet 261025_0545 (XC-14) · El fil encara no s'ha llegit mai i no hi
+     ha res a mostrar: la llista està ocupada, no buida. */
+  const carregantFil = carregat === false && messages.length === 0;
+  /* D5 · Si la primera lectura ha fallat, mana l'avís: mai «Carregant la
+     conversa…» i l'avís alhora. La llista està ocupada mentre no hi ha avís
+     o mentre «Torna-ho a provar» torna a llegir. */
+  const textCarregant = carregantFil && !avisFil;
+  const llistaOcupada = carregantFil && (!avisFil || Boolean(llegintFil));
 
   const llistaRef = useRef(null);
   const sentinellaRef = useRef(null);
   const campRef = useRef(null);
   const aBaixRef = useRef(true);
+  /* Gauntlet 261025_0545 (XU-05, verificació en Chrome) · L'últim scrollTop
+     de la llista que la conversa ha vist o ha posat ella: amb ell se sap si
+     un scroll és la persona que puja (baixa) o el contingut que creix.
+     Revisió creuada · I fins on podia baixar llavors (apuntaVist): sense
+     creixement, el scroll és de la persona encara que no haja baixat. */
+  const vistRef = useRef({ top: 0, maxim: 0 });
   /* Cert mentre dura el salt suau de «Baixa al final» (#5). */
   const baixantRef = useRef(false);
   /* El salt inicial ja s'ha fet (una sola vegada, amb la llista llesta). Si
@@ -212,6 +296,10 @@ export default function Conversa({
   /* Si el camp mostra l'esborrany de la persona (o el que ella hi ha escrit)
      i no el text de ?context= (#3). */
   const esborranyPropiRef = useRef(!initialText);
+  /* Una resposta tardana d'enviar no pot desfer una edició, una cita o un
+     enviament posterior, ni recrear l'esborrany després de desmuntar. */
+  const revisioCompositorRef = useRef(0);
+  useEffect(() => () => { revisioCompositorRef.current += 1; }, []);
   const geometria = useRef({ claus: [], alcada: 0 });
   /* Als grups i als Avisos cada bombolla diu qui l'ha escrita. */
   const esGrup = fil?.tipus === 'grup' || fil?.tipus === 'canal';
@@ -223,6 +311,7 @@ export default function Conversa({
      es mostra però no trepitja l'esborrany d'eixa conversa mentre no s'edite
      (#3). Sense clau, res no ix d'ací. */
   const canviaText = useCallback((valor) => {
+    revisioCompositorRef.current += 1;
     esborranyPropiRef.current = true;
     setText(valor);
     desaEsborrany(clauEsborrany, valor);
@@ -236,6 +325,7 @@ export default function Conversa({
   const actualitzaFons = useCallback(() => {
     const ol = llistaRef.current;
     if (!ol) return;
+    apuntaVist(vistRef.current, ol);
     const baix = estaAlFons(ol);
     if (baixantRef.current && !baix) return;
     baixantRef.current = false;
@@ -244,7 +334,44 @@ export default function Conversa({
     if (baix) setNousAvall(0);
   }, []);
 
-  const interrompBaixada = useCallback(() => { baixantRef.current = false; }, []);
+  /* Gauntlet 261025_0545 (XU-05, verificació en Chrome) · El navegador
+     dispara el scroll pendent (el d'una fixació d'abans) ABANS que la crida
+     del ResizeObserver del mateix fotograma: una foto que ja era a la memòria
+     cau, o el compositor que creix a tecla seguida, el feien llegir lluny del
+     fons i «ja eres a baix» queia; l'observador ja no fixava i el final
+     quedava tapat amb «Baixa al final» (4 de 4 en Chrome). Un scroll només
+     vol dir que la persona ha deixat el fons si scrollTop ha baixat: si eres
+     a baix i no ha baixat, el que ha canviat és el contingut, i t'hi quedes.
+     Pujar sempre baixa scrollTop; el salt al separador, la cita i els antics
+     de dalt els decidix el codi que els fa (actualitzaFons), no este scroll.
+     Gauntlet 261025_0545 (XU-05, revisió creuada) · No haver baixat no basta:
+     un trackpad, un dit o una roda de precisió lents (uns 60 px/s o menys en
+     Chrome) mouen la llista 1 px o menys per scroll, i com que cada scroll
+     dins del fons apunta on és, en passar el llindar semblava contingut que
+     creix i tornava al fons sense botó (6 de 6 en Chrome). Només es fixa si
+     la llista pot baixar més que l'últim cop que s'ha vist (haCrescut). */
+  const enScroll = useCallback(() => {
+    const ol = llistaRef.current;
+    if (!ol) return;
+    if (aBaixRef.current && !baixantRef.current && !estaAlFons(ol) && haCrescut(vistRef.current, ol)) {
+      ol.scrollTop = ol.scrollHeight;
+      apuntaVist(vistRef.current, ol);
+      return;
+    }
+    actualitzaFons();
+  }, [actualitzaFons]);
+
+  /* XU-05 (verificació) · Si la persona interromp el salt suau de «Baixa al
+     final», la llista és seua des d'eixe moment: es mira on ha quedat (a mig
+     camí, el botó torna) i el scroll següent ja no es pren per contingut que
+     creix. Fora del salt no s'hi apunta res: la roda i el dit són passius, i
+     Chrome pot haver mogut la llista ABANS d'avisar-ne (en Chrome, apuntar-hi
+     el scrollTop tornava al fons qui pujava 120 px amb la roda). */
+  const interrompBaixada = useCallback(() => {
+    if (!baixantRef.current) return;
+    baixantRef.current = false;
+    actualitzaFons();
+  }, [actualitzaFons]);
 
   /* Scroll segons el que ha canviat (conversa.js, classificaCanvi):
      · el salt inicial, una sola vegada i amb la llista llesta, va al
@@ -280,6 +407,8 @@ export default function Conversa({
         ol.scrollTop += ara != null && previ.ancora?.pos != null
           ? ara - previ.ancora.pos
           : ol.scrollHeight - previ.alcada;
+        /* XU-05 (verificació) · La compensació és del codi, no de la persona. */
+        apuntaVist(vistRef.current, ol);
       }
       if (canvi.nous.length) {
         const teu = canvi.nous.some((m) => m?.sender === 'me');
@@ -302,11 +431,62 @@ export default function Conversa({
   }, [messages, llesta, actualitzaFons]);
 
   /* La barra de resposta ocupa lloc davall de la llista: si eres a baix, s'hi
-     continua (com a les apps de missatgeria, l'últim missatge no queda tapat). */
+     continua (com a les apps de missatgeria, l'últim missatge no queda tapat).
+     Gauntlet 261025_0545 (XC-14) · L'avís del fil també hi ocupa lloc. */
   useLayoutEffect(() => {
     const ol = llistaRef.current;
-    if (ol && aBaixRef.current) ol.scrollTop = ol.scrollHeight;
-  }, [resposta]);
+    if (!ol || !aBaixRef.current) return;
+    ol.scrollTop = ol.scrollHeight;
+    apuntaVist(vistRef.current, ol);
+  }, [resposta, avisFil]);
+
+  /* Gauntlet 261025_0545 (XU-05) · Enganxada al fons també quan canvia una
+     mida i no la llista: la foto que acaba de carregar, el compositor que
+     creix fins a 6 línies, la barra de l'adjunt o el teclat d'Android, que
+     encongix la vista (SystemBars). Cap d'eixos canvis fa scroll, i el final
+     quedava tapat sense «Baixa al final». Si eres a baix, t'hi quedes; si no,
+     res no salta. S'observa la caixa de la llista i només les bombolles que
+     creixen després de muntar (CREIXEN_DESPRES): observar-les totes serien
+     10.000 observacions amb 10.000 missatges. Sense ResizeObserver, com abans.
+     Verificació en Chrome · Si scrollTop ha baixat des de l'últim que s'ha
+     vist (una animació de teclat que puja i el seu scroll encara no ha
+     arribat), no es fixa: es mira on és. Una retallada del navegador quan el
+     contingut s'encongix també el baixa, però deixa la llista al fons. */
+  const midesRef = useRef(null);
+  useEffect(() => {
+    const ol = llistaRef.current;
+    if (!ol || typeof ResizeObserver === 'undefined') return undefined;
+    const observador = new ResizeObserver(() => {
+      if (aBaixRef.current && noHaPujat(vistRef.current, ol)) {
+        ol.scrollTop = ol.scrollHeight;
+        apuntaVist(vistRef.current, ol);
+      } else actualitzaFons();
+    });
+    observador.observe(ol);
+    midesRef.current = { observador, observats: new Set() };
+    return () => {
+      observador.disconnect();
+      midesRef.current = null;
+    };
+  }, [actualitzaFons]);
+  useEffect(() => {
+    const mides = midesRef.current;
+    const ol = llistaRef.current;
+    if (!mides || !ol) return;
+    const creixen = new Set(messages.filter((msg) => msg?.id != null && CREIXEN_DESPRES.has(msg.tipus)).map((msg) => String(msg.id)));
+    const nodes = creixen.size ? [...ol.querySelectorAll('[data-missatge]')] : [];
+    const actuals = new Set(nodes.filter((node) => creixen.has(node.getAttribute('data-missatge'))));
+    for (const node of mides.observats) {
+      if (actuals.has(node)) continue;
+      mides.observador.unobserve?.(node);
+      mides.observats.delete(node);
+    }
+    for (const node of actuals) {
+      if (mides.observats.has(node)) continue;
+      mides.observador.observe(node);
+      mides.observats.add(node);
+    }
+  }, [messages]);
 
   useEffect(() => {
     setModeSeleccio(false);
@@ -379,30 +559,107 @@ export default function Conversa({
      que tornava a observar-les totes (6.668 observe() per un sol missatge
      amb 10.000). Com que ja no es torna a notificar tot, es recorda què és a
      la vista, i cada notificació amb la pestanya visible marca fins al més
-     alt: el mateix que feia la notificació inicial de l'observador nou. */
+     alt: el mateix que feia la notificació inicial de l'observador nou.
+     Gauntlet 261025_0545 (XU-08, XC-12) · Llegit vol dir vist:
+       · L'arrel és la pantalla i no la llista: la llista retalla igual, i ara
+         també compta si la conversa és fora de la vista (l'encastament dins
+         d'una pàgina de l'amfitrió que s'ha desplaçat).
+       · La finestra ha d'estar atenta: visible i amb el focus. Desenfocada
+         (darrere d'una altra app, l'altra pantalla) no es marca res. Sense
+         focus però sense haver-lo perdut mai (un iframe que encara no s'ha
+         tocat, un WebView que no el diu), com abans.
+       · En tornar (focus de la finestra o pestanya visible), es marca el que
+         ja hi ha a la vista, sense esperar cap missatge ni cap scroll.
+     MISSED (verify-xat-ux) · Una bombolla més alta que el doble de la llista
+     també es llig: esVista i LLINDARS_VIST. */
   const marcaVistRef = useRef(onMarcaVist);
   useEffect(() => { marcaVistRef.current = onMarcaVist; }, [onMarcaVist]);
+  /* Gauntlet 261025_0545 (XU-08, revisió) · El focus es vigila des que es
+     munta la conversa i no des que és llesta: si la finestra el perd mentre
+     carrega (canviar d'app als primers segons), quan es fa llesta ja no és
+     atenta. Tornar a ser visible només desfà el desenfocament amb el focus:
+     una finestra destapada mentre una altra app el té continua desenfocada. */
+  /* Gauntlet 261025_0545 (D4, revisió creuada) · Un WKWebView (Capacitor a
+     iOS) que dispara blur en anar al fons però, en tornar, ni torna el focus
+     ni dispara 'focus' deixava la conversa desenfocada per sempre: no es
+     marcava res fins que la persona enfocava alguna cosa. També la desfan
+     'pageshow' amb la pàgina visible i el primer toc o tecla DINS de la
+     conversa (qui toca la conversa la mira). Sense res d'això, desenfocada
+     no marca res, com fins ara. */
+  const arrelRef = useRef(null);
+  const atencioRef = useRef({ desenfocada: false, enTornar: null });
+  useEffect(() => {
+    const doc = llistaRef.current?.ownerDocument ?? globalThis.document;
+    const finestra = doc?.defaultView;
+    if (!doc) return undefined;
+    const atencio = atencioRef.current;
+    const arrel = arrelRef.current;
+    const ambFocus = () => typeof doc.hasFocus !== 'function' || doc.hasFocus();
+    const enDesenfocar = () => { atencio.desenfocada = true; };
+    const enTornar = () => {
+      atencio.desenfocada = false;
+      atencio.enTornar?.();
+    };
+    const enCanviarVisibilitat = () => {
+      if (doc.visibilityState !== 'visible') return;
+      if (ambFocus()) atencio.desenfocada = false;
+      atencio.enTornar?.();
+    };
+    /* Gauntlet 261025_0545 (D4, revisió creuada) · Només el pageshow d'una
+       pàgina que torna (persisted): el de la primera càrrega arriba després
+       de load i, si la conversa ja era muntada i la finestra havia perdut el
+       focus, marcava com a llegit amb la finestra desenfocada. */
+    const enMostrarPagina = (esdeveniment) => {
+      if (esdeveniment?.persisted && doc.visibilityState === 'visible') enTornar();
+    };
+    const enInteractuar = () => {
+      if (atencio.desenfocada) enTornar();
+    };
+    const opcionsInteraccio = { capture: true, passive: true };
+    finestra?.addEventListener('blur', enDesenfocar);
+    finestra?.addEventListener('focus', enTornar);
+    finestra?.addEventListener('pageshow', enMostrarPagina);
+    doc.addEventListener('visibilitychange', enCanviarVisibilitat);
+    for (const tipus of ['pointerdown', 'touchstart', 'keydown']) arrel?.addEventListener(tipus, enInteractuar, opcionsInteraccio);
+    return () => {
+      finestra?.removeEventListener('blur', enDesenfocar);
+      finestra?.removeEventListener('focus', enTornar);
+      finestra?.removeEventListener('pageshow', enMostrarPagina);
+      doc.removeEventListener('visibilitychange', enCanviarVisibilitat);
+      for (const tipus of ['pointerdown', 'touchstart', 'keydown']) arrel?.removeEventListener(tipus, enInteractuar, opcionsInteraccio);
+    };
+  }, []);
   const vigiaRef = useRef(null);
   useEffect(() => {
     const ol = llistaRef.current;
     if (!ol || !llesta || typeof IntersectionObserver === 'undefined') return undefined;
+    const doc = ol.ownerDocument;
     const aLaVista = new Set();
-    const observador = new IntersectionObserver((entrades) => {
-      for (const e of entrades) {
-        if (e.isIntersecting) aLaVista.add(e.target);
-        else aLaVista.delete(e.target);
-      }
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    const atencio = atencioRef.current;
+    const atenta = () => doc.visibilityState === 'visible'
+      && (typeof doc.hasFocus !== 'function' || doc.hasFocus() || !atencio.desenfocada);
+    const marcaLaVista = () => {
+      if (!atenta()) return;
       let maxim = null;
       for (const node of aLaVista) {
         const seq = Number(node.getAttribute('data-vist') ?? NaN);
         if (Number.isFinite(seq) && (maxim == null || seq > maxim)) maxim = seq;
       }
       if (maxim != null) marcaVistRef.current(maxim);
-    }, { root: ol, threshold: 0.5 });
+    };
+    const observador = new IntersectionObserver((entrades) => {
+      const alcada = ol.clientHeight;
+      for (const e of entrades) {
+        if (esVista(e, alcada)) aLaVista.add(e.target);
+        else aLaVista.delete(e.target);
+      }
+      marcaLaVista();
+    }, { threshold: LLINDARS_VIST });
+    atencio.enTornar = marcaLaVista;
     vigiaRef.current = { observador, observats: new Set(), aLaVista };
     return () => {
       observador.disconnect();
+      if (atencio.enTornar === marcaLaVista) atencio.enTornar = null;
       vigiaRef.current = null;
     };
   }, [llesta]);
@@ -435,6 +692,7 @@ export default function Conversa({
   const envia = useCallback(async () => {
     const value = text.trim();
     if (!value) return;
+    const revisio = ++revisioCompositorRef.current;
     const citat = resposta;
     /* Enviar buida l'esborrany només si el camp era l'esborrany de la
        persona: enviar tal qual el text de ?context= no se'l menja (#3). */
@@ -446,7 +704,9 @@ export default function Conversa({
       if (citat?.id != null) await onSendMessage(fil, value, { respostaA: citat.id });
       else await onSendMessage(fil, value);
     } catch {
-      /* Si falla, es conserven el text i la resposta (i l'esborrany). */
+      /* Si el compositor continua igual, es recuperen el text i la cita.
+         Si la persona ja ha continuat, mana el que ha fet després. */
+      if (revisioCompositorRef.current !== revisio) return;
       setText(value);
       if (propi) desaEsborrany(clauEsborrany, value);
       if (citat) setResposta(citat);
@@ -458,11 +718,13 @@ export default function Conversa({
      resposta no canvia l'estat, i el focus del menú desmuntat cauria a
      <body> (revisió adversarial 260930, #8). */
   const respon = useCallback((missatge) => {
+    revisioCompositorRef.current += 1;
     setResposta(missatge);
     campRef.current?.focus();
   }, []);
 
   const cancelaResposta = useCallback(() => {
+    revisioCompositorRef.current += 1;
     setResposta(null);
     campRef.current?.focus();
   }, []);
@@ -473,6 +735,7 @@ export default function Conversa({
     const comportament = comportamentDesplacament();
     baixantRef.current = comportament === 'smooth';
     desplacaLlista(ol, ol.scrollHeight, comportament);
+    apuntaVist(vistRef.current, ol);
     aBaixRef.current = true;
     setABaix(true);
     setNousAvall(0);
@@ -628,7 +891,7 @@ export default function Conversa({
   } : null;
 
   return (
-    <div className="sdp-xat-conversa">
+    <div className="sdp-xat-conversa" ref={arrelRef}>
       <CapcaleraConversa
         fil={fil}
         onTorna={onBack}
@@ -647,12 +910,13 @@ export default function Conversa({
         className="sdp-xat-missatges"
         ref={llistaRef}
         tabIndex={-1}
-        onScroll={actualitzaFons}
+        onScroll={enScroll}
         onWheel={interrompBaixada}
         onTouchStart={interrompBaixada}
         onPointerDown={interrompBaixada}
         onKeyDown={interrompBaixada}
         aria-label={t('section.xat.missatges', 'Missatges')}
+        aria-busy={llistaOcupada || undefined}
       >
         {hiHaMes ? (
           <li className="sdp-xat-carrega">
@@ -664,21 +928,66 @@ export default function Conversa({
           </li>
         ) : null}
         <li className="sdp-xat-sentinella" ref={sentinellaRef} aria-hidden="true" />
-        {messages.length === 0 && !cortesiaIAIA ? (
-          <li className="sdp-xat-conversa-buida">{t('section.xat.conversaBuida', 'Cap missatge encara. Inicia la conversa!')}</li>
-        ) : null}
-        {bombolles}
+        {/* Gauntlet 261025_0545 (IA-07 i MISSED de verify-iaia-xat) · La
+            benvinguda automàtica diu que és IA, com tota bombolla de la IA
+            (Bombolla, «· IA»), i va dalt de tot, abans dels missatges: al
+            final, al grup públic de /iaia semblava la resposta de la IAIA al
+            que algú acabava d'escriure. En un fil buit es veu igual que abans. */}
         {cortesiaIAIA ? (
           <li className="sdp-xat-conversa-buida">
-            <strong>IAIA MarIA</strong>
+            <strong>{`${NOM_IAIA} · ${t('section.xat.ia.etiqueta', 'IA')}`}</strong>
             <p>{t('section.xat.iaia.salutacio', BENVINGUDA_IAIA)}</p>
             <small>{t('section.xat.iaia.cortesia', 'Benvinguda automàtica. Es mostra només ací; no és una resposta guardada al xat compartit.')}</small>
           </li>
         ) : null}
+        {/* Gauntlet 261025_0545 (XC-14 / XU-07) · Mentre el fil no s'ha llegit
+            mai, no es diu que és buit: «Carregant la conversa…». */}
+        {textCarregant ? (
+          <li className="sdp-xat-conversa-buida">
+            <span role="status">{t('section.xat.carregantConversa', 'Carregant la conversa…')}</span>
+          </li>
+        ) : carregantFil ? null : messages.length === 0 && !cortesiaIAIA ? (
+          <li className="sdp-xat-conversa-buida">{t('section.xat.conversaBuida', 'Cap missatge encara. Inicia la conversa!')}</li>
+        ) : null}
+        {bombolles}
       </ol>
 
       {/* Només els nous d'altres que entren pel final (#11). */}
       <AnunciDeNous ref={anunciRef} t={t} />
+
+      {/* Gauntlet 261025_0545 (XC-14) · L'avís del fil que no s'ha pogut
+          llegir (o marcar): una línia damunt del compositor, amb la peça de
+          l'avís públic i el botó de la bombolla en error. No tapa ni la
+          llista ni el camp. El context en dona el text cru de l'error («Load
+          failed»): ací es diu, traduït, què li passa a la conversa. */}
+      {/* Gauntlet 261025_0545 (D5) · El text segons el que ha fallat: una
+          marca de lectura que no s'ha pogut desar no és una conversa que no
+          s'ha pogut llegir. Mentre una lectura vola, el botó continua al seu
+          lloc i amb el focus (aria-disabled i no disabled), diu
+          «Actualitzant…» i no torna a demanar. */}
+      {avisFil ? (
+        <div className="sdp-xat-avis-public">
+          <AlertTriangle size={16} aria-hidden="true" focusable="false" />
+          <span role="status">
+            {tipusAvisFil === 'marca'
+              ? t('section.xat.conversa.avisMarca', "No s'ha pogut marcar la conversa com a llegida.")
+              : t('section.xat.conversa.avisFil', "No s'ha pogut actualitzar la conversa.")}
+          </span>
+          {typeof onReintentaFil === 'function' ? (
+            <button
+              type="button"
+              className="sdp-xat-bombolla__accio"
+              onClick={llegintFil ? undefined : onReintentaFil}
+              aria-busy={llegintFil ? true : undefined}
+              aria-disabled={llegintFil ? true : undefined}
+            >
+              {llegintFil
+                ? t('section.xat.conversa.actualitzant', 'Actualitzant…')
+                : t('section.xat.missatge.reintenta', 'Torna-ho a provar')}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {consultaIAIA && !modeSeleccio ? <ConsultaIAIA t={t} /> : null}
 

@@ -66,7 +66,8 @@ describe('baixa del canal del xat amb el client de Realtime instal·lat', () => 
   it('el desmuntatge dona de baixa una vegada: darrere d’un error, un sol intent més allibera el canal', async () => {
     actiu = clientAmbBaixes(['error']);
     const { subscription } = await subscribeToXat('fil', () => {}, REMOT);
-    esperaCanals(actiu.client, subscription);
+    const fisic = actiu.client.getChannels()[0];
+    esperaCanals(actiu.client, fisic);
     // XatContext no reintenta: avisa a la consola i se'n va.
     await expect(unsubscribeFromXat(subscription)).rejects.toMatchObject({ code: 'CANAL_NO_TANCAT', retriable: true });
     await buidaCua();
@@ -75,7 +76,9 @@ describe('baixa del canal del xat amb el client de Realtime instal·lat', () => 
     // Tornar al mateix fil obri un canal nou, no el retingut.
     const { subscription: nova } = await subscribeToXat('fil', () => {}, REMOT);
     expect(nova).not.toBe(subscription);
-    esperaCanals(actiu.client, nova);
+    const fisicNou = actiu.client.getChannels()[0];
+    expect(fisicNou).not.toBe(fisic);
+    esperaCanals(actiu.client, fisicNou);
     expect(actiu.totes).not.toHaveBeenCalled();
   });
 
@@ -93,11 +96,12 @@ describe('baixa del canal del xat amb el client de Realtime instal·lat', () => 
   it('si el segon intent també falla, no n’hi ha cap més i el propietari queda per a un reintent explícit', async () => {
     actiu = clientAmbBaixes(['error', 'error']);
     const { subscription } = await subscribeToXat('fil', () => {}, REMOT);
+    const fisic = actiu.client.getChannels()[0];
     await expect(unsubscribeFromXat(subscription)).rejects.toMatchObject({ code: 'CANAL_NO_TANCAT', retriable: true });
     await buidaCua();
     await buidaCua();
     expect(actiu.intents).toBe(2);
-    esperaCanals(actiu.client, subscription);
+    esperaCanals(actiu.client, fisic);
     await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
     expect(actiu.intents).toBe(3);
     expect(actiu.client.getChannels()).toHaveLength(0);

@@ -38,7 +38,8 @@ test('dues persones: una conversa nova i una que ja existia, en sèrie, i la not
   const { resultats } = await aplica({ nota: NOTA, origen: ORIGEN, abast, missatge: 'Hola' });
   expect(mocks.ordre).toEqual(['fil:u1', 'envia:f-u1', 'envia:f-vell']);
   expect(mocks.creaFil).toHaveBeenCalledTimes(1);
-  expect(mocks.send).toHaveBeenCalledWith({ id: 'f-u1' }, 'Hola');
+  /* Gauntlet 261025_0545 (D2) · Connectar no espera la xarxa (XC-03 és per a la conversa oberta). */
+  expect(mocks.send).toHaveBeenCalledWith({ id: 'f-u1' }, 'Hola', { esperaLaXarxa: false });
   expect(resultats.map((r) => [r.nom, r.estat])).toEqual([['Pepa', 'fet'], ['Toni', 'fet']]);
   const [id, canvis, revisio] = mocks.update.mock.calls[0];
   expect([id, revisio]).toEqual(['n-1', 3]);

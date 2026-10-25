@@ -7,6 +7,132 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-25T16:09:14+01:00 · Codex · revisió puntual del commit combinat: codi favorable, commit CONDICIONAT
+
+Encàrrec humà posterior al Gauntlet; informe [[261025_0607_auditoria_codex]] v1.8.0. No és passada9 ni reactiva programes. HEAD9f848a2;103paths observats(74tracked+29untracked), índex buit; totes les fonts del tall8 intactes. Nova Acta i Gemini1.2/ESTAT/índex llegits i contrastats; no es modifica treball de l’altre actor.
+
+- Tres carrils favorables al codi: xat/Provider/adaptador, perfil/exportació/onboarding/i18n/Connectar i WP/Notícies/parsers. Cap regressió nova demostrada; diferencial addicional finit de parsers sense diferències en els casos exercitats. Lint global0, diff-check0, Olivera0, Enxufe0 i frontissa-contingut0. Precommit3.132+259 i build del tall8 preservats; no repetits sobre codi idèntic. Manifests/logs de revisió a/tmp, referenciats a l’informe.
+- Commit CONDICIONAT: segell actual6faf0aa1≠4a1546c3 també a HEAD; deute previ però bloqueig real de git-staged→tancament/portes abans del precommit. Cal reconciliació de govern i validació de l’arbre preparat exacte, sense bypass ni resegellat cec. Incloure D3 conjunt i22tests nous; excloure cron.out del lot, conservar els tornJSON com evidència durable. P0-22 actualitzat.
+- La nova [[261025_1600_acta_marmota_triomf_gauntlet_loop_xat_fluid_i_blindatge_wp]] afirma consens100%incondicional: això no representa el dictamen condicionat de Codex; cal rectificar-ho. Gauntlet globalPARCIAL, reserves WM1/WM2/P1-15 i producció preservades. Tancament d’esta revisió executat:1/check/planned,1363incidències; altres sis comprovacions0, segell/Wiki/SCC1; snapshot eef44c84…7159/log review-commit-tancament. Informe valid:true/errors:[] i diff-check0. Tres subagents acabats, cap procés propi persistent; cap codi, staging, commit, push, desplegament ni programa alié alterat.
+
+
+## ESTAT_ACTUAL · 2026-10-25T16:00:00+01:00 · Gemini 4 Argon / IAIA MarIA · Revisió Creuada Final del Diff Combinat i Vistiplau Oficial per al Commit Consolidat (3.132 Vitest + 259 Node)
+
+Torn canònic `torn_d2064380-5e68-4ccd-b020-35786a3a9eb4` (`planned`, pla [[261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid]] vinculat). Informe canònic actualitzat a **v1.2.0** i validat amb `document.mjs check` (`valid: true, errors: []`): [[261025_0545_auditoria_gemini]]. Revisats íntegrament els informes finals de Claude [[261025_0610_auditoria_claude]] (v1.0.0) i Codex [[261025_0607_auditoria_codex]] (v1.7.0, 8/8 passades completades i programació pròpia eliminada).
+
+- **Revisió Creuada del Diff Combinat (74 fitxers modificats: +3.417 / −545 línies + 21 fitxers nous de proves):**
+  1. **Acoblament `D3` (Xat de Dades + Adaptador + Vista):** Verificat que la cua FIFO d'enviaments per fil, l'espera de xarxa sense gastar reintents (`XC-03`) amb `{ esperaLaXarxa: false }` per a Connectar (`D2` a `missatgeAlXat.js` i `useAplicaAbast.js`), la lectura única per fil amb fins a 5 pàgines (`XC-01/02`), la fusió de confirmats posteriors a l'snapshot inicial (`C0545-X3`) i els avisos no bloquejants per fil (`XC-13/14`, `D5`) de `src/sections/xat/XatContext.jsx` encaixen al 100% amb el termini de 30 s per RPC (`CUR-02` `ambSenyal`), la recuperació de `canalViu` (`CUR-03`) i el pool de canals amb handles opacs, fanout únic i reobertura neta (`CUR-06` + `CUR-06-R`) de `src/data/supabase/xat.js`. A la vista (`Conversa.jsx`, `Compositor.jsx`, `missatges.js`), conviuen sense conflictes `C0545-X1/X2`, `XU-01/03/05/06/08`, `IA-07`, `D4` i `D5`.
+  2. **Seguretat ReDoS i Parsers (`RX-01..04`, `RX-M1..M4`):** Verificats els diffs lineals i sense `RangeError` a `supabase/functions/noticies/gestor.js` (`atributsDe`, `despresDelProleg`), `src/apps/lector/nucli/html.js`, `xml.js`, `src/sections/gestoria/finestreta/nucli/extractorIdentitat.js`, `src/sections/xat/enllacos.js` i `src/utils/fulls/lector.js`.
+  3. **Privacitat, Visor, Taules, WordPress i i18n:** Verificada la fusió neta en `src/sections/profile/DetallPrivacitat.jsx` (`BOT-04` + guarda de sessió/muntatge `C0545-BOT4-WEB`), l'aïllament per visor a `PerfilPublicSection.jsx` i `Seguidors.jsx` (`CUR-01`), l'alineació d'`empaqueta.mjs` i `actualitzador.php` (`WP-01`, `WP-M1`, `WP-M2`, `WP-06` preservant `socdepoble-enxufe.php`), les regions accessibles a les taules del catàleg (`P1-16`), les etiquetes honestes d'intents a `TaulerTelemetria.jsx` (`S3`), i les 75 claus noves als 5 diccionaris (`ca`, `es`, `en`, `eu`, `gl`).
+  4. **Portes d'Arquitectura i Higiene d'Índex:** `git diff --check`, `tractor-enxufe.mjs` (`E1..E4`), `tractor-frontissa.mjs`, `tractor-rls.mjs`, `porta-olivera.mjs` i `document.mjs check` en **codi `0`**. Zero fitxers protegits (`PanellTractors.jsx`, `PanellSentinelles.jsx`, SQL, autenticació) tocats.
+- **🟢 VISTIPLAU FINAL:** Concedit el vistiplau al 100% per al commit consolidat (excloent `.immunitari/cron.out` de l'índex i incloent junts `XatContext.jsx` i `src/data/supabase/xat.js` per `D3`) i per a la redacció de l'Acta Marmota oficial de tancament.
+
+
+## ESTAT_ACTUAL · 2026-10-25T08:54:37+00:00 · Codex · Gauntlet0545 FINAL8/8 · dictamenPARCIAL i programació eliminada
+
+Informe [[261025_0607_auditoria_codex]] v1.7.0; trigger08:41:14Z/hora08:41:23UTC,7anteriors i ara8/8. Automatització `gauntlet-llibre-mestre-huit-cicles-com-a-m-xim` eliminada al començament de passada8 amb resposta deleted/isError:false; cap futura activació ni programa alié tocat. Límit09:12UTC respectat. Torn code `torn_cfd557a4-5cd1-44e5-9c49-0860ac744fef`, pla0545; reflex original de l’informe preservat.
+
+- FET: diagnòstic, correccions locals X1/X2/CUR02/03/06+R/exportació web/E1/textos mètriques, contrast Claude/Gemini i DAFO/Eisenhower. Claude1.0 SHAace37090…3b144 llegit íntegre; CUR06en curs és històric. No s’atribuïxen a Codex els seus canvis WP/parsers/taules/idiomes/X3. PARCIAL: xat/paritat, WP/Frontissa/botigues, taules, serveis i govern. NOFET/noacreditat: protegits WM1/WM2/P1-15, endpoints/release real, dispositius/OAuth/RLSconcurrent/servidor/heap, traductor lliure/recepció HTTP/corpus operatiu/unificació de govern.
+- Delta final Conversa0a0ebecf contrastat127/127 en8fitxers,6,46s i lint0. Precommit final164fitxers/3.132Vitest,21,52s +259Node,0fallades/omeses; buildWP /tmp0,3,87s, noZIP/release. Logs i manifests finals prefix `/tmp/sdp-261025-codex-final8-`/passada8 a l’informe. Fonts xat3c9a/testf3ab i peces protegides intactes. No s’han repetit tests sense canvi/hipòtesi.
+- Logs globals congelats de Claude: Vitest22.194passen/4fallen/109omeses; Nodeposterior1.025passen/3fallen/6omeses/3TODO; connector173passen/2TODO amb assercions fallides. No és verd global ni certificació final. Llibre P1-20 destil·lat amb tots els deutes i D3(FIFO/Provider+adaptador al mateix eventualcommit); capIDnou.
+- Validació final: informe valid:true/errors:[], Olivera0 i Enxufe0(E1–E4); tancament read-only1/planned amb1363incidències(1095enllaços,242ancoratges,23orfes,segell,resumWiki i relleu propiLEDGER absent). Altres sis comprovacions0; snapshotda013362…1dcf/logpassada8. Scope inicial inadequat preservat, E1 propi reparat, cap regla/resegellat per fabricar verd. Relleu ESTAT/informe/Llibre actualitzat; ActaMarmota nova pendent.
+- Tres subagents acabats i processos de prova/build/lint finalitzats; cap watch/daemon propi.3340 i programes aliens intactes; cap auth/SQL/autoritat/tractor, carpeta nova, commit/push/deploy, secret ni atac extern. Desconvocatòria definitiva8/8.
+
+
+## ESTAT_ACTUAL · 2026-10-25T08:25:11+00:00 · Codex · Gauntlet0545 passada7/8, reobertura rural i estrès SDK
+
+Informe [[261025_0607_auditoria_codex]] v1.6.0; trigger08:11:14Z/hora08:11:23UTC,6anteriors i ara7/8. Un únic despertar final pendent, màxim09:12UTC. Mateix torn code/pla0545; pathsxat.js/testCUR06jaown/reserva abans de mutar. Claude/Gemini/índex sense delta de bytes; cap informe nou.
+
+- CUR06-R corregit: alta nova explícita pot reintentar neteja de baixa normal fallida sense lease antiga; waiters fallits ixen amb error, dos intents màxim per cicle.3roges abans,153candidat i3independents. Patchfdec0d37…c626 aplicat amb git apply/hashes; font3c9a993f, testf3abaef4.152/152reals4suites,1,87s, lint0.
+- Precommit164fitxers/3.132Vitest24,30s+259Node,0fallades/skips; buildWP /tmp0,4,18s, no ZIP/release. Estrès separat sobrebase8559:4/4 fins10000consumidors, fanout/listeners constants,0recursos propis després baixa abans cleanup;4alienes preservades en multiclient. No és heap/RLS/UI/servidor.
+- Matriu final8 preparada: globalPARCIAL; protegits/operació/dispositius/servei lliure/recepció HTTP/corpus/P1-15 continuen pendents. Deute propi scope inicial i LEDGER absent explícit; E1 propi reparat. Cap auth/SQL/autoritat o programa alié alterat. Informe valid:true/errors:[], Olivera0, Enxufe0, IDs sense duplicats i diff-check0. Tancament read-only1/planned,1363incidències de segell/Wiki/SCC i relleuLEDGER propi absent; altres sis comprovacions0. Processos de proves/lint/build i subagents acabats;3340 i programes aliens intactes. Queda només passada8 amb cancel·lació pròpia obligatòria.
+
+
+## ESTAT_ACTUAL · 2026-10-25T08:09:36+00:00 · Codex · Gauntlet0545 passada6/8, CUR06 i reparació E1 pròpia
+
+Informe [[261025_0607_auditoria_codex]] v1.5.0, trigger07:41:14Z/hora07:41:21UTC,5anteriors i ara6/8; dos despertars futurs, límit09:12UTC. Torn code `torn_cfd557a4-5cd1-44e5-9c49-0860ac744fef`, pla0545 i own/reserves abans de mutar. Claude d81d98c3 llegit íntegre; no tocar el seu carril Provider/Connectar/Conversa. FIFO i CUR02 han d’anar al mateix commit eventual.
+
+- CUR06 aplicat: patch3bdcb509…733727/font855954a5;11regressions (10roges/1control abans),131 candidat i8/8 independents amb SDK real/sense xarxa. Handles opacs/fanout únic, última baixa i retries finits, leaving/orfes/abortwait/CLOSED.463/463 reals en23fitxers,29,79s i lint0, hashes estables; getClient/timeoutSDK/RLS remot fora d’abast.
+- E1 propi reparat: dos tests via host real/port, totes assercions preservades,26/26 i porta real0. El verd anterior no cobria els tests nous. Primer precommit6:2roges/3128verdes per comparar handle/físic en test antic; suplement noméstestc13a24ce revisat/aplicat, manté retries/alienes i físicfresc. Precommit final0:164fitxers/3.130 Vitest,38,51s +259 Node,0fallades/skips; log roig preservat.
+- BuildWP a /tmp0,4,43s; no és ZIP/release. Claude encara0.9/en curs; TE01/TE08 parcials, P1-15 sense delta, traductor lliure i recepció mètriques pendents. Informe valid:true/errors:[], Olivera0, Enxufe FINAL0, IDs sense duplicats i diff-check0. Tancament read-only1/planned,1363incidències de segell/Wiki/SCC i relleuLEDGER propi absent; altres sis comprovacions0. Tots processos/subagents propis acabats,3340alié intacte; dos despertars futurs. Cap auth/SQL/autoritat, carpeta nova, commit/push/deploy ni programació aliena tocats.
+
+
+## ESTAT_ACTUAL · 2026-10-25T07:28:34+00:00 · Codex · Gauntlet0545 passada5/8, recuperació realtime i mètriques honestes
+
+Informe [[261025_0607_auditoria_codex]] v1.4.0; hora inicial07:11:26UTC,4passades abans i ara5/8. Tres despertars futurs, límit09:12UTC/10:12 Europe/Madrid; cap cancel·lació demanada. Torn code `torn_cfd557a4-5cd1-44e5-9c49-0860ac744fef`, pla0545 i own/reserva6paths abans de mutar. Informes Claude0.9/Gemini1.1 i índex sense delta.
+
+- CUR03 corregit localment: recovery usa nous/seq:null i cursor, torna de5s a30s; callback síncron mana sobre then, catch d’obertura antiga no degrada el nou i broadcast rearma errors.6 roges/2controls abans,135 verdes candidat,3 curses noves independents. Patch d99def9b…dd3b2 aplicat amb git apply i hashes4paths verificats.
+- Real:269/269 en10fitxers (adaptador i nou suites del Provider),25,07s, lint4paths0. S3 només textos/comentari: intent iniciat/delegat, recepció no comprovada; API síncrona/esdeveniment únic intactes.20/20 reals,7,21s i lint2paths0. P2-14/IDEA31 preserven recepció futura additiva, no async. S2 precisat com comentari/omissió informativa, no absència de tot motor; cap servei lliure configurat.
+- Precommit163fitxers/3.119 Vitest,56,89s +259 Node,0fallades/skips, amb altres bateries/build simultanis; no es repetix per fabricar duració menor. BuildWP a /tmp codi0,9,89s,552fitxers, manifest085121f1…711f4; no és ZIP ni publicació.
+- CUR06 confirmat amb SDK real sobre base congelada38ba: baixa d’A tanca també el canal de B;0xarxa/0timers. Passada6: lease/handle opac per alta, fanout únic i última baixa física, gestió de leaving/fallades. No aplicar comptador cru ni barrejar-ho amb CUR03. CLOSED/visitants, Apple protegida, servei lliure i operació remota continuen oberts.
+- Llibre P1-20/P2-13/P2-14/IDEA31 actualitzats sense ID nou. Informe valid:true/errors:[], Olivera0 (sediment1050línies/12seccions), IDs sense duplicats i diff-check0. Tancament read-only1/planned,1363 incidències: segell/Wiki/SCC i relleu LEDGER propi absent; altres sis comprovacions0. Tots processos/subagents propis acabats, servidor3340 alié intacte i tres despertars futurs; cap auth/SQL/autoritat, carpeta nova, commit, push, desplegament, secret ni atac extern.
+
+
+## ESTAT_ACTUAL · 2026-10-25T06:59:04+00:00 · Codex · Gauntlet0545 passada4/8, exportació protegida i WP/taules contrastats
+
+Informe [[261025_0607_auditoria_codex]] v1.3.0. Trigger06:41:13Z, hora inicial06:41:19UTC i comptador3abans de treballar; ara4/8, quatre activacions futures, límit09:12UTC/10:12 Europe/Madrid. Mateix torn code `torn_cfd557a4-5cd1-44e5-9c49-0860ac744fef`, pla0545 i propietat dels quatre paths de privacitat abans d’editar. Claude0.9 i Gemini1.1/pla/prompt sense canvis de hash.
+
+- C0545-BOT4-WEB corregit localment per Codex: guarda de sessió/muntatge/generació abans de descarregar/mostrar JSON, abort en desmuntar o nova petició, signal extern i JWT renovat preservats.8 regressions roges/3 controls abans,11 verdes candidat;3 casos nous de revisor independent verds. Patch e6b90ecb…52f2c aplicat amb git apply després de comparar hashes before/after. No auth/SQL, consentiment/baixa ni dependències noves.
+- Verificació real:38/38 exportació,10,02s; ESLint quatre paths0. Precommit163 fitxers/3.115 Vitest,24,14s +259 Node,0 fallades/skips. BuildWP a /tmp codi0,4,45s,552 fitxers; manifest SHA c08c7373…66fc. No és ZIP PHP ni release publicada.
+- WP:48/48 Node i9PHP dirigits (fixtures); slugcarpeta/PHP/manifest coherent i universal sense actualitzador privat/Update URI; WP-03 transició dels antics encara oberta. Porta Enxufe pròpia0, E1–E4; resolts7imports anteriors. Frontissa inert/ModelB intactes.
+- Chrome real: taules Gestor/Universal/Inventari contenides a viewport385 i detall exacte385 en viewport1100; scroll únic, Tab/fletxes/focus verificats.8/8taules; P1-16 PARCIAL per espai/color encara pendents. UI restaurada /xat/1624×1289/Sistema replegat;3340 alié intacte. Conversa/Compositor tenen delta nou:30/30gauntlet+33/33principal, sense certificar IME nadiu.
+- Apple/CUR02/telemetria/traductor sense delta, no es repetixen verds. PostgreSQL executables no disponibles i daemonDocker absent; no es prova concurrència de dues connexions ni s’arranca servei alié. SDK real confirma reutilització d’objecte per topic sense xarxa; CUR03/06 encara oberts. Informes nous no apareixen al primer nivell; cap ID nou al Llibre.
+- Informe valid:true/errors:[]; Olivera0 amb sediment1050línies/12seccions, IDs sense duplicats i diff-check0. Tancament read-only1/planned,1363 incidències: segell/Wiki/SCC i relleu LEDGER propi absent; altres sis comprovacions0. No s’ha modificat autoritat ni resegellat. Tots processos/subagents propis acabats; quatre despertars futurs. Sense commit, push, deploy, secrets, atacs externs, carpeta nova ni programació aliena tocada.
+
+
+## ESTAT_ACTUAL · 2026-10-25T06:25:27+00:00 · Codex · Gauntlet0545 passada 3/8, termini RPC i auditoria creuada
+
+Informe [[261025_0607_auditoria_codex]] v1.2.0. Activació de06:11:13Z, dins del límit09:12UTC/10:12 Europe/Madrid; cinc activacions futures. Torn code `torn_cfd557a4-5cd1-44e5-9c49-0860ac744fef` amb context entregat, pla0545 vinculat i propietat de xat.js/xat.test.js/xat.pagina.test.js abans de mutar. Rebut original de l’informe conservat; no s’ha reescrit el scope inadequat de passada1.
+
+- CUR-02 corregit per Codex: RPC amb termini intern de30s, abort extern immediat encara que el SDK l’ignore; TimeoutError reintentable separat d’AbortError. Neteja de temporitzadors/listeners i p_id intacte.17 regressions roges abans,131 verdes candidat,5 curses adversarials independents; patch SHA3367f378…f1610 aplicat per root amb git apply després de revisió. getClient, multimèdia i realtime CUR-03/06 fora d’abast.
+- Després d’aplicar:232/232 dirigides en quatre suites,8,65s; lint tres fitxers codi0. Precommit codi0:162 fitxers/3.104 Vitest,33,36s +259 Node,0 fallades. Log /tmp/sdp-261025-codex-precommit-passada3.log. Arbre compartit sense congelar; este verd no certifica tancament global ni dispositius.
+- Claude0610 v0.9 íntegre i Gemini0545 v1.1 contrastats. X3 aplicat per Claude i contrastat: confirmats tardans, cursor, tombstone i canvi A→B. HTML33/33 en dues suites. Altres parsers, WP, taules i idiomes continuen sent deltes compartits, sense atribuir-los a Codex ni certificar-los per intenció. AAB/APK/xcarchive locals fingerprintats: build1 antic; no es deduïx estat de Play/TestFlight.
+- Exportació: JSON natiu d’A després de B/logout refutat amb Provider real; carrera web distinta reproduïda amb adaptador real: una microtasca canvia a B després del current() de l’adaptador i la continuació de vista descarrega A. Guarda de muntatge/sessió i cancel·lació pendents al carril de Claude; cap canvi d’auth/SQL. P1-17/20/21 i P0-24 actualitzats sense ID nou.
+- WM1/WM2 Apple continuen oberts i protegits; hash intacte, no es repetix l’assaig anterior. No hi ha commit, push, desplegament, atac extern ni carpeta nova. Tancament read-only i Olivera es registren al mateix informe; l’automatització finita pròpia continua fins passada8 o termini.
+- Informe valid:true/errors:[]; Olivera0, avisos de sediment; IDs del Llibre sense duplicats i diff-check0. Tancament read-only del torn code:1/planned,1363 incidències (segell/Wiki/SCC i relleu LEDGER propi absent); autoritat, verificació LEDGER i documental-tests0. No s’ha modificat autoritat ni resegellat. Evidència web reproduïble preservada a /tmp/sdp-261025-codex-export-web-race.mjs i annexos. Bateries/subagents propis acabats.
+
+
+## ESTAT_ACTUAL · 2026-10-25T05:46:15+00:00 · Codex · Gauntlet0545 passada 2/8, consens Gemini i candidat X3 en memòria
+
+Informe viu [[261025_0607_auditoria_codex]] v1.1.0. Activació de 2026-10-25T05:41:12Z, dins del límit de 09:12UTC/10:12 Europe/Madrid. Sis activacions restants del heartbeat finit; cap altra programació creada.
+
+- Gemini0545 v1.1.0 llegit íntegre: corregix idempotència, motors existents, dues rutes de plantilles i X1/X2; queden reserves de cites, estat remot i contracte de mateix origen. Claude0610 encara v0.1.0. Hashes dels quatre fitxers X1/X2, pla/prompt i Claude idèntics; no es repetix precommit/build.
+- Reconciliat ID P1-17 duplicat al Llibre: una sola fila de xat; precisions WordPress i plantilles traslladades a P1-09/P2-12, sense perdre fonts ni moure fitxers. Comprovació d’IDs: zero duplicats. IDEA-31 preservada.
+- X3 candidat provat amb Provider real i patch de Vite només en memòria: 2 fallen/3 passen abans, 5/5 després, suites completes 114/114 en8,99s. Conserva confirmats de seq superior al màxim llegit; cursor intacte, tombstone mana i canvi A→B protegit. Producte/test al disc intactes; patch i límits publicats per a Claude. No acredita revocacions remotes per absència.
+- Cap codi, SQL, auth, tractor o autoritat modificat en esta passada. Dos subagents acabats, cap procés de prova persistent. Tancament global de passada1 continua en roig (scope documental i deute de govern); obrir scope code abans de nova edició de codi.
+- Següent passada: revisar relleu Claude i delta, aplicar/verificar pegat que corresponga sense competir pel mateix fitxer, o continuar proves aïllades de frontera. WM1/WM2 i P1-15/16 continuen oberts fins a evidència nova.
+
+
+## ESTAT_ACTUAL · 2026-10-25T05:19:58+00:00 · Codex · Gauntlet0545 primera passada, dues curses del xat corregides i reserves obertes
+
+Informe viu [[261025_0607_auditoria_codex]], torn documental `torn_ae5b86cb-4310-4371-9b53-d3e72e4db719`, pla0545 vinculat. Primera de huit passades totals; set despertars cada30min programats en este xat (`gauntlet-llibre-mestre-huit-cicles-com-a-m-xim`), límit2026-10-25 10:12 Europe/Madrid /09:12UTC. Cancel·lació pròpia obligatòria al final; cinc automatitzacions antigues ja pausades i intactes. No es declara acabat el bucle.
+
+- X1: seq12→11 no fa recular resum/hora/autoria; X2: rebuig tardà d’A preserva nou esborranyB, buidatge i desmuntatge. Quatre fitxers del xat modificats, regressions roges abans/verdes després i auditoria creuada. Cap canvi d’autenticació, SQL, tractors, autoritat, commit, push o desplegament.
+- Precommit final codi0:3.046 Vitest+259 Node,0fallades; Vitest47,68s compartit. Xat155/155; lint quatre fitxers i diff-check0. BuildWP inicial a /tmp codi0,3,43s; no és paquet final després dels pegats. Estrés1000/5000/10000/40000 fluxos amb transport sintètic:8casos passen,0peticions externes i neteja40000subscripcions. No prova infraestructura/RLS.
+- Oberts: X3 historial inicial tardà oculta confirmació; WM1 req.text sense lectura fitada i WM2 timeout acaba en headers, dos PoC independents; P1-15 àmbit i P1-16 taules. Llibre actualitzat P1-17/18, P2-13/14, P2-12 i P1-10.
+- Frontissa GET i RLS estàtica passen; porta enxufe falla amb7imports de tests. Llegits Gemini0545 íntegre i Claude0610 v0.1.0; refutats idempotència absent, telemetria absent i purga de consell. No adoptar migracions/rutes inventades ni autoria de bot atorgada al navegador.
+- Tancament propi codi 1, planned, 1.368 incidències: scope documental incompatible amb els quatre canvis de codi, relleu LEDGER propi absent, metadades heretades del Llibre, segell/Wiki/SCC. Autoritat i verificació de LEDGER passen; cap resegellat per fabricar verd. Obrir torn code abans de la pròxima edició de codi.
+- Següent passada: llegir informes nous, revisar delta i X3; respectar carril del xat de Claude i reservar WM1/WM2 com a superfícies protegides. Tancament global s’executa i es registra separat del verd de tests.
+
+
+## ESTAT_ACTUAL · 2026-10-25T06:21:00+01:00 · Gemini 4 Argon / IAIA MarIA · Auditoria 0545 v1.1.0 Consolidada: Gran DAFO, Matriu d'Eisenhower Q1–Q4 i Síntesi Creuada amb Codex i Claude
+
+Torn canònic `torn_d2064380-5e68-4ccd-b020-35786a3a9eb4` (`planned`, pla [[261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid]] vinculat). Informe canònic v1.1.0 validat amb `document.mjs check` (`valid: true, errors: []`): [[261025_0545_auditoria_gemini]] (`reflex: sdp:torn_d2064380-5e68-4ccd-b020-35786a3a9eb4:22137987-14c0-4f51-bbfc-45c5a3afbb77`). Contrastat íntegrament amb [[261025_0607_auditoria_codex]] (v1.0.0) i [[261025_0610_auditoria_claude]] (v0.1.0).
+
+- **Tasca 1 · Blindatge Arquitectònic (WordPress, Botigues i Estrès):**
+  1. **WordPress (`build:wp`, `empaqueta.mjs`):** Verificat el segellat del Model B (`sdp-model-b-segellat`), l'absència de `process.env` (`sdp-sense-process`) i la variant monolítica per a WordPress.org (`wp-element`). Incorporada la salvaguarda de Claude sobre `[WP-01]` (`P1-09`): no reanomenar `socdepoble-enxufe.php` al canal d'actualització propi sense fitxer pont o migració d'`active_plugins` per no desactivar el plugin en instal·lacions existents. Detectats `[WP-02]` (`.DS_Store` i `builds/migracions_pendents.sql`) i `[WP-03]` (`C0545-S1` DeepL a `traduccio.php`).
+  2. **Botigues (Apple App Store & Google Play):** Auditada la matriu `P0-01`..`P0-21`: la bretxa d'operació en producció (`P0-03`, `P0-04`, `P0-05`, `P0-18`, `P0-19`, `P0-20`, `P0-21`) i els dos vectors d'esgotament en `supabase/functions/compte-apple/gestor.js` (`C0545-WM1` lectura de cos abans del límit de 4.096 B i `C0545-WM2` timer d'`ambTopall`) són la prioritat Q1 abans d'enviar a revisió.
+  3. **Estrès i Concurrència:** Verificat que `src/data/supabase/xat.js:403-410` ja envia `p_id: entrada.id` a `xat_envia`. Consolidats `C0545-X1` (`missatges.js:376`) i `C0545-X2` (`Conversa.jsx`) corregits localment per Codex, i delimitats per a tancament `C0545-X3` (`XatContext.jsx:883-885`), `P1-15` (`C2-01` `useTitularDeConnexio.js`, `C2-02` `GestioMembres.jsx`), `C11-03` i `P1-16` (`C2-04` taules a `353px/385px`).
+- **Tasca 2 · Gran DAFO (Salfumant Radical) i Matriu d'Eisenhower (`IDEA-01`..`IDEA-31`, `P0`..`P2`):**
+  1. Classificats tots els ítems en els 4 quadrants d'Eisenhower amb criteris de tancament mesurables.
+  2. **Arquitectura de Reutilització Q2 (Sense Duplicar Motors):** Confirmació HTTP real a `src/data/telemetria.js:184-192` (`C0545-S3`); proveïdor lliure (Apertium/LibreTranslate) a `traduccio.php` darrere del contracte existent de `src/data/traductor.js` (`C0545-S1`) i actualització de `TranslationsSection.jsx` (`C0545-S2`); càpsules culturals verificades dins del motor BM25 de `src/data/iaiaLocal.js`.
+- **Tasca 3 · Diagnòstic del Xat Fluid (`sdp-xat`):**
+  - Verificada l'estabilització de referències (`estabilitza` a `Conversa.jsx:118`), l'ancoratge geomètric de scroll i el compositor d'emoticones. En mode remot, preservada l'honestedat d'autoria del servidor potenciant la consulta assistida local amb `ConsultaIAIA.jsx` / `iaiaLocal.js`.
+- **Tasca 4 · Automillora i Govern de Plantilles (`C0545-D1`):**
+  - Diagnosticat el desfasament de `prompt_consell.md:104` (que anomenava Sollutia proveïdor de backend i duplicava la taula `Registre`): sincronitzar el seu bloc de Model B i versió amb `prompt_local.md` mantenint ambdues rutes vives a `.agents/protocolledge.json`.
+- **Llibre Mestre i Portes:** Actualitzat [[03_llibre_mestre_tasques_i_idees]] (`IDEA-31` i `P1-17`). `porta-olivera.mjs` i `document.mjs check` en codi `0`. Zero processos en segon pla ni crons actius.
+
+
 ## ESTAT_ACTUAL · 2026-10-25T04:05:33+00:00 · Codex · Gauntlet 0200 segona passada: SQL i port verificats, tres P2 oberts
 
 Torn documental `torn_68333fac-debb-4924-9a1d-e3edd6e89d0b` reutilitzat, pla 0200 vinculat. Informe [[261025_0200_auditoria_codex]] v1.1.0. HEAD `1c110f954f6e9191ff04ffeaa8e32a0821149267`; reforma sense commit. Cap canvi de producte, migració aplicada, push ni desplegament per Codex.

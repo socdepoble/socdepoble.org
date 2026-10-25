@@ -28,6 +28,15 @@
  * AbortError, i només quan la persona no accepta les normes de convivència
  * (Fase D, 261020, tasca 2: la porta d'abans del primer missatge, vegeu
  * «Moderació» més avall); qui l'envia torna a posar el text al camp.
+ * Gauntlet 261025_0545 · Els enviaments d'un mateix fil ixen d'un en un i en
+ * l'ordre en què s'escriuen (encuaEnviament), i sense xarxa (navigator.onLine
+ * fals) una fallada de xarxa no gasta reintents: la bombolla es queda
+ * `pendent` fins que torna la xarxa o la pàgina, amb el mateix id (XC-03).
+ * Gauntlet 261025_0545 (D2) · Eixa espera és per a la conversa que la persona
+ * té davant. Qui envia per programa i espera cada enviament (Connectar)
+ * passa `{ esperaLaXarxa: false }`: els reintents de sempre i una resposta
+ * acotada, i si el fil ja té una bombolla que espera la xarxa, la seua queda
+ * en error sense eixir (ni passa davant ni s'hi queda).
  *
  * MODERACIÓ (Fase D, 261020, tasca 2; pla 261020_1300)
  * ────────────────────────────────────────────────────
@@ -68,6 +77,10 @@
  *     exposa amb `esperaAntics(filId)`: Conversa no el torna a demanar sol
  *     dins de l'espera, ni després de la tercera fallada o d'un error no
  *     reintentable (només el botó o la xarxa que torna, `online`).
+ *   · Gauntlet 261025_0545 (XC-13) · Una lectura o una marca fallida d'un fil
+ *     no posa `avis` (no tapa la llista): és `avisFil(filId)`, i se'n va amb
+ *     la lectura bona següent del fil. Una sola lectura en vol per fil
+ *     (XC-01), i posar-se al dia buida el forat en una crida (XC-02).
  *
  * LECTURA (XAT-C08)
  * ─────────────────
@@ -181,7 +194,7 @@ import {
 } from '../../data/backendPort.js';
 import { subjecteDeXat } from '../../data/contracte.js';
 import {
-  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi,
+  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esIdPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi,
   missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte
 } from '../../data/xatsPerDefecte.js';
 import useNivellIaia from '../realitat/useNivellIaia.js';
@@ -266,6 +279,11 @@ const ESPERES_ANTICS = Object.freeze([2000, 5000]);
 const MAX_FALLADES_ANTICS = ESPERES_ANTICS.length + 1;
 /* Agrupació de les marques de lectura per conversa. */
 const MS_MARQUES = 2000;
+/* Gauntlet 261025_0545 (XC-02) · Posar-se al dia d'un fil: les pàgines
+   incrementals seguides que una sola lectura demana mentre tornen plenes.
+   xat_nous en torna com a molt 100, i el fil de pàgina LIMIT_PAGINA (50):
+   una pàgina amb LIMIT_PAGINA o més pot ser plena. La resta, al tic següent. */
+const MAX_PAGINES_NOUS = 5;
 /* La ruta del xat, també dins d'un espai /e/:slug/xat. */
 const RUTA_XAT = /(^|\/)xat(\/|$)/;
 /* Una sola llista buida: els derivats buits no canvien de referència. */
@@ -282,6 +300,11 @@ const errorSenseCapacitat = () => Object.assign(
 
 /* Un fil de pàgina que encara llegixes sense ser-ne participant (remot). */
 const esVisitant = (mapa, filId) => mapa[filId]?.participant === false;
+
+/* Gauntlet 261025_0545 (XC-14) · Un fil que no es llig mai al port: el xat
+   de només lectura de Javi i les files d'ajuda per defecte (que XatSection
+   obri per la seua via). No hi ha cap lectura que esperar. */
+const senseLecturaAlPort = (filId) => filId === ID_FIL_DE_MOSTRA_DE_JAVI || esIdPerDefecte(filId);
 
 /* B04 · L'espera fins al tic següent de la llista després de `fallades`
    fallades seguides. Pura. XatSection la reutilitza per a tornar a obrir un
@@ -384,6 +407,14 @@ const BUIT = {
   carregantAntics: () => false,
   esperaAntics: () => null,
   carregaMesAntics: async () => false,
+  /* Gauntlet 261025_0545 (XC-14) · Fora del proveïdor no hi ha cap lectura
+     que esperar: el fil es dona per carregat i sense avís. */
+  filCarregat: () => true,
+  avisFil: () => null,
+  recarregaFil: () => {},
+  /* Gauntlet 261025_0545 (D5) · Ni avís ni lectura en vol. */
+  tipusAvisFil: () => null,
+  llegintFil: () => false,
   llistaFresca: true,
   avisLlista: null,
   sendChatMessage: async () => [],
@@ -415,6 +446,31 @@ function espera(ms, signal) {
       signal?.removeEventListener('abort', alAbortar);
       resolve(true);
     }, ms);
+    signal?.addEventListener('abort', alAbortar, { once: true });
+  });
+}
+
+/* Gauntlet 261025_0545 (XC-03) · El navegador diu que no hi ha xarxa. Només
+   val el `false`: un `true` no garantix res, i llavors manen els reintents.
+   Sense finestra no hi ha cap event que esperar: també manen els reintents. */
+const senseXarxa = () => typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.onLine === false;
+
+/** Gauntlet 261025_0545 (XC-03) · Espera que torne la xarxa ('online') o que
+ *  la pàgina torne a la vista. Torna `false` si el senyal s'avorta. */
+function esperaXarxa(signal) {
+  return new Promise((resolve) => {
+    if (signal?.aborted) { resolve(false); return; }
+    const acaba = (valor) => {
+      window.removeEventListener('online', alTornar);
+      document.removeEventListener('visibilitychange', alVeure);
+      signal?.removeEventListener('abort', alAbortar);
+      resolve(valor);
+    };
+    const alTornar = () => acaba(true);
+    const alVeure = () => { if (!document.hidden) acaba(true); };
+    const alAbortar = () => acaba(false);
+    window.addEventListener('online', alTornar);
+    document.addEventListener('visibilitychange', alVeure);
     signal?.addEventListener('abort', alAbortar, { once: true });
   });
 }
@@ -624,6 +680,29 @@ export function XatProvider({ children, config }) {
      l'operació que les porta: una renovació les avorta, i l'efecte del relleu
      les torna a demanar amb l'operació nova sense eixir de «carregant». */
   const carregantAnticsRef = useRef(new Map());
+  /* Gauntlet 261025_0545 (XC-01) · La lectura del fil que vola, una per fil:
+     { op, deNou, promesa }. Qui en demana una altra mentre vola només la
+     marca `deNou` i n'espera la mateixa promesa (vegeu carregaMissatges). */
+  const lecturesFilRef = useRef(new Map());
+  /* Gauntlet 261025_0545 (XC-13, XC-14) · Per fil i dins de l'àmbit: si la
+     primera lectura ja ha anat bé (`carregats`) i l'avís NO bloquejant de
+     l'última lectura o marca fallida (`avisosFil`), que pinta la conversa i
+     no tapa la llista. `avis` continua sent només el de la llista. */
+  const [carregats, setCarregats] = useState({});
+  const carregatsRef = useRef({});
+  const [avisosFil, setAvisosFil] = useState({});
+  const avisosFilRef = useRef({});
+  /* Gauntlet 261025_0545 (D5) · Per fil, si vola una lectura que la vista ha
+     de saber (publicaLectura): la del fil encara sense carregar o amb avís. */
+  const [llegint, setLlegint] = useState({});
+  const llegintRef = useRef({});
+  /* Gauntlet 261025_0545 (ordre d'enviament) · La cua d'enviaments de cada
+     fil: la promesa, que mai rebutja, de l'últim enviament encuat. */
+  const cuesEnviamentRef = useRef(new Map());
+  /* Gauntlet 261025_0545 (D2) · Per fil, quants enviaments esperen ara la
+     xarxa (XC-03) i qui de la cua vol saber quan n'hi entra un:
+     { esperen, oients }. */
+  const esperesXarxaRef = useRef(new Map());
   /* Últim seq del qual ja s'ha avisat (o vist) per fil, per a no repetir avisos. */
   const ultimSeqAvisat = useRef({});
   const avisadorRef = useRef(null);
@@ -634,7 +713,6 @@ export function XatProvider({ children, config }) {
   }
 
   const genFils = useRef(0);
-  const genMissatges = useRef(0);
 
   /* Els refs són la font de veritat per als camins asíncrons; l'estat, per al render.
      Auditoria 261007 (B) · Els fils també: `filsRef` s'escriu alhora que
@@ -664,7 +742,66 @@ export function XatProvider({ children, config }) {
     visitantsRef.current = nou;
     setVisitants(nou);
   }, []);
+  /* Gauntlet 261025_0545 (XC-13, XC-14) · Els dos mapes per fil, amb la
+     mateixa regla: si res no canvia, cap render. */
+  const marcaCarregat = useCallback((filId) => {
+    if (carregatsRef.current[filId]) return;
+    carregatsRef.current = { ...carregatsRef.current, [filId]: true };
+    setCarregats(carregatsRef.current);
+  }, []);
+  /* Gauntlet 261025_0545 (D5) · Publica si vola una lectura del fil, només
+     quan la vista en pot pintar alguna cosa: el fil encara sense carregar
+     («Carregant la conversa…») o amb avís (el botó de tornar-ho a provar,
+     ocupat). Un fil ja carregat i sense avís no es publica: el sondeig no
+     repinta la conversa cada 5 o 30 s per a res (Auditoria 261007, B).
+     Publicada una vegada, es queda fins que la lectura acaba. */
+  const publicaLectura = useCallback((filId) => {
+    const ara = llegintRef.current[filId] === true;
+    const importa = Object.hasOwn(avisosFilRef.current, filId) || carregatsRef.current[filId] !== true;
+    const nou = lecturesFilRef.current.has(filId) && (ara || importa);
+    if (nou === ara) return;
+    const seguent = { ...llegintRef.current };
+    if (nou) seguent[filId] = true;
+    else delete seguent[filId];
+    llegintRef.current = seguent;
+    setLlegint(seguent);
+  }, []);
+  /* Gauntlet 261025_0545 (D5) · L'avís porta de quina operació ve: 'lectura'
+     (els missatges o l'historial) o 'marca' (la de lectura), perquè la vista
+     no diga d'una marca fallida que no s'ha pogut carregar la conversa. Si
+     arriba mentre vola una lectura, ara la vista l'ha de saber. */
+  const posaAvisFil = useCallback((filId, text, tipus) => {
+    const previ = avisosFilRef.current[filId];
+    if (previ?.text !== text || previ?.tipus !== tipus) {
+      avisosFilRef.current = { ...avisosFilRef.current, [filId]: { text, tipus } };
+      setAvisosFil(avisosFilRef.current);
+    }
+    publicaLectura(filId);
+  }, [publicaLectura]);
+  const llevaAvisFil = useCallback((filId) => {
+    if (!Object.hasOwn(avisosFilRef.current, filId)) return;
+    const nou = { ...avisosFilRef.current };
+    delete nou[filId];
+    avisosFilRef.current = nou;
+    setAvisosFil(nou);
+  }, []);
   useEffect(() => () => agrupador.current?.cancela(), []);
+  /* Gauntlet 261025_0545 (MISSED P3) · La marca que esperava l'agrupació
+     (MS_MARQUES) es perdia si la pàgina s'amagava o es tancava abans. Ara ix
+     quan la pestanya s'amaga (l'últim moment fiable, sobretot al mòbil) i en
+     'pagehide'. Un canvi d'àmbit continua cancel·lant-les (la purga: mai les
+     d'A com a B), i desmuntar també, perquè l'operació ja és avortada. */
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
+    const buida = () => agrupador.current?.buidaTot();
+    const alAmagar = () => { if (document.hidden) buida(); };
+    window.addEventListener('pagehide', buida);
+    document.addEventListener('visibilitychange', alAmagar);
+    return () => {
+      window.removeEventListener('pagehide', buida);
+      document.removeEventListener('visibilitychange', alAmagar);
+    };
+  }, []);
 
   const registraAvisador = useCallback((fn) => { avisadorRef.current = fn; }, []);
 
@@ -737,6 +874,18 @@ export function XatProvider({ children, config }) {
       falladesAnticsRef.current = {};
       ultimSeqAvisat.current = {};
       agrupador.current?.cancela();
+      /* Gauntlet 261025_0545 · Ni les lectures i els enviaments encuats, ni
+         els fils ja carregats o els seus avisos passen a l'àmbit nou. */
+      lecturesFilRef.current.clear();
+      cuesEnviamentRef.current.clear();
+      carregatsRef.current = {};
+      setCarregats({});
+      avisosFilRef.current = {};
+      setAvisosFil({});
+      /* Gauntlet 261025_0545 (D2, D5) · Ni les esperes de xarxa ni les lectures publicades. */
+      esperesXarxaRef.current.clear();
+      llegintRef.current = {};
+      setLlegint({});
       setFilActiu(null);
       setAvis(null);
       /* B04 · L'àmbit nou encara no ha carregat cap llista. */
@@ -848,58 +997,116 @@ export function XatProvider({ children, config }) {
   }, [joId, config, captura, vigent, avisaSiCal, mutaFils, mutaVisitants]);
 
   /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ──
-     Torna true, false o null com carregaFils (null: una càrrega posterior l'ha superada). */
-  const carregaMissatges = useCallback(async (filId) => {
+     Torna true o false com carregaFils.
+     Gauntlet 261025_0545 (XC-01) · Una sola lectura en vol per fil. Abans,
+     cada crida (cada avís del canal) superava la que volava i en llençava la
+     resposta: amb avisos més seguits que una volta de xarxa, la conversa
+     oberta no rebia res fins que la ràfega parava, i cada avís era una
+     petició. Ara, si n'hi ha una en vol, la crida només la marca `deNou` i
+     n'espera la mateixa promesa; la lectura que torna S'APLICA sempre
+     (avança el cursor) i, si estava marcada, se'n fa UNA més. L'única guarda
+     de generació que queda és la de l'operació (vigent): una renovació o un
+     altre àmbit. Els avisos no es filtren pel seq: el cursor no sap si el
+     forat ja és ple (el missatge propi confirmat no el mou, vegeu cursorRef).
+     Gauntlet 261025_0545 (XC-02) · Mentre una lectura incremental torna plena,
+     se'n demana la pàgina següent, cada una aplicada, fins a MAX_PAGINES_NOUS;
+     abans, cada tic en portava 100 i un fil ja visitat amb 350 de nous tardava
+     més d'un minut a arribar al final. L'adaptador no canvia. */
+  const carregaMissatges = useCallback((filId) => {
     const op = captura();
-    if (!filId || !joId || !vigent(op)) return false;
-    const meua = ++genMissatges.current;
-    /* Auditoria 261007 (B) · El cursor de servidor (cursorRef), mai el seq
-       màxim del magatzem: el missatge propi confirmat no el mou. */
-    const desDe = cursorRef.current[filId] ?? null;
-    const incremental = desDe != null;
-
-    try {
-      await hostReady(op.controller.signal);
-      if (!vigent(op)) return false;
-      const opcions = { ...config, signal: op.controller.signal };
-      if (incremental) opcions.despresDeSeq = desDe;
-      if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
-      const bruts = await loadMissatges(filId, opcions);
-      if (!vigent(op)) return false;
-      /* Superada: el cursor no avança i la càrrega vigent torna a demanar el forat. */
-      if (meua !== genMissatges.current) return null;
-      const nous = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
-      /* Auditoria 261007 (B) · Només una lectura acceptada avança el cursor, i
-         mai cap arrere. Una càrrega completa sense cap missatge el deixa a 0
-         (cursor vàlid per a xat_nous): un fil buit no torna a fer una càrrega
-         completa a cada sondeig. */
-      const maxim = seqMaxim(nous);
-      cursorRef.current[filId] = incremental ? Math.max(desDe, maxim ?? desDe) : (maxim ?? 0);
-      /* Auditoria 261007 (B) · Un sondeig incremental sense res nou no muta
-         res: ni el magatzem ni els derivats, ni la conversa oberta es repinta
-         cada 5 o 30 s per a res. El separador «Hui»/«Ahir» del dia nou el
-         porta el sondeig de la llista (vegeu carregaFils). */
-      if (incremental && !nous.length) return true;
-      mutaMissatges((previs) => ({
-        ...previs,
-        [filId]: fusionaPerSeq(incremental ? previs[filId] || [] : [], nous)
-      }));
-      /* Un pendent que el servidor ja torna amb el seu id és un missatge confirmat. */
-      mutaPendents((previs) => retiraConfirmats(previs, filId, nous));
-      if (incremental) {
-        for (const m of nous) avisaSiCal(filId, m.seq, m.usuariId, m.author);
-      } else {
-        setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: nous.length >= LIMIT_PAGINA, carregant: false } }));
-        if (maxim != null) ultimSeqAvisat.current[filId] = Math.max(ultimSeqAvisat.current[filId] || 0, maxim);
-      }
-      return true;
-    } catch (error) {
-      if (!vigent(op)) return false;
-      if (meua !== genMissatges.current) return null;
-      setAvis(error?.message || 'No s\'han pogut carregar els missatges.');
-      return false;
+    if (!filId || !joId || !vigent(op)) return Promise.resolve(false);
+    const enVol = lecturesFilRef.current.get(filId);
+    if (enVol && enVol.op === op) {
+      enVol.deNou = true;
+      return enVol.promesa;
     }
-  }, [joId, config, captura, vigent, avisaSiCal, mutaMissatges, mutaPendents]);
+    const lectura = { op, deNou: false, promesa: null };
+    lecturesFilRef.current.set(filId, lectura);
+    /* Gauntlet 261025_0545 (D5) · llegintFil, si la vista l'ha de saber. */
+    publicaLectura(filId);
+
+    /* Una lectura, aplicada: { ok, plena }. */
+    const llegix = async () => {
+      /* Auditoria 261007 (B) · El cursor de servidor (cursorRef), mai el seq
+         màxim del magatzem: el missatge propi confirmat no el mou. */
+      const desDe = cursorRef.current[filId] ?? null;
+      const incremental = desDe != null;
+      try {
+        await hostReady(op.controller.signal);
+        if (!vigent(op)) return { ok: false, plena: false };
+        const opcions = { ...config, signal: op.controller.signal };
+        if (incremental) opcions.despresDeSeq = desDe;
+        if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
+        const bruts = await loadMissatges(filId, opcions);
+        if (!vigent(op)) return { ok: false, plena: false };
+        const nous = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
+        /* Auditoria 261007 (B) · Només una lectura acceptada avança el cursor, i
+           mai cap arrere. Una càrrega completa sense cap missatge el deixa a 0
+           (cursor vàlid per a xat_nous): un fil buit no torna a fer una càrrega
+           completa a cada sondeig. */
+        const maxim = seqMaxim(nous);
+        cursorRef.current[filId] = incremental ? Math.max(desDe, maxim ?? desDe) : (maxim ?? 0);
+        /* Gauntlet 261025_0545 (XC-13, XC-14) · El fil ja s'ha llegit bé una
+           vegada en este àmbit, i l'avís d'una lectura fallida se'n va. */
+        marcaCarregat(filId);
+        llevaAvisFil(filId);
+        /* Auditoria 261007 (B) · Un sondeig incremental sense res nou no muta
+           res: ni el magatzem ni els derivats, ni la conversa oberta es repinta
+           cada 5 o 30 s per a res. El separador «Hui»/«Ahir» del dia nou el
+           porta el sondeig de la llista (vegeu carregaFils). */
+        if (incremental && !nous.length) return { ok: true, plena: false };
+        /* Gauntlet 261025_0545 (Codex C0545-X3) · La càrrega completa ja no
+           buida el magatzem: hi conserva els confirmats PROPIS que han arribat
+           mentre volava (seq més alt que el màxim de la pàgina), que abans
+           desapareixien fins al sondeig següent. El cursor el continua
+           governant la lectura (maxim): el forat d'abans del meu ja arribarà.
+           Si la pàgina porta el mateix id, mana la pàgina (un esborrat, també). */
+        mutaMissatges((previs) => ({
+          ...previs,
+          [filId]: fusionaPerSeq(
+            incremental ? previs[filId] || []
+              : (previs[filId] || []).filter((m) => m.seq != null && m.seq > (maxim ?? 0)),
+            nous
+          )
+        }));
+        /* Un pendent que el servidor ja torna amb el seu id és un missatge confirmat. */
+        mutaPendents((previs) => retiraConfirmats(previs, filId, nous));
+        if (incremental) {
+          for (const m of nous) avisaSiCal(filId, m.seq, m.usuariId, m.author);
+        } else {
+          setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: nous.length >= LIMIT_PAGINA, carregant: false } }));
+          if (maxim != null) ultimSeqAvisat.current[filId] = Math.max(ultimSeqAvisat.current[filId] || 0, maxim);
+        }
+        return { ok: true, plena: incremental && nous.length >= LIMIT_PAGINA };
+      } catch (error) {
+        if (!vigent(op)) return { ok: false, plena: false };
+        /* Gauntlet 261025_0545 (XC-13) · Abans, `avis`: l'error que TAPA la
+           llista de converses fins al sondeig bo següent. Ara és un avís del
+           fil, que no bloqueja res i se'n va amb la lectura bona següent. */
+        posaAvisFil(filId, error?.message || 'No s\'han pogut carregar els missatges.', 'lectura');
+        return { ok: false, plena: false };
+      }
+    };
+
+    lectura.promesa = (async () => {
+      try {
+        for (let pagines = 1; ; pagines += 1) {
+          lectura.deNou = false;
+          const { ok, plena } = await llegix();
+          if (!vigent(op)) return false;
+          /* XC-01 · L'han tornada a demanar mentre volava: una lectura més. */
+          if (lectura.deNou) { pagines = 0; continue; }
+          /* XC-02 · Una pàgina plena, la següent, fins a MAX_PAGINES_NOUS. */
+          if (!ok || !plena || pagines >= MAX_PAGINES_NOUS) return ok;
+        }
+      } finally {
+        /* Una lectura d'una operació avortada no esborra la que ja vola amb la nova. */
+        if (lecturesFilRef.current.get(filId) === lectura) lecturesFilRef.current.delete(filId);
+        publicaLectura(filId);
+      }
+    })();
+    return lectura.promesa;
+  }, [joId, config, captura, vigent, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
 
   /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
   const carregaMesAntics = useCallback(async (filId) => {
@@ -926,10 +1133,13 @@ export function XatProvider({ children, config }) {
       /* B09 · El primer èxit reinicia el comptador i lleva l'espera. */
       delete falladesAnticsRef.current[filId];
       setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: antics.length >= LIMIT_PAGINA, carregant: false } }));
+      /* Gauntlet 261025_0545 (XC-13) · Una lectura bona del fil lleva el seu avís. */
+      llevaAvisFil(filId);
       return true;
     } catch (error) {
       if (!vigent(op)) return false;
-      setAvis(error?.message || 'No s\'ha pogut carregar l\'historial.');
+      /* Gauntlet 261025_0545 (XC-13) · Avís del fil, no `avis`: no tapa la llista. */
+      posaAvisFil(filId, error?.message || 'No s\'ha pogut carregar l\'historial.', 'lectura');
       /* Auditoria 261008 (B09) · Sense xarxa, la crida falla en mil·lisegons
          i l'observador de Conversa, que es tornava a crear amb `carregant`,
          la tornava a demanar a l'instant: un bucle de peticions. Cada fallada
@@ -945,7 +1155,7 @@ export function XatProvider({ children, config }) {
       /* La d'una operació avortada no esborra la que el relleu ja ha llançat. */
       if (carregantAnticsRef.current.get(filId) === op) carregantAnticsRef.current.delete(filId);
     }
-  }, [joId, config, captura, vigent, carregaMissatges, mutaMissatges]);
+  }, [joId, config, captura, vigent, carregaMissatges, mutaMissatges, posaAvisFil, llevaAvisFil]);
 
   /* ── Càrrega inicial. `joId` a la clau: canviar de sessió recarrega. ──
      Decisió 1 · Una renovació també hi torna (carregaFils penja de l'operació),
@@ -1032,11 +1242,19 @@ export function XatProvider({ children, config }) {
       desconnecta();
       if (!viu || !vigent(op) || !filActiu || amagat()) return;
       const versio = versioSub;
+      /* CUR-03 · El callback pot arribar abans de resoldre l'obertura:
+         l'últim estat del canal mana sobre el resultat inicial. */
+      let estatCanal = null;
       const alRebre = (error, dades) => {
         if (!viu || !vigent(op) || versio !== versioSub) return;
-        if (error) { canalViu = false; return; }
-        /* El canal només avisa: els missatges es demanen sempre per seq. */
-        if (dades?.tipus === 'nous' && dades.filId === filActiu) carregaMissatges(filActiu);
+        if (error) { estatCanal = false; canalViu = false; return; }
+        /* Un avís vàlid prova que el canal viu, també després d'una
+           reconnexió. Les dades es demanen sempre pel cursor de seq. */
+        if (dades?.tipus === 'nous' && dades.filId === filActiu) {
+          estatCanal = true;
+          canalViu = true;
+          carregaMissatges(filActiu);
+        }
       };
       let promesa;
       try {
@@ -1049,11 +1267,13 @@ export function XatProvider({ children, config }) {
         if (!sub) return;
         if (viu && vigent(op) && versio === versioSub) {
           subscripcio = sub;
-          canalViu = !res.error;
+          canalViu = estatCanal ?? !res.error;
         } else {
           donaDeBaixa(sub);
         }
-      }).catch(() => { canalViu = false; });
+      }).catch(() => {
+        if (viu && vigent(op) && versio === versioSub) canalViu = false;
+      });
     };
 
     connectaRealtime();
@@ -1138,8 +1358,10 @@ export function XatProvider({ children, config }) {
     };
   }, [joId, filActiu, carregaFils, carregaMissatges, tokenEstat, token, config, captura, vigent]);
 
-  /* ── Enviament amb reintents: sempre el mateix id (XAT-A25) ── */
-  const executaEnviament = useCallback(async (filId, id, cos, respostaA = null) => {
+  /* ── Enviament amb reintents: sempre el mateix id (XAT-A25) ──
+     Gauntlet 261025_0545 (D2) · `esperaLaXarxa` fals (Connectar): sense
+     xarxa, els reintents de sempre en lloc de l'espera de XC-03. */
+  const executaEnviament = useCallback(async (filId, id, cos, respostaA = null, esperaLaXarxa = true) => {
     const op = captura();
     if (!vigent(op)) return [];
     /* Una resposta porta l'id del missatge citat; el port ja l'accepta
@@ -1149,7 +1371,10 @@ export function XatProvider({ children, config }) {
     /* Integració 261024 (Codex C-02) · Un rebuig per les normes (SDP-MOD-428)
        torna a obrir la porta UNA sola vegada per enviament. */
     let normesReobertes = false;
-    for (let intent = 0; ; intent += 1) {
+    /* Gauntlet 261025_0545 (XC-03) · `intent` només puja amb un reintent que
+       gasta (els de sempre i el de les normes), no amb l'espera de la xarxa. */
+    let intent = 0;
+    for (;;) {
       try {
         /* T63.2 · En un fil de pàgina que llegixes com a visitant, el primer missatge hi entra. */
         const visitant = esVisitant(visitantsRef.current, filId);
@@ -1174,8 +1399,40 @@ export function XatProvider({ children, config }) {
         return [definitiu];
       } catch (error) {
         if (!vigent(op)) return [];
+        /* Gauntlet 261025_0545 (XC-03) · Sense xarxa (el navegador ho diu),
+           una fallada de xarxa no gasta cap reintent: abans, els tres
+           s'esgotaven en uns 10 s i la bombolla quedava en error, i res no la
+           reenviava en tornar la cobertura. Ara es queda 'pendent' i espera
+           que torne la xarxa o que la pàgina torne a la vista, i ho torna a
+           provar amb el MATEIX id (el servidor és idempotent per id). Mentre
+           espera, la cua del fil (encuaEnviament) reté els següents: ixen en
+           ordre i d'un en un (el límit de 15 per 5 s, trg_rate_limit_xat). Un
+           error no reintentable, o els reintents esgotats amb xarxa, fan el
+           camí de sempre. Una renovació talla l'espera com talla els
+           reintents (interromEnviaments: la bombolla passa a error). El text
+           només viu en memòria: desar-lo al dispositiu és decisió del Mestre. */
+        if (error?.retriable && esperaLaXarxa && senseXarxa()) {
+          /* Gauntlet 261025_0545 (D2) · Els de programa encuats darrere ho
+             saben ara (encuaEnviament): no esperaran la xarxa amb esta. */
+          const esperes = esperesXarxaRef.current.get(filId) || { esperen: 0, oients: new Set() };
+          esperesXarxaRef.current.set(filId, esperes);
+          esperes.esperen += 1;
+          for (const oient of [...esperes.oients]) oient();
+          let seguir;
+          try {
+            seguir = await esperaXarxa(op.controller.signal);
+          } finally {
+            esperes.esperen -= 1;
+            if (!esperes.esperen && !esperes.oients.size && esperesXarxaRef.current.get(filId) === esperes) {
+              esperesXarxaRef.current.delete(filId);
+            }
+          }
+          if (!seguir || !vigent(op)) return [];
+          continue;
+        }
         if (error?.retriable && intent < MAX_REINTENTS) {
           const seguir = await espera(esperaReintent(intent), op.controller.signal);
+          intent += 1;
           if (!seguir || !vigent(op)) return [];
           continue;
         }
@@ -1193,7 +1450,7 @@ export function XatProvider({ children, config }) {
           normesReobertes = true;
           const acceptades = await moderacio.asseguraNormes({ rebutjades: true });
           if (!vigent(op)) return [];
-          if (acceptades === true) continue;
+          if (acceptades === true) { intent += 1; continue; }
         }
         /* Onada 6 · `codiError` deixa que la bombolla diga en la llengua de
            la interfície els codis SDP que té traduïts (errorsXat.js). */
@@ -1207,13 +1464,62 @@ export function XatProvider({ children, config }) {
     }
   }, [joId, config, captura, vigent, mutaFils, mutaMissatges, mutaPendents, mutaVisitants, carregaFils]);
 
+  /* Gauntlet 261025_0545 (MISSED P2, ordre d'enviament) · Els enviaments d'un
+     mateix fil, en l'ordre en què s'escriuen: cada un espera que l'anterior
+     acabe (enviat, en error o tallat). Abans anaven en paral·lel i, si el
+     primer esperava un reintent, el segon el passava davant i el servidor el
+     numerava abans: tothom els veia al revés. Amb la cua buida ix en el mateix
+     tic (la bombolla i la crida, com sempre); un altre fil no espera. */
+  /* Gauntlet 261025_0545 (D2) · `abandona` (els de programa, que no esperen
+     la xarxa): si el fil té, o arriba a tindre mentre este espera el torn, un
+     enviament que espera la xarxa (XC-03), este no s'hi queda ni el passa
+     davant: `abandona()` el deixa en error i en torna la resposta. El
+     següent de la cua continua darrere de l'anterior. */
+  const encuaEnviament = useCallback((filId, tasca, abandona = null) => {
+    const anterior = cuesEnviamentRef.current.get(filId);
+    let actual;
+    if (!anterior) actual = tasca();
+    else if (!abandona) actual = anterior.then(tasca);
+    else {
+      const mapa = esperesXarxaRef.current;
+      const esperes = mapa.get(filId) || { esperen: 0, oients: new Set() };
+      if (esperes.esperen > 0) actual = Promise.resolve(abandona());
+      else {
+        mapa.set(filId, esperes);
+        actual = new Promise((resol) => {
+          let fet = false;
+          const oient = () => acaba(abandona);
+          function acaba(fn) {
+            if (fet) return;
+            fet = true;
+            esperes.oients.delete(oient);
+            if (!esperes.esperen && !esperes.oients.size && mapa.get(filId) === esperes) mapa.delete(filId);
+            resol(fn());
+          }
+          esperes.oients.add(oient);
+          anterior.then(() => acaba(tasca));
+        });
+      }
+    }
+    const cua = (abandona && anterior ? Promise.all([anterior, actual]) : actual).then(() => undefined, () => undefined);
+    cuesEnviamentRef.current.set(filId, cua);
+    cua.then(() => { if (cuesEnviamentRef.current.get(filId) === cua) cuesEnviamentRef.current.delete(filId); });
+    return actual;
+  }, []);
+
   /* ── Enviar: la bombolla es pinta abans de la xarxa (L4). No llança. ──
      D7 · Defensa en profunditat: a un fil on no es pot escriure (els Avisos
      per a qui no n'és administrador) no s'envia res ni es pinta cap bombolla.
      El Compositor ja no hi mostra el formulari i el servidor ho rebutja
      (SDP-XAT-011).
      `opcions.respostaA`: l'id del missatge al qual es respon (la cita del
-     patró de missatgeria). */
+     patró de missatgeria).
+     Gauntlet 261025_0545 (D2) · `opcions.esperaLaXarxa` (cert si no es diu):
+     fals per a qui envia per programa i espera cada enviament (Connectar,
+     missatgeAlXat). Sense xarxa, la resposta arriba acotada, com abans de
+     XC-03: els reintents de sempre i [] amb la bombolla en error, que es
+     queda al xat per a tornar-la a provar. La conversa que la persona té
+     davant no el passa: hi continua l'espera de la xarxa. */
   const sendChatMessage = useCallback(async (fil, text, opcions = {}) => {
     const op = captura();
     /* Relleu 261007 · Guardada d'abans d'una renovació: la versió vigent. */
@@ -1225,6 +1531,7 @@ export function XatProvider({ children, config }) {
     const cos = String(text ?? '').trim();
     if (!filId || !cos) return [];
     const respostaA = opcions?.respostaA ? String(opcions.respostaA) : null;
+    const esperaLaXarxa = opcions?.esperaLaXarxa !== false;
 
     const id = generaId();
     const pendent = {
@@ -1245,8 +1552,20 @@ export function XatProvider({ children, config }) {
       error: null
     };
     mutaPendents((previs) => afigPendent(previs, filId, pendent));
-    return executaEnviament(filId, id, cos, respostaA);
-  }, [joId, captura, vigent, accioVigent, mutaPendents, executaEnviament]);
+    const tasca = () => executaEnviament(filId, id, cos, respostaA, esperaLaXarxa);
+    if (esperaLaXarxa) return encuaEnviament(filId, tasca);
+    /* Gauntlet 261025_0545 (D2) · El fil espera la xarxa per una bombolla
+       d'abans: esta no ix (no la passa davant) i queda en error, a mà. */
+    const abandona = () => {
+      if (vigent(op)) {
+        mutaPendents((previs) => actualitzaPendent(previs, id, {
+          estatEnviament: 'error', error: 'No s\'ha enviat: no hi ha xarxa.', codiError: 'XARXA'
+        }));
+      }
+      return [];
+    };
+    return encuaEnviament(filId, tasca, abandona);
+  }, [joId, captura, vigent, accioVigent, mutaPendents, executaEnviament, encuaEnviament]);
 
   /* ── Fase D (261020, tasca 2; crítica 261020, troballa 1) · La porta de les
      normes de convivència, UNA sola i ací: és l'únic sendChatMessage que
@@ -1319,8 +1638,9 @@ export function XatProvider({ children, config }) {
     const trobat = trobaPendent(pendentsRef.current, missatgeId);
     if (!trobat || trobat.missatge.estatEnviament !== 'error') return [];
     mutaPendents((previs) => actualitzaPendent(previs, missatgeId, { estatEnviament: 'pendent', error: null, codiError: null }));
-    return executaEnviament(trobat.filId, missatgeId, trobat.missatge.text, trobat.missatge.respostaA || null);
-  }, [joId, captura, vigent, mutaPendents, executaEnviament]);
+    /* Gauntlet 261025_0545 (ordre d'enviament) · També a la cua del seu fil. */
+    return encuaEnviament(trobat.filId, () => executaEnviament(trobat.filId, missatgeId, trobat.missatge.text, trobat.missatge.respostaA || null));
+  }, [joId, captura, vigent, mutaPendents, executaEnviament, encuaEnviament]);
 
   const descartaFallit = useCallback((missatgeId) => {
     if (!vigent(captura())) return;
@@ -1334,12 +1654,12 @@ export function XatProvider({ children, config }) {
      l'avís: l'agrupador (missatges.js) l'ha de saber per a no donar-la per
      enviada i acceptar-la de nou en la lectura següent. Qui la crida fora de
      l'agrupador (marcaLlegides) s'ho empassa: l'avís ja s'ha pintat.
-     Pendent del Mestre: amb una fallada PERSISTENT (RLS, servidor caigut) i
-     la conversa a la vista, cada sondeig de la llista torna els no llegits
-     del servidor, la lectura torna a marcar, falla i l'avís torna a tapar la
-     llista. L'avís és el de sempre; el que canvia és que ara reapareix a
-     cada sondeig en lloc de quedar-se una sola vegada amb la pastilla
-     encallada. */
+     Amb una fallada PERSISTENT (RLS, servidor caigut) i la conversa a la
+     vista, cada sondeig de la llista torna els no llegits del servidor, la
+     lectura torna a marcar i torna a fallar.
+     Gauntlet 261025_0545 (XC-13) · L'avís ja no és `avis`, que tapava la
+     llista a cada fallada, sinó el del fil (avisFil), que no bloqueja res i
+     se'n va amb la lectura bona següent del fil. */
   const enviaMarca = useCallback(async (filId, seq) => {
     const op = captura();
     if (!vigent(op)) return;
@@ -1352,7 +1672,7 @@ export function XatProvider({ children, config }) {
       }
     } catch (error) {
       if (vigent(op)) {
-        setAvis(error?.message || 'No s\'ha pogut marcar com a llegit.');
+        posaAvisFil(filId, error?.message || 'No s\'ha pogut marcar com a llegit.', 'marca');
         throw error;
       }
       /* Decisió 1 · Una marca en vol que la renovació ha tallat es torna a
@@ -1368,7 +1688,7 @@ export function XatProvider({ children, config }) {
          mig torna a esperar el relleu. Sense acció vigent, l'error original. */
       return despresDelRelleu(op, accionsRef, 'enviaMarca', [filId, seq], () => { throw error; });
     }
-  }, [config, captura, vigent, mutaFils]);
+  }, [config, captura, vigent, mutaFils, posaAvisFil]);
   /* L'agrupador crida sempre l'última enviaMarca, que passa captura(). */
   enviaMarcaRef.current = enviaMarca;
 
@@ -1657,6 +1977,46 @@ export function XatProvider({ children, config }) {
   const comunitats = useMemo(() => (visible ? agrupaComunitats(filsVisibles) : CAP), [visible, filsVisibles]);
   const contactesFrequents = useMemo(() => (visible ? calculaContactesFrequents(filsComptats, null, joId) : CAP), [visible, filsComptats, joId]);
   const filAmagat = useCallback((filId) => (dins() ? esFilAmagat(filId) : false), [dins, esFilAmagat]);
+  /* Gauntlet 261025_0545 (XC-14) · Contracte amb la vista. Abans, mentre la
+     primera lectura d'un fil volava (o després que fallara), Conversa deia
+     «Cap missatge encara. Inicia la conversa!» d'un fil que en tenia.
+       · filCarregat(filId): cert quan la primera lectura del fil ha anat bé
+         en este àmbit; en llavor i en local, i amb un fil que no té res per
+         llegir al port (el de mostra de Javi, una fila d'ajuda per defecte),
+         cert des del primer moment; fals mentre la primera lectura remota
+         vola o si ha fallat;
+       · avisFil(filId): l'avís no bloquejant de l'última lectura o marca
+         fallida del fil (el text cru: l'etiqueta la traduïx la vista), o null;
+       · recarregaFil(filId): torna a llegir el fil ara (si ja en vola una,
+         en farà una més quan torne). No torna res.
+     Gauntlet 261025_0545 (D5) · Dos més, per a la vista:
+       · tipusAvisFil(filId): de quina operació ve l'avís del fil, 'lectura'
+         (els missatges o l'historial) o 'marca' (la de lectura), o null;
+       · llegintFil(filId): cert mentre vola una lectura del fil que encara
+         no s'ha carregat o que té avís (el «Carregant…» i el botó de tornar-ho
+         a provar, ocupat). D'un fil carregat i sense avís, el sondeig no es
+         publica (no repinta res) i torna fals (vegeu publicaLectura). */
+  const filCarregat = useCallback((filId) => {
+    if (filId == null || filId === '') return false;
+    if (modeDades !== 'remote' || senseLecturaAlPort(filId)) return true;
+    return dins() && carregats[filId] === true;
+  }, [modeDades, dins, carregats]);
+  const avisFil = useCallback(
+    (filId) => (dins() && Object.hasOwn(avisosFil, filId) ? avisosFil[filId].text : null),
+    [dins, avisosFil]
+  );
+  const tipusAvisFil = useCallback(
+    (filId) => (dins() && Object.hasOwn(avisosFil, filId) ? avisosFil[filId].tipus ?? null : null),
+    [dins, avisosFil]
+  );
+  const llegintFil = useCallback(
+    (filId) => dins() && llegint[filId] === true,
+    [dins, llegint]
+  );
+  const recarregaFil = useCallback((filId) => {
+    if (!filId || !dins() || senseLecturaAlPort(filId)) return;
+    carregaMissatges(filId);
+  }, [dins, carregaMissatges]);
 
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
@@ -1692,6 +2052,14 @@ export function XatProvider({ children, config }) {
     carregantAntics,
     esperaAntics,
     carregaMesAntics,
+    /* Gauntlet 261025_0545 (XC-14) · Si el fil ja s'ha llegit, el seu avís
+       no bloquejant i tornar-lo a llegir ara. */
+    filCarregat,
+    avisFil,
+    recarregaFil,
+    /* Gauntlet 261025_0545 (D5) · De quina operació ve l'avís i si en vola la lectura. */
+    tipusAvisFil,
+    llegintFil,
     /* Fase D (261020, tasca 2) · Amb la porta de les normes (enviaAmbNormes). */
     sendChatMessage: enviaAmbNormes,
     sendChatMedia,
@@ -1715,7 +2083,8 @@ export function XatProvider({ children, config }) {
     iaiaApagada,
     esFilAmagat: filAmagat
   }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, missatgesDerivats,
-    totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
+    totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
+    enviaAmbNormes, sendChatMedia, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat]);
 

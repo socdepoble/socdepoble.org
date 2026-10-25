@@ -5,7 +5,7 @@
  * backend de Sóc de Poble, no a WordPress, i no es toquen.
  *
  * DUES CÒPIES. Les opcions són de la base de dades, no de la carpeta: les
- * compartix qualsevol altra còpia del plugin (un zip sense socdepoble-enxufe/
+ * compartix qualsevol altra còpia del plugin (un zip sense socdepoble/
  * a l'arrel s'instal·la en una carpeta nova, al costat de la vella). Si una
  * altra còpia continua activa en este lloc, en un altre lloc de la xarxa o a
  * tota la xarxa, esborrar esta carpeta no esborra res: els Ajustos, l'estat

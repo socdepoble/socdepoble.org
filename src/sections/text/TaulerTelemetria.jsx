@@ -19,7 +19,7 @@ import {
  *      (DNT/GPC) es distingixen: el segon no es pot desfer des d'ací.
  *   3. El tauler públic d'Umami, en un iframe aïllat, només si el node té
  *      VITE_UMAMI_SHARE_URL. Sense enllaç, un estat buit honest.
- *   4. El que ha eixit d'este navegador: darrersEnviaments(), refrescat amb
+ *   4. Els intents d'este navegador: darrersEnviaments(), refrescat amb
  *      l'esdeveniment sdp:telemetria. Així es comprova «Connectar» sense backend.
  *
  * `config` s'injecta en les proves; en l'app és la configuració de compilació.
@@ -29,8 +29,8 @@ const CONFIG_COMPILADA = configTelemetria();
 
 /* Motius de telemetria.js en paraules de plaça. */
 const MOTIUS = {
-  umami: 'Enviat al comptador.',
-  amfitrio: 'Passat al comptador de la pàgina amfitriona.',
+  umami: 'Petició iniciada al comptador; recepció no comprovada.',
+  amfitrio: 'Delegat al comptador de la pàgina amfitriona; recepció no comprovada.',
   apagada: "No s'ha enviat: la telemetria està apagada en este navegador.",
   'sense-configurar': "No s'ha enviat: el comptador no està configurat.",
   'amfitrio-compta-visites': "No s'ha enviat: la pàgina amfitriona ja compta les visites.",
@@ -42,7 +42,7 @@ const MOTIUS = {
 };
 
 function estatEnParaules({ enviat, motiu }) {
-  return MOTIUS[motiu] || (enviat ? 'Enviat.' : `No s'ha enviat (${motiu || 'motiu desconegut'}).`);
+  return MOTIUS[motiu] || (enviat ? 'Intent iniciat; recepció no comprovada.' : `No s'ha enviat (${motiu || 'motiu desconegut'}).`);
 }
 
 /* La mateixa lectura que telemetriaApagada() (data/telemetria.js:63-64). El
@@ -101,7 +101,7 @@ export default function TaulerTelemetria({ config = CONFIG_COMPILADA }) {
     <section className="sdp-telemetria" aria-labelledby={`${id}-titol`}>
       <h3 id={`${id}-titol`}>Telemetria: què comptem i com ho pots comprovar</h3>
       <p>
-        A <strong>Sóc de Poble</strong> comptem les visites i l'acte de «Connectar» amb un comptador <strong>Umami</strong>. Per a comptar <strong>no carreguem cap programa extern</strong> de rastreig comercial: el missatge l'envia el codi de la mateixa aplicació, i més avall pots vore en directe cada intent que ha eixit, o no, del teu navegador.
+        A <strong>Sóc de Poble</strong> comptem les visites i l'acte de «Connectar» amb un comptador <strong>Umami</strong>. Per a comptar <strong>no carreguem cap programa extern</strong> de rastreig comercial: el codi de la mateixa aplicació inicia la petició, i més avall pots vore en directe els intents de comptar d'este navegador.
       </p>
 
       <h4>Què es compta i què no</h4>
@@ -190,11 +190,12 @@ export default function TaulerTelemetria({ config = CONFIG_COMPILADA }) {
         </EstatBuit>
       )}
 
-      <h4>El que ha enviat este navegador</h4>
+      <h4>Els intents de comptar d'este navegador</h4>
       <p className="sdp-telemetria__nota">
-        <strong>Evidència directa des de la memòria del teu navegador:</strong> cada intent de comptar des que has obert esta pestanya, enviat o no, del més recent al més antic
-        (fins a 20). «Enviat» vol dir que ha eixit del navegador: el comptador no en torna confirmació. La
-        llista viu només en la memòria d'esta pestanya.
+        <strong>Evidència directa des de la memòria del teu navegador:</strong> cada intent de comptar des que has obert esta pestanya, iniciat o no, del més recent al més antic
+        (fins a 20). «Petició iniciada» vol dir que s'ha demanat l'enviament al navegador; «Delegat», que
+        s'ha passat l'acte al comptador de la pàgina amfitriona. Esta llista no comprova si el missatge ha
+        eixit, si s'ha rebut o si s'ha acceptat. Viu només en la memòria d'esta pestanya.
       </p>
       {enviaments.length ? (
         <ol className="sdp-telemetria__llista">

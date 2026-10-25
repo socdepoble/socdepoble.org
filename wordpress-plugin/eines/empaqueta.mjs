@@ -41,7 +41,11 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-export const SLUG = 'socdepoble-enxufe';
+/* Gauntlet 261025_0545 (WP-01) · La carpeta del plugin: arrel de cada zip de WordPress i
+   adaptadors.wordpress.slug del canal. És el SOCDEPOBLE_ENXUFE_SLUG del PHP, que la comprova a
+   valida_canal, al bloqueig i a l'arrel del zip (comprovaSlug ho exigix abans d'empaquetar).
+   Decisió del Mestre (261023): una sola variant universal, amb l'slug de WordPress.org. */
+export const SLUG = 'socdepoble';
 export const ESQUEMA = 'sdp.release.v1';
 export const FITXER_RELEASE = 'sdp-release.json';
 export const FITXER_INVENTARI = 'sdp-inventari.json';
@@ -264,6 +268,22 @@ export function clauIncrustada(textActualitzador) {
   const m = textActualitzador.match(/define\(\s*'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA'\s*,\s*'([0-9a-fA-F]*)'\s*\)/);
   if (!m) throw new Error('includes/actualitzador.php no definix SOCDEPOBLE_ENXUFE_CLAU_PUBLICA.');
   return m[1].toLowerCase();
+}
+
+/** La carpeta que exigix el plugin: SOCDEPOBLE_ENXUFE_SLUG de socdepoble-enxufe.php. */
+export function slugDelPlugin(textPhp) {
+  const m = textPhp.match(/^const SOCDEPOBLE_ENXUFE_SLUG\s*=\s*'([^']*)';/m);
+  if (!m) throw new Error('socdepoble-enxufe.php no definix SOCDEPOBLE_ENXUFE_SLUG.');
+  return m[1];
+}
+
+/* Gauntlet 261025_0545 (WP-01) · Cap paquet amb una arrel o un slug de canal que el seu propi PHP
+   rebutjaria: el 9027265e1 va canviar la constant i l'empaquetador no se'n va assabentar. */
+function comprovaSlug(textPhp) {
+  const delPlugin = slugDelPlugin(textPhp);
+  if (delPlugin !== SLUG) {
+    throw new Error(`El plugin exigix la carpeta ${delPlugin} i l'empaquetador en fa ${SLUG}: el PHP rebutjaria el canal i el zip.`);
+  }
 }
 
 /* ──────────────────────────── Textos del paquet ──────────────────────────── */
@@ -528,7 +548,10 @@ export function creaPaquetLleuger({ arrelPlugin = ARREL_PLUGIN } = {}) {
   verificaPaquet(dist, release, camins);
   if (camins.some(cami => cami.startsWith('assets/'))) throw new Error('El connector lleuger encara porta assets locals.');
   const adaptador = fitxersAdaptador(arrelPlugin).map(({ rel, dades }) => {
-    if (rel === 'socdepoble-enxufe.php') dades = Buffer.from(estampaVersio(dades.toString('utf8'), release.versio));
+    if (rel === 'socdepoble-enxufe.php') {
+      comprovaSlug(dades.toString('utf8'));
+      dades = Buffer.from(estampaVersio(dades.toString('utf8'), release.versio));
+    }
     if (rel === 'readme.txt') {
       dades = Buffer.from(`${estampaReadme(dades.toString('utf8'), release.versio)}\n== Lightweight media ==\n\nThis manually installed package loads its images and media from ${mitjans.origen}/assets/. Each request sends the visitor's IP address and browser user agent to that server. The application code, fonts and knowledge index are included in the plugin. Terms and privacy: https://socdepoble.org/legal\n`);
     }
@@ -629,6 +652,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     if (!fitxer) throw new Error(`Falta ${rel} a l'adaptador.`);
     return fitxer.dades.toString('utf8');
   };
+  comprovaSlug(text('socdepoble-enxufe.php'));
   const requisits = requisitsDe(text('socdepoble-enxufe.php'), text('readme.txt'));
   const phpEstampat = estampaVersio(text('socdepoble-enxufe.php'), versio);
   const readmeEstampat = estampaReadme(text('readme.txt'), versio);
