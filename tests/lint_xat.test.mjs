@@ -37,7 +37,9 @@ const COMPONENTS_XAT = [
   /* Fase E (261020, tasca 3): la llista viva d'«El Comú» dins de la bombolla. */
   'TargetaLlistaComu',
   /* Pla 261022_1425: el calaix d'emoticones gran del compositor. */
-  'SelectorEmoticones'
+  'SelectorEmoticones',
+  /* 261026 (prompt 261026_1615, tasca 2): «Envia a…», el que arriba del menú «Compartir». */
+  'DialegCompartir'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
 /* Les proves dels components de l'onada 3 (també la de les files, T67), de

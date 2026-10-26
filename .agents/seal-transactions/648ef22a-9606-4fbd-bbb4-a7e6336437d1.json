@@ -1,0 +1,22 @@
+{
+  "id": "648ef22a-9606-4fbd-bbb4-a7e6336437d1",
+  "session": "fb5e809a-2e07-4b2f-8a3f-b9b23f5021b4",
+  "operationId": "local-notifications-8.3.1",
+  "claim": "fb5e809a-2e07-4b2f-8a3f-b9b23f5021b4:governance-write",
+  "planHash": "aca50682692e15334e87349ce96b4b0332da38f478d2ce260aa992c21a92ffc9",
+  "beforeSeal": "6a72d0fac54b3ed1cedd1076f93b96b72392e2f55d0423343699236f8b595ba5",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "96541d96c760d690a8a9f3dadb467bbdfec90053fdb5e3f62156f8b243358cd5",
+      "after": "20efd646c11202f125dd57e8839c82e9ea5671f09aff212b56f2c38c498b4840"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "693b0c30834eb3c57fb79d2dcfbaa904f957769b2a91f888fc18aa5ae033ea48",
+      "after": "739d67839b74644a1477c45340775f0104d107cd222cb0362bd0abce8e182599"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518"
+}

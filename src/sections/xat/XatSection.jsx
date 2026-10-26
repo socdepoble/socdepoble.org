@@ -101,6 +101,11 @@ import FiltresCerca, { IconaFiltre } from './components/FiltresCerca.jsx';
 import ResultatsCercaXat from './components/ResultatsCercaXat.jsx';
 import FitxaComunitat from './components/FitxaComunitat.jsx';
 import DialegNovaConversa from './components/DialegNovaConversa.jsx';
+import DialegCompartir from './components/DialegCompartir.jsx';
+import { esNomesLectura } from './components/Compositor.jsx';
+import useCompartitPendent from './useCompartitPendent.js';
+import { desaEsborrany, llegixEsborrany } from './esborranys.js';
+import { descartaCompartit, prenTextCompartit, triaDestiCompartit } from '../../config/compartirNatiu.js';
 import { esComunitat } from './components/FilaConversa.jsx';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
@@ -453,6 +458,27 @@ function XatWorkspace({ origen = null }) {
 
   const threads = useMemo(() => filsAmbCaraDelPoble(chatThreads || CAP, pobleDeLaLlista, caraDelPoble), [chatThreads, pobleDeLaLlista, caraDelPoble]);
   const comunitats = useMemo(() => comunitatsAmbCaraDelPoble(comunitatsDelXat, pobleDeLaLlista, caraDelPoble), [comunitatsDelXat, pobleDeLaLlista, caraDelPoble]);
+  /* 261026 (ordre del Mestre, prompt 261026_1615, tasca 2) · El que arriba del
+     menú «Compartir» del dispositiu espera a «Envia a…» (DialegCompartir). Les
+     converses on es pot escriure, amb l'oberta primer i la resta per l'últim
+     missatge. Amb imatges, només les que en poden rebre (com onSendMedia de
+     Conversa, més avall): en remot i mai el xat de la IAIA. Tampoc el directe
+     amb qui has bloquejat: Conversa no hi deixa escriure. */
+  const compartit = useCompartitPendent();
+  const filsPerCompartir = useMemo(() => {
+    if (!compartit) return CAP;
+    const ambFitxers = compartit.fitxers.length > 0;
+    const obert = String(threadId ?? '');
+    const bloquejat = (fil) => {
+      const contrapart = moderacioDelXat?.objectiuDeContrapart?.(fil) ?? null;
+      return Boolean(contrapart) && moderacioDelXat.esPersonaBloquejada?.(contrapart.id) === true;
+    };
+    return threads
+      .filter((fil) => fil && !fil.arxivat && !fil.perDefecte && !esComunitat(fil) && fil.participant !== false
+        && !esNomesLectura(fil) && !esFilAmagat(fil.id) && !bloquejat(fil)
+        && !(ambFitxers && (modeDades !== 'remote' || esXatDeLaIAIA(fil))))
+      .sort((a, b) => (Number(String(b.id) === obert) - Number(String(a.id) === obert)) || (instantDe(b.ultimAl) - instantDe(a.ultimAl)));
+  }, [compartit, threads, threadId, esFilAmagat, modeDades, moderacioDelXat]);
   /* Auditoria 261008 (B04 i B05) · `trobatViu` és el fil de la URL tal com
      és ara a la llista (o entre els visitants). obriFil només es crida amb
      este: un id que no hi és (ni entre els visitants) no es demana mai a
@@ -593,6 +619,21 @@ function XatWorkspace({ origen = null }) {
      s'ha pogut obrir, la reserva: copiar l'informe o enviar-lo per correu. */
   const informe = useInformaDUnError({ t, navigate, showToast, pathname });
   const [revisioEsborrany, setRevisioEsborrany] = useState(0);
+  /* 261026 (prompt 261026_1615, tasca 2) · Triar la conversa: les imatges les
+     pren el compositor d'eixa conversa (ControlsAdjunt); un text sol, a
+     l'esborrany, com l'informe d'un error. */
+  const triaCompartir = (fil) => {
+    // El lot és de qui tria (Gauntlet 261026_1615, C1615-01): ningú més no el pren.
+    if (!triaDestiCompartit(fil.id, joId)) return;
+    const text = prenTextCompartit(fil.id, joId);
+    if (text && ambitEstable) {
+      const clau = `${ambitEstable}::${fil.id}`;
+      const previ = llegixEsborrany(clau);
+      desaEsborrany(clau, previ ? `${previ}\n\n${text}` : text);
+      if (String(fil.id) === String(threadId ?? '')) setRevisioEsborrany((n) => n + 1);
+    }
+    navigate(`/xat/${enc(fil.id)}`);
+  };
   const informaDUnError = async () => {
     const obert = String(threadId ?? '');
     const filId = await informe.informa();
@@ -1524,14 +1565,33 @@ function XatWorkspace({ origen = null }) {
   else if (vistaActiva) activaAlRail = vistaActiva;
 
   return (
-    <ClosCaXat
-      activa={activaAlRail}
-      comunitatActiva={comunitatId || null}
-      middleTitle={titolVista || titolLlista}
-      middleIcon={entradaVista ? entradaVista.Icona : MessageCircle}
-      middleColumn={middleColumn}
-      rightColumn={rightColumn}
-    />
+    <>
+      <ClosCaXat
+        activa={activaAlRail}
+        comunitatActiva={comunitatId || null}
+        middleTitle={titolVista || titolLlista}
+        middleIcon={entradaVista ? entradaVista.Icona : MessageCircle}
+        middleColumn={middleColumn}
+        rightColumn={rightColumn}
+      />
+      {/* Fora de les columnes: en estret una de les dues no es pinta, i el
+          diàleg ha d'aparéixer siga on siga la persona dins del Xat. */}
+      <DialegCompartir
+        obert={Boolean(compartit) && !compartit.desti}
+        lot={compartit}
+        fils={filsPerCompartir}
+        filActiuId={threadId ?? null}
+        senseSessio={senseSessio}
+        carregant={status !== 'ready' || (!joId && !senseSessio)}
+        tornar={rutaActual}
+        onTria={triaCompartir}
+        onDescarta={descartaCompartit}
+        onVes={(ruta) => navigate(ruta)}
+        locale={locale}
+        t={t}
+        joId={joId}
+      />
+    </>
   );
 }
 
@@ -1635,7 +1695,7 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
 function AccesAlXat({ t, tornar, navigate }) {
   return (
     <div className="sdp-alerta sdp-xat-acces">
-      <p>{t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}</p>
+      <p>{t('section.xat.sessio.calEntrar', 'Benvinguda a Sóc de Poble')}</p>
       <div className="sdp-alerta__accions">
         <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar }))}>
           {t('section.xat.sessio.connectar', 'Connectar-se')}

@@ -472,7 +472,8 @@ test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
   fireEvent.click(screen.getByRole('menuitemradio', { name: /Preferits/ }));
   const cos = document.querySelector('input[name="xatSearch"]').closest('aside').querySelector(':scope > .sdp-workspace-column__body');
   expect(cos.querySelector('.sdp-workspace-state').textContent).toBe('Cap conversa amb este filtre.');
-  expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Entra per buscar persones i enviar missatges.')).toHaveLength(1);
+  // Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · La benvinguda substituïx la crida a entrar.
+  expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Benvinguda a Sóc de Poble')).toHaveLength(1);
   expect([...cos.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Connectar-se', 'Registrar-se']);
 });
 

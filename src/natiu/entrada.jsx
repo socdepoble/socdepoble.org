@@ -11,8 +11,9 @@
  * §2.1c, dia 1). Fase D (261020, tasca 1) · El pas 0 ja hi és: l'adaptador de
  * l'entrada amb Apple i Google (natiu/entradaSocial.js), que és l'únic que
  * nomena un paquet natiu i només el carrega al primer toc. Encara arribaran, i
- * en este ordre: l'1 (tria del poble i sessió duradora), el 4a (selector de
- * poble) i el 5 (escoltes natives).
+ * en este ordre: l'1 (tria del poble i sessió duradora) i el 4a (selector de
+ * poble). El 5 (escoltes natives) hi és des del 261026: el menú «Compartir»
+ * (natiu/compartirNatiu.js) i els avisos del xat (natiu/avisosNatius.js).
  *
  * Diferències amb main.jsx, totes del §1.2:
  *   · el mode de dades és sempre 'remote';
@@ -27,7 +28,11 @@ import { configura, arrenca } from '../host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from '../config/capaDelPaquet.js';
 import { registraEntradaNativa } from '../config/entradaNativa.js';
 import { creaEntradaSocial, entradaSenseProveidors, plataformaDelDispositiu } from './entradaSocial.js';
-import { pintaAmbDiccionari } from '../config/i18n.js';
+import { createTranslator, llegeixIdiomaTriat, pintaAmbDiccionari, resolIdioma } from '../config/i18n.js';
+import { lliuraCompartit, registraAlliberadorCompartit } from '../config/compartirNatiu.js';
+import { registraAvisosNatius } from '../config/avisosNatius.js';
+import { creaReceptorCompartit } from './compartirNatiu.js';
+import { creaAvisosNatius } from './avisosNatius.js';
 
 const styleNode = document.createElement('style');
 styleNode.textContent = styles;
@@ -63,6 +68,29 @@ const init = () => {
          només hi ha el correu. */
       try { registraEntradaNativa(entradaSenseProveidors(plataformaDelDispositiu())); }
       catch (e2) { console.error('[natiu] Ni tan sols la plataforma de l’entrada nativa:', e2); }
+    }
+
+    /* Pas 5 del §1.2 (261026, ordre del Mestre, prompt 261026_1615): les
+       escoltes natives, abans del primer pintat perquè una compartició o el
+       toc d'un avís que han obert l'App no es perden. El menú «Compartir» i
+       els avisos del xat; cap dels dos tomba mai l'arrencada. */
+    /* El nom del canal d'Android es llig en crear-lo (el primer avís), amb el
+       diccionari de la llengua triada ja carregat. */
+    const canalDelXat = () => {
+      const t = createTranslator(resolIdioma({ triat: llegeixIdiomaTriat() }));
+      return {
+        nom: t('section.xat.avisNatiu.canal', 'Missatges del xat'),
+        descripcio: t('section.xat.avisNatiu.canalDescripcio', 'Avisos dels missatges nous de Sóc de Poble')
+      };
+    };
+    try { registraAvisosNatius(creaAvisosNatius({ plataforma: plataformaDelDispositiu(), canal: canalDelXat })); }
+    catch (e) { console.error('[natiu] Avisos natius no registrats:', e); }
+    const receptor = creaReceptorCompartit();
+    if (receptor) {
+      // La còpia nativa la tanca el registre: en enviar o descartar (Gauntlet 261026_1615).
+      registraAlliberadorCompartit(receptor.allibera);
+      receptor.escolta(lliuraCompartit)
+        .catch((e) => console.error('[natiu] Receptor del menú Compartir no connectat:', e));
     }
 
     /* Pas 2 del §1.2: la capa, abans de res més. El backend segellat al build

@@ -21,6 +21,15 @@
     "CapacitorCookies": {
       "enabled": false
     },
+    "SystemBars": {
+      "style": "DARK",
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_sdp",
+      "iconColor": "#0F672F"
+    },
     "SocialLogin": {
       "providers": {
         "google": true,

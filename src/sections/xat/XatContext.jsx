@@ -236,10 +236,14 @@ import {
   trobaPendent
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
+import { descartaCompartit } from '../../config/compartirNatiu.js';
 import { buidaRecents } from './emoticonesXat.js';
 import { recordaRutaForaDelXat } from './informeDError.js';
 import { recordaOrigenDelXat } from './origenDelXat.js';
 import { clauDia } from './temps.js';
+import {
+  avisaNatiu, avisosNatiusActius, avisosNatiusDisponibles, demanaPermisAvisos, idDAvis, netejaAvisosNatius, refrescaPermisAvisos
+} from '../../config/avisosNatius.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { anotaFilsBloquejats, anotaMissatgesBloquejats, senseDirectesBloquejats } from '../../config/moderacio.js';
 import { CODI_NORMES_SERVIDOR, esRebuigDeNormes } from '../../data/errorsBackend.js';
@@ -264,6 +268,11 @@ function hostReady(signal) {
 const MS_LLISTA = 25000;
 const MS_FIL = 5000;
 const MS_FIL_AMB_CANAL = 30000;
+/* 261026 (prompt 261026_1615, tasca 3) · Amb l'App fora de la vista i els avisos
+   natius concedits, la llista es mira cada minut perquè arribe l'avís del
+   sistema mentre l'App continua viva (a Android el WebView no s'atura). Sense
+   avisos natius, amagada no es mira res, com sempre. */
+const MS_LLISTA_SEGON_PLA = 60000;
 /* Auditoria 261008 (B04) · Després d'una fallada REINTENTABLE de la llista
    (xarxa, temps d'espera, 5xx), el sondeig torna a provar aviat i cada vegada
    més espaiat: 2, 5, 10 i 30 s, i després cada 60 s fins al primer èxit. Una
@@ -286,6 +295,7 @@ const MS_MARQUES = 2000;
 const MAX_PAGINES_NOUS = 5;
 /* La ruta del xat, també dins d'un espai /e/:slug/xat. */
 const RUTA_XAT = /(^|\/)xat(\/|$)/;
+const paginaAmagada = () => typeof document !== 'undefined' && document.hidden === true;
 /* Una sola llista buida: els derivats buits no canvien de referència. */
 const CAP = Object.freeze([]);
 /* Fase D (261020, tasca 2) · Sense ProveidorModeracio, ningú no és bloquejat:
@@ -481,7 +491,7 @@ function esperaXarxa(signal) {
  * que a App.jsx estan per damunt de XatProvider. Només diu qui ha escrit, mai
  * el text, i només quan la persona no és al xat.
  */
-function AvisadorXat({ registra }) {
+function AvisadorXat({ registra, ambSessio }) {
   const { pathname, search } = useLocation();
   const { showToast } = useToast();
   const { t } = useUIActions();
@@ -492,13 +502,38 @@ function AvisadorXat({ registra }) {
      la consulta, on torna la fletxa de la conversa (origenDelXat.js). */
   useEffect(() => { recordaOrigenDelXat(pathname, search); }, [pathname, search]);
   useEffect(() => {
-    registra((nom) => {
+    registra((nom, filId, { silenciat = false } = {}) => {
+      /* 261026 (prompt 261026_1615, tasca 3) · Amb l'App fora de la vista, l'avís
+         és del sistema (so i vibració), també si es va quedar al xat. Com el
+         toast, només diu de quin xat és, mai el text del missatge. */
+      if (paginaAmagada() && !silenciat && avisaNatiu({
+        id: idDAvis(filId),
+        titol: nom || t('section.xat.avisNatiu.titol', 'Sóc de Poble'),
+        cos: t('section.xat.avisNatiu.cos', 'Missatge nou'),
+        filId,
+        vigent: paginaAmagada
+      })) return;
       if (RUTA_XAT.test(String(pathname || ''))) return;
       const plantilla = t('section.xat.avisNouMissatge', 'Missatge nou de {nom}');
       showToast(String(plantilla).replace('{nom}', nom || ''));
     });
     return () => registra(null);
   }, [registra, pathname, showToast, t]);
+  /* El toc d'un avís obri el seu xat: ho fa ReceptorCompartit (App.jsx), que té el router sencer. */
+  /* El permís es demana amb context: la primera vegada que s'entra al Xat amb
+     sessió. Qui ja ha dit que sí o que no no ho torna a vore (avisosNatius.js). */
+  const alXat = RUTA_XAT.test(String(pathname || ''));
+  useEffect(() => {
+    if (ambSessio && alXat && avisosNatiusDisponibles()) demanaPermisAvisos();
+  }, [ambSessio, alXat]);
+  /* El permís es pot canviar als ajustos del sistema: es torna a llegir en tornar. */
+  useEffect(() => {
+    if (!avisosNatiusDisponibles() || typeof document === 'undefined') return undefined;
+    /* I els avisos que ja són a la barra sobren: la persona ja és dins. */
+    const alTornar = () => { if (!paginaAmagada()) { refrescaPermisAvisos(); netejaAvisosNatius(); } };
+    document.addEventListener('visibilitychange', alTornar);
+    return () => document.removeEventListener('visibilitychange', alTornar);
+  }, []);
   return null;
 }
 
@@ -705,6 +740,9 @@ export function XatProvider({ children, config }) {
   const esperesXarxaRef = useRef(new Map());
   /* Últim seq del qual ja s'ha avisat (o vist) per fil, per a no repetir avisos. */
   const ultimSeqAvisat = useRef({});
+  /* Revisió 261026 · La primera llista de l'àmbit és la línia base dels avisos;
+     un fil que apareix DESPRÉS és una conversa nova i el seu primer missatge avisa. */
+  const baseAvisosRef = useRef(false);
   const avisadorRef = useRef(null);
   const enviaMarcaRef = useRef(null);
   const agrupador = useRef(null);
@@ -811,8 +849,12 @@ export function XatProvider({ children, config }) {
      base avança igual, i en tornar-la a encendre no arriba cap avís vell. */
   const avisaSiCal = useCallback((filId, seq, autorId, nom) => {
     const s = Number(seq) || 0;
-    const previ = ultimSeqAvisat.current[filId];
-    if (previ === undefined) { ultimSeqAvisat.current[filId] = s; return; }
+    let previ = ultimSeqAvisat.current[filId];
+    if (previ === undefined) {
+      ultimSeqAvisat.current[filId] = s;
+      if (!baseAvisosRef.current) return;
+      previ = 0;
+    }
     if (s <= previ) return;
     ultimSeqAvisat.current[filId] = s;
     if (!autorId || autorId === joId) return;
@@ -823,7 +865,11 @@ export function XatProvider({ children, config }) {
       const fil = filsRef.current.find((f) => f.id === filId) || visitantsRef.current[filId];
       if (esXatDeLaIAIA(fil)) return;
     }
-    avisadorRef.current?.(nom);
+    /* 261026 (prompt 261026_1615, tasca 3) · Un xat silenciat o arxivat no fa
+       sonar el telèfon (com el comptador, que tampoc no els suma): l'avís
+       natiu, no; el toast de dins de l'App, com sempre. */
+    const fil = filsRef.current.find((f) => f.id === filId) || visitantsRef.current[filId];
+    avisadorRef.current?.(nom, filId, { silenciat: Boolean(fil?.silenciat || fil?.arxivat) });
   }, [joId]);
 
   /* Decisió 1 · Desmuntar tanca l'àmbit: els getters guardats tornen buit i
@@ -873,6 +919,7 @@ export function XatProvider({ children, config }) {
       carregantAnticsRef.current.clear();
       falladesAnticsRef.current = {};
       ultimSeqAvisat.current = {};
+      baseAvisosRef.current = false;
       agrupador.current?.cancela();
       /* Gauntlet 261025_0545 · Ni les lectures i els enviaments encuats, ni
          els fils ja carregats o els seus avisos passen a l'àmbit nou. */
@@ -967,6 +1014,7 @@ export function XatProvider({ children, config }) {
       setLlistaFresca(true);
       setAvisLlista(null);
       for (const f of nous) avisaSiCal(f.id, f.ultimSeq, f.ultimAutorId, f.name);
+      baseAvisosRef.current = true;
       return true;
     } catch (error) {
       if (!vigent(op)) return false;
@@ -1299,8 +1347,9 @@ export function XatProvider({ children, config }) {
       if (temporitzador) clearTimeout(temporitzador);
       temporitzador = null;
       const visible = !amagat();
-      if (visible) await carregaFils();
-      if (viu && vigent(op)) arma(visible ? esperaSeguent() : MS_LLISTA);
+      const vigila = !visible && avisosNatiusActius();
+      if (visible || vigila) await carregaFils();
+      if (viu && vigent(op)) arma(visible ? esperaSeguent() : vigila ? MS_LLISTA_SEGON_PLA : MS_LLISTA);
     };
 
     /* Revisió 261008 (B04) · La càrrega inicial ja pot haver fallat quan
@@ -1943,11 +1992,17 @@ export function XatProvider({ children, config }) {
   const personaPrevia = useRef(clauPersona);
   useLayoutEffect(() => {
     if (personaPrevia.current === clauPersona) return;
+    const previa = personaPrevia.current;
     personaPrevia.current = clauPersona;
     entradesFetes.current = new Set();
     buidaEsborranys();
     /* Pla 261022_1425 · Les emoticones recents tampoc passen d'una persona a l'altra. */
     buidaRecents();
+    /* Gauntlet 261026_1615 (Codex C1615-01, Gemini G1615-00) · El que s'havia
+       compartit des del menú del dispositiu tampoc: eixir d'una sessió (o canviar
+       de persona o de backend) el descarta, també el que el compositor tenia en
+       vol. Compartir abans d'entrar (convidat → persona) el conserva. */
+    if (JSON.parse(previa)[1] != null) descartaCompartit();
   }, [clauPersona]);
 
   /* Auditoria adversarial 261016 (P3) · El xat de només lectura de Javi porta
@@ -2091,7 +2146,7 @@ export function XatProvider({ children, config }) {
 
   return (
     <XatContext.Provider value={value}>
-      <AvisadorXat registra={registraAvisador} />
+      <AvisadorXat registra={registraAvisador} ambSessio={Boolean(joId)} />
       {children}
     </XatContext.Provider>
   );

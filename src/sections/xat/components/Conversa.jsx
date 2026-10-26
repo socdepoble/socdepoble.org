@@ -994,7 +994,9 @@ export default function Conversa({
       {aBaix ? null : <BotoBaixar nous={nousAvall} onBaixa={baixaAlFinal} t={t} />}
 
       {!modeSeleccio && potRespondre && !contrapartBloquejada && fil.participant !== false && onSendMedia ? (
-        <ControlsAdjunt fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale} onEnvia={async (conversa, adjunt, opcions) => {
+        <ControlsAdjunt fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}
+          onTextOrfe={(orfe) => canviaText(text.trim() ? `${text}\n\n${orfe}` : orfe)}
+          onEnvia={async (conversa, adjunt, opcions) => {
           const resultat = await onSendMedia(conversa, { ...adjunt, respostaA: resposta?.id || null }, opcions);
           if (resultat?.length) cancelaResposta();
           return resultat;

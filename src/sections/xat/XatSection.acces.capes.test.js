@@ -110,3 +110,32 @@ test('puresa visual de l’accés: sense vora lateral de cita ni fons d’alerta
   expect(valor('.sdp-xat-acces > p', 'text-align')).toBe('center');
   expect(valor('.sdp-xat-acces > .sdp-alerta__accions', 'justify-content')).toBe('center');
 });
+
+/* Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · «Connectar-se» i
+   «Registrar-se» comparteixen fila: la mateixa amplària, el buit de la
+   reixeta entre les dues i, com a molt, l'amplària de la columna del llistat. */
+const ACCIONS = '.sdp-xat-acces > .sdp-alerta__accions';
+
+test('261026 · les dues píndoles de l’accés van en línia i de la mateixa amplària, sense el 100% de sèrie', () => {
+  const pindola = `${ACCIONS} > .sdp-xat-pindola`;
+  expect(valor(pindola, 'flex')).toBe('1 1 0');
+  expect(valor(pindola, 'width')).toBe('auto');
+  expect(valor(pindola, 'min-inline-size')).toBe('max-content');
+  /* La regla de sèrie continua portant el 100%: és la de l'accés la que el desfà. */
+  expect(valor('.sdp-xat-pindola', 'width')).toBe('100%');
+});
+
+test('261026 · la fila de l’accés porta el buit de la reixeta i com a molt l’amplària de la targeta viva', () => {
+  expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-space-3)');
+  expect(valor(ACCIONS, 'max-inline-size')).toBe('var(--sdp-targeta-viva-ample)');
+  expect(valor(ACCIONS, 'justify-content')).toBe('center');
+});
+
+test('261026 · en una pantalla baixa ja cap regla de píndola: comparteixen fila sempre', () => {
+  const blocs = blocsMedia('(max-height: 500px)');
+  expect(blocs.length).toBeGreaterThan(0);
+  for (const bloc of blocs) {
+    expect(bloc).not.toContain('.sdp-xat-pindola');
+    expect(valor(`${ACCIONS} > .sdp-xat-pindola`, 'width', bloc)).toBeNull();
+  }
+});

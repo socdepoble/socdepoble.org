@@ -76,6 +76,7 @@ import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
 import { NotesProvider } from '../sections/notes/NotesContext';
 import { XatProvider } from '../sections/xat/XatContext';
+import ReceptorCompartit from '../sections/xat/ReceptorCompartit.jsx';
 import { ProveidorModeracio } from './contexts/ModeracioContext.jsx';
 /* Fase D (261020, tasca 2) · Els tres diàlegs de la moderació (denúncia,
    bloqueig i normes), que el proveïdor pinta en este ordre. */
@@ -865,6 +866,9 @@ function AppContent({ config, targetNode }) {
           <NotesDataProvider config={config}>
             <NotesProvider>
               <XatProvider config={config}>
+                {/* 261026 (prompt 261026_1615) · El menú «Compartir» del dispositiu
+                    i el toc dels avisos del xat porten al Xat (només a l'App). */}
+                <ReceptorCompartit />
                 <MultimediaProvider config={config}>
                   <AppDataLoader />
                 </MultimediaProvider>

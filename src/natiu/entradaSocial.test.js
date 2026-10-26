@@ -25,7 +25,8 @@ function connectorFals({ resultat = { idToken: JWT, accessToken: { token: 'acces
     login: vi.fn(async ({ provider }) => ({ provider, result: resultat })),
     logout: vi.fn(async () => undefined)
   };
-  return { social, carregaConnector: vi.fn(async () => social) };
+  // Com el mòdul de veres: el connector hi va dins (vegeu carregaPerDefecte).
+  return { social, carregaConnector: vi.fn(async () => ({ SocialLogin: social })) };
 }
 const promesaOberta = () => {
   let resol;
@@ -105,6 +106,62 @@ describe('initialize', () => {
     await adaptador.demana('google');
     expect(social.initialize).toHaveBeenCalledWith({ google: { webClientId: WEB, mode: 'online' } });
     expect(opcionsDInici('android', CLIENTS, ['google', 'apple'])).not.toHaveProperty('apple');
+  });
+
+  /* 261026 (torn_e6be28f2) · El connector de veres és un Proxy de Capacitor que
+     respon a qualsevol nom, també a `then`, sense cridar mai cap callback: una
+     promesa resolta amb ell no es resol mai. L'adaptador no el torna mai d'una
+     promesa, i el primer toc ja no espera els 20 s del topall. */
+  test('un connector que respon a «then» com el Proxy de Capacitor no penja l’entrada', async () => {
+    const { social } = connectorFals();
+    const trampa = new Proxy(social, { get: (objectiu, nom) => (nom === 'then' ? () => {} : objectiu[nom]) });
+    const adaptador = creaEntradaSocial({ plataforma: 'ios', clients: CLIENTS, carregaConnector: async () => ({ SocialLogin: trampa }) });
+    const penjada = Symbol('penjada');
+    const espera = new Promise((resol) => { setTimeout(() => resol(penjada), 1000); });
+    await expect(Promise.race([adaptador.demana('apple'), espera])).resolves.toMatchObject({ testimoni: JWT });
+    await expect(Promise.race([adaptador.oblida('apple').then(() => 'fet'), espera])).resolves.toBe('fet');
+    expect(social.logout).toHaveBeenCalledTimes(1);
+  });
+
+  /* 261026 (prompt 261026_1615, revisió) · La prova d'abans injecta el
+     carregador; esta passa pel de veres (carregaPerDefecte, l'import() del
+     paquet), amb el paquet substituït per un mòdul que porta la trampa dins.
+     Si el carregador tornara el connector sol, el primer toc es penjaria. El
+     nom del paquet es compon a trossos, com a frontera.test.js. */
+  describe('amb el carregador per defecte', () => {
+    const PAQUET_SOCIAL = [['@cap', 'go'].join(''), ['capa', 'citor-social-login'].join('')].join('/');
+    afterEach(() => {
+      vi.doUnmock(PAQUET_SOCIAL);
+      vi.resetModules();
+    });
+
+    test('l’import() del paquet amb el Proxy de Capacitor dins no penja el primer toc', async () => {
+      const { social } = connectorFals();
+      const trampa = new Proxy({}, {
+        get: (_, nom) => (nom === 'then' ? () => {} : social[nom])
+      });
+      vi.resetModules();
+      vi.doMock(PAQUET_SOCIAL, () => ({ SocialLogin: trampa }));
+      const { creaEntradaSocial: creaFresc } = await import('./entradaSocial.js');
+      const adaptador = creaFresc({ plataforma: 'ios', clients: CLIENTS });
+      const penjada = Symbol('penjada');
+      let temporitzador = null;
+      const espera = new Promise((resol) => { temporitzador = setTimeout(() => resol(penjada), 1000); });
+      try {
+        await expect(Promise.race([adaptador.demana('apple'), espera])).resolves.toMatchObject({ testimoni: JWT, codiAutoritzacio: CODI_APPLE });
+        await expect(Promise.race([adaptador.oblida('apple').then(() => 'fet'), espera])).resolves.toBe('fet');
+      } finally {
+        clearTimeout(temporitzador);
+      }
+      expect(social.initialize).toHaveBeenCalledTimes(1);
+      expect(social.initialize).toHaveBeenCalledWith({
+        google: { iOSClientId: IOS, iOSServerClientId: WEB, mode: 'online' },
+        apple: { redirectUrl: '', useProperTokenExchange: true }
+      });
+      expect(social.login).toHaveBeenCalledTimes(1);
+      expect(social.login.mock.calls[0][0].provider).toBe('apple');
+      expect(social.logout).toHaveBeenCalledWith({ provider: 'apple' });
+    });
   });
 
   test('un initialize fallit es torna a provar al toc següent', async () => {
@@ -196,7 +253,7 @@ describe('login', () => {
     let viu = true;
     const demanada = adaptador.demana('apple', { viu: () => viu });
     viu = false;
-    carrega.resol(social);
+    carrega.resol({ SocialLogin: social });
     await expect(demanada).rejects.toMatchObject({ code: CODI_ENTRADA_NATIVA.CANCELADA });
     expect(social.initialize).toHaveBeenCalledTimes(1);
     expect(social.login).not.toHaveBeenCalled();

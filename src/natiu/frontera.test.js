@@ -23,6 +23,8 @@ const CAP = ['@capa', 'citor'].join('');
 const AMBITS_NATIUS = Object.freeze([CAP, ['@cap', 'go'].join(''), ['@capa', 'wesome'].join('')]);
 const PAQUET_NATIU = new RegExp(['capa', 'citor'].join(''), 'i');
 const CAPGO_SOCIAL = `${['@cap', 'go'].join('')}/${['capa', 'citor-social-login'].join('')}`;
+/* 261026 (prompt 261026_1615, tasca 3) · Els avisos del xat, aprovats pel Mestre en xat. */
+const AVISOS_LOCALS = `${CAP}/local-notifications`;
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const esProva = (ruta) => /\.test\.[cm]?jsx?$/.test(ruta) || ruta.includes('/__fixtures__/');
 
@@ -266,7 +268,13 @@ describe('els adaptadors natius', () => {
      carrega de seguida els proveïdors web i llig l'emmagatzematge. El nucli del
      pont (@capacitor/core) no l'importa ningú: la plataforma es llig del global
      que injecta l'app. */
-  const ADAPTADORS_NATIUS = Object.freeze({ [`${NATIU}/entradaSocial.js`]: [CAPGO_SOCIAL] });
+  /* 261026 (prompt 261026_1615) · El segon: els avisos del xat. El menú
+     «Compartir» (compartirNatiu.js) no n'importa cap: el connector és propi de
+     l'App i es crida pel pont global, com la plataforma. */
+  const ADAPTADORS_NATIUS = Object.freeze({
+    [`${NATIU}/entradaSocial.js`]: [CAPGO_SOCIAL],
+    [`${NATIU}/avisosNatius.js`]: [AVISOS_LOCALS]
+  });
 
   test('només els adaptadors natius importen paquets natius, i només els seus', () => {
     const natius = Object.fromEntries(DEL_NATIU
@@ -282,6 +290,21 @@ describe('els adaptadors natius', () => {
     }
     expect([...codi.matchAll(FORMES[2])].map(textDe).filter(esCapacitor)).toEqual([CAPGO_SOCIAL]);
     expect(codi.includes(`${CAP}/core`)).toBe(false);
+  });
+
+  test('el connector dels avisos només arriba per import() dinàmic, i el nucli del pont no l’importa ningú', () => {
+    const codi = llig(`${NATIU}/avisosNatius.js`);
+    for (const forma of [FORMES[0], FORMES[1], FORMES[3]]) {
+      expect([...codi.matchAll(forma)].map(textDe).filter(esCapacitor), String(forma)).toEqual([]);
+    }
+    expect([...codi.matchAll(FORMES[2])].map(textDe).filter(esCapacitor)).toEqual([AVISOS_LOCALS]);
+    for (const ruta of [`${NATIU}/avisosNatius.js`, `${NATIU}/compartirNatiu.js`]) expect(llig(ruta).includes(`${CAP}/core`), ruta).toBe(false);
+  });
+
+  test('els registres del menú Compartir i dels avisos (src/config/) no importen res i no nomenen el pont', () => {
+    expect(especificadors(llig('src/config/compartirNatiu.js'))).toEqual([]);
+    expect(especificadors(llig('src/config/avisosNatius.js'))).toEqual([]);
+    for (const ruta of ['src/config/compartirNatiu.js', 'src/config/avisosNatius.js']) expect(PAQUET_NATIU.test(llig(ruta)), ruta).toBe(false);
   });
 
   test('el registre de l’entrada nativa (src/config/entradaNativa.js) no importa res i no nomena el pont', () => {

@@ -11,6 +11,12 @@
   .sdp-xat-adjunts__avis { padding: var(--sdp-space-2) var(--sdp-space-3); border-radius: var(--sdp-radi-s); background: var(--sdp-avis-fons); color: var(--sdp-avis-text); }
   /* XAT-07 · El rellotge de la gravació, al costat d'«Atura», amb números que no ballen. */
   .sdp-xat-adjunts__rellotge { align-self: center; font-variant-numeric: tabular-nums; }
+  /* 261026 (prompt 261026_1615, tasca 2) · El peu de la foto o del vídeo, sota la
+     miniatura: el mateix camp que el compositor (vora, radi i fons), d'amplària
+     sencera i diana de 48px. */
+  .sdp-xat-adjunts__peu { display: block; margin: var(--sdp-space-2) 0; }
+  .sdp-xat-adjunts__peu input { box-sizing: border-box; inline-size: 100%; min-block-size: var(--sdp-touch); padding: var(--sdp-space-2) var(--sdp-space-3); border: 1px solid var(--sdp-vora-control); border-radius: var(--sdp-radi-m); background: var(--sdp-fons-elevat); color: var(--sdp-text-cos); font: inherit; line-height: 1.5; }
+  .sdp-xat-adjunts__peu input:focus-visible { outline: var(--sdp-focus-gruix) solid var(--sdp-focus); outline-offset: var(--sdp-focus-separacio); }
   /* XAT-03 · El progrés de la pujada: la barra nativa i el percentatge. */
   .sdp-xat-adjunts__progres { display: flex; align-items: center; gap: var(--sdp-space-2); }
   .sdp-xat-adjunts__progres progress { flex: 1 1 auto; min-width: 0; accent-color: var(--sdp-accio); }

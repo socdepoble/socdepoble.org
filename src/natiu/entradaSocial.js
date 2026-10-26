@@ -79,7 +79,11 @@ export function credencialDe(proveidor, resultat, nonce) {
   return { testimoni, nonce, testimoniAcces: acces || null, nom: nom || null, codiAutoritzacio: codi || null };
 }
 
-const carregaPerDefecte = () => import('@capgo/capacitor-social-login').then((m) => m.SocialLogin);
+/* 261026 (torn_e6be28f2) · El mòdul, mai el connector sol: el connector és un
+   Proxy de Capacitor que respon a qualsevol nom, també a `then`, i una promesa
+   que es resol AMB ell no es resol mai (verificat amb el nucli 8.5.3 del pont).
+   Abans, el primer toc esperava els 20 s del topall i fallava. */
+const carregaPerDefecte = () => import('@capgo/capacitor-social-login');
 const ambTopall = (promesa, ms) => {
   let id = null;
   const topall = new Promise((_, rebutja) => {
@@ -100,10 +104,11 @@ export function creaEntradaSocial({ plataforma, clients = {}, carregaConnector =
   if (!PLATAFORMES.has(plataforma)) return null;
   const proveidors = proveidorsDe(plataforma, clients);
   let connector = null;
+  /* Resol amb { social }: el connector, embolicat (vegeu carregaPerDefecte). */
   const obri = () => (connector ??= ambTopall(
-    Promise.resolve().then(carregaConnector).then(async (social) => {
+    Promise.resolve().then(carregaConnector).then(async ({ SocialLogin: social }) => {
       await social.initialize(opcionsDInici(plataforma, clients, proveidors));
-      return social;
+      return { social };
     }),
     TOPALL_INICI_MS
   ).catch((error) => { connector = null; throw error; }));
@@ -116,7 +121,7 @@ export function creaEntradaSocial({ plataforma, clients = {}, carregaConnector =
       try {
         const nonce = nonceNou();
         const nonceXifrat = await sha256Hex(nonce);
-        const social = await obri();
+        const { social } = await obri();
         if (!viu()) throw errorNatiu(CODI_ENTRADA_NATIVA.CANCELADA, 'Entrada cancel·lada abans d’obrir el full.');
         const resposta = await social.login({ provider: proveidor, options: opcionsDeLogin(plataforma, proveidor, nonceXifrat) });
         return credencialDe(proveidor, resposta?.result, nonce);
@@ -129,7 +134,7 @@ export function creaEntradaSocial({ plataforma, clients = {}, carregaConnector =
     },
     /* Sense res carregat, res a oblidar: eixir no carrega el connector. */
     oblida: (proveidor) => (connector
-      ? connector.then((social) => social.logout({ provider: proveidor })).catch(() => undefined)
+      ? connector.then(({ social }) => social.logout({ provider: proveidor })).catch(() => undefined)
       : Promise.resolve())
   });
 }

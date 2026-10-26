@@ -4645,12 +4645,21 @@ details[open] summary.accordion-header svg:last-child {
     align-items: center;
   }
   .sdp-xat-acces > p { margin: 0; text-align: center; }
+  /* Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · «Connectar-se» i
+     «Registrar-se» van en línia, de la mateixa amplària, amb el buit de la
+     reixeta entre els dos i com a molt l'amplària de la columna del llistat
+     (--sdp-targeta-viva-ample), centrats. Abans cada píndola portava el 100%
+     de .sdp-xat-pindola i en cada línia només en cabia una. Si en un mòbil
+     molt estret els dos textos no hi caben, cadascun baixa a la seua línia. */
   .sdp-xat-acces > .sdp-alerta__accions {
-    margin: var(--sdp-space-3) 0 0;
+    margin: var(--sdp-space-3) auto 0;
     justify-content: center;
     align-items: center;
+    gap: var(--sdp-space-3);
     width: 100%;
+    max-inline-size: var(--sdp-targeta-viva-ample);
   }
+  .sdp-xat-acces > .sdp-alerta__accions > .sdp-xat-pindola { flex: 1 1 0; width: auto; min-inline-size: max-content; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu { display: flex; flex-direction: column; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > * { flex-shrink: 0; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > .sdp-xat-fitxa-comunitat { flex-grow: 1; min-height: 0; }
@@ -4669,16 +4678,15 @@ details[open] summary.accordion-header svg:last-child {
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-filtres-cerca { padding-bottom: var(--sdp-space-2); }
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-fitxa-comunitat__peu { padding-bottom: var(--sdp-space-3); }
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-vista-comunitats { padding-bottom: var(--sdp-space-4); }
-  /* En una pantalla baixa (≤ 500 px d'alt, un mòbil apaïsat), compacte: les
-     dos píndoles comparteixen fila si hi caben, amb menys coixí, i la frase
-     cau: els botons ja diuen què fan. Els missatges conserven l'espai. */
+  /* En una pantalla baixa (≤ 500 px d'alt, un mòbil apaïsat), compacte: menys
+     coixí, i la frase cau: els botons ja diuen què fan. Els missatges
+     conserven l'espai. Les dos píndoles ja comparteixen fila sempre (261026). */
   @media (max-height: 500px) {
     .sdp-alerta.sdp-xat-acces { padding: var(--sdp-space-2) var(--sdp-space-3); }
     :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu--acces > .sdp-xat-acces {
       padding-bottom: calc(var(--sdp-space-2) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
     }
     .sdp-xat-acces > p { display: none; }
-    .sdp-xat-acces > .sdp-alerta__accions > .sdp-xat-pindola { flex: 1 1 auto; width: auto; }
   }
   .sdp-xat-informe:disabled { opacity: 0.6; cursor: progress; }
   .sdp-xat-informe__nota {

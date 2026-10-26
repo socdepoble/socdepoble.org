@@ -18,7 +18,35 @@
 		5DF0D0000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5DF0D0000000000000000002 /* PrivacyInfo.xcprivacy */; };
 		5DF0D0000000000000000005 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5DF0D0000000000000000004 /* InfoPlist.strings */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		5DF0C0000000000000000002 /* CompartirNatiuPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF0C0000000000000000001 /* CompartirNatiuPlugin.swift */; };
+		5DF0C0000000000000000004 /* ControladorSdp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF0C0000000000000000003 /* ControladorSdp.swift */; };
+		5DF0C0000000000000000006 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF0C0000000000000000005 /* ShareViewController.swift */; };
+		5DF0C000000000000000000A /* Compartir.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5DF0C0000000000000000009 /* Compartir.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5DF0C0000000000000000011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5DF0C000000000000000000C;
+			remoteInfo = Compartir;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5DF0C0000000000000000010 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5DF0C000000000000000000A /* Compartir.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -39,6 +67,12 @@
 		5DF0D000000000000000000A /* gl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = gl; path = gl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		5DF0C0000000000000000001 /* CompartirNatiuPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompartirNatiuPlugin.swift; sourceTree = "<group>"; };
+		5DF0C0000000000000000003 /* ControladorSdp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControladorSdp.swift; sourceTree = "<group>"; };
+		5DF0C0000000000000000005 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		5DF0C0000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5DF0C0000000000000000008 /* Compartir.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Compartir.entitlements; sourceTree = "<group>"; };
+		5DF0C0000000000000000009 /* Compartir.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Compartir.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +84,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DF0C000000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -58,6 +99,7 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				5DF0C000000000000000000B /* Compartir */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -66,6 +108,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				5DF0C0000000000000000009 /* Compartir.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,6 +117,8 @@
 			isa = PBXGroup;
 			children = (
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
+				5DF0C0000000000000000003 /* ControladorSdp.swift */,
+				5DF0C0000000000000000001 /* CompartirNatiuPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -89,6 +134,16 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		5DF0C000000000000000000B /* Compartir */ = {
+			isa = PBXGroup;
+			children = (
+				5DF0C0000000000000000005 /* ShareViewController.swift */,
+				5DF0C0000000000000000007 /* Info.plist */,
+				5DF0C0000000000000000008 /* Compartir.entitlements */,
+			);
+			path = Compartir;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -99,10 +154,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				5DF0C0000000000000000010 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5DF0C0000000000000000012 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -111,6 +168,23 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		5DF0C000000000000000000C /* Compartir */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5DF0C0000000000000000013 /* Build configuration list for PBXNativeTarget "Compartir" */;
+			buildPhases = (
+				5DF0C000000000000000000D /* Sources */,
+				5DF0C000000000000000000E /* Frameworks */,
+				5DF0C000000000000000000F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Compartir;
+			productName = Compartir;
+			productReference = 5DF0C0000000000000000009 /* Compartir.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -125,6 +199,11 @@
 						CreatedOnToolsVersion = 9.2;
 						DevelopmentTeam = 9KNUA4JR8P;
 						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+					};
+					5DF0C000000000000000000C = {
+						CreatedOnToolsVersion = 16.0;
+						DevelopmentTeam = 9KNUA4JR8P;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -150,6 +229,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				5DF0C000000000000000000C /* Compartir */,
 			);
 		};
 /* End PBXProject section */
@@ -170,6 +250,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DF0C000000000000000000F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -179,10 +266,28 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				5DF0C0000000000000000004 /* ControladorSdp.swift in Sources */,
+				5DF0C0000000000000000002 /* CompartirNatiuPlugin.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5DF0C000000000000000000D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5DF0C0000000000000000006 /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5DF0C0000000000000000012 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5DF0C000000000000000000C /* Compartir */;
+			targetProxy = 5DF0C0000000000000000011 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -373,6 +478,54 @@
 			};
 			name = Release;
 		};
+		5DF0C0000000000000000014 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Compartir/Compartir.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9KNUA4JR8P;
+				INFOPLIST_FILE = Compartir/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.socdepoble.app.compartir;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5DF0C0000000000000000015 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Compartir/Compartir.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9KNUA4JR8P;
+				INFOPLIST_FILE = Compartir/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.socdepoble.app.compartir;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -390,6 +543,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5DF0C0000000000000000013 /* Build configuration list for PBXNativeTarget "Compartir" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DF0C0000000000000000014 /* Debug */,
+				5DF0C0000000000000000015 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

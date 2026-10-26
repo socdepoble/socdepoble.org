@@ -46,7 +46,13 @@ export const PRECOMMIT_INCLUDE = Object.freeze([
   'src/natiu/entrada*.test.{js,jsx}',
   'src/config/{hostIframeAdapter,origenPublic,origensSollutia}.test.js',
   'src/sections/gestoria/cofre/nucli/cripto.test.js',
-  'src/sections/tractors/nucli/webauthn.test.js'
+  'src/sections/tractors/nucli/webauthn.test.js',
+  /* Gauntlet 261026_1615 (Codex C1615-10, Gemini G1615-06) · El menú «Compartir»
+     i els avisos natius: aïllament entre persones, no-pèrdua, frontera i projectes natius. */
+  'src/natiu/{projecte*,avisosNatius}.test.js',
+  'src/config/{compartirNatiu,avisosNatius}.test.js',
+  'src/sections/xat/{ReceptorCompartit,XatContext.avisosNatius}.test.jsx',
+  'src/sections/xat/components/{DialegCompartir,ControlsAdjunt.compartir}.test.jsx'
 ]);
 
 /* La suite principal en fa servir 2 (vite.config.js: no satura els imports del catàleg); esta, que

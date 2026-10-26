@@ -221,7 +221,7 @@ function Contingut({
 
       {errorObrir ? <p className="sdp-xat-avis" role="alert">{errorObrir}</p> : null}
       {senseSessio ? <p className="sdp-xat-avis" role="status">
-        {t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}
+        {t('section.xat.sessio.calEntrar', 'Benvinguda a Sóc de Poble')}
         {' '}<button type="button" className="sdp-xat-pindola" onClick={() => onVes(rutaDEntrada({ tornar }))}>
           {t('section.xat.sessio.entrar', 'Entrar')}
         </button>
