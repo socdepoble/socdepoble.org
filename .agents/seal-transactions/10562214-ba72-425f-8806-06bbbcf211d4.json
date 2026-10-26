@@ -1,0 +1,77 @@
+{
+  "id": "10562214-ba72-425f-8806-06bbbcf211d4",
+  "session": "638b2199-d229-4ec4-a1fa-d57d66379f4e",
+  "operationId": "sdp0225-skills2",
+  "claim": "638b2199-d229-4ec4-a1fa-d57d66379f4e:governance-write",
+  "planHash": "3f54985b667a0761e33d3fcb498e72bc129a18e3e00701d72fe7a442764f3d00",
+  "beforeSeal": "1cff0c2695288e4207ca5c46eb35d142971425e5cb85e7a94260cc4457b196eb",
+  "files": [
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "06d5aa8120c8fed0f64d5b7d53ae24e49b3733694f424a9c08193b0ee1620682",
+      "after": "80a307d846444f138f0a1e762c8daa1ac021da2f729c188b607b3d9548e31494"
+    },
+    {
+      "path": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+      "before": "664254e3719d0cd1b2441f1d3823458654d84db0cb39b804b3db4bb096201184",
+      "after": "0bf7d80c3af2fb7d3365aae5080a0095bd59fa66648a9862d39afd2409e3a62e"
+    },
+    {
+      "path": ".agents/skills/core-temps-termodinamic/SKILL.md",
+      "before": "1f5c21f776ae1a85d6d298ef05be4b1bc6e9989f968aa76c13231e258bdb4f76",
+      "after": "acc8174971aa6896785fd4e0219189afe00cd24162a8bbcf10bb73db7293be7e"
+    },
+    {
+      "path": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "before": "fcbdfcfd88c759b3a7245f29514573437a3e2bb1373af8ec5f711788e6669d65",
+      "after": "2395f3b55338d14fa3b38cbb34e8feb03c64ccbfdde2ffd22c645c54135e6a5b"
+    },
+    {
+      "path": ".agents/skills/core-taxonomia-estricta/SKILL.md",
+      "before": "4f949498e420ce902ec6f0c35236307bfd2183afb5ea00676d974f4508346976",
+      "after": "98d5da16277dfd8ca37fc8c10392108bcd3ee2620fe077761159a6b35e490e49"
+    },
+    {
+      "path": ".agents/skills/core-llegibilitat-text/SKILL.md",
+      "before": "ade923bc69e27dd5b5a9c659d8262e6f34201634c1854650c4a0f6c27b77099d",
+      "after": "97a679dc1e34a6ef74b9d702753a4a1db78cdffc30e86dcd2cc3f0a8a2cce450"
+    },
+    {
+      "path": ".agents/skills/core-consell-i-colmena/SKILL.md",
+      "before": "002164a7d50dfe9fe819696b804c5fe68a114028dc39d2a6abdea4b3ef08db46",
+      "after": "583b7f01996e8fd9bdae501c5ba5c02ba11d4b58997ccebb6f1d2a26dd60413b"
+    },
+    {
+      "path": ".agents/skills/core-direccio-autonoma/SKILL.md",
+      "before": "35f37de883e524e3d5ec75d7a054071522095497e7cfeaeb9df9e4c8d15dd94c",
+      "after": "14a9dd5217e9430d7a55246baccf38154142fa1889e66290cc6c2d02f1742225"
+    },
+    {
+      "path": ".agents/skills/core-gauntlet-loop/SKILL.md",
+      "before": "7678bb0add269e1e28542ede470b279b8f5cc28f21a23f2195649bd3013243da",
+      "after": "c26e792bfd8da4c10a31870f6a954ed8f8b517bb3d07b018cf38bb68ea088e8b"
+    },
+    {
+      "path": ".agents/skills/core-automillora/SKILL.md",
+      "before": "b9fae0508f9c6dafd66d9c3d580c1b0b45b660636fe2f64ce608ec578b94ec68",
+      "after": "bd5a31311e29e5a64c16375cafafdab6f9fddd66b38f6bb906dc5d9b24924c6a"
+    },
+    {
+      "path": ".agents/skills/core-comprensio-reflexiva/SKILL.md",
+      "before": "9c1c70142662cdc6ced8fdd4486498c0771662b162d6d79c0e0ec7ba50b73bcc",
+      "after": "b63f6c9ee9cfa09d08afcdba1416c1b59e61651452ab2474c0db8860358f09db"
+    },
+    {
+      "path": ".agents/skills/core-salfumant-radical/SKILL.md",
+      "before": "75dcf77cd4b2c56966a5197180b63370859b162027edcceae8af3676dfc75a23",
+      "after": "6eef2a5d38404bbf81765fe835cd5787122f9218f9f73b27e084c8729b189d96"
+    },
+    {
+      "path": ".agents/skills/core-seguretat-audit/SKILL.md",
+      "before": "8fda8b84151a70091454c30f06c7216c05ddf20bd5257f9e4294d8ecf30debf8",
+      "after": "1ce54435941edd04364e60f38bef87d45b50c71ca2224f00adb45618ee89a22b"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518"
+}

@@ -146,7 +146,7 @@ Codis i fonts noves del compilador:
 | `fonts.portaDocuments` | Rep l'eixida de `checkDocuments` (`{ valid, checked, errors }`) i mesura `conformitat-documental` com a documents sense cap error sobre els comprovats. Un error que no és de cap document compta com un document més que falla. Amb `checked: 0` és `N/A`: per defecte la porta només comprova els documents canviats, i amb l'arbre net no en comprova cap. |
 | `fonts.cadenaPortes` | Rep l'eixida de `run-portes.mjs --diagnostic` (`{ valid, failures, total? }`) i mesura `cadena-portes`. |
 
-Sense alguna d'estes dues fonts, la mètrica continua en `N/A`. La closca (`tooling/brain/mapa-consola.mjs`) encara no les passa: és governança, i el canvi va en el paquet de laboratori `04_escriptori/02_investigacio_ia/261009_0400_consola_claude/`.
+Sense alguna d'estes dues fonts, la mètrica continua en `N/A`. Des del 2026-10-26, la closca (`tooling/brain/mapa-consola.mjs`) les passa: executa `porta-documents.mjs` i `run-portes.mjs --diagnostic` en un procés fill, amb temps límit, i només en llig el JSON de l'eixida estàndard. Sense script, sense JSON coherent, amb error de llançament, temps esgotat, senyal o límit de buffer, la mètrica continua en `N/A`. Una eixida 0 exigix `valid: true`; una eixida 1 exigix `valid: false`. El tancament per caducitat dels torns és una baixa administrativa i no crea ni recalcula verificacions de fitxers. Una porta roja és, a més, un avís alt: `porta-documents-roja`, un per document amb errors, i `cadena-portes-roja`, un per a la cadena.
 
 ## On viu l'eixida
 

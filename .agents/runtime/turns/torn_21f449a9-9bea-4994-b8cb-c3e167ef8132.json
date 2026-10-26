@@ -3,10 +3,10 @@
   "turn_id": "torn_21f449a9-9bea-4994-b8cb-c3e167ef8132",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-20T19:08:11.854Z",
-  "updatedAt": "2026-10-20T21:39:49.934Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T19:08:11.855Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3606,6 +3606,12 @@
       "state": "planned",
       "action": "handoff",
       "at": "2026-10-20T21:39:49.934Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3613,5 +3619,10 @@
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261020_2110_auditoria_claude_el_comu_universal_list_card.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

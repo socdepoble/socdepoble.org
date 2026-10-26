@@ -3,10 +3,10 @@
   "turn_id": "torn_e8d882de-7a49-4c0e-aaf9-696c1d8beef7",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 17,
+  "state": "closed",
+  "revision": 18,
   "createdAt": "2026-10-24T23:58:08.405Z",
-  "updatedAt": "2026-10-25T04:33:28.142Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T23:58:08.406Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3940,6 +3940,17 @@
       "file": "_wiki_de_poble/10_actes/261025_0530_acta_marmota_triomf_desplegament_produccio_i_subvencio.md",
       "at": "2026-10-25T04:33:28.142Z",
       "hash": "ce2aaf08f44967f1668c9c14ea9bc5ccd903c2c91dd23ebdf7ff6b0f268eb558"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

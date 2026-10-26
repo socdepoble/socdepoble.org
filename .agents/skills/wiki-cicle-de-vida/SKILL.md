@@ -22,7 +22,7 @@ contracte.escriu:
 # Cicle de vida documental
 
 1. Obri el torn: `node tooling/gates/obrir_torn.mjs --actor NOM --scope code --output /tmp/torn-NOM.json`. El punter és local i opcional; no sobreescriu un fitxer existent.
-2. Llig la plantilla retornada per `document.mjs context`. Crea el document amb `document.mjs create --turn-id ID --route RUTA --file CAMI --title TITOL --description DESCRIPCIO`.
+2. Per a crear documents, aplica el circuit únic de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]; esta skill governa el torn, el relleu i el tancament.
 3. Completa els camps editorials. El prompt local copia literalment Context i Olivera; valida amb `document.mjs check --file CAMI`.
 4. Vincula el pla aprovat amb `document.mjs plan --turn-id ID --file CAMI`. L’aprovació anterior continua vigent.
 5. En arbre compartit declara els fitxers propis amb `document.mjs own --turn-id ID --file CAMI`. La zona humana i els canvis de codi fora d’abast continuen vigilats globalment.

@@ -819,9 +819,12 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     font: `${CARPETA_ESCRIPTORI} · 00_index_escriptori.md`,
     prova: PROVA_MAPA
   } : { font: `${CARPETA_ESCRIPTORI} · 00_index_escriptori.md` }));
+  /* Opció (a) del Mestre (261026) · El document permanent canònic (el Llibre
+     Mestre) porta ambRebut null: no n'ha de portar, i no compta en el rebut. */
+  const ambRebutAplicable = documentsEscriptori?.filter((d) => d.ambRebut !== null);
   salut.push(metrica('escriptori-amb-rebut', documentsEscriptori ? {
-    numerador: documentsEscriptori.filter((d) => d.ambRebut === true).length,
-    denominador: documentsEscriptori.length,
+    numerador: ambRebutAplicable.filter((d) => d.ambRebut === true).length,
+    denominador: ambRebutAplicable.length,
     font: `${CARPETA_ESCRIPTORI} · ${FONT_TORNS}`,
     prova: PROVA_MAPA
   } : { font: `${CARPETA_ESCRIPTORI} · ${FONT_TORNS}` }));
@@ -915,6 +918,32 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     'tooling/gates/porta-documents.mjs', 'node tooling/gates/porta-documents.mjs'));
   salut.push(metricaDePorta('cadena-portes', fonts.cadenaPortes,
     'tooling/gates/run-portes.mjs', 'node tooling/gates/run-portes.mjs --diagnostic'));
+  /* Correcció 261026 (la closca ja passa les dues portes) · Una porta roja no
+     és només una fracció de la salut. Mentre eren N/A, «Avisos i salut» no
+     podia dir «En ordre» (BASE_DEL_VERD); mesurades, sí, i ho diria amb una
+     porta roja. Com la frontissa (Onada 6), cada document amb errors és un
+     avís alt 'porta-documents-roja' sobre el seu node, amb cada error com a
+     evidència; un error que no és de cap document va sobre la porta. La
+     cadena roja és un sol avís alt 'cadena-portes-roja': el JSON del
+     diagnòstic no diu quins passos fallen. */
+  const resultatPorta = (p) => (p && typeof p === 'object' && !Array.isArray(p) ? p : null);
+  const portaDocs = resultatPorta(fonts.portaDocuments);
+  if (portaDocs?.valid === false) {
+    const errors = Array.isArray(portaDocs.errors) ? portaDocs.errors.filter((e) => typeof e === 'string' && e.trim()) : [];
+    for (const e of errors) {
+      const doc = documentDeLError(e);
+      const peca = nodeRuta(doc ?? 'tooling/gates/porta-documents.mjs');
+      avis(peca.id, 'porta-documents-roja', 'alta', doc && e.startsWith(`${doc}: `) ? e.slice(doc.length + 2) : e);
+    }
+    if (!errors.length) avis(nodeRuta('tooling/gates/porta-documents.mjs').id, 'porta-documents-roja', 'alta', 'node tooling/gates/porta-documents.mjs');
+  }
+  const cadena = resultatPorta(fonts.cadenaPortes);
+  if (cadena?.valid === false) {
+    const passos = Number.isInteger(cadena.failures) && Number.isInteger(cadena.total)
+      ? `${cadena.failures} de ${plural(cadena.total, 'pas', 'passos')} de només lectura en roig` : null;
+    avis(nodeRuta('tooling/gates/run-portes.mjs').id, 'cadena-portes-roja', 'alta',
+      [passos, 'node tooling/gates/run-portes.mjs --diagnostic'].filter(Boolean).join(' · '));
+  }
 
   const perId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const perAresta = (a, b) => `${a.de}|${a.a}|${a.tipus}`.localeCompare(`${b.de}|${b.a}|${b.tipus}`);

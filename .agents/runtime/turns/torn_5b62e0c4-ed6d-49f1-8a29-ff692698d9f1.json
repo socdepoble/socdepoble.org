@@ -3,10 +3,10 @@
   "turn_id": "torn_5b62e0c4-ed6d-49f1-8a29-ff692698d9f1",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 9,
+  "state": "closed",
+  "revision": 10,
   "createdAt": "2026-10-15T22:21:06.703Z",
-  "updatedAt": "2026-10-16T00:33:24.405Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-16T22:21:06.703Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3835,6 +3835,17 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-16T00:33:24.404Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

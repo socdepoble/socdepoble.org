@@ -3,10 +3,10 @@
   "turn_id": "torn_0b08c39b-2bf0-4275-be82-0ed0c59efc56",
   "actor": "Codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-23T23:27:36.684Z",
-  "updatedAt": "2026-10-23T23:31:35.200Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-24T23:27:36.685Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3685,6 +3685,12 @@
         ".agents/LEDGER.md"
       ],
       "at": "2026-10-23T23:31:35.199Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3692,5 +3698,10 @@
     "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
     ".agents/ESTAT.md",
     ".agents/LEDGER.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

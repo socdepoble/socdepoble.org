@@ -81,7 +81,10 @@ export const CODIS_ALTS = Object.freeze({
   'tasca-morta': 'tasques mortes',
   'ledger-invalid': 'el LEDGER invàlid',
   // Onada 6 · la frontissa de contingut roja ja és un avís, no només una fracció.
-  'frontissa-roja': 'la frontissa de contingut roja'
+  'frontissa-roja': 'la frontissa de contingut roja',
+  // 261026 · les dues portes que mesura la salut, també: roges, avís alt.
+  'porta-documents-roja': 'documents que no passen la porta documental',
+  'cadena-portes-roja': 'la cadena de portes de només lectura roja'
 });
 
 /* ── El semàfor i els problemes de les deu xifres (Onada 6, requisits 8 i 9)

@@ -768,6 +768,23 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     expect(() => normalitzaMapa(m)).not.toThrow();
   });
 
+  it('opció (a) del Mestre, 261026 · un nom exempt (ambRebut null) no compta en el rebut ni en porta l’avís, però sí en l’àncora', () => {
+    const escriptori = { ...VIGILANCIA.escriptori, documents: [
+      ...VIGILANCIA.escriptori.documents, { nom: '03_llibre_mestre_tasques_i_idees.md', ancorat: true, ambRebut: null }
+    ] };
+    const base = construeixMapa({ ...fontsBase(), ...VIGILANCIA }, { existeix, ara: ARA });
+    const m = construeixMapa({ ...fontsBase(), ...VIGILANCIA, escriptori }, { existeix, ara: ARA });
+    expect(valorMetrica(metrica(m, 'escriptori-amb-rebut'))).toEqual(valorMetrica(metrica(base, 'escriptori-amb-rebut')));
+    expect(metrica(m, 'escriptori-ancorat').denominador).toBe(metrica(base, 'escriptori-ancorat').denominador + 1);
+    expect(avisosDe(m, 'document:_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md')).toEqual([]);
+    // Sense àncora, l’avís de l’àncora sí que hi és, i sense parlar de rebut.
+    const solt = { ...escriptori, documents: escriptori.documents.map((d) => d.ambRebut === null ? { ...d, ancorat: false } : d) };
+    const s = construeixMapa({ ...fontsBase(), ...VIGILANCIA, escriptori: solt }, { existeix, ara: ARA });
+    expect(s.avisos.find((x) => x.node === 'document:_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md'))
+      .toMatchObject({ codi: 'escriptori-sense-ancora', evidencia: 'sense enllaç a 00_index_escriptori.md' });
+    expect(() => normalitzaMapa(m)).not.toThrow();
+  });
+
   it('261004 · fòssils i línies mal formades del LEDGER: mètriques pròpies, també amb la signatura vàlida', () => {
     for (const valid of [false, true]) {
       const m = construeixMapa({ ...fontsBase(), ledger: { ...VIGILANCIA.ledger, valid } }, { existeix, ara: ARA });
@@ -909,6 +926,34 @@ describe('construeixMapa · Onada 6, honestedat dels avisos', () => {
     expect(metrica(brossa, 'cadena-portes').valor).toBe('N/A');
     expect(metrica(brossa, 'conformitat-documental').valor).toBe('N/A');
     expect(() => normalitzaMapa(amb)).not.toThrow();
+  });
+
+  /* 261026 · Mesurades, les portes ja no frenen el verd de Salut amb un N/A:
+     una porta roja ha de ser un avís alt, com la frontissa. */
+  it('una porta roja és un avís alt: un per document de la porta documental i un per a la cadena', () => {
+    const avisosDe = (m, codi) => m.avisos.filter((x) => x.codi === codi);
+    const m = construeixMapa({
+      ...fontsBase(),
+      portaDocuments: { valid: false, checked: 6, errors: [
+        'd/a.md: reflex: cal un rebut persistent', 'd/a.md: frontmatter.tags[2]: fora de l’enum',
+        'Sense àncora: d/b.md', 'Contracte de l’índex diferent del disc: .agents/protocolledge.json'] },
+      cadenaPortes: { diagnostic: true, valid: false, failures: 2, total: 5 }
+    }, { existeix, ara: ARA });
+    const docs = avisosDe(m, 'porta-documents-roja');
+    expect(docs.map((x) => x.node).sort()).toEqual(['document:d/a.md', 'document:d/b.md', 'script:tooling/gates/porta-documents.mjs']);
+    expect(docs.every((x) => x.severitat === 'alta')).toBe(true);
+    const a = docs.find((x) => x.node === 'document:d/a.md');
+    expect(a.evidencia).toBe('reflex: cal un rebut persistent');
+    expect(a.evidencies).toEqual(['reflex: cal un rebut persistent', 'frontmatter.tags[2]: fora de l’enum']);
+    expect(avisosDe(m, 'cadena-portes-roja')).toEqual([expect.objectContaining({
+      node: 'script:tooling/gates/run-portes.mjs', severitat: 'alta',
+      evidencia: '2 de 5 passos de només lectura en roig · node tooling/gates/run-portes.mjs --diagnostic'
+    })]);
+    // Verdes (o sense resultat), cap avís: la mesura és la fracció.
+    const verdes = construeixMapa({ ...fontsBase(), portaDocuments: { valid: true, checked: 3, errors: [] }, cadenaPortes: { valid: true, failures: 0, total: 5 } }, { existeix, ara: ARA });
+    expect(verdes.avisos.filter((x) => /porta/.test(x.codi))).toEqual([]);
+    expect(mapa().avisos.filter((x) => /porta/.test(x.codi))).toEqual([]);
+    expect(() => normalitzaMapa(m)).not.toThrow();
   });
 
   /* Correcció de l'Onada 6 (revisió adversarial: «una porta verda que no ha

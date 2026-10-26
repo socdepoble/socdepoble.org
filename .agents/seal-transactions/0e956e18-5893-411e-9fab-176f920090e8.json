@@ -1,0 +1,17 @@
+{
+  "id": "0e956e18-5893-411e-9fab-176f920090e8",
+  "session": "9447418a-00e3-4a30-8e30-821a165adada",
+  "operationId": "sdp0225-index-skill",
+  "claim": "9447418a-00e3-4a30-8e30-821a165adada:governance-write",
+  "planHash": "152fa205bf09bb6e8bc189034d7a0b0c857aa472cfbec7ddd644761d9aceee75",
+  "beforeSeal": "cf4a65832a1fa646b1ff81c295a56f5d53e80309a77850080dfaca7a2d22060e",
+  "files": [
+    {
+      "path": ".agents/skills_index.json",
+      "before": "67cf0b68f503512f368798ad2e180912a8f28e65f12ee013de69b449f7ad3435",
+      "after": "6f95785be71ada8df225d36759fd06e1637e73749aa32f074f2dde5e697983a4"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518"
+}

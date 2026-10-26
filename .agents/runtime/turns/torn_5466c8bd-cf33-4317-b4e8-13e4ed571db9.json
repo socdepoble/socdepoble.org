@@ -3,10 +3,10 @@
   "turn_id": "torn_5466c8bd-cf33-4317-b4e8-13e4ed571db9",
   "actor": "gemini",
   "scope": "documents",
-  "state": "planned",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-18T10:41:04.441Z",
-  "updatedAt": "2026-10-18T12:08:55.037Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-19T10:41:04.442Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3906,6 +3906,17 @@
       "file": "_wiki_de_poble/04_escriptori/261018_1405_estudi_obsidian_rea_gemini4_iaia.md",
       "at": "2026-10-18T12:08:55.037Z",
       "hash": "3036e582fdfd3bbe657d27619f989b2d82ac222b3a233f98610e0c3f3ff8eb44"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

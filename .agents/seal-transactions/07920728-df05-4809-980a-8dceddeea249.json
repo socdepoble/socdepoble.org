@@ -1,0 +1,27 @@
+{
+  "id": "07920728-df05-4809-980a-8dceddeea249",
+  "session": "cd390196-ea76-4c62-9cbc-9507efaa58d4",
+  "operationId": "sdp0225-handoff",
+  "claim": "cd390196-ea76-4c62-9cbc-9507efaa58d4:governance-write",
+  "planHash": "02a5316c090650fca8bc0016b492f0723796ce1ca25e67b24808ff53886ac4cb",
+  "beforeSeal": "2bc0929f575b55750bee6bb8a48089ef08ff492ee90556a5c0b1ab19aaa4c659",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "efaad9530ea232b79c34102c9a9640c1ab076b82df0aaae067e3fdd1449598e2",
+      "after": "16ea388c4db7e3a05761c86894063ca50edb8e9ca64c42f2f4968063b9d2261d"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "d6cd82ff8421499d7bbd4d59d301213a174e348a827a7995cdb617281ad83235",
+      "after": "8583417352294f47b25b2684aefc6e983127485221c72c9a830b17d239711d63"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "7c7e029497d98fc641998728d294ded91366ffc1d308b4521bb87304e3346658",
+      "after": "e4fc4c0329af6a7ada6ead05ce6d49820c31583cb34dc62ef6e03cfc820f45d8"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518"
+}

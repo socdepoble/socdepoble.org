@@ -3,10 +3,10 @@
   "turn_id": "torn_d6ba4b1c-f357-4907-a300-712ecc5e4ff3",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 15,
+  "state": "closed",
+  "revision": 16,
   "createdAt": "2026-10-17T10:50:10.345Z",
-  "updatedAt": "2026-10-17T20:00:55.195Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-18T10:50:10.345Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -4019,6 +4019,17 @@
       "file": "_wiki_de_poble/10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem.md",
       "at": "2026-10-17T20:00:55.195Z",
       "hash": "7e66ea4085abf7b4349867894d005cc454e10aa959510446eab6e61852746b87"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

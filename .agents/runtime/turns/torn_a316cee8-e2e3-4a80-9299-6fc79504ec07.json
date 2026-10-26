@@ -3,10 +3,10 @@
   "turn_id": "torn_a316cee8-e2e3-4a80-9299-6fc79504ec07",
   "actor": "agent-local",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 24,
+  "state": "closed",
+  "revision": 25,
   "createdAt": "2026-10-20T21:37:56.728Z",
-  "updatedAt": "2026-10-20T22:54:43.817Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T21:37:56.729Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3936,6 +3936,12 @@
       "file": "_wiki_de_poble/04_escriptori/261021_0800_auditoria_gemini_llancament_apps_i_sollutia.md",
       "at": "2026-10-20T22:54:43.817Z",
       "hash": "a42b030a13672c54c0f0a0404e1d825ab1ff4f0f44d40cfbe938c682f0314abe"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3947,5 +3953,10 @@
     "_wiki_de_poble/04_escriptori/261020_2355_pla_implementacio_llancament_apps_i_desbloqueig_sollutia.md",
     "_wiki_de_poble/04_escriptori/261020_2355_prompt_claude_llancament_apps_i_desbloqueig_sollutia.md",
     "_wiki_de_poble/04_escriptori/261020_2355_prompt_gemini_auditoria_llancament_apps_i_sollutia.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

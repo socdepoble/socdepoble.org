@@ -1,0 +1,37 @@
+{
+  "id": "65115641-37fe-4993-b43f-2726250769d7",
+  "session": "f8df07ed-d09c-4907-9a90-cf9f56de8345",
+  "operationId": "sanejament-skills-frontmatter",
+  "claim": "f8df07ed-d09c-4907-9a90-cf9f56de8345:governance-write",
+  "planHash": "b8393d25c23865134c7964499826cc4ffd48114b6551121e93d4d76a14d1fc00",
+  "beforeSeal": "81d81534a70747e827e014b93a6629723aec68cae29bb30c897444bc9a923c5f",
+  "files": [
+    {
+      "path": ".agents/skills/core-salfumant-radical/SKILL.md",
+      "before": "49ae1506b76e7b5668d3963a674bb9cc4b75efde98c4c4fd25e59edfe92e0829",
+      "after": "75dcf77cd4b2c56966a5197180b63370859b162027edcceae8af3676dfc75a23"
+    },
+    {
+      "path": ".agents/skills/core-seguretat-audit/SKILL.md",
+      "before": "13831b11ab93c4a225d3e0e60df1747be708a1413cda651a00bd4b764157e323",
+      "after": "8fda8b84151a70091454c30f06c7216c05ddf20bd5257f9e4294d8ecf30debf8"
+    },
+    {
+      "path": ".agents/skills/sdp-vigilant-tellado/SKILL.md",
+      "before": "09c00bd78a15162592793e5feed9cbffe7ba235fb624ee53eaf54fee60dd4f29",
+      "after": "40092e87be8e199972320ceaace3547f4f1c476a770fdf98fa32711e574c0e5a"
+    },
+    {
+      "path": ".agents/skills/core-gauntlet-loop/SKILL.md",
+      "before": "8eaea7639447c9b8780209f6382baf1143d695110d19e53c9208e8b290aea902",
+      "after": "7678bb0add269e1e28542ede470b279b8f5cc28f21a23f2195649bd3013243da"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "3c2597d7867aa9246d0654d22ae4f874f8f55320e14b924baeeec92d25aea615",
+      "after": "dcc4799f3df58c29555d3a8a62fd817fb68c4129e263eae0b299449875084738"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "7df7a6fc4c997a35f0f89542233eacd79266d2d080e7724b4fbb561538afa97a"
+}

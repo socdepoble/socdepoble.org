@@ -19,7 +19,7 @@ contracte.escriu:
 ---
 # Tractor de Llegibilitat i Flux de Text (Pedra Seca)
 
-Aquest tractor vigila que tot text inserit al sistema complisca les regles innegociables d'accessibilitat, jerarquia i flux natural per a la gent del poble.
+Aquest tractor governa la llegibilitat de components, HTML i pàgines pintades. El fitxer Markdown font correspon a [[core-maquetacio-markdown/SKILL|core-maquetacio-markdown]] i l'encaminament documental a [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]].
 
 ## 1. Flux Lliure del Text (Zero "Capar")
 No es pot limitar artificialment l'amplada del text (evitar contenidors que tallen el text a poc més de mitja pàgina). El text ha de **fluir de forma natural ocupant l'espai disponible**, adaptant-se fins al final, respectant únicament els marges generals del sistema de Pedra Seca. Zero caixes estretes innecessàries.
@@ -39,7 +39,7 @@ Sóc de Poble està pensat per a lectors que busquen anar al gra.
 - **La norma d'or:** Si el lector només llig les paraules en negreta (saltant sobre elles), ha de poder entendre el missatge principal "d'un colp d'ull" sense haver de llegir la morralla sintàctica.
 
 ## 4. Deure d'Avís i Auto-Correcció
-Si, mentre inspecciones una pàgina, detectes un text pla (sense ressaltar), una falta d'encapçalaments (falten H2, H3...) o un text capat que no fluïx, **has d'avisar immediatament o aplicar tu mateix la correcció** sota el paraigua d'aquest tractor.
+Si detectes text poc llegible, cita la superfície i el defecte. Corregix-lo quan entre en l'encàrrec autoritzat; fora d'abast, registra'l. Els canvis visuals respecten el pla aprovat i la Llei del Píxel de [[sdp-workflow/SKILL|sdp-workflow]].
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

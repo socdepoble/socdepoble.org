@@ -3,10 +3,10 @@
   "turn_id": "torn_528e27ee-1e76-438d-899e-0abfcd996b0b",
   "actor": "IAIA MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 2,
+  "state": "closed",
+  "revision": 3,
   "createdAt": "2026-10-22T21:28:21.381Z",
-  "updatedAt": "2026-10-22T21:28:32.008Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T21:28:21.381Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3661,6 +3661,17 @@
       "file": "_wiki_de_poble/10_actes/261022_2330_acta_marmota_consens_cercador_i_preparacio_botigues.md",
       "at": "2026-10-22T21:28:32.008Z",
       "hash": "b75f4d75104d9d55ea722698b9d6c25508c77167b64bb9d908c49b8fcfda1474"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

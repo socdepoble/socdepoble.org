@@ -3,10 +3,10 @@
   "turn_id": "torn_64d46b97-8715-4a3a-ae27-84611ac0e111",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-18T10:19:38.147Z",
-  "updatedAt": "2026-10-18T10:20:17.269Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-19T10:19:38.148Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3911,6 +3911,17 @@
       "file": "_wiki_de_poble/04_escriptori/261018_1220_prompt_claude_codex_sessio_i_poda.md",
       "at": "2026-10-18T10:20:17.269Z",
       "hash": "959e570f2d57464bccafc5795506ae7978b4a7c73c9ba68081defd65e0ff38f8"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

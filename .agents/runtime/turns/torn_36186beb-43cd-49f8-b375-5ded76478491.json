@@ -3,10 +3,10 @@
   "turn_id": "torn_36186beb-43cd-49f8-b375-5ded76478491",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 10,
+  "state": "closed",
+  "revision": 11,
   "createdAt": "2026-10-14T18:14:58.853Z",
-  "updatedAt": "2026-10-14T18:51:14.072Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-15T18:14:58.853Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3867,6 +3867,17 @@
       "file": "_wiki_de_poble/10_actes/261014_2050_acta_marmota.md",
       "at": "2026-10-14T18:51:14.072Z",
       "hash": "aef4e11aaa7f8fa514bd4c0e6769cb2c6be732b0eafa01f19841898bfc834b6e"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

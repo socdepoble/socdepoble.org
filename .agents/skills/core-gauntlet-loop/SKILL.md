@@ -10,9 +10,9 @@ triggers_on:
   - bucle adversarial
   - auditoria adversarial
   - matriu de conformitat
-  - mcr
-  - rea
+  - matriu mcr
   - enginyeria inversa
+  - reverse engineer
 contracte.llig:
   - AGENTS.md
   - _wiki_de_poble/00_index.md
@@ -50,7 +50,7 @@ Tota auditoria sobre un Pla d'Implementació ha d'incorporar obligatòriament la
 | *Ex: Visor modal Google Fotos* | `[NO FET]` | No s'ha creat el component Lightbox | Temps esgotat; es trasllada al següent torn. |
 
 ### La Regla del Balanç Transparent (Zero Oblits):
-- El que està `[FET]` es dona per segellat i no es tocarà més.
+- El que està `[FET]` conserva la seua evidència; una regressió o un requeriment nou pot reobrir-lo amb causa explícita.
 - El que està `[PARCIAL]` o `[NO FET]` **es trasllada automàticament i de forma visible al següent Pla d'Implementació**. Prohibit esborrar-ho, amagar-ho o oblidar-ho.
 
 ---
@@ -77,15 +77,11 @@ El Mestre humà no és informàtic i no ha de patir l'ofegament d'un IDE o d'un 
 
 ---
 
-## 5. Protocol de Parada Obligatòria i Kill Switch («Tots a Dormir»)
-El Gauntlet Loop té un inici delimitat i **un final absolut obligatori**. Quan el Crític Implacable i el Garant de Coherència (Gemini/Codex) emeten el dictamen favorable (100% verd, `status: canonic` o `DICTAMEN D'APROVACIÓ TOTAL`) sobre els commits del Constructor (Claude):
-1. **Aturada Mecànica Immediata:** L'orquestradora (MarIA) o qualsevol agent ha d'executar immediatament l'apagada de totes les tasques de fons:
-   - Executar `npm run guarda:aturar` i cridar `manage_task` amb `Action: 'kill'` sobre qualsevol cron o temporitzador en curs.
-   - Està **TERMINANTMENT PROHIBIT** mantindre crons zombi en bucle infinit despertant agents si la feina ja està validada.
-2. **Prohibició de `IsDaemon: true` sense sostre:** Tot cron de supervisió nocturna ha de configurar-se amb `IsDaemon: false` i amb `MaxIterations` acotat (màxim 6 iteracions / 6 hores).
-3. **Verificació de Fi de Guàrdia:** La primera comprovació de qualsevol tick de vigilància ha de ser `node tooling/gates/guarda-nocturna.mjs`. Si indica que la guàrdia deuria parar, l'acció número 1 de la IA és aturar-se i cancel·lar el cron.
+## 5. Parada i recursos
 
----
+El bucle acaba amb un dictamen verificat, una ordre de parada o el límit de l'encàrrec. La política única de guàrdies, sis execucions i sis hores com a màxim, i el procediment de desconvocatòria viuen a [[core-direccio-autonoma/SKILL|core-direccio-autonoma]].
+
+Abans de donar el torn per acabat, aplica eixe procediment a qualsevol cron, procés o subagent propi, també quan queden requeriments pendents. Un dictamen textual no acredita per si sol que el planificador haja cancel·lat la tasca.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

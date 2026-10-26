@@ -1,0 +1,50 @@
+{
+  "schema": "sdp.reviewed-recovery.evidence.v1",
+  "id": "80fc6d64-9125-45e2-87e6-2c1f5950164b",
+  "state": "reviewed",
+  "kind": "reviewed-recovery",
+  "at": "2026-10-26T01:45:45.888Z",
+  "recoverySession": "f0de91d0-83ea-47fa-b9f8-e1691e8fc8a4",
+  "recoveryPlanHash": "d7d7db93a4fc9bad85a52bfe22a332234cb01597d9b783d7364c2914d6141e79",
+  "originalMutation": "6979db13-8ded-498b-b81d-8b3a9bb8fb6b",
+  "originalState": "failed",
+  "disposition": "targets-applied-seal-unchanged",
+  "reason": "Recuperació revisada independentment: dos targets exactament aplicats i segell anterior intacte; CAS global final afectat per canvis concurrents fora dels targets. No es reexecuten ni restauren fonts.",
+  "pendingSHA": "3af73e4133c5b2843d09a1771bf240cfcc69a683d57add09ae74db9cdae0a874",
+  "pendingRaw": "{\"id\":\"6979db13-8ded-498b-b81d-8b3a9bb8fb6b\",\"session\":\"ae79b34e-45d9-4f2e-a2c7-4b1972c51353\",\"operationId\":\"sdp0225-connectivity\",\"claim\":\"ae79b34e-45d9-4f2e-a2c7-4b1972c51353:governance-write\",\"planHash\":\"daf6f25ee887c4e8bc3558d65d4a49129ec04ae647a702be0b4688f10ba0d58f\",\"beforeSeal\":\"11eab7c36e361ae415cb34593a84b3bdf4c1c528794cd33ba4150ffd3e19ac05\",\"files\":[{\"path\":\"_wiki_de_poble/00_index.md\",\"before\":\"83b087f75ea1a6f7983c1b25599fba3b7817c908c2a666d42083c817d4e82d7b\",\"after\":\"95274785ba85121d0b3967a74ec0a1ae8e60e0bbf8a3bd553e0beb50be7a6be5\"},{\"path\":\"_wiki_de_poble/04_escriptori/00_index_escriptori.md\",\"before\":\"944d7fe1434f0323db751ba0e8157c06382d4e71b31cbd861af4c32f5e3a45b0\",\"after\":\"efd1d405d0d1db5e8a4b39413c05a789ab84e7add3d2a167e48082a76645aba5\"}],\"state\":\"prepared\"}\n",
+  "originalReceipt": {
+    "path": ".sdp-reflex/sessions/ae79b34e-45d9-4f2e-a2c7-4b1972c51353.json",
+    "sha256": "0a1f6b1868044481f5ae69294af989c376a263a8bde041010a2d2398d0c935f0",
+    "signatureValid": true,
+    "status": "consumed",
+    "claim": "completed"
+  },
+  "files": [
+    {
+      "path": "_wiki_de_poble/00_index.md",
+      "before": "83b087f75ea1a6f7983c1b25599fba3b7817c908c2a666d42083c817d4e82d7b",
+      "after": "95274785ba85121d0b3967a74ec0a1ae8e60e0bbf8a3bd553e0beb50be7a6be5",
+      "actual": "95274785ba85121d0b3967a74ec0a1ae8e60e0bbf8a3bd553e0beb50be7a6be5"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "before": "944d7fe1434f0323db751ba0e8157c06382d4e71b31cbd861af4c32f5e3a45b0",
+      "after": "efd1d405d0d1db5e8a4b39413c05a789ab84e7add3d2a167e48082a76645aba5",
+      "actual": "efd1d405d0d1db5e8a4b39413c05a789ab84e7add3d2a167e48082a76645aba5"
+    }
+  ],
+  "sealBytesSHA": "11eab7c36e361ae415cb34593a84b3bdf4c1c528794cd33ba4150ffd3e19ac05",
+  "sealHash": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518",
+  "observedOutsideTargets": [
+    {
+      "path": "src/data/wikiManifest.js",
+      "sha256": "c0652bb38bacb22cfdef46250c5bd14722bc9287df0b36b3dd31e7e1458157b5",
+      "provenance": "Observació actual fora dels targets; no prova per si sola el moment de la deriva."
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/261026_0230_auditoria_claude.md",
+      "sha256": "c03bd7d817a2d3fc70842256345f2c394ac0a28361add68861398a40cd84887d",
+      "provenance": "Observació actual fora dels targets; no prova per si sola el moment de la deriva."
+    }
+  ]
+}

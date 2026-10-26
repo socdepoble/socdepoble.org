@@ -1028,4 +1028,34 @@ Informe1315_codex v2.0.0 i Llibre Mestre actualitzats. NO VISTIPLAU per carrera 
 Informe 261024_1800_auditoria_claude validat i Llibre Mestre (P1-07, P1-10, P2-10, P2-11) actualitzat; pla 1800 vinculat. T1 anti-SSRF a tots els salts (C6-02 i C6-03, amb la segona passada de Codex), T2 registre d'altes de seguiments (C6-01), T3 sense «MAS» a les Notes, T4 test:precommit de 23,3 s i hook amb run-portes --nomes-portes (leases 284a95f8 i 94d149d1 consumides). Vitest sencer en còpia: 21.797 passen, 1 fallada de còpia; lint 0. Res commitejat, desplegat ni aplicat. La signatura del LEDGER ja era trencada abans d'esta entrada i no s'ha resegellat.
 
 
-<!-- HASH: 2b6a33a8c79b948722387211b16357fd6005e4cb48fb6b5ed02233a588d907a3 -->
+## 2026-10-25 · Codex · Auditoria habitabilitat 1645 · torn_05675b07-b173-48d1-a4a7-f8c4a8848419
+
+Informe261025_1701_auditoria_codex i Llibre Mestre actualitzats; pla1645 vinculat. Dictamen parcial: precommit3132Vitest+259Node verd; bot amb rutes/RAG incompatibles, WP5.8 sense acreditar, Apple WM1/WM2 pendent, higiene amb propostes de consum/hash/consumidors. Contrast Gemini complet amb reserves contra arxivament per timestamp i garanties no provades; Claude1705 encara en esborrany al tall. REA plist iOS SDK27.1/min16, APK target36/min24 depurable. Cap codi de producte, auth, SQL, skill, arxivat, carpeta nova, commit, desplegament ni cron propi. Informe canònic vàlid; tancament global no verd per segell/Wiki/SCC, sense relaxar portes. El checksum del LEDGER era vàlid abans d’esta entrada i es recalcula únicament per afegir este relleu, preservant íntegre el cos anterior.
+
+
+## 2026-10-25 · Codex · Gauntlet adversarial 2120 · torn_27504268-afde-4351-bdf6-4ec30edf4574
+
+Informe261025_2120_auditoria_codex canònic validat, pla1645 vinculat, Llibre Mestre i ESTAT actualitzats. NO certificació10/10 del commit20d11564e: C2120-01 regressió A→B→A del consentiment reproduïda contra el pare; XHR redirigit transmet cos abans del control; SDK Storage manté efectes possibles després del timeout; cursa de signatura d'àudio preexistent i fallback locale WP antic. Refutada memòria il·limitada:300posicions i0listeners després de100muntatges. Precommit3151Vitest+259Node verd25,22s; suite sencera22333passen/3fallen/100omissions (deute previ, una dependent de l'entorn); Node1038passen/4omissions/3TODO, lint0, Model B verd. Cap font de producte modificada, credencial, compte remot, SQL, commit/push/desplegament ni cron propi. Servidors locals i agents de proves acabats. Tancament global registrat a l'informe sense relaxar portes. Checksum previ vàlid; cos anterior preservat íntegre i hash recalculat només per este relleu.
+
+
+## 2026-10-25 · Codex · Acceptació cd1bb28a4 · torn_53e51433-6912-4a51-97d4-991ec181f249
+
+Informe261025_2230_auditoria_codex validat, pla1645 vinculat, Llibre i ESTAT actualitzats. Conformitat als quatre pegats de consentiment/àudio en l'abast provat; NO10/10 global. Consentiment4/4+13acceptació, àudio163passen/1candidatomés+6addicionals; dirigides3fitxers100/100. Precommit REAL3151Vitest+259Node=3410, no3419:9novesUI fora de PRECOMMIT_INCLUDE;38,66s paret amb concurrència. Lint0, Enxufe/Frontissa0,6fonts exactes. Riscos XHR/Storage/WP continuen i WebKit real pendent. Cap codi de producte, secret, compte remot, SQL, dependència, commit/push/desplegament ni cron propi. Processos de proves/agents acabats. Govern global registrat a l'informe. Checksum previ vàlid i cos anterior preservat; hash recalculat només per afegir este relleu.
+
+
+## 2026-10-26 · Codex · Auditoria forense Consola0145 · torn_29933990-052b-4c29-ae39-41b5c532ff35
+
+Informe261026_0145_auditoria_codex validat i pla1645 vinculat; Llibre/ESTAT actualitzats. GuióClaudeNOcertificat: caducitatfabrica verification, locknoadquirit, taxonomiaunstagedbypassa staging, timeout20s→verd i aplicacióparcial. Frontmatters40/40/hash7df7a6fc síreproduïts encòpia, nouparsercorrecte. Cens40skillsíntegres;390imatges/389classificades,149òrfensnoacreditats. SCC1388incidències(1123links,242àncores,23orfes),només59linksdesd'actes. Provesbase41Node i887Vitest/4omissions; controlsadversarialsnoequivalenaacceptació. Consolaviva7alts i polsil·legible. No fontproducte, secret, SQL, remot, sanejament, resegellat, arxivament, commit/push, novescarpetesdelprojecte ni cronpropi. Processosfinits i relleufinaldetancamentalinforme. Checksumprevi vàlid; cosanteriorpreservat i hashrecalculatnomésperafegiresterelleu.
+
+
+### Addenda0145 · revisió93b668e9 · torn_29933990-052b-4c29-ae39-41b5c532ff35
+
+Patch655021f3 real aplicat només en còpia:6casos reexecutats, C0145-03stagedCORREGITenproposta, àncora preservada; residualP3d'abast10_actes. C01/02/04/05/06continuenoberts. Arxivamentconcurrentalié: dosvinclespropisreapuntats90sensemoure/llegircossosfreds. Tancamentfinal1431incidències, capdelnouinforme. GuióNOcertificat; capmutacióproducte/segell. Checksumprevi vàlid i cosanteriorpreservat.
+
+
+### 2026-10-26T01:59:04.053Z · Codex · Sanejament nocturn · torn_7dba9117-6651-479e-ade2-81a97ff2582c
+
+Ordre humana prompt mestre 0210 executada amb plans CAS i leases. Skills fase1 hash7df, harmonització13/cens40 hashb9af; índex72línies/268àncores,44fitxers evacuats amb hashes. Consola: exempció canònica, parser, mètriques fail closed, caducitat109 amb locks/CAS sense verification nova; rebutjat llegat expire-close com prova. Recuperació revisada de connectivity amb evidència80fc6d64, cap font/segell reescrits. Cens480fitxers/390imatges/92candidates, assets intactes; guió antic substituït per corredor segur. Precommit final3151+262=3413 verd, Consola889/4omissions, Node93 i política9. SCC1428→209links,0orfes/0senseàncora; dos automatismes morts i informeClaude0230 en curs encara limiten el verd. Guàrdia aturada, servidor reprès, cap cron propi ni remot/SQL/secret/commit/push. Historial anterior preservat; hash recalculat només per afegir esta entrada.
+
+
+<!-- HASH: 99cf03dc6c5c072d3bc43c5446f7b8b3baaf27e1c80de6fa34bd250172872bb2 -->

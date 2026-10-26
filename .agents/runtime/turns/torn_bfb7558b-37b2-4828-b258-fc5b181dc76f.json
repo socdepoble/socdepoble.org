@@ -3,10 +3,10 @@
   "turn_id": "torn_bfb7558b-37b2-4828-b258-fc5b181dc76f",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-24T22:39:23.623Z",
-  "updatedAt": "2026-10-24T22:42:08.543Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T22:39:23.624Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3778,6 +3778,17 @@
       "file": "_wiki_de_poble/04_escriptori/261025_0045_pla_implementacio_disseny_usabilitat_dialegs.md",
       "at": "2026-10-24T22:42:08.543Z",
       "hash": "f8d7214ea702a4a6c5cd527e4887ee02a9368c4babfea5da381410b25099291c"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

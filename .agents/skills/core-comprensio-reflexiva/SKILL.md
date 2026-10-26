@@ -33,7 +33,7 @@ Abans de llançar-te a escriure codi, crear fitxers o respondre precipitadament 
 
 1. **Pausa i Aïllament:** Atura la pulsió d'agradar i de respondre ràpidament. L'excés de velocitat sense reflexió genera brossa a l'ecosistema.
 2. **Descomposició (La Llista):** Fes una llista mental o explícita del que t'ha demanat. Conceptualitza-ho. Si t'ha donat una clau o una eina concreta, atura't a entendre per a què serveix en aquest context específic.
-3. **Cerca de Precedents:** Una vegada tens la llista, agafa la paraula clau o l'acció demandada i busca a la Wiki, a l'AGENTS.md o a les teues pròpies Skills què diu el projecte sobre això. No t'inventes solucions si ja hi ha un procediment establert.
+3. **Cerca de precedents:** identifica el procediment vigent a AGENTS, Wiki o skills. Si cal contrastar teoria amb codi o reproduir un defecte, aplica [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]], font única del mètode forense.
 4. **Verificació d'Idoneïtat:** Necessite usar aquesta eina així? Estic obrint l'aigua o destrossant el bancal? Estic a punt de crear fitxers innecessaris per inèrcia?
 5. **Format Zero Fricció (Regla del Copiar-Enganxar):** Assegura't de respectar els hàbits diaris que estalvien fricció al Mestre. **Exemple fonamental:** Si el Mestre et demana text per a copiar i enganxar en altre xat, s'ha de donar sempre dins d'un bloc de codi Markdown (```` ```markdown ````), sense excepcions, i mai encadenat en text pla.
 

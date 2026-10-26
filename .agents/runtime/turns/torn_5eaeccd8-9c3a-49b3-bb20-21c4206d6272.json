@@ -3,10 +3,10 @@
   "turn_id": "torn_5eaeccd8-9c3a-49b3-bb20-21c4206d6272",
   "actor": "gemini",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-19T19:48:45.605Z",
-  "updatedAt": "2026-10-19T19:49:25.033Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-20T19:48:45.606Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3886,6 +3886,17 @@
       "file": "_wiki_de_poble/04_escriptori/261019_2145_auditoria_gemini_botigues_i_alletjament_core.md",
       "at": "2026-10-19T19:49:25.033Z",
       "hash": "c72b413dcf9ebfcfa567a1fcd338c1f411d568134035f827f016663a85c9065d"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

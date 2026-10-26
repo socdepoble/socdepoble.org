@@ -3,10 +3,10 @@
   "turn_id": "torn_090a389d-15dd-49af-840d-a96759411b09",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 9,
+  "state": "closed",
+  "revision": 10,
   "createdAt": "2026-10-18T14:03:28.953Z",
-  "updatedAt": "2026-10-18T15:18:46.615Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-19T14:03:28.953Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3893,6 +3893,12 @@
       "file": "_wiki_de_poble/04_escriptori/261018_1718_auditoria_perfil_public_multimedia_i_poble.md",
       "at": "2026-10-18T15:18:46.615Z",
       "hash": "3b82d8e311ccf9d2ffe5d5ba84ec5f6bbc9c9b2481ad16b652cae56f50001ed5"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3900,5 +3906,10 @@
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261018_1605_prompt_claude_codex_perfil_public_i_multimedia.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

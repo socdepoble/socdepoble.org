@@ -31,3 +31,54 @@ test('--check del compilador no escriu i exclou els registres runtime',t=>{const
 
 test('una àncora en exemple o comentari no compta com a enllaç real',t=>{const {root,d}=planned(t);const index=path.join(root,'_wiki_de_poble/04_escriptori/00_index_escriptori.md');const link=`[[${path.basename(d.file,'.md')}]]`;let s=fs.readFileSync(index,'utf8');s=s.replace(`- ${link}`,`<!-- ${link} -->\n\`\`\`md\n${link}\n\`\`\``);fs.writeFileSync(index,s);assert.match(checkTurn(root,d.turn.turn_id).errors.join(),/sense àncora/);});
 test('CLI tancament rebutja torn inventat abans de qualsevol procés amb efectes',()=>{const p=spawnSync(process.execPath,[path.join(REPO,'tooling/gates/tancament.mjs'),'--check','--turn-id=inventat','--json'],{encoding:'utf8'});assert.equal(p.status,1);assert.match(p.stderr,/Identificador de torn invàlid/);});
+
+
+test('Llibre permanent: només la ruta física canònica i type document, amb esquema vàlid', t => {
+  const root = fixture(t), file = '_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md';
+  const raw = '---\ntype: document\nstatus: canonic\ndescription: Llibre Mestre permanent de tasques i idees\ntags: [govern, arquitectura, pla]\n---\n# Llibre\n';
+  fs.writeFileSync(path.join(root, file), raw);
+  assert.deepEqual(validateDocument(root, raw, file), []);
+  assert.match(validateDocument(root, raw.replace('govern', 'backlog'), file).join(), /tags/);
+  for (const other of ['_wiki_de_poble/10_actes/03_llibre_mestre_tasques_i_idees.md', '_wiki_de_poble/04_escriptori/sub/03_llibre_mestre_tasques_i_idees.md', '_wiki_de_poble/04_escriptori/260922_0300_auditoria_exempta.md']) assert.match(validateDocument(root, raw, other).join(), /rebut persistent/);
+  assert.match(validateDocument(root, raw.replace('type: document', 'type: prompt'), file).join(), /rebut persistent/);
+  const alias = '_wiki_de_poble/04_escriptori/alias.md';
+  fs.symlinkSync(path.basename(file), path.join(root, alias));
+  assert.match(validateDocument(root, raw, alias).join(), /rebut persistent/);
+});
+test('Llibre permanent: staging continua exigint àncora', t => {
+  const root = fixture(t), file = '_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md';
+  fs.writeFileSync(path.join(root, file), '---\ntype: document\nstatus: canonic\ndescription: Llibre Mestre permanent de tasques i idees\ntags: [govern]\n---\n# Llibre\n');
+  git(root, 'init', '-q'); git(root, 'add', '.');
+  assert.match(checkDocuments(root, { staged: true }).errors.join(), /Sense àncora/);
+  fs.appendFileSync(path.join(root, '_wiki_de_poble/04_escriptori/00_index_escriptori.md'), '\n- [[03_llibre_mestre_tasques_i_idees]]\n');
+  git(root, 'add', '.');
+  assert.equal(checkDocuments(root, { staged: true }).valid, true);
+});
+
+
+test('expire-close històric amb hashes coincidents no acredita verificació; els checks legítims es conserven', t => {
+  const { root, d } = planned(t);
+  sealTurn(root, d.turn.turn_id, ok, { close: true });
+  const record = path.join(root, '.agents/runtime/turns', `${d.turn.turn_id}.json`);
+  const turn = JSON.parse(fs.readFileSync(record));
+  const genuine = structuredClone(turn.verification.checks);
+  assert.deepEqual(validateDocument(root, d.content, d.file, { closed: true }), []);
+  git(root, 'init', '-q'); git(root, 'add', '.');
+  assert.equal(checkDocuments(root, { staged: true }).valid, true);
+
+  // Only the claimed checks change: the document and its verified file hash are identical.
+  turn.verification.checks = ['expire-close'];
+  fs.writeFileSync(record, JSON.stringify(turn));
+  assert.match(validateDocument(root, d.content, d.file, { closed: true }).join(), /expire-close només acredita caducitat/);
+  git(root, 'add', '.');
+  assert.match(checkDocuments(root, { staged: true }).errors.join(), /expire-close només acredita caducitat/);
+
+  // A later administrative expiry does not invalidate an authentic earlier verification.
+  turn.verification.checks = genuine;
+  turn.closure = { reason: 'expired', at: new Date().toISOString(), previousState: 'verified' };
+  turn.history.push({ action: 'expire-close', state: 'closed', at: turn.closure.at });
+  fs.writeFileSync(record, JSON.stringify(turn));
+  assert.deepEqual(validateDocument(root, d.content, d.file, { closed: true }), []);
+  git(root, 'add', '.');
+  assert.equal(checkDocuments(root, { staged: true }).valid, true);
+});

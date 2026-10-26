@@ -3,10 +3,10 @@
   "turn_id": "torn_83d9b889-cad0-4c46-a866-e5a6c36e53a5",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 13,
+  "state": "closed",
+  "revision": 14,
   "createdAt": "2026-10-20T10:54:32.397Z",
-  "updatedAt": "2026-10-20T12:08:31.587Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T10:54:32.398Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3636,6 +3636,17 @@
       "file": "_wiki_de_poble/04_escriptori/261020_1400_auditoria_gemini_fase_d_i_estudi_tellado.md",
       "at": "2026-10-20T12:08:31.587Z",
       "hash": "dbe9e87495d19a40744ad2fd8a9135e452984071b1b79632223afca507772ba9"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

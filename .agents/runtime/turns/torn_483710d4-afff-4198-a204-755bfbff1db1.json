@@ -3,10 +3,10 @@
   "turn_id": "torn_483710d4-afff-4198-a204-755bfbff1db1",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 22,
+  "state": "closed",
+  "revision": 23,
   "createdAt": "2026-10-24T16:36:25.951Z",
-  "updatedAt": "2026-10-24T16:43:47.910Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T16:36:25.952Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3855,6 +3855,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-24T16:43:47.909Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3876,5 +3882,10 @@
     "package.json",
     "tooling/gates/git-staged.mjs",
     "_wiki_de_poble/04_escriptori/261024_1800_auditoria_claude.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

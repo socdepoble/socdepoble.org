@@ -24,6 +24,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { exemptDeRebut } from '../documental/core.mjs';
 
 const DIR_TORNS = '.agents/runtime/turns';
 const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
@@ -165,7 +166,7 @@ export function resumEscriptori(root) {
     const documents = entrades
       .filter((e) => e.isFile() && !e.name.startsWith('.') && /\.md$/i.test(e.name) && e.name.toLowerCase() !== INDEX_ESCRIPTORI)
       .map((e) => e.name).sort()
-      .map((nom) => ({ nom, ancorat: ancoratA(index, nom), ambRebut: rebuts.has(`${ESCRIPTORI}/${nom}`) }));
+      .map((nom) => ({ nom, ancorat: ancoratA(index, nom), ambRebut: exemptDeRebut(root, `${ESCRIPTORI}/${nom}`) ? null : rebuts.has(`${ESCRIPTORI}/${nom}`) }));
     const carpetaSafata = entrades.find((e) => e.isDirectory() && e.name === SAFATA)
       ?? entrades.find((e) => e.isDirectory() && e.name.toLowerCase() === SAFATA);
     // Una Safata il·legible no és una Safata buida: l'excepció fa null el resum sencer.

@@ -3,10 +3,10 @@
   "turn_id": "torn_2ca7d6d7-2a6a-4678-9e29-541976629b27",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-18T19:03:09.633Z",
-  "updatedAt": "2026-10-18T19:03:41.830Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-19T19:03:09.633Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3808,6 +3808,17 @@
       "file": "_wiki_de_poble/10_actes/261018_2105_acta_marmota_auditoria_trio_i_relleu_implementacio.md",
       "at": "2026-10-18T19:03:41.830Z",
       "hash": "70fe99c8f3659d558e45604ef90afeb1af67086c846edc7f23c1f4ebafe98661"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

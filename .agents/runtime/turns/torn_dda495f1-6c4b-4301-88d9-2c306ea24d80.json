@@ -3,10 +3,10 @@
   "turn_id": "torn_dda495f1-6c4b-4301-88d9-2c306ea24d80",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-13T21:55:23.147Z",
-  "updatedAt": "2026-10-13T21:56:04.016Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-14T21:55:23.147Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3739,6 +3739,17 @@
       "file": "_wiki_de_poble/04_escriptori/261013_2355_prompt_codex_sanejament_produccio_i_laboratori.md",
       "at": "2026-10-13T21:56:04.016Z",
       "hash": "34259aba35d58d0d483baf73ff2ea946fb9f2aca001fd270b56c58550a0b06c1"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

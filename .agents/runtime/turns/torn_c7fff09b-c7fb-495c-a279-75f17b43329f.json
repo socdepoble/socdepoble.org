@@ -3,10 +3,10 @@
   "turn_id": "torn_c7fff09b-c7fb-495c-a279-75f17b43329f",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 15,
+  "state": "closed",
+  "revision": 16,
   "createdAt": "2026-10-24T11:09:37.540Z",
-  "updatedAt": "2026-10-24T15:56:12.142Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T11:09:37.541Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3887,6 +3887,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-24T15:56:12.142Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3898,5 +3904,10 @@
     "_wiki_de_poble/04_escriptori/261024_1315_auditoria_gemini.md",
     "_wiki_de_poble/04_escriptori/261024_1315_pla_implementacio_fortificacio_i_auditoria_adversarial_trio.md",
     "_wiki_de_poble/04_escriptori/261024_1315_prompt_claude_gemini_codex_fortificacio_i_auditoria_adversarial_trio.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

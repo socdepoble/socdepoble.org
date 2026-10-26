@@ -3,10 +3,10 @@
   "turn_id": "torn_1be1a18c-b5b1-45c7-9492-a8f481f25682",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 25,
+  "state": "closed",
+  "revision": 26,
   "createdAt": "2026-10-20T17:29:48.405Z",
-  "updatedAt": "2026-10-20T21:39:48.823Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T17:29:48.407Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -4006,6 +4006,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-20T21:39:48.823Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -4019,5 +4025,10 @@
     "_wiki_de_poble/04_escriptori/261020_2030_prompt_gemini_enginyeria_inversa_bring_i_lovable.md",
     "_wiki_de_poble/04_escriptori/261020_2045_pla_implementacio_el_comu_i_llistes_reactives.md",
     "_wiki_de_poble/04_escriptori/261020_2100_auditoria_gemini_skills_i_textos_publics.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

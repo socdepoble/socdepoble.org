@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PROJECT_DIR, AGENTS_DIR, SKILLS_DIR } from '../wiki/lib/project_paths.mjs';
+import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
 import { recullMapa } from '../brain/mapa-consola.mjs';
 
 export const RUTA_CONSOLA = '/__iaia/consola.json';
@@ -33,20 +34,16 @@ const parseJsonl = (txt) => {
   return { items, font: { estat: 'ok', línies_descartades: descartades, h: Date.now() } };
 };
 
-/* Mateix parser mínim que tooling/brain/matrix.mjs:62-75: claus planes i llistes. */
-function frontmatter(txt) {
-  const m = (txt ?? '').match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const out = {};
-  let clau = null;
-  for (const l of m[1].split('\n')) {
-    const kv = l.match(/^([a-zA-Z_][\w]*):\s*(.*)$/);
-    const it = l.match(/^\s+-\s+(.*)$/);
-    if (kv) { clau = kv[1]; out[clau] = kv[2] === '' ? [] : kv[2].replace(/^['"]|['"]$/g, ''); }
-    else if (it && clau) { if (!Array.isArray(out[clau])) out[clau] = []; out[clau].push(it[1].replace(/^['"]|['"]$/g, '')); }
-  }
-  return out;
-}
+/* Correcció 261026 («El pols del cervell: No s’han pogut llegir les dades») ·
+   El parser mínim d'abans (còpia d'un tooling/brain/matrix.mjs que ja no el
+   porta) no acceptava claus amb punt: les llistes de `contracte.llig:` i
+   `contracte.escriu:` s'enganxaven a la clau anterior. En core-automillora,
+   core-estrategia-ia i core-telemetria-huma eixa clau és `description`, que
+   arribava com a llista, i normalitza (src/sections/consola/consolaContent.js)
+   rebutjava consola.json sencer. Ara es llig amb l'únic parser lleuger del
+   frontmatter (tooling/wiki/lib/frontmatter.mjs), el de cataleg_skills.mjs i
+   build_skills_index.mjs, que coneix les claus amb punt i els blocs `>`/`|`. */
+const frontmatter = (txt) => parseFrontmatter(txt ?? '').data;
 
 export function recullConsola() {
   const diariData = parseJsonl(llig(path.join(AGENTS_DIR, '.diari_sessio.jsonl')));

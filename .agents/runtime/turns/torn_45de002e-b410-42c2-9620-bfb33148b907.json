@@ -3,10 +3,10 @@
   "turn_id": "torn_45de002e-b410-42c2-9620-bfb33148b907",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-19T19:17:33.869Z",
-  "updatedAt": "2026-10-19T19:18:59.359Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-20T19:17:33.870Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3894,6 +3894,17 @@
       "file": "_wiki_de_poble/04_escriptori/261019_2115_prompt_gemini_auditoria_botigues_mobil.md",
       "at": "2026-10-19T19:18:59.359Z",
       "hash": "768362ef4b59cc40168e8cce1a4a2994b6dbd86881cc1e12a99f9bd4cb0e6af5"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

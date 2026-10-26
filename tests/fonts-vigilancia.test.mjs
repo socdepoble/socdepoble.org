@@ -241,3 +241,18 @@ test('cap funció llança: una arrel inservible és null', () => {
     assert.equal(f(undefined), null, `${f.name} sense arrel`);
   }
 });
+
+test('escriptori: només el Llibre canònic està exempt de rebut i conserva el control d’àncora', () => {
+  const arrel = arrelNova();
+  escriu(arrel, `${DESK}/00_index_escriptori.md`, '# Índex\n\n- [[03_llibre_mestre_tasques_i_idees]]\n- [[260930_0040_a]]\n');
+  escriu(arrel, `${DESK}/03_llibre_mestre_tasques_i_idees.md`, '# Llibre\n');
+  escriu(arrel, `${DESK}/260930_0040_a.md`, '# a\n');
+  assert.deepEqual(resumEscriptori(arrel).documents, [
+    { nom: '03_llibre_mestre_tasques_i_idees.md', ancorat: true, ambRebut: null },
+    { nom: '260930_0040_a.md', ancorat: true, ambRebut: false }
+  ]);
+  escriu(arrel, 'tooling/wiki/taxonomia.json', JSON.stringify({ schema: 'sdp.taxonomia.v1', superficies: [DESK], exempts: { '260930_0040_a.md': 'no autoritzat' } }));
+  assert.equal(resumEscriptori(arrel).documents[1].ambRebut, false);
+  escriu(arrel, `${DESK}/00_index_escriptori.md`, '# Índex\n');
+  assert.deepEqual(resumEscriptori(arrel).documents[0], { nom: '03_llibre_mestre_tasques_i_idees.md', ancorat: false, ambRebut: null });
+});

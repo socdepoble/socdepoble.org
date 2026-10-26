@@ -3,10 +3,10 @@
   "turn_id": "torn_ae1a7ff6-2572-431c-a352-e3ed470f30ef",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-20T13:16:39.659Z",
-  "updatedAt": "2026-10-20T13:17:01.174Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T13:16:39.659Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3512,9 +3512,20 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-20T13:17:01.173Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261020_1518_auditoria_claude_fase_d_auth_mobil_i_moderacio.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

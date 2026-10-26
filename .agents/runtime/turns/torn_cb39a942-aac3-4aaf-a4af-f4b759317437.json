@@ -3,10 +3,10 @@
   "turn_id": "torn_cb39a942-aac3-4aaf-a4af-f4b759317437",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 18,
+  "state": "closed",
+  "revision": 19,
   "createdAt": "2026-10-19T15:11:48.811Z",
-  "updatedAt": "2026-10-19T16:25:36.280Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-20T15:11:48.812Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -4069,6 +4069,17 @@
       "file": "_wiki_de_poble/04_escriptori/261019_1825_auditoria_gemini_editorial_i_skills.md",
       "at": "2026-10-19T16:25:36.280Z",
       "hash": "bfc45846d53afd4e10da7d6214c6e0a14f1ea3d44468d12f7ae77e3ba53af340"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

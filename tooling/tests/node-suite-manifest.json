@@ -463,6 +463,11 @@
       "reason": "Inventari estructural d’un full humà opcional de la sessió per a dissenyar l’importador; no és una prova portable de producte. Les regressions de Salut viuen a Vitest."
     },
     {
+      "path": "tests/saneja-torns-caducats.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió del sanejament instal·lat: caducitat sense falsa verificació i protecció lock/CAS."
+    },
+    {
       "path": "tests/security-chain.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -556,6 +561,11 @@
       "path": "tooling/gates/tractor-psicopatia.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/media/cens_imatges.test.mjs",
+      "suite": "primary",
+      "reason": "Cens de mitjans permanent amb fixtures portables: traçabilitat, variants, duplicats i lectura confinada; cap mutació d’assets."
     },
     {
       "path": "tooling/media/optimitzar_webp.test.mjs",

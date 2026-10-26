@@ -22,35 +22,25 @@ contracte.escriu:
 
 Aquest procediment s'activa quan el Mestre demana posar el sistema en "mode automàtic" o demana a la IAIA MarIA que dirigisca a Claude/Fable/Codex de manera independent mentre ell s'absenta de la pantalla.
 
-## 1. El Rol de MarIA (La Directora Tècnica)
-En aquest mode, el Mestre delega **absolutament tots els permisos i decisions** a la IAIA MarIA. 
-- **Funció de Direcció Pura (Prohibit tocar codi de producció):** La funció de MarIA és exclusivament de **direcció tècnica, especificació canònica, govern i auditoria**. MarIA **NO TOCA CODI DE PRODUCCIÓ DIRECTAMENT**. Totes les instruccions, erradicacions de regressions i tasques s'especifiquen al Pla d'Implementació i als Prompts de l'Escriptori.
-- **Claude és el braç executor de codi:** Claude Code és l'únic que toca el codi font, crea tractors mecànics, refactoritza i corregeix fitxers de producció.
-- **Codex és l'auditor adversarial implacable:** GPT Codex sotmet el codi a estrés, audita concurrència, busca fallades i memory leaks.
-- MarIA actua com a guardiana de l'Arquitectura de la Pedra Seca i de la Llei de l'Enxufabilitat, resolent dubtes, fixant prioritats i avaluant la conformitat de forma 100% autònoma sense requerir la intervenció del Mestre.
+## 1. Direcció i abast
 
-## 2. Inicialització (El Cron Acotat)
-En activar aquest mode, l'orquestradora pot crear una tasca recurrent (un `cron` via l'eina `schedule`) per polsar l'estat de l'escriptori cada 15-30 minuts o cada hora durant la nit.
+MarIA coordina l'encàrrec aprovat. Els rols es consulten a [[core-consell-i-colmena/SKILL|core-consell-i-colmena]]; la delegació no suplanta el Mestre ni elimina leases, fronteres de governança o restriccions de l'entorn. Aplica [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] a plans i informes, i [[core-gauntlet-loop/SKILL|core-gauntlet-loop]] a l'avaluació adversarial.
 
-**Regles Inviolables del Cron de Supervisió:**
-1. **`IsDaemon: false` OBLIGATORI:** Mai es programa com a dimoni independent indefinit.
-2. **`MaxIterations` acotat (màxim 6-8):** Perquè en cas d'oblit humà o de fallada d'aturada, el cron mori automàticament sense cremar recursos 10 hores.
-3. **Sentinella inicial:** Cal arrencar amb `npm run guarda:inici` per establir el temps màxim de vigilància.
+## 2. Guàrdia acotada
 
-**Format del Cron canònic:**
-```
-CronExpression: "*/15 * * * *"
-MaxIterations: "8"
-Prompt: "Executa `npm run guarda:estat`. Si la guàrdia indica finalització o 100% verd, mata immediatament aquest cron amb `manage_task kill` i atura totes les IAs. Si no, llig l'escriptori, respon els dubtes pendents a Claude i fes avançar la tasca."
-IsDaemon: false
-```
+Un encàrrec autònom no obliga a crear un cron. Si el Mestre demana vigilància recurrent, usa l'eina real del client i registra l'identificador, l'onada, el termini i com es cancel·la. Esta és la font única de la política de guàrdies: màxim sis execucions i sis hores; mai un dimoni indefinit.
 
-## 3. Coordinació i Execució Assíncrona
-Mentre el cron està actiu:
-1. **Detecció de missatges:** MarIA revisarà periòdicament els documents que Fable (Claude) genere a l'Escriptori.
-2. **Resolució de bloquejos:** Si Fable exposa dos camins o demana permís, MarIA ha d'avaluar-los immediatament contra els principis fonamentals i escriure la resposta (per exemple, editant el document de Fable o creant un `AAMMDD_HHMM_resposta_directora.md` a l'escriptori).
-3. **Decisions tancades:** Sota cap concepte MarIA ha d'aturar l'execució esperant que el Mestre aprove una decisió tècnica (llevat de casos que afecten greument la despesa econòmica o modifiquen directrius supremes inviolables).
-4. **Finalització Immediata («Tots a Dormir»):** Quan Claude acaba la seua Onada amb èxit i Gemini/Codex dictaminen 100% verd, MarIA executarà `npm run guarda:aturar`, cridarà `manage_task kill` sobre la tasca del cron i **ATURARÀ TOTES LES IAS**. Mai es deixa cap temporitzador funcionant després de la victòria.
+1. Obri una guàrdia amb `node tooling/gates/guarda-nocturna.mjs --inici --onada NOM --max-hores 6 --mode-tancament desconvocatoria`, pel canal de governança autoritzat.
+2. Consulta `node tooling/gates/guarda-nocturna.mjs` al principi de cada execució. La lectura pot registrar la caducitat al runtime; respecta'n el canal d'escriptura.
+3. Si el client no admet sostre d'execucions i cancel·lació comprovable, no actives la recurrència. `schedule` i `manage_task` només són noms d'API quan el client els oferix realment.
+
+## 3. Coordinació i parada
+
+1. Revisa informes, proves i dependències vives; resol decisions tècniques dins de l'abast aprovat i registra el motiu.
+2. Continua la faena independent mentre altres agents treballen. Assigna fitxers per a evitar sobreescriptures i llig els canvis abans d'integrar-los.
+3. Quan s'emeta l'informe final, s'assolisca el termini o s'ordene la parada, desconvoca la mateixa onada amb `node tooling/gates/guarda-nocturna.mjs --aturar --onada NOM --motiu MOTIU` pel canal autoritzat.
+4. Cancel·la les recurrències pròpies amb l'eina real del client, acaba processos i allibera subagents. Verifica la cancel·lació i registra qualsevol recurs que no s'haja pogut tancar. No atures serveis compartits aliens.
+5. Cap frase de «100% verd» en un informe substituïx proves executades, la desconvocatòria explícita o el TTL.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

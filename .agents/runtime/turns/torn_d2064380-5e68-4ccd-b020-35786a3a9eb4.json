@@ -4,9 +4,9 @@
   "actor": "iaia-maria",
   "scope": "documents",
   "state": "planned",
-  "revision": 10,
+  "revision": 13,
   "createdAt": "2026-10-25T04:38:47.633Z",
-  "updatedAt": "2026-10-25T05:09:16.841Z",
+  "updatedAt": "2026-10-25T15:53:11.904Z",
   "expiresAt": "2026-10-26T04:38:47.634Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3690,7 +3690,7 @@
       "id": "ed06aebf-f0a4-4810-841b-c2d7a12cdccc",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
       "contractSnapshot": "0303aea66143591f70f5499f61e321e9e9c09e5a1049c5296953d89c769ac371",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
@@ -3700,7 +3700,18 @@
         "preparedAt": "2026-10-25T04:39:05.872Z",
         "committedAt": "2026-10-25T04:39:05.893Z",
         "documentHash": "1ce80210f16dff2c4c64dead0682ee25940d03eae3635a147038b298e7bd58e0"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+          "hash": "c37b236f7c159bcc6cb93e8fc5e550a115eddc6066d7d8a1464ec8269bf0f725",
+          "at": "2026-10-25T15:53:11.597Z",
+          "receiptIds": [
+            "ed06aebf-f0a4-4810-841b-c2d7a12cdccc"
+          ]
+        }
+      ]
     },
     "a7dd8df2-aef2-4a09-a8a8-bac0925fb3e8": {
       "id": "a7dd8df2-aef2-4a09-a8a8-bac0925fb3e8",
@@ -3722,7 +3733,7 @@
       "id": "7fbecd87-e8f3-4eaf-8273-f8c75a2c1e8b",
       "route": "prompt.local",
       "routeVersion": "3.10.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md",
       "contractSnapshot": "1b7c94cd13fbb14e9e97162d99662d87d0c90abfee6d727f67cd0be502ca3d30",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "1186c19e82c2aa1a29514c64220e45b495e1abfb77a4c3acd27716c1affc5c4c",
@@ -3732,23 +3743,46 @@
         "preparedAt": "2026-10-25T04:44:42.160Z",
         "committedAt": "2026-10-25T04:44:42.186Z",
         "documentHash": "e1299289d36848e6c99d354b94ff912b5e05ab5c4dd9dd5a9206e79e8eb5074c"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md",
+          "hash": "48374a513166d7d46c140b057e05f523e97a62a462e0b4d03577d7f98a89ac1c",
+          "at": "2026-10-25T15:53:11.903Z",
+          "receiptIds": [
+            "7fbecd87-e8f3-4eaf-8273-f8c75a2c1e8b"
+          ]
+        }
+      ]
     },
     "b9b8a898-fb52-43b9-80c1-9bb8b6085579": {
       "id": "b9b8a898-fb52-43b9-80c1-9bb8b6085579",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0545_auditoria_gemini.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
-      "issuedAt": "2026-10-25T05:09:08.350Z"
+      "issuedAt": "2026-10-25T05:09:08.350Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0545_auditoria_gemini.md",
+          "hash": "23b439f402826edb7a753a4bd14b4da5c64f45b8efa554b6cfb145f5922b0920",
+          "at": "2026-10-25T15:53:11.438Z",
+          "receiptIds": [
+            "b9b8a898-fb52-43b9-80c1-9bb8b6085579",
+            "22137987-14c0-4f51-bbfc-45c5a3afbb77"
+          ]
+        }
+      ]
     },
     "22137987-14c0-4f51-bbfc-45c5a3afbb77": {
       "id": "22137987-14c0-4f51-bbfc-45c5a3afbb77",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0545_auditoria_gemini.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
@@ -3758,11 +3792,23 @@
         "preparedAt": "2026-10-25T05:09:16.755Z",
         "committedAt": "2026-10-25T05:09:16.796Z",
         "documentHash": "74798a06895b281386c8b5ad014932a68fc65088ea3a2b9af449a48f6bdee65f"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0545_auditoria_gemini.md",
+          "hash": "23b439f402826edb7a753a4bd14b4da5c64f45b8efa554b6cfb145f5922b0920",
+          "at": "2026-10-25T15:53:11.438Z",
+          "receiptIds": [
+            "b9b8a898-fb52-43b9-80c1-9bb8b6085579",
+            "22137987-14c0-4f51-bbfc-45c5a3afbb77"
+          ]
+        }
+      ]
     }
   },
   "plan": {
-    "file": "_wiki_de_poble/04_escriptori/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+    "file": "_wiki_de_poble/90_arxiu_historic/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
     "hash": "c37b236f7c159bcc6cb93e8fc5e550a115eddc6066d7d8a1464ec8269bf0f725"
   },
   "verification": null,
@@ -3829,6 +3875,31 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-25T05:09:16.840Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-25T15:53:11.438Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-25T15:53:11.597Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-25T15:53:11.904Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261025_0545_auditoria_gemini.md",
+    "_wiki_de_poble/90_arxiu_historic/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+    "_wiki_de_poble/90_arxiu_historic/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261025_0545_auditoria_gemini.md",
+    "_wiki_de_poble/04_escriptori/261025_0545_pla_implementacio_destil_llibre_mestre_dafo_i_xat_fluid.md",
+    "_wiki_de_poble/04_escriptori/261025_0545_prompt_claude_gemini_codex_destil_llibre_mestre_dafo_i_xat_fluid.md"
   ]
 }

@@ -3,10 +3,10 @@
   "turn_id": "torn_ff168a12-8945-472f-b2a1-7cec97ecd398",
   "actor": "Gemini4",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-14T14:38:02.966Z",
-  "updatedAt": "2026-10-14T14:38:17.304Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-15T14:38:02.967Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3762,6 +3762,17 @@
       "file": "_wiki_de_poble/04_escriptori/261014_1638_auditoria_gemini4.md",
       "at": "2026-10-14T14:38:17.304Z",
       "hash": "0b7d34553c6bf13d64f8e50191e204bdd3400c5a674b323f5b34a1d7742eead9"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

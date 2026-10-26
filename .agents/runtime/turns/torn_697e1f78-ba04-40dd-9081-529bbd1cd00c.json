@@ -3,10 +3,10 @@
   "turn_id": "torn_697e1f78-ba04-40dd-9081-529bbd1cd00c",
   "actor": "Codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 7,
+  "state": "closed",
+  "revision": 8,
   "createdAt": "2026-10-21T23:40:50.487Z",
-  "updatedAt": "2026-10-21T23:55:38.371Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-22T23:40:50.488Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3665,6 +3665,17 @@
       "file": "_wiki_de_poble/04_escriptori/261022_0141_acta_tancament_codex.md",
       "at": "2026-10-21T23:55:38.371Z",
       "hash": "c6201886f6bc22c1e3d5150bbdf81bd0b5f64f48dd268cc05280b17417ae2f5c"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

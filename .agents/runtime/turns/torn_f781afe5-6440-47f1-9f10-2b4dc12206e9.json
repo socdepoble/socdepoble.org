@@ -3,10 +3,10 @@
   "turn_id": "torn_f781afe5-6440-47f1-9f10-2b4dc12206e9",
   "actor": "gemini",
   "scope": "code",
-  "state": "planned",
-  "revision": 4,
+  "state": "closed",
+  "revision": 5,
   "createdAt": "2026-10-21T14:41:06.399Z",
-  "updatedAt": "2026-10-21T14:41:21.062Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-22T14:41:06.400Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3617,6 +3617,17 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-21T14:41:21.061Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { recullMapa, recullFonts, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
+import { recullMapa, recullFonts, eixidaDePorta, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
 import { SOURCES } from '../tooling/brain/context-local.mjs';
 import { normalitzaMapa } from '../src/sections/consola/mapa/mapaContent.js';
 
@@ -121,6 +121,8 @@ test('peces de lectura: plist, lliçons i mencions', () => {
   assert.equal(compteLlicons('# X\n'), 0);
   assert.deepEqual(mencionsDeSkills('usa core-context-panic i `wiki-cicle-de-vida`; no .sdp-reflex ni wiki-integrity.yml'),
     ['core-context-panic', 'wiki-cicle-de-vida']);
+  // Un esquema d'URI no és cap skill: `sdp-media://` no és una crida a «sdp-media».
+  assert.deepEqual(mencionsDeSkills('rutes `sdp-media://avatars/x.webp` i core-context-panic'), ['core-context-panic']);
   // Una skill absorbida citada a l'Historial és història, no una crida.
   assert.deepEqual(mencionsDeSkills('# X\n\n## Historial\n\n> absorbix `core-safe-restore`\n\n## Àmbit\n\ncrida sdp-workflow\n'), ['sdp-workflow']);
   assert.deepEqual(mencionsDeSkills('# X\n\ncrida sdp-workflow\n\n## Historial\n\nabsorbix core-safe-restore\n'), ['sdp-workflow']);
@@ -196,7 +198,8 @@ function comprovaContracte({ torns, escriptori, ledger, estat }) {
     assert.deepEqual(claus(d), ['ambRebut', 'ancorat', 'nom']);
     assert.equal(typeof d.nom, 'string');
     assert.equal(typeof d.ancorat, 'boolean');
-    assert.equal(typeof d.ambRebut, 'boolean');
+    // null: un nom exempt de la taxonomia (el Llibre Mestre) no ha de portar rebut (opció (a), 261026).
+    assert.ok(typeof d.ambRebut === 'boolean' || d.ambRebut === null, `${d.nom}: ambRebut`);
   }
   assert.deepEqual(claus(ledger), ['entrades', 'fossils', 'malformades', 'peusHistorics', 'valid']);
   assert.equal(typeof ledger.valid, 'boolean');
@@ -247,6 +250,21 @@ test('fonts de vigilància absents: null, i no s’afigen a les fonts absents ob
   assert.doesNotThrow(() => normalitzaMapa(recullMapa(arrel, { home, plataforma: 'linux', ara: ARA })));
 });
 
+/* ── 261026 · El pols del cervell: consola.json del repositori passa normalitza ── */
+test('pols 261026: les claus amb punt del frontmatter (contracte.llig) no tomben consola.json', async () => {
+  const { recullConsola } = await import('../tooling/vite/consola-iaia.mjs');
+  const { normalitza, resumSkills } = await import('../src/sections/consola/consolaContent.js');
+  const dades = normalitza(recullConsola());
+  // El nucli és el que diu el disc: cada SKILL.md amb `core: true` al frontmatter.
+  const dir = new URL('../.agents/skills/', import.meta.url);
+  const delDisc = fs.readdirSync(dir).filter((nom) => {
+    let text = '';
+    try { text = fs.readFileSync(new URL(`${nom}/SKILL.md`, dir), 'utf8'); } catch { /* sense SKILL.md */ }
+    return /^core:\s*true\s*$/m.test(text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '');
+  }).sort();
+  assert.deepEqual(resumSkills(dades.skills).nucli.map((s) => s.nom).sort(), delDisc);
+});
+
 /* ── 261006 (prompt 261006_0224, T1) · El Mapa no compta els peus històrics com a fòssils ── */
 test('LEDGER 261006: els peus intercalats arriben com a peus històrics i les mètriques del Mapa no els compten', () => {
   const peu = (c) => `<!-- HASH: ${c.repeat(64)} -->`;
@@ -267,4 +285,62 @@ test('LEDGER 261006: els peus intercalats arriben com a peus històrics i les m�
   const brut = amb(['# LEDGER', '', '260924 | torn | claude | a', `- nota ${peu('a')}`, '260924 | torn | claude | b'].join('\n'));
   assert.deepEqual([brut.fonts.ledger.peusHistorics, brut.fonts.ledger.fossils], [1, 1]);
   assert.equal(valorDe(brut.mapa, 'ledger-fossils'), 1);
+});
+
+/* ── 261026 · Les dues portes de només lectura arriben al Mapa (abans, N/A fixos) ── */
+test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformitat-documental i cadena-portes', () => {
+  const metrica = (mapa, nom) => mapa.salut.find((m) => m.metrica === nom);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  // Sense els scripts: cap font, i les dues mètriques continuen N/A (mai un verd inventat).
+  const buit = mas();
+  const senseFonts = recullFonts(buit, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual([senseFonts.portaDocuments, senseFonts.cadenaPortes], [null, null]);
+  const senseMapa = recullMapa(buit, { home, plataforma: 'linux', ara: ARA });
+  assert.equal(metrica(senseMapa, 'conformitat-documental').valor, 'N/A');
+  assert.equal(metrica(senseMapa, 'cadena-portes').valor, 'N/A');
+
+  // Portes roges: exit 1 amb el JSON a l'eixida estàndard; run-portes acaba amb una línia JSON.
+  const arrel = mas();
+  escriu(arrel, 'tooling/gates/porta-documents.mjs',
+    "console.log(JSON.stringify({ valid: false, checked: 4, errors: ['_wiki_de_poble/04_escriptori/x.md: falta el rebut'] }, null, 2)); process.exitCode = 1;\n");
+  escriu(arrel, 'tooling/gates/run-portes.mjs',
+    "console.log('⏳ Executant A...'); console.log(JSON.stringify({ diagnostic: process.argv.includes('--diagnostic'), failures: 2, valid: false })); process.exitCode = 1;\n");
+  const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual(fonts.portaDocuments, { valid: false, checked: 4, errors: ['_wiki_de_poble/04_escriptori/x.md: falta el rebut'] });
+  assert.equal(fonts.cadenaPortes.failures, 2);
+  assert.equal(fonts.cadenaPortes.total, 5, 'els passos readOnly de run-portes.mjs');
+  const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual([metrica(mapa, 'conformitat-documental').numerador, metrica(mapa, 'conformitat-documental').denominador], [3, 4]);
+  assert.deepEqual([metrica(mapa, 'cadena-portes').numerador, metrica(mapa, 'cadena-portes').denominador], [3, 5]);
+  assert.doesNotThrow(() => normalitzaMapa(mapa));
+
+  // Una porta que peta sense JSON (o que no és el diagnòstic) no és cap mesura.
+  escriu(arrel, 'tooling/gates/porta-documents.mjs', "console.error('{\"valid\":false}'); process.exitCode = 1;\n");
+  escriu(arrel, 'tooling/gates/run-portes.mjs', "console.log(JSON.stringify({ failures: 0, valid: true }));\n");
+  const trencat = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual([trencat.portaDocuments, trencat.cadenaPortes], [null, null]);
+});
+
+
+test('portes: timeout amb stdout verd, senyal i exit incoherent mai acrediten una mesura', t => {
+  const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-porta-timeout-'));
+  t.after(() => fs.rmSync(arrel, { recursive: true, force: true }));
+  const file = 'porta.mjs';
+  escriu(arrel, file, "console.log(JSON.stringify({valid:true,checked:1,errors:[]})); setInterval(() => {}, 1000);\n");
+  assert.equal(eixidaDePorta(arrel, file, [], { timeout: 150 }), null);
+  for (const body of [
+    "console.log(JSON.stringify({valid:true})); process.exitCode = 1;",
+    "console.log(JSON.stringify({valid:false}));",
+    "console.log(JSON.stringify({valid:false})); process.exitCode = 2;",
+    "console.log(JSON.stringify({valid:true})); process.kill(process.pid, 'SIGTERM');"
+  ]) { escriu(arrel, file, body); assert.equal(eixidaDePorta(arrel, file), null, body); }
+  escriu(arrel, file, "console.log(JSON.stringify({valid:false})); process.exitCode = 1;");
+  assert.deepEqual(eixidaDePorta(arrel, file), { valid: false });
+});
+test('portes: recomptes i DTO incoherents queden N/A', () => {
+  const arrel = mas(), home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  escriu(arrel, 'tooling/gates/porta-documents.mjs', "console.log(JSON.stringify({valid:true,checked:-1,errors:[]}));");
+  escriu(arrel, 'tooling/gates/run-portes.mjs', "console.log(JSON.stringify({diagnostic:true,failures:6,valid:false})); process.exitCode=1;");
+  const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual([fonts.portaDocuments, fonts.cadenaPortes], [null, null]);
 });

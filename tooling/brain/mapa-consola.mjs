@@ -36,7 +36,14 @@
  * Llig les fonts declarades del Mas, les passa al compilador pur
  * src/sections/consola/mapa/construeixMapa.js i torna el JSON. És de només
  * lectura: no escriu cap fitxer ni llig `.sdp-reflex/`. Només executa `git`
- * (lectura) i, si existix, la frontissa de contingut en mode --json.
+ * (lectura) i, si existixen, la frontissa de contingut en mode --json i les
+ * dues portes de només lectura que mesuren `conformitat-documental` i
+ * `cadena-portes` (porta-documents.mjs i run-portes.mjs --diagnostic).
+ * Matís 261026: el `git status` d'ací i el `git diff HEAD` de
+ * porta-documents.mjs poden reescriure la memòria cau d'estat de
+ * `.git/index` (mai el contingut) quan un fitxer seguit té la data de disc
+ * envellida. En el cas de `git diff`, git ho fa encara que
+ * GIT_OPTIONAL_LOCKS=0.
  *
  * El middleware només-dev de la Consola (tooling/vite/consola-iaia.mjs) el
  * servix a GET /__iaia/mapa.json. El Mapa descriu la maquinària interna: no
@@ -50,12 +57,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { parseDocument, validateSchema } from '../documental/core.mjs';
 import { construeixMapa } from '../../src/sections/consola/mapa/construeixMapa.js';
 import { SOURCES as FONTS_CONTEXT_LOCAL } from './context-local.mjs';
 import { resumTorns, resumEscriptori, resumLedger, resumEstat } from './fonts-vigilancia.mjs';
+import { seleccionaPassos } from '../gates/run-portes.mjs';
 
 const llig = (abs) => { try { return fs.readFileSync(abs, 'utf8'); } catch { return null; } };
 const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
@@ -64,7 +72,8 @@ const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
 const SCRIPT_CONTEXT_LOCAL = 'tooling/brain/context-local.mjs';
 
 /** Mencions de skills dins de la prosa: sempre inferides, mai declarades. */
-const MENCIO_SKILL = /(?<![\w./-])((?:core|sdp|wiki)-[a-z0-9]+(?:-[a-z0-9]+)*)(?![\w-]|\.[a-z])/g;
+/** Un esquema d'URI (`sdp-media://bucket/camí`) no és cap skill: el `://` la talla. */
+const MENCIO_SKILL = /(?<![\w./-])((?:core|sdp|wiki)-[a-z0-9]+(?:-[a-z0-9]+)*)(?![\w-]|\.[a-z]|:\/\/)/g;
 const LLICONS = /^##\s+Lliçons del Mestre\s*$/m;
 const HISTORIAL = /^##\s+Historial\s*$/m;
 const ERROR_DE_LOG = /(?:Error:|MODULE_NOT_FOUND|npm ERR!|Traceback)/;
@@ -237,6 +246,50 @@ function frontissa(arrel) {
 }
 
 /**
+ * Correcció 261026 (Consola: `conformitat-documental` i `cadena-portes` en
+ * N/A) · El compilador ja les sabia mesurar (construeixMapa.js, Onada 6),
+ * però esta closca no li passava mai `fonts.portaDocuments` ni
+ * `fonts.cadenaPortes`. Ara executa les dues portes de només lectura com la
+ * frontissa: en un procés fill, amb temps límit, i només llig el JSON de
+ * l'eixida estàndard (exit 1 = porta roja, però el JSON hi és). Sense script,
+ * sense JSON o amb el temps esgotat, null: la mètrica continua N/A, mai verd.
+ * `ultimaLinia`: run-portes.mjs pinta el registre de cada pas i acaba amb una
+ * línia JSON.
+ */
+export function eixidaDePorta(arrel, rel, args = [], { ultimaLinia = false, timeout = 20000 } = {}) {
+  const script = path.join(arrel, rel);
+  if (!fs.existsSync(script)) return null;
+  const child = spawnSync(process.execPath, [script, ...args], {
+    cwd: arrel, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout, maxBuffer: 20 * 1024 * 1024
+  });
+  // Partial stdout is not evidence after a timeout, signal, spawn or buffer error.
+  if (child.error || child.signal || ![0, 1].includes(child.status) || !child.stdout) return null;
+  const json = ultimaLinia ? child.stdout.trimEnd().split('\n').at(-1) : child.stdout;
+  try {
+    const r = JSON.parse(json);
+    if (!r || typeof r !== 'object' || Array.isArray(r) || typeof r.valid !== 'boolean') return null;
+    return r.valid === (child.status === 0) ? r : null;
+  } catch { return null; }
+}
+
+/** A complete and coherent document-gate result; malformed DTOs stay N/A. */
+function portaDocuments(arrel) {
+  const r = eixidaDePorta(arrel, 'tooling/gates/porta-documents.mjs');
+  if (!r || !Number.isInteger(r.checked) || r.checked < 0 || !Array.isArray(r.errors)
+      || !r.errors.every(e => typeof e === 'string') || r.valid !== (r.errors.length === 0)) return null;
+  return r;
+}
+
+/** Only the read-only diagnostic steps are counted; recursive diagnostics stay N/A. */
+function cadenaPortes(arrel) {
+  const r = eixidaDePorta(arrel, 'tooling/gates/run-portes.mjs', ['--diagnostic'], { ultimaLinia: true });
+  const total = seleccionaPassos({ diagnostic: true }).length;
+  if (!r || r.diagnostic !== true || !Number.isInteger(r.failures) || r.failures < 0 || r.failures > total
+      || r.valid !== (r.failures === 0)) return null;
+  return { ...r, total };
+}
+
+/**
  * Càrrega d'arrencada de `context-local.mjs`: les fonts ixen del codi
  * (SOURCES), no d'una llista copiada. Null si l'script no és a l'arrel que es
  * llig: el que no hi és no carrega res.
@@ -325,6 +378,9 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     llancadors: llancadors(arrel, home, plataforma),
     hooksGit: hooksGit(arrel, { absents }),
     frontissa: frontissa(arrel),
+    // Les dues portes de només lectura de les mètriques de salut (null si no hi són o no responen).
+    portaDocuments: portaDocuments(arrel),
+    cadenaPortes: cadenaPortes(arrel),
     timeMachine: ultimaInstantania ? { ultima: ultimaInstantania } : null,
     // Vigilància: torns, Escriptori, LEDGER i relleu d'ESTAT (null si la font no hi és).
     torns: resumTorns(arrel),

@@ -3,10 +3,10 @@
   "turn_id": "torn_9674401f-d730-449d-97ae-1c09b98d9dbf",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 8,
+  "state": "closed",
+  "revision": 9,
   "createdAt": "2026-10-15T17:26:23.144Z",
-  "updatedAt": "2026-10-15T17:33:34.067Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-16T17:26:23.145Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3830,9 +3830,20 @@
       "file": "_wiki_de_poble/04_escriptori/261015_1933_acta_marmota_codex_fase1.md",
       "at": "2026-10-15T17:33:34.067Z",
       "hash": "a365363f176d68301acddbfc98f6e0699c30ea5107803636a626b03a99768304"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261015_1945_auditoria_codex.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

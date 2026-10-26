@@ -3,10 +3,10 @@
   "turn_id": "torn_d54543b5-24fc-47a3-b2d7-6c664e6ec516",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-14T12:46:00.626Z",
-  "updatedAt": "2026-10-14T12:46:20.953Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-15T12:46:00.626Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3759,6 +3759,17 @@
       "file": "_wiki_de_poble/04_escriptori/261014_1450_pla_implementacio_sincronitzacio_identitats_i_xat.md",
       "at": "2026-10-14T12:46:20.953Z",
       "hash": "e4e499303f7900476bd763167e82c49e0601924a06e8a3b20aeb220007aaaedb"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

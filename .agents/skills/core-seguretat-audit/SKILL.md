@@ -2,7 +2,7 @@
 name: core-seguretat-audit
 type: skill
 status: canonic
-description: Protocol integral de ciberseguretat i sentinella permanent d'auditoria de vulnerabilitats per a tota la Colmena (Claude Code, MarIA, Codex i Gemini), amb coacció primitiva JSONB, zero ReDoS, Clean Shadow Copy i blindatge Supabase RLS/Storage.
+description: Usa-la en auditar la seguretat del codi, de les dades o d'una migració (Claude Code, MarIA, Codex i Gemini). Coacció primitiva JSONB, zero ReDoS, Clean Shadow Copy i blindatge Supabase RLS/Storage.
 tags:
   - seguretat
   - skills
@@ -17,9 +17,10 @@ triggers_on:
   - sast
   - sarif
   - auditoria seguretat
-  - cwe
+  - cwe-
   - redos
-  - rls
+  - polítiques rls
+  - row level security
 contracte.llig:
   - AGENTS.md
   - _wiki_de_poble/00_index.md
@@ -65,7 +66,7 @@ Tota escriptura o revisió de codi en `src/`, `tooling/` o `supabase/migrations/
 ### B. Llei d'Escàners Lineals $O(n)$ (Zero ReDoS — CWE-1333)
 
 - **Prohibició de Regex amb Backtracking sobre Entrades No Fiables:** Està prohibit executar expressions regulars amb quantificadors imbricats o classes negades obertes (com `/<[^>]*>/g`, `/<[a-z][\s\S]*>/i` o `/<img[^>]+src="([^">]+)"/`) sobre text d'usuari, HTML ric o respostes d'API abans de truncar-ne la longitud.
-- **Obligació d'Escàners Lineals:** Per a netejar etiquetes, detectar scripts o extreure atributs d'HTML (`src/utils/sanitize.js`, `src/data/supabase/publicarNota.js`), s'han d'utilitzar exclusivament recorreguts lineals amb `indexOf` (`llevaEtiquetes`, `llevaScriptsIEstils`, `srcsDeLesImg`) que garantisquen temps $O(n)$ i no puguen bloquejar el fil principal del navegador.
+- **Obligació d'Escàners Lineals:** Per a netejar etiquetes, detectar scripts o extreure atributs d'HTML (`src/config/contentHelpers.js` per a `llevaEtiquetes` i `llevaScriptsIEstils`, i `src/sections/profile/DetallMultimedia.jsx` per a `srcsDeLesImg`), s'han d'utilitzar exclusivament recorreguts lineals amb `indexOf` (`llevaEtiquetes`, `llevaScriptsIEstils`, `srcsDeLesImg`) que garantisquen temps $O(n)$ i no puguen bloquejar el fil principal del navegador.
 
 ### C. Llei de Purga d'Autoritat i Validació de Rutes `sdp-media://`
 

@@ -3,10 +3,10 @@
   "turn_id": "torn_777751a0-88ab-46b3-b292-50391bcad195",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 9,
+  "state": "closed",
+  "revision": 10,
   "createdAt": "2026-10-17T13:26:37.236Z",
-  "updatedAt": "2026-10-17T13:45:01.487Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-18T13:26:37.236Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3916,10 +3916,21 @@
         "_wiki_de_poble/04_escriptori/261017_1542_acta_marmota_codex_gauntlet_extrem.md"
       ],
       "at": "2026-10-17T13:45:01.486Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261017_1526_auditoria_codex.md",
     "_wiki_de_poble/04_escriptori/261017_1542_acta_marmota_codex_gauntlet_extrem.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

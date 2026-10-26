@@ -4,7 +4,7 @@ name: core-salfumant-radical
 prioritat: 1
 description: Llei Suprema del Salfumant Radical, Zero Complauença i Veritat Nua. Prohibeix l'aigua de colònia i l'AI slop; mana auditories destructives, transparència total i extirpació implacable de llast a carpetes i codi.
 status: actiu
-tags: [govern, arquitectura, filosofia, neteja]
+tags: [govern, arquitectura, auditoria, trellat]
 triggers_on:
   - salfumant
   - salfumant radical
@@ -22,7 +22,6 @@ contracte.llig:
   - src/
   - .agents/
 contracte.escriu:
-  - _wiki_de_poble/90_arxiu_historic
   - _wiki_de_poble/04_escriptori
 ---
 
@@ -41,7 +40,7 @@ Això és **aigua de colònia**: una capa superficial que tapa les males olors p
 
 El **Salfumant Radical** és el contrari:
 1. **Ataca la calç i el rovell:** No accepta que convisquen carpetes duplicades com `10_metriques` i `10_actes`.
-2. **No tolera l'acumulació de llast:** 105 actes acumulades durant un mes sense podar són 105 fòssils que entelen el context. El present és per a la memòria viva; el passat amortitzat va a l'arxiu històric.
+2. **Revisa el llast:** inventaria la utilitat i els consumidors abans de proposar l'arxivament. La data d'una acta no decidix si continua viva; aplica la retenció de la secció 3.
 3. **No amaga res:** Si no se sap la resposta a una pregunta, o si es descobreix una contradicció o un fitxer del qual no es coneix l'origen, **es confessa immediatament**. Prohibit inventar explicacions tranquil·litzadores per a quedar bé.
 
 ---
@@ -56,17 +55,12 @@ Aquest principi s'aplica a la relació entre el Mestre i les IAs, i entre les pr
 
 ---
 
-## 3. La Llei de la Utilitat Innegociable
+## 3. Utilitat i retenció
 
-A tot el repositori de Sóc de Poble:
-- **Tot fitxer i carpeta ha de tindre una utilitat viva i demostrable.**
-- Si un fitxer no és útil, o si fa més d'un mes que ningú el llig ni l'actualitza:
-  - **O s'arxiva a `_wiki_de_poble/90_arxiu_historic/`**,
-  - **O es purga si era brossa efímera**,
-  - **O, si és un recurs multimèdia/imatge, s'incorpora oficialment a la galeria i al cens**.
-- **No es toleren fitxers satèl·lit:** Cap fitxer pot viure aïllat sense estar registrat al seu índex corresponent ni al mapa de la Wiki.
-
----
+1. Identifica la utilitat, el consumidor actual i la traçabilitat de cada fitxer. Antiguitat o inactivitat suggerixen revisió; no autoritzen arxiu ni purga automàtics.
+2. Per a documents de l'Escriptori aplica [[core-higiene-escriptori/SKILL|core-higiene-escriptori]] i la porta Olivera. Conserva les dependències vives i no elimines fitxers per obtindre un verd.
+3. Fora de l'abast d'Olivera, registra la proposta de destí i respecta l'autorització i el canal de mutació aplicables. Els recursos multimèdia es contrasten amb el cens i els consumidors abans de proposar-ne el trasllat.
+4. Mantín cada recurs viu ancorat al seu índex. Un nom o un hash coincident no prova per si sol la identitat semàntica d'un recurs.
 
 ## 4. Fronteres Clares: Sollutia vs Sóc de Poble
 
@@ -83,29 +77,15 @@ Quan s'executa una auditoria de salfumant, cal aplicar dos criteris quirúrgics 
 
 ---
 
-## 5. Auditoria Adversarial Cíclica (El Gauntlet Continu)
+## 5. Contrast adversarial
 
-Una auditoria no és un formulari ràpid de 5 minuts per complir l'expedient. Ha de ser **cíclica i adversarial**:
-1. **Passada 1 (Extracció):** Una IA (ex: Gemini) escaneja el sistema i emet la seua llista de troballes crues.
-2. **Passada 2 (Confrontació Adversarial):** Una altra IA (ex: Claude o ChatGPT) rep l'informe de la primera, el posa en dubte, busca allò que la primera no ha sabut vore i audita les pròpies conclusions.
-3. **Passada 3 (Autocrítica i Verificació):** L'orquestradora (MarIA) revisa l'arbre físic real des de la consola per verificar que no queden ombres ni punts cecs.
-4. **Despesa conscient de tokens:** Els models han de gastar els seus tokens raonant en profunditat, contrastant hipòtesis i inspeccionant fitxer a fitxer, no fent resums superficials d'alta velocitat.
+Aplica [[core-gauntlet-loop/SKILL|core-gauntlet-loop]] per a constructor, crítica independent, matriu MCR i verificació final. Esta skill exigix declarar el deute i els límits sense complaença; no crea un segon bucle ni un altre criteri de tancament.
 
----
+## 6. Investigació de la utilitat
 
-## 6. El Qüestionari Forense dels 5 «Per Què»
+Aplica [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]] per a llegir teoria, tractor real, restriccions i reproducció. En cada recurs concreta què és, per què està ací, qui el consumix, quina evidència d'ús té i quin destí es proposa. Distingix ús desconegut d'absència d'ús.
 
-Davant de qualsevol fitxer o carpeta que es trobe a l'arbre, cal aplicar aquesta prova del cotó:
-
-1. **Què és exactament?** (Descripció precisa sense suposicions).
-2. **Per què està ací i no en un altre lloc?** (Justificació taxonòmica de la seua carpeta mare).
-3. **Qui el llig o l'executa en el present actiu?** (Si no el llig cap humà ni cap script vigent, és un fòssil).
-4. **Quan es va tocar per última vegada?** (Si està congelat des de fa setmanes sense ser un estàndard de referència, s'ha d'arxivar).
-5. **On ha d'anar a parar?** (A l'arxiu històric, a multimèdia, o a la paperera).
-
----
-
-## 7. Vincles Canònics
+## Vincles
 
 - [[00_BIOS_COGNITIU]]
 - [[AGENTS]]

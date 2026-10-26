@@ -3,10 +3,10 @@
   "turn_id": "torn_3ee7e2bb-b404-4f03-99c8-0b1ff905661f",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-20T18:57:02.177Z",
-  "updatedAt": "2026-10-20T18:57:23.058Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T18:57:02.178Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3560,6 +3560,17 @@
       "file": "_wiki_de_poble/04_escriptori/261020_2100_prompt_gemini_auditoria_extrema_skills_i_textos.md",
       "at": "2026-10-20T18:57:23.058Z",
       "hash": "6e09ab66dc55fe4fa2dc6ef51d93cf52bda273211d9693c6521d6dcc79f5e286"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

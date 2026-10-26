@@ -4,9 +4,9 @@
   "actor": "codex",
   "scope": "documents",
   "state": "planned",
-  "revision": 4,
+  "revision": 5,
   "createdAt": "2026-10-25T05:07:27.375Z",
-  "updatedAt": "2026-10-25T05:08:42.927Z",
+  "updatedAt": "2026-10-25T15:53:12.317Z",
   "expiresAt": "2026-10-26T05:07:27.376Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3692,17 +3692,29 @@
       "id": "43cc4993-442b-4526-b78d-d59634cd8b8f",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0607_auditoria_codex.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0607_auditoria_codex.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
-      "issuedAt": "2026-10-25T05:07:33.184Z"
+      "issuedAt": "2026-10-25T05:07:33.184Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0607_auditoria_codex.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0607_auditoria_codex.md",
+          "hash": "1c506c585d98e73bb72eeb9be91b14f01106d16e78419e4800c724a9cb6df111",
+          "at": "2026-10-25T15:53:12.316Z",
+          "receiptIds": [
+            "43cc4993-442b-4526-b78d-d59634cd8b8f",
+            "befae8c7-830d-4c59-b79d-c9f2d253d8b3"
+          ]
+        }
+      ]
     },
     "befae8c7-830d-4c59-b79d-c9f2d253d8b3": {
       "id": "befae8c7-830d-4c59-b79d-c9f2d253d8b3",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0607_auditoria_codex.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0607_auditoria_codex.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
@@ -3712,7 +3724,19 @@
         "preparedAt": "2026-10-25T05:08:42.868Z",
         "committedAt": "2026-10-25T05:08:42.889Z",
         "documentHash": "8a37f829664affe977ebf5e18c77fb4968a6f8d340e1cd1494be190f5f041c2e"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0607_auditoria_codex.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0607_auditoria_codex.md",
+          "hash": "1c506c585d98e73bb72eeb9be91b14f01106d16e78419e4800c724a9cb6df111",
+          "at": "2026-10-25T15:53:12.316Z",
+          "receiptIds": [
+            "43cc4993-442b-4526-b78d-d59634cd8b8f",
+            "befae8c7-830d-4c59-b79d-c9f2d253d8b3"
+          ]
+        }
+      ]
     }
   },
   "plan": {
@@ -3747,6 +3771,17 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-25T05:08:42.926Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-25T15:53:12.317Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261025_0607_auditoria_codex.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261025_0607_auditoria_codex.md"
   ]
 }

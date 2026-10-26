@@ -3,10 +3,10 @@
   "turn_id": "torn_8ee65040-5730-4568-b046-a661886e8590",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 4,
+  "state": "closed",
+  "revision": 5,
   "createdAt": "2026-10-21T16:58:42.558Z",
-  "updatedAt": "2026-10-21T16:58:49.076Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-22T16:58:42.559Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3622,6 +3622,17 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-21T16:58:49.076Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

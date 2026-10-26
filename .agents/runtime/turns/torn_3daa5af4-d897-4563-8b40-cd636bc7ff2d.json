@@ -3,10 +3,10 @@
   "turn_id": "torn_3daa5af4-d897-4563-8b40-cd636bc7ff2d",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 46,
+  "state": "closed",
+  "revision": 47,
   "createdAt": "2026-10-19T19:46:00.113Z",
-  "updatedAt": "2026-10-19T21:48:39.979Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-20T19:46:00.114Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -4160,6 +4160,12 @@
         "_wiki_de_poble/04_escriptori/261019_2155_auditoria_claude_capacitor_mobil.md"
       ],
       "at": "2026-10-19T21:48:39.979Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -4205,5 +4211,10 @@
     "src/sections/profile/PerfilShell.fitxaPublica.test.jsx",
     "src/sections/profile/PerfilShell.fitxaPublica.capes.test.js",
     "_wiki_de_poble/04_escriptori/261019_2155_auditoria_claude_capacitor_mobil.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

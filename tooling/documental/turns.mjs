@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { DESK, canonical, inside, relativePath, humanZone, hashFile, sha, json, turnPattern, receiptPattern,
-  loadContract, saveContract, readContract, resolveRoute, parseDocument, anchored, validateSchema, validateSections, validateRegister } from './core.mjs';
+  exemptDeRebut, loadContract, saveContract, readContract, resolveRoute, parseDocument, anchored, validateSchema, validateSections, validateRegister } from './core.mjs';
 
 const STORE = '.agents/runtime/turns';
 function recordPath(root, id) {
@@ -38,12 +38,14 @@ export function inventory(root, {files=[]} = {}) {
 export function changes(before, after) {
   return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(p => before[p] !== after[p]).sort();
 }
-export function readTurn(root, id, { closed = false, now = Date.now() } = {}) {
+export function readTurn(root, id, { closed = false, expired = false, now = Date.now() } = {}) {
   const turn = json(recordPath(root, id));
   if (turn.turn_id !== id || turn.schema !== 'sdp.turn.v1' || !['opened', 'context_loaded', 'planned', 'verified', 'closed'].includes(turn.state)) throw new Error('Registre de torn invàlid');
   if (turn.state === 'closed' && !closed) throw new Error('Torn ja tancat');
-  if (turn.state !== 'closed' && (!Number.isFinite(Date.parse(turn.expiresAt)) || Date.parse(turn.expiresAt) <= now)) throw new Error('Torn caducat');
-  if (!turn.receipts || !turn.initial || !Array.isArray(turn.history)) throw new Error('Registre de torn incomplet');
+  const expiry = Date.parse(turn.expiresAt);
+  if (!Number.isFinite(expiry)) throw new Error('Caducitat de torn invàlida');
+  if (!expired && turn.state !== 'closed' && expiry <= now) throw new Error('Torn caducat');
+  if (!turn.receipts || typeof turn.receipts !== 'object' || Array.isArray(turn.receipts) || !turn.initial || typeof turn.initial !== 'object' || Array.isArray(turn.initial) || !Array.isArray(turn.history)) throw new Error('Registre de torn incomplet');
   return turn;
 }
 function atomic(file, value) {
@@ -199,6 +201,8 @@ export function validateDocument(root, content, file, { closed = false, readReco
     const rel = relativePath(root, file);
     // The canonical desktop index is structural, never a substitute for a formal document.
     if (rel === `${DESK}/00_index_escriptori.md` && parsed.data.type === 'index') return validateSchema(parsed.data,loadContract(root,{templates:false}).schema);
+    // Permanent knowledge has no per-turn receipt; the exception is one canonical path.
+    if (exemptDeRebut(root, file) && parsed.data.type === 'document') return validateSchema(parsed.data,loadContract(root,{templates:false}).schema);
     const m = typeof parsed.data.reflex === 'string' && receiptPattern.exec(parsed.data.reflex);
     if (!m) {
       errors.push('reflex: cal un rebut persistent emés per document.mjs context');
@@ -216,6 +220,8 @@ export function validateDocument(root, content, file, { closed = false, readReco
       if (receipt.templateHash !== route.templateHash || receipt.routeVersion !== route.version) throw new Error('Plantilla del rebut canviada');
       if (parsed.data.type !== route.tipus) errors.push('type: no correspon a la ruta del rebut');
       errors.push(...validateSections(parsed.body, route), ...validateRegister(parsed.body, contract));
+      // Expiry only records administrative closure; legacy expiry hashes are not verification.
+      if (turn.state === 'closed' && Array.isArray(turn.verification?.checks) && turn.verification.checks.length > 0 && turn.verification.checks.every(check => check === 'expire-close')) errors.push('Verificació invàlida: expire-close només acredita caducitat, no fitxers');
       if (turn.state === 'closed' && turn.verification?.files?.[rel] !== sha(content)) errors.push('Artefacte modificat després del tancament');
     }
   } catch (e) { errors.push(e.message); }

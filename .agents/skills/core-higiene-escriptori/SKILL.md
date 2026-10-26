@@ -74,23 +74,14 @@ L'orquestradora (MarIA) o el Mestre. Claude i Codex no poden moure fitxers. La n
 
 ## Procediment: Convocatòria (Onada nova / Nova Auditoria)
 
-Preparar una nova auditoria és un **flux de treball complet i atòmic**: prompt nou + pla d'implementació nou + Llibre Mestre actualitzat + **arxivament immediat dels documents consumits del torn anterior**. La feina viva de l'Onada anterior passa a la següent pel pla nou, mai per la taula.
+Esta skill decidix la vida dels documents i aplica la porta Olivera. La creació des de plantilles és de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]; l'obertura i el tancament del torn són de [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]].
 
-1. **Arxivament Atòmic del Torn Anterior (Regla d'Or del Mestre):**
-   Abans de convocar el nou torn o just en publicar el nou pla/prompt, identifica tots els documents del torn anterior que ja han sigut consumits o consolidats (auditories de Claude/Codex/Gemini, plans anteriors, prompts anteriors i informes d'implementació `aammdd_hhmm_implementacio_claude.md`).
-   - **Executa sense vacil·lar:**
-     `node tooling/gates/porta-olivera.mjs --arxiva --nom DOC_1 --nom DOC_2 ...`
-   - **Damunt de l'Escriptori NOMÉS poden quedar:**
-     1. `03_llibre_mestre_tasques_i_idees.md` (permanent).
-     2. El `pla_implementacio` vigent de l'onada actual.
-     3. Els `prompt` vius de l'onada actual.
-   - **Superació de la Ceguesa Mecànica:** Que `npm run porta:olivera` done exit code `0` NO vol dir que la taula estiga lliure de brossa; la porta indulta qualsevol fitxer ancorat a `## Activitat en curs`. És responsabilitat directa de MarIA retirar amb `--arxiva --nom` tot el que ja ha complert el seu cicle.
-2. **Absorbix:** abans de crear el pla nou, copia-hi sencers els ítems de l'Onada anterior que encara són vius (tasques futures, preguntes obertes, decisions pendents), cadascun amb la seua font citada amb `[[…]]`. El pla nou és l'única pissarra que cita el prompt.
-3. **Arxiva el pla vell:** quan el pla nou ja conté el que era viu, el pla de l'Onada anterior ix amb `node tooling/gates/porta-olivera.mjs --arxiva --nom FITXER`.
-4. **Declara cada viu amb el seu motiu** a «## Activitat en curs», una línia per document i sense repetir-lo: `· per a [[consumidor]]`, `· torn_ID` o `· Mestre aammdd: motiu`. L'informe de la porta mostra cada viu amb el seu motiu (🌿), o 🍂 si cap motiu no es comprova.
-5. **Fes nàixer el pla primer:** el `pla_implementacio` naix abans que el prompt, a la mateixa jornada i amb el mateix HHMM (la Trinitat: pla, prompt de Claude i prompt de Codex). Arriba complet a la convocatòria: «Estat del Pla» triat, i Verificació i Riscos escrits.
-6. **Fes la secció 0 del prompt** marcant les caselles del Preflight. Una secció 0 que només diu `[pendent]` no compta com a feta.
-7. **Verifica:** `npm run porta:olivera` ix amb 0, cap viu no porta 🍂 i damunt la taula només queden els fitxers vius del torn actual i el Llibre Mestre.
+1. Identifica documents consumits i dependències vives. Un commit o un pla nou no convertixen per si sols un document en consumit.
+2. Trasllada sencers al pla nou els ítems pendents, amb la font citada. Conserva l'original mentre un consumidor viu encara el necessite.
+3. Arxiva els consumits amb el procediment anterior: primer `--sec`, després `--arxiva --nom`. Conserva Llibre Mestre, pla, prompts, informes i altres documents que tinguen consumidor, torn vigent o retenció humana acreditada.
+4. Declara cada viu a «## Activitat en curs», una línia amb el seu motiu. Net no vol dir limitar la taula a tres tipus de document.
+5. Crea el pla abans dels prompts i completa'n estat, verificació i riscos. Aplica el circuit de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] i les marques de [[core-temps-termodinamic/SKILL|core-temps-termodinamic]].
+6. Verifica la porta, els motius de retenció i el Preflight abans de convocar. Actualitza el Llibre Mestre amb el que continua pendent.
 
 ## Límits
 
@@ -108,7 +99,7 @@ Una prova de diagnosi etiquetada `[DEFECTE]` pot passar perquè reproduïx el de
 - **260929 · La neteja és acció de l'orquestradora.** Quan l'Escriptori està brut, MarIA l'arxiva amb la porta, verifica el verd i després escriu el prompt.
 - **260924 · Arxivar i despenjar l'àncora són un sol acte.** `--arxiva` fa les dues coses en la mateixa passada.
 - **260924 · Una àncora pot ser l'únic fil que sosté un document.** Abans de llevar-la, mira on viu el fitxer.
-- **260930 · L'Acte Reflex Pre-Arxivament.** Mai més arxives un informe acabat de generar si saps que el següent pas era enviar-lo a un altre agent (ex. Codex). Si ho fas, li furtaràs el document mentre el llig. L'orquestradora no tanca la porta de la sala fins que tots els obrers n'han eixit. Però un cop l'onada s'ha consolidat en commit o s'ha superat pel nou pla, l'arxivament és immediat i inexcusable.
+- **260930 · L'Acte Reflex Pre-Arxivament.** Mai més arxives un informe acabat de generar si saps que el següent pas era enviar-lo a un altre agent (ex. Codex). Si ho fas, li furtaràs el document mentre el llig. L'orquestradora no tanca la porta de la sala fins que tots els obrers n'han eixit. Quan el consumidor ja ha acabat i el deute està destil·lat, arxiva el document; un commit o un pla nou no cancel·len una dependència viva.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

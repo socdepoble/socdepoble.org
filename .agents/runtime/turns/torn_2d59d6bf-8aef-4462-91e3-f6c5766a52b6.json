@@ -3,10 +3,10 @@
   "turn_id": "torn_2d59d6bf-8aef-4462-91e3-f6c5766a52b6",
   "actor": "agent-local",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-22T16:57:21.894Z",
-  "updatedAt": "2026-10-22T16:58:13.050Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T16:57:21.894Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3665,6 +3665,17 @@
       "file": "_wiki_de_poble/10_actes/261022_1900_acta_marmota_transicio_webp_sanejament_supabase_i_relleu.md",
       "at": "2026-10-22T16:58:13.050Z",
       "hash": "d7611cdb3e44440dd62fa2ea02f67f3bc0ee70da4300c091e904792de40950a9"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

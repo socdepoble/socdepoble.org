@@ -3,10 +3,10 @@
   "turn_id": "torn_4400d512-c727-4114-a441-0e66a1e1fc53",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-21T16:47:01.506Z",
-  "updatedAt": "2026-10-21T16:47:51.103Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-22T16:47:01.506Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3640,6 +3640,17 @@
       "file": "_wiki_de_poble/04_escriptori/261021_1850_prompt_claude_gemini_botigues_ayudawp_i_salfumant.md",
       "at": "2026-10-21T16:47:51.103Z",
       "hash": "24c92b8ff8497bdb8f380fa9e88e337c44cd4d7bbe03f02a616b45ec0f5e6af9"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

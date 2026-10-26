@@ -3,10 +3,10 @@
   "turn_id": "torn_241a9f50-0fae-45e4-b1ce-724b30668c6d",
   "actor": "gemini",
   "scope": "documents",
-  "state": "planned",
-  "revision": 15,
+  "state": "closed",
+  "revision": 16,
   "createdAt": "2026-10-22T13:56:24.643Z",
-  "updatedAt": "2026-10-22T20:09:11.289Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T13:56:24.644Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3788,11 +3788,22 @@
         "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md"
       ],
       "at": "2026-10-22T20:09:11.288Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261022_1556_auditoria_gemini.md",
     "_wiki_de_poble/04_escriptori/261022_1700_auditoria_gemini.md",
     "_wiki_de_poble/04_escriptori/261022_2210_auditoria_gemini.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

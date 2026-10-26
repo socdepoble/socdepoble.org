@@ -45,6 +45,12 @@ export function protectedPath(root, file, cwd = root) {
   if (lexicalProtected && !actualProtected) throw new Error('Symlink que escapa de l’Escriptori');
   return (lexicalProtected || actualProtected) && actual.toLowerCase().endsWith('.md');
 }
+// Only permanent knowledge at its physical canonical path is exempt from a turn receipt.
+export function exemptDeRebut(root, file) {
+  const rel = relativePath(root, file);
+  return rel === `${DESK}/03_llibre_mestre_tasques_i_idees.md`
+    && path.resolve(root, file) === path.resolve(root, rel);
+}
 export function humanZone(rel) {
   return rel.toLowerCase().startsWith(`${DESK}/01_produccio/`);
 }

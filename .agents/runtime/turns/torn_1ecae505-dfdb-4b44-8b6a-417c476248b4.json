@@ -3,10 +3,10 @@
   "turn_id": "torn_1ecae505-dfdb-4b44-8b6a-417c476248b4",
   "actor": "Codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 8,
+  "state": "closed",
+  "revision": 9,
   "createdAt": "2026-10-24T11:16:57.901Z",
-  "updatedAt": "2026-10-24T15:56:10.880Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T11:16:57.901Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3731,6 +3731,12 @@
       "state": "planned",
       "action": "handoff",
       "at": "2026-10-24T15:56:10.880Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3741,5 +3747,10 @@
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261024_1315_auditoria_codex.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

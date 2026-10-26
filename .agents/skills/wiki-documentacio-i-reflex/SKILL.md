@@ -62,7 +62,7 @@ Si s'envia a IAs Locals (Codex/Claude en IDE/Cowork, no tenen problemes de conte
 ## 3. L'Abocament Total (La Creació del Context)
 
 Quan es demana preparar el terreny per a una de les avaluacions:
-- **Neteja prèvia:** la fa l'orquestradora (MarIA) o el Mestre, en el mateix torn i abans d'escriure el prompt, amb la porta Olivera (AGENTS §0.1): conserva i declara a «## Activitat en curs» el que continua viu, arxiva la resta amb l'eina i verifica que la porta ix amb 0. Net no vol dir buit; `01_produccio/` i `02_investigacio_ia/` queden fora.
+- **Neteja prèvia:** aplica [[core-higiene-escriptori/SKILL|core-higiene-escriptori]], font única de classificació, retenció i arxivament amb Olivera. Esta skill crea els documents i no amplia permisos de trasllat.
 - **Abocament Total:** Tota la font s'ha de lliurar sense retallar. Res de resums mutilats per "estalviar tokens".
 - **Format Zero Fricció:** CREA SEMPRE UN ARXIU MARKDOWN (.md) AL DISC. Mai imprimisques el prompt o el bundle al xat directament amb tancats de codi gegants (costarà massa de copiar-ho i enganxar-ho).
 - **Identitat Inicial:** El document generat sempre ha d'incloure (ja ho diu la plantilla, però serveix de recordatori) qui és Sóc de Poble i qui és el Rentonar, la voluntat de codi pur Obsidian i la relació amb Sollutia. 
@@ -109,9 +109,12 @@ Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seg
 - **261012** | **Evolució Automàtica de les Plantilles Canòniques (Versionat en calent)**: Cada volta que hi haja una proposta per millorar de forma significativa l'estructura d'un prompt (ex. incloure el "Gauntlet Prompt" o l'Àrbitre Adversarial), **És responsabilitat de la IAIA MarIA i la seua documentació reflectir aquest canvi immediatament a la plantilla general canònica** (a `_wiki_de_poble/03_actuar/plantilles/`). Això implica pujar-li la versió al fitxer `.md`, documentar el canvi a l'historial del fitxer, i actualitzar OBLIGATÒRIAMENT el camp `version` dins de `.agents/protocolledge.json`. No cal esperar a que el Mestre ho demane; el sistema ha d'evolucionar les seues pròpies eines de comunicació quan es demostre una millora tècnica evident.
 - **261011** | **El Cicle I+D de les IAs (Investigació + Desenvolupament)**: Tota IA d'aquest sistema (i nosaltres al crear els Prompts) ha de tenir present l'obligació de no només implementar mecanicament (Desenvolupar), sinó d'exercir activament d'Investigadors (I) sobre l'estat de l'art abans de donar respostes. Els Prompts han d'exigir a l'agent receptor que propose "com fer això aprofitant l'última tendència o tecnologia", garantint que l'Efecte Matrix estiga directament vinculat a mantenir l'avantguarda.
 
-## Vincles
-- [[00_index]]
-
 ## Convocatòria i evidència de lectura
 
 Per a `prompt.local` i `prompt.consell`, el CLI comprova la taula en `context` i la revalida en `create`. Els esborranys solts queden ancorats a «## Activitat en curs»; conservar-los no autoritza cap trasllat. Un manifest acredita rutes i hashes, però no la comprensió: declara quines fonts has llegit íntegrament i quines queden pendents. Separa comprovacions de regressió de proves `[DEFECTE]`, que poden passar reproduint deute conegut.
+
+## Vincles
+
+- [[00_index]]
+- [[core-higiene-escriptori/SKILL]]
+- [[wiki-cicle-de-vida/SKILL]]

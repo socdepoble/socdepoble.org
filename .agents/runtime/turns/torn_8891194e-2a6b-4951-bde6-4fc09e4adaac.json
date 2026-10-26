@@ -3,10 +3,10 @@
   "turn_id": "torn_8891194e-2a6b-4951-bde6-4fc09e4adaac",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 14,
+  "state": "closed",
+  "revision": 15,
   "createdAt": "2026-10-22T00:21:09.768Z",
-  "updatedAt": "2026-10-22T04:16:59.302Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T00:21:09.768Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3773,6 +3773,17 @@
       "file": "_wiki_de_poble/04_escriptori/261022_0615_acta_consens_gauntlet_extrem.md",
       "at": "2026-10-22T04:16:59.302Z",
       "hash": "b511b6da5ac007bc3683851f51d58b9e43a3bd9964cb30be85d33630430db574"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

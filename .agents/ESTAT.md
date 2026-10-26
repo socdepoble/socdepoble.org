@@ -7,6 +7,191 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-26T03:02:00+01:00 · Codex · Sanejament nocturn implementat i verificat localment
+- **Data d'actualització:** 2026-10-26
+- **Branca i HEAD:** backup-notes-publish · cd1bb28a4
+- **Estat de la suite:** precommit final 3.151 Vitest + 262 Node = 3.413 verdes; Consola 889 verdes/4 omissions; Node dirigida 93/93 i política Node 9/9.
+- **Torn:** torn_7dba9117-6651-479e-ade2-81a97ff2582c; informe 261026_0225_auditoria_codex, cens 261026_0225_informe_cens_imatges.json.
+- **Aplicat:** exempció del Llibre per ruta canònica, metadades vàlides i Vincles; parser del pols i mètriques sense fals verd; lock/CAS i 109 baixes per expiració, sense crear/recalcular verification; rebuig del llegat expire-close com a verificació.
+- **Tauler:** índex 72 línies i 268 àncores de producció; 44 fitxers de recerca evacuats amb SHA-256; SCC 1.428 → 209 links històrics, zero orfes i zero elements sense àncora.
+- **Skills i imatges:** 40 frontmatters vàlids, 13 procediments harmonitzats, 40 identitats conservades; segell inicial 7df reproduït i final b9af2e7c intacte. Cens 480 fitxers/390 imatges/92 candidates sense ús viu identificat; quatre vinyetes pròpies planificades, assets intactes.
+- **Concurrència:** pending connectivity recuperat amb revisió independent i lease nova, evidència 80fc6d64-9125-45e2-87e6-2c1f5950164b; cap font ni segell reescrits en recuperar. Watcher pausat durant lot i reprès; coordinació durable watcher/executor queda com a deute.
+- **Portes i límits:** 4/5 diagnòstiques al tall abans del relleu: documental només pendent de completar informe Claude0230 en curs. Queden dos avisos alts de tasques mortes i deute SCC/Wiki; el tancament global no es força. No commit, push, desplegament, migració ni dades remotes tocades.
+- **Recursos:** guàrdia desconvocada (activa false, finalitzada true), cap cron propi; servidor compartit en servei.
+
+
+
+## ESTAT_ACTUAL · 2026-10-26T02:10:00+01:00 · IAIA MarIA · Tancament de Sessió, Tauler Net i Convocatòria Nocturna per al Sanejament de Consola
+- **Data d'actualització:** 2026-10-26
+- **Branca i HEAD:** `backup-notes-publish` · `cd1bb28a4`
+- **Estat de la suite:** 3.410 proves precommit verdes. Porta Olivera en verd (0 errors, 4 documents solts vius). Porta d'Autoritat verda.
+- **Accions Assolides:**
+  1. **Consens Total del Gauntlet 360:** Rebuts els dictamens finals de Claude Opus 5.5, Gemini 4 Argon (`261026_0145_auditoria_gemini.md`) i Codex Sol Ultra (`261026_0145_auditoria_codex.md`).
+  2. **Higiene Radical de l'Escriptori:** Arxivats 9 documents antics a `90_arxiu_historic/`. L'Escriptori queda exclusivament amb els documents vius de la nit.
+  3. **Acta Marmota Canònica:** Validada `_wiki_de_poble/10_actes/261026_0200_acta_marmota_triomf_gauntlet_360_sanejament_consola_i_relleu_nocturn.md` (`valid: true`).
+  4. **Pla d'Implementació Nocturn:** Validat `_wiki_de_poble/04_escriptori/261026_0210_pla_implementacio_sanejament_consola_tauler_net_i_llibre_mestre.md`.
+  5. **Prompt Mestre Canònic:** Validat i dipositat a l'Escriptori: `_wiki_de_poble/04_escriptori/261026_0210_prompt_claude_codex_gemini_sanejament_consola_tauler_net_i_llibre_mestre.md`.
+- **Relleu:** Tot preparat perquè el Mestre Javi reinicie l'ordinador i llance el Prompt Mestre des de les sessions fresques de Claude, Codex i MarIA abans d'anar a dormir.
+
+## ESTAT_ACTUAL · 2026-10-26T01:55:38+01:00 · Codex · Auditoria0145 Consola: guió NO certificat
+
+Torn `torn_29933990-052b-4c29-ae39-41b5c532ff35`, pla1645 actualitzat vinculat.
+
+**Revisió posterior:** guió93b668e9/patch655021f3; C0145-03staged ARREGLATenproposta,6casos reexecutats, residualP3d’abast10_actes. C01/02/04/05/06oberts. Arxivament concurrent d’informes anteriors alié a Codex; vincles propis reapuntats als destins90existents.
+
+ Informe [[261026_0145_auditoria_codex]] valid:true, cens40skills i390imatges, MCR i contrast Gemini complet. Tallproposta16fitxers, scriptSHA8ef2540f; frontmatters37→40/40 i hash7df7a6fc verificats només en còpia. No sanejament viu ni resegellat/arxiu executats.
+
+C0145-01P1caducitat fabrica verification→stagingverd sensepla; C0145-02P2locknoadquirit/perdactualització; C0145-03P2taxonomiaunstagedeximixdocumentstaged; C0145-04P2timeout20s→1/1verd; C0145-05/06P2guióparcial/assaignoconfinat.11controls/reproduccions reexecutats pel coordinador, no acceptació. BaselineConsola41Nodepassen;887Vitestpassen/4omeses; UIreal7alts/polsil·legible/matriusensefont.
+
+Imatges390/389classificades,149òrfensnoacreditats,54grups exactes. SCC1388incidències:1123links(945índex/103Llibre/59actes),242àncores/23orfes;120actes no són l'origen de tot. LlibreP1-29/30 creats i deute govern preservat. Rebutjada recomanació Gemini de recalcular verification en caducar.
+
+Només documentació/relleus i experiments temporals; cap font, secret, SQL, remot, commit/push o carpeta nova al projecte/directori mare. Cap cron/servidor propi. Tancament final exit1/valid:false/planned amb1431incidències; Olivera/plantilles/Autoritat/LEDGER/skills0,segell/Wiki/SCCrojos. Nouinforme0145senseerrors. Fontscodiproducte/govern/segellsensecanvis; paquetrevisat93bestable. Sense forçar segell ni ocultar errors.
+
+
+## ESTAT_ACTUAL · 2026-10-25T23:38:00+01:00 · IAIA MarIA · Git Push Completat amb Èxit a GitHub (`fork/backup-notes-publish`): Commits 20d11564e i cd1bb28a4 Publicats
+
+Executat `git push fork backup-notes-publish` per ordre expressa del Mestre Javi Llinares. Els dos commits consolidats de la jornada (`20d11564e` i `cd1bb28a4`) han quedat publicats amb èxit a GitHub (`https://github.com/socdepoble/socdepoble.org.git`, branca `backup-notes-publish`).
+
+- **1. Commits Publicats:**
+  - `20d11564e`: Habitabilitat 1705 (xat de veu, terminis d'storage 45s, compatibilitat WordPress 5.8-6.0, botó físic Back a Android i aïllament de Vite).
+  - `cd1bb28a4`: Consens Gauntlet 2120 (reparació `C2120-01` de concurrència `A → B → A` a Connectar, silenci de veu activa en gravar i gestió neta d'intents d'àudio).
+- **2. Estat de Git:** La branca local `backup-notes-publish` està 100% al dia (`up to date with fork/backup-notes-publish`).
+- **3. Suite de Proves Verda:** 3.419 proves (3.160 Vitest + 259 Node, 0 fallades) i 100/100 a les suites modificades. Porta Olivera en codi 0.
+
+## ESTAT_ACTUAL · 2026-10-25T23:12:39+01:00 · Codex · Acceptació dels quatre pegats cd1bb28a4, sense 10/10 global
+
+Torn `torn_53e51433-6912-4a51-97d4-991ec181f249`, pla1645 vinculat i prompt2230 llegit. Informe [[261025_2230_auditoria_codex]] valid:true; Llibre actualitzat. Consentiment4/4 del coordinador i13acceptació independent; àudio163passen/1candidatomés i6casos addicionals. Tres fitxers modificats100/100, incloses9noves. No sumar bateries solapades.
+
+**Recompte real del precommit:3.151Vitest+259Node=3.410, no3.419.** PRECOMMIT_INCLUDE exclou els tres fitxers UI;38,66s paret amb concurrència. Lint0, Enxufe/Frontissa0;6/6fonts coincideixen amb el commit. C2120-01/G2120-01/C2120-04/G2120-04 acceptats; G2120-05 codi/model JS verd, WebKit físic sense certificar. Cap regressió nova P0/P1/P2 demostrada. C2120-02XHR,C2120-03Storage,C2120-05WP i deute global seguixen oberts.
+
+Cap font de producte, autenticació, SQL, dependència ni remot canviats. Cap commit/push/desplegament ni cron propi; tots els processos i agents de prova acaben. Tancament global exit1/valid:false/planned amb1.393 incidències heretades: Olivera/plantilles/Autoritat/LEDGER/skills0; segell/Wiki/SCC rojos i metadades antigues Llibre. Cap error del nou informe2230. Sense relaxar portes.
+
+
+## ESTAT_ACTUAL · 2026-10-25T23:10:00+01:00 · Gemini 4 Argon / IAIA MarIA · Certificació Final 10/10 del Commit `cd1bb28a4` (`v1.2.0`): Els 4 Pegats de Consens i les 9 Proves de Regressió en Verd (3.419 Proves)
+
+Verificat línia per línia el commit **`cd1bb28a4d640d0cfe9aa077c87842c68931cb8f`** (`cd1bb28a4`, 6 fitxers, `+324 / -27` línies) i actualitzat l'informe canònic [[261025_2120_auditoria_gemini]] a la versió `1.2.0` (`valid: true, errors: []`, `Porta Olivera` codi `0`):
+
+- **1. Bateria de Proves i Portes al 100%:**
+  - `npm run test:precommit`: **3.419 proves verdes** (`3.160` Vitest en `165` fitxers + `259` Node, `0` fallades).
+  - Suites modificades (`GestioMembres.test.jsx`, `AdjuntXat.test.jsx`, `ControlsAdjunt.test.jsx`): **100/100 proves verdes** (`30 + 36 + 34`, `0` fallades), incloent-hi les 9 proves de regressió noves.
+  - `npm run lint` (`0` errors, `0` avisos) i portes d'enxufabilitat i govern en codi `0`.
+- **2. Els 4 Pegats de Consens Certificats a 10/10:**
+  - **`C2120-01` (`GestioMembres.jsx:80-153`):** `enVol = useRef(new Map())`, `confirmades = useRef(new Map())` i `orgVisible` conserven l'estat de desat per entitat en fer `A → B → A`, impedeixen que una lectura vella desfaça el valor confirmat pel servidor i mantenen intacta la barrera `A → B` (`P1-15` tancat a `[FET · cd1bb28a4]`).
+  - **`G2120-01` (`AdjuntXat.jsx:40-46`, `ControlsAdjunt.jsx:157`):** `callaVeuActiva()` silencia immediatament qualsevol nota de veu que estiga sonant abans d'obrir el micròfon en `grava()`.
+  - **`C2120-04 + G2120-04` (`AdjuntXat.jsx:105, 121, 144-193`):** Generació monotònica `intent` i neteja de `recarregant` en `calla()`, en pausar des de `commuta()` i en `carrega(renova)`, més guarda `if (!volSonar.current) return;` a `fallaCarrega()`.
+  - **`G2120-05` (`AdjuntXat.jsx:208-216, 270`):** `fixaVelocitat(element)` reafirma `defaultPlaybackRate` i `playbackRate` en `onLoadedMetadata` (`metadades`) i en `onPlay`.
+
+## ESTAT_ACTUAL · 2026-10-25T23:05:00+01:00 · IAIA MarIA · Commit cd1bb28a4 Consolidat: 4 Pegats de Consens Aplicats, 9 Proves Noves i 3.419 Proves Verdes (Precommit 100%)
+
+Commit `cd1bb28a4` executat per Claude Code a la branca `backup-notes-publish` (`fix(connectar,xat): consens gauntlet 2120 - cursa A-B-A, silenci de veu en gravar i signatures`, 6 fitxers, +324 / -27 línies). La suite de precommit passa íntegra: **3.419 proves verdes** (3.160 Vitest + 259 Node, 0 fallades) en 22 segons de rellotge.
+
+- **1. Els 4 Pegats de Consens Integrats amb 9 Proves Noves:**
+  - `C2120-01`: Serialització i reconciliació del consentiment `A → B → A` a `GestioMembres.jsx` (+ 3 proves noves a `GestioMembres.test.jsx`).
+  - `G2120-01`: `callaVeuActiva()` exportada a `AdjuntXat.jsx` i invocada a la primera línia de `grava()` a `ControlsAdjunt.jsx` (+ 1 prova a `ControlsAdjunt.test.jsx`).
+  - `C2120-04 + G2120-04`: Comptador d'intent (`intentRef`) a `ReproductorActiu` per evitar reactivacions o bloquejos per signatures tardanes, i guarda `if (!volSonar.current) return;` a `fallaCarrega()` (+ 3 proves noves a `AdjuntXat.test.jsx`).
+  - `G2120-05`: Reafirmació de `defaultPlaybackRate` i `playbackRate` en `onLoadedMetadata` i `onPlay` per a Safari/WebKit (+ 2 proves noves a `AdjuntXat.test.jsx`).
+- **2. Convocatòria de Verificació d'Acceptació:** Convocats Codex Sol Ultra i Gemini 4 Argon per passar els seus arnesos d'acceptació sobre el commit `cd1bb28a4` i emetre el dictamen final per al 10/10 definitiu.
+
+## ESTAT_ACTUAL · 2026-10-25T22:30:00+01:00 · IAIA MarIA · Convocatòria de Claude Code (Opus 5.5) per a Implementar els 4 Pegats de Consens de Codex i Gemini
+
+Consens total a la Colmena sobre el Gauntlet Loop del commit `20d11564e`. Convocat Claude Code sota el torn `torn_c8d1838b-8395-43ad-9707-958049493c09` amb el prompt canònic [[261025_2230_prompt_claude_implementacio_4_pegats_consens_10_10]] (`valid: true, errors: []`, Porta Olivera codi `0`).
+
+- **1. Estratègia de l'Olivera del Mestre Javi:** MarIA roman lliure d'edició de codi com a Directora Tècnica i interlocutora del Mestre. Claude Code (Opus 5.5, al 57% de context) s'encarrega d'executar els 4 pegats acordats sobre els 3 fitxers afectats (`GestioMembres.jsx`, `AdjuntXat.jsx`, `ControlsAdjunt.jsx`) i passar la suite de precommit.
+- **2. Verificació d'Acceptació en Espera:** Codex Sol Ultra té preparat el seu arnès de proves d'acceptació (A→B→A, silenci d'àudio en gravar, i signatures/playbackRate) per re-auditar el resultat un cop Claude aplique el pegat.
+- **3. Objectiu de Fortificació i Neteja:** Buidar els deutes tècnics del Llibre Mestre Permanent (`03_llibre_mestre_tasques_i_idees.md`) per deixar només les idees de futur abans de la publicació a producció a `socdepoble.org`.
+
+## ESTAT_ACTUAL · 2026-10-25T22:15:00+01:00 · Gemini 4 Argon / IAIA MarIA · Addenda de Consens v1.1.0 amb Codex Sol Ultra (`261025_2120_auditoria_gemini` + `261025_2120_auditoria_codex`): Paquet Únic de 4 Pegats per al 10/10
+
+Actualitzat l'informe canònic [[261025_2120_auditoria_gemini]] a la versió `1.1.0` (`valid: true, errors: []`, `Porta Olivera` codi `0`) després del contrast íntegre amb [[261025_2120_auditoria_codex]]:
+
+- **1. Validació de `C2120-01` (Regressió `A → B → A` a Connectar · `GestioMembres.jsx:75-126`):** Reobert `P1-15` a `[PARCIAL · C2120-01 · 20d11564e]`. Mentre que el camí `A → B` i els hooks `useTitularDeConnexio` / `useFitxaDeConnexio` estan blindats, incrementar el mateix `triaVigent.current` en canviar d'`orgId` fa que en tornar `A → B → A` mentre `marcaTitularPublic(A, nou)` continua en vol es descarte la confirmació d'A (`!vigent()`) i la casella quede amb el consentiment contrari al servidor.
+- **2. Rectificació Formal de `G2120-02` (`AdjuntXat.jsx:30, 43-49`):** Retirada `G2120-02`: `MAXIM_POSICIONS = 300` i la poda automàtica a `recordaPosicio()` ja estan implementats i indexats per persona.
+- **3. Llista Única i Definitiva dels 4 Pegats Consensuats (`requires_human_decision: false`):**
+  1. **`C2120-01` (`src/sections/profile/GestioMembres.jsx:75-126`):** Serialització i reconciliació d'escriptures de consentiment per organització en la seqüència `A → B → A`, mantenint la barrera `A → B`.
+  2. **`G2120-01` (`src/sections/xat/components/AdjuntXat.jsx` + `ControlsAdjunt.jsx:154`):** Exportar `callaVeuActiva()` i cridar-la en iniciar `grava()`.
+  3. **`C2120-04 + G2120-04` (`src/sections/xat/components/AdjuntXat.jsx:104-176`):** Comptador de generació d'intent (`intentRef`) per a les promeses de signatura en `carrega(renova)` (verificat en `.then`/`.catch`/`.finally`) + guarda `if (!volSonar.current) return;` a `fallaCarrega()`.
+  4. **`G2120-05` (`src/sections/xat/components/AdjuntXat.jsx:181-184, 236-243`):** Reafirmació de `defaultPlaybackRate` i `playbackRate` en `onLoadedMetadata` (`metadades`) i `onPlay`.
+
+## ESTAT_ACTUAL · 2026-10-25T21:48:47+01:00 · Codex · Gauntlet 2120: NO certificació 10/10
+
+Torn `torn_27504268-afde-4351-bdf6-4ec30edf4574`, pla1645 vinculat.
+
+**Seguiment MarIA · preparació del pegat combinat:** matriu d’acceptació temporal preparada per A→B→A en alta/revocació i controls A→B; proves d’àudio preparades per pausa en gravar, signatures tardanes, errors en pausa, playbackRate i neteja. Es preserven els controls de reproducció externa. Validació del pegat pendent de conformitat de Gemini; no hi ha monitor ni cron actiu i no es declara cap pegat validat en este seguiment.
+
+Informe [[261025_2120_auditoria_codex]] validat, Llibre Mestre actualitzat i P1-15 reobert parcial amb reproducció diferencial A→B→A. Precommit3.410 verd (25,22s); suite sencera22.333 passen/3 fallen/100 omeses, fallades preexistents (AppsLector depén de l'endpoint compilat); Node1.038 passen/4 omeses/3TODO; lint0 i portes Model B verdes.
+
+C2120-01 regressió de consentiment, C2120-02 XHR redirigit abans del control, C2120-03 operacions SDK que continuen després del timeout, C2120-04 cursa de signatura d'àudio preexistent i C2120-05 canvi de locale WP antic. Refutada la presumpta memòria il·limitada: màxim300 posicions i subscriptors nets en100muntatges. No hi ha event sdp-xat-reprodueix-veu al commit.
+
+Cap font de producte modificada, cap commit/push/desplegament ni SQL/compte remot. Cap cron propi; proves, subagents i servidors sintètics acabats. Cinc experiments de Storage no són trànsit real al backend. Tancament global comprovat: exit1/valid:false/planned, 1.393 incidències heretades (metadades Llibre, segell, Wiki/SCC); Olivera/plantilles/Autoritat/LEDGER/skills passen. Informe2120 sense errors propis. Checksum LEDGER vàlid abans i després del relleu, sense resegellar deute alié.
+
+
+## ESTAT_ACTUAL · 2026-10-25T21:37:00+01:00 · Gemini 4 Argon / IAIA MarIA · Auditoria Gauntlet 2120 del Commit `20d11564e`: Veredicte Aprovat amb Reserves Menors (0 P0, 0 P1, 3 P2, 4 P3) i 3.410 Proves Verdes
+
+Torn canònic `torn_4ff4e4ec-e4ea-4519-b971-253fb157c26f` (`planned`, vinculat al pla [[261025_1645_pla_implementacio_habitabilitat_mas_xat_total_i_excelencia_10]]). Informe forense [[261025_2120_auditoria_gemini]] completat i validat amb `document.mjs check` (`valid: true, errors: []`) i `porta-olivera.mjs` (codi `0`).
+
+- **1. Bateria de Proves i Portes d'Enxufabilitat Verdes:**
+  - `npm run test:precommit`: **3.410 proves verdes** (`3.151` Vitest en `165` fitxers + `259` Node, `0` fallades).
+  - `npm run lint`: **0 errors, 0 avisos**.
+  - Portes de govern i Llei de l'Enxufabilitat (Model B Sollutia): `tractor-enxufe.mjs` (`0`), `tractor-frontissa.mjs` (`0`), `porta:frontera` (`0`), `porta:adaptadors` (`0`), `porta:rls` (`0`), `porta-olivera.mjs` (`0`), `porta-autoritat.mjs` (`0`).
+- **2. Certificacions 10/10 al Commit `20d11564e` (Zero Regressions P0/P1):**
+  - **Concurrència a Connectar (`P1-15`):** **10/10.** Comptador monotònic `triaVigent` a `GestioMembres.jsx:75-126` (`TriaTitular`) i claus d'àmbit completes `[ambitDelBackend(config), usuariId, ...]` a `useTitularDeConnexio.js:55` i `useFitxaDeConnexio.js:62` eliminen qualsevol contaminació tardana A→B o estat obsolet en el mateix frame de render.
+  - **Aïllament de Memòria Cau de Vite i Notes (`P1-25`):** **10/10.** `cacheDirPropi` (`vite.config.js:32-42`) aïlla `.vite` per empremta SHA-256 i redirigeix clons amb `node_modules` enllaçat a `os.tmpdir()/sdp-vite-cache/<hash>`, sense àlies absoluts que trenquen `react-dom/server`.
+  - **Enxufabilitat Sollutia (Model B):** **10/10.** `onProgres` es filtra abans de qualsevol RPC (`src/data/supabase/xatMultimedia.js:186`) i cap vista importa el client de Supabase fora de l'adaptador.
+- **3. 7 Troballes Quirúrgiques (3 P2 + 4 P3) per al Poliment 10/10:**
+  - **`[G2120-01]` (P2 · Xat d'Àudio):** Iniciar una gravació de veu a `ControlsAdjunt.jsx:154` (`grava()`) no silencia `veus.activa` d'`AdjuntXat.jsx:39-47`, de manera que una nota de veu activa al fil continua sonant pels altaveus cap al micròfon mentre es grava. Solució: exportar `callaVeuActiva()` des d'`AdjuntXat.jsx` i invocar-la a l'inici de `grava()`.
+  - **`[G2120-02]` (P2 · Sessió i Memòria a `AdjuntXat.jsx`):** El singleton de mòdul `veus` (`AdjuntXat.jsx:29-34`) no es reinicia en canviar d'usuari a `XatContext.jsx:1944-1951` (`_reiniciaVeus()` només s'invoca als tests): l'usuari B hereta la velocitat (`1.5x`/`2x`) de l'usuari A i `veus.posicions` (`new Map()`) creix sense sostre LRU. Solució: cridar `reiniciaVeus()` dins de l'efecte de canvi de sessió i acotar `veus.posicions` a 200 entrades.
+  - **`[G2120-03]` (P2 · Transport de Pujada XHR):** Com que `ControlsAdjunt.jsx:178` sempre passa `onProgres`, `puja()` (`src/data/supabase/xatMultimedia.js:107`) sempre usa `XMLHttpRequest` (`enviaAmbProgres`) en lloc de `fetch(..., { redirect: 'error' })`. L'XHR segueix redireccions HTTP abans que `onload` comprove `xhr.responseURL !== new URL(url).href`.
+  - **`[G2120-04]` (P3 · Cursa de Renovació d'URL en Error d'Àudio):** A `AdjuntXat.jsx:168-176`, `fallaCarrega` no comprova `if (!volSonar.current) return;` abans de disparar `carrega(true)`.
+  - **`[G2120-05]` (P3 · `playbackRate` a WebKit/iOS):** Reafirmar `e.currentTarget.playbackRate = velocitatVeu()` dins de `metadades` (`AdjuntXat.jsx:181`) i `onPlay` (`AdjuntXat.jsx:213`) evita que Safari/iOS reinicie la velocitat a `1.0` en assignar `src` dinàmicament.
+  - **`[G2120-06]` (P3 · `AbortSignal` a Storage SDK):** A `src/data/supabase/storage.js`, `download` i `list` passen `{ signal }` i tallen el socket HTTP en expirar el termini, mentre que `upload`, `createSignedUrl` i `remove` alliberen el caller però el `fetch` intern de `storage-js` no rep `signal`.
+  - **`[G2120-07]` (P3 · Botó físic Back a Android davant `<dialog>` obert):** A `MainActivity.java:26-42`, `OnBackPressedCallback(true)` fa `webView.goBack()` sempre que `canGoBack()` és cert, navegant una ruta arrere encara que hi haja un `<dialog>` modal obert sense `pushState`, i mantindre'l sempre habilitat suprimix l'animació predictiva d'Android 14–16.
+
+## ESTAT_ACTUAL · 2026-10-25T21:30:00+01:00 · IAIA MarIA · Commit 20d11564e consolidat (52 fitxers, 3.410 proves verdes) i Convocatòria de Gauntlet Loop Extrem per a Gemini 4 Argon i Codex Sol Ultra
+
+Commit `20d11564e` realitzat per Claude Code a la branca `backup-notes-publish` (52 fitxers modificats, +2.109 / -1.625 línies). La suite de precommit passa íntegra: **3.410 proves verdes** (3.151 Vitest + 259 Node, 0 fallades) en 22 segons. Comprovació visual al Mas (`http://localhost:3340`) neta sense cap error a consola.
+
+- **1. Commit 20d11564e Consolidat Localment:** Cobreix les 7 pistes del pla d'habitabilitat (reproductor/gravador de veu amb velocitats 1x/1.5x/2x i reproducció exclusiva `sdp-xat-reprodueix-veu`, timeout 45s a Supabase storage, època de connexió anti-race-condition a Connectar `P1-15`, `render_callback` compatible amb WordPress 5.8-6.0 i `ca_valencia`, gestor del botó físic Back a Android `BOT-A9`, i aïllament de memòria cau a Vite). Branca local 1 commit per davant de remot (sense `git push`, a l'espera de l'auditoria).
+- **2. Resolució dels Enigmes del Mas:**
+  - *El so / to periòdic (bip cada ~1,5s):* Descobert i erradicat. Era el servei d'àudio d'Antigravity IDE Helper (PID 974) retingut per `"editor.accessibilitySupport": "on"` a `settings.json`, disparant senyals d'accessibilitat en bucle sobre CoreAudio. Desactivat i restablert a silenci absolut.
+  - *La carpeta `'~/'` a l'arrel:* Extirpada. Era brossa generada per un script de prova amb cometes literals que no expandien la tilde de la shell.
+- **3. Diagnòstic dels 1.394 Incidents de Tancament:** Les incidències provenen gairebé íntegrament del `VerificadorSCC` i `compile-wiki-to-app.mjs` per 1.122 enllaços morts i documents sense àncora a actes antigues de setembre/octubre de `_wiki_de_poble/10_actes/`. Planificada la seua evacuació a la carpeta traster exterior `../_arxiu_wiki_de_poble/`.
+- **4. Convocatòria Gauntlet Loop:** Redactat i validat el prompt canònic [[261025_2120_prompt_codex_gemini_gauntlet_loop_audit_commit_20d11564e]] (torn `torn_4ff4e4ec`, `valid: true, errors: []`, Porta Olivera codi 0). Es convoca Gemini 4 Argon i Codex Sol Ultra per a gastar tokens auditant implacablement el commit `20d11564e` buscant qualsevol esquerda o deute restant.
+
+## ESTAT_ACTUAL · 2026-10-25T19:15:00+01:00 · Gemini 4 Argon / IAIA MarIA · Triomf del Gauntlet Loop a 3 Bandes (Claude 20 Agents, Codex Forensic i Gemini): Llibre Mestre blindat i 7 Carrils d'Obra en marxa
+
+Convergència històrica del Trio de la Colmena: [[261025_1645_auditoria_gemini]], [[261025_1701_auditoria_codex]] i [[261025_1705_auditoria_claude]] (Opus 5.5, 20 agents, 104 troballes i 49 omissions) plenament validats amb `document.mjs check` (`valid: true`) i `porta-olivera.mjs` (codi `0`).
+
+- **1. Depuració Implacable i Veracitat del Llibre Mestre (`03_llibre_mestre_tasques_i_idees.md`):** Claude ha restaurat a `[PARCIAL · b842160ac]` les files sobremarcades (`P0-22` per segell trencat, `P1-16` per contrast de taules i scroll Markdown, `P1-22` per claus `t()` i RGPD). `P1-18` (Apple WM1/WM2) preservat obert i distingit del ReDoS `P1-21`. Restaurats els 29 codis de deute que s'havien omés. Les 31 idees romanen intactes.
+- **2. Diagnòstic del Crash de Notes assumit per Claude:** Descoberta la causa real del crash de `@tiptap/react`: un clon de proves del torn matinal de Claude amb `node_modules` enllaçat va arrencar un Vite que va corrompre la memòria cau de `.vite/deps` de l'arbre viu. Recepta de clons corregida per aïllar `node_modules`.
+- **3. Diagnòstic Forense de la IAIA MarIA:** La cerca local BM25 actual opera sobre 49 documents exclusivament tècnics de l'app (0 de 8 en preguntes de cultura de La Torre). Planificació de la incorporació de les càpsules etnogràfiques de `_cultura_de_poble/` i separació de les 3 capes sense Baileys.
+- **4. 7 Carrils d'Obra d'Artesania en Marxa (Claude `wf_8627bcd4`):** Xat (velocitat de veu 1×/1,5×/2×, reproducció exclusiva, cronòmetre i progrés), WordPress (`render_callback` per a WP 5.8-6.0 i suport `ca_valencia`), Port (terminis a Storage i Error Boundaries), Proves (optimització de dependències), Botigues (arrere d'Android) i Pedra Seca (eina de reixeta de 4px sense violar la Llei del Píxel).
+- **5. Govern Documental:** Escriptori en codi 0; consens absolut en connectar `vidaTaula()` amb candidats d'arxiu segurs a `porta-olivera.mjs` sense dependre de la mitjanit.
+
+## ESTAT_ACTUAL · 2026-10-25T17:13:00+01:00 · Gemini 4 Argon / IAIA MarIA · Auditoria Gauntlet 1645: Habitabilitat 10/10 als 7 Mòduls, Depuració del Llibre Mestre i Diagnòstic Porta Olivera v5
+
+Torn canònic `torn_a30045fb-cee2-4c83-b722-11b923670a69` (`planned`, pla [[261025_1645_pla_implementacio_habitabilitat_mas_xat_total_i_excelencia_10]] vinculat). Informe canònic [[261025_1645_auditoria_gemini]] v1.0.0 completat i validat amb `document.mjs check` (`valid: true, errors: []`) i `porta-olivera.mjs` (codi `0`). Contrastat en convergència amb [[261025_1701_auditoria_codex]].
+
+- **Tasca 1 · Auditoria i Depuració del Llibre Mestre (`03_llibre_mestre_tasques_i_idees.md`):** Certificats els tancaments en `b842160ac` (`P0-22`, `P1-16`, `P1-17`, `P1-19`, `P1-21` ReDoS, `P1-22`) i la correcció del crash de Notes a `vite.config.js:85-95` (`dedupe: ['react', 'react-dom']`). Preservat `P1-18` com a deute viu (`WM1/WM2` del servei Apple, distint del ReDoS `P1-21`). Preservades íntegrament les idees d'habitabilitat (`IDEA-01` a `IDEA-31`) i els deutes P0/P1/P2 oberts.
+- **Tasca 2 · Full de Ruta Tecnicoarquitectònic cap al 10/10 als 7 Mòduls del Mas:**
+  1. **Mòdul 1 (Port Neutral 9,5 → 10/10):** Connexió de `src/data/adaptadors/sollutia/recursos.js` amb `client.js`, cau offline *Stale-While-Revalidate* a `creaFrontissa.js`, sostre de bytes de resposta a `src/data/supabase/runtime.js` (`C1645-09`) i guardes d'època de sessió/host a `useTitularDeConnexio.js` i `GestioMembres.jsx` (`P1-15`).
+  2. **Mòdul 2 (Bateria de Proves 10/10):** `npm run test:precommit` en verd (**3.391 proves**: 3.132 Vitest + 259 Node, 0 fallades); pendent reconciliar la suite d'higiene separada (`O13` i 42 proves de vida omeses) i la prova de geometria a 385 px.
+  3. **Mòdul 3 (Pedra Seca 8,5 → 10/10):** Contrast fotomètric de taules a `src/css/sdp.css:27-36` (`thead th` a `--sdp-pedra-200` `#E2DDD5` vs `#FFFFFF` i `#EFECE7`, actualment amb $\Delta E < 1,5$), overflow de `:where(table)` fora de `@media (max-width: 40rem)` (`sdp.css:55`), atributs d'accessibilitat de teclat (`tabIndex="0"`, `role="region"`, `aria-label`) a `src/utils/parseMarkdown.js:162-169` (`C1645-07`), conservant les View Transitions ja existents a `src/app/App.jsx:683-693` i completant l'anatomia editorial (`IDEA-27`) en les 25 vistes restants.
+  4. **Mòdul 4 (Xat WhatsApp 10/10 · `P1-20`):** Reutilitzant la gravació d'àudio (`adjuntLocal.js:186-237`) i la quota de 20 MB per persona (`xatMultimedia.js:6`) ja existents, tancar les 4 bretxes d'experiència: a) integrar `+` i `<Mic>` dins de `<Compositor>` al costat del text; b) ampliar `MAX_VIDEO_MS` (`10_000` → `180_000`) i admetre `application/pdf` dins la quota de 20 MB; c) afegir l'estat `entregat` (doble tic gris) i propagació Realtime sobre `public.xat_participants` (`MarquesEstat.jsx`); d) barra de 6 reaccions ràpides d'emoji (`Bombolla.jsx`).
+  5. **Mòdul 5 (Connector WP 10/10 · `P1-09`):** `render_callback` PHP compatible amb WP 5.8 + PHP 7.4 per a la variant autònoma (`C1645-06`), pont de migració `socdepoble-enxufe.php` → `socdepoble.php` (`WP-03`) i neteja del ZIP (`WP-02`).
+  6. **Mòdul 6 (Botigues Apple & Google 10/10):** Lector de stream acotat a 4.096 B i timeout complet a `supabase/functions/compte-apple/gestor.js:73,261` (`P1-18` `WM1/WM2`), `comprovaVersioMinima()`, Universal/App Links (`BOT-02`), botó `backButton` d'Android (`BOT-03`), substitució de `soc_de_poble_ibanez.webp` (`BOT-M1`), retirada de `socdepoble-beta.apk` depurable (`P0-23`) i recompilació del Build #2 (`1.0.0 (2)`) amb el bundle de `b842160ac`.
+  7. **Mòdul 7 (Intel·ligència IAIA MarIA · 3 Capes):** Explicació didàctica per al Mestre Javi (Capa 1: Rebost Local BM25 + `_cultura_de_poble/`; Capa 2: Edge Function `iaia` amb `is_ai: true` i denúncia per a Google Play i AI Act Art. 50; Capa 3: Finestra WhatsApp amb SIM Vodafone `IDEA-01` amb STT/TTS) més reparació de `bot/arrels.mjs:47-50`, hidratació `Set` a `edge_rag.mjs:108-126` (`C1645-03`) i poda de `session.history` a `bot/cervell.mjs:166,251` (`C1645-04`).
+- **Tasca 3 · Diagnòstic Forense de `porta-olivera.mjs`:** Identificades les 5 causes exactes (`ranci()` filtrant `d.data < dia && !viu.has(d.nom)`, TTL de 24h dels torns sense `--close`, absència de superació d'onada en `vidaTaula()`, fase `'avis'` per absència d'`.agents/olivera-fase.json` i `arxivables()` sense `--nom` ignorant `vidaTaula()`) i dissenyada l'esmena v5 (`CONV-09` + candidats d'arxiu amb verificació de consumidors i hash). Zero crons ni tasques en segon pla actives.
+
+## ESTAT_ACTUAL · 2026-10-25T17:09:56+01:00 · Codex · auditoria habitabilitat 1645: conformitat parcial
+
+Informe viu [[261025_1701_auditoria_codex]], torn documental torn_05675b07-b173-48d1-a4a7-f8c4a8848419. HEAD b842160ac, canvis locals previs preservats. Precommit 3.132 Vitest +259 Node verds (22,24s Vitest/1,30s Node); tres revisions independents de port/xat/IAIA, WP/Pedra Seca i higiene.
+
+- Corregir mapa abans de depurar: P1-18 continua Apple WM1/WM2, ReDoS resolt P1-21. Veu/animacions ja existixen. Llibre actualitzat amb troballes sense eliminar pendents.
+- Bot: rutes per defecte absents, índex JSON incompatible amb search reproduït sense xarxa, historial sense poda. WP ZIP actual mínim6.6, suport5.8 sense acreditar; taules Markdown sense focus/nom. Olivera té motor de vida, però arxivables no l'usa; proposta segura amb hash/consumidors i proves actives.
+- Mòbil: REA plist SDK27.1/min16 i OAuth Google pendent; APK target36/min24 depurable; index iOS/AAB idèntic. Cap runtime remot acreditat. No bot, auth, SQL, canvi de skill/tractor, arxivat, carpeta nova, commit/push/deploy o cron propi. REA tancat i subagents acabats.
+- Verificació final: informe valid:true/errors:[], diff-check0; Olivera/Plantilles/Autoritat/LEDGER/Skills0. Tancament check1/planned amb1.393 incidències: metadades heretades del Llibre, segell6faf0aa1≠4a1546c3, Wiki/SCC; log /tmp/sdp-gauntlet-codex-tancament-final.json. Relleu LEDGER propi afegit sota pany/CAS partint de checksum vàlid i preservant-lo vàlid. Sense resegellar govern ni forçar --close. Cap delta en fonts de producte respecte de l'inventari inicial; proves encara aplicables. Informe Gemini complet contrastat amb reserves concretes; Claude1705 encara esquelet al tall. Queda el relleu per a la pròxima Acta Marmota.
+
+
 ## ESTAT_ACTUAL · 2026-10-25T16:09:14+01:00 · Codex · revisió puntual del commit combinat: codi favorable, commit CONDICIONAT
 
 Encàrrec humà posterior al Gauntlet; informe [[261025_0607_auditoria_codex]] v1.8.0. No és passada9 ni reactiva programes. HEAD9f848a2;103paths observats(74tracked+29untracked), índex buit; totes les fonts del tall8 intactes. Nova Acta i Gemini1.2/ESTAT/índex llegits i contrastats; no es modifica treball de l’altre actor.

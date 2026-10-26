@@ -3,10 +3,10 @@
   "turn_id": "torn_08793431-2505-4da7-8248-15e373802748",
   "actor": "claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 14,
+  "state": "closed",
+  "revision": 71,
   "createdAt": "2026-10-24T20:54:55.222Z",
-  "updatedAt": "2026-10-25T05:17:29.979Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T20:54:55.223Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3753,17 +3753,29 @@
       "id": "4eb46464-8b44-4f9a-882f-c1b8fca611f1",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0610_auditoria_claude.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0610_auditoria_claude.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
-      "issuedAt": "2026-10-25T05:17:29.891Z"
+      "issuedAt": "2026-10-25T05:17:29.891Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0610_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0610_auditoria_claude.md",
+          "hash": "ace3709043229a2231bb220f17663bc4d181f434390b88a78ca7e06578a3b144",
+          "at": "2026-10-25T15:53:12.925Z",
+          "receiptIds": [
+            "4eb46464-8b44-4f9a-882f-c1b8fca611f1",
+            "0852911a-9696-4449-954b-d662ed2156e4"
+          ]
+        }
+      ]
     },
     "0852911a-9696-4449-954b-d662ed2156e4": {
       "id": "0852911a-9696-4449-954b-d662ed2156e4",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261025_0610_auditoria_claude.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261025_0610_auditoria_claude.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
@@ -3773,6 +3785,44 @@
         "preparedAt": "2026-10-25T05:17:29.951Z",
         "committedAt": "2026-10-25T05:17:29.979Z",
         "documentHash": "1ec851a8a80362b7f2d2ee17ae6b4f36bcf274631a885498f57294acce74a790"
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261025_0610_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261025_0610_auditoria_claude.md",
+          "hash": "ace3709043229a2231bb220f17663bc4d181f434390b88a78ca7e06578a3b144",
+          "at": "2026-10-25T15:53:12.925Z",
+          "receiptIds": [
+            "4eb46464-8b44-4f9a-882f-c1b8fca611f1",
+            "0852911a-9696-4449-954b-d662ed2156e4"
+          ]
+        }
+      ]
+    },
+    "975f97a4-ef38-4b87-b384-d41bf0ecc24b": {
+      "id": "975f97a4-ef38-4b87-b384-d41bf0ecc24b",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261025_1705_auditoria_claude.md",
+      "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-25T16:05:28.833Z"
+    },
+    "760d0870-d139-4aa6-8b83-46ad14a13c54": {
+      "id": "760d0870-d139-4aa6-8b83-46ad14a13c54",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261025_1705_auditoria_claude.md",
+      "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-25T16:05:33.583Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-25T16:05:33.584Z",
+        "committedAt": "2026-10-25T16:05:33.631Z",
+        "documentHash": "e976af3e7aa5895c44e47e365d70de964018606d90079e9db45002ef75fe5f25"
       }
     }
   },
@@ -3864,6 +3914,461 @@
       "file": "_wiki_de_poble/04_escriptori/261025_0610_auditoria_claude.md",
       "at": "2026-10-25T05:17:29.979Z",
       "hash": "1ec851a8a80362b7f2d2ee17ae6b4f36bcf274631a885498f57294acce74a790"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-25T15:53:12.925Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-25T16:05:28.834Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-25T16:05:33.584Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "760d0870-d139-4aa6-8b83-46ad14a13c54",
+      "file": "_wiki_de_poble/04_escriptori/261025_1705_auditoria_claude.md",
+      "at": "2026-10-25T16:05:33.631Z",
+      "hash": "e976af3e7aa5895c44e47e365d70de964018606d90079e9db45002ef75fe5f25"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "android/app/src/main/java/org/socdepoble/app/MainActivity.java"
+      ],
+      "at": "2026-10-25T20:09:19.240Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/app/RouteErrorBoundary.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:19.273Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/app/contexts/CoreContentContext.forma.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:19.307Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/app/contexts/CoreContentContext.jsx"
+      ],
+      "at": "2026-10-25T20:09:19.342Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/components/ErrorBoundary.jsx"
+      ],
+      "at": "2026-10-25T20:09:19.376Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/config/idiomes/ca.js"
+      ],
+      "at": "2026-10-25T20:09:19.410Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/config/idiomes/en.js"
+      ],
+      "at": "2026-10-25T20:09:19.444Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/config/idiomes/es.js"
+      ],
+      "at": "2026-10-25T20:09:19.477Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/config/idiomes/eu.js"
+      ],
+      "at": "2026-10-25T20:09:19.511Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/config/idiomes/gl.js"
+      ],
+      "at": "2026-10-25T20:09:19.545Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/css/reixetaEspaiat.capes.test.js"
+      ],
+      "at": "2026-10-25T20:09:19.579Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/contracte.js"
+      ],
+      "at": "2026-10-25T20:09:19.613Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/mapejadorSeccions.js"
+      ],
+      "at": "2026-10-25T20:09:19.647Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/mapejadorSeccions.test.js"
+      ],
+      "at": "2026-10-25T20:09:19.681Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/qualitat.test.js"
+      ],
+      "at": "2026-10-25T20:09:19.715Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/supabase/storage.js"
+      ],
+      "at": "2026-10-25T20:09:19.749Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/supabase/storage.privacitat.test.js"
+      ],
+      "at": "2026-10-25T20:09:19.783Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/supabase/storage.termini.test.js"
+      ],
+      "at": "2026-10-25T20:09:19.817Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/supabase/xatMultimedia.js"
+      ],
+      "at": "2026-10-25T20:09:19.851Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/supabase/xatMultimedia.test.js"
+      ],
+      "at": "2026-10-25T20:09:19.885Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/data/xatMultimedia.js"
+      ],
+      "at": "2026-10-25T20:09:19.919Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/connectar/ConnectarSection.jsx"
+      ],
+      "at": "2026-10-25T20:09:19.968Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/connectar/ConnectarSection.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.038Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/connectar/useFitxaDeConnexio.js"
+      ],
+      "at": "2026-10-25T20:09:20.129Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/connectar/useFitxaDeConnexio.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.205Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/connectar/useTitularDeConnexio.js"
+      ],
+      "at": "2026-10-25T20:09:20.251Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/connectar/useTitularDeConnexio.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.289Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/mur/MurContext.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.330Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/mur/MurContext.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.425Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/profile/GestioMembres.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.512Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/profile/GestioMembres.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.561Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/XatContext.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.636Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/XatContext.moderacio.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:20.700Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/adjuntLocal.js"
+      ],
+      "at": "2026-10-25T20:09:20.805Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/adjuntLocal.test.js"
+      ],
+      "at": "2026-10-25T20:09:20.892Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/components/AdjuntXat.css"
+      ],
+      "at": "2026-10-25T20:09:20.960Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/components/AdjuntXat.jsx"
+      ],
+      "at": "2026-10-25T20:09:21.013Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/components/AdjuntXat.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:21.054Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/components/Bombolla.jsx"
+      ],
+      "at": "2026-10-25T20:09:21.123Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/components/ControlsAdjunt.jsx"
+      ],
+      "at": "2026-10-25T20:09:21.184Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "src/sections/xat/components/ControlsAdjunt.test.jsx"
+      ],
+      "at": "2026-10-25T20:09:21.222Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/backend_consolidacio.test.mjs"
+      ],
+      "at": "2026-10-25T20:09:21.259Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/enxufe-empaqueta.test.mjs"
+      ],
+      "at": "2026-10-25T20:09:21.296Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/enxufe-pantalla.test.mjs"
+      ],
+      "at": "2026-10-25T20:09:21.333Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/enxufe-plugin.test.mjs"
+      ],
+      "at": "2026-10-25T20:09:21.370Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/fixtures/enxufe-pantalla.php"
+      ],
+      "at": "2026-10-25T20:09:21.406Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/lint_enxufe.test.mjs"
+      ],
+      "at": "2026-10-25T20:09:21.442Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "tests/vite-empremta-dev.test.mjs"
+      ],
+      "at": "2026-10-25T20:09:21.478Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "vite.config.js"
+      ],
+      "at": "2026-10-25T20:09:21.520Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "wordpress-plugin/includes/bloc/render.php"
+      ],
+      "at": "2026-10-25T20:09:21.562Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "wordpress-plugin/includes/idioma.php"
+      ],
+      "at": "2026-10-25T20:09:21.601Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "wordpress-plugin/includes/marcatge.php"
+      ],
+      "at": "2026-10-25T20:09:21.640Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261025_0610_auditoria_claude.md",
+    "android/app/src/main/java/org/socdepoble/app/MainActivity.java",
+    "src/app/RouteErrorBoundary.test.jsx",
+    "src/app/contexts/CoreContentContext.forma.test.jsx",
+    "src/app/contexts/CoreContentContext.jsx",
+    "src/components/ErrorBoundary.jsx",
+    "src/config/idiomes/ca.js",
+    "src/config/idiomes/en.js",
+    "src/config/idiomes/es.js",
+    "src/config/idiomes/eu.js",
+    "src/config/idiomes/gl.js",
+    "src/css/reixetaEspaiat.capes.test.js",
+    "src/data/contracte.js",
+    "src/data/mapejadorSeccions.js",
+    "src/data/mapejadorSeccions.test.js",
+    "src/data/qualitat.test.js",
+    "src/data/supabase/storage.js",
+    "src/data/supabase/storage.privacitat.test.js",
+    "src/data/supabase/storage.termini.test.js",
+    "src/data/supabase/xatMultimedia.js",
+    "src/data/supabase/xatMultimedia.test.js",
+    "src/data/xatMultimedia.js",
+    "src/sections/connectar/ConnectarSection.jsx",
+    "src/sections/connectar/ConnectarSection.test.jsx",
+    "src/sections/connectar/useFitxaDeConnexio.js",
+    "src/sections/connectar/useFitxaDeConnexio.test.jsx",
+    "src/sections/connectar/useTitularDeConnexio.js",
+    "src/sections/connectar/useTitularDeConnexio.test.jsx",
+    "src/sections/mur/MurContext.jsx",
+    "src/sections/mur/MurContext.test.jsx",
+    "src/sections/profile/GestioMembres.jsx",
+    "src/sections/profile/GestioMembres.test.jsx",
+    "src/sections/xat/XatContext.jsx",
+    "src/sections/xat/XatContext.moderacio.test.jsx",
+    "src/sections/xat/adjuntLocal.js",
+    "src/sections/xat/adjuntLocal.test.js",
+    "src/sections/xat/components/AdjuntXat.css",
+    "src/sections/xat/components/AdjuntXat.jsx",
+    "src/sections/xat/components/AdjuntXat.test.jsx",
+    "src/sections/xat/components/Bombolla.jsx",
+    "src/sections/xat/components/ControlsAdjunt.jsx",
+    "src/sections/xat/components/ControlsAdjunt.test.jsx",
+    "tests/backend_consolidacio.test.mjs",
+    "tests/enxufe-empaqueta.test.mjs",
+    "tests/enxufe-pantalla.test.mjs",
+    "tests/enxufe-plugin.test.mjs",
+    "tests/fixtures/enxufe-pantalla.php",
+    "tests/lint_enxufe.test.mjs",
+    "tests/vite-empremta-dev.test.mjs",
+    "vite.config.js",
+    "wordpress-plugin/includes/bloc/render.php",
+    "wordpress-plugin/includes/idioma.php",
+    "wordpress-plugin/includes/marcatge.php"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261025_0610_auditoria_claude.md"
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

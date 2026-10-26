@@ -3,10 +3,10 @@
   "turn_id": "torn_34da1b34-3cf4-4b01-970e-00424573bf81",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 11,
+  "state": "closed",
+  "revision": 12,
   "createdAt": "2026-10-22T17:50:55.538Z",
-  "updatedAt": "2026-10-22T20:08:23.692Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T17:50:55.539Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3782,6 +3782,17 @@
       "file": "_wiki_de_poble/10_actes/261022_2215_acta_marmota_cercador_universal_desbloqueig_supabase_i_relleu.md",
       "at": "2026-10-22T20:08:23.692Z",
       "hash": "ed750319c09e209924f8d3e1dbafd2f2c66097c2bc6752175da0ea52468f20e6"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

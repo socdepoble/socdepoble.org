@@ -35,10 +35,7 @@ Abans de nominar **qualsevol** arxiu que porte data/hora al títol, has d'execut
 1. **Obtindre l'Hora Real (La Realitat Termodinàmica):** Mai confies en el nom d'un fitxer obert ni en instruccions passades com a referència temporal. Llegeix exclusivament la variable "The current local time is..." de les metadades del teu entorn o invoca una comanda de sistema per saber l'hora exacta d'aquell precís instant.
 2. **Assignar Marca (AAMMDD_HHMM):** Construeix la marca temporal exclusivament a partir de l'hora present obtinguda en el pas 1.
 3. **Bloqueig d'Herència Cega:** Si estàs generant un fitxer relacionat amb un altre (per exemple, l'auditoria d'un prompt previ), NO COPIES la marca de temps de l'original. El teu fitxer *nou* sempre naix en el *present*. (Si es tracta d'una versió actualitzada de l'original, el Mestre et dirà explícitament si l'has de sobreescriure mantenint el nom; altrament, se'n crea un de nou si la plataforma ho demana, o es fa cas a la regla específica del domini).
-4. **Relleu Obligatori de Sessió (Caducitat de Torn):** Si la sessió anterior ja va culminar en auditories o una Acta Marmota (o si l'hora real difereix de la marca dels documents de l'escriptori), **ESTÀ TERMINANTMENT PROHIBIT** continuar editant els documents vells. S'ha de complir el ritual de relleu:
-   - Arxivar la sessió consumida a `90_arxiu_historic/` amb la Porta Olivera (`porta-olivera.mjs --arxiva`).
-   - Obrir un torn nou amb `node tooling/gates/obrir_torn.mjs`.
-   - Fer nàixer el nou Pla d'Implementació i el nou Prompt amb la marca termodinàmica present (`AAMMDD_HHMM`), absorbint el deute pendent de l'onada anterior més les noves ordres del Mestre.
+4. **Continuïtat del document viu:** la diferència entre l'hora present i el nom no obliga a substituir un document. Conserva'n el nom quan l'actualització continue el mateix encàrrec vigent. Per a una sessió nova o un encàrrec nou aplica [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]]; el consum i l'arxivament els resol [[core-higiene-escriptori/SKILL|core-higiene-escriptori]].
 
 ## La Promesa del Rellotger
 

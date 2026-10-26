@@ -2,9 +2,9 @@
 type: skill
 name: sdp-vigilant-tellado
 prioritat: 2
-description: "Tractor de perímetre i enduriment, inspirat en Vigilant (Vigilante) de Fernando Tellado (AyudaWP). Sis regles VIG de la checklist d'AyudaWP i comprovacions de perímetre: capçaleres, CSP, exposició de fitxers, integritat del paquet, secrets versionats, enumeració, 2FA i compatibilitat amb els plugins de seguretat de l'amfitrió, en tres capes: connector WordPress, SPA amb Supabase, i govern. Només llig i informa. No arregla res."
+description: "Tractor de perímetre inspirat en Vigilant de Fernando Tellado. Usa-la abans de desplegar o empaquetar el connector WordPress, en tocar capçaleres o CSP, o si un plugin de seguretat bloqueja l'App. Només llig i informa."
 status: actiu
-tags: [seguretat, wordpress, perimetre, enduriment, higiene]
+tags: [seguretat, fortificacio, tractors, auditoria]
 triggers_on:
   - vigilant
   - vigilante

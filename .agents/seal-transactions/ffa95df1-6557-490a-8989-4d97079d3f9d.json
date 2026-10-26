@@ -1,0 +1,22 @@
+{
+  "id": "ffa95df1-6557-490a-8989-4d97079d3f9d",
+  "session": "9ef2554c-c24d-4c74-95b9-a8db0a5968ed",
+  "operationId": "sdp0225-docs",
+  "claim": "9ef2554c-c24d-4c74-95b9-a8db0a5968ed:governance-write",
+  "planHash": "b0948acf6b5d10370ad4497134f210f86f6043d6c5c2d7fc4ca8f8976052c44e",
+  "beforeSeal": "8f144b849ffc1ed2e2c09fa0871a54b5906bd39d3f45bdefc561b86b0249e606",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "before": "fc11bf1bc26e1a990d050ce29095453ffdc4696716d36659f32f3c713f963437",
+      "after": "575dce68fb031143baa439b643db04dc4b1f514edccd9b4625f4822cd57529e4"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "62bd961d30b4212954c5670632ae1e915a8f9367f33e16fc2375d55926f4152e",
+      "after": "efaad9530ea232b79c34102c9a9640c1ab076b82df0aaae067e3fdd1449598e2"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "7df7a6fc4c997a35f0f89542233eacd79266d2d080e7724b4fbb561538afa97a"
+}

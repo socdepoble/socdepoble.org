@@ -1,0 +1,102 @@
+{
+  "id": "4ede9406-32a5-44c2-888e-c87da2ca685d",
+  "session": "3cd69312-bb40-416d-81d0-1d47431d614b",
+  "operationId": "sdp0225-sources",
+  "claim": "3cd69312-bb40-416d-81d0-1d47431d614b:governance-write",
+  "planHash": "f47e2570a4f90ed5d7ffd8e51bdb9f8d1bf8625c6a46ed71e11758a0749e1901",
+  "beforeSeal": "11eab7c36e361ae415cb34593a84b3bdf4c1c528794cd33ba4150ffd3e19ac05",
+  "files": [
+    {
+      "path": "tooling/documental/core.mjs",
+      "before": "8315402c83ea150d76472bc39ac5a18b0c4d841619e4eb76abda65fd499ac349",
+      "after": "d4d60023ff959b4b9fc161cf82d3789fe20b68db7aea800b2513a8484d01461b"
+    },
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "c4a06f00f185402298221ff711d7ca007ab83cad2e99ceec2b5f08c91f292825",
+      "after": "06d41e68cba4128b50a475200374ac6d6a7f3509ee16b79e3c7df382ed3c1655"
+    },
+    {
+      "path": "tooling/session/saneja_torns_caducats.mjs",
+      "before": "1a2e2ef14a5c55df3277fce6240e4de62a9f5b82e335381655d66bc31ea0f1b8",
+      "after": "4c982e58f7574c0fae58c3e1f322d8f82eae5e5d2e60ad9b8716d12b1ced3475"
+    },
+    {
+      "path": "tooling/brain/mapa-consola.mjs",
+      "before": "99729ba0fbd23e5f8ecbb455d317a958e3c0a49df2c7b5b33c5192610864382c",
+      "after": "f2df9fcb727e20b4350aab18d45b12f341fbf9cd5f3761abafebd981648d7d73"
+    },
+    {
+      "path": "tooling/brain/fonts-vigilancia.mjs",
+      "before": "9c257d40e448a7b3e471263e173224496dd1b6c07ac7ffe4b63bd52167d385b3",
+      "after": "887f32a2e2ff89281ad6cb9e7b7040a527ba04408522299860eabf237a5abe61"
+    },
+    {
+      "path": "tooling/vite/consola-iaia.mjs",
+      "before": "f485a5d2bb176400d58131983e72cf1a8498965bbd1974702f72eeeb5300bc16",
+      "after": "d56c49f67e1f60cd204f964407d71218432fcfaab9cbbe570211dd2018b1161b"
+    },
+    {
+      "path": "src/sections/consola/mapa/construeixMapa.js",
+      "before": "ca19cfa2f91c8891095ef0c8c18165958f627466b8e88d79c775ce30ba9980d5",
+      "after": "94891bb2e3ac0c75a484397b812b5fa9a006ba66ec42b151feceef31d1a39d15"
+    },
+    {
+      "path": "src/sections/consola/mapa/construeixMapa.test.js",
+      "before": "30d09558cce6187c09c6dfd54ad16d5fa4d94bb0257b3c52b78f9af10ce30005",
+      "after": "f05280c6760c4c091f73471f7a13fb468a83a48801d71d4b9c4d7c6313612321"
+    },
+    {
+      "path": "src/sections/consola/mapa/grafMapa.js",
+      "before": "95b39c92d97422f6510168055caf0333b3a5b7fce182697eb46dd5095288712a",
+      "after": "a1615e1dba1646874d8a4a018c5ec16639e812b82c669201b8a0b186414d0339"
+    },
+    {
+      "path": "src/sections/consola/xifresMas.js",
+      "before": "18e6296410a3c3ff1557b9d0594a4110aa35949747862e026dc46862e9dcdb27",
+      "after": "855100cf1a67d753abc685a13fe8bb603d12b118d7824584678a6426ba50947b"
+    },
+    {
+      "path": "tests/documental.test.mjs",
+      "before": "c28ba566b44fa61036d429b68d7fc43f73b0f227ee924739f72e5d61ae71bff6",
+      "after": "64717ee5b58fed215b0cf11d084ece92f2a875b4797703641c0307b796f66314"
+    },
+    {
+      "path": "tests/saneja-torns-caducats.test.mjs",
+      "before": null,
+      "after": "be180571d6702e516f2bb8952c9253d5427280af5e0f07fd1d6101a8d771ade7"
+    },
+    {
+      "path": "tests/mapa-consola.test.mjs",
+      "before": "42f4649bc625126933417002462a48801b60045e5d8bede0d96b111d44a46a2d",
+      "after": "d160fbe1f3f8e75b7456e5a58c9e575f817f696c70185ad73c210f1af9855bf0"
+    },
+    {
+      "path": "tests/fonts-vigilancia.test.mjs",
+      "before": "a85cf79fbb27e62a93094a7bbf0e8360c4a80eb3bf35b1b77880cc2d9b1508e2",
+      "after": "a1a27d16c6dfefb43a8d0f922a78c669ab2949c0d84c034debfedefee44b8641"
+    },
+    {
+      "path": "_wiki_de_poble/02_saber/03_consola_termodinamica/04_contracte_de_dades.md",
+      "before": "95c58fba60135fc5332c27c7dcadf8576bc62e97fc63eccc58ba6c76a02958a7",
+      "after": "d4d8894fccaef77f55c47400ee161a218bedd095e1e0b0565d5ec9f67deb3d62"
+    },
+    {
+      "path": "tooling/media/cens_imatges.mjs",
+      "before": null,
+      "after": "948fd6e8f2f85a9e934244aa39b4e28497906076408ab1416535b6968751e0aa"
+    },
+    {
+      "path": "tooling/media/cens_imatges.test.mjs",
+      "before": null,
+      "after": "62dbb808730e0538db47f292969d68ccd0bce7fd3b753b41dd9e459e3a167ef2"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "b797b3659a10e617ae2ae17c9615e964274984c4be206cba4061ff7b5ad0ba54",
+      "after": "1238df391c918845979be83a765f6fa022bf4d39b34a6e1f6a67ae7996998732"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518"
+}

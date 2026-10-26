@@ -3,10 +3,10 @@
   "turn_id": "torn_5a795c4e-b75e-4200-9cf7-b39c28607ece",
   "actor": "agent-local",
   "scope": "code",
-  "state": "opened",
-  "revision": 0,
+  "state": "closed",
+  "revision": 1,
   "createdAt": "2026-10-24T11:17:16.485Z",
-  "updatedAt": "2026-10-24T11:17:16.485Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T11:17:16.486Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3629,6 +3629,17 @@
       "state": "opened",
       "action": "open",
       "at": "2026-10-24T11:17:16.485Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "opened",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "opened"
+  }
 }

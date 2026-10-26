@@ -3,10 +3,10 @@
   "turn_id": "torn_0a677a4c-bbc1-4c9e-9030-8f0ddb6f9ea1",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 11,
+  "state": "closed",
+  "revision": 12,
   "createdAt": "2026-10-20T20:14:12.554Z",
-  "updatedAt": "2026-10-20T21:39:53.102Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-21T20:14:12.555Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3728,6 +3728,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-20T21:39:53.102Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3737,5 +3743,10 @@
   "relocated": [
     "_wiki_de_poble/04_escriptori/261020_2235_auditoria_gemini_salfumant_sistema_i_android.md",
     "_wiki_de_poble/04_escriptori/261020_2235_prompt_gemini_auditoria_salfumant_sistema_i_android.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

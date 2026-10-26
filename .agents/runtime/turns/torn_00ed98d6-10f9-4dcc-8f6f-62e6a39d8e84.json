@@ -3,10 +3,10 @@
   "turn_id": "torn_00ed98d6-10f9-4dcc-8f6f-62e6a39d8e84",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 7,
+  "state": "closed",
+  "revision": 8,
   "createdAt": "2026-10-24T20:29:49.484Z",
-  "updatedAt": "2026-10-24T21:02:43.543Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-25T20:29:49.484Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3784,6 +3784,17 @@
       "file": "_wiki_de_poble/04_escriptori/261024_2230_auditoria_gemini.md",
       "at": "2026-10-24T21:02:43.543Z",
       "hash": "5929805a3430d3a0d2c94d17221ee8bfabd3f72d8425276dc5255edd83e75d0b"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

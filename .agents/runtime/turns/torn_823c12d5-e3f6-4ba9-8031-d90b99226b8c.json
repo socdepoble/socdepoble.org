@@ -3,10 +3,10 @@
   "turn_id": "torn_823c12d5-e3f6-4ba9-8031-d90b99226b8c",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 17,
+  "state": "closed",
+  "revision": 18,
   "createdAt": "2026-10-22T12:21:42.434Z",
-  "updatedAt": "2026-10-22T12:48:44.766Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T12:21:42.434Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3946,6 +3946,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-22T12:48:44.766Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3955,5 +3961,10 @@
   "relocated": [
     "_wiki_de_poble/04_escriptori/261022_1425_prompt_consell_emojis_grans_i_paritat_whatsapp.md",
     "_wiki_de_poble/04_escriptori/261022_1425_prompt_claude_codex_emojis_grans_i_paritat_whatsapp.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

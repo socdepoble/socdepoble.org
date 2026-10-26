@@ -3,10 +3,10 @@
   "turn_id": "torn_b133a06e-33c6-4d0e-ab14-aea86b297f5b",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-19T19:14:59.252Z",
-  "updatedAt": "2026-10-19T19:15:12.997Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-20T19:14:59.252Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3865,6 +3865,17 @@
       "file": "_wiki_de_poble/04_escriptori/261019_2115_pla_implementacio_capacitor_mobil.md",
       "at": "2026-10-19T19:15:12.997Z",
       "hash": "f40579e64784fa6618c4399a1d357b48abfc49c2bbaa046e7c0017d3c6d2945e"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

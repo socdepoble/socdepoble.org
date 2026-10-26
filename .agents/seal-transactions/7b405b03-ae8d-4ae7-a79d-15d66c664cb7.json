@@ -1,0 +1,22 @@
+{
+  "id": "7b405b03-ae8d-4ae7-a79d-15d66c664cb7",
+  "session": "8f99c17d-524f-4965-8f70-d2d38694f677",
+  "operationId": "sdp0225-cl02",
+  "claim": "8f99c17d-524f-4965-8f70-d2d38694f677:governance-write",
+  "planHash": "ddcfe02fc489e960224944dcdcf4c34e7ea57cb8ac8865caad1a2cc4f25b0287",
+  "beforeSeal": "e7aac631fd315efa46340178caa5703c6e40608cc8b2b84ba14c583e92a98f4b",
+  "files": [
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "06d41e68cba4128b50a475200374ac6d6a7f3509ee16b79e3c7df382ed3c1655",
+      "after": "51abcd00ace41f19a8dd4dc9ccde11010919a0eb72095766054afc4fbd86a902"
+    },
+    {
+      "path": "tests/documental.test.mjs",
+      "before": "64717ee5b58fed215b0cf11d084ece92f2a875b4797703641c0307b796f66314",
+      "after": "cc1aaa1118ea18be9a280c68441d9fc628cb475085bfd5eda4f43d1968db532f"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518"
+}

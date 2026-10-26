@@ -3,10 +3,10 @@
   "turn_id": "torn_2b56c0fa-6965-40a0-b325-a4658341d3ae",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-23T23:22:21.810Z",
-  "updatedAt": "2026-10-23T23:23:31.911Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-24T23:22:21.811Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3703,6 +3703,17 @@
       "file": "_wiki_de_poble/04_escriptori/261024_0130_pla_implementacio_auditoria_adversarial_claude_i_dsa.md",
       "at": "2026-10-23T23:23:31.910Z",
       "hash": "01b5790143ff8eda4dc4507fd30ebac2ebcb60b97b3ca3f11aa9543f42b20285"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

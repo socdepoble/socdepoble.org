@@ -3,10 +3,10 @@
   "turn_id": "torn_3e2490dc-0092-4905-b42e-3284b57af480",
   "actor": "claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 20,
+  "state": "closed",
+  "revision": 21,
   "createdAt": "2026-10-22T15:19:04.711Z",
-  "updatedAt": "2026-10-22T16:24:49.496Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-23T15:19:04.712Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3783,6 +3783,12 @@
         "src/sections/multimedia/censImatges.test.js"
       ],
       "at": "2026-10-22T16:24:49.496Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -3803,5 +3809,10 @@
     "src/sections/text/pageContent.js",
     "src/sections/multimedia/censImatges.js",
     "src/sections/multimedia/censImatges.test.js"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

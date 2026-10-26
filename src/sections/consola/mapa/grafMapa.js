@@ -247,6 +247,9 @@ export const TEXTOS_AVIS = Object.freeze({
   'ledger-invalid': 'La signatura del LEDGER no és vàlida: el cos del Llibre d’Obra no quadra amb el seu segell (s’ha editat sense tornar-lo a segellar) o li falta el segell. Els segells fòssils i les línies mal formades es compten a part.',
   // Onada 6 · La frontissa roja ja no és només una fracció de la salut: un avís per clau que falla.
   'frontissa-roja': 'La frontissa de contingut està roja: esta clau estructural de PAGE_COPY falta o no té l’empremta aprovada, i el pre-commit es para.',
+  // 261026 · Les dues portes de la salut, com la frontissa: roges, avís alt, amb la causa a l'evidència.
+  'porta-documents-roja': 'Este document no passa la porta documental (tooling/gates/porta-documents.mjs): l’evidència diu per què, i la cadena de portes es para.',
+  'cadena-portes-roja': 'La cadena de portes de només lectura (node tooling/gates/run-portes.mjs --diagnostic) té passos en roig: el pre-commit es para fins que es reparen.',
   'recaiguda-recent': 'El LEDGER anota una recaiguda recent d’esta skill: una correcció del Mestre que ja estava apresa s’ha tornat a trencar.'
 });
 

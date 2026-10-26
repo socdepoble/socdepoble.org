@@ -3,10 +3,10 @@
   "turn_id": "torn_6d6d3e52-83e8-4e4b-a3fa-0fb417c22c50",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 9,
+  "state": "closed",
+  "revision": 10,
   "createdAt": "2026-10-17T19:31:16.488Z",
-  "updatedAt": "2026-10-17T19:39:45.233Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-18T19:31:16.489Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -3939,10 +3939,21 @@
         "_wiki_de_poble/04_escriptori/261017_2133_auditoria_codex_final_gauntlet.md"
       ],
       "at": "2026-10-17T19:39:45.233Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/04_escriptori/261017_2133_acta_tancament_codex_gauntlet.md",
     "_wiki_de_poble/04_escriptori/261017_2133_auditoria_codex_final_gauntlet.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "planned"
+  }
 }

@@ -3,10 +3,10 @@
   "turn_id": "torn_0e4ba9fa-308c-4741-b17d-703712ab7b9e",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 19,
+  "state": "closed",
+  "revision": 20,
   "createdAt": "2026-10-19T12:24:49.787Z",
-  "updatedAt": "2026-10-19T12:52:08.445Z",
+  "updatedAt": "2026-10-26T01:49:16.075Z",
   "expiresAt": "2026-10-20T12:24:49.788Z",
   "contractHash": "b4e52fda3ed2f2fee90d664635aac0aace1da27366cedf03b91577f63b897d36",
   "humanInventoryVersion": 1,
@@ -4100,6 +4100,12 @@
       "file": "_wiki_de_poble/04_escriptori/261019_1425_auditoria_gemini_skills_i_multimedia.md",
       "at": "2026-10-19T12:52:08.445Z",
       "hash": "0253f512d632b51433bf65a1d1b1b19f0bf59d1649548611db83e8313ebe2ac7"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-26T01:49:16.075Z"
     }
   ],
   "ownedPaths": [
@@ -4109,5 +4115,10 @@
   "relocated": [
     "_wiki_de_poble/04_escriptori/261019_1425_pla_alliberament_multimedia_i_conversio_webp.md",
     "_wiki_de_poble/04_escriptori/261019_1430_prompt_alliberament_multimedia_i_conversio_webp.md"
-  ]
+  ],
+  "closure": {
+    "reason": "expired",
+    "at": "2026-10-26T01:49:16.075Z",
+    "previousState": "context_loaded"
+  }
 }

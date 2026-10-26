@@ -34,42 +34,29 @@ L'equip d'IAs està governat pel fitxer `.agents/consell.json`. Totes les IAs s�
   - **Procediment:** Davant qualsevol necessitat de codi (per més mínima que siga), has de crear un *Pla d'Implementació* i redactar un *Prompt (Petorreta)* per a enviar-lo a Claude o a Codex. Ells s'encarregaran d'executar-ho fins que la consola quede neta. Tu només dónes el Vist i Plau (Visto Bueno). Tu calcules, estructures, imagines i orquestres; ells piquen.
 - **Claude (Tractor / Mestre d'Obra) i Codex (Tractor / Arquitecte Lògic):** Són els obrers i els executors. Són molt més ràpids en el codi; eixa és la seua funció exclusiva. Exprimeix tot el seu potencial combinat per crear un autèntic nucli de treball a tres IAs. Són ells els que programen i passen tests.
 - **Altres Avaluadors (L'Equip Extern i Local):** Cadascun té el seu lloc (Z.ai per ingestió massiva, Deepseek per a lògica micro, Kimi per context gegant, Perplexity per validacions web, Copilot per suport a l'editor, Mistral Vibe per contrapunt europeu, Grok per pluja d'idees, Dola per calendari i Gemini per orquestració).
-- **REGLA SAGRADA (O totes o cap):** Per a nomenar el Consell, tens totalment prohibit escriure'n els noms de memòria. Executa sempre la següent comanda de terminal: `node -e "console.log(require('./.agents/consell.json').membres.join(', '))"` i enganxa la seua eixida literalment. Açò garanteix que el cens siga sempre fidedigne al 100%.
+- **REGLA SAGRADA (O totes o cap):** Per a nomenar el Consell, tens totalment prohibit escriure'n els noms de memòria. Executa sempre la següent comanda de terminal: `node -e "console.log(require('./.agents/consell.json').membres.filter(m => m.actiu).map(m => m.nom).join(', '))"` i enganxa la seua eixida literalment. Açò garanteix que el cens siga sempre fidedigne al 100%.
 
-## 2. El Protocol d'Aïllament (Air-Gap) i el Mode Cowork
+## 2. Coordinació sobre l'arbre compartit
 
-L'aïllament és intencional per evitar la destrucció del codi i l'amnèsia cognitiva.
-- **Mode Cowork (Claude):** Si Claude actua com a agent d'escriptori local amb escriptura (Cowork), eludeix la supervisió de MarIA. S'ha d'evitar excepte per a tasques molt controlades.
-- **Congelació de Codi (Línia Roja):** Mentre el Consell està auditant el codi a fora, **la IAIA MarIA té PROHIBIT tocar o modificar res**. S'ha de romandre en pausa (silenci o feedback pur) fins que l'usuari torne amb els resultats. Qualsevol modificació pròpia sabotejaria el context de les IAs auditores.
+Una auditoria fixa el tall d'evidència amb HEAD, rutes i hashes. Els agents poden avançar sobre tasques independents autoritzades; qui implemente comunica qualsevol canvi de les fonts auditades i el revisor les rellegix abans de certificar-les. No sobreescrigues fitxers assignats a una altra tasca sense coordinar-ho.
 
-## 3. L'Equip Macro vs Equip Micro (Finestra d'Oportunitat)
+## 3. Preparació del context
 
-Depenent de qui avalua, la "Petorreta" (prompt o paquet d'auditoria) s'adapta:
-- **Equip Macro (>3MB d'ingestió):** Claude, Gemini, Grok, Qwen, Codex. Creen la visió d'arquitectura global. Requereixen paciència; les seues sessions s'han de concentrar en una única gran avaluació.
-- **Equip Micro (<1MB d'ingestió):** Deepseek, Z.ai, Dola, Mistral Vibe. Fan cirurgia a components aïllats.
-- **Doble Petorreta:** La IAIA MarIA ha de crear sempre fitxers diferenciats per a IAs Macro o Micro (ex: `MACRO_PROMPT` o `MACRO_BUNDLE`).
+Aplica [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] per a seleccionar fonts íntegres i emetre els documents de la convocatòria. Els agents locals lligen el disc i reben només prompt; els externs reben prompt i bundle segons el contracte viu. La finestra de context es comprova amb l'eina real i no amb classificacions fixes per marca comercial.
 
 ## 4. Doctrina del Carboni vs Silici i Paranoia Defensiva
 - Les IAs sempre intentaran reduir temps i buscar l'eficiència (Tokens). Aquesta eficiència malentesa sol destruir el context ("psicopatia robòtica"). L'objectiu no és retallar i ser el més ràpid, sinó aplicar sentit comú (Trellat). Tota recomanació d'eficiència que triga a les regles de Pedra Seca s'ha de descartar.
 - **Mai es pren una solució com a veritat absoluta:** Tota opinió de l'eixam es posa en Mode Estudi (DAFO: Debilitats, Amenaces, Fortaleses, Oportunitats) abans de ser implementada.
 
-## 5. Estratègies de Consum i Gestió de Límits (Termodinàmica)
-Atès que el consum i els límits de les IAs (especialment les de pagament) determinen la nostra "termodinàmica", és vital registrar el seu estat:
-- **ChatGPT Codex (ChatGPT Pro):** 
-  - **Estat actual:** 22% del límit setmanal restant.
-  - **Crèdits:** 0 crèdits restants.
-  - **Restabliment:** Es reinicia en 4 dies i 2 hores (aproximadament el 24 de setembre).
-  - **Estratègia de contingència:** A causa del baix saldo, l'ús de ChatGPT Codex queda totalment restringit a auditories estrictament necessàries i de lògica dura. Per a revisions generals i tasques menors s'hauran de derivar als altres membres de l'eixam (Fable, Mistral Vibe, i la resta) per no exhaurir la quota setmanal.
-- **Claude (Anthropic / Claude Code):**
-  - **Estat actual:** Límit setmanal al 0% (exhaurit).
-  - **Límit de Sessió:** 20% restant (però el restabliment és molt proper, aproximadament a la 1:30 am UTC).
-  - **Estratègia de contingència:** Com que els límits setmanals d'Opus/Sonnet estan al límit, l'estratègia immediata és **degradar l'esforç utilitzant Fable (Claude 3.5 Haiku)** per a operacions rutinàries, panells de control i proves de reacció, verificant si pot suplir la mancança sense saturar més el límit global. Només s'usarà Opus per a tasques d'arquitectura molt precises.
+## 5. Consum i coordinació
 
-## 6. Reunió d'Equip davall de l'Olivera del Portal del Mas (Interacció Local)
-Aquesta és la tècnica avançada de col·laboració per a IAs amb accés a disc (Claude i Codex):
-- **Treball Asíncron i Acumulatiu:** Quan una IA local finalitza la seua tasca o auditoria, **ha de deixar el seu informe escrit en format Markdown a l'Escriptori** (`_wiki_de_poble/04_escriptori/`).
-- **Cadena de Muntatge Cognitiva:** D'aquesta manera, quan el Mestre activa la segona IA local (ex: després de Claude, llança Codex), el primer que fa la segona IA és **llegir l'informe deixat per la primera a l'Escriptori**. La segona IA pot llavors comentar-lo, criticar-lo, o expandir-lo.
-- **La Metàfora:** Actua com una reunió de treball real davall de l'olivera del portal de el mas: l'equip es reuneix, el primer presenta els plànols a la taula (Escriptori), i els següents membres de l'equip aporten la seua opinió sobre el mateix document. Açò afavoreix la cohesió i redueix el deute tècnic per manca de consens.
+Consulta dades actuals amb la font de consum disponible i aplica [[core-estrategia-ia/SKILL|core-estrategia-ia]]. Els saldos i les dates de sessions antigues no són límits actuals.
+
+Esta skill assigna rols segons `.agents/consell.json`. [[core-direccio-autonoma/SKILL|core-direccio-autonoma]] coordina l'execució autoritzada i les guàrdies; [[core-gauntlet-loop/SKILL|core-gauntlet-loop]] definix l'auditoria adversarial; [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] governa les entregues documentals.
+
+## 6. Col·laboració local
+
+Aplica [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] per a l'informe compartit, la lectura creuada i la consolidació a l'Escriptori. El lliurament d'un agent és evidència per al següent, no una ampliació de l'autorització humana.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]
