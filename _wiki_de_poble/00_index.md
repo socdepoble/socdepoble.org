@@ -49,6 +49,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[estandard_integracio_react]]
 
 ## Actes i Sessions (260915 - 260918)
+- [[10_actes/261026_1630_acta_marmota_triomf_botigues_share_target_neteja_i_relleu_fresc.md]]
 - [[10_actes/260915_1410_acta_marmota_tancament_fase4.md]]
 - [[10_actes/260916_0540_acta_marmota_fi_radar.md]]
 - [[10_actes/260916_0645_ACTA_sincronitzacio_disseny.md]]

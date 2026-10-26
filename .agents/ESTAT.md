@@ -7,6 +7,24 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-26T16:32:00+01:00 · IAIA MarIA · Triomf de Botigues Nadiues, Commit 9279e420b Publicat, Neteja d'Escriptori i Relleu per a Missió Share Target
+- **Data d'actualització:** 2026-10-26
+- **Branca i HEAD:** `backup-notes-publish` · `9279e420b` (publicat a `fork/backup-notes-publish`, working tree net).
+- **Estat de la suite:** 3.413 proves precommit verdes (3.151 Vitest + 262 Node, 0 fallades). Porta Olivera en codi 0.
+- **Botigues Nadiues:**
+  - Google Play: Paquet `org.socdepoble.app` publicat a Prova Interna; versió `1.0.0 (1)` instal·lada i provada amb èxit al telèfon físic del Mestre Javi.
+  - Apple TestFlight: Grup intern `Sóc de Poble. Grup de Treball` actiu amb `gentdelatorre@mac.com` (instal·lable a l'acte a iPhone i iPad); grup extern en espera de revisió de 12-24 hores.
+- **Salvaguarda de Git:** Publicat el commit `9279e420b` (`chore(consola,escriptori): sanejament nocturn, cens d'imatges i neteja d'escriptori per a nova missió`) al fork de GitHub.
+- **Automillora de l'Escriptori:**
+  - Registrada la incidència humana del Mestre: l'agent ha d'arxivar els documents consumits de sessions anteriors per acte reflex proactiu, sense esperar avisos humans.
+  - Traslladats els 7 documents de la matinada a `90_arxiu_historic/`. L'Escriptori queda netíssim amb només 4 elements: el Llibre Mestre, el cens d'imatges i els dos documents de la nova missió (`261026_1615`).
+- **Missió per a Claude (Torn 16:15):**
+  - Pla: `_wiki_de_poble/04_escriptori/261026_1615_pla_implementacio_share_target_notificacions_i_xat.md`.
+  - Prompt: `_wiki_de_poble/04_escriptori/261026_1615_prompt_claude_share_target_notificacions_i_xat.md`.
+  - Eixos: Receptor del menú «Compartir» (Android SEND intent / iOS Share Extension) per a rebre captures al Xat, notificacions push/locals, text *"Benvinguda a Sóc de Poble"* i maquetació mòbil en línia dels botons d'accés.
+- **Acta Marmota:** Validada i segellada a `_wiki_de_poble/10_actes/261026_1630_acta_marmota_triomf_botigues_share_target_neteja_i_relleu_fresc.md`.
+- **Relleu:** El Mestre reinicia el seu ordinador per alliberar memòria. En tornar a obrir amb "Sóc de Poble!", arrenquem des de zero amb Claude en xat net executant la nova missió.
+
 ## ESTAT_ACTUAL · 2026-10-26T03:02:00+01:00 · Codex · Sanejament nocturn implementat i verificat localment
 - **Data d'actualització:** 2026-10-26
 - **Branca i HEAD:** backup-notes-publish · cd1bb28a4

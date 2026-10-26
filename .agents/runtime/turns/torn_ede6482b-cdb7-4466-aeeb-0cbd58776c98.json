@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 6,
+  "revision": 8,
   "createdAt": "2026-10-26T15:10:17.502Z",
-  "updatedAt": "2026-10-26T15:13:10.033Z",
+  "updatedAt": "2026-10-26T15:28:36.247Z",
   "expiresAt": "2026-10-27T15:10:17.502Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3745,6 +3745,22 @@
         "committedAt": "2026-10-26T15:13:10.033Z",
         "documentHash": "b7f9980103a7d7173e034759f360ea2c9df90949c2fda8521d44b1633bcbc60c"
       }
+    },
+    "d91ed0de-66cd-445f-9c0a-7563ddb4b298": {
+      "id": "d91ed0de-66cd-445f-9c0a-7563ddb4b298",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261026_1630_acta_marmota_triomf_botigues_share_target_neteja_i_relleu_fresc.md",
+      "contractSnapshot": "c87eb570dea112730a73f1d420d0113fbce4ac8f2ce35522fb57b31fdb42aa92",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-26T15:28:36.228Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-26T15:28:36.229Z",
+        "committedAt": "2026-10-26T15:28:36.247Z",
+        "documentHash": "0e8c47fdfa928e003d012aecf7ca6e6f9f6bacd83255d3b120561862955de836"
+      }
     }
   },
   "plan": null,
@@ -3788,6 +3804,18 @@
       "file": "_wiki_de_poble/04_escriptori/261026_1615_pla_implementacio_share_target_notificacions_i_xat.md",
       "at": "2026-10-26T15:13:10.033Z",
       "hash": "b7f9980103a7d7173e034759f360ea2c9df90949c2fda8521d44b1633bcbc60c"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-26T15:28:36.229Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "d91ed0de-66cd-445f-9c0a-7563ddb4b298",
+      "file": "_wiki_de_poble/10_actes/261026_1630_acta_marmota_triomf_botigues_share_target_neteja_i_relleu_fresc.md",
+      "at": "2026-10-26T15:28:36.247Z",
+      "hash": "0e8c47fdfa928e003d012aecf7ca6e6f9f6bacd83255d3b120561862955de836"
     }
   ]
 }

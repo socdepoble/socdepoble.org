@@ -75,3 +75,4 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../90_arxiu_historic/261026_0210_pla_implementacio_sanejament_consola_tauler_net_i_llibre_mestre]]
 - [[../90_arxiu_historic/261026_0145_auditoria_gemini]]
 - [[../90_arxiu_historic/261026_0145_auditoria_codex]]
+- [[../10_actes/261026_1630_acta_marmota_triomf_botigues_share_target_neteja_i_relleu_fresc]]
