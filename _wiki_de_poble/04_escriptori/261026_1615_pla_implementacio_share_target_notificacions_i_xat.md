@@ -62,6 +62,11 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 - **Text d'accés:** Actualitzar la cadena `section.xat.sessio.calEntrar` a `src/config/idiomes/ca.js` i els components `XatSection.jsx` i `DialegNovaConversa.jsx` perquè mostren «Benvinguda a Sóc de Poble» en lloc de «Entra per buscar persones i enviar missatges.».
 - **Maquetació mòbil dels botons:** Ajustar `.sdp-xat-acces > .sdp-alerta__accions` a `src/css/modules.css` perquè els botons «Connectar-se» i «Registrar-se» es distribuïsquen de forma equilibrada (en línia o amb espaiat harmònic) sense amuntegar-se a pantalles mòbils compactes.
 
+### 4. Barra d'Estat i Icones Blanques del Sistema (Status Bar & Navigation Bar)
+- **Objectiu:** Forçar que les icones del sistema (hora, bateria, wifi, cobertura) i els botons de navegació inferiors siguen blancs sobre fons negre, restaurant la visibilitat completa a Android i iOS.
+- **Android (`styles.xml`):** Configurar `windowLightStatusBar = false`, `statusBarColor = #000000`, `windowLightNavigationBar = false` i `navigationBarColor = #000000`.
+- **iOS (`Info.plist`):** Configurar `UIStatusBarStyleLightContent` permanent.
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 

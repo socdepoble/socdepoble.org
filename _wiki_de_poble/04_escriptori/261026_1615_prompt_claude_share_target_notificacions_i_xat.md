@@ -104,7 +104,22 @@ L'objectiu d'aquest torn és implementar la integració nativa completa amb el *
 - **Botons en dispositius mòbils:** A `src/css/modules.css`, millora `.sdp-xat-acces > .sdp-alerta__accions`:
   Fes que els botons «Connectar-se» i «Registrar-se» (`.sdp-xat-pindola`) no queden amuntegats en vertical ocupant el 100% cadascun, sinó que es disposen de manera neta, elegant i equilibrada (flex en línia o amb marges proporcionats que respecten la graella Pedra Seca).
 
-### 5. Verificació i Auditoria
+### 5. Barra d'Estat i Icones Blanques del Sistema (Status Bar & Navigation Bar)
+- **Problema diagnosticat pel Mestre Javi:** Com que la capçalera de Sóc de Poble és negra, les icones de la barra del sistema d'Android (hora, cobertura, wifi, bateria) han quedat en negre i són invisibles (només s'aprecia el percentatge «51»). Igualment, els botons del peu del sistema (tornar arrere, inici) desapareixen en no contrastar.
+- **Acció a Android (`android/app/src/main/res/values/styles.xml`):**
+  - A `AppTheme.NoActionBar`, configurar:
+    ```xml
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:statusBarColor">#000000</item>
+    <item name="android:windowLightNavigationBar">false</item>
+    <item name="android:navigationBarColor">#000000</item>
+    ```
+    *(Amb `windowLightStatusBar = false`, Android força les icones de la barra superior a ser blanc pur sobre fons negre).*
+  - A `AppTheme.NoActionBarLaunch` (SplashScreen), afegir també `windowLightStatusBar = false` i `statusBarColor = #000000`.
+- **Acció a iOS (`ios/App/App/Info.plist`):**
+  - Assegurar `UIStatusBarStyle = UIStatusBarStyleLightContent` i `UIViewControllerBasedStatusBarAppearance = false` perquè el text i les icones d'iOS romanguen sempre en blanc sobre la barra negra.
+
+### 6. Verificació i Auditoria
 - Executa `npm run test:precommit` i assegura que totes les proves continuen en verd (sense trencar tests de capes ni d'avatars).
 - Actualitza el Llibre Mestre (`04_escriptori/03_llibre_mestre_tasques_i_idees.md`) amb les fites assolides.
 - Emet el document d'auditoria: `_wiki_de_poble/04_escriptori/261026_HHMM_auditoria_claude.md`.
