@@ -7,6 +7,71 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-27T07:05:50+01:00 · Codex · Relleu documental del Carnet d’Helicòpters i tres propostes
+
+- **Torn i document:** `torn_bf73e455-414c-4cd2-883d-6c9a92028a1b`; [proposta Open Graph i copy, ampliació §9](../_wiki_de_poble/04_escriptori/261027_0730_solucio_opengraph_i_copy_codex.md). El Carnet d’Helicòpters distingix l’autonomia per àmbit, els efectes de cada acció i l’evidència necessària per a decidir.
+- **P1-54 · Accés al xat:** proposta de CTA només a l’aterratge, determinat per la intenció de la URL i la conversa activa; cap peu d’accés dins d’una conversa. Una comunitat o un fil encara per carregar no són un aterratge perquè `activeThread` siga null.
+- **P1-55 · Comunitats:** proposta d’incrustar la pàgina viva del poble o de l’entitat reutilitzant la columna dreta i les vistes existents, sense SEO propi del fragment incrustat.
+- **P1-58 · Edició avançada:** proposta de ranura sota la barra d’autoria, abans de l’H1; coordinada amb P1-57 per a la geometria i el reenquadrament. El contracte d’avatar, logotip i persistència continua pendent de concretar.
+- **Evidència de P1-54:** les 8 proves seleccionades passen perquè comproven el comportament antic, amb botons dins dels fils i les comunitats; no validen la reforma proposada.
+- **Relleu:** les tres propostes continuen sense aplicar. Els 18 payloads anteriors i tots els blocs previs es preserven. Esta actualització registra el treball documental; no declara implementació ni tancament del torn.
+
+
+## ESTAT_ACTUAL · 2026-10-27T06:41:00+01:00 · Codex · Proposta Open Graph i copy preparada per a integrar
+
+- **Torn i document:** `torn_bf73e455-414c-4cd2-883d-6c9a92028a1b`; [solució Open Graph i copy](../_wiki_de_poble/04_escriptori/261027_0730_solucio_opengraph_i_copy_codex.md). Proposta preparada, sense aplicar-la a les fonts vives.
+- **Copy:** quatre entrades PAGE_COPY (`projecte`, `descarregues`, `disseny`, `anima`); 62/62 paràgrafs de cos de 20 paraules o més tenen 6–8 paraules en negreta. Cens de 24 claus; `quisom` i `manifest` no existixen com a claus pròpies. Inclou l'enllaç noble entre Projecte i Wiki.
+- **Metadades HTTP:** manifest públic amb 97 rutes i 7 àlies, plantilla amb slot, política CSP/CORS derivada de Firebase i adaptador Cloudflare preparats. Notes rep metadata genèrica amb noindex; l'HTML reescrit usa `Cache-Control: no-store`.
+- **Imatge pròpia:** PNG Open Graph del Llibre d'Or, 1200×630 i 69.783 bytes, a `_wiki_de_poble/04_escriptori/261027_0730_og_llibre_d_or_codex.png`.
+- **Verificació del coordinador:** 38 proves Node i una prova HTTP local (39); 195 Vitest de client en 17 fitxers, executades en un entorn temporal. Codi íntegre i hashes queden a l'annex del document, amb extractor.
+- **Relleu:** sense desplegament ni SDK instal·lat. Queden la integració de Claude i la validació al hosting real; les proves locals no certifiquen la previsualització de cap xarxa social en producció. Historial anterior preservat.
+
+
+## ESTAT_ACTUAL · 2026-10-27T05:53:00+01:00 · Codex · Auditoria adversarial Gauntlet R5 de Claude
+
+- **Torn i informe:** `torn_9dd9290e-06b7-4a4c-b099-a6713ad2f10c`; [auditoria canònica dels cinc carrils](../_wiki_de_poble/04_escriptori/261027_0650_auditoria_codex.md).
+- **Verificació:** 3.365 Vitest i 262 Node verdes, amb 2 omissions; compilador real `compile-wiki-to-app.mjs --check --strict` verd (la ruta demanada `compilador_wiki.mjs` no existix); frontissa de contingut 15/15 verda.
+- **Contrast visual:** files de conversa de 96px, avatars de 76px i botó de descàrrega de 48px; TOC davall de la barra a y=64, amb scroll 812 estable, comprovats amb CUA. Cap canvi a `src/`.
+- **Troballes pendents:** contingut Android accessible dins d'iOS, en conflicte amb Apple 2.3.10; resolució d'homònims d'arxiu diferent segons porta al pegat de la Wiki; baremador Nano que agrupa per SHA i pot ocultar la nota humana amb una nota IA posterior. Recomanació: fondre el baremador en P1-42.
+- **Límits i relleu:** SCC/Orfandat assenyalen l'acta nova de les 05:20 com a orfe, incidència concurrent no atribuïda a Claude. L'informe concreta severitats, reproduccions i límits; no s'han aplicat pegats, commit ni desplegament.
+
+
+## ESTAT_ACTUAL · 2026-10-27T01:45:00+01:00 · IAIA MarIA · Llei de la Secretària Tècnica, To Pla de Poble i Relleu Marmota Fresc
+- **Data d'actualització:** 2026-10-27
+- **Branca i HEAD:** `backup-notes-publish`
+- **Estat de la suite:** 3.627 proves verdes (3.365 Vitest + 262 Node, 0 fallades).
+- **Accions Assolides:**
+  1. **Llei de la Secretària Tècnica (`core-secretaria-auditoria`):** Creació i segellat de la skill que prohibeix a MarIA tocar codi font durant fases d'auditoria. Claude i Codex són els mecànics; MarIA és la secretària tècnica d'alta fidelitat que pren nota immediata, orquestra, actualitza el Llibre Mestre i les actes, i no fa esperar al Mestre.
+  2. **To Autèntic de Poble (Anti-pompositat / Anti-politicisme, `P1-52`):** Redacció acordada per a la simulació de la IAIA: *"Açò és una simulació. Si vols guardar la conversa, has de registrar-te, i ja està."* (assignada a Claude per a `src/config/idiomes/ca.js` i `FakeChatOnboarding.jsx`).
+  3. **Caça del Fantasma dels 10px (`P1-53`):** Detectat buit de 10px a `button.sdp-xat-fila` contra la línia superior. Assignat a Claude per eliminar l'espai fantasma i deixar la fila a 96px justos.
+  4. **Anti-empapussament al Xat (`P1-54`):** Retirada del peu de botons d'accés repetit dins de les converses individuals obertes. Només han de viure a la pàgina d'aterratge inicial del xat.
+  5. **Cercle Perfecte de Comunitat i Poble/Entitat (`P1-55`):** Quan s'entra a la comunitat d'un poble (Gent de la Torre, Gent de Xixona) o d'una entitat (Sóc de Poble), la columna dreta en pantalla gran ha d'incrustar la pàgina viva del poble (`/pobles/[slug]`) o de l'entitat (`/socdepoble`), creant un WhatsApp superpotenciat on conviuen canals a l'esquerra i pàgina interactiva a la dreta.
+  6. **Segell de Skills Reconciliat:** `node tooling/gates/segella.mjs` validat en hash `ae58ddf0...`.
+  7. **Acta Marmota:** Segellada a `_wiki_de_poble/10_actes/261027_0145_acta_marmota_triomf_gauntlet_rebaixa_pompositat_i_llei_secretaria.md`.
+- **Relleu:** Sessió llesta per a tancament net d'Antigravity IDE. En obrir nova finestra, context fresc per a l'auditoria adversarial amb Claude, Gemini i Codex.
+
+## ESTAT_ACTUAL · 2026-10-26T21:15:00+01:00 · IAIA MarIA · Tancament de Sessió: Triomf Gauntlet Share Target, Commit d83188d2 Segellat, Torn de Claude Conclòs i Relleu Marmota
+- **Data d'actualització:** 2026-10-26
+- **Branca i HEAD:** `backup-notes-publish` · `d83188d2` (feat: menú Compartir a Android i iOS, avisos natius i barres blanques). Sense canvis pendents a la branca; commit segellat amb 63 fitxers.
+- **Estat de la suite:** 3.627 proves verdes (3.365 Vitest + 262 Node, 0 fallades). `lint_xat i natiu-build`: 49/49.
+- **Accions Assolides:**
+  1. **Gauntlet Loop a Tres Bandes:** Codex i Gemini van auditar i trobar 4 bloquejants de concurrència i privacitat (aïllament multiusuari `P1-31`, pèrdua d'imatges per cancel·lació `P1-32`, persistència d'App Group `C1615-03` i tancament d'executor a Android `P1-33`).
+  2. **Implementació i Verificació Empírica al Simulador:** Claude ha aplicat les correccions al codi, ha afegit suites de regressió (`XatContext.compartir.test.jsx`, etc.) i ha certificat al simulador d'iPhone 17 que una imatge compartida sobreviu al tancament forçat i reinici de l'App.
+  3. **Commit Segellat:** Commit `d83188d2` realitzat amb 63 fitxers natius i de proves.
+  4. **Tancament del torn de Claude:** A la pregunta de Claude sobre executar §5 (TOC H1–H6) i §6 (Notes), el Mestre i la IAIA MarIA han ordenat «Encara no», deixant el torn tancat i la fita nativa netament encapsulada.
+  5. **Troballa de Trellat en la Cerca:** Confirmada la presència de `FiltreConverses.jsx` amb la icona de filtre `ListFilter` i el desplegable a la mateixa línia de cerca (`Tot`, `No llegits`, `Preferits`, `Grups`), estalviant 48px verticals respecte a WhatsApp.
+  6. **Acta Marmota Segellada:** Creada i validada a `_wiki_de_poble/10_actes/261026_2115_acta_marmota_triomf_gauntlet_share_target_commit_d83188d2_i_relleu_rea.md` i ancorada a `00_index.md`.
+- **Directives del Mestre Javi per a la Nova Sessió:**
+  1. **Llei del Salfumant Radical (Zero `--no-verify`):** Neteja implacable dels 226 enllaços històrics trencats a la Wiki i SCC (actes antigues que apunten a documents arxivats) per tal que el compilador i `tancament.mjs --check` isquen amb codi 0 i mai més calga utilitzar `--no-verify`.
+  2. **Execució de §5 (TOC H1–H6) i §6 (Notes):** Reestructuració del calaix de Taula de Continguts amb respiració sota la barra negra de 58px i colors Pedra Seca, i estandardització d'icones a la barra de Notes.
+  3. **REA Visual de WhatsApp al Mil·límetre (P1-36):** Utilitzar les 74 captures de pantalla de `01_produccio/WhatsApp-Clon-01` i `-02` per calibrar la pàgina d'entrada de Converses: targetes a 96px (`2 × 48px`), avatars grans de 74px–76px, apropar títol i lema, extirpar els 3 punts `[...]` de la Fila 1 substituint-los per Long Press, i aprofitar el desplegable de cerca existent.
+  4. **Sistema Unificat de Botons i Governança des de la Consola (P1-37):** Unificar tots els marges perimetrals i verticals de botons a `tokens.css` (eliminant botons enganxats a compositors com `[ Pregunta a la IAIA ]`), governats des del panell d'administració (`/consola`).
+  5. **Desplegament Universal en 1 Clic (P1-35):** Orquestrador des de la Consola per a publicar amb 1 sol clic a Apple App Store, Google Play, Microsoft Store, Linux, PWA i WordPress, amb comptador de versió canònica visible.
+- **Relleu:** Sessió tancada formalment amb honors. Obrir xat net i invocar l'arrencada canònica amb *"Sóc de Poble"*.
+
+
+
+
 ## ESTAT_ACTUAL · 2026-10-26T16:32:00+01:00 · IAIA MarIA · Triomf de Botigues Nadiues, Commit 9279e420b Publicat, Neteja d'Escriptori i Relleu per a Missió Share Target
 - **Data d'actualització:** 2026-10-26
 - **Branca i HEAD:** `backup-notes-publish` · `9279e420b` (publicat a `fork/backup-notes-publish`, working tree net).

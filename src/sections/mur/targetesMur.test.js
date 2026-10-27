@@ -22,6 +22,25 @@ describe('targetesDeSistema', () => {
     expect(quanFalta.mock.calls.map(([clau]) => clau)).toEqual(SYSTEM_PAGES.map((p) => p.key));
     expect(targetesDeSistema(undefined)).toEqual([]);
   });
+
+  /* Ordre del Mestre (261027; auditoria Gauntlet R5, G1-01 i G5-01) · Dins de
+     l'app nativa, «Descàrregues i Aplicacions» no és cap targeta: ni al Mur, ni
+     al Calendari, ni a usePaginesDelSistema, que passen tots per ací. No falta:
+     no avisa. Per defecte ho decidix el pont de Capacitor (esAppNativa). */
+  test('dins de l’app nativa, Descàrregues no és cap targeta, i no falta', () => {
+    const copy = { descarregues: { title: 'Descàrregues i Aplicacions' }, projecte: { title: 'El projecte' } };
+    const claus = (llista) => llista.map((targeta) => targeta.id);
+    expect(claus(targetesDeSistema(copy))).toEqual(['projecte', 'descarregues']);
+    const quanFalta = vi.fn();
+    expect(claus(targetesDeSistema(copy, { quanFalta, nativa: true }))).toEqual(['projecte']);
+    expect(quanFalta.mock.calls.map(([clau]) => clau)).not.toContain('descarregues');
+    window.Capacitor = { isNativePlatform: () => true };
+    try {
+      expect(claus(targetesDeSistema(copy))).toEqual(['projecte']);
+    } finally {
+      delete window.Capacitor;
+    }
+  });
 });
 
 describe('momentDeLaTargeta i perMomentDescendent', () => {

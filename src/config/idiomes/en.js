@@ -19,6 +19,7 @@ export default {
   'section.xat.iaia.salutacio': "I'm in no mood for nonsense right now, but I can answer your technical questions and explain how any corner of the village works.",
   'section.xat.sessio.connectar': "Sign in",
   'section.xat.sessio.registrar': "Sign up",
+  'section.xat.sessio.descarregar': "Download the app",
   'section.xat.iaia.cortesia': "Automatic welcome. Shown only here; it is not a reply saved in the shared chat.",
 
   'section.xat.sessio.calEntrar': 'Welcome to Sóc de Poble',
@@ -1460,8 +1461,7 @@ export default {
   'section.xat.compartir.entesos': 'OK',
   'section.xat.adjunts.peu': 'Caption (optional)',
   'section.xat.adjunts.peuPlaceholder': 'Add a caption…',
-  'section.xat.mesOpcions': 'More options',
-  'section.xat.seleccio.xats': 'Select chats',
+  'section.xat.seleccio.pista': 'Press and hold a conversation, right-click it or press Shift+F10 to select chats.',
   'section.xat.seleccio.triaXats': 'Choose the chats',
   'section.xat.seleccio.unaSeleccionada': '1 selected',
   'section.xat.seleccio.seleccionades': '{n} selected',

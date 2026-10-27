@@ -3,7 +3,11 @@ import { useContext, useState, useRef, useEffect, useId, forwardRef } from 'reac
 import { AppGridContext } from '../layout/AppGridShell';
 import { PUNTS_DE_TALL } from '../layout/graella.js';
 
-const iconProps = { size: 20, strokeWidth: 2, 'aria-hidden': true, focusable: false };
+/* Ordre del Mestre (261026_2126, prompt Tasca 3 i pla 261026_1615 §6) · Una
+   sola mida de glif, la de les capçaleres de columna: 24px (abans 20), dins de
+   la cel·la tàctil de 48px (--sdp-bloc-control, modules.css). */
+const MIDA_ICONA_EINES = 24;
+const iconProps = { size: MIDA_ICONA_EINES, strokeWidth: 2, 'aria-hidden': true, focusable: false };
 
 /* T7 (P2) · El tall de la barra d'eines ve de la font única de la graella. */
 export function useCompactControls() {

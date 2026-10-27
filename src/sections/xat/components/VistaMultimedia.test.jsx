@@ -254,6 +254,10 @@ test('si arriben adjunts, una fila per element amb la icona del tipus, sense min
   expect(fila.textContent).toContain('Vicent Ferris');
   expect(fila.textContent).toContain('Fotos · La plaça');
   expect(fila.querySelector('svg.lucide-camera')).toBeTruthy();
+  /* P1-36 (261026_2126) · Un adjunt és una fila senzilla, no una targeta de
+     conversa: els 72px i la icona de 48 amb el dibuix de 24 d'abans. */
+  expect(fila.className).toBe('sdp-xat-fila sdp-xat-fila--senzilla');
+  expect(fila.querySelector(':scope > .sdp-xat-avatar-icona > svg').getAttribute('width')).toBe('24');
   expect(fitxers.querySelector('img')).toBeNull();
   fireEvent.click(fila);
   expect(onObriFil).toHaveBeenCalledWith('f-vicent');

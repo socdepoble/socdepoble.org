@@ -108,12 +108,15 @@ function estatDeLaWiki(wiki) {
 }
 
 /* Una fila inerta (una pàgina del codi o una carpeta) porta, al lloc de
-   l'hora, la icona d'obres i el seu motiu («Al codi», «Icona fixa»). */
+   l'hora, la icona d'obres i el seu motiu («Al codi», «Icona fixa»).
+   Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · Un destí no és
+   cap targeta de conversa: la fila senzilla (sdp-xat-fila--senzilla)
+   conserva els 72px d'abans, no els 96 de la llista de converses. */
 function FilaDesti({ desti, avis, idAvis, onTria }) {
   const motiu = motiuInert(desti);
   return (
     <li>
-      <button type="button" className="sdp-xat-fila" aria-disabled={motiu ? true : undefined}
+      <button type="button" className="sdp-xat-fila sdp-xat-fila--senzilla" aria-disabled={motiu ? true : undefined}
         aria-describedby={avis ? idAvis : undefined} onClick={() => onTria(desti)}>
         <span className="sdp-assigna-emoji__actual" aria-hidden="true">
           <NavGlyph glyph={desti.glif} fallback={GLIF_DOCUMENT} size={24} />

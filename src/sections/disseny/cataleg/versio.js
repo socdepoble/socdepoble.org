@@ -15,7 +15,22 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenGestor.jsx, EspecimenUniversalWorkspace.jsx i EspecimenInventariGlobal.jsx,
+ * Darrera posada al dia: AssignacioEmoji.jsx, EspecimenXatLlista.jsx i EspecimenUniversalWorkspace.jsx,
+ * 2026-10-26T23:12:37+01:00, pla 261026_2130 (ordre del Mestre 261026_2126, P1-36; revisió del torn):
+ * els destins d'AssignacioEmoji.jsx són files senzilles (sdp-xat-fila--senzilla) i conserven els 72px
+ * d'abans, no la targeta de conversa de 96 px (Llei del Píxel); el contracte de FilaConversa i de
+ * FilaComunitat a EspecimenXatLlista.jsx porta premuda ({ handlers, consumeix, pista }); i el
+ * d'EspecimenUniversalWorkspace.jsx, la fila obridorALaLlista (pla 261026_1615 §6: amb false, la
+ * carpeta de la llista es lleva només en «mitja», on el rail fix de la navegació és una porta a la
+ * vista; en «estret» i en compacte es queda). Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: EspecimenXatLlista.jsx, EspecimenXat.jsx, manifest.js i registre.js,
+ * 2026-10-26T22:16:03+01:00, pla 261026_2130 (ordre del Mestre 261026_2126, P1-36): el «…» inventat
+ * de la fila de títol de la llista de converses (MenuLlista) es retira del producte, del registre i
+ * de l'espècimen; la seua mostra oberta passa a ser una llista on la pulsació llarga, el clic dret o
+ * Maj+F10 sobre una fila diu que entraria en «Seleccionar xats» amb eixa fila triada, i el contracte
+ * i l'accessibilitat ho expliquen. La descripció d'EspecimenXat.jsx diu la fila nova: 96 px amb
+ * l'avatar de 76 px. Cap espècimen nou; l'entrada del manifest canvia el text, no l'id.
+ * Versió anterior: EspecimenGestor.jsx, EspecimenUniversalWorkspace.jsx i EspecimenInventariGlobal.jsx,
  * 2026-10-25T07:16:15+01:00, Gauntlet 261025_0545 (P1-16; DF-04, C2-04 i G0200-R2-01): cap taula
  * nua a la columna del detall. Les quatre taules del Gestor, la de les variants d'UniversalWorkspace
  * i el registre de l'Inventari es desplacen dins de la seua caixa a qualsevol amplada (la de les
@@ -223,4 +238,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-25T07:16:15+01:00';
+export const VERSIO_CATALEG = '2026-10-26T23:12:37+01:00';

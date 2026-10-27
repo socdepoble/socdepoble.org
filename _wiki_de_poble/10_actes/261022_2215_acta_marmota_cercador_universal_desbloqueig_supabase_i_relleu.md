@@ -75,6 +75,6 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261022_1955_pla_implementacio_cercador_universal]]
-- [[261022_1955_prompt_claude_gemini_cercador_universal]]
+- [[../90_arxiu_historic/261022_1955_pla_implementacio_cercador_universal|261022_1955_pla_implementacio_cercador_universal]]
+- [[../90_arxiu_historic/261022_1955_prompt_claude_gemini_cercador_universal|261022_1955_prompt_claude_gemini_cercador_universal]]
 

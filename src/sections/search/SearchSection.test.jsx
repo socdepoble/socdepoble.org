@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import SearchSection from './SearchSection';
 import { extracteDeResultat, partsRessaltades } from './indexCerca.js';
 import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 const mocks = vi.hoisted(() => ({
   url: '',
@@ -535,5 +536,26 @@ test('261019 · en remot, l’entitat que gestiones i la del catàleg es fan una
     expect(screen.getByText('La gestiones tu')).toBeTruthy();
   } finally {
     oblidaEntitatDelProjecte();
+  }
+});
+
+/* Ordre del Mestre (261027; verificació dels retocs) · Dins de l'app nativa,
+   Descàrregues (només web) no ix a la cerca: el seu cos nomena Android,
+   Google Play i l'APK. A la web, sí. */
+test('261027 · dins de l’app nativa, la cerca no troba Descàrregues; a la web, sí', async () => {
+  mocks.core = { ...mocks.core, pages: [{ key: 'descarregues', ...PAGE_COPY.descarregues }] };
+  mocks.url = '?q=android';
+  const resultat = () => document.querySelector('a[href="/page/descarregues"]');
+  await pinta();
+  await waitFor(() => expect(resultat()).not.toBeNull());
+  cleanup();
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    await pinta();
+    await waitFor(() => expect(screen.getByRole('searchbox').value).toBe('android'));
+    expect(resultat()).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Google Play|APK/);
+  } finally {
+    delete window.Capacitor;
   }
 });

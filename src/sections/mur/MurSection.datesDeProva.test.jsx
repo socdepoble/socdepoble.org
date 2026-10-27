@@ -1,7 +1,7 @@
 /**
  * Tasca 5 (ordre del Mestre, 261001) · Amb les dates de prova, l'ordre per
- * defecte del Mur deixa les importants dalt de tot: primer les nou d'esta
- * setmana, cadascuna amb la seua hora a la pastilla; després les molt
+ * defecte del Mur deixa les importants dalt de tot: primer les deu d'esta
+ * setmana (nou fins al 261026_2126), cadascuna amb la seua hora a la pastilla; després les molt
  * tècniques (del 2 al 15 de setembre) i, al final, el 2n Aplec (2023).
  * Ordre del Mestre (261007) · «Drets d'autor» no és cap de les importants:
  * amb la seua data real (2026-01-30, 00:00 hora local) cau avall, entre les
@@ -11,6 +11,9 @@
  * setembre, PAGE_COPY), sense data de prova: van just darrere de les
  * importants i davant de les Versions, l'única tècnica que queda. Abans,
  * Disseny era una tècnica del 14 de setembre.
+ * Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Les
+ * importants ja són deu: «Descàrregues i Aplicacions» n'és la primera, com El
+ * Xat (IMPORTANTS_DEL_MUR, datesDeProvaMur.js).
  *
  * El Mur de veres (MurSection) amb la llavor tal com la servix el mode seed:
  * cap ordre recalculat a la prova. Es comprova amb diversos `ara` perquè no

@@ -49,7 +49,13 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[estandard_integracio_react]]
 
 ## Actes i Sessions (260915 - 260918)
+- [[10_actes/261027_0805_acta_marmota_triomf_umami_gauntlet_r5_i_protocol_guarda_nocturna.md]]
+- [[10_actes/261027_0520_acta_marmota_triomf_ronda5_claude_i_canonitzacio_doble_projecte.md]]
+- [[10_actes/261027_0145_acta_marmota_triomf_gauntlet_rebaixa_pompositat_i_llei_secretaria.md]]
+- [[10_actes/261026_2115_acta_marmota_triomf_gauntlet_share_target_commit_d83188d2_i_relleu_rea.md]]
 - [[10_actes/261026_1630_acta_marmota_triomf_botigues_share_target_neteja_i_relleu_fresc.md]]
+- [[10_actes/261026_0200_acta_marmota_triomf_gauntlet_360_sanejament_consola_i_relleu_nocturn.md]]
+- [[10_actes/261026_0130_acta_marmota_triomf_commit_cd1bb28a4_i_fundacio_llei_tauler_net.md]]
 - [[10_actes/260915_1410_acta_marmota_tancament_fase4.md]]
 - [[10_actes/260916_0540_acta_marmota_fi_radar.md]]
 - [[10_actes/260916_0645_ACTA_sincronitzacio_disseny.md]]
@@ -91,7 +97,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[_wiki_de_poble/01_ser/personalitat_iaia.md]]
 - [Contingència històrica](02_saber/protocols_tecnics/contingencia_offline.md)
 - [[_wiki_de_poble/10_actes/260921_1002_acta_marmota.md]]
-- [Auditoria històrica de vigència](../docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md)
+- Auditoria històrica de vigència (`260915_0436_AUDITORIA_purga_vigencia`)
 - [[10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes.md]]
 - [[10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar.md]]
 

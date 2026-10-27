@@ -1100,6 +1100,12 @@ function ActorRoutes({ agents }) {
       {/* T8 (ordre del Mestre, 261001) · On porta la franja de l'amfitrió: què
           és un node. Pàgina de text fora de la barra lateral i del Mur. */}
       <Route path="fedivers" element={<TextRoute pageKey="fedivers" />} />
+      {/* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) ·
+          /descarregues, l'adreça curta de «Descàrregues i Aplicacions» (la
+          porta el botó «Descarrega l'App» de l'accés al Xat): una redirecció
+          a la ruta de la seua entrada de SYSTEM_PAGES, /page/descarregues
+          (PageDetailSection), com /wiki porta a la Wiki. Cap component nou. */}
+      <Route path="descarregues" element={<Navigate to="/page/descarregues" replace />} />
 
       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
       <Route path="*" element={<NotFoundPage />} />

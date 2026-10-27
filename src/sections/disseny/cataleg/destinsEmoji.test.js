@@ -240,9 +240,12 @@ describe('destinsDelSistema', () => {
     /* Onada 8 (261009) · La Consola i el Cervell, pàgines del sistema
        darrere de Disseny (SYSTEM_PAGES). La Consola, com les portades, es
        passa com a ja llistada (AssignacioEmoji.jsx): la Wiki ja la porta i
-       no es repetix. El Cervell és nou i hi és. */
+       no es repetix. El Cervell és nou i hi és.
+       Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) ·
+       «Descàrregues i Aplicacions», l'última de SYSTEM_PAGES, darrere de
+       Drets d'autor. */
     const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
-    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'anima', 'fedivers'];
+    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'anima', 'fedivers'];
     expect(destins.map((desti) => desti.id)).toEqual(claus.map((clau) => `sistema:${clau}`));
     expect(destins.map((desti) => desti.titol)).toEqual(claus.map((clau) => PAGE_COPY[clau].title));
     expect(destins.every((desti) => desti.grup === 'sistema' && desti.escriu === 'codi')).toBe(true);
@@ -255,7 +258,9 @@ describe('destinsDelSistema', () => {
       'sistema:projecte': FileText, 'sistema:constitucio': ShieldCheck, 'sistema:roadmap': Route, 'sistema:notes': NotebookPen,
       'sistema:xat': GLIF_DOCUMENT, 'sistema:drets-autor': GLIF_DOCUMENT, 'sistema:anima': BrainCircuit, 'sistema:fedivers': Network,
       /* Onada 8 (261009) · /page/cervell no té entrada a la barra: el document. */
-      'sistema:cervell': GLIF_DOCUMENT
+      'sistema:cervell': GLIF_DOCUMENT,
+      /* 261026_2126 · /page/descarregues tampoc no en té: el document. */
+      'sistema:descarregues': GLIF_DOCUMENT
     });
     /* Sense exclusions, les portades de la Wiki i de Disseny també hi són. */
     expect(Object.keys(glifs)).toEqual(expect.arrayContaining(['sistema:wikidepoble', 'sistema:disseny']));

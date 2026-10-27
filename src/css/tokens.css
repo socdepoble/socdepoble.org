@@ -228,10 +228,19 @@
   --sdp-alt-nav-mobil: 72px;                 /* nav inferior plana d'extrem a extrem */
   --sdp-pad-contenidor: clamp(16px, 4vw, 40px);
   --sdp-fitxa-mida: 96px;                    /* LLEI DE LA FITXA · costat de la media = alçada mínima */
-  /* Xat (pla 260927_0055 §4.D): fila de conversa de 72px (proporció del
-     patró de missatgeria; 86 és Notes, 96 la Llei de la Fitxa) i amplària
-     màxima de la bombolla. Canviar-los és canviar una línia. */
-  --sdp-xat-fila-mida: 72px;
+  /* Xat (pla 260927_0055 §4.D): fila de conversa i amplària màxima de la
+     bombolla. Canviar-los és canviar una línia.
+     Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · La targeta de
+     conversa passa de 72 a 96px (2 × --sdp-touch, la mateixa alçada que la
+     Llei de la Fitxa) i l'avatar de la fila, de 48 a 76px: el prompt en
+     demana 74–76 i 76 és el que cau a la reixeta de 4px. El que compartix la
+     fila i no és cap conversa conserva els 72 d'abans (Llei del Píxel): les
+     opcions dels Ajustos del xat (.sdp-xat-opcio) i les files senzilles
+     (.sdp-xat-fila--senzilla: els destins d'AssignacioEmoji, al catàleg de
+     Disseny, i els fitxers i documents de VistaMultimedia). */
+  --sdp-xat-fila-mida: calc(2 * var(--sdp-touch));
+  --sdp-xat-avatar-mida: 76px;
+  --sdp-xat-fila-senzilla-mida: 72px;
   --sdp-xat-bombolla-max: 75%;
   /* T50 · Amplària de la targeta viva quan es pinta fora de la llista:
      «Les vistes» del Perfil (PerfilShell.css, .perfil-vistes__targeta). És

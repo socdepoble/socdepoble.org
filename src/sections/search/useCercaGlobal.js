@@ -45,6 +45,8 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { esPaginaVisible } from '../../config/systemPages.js';
 import { esEntitatDelProjecte, subscriuEntitatDelProjecte } from '../../config/navigation.js';
 import { listPublicOrganizations } from '../../data/backendPort.js';
 import { LIMIT_DIRECTORI_ENTITATS } from '../../data/contracte.js';
@@ -339,7 +341,12 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
   const deOrganitzacions = useMemo(() => mapa([...llistaDirectori, ...llistaDirectoriServidor], deOrganitzacio, opcionsDirectori),
     [llistaDirectori, llistaDirectoriServidor, opcionsDirectori]);
   const dePobles = useMemo(() => mapa(core.towns, dePoble, opcions), [core.towns, opcions]);
-  const dePagines = useMemo(() => mapa(core.pages, dePagina, opcions), [core.pages, opcions]);
+  /* Ordre del Mestre (261027) · Dins de l'app nativa, les pàgines només web
+     (esPaginaVisible: Descàrregues) no entren a la cerca. */
+  const dePagines = useMemo(() => mapa(
+    Array.isArray(core.pages) ? core.pages.filter((p) => esPaginaVisible(p?.key ?? p?.slug ?? p?.id, { nativa: esAppNativa() })) : core.pages,
+    dePagina, opcions
+  ), [core.pages, opcions]);
   const dePublicacions = useMemo(() => mapa(mur.feedPosts, dePublicacio, opcions), [mur.feedPosts, opcions]);
   const deActes = useMemo(() => mapa(mur.events, deActe, opcions), [mur.events, opcions]);
   const deProductes = useMemo(() => mapa(mur.marketItems, deProducte, opcions), [mur.marketItems, opcions]);

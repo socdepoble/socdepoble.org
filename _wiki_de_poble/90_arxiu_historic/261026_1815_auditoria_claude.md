@@ -20,9 +20,9 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-10-26T17:16:04.251Z |
-| Modificació | 2026-10-26T19:40:00.000Z |
+| Modificació | 2026-10-26T20:00:00.000Z |
 | Propietari | Claude (torn `torn_e6be28f2`, actor `claude`, abast `code`) |
-| Aprovació humana | ordre del Mestre (prompt 261026_1615) i dues decisions en xat el 261026: `@capacitor/local-notifications` 8.3.1 i la Share Extension d'iOS ara. El resultat espera la seua revisió; res confirmat amb commit |
+| Aprovació humana | ordre del Mestre (prompt 261026_1615) i dues decisions en xat el 261026: `@capacitor/local-notifications` 8.3.1 i la Share Extension d'iOS ara. Commit `d83188d27` amb `--no-verify` per decisió del Mestre en xat (261026) |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
 | Model IA | Claude Opus 5.5 (Claude Code, app d'escriptori), amb subagents de lectura, proves i revisió |
 | Tokens consumits | No mesurats amb precisió; els agents de suport en van gastar més de 3,9 milions (comptador del harness) |
@@ -38,6 +38,7 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 2026-10-26T17:16:04.251Z: esborrany creat; contingut i verificació pendents.
 2026-10-26T18:08:00.000Z: implementació, builds natius, revisió adversarial i verificació completes; informe redactat.
 2026-10-26T19:40:00.000Z: correccions del Gauntlet de Codex i Gemini (261026_1615_auditoria_codex i _gemini) aplicades i verificades; §11 afegit.
+2026-10-26T20:00:00.000Z: commit d83188d27 (63 fitxers, --no-verify per decisió del Mestre).
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -183,7 +184,10 @@ Les proves de regressió noves s'han comprovat contra mutacions: 24 al registre,
 - **D-3 · El peu a totes les fotos?** Ara només el porten les imatges del menú «Compartir». Fer-ho a totes, com WhatsApp, canvia el flux d'adjunts de sempre (Llei del Píxel).
 - **D-4 · Barra d'estat d'iOS.** S'ha aplicat literal `UIViewControllerBasedStatusBarAppearance = false`. Amb `true` i `SystemBars.style = DARK` el resultat és el mateix i el JS podria canviar l'estil (per exemple, en els diàlegs a pantalla completa de fons clar, que ara també porten icones blanques).
 - **D-5 · El pla ha crescut.** El pla d'esta missió porta §5 (Taula de Continguts H1–H6) i §6 (icones de Notes), escrites a les 17:47; el prompt no les inclou. No s'han tocat. **Decidit pel Mestre en xat (261026):** primer, Codex i Gemini auditen este torn; §5 i §6, després.
-- **D-6 · Commit.** Res no s'ha confirmat. El hook de pre-commit no pot passar en este arbre (lease Reflex, deute de govern a HEAD). Commit amb `--no-verify` només amb decisió expressa del Mestre.
+- **D-6 · Commit. Resolt:** `d83188d27` a `backup-notes-publish`, sense push.
+  - **Abast:** 63 fitxers meus, amb un índex temporal i l'arbre `a4d5a1b` assajat abans fora del repositori (`test:precommit` 3.365 + 262 verds).
+  - **Per què `--no-verify`:** el hook no podia passar per deute heretat (`tancament --check`: 226 errors de Wiki i SCC); el Mestre ho va decidir en xat.
+  - **Fora del commit**, per a MarIA: ESTAT, LEDGER, índex, Llibre, pla i els informes i prompts de Codex i Gemini.
 
 **El que no s'ha pogut verificar:**
 

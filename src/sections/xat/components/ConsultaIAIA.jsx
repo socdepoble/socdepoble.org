@@ -12,8 +12,10 @@ const ESPERA_PER_A_PREPARAR = 300;
 
 export default function ConsultaIAIA({ t, consulta = consultaTecnicaIAIA, prepara = preparaWikiDeLaIAIA }) {
   const [obert, setObert] = useState(false);
+  /* Ordre del Mestre (261026_2126; P1-37) · La píndola respira: ja no va
+     enganxada al compositor ni a les vores (ConsultaIAIA.css). */
   return <>
-    <button type="button" className="sdp-xat-pindola" onClick={() => setObert(true)}>
+    <button type="button" className="sdp-xat-pindola sdp-xat-pindola--iaia" onClick={() => setObert(true)}>
       {t('section.xat.iaia.consulta.obrir', 'Pregunta a la IAIA')}
     </button>
     <Dialeg obert={obert} onTanca={() => setObert(false)} mida="m" className="sdp-iaia-consulta"

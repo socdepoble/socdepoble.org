@@ -90,7 +90,9 @@ describe('Pedra Seca al codi', () => {
     expect(especimen).toMatch(/lazyRoute\(\(\) => import\('\.\.\/AssignacioEmoji\.jsx'\)\)/);
     expect(especimen).not.toMatch(/^import .*AssignacioEmoji/m);
     const pantalla = senseComentaris(llig(`${CATALEG}/AssignacioEmoji.jsx`));
-    expect(pantalla).toMatch(/className="sdp-xat-fila"/);
+    /* P1-36 (261026_2126) · La fila del Xat, en la variant senzilla: els 72px
+       d'abans, no la targeta de conversa de 96 (Llei del Píxel). */
+    expect(pantalla).toMatch(/className="sdp-xat-fila sdp-xat-fila--senzilla"/);
     expect(pantalla).toMatch(/className="sdp-xat-seccio"/);
     /* El canal de desar de la nota és el de l'editor, i només per a notes. */
     expect(pantalla.match(/setLocalNoteField\(/g)).toHaveLength(1);

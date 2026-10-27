@@ -105,7 +105,7 @@ Quan obrim la nova conversa neta:
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261019_2115_pla_implementacio_capacitor_mobil]]
-- [[261019_2115_prompt_claude_capacitor_mobil]]
-- [[261019_2115_prompt_gemini_auditoria_botigues_mobil]]
+- `261019_2115_pla_implementacio_capacitor_mobil`
+- `261019_2115_prompt_claude_capacitor_mobil`
+- `261019_2115_prompt_gemini_auditoria_botigues_mobil`
 - [[261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]

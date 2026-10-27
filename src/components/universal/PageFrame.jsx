@@ -40,12 +40,20 @@ export function selectorIndex(nivellMax) {
 /* T7 (P9) · Les entrades de l'Índex d'un contenidor, amb el slug estable de
    cada una: fet del text i, si es repetix, amb sufix (-2, -3…) en l'ordre del
    document (seleccioUrl.js). El mateix recorregut servix per a pintar
-   l'Índex i per a trobar la secció de la URL en carregar. */
+   l'Índex i per a trobar la secció de la URL en carregar.
+   Ordre del Mestre (261026_2126, §5) · Tampoc no hi entra el títol d'un
+   <dialog> tancat del cos (a l'editor, «Vista prèvia d'impressió», dins del
+   selector de drets): no es pinta i l'entrada no portava enlloc. */
 export function encapcalamentsIndex(container, selector) {
   const elements = Array.from(container?.querySelectorAll?.(selector) || [])
-    .filter((el) => !el.classList.contains('sr-only') && el.textContent.trim() !== '');
+    .filter((el) => !el.classList.contains('sr-only') && el.textContent.trim() !== '' && !dinsDUnDialegTancat(el, container));
   const slugs = slugsDeSeccions(elements.map((el) => el.textContent));
   return elements.map((element, i) => ({ element, slug: slugs[i] }));
+}
+
+function dinsDUnDialegTancat(el, container) {
+  const dialeg = el.closest('dialog');
+  return Boolean(dialeg && !dialeg.hasAttribute('open') && container.contains(dialeg));
 }
 
 /* Fase D (261020, tasca 3.2) · L'àncora estable d'un encapçalament: data-sdp-ancora
@@ -199,10 +207,48 @@ export function desplacaASeccio(element, opcions = { block: 'start' }) {
   }
 }
 
+/* Ordre del Mestre (261026_2126, pla 261026_1615 §5) · L'H1 de la pàgina
+   (header.page-title h1) viu fora de l'article (contentRef) i l'Índex no el
+   veia mai. Ara n'és la primera entrada, de nivell 1, si porta text. No té
+   slug ni id: el seu slug no ha de canviar els de les seccions del cos
+   (?seccio= continua comptant només l'article, encapcalamentsIndex) ni pot
+   donar un id repetit si coincidix amb el text d'una secció. El preu que
+   l'H1 porta dins (sp-card-price) no és títol i no hi entra. null si la
+   capçalera no té H1 o el té buit (una nota nova a l'editor: el text d'ajuda
+   és un data-placeholder, no text). */
+export function titolDeLIndex(capcalera) {
+  const h1 = [...(capcalera?.children || [])].find((el) => el.tagName === 'H1');
+  if (!h1 || h1.classList.contains('sr-only')) return null;
+  const text = [...h1.childNodes]
+    .filter((node) => !node.classList?.contains('sp-card-price'))
+    .map((node) => node.textContent)
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text ? { id: null, slug: null, text, level: 1, element: h1, titol: true } : null;
+}
+
+/* Ordre del Mestre (261026_2126, §5: «el comportament erràtic del calaix») ·
+   Dins d'un cos editable (el TipTap del Bloc de Notes) l'Índex no escriu cap
+   id. L'editor és l'amo del seu DOM: un atribut que no ix del document li fa
+   redibuixar el node (comprovat al navegador a /notes, 261026: l'H3 amb id
+   nou se substituïx per un H3 sense id). El node nou disparava l'observador,
+   l'Índex hi tornava a escriure l'id i la pàgina es quedava penjada en un
+   bucle sense fi. Sense id, el salt continua: l'entrada porta l'element. Un
+   illot no editable (contenteditable="false", una targeta incrustada) dins
+   del cos editable també és del cos: compta l'avantpassat editable. */
+const SELECTOR_EDITABLE = '[contenteditable]:not([contenteditable="false"])';
+const esEditable = (element) => Boolean(element?.closest?.(SELECTOR_EDITABLE));
+
 export function TableOfContentsDrawer({
   isOpen, onClose, contentRef, idPrefix = 'toc', nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
-  /* T7 (P9) · Opcional: rep el slug de l'entrada clicada (PageFrame l'escriu a ?seccio=). */
-  onSeccio = null
+  /* T7 (P9) · Opcional: rep el slug de l'entrada clicada (PageFrame l'escriu a ?seccio=).
+     L'entrada del títol (H1) hi passa null: la secció s'esborra de la URL. */
+  onSeccio = null,
+  /* Ordre del Mestre (261026_2126, §5) · Opcional: la capçalera de la pàgina
+     (header.page-title), d'on l'Índex pren l'H1 (titolDeLIndex). Sense, cap
+     títol: l'Índex del cos de sempre. */
+  capcaleraRef = null
 }) {
   const [headings, setHeadings] = useState([]);
   /* Ordre del Mestre, 261004 (integració final) · On es pinta l'Índex: es
@@ -219,20 +265,33 @@ export function TableOfContentsDrawer({
 
     const container = contentRef?.current;
     if (!container) return;
+    const OBSERVA = { childList: true, subtree: true, characterData: true };
+    /* Ordre del Mestre (261027; auditoria Gauntlet R5, G3-01 de Gemini) · La
+       capçalera es llig a cada reconstrucció, no només en obrir: si es munta
+       després d'obrir l'Índex, el seu H1 hi entra amb el pròxim canvi del cos,
+       i des d'aleshores també se n'observa el text. */
+    let capcalera = null;
+    let observer = null;
+    const seguixCapcalera = () => {
+      const actual = capcaleraRef?.current || null;
+      if (actual !== capcalera && actual && observer) observer.observe(actual, OBSERVA);
+      capcalera = actual;
+    };
 
     let currentParsed = [];
 
     const buildToc = () => {
+      seguixCapcalera();
       /* T7 (P9) · L'id que posa l'Índex ja no és la posició: és el slug del
          text, estable entre càrregues. Si el text canvia, l'id el seguix. Un
          id propi de l'encapçalament no es toca. */
-      const parsedHeadings = encapcalamentsIndex(container, selector).map(({ element: el, slug }) => {
-        if (!el.id || el.dataset.sdpTocGenerated === 'true') {
+      const cos = encapcalamentsIndex(container, selector).map(({ element: el, slug }) => {
+        if (!esEditable(el) && (!el.id || el.dataset.sdpTocGenerated === 'true')) {
           el.id = `${idPrefix}-${slug}`;
           el.dataset.sdpTocGenerated = 'true';
         }
         return {
-          id: el.id,
+          id: el.id || null,
           slug,
           /* Correcció final (ordre del Mestre, 261004) · El text tal com està
              escrit, no com el pinta la CSS: innerText copiava el text-transform
@@ -243,30 +302,31 @@ export function TableOfContentsDrawer({
           element: el
         };
       });
-      
+      // §5 (261026_2126) · L'H1 de la capçalera, primer: va abans de l'article.
+      const titol = titolDeLIndex(capcalera);
+      const parsedHeadings = titol ? [titol, ...cos] : cos;
+
       currentParsed = parsedHeadings;
       setHeadings(parsedHeadings);
     };
 
-    buildToc();
-
     // Use MutationObserver for live updates as suggested by the Council
-    const observer = new MutationObserver((mutations) => {
+    observer = new MutationObserver((mutations) => {
       // Only rebuild if there are meaningful text or node changes
-      const shouldRebuild = mutations.some(m => 
-        m.type === 'childList' || 
-        (m.type === 'characterData' && m.target.parentElement?.matches?.(selector))
+      /* §5 (261026_2126) · A la capçalera, qualsevol canvi de text compta: a
+         l'editor el títol s'escriu dins d'un span editable, fill de l'H1. */
+      const shouldRebuild = mutations.some(m =>
+        m.type === 'childList' ||
+        (m.type === 'characterData' && (m.target.parentElement?.matches?.(selector) || Boolean(capcalera?.contains(m.target))))
       );
       if (shouldRebuild) {
         buildToc();
       }
     });
 
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      characterData: true
-    });
+    observer.observe(container, OBSERVA);
+    // La primera construcció ja troba l'observador: si hi ha capçalera, l'observa.
+    buildToc();
 
     return () => {
       observer.disconnect();
@@ -278,7 +338,7 @@ export function TableOfContentsDrawer({
       });
       setHeadings([]);
     };
-  }, [contentRef, idPrefix, isOpen, selector]);
+  }, [capcaleraRef, contentRef, idPrefix, isOpen, selector]);
 
   /* Ordre del Mestre, 261004 (integració final) · Esc s'escolta a l'arrel
      del destí: el document a socdepoble.org, com abans; encastat, l'arrel
@@ -293,6 +353,50 @@ export function TableOfContentsDrawer({
     arrel.addEventListener('keydown', handleKeyDown);
     return () => arrel.removeEventListener('keydown', handleKeyDown);
   }, [desti, isOpen, onClose]);
+
+  /* Ordre del Mestre (261026_2126, §5) · El vel comença davall de la barra
+     negra, que es queda a la vista i a l'abast: un toc a la barra ja no queia
+     al vel, el diàleg aria-modal es quedava obert i el menú lateral s'obria
+     damunt. Ara un pointerdown fora del vel tanca l'Índex, i el toc continua
+     al seu botó. S'escolta en captura a l'arrel del destí, com l'Esc: el
+     document a socdepoble.org; encastat, l'arrel ombra (un toc a la pàgina de
+     WordPress no tanca l'Índex de dins). El vel conserva el seu clic: tancar
+     en el pointerdown faria caure el clic (o el toc) al que hi ha davall. El
+     botó «Índex» que hi apunta (aria-controls) no compta: no es tanca per a
+     tornar-se a obrir.
+     Verificació (261027) · El teclat, igual que el toc: un Maj+Tab que ix del
+     calaix cap a un botó de la barra negra deixava dos diàlegs a la vista (el
+     menú lateral i l'Índex). Ara un focusin fora del vel, en captura a la
+     mateixa arrel, també tanca l'Índex, amb les mateixes excepcions. No és cap
+     trampa de focus: el focus es queda on la persona l'ha dut. Encastat, un
+     focus a la pàgina de WordPress no arriba a l'arrel ombra i l'Índex es
+     queda, com amb el toc. El focus que el calaix rep en obrir-se és dins del
+     vel; el que torna al botó «Índex» en tancar-se arriba quan este oient ja
+     s'ha llevat (es neteja abans que l'efecte del calaix, declarat després). */
+  const velRef = useRef(null);
+  useEffect(() => {
+    if (!isOpen || !desti) return undefined;
+    const arrel = desti.getRootNode();
+    const id = idDeLIndex(idPrefix);
+    const foraDelVel = (e) => {
+      const cami = e.composedPath();
+      if (velRef.current && cami.includes(velRef.current)) return false;
+      return !cami.some((node) => node?.getAttribute?.('aria-controls') === id);
+    };
+    const handlePointerDown = (e) => {
+      if (e.button > 0) return;
+      if (foraDelVel(e)) onClose();
+    };
+    const handleFocusIn = (e) => {
+      if (foraDelVel(e)) onClose();
+    };
+    arrel.addEventListener('pointerdown', handlePointerDown, true);
+    arrel.addEventListener('focusin', handleFocusIn, true);
+    return () => {
+      arrel.removeEventListener('pointerdown', handlePointerDown, true);
+      arrel.removeEventListener('focusin', handleFocusIn, true);
+    };
+  }, [desti, idPrefix, isOpen, onClose]);
 
   /* Verificació «index-amfitrio», D1 (ordre del Mestre, 261004) · Encastat,
      Esc només arriba a l'oient de l'arrel ombra si el focus és dins d'ella.
@@ -328,7 +432,7 @@ export function TableOfContentsDrawer({
   if (!isOpen || !desti) return null;
 
   return createPortal(
-    <div className="toc-overlay" onClick={onClose}>
+    <div ref={velRef} className="toc-overlay" onClick={onClose}>
       <aside
         id={idDeLIndex(idPrefix)}
         ref={calaixRef}
@@ -572,8 +676,13 @@ export function PageFrame({
   LinkComponent = 'a' // To decouple from React Router's Link
 }) {
   const [isTocOpen, setIsTocOpen] = useState(false);
+  /* Estable: els escoltadors de tecla, toc i focus de l'Índex depenen
+     d'onClose i no s'han de tornar a subscriure a cada pintada. */
+  const tancaIndex = useCallback(() => setIsTocOpen(false), []);
   const containerRef = useRef(null);
   const traduccioRef = useRef(null);
+  /* §5 (261026_2126) · La capçalera, perquè l'Índex hi trobe l'H1. */
+  const capcaleraRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
 
   /* Traductor Sobirà (ordre del Mestre, 260930 · via B) · L'estat de la
@@ -902,7 +1011,7 @@ export function PageFrame({
       )}
 
       {hasHeader && (
-        <header className="page-title">
+        <header className="page-title" ref={capcaleraRef}>
           {logoDeLaRanura ? (
             <div className="page-title-logo-personalitzat">
               {logoDeLaRanura}
@@ -1019,9 +1128,11 @@ export function PageFrame({
           Correcció T2 · Traduïda, l'Índex no escriu ?seccio=: el slug seria
           el del text traduït, que un enllaç copiat (sempre en l'original) no
           troba, i canviar la consulta canvia la clau de useTraduccioPagina i
-          tornaria la pàgina a l'original. La URL conserva la secció d'abans. */}
-      <TableOfContentsDrawer isOpen={isTocOpen} onClose={() => setIsTocOpen(false)}
-        contentRef={traduida ? traduccioRef : containerRef}
+          tornaria la pàgina a l'original. La URL conserva la secció d'abans.
+          Ordre del Mestre (261026_2126, §5) · I l'H1 de la capçalera, la
+          primera entrada (traduït, l'H1 ja porta el títol traduït). */}
+      <TableOfContentsDrawer isOpen={isTocOpen} onClose={tancaIndex}
+        contentRef={traduida ? traduccioRef : containerRef} capcaleraRef={capcaleraRef}
         idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida ? null : escriuSeccioUrl} />
     </>
   );

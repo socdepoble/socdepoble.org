@@ -162,7 +162,6 @@ REGISTRE.push({ nom: 'FilaComunitat', fitxer: 'sections/xat/components/FilaConve
 REGISTRE.push({ nom: 'Bombolla', fitxer: 'sections/xat/components/Bombolla.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'Compositor', fitxer: 'sections/xat/components/Compositor.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'CapcaleraConversa', fitxer: 'sections/xat/components/CapcaleraConversa.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
-REGISTRE.push({ nom: 'MenuLlista', fitxer: 'sections/xat/components/MenuLlista.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'BarraSeleccio', fitxer: 'sections/xat/components/BarraSeleccio.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'FiltresCerca', fitxer: 'sections/xat/components/FiltresCerca.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'ResultatsCercaXat', fitxer: 'sections/xat/components/ResultatsCercaXat.jsx', pagina: 'fonaments', estat: 'viu', fora: true });

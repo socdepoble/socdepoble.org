@@ -156,6 +156,10 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/brain/nano-banana_arxiver_1774284589999.webp', 'La Nano Banana arxivera', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_agricola_mas_1773539958988.png', 'El Mas agrícola', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp', 'L’ànima del Mas', 'contingut', 'ia'),
+  /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · La portada de
+     «Descàrregues i Aplicacions» (PAGE_COPY.descarregues), com la del Xat. Es
+     nomena l'original: el .webp que pinta la pàgina n'és la bessona. */
+  e('/assets/uploads/brain/nano_descarregues_app.jpg', 'Portada de Descàrregues', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_mel_font_roja_1774216345755.png', 'Mel de la Font Roja', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_mixa_socis_1774215027069.png', 'La Mixa i els socis', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_oli_oliva_1774198089084.png', 'Oli d’oliva', 'contingut', 'ia'),

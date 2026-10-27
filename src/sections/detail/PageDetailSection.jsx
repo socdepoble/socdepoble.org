@@ -2,7 +2,8 @@ import { Navigate, useParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { resolvePageSlugPath } from '../../config/navigation';
-import { accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { accioAlFinal, accioDeLaPagina, esPaginaVisible } from '../../config/systemPages.js';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 import TextSection from '../text/TextSection';
@@ -93,6 +94,8 @@ export default function PageDetailSection() {
 
   const canonica = resolvePageSlugPath(slug);
   if (canonica) return <Navigate to={canonica} replace />;
+  // Ordre del Mestre (261027) · Una pàgina només web no s'obri dins de l'app nativa.
+  if (!esPaginaVisible(slug, { nativa: esAppNativa() })) return <Navigate to="/" replace />;
 
   // El slug ve de la URL: només claus pròpies («constructor» no és cap pàgina).
   const propia = (taula) => (Object.hasOwn(taula, slug) ? taula[slug] : null);

@@ -54,8 +54,10 @@ const CERCA = 'Cerca una nota, una pàgina o una carpeta';
 /* Les pàgines de Sóc de Poble que viuen al PAGE_COPY, sense les portades de la Wiki i de Disseny.
    Onada 8 (261009) · Amb el Cervell, pàgina del sistema darrere de Disseny.
    La Consola també ho és, però no es repetix: ja és al grup de la Wiki, com
-   abans (Llei del Píxel). */
-const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'anima', 'fedivers'];
+   abans (Llei del Píxel).
+   Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Amb
+   «Descàrregues i Aplicacions», l'última de SYSTEM_PAGES. */
+const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'anima', 'fedivers'];
 
 beforeEach(() => {
   setLocalNoteField.mockReset();
@@ -113,7 +115,8 @@ test('la llista agrupada: quatre grups i, en cada un, la portada, les carpetes i
   expect(files('Pàgines de Sóc de Poble')).toEqual(PAGINES.map((clau) => PAGE_COPY[clau].title));
 
   const nota = fila('Notes personals', 'La nota');
-  expect(nota.className).toBe('sdp-xat-fila');
+  /* P1-36 (261026_2126) · Un destí és una fila senzilla: els 72px d'abans, no la targeta de conversa. */
+  expect(nota.className).toBe('sdp-xat-fila sdp-xat-fila--senzilla');
   expect(nota.getAttribute('type')).toBe('button');
   expect(nota.hasAttribute('aria-disabled')).toBe(false);
   expect(glif(nota).textContent).toBe('🪶');

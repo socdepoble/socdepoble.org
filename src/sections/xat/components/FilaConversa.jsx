@@ -1,7 +1,9 @@
 /**
  * FilaConversa.jsx — la fila de la llista de converses (XAT-A09, UX-B01):
  * avatar, nom, hora de l'últim missatge, previsualització d'una línia i el
- * comptador de no llegits. Un botó de 72px (--sdp-xat-fila-mida).
+ * comptador de no llegits. Un botó de --sdp-xat-fila-mida (96px des de
+ * l'ordre del Mestre del 261026_2126, P1-36; abans 72px) amb l'avatar gran de
+ * --sdp-xat-avatar-mida (76px).
  *
  * Onada 3 (T67 i T68, patró estàndard de missatgeria, captura de referència
  * 19.11.50):
@@ -26,6 +28,15 @@
  *   · Un fil silenciat no ressalta l'hora i la seua pastilla és grisa.
  *   · Un fil marcat a mà com a no llegit, sense recompte, porta el punt.
  *   · FilaComunitat no canvia.
+ *
+ * Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · Sense el «…» de la
+ * fila de títol, la selecció de xats s'obri amb una pulsació llarga sobre la
+ * fila. `premuda` ({ handlers, consumeix, pista }, el porta LlistaConverses
+ * amb usePulsacioLlarga de Pedra Seca) afig al botó els gestors del dit, del
+ * menú contextual i de Maj+F10; el clic que ve darrere d'una pulsació llarga
+ * no obri la conversa ni alterna la casella. Fora de la selecció, la fila diu
+ * la drecera (aria-keyshortcuts) i la pista per al lector de pantalla
+ * (aria-describedby). Sense `premuda`, el botó de sempre.
  */
 import { BellOff, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, Users } from 'lucide-react';
 import CaraXat from './CaraXat.jsx';
@@ -130,20 +141,31 @@ function MarcaTria({ triada }) {
   );
 }
 
-/* Atributs del botó: una fila normal o una casella de la selecció. */
-function propsDeFila({ seleccio, activa, onPrem, classe }) {
+/* Atributs del botó: una fila normal o una casella de la selecció. Amb
+   `premuda`, els gestors de la pulsació llarga i un clic que la gasta. */
+function propsDeFila({ seleccio, activa, onPrem, classe, premuda = null }) {
+  const gestors = premuda?.handlers || null;
+  const clic = (accio) => (premuda ? () => { if (!premuda.consumeix()) accio?.(); } : accio);
   if (seleccio) {
     return {
+      ...gestors,
       role: 'checkbox',
       'aria-checked': Boolean(seleccio.triada),
       className: `${classe} sdp-xat-fila--triable`,
-      onClick: seleccio.onAlterna
+      onClick: clic(seleccio.onAlterna)
     };
   }
-  return { 'aria-current': activa ? 'true' : undefined, className: classe, onClick: onPrem };
+  return {
+    ...gestors,
+    'aria-current': activa ? 'true' : undefined,
+    'aria-keyshortcuts': premuda ? 'Shift+F10' : undefined,
+    'aria-describedby': premuda?.pista || undefined,
+    className: classe,
+    onClick: clic(onPrem)
+  };
 }
 
-export default function FilaConversa({ fil, activa = false, onSelect, locale, t, seleccio = null, joId = null }) {
+export default function FilaConversa({ fil, activa = false, onSelect, locale, t, seleccio = null, joId = null, premuda = null }) {
   const nom = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
   const noLlegits = Number(fil.noLlegits) || 0;
   const silenciat = Boolean(fil.silenciat);
@@ -154,7 +176,7 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
   const classe = `sdp-xat-fila${ressaltada ? ' sdp-xat-fila--nova' : ''}`;
 
   return (
-    <button type="button" {...propsDeFila({ seleccio, activa, onPrem: () => onSelect(fil.id), classe })}>
+    <button type="button" {...propsDeFila({ seleccio, activa, onPrem: () => onSelect(fil.id), classe, premuda })}>
       {seleccio ? <MarcaTria triada={seleccio.triada} /> : null}
       <AvatarFil fil={fil} nom={nom} />
       <span className="sdp-xat-fila__cos">
@@ -206,7 +228,7 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
  * useXat().comunitats ({ fil, fills, noLlegits, ultimAl }). Obri la fitxa, no
  * cap conversa.
  */
-export function FilaComunitat({ comunitat, onObri, t, seleccio = null }) {
+export function FilaComunitat({ comunitat, onObri, t, seleccio = null, premuda = null }) {
   const { fil, fills = [], noLlegits = 0 } = comunitat;
   const nom = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
   const grups = nomsDelsGrups(fills);
@@ -215,7 +237,7 @@ export function FilaComunitat({ comunitat, onObri, t, seleccio = null }) {
   const ressaltada = noLlegits > 0 || fills.some((f) => f?.noLlegitManual);
   const classe = `sdp-xat-fila sdp-xat-fila--comunitat${ressaltada ? ' sdp-xat-fila--nova' : ''}`;
   return (
-    <button type="button" {...propsDeFila({ seleccio, activa: false, onPrem: () => onObri(fil.id), classe })}>
+    <button type="button" {...propsDeFila({ seleccio, activa: false, onPrem: () => onObri(fil.id), classe, premuda })}>
       {seleccio ? <MarcaTria triada={seleccio.triada} /> : null}
       <AvatarComunitat fil={fil} nom={nom} />
       <span className="sdp-xat-fila__cos">

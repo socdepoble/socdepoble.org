@@ -9,16 +9,20 @@
  */
 import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
 import { dataDeDocument, momentDElement } from '../../components/universal/editorial.js';
-import { SYSTEM_PAGES } from '../../config/systemPages.js';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { esPaginaVisible, SYSTEM_PAGES } from '../../config/systemPages.js';
 
 /**
  * Les pàgines del sistema (SYSTEM_PAGES) que el Mur barreja amb les
  * publicacions, fetes targeta amb el seu copy (PAGE_COPY). Una pàgina declarada
  * i absent no es pinta: `quanFalta(clau)` deixa que qui la demana ho diga en
  * veu alta (incident del 24-09: `wikidepoble` → `skills`).
+ * Ordre del Mestre (261027) · Dins de l'app nativa (`nativa`, per defecte
+ * esAppNativa), les pàgines `nomesWeb` no hi són (esPaginaVisible): no falten,
+ * i no avisen. El Mur, el Calendari i usePaginesDelSistema passen tots per ací.
  */
-export function targetesDeSistema(pageCopy, { quanFalta } = {}) {
-  return SYSTEM_PAGES.map((item) => {
+export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa() } = {}) {
+  return SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa })).map((item) => {
     const data = pageCopy?.[item.key];
     if (!data) {
       quanFalta?.(item.key);

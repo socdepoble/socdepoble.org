@@ -1,0 +1,17 @@
+{
+  "id": "0ade4838-5b21-4e6a-8a28-930dcc3dc909",
+  "session": "50b0d5b2-20df-4ae2-8cca-50a1470ad8c1",
+  "operationId": "codex-carnet-helicopters-relleu-estat-261027",
+  "claim": "50b0d5b2-20df-4ae2-8cca-50a1470ad8c1:governance-write",
+  "planHash": "badbb7ae59c406bfc8f8b2a444a490da6494bb50db2b632b13cdce76ad63754c",
+  "beforeSeal": "c4a1f6320e761861bb0eec927b5dc6f14ec5ede09d55adcd9223bd59fb399929",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "437f9ace139e34d74dd1cd1ecba9e19a8022e859a4cfd5fd04cab4810c04c39a",
+      "after": "0220ad32ff64056d14401a1b747f7d611c73644dc541c497fba898c297556669"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "026969b02dc8dfeac480886241561ad89bc00532984e8a2b9a8a664baeff3059"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "2968fac2-b5d2-485c-a398-a36c17b6ec46",
+  "session": "54a62573-e3c1-45a5-b201-dc9eb43beb84",
+  "operationId": "codex-opengraph-copy-estat-261027",
+  "claim": "54a62573-e3c1-45a5-b201-dc9eb43beb84:governance-write",
+  "planHash": "97dfc9c9d2c33631f866f9fdd07bfa0dd9fd8b2c7ec7e76f74e7f74f4ee2fa94",
+  "beforeSeal": "be7c0e87bf480bac5536fbf4f2d9d80bb645b3f541e2a6cfa77648f2305abf12",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "c594749e33fadca80a9279ad1bba8d8a6e55b1dfc6382c3066a6e62b8cd2b0e4",
+      "after": "437f9ace139e34d74dd1cd1ecba9e19a8022e859a4cfd5fd04cab4810c04c39a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "026969b02dc8dfeac480886241561ad89bc00532984e8a2b9a8a664baeff3059"
+}

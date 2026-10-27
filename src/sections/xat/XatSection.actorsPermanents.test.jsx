@@ -275,9 +275,20 @@ describe('les quatre converses de l’ordre', () => {
     mocks.threads = [mapejaFil({ id: 'f-pepa', tipus: 'directe', titol: 'Pepa', fixatAl: '2026-10-16T09:00:00Z', ultimAl: '2026-10-16T10:00:00Z', ultimSeq: 1 }), ...mocks.threads];
     render(<XatSection />);
     expect(clausDeLaLlista()).toEqual([CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'f-pepa']);
-    fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+    /* Ordre del Mestre (261026_2126, P1-36) · Sense el «…»: la pulsació
+       llarga (ací, Maj+F10 i el menú contextual). Cap dels quatre actors la
+       pot obrir: ni la comunitat, ni Javi, ni el poble, ni la IAIA. */
+    const botoDe = (clau) => llista().querySelector(`li[data-clau="${clau}"] > button`);
+    for (const clau of [CLAU_FILA_DE_SOC_DE_POBLE, 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia']) {
+      expect(botoDe(clau).hasAttribute('aria-keyshortcuts'), clau).toBe(false);
+      expect(fireEvent.contextMenu(botoDe(clau)), clau).toBe(true);
+      fireEvent.keyDown(botoDe(clau), { key: 'F10', shiftKey: true });
+    }
+    expect(clausDeLaLlista()).toHaveLength(5);
+    expect(screen.queryByRole('button', { name: 'Eixir de la selecció de xats' })).toBeNull();
+    fireEvent.keyDown(botoDe('f-pepa'), { key: 'F10', shiftKey: true });
     expect(clausDeLaLlista()).toEqual(['f-pepa']);
+    expect(botoDe('f-pepa').getAttribute('aria-checked')).toBe('true');
   });
 
   test('un amfitrió que declara un altre poble el substituïx: la fila és la seua, no la de la Torre', () => {

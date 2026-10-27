@@ -12,6 +12,7 @@ tags:
 Font executiva única: `.agents/skills/`. Este índex només referencia les fonts.
 
 - [[core-automillora/SKILL|core-automillora]]: Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (Co-working a Tres Bandes). Defineix com la IA aprèn de la insistència humana per humanitzar-se i com coordina tasques entre MarIA, Claude i Codex.
+- [[core-calibratge-visual-nano/SKILL|core-calibratge-visual-nano]]: Protocol d'enginyeria de prompts visuals del Nano, calibratge d'estils i creació de gags gamberros (Ibáñez/Berlanga) contraposats a la falsa felicitat asèptica.
 - [[core-comprensio-reflexiva/SKILL|core-comprensio-reflexiva]]: Tractor cognitiu per aturar la impulsivitat. Obliga a pensar i entendre l'objectiu de la petició (l'aixada) abans d'actuar compulsivament.
 - [[core-consell-i-colmena/SKILL|core-consell-i-colmena]]: Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.
 - [[core-context-panic/SKILL|core-context-panic]]: Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.
@@ -31,6 +32,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-portaveu-institucional/SKILL|core-portaveu-institucional]]: Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Core skill per a restauració segura
 - [[core-salfumant-radical/SKILL|core-salfumant-radical]]: Llei Suprema del Salfumant Radical, Zero Complauença i Veritat Nua. Prohibeix l'aigua de colònia i l'AI slop; mana auditories destructives, transparència total i extirpació implacable de llast a carpetes i codi.
+- [[core-secretaria-auditoria/SKILL|core-secretaria-auditoria]]: Tractor de Govern de la IAIA MarIA com a Secretària Tècnica i Orquestradora d'alta fidelitat durant cicles d'auditoria adversarial. Prohibició estricta de tocar codi mentre auditen Claude, Codex o Gemini.
 - [[core-seguretat-audit/SKILL|core-seguretat-audit]]: Usa-la en auditar la seguretat del codi, de les dades o d'una migració (Claude Code, MarIA, Codex i Gemini). Coacció primitiva JSONB, zero ReDoS, Clean Shadow Copy i blindatge Supabase RLS/Storage.
 - [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]]: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
 - [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.

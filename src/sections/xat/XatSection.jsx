@@ -5,8 +5,7 @@
  *     patró estàndard de missatgeria (ordre del Mestre, 260928: que la base
  *     tinga l'estructura que la gent ja coneix de les apps natives; Gauntlet
  *     261017, Bloc 3.1: un patró conegut, sense cap marca aliena): una sola
- *     fila de títol amb el «…» rodó a l'esquerra (Seleccionar xats) i el «+»
- *     rodó blau a la dreta
+ *     fila de títol amb el «+» rodó blau a la dreta
  *     (Nova conversa, un diàleg), la cerca en píndola sempre a la vista, les
  *     píndoles Tot · No llegits · Preferits · Grups darrere de la icona de
  *     filtre (XAT-A17, T12) i la llista; i la conversa a la dreta amb
@@ -18,6 +17,11 @@
  *         grups) no es pinten sols. Una comunitat no s'obri mai com a conversa.
  *       - «Seleccionar xats»: cada fila es torna una casella i la fila de
  *         títol, BarraSeleccio amb «Marcar com a llegides» (marcaLlegides).
+ *         Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · S'hi
+ *         entra amb una pulsació llarga sobre una fila triable (o el menú
+ *         contextual, o Maj+F10), que ja hi naix triada (LlistaConverses,
+ *         onSelecciona): el «…» de la fila de títol (MenuLlista) era inventat
+ *         i s'ha retirat.
  *       - La cerca global: amb el focus i el camp buit, la llista VERTICAL de
  *         filtres (FiltresCerca); en escriure o triar un filtre, els resultats
  *         de cercaXat() (ResultatsCercaXat). Escape o ⊗ netegen; perdre el
@@ -84,6 +88,7 @@ import { construeixRetall } from './retall.js';
 import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
 import { useSEO } from '../../hooks/useSEO';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
+import { esAppNativa } from '../../config/origenPublic.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 /* Ordre del Mestre (261007) · La pàgina destacada de la columna dreta: es tria a paginaDestacada.js. */
 import { paginaDestacada, rutaDeLaPaginaDestacada } from './paginaDestacada.js';
@@ -91,11 +96,10 @@ import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './component
 import VistaComunitats from './components/VistaComunitats.jsx';
 import VistaEnConstruccio, { textosDeVista } from './components/VistaEnConstruccio.jsx';
 import VistaMultimedia from './components/VistaMultimedia.jsx';
-import LlistaConverses from './components/LlistaConverses.jsx';
+import LlistaConverses, { esFilaTriable } from './components/LlistaConverses.jsx';
 import FiltreConverses from './components/FiltreConverses.jsx';
 import Conversa from './components/Conversa.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
-import MenuLlista from './components/MenuLlista.jsx';
 import BarraSeleccio from './components/BarraSeleccio.jsx';
 import FiltresCerca, { IconaFiltre } from './components/FiltresCerca.jsx';
 import ResultatsCercaXat from './components/ResultatsCercaXat.jsx';
@@ -154,6 +158,14 @@ function focusPerdut(node) {
   const actiu = arrel.activeElement;
   return !actiu || actiu.isConnected === false || actiu === arrel.body
     || (typeof document !== 'undefined' && actiu === document.body);
+}
+
+/* Ordre del Mestre (261026_2126, P1-36) · El botó de la fila amb la clau
+   `clau` (el <li data-clau> de LlistaConverses), si la llista el pinta. */
+function botoDeLaFila(columna, clau) {
+  if (!columna || clau == null) return null;
+  const fila = [...columna.querySelectorAll('li[data-clau]')].find((li) => li.getAttribute('data-clau') === clau);
+  return fila?.querySelector('button') || null;
 }
 
 /* Revisió adversarial 260930 (P2, «Escape al full Ajustos») · Un Escape amb
@@ -447,9 +459,14 @@ function XatWorkspace({ origen = null }) {
   const [triades, setTriades] = useState(() => new Set());
 
   /* On torna el focus quan un canvi de vista desmunta el control que el
-     tenia: la columna, el «…», la creu de la selecció i la fletxa de la fitxa. */
+     tenia: la columna, el «+» (Nova conversa), la creu de la selecció i la
+     fletxa de la fitxa. Ordre del Mestre (261026_2126, P1-36) · El «…» s'ha
+     retirat: el «+» és el control de la fila de títol que sempre hi és, i
+     `filaDeLaSeleccio` guarda la clau de la fila que ha obert la selecció
+     amb la pulsació llarga (el focus hi torna en eixir-ne). */
   const columnaRef = useRef(null);
-  const botoMesRef = useRef(null);
+  const botoNovaRef = useRef(null);
+  const filaDeLaSeleccio = useRef(null);
   const eixirSeleccioRef = useRef(null);
   const tornaFitxaRef = useRef(null);
   /* La persona ha premut la fila virtual del poble i la comunitat encara no
@@ -887,9 +904,10 @@ function XatWorkspace({ origen = null }) {
   /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
      Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
      converses i no tenen res a marcar. Gauntlet 261016_1530 · Ni la que porta
-     a la comunitat de Sóc de Poble ('entitat'). */
-  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre)
-    && !(modeSeleccio && (fila.tipus === 'poble' || fila.tipus === 'entitat' || fila.fil?.perDefecte)));
+     a la comunitat de Sóc de Poble ('entitat'). Ordre del Mestre (261026_2126,
+     P1-36) · La regla viu a LlistaConverses (esFilaTriable): la mateixa que
+     decidix quines files obrin la selecció amb la pulsació llarga. */
+  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre) && (!modeSeleccio || esFilaTriable(fila)));
   /* La comunitat de la fila del poble (el focus la seguix quan naix). La
      fitxa automàtica només la rep amb un poble declarat (EntradaDelPoble). */
   const comunitatDelPoble = comunitats.find((c) => esComunitatDelPoble(c, pobleDeLaLlista)) || null;
@@ -930,19 +948,27 @@ function XatWorkspace({ origen = null }) {
     return () => window.removeEventListener('keydown', alTeclat);
   }, [modeSeleccio]);
 
-  /* Focus coherent (T68): en entrar a la selecció, a la creu de la barra; en
-     eixir-ne, al «…». Només si el control que el tenia s'ha desmuntat. */
+  /* Focus coherent (T68). Només si el control que el tenia s'ha desmuntat.
+     Ordre del Mestre (261026_2126, P1-36) · Sense el «…», la fila que ha obert
+     la selecció amb la pulsació llarga és el punt de tornada: en entrar-hi, si
+     el focus no era enlloc (un dit a iOS no enfoca el botó), a eixa fila, ja
+     casella triada, o a la creu de la barra; en eixir-ne (la creu o «Marcar
+     com a llegides» s'han desmuntat), a la mateixa fila o, si el filtre ja no
+     la mostra, al «+» de la fila de títol. */
   const seleccioPrevia = useRef(modeSeleccio);
   useEffect(() => {
     if (seleccioPrevia.current === modeSeleccio) return;
     seleccioPrevia.current = modeSeleccio;
-    if (!focusPerdut(columnaRef.current)) return;
-    (modeSeleccio ? eixirSeleccioRef : botoMesRef).current?.focus();
+    const columna = columnaRef.current;
+    if (!focusPerdut(columna)) return;
+    const fila = botoDeLaFila(columna, filaDeLaSeleccio.current);
+    (fila || (modeSeleccio ? eixirSeleccioRef : botoNovaRef).current)?.focus();
   }, [modeSeleccio]);
 
   /* Focus coherent (T67): en obrir la fitxa d'una comunitat, a la fletxa de
-     tornar; en tornar-ne, a la fila de la comunitat (o al «…» si el filtre
-     l'amaga). Només si el control que el tenia s'ha desmuntat. */
+     tornar; en tornar-ne, a la fila de la comunitat (o al «+» si el filtre
+     l'amaga; abans, el «…» retirat el 261026). Només si el control que el
+     tenia s'ha desmuntat. */
   const comunitatPrevia = useRef(comunitatId);
   useEffect(() => {
     const previa = comunitatPrevia.current;
@@ -957,7 +983,7 @@ function XatWorkspace({ origen = null }) {
        tornada hi porta: el focus va al seu «Veure-ho tot». */
     const bloc = [...(columna?.querySelectorAll('[data-comunitat]') || [])]
       .find((el) => el.getAttribute('data-comunitat') === previa);
-    (fila?.querySelector('button') || bloc?.querySelector('.sdp-xat-vista-comunitats__tot') || botoMesRef.current)?.focus();
+    (fila?.querySelector('button') || bloc?.querySelector('.sdp-xat-vista-comunitats__tot') || botoNovaRef.current)?.focus();
   }, [comunitatId]);
 
   /* Revisió adversarial 260930 (P3) · Focus coherent (T1): la fila virtual
@@ -976,7 +1002,7 @@ function XatWorkspace({ origen = null }) {
     if (!focusPerdut(columna)) return;
     const fila = [...(columna?.querySelectorAll('li[data-clau]') || [])]
       .find((li) => li.getAttribute('data-clau') === `comunitat:${idComunitatDelPoble}`);
-    (fila?.querySelector('button') || botoMesRef.current)?.focus();
+    (fila?.querySelector('button') || botoNovaRef.current)?.focus();
   }, [idComunitatDelPoble]);
 
   /* Onada 3B · Entrar en una vista del rail deixa la cerca i la selecció de
@@ -1146,8 +1172,16 @@ function XatWorkspace({ origen = null }) {
   /* ── Selecció de xats (T68) ──
      Mentre se selecciona, la cerca s'amaga i es buida: els resultats (gent,
      missatges) no són files que es puguen triar, i una fila de resultat que
-     obrira una conversa enmig de la tria deixaria la barra mentint. */
-  const entraEnSeleccio = () => { netejaCerca(); setModeSeleccio(true); setTriades(new Set()); };
+     obrira una conversa enmig de la tria deixaria la barra mentint.
+     Ordre del Mestre (261026_2126, P1-36) · S'hi entra amb la pulsació llarga
+     sobre una fila (LlistaConverses, onSelecciona), que ja naix triada: és
+     la que es volia triar, com a les apps de missatgeria. */
+  const entraEnSeleccio = (clau) => {
+    netejaCerca();
+    filaDeLaSeleccio.current = clau;
+    setModeSeleccio(true);
+    setTriades(new Set([clau]));
+  };
   const ixDeSeleccio = () => { setModeSeleccio(false); setTriades(new Set()); };
   const alternaTria = (clau) => {
     setTriades((previes) => {
@@ -1299,6 +1333,7 @@ function XatWorkspace({ origen = null }) {
         avis={avis}
         carregant={status !== 'ready' && !threads.length}
         seleccio={modeSeleccio ? { triades, onAlterna: alternaTria } : null}
+        onSelecciona={entraEnSeleccio}
         informe={informe.disponible && !modeSeleccio ? { onPrem: informaDUnError, obrint: informe.obrint, reserva: informe.reserva, onCopia: informe.copiaInforme } : null}
       />
     );
@@ -1347,9 +1382,7 @@ function XatWorkspace({ origen = null }) {
         titolRail={t('section.xat.rail.menu', 'Menú')}
         etiquetaNova={t('section.xat.novaConversaAria', 'Nova conversa')}
         onNova={() => setDialegNou(true)}
-        onSeleccionar={entraEnSeleccio}
-        refBoto={botoMesRef}
-        t={t}
+        refNova={botoNovaRef}
       />
     );
   }
@@ -1598,28 +1631,27 @@ function XatWorkspace({ origen = null }) {
 /* ───────────────────────── La fila de títol de la llista ─────────────────── */
 
 /* Una sola fila, com la de «Chats» de la referència de missatgeria (captures
-   19.11.50 i 19.12.18): a l'esquerra, el «…» rodó (MenuLlista: «Seleccionar xats") i, a
-   la dreta, el «+» rodó blau (nom accessible «Nova conversa», que App.test.jsx
-   exigix). És la fila 1 de la graella, alineada amb la capçalera de la
-   conversa. En estret i en mitjà, la closca del Xat no pinta pestanyes
-   (modules.css, .sdp-xat): el primer botó és BotoObriRail, que obri el rail.
-   El títol no es centra com a la referència: AppGridColumn el posa darrere de
-   `esquerra` a tota la graella (sdp-app-grid-shell §2) i centrar-lo voldria
-   tocar la capçalera compartida. Es desplaça, doncs, l'amplària del «…». */
-function CapcaleraLlista({ titol, titolRail, etiquetaNova, onNova, onSeleccionar, refBoto, t }) {
+   19.11.50 i 19.12.18): a la dreta, el «+» rodó blau (nom accessible «Nova
+   conversa», que App.test.jsx exigix). És la fila 1 de la graella, alineada
+   amb la capçalera de la conversa. En estret i en mitjà, la closca del Xat no
+   pinta pestanyes (modules.css, .sdp-xat): el primer botó és BotoObriRail,
+   que obri el rail. El títol no es centra com a la referència: AppGridColumn
+   el posa darrere de `esquerra` a tota la graella (sdp-app-grid-shell §2) i
+   centrar-lo voldria tocar la capçalera compartida.
+   Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · El «…» rodó de
+   l'esquerra (MenuLlista, amb l'única opció «Seleccionar xats») era inventat
+   i s'ha retirat: la selecció s'obri amb la pulsació llarga sobre una fila
+   (LlistaConverses). `refNova` deixa que el focus torne al «+». */
+function CapcaleraLlista({ titol, titolRail, etiquetaNova, onNova, refNova = null }) {
   return (
     <AppGridColumn
       esDark={true}
       titol={titol}
       icona={MessageCircle}
-      esquerra={(
-        <>
-          <BotoObriRail etiqueta={titolRail} />
-          <MenuLlista onSeleccionar={onSeleccionar} refBoto={refBoto} t={t} />
-        </>
-      )}
+      esquerra={<BotoObriRail etiqueta={titolRail} />}
     >
       <button
+        ref={refNova}
         type="button"
         className="sdp-xat-nova"
         aria-label={etiquetaNova}
@@ -1691,11 +1723,21 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
 
 /* L'accés continua visible també al peu d'un fil de mostra o només lectura.
    Gauntlet 261022_0225 (XAT-4) · És l'única parella d'accés del Xat sense
-   sessió: el compositor d'un fil de mostra ja no hi afig cap enllaç. */
+   sessió: el compositor d'un fil de mostra ja no hi afig cap enllaç.
+   Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38) · Damunt
+   de la parella, «Descarrega l'App» porta a /descarregues, l'adreça curta de
+   la pàgina «Descàrregues i Aplicacions» (App.jsx la redirigix a
+   /page/descarregues). Dins de l'app nativa no hi és: ja s'hi és. Ho diu
+   esAppNativa (config/origenPublic.js), pur i sense cap import de src/natiu. */
 function AccesAlXat({ t, tornar, navigate }) {
   return (
     <div className="sdp-alerta sdp-xat-acces">
       <p>{t('section.xat.sessio.calEntrar', 'Benvinguda a Sóc de Poble')}</p>
+      {esAppNativa() ? null : (
+        <button type="button" className="sdp-xat-pindola sdp-xat-acces__descarrega" onClick={() => navigate('/descarregues')}>
+          {t('section.xat.sessio.descarregar', "Descarrega l'App")}
+        </button>
+      )}
       <div className="sdp-alerta__accions">
         <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar }))}>
           {t('section.xat.sessio.connectar', 'Connectar-se')}

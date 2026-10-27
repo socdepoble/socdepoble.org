@@ -30,6 +30,8 @@ import { SECTIONS } from '../../config/sections.js';
 import { esRutaInterna, resolvePageSlugPath } from '../../config/navigation.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { esPaginaVisible } from '../../config/systemPages.js';
 import { PAGE_COPY } from './pageContent.js';
 
 /** Rutes de kind 'text' que no pinta TextSection: mai es resolen ací. */
@@ -139,11 +141,15 @@ export function rutaVigentDePagina(ruta) {
  * La pàgina de text d'una ruta: { pageKey, page } o null. `pageCopy` i
  * `pages` són els del contingut core (useCoreContent); PAGE_COPY fa de
  * reserva, com a les rutes de veres.
+ * Ordre del Mestre (261027) · Dins de l'app nativa (`nativa`, per defecte
+ * esAppNativa), una pàgina només web (esPaginaVisible: Descàrregues) no es
+ * resol: el lector de connexions i la targeta incrustada no la pinten.
  */
-export function paginaDeRuta(ruta, { pageCopy, pages } = {}) {
+export function paginaDeRuta(ruta, { pageCopy, pages, nativa = esAppNativa() } = {}) {
   const clau = clauDeRuta(ruta);
   if (!clau) return null;
   const { pageKey, via } = clau;
+  if (!esPaginaVisible(pageKey, { nativa })) return null;
   const delSlug = via === 'slug' && Array.isArray(pages)
     ? pages.find((p) => p && (String(p.slug) === pageKey || String(p.id) === pageKey)) || null
     : null;

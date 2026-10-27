@@ -30,7 +30,8 @@
  *   · Cada bombolla porta data-missatge="<id>" perquè la cita la trobe, i
  *     `ressaltat` la marca un moment en arribar-hi.
  *
- * Revisió adversarial 260930: el menú «⋯» seguix el patró de MenuLlista (el
+ * Revisió adversarial 260930: el menú «⋯» seguix el patró de MenuLlista,
+ * retirat el 261026 (P1-36), el mateix del «⋯» de CapcaleraConversa (el
  * focus hi entra en obrir-lo i torna al «⋯» amb Escape o «Copia el text»,
  * i l'Escape queda consumit), i el <li> és enfocable amb tabIndex -1 perquè
  * la cita hi porte el focus.
@@ -155,7 +156,7 @@ function Bombolla({
     return () => node.removeEventListener('play', para, true);
   }, [triable]);
 
-  /* El patró de MenuLlista (revisió adversarial 260930, #7 i #8): en obrir,
+  /* El patró de MenuLlista, retirat el 261026 (revisió adversarial 260930, #7 i #8): en obrir,
      el focus entra a la primera opció; Escape tanca, queda consumit (un sol
      Escape tanca UNA cosa: la selecció de xats l'escolta a window) i torna
      el focus al «⋯». */

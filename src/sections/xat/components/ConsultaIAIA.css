@@ -6,4 +6,17 @@
   /* Gauntlet 261022_0225 (crítica Claude) · Mentre consulta, el botó no es
      desactiva (el focus no cau) però s'apaga com un .sdp-boto:disabled. */
   .sdp-iaia-consulta .sdp-boto[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
+  /* Ordre del Mestre (261026_2126; P1-37) · «Pregunta a la IAIA», entre els
+     missatges i el compositor, anava a tota l'amplària i sense cap marge:
+     enganxat a «Escriu un missatge…» i a les vores. Ara respira amb els
+     espais de la reixeta, 16px als costats i 12px dalt i baix. És un sol
+     botó, no un grup: el separen els seus marges (un grup, el gap del seu
+     contenidor). L'amplària la dona el contenidor (flex en columna,
+     .sdp-xat-conversa) menys els marges; el doble selector guanya el 100%
+     de .sdp-xat-pindola siga quin siga l'ordre dels fulls. */
+  .sdp-xat-pindola.sdp-xat-pindola--iaia {
+    width: auto;
+    margin-inline: var(--sdp-space-4);
+    margin-block: var(--sdp-space-3);
+  }
 }

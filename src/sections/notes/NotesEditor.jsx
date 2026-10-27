@@ -31,6 +31,8 @@ import { TITOL_NOTA_PREPARADA, useNotaPreparadaDelBloc } from './notaPreparada.j
 import { LLAVORS_NOTA } from './llavorNota.js';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
+import { esAppNativa } from '../../config/origenPublic.js';
+import { esPaginaVisible } from '../../config/systemPages.js';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
@@ -186,8 +188,14 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      l'esquema de l'editor es fixa en crear-lo. Les entrades es fan quan es
      busca, no a cada render, i es recorden mentre les fonts no canvien. */
   const fontsTargetes = useRef(null);
+  /* Ordre del Mestre (261027) · Dins de l'app nativa, les pàgines només web
+     (esPaginaVisible: Descàrregues) no s'oferixen com a targeta. Memoritzat:
+     la memòria de la cerca compara les fonts. */
+  const paginesDeTargeta = useMemo(() => (Array.isArray(pages)
+    ? pages.filter((p) => esPaginaVisible(p?.key ?? p?.slug ?? p?.id, { nativa: esAppNativa() }))
+    : pages), [pages]);
   fontsTargetes.current = {
-    publicacions: mur.feedPosts, actes: mur.events, productes: mur.marketItems, pobles: towns, pagines: pages
+    publicacions: mur.feedPosts, actes: mur.events, productes: mur.marketItems, pobles: towns, pagines: paginesDeTargeta
   };
   const memoriaTargetes = useRef({ fonts: null, entrades: CAP });
   const cercaTargetes = useCallback((consulta) => {

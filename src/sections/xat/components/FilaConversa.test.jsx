@@ -218,3 +218,148 @@ test('la comunitat de Sóc de Poble sense imatge mostra el logo oficial, però u
   rerender(<AvatarComunitat fil={{ ...fil, subjecte: { tipus: 'entitat', id: 'altra-entitat' } }} nom="Sóc de Poble" />);
   expect(container.querySelector('img')).toBeNull();
 });
+
+/* ═══ Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) ═══════════════
+   La targeta de conversa a 96px (2 × --sdp-touch) amb l'avatar gran de 76px,
+   el nom i l'últim missatge a 4px, i la pulsació llarga que obri la selecció
+   (`premuda`, de LlistaConverses). */
+
+/** Les declaracions d'un selector exacte de modules.css (l'última guanya). */
+const MODULS = llig('src/css/modules.css').replace(/\/\*[\s\S]*?\*\//g, '');
+function regla(selector) {
+  const net = (text) => text.replace(/\s+/g, ' ').trim();
+  const eixida = {};
+  for (const m of MODULS.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!net(m[1]).split(',').map(net).includes(selector)) continue;
+    for (const declaracio of m[2].split(';')) {
+      const [prop, ...resta] = declaracio.split(':');
+      if (prop?.trim()) eixida[net(prop)] = net(resta.join(':'));
+    }
+  }
+  return eixida;
+}
+
+/** Els píxels d'un token de tokens.css: «Npx», «var(--x)» o «calc(N * var(--x))». */
+function px(nom) {
+  const [valor] = declaracions(nom);
+  const calc = /^calc\((\d+) \* var\((--[\w-]+)\)\)$/.exec(valor);
+  if (calc) return Number(calc[1]) * px(calc[2]);
+  const alias = /^var\((--[\w-]+)\)$/.exec(valor);
+  if (alias) return px(alias[1]);
+  const pixels = /^(\d+)px$/.exec(valor);
+  if (!pixels) throw new Error(`${nom}: «${valor}» no és cap mida en px`);
+  return Number(pixels[1]);
+}
+
+/** Cada selector de modules.css, net i solt. */
+const SELECTORS = [...MODULS.matchAll(/([^{}]+)\{[^{}]*\}/g)]
+  .flatMap((m) => m[1].split(',').map((s) => s.replace(/\s+/g, ' ').trim()));
+
+/** Un avatar (la cara, la quadrada d'una comunitat o la icona) fill directe de la fila. */
+const AL_AVATAR_DE_LA_FILA = /\.sdp-xat-fila(?![\w-])\S*\s*>\s*\.(sdp-avatar|sdp-xat-apilat|sdp-xat-avatar-icona)(?![\w-])/;
+const NO_SENZILLA = '.sdp-xat-fila:not(.sdp-xat-fila--senzilla)';
+
+test('P1-36 · els tokens: la fila fa 2 × --sdp-touch (96px), l’avatar 76px dins de la reixeta de 4px, i el que no és cap conversa conserva 72px', () => {
+  expect(declaracions('--sdp-xat-fila-mida')).toEqual(['calc(2 * var(--sdp-touch))']);
+  expect(declaracions('--sdp-touch')).toEqual(['48px']);
+  expect(px('--sdp-xat-fila-mida')).toBe(96);
+  expect(declaracions('--sdp-xat-avatar-mida')).toEqual(['76px']);
+  expect(px('--sdp-xat-avatar-mida') % 4).toBe(0);
+  expect(declaracions('--sdp-xat-fila-senzilla-mida')).toEqual(['72px']);
+});
+
+test('P1-36 · la fila: 96px d’alt, l’avatar de 76px hi cap amb el coixí, el nom i el missatge a 4px; sense menú emergent ni selecció de text', () => {
+  const fila = regla('.sdp-xat-fila');
+  expect(fila).toMatchObject({
+    'min-height': 'var(--sdp-xat-fila-mida)',
+    padding: 'var(--sdp-space-2) var(--sdp-space-4)',
+    'align-items': 'center'
+  });
+  expect(regla(NO_SENZILLA)).toMatchObject({
+    '-webkit-touch-callout': 'none',
+    '-webkit-user-select': 'none',
+    'user-select': 'none'
+  });
+  /* El coixí de dalt i de baix més l'avatar caben en la fila: 8 + 76 + 8 = 92 ≤ 96. */
+  const coixi = px(/^var\((--[\w-]+)\)/.exec(fila.padding)[1]);
+  expect(2 * coixi + px('--sdp-xat-avatar-mida')).toBeLessThanOrEqual(px('--sdp-xat-fila-mida'));
+  expect(regla('.sdp-xat-fila__cos')).toMatchObject({ display: 'grid', gap: 'var(--sdp-space-1)' });
+  for (const selector of [`${NO_SENZILLA} > .sdp-avatar`, `${NO_SENZILLA} > .sdp-xat-apilat > .sdp-avatar`, `${NO_SENZILLA} > .sdp-xat-avatar-icona`]) {
+    expect(regla(selector), selector).toMatchObject({ width: 'var(--sdp-xat-avatar-mida)', height: 'var(--sdp-xat-avatar-mida)' });
+  }
+  expect(regla(`${NO_SENZILLA} > .sdp-xat-avatar-icona > svg`)).toMatchObject({ width: 'var(--sdp-space-10)', height: 'var(--sdp-space-10)' });
+  /* El «…» retirat no deixa regles òrfenes. */
+  expect(MODULS).not.toMatch(/\.sdp-xat-mes\b|\.sdp-xat-menu-llista\b|\.sdp-xat-menu--esquerra\b|\.sdp-xat-especimen--menu\b/);
+});
+
+test('P1-36 · Llei del Píxel: les opcions dels Ajustos i les files senzilles (AssignacioEmoji, adjunts de VistaMultimedia) es queden com a HEAD, 72px i la icona de 48', () => {
+  expect(px('--sdp-xat-fila-senzilla-mida')).toBe(72);
+  expect(regla('.sdp-xat-opcio')['min-height']).toBe('var(--sdp-xat-fila-senzilla-mida)');
+  expect(regla('.sdp-xat-fila--senzilla')['min-height']).toBe('var(--sdp-xat-fila-senzilla-mida)');
+  /* A igual especificitat, la dels 72 guanya perquè va darrere de la de la fila. */
+  expect(MODULS.search(/\.sdp-xat-fila--senzilla\s*\{/)).toBeGreaterThan(MODULS.search(/\.sdp-xat-fila,\s*\.sdp-xat-opcio\s*\{/));
+  expect(regla('.sdp-xat-fila--senzilla')).not.toHaveProperty('user-select');
+  expect(regla('.sdp-xat-fila')).not.toHaveProperty('user-select');
+  /* Cap regla dels 76px no arriba a l'avatar d'una fila senzilla. */
+  const alAvatar = SELECTORS.filter((s) => AL_AVATAR_DE_LA_FILA.test(s));
+  expect(alAvatar.length).toBeGreaterThanOrEqual(6);
+  for (const selector of alAvatar) expect(selector.startsWith(`${NO_SENZILLA} >`), selector).toBe(true);
+  /* I la icona de la fila senzilla és la de sempre: --sdp-touch (48), i el dibuix, el seu atribut de 24. */
+  expect(regla('.sdp-xat-avatar-icona')).toMatchObject({ width: 'var(--sdp-touch)', height: 'var(--sdp-touch)' });
+  expect(regla('.sdp-assigna-emoji__actual')).toMatchObject({ 'inline-size': 'var(--sdp-touch)', 'block-size': 'var(--sdp-touch)' });
+});
+
+test('P1-36 · cada tipus de fila porta l’avatar com a fill directe del botó, on el cobrix la regla dels 76px', () => {
+  const directa = mapejaFil({ id: 'd', tipus: 'directe', titol: 'Vicent', ultimText: 'Hola' });
+  const grup = mapejaFil({ id: 'g', tipus: 'grup', titol: 'Penya' });
+  const canal = mapejaFil({ id: 'k', tipus: 'canal', titol: 'Avisos' });
+  const { container } = render(
+    <ul>
+      <li><FilaConversa fil={directa} onSelect={() => {}} t={t} /></li>
+      <li><FilaConversa fil={grup} onSelect={() => {}} t={t} /></li>
+      <li><FilaConversa fil={canal} onSelect={() => {}} t={t} /></li>
+      <li><FilaComunitat comunitat={comunitat()} onObri={() => {}} t={t} /></li>
+      <li><FilaConversa fil={directa} onSelect={() => {}} t={t} seleccio={{ triada: true, onAlterna: () => {} }} /></li>
+    </ul>
+  );
+  const [persona, ambGrup, ambCanal, ambComunitat, enSeleccio] = container.querySelectorAll('button.sdp-xat-fila');
+  /* Cap targeta de conversa és una fila senzilla (la dels 72px). */
+  expect(container.querySelector('.sdp-xat-fila--senzilla')).toBeNull();
+  expect(persona.querySelector(':scope > .sdp-avatar')).not.toBeNull();
+  expect(ambGrup.querySelector(':scope > .sdp-xat-avatar-icona > svg.lucide-users')).not.toBeNull();
+  expect(ambCanal.querySelector(':scope > .sdp-xat-avatar-icona > svg.lucide-megaphone')).not.toBeNull();
+  expect(ambComunitat.querySelector(':scope > .sdp-xat-apilat > .sdp-avatar.sdp-xat-avatar--quadrat')).not.toBeNull();
+  /* En selecció, el cercle va davant i l'avatar continua sent fill directe. */
+  expect([...enSeleccio.children].map((n) => n.classList[0])).toEqual(['sdp-xat-fila__tria', 'sdp-avatar', 'sdp-xat-fila__cos']);
+});
+
+test('P1-36 · amb `premuda`: els gestors al botó, la drecera i la pista fora de la selecció, i un clic gastat no obri ni alterna', () => {
+  const fil = mapejaFil({ id: 'd', tipus: 'directe', titol: 'Vicent', ultimText: 'Hola' });
+  let gastat = true;
+  const onPointerDown = () => {};
+  const premuda = { handlers: { onPointerDown }, consumeix: () => { const era = gastat; gastat = false; return era; }, pista: 'pista-1' };
+  const seleccions = [];
+  const { rerender } = render(<FilaConversa fil={fil} onSelect={(id) => seleccions.push(id)} t={t} premuda={premuda} />);
+  const boto = screen.getByRole('button', { name: /Vicent/ });
+  expect(boto.getAttribute('aria-keyshortcuts')).toBe('Shift+F10');
+  expect(boto.getAttribute('aria-describedby')).toBe('pista-1');
+  boto.click();
+  expect(seleccions).toEqual([]);
+  boto.click();
+  expect(seleccions).toEqual(['d']);
+
+  const alternades = [];
+  gastat = true;
+  rerender(<FilaConversa fil={fil} onSelect={() => {}} t={t} premuda={{ ...premuda, pista: null }} seleccio={{ triada: false, onAlterna: () => alternades.push('d') }} />);
+  const casella = screen.getByRole('checkbox', { name: /Vicent/ });
+  expect(casella.hasAttribute('aria-keyshortcuts')).toBe(false);
+  expect(casella.hasAttribute('aria-describedby')).toBe(false);
+  casella.click();
+  expect(alternades).toEqual([]);
+  casella.click();
+  expect(alternades).toEqual(['d']);
+
+  /* Sense `premuda`, el botó de sempre. */
+  rerender(<FilaConversa fil={fil} onSelect={() => {}} t={t} />);
+  expect(screen.getByRole('button', { name: /Vicent/ }).hasAttribute('aria-keyshortcuts')).toBe(false);
+});

@@ -76,3 +76,21 @@ test('les fonts noves es veuen a la cerca següent, sense canviar la funció', (
   expect(mocks.adapter.targetes.cerca).toBe(cerca);
   expect(cerca('oli').map((entrada) => entrada.clau)).toEqual(['mercat:m2']);
 });
+
+/* Ordre del Mestre (261027; verificació dels retocs) · Dins de l'app nativa,
+   la targeta de Descàrregues (només web) no s'oferix: el seu cos nomena
+   Android, Google Play i l'APK. A la web, sí. */
+test('dins de l’app nativa, Descàrregues no s’oferix com a targeta; a la web, sí', () => {
+  mocks.core = { ...mocks.core, pages: [...mocks.core.pages, { key: 'descarregues', title: 'Descàrregues i Aplicacions', html: '<h3>Android</h3>' }] };
+  render(<NotesEditor />);
+  expect(mocks.adapter.targetes.cerca('android').map((entrada) => entrada.clau)).toEqual(['pagines:descarregues']);
+  cleanup();
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    render(<NotesEditor />);
+    expect(mocks.adapter.targetes.cerca('android')).toEqual([]);
+    expect(mocks.adapter.targetes.cerca('festa').map((entrada) => entrada.clau)).toContain('pagines:qui-som');
+  } finally {
+    delete window.Capacitor;
+  }
+});

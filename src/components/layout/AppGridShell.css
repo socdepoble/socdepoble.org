@@ -726,8 +726,12 @@
 .sdp-workspace-sort-menu__option:focus-visible {
   outline-color: var(--sdp-crom-focus);
 }
-.sdp-workspace-sort-action {
-  margin-right: var(--sdp-space-3); /* Separa 12px del botó Crear */
+/* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · Els 12px que separen
+   l'Ordenar del botó Crear els porta ara el Crear: sense Crear (Disseny, o el
+   Bloc sense sessió), l'Ordenar toca el coixí de 16px de la fila i cau a
+   plom davall del [|<] de replegar de la fila de dalt. */
+.sdp-workspace-sort-action + .app-grid-col-header__accio {
+  margin-inline-start: var(--sdp-space-3);
 }
 
 /* ── Configuració de l'espai de treball (roda dentada) ── */

@@ -244,7 +244,8 @@ test('menús: entrada des de --sdp-escala-aparicio i l’opacitat, amb l’orige
   expect(valorDe('.sdp-xat-menu', 'animation')).toBe(ENTRADA);
   expect(valorDe('.sdp-slash-menu', 'animation')).toBe(ENTRADA);
   expect(valorDe('.sdp-xat-menu', 'transform-origin')).toBe('top right');
-  expect(valorDe('.sdp-xat-menu--esquerra', 'transform-origin')).toBe('top left');
+  /* Ordre del Mestre (261026_2126, P1-36) · El menú del «…» de la llista
+     (.sdp-xat-menu--esquerra, MenuLlista) s'ha retirat amb el component. */
   expect(valorDe('.sdp-xat-item--altre .sdp-xat-menu', 'transform-origin')).toBe('top left');
   expect(valorDe('.sdp-slash-menu', 'transform-origin')).toBe('top left');
   const des = keyframes('sdp-aparicio-menu').find((r) => r.prelud === 'from');
@@ -286,15 +287,70 @@ test('AAA · el valor d’estadística (24px en negreta, text gran) passa de 4,5
   for (const tema of [CLAR, TEMA_FOSC]) expect(contrast(tema, '--sdp-accent-text-hover', '--sdp-fons-subtil')).toBeGreaterThanOrEqual(4.5);
 });
 
-test('AAA · el hover de l’Índex no baixa de banda: nivell 2 amb --sdp-accent-text-hover i nivell 3 amb --sdp-accio-text', () => {
+/* Ordre del Mestre (261026_2126, pla 261026_1615 §5) · El nivell 3 passa del
+   blau de l'H1 al color de títol de secció (--sdp-text-titol), també en
+   hover i focus. */
+test('AAA · el hover de l’Índex no baixa de banda: nivell 2 amb --sdp-accent-text-hover i nivell 3 amb --sdp-text-titol', () => {
   expect(valorDe('.toc-level-2 button:hover', 'color')).toBe('var(--sdp-accent-text-hover)');
   expect(valorDe('.toc-level-2 button:focus-visible', 'color')).toBe('var(--sdp-accent-text-hover)');
-  expect(valorDe('.toc-level-3 button:hover', 'color')).toBe('var(--sdp-accio-text)');
-  expect(valorDe('.toc-level-3 button:focus-visible', 'color')).toBe('var(--sdp-accio-text)');
+  expect(valorDe('.toc-level-3 button:hover', 'color')).toBe('var(--sdp-text-titol)');
+  expect(valorDe('.toc-level-3 button:focus-visible', 'color')).toBe('var(--sdp-text-titol)');
   for (const tema of [CLAR, TEMA_FOSC]) {
     expect(contrast(tema, '--sdp-accent-text-hover', '--sdp-fons-targeta')).toBeGreaterThanOrEqual(7);
+    expect(contrast(tema, '--sdp-text-titol', '--sdp-fons-subtil')).toBeGreaterThanOrEqual(7);
+  }
+});
+
+/* §5 (261026_2126) · L'H1 de la capçalera és ara la primera entrada de
+   l'Índex de totes les pàgines: el seu hover i el seu focus conserven el blau
+   d'acció sobre el fons del hover (--sdp-fons-subtil, .toc-item button), i
+   eixe parell no baixa de 7:1 en clar ni en fosc. */
+test('AAA · el hover i el focus de l’entrada de nivell 1 (l’H1): --sdp-accio-text sobre --sdp-fons-subtil, ≥ 7:1 en clar i en fosc', () => {
+  expect(valorDe('.toc-item button:focus-visible', 'background')).toBe('var(--sdp-fons-subtil)');
+  expect(valorDe('.toc-item button:hover', 'background')).toBe('var(--sdp-fons-subtil)');
+  expect(valorDe('.toc-level-1 button:hover', 'color')).toBe('var(--sdp-accio-text)');
+  expect(valorDe('.toc-level-1 button:focus-visible', 'color')).toBe('var(--sdp-accio-text)');
+  for (const tema of [CLAR, TEMA_FOSC]) {
     expect(contrast(tema, '--sdp-accio-text', '--sdp-fons-subtil')).toBeGreaterThanOrEqual(7);
   }
+});
+
+/* §5 (261026_2126) · Jerarquia cromàtica de l'Índex amb tokens de Pedra
+   Seca (cap color cru): H1 blau d'acció, H2 terracota, H3 títol de secció i,
+   del 4 al 6, l'escala que baixa un esglaó per nivell, sagnada de 8 en 8. Cada
+   color de text passa de 4,5:1 sobre la targeta del calaix en clar i en fosc:
+   --sdp-accent-titol és AA de disseny (5,51:1 en clar, tokens.css «h2, h4»;
+   el Bancal el puja a AAA), i la resta passen de 7:1. */
+test('§5 · l’Índex: H1 --sdp-accio-text, H2 --sdp-accent-titol, H3 --sdp-text-titol, H4-H6 sagnats de 8 en 8, amb contrast sobre la targeta', () => {
+  const COLORS = ['var(--sdp-accio-text)', 'var(--sdp-accent-titol)', 'var(--sdp-text-titol)', 'var(--sdp-text-cos)', 'var(--sdp-text-cos)', 'var(--sdp-text-suau)'];
+  expect([1, 2, 3, 4, 5, 6].map((n) => valorDe(`.toc-level-${n} button`, 'color'))).toEqual(COLORS);
+  expect([1, 2, 3, 4, 5, 6].map((n) => valorDe(`.toc-level-${n} button`, 'font-weight'))).toEqual(['800', '700', '600', '500', '500', '400']);
+  expect([4, 5, 6].map((n) => valorDe(`.toc-level-${n} button`, 'padding-left'))).toEqual([
+    'calc(var(--sdp-space-2) + var(--sdp-space-2))',
+    'calc(var(--sdp-space-2) + var(--sdp-space-4))',
+    'calc(var(--sdp-space-2) + var(--sdp-space-6))'
+  ]);
+  for (const tema of [CLAR, TEMA_FOSC]) {
+    for (const color of new Set(COLORS)) {
+      const minim = color === 'var(--sdp-accent-titol)' ? 4.5 : 7;
+      expect(contrast(tema, color.slice(4, -1), '--sdp-fons-targeta'), `${color} sobre la targeta`).toBeGreaterThanOrEqual(minim);
+    }
+  }
+});
+
+/* §5 (261026_2126) · El vel i el calaix naixen davall de la barra negra
+   (header.bar-black, layout.css: var(--sdp-alt-negra) més la zona segura de
+   dalt), amb l'alçada de la resta de la pantalla (vh i, després, dvh), i el
+   calaix porta respiració de dalt. */
+test('§5 · el vel de l’Índex comença davall de la barra negra, vh abans de dvh, i el calaix respira de dalt', () => {
+  const BARRA = 'calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))';
+  expect(valorDe('.toc-overlay', 'top')).toBe(BARRA);
+  const altures = DECLS.filter((d) => d.prelud === '.toc-overlay' && d.propietat === 'height').map((d) => d.valor);
+  expect(altures).toEqual([
+    'calc(100vh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px))',
+    'calc(100dvh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px))'
+  ]);
+  expect(valorDe('.toc-drawer', 'padding-block')).toBe('var(--sdp-space-2) env(safe-area-inset-bottom, 0px)');
 });
 
 /* El mapa de fons de la conversa del Xat (T14, 0,05) és decoració, no text:
@@ -371,4 +427,31 @@ test('Bancal · text opac, pes de 600 o més i les ombres de sempre (Q6)', () =>
   const pesos = BANCAL.filter((r) => /font-weight: (600|700|800)\b/.test(r.cos));
   expect(opacs.length).toBeGreaterThan(0);
   expect(pesos.length).toBeGreaterThan(0);
+});
+
+/* §5 (261026_2126) · Al Bancal, la lletra menuda de l'Índex (H4 a H6) puja a
+   600 tota junta: abans hi entraven l'H4 i l'H6 i no l'H5, i l'escala feia
+   600 > 500 < 600. Els nivells 1 a 3 no hi entren (ja van a 600 o més). El
+   pes de cada nivell al Bancal: el del bloc, si n'hi és (a :root i a :host),
+   i si no, el de sempre. */
+test('Bancal · el pes de l’Índex no torna a pujar: H1-H3 els de sempre i H4, H5 i H6 a 600, a :root i a :host', () => {
+  const selectorsDe = (r) => r.prelud.split(/[(),]/).map((s) => s.trim());
+  const pesAlBancal = (n) => {
+    const selector = `.toc-level-${n} button`;
+    const delBloc = BANCAL.filter((r) => selectorsDe(r).includes(selector) && /font-weight:/.test(r.cos));
+    if (!delBloc.length) return { pes: valorDe(selector, 'font-weight'), cobertura: 0 };
+    const regla = delBloc.at(-1);
+    return {
+      pes: declaracions(regla.cos).filter(([propietat]) => propietat === 'font-weight').pop()[1],
+      cobertura: selectorsDe(regla).filter((s) => s === selector).length
+    };
+  };
+  const nivells = [1, 2, 3, 4, 5, 6].map(pesAlBancal);
+  expect(nivells.map(({ pes }) => pes)).toEqual(['800', '700', '600', '600', '600', '600']);
+  // :root i :host porten els tres nivells menuts; els tres primers, cap.
+  expect(nivells.map(({ cobertura }) => cobertura)).toEqual([0, 0, 0, 2, 2, 2]);
+  const pesos = nivells.map(({ pes }) => Number(pes));
+  for (let n = 1; n < pesos.length; n += 1) {
+    expect(pesos[n], `H${n + 1} no pesa més que H${n}`).toBeLessThanOrEqual(pesos[n - 1]);
+  }
 });

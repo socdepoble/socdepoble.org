@@ -28,6 +28,7 @@ export default function EspecimenUniversalWorkspace() {
           ['listClassName / detailClassName / className', 'string', "''", 'Ganxos CSS per a la pell de cada secció.'],
           ['mestreDetall', "false | 'navegacio' | 'detall' | { clau, element }", 'false', 'Mestre-detall en estret (ordre del Mestre, 261003): primera vista la navegació (o la llista si no n’hi ha) o, amb un enllaç profund, el detall. Les seccions passen { clau, element } (l’element de la URL crua): si és el de quan es va deixar el mòdul (Arrere, recàrrega), el nivell on era la persona. Es llig en muntar. Ignorat en mode compacte; en ample i mitjà no canvia res.'],
           ['tornaDeLaLlista', '() => void', 'null', 'Sense navegació, la fletxa ← de la llista en estret (labels.back). Admin: tornar al Tauler.'],
+          ['obridorALaLlista', 'boolean', 'true', 'Ordre del Mestre (261026_2126, pla 261026_1615 §6) · Amb false, la carpeta de l’esquerra del títol de la llista (icons.categories) es lleva només en «mitja», la tauleta, on el rail fix de la navegació és una porta a la vista. En «estret», el mòbil, es queda: la llista oberta tapa el rail i la carpeta és l’única porta; en el mode compacte, sense rail, també. Cap funció es perd. Només el passa el Bloc de Notes.'],
         ]}
         a11y={[
           'La categoria activa porta aria-current="page"; l’element actiu del llistat, aria-current="true".',

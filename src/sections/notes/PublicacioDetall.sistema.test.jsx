@@ -167,10 +167,13 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
      Consola i el Cervell ja tenen cos (sis paràgrafs a PAGE_COPY): la llista
      COS_BUIT de l'Onada 8 queda buida i es retira, i totes dues entren en
-     esta comprovació com qualsevol pàgina de text. */
+     esta comprovació com qualsevol pàgina de text.
+     Ordre del Mestre 261026_2126 (P1-38) · Descàrregues i Aplicacions
+     (/page/descarregues) hi entra com a pàgina de text: ara en són deu, i
+     tretze pàgines en total. */
   const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
-    expect(SISTEMA).toHaveLength(12);
+    expect(SISTEMA).toHaveLength(13);
     for (const targeta of SISTEMA) {
       const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
       const cos = container.querySelector('article.cms-preview');

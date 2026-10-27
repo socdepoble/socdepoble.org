@@ -245,20 +245,28 @@ test('sense barres enganxades, el marge és només el scroll-margin-top de l’e
 /* La pell de l'encastat (jsdom no resol la cascada: es llig el full, com
    src/css/pantallaCompleta.capes.test.js). Dins de .sdp-root, el vel de
    l'Índex ocupa la caixa de l'App i no 100vw x 100vh de la pàgina de
-   WordPress; a socdepoble.org (sense :host) el .toc-overlay és el de sempre. */
+   WordPress; a socdepoble.org (sense :host) el .toc-overlay és el de sempre.
+   Ordre del Mestre (261026_2126, pla 261026_1615 §5) · Als dos llocs, el vel
+   naix davall de la barra negra: el calc de la seua alçada (layout.css,
+   header.bar-black), mai top 0. */
 const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const pla = (css) => css.replace(/\s+/g, ' ');
+const BARRA_NEGRA = 'calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))';
 
 test('encastat, el vel de l’Índex ocupa la caixa de l’App: :host .toc-overlay dins de @layer components de layout.css', () => {
   const layout = pla(llig('src/css/layout.css'));
-  expect(layout.match(/:host \.toc-overlay \{[^}]*\}/g)).toEqual([':host .toc-overlay { inset: 0; width: auto; height: auto; }']);
+  expect(layout.match(/:host \.toc-overlay \{[^}]*\}/g)).toEqual([`:host .toc-overlay { inset: ${BARRA_NEGRA} 0 0; width: auto; height: auto; }`]);
+  // La barra negra fa exactament esta alçada: el vel comença on ella acaba.
+  expect(layout).toContain(`header.bar-black { box-sizing: border-box; height: ${BARRA_NEGRA}; min-height: ${BARRA_NEGRA};`);
   // Dins del primer bloc @layer components, el de la Frontera C2 (abans del primer @layer legacy).
   const posicio = layout.indexOf(':host .toc-overlay');
   expect(posicio).toBeGreaterThan(layout.indexOf('@layer components {'));
   expect(posicio).toBeLessThan(layout.indexOf('@layer legacy {'));
   // La regla de sempre viu a la capa legacy de modules.css, i components hi guanya per l'ordre de capes.
   const modules = pla(llig('src/css/modules.css'));
-  expect(modules).toContain('.toc-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;');
+  expect(modules).toContain(`.toc-overlay { position: fixed; top: ${BARRA_NEGRA}; left: 0; width: 100vw;`
+    + ' height: calc(100vh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));'
+    + ' height: calc(100dvh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));');
   const posLegacy = modules.indexOf('@layer legacy {');
   const posBase = modules.indexOf('.toc-overlay { position: fixed;');
   expect(posBase).toBeGreaterThan(posLegacy);

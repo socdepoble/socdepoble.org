@@ -63,10 +63,12 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
   const ENTITAT_REMOTA = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
 
   /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a
-     pàgines del sistema. Abans, deu. */
-  test('les dotze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
+     pàgines del sistema. Abans, deu.
+     Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Tretze:
+     hi entra «Descàrregues i Aplicacions». Abans, dotze. */
+  test('les tretze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
     expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length);
-    expect(SYSTEM_PAGES).toHaveLength(12);
+    expect(SYSTEM_PAGES).toHaveLength(13);
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
       expect(esAliesDelProjecte(alies)).toBe(true);
       const items = itemsPublicatsDe({ feedPosts: SISTEMA }, alies);

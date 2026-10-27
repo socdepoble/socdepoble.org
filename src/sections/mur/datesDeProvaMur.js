@@ -2,8 +2,8 @@
  * datesDeProvaMur.js — les dates de prova del Mur (mode seed).
  *
  * Tasca 5 (ordre del Mestre, 261001): «Per comprovar que l'ordenació temporal
- * funciona», les nou targetes importants del Mur porten dia i hora d'ESTA
- * setmana, i les molt tècniques, una data de fa dues setmanes (entre el 2 i
+ * funciona», les deu targetes importants del Mur (nou fins al 261026_2126)
+ * porten dia i hora d'ESTA setmana, i les molt tècniques, una data de fa dues setmanes (entre el 2 i
  * el 15 de setembre de 2026). L'ordre per defecte del Mur (MurSection ·
  * momentDElement, la mateixa data que pinta la pastilla) les deixa així dalt
  * de tot, i el Calendari en té per a pintar en la setmana en curs.
@@ -47,8 +47,18 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * sistema porta una data real (PAGE_COPY.xat, 07-10-2026) que, sense data de
  * prova, la col·locava damunt o enmig de les importants. Entra com la primera,
  * la més nova: és la publicació més recent. Amb ella en són nou.
+ *
+ * Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · «Descàrregues
+ * i Aplicacions» es troba en el mateix cas que El Xat: la seua data real
+ * (PAGE_COPY.descarregues, 26-10-2026) la posava damunt o enmig de les
+ * importants segons el dia. Entra com El Xat, la primera: és la publicació més
+ * recent. Amb ella en són deu. Pendent del Mestre: si l'ha de deixar amb la
+ * seua data real (i aleshores les setmanes següents cauria davall de les
+ * importants), n'hi ha prou a llevar esta fila i tornar el sostre de la prova
+ * a nou.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['pages', 'descarregues'],
   ['pages', 'xat'],
   ['pages', 'projecte'],
   ['marketItems', 'samarreta-socdepoble'],

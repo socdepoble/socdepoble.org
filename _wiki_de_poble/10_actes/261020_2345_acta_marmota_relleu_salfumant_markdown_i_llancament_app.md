@@ -119,4 +119,4 @@ requereix_auditoria: false
 - [[00_index]]
 - [[00_index_escriptori]]
 - [[261020_1930_acta_marmota_relleu_fase_d_i_enginyeria_inversa_bring_lovable]]
-- [[261020_2355_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]
+- `261020_2355_pla_implementacio_llancament_apps_i_desbloqueig_sollutia`

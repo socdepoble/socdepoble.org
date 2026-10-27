@@ -1,9 +1,16 @@
 /**
  * EspecimenXatLlista.jsx — la columna de llista del Xat (onada 3, T67 i T68;
- * catàleg de l'onada 3B, Pedra Seca §9): el «…» de la fila de títol obert
- * (MenuLlista), la barra de «Seleccionar xats» amb 0, 1 i n (BarraSeleccio),
- * la fila de conversa en totes les variants noves (FilaConversa) i la fila
- * de comunitat (FilaComunitat).
+ * catàleg de l'onada 3B, Pedra Seca §9): la pulsació llarga que obri
+ * «Seleccionar xats» (LlistaConverses, onSelecciona), la barra de la selecció
+ * amb 0, 1 i n (BarraSeleccio), la fila de conversa en totes les variants
+ * noves (FilaConversa) i la fila de comunitat (FilaComunitat).
+ *
+ * Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · El «…» de la fila
+ * de títol (MenuLlista) era inventat i s'ha retirat del producte i d'ací: la
+ * mostra que l'obria ara és una llista on la pulsació llarga, el clic dret o
+ * Maj+F10 sobre una fila diu que entraria en la selecció amb eixa fila
+ * triada. Les files fan 96px i l'avatar, 76px (--sdp-xat-fila-mida i
+ * --sdp-xat-avatar-mida): ho pinta el full, no l'espècimen.
  *
  * Components de producció amb dades de mostra passades per mapejaFil i
  * agrupaComunitats, com les dona el XatContext. Cap context de l'app.
@@ -30,11 +37,8 @@
  * pogut carregar, i la reserva quan el xat no s'obri (copiar l'informe o
  * enviar-lo per correu).
  */
-import { useEffect, useRef, useState } from 'react';
-import { MessageCircle } from 'lucide-react';
+import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
-import AppGridColumn from '../../../../components/layout/AppGridColumn.jsx';
-import MenuLlista from '../../../xat/components/MenuLlista.jsx';
 import BarraSeleccio from '../../../xat/components/BarraSeleccio.jsx';
 import FilaConversa, { FilaComunitat } from '../../../xat/components/FilaConversa.jsx';
 import FilaPoble from '../../../xat/components/FilaPoble.jsx';
@@ -128,25 +132,6 @@ function mostraDeLaFila() {
   ].map((f) => mapejaFil(f));
 }
 
-/* Obri el «…» una sola vegada en muntar-se (també amb el doble efecte de
-   StrictMode): el menú real, amb el focus a la seua opció. */
-function MenuObert({ onSeleccionar }) {
-  const boto = useRef(null);
-  const obert = useRef(false);
-  useEffect(() => {
-    if (obert.current) return;
-    obert.current = true;
-    boto.current?.click();
-  }, []);
-  return (
-    <div className="sdp-xat sdp-xat-especimen sdp-xat-especimen--menu">
-      <aside className="sdp-workspace-column" aria-label="Llista de mostra amb el menú obert">
-        <AppGridColumn esDark={true} titol="Converses" icona={MessageCircle} esquerra={<MenuLlista onSeleccionar={onSeleccionar} refBoto={boto} t={t} />} />
-      </aside>
-    </div>
-  );
-}
-
 /* L'informe de mostra de la reserva: l'entorn s'injecta, cap lectura del navegador. */
 const INFORME_DE_MOSTRA = composaInforme({
   t, rutaActual: '/xat', rutaAnterior: '/mur', versio: 'production · XatSection-mostra.js',
@@ -154,7 +139,7 @@ const INFORME_DE_MOSTRA = composaInforme({
 });
 const RESERVA_DE_MOSTRA = { informe: INFORME_DE_MOSTRA, correu: enllacDeCorreu(INFORME_DE_MOSTRA, "Informe d'un error a Sóc de Poble") };
 
-/* Una columna de llista de mostra amb el seu peu. */
+/* Una columna de llista de mostra, amb el seu peu si en porta. */
 function ColumnaAmbPeu({ etiqueta, children }) {
   return (
     <div className="sdp-especimen__mostra sdp-especimen__mostra--columna">
@@ -196,13 +181,13 @@ export default function EspecimenXatLlista() {
   );
 
   return (
-    <Especimen id="xat-llista" nom="Xat · llista de converses" fitxer="src/sections/xat/components/ (MenuLlista, BarraSeleccio, FilaConversa, FilaPoble, LlistaConverses, BotoInformaDUnError)"
-      descripcio="La columna de llista amb el patró estàndard de missatgeria (onada 3): el «…» redó de la fila de títol amb «Seleccionar xats», la barra que el substituïx mentre es trien xats i les files. Un grup porta la icona de persones i l’avanç «Nom: text»; el General d’una comunitat, la bafarada; un canal («Avisos»), sempre el megàfon, tinga o no imatge. Si l’últim missatge és teu, la previsualització comença amb les marques (✓ enviat, ✓✓ blau llegit) i, en un grup o un canal, amb «Tu: »; el ✓✓ gris (entregat) espera que el contracte porte el rebut dels altres. Un fil silenciat porta la pastilla grisa i l’hora sense ressaltar; un fil marcat a mà com a no llegit, el punt. Una comunitat és UNA fila, amb l’avatar quadrat i les targetes apilades, que obri la seua fitxa. En un amfitrió que declara el seu poble, el grup del poble va el primer; mentre encara no existix, el pinta FilaPoble, fixada, i prémer-la l’obri o el crea."
+    <Especimen id="xat-llista" nom="Xat · llista de converses" fitxer="src/sections/xat/components/ (BarraSeleccio, FilaConversa, FilaPoble, LlistaConverses, BotoInformaDUnError)"
+      descripcio="La columna de llista amb el patró estàndard de missatgeria (onada 3): la pulsació llarga sobre una fila (o el clic dret, o Maj+F10) que obri «Seleccionar xats» amb eixa fila ja triada, la barra que substituïx la fila de títol mentre es trien xats i les files, de 96 px amb l’avatar de 76 px. Un grup porta la icona de persones i l’avanç «Nom: text»; el General d’una comunitat, la bafarada; un canal («Avisos»), sempre el megàfon, tinga o no imatge. Si l’últim missatge és teu, la previsualització comença amb les marques (✓ enviat, ✓✓ blau llegit) i, en un grup o un canal, amb «Tu: »; el ✓✓ gris (entregat) espera que el contracte porte el rebut dels altres. Un fil silenciat porta la pastilla grisa i l’hora sense ressaltar; un fil marcat a mà com a no llegit, el punt. Una comunitat és UNA fila, amb l’avatar quadrat i les targetes apilades, que obri la seua fitxa. En un amfitrió que declara el seu poble, el grup del poble va el primer; mentre encara no existix, el pinta FilaPoble, fixada, i prémer-la l’obri o el crea."
       contracte={[
-        ['MenuLlista', '{ onSeleccionar, t, refBoto? }', '—', 'El «…» de la fila de títol; una sola opció, «Seleccionar xats». Escape el tanca i torna el focus al botó.'],
+        ['LlistaConverses · onSelecciona', '{ …, seleccio?, onSelecciona? }', 'null', 'La pulsació llarga (mig segon, sense moure el dit), el clic dret, la pulsació llarga d’Android o Maj+F10 i la tecla de menú sobre una fila triable criden onSelecciona(clau): s’entra a la selecció amb eixa fila triada. Mai la fila del poble, la de l’entitat ni les d’ajuda (esFilaTriable). El clic que ve darrere no obri la conversa; dins de la selecció, no fa res.'],
         ['BarraSeleccio', '{ quants, onEixir, onMarcaLlegides, t, refEixir? }', '0', 'La fila de títol durant la selecció: la creu, el recompte i «Marcar com a llegides», desactivat amb 0.'],
-        ['FilaConversa', '{ fil, activa, onSelect, locale, t, seleccio?, joId? }', '—', 'Amb seleccio ({ triada, onAlterna }) és una casella: role="checkbox" amb el cercle. Amb joId, si l’últim missatge és teu: les marques d’estatDeLUltim i, en grups i canals, «Tu: ».'],
-        ['FilaComunitat', '{ comunitat, onObri, t, seleccio? }', '—', 'comunitat és una entrada d’useXat().comunitats; la pastilla suma els no llegits dels fills. No porta ni el punt ni la pastilla grisa.'],
+        ['FilaConversa', '{ fil, activa, onSelect, locale, t, seleccio?, joId?, premuda? }', '—', 'Amb seleccio ({ triada, onAlterna }) és una casella: role="checkbox" amb el cercle. Amb joId, si l’últim missatge és teu: les marques d’estatDeLUltim i, en grups i canals, «Tu: ». Amb premuda ({ handlers, consumeix, pista }, el porta LlistaConverses a les files triables), els gestors de la pulsació llarga van al botó i el clic que ve darrere d’una pulsació no obri ni alterna; fora de la selecció, aria-keyshortcuts="Shift+F10" i, si la pista existix, aria-describedby. Sense, el botó de sempre.'],
+        ['FilaComunitat', '{ comunitat, onObri, t, seleccio?, premuda? }', '—', 'comunitat és una entrada d’useXat().comunitats; la pastilla suma els no llegits dels fills. No porta ni el punt ni la pastilla grisa. premuda ({ handlers, consumeix, pista }), com a FilaConversa: el clic gastat per la pulsació llarga no obri la fitxa.'],
         ['FilaPoble', '{ poble, onObri, t }', '—', 'poble és { id, nom } de l’amfitrió (pobleDeConfig). El grup del poble que encara no existix: l’anatomia de FilaComunitat, «Avisos, General» i la xinxeta de fixada. onObri(poble) fa el camí del «Comentar» de la pàgina del poble. Mai en selecció ni mentre la llista carrega.'],
         ['PastillaNoLlegits', '{ quants, t, manual?, silenciada? }', '0 · false · false', 'Res amb 0 si no és manual; manual i 0, el punt amb «Marcada com a no llegida»; silenciada, grisa. Amb recompte, mana el número.'],
         ['LlistaConverses · peu', '{ …, avis?, estatBuit?, carregant?, peu? }', 'null', 'Onada 6 · El node del peu va darrere de la llista, FORA de la <ul> (no és cap conversa), i també davall de l’avís (avis) i de l’estat buit; mentre carrega, no. En compacte la reserva de la barra mòbil passa de la llista al peu.'],
@@ -213,13 +198,16 @@ export default function EspecimenXatLlista() {
         'Les marques diuen l’estat en text («Enviat», «Llegit»), a més de la forma (una marca o dos): mai només el color.',
         'El punt no és només un color: porta el text «Marcada com a no llegida». La pastilla grisa fa 9,50:1 en clar i 11,51:1 en fosc; el punt gris, 3:1 o més sobre la fila (WCAG 1.4.11).',
         'En selecció, la fila és role="checkbox" amb aria-checked; la barra anuncia el recompte (aria-live).',
-        'El menú és role="menu" amb menuitem; en obrir-lo el focus entra a l’opció i Escape el torna al «…».',
+        'La selecció també s’obri amb el teclat: Maj+F10 o la tecla de menú sobre la fila enfocada (aria-keyshortcuts); cada fila triable ho descriu al lector de pantalla amb una pista amagada (aria-describedby). En eixir-ne, el focus torna a la fila que l’ha oberta.',
         'El peu «Informa d’un error» no és un listitem: el lector de pantalla compta només les converses. La nota de la reserva viu en una regió role="status" sempre muntada, que s’anuncia en aparéixer.'
       ]}
       fes={['Passar les comunitats d’useXat() tal qual: la llista no torna a agrupar.', 'Una sola acció a la barra de selecció: la que té RPC darrere.']}
       noFacis={['Pintar els Avisos i el General com a files soltes: viuen dins de la seua comunitat.', 'Obrir una comunitat com si fóra una conversa.']}>
-      <h4>El «…» de la fila de títol, obert</h4>
-      <MenuObert onSeleccionar={avisa('Entraria en «Seleccionar xats».')} />
+      <h4>Pulsació llarga: obri la selecció amb la fila triada</h4>
+      <ColumnaAmbPeu etiqueta="Llista de mostra amb la pulsació llarga">
+        <LlistaConverses fils={[per['g-festes'], per['dir-vicent']]} onSelect={(id) => setAvis(`Obriria la conversa ${id}.`)}
+          onSelecciona={(clau) => setAvis(`Entraria en «Seleccionar xats» amb ${clau} triada.`)} locale={LOCALE} t={t} joId="jo" />
+      </ColumnaAmbPeu>
 
       <h4>Seleccionar xats: 0, 1 i n</h4>
       <Barra quants={0} etiqueta="Selecció amb cap xat" avisa={avisa} />

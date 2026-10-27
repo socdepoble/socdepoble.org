@@ -989,9 +989,12 @@ export default function Conversa({
         </div>
       ) : null}
 
-      {consultaIAIA && !modeSeleccio ? <ConsultaIAIA t={t} /> : null}
-
+      {/* Ordre del Mestre (261026_2126; P1-37) · L'àncora de «Baixa al final»
+          va damunt de «Pregunta a la IAIA»: el botó flota sobre els missatges,
+          com a tota conversa, i no tapa la punta dreta de la píndola. */}
       {aBaix ? null : <BotoBaixar nous={nousAvall} onBaixa={baixaAlFinal} t={t} />}
+
+      {consultaIAIA && !modeSeleccio ? <ConsultaIAIA t={t} /> : null}
 
       {!modeSeleccio && potRespondre && !contrapartBloquejada && fil.participant !== false && onSendMedia ? (
         <ControlsAdjunt fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}

@@ -127,6 +127,17 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       les accions d'AppGridColumn (botó d'icona de 24 px,
  *                       amb nom i title). Només a la columna oberta: el rail
  *                       plegat no canvia. Sense, cap (el DOM de sempre).
+ *   - `obridorALaLlista` → (opcional, ordre del Mestre 261026_2126, pla
+ *                       261026_1615 §6) false lleva l'obridor de la
+ *                       navegació (la carpeta, `icons.categories`) de
+ *                       l'esquerra del títol de la llista oberta en «mitja»,
+ *                       on la navegació continua a l'abast pel seu rail fix
+ *                       de l'esquerra. En «estret» la carpeta es queda: la
+ *                       llista oberta tapa el rail i és l'única porta a la
+ *                       vista. Tampoc es lleva on és l'única porta en
+ *                       «mitja» (el mode compacte, sense rail). Només el
+ *                       passa el Bloc de Notes. Sense, true: el de sempre
+ *                       (Wiki, Disseny, Perfil…).
  *
  * La roda dentada (⚙️) de la capçalera de la navegació és el lloc estàndard
  * de la personalització de l'espai de treball (Llei de la Roda Dentada): hi
@@ -468,7 +479,8 @@ export function UniversalWorkspace({
   mestreDetall = false,
   tornaDeLaLlista = null,
   idEspai,
-  accionsLlista = CAP
+  accionsLlista = CAP,
+  obridorALaLlista = true
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
   /* Llei de la Roda Dentada · Qui és l'espai per a les seues preferències:
@@ -594,6 +606,7 @@ export function UniversalWorkspace({
         detailClassName={detailClassName}
         className={className}
         accionsLlista={accionsLlista}
+        obridorALaLlista={obridorALaLlista !== false}
       />
     </WorkspaceProvider>
   );
@@ -602,7 +615,7 @@ export function UniversalWorkspace({
 function WorkspaceFrame({
   columnesRef, compacte, espai, grups, amagades, vigilaAmagada, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className,
-  accionsLlista
+  accionsLlista, obridorALaLlista
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -710,6 +723,7 @@ function WorkspaceFrame({
             collapseBtnRef={collapseMiddleRef}
             expandBtnRef={expandMiddleRef}
             accionsLlista={accionsLlista}
+            obridorALaLlista={obridorALaLlista}
           />
         </SlotErrorBoundary>
       }
@@ -1218,13 +1232,13 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
   tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
-  accionsLlista = CAP
+  accionsLlista = CAP, obridorALaLlista = true
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
   } = useWorkspace();
-  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, llistaEnRail, nodeRail } = useAppGrid();
+  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, llistaEnRail, nodeRail, ambRailNavegacio } = useAppGrid();
   /* MD · En estret, amb el mestre-detall, l'obridor de la navegació l'obri
      al primer toc (toggleColumn commuta el rail d'«ample» i només obria en
      un toc de cada dos), du el focus a la carpeta activa i es declara obridor
@@ -1253,8 +1267,18 @@ function ItemListColumn({
      la mateixa icona, i ara obri al primer toc, tanca al segon i es declara
      obridor de la closca. El toggleColumn que hi havia ha quedat sense cap
      cas i s'ha retirat. */
-  const obridorNavegacio = obridorEstret || (mida !== 'ample' && Boolean(categoryIcon));
   const obridorDelRail = llistaPlegable && (Boolean(categoryIcon) || categories.length > 0);
+  /* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · Amb
+     obridorALaLlista={false} (el Bloc de Notes), la carpeta de l'esquerra del
+     títol es lleva només on la navegació té una altra porta a la vista: en
+     «mitja», el seu rail fix (ambRailNavegacio). En «estret» es queda: la
+     llista oberta tapa el rail de la llista, i la carpeta de la capçalera és
+     l'única porta a la vista (i obri CARPETES d'un toc). Tampoc es lleva on
+     era l'única porta en «mitja» (el Snippet, sense cap rail): cap funció es
+     perd. */
+  const altraPortaANavegacio = mida === 'mitja' && ambRailNavegacio;
+  const obridorNavegacio = (obridorEstret || (mida !== 'ample' && Boolean(categoryIcon)))
+    && (obridorALaLlista !== false || !altraPortaANavegacio);
   /* P6 (revisió) · L'obridor declara aria-expanded: amb el panell obert, el
      torna a tancar. En «mitja» el panell de la navegació no tapa la llista i
      l'obridor continua a l'abast del teclat; abans no feia res i el panell
@@ -1487,12 +1511,14 @@ function ItemListColumn({
         esDark="intens"
         startActions={accionsDeCerca(false)}
         endActions={[
-          ...(sortable ? [{ 
-            id: 'sort', 
-            etiqueta: 'Ordenar per data o nom', 
-            icona: ArrowDownAZ, 
-            iconSize: 20,
-            pressed: sortOpen, 
+          /* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · El glif
+             d'ordenar ja no va forçat a 20px: els 24px de totes les icones de
+             les dues files (el valor per defecte d'AppGridColumn). */
+          ...(sortable ? [{
+            id: 'sort',
+            etiqueta: 'Ordenar per data o nom',
+            icona: ArrowDownAZ,
+            pressed: sortOpen,
             className: 'sdp-workspace-sort-action',
             onAcciona: () => setSortOpen(value => !value) 
           }] : []),

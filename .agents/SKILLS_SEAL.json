@@ -1,10 +1,11 @@
 {
-  "timestamp": "2026-10-26T16:39:55.255Z",
-  "hash": "b9af2e7c0b75d1e43ad68f6de5550df3412f8c2695c6bf9774597b9696669518",
-  "filesCount": 41,
+  "timestamp": "2026-10-27T07:05:22.426Z",
+  "hash": "c7eca82970cdaf797afdb9bb8ce412a88fdca0d06aa850259b504c083b5d717c",
+  "filesCount": 43,
   "manifest": {
-    ".agents/skills/00_INDEX_SKILLS.md": "dcc4799f3df58c29555d3a8a62fd817fb68c4129e263eae0b299449875084738",
-    ".agents/skills/core-automillora/SKILL.md": "bd5a31311e29e5a64c16375cafafdab6f9fddd66b38f6bb906dc5d9b24924c6a",
+    ".agents/skills/00_INDEX_SKILLS.md": "99ddeaeab0dd48a8c2dfa2748fef2c58c2505171ddd8dd526abb168ac972be06",
+    ".agents/skills/core-automillora/SKILL.md": "b599880ad7343c5a87a7004ea570fb5690fe1cec3b7fac6231091b392779b74f",
+    ".agents/skills/core-calibratge-visual-nano/SKILL.md": "c7ab935ab8d35e7dc1892783c340bd43a70c2e552adf1298b9935be759a90d6f",
     ".agents/skills/core-comprensio-reflexiva/SKILL.md": "b63f6c9ee9cfa09d08afcdba1416c1b59e61651452ab2474c0db8860358f09db",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "583b7f01996e8fd9bdae501c5ba5c02ba11d4b58997ccebb6f1d2a26dd60413b",
     ".agents/skills/core-context-panic/SKILL.md": "19983a978d033469228fb7d426ae66fa60496d058ae557833d861c4836104262",
@@ -14,16 +15,17 @@
     ".agents/skills/core-estrategia-ia/SKILL.md": "315e06249d7170eca53aba68dc43e4e206cf1f963c5ca32b65f64660a7e171f0",
     ".agents/skills/core-gauntlet-loop/SKILL.md": "c26e792bfd8da4c10a31870f6a954ed8f8b517bb3d07b018cf38bb68ea088e8b",
     ".agents/skills/core-higiene-escriptori/SKILL.md": "80a307d846444f138f0a1e762c8daa1ac021da2f729c188b607b3d9548e31494",
-    ".agents/skills/core-identitat-visual/SKILL.md": "da490eb26aed9ce2a5c77948876ae61bf816862ee54ee01d8dfd21f7a7645bd6",
+    ".agents/skills/core-identitat-visual/SKILL.md": "7fc50b33b190ef51b8dd3780622b7b94475524bc3816f856a06d28d40e058e05",
     ".agents/skills/core-identitat/SKILL.md": "26689bd02d0efb6c678fb02402d1aa5cf54e0a0cc7d7b93a39086d04ca6118ad",
     ".agents/skills/core-informes-pdf/SKILL.md": "db66405da9d5ecd2c88fe8591ce98d7ee8b503bdb391c36f4f7205dde77dfc81",
-    ".agents/skills/core-llegibilitat-text/SKILL.md": "97a679dc1e34a6ef74b9d702753a4a1db78cdffc30e86dcd2cc3f0a8a2cce450",
+    ".agents/skills/core-llegibilitat-text/SKILL.md": "ea3193516d776f334e9917950f263dd80b88d9bb50cfb24ca47645864484a3dd",
     ".agents/skills/core-maquetacio-markdown/SKILL.md": "4992154d3490c98da065b2421fbf1cde97342f225030a75a38fad0515a2b3002",
     ".agents/skills/core-memoria-historica/SKILL.md": "dbeb94176beb026573455fed5f411e5d83f11d8ad04fe8d16b3a31ecf06ee4e5",
     ".agents/skills/core-neteja-brossa/SKILL.md": "8d7f53e9ed19ab43e0e50ea758765e9e32164acf22f7fe40f432b4b7149de935",
     ".agents/skills/core-portaveu-institucional/SKILL.md": "21faf6171d0782328a55b1ae2dcd0d1178ff68e81e196c677d96a8e1638bcfb8",
     ".agents/skills/core-restauracio-segellada/SKILL.md": "6986ee269036c83387c7c121f758456a89f681b44fef963f124a69a55065bad0",
     ".agents/skills/core-salfumant-radical/SKILL.md": "6eef2a5d38404bbf81765fe835cd5787122f9218f9f73b27e084c8729b189d96",
+    ".agents/skills/core-secretaria-auditoria/SKILL.md": "2a72a496da833b5a3da23530acbeec6d827d7317e6609819094e3fce7fa9a08a",
     ".agents/skills/core-seguretat-audit/SKILL.md": "1ce54435941edd04364e60f38bef87d45b50c71ca2224f00adb45618ee89a22b",
     ".agents/skills/core-taxonomia-estricta/SKILL.md": "98d5da16277dfd8ca37fc8c10392108bcd3ee2620fe077761159a6b35e490e49",
     ".agents/skills/core-tecniques-investigacio/SKILL.md": "3e06e4ceee158a5bd5a9ff092a4cf178a5c5605f90ec85c69152bf19af808220",
@@ -45,5 +47,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "2395f3b55338d14fa3b38cbb34e8feb03c64ccbfdde2ffd22c645c54135e6a5b",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "209f6826f46f5afec2d068b129a006e911a1b470df5cedd144fa6fe62b791dea"
   },
-  "transaction": "648ef22a-9606-4fbd-bbb4-a7e6336437d1"
+  "transaction": "77747e10-a2fa-457e-83cf-c9fee25dd214"
 }

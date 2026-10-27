@@ -92,8 +92,8 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria]]
-- [[261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio]]
-- [[261014_2035_auditoria_claude]]
-- [[261014_2040_auditoria_gemini4]]
+- `261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria`
+- `261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio`
+- `261014_2035_auditoria_claude`
+- `261014_2040_auditoria_gemini4`
 

@@ -22,8 +22,10 @@ const existix = (ruta) => fs.existsSync(path.join(ARREL, ruta));
 const COMPONENTS_XAT = [
   'ClosCaXat', 'FilaConversa', 'FilaPersona', 'LlistaConverses', 'CapcaleraConversa', 'FiltreConverses',
   'Bombolla', 'MarquesEstat', 'PastillaNoLlegits', 'SeparadorDia', 'Compositor', 'PanellInicialMobil',
-  /* Onada 3 (T63.2, T67, T68, T69): la columna de llista calcada de WhatsApp Desktop. */
-  'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa',
+  /* Onada 3 (T63.2, T67, T68, T69): la columna de llista calcada de WhatsApp Desktop.
+     Ordre del Mestre (261026_2126, P1-36) · MenuLlista (el «…») s'ha retirat:
+     la selecció de xats s'obri amb la pulsació llarga (LlistaConverses). */
+  'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa',
   /* Onada 3B: les vistes de la columna central que obri el rail. */
   'VistaComunitats', 'VistaEnConstruccio',
   /* Torn 260930 (T1): la conversa calcada de WhatsApp, el grup del poble de
@@ -45,7 +47,9 @@ const COMPONENTS_XAT = [
 /* Les proves dels components de l'onada 3 (també la de les files, T67), de
    l'onada 3B (el rail i les vistes) i del torn 260930. */
 const PROVES_COMPONENTS_XAT = [
-  'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa', 'FilaConversa',
+  /* P1-36 (261026_2126) · La pulsació llarga de la llista de converses. */
+  'LlistaConverses',
+  'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa', 'FilaConversa',
   'ClosCaXat', 'VistaComunitats', 'VistaEnConstruccio',
   'Conversa', 'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos', 'CaraXat'
 ].map((nom) => `src/sections/xat/components/${nom}.test.jsx`);

@@ -1,7 +1,8 @@
 /**
  * Tasca 5 (ordre del Mestre, 261001) · Les dates de prova del Mur.
  *
- * Les nou importants, amb dia i hora d'esta setmana (mai en el futur); les
+ * Les deu importants (nou fins al 261026_2126), amb dia i hora d'esta
+ * setmana (mai en el futur); les
  * molt tècniques, del 2 al 15 de setembre, també amb hora; els actes, amb el
  * seu dia de sempre. Cap prova depén del dia en què s'executa: `ara`
  * s'injecta i es recorren tots els dies d'una setmana, les vores (dilluns de
@@ -89,7 +90,10 @@ describe('la llavor del Mur amb les dates de prova', () => {
     const existents = new Set(targetesDelMur(APP_SEED).map(({ clau: c }) => c));
     for (const fila of [...IMPORTANTS_DEL_MUR, ...TECNIQUES_DEL_MUR]) expect(existents.has(clau(fila)), clau(fila)).toBe(true);
     expect(N).toBeGreaterThanOrEqual(8);
-    expect(N).toBeLessThanOrEqual(9);
+    /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · Deu:
+       «Descàrregues i Aplicacions» hi entra la primera, com El Xat (261007).
+       Abans, com a molt nou. */
+    expect(N).toBeLessThanOrEqual(10);
   });
 
   test.each(MOMENTS)('%s: les importants dalt, les tècniques del 2 al 15 de setembre i els actes al seu dia', (_, ara) => {

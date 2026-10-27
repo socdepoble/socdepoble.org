@@ -126,8 +126,9 @@ test('l’Índex es pinta dins de l’arrel ombra (a .sdp-root), no al body de W
   // El botó «Índex» hi apunta, i l'id es troba dins de la mateixa arrel.
   expect(boto.getAttribute('aria-controls')).toBe(dialeg.id);
   expect(arrel.getElementById(boto.getAttribute('aria-controls'))).toBe(dialeg);
-  // L'Índex llig les seccions de la pàgina encastada.
-  expect([...dialeg.querySelectorAll('.toc-nav button')].map((b) => b.textContent)).toEqual(['Primera secció', 'Segona secció']);
+  // L'Índex llig les seccions de la pàgina encastada. Ordre del Mestre
+  // (261026_2126, §5) · I primer, l'H1 de la capçalera.
+  expect([...dialeg.querySelectorAll('.toc-nav button')].map((b) => b.textContent)).toEqual(['Pàgina encastada', 'Primera secció', 'Segona secció']);
 
   // Una tecla de la pàgina de WordPress no tanca l'Índex de dins.
   tecla(document.body, 'Escape');

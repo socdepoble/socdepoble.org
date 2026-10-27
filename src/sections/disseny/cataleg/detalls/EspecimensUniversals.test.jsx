@@ -633,11 +633,18 @@ describe('Especímens del Xat · onada 3B', () => {
     expect(screen.getByText('Escrius al xat públic de «Festa major».')).toBeTruthy();
   });
 
-  it('XatLlista: el «…» obert, la barra amb 0, 1 i n, les variants de fila i la fila de comunitat', () => {
+  /* Ordre del Mestre (261026_2126, P1-36) · Sense el «…» (MenuLlista): la
+     mostra de la pulsació llarga, amb Maj+F10 sobre la fila enfocada. */
+  it('XatLlista: la pulsació llarga sense «…», la barra amb 0, 1 i n, les variants de fila i la fila de comunitat', () => {
     const arrel = pinta(EspecimenXatLlista);
-    const menu = screen.getByRole('menu', { name: 'Més opcions' });
-    expect(within(menu).getByRole('menuitem', { name: 'Seleccionar xats' })).toBe(document.activeElement);
-    expect(screen.getByRole('button', { name: 'Més opcions' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Més opcions' })).toBeNull();
+    const ambPulsacio = screen.getByRole('complementary', { name: 'Llista de mostra amb la pulsació llarga' });
+    const festes = within(ambPulsacio).getByRole('button', { name: /^Comissió de Festes/ });
+    expect(festes.getAttribute('aria-keyshortcuts')).toBe('Shift+F10');
+    expect(document.getElementById(festes.getAttribute('aria-describedby')).textContent).toMatch(/^Mantín premuda una conversa/);
+    fireEvent.keyDown(festes, { key: 'F10', shiftKey: true });
+    expect(screen.getByText('Entraria en «Seleccionar xats» amb g-festes triada.').getAttribute('role')).toBe('status');
     expect([...arrel.querySelectorAll('.sdp-xat-barra-seleccio__recompte')].map((n) => n.textContent)).toEqual(['Tria els xats', '1 seleccionada', '4 seleccionades']);
     expect(screen.getAllByRole('button', { name: 'Marcar com a llegides' }).map((b) => b.disabled)).toEqual([true, false, false]);
 

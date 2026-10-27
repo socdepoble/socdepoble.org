@@ -1967,24 +1967,34 @@ details[open] summary.accordion-header svg:last-child {
    `0.18s ease ease-out`: dues corbes fan el shorthand invàlid i ni el vel ni
    el calaix s'animaven mai. Ara durada i corba són tokens separats: el vel fa
    una fosa de 200ms i el calaix entra en 280ms amb la corba de calaix. Amb
-   menys moviment, l'apagador global de base.css ho fa instantani. */
+   menys moviment, l'apagador global de base.css ho fa instantani.
+   Ordre del Mestre (261026_2126, pla 261026_1615 §5) · El vel i el calaix
+   naixen davall de la barra negra (header.bar-black, layout.css): el mateix
+   calc que la seua alçada, var(--sdp-alt-negra) més la zona segura de dalt.
+   Ni tapen la barra ni topen amb la barra d'estat del sistema (la Dynamic
+   Island). L'alçada, la resta de la pantalla: vh primer per a la Baseline
+   2022 i dvh on existix (la barra del navegador mòbil no la retalla). */
 
 .toc-overlay {
   position: fixed;
-  top: 0;
+  top: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px));
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));
+  height: calc(100dvh - var(--sdp-alt-negra) - env(safe-area-inset-top, 0px));
   background: var(--sdp-fons-vel);
   z-index: var(--z-calaix);
   display: flex;
   animation: sdp-fade-in var(--sdp-durada-base) var(--sdp-corba-eixida);
 }
 
+/* §5 (261026_2126) · Respiració de dalt: la capçalera de l'Índex no s'enganxa
+   a la vora de la barra negra. Al peu, la zona segura (la barra d'inici). */
 .toc-drawer {
   width: 85%;
   max-width: 320px;
   height: 100%;
+  padding-block: var(--sdp-space-2) env(safe-area-inset-bottom, 0px);
   background: var(--sdp-fons-targeta);
   box-shadow: var(--sdp-ombra-3);
   overflow-y: auto;
@@ -2112,39 +2122,49 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
+/* Ordre del Mestre (261026_2126, pla 261026_1615 §5) · Jerarquia cromàtica de
+   l'Índex: H1 en blau d'acció (--sdp-accio-text), H2 en terracota
+   (--sdp-accent-titol) i H3 en el color de títol de secció (--sdp-text-titol;
+   abans, el blau de l'H1). Del 4 al 6, l'escala baixa d'un esglaó en cada
+   nivell (pes 500, 500 i 400; cos, cos i suau) i el sagnat creix de 8 en 8
+   (8, 16 i 24px): una targeta (H3) i els seus H4 i H5 es lligen com a pare i
+   fills. */
 .toc-level-3 button {
   font-weight: 600;
   font-size: 0.95rem;
-  color: var(--sdp-accio-text);
+  color: var(--sdp-text-titol);
 }
 
-/* AAA (Q1, 261004) · El hover passava a --sdp-accio, el blau de marca, que
-   sobre --sdp-fons-subtil fa 3,29:1 en clar: es queda en --sdp-accio-text
-   (7,81:1 sobre el fons del hover) i el feedback el dona el fons. */
+/* AAA (Q1, 261004) · Cap hover canvia de color: el feedback el dona el fons.
+   §5 (261026_2126) · --sdp-text-titol sobre --sdp-fons-subtil, el fons del
+   hover, passa de 7:1 en clar i en fosc (modules.abast.capes.test.js). */
 .toc-level-3 button:focus-visible {
-  color: var(--sdp-accio-text);
+  color: var(--sdp-text-titol);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .toc-level-3 button:hover {
-    color: var(--sdp-accio-text);
+    color: var(--sdp-text-titol);
   }
 }
 
 .toc-level-4 button {
-  font-weight: 400;
+  padding-left: calc(var(--sdp-space-2) + var(--sdp-space-2));
+  font-weight: 500;
   font-size: 0.95rem;
-  color: var(--sdp-text-suau);
+  color: var(--sdp-text-cos);
 }
 
 /* T2 (ordre del Mestre, 260930) · Els nivells 5 i 6 arriben a l'Índex de
    totes les pàgines (PageFrame, NIVELL_INDEX_PER_DEFECTE = 6): les mètriques
    en h5 de la Consola i qualsevol h5 o h6 d'una targeta o d'un document. El
-   sagnat i el pes es van pensar per a les mètriques, que es lligen com a
-   filles de la targeta que tenen damunt; els nivells 1-4 no van sagnats. */
+   sagnat es va pensar per a les mètriques, que es lligen com a filles de la
+   targeta que tenen damunt. §5 (261026_2126) · Derogat «els nivells 1-4 no
+   van sagnats»: l'H4 també (8px), i l'H5 passa de 700 a 500, l'esglaó de
+   l'escala; les xifres continuen tabulars. */
 .toc-level-5 button {
   padding-left: calc(var(--sdp-space-2) + var(--sdp-space-4));
-  font-weight: 700;
+  font-weight: 500;
   color: var(--sdp-text-cos);
   font-variant-numeric: tabular-nums;
 }
@@ -3364,7 +3384,9 @@ details[open] summary.accordion-header svg:last-child {
      Preferits · Grups (XAT-A17) dins d'un desplegable darrere de la icona
      de filtre, a la línia de la cerca; la fila de píndoles que ocupava una
      fila de la llista ha desaparegut. La icona s'il·lumina amb el to d'acció
-     quan hi ha un filtre que no és «Tot»; el menú és el mateix que el «⋯». */
+     quan hi ha un filtre que no és «Tot»; el menú és el patró .sdp-xat-menu,
+     el del «⋯» de CapcaleraConversa (el «…» de la fila de títol de la
+     llista s'ha retirat: ordre del Mestre 261026_2126, P1-36). */
   .sdp-xat-filtre { position: relative; flex: none; }
   .sdp-xat-filtre__boto { flex: none; }
   .sdp-xat-cerca .sdp-xat-filtre__boto--actiu {
@@ -3379,8 +3401,28 @@ details[open] summary.accordion-header svg:last-child {
     height: var(--sdp-space-5);
   }
 
-  /* Llista de converses: files de --sdp-xat-fila-mida (XAT-A09, UX-B01). */
+  /* Llista de converses: files de --sdp-xat-fila-mida (XAT-A09, UX-B01).
+     Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · La targeta de
+     conversa fa 96px (2 × --sdp-touch; abans 72) amb l'avatar gran de 76px
+     (--sdp-xat-avatar-mida): 8 de coixí + 76 + 8 = 92 ≤ 96, cap buit gratuït.
+     El nom i l'últim missatge van a 4px (el gap de __cos) i el bloc de text
+     es centra al costat de l'avatar. L'interlineat de 1,5 no baixa: amb Noto
+     Sans (àrea de contingut 1,362em) i l'overflow de l'el·lipsi, menys es
+     menjaria els accents de «À» i la cua de la «ç». */
   .sdp-xat-llista { list-style: none; margin: 0; padding: 0; }
+  /* P1-53 (Llibre Mestre, 261027) · Cada <li> heretava el marge editorial de
+     base.css (8px davall i 4px a l'esquerra): la línia de cada fila quedava
+     8px per damunt de la següent, i el pas era de 104px. Les files van arran:
+     96px justos d'una línia a l'altra.
+     Ordre del Mestre (261027; auditoria Gauntlet R5, G2-01 de Gemini) · El
+     reinici és de totes les llistes del xat, no només de la de converses:
+     Comunitats, la fitxa d'una comunitat, Compartir, Multimèdia, els
+     resultats de la cerca, les opcions del control i els espècimens de
+     Disseny. Les .sdp-xat-targeta ja anaven arran (més avall). Amb :where, la
+     regla pesa com el `li` sol (0,0,1): guanya el de base.css per la capa, i
+     una classe pròpia del <li> (.sdp-xat-multimedia__item, amb el seu coixí
+     de 16px) continua guanyant-la. */
+  :where(.sdp-xat-llista) > li { margin-bottom: 0; padding-left: 0; }
   .sdp-xat-fila,
   .sdp-xat-opcio {
     display: flex;
@@ -3396,6 +3438,38 @@ details[open] summary.accordion-header svg:last-child {
     font: inherit;
     text-align: left;
     cursor: pointer;
+  }
+  /* P1-36 · Ni les opcions dels Ajustos del xat (XatControlSection) ni les
+     files senzilles del patró (.sdp-xat-fila--senzilla: els destins
+     d'AssignacioEmoji, al catàleg de Disseny, i els fitxers i documents de
+     VistaMultimedia) són cap targeta de conversa: conserven els 72px d'abans
+     (--sdp-xat-fila-senzilla-mida) i cap de les dues regles de davall no les
+     toca, la icona continua de 48 amb el dibuix de 24 (Llei del Píxel). */
+  .sdp-xat-opcio,
+  .sdp-xat-fila--senzilla { min-height: var(--sdp-xat-fila-senzilla-mida); }
+  /* P1-36 · La pulsació llarga sobre la fila obri la selecció de xats
+     (LlistaConverses): mentre el dit és damunt, ni el menú emergent d'iOS ni
+     la selecció del text. */
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* P1-36 · L'avatar gran de la fila: la cara, també la quadrada d'una
+     comunitat dins de les targetes apilades (que la seguixen), i la icona
+     d'un grup o d'un canal, amb el dibuix en proporció (24 de 48, 40 de 76).
+     Les inicials creixen amb el cercle. */
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) > .sdp-avatar,
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) > .sdp-xat-apilat > .sdp-avatar,
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) > .sdp-xat-avatar-icona {
+    width: var(--sdp-xat-avatar-mida);
+    height: var(--sdp-xat-avatar-mida);
+  }
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) > .sdp-avatar,
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) > .sdp-xat-apilat > .sdp-avatar { font-size: var(--sdp-text-h5); }
+  .sdp-xat-fila:not(.sdp-xat-fila--senzilla) > .sdp-xat-avatar-icona > svg {
+    width: var(--sdp-space-10);
+    height: var(--sdp-space-10);
   }
   @media (hover: hover) and (pointer: fine) {
     .sdp-xat-fila:hover,
@@ -4344,7 +4418,7 @@ details[open] summary.accordion-header svg:last-child {
 
 /* ═══ XAT · ONADA 3 (T63.2, T67, T68, T69) ═══════════════════════════════
    La columna de llista del patró de missatgeria (captures del Mestre,
-   260928): el «…» rodó de la fila de títol, la selecció de xats, el diàleg
+   260928): la selecció de xats (per pulsació llarga des del 261026), el diàleg
    «Nova conversa», la cerca global amb la llista vertical de filtres, les
    files de comunitat (avatar quadrat amb targetes apilades) i la fitxa de
    comunitat. El verd d'una marca aliena no es copia: l'acció és --sdp-accio (blau,
@@ -4352,29 +4426,10 @@ details[open] summary.accordion-header svg:last-child {
    semàntics, radis per token, espais de 0.25rem i zona tàctil --sdp-touch.
    ═══════════════════════════════════════════════════════════════════════ */
 @layer components {
-  /* El «…» rodó de la fila de títol (captura 19.12.18) i el seu menú, ancorat
-     a l'esquerra perquè el botó hi és. Sobre el crom fosc: fons de realç i
-     icona clara, com el «+» però sense competir amb l'acció principal. */
-  .sdp-xat-menu-llista { position: relative; flex: none; }
-  .sdp-xat-mes {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--sdp-touch);
-    height: var(--sdp-touch);
-    padding: 0;
-    border: 0;
-    border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-crom-realc);
-    color: var(--sdp-crom-text);
-    cursor: pointer;
-    flex: none;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-xat-mes:hover { background: var(--sdp-crom-hover); }
-  }
-  .sdp-xat-mes:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
-  .sdp-xat-menu--esquerra { right: auto; left: 0; transform-origin: top left; }
+  /* Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · El «…» rodó de
+     la fila de títol (MenuLlista) i el seu menú ancorat a l'esquerra s'han
+     retirat amb el component i les seues regles: la selecció de xats s'obri
+     amb la pulsació llarga sobre una fila (LlistaConverses). */
 
   /* BarraSeleccio (T68): el recompte a la fila del títol i una sola acció. */
   .sdp-xat-barra-seleccio__recompte { font-variant-numeric: tabular-nums; }
@@ -4660,6 +4715,18 @@ details[open] summary.accordion-header svg:last-child {
     max-inline-size: var(--sdp-targeta-viva-ample);
   }
   .sdp-xat-acces > .sdp-alerta__accions > .sdp-xat-pindola { flex: 1 1 0; width: auto; min-inline-size: max-content; }
+  /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38 i P1-37) ·
+     «Descarrega l'App», damunt de la parella: la píndola de sèrie (alçada
+     tàctil i 100%), com a molt l'amplària de la parella i amb el respir de
+     davall del text que abans portava la parella. Entre la píndola i la
+     parella, només el buit de l'alerta (gap: var(--sdp-space-3), el mateix que
+     entre «Connectar-se» i «Registrar-se»): la parella hi perd el seu marge de
+     dalt. Dins de l'app nativa no hi ha píndola i la parella el conserva. */
+  .sdp-xat-acces > .sdp-xat-acces__descarrega {
+    margin: var(--sdp-space-3) auto 0;
+    max-inline-size: var(--sdp-targeta-viva-ample);
+  }
+  .sdp-xat-acces > .sdp-xat-acces__descarrega + .sdp-alerta__accions { margin-top: 0; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu { display: flex; flex-direction: column; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > * { flex-shrink: 0; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > .sdp-xat-fitxa-comunitat { flex-grow: 1; min-height: 0; }
@@ -5200,15 +5267,7 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-especimen--carril { inline-size: 3.5rem; }
   .sdp-xat-especimen--baixa { block-size: auto; }
-  /* El «…» obert: el menú ix per davall de la fila de títol, i el marc li
-     deixa lloc en lloc de retallar-lo. */
-  .sdp-xat-especimen.sdp-xat-especimen--menu {
-    block-size: auto;
-    padding-bottom: var(--sdp-space-16);
-    overflow: visible;
-    border: 0;
-    background: transparent;
-  }
+  /* P1-36 (261026_2126) · El marc del «…» obert s'ha retirat amb MenuLlista. */
   .sdp-xat-especimen > .sdp-workspace-column { flex: 1 1 auto; min-height: 0; }
 
   /* ── El full «Ajustos» (torn 260930, T1; captures 20.47–21.05) ─────────
@@ -10111,6 +10170,8 @@ details[open] summary.accordion-header svg:last-child {
        El cos de lectura (18px) i els títols no canvien. La llista va dins de
        :where() perquè no pese més que una classe: les variants que ja eren
        negretes (700) ho continuen sent amb una regla pròpia, darrere.
+       §5 (261026_2126) · Els nivells 4, 5 i 6 de l'Índex hi entren tots
+       tres (600, 600 i 600): l'escala de l'H4 a l'H6 no torna a pujar.
      · Les ombres de sempre (Q6): cap vora substituta.
    Dins de @layer components: guanya a `legacy` per capa i a les regles de
    components per especificitat (l'atribut de :root o :host hi suma) o per
@@ -10134,7 +10195,7 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-connectar__nota, .sdp-connexio-resum__detall, .sdp-calaix-identitats__rol,
     .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
     .sdp-resultat-cerca__meta, .sdp-cerca__estat,
-    .toc-level-4 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
+    .toc-level-4 button, .toc-level-5 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
     .sdp-avisador-efimer, .sdp-chat-bubble-meta,
     .file-item-meta, .download-card-meta, .embed-caption, .upload-zone-sub,
     .stat-label, .divider-label, .pagination-label
@@ -10151,7 +10212,7 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-connectar__nota, .sdp-connexio-resum__detall, .sdp-calaix-identitats__rol,
     .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
     .sdp-resultat-cerca__meta, .sdp-cerca__estat,
-    .toc-level-4 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
+    .toc-level-4 button, .toc-level-5 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
     .sdp-avisador-efimer, .sdp-chat-bubble-meta,
     .file-item-meta, .download-card-meta, .embed-caption, .upload-zone-sub,
     .stat-label, .divider-label, .pagination-label

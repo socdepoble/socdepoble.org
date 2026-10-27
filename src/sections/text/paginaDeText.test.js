@@ -489,3 +489,18 @@ test('propsDePaginaDeText: les de TextSection (hero resolt, etiquetes, drets i d
   expect(senseRes).toMatchObject({ time: '', date: '', dateTime: '' });
   expect(propsDePaginaDeText({ title: 'X' }, 'x').labels[1].text).toBe('Pàgina');
 });
+
+/* Ordre del Mestre (261027; verificació dels retocs) · Dins de l'app nativa,
+   una pàgina només web (Descàrregues) no es resol: el lector de connexions i
+   la targeta incrustada no la pinten, com la ruta. Les altres, igual. */
+test('261027 · dins de l’app nativa, /page/descarregues no es resol; /page/xat, sí', () => {
+  expect(paginaDeRuta('/page/descarregues')).toEqual({ pageKey: 'descarregues', page: PAGE_COPY.descarregues });
+  expect(paginaDeRuta('/page/descarregues', { nativa: true })).toBeNull();
+  expect(paginaDeRuta('/page/xat', { nativa: true })).toEqual({ pageKey: 'xat', page: PAGE_COPY.xat });
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    expect(paginaDeRuta('/page/descarregues')).toBeNull();
+  } finally {
+    delete window.Capacitor;
+  }
+});

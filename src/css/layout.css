@@ -56,8 +56,11 @@
   /* Ordre del Mestre, 261004 (integració final, auditoria d'amfitrió) · Encastat,
      l'Índex de la Pàgina Universal es pinta dins de .sdp-root (PageFrame), com
      els diàlegs: el vel ocupa la caixa de l'App, no 100vw x 100vh de la pàgina
-     de WordPress. Guanya al .toc-overlay de modules.css (capa legacy). */
-  :host .toc-overlay { inset: 0; width: auto; height: auto; }
+     de WordPress. Guanya al .toc-overlay de modules.css (capa legacy).
+     Ordre del Mestre (261026_2126, pla 261026_1615 §5) · Com a la SPA, naix
+     davall de la barra negra de l'App, que és dalt de tot de la caixa: el
+     mateix calc que la seua alçada. */
+  :host .toc-overlay { inset: calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px)) 0 0; width: auto; height: auto; }
 }
 
 @layer legacy {

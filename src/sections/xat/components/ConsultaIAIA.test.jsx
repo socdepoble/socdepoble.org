@@ -150,3 +150,20 @@ test('en anglés, la salutació de la consulta és la del diccionari', () => {
   expect(screen.getByText(EN['section.xat.iaia.salutacio'])).toBeTruthy();
   expect(screen.queryByText(SALUTACIO_TECNICA_IAIA)).toBeNull();
 });
+
+/* Ordre del Mestre (261026_2126; P1-37) · «Pregunta a la IAIA» ja no va
+   enganxat al compositor ni a les vores de la conversa: la píndola de sèrie,
+   amb el seu modificador, respira amb els espais de la reixeta (16px als
+   costats, 12px dalt i baix) i el contenidor li dona l'amplària. La funció
+   no canvia: obri el diàleg. jsdom no pinta: es comprova la regla escrita. */
+test('P1-37 · la píndola de la IAIA respira: marges de la reixeta, amplària del contenidor, la mateixa funció', () => {
+  munta(vi.fn());
+  const boto = screen.getByRole('button', { name: 'Pregunta a la IAIA' });
+  expect([...boto.classList]).toEqual(['sdp-xat-pindola', 'sdp-xat-pindola--iaia']);
+  const propi = readFileSync(resolve(process.cwd(), 'src/sections/xat/components/ConsultaIAIA.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const bloc = propi.slice(propi.indexOf('.sdp-xat-pindola.sdp-xat-pindola--iaia')).match(/\{([^}]*)\}/)[1];
+  expect(bloc.split(';').map((d) => d.trim().replace(/\s+/g, ' ')).filter(Boolean).sort())
+    .toEqual(['margin-block: var(--sdp-space-3)', 'margin-inline: var(--sdp-space-4)', 'width: auto']);
+  fireEvent.click(boto);
+  expect(screen.getByLabelText('Què necessites saber?')).toBeTruthy();
+});

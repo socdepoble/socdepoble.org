@@ -63,8 +63,12 @@ test('barra taronja universal · desplegables i Explorador deixen lloc a la blav
   expect(moduls).not.toContain(UNA_BARRA);
 });
 
-test('T2 · els nivells 5 i 6 de l’Índex van sagnats, al costat dels altres nivells (@layer legacy)', () => {
+/* Ordre del Mestre (261026_2126, pla 261026_1615 §5) · L'escala harmònica de
+   l'Índex: l'H4 també va sagnat (8px) i l'H5, amb el sagnat de sempre (16px)
+   i les xifres tabulars, baixa de 700 a 500, l'esglaó que li toca. */
+test('T2 · els nivells 4, 5 i 6 de l’Índex van sagnats, al costat dels altres nivells (@layer legacy)', () => {
   const legacy = blocDe(moduls, '@layer legacy {', '.toc-level-4 button {');
-  expect(legacy).toContain('.toc-level-5 button { padding-left: calc(var(--sdp-space-2) + var(--sdp-space-4)); font-weight: 700; color: var(--sdp-text-cos); font-variant-numeric: tabular-nums; }');
+  expect(legacy).toContain('.toc-level-4 button { padding-left: calc(var(--sdp-space-2) + var(--sdp-space-2)); font-weight: 500; font-size: 0.95rem; color: var(--sdp-text-cos); }');
+  expect(legacy).toContain('.toc-level-5 button { padding-left: calc(var(--sdp-space-2) + var(--sdp-space-4)); font-weight: 500; color: var(--sdp-text-cos); font-variant-numeric: tabular-nums; }');
   expect(legacy).toContain('.toc-level-6 button { padding-left: calc(var(--sdp-space-2) + var(--sdp-space-6)); font-weight: 400; color: var(--sdp-text-suau); }');
 });

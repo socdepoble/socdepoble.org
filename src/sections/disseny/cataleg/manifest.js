@@ -137,9 +137,9 @@ const FONAMENTS = [
     'Les peces del Xat tal com es munten sobre AppGridShell: fila de conversa, bombolles, marques d’estat, la capçalera de la conversa (també d’una pàgina i dels Avisos) i el compositor.',
     'capcalera sobre participants avisos megafon xat public pagina'),
   /* Onada 3B (Pedra Seca §9) · les peces noves del Xat, cadascuna amb el seu espècimen. */
-  especimen('fonaments', 'xat-llista', 'Xat · llista de converses', 'MenuLlista · BarraSeleccio · FilaConversa · FilaComunitat', ['organisme', 'xat', 'llista'],
-    'La columna de llista amb el patró estàndard de missatgeria: el «…» amb «Seleccionar xats», la barra de la selecció i les files de grup, de comunitat i de canal.',
-    'seleccionar xats casella comunitat canal avisos grup megafon'),
+  especimen('fonaments', 'xat-llista', 'Xat · llista de converses', 'LlistaConverses · BarraSeleccio · FilaConversa · FilaComunitat', ['organisme', 'xat', 'llista'],
+    'La columna de llista amb el patró estàndard de missatgeria: la pulsació llarga que obri «Seleccionar xats», la barra de la selecció i les files de grup, de comunitat i de canal.',
+    'seleccionar xats pulsacio llarga casella comunitat canal avisos grup megafon'),
   especimen('fonaments', 'xat-cerca', 'Xat · cerca global', 'FiltresCerca · ResultatsCercaXat · la fitxa del filtre', ['organisme', 'xat', 'cerca'],
     'La cerca del Xat: la llista vertical de filtres, la fitxa del filtre dins del camp i els resultats en tres grups, amb els estats buits que diuen la veritat.',
     'filtres fotos enllacos resultats persones missatges'),

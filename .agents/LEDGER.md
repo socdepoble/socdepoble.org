@@ -1058,4 +1058,9 @@ Patch655021f3 real aplicat només en còpia:6casos reexecutats, C0145-03stagedCO
 Ordre humana prompt mestre 0210 executada amb plans CAS i leases. Skills fase1 hash7df, harmonització13/cens40 hashb9af; índex72línies/268àncores,44fitxers evacuats amb hashes. Consola: exempció canònica, parser, mètriques fail closed, caducitat109 amb locks/CAS sense verification nova; rebutjat llegat expire-close com prova. Recuperació revisada de connectivity amb evidència80fc6d64, cap font/segell reescrits. Cens480fitxers/390imatges/92candidates, assets intactes; guió antic substituït per corredor segur. Precommit final3151+262=3413 verd, Consola889/4omissions, Node93 i política9. SCC1428→209links,0orfes/0senseàncora; dos automatismes morts i informeClaude0230 en curs encara limiten el verd. Guàrdia aturada, servidor reprès, cap cron propi ni remot/SQL/secret/commit/push. Historial anterior preservat; hash recalculat només per afegir esta entrada.
 
 
-<!-- HASH: 99cf03dc6c5c072d3bc43c5446f7b8b3baaf27e1c80de6fa34bd250172872bb2 -->
+## 2026-10-26T18:53:23.097Z · Codex · Gauntlet Compartir natiu · torn_b65d699d-9390-455d-9904-1d80121da006
+
+Informe261026_1615_auditoria_codex validat i Llibre/ESTAT actualitzats. Quatre bloquejants: aïllament entre comptes, consum destructiu abans de preparar, inbox iOS no recuperable i provider Android que immobilitza la cua. Cinc sondes web reexecutades amb lògica real i dobles explícits; natiu és revisió de codi/APK existent, sense prova física ni nou build. Precommit3171Vitest+262Node, Node49/2omissions, dirigides193/2omissions; bateries solapades. Contrast Claude i Gemini; no consens de publicació, neteja de sessió declarada per Gemini absent al codi. Cap font de producte, dependència, secret, remot, SQL, commit/push/desplegament, carpeta nova ni cron propi. Fonts57sensecanvis al tall; processos/suites propis acabats. Tancament global Wiki/SCC continua roig; no es relaxa ni es fabrica verification. Cos anterior preservat i checksum previ comprovat; hash nou només per afegir este relleu.
+
+
+<!-- HASH: 00c29e99acfa75691a2118f4666fad68f8c70efca554bb3e4211f291229ac20f -->

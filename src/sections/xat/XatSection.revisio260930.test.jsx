@@ -290,10 +290,13 @@ test.each([[600, 'estret'], [800, 'mitja']])('XAT-01 · a %ipx (%s) la llista pr
 
 /* ─────────── P2/P3 · Escape d'un diàleg i «Seleccionar xats» ─────────── */
 
+/* Ordre del Mestre (261026_2126, P1-36) · Sense el «…»: Maj+F10 (el camí del
+   teclat de la pulsació llarga) sobre la primera fila triable, que hi naix triada. */
 function entraEnSeleccioAmbUnaTriada() {
-  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
-  fireEvent.click(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox')[0]);
+  const fila = screen.getByRole('list', { name: 'Converses' }).querySelector('li[data-clau] > button[aria-keyshortcuts]');
+  fila.focus();
+  fireEvent.keyDown(fila, { key: 'F10', shiftKey: true });
+  expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox')[0].getAttribute('aria-checked')).toBe('true');
   expect(screen.getByText('1 seleccionada')).toBeTruthy();
 }
 

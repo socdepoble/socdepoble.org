@@ -37,7 +37,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 
 2026-10-09T05:24:22.569Z: esborrany creat; contingut i verificació pendents.
 
-2026-10-09T05:30Z: acta completada per Claude al final de l'Onada 6. Inici observat del torn: 2026-10-09T01:09Z (03:09). Final observat: 2026-10-09T05:30Z (07:30). L'informe complet és [[261009_0310_auditoria_claude]].
+2026-10-09T05:30Z: acta completada per Claude al final de l'Onada 6. Inici observat del torn: 2026-10-09T01:09Z (03:09). Final observat: 2026-10-09T05:30Z (07:30). L'informe complet és `261009_0310_auditoria_claude`.
 
 <!-- SDP:SECTION acta.s4 -->
 ## Resultats
@@ -96,7 +96,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 **Estat final.** El codi de l'Onada 6 és a l'arbre sense commit, i la bateria del producte és verda. El navegador integrat queda sense pestanyes de proves.
 
 **Primer de tot en el pròxim torn:**
-1. `[ ]` Revisar l'auditoria [[261009_0310_auditoria_claude]] i fer el commit de les Onades 5 i 6.
+1. `[ ]` Revisar l'auditoria `261009_0310_auditoria_claude` i fer el commit de les Onades 5 i 6.
 2. `[ ]` Abans de dilluns: crear el cofre, signar `gestoria.historic` i carregar els N43 (passos a «Per al Mestre» de l'auditoria).
 3. `[ ]` Decidir el sostre de `pesDelNucli.test.js` abans del pròxim build.
 4. `[ ]` Aprovar i aplicar amb lease els dos laboratoris, i instal·lar el cron d'higiene.

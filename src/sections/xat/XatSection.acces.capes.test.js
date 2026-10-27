@@ -139,3 +139,28 @@ test('261026 · en una pantalla baixa ja cap regla de píndola: comparteixen fil
     expect(valor(`${ACCIONS} > .sdp-xat-pindola`, 'width', bloc)).toBeNull();
   }
 });
+
+/* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38 i P1-37) ·
+   «Descarrega l'App», damunt de la parella: la píndola de sèrie (alçada
+   tàctil i 100%) fins a l'amplària de la parella, amb el respir de davall de
+   la frase que abans portava la parella. Entre la píndola i la parella, només
+   el buit de l'alerta, el mateix que entre «Connectar-se» i «Registrar-se». */
+const DESCARREGA = '.sdp-xat-acces > .sdp-xat-acces__descarrega';
+const components = readFileSync(resolve(process.cwd(), 'src/css/components.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
+test('261026_2126 · «Descarrega l’App» és la píndola de sèrie: alçada tàctil i, com a molt, l’amplària de la parella', () => {
+  expect(valor('.sdp-xat-pindola', 'min-height')).toBe('var(--sdp-touch)');
+  expect(valor('.sdp-xat-pindola', 'width')).toBe('100%');
+  expect(valor(DESCARREGA, 'max-inline-size')).toBe(valor(ACCIONS, 'max-inline-size'));
+  expect(valor(DESCARREGA, 'margin')).toBe('var(--sdp-space-3) auto 0');
+  expect(valor(ACCIONS, 'margin')).toBe('var(--sdp-space-3) auto 0');
+  /* Cap regla no li desfà l'amplària ni l'alçada de sèrie. */
+  for (const propietat of ['width', 'min-height', 'height', 'flex']) expect(valor(DESCARREGA, propietat), propietat).toBeNull();
+});
+
+test('261026_2126 · P1-37 · entre «Descarrega l’App» i la parella, només el buit de l’alerta', () => {
+  expect(valor(`${DESCARREGA} + .sdp-alerta__accions`, 'margin-top')).toBe('0');
+  expect(valor('.sdp-alerta', 'gap', components)).toBe('var(--sdp-space-3)');
+  expect(valor('.sdp-alerta.sdp-xat-acces', 'gap')).toBeNull();
+  expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-space-3)');
+});

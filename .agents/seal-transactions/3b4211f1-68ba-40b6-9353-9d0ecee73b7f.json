@@ -1,0 +1,17 @@
+{
+  "id": "3b4211f1-68ba-40b6-9353-9d0ecee73b7f",
+  "session": "60618c15-2010-43aa-be54-3d0b90f7a1ea",
+  "operationId": "codex-gauntlet-r5-estat-261027",
+  "claim": "60618c15-2010-43aa-be54-3d0b90f7a1ea:governance-write",
+  "planHash": "f0fbe5cd91b726e1ea36dd73094b7a6618999fbe8fdfbd591fa7d16ff69f7451",
+  "beforeSeal": "daf1cd4dcbd0928bfeb31cda56230ca8a8a77552fbe0826f4a02cd98b5ede5b1",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "18a5ea89ee9cea1c38b753b2443ecbb45085146c7b7d3889a2aa3598ebd80002",
+      "after": "c594749e33fadca80a9279ad1bba8d8a6e55b1dfc6382c3066a6e62b8cd2b0e4"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "ae58ddf01b597754c8ce3952b4c63ada64298d158fb6af870db4d2ad506c4be1"
+}

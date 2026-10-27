@@ -24,7 +24,7 @@ import { describe, expect, test } from 'vitest';
 import '../../tests/helpers/diccionaris.js';
 import fontApp from '../app/App.jsx?raw';
 import { RUTA_CONSOLA, segmentPagina } from '../sections/consola/consolaPagines.js';
-import { RUTA_DRETS_AUTOR, SYSTEM_PAGES, accioAlFinal, accioDeLaPagina, accioDeLaTargeta } from './systemPages.js';
+import { RUTA_DRETS_AUTOR, SYSTEM_PAGES, accioAlFinal, accioDeLaPagina, accioDeLaTargeta, esPaginaVisible } from './systemPages.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { IDS_PLUGINS, RUTA_PLUGINS } from '../sections/plugins/registrePlugins.js';
 import { createTranslator } from './i18n.js';
@@ -185,6 +185,87 @@ describe('Onada 10 · el botó de la targeta, el del final de la pàgina i les e
     expect(IDS_PLUGINS).toEqual(expect.arrayContaining(['rebost', 'salut']));
     expect(CLAUS.filter((clau) => IDS_PLUGINS.includes(clau))).toEqual([]);
     expect(SYSTEM_PAGES.filter((pagina) => pagina.href.startsWith(`${RUTA_PLUGINS}/`)).map((pagina) => pagina.key)).toEqual([]);
+  });
+});
+
+/* Ordre del Mestre (261026_2126; prompt i pla 261026_2130, tasca 1; P1-38) ·
+   «Descàrregues i Aplicacions» és una pàgina del sistema més: /page/descarregues
+   (PageDetailSection, sense component propi), sense acció gran (el prompt diu
+   `accio: null`; ometre-la és el mateix), i /descarregues n'és l'adreça
+   curta, una redirecció d'App.jsx.
+   Revisió (261026_2126, segona volta) · La redirecció ja no s'ancora al
+   literal de la font: la prova src/app/App.descarregues.test.jsx munta l'app
+   de veres a /descarregues i hi veu /page/descarregues i l'H1. */
+describe('261026_2126 · Descàrregues i Aplicacions', () => {
+  test('viu a /page/descarregues, sense acció gran ni ruta canònica que la torne a redirigir', () => {
+    expect(SYSTEM_PAGES.find((pagina) => pagina.key === 'descarregues')).toEqual({ key: 'descarregues', isAvis: false, href: '/page/descarregues', nomesWeb: true });
+    expect(accioDeLaPagina('descarregues')).toBeNull();
+    expect(accioDeLaTargeta('descarregues')).toBeNull();
+    expect(accioAlFinal('descarregues')).toBe(false);
+    /* Sense ruta canònica: /page/descarregues no redirigix a /descarregues,
+       que hi redirigix (cap bucle). */
+    expect(resolvePageSlugPath('descarregues')).toBeNull();
+  });
+
+  /* Ordre del Mestre (261027; auditoria Gauntlet R5, G1-01 i G5-01) · Dins de
+     l'app nativa no hi és: nomena Android, Google Play i l'APK (regla 2.3.10
+     de l'App Store). És l'única pàgina només web. */
+  test('esPaginaVisible: a la web, totes; dins de l’app nativa, totes menys les només web', () => {
+    expect(SYSTEM_PAGES.filter((pagina) => pagina.nomesWeb).map((pagina) => pagina.key)).toEqual(['descarregues']);
+    expect(SYSTEM_PAGES.filter((pagina) => !esPaginaVisible(pagina.key)).map((pagina) => pagina.key)).toEqual([]);
+    expect(SYSTEM_PAGES.filter((pagina) => !esPaginaVisible(pagina.key, { nativa: true })).map((pagina) => pagina.key)).toEqual(['descarregues']);
+    // Una clau que no és de SYSTEM_PAGES no es decidix ací.
+    expect(esPaginaVisible('una-nota-qualsevol', { nativa: true })).toBe(true);
+  });
+
+  test('el copy: títol del Mestre, data de l’ordre, la imatge sense text (no la «gamberro») i les tres etiquetes', () => {
+    const copy = PAGE_COPY.descarregues;
+    expect(copy).toMatchObject({
+      date: '2026-10-26T22:07:00+01:00',
+      title: 'Descàrregues i Aplicacions',
+      image: '/assets/uploads/brain/nano_descarregues_app.webp',
+      imageWidth: 1024,
+      imageHeight: 1024,
+      imageFetchPriority: 'high'
+    });
+    expect(existsSync(path.join(process.cwd(), 'public', copy.image))).toBe(true);
+    expect(copy.imageAlt.trim().length).toBeGreaterThan(20);
+    /* Revisió (261026_2126, segona volta) · L'alt diu el que pinta la imatge:
+       el que cau a la cistella són robotets i cervellets amb potetes, no xips. */
+    expect(copy.imageAlt).toContain('robotets i cervellets amb potetes');
+    expect(copy.imageAlt).not.toMatch(/xips/i);
+    expect(copy.labels).toEqual([
+      { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: 'Descàrregues', className: 'sdp-badge-category' },
+      { text: 'Multiplataforma', className: 'sdp-badge-tag' }
+    ]);
+  });
+
+  /* Cap botiga ni cap APK no és oberta a tothom (actes 261024_0345 i
+     261026_1630): la pàgina no porta cap enllaç extern, ni el de proves
+     internes de Google Play. Quan el Mestre done les adreces públiques,
+     esta prova canvia amb elles. */
+  test('honestedat: cap enllaç a una botiga ni a un APK que encara no són públics', () => {
+    const { html } = PAGE_COPY.descarregues;
+    expect(html).not.toMatch(/https?:\/\//i);
+    expect(html).not.toMatch(/play\.google\.com|apps\.apple\.com|testflight\.apple\.com|internaltest/i);
+    for (const cami of ['Google Play', 'APK', 'TestFlight', 'App Store', 'Windows, Mac i Linux', 'CRDT', 'ADR-2026-08']) {
+      expect([cami, html.includes(cami)]).toEqual([cami, true]);
+    }
+    expect(html).toContain('hui això és una visió, no una funció');
+  });
+
+  /* Revisió (261026_2126, segona volta) · De cada camí, el que diuen les actes
+     i res més: de TestFlight, que la 1.0.0 (1) «ja està disponible per a
+     instal·lar» per al grup intern (acta 261026_1630), no que ja l'usen; de
+     l'APK, el fet i on eixirà l'enllaç, sense cap consell que ningú no ha
+     demanat. */
+  test('honestedat: de TestFlight i de l’APK, només el fet', () => {
+    const { html } = PAGE_COPY.descarregues;
+    expect(html).toContain('ja la pot instal·lar el grup de treball intern');
+    expect(html).not.toContain('la fa servir el grup');
+    expect(html).toContain("<strong>Hui encara no hi ha cap APK públic de Sóc de Poble.</strong> Quan n'hi haja un, l'enllaç oficial eixirà en esta pàgina.");
+    expect(html).not.toContain('no instal·les');
   });
 });
 

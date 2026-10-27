@@ -119,10 +119,10 @@ Com a continuació directa del missatge del dissabte 3 d'octubre (on es deia *"E
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261017_2133_auditoria_codex_final_gauntlet]]
-- [[261017_2133_acta_tancament_codex_gauntlet]]
-- [[261017_1526_auditoria_claude]]
-- [[261017_1529_auditoria_gemini4]]
+- `261017_2133_auditoria_codex_final_gauntlet`
+- `261017_2133_acta_tancament_codex_gauntlet`
+- `261017_1526_auditoria_claude`
+- `261017_1529_auditoria_gemini4`
 - [[03_llibre_d_or_memoria_episodica]]
 - [[memoria_aprenentatges]]
 

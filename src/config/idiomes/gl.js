@@ -19,6 +19,7 @@ export default {
   'section.xat.iaia.salutacio': "Agora non estou para parvadas, pero si que podo responderche preguntas técnicas e explicarche como funciona calquera recuncho do pobo.",
   'section.xat.sessio.connectar': "Conectarse",
   'section.xat.sessio.registrar': "Rexistrarse",
+  'section.xat.sessio.descarregar': "Descarga a app",
   'section.xat.iaia.cortesia': "Benvida automática. Só se mostra aquí; non é unha resposta gardada no chat compartido.",
 
   'section.xat.sessio.calEntrar': 'Benvida a Sóc de Poble',
@@ -1468,8 +1469,7 @@ export default {
   'section.xat.compartir.entesos': 'Entendido',
   'section.xat.adjunts.peu': 'Texto do ficheiro (opcional)',
   'section.xat.adjunts.peuPlaceholder': 'Engade un texto…',
-  'section.xat.mesOpcions': 'Máis opcións',
-  'section.xat.seleccio.xats': 'Seleccionar chats',
+  'section.xat.seleccio.pista': 'Mantén premida unha conversa, fai clic co botón dereito ou preme Maiús+F10 para seleccionar chats.',
   'section.xat.seleccio.triaXats': 'Escolle os chats',
   'section.xat.seleccio.unaSeleccionada': '1 seleccionada',
   'section.xat.seleccio.seleccionades': '{n} seleccionadas',

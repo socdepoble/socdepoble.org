@@ -78,6 +78,18 @@ const OBRIR_CERVELL = Object.freeze({
  * Cervell i Disseny) a «Maquinària i Sistema»: ixen del Panell i les seues
  * targetes viuen només al Mur (i al Calendari i incrustades), sense botó i
  * amb Categoria i Etiqueta.
+ * Ordre del Mestre (261026_2126; prompt i pla 261026_2130, tasca 1; P1-38) ·
+ * «Descàrregues i Aplicacions» viu a /page/descarregues (PageDetailSection,
+ * sense component propi) i la seua targeta ix al Mur com les germanes.
+ * /descarregues n'és l'adreça curta (App.jsx, una redirecció) i la porta el
+ * botó «Descarrega l'App» de l'accés sense sessió del Xat (AccesAlXat). Sense
+ * acció gran: el prompt diu `accio: null`, i ometre-la és el mateix
+ * (accioDeclarada torna null), com Drets d'autor.
+ * Ordre del Mestre (261027; auditoria Gauntlet R5, G1-01 de Gemini i G5-01 de
+ * Codex) · Dins de l'app nativa no hi és: ni la targeta ni la pàgina. Nomena
+ * Android, Google Play i l'APK, i la regla 2.3.10 de l'App Store no admet
+ * noms d'altres plataformes dins de l'app; amagar només el botó no bastava.
+ * Ho diu la marca `nomesWeb` del descriptor (esPaginaVisible).
  */
 export const SYSTEM_PAGES = Object.freeze([
   { key: 'projecte', isAvis: false, href: '/projecte' },
@@ -91,8 +103,21 @@ export const SYSTEM_PAGES = Object.freeze([
   { key: 'versions', isAvis: false, href: '/versions' },
   { key: 'legal', isAvis: false, href: '/legal' },
   { key: 'xat', isAvis: false, href: '/page/xat', accio: ANAR_AL_XAT },
-  { key: 'drets-autor', isAvis: false, href: '/page/drets-autor' }
+  { key: 'drets-autor', isAvis: false, href: '/page/drets-autor' },
+  { key: 'descarregues', isAvis: false, href: '/page/descarregues', nomesWeb: true }
 ].map((page) => Object.freeze(page)));
+
+/**
+ * Ordre del Mestre (261027) · Si la pàgina del sistema `clau` es mostra: una
+ * pàgina `nomesWeb` no ix dins de l'app nativa (ni al Mur, ni al Calendari,
+ * ni per la seua ruta). Pur: qui crida diu si és l'app nativa (esAppNativa,
+ * config/origenPublic.js), perquè este mòdul no importa res. Una clau que no
+ * és de SYSTEM_PAGES no la decidix ací: es mostra.
+ */
+export function esPaginaVisible(clau, { nativa = false } = {}) {
+  if (!nativa) return true;
+  return SYSTEM_PAGES.find((pagina) => pagina.key === clau)?.nomesWeb !== true;
+}
 
 /**
  * Ordre del Mestre (261007) · On porta el copyright d'una targeta

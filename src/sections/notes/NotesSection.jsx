@@ -737,6 +737,12 @@ export default function NotesSection() {
         listClassName="sdp-bloc-list--notes"
         detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
         accionsLlista={accionsLlista}
+        /* Ordre del Mestre (261026_2126, pla 261026_1615 §6) · Fora la
+           carpeta de l'esquerra de NOTES en «mitja»: duplicava la del rail
+           fix i trencava l'eix vertical (la icona de NOTES cau ara a plom
+           damunt de la lupa). L'espai la conserva on és l'única porta a
+           CARPETES (en «estret», la llista oberta tapa el rail). */
+        obridorALaLlista={false}
       />
       </ProveidorSincronitzacioTargetes>
       {/* Selector d'emojis com a subvista / pàgina dedicada de columna (PaginaEmojis),

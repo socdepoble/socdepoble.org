@@ -4,7 +4,7 @@
  *
  * La llista és TANCADA (data/traductor.js): Castellà, Anglés, Francés i
  * Alemany i, quan la pàgina ja està traduïda, «Original (valencià)».
- * El mateix patró que els menús del Xat (FiltreConverses, MenuLlista):
+ * El mateix patró que els menús del Xat (FiltreConverses; MenuLlista, retirat el 261026):
  * role=menu amb menuitemradio i la triada marcada; es tanca en triar, en
  * clicar fora o amb Escape, sense tocar document.body. Les escoltes van a
  * l'arrel del node (getRootNode): dins del Shadow DOM de WordPress, l'arrel

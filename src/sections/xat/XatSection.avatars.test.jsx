@@ -410,6 +410,42 @@ test.each([null, 'fake-javi', 'fake-iaia'])('sense sessió els botons d’accés
   }
 });
 
+/* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38) · Damunt
+   de la parella, «Descarrega l'App»: la píndola de sèrie, entre la frase i la
+   parella, una sola a la pantalla (també al peu d'un fil), porta a
+   /descarregues, l'adreça curta de la pàgina (App.jsx). */
+test.each([null, 'fake-iaia'])('sense sessió, «Descarrega l’App» va damunt de la parella i porta a /descarregues (fil %s)', (filId) => {
+  mocks.threadId = filId;
+  munta(senseSessio());
+  expect(screen.getAllByRole('button', { name: "Descarrega l'App" })).toHaveLength(1);
+  const boto = screen.getByRole('button', { name: "Descarrega l'App" });
+  expect([...boto.classList]).toEqual(['sdp-xat-pindola', 'sdp-xat-acces__descarrega']);
+  expect(boto.getAttribute('type')).toBe('button');
+  const acces = document.querySelector('.sdp-xat-acces');
+  expect(boto.parentElement).toBe(acces);
+  expect(boto.previousElementSibling.tagName).toBe('P');
+  expect(boto.nextElementSibling.classList.contains('sdp-alerta__accions')).toBe(true);
+  expect([...acces.querySelectorAll('button')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Connectar-se', 'Registrar-se']);
+  fireEvent.click(boto);
+  expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/descarregues');
+});
+
+/* Dins de l'app nativa (el pont de Capacitor que el WebView injecta, el que
+   llig esAppNativa), oferir-ne la descàrrega no té sentit: només la parella. */
+test('dins de l’app nativa, l’accés no oferix «Descarrega l’App»: només la parella', () => {
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    munta(senseSessio());
+    expect(screen.queryByRole('button', { name: "Descarrega l'App" })).toBeNull();
+    expect(document.querySelector('.sdp-xat-acces__descarrega')).toBeNull();
+    const acces = document.querySelector('.sdp-xat-acces');
+    expect([...acces.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Connectar-se', 'Registrar-se']);
+  } finally {
+    delete window.Capacitor;
+  }
+});
+
 /* El peu de l'accés (l'únic de la pantalla) si és l'últim fill del cos amb
    scroll de la columna central; si no, falla. */
 function peuDAccesAlCos() {
@@ -474,7 +510,8 @@ test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
   expect(cos.querySelector('.sdp-workspace-state').textContent).toBe('Cap conversa amb este filtre.');
   // Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · La benvinguda substituïx la crida a entrar.
   expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Benvinguda a Sóc de Poble')).toHaveLength(1);
-  expect([...cos.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Connectar-se', 'Registrar-se']);
+  // Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · «Descarrega l'App», damunt de la parella.
+  expect([...cos.querySelectorAll('button')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Connectar-se', 'Registrar-se']);
 });
 
 test('el fil remot de la IAIA porta la benvinguda oficial, sense afegir missatges al servidor', () => {

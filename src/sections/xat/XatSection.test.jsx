@@ -16,6 +16,7 @@ import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
 import { RUTA_XAT_DE_LA_IAIA } from './useObriXatPerDefecte.js';
 import { RUTA_SOBRE_DE_SOC_DE_POBLE } from './actorsDelXat.js';
 import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
+import { DURADA_PULSACIO } from '../../components/PedraSeca/organismes/pulsacioLlarga.js';
 
 const mocks = vi.hoisted(() => ({
   creaNota: vi.fn(),
@@ -813,11 +814,15 @@ test('el drag parteix de l’amplària visible quan la desada supera l’espai d
 
 /* D5 (ordre del Mestre, 260927) i onada 3 (260928, captures 19.11.50 i
    19.12.18): la columna de la llista seguix el patró de missatgeria. De dalt
-   a baix, una sola fila de títol amb el «…» rodó a l'esquerra del títol i el «+» rodó a la
-   dreta, la cerca en píndola sempre a la vista (amb la icona de filtre a la
-   mateixa línia, T12) i la llista; el diàleg «Nova conversa» viu al final de
-   la columna i no ocupa cap fila (és un <dialog> tancat). */
-test('la llista seguix el patró de missatgeria: «…» i títol a l’esquerra, «+» a la dreta, cerca en píndola amb filtre i llista', () => {
+   a baix, una sola fila de títol amb el títol i el «+» rodó a la dreta, la
+   cerca en píndola sempre a la vista (amb la icona de filtre a la mateixa
+   línia, T12) i la llista; el diàleg «Nova conversa» viu al final de la
+   columna i no ocupa cap fila (és un <dialog> tancat).
+   Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · Sense el «…»
+   inventat de l'esquerra (MenuLlista): la selecció de xats s'obri amb la
+   pulsació llarga. El desplegable de filtres continua a la línia de la cerca,
+   tal com estava: el Mestre hi guanya 48px a la referència. */
+test('la llista seguix el patró de missatgeria: títol sense «…», «+» a la dreta, cerca en píndola amb filtre i llista', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const columna = document.getElementById('app-grid-list').querySelector('.sdp-workspace-column');
@@ -825,21 +830,32 @@ test('la llista seguix el patró de missatgeria: «…» i títol a l’esquerra
     'app-grid-col-header', 'sdp-xat-cerca', 'sdp-workspace-column__body', 'sdp-dialeg'
   ]);
   expect(columna.querySelector('dialog.sdp-dialeg').hasAttribute('open')).toBe(false);
-  expect(columna.querySelector('.sdp-xat-cerca .sdp-xat-filtre__boto')).toBeTruthy();
   const fila = columna.firstElementChild;
   const nova = screen.getByRole('button', { name: 'Nova conversa' });
   expect(nova.classList.contains('sdp-xat-nova')).toBe(true);
   expect(nova.getAttribute('aria-haspopup')).toBe('dialog');
-  const mes = within(fila).getByRole('button', { name: 'Més opcions' });
-  expect(mes.getAttribute('aria-haspopup')).toBe('menu');
-  /* Ordre del DOM = ordre visual: «…», títol i «+». */
+  /* P1-36 · Cap «…» a la fila 1: ni el botó ni el seu menú ni les seues classes. */
+  expect(within(fila).queryByRole('button', { name: 'Més opcions' })).toBeNull();
+  expect(fila.querySelector('.sdp-xat-mes, .sdp-xat-menu-llista, [aria-haspopup="menu"]')).toBeNull();
+  /* Ordre del DOM = ordre visual: títol i «+». */
   const titol = within(fila).getByText('Converses');
   const abans = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-  expect(abans(mes, titol)).toBe(true);
   expect(abans(titol, nova)).toBe(true);
   expect(fila.contains(nova)).toBe(true);
   /* El «⋯» de la conversa oberta és un altre menú: ací no n'hi ha. */
   expect(screen.queryByRole('button', { name: 'Opcions de la conversa' })).toBeNull();
+
+  /* La cerca i la icona de filtre (ListFilter), germanes a la mateixa línia;
+     el desplegable porta Tot · No llegits · Preferits · Grups. */
+  const cerca = columna.querySelector('.sdp-xat-cerca');
+  const filtre = within(cerca).getByRole('button', { name: 'Filtra les converses' });
+  expect(filtre.classList.contains('sdp-xat-filtre__boto')).toBe(true);
+  expect(filtre.querySelector('svg.lucide-list-filter')).not.toBeNull();
+  expect([...cerca.children].map((n) => n.classList[0])).toEqual(['sdp-xat-cerca__camp', 'sdp-xat-filtre']);
+  expect(cerca.querySelector('.sdp-xat-cerca__camp input[type="search"]')).not.toBeNull();
+  fireEvent.click(filtre);
+  const opcions = within(within(cerca).getByRole('menu', { name: 'Filtra les converses' })).getAllByRole('menuitemradio');
+  expect(opcions.map((o) => o.textContent)).toEqual(['Tot', 'No llegits', 'Preferits', 'Grups']);
 });
 
 /* T69 (captura 19.13.56): escriure busca a tot arreu amb cercaXat i pinta els
@@ -930,39 +946,55 @@ test('el «+» obri el diàleg «Nova conversa» amb el cercador enfocat, i un c
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-/* T68 (captura 19.12.18): el «…» obri un menú amb una sola opció. En triar
-   «Seleccionar xats», cada fila és una casella i la fila de títol, la barra de
-   selecció; «Marcar com a llegides» crida marcaLlegides (una comunitat, amb
-   els ids dels seus fills). Escape ix. */
-test('T68 · «Seleccionar xats»: caselles, recompte i «Marcar com a llegides» amb els fills de la comunitat', () => {
+/* Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · El botó de la
+   fila amb la clau `clau` a la llista de converses, i Maj+F10 damunt: el camí
+   del teclat de la pulsació llarga (pulsacioLlarga.js). */
+const botoDeFila = (clau) => screen.getByRole('list', { name: 'Converses' }).querySelector(`li[data-clau="${clau}"] > button`);
+function seleccionaAmbElTeclat(clau) {
+  /* La finestra de duplicats de pulsacioLlarga.js (400ms) és de tota la
+     llista: amb el rellotge fals, entre dues entrades hi passa un segon. */
+  if (vi.isFakeTimers()) act(() => { vi.advanceTimersByTime(1000); });
+  const fila = botoDeFila(clau);
+  fila.focus();
+  fireEvent.keyDown(fila, { key: 'F10', shiftKey: true });
+  return fila;
+}
+const ambElRellotgeFals = (prova) => () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+  try { prova(); } finally { vi.useRealTimers(); }
+};
+
+/* T68 · En «Seleccionar xats», cada fila és una casella i la fila de títol, la
+   barra de selecció; «Marcar com a llegides» crida marcaLlegides (una
+   comunitat, amb els ids dels seus fills). Escape ix.
+   P1-36 · S'hi entra amb la pulsació llarga (ací, Maj+F10) sobre una fila, que
+   ja hi naix triada i conserva el focus; en eixir-ne, el focus hi torna. */
+test('T68 · «Seleccionar xats» per pulsació llarga: la fila naix triada, caselles, recompte i «Marcar com a llegides» amb els fills de la comunitat', ambElRellotgeFals(() => {
   mocks.threadId = null;
   ambComunitat();
   mocks.marcaLlegides.mockReturnValue(3);
   render(<XatSection />);
-  const mes = screen.getByRole('button', { name: 'Més opcions' });
-  fireEvent.click(mes);
-  const menu = screen.getByRole('menu', { name: 'Més opcions' });
-  expect(within(menu).getAllByRole('menuitem').map((o) => o.textContent)).toEqual(['Seleccionar xats']);
-  expect(document.activeElement).toBe(within(menu).getByRole('menuitem'));
-  fireEvent.keyDown(document, { key: 'Escape' });
-  expect(screen.queryByRole('menu')).toBeNull();
-  expect(document.activeElement).toBe(mes);
+  expect(screen.queryByRole('button', { name: 'Més opcions' })).toBeNull();
 
-  fireEvent.click(mes);
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  const comunitat = seleccionaAmbElTeclat('comunitat:c-1');
   expect(screen.queryByRole('button', { name: 'Nova conversa' })).toBeNull();
-  /* El menuitem s'ha desmuntat: el focus va a la creu de la barra, no a <body>. */
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
+  /* La fila no s'ha desmuntat: ara és una casella triada i té el focus. */
+  expect(comunitat.getAttribute('role')).toBe('checkbox');
+  expect(comunitat.getAttribute('aria-checked')).toBe('true');
+  expect(document.activeElement).toBe(comunitat);
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
   /* Mentre se selecciona, la cerca no hi és: els resultats no es poden triar. */
   expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
+  const caselles = within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox');
+  expect(caselles).toHaveLength(3);
+  expect(caselles.filter((c) => c.getAttribute('aria-checked') === 'true')).toEqual([comunitat]);
+
+  /* Desmarcada, cap: «Marcar com a llegides» es desactiva. */
+  fireEvent.click(comunitat);
   const marca = screen.getByRole('button', { name: 'Marcar com a llegides' });
   expect(marca.disabled).toBe(true);
   expect(screen.getByText('Tria els xats')).toBeTruthy();
-  const caselles = within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox');
-  expect(caselles).toHaveLength(3);
-  expect(caselles.every((c) => c.getAttribute('aria-checked') === 'false')).toBe(true);
 
-  const comunitat = caselles.find((c) => c.textContent.includes('Sóc de Poble'));
   fireEvent.click(comunitat);
   fireEvent.click(caselles.find((c) => c.textContent.includes('Hola')));
   expect(comunitat.getAttribute('aria-checked')).toBe('true');
@@ -973,35 +1005,111 @@ test('T68 · «Seleccionar xats»: caselles, recompte i «Marcar com a llegides�
   expect(mocks.showToast).toHaveBeenCalledWith('3 converses marcades com a llegides.', 'info');
   expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   expect(screen.getByRole('button', { name: 'Nova conversa' })).toBeTruthy();
-  /* «Marcar com a llegides» s'ha desmuntat: el focus torna al «…». */
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Més opcions' }));
+  /* «Marcar com a llegides» s'ha desmuntat: el focus torna a la fila que
+     ha obert la selecció (abans, al «…»). */
+  expect(document.activeElement).toBe(botoDeFila('comunitat:c-1'));
   expect(screen.getByRole('searchbox', { name: 'Cerca converses' })).toBeTruthy();
 
-  /* Escape també ix, sense marcar res. */
-  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  /* Escape també ix, sense marcar res; la fila conserva el focus. */
+  seleccionaAmbElTeclat('b');
   expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   expect(mocks.marcaLlegides).toHaveBeenCalledTimes(1);
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Més opcions' }));
+  expect(document.activeElement).toBe(botoDeFila('b'));
 
-  /* I la creu, també amb el focus de tornada al «…». */
-  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  /* I la creu, també amb el focus de tornada a la fila. */
+  seleccionaAmbElTeclat('a');
   fireEvent.click(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
   expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Més opcions' }));
-});
+  expect(document.activeElement).toBe(botoDeFila('a'));
+}));
+
+/* P1-36 · La pulsació llarga del dit o del ratolí (mig segon, quiet): la fila
+   entra en la selecció ja triada, i el clic que la seguix ni obri la conversa
+   ni desfà la tria. El focus, que el dit no havia posat enlloc, va a la fila. */
+test('P1-36 · pulsació llarga: la fila naix triada i el clic de després no obri ni desmarca', ambElRellotgeFals(() => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const fila = botoDeFila('b');
+  expect(fila.getAttribute('aria-keyshortcuts')).toBe('Shift+F10');
+  expect(document.getElementById(fila.getAttribute('aria-describedby')).textContent)
+    .toBe('Mantín premuda una conversa, fes clic amb el botó dret o prem Maj+F10 per a seleccionar xats.');
+  fireEvent.pointerDown(fila, { button: 0, clientX: 10, clientY: 10 });
+  act(() => { vi.advanceTimersByTime(DURADA_PULSACIO); });
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
+  expect(fila.getAttribute('aria-checked')).toBe('true');
+  expect(document.activeElement).toBe(fila);
+  /* Dins de la selecció, la fila ja no anuncia la drecera ni la pista. */
+  expect(fila.hasAttribute('aria-keyshortcuts')).toBe(false);
+  expect(fila.hasAttribute('aria-describedby')).toBe(false);
+  fireEvent.pointerUp(fila);
+  fireEvent.click(fila);
+  expect(fila.getAttribute('aria-checked')).toBe('true');
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  /* El clic següent, sí: desmarca. */
+  fireEvent.pointerDown(fila, { button: 0, clientX: 10, clientY: 10 });
+  fireEvent.pointerUp(fila);
+  fireEvent.click(fila);
+  expect(fila.getAttribute('aria-checked')).toBe('false');
+  expect(screen.getByText('Tria els xats')).toBeTruthy();
+}));
+
+/* P1-36 · Un dit que es mou més de 10px (o que el navegador pren per a
+   desplaçar la llista: pointercancel) no és cap pulsació llarga; un toc curt
+   obri la conversa com sempre. */
+test('P1-36 · moure el dit o desplaçar la llista cancel·la la pulsació llarga; el toc curt obri la conversa', ambElRellotgeFals(() => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const fila = botoDeFila('b');
+  fireEvent.pointerDown(fila, { button: 0, clientX: 10, clientY: 10 });
+  fireEvent.pointerMove(fila, { clientX: 10, clientY: 30 });
+  act(() => { vi.advanceTimersByTime(DURADA_PULSACIO * 2); });
+  fireEvent.pointerDown(fila, { button: 0, clientX: 10, clientY: 10 });
+  fireEvent.pointerCancel(fila);
+  act(() => { vi.advanceTimersByTime(DURADA_PULSACIO * 2); });
+  fireEvent.pointerDown(fila, { button: 0, clientX: 10, clientY: 10 });
+  act(() => { vi.advanceTimersByTime(DURADA_PULSACIO - 100); });
+  fireEvent.pointerUp(fila);
+  act(() => { vi.advanceTimersByTime(DURADA_PULSACIO); });
+  expect(screen.queryByRole('button', { name: 'Eixir de la selecció de xats' })).toBeNull();
+  expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+  fireEvent.click(fila);
+  expect(mocks.navigate).toHaveBeenCalledWith('/xat/b');
+}));
+
+/* P1-36 · El menú contextual (botó dret a l'escriptori, pulsació llarga
+   d'Android) i la tecla de menú del teclat fan el mateix que la pulsació
+   llarga; el menú del navegador no ix. Ja dins de la selecció, el menú
+   contextual que Android dispara tard (retard llarg d'accessibilitat, fora
+   de la finestra de duplicats) no desfà la tria. */
+test('P1-36 · el menú contextual i la tecla de menú obrin la selecció amb la fila triada; dins, no la desfan', ambElRellotgeFals(() => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  expect(fireEvent.contextMenu(botoDeFila('b'))).toBe(false);
+  expect(botoDeFila('b').getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(fireEvent.contextMenu(botoDeFila('b'))).toBe(false);
+  expect(botoDeFila('b').getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
+  expect(document.activeElement).toBe(botoDeFila('b'));
+
+  act(() => { vi.advanceTimersByTime(1000); });
+  const fila = botoDeFila('a');
+  fila.focus();
+  expect(fireEvent.keyDown(fila, { key: 'ContextMenu' })).toBe(false);
+  expect(fila.getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
+}));
 
 /* Un sol Escape tanca UNA cosa: amb el «⋯» de la conversa obert enmig d'una
    selecció de xats, tanca el menú i la selecció continua amb les seues marques. */
 test('T68 · Escape amb el menú de la conversa obert tanca el menú i no la selecció', () => {
   render(<XatSection />);
-  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  seleccionaAmbElTeclat('a');
   const llista = screen.getByRole('list', { name: 'Converses' });
-  fireEvent.click(within(llista).getAllByRole('checkbox')[0]);
   expect(screen.getByText('1 seleccionada')).toBeTruthy();
 
   fireEvent.click(screen.getByRole('button', { name: 'Opcions de la conversa' }));
@@ -1016,16 +1124,26 @@ test('T68 · Escape amb el menú de la conversa obert tanca el menú i no la sel
   expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
 });
 
-/* Entrar a la selecció buida la cerca: cap resultat clicable enmig de la tria. */
-test('T68 · entrar a «Seleccionar xats» buida la cerca i en tornar la llista és la de converses', () => {
+/* Entrar a la selecció amaga i buida la cerca: cap resultat clicable enmig
+   de la tria. P1-36 · Els resultats de la cerca no són files de la llista: no
+   obrin la selecció (ni la drecera ni la pista), i la cerca no es buida. */
+test('T68 · la selecció amaga la cerca i en tornar la llista és la de converses; els resultats no obrin la selecció', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
   fireEvent.change(cerca, { target: { value: 'adeu' } });
-  expect(screen.getByRole('region', { name: 'Resultats de la cerca' })).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
-  expect(screen.queryByRole('region', { name: 'Resultats de la cerca' })).toBeNull();
+  const resultats = screen.getByRole('region', { name: 'Resultats de la cerca' });
+  const resultat = within(resultats).getAllByRole('button')[0];
+  expect(resultat.hasAttribute('aria-keyshortcuts')).toBe(false);
+  fireEvent.keyDown(resultat, { key: 'F10', shiftKey: true });
+  expect(fireEvent.contextMenu(resultat)).toBe(true);
+  expect(screen.queryByRole('button', { name: 'Eixir de la selecció de xats' })).toBeNull();
+  expect(screen.getByRole('searchbox', { name: 'Cerca converses' }).value).toBe('adeu');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Tanca la cerca' }));
+  fireEvent.blur(screen.getByRole('searchbox', { name: 'Cerca converses' }));
+  seleccionaAmbElTeclat('a');
+  expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
   expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox')).toHaveLength(2);
   fireEvent.click(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
   expect(screen.getByRole('searchbox', { name: 'Cerca converses' }).value).toBe('');
@@ -2321,8 +2439,18 @@ test('261007 · en «Seleccionar xats» les files d’ajuda no es poden triar', 
   mocks.threadId = null;
   ambFilesPerDefecte();
   render(<XatSection />);
-  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  /* P1-36 · Ni la pulsació llarga les fa entrar: ni la drecera, ni el menú
+     contextual retingut, ni Maj+F10. */
+  const ajudes = within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button')
+    .filter((b) => /Sóc de Poble|IAIA MarIA/.test(b.textContent));
+  expect(ajudes.length).toBeGreaterThan(0);
+  for (const ajuda of ajudes) {
+    expect(ajuda.hasAttribute('aria-keyshortcuts')).toBe(false);
+    expect(fireEvent.contextMenu(ajuda)).toBe(true);
+    fireEvent.keyDown(ajuda, { key: 'F10', shiftKey: true });
+  }
+  expect(screen.queryByRole('button', { name: 'Eixir de la selecció de xats' })).toBeNull();
+  seleccionaAmbElTeclat('a');
   const caselles = within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox');
   expect(caselles).toHaveLength(2);
   expect(caselles.some((c) => /Sóc de Poble|IAIA MarIA/.test(c.textContent))).toBe(false);

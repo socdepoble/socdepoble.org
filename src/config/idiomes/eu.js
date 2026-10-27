@@ -19,6 +19,7 @@ export default {
   'section.xat.iaia.salutacio': "Orain ez nago txorakerietarako, baina galdera teknikoei erantzun diezazuket eta herriko edozein txoko nola dabilen azaldu.",
   'section.xat.sessio.connectar': "Hasi saioa",
   'section.xat.sessio.registrar': "Erregistratu",
+  'section.xat.sessio.descarregar': "Deskargatu aplikazioa",
   'section.xat.iaia.cortesia': "Ongi etorri automatikoa. Hemen bakarrik agertzen da; ez da partekatutako txatean gordetako erantzuna.",
 
   'section.xat.sessio.calEntrar': 'Ongi etorri Sóc de Poblera',
@@ -1469,8 +1470,7 @@ export default {
   'section.xat.compartir.entesos': 'Ados',
   'section.xat.adjunts.peu': 'Fitxategiaren testua (aukerakoa)',
   'section.xat.adjunts.peuPlaceholder': 'Gehitu testu bat…',
-  'section.xat.mesOpcions': 'Aukera gehiago',
-  'section.xat.seleccio.xats': 'Hautatu txatak',
+  'section.xat.seleccio.pista': 'Txatak hautatzeko, eduki sakatuta elkarrizketa bat, egin klik eskuineko botoiarekin edo sakatu Maius+F10.',
   'section.xat.seleccio.triaXats': 'Aukeratu txatak',
   'section.xat.seleccio.unaSeleccionada': '1 hautatuta',
   'section.xat.seleccio.seleccionades': '{n} hautatuta',

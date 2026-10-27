@@ -19,6 +19,7 @@ export default {
   'section.xat.iaia.salutacio': "Ara no estic pa tonteries, però sí que puc contestar-te preguntes tècniques i explicar-te com funciona qualsevol racó del poble.",
   'section.xat.sessio.connectar': "Connectar-se",
   'section.xat.sessio.registrar': "Registrar-se",
+  'section.xat.sessio.descarregar': "Descarrega l'App",
   'section.xat.iaia.cortesia': "Benvinguda automàtica. Es mostra només ací; no és una resposta guardada al xat compartit.",
 
   'section.xat.sessio.calEntrar': 'Benvinguda a Sóc de Poble',
@@ -1513,8 +1514,7 @@ export default {
   'section.xat.adjunts.peu': 'Text del fitxer (opcional)',
   'section.xat.adjunts.peuPlaceholder': 'Afig un text…',
   // Xat · onada 3 (T63.2, T67, T68, T69): la columna de llista (patró de missatgeria).
-  'section.xat.mesOpcions': 'Més opcions',
-  'section.xat.seleccio.xats': 'Seleccionar xats',
+  'section.xat.seleccio.pista': 'Mantín premuda una conversa, fes clic amb el botó dret o prem Maj+F10 per a seleccionar xats.',
   'section.xat.seleccio.triaXats': 'Tria els xats',
   'section.xat.seleccio.unaSeleccionada': '1 seleccionada',
   'section.xat.seleccio.seleccionades': '{n} seleccionades',

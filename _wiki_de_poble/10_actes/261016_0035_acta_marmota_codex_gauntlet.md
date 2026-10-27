@@ -93,5 +93,5 @@ El Mestre ha demanat execució sense preguntes. No s'han inferit emocions, temps
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261016_0021_auditoria_codex]]
-- [[261016_0015_pla_implementacio_gauntlet_autonom]]
+- `261016_0021_auditoria_codex`
+- `261016_0015_pla_implementacio_gauntlet_autonom`

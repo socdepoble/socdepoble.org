@@ -272,7 +272,8 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     if (enfoca) tornaAlCamp();
   }, [tornaAlCamp]);
 
-  /* Clicar fora del compositor tanca el calaix i no mou el focus (MenuLlista:
+  /* Clicar fora del compositor tanca el calaix i no mou el focus (el patró de
+     MenuLlista, retirat el 261026, que hui porten FiltreConverses i CapcaleraConversa:
      a l'arrel del node, també dins de l'arrel d'ombra de l'encastament). Dins
      d'una arrel d'ombra, el web amfitrió no hi arriba: el document també
      escolta, i tot el que hi arriba des de dins del giny porta de destí

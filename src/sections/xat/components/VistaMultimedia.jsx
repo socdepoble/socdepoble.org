@@ -124,7 +124,10 @@ function FilaEnllac({ item, onObriFil, locale, t }) {
 }
 
 /* Un fitxer o un document: una fila de xat, amb la icona del tipus en lloc
-   de la miniatura, que obri la conversa. */
+   de la miniatura, que obri la conversa.
+   Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · Un adjunt no és
+   cap targeta de conversa: la fila senzilla (sdp-xat-fila--senzilla)
+   conserva els 72px i la icona de 48 amb el dibuix de 24 d'abans. */
 function FilaAdjunt({ item, onObriFil, locale, t }) {
   const { fil, missatge, tipus } = item;
   const filtre = FILTRES_CERCA_XAT.find((f) => f.id === tipus) || null;
@@ -134,7 +137,7 @@ function FilaAdjunt({ item, onObriFil, locale, t }) {
   const hora = etiquetaLlista(missatge.creatAl, { locale, t });
   return (
     <li className="sdp-xat-multimedia__adjunt">
-      <button type="button" className="sdp-xat-fila" onClick={() => onObriFil(fil.id)}>
+      <button type="button" className="sdp-xat-fila sdp-xat-fila--senzilla" onClick={() => onObriFil(fil.id)}>
         <span className="sdp-xat-avatar-icona" aria-hidden="true">
           <IconaFiltre nom={filtre?.icona} size={24} />
         </span>

@@ -78,14 +78,18 @@ test('els suspensius es queden, i un títol que no és text passa tal qual',()=>
 
 /* T2 (ordre del Mestre, 260930) · L'Índex recull tots els encapçalaments,
    de h1 a h6, si la pàgina no en demana menys: els h4, h5 i h6 de les
-   targetes hi entren a totes les pàgines, no només a la Consola. */
+   targetes hi entren a totes les pàgines, no només a la Consola.
+   Ordre del Mestre (261026_2126, §5) · I l'H1 de la capçalera («T»), la
+   primera entrada (PageFrame.indexTitol.test.jsx). */
 const CONTINGUT_INDEX=<><h3>Targeta</h3><h4>Subtítol</h4><h5>38 rebuts</h5><h6>Nota</h6></>;
 const obriIndex=(container)=>fireEvent.click(container.querySelector('button[aria-label="Índex de secció"]'));
 const entradesIndex=()=>[...document.querySelectorAll('.toc-nav li')].map(li=>[li.className,li.textContent]);
+const TITOL_INDEX=['toc-item toc-level-1','T'];
 test('T2 · sense nivellMaxIndex, l’Índex recull fins a h6, cada entrada amb el seu nivell',()=>{
   const {container}=render(<PageFrame chrome="system" title="T">{CONTINGUT_INDEX}</PageFrame>);
   obriIndex(container);
   expect(entradesIndex()).toEqual([
+    TITOL_INDEX,
     ['toc-item toc-level-3','Targeta'],['toc-item toc-level-4','Subtítol'],
     ['toc-item toc-level-5','38 rebuts'],['toc-item toc-level-6','Nota']
   ]);
@@ -93,11 +97,11 @@ test('T2 · sense nivellMaxIndex, l’Índex recull fins a h6, cada entrada amb 
 test('T2 · una pàgina encara pot demanar-ne menys: amb nivellMaxIndex={4}, h5 i h6 no; amb 5, h6 no',()=>{
   const {container,unmount}=render(<PageFrame chrome="system" title="T" nivellMaxIndex={4}>{CONTINGUT_INDEX}</PageFrame>);
   obriIndex(container);
-  expect(entradesIndex()).toEqual([['toc-item toc-level-3','Targeta'],['toc-item toc-level-4','Subtítol']]);
+  expect(entradesIndex()).toEqual([TITOL_INDEX,['toc-item toc-level-3','Targeta'],['toc-item toc-level-4','Subtítol']]);
   unmount();
   const cinc=render(<PageFrame chrome="system" title="T" nivellMaxIndex={5}>{CONTINGUT_INDEX}</PageFrame>);
   obriIndex(cinc.container);
-  expect(entradesIndex().map(([classe])=>classe)).toEqual(['toc-item toc-level-3','toc-item toc-level-4','toc-item toc-level-5']);
+  expect(entradesIndex().map(([classe])=>classe)).toEqual(['toc-item toc-level-1','toc-item toc-level-3','toc-item toc-level-4','toc-item toc-level-5']);
 });
 test('T2 · el selector de l’Índex es limita a h1-h6, i un valor que no és enter torna al per defecte (h6)',()=>{
   expect(selectorIndex(0)).toBe('h1');

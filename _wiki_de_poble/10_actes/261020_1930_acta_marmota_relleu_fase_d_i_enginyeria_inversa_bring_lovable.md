@@ -96,6 +96,6 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 a8266f
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[261020_1300_pla_implementacio_botigues_i_auth_mobil]]
-- [[261020_1518_auditoria_claude_fase_d_auth_mobil_i_moderacio]]
-- [[261020_1930_prompt_gemini_enginyeria_inversa_bring_i_lovable]]
+- `261020_1300_pla_implementacio_botigues_i_auth_mobil`
+- `261020_1518_auditoria_claude_fase_d_auth_mobil_i_moderacio`
+- `261020_1930_prompt_gemini_enginyeria_inversa_bring_i_lovable`

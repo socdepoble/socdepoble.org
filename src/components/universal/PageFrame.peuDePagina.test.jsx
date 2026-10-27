@@ -66,11 +66,13 @@ describe('amb peuDePagina', () => {
     expect(within(peu).getByRole('heading', { level: 2 }).textContent).toBe('Ja publicat al Mercat');
   });
 
-  test('l’Índex de la pàgina només recull els encapçalaments de l’article, no els del peu', () => {
+  /* Ordre del Mestre (261026_2126, §5) · L'H1 de la capçalera («Nota») és ara
+     la primera entrada; el peu continua fora. */
+  test('l’Índex de la pàgina només recull l’H1 i els encapçalaments de l’article, no els del peu', () => {
     pinta({ peuDePagina: PEU, etiquetaPeuDePagina: 'Ja publicat al Mercat' });
     fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
     const entrades = within(screen.getByRole('dialog')).getAllByRole('button').map((b) => b.textContent).filter((t) => t !== '');
-    expect(entrades).toEqual(['Què és?', 'Vincles']);
+    expect(entrades).toEqual(['Nota', 'Què és?', 'Vincles']);
   });
 
   test('aparéixer no canvia el node de l’article (el cos no es remunta)', () => {
