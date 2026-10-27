@@ -4,9 +4,9 @@
   "actor": "claude",
   "scope": "code",
   "state": "planned",
-  "revision": 5,
+  "revision": 6,
   "createdAt": "2026-10-26T20:45:17.991Z",
-  "updatedAt": "2026-10-27T02:01:05.417Z",
+  "updatedAt": "2026-10-27T07:42:13.956Z",
   "expiresAt": "2026-10-27T20:45:17.991Z",
   "contractHash": "4c6862d431f954eab44b1ccd44ce9f693588d58d503c175a8de0589e4b077876",
   "humanInventoryVersion": 1,
@@ -3718,17 +3718,29 @@
       "id": "e50e47cb-bdc3-4705-a581-cc38b43cba69",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261026_2150_auditoria_claude.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261026_2150_auditoria_claude.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
-      "issuedAt": "2026-10-26T20:49:33.220Z"
+      "issuedAt": "2026-10-26T20:49:33.220Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261026_2150_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261026_2150_auditoria_claude.md",
+          "hash": "5ffa938bab1cfc4ae5c8dc11c7daeb4dbd8e86b6ea1b6c8bd142c559a08cbf63",
+          "at": "2026-10-27T07:42:13.956Z",
+          "receiptIds": [
+            "e50e47cb-bdc3-4705-a581-cc38b43cba69",
+            "1e692e0b-014a-4ba4-8fa2-a74eb82805cd"
+          ]
+        }
+      ]
     },
     "1e692e0b-014a-4ba4-8fa2-a74eb82805cd": {
       "id": "1e692e0b-014a-4ba4-8fa2-a74eb82805cd",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261026_2150_auditoria_claude.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261026_2150_auditoria_claude.md",
       "contractSnapshot": "7c9c602f3ed4f711f47ded7bd3f7c4379505b87efdd3ce6fcd87ab38bb8bb484",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
@@ -3738,7 +3750,19 @@
         "preparedAt": "2026-10-26T20:53:57.342Z",
         "committedAt": "2026-10-26T20:53:57.364Z",
         "documentHash": "fae483909efc5a970057304e9d22b240aa2a92bc5730575a5f7e835a33b9de2b"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261026_2150_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261026_2150_auditoria_claude.md",
+          "hash": "5ffa938bab1cfc4ae5c8dc11c7daeb4dbd8e86b6ea1b6c8bd142c559a08cbf63",
+          "at": "2026-10-27T07:42:13.956Z",
+          "receiptIds": [
+            "e50e47cb-bdc3-4705-a581-cc38b43cba69",
+            "1e692e0b-014a-4ba4-8fa2-a74eb82805cd"
+          ]
+        }
+      ]
     }
   },
   "plan": {
@@ -3780,9 +3804,17 @@
         "_wiki_de_poble/04_escriptori/261026_2150_auditoria_claude.md"
       ],
       "at": "2026-10-27T02:01:05.416Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-27T07:42:13.956Z"
     }
   ],
   "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261026_2150_auditoria_claude.md"
+  ],
+  "relocated": [
     "_wiki_de_poble/04_escriptori/261026_2150_auditoria_claude.md"
   ]
 }

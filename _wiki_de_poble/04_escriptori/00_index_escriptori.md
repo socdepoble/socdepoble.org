@@ -14,12 +14,12 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
+- [[261027_0845_prompt_guarda_nocturna_claude_codex_gemini]]
+- [[261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]]
 - [[./261027_0730_og_llibre_d_or_codex.png|Prototip targeta Open Graph Llibre d'Or]] · Mestre 261027: prototip visual Open Graph WhatsApp P1-61
 - [[261027_0730_reforma_editorial_gemini]] · Mestre 261027: reforma editorial canònica P1-60 i P1-63
 - [[261027_0730_solucio_opengraph_i_copy_codex]] · Mestre 261027: P1-60/P1-61/P1-63 per a integrar amb Claude; [targeta social PNG](./261027_0730_og_llibre_d_or_codex.png)
-- [[261026_2150_auditoria_claude]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
-- [[./261026_0225_informe_cens_imatges.json|Cens complet de public/assets]] · Mestre 261026: traçabilitat del Mòdul 8
 
 ## Producció humana
 
@@ -70,6 +70,7 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261026_2150_auditoria_claude]]
 - [[../90_arxiu_historic/261027_0650_auditoria_codex]]
 - [[../90_arxiu_historic/261027_0535_prompt_codex_auditoria_gauntlet_ronda5_claude]]
 - [[../90_arxiu_historic/261027_0535_pla_implementacio_auditoria_gauntlet_ronda5_claude]]

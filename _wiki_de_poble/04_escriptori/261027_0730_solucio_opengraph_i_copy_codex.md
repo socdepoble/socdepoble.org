@@ -461,7 +461,7 @@ El pressupost de memòria cau inicial és deliberadament simple: HTML no-store i
 - [[00_index_escriptori]]
 - [[03_llibre_mestre_tasques_i_idees]]
 - [[../90_arxiu_historic/261027_0650_auditoria_codex|261027_0650_auditoria_codex]]
-- [[261026_2150_auditoria_claude]]
+- [[../90_arxiu_historic/261026_2150_auditoria_claude|261026_2150_auditoria_claude]]
 - [[261027_0730_reforma_editorial_gemini]]
 - [Targeta social proposada](261027_0730_og_llibre_d_or_codex.png)
 

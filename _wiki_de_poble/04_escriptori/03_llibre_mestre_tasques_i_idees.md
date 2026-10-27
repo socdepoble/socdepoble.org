@@ -15,8 +15,26 @@ tags:
 
 ---
 
+<!-- SDP:GUARDA_NOCTURNA_261027 -->
+## 🌙 Guarda Nocturna: Sanejament Integral de Deute Tècnic, Comunitats i Col·laboració Autònoma · 2026-10-27
+
+Pla [[261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]], Prompt [[261027_0845_prompt_guarda_nocturna_claude_codex_gemini]], torn `torn_5922ffdf-6dd5-47d5-9b9d-d37527d1b22d`.
+
+> **MANDAT SUPREM DEL MESTRE JAVI (Àudios 08:24, 08:40, 08:44):**
+> 1. **Primer el Deute Tècnic:** Tota la part tècnica i els deutes acumulats s'han de netejar i passar totes les portes a verd abans d'implementar cap nova idea.
+> 2. **Les idees es queden en cua:** Idees com el Cercador especialitzat (IDEA-46), el Proposa Card (P1-56) o el Baremador universal (P1-42) es preserven íntegres al banc d'idees, però no s'implementen fins a deixar la base tècnica neta.
+> 3. **Investigació d'Humanització i Comunicació Col·laborativa:** Claude, Codex i Gemini han d'aprofitar la nit per investigar i proposar com millorar el seu bucle de comunicació i coordinació autònoma sense la dependència del Mestre.
+
+### Fites Prioritàries de la Guarda Nocturna:
+- **`P1-54` [DEUTE TÈCNIC / UI]: Desempapussament dels botons d'accés:** Retirar `[ Descarrega l'App ]`, `[ Connectar-se ]` i `[ Registrar-se ]` del peu de la llista quan l'usuari entra a comunitats (`?comunitat=...`) o converses. Els botons només viuen a la portada d'aterratge buida.
+- **`P1-55` [DEUTE TÈCNIC / UX]: Pàgina viva de comunitat al panell de lectura:** En seleccionar una comunitat a la barra lateral, el panell principal dret carrega la pàgina viva d'eixa comunitat (perfil, dades, poble, avisos) en compte de la benvinguda genèrica del xat.
+- **`P1-60 / P1-63` [DEUTE TÈCNIC / CONSOLA]: Sanejament de Consola Termodinàmica i Maquinària:** Desbloquejar les 4 targetes de Govern a la Consola embeguda (`ConsolaSection.jsx:57-63`), sanejar tasques mortes a `registre_tasques.json`, podar `.agents/skills/sdp-vigilant-tellado/SKILL.md` i obrir la documentació pública de Maquinària a producció (`WikiDePobleSection.jsx:65-85`).
+- **`T1-06` [CONFORMITAT APPLE]: Neteja Guideline 2.3.10:** Purgar referències a Android/Google Play a `Full de ruta` i `Avís legal` dins de l'app nativa.
+
+---
+
 <!-- SDP:DESCARREGUES_2130_MARIA -->
-## Nova Missió: Botó i Card de Descàrregues, Salfumant Radical Wiki i Converses WhatsApp · 2026-10-26
+## Missió Precedenta: Botó i Card de Descàrregues, Salfumant Radical Wiki i Converses WhatsApp · 2026-10-26
 
 Pla [[90_arxiu_historic/261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses|261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses]], Prompt [[90_arxiu_historic/261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses|261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]], torn `torn_409a64e5-477b-454c-b445-4e0c42a28d83`.
 
@@ -114,14 +132,13 @@ Pla [[90_arxiu_historic/261026_2130_pla_implementacio_boto_descarregues_salfuman
 - **Fita 17 (`P1-53`): Caça del fantasma de 10px a la targeta de xat (`button.sdp-xat-fila`):**
   - *Problema:* A la llista de converses del xat, hi ha una franja buida de ~10px entre la línia divisòria superior i la targeta de conversa seleccionada de la IAIA MarIA (`button.sdp-xat-fila`). L'alçada total mesura ~106px en comptes dels 96px exactes de disseny.
   - *Solució a implementar per Claude:* Eliminar el marge/padding fantasma superior per deixar la card perfectament encaixada a 96px justos contra la línia divisòria.
-- **Fita 18 (`P1-54`): No empapussar amb botons d'accés dins de les converses:**
-  - *Problema:* A les converses obertes (a la pissarra de conversa) es col·loca el peu d'accés repetit («Descarrega l'App», «Connectar-se», «Registrar-se»). Com diu el Mestre, s'està «empapussant» l'usuari amb botons redundants com un pardalet a qui li donen més menjar del que pot tragar.
-  - *Solució a implementar per Claude:* Retirar aquest bloc de la pissarra d'una conversa individual. Els botons de registre, connexió i descàrrega només han d'estar a la pàgina d'inici/aterratge del xat (on no hi ha conversa activa triada). Un cop s'entra a llegir un fil o conversa, ha de semblar un xat normal (com WhatsApp), natural i sense empapussar el foraster.
-- **Fita 19 (`P1-55`): Cercle perfecte de Comunitat i Poble/Entitat (Incrustar la pàgina viva al xat):**
-  - *Visió del Mestre (27 d'octubre 2026, 01:40 i 01:46):*
-    1. **Comunitats de Poble (ex: *Gent de la Torre*, *Gent de Xixona*, *Gent de Relleu*):** Quan s'entra a la comunitat, la columna/panell dret no mostra la portada genèrica del xat, sinó directament la **pàgina viva del poble** (`/pobles/[slug]` amb la foto de portada, descripció municipal, avisos i contingut).
-    2. **Comunitats d'Entitat / Projecte (ex: *Sóc de Poble*):** Quan s'entra a la comunitat de Sóc de Poble, a la dreta s'incrusta la **pàgina oficial de l'entitat** (`/socdepoble`: el compte oficial, descripció d'infraestructura, botons d'acció, publicacions del mur, mercat i agenda).
-    3. **WhatsApp Superpotenciat:** En pantalla d'escriptori o tauleta, la persona té a l'esquerra els canals/grups (Avisos, General, Beta Testers) i a la dreta la pàgina viva del poble o entitat per a interactuar, navegar i connectar. Si fa clic a un grup específic, llavors s'obri el fil de conversa corresponent.
+- **Fita 18 (`P1-54`): No empapussar amb botons d'accés dins de les comunitats ni converses:**
+  - *Problema confirmat pel Mestre (Captures 08:40):* Quan s'entra a una comunitat (`?comunitat=fake-sdp` o `?comunitat=fake-poble`) o conversa oberta, al peu de la llista de grups/canals continua apareixent el calaix inferior d'accés amb els tres botons: `[ Descarrega l'App ]`, `[ Connectar-se ]` i `[ Registrar-se ]`. Com diu el Mestre, s'està «empapussant» l'usuari amb elements redundants que atabalen i espanten el veí.
+  - *Solució innegociable:* Aquests tres botons han d'estar **exclusivament a la pàgina inicial d'aterratge del xat** (quan no hi ha cap comunitat ni conversa seleccionada), tant a escriptori com a mòbil (on és vital per a poder veure i descarregar l'aplicació). En el moment en què l'usuari entra a una comunitat o a qualsevol xat, eixos tres botons **desapareixen per complet** de la vista.
+- **Fita 19 (`P1-55`): Pàgina viva de Comunitat al panell de lectura (Cercle perfecte de Poble i Xat):**
+  - *Problema confirmat pel Mestre (Captures 08:40):* En seleccionar una comunitat a la barra lateral (com `Sóc de Poble` o `Gent de la Torre`), el panell principal dret continua mostrant la portada genèrica del xat («El Xat / Parla amb la teua gent»), ignorant la identitat de la comunitat que s'acaba de triar.
+  - *Solució innegociable:* Quan s'accedeix a una comunitat (`?comunitat=fake-sdp` o `?comunitat=fake-poble`), el panell principal ha de carregar automàticament la **pàgina viva d'eixa comunitat o poble** (portada, informació municipal o institucional, avisos i contingut de poble). Si l'usuari després fa clic en un grup o canal concret (Avisos, General, Beta Testers), llavors s'obre el fil de xat corresponent.
+  - *Visió de Producte:* Xarxa social modular i intuïtiva on la comunitat té rostre propi i la conversa s'emmarca en la vida real del poble.
 - **Fita 20 (`P1-56`): Motor Universal de Canonització i Ingesta de Text: El Botó `[ 🎴 Proposa Card ]` (Bloc de Notes, Snippet Web i Lector RSS):**
   - *Directiva Suprema del Mestre (Àudios 27 d'octubre 2026, 03:00 i 03:03):*
     - **Principi d'Economia i Reutilització de Codi:** Un sol motor i algoritme de programació per a tot el sistema (`proposaCard()`). Serveix per a qualsevol entrada de text en brut que arribe a Sóc de Poble.
@@ -313,7 +330,7 @@ Informes [[../90_arxiu_historic/261027_0550_auditoria_gemini|261027_0550_auditor
 <!-- SDP:DESCARREGUES_2150_CLAUDE -->
 ## Card de Descàrregues, salfumant de la Wiki, Notes i Converses · Claude · 2026-10-27
 
-Torn `torn_51d1660b-c6e1-4cad-a261-92a7776ab0a8` (encàrrec de `torn_409a64e5`); prompt [[../90_arxiu_historic/261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses|261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]]; informe [[261026_2150_auditoria_claude]] (versió 1.1.0). **Implementat i verificat localment, sense commit.** Auditat per Gemini (0550) i per Codex (0650); els quatre retocs que el Mestre va manar al xat a les 06:13 estan fets.
+Torn `torn_51d1660b-c6e1-4cad-a261-92a7776ab0a8` (encàrrec de `torn_409a64e5`); prompt [[../90_arxiu_historic/261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses|261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]]; informe [[../90_arxiu_historic/261026_2150_auditoria_claude|261026_2150_auditoria_claude]] (versió 1.1.0). **Implementat i verificat localment, sense commit.** Auditat per Gemini (0550) i per Codex (0650); els quatre retocs que el Mestre va manar al xat a les 06:13 estan fets.
 
 - **Fet (P1-38):** botó «Descarrega l'App» damunt de Connectar-se / Registrar-se (48px); pàgina de sistema `descarregues` amb la imatge de l'App (1024×1024), àlies `/descarregues` i targeta al Mur. El text només diu l'estat real de cada canal i no porta cap enllaç. **Dins de l'App nativa no hi ha ni el botó, ni la targeta, ni la pàgina, ni la cerca, ni la connexió, ni el selector de targetes de Notes** (retoc del Mestre, G1-01 i G5-01: regla 2.3.10 d'Apple; dues verificacions en còpies congelades). La parella gamberro ja no és a `public/`.
 - **Fet (P1-39):** 248 enllaços tractats en 26 fitxers de la Wiki: 190 reconduïts, 46 passats a codi (ja no es poden seguir) i 12 claudàtors; `compile-wiki --check --strict`, SCC, Orfandat i `tancament --check` a 0. A les 06:25, dos arranjaments mecànics en documents d'altres mans (l'informe de Gemini i l'ancoratge de l'acta 0520) els van tornar a 0. El blindatge (resoldre per nom els arxivats) està preparat i assajat en sis voltes, no aplicat; té un defecte obert (G5-02: un homònim viu i arxivat divergix entre portes).
