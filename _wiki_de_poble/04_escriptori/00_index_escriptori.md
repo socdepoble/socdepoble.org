@@ -17,13 +17,7 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 - [[./261027_0730_og_llibre_d_or_codex.png|Prototip targeta Open Graph Llibre d'Or]] · Mestre 261027: prototip visual Open Graph WhatsApp P1-61
 - [[261027_0730_reforma_editorial_gemini]] · Mestre 261027: reforma editorial canònica P1-60 i P1-63
 - [[261027_0730_solucio_opengraph_i_copy_codex]] · Mestre 261027: P1-60/P1-61/P1-63 per a integrar amb Claude; [targeta social PNG](./261027_0730_og_llibre_d_or_codex.png)
-- [[261027_0550_auditoria_gemini]] · Mestre 261027: dictamen auditoria Gauntlet R5 Claude
-- [[261027_0650_auditoria_codex]] · Mestre 261027: dictamen Gauntlet R5 per al relleu de Claude
-- [[261027_0535_pla_implementacio_auditoria_gauntlet_ronda5_claude]]
-- [[261027_0535_prompt_codex_auditoria_gauntlet_ronda5_claude]]
 - [[261026_2150_auditoria_claude]]
-- [[261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]]
-- [[261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses]]
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 - [[./261026_0225_informe_cens_imatges.json|Cens complet de public/assets]] · Mestre 261026: traçabilitat del Mòdul 8
 
@@ -76,6 +70,11 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261027_0650_auditoria_codex]]
+- [[../90_arxiu_historic/261027_0535_prompt_codex_auditoria_gauntlet_ronda5_claude]]
+- [[../90_arxiu_historic/261027_0535_pla_implementacio_auditoria_gauntlet_ronda5_claude]]
+- [[../90_arxiu_historic/261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]]
+- [[../90_arxiu_historic/261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses]]
 - [[../90_arxiu_historic/261026_1615_auditoria_codex]]
 - [[../90_arxiu_historic/261026_1615_auditoria_gemini]]
 - [[../90_arxiu_historic/261026_1615_pla_implementacio_share_target_notificacions_i_xat]]

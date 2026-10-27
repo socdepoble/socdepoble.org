@@ -247,5 +247,5 @@ Hem localitzat les **tres causes exactes** al codi que expliquen per què el des
 - Document reformat (Memòria Episòdica): [[03_llibre_d_or_memoria_episodica]]
 - Document reformat (El Projecte): [[el_projecte]]
 - Llibre Mestre de Tasques i Idees: [[03_llibre_mestre_tasques_i_idees]]
-- Auditoria Gauntlet Ronda 5 Gemini: [[261027_0550_auditoria_gemini]]
+- Auditoria Gauntlet Ronda 5 Gemini: [[../90_arxiu_historic/261027_0550_auditoria_gemini|261027_0550_auditoria_gemini]]
 - Protocol canònic d'auditoria: [[auditoria_canonica]]

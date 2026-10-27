@@ -18,7 +18,7 @@ tags:
 <!-- SDP:DESCARREGUES_2130_MARIA -->
 ## Nova Missió: Botó i Card de Descàrregues, Salfumant Radical Wiki i Converses WhatsApp · 2026-10-26
 
-Pla [[261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses]], Prompt [[261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]], torn `torn_409a64e5-477b-454c-b445-4e0c42a28d83`.
+Pla [[90_arxiu_historic/261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses|261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses]], Prompt [[90_arxiu_historic/261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses|261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]], torn `torn_409a64e5-477b-454c-b445-4e0c42a28d83`.
 
 - **Fita 1 (`P1-38`): Botó i Card de Descàrregues Multiplataforma:**
   - Botó `Descarrega l'App` a `AccesAlXat` (`XatSection.jsx`) situat damunt de `[ Connectar-se ]` i `[ Registrar-se ]`.
@@ -294,7 +294,7 @@ Pla [[261026_2130_pla_implementacio_boto_descarregues_salfumant_wiki_i_converses
 <!-- SDP:GAUNTLET_RONDA5_GEMINI_CODEX -->
 ## Balanç Gauntlet Adversarial Ronda 5 · Gemini & Codex · 2026-10-27
 
-Informes [[261027_0550_auditoria_gemini]] i [[261027_0650_auditoria_codex]]. **Gauntlet Loop culminat amb èxit. Identificats 2 bloquejants de conformitat i 3 defectes per al torn quirúrgic de Claude/Codex (Ronda 6):**
+Informes [[../90_arxiu_historic/261027_0550_auditoria_gemini|261027_0550_auditoria_gemini]] i [[../90_arxiu_historic/261027_0650_auditoria_codex|261027_0650_auditoria_codex]]. **Gauntlet Loop culminat amb èxit. Identificats 2 bloquejants de conformitat i 3 defectes per al torn quirúrgic de Claude/Codex (Ronda 6):**
 
 1. **`G1-01 / G5-01` [BLOQUEJANT]: Ocultació de Descàrregues al Mur natiu d'iOS (Apple Guideline 2.3.10):**
    - El botó de 48px s'amaga al xat, però `SYSTEM_PAGES` inclou la pàgina incondicionalment i el Mur la mostra com a primera targeta a iOS parlant d'Android i Google Play.
@@ -313,17 +313,23 @@ Informes [[261027_0550_auditoria_gemini]] i [[261027_0650_auditoria_codex]]. **G
 <!-- SDP:DESCARREGUES_2150_CLAUDE -->
 ## Card de Descàrregues, salfumant de la Wiki, Notes i Converses · Claude · 2026-10-27
 
-Torn `torn_51d1660b-c6e1-4cad-a261-92a7776ab0a8` (encàrrec de `torn_409a64e5`); prompt [[261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]]; informe [[261026_2150_auditoria_claude]]. **Implementat i verificat localment, sense commit.**
+Torn `torn_51d1660b-c6e1-4cad-a261-92a7776ab0a8` (encàrrec de `torn_409a64e5`); prompt [[../90_arxiu_historic/261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses|261026_2130_prompt_claude_boto_descarregues_salfumant_wiki_i_converses]]; informe [[261026_2150_auditoria_claude]] (versió 1.1.0). **Implementat i verificat localment, sense commit.** Auditat per Gemini (0550) i per Codex (0650); els quatre retocs que el Mestre va manar al xat a les 06:13 estan fets.
 
-- **Fet (P1-38):** botó «Descarrega l'App» damunt de Connectar-se / Registrar-se (48px, amagat dins de l'App nativa); pàgina de sistema `descarregues` amb la imatge de l'App (1024×1024), àlies `/descarregues` i targeta al Mur. El text només diu l'estat real de cada canal i no porta cap enllaç.
-- **Fet (P1-39):** 248 enllaços reparats en 26 fitxers de la Wiki; `compile-wiki --check --strict`, SCC i Orfandat a 0, i `tancament --check` a 0 amb l'informe complet. El blindatge perquè el pròxim arxivament no els torne a trencar (resoldre per nom els arxivats) està preparat, no aplicat.
-- **Fet (§5 i §6 de Notes):** Índex de l'H1 a l'H6 sota la barra negra (64px reals, no 58), tokens Pedra Seca, tancament amb toc o focus fora; icones de 24px en cel·les de 48px; la carpeta intrusa ix només en «mitja». Corregit de passada el bucle sense fi en obrir l'Índex en Notes.
-- **Fet (P1-36 i P1-37):** files de 96px, avatars de 76px, 4px entre títol i missatge, fora el `[...]` de la Fila 1 i selecció per pulsació llarga.
-- **Preparat, no aplicat (P1-41):** baremador del Nano a `_investigacio_ia_de_poble/261026_2130_baremador_nano_claude/`. Toca governança i la lliçó 261002 demana l'aprovació web del Mestre; a més, **se solapa amb P1-42**.
-- **Deute trobat:** la reparació viva de la Wiki és fràgil sense el pegat d'arxiu per nom; el hook no pot passar sense `--no-verify` per portes roges ja a HEAD (Psicopatia, Promesa, Arrel, InnerHTML, Rutes, Cognitiu, Cens, Consell i F9); la pàgina de Descàrregues parla d'Android dins de l'App d'iOS (risc de revisió d'Apple); P1-42 i P1-43 porten rutes `file:///` d'esta màquina.
-- **Pendent del Mestre:** aprovar l'empremta `descarregues`; respondre D-3 i dir si el baremador és provisional o es fon en P1-42; triar la imatge gamberro (fora de `public/` o a `EXCLOSES`); decidir el torn de salfumant per al deute heretat o el `--no-verify` d'este commit; i les decisions visuals de l'informe (§Límits).
-- **No fet, no demanat en este prompt:** P1-46 (pastilla de versió i botons per plataforma, afegit per MarIA a les 23:07).
-
+- **Fet (P1-38):** botó «Descarrega l'App» damunt de Connectar-se / Registrar-se (48px); pàgina de sistema `descarregues` amb la imatge de l'App (1024×1024), àlies `/descarregues` i targeta al Mur. El text només diu l'estat real de cada canal i no porta cap enllaç. **Dins de l'App nativa no hi ha ni el botó, ni la targeta, ni la pàgina, ni la cerca, ni la connexió, ni el selector de targetes de Notes** (retoc del Mestre, G1-01 i G5-01: regla 2.3.10 d'Apple; dues verificacions en còpies congelades). La parella gamberro ja no és a `public/`.
+- **Fet (P1-39):** 248 enllaços tractats en 26 fitxers de la Wiki: 190 reconduïts, 46 passats a codi (ja no es poden seguir) i 12 claudàtors; `compile-wiki --check --strict`, SCC, Orfandat i `tancament --check` a 0. A les 06:25, dos arranjaments mecànics en documents d'altres mans (l'informe de Gemini i l'ancoratge de l'acta 0520) els van tornar a 0. El blindatge (resoldre per nom els arxivats) està preparat i assajat en sis voltes, no aplicat; té un defecte obert (G5-02: un homònim viu i arxivat divergix entre portes).
+- **Fet (§5 i §6 de Notes):** Índex de l'H1 a l'H6 sota la barra negra (64px reals, no 58), tokens Pedra Seca, tancament amb toc o focus fora; icones de 24px en cel·les de 48px; la carpeta intrusa ix només en «mitja». Corregit el bucle sense fi en obrir l'Índex en Notes i, amb el retoc del Mestre (G3-01), l'Índex llig la capçalera a cada reconstrucció.
+- **Fet (P1-36, P1-37 i P1-53):** files de 96px, avatars de 76px, 4px entre títol i missatge, fora el `[...]` de la Fila 1 i selecció per pulsació llarga. Les files van arran i, amb el retoc del Mestre (G2-01), en totes les llistes del xat.
+- **Paquet d'estudi (P1-41):** el baremador del Nano no s'activa (decisió del Mestre, 261027). Queda a `_investigacio_ia_de_poble/261026_2130_baremador_nano_claude/` per a fondre'n la lògica pura en P1-42. Per a la fusió: la nota d'una IA desplaça la del Mestre en el resum (G5-03).
+- **Deute trobat:**
+  - el hook no pot passar sense `--no-verify`, per portes roges ja a HEAD (Psicopatia, Promesa, Arrel, InnerHTML, Rutes, Cognitiu, Cens i Consell) i per la tolerància zero de F9 en els 22 fitxers de la Wiki reparats;
+  - P1-42 i P1-43 porten rutes `file:///` d'esta màquina;
+  - l'informe de Gemini 0550 porta el rebut de l'informe de Claude;
+  - el lector d'enllaços (`tooling/lib/document-links.mjs`) es desquadra amb un literal fet amb dos accents greus;
+  - G5-07: un canvi de text dins d'un `strong` d'un títol no reconstruïx l'Índex.
+- **Paquet de consens per al relleu (P1-54, P1-55 i P1-58):** propostes de Gemini (0730) i de Codex (0730, §9) validades contra el codi viu; és a l'informe, secció «Paquet de consens per al relleu».
+- **Pendent del Mestre:** el Full de ruta i l'Avís legal també nomenen Google Play i Android dins de l'App (T1-06); el commit, amb `--no-verify` o després d'un torn de salfumant del deute heretat; aplicar el blindatge de la Wiki (abans, G5-02); les decisions visuals T1-04, T3-01 a T3-03 i T4-01 a T4-03 de l'informe; on va el material de governança preparat (P-01).
+- **Pendent de MarIA i Gemini:** el relleu del torn a ESTAT i LEDGER, i reconéixer les dues imatges de `01_produccio` (P-03 i P-06); un rebut propi per a l'informe 0730 de Gemini, l'únic que fa eixir `tancar -- --check` amb 1 (el 0550 ja és a l'arxiu); regenerar `wikiManifest.js` després de la reforma del llibre d'or.
+- **No fet, no demanat en este prompt:** P1-42 a P1-52 i P1-54 a P1-63, anotades durant la nit; l'enllaç de `/projecte` cap a la Wiki de P1-60.
 ---
 
 <!-- SDP:SHARE_TARGET_1615_GEMINI -->
