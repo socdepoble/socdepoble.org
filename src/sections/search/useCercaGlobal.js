@@ -54,6 +54,7 @@ import { PERSONA_PILOT, aliesDeLActor, esComptePersonaPilot } from '../../data/i
 import { useMur } from '../mur/MurContext';
 import { useMultimedia } from '../multimedia/MultimediaContext';
 import { useNotes } from '../notes/NotesContext';
+import { paginaPerAppNativa } from '../text/perAppNativa.js';
 import { useXat } from '../xat/XatContext';
 import {
   ambLaIdentitatPropia, cercaEntrades, deActe, deAgent, deConversa, deIdentitat, deMedia, deMembre, deNota,
@@ -342,11 +343,19 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
     [llistaDirectori, llistaDirectoriServidor, opcionsDirectori]);
   const dePobles = useMemo(() => mapa(core.towns, dePoble, opcions), [core.towns, opcions]);
   /* Ordre del Mestre (261027) · Dins de l'app nativa, les pàgines només web
-     (esPaginaVisible: Descàrregues) no entren a la cerca. */
-  const dePagines = useMemo(() => mapa(
-    Array.isArray(core.pages) ? core.pages.filter((p) => esPaginaVisible(p?.key ?? p?.slug ?? p?.id, { nativa: esAppNativa() })) : core.pages,
-    dePagina, opcions
-  ), [core.pages, opcions]);
+     (esPaginaVisible: Descàrregues) no entren a la cerca.
+     Pla 261027_0845 (Guarda Nocturna), T1-06 · I cada pàgina hi entra passada
+     per paginaPerAppNativa: cap altra plataforma mòbil als fragments (el
+     comentari HTML del Full de ruta, la frase de l'Avís legal). */
+  const dePagines = useMemo(() => {
+    const nativa = esAppNativa();
+    return mapa(
+      Array.isArray(core.pages)
+        ? core.pages.filter((p) => esPaginaVisible(p?.key ?? p?.slug ?? p?.id, { nativa })).map((p) => paginaPerAppNativa(p, { nativa }))
+        : core.pages,
+      dePagina, opcions
+    );
+  }, [core.pages, opcions]);
   const dePublicacions = useMemo(() => mapa(mur.feedPosts, dePublicacio, opcions), [mur.feedPosts, opcions]);
   const deActes = useMemo(() => mapa(mur.events, deActe, opcions), [mur.events, opcions]);
   const deProductes = useMemo(() => mapa(mur.marketItems, deProducte, opcions), [mur.marketItems, opcions]);

@@ -50,7 +50,15 @@ const mocks = vi.hoisted(() => ({
   totalNoLlegits: 0,
   amplada: 1280,
   /* Fase D (261020, L4) · Cada muntatge del document destacat (diferit). */
-  documentMuntat: vi.fn()
+  documentMuntat: vi.fn(),
+  /* Pla 261027_0845 (Guarda Nocturna), P1-55 · Cada muntatge de la pàgina
+     viva d'una comunitat (diferida); `vivaSenseFitxa` fa que no es resolga i
+     `vivaFallaTros`, que el seu tros no arribe. */
+  fitxaViva: vi.fn(),
+  vivaSenseFitxa: false,
+  vivaFallaTros: false,
+  /* Revisió adversarial P1-55 · L'estat de la llista del xat (useXat). */
+  status: 'ready'
 }));
 
 vi.mock('../../app/contexts/RouterContext', async () => {
@@ -86,6 +94,26 @@ vi.mock('../text/TextSection', async () => {
   }
   return { default: DocumentPerDefecte };
 });
+/* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina viva d'una comunitat
+   a la columna dreta: una marca, com el document per defecte. La de veres
+   (la fitxa pública, la pàgina del poble) té les seues proves
+   (components/FitxaVivaDeComunitat.test.jsx); ací només es prova on es munta
+   i què hi guanya. Sense ella, les proves amb ?comunitat= en ample
+   carregarien el perfil públic i el detall del poble sencers. */
+vi.mock('./components/FitxaVivaDeComunitat.jsx', async () => {
+  const { createElement } = await import('react');
+  const { LazyRouteError } = await import('../../apps/plataforma/lazyRoute.js');
+  function FitxaVivaDeProva({ comunitat, senseFitxa }) {
+    if (mocks.vivaFallaTros) throw new LazyRouteError(new TypeError('Failed to fetch dynamically imported module'));
+    mocks.fitxaViva(comunitat?.fil?.id);
+    if (mocks.vivaSenseFitxa) return senseFitxa;
+    const subjecte = comunitat?.fil?.subjecte;
+    return createElement('div', {
+      'data-testid': 'fitxa-viva-de-comunitat', 'data-comunitat': comunitat?.fil?.id, 'data-subjecte': `${subjecte?.tipus}:${subjecte?.id}`
+    });
+  }
+  return { default: FitxaVivaDeProva };
+});
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ pageCopy: {} }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ t: (_, fallback) => fallback, resolveAsset: (v) => v }),
@@ -108,7 +136,7 @@ vi.mock('./XatContext', async (importOriginal) => ({
   useXat: () => ({
     scopeKey: mocks.scope,
     ambitEstable: mocks.ambit,
-    status: 'ready',
+    status: mocks.status,
     avis: null,
     chatThreads: mocks.threads,
     getThreadMessages: () => mocks.messages,
@@ -181,6 +209,9 @@ beforeEach(() => {
   mocks.joNom = 'Javi';
   mocks.senseSessio = false;
   mocks.totalNoLlegits = 0;
+  mocks.vivaSenseFitxa = false;
+  mocks.vivaFallaTros = false;
+  mocks.status = 'ready';
   mocks.members.mockResolvedValue([]);
   mocks.createThread.mockResolvedValue('thread-new');
   mocks.send.mockResolvedValue([]);
@@ -1257,6 +1288,151 @@ test('T67 · una comunitat no s’obri mai com a conversa: /xat/<comunitat> port
   expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-1', { replace: true });
   expect(document.querySelector('.sdp-xat-conversa')).toBeNull();
   expect(mocks.openThread).not.toHaveBeenCalledWith('c-1');
+});
+
+/* Pla 261027_0845 (Guarda Nocturna), P1-55 · «Pàgina viva de comunitat»
+   (Llibre Mestre, Fita 19): amb ?comunitat= i cap conversa, la columna dreta
+   pinta la pàgina viva de la comunitat, no el document genèric d'«El Xat».
+   Un grup o un canal obert hi mana; la pestanya és sempre la del Xat. */
+test('P1-55 · /xat?comunitat=<id> pinta la pàgina viva a la columna dreta, sense el document genèric, i la pestanya continua sent la del Xat', async () => {
+  mocks.totalNoLlegits = 5;
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  render(<XatSection />);
+  const dreta = document.getElementById('app-grid-main');
+  const viva = await within(dreta).findByTestId('fitxa-viva-de-comunitat');
+  expect(viva.getAttribute('data-comunitat')).toBe('c-1');
+  expect(viva.getAttribute('data-subjecte')).toBe('entitat:socdepoble');
+  expect(within(dreta).queryByTestId('document-per-defecte')).toBeNull();
+  expect(mocks.documentMuntat).not.toHaveBeenCalled();
+  /* La fitxa de la comunitat continua a la columna de llista. */
+  expect(within(document.getElementById('app-grid-list')).getByRole('region', { name: 'Sóc de Poble' })).toBeTruthy();
+  expect(document.title).toBe('(5) Xat | Sóc de Poble');
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: '(5) Xat' }));
+});
+
+test('P1-55 · un grup o un canal obert des de la comunitat mana sobre la pàgina viva, i tornar a la comunitat la torna', async () => {
+  ambComunitat();
+  mocks.threadId = 'g-1';
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  const view = render(<XatSection />);
+  const dreta = document.getElementById('app-grid-main');
+  expect(dreta.querySelector('.sdp-xat-conversa')).toBeTruthy();
+  await act(async () => { await Promise.resolve(); });
+  expect(within(dreta).queryByTestId('fitxa-viva-de-comunitat')).toBeNull();
+  expect(mocks.fitxaViva).not.toHaveBeenCalled();
+
+  mocks.threadId = null;
+  view.rerender(<XatSection />);
+  expect(await within(dreta).findByTestId('fitxa-viva-de-comunitat')).toBeTruthy();
+  expect(dreta.querySelector('.sdp-xat-conversa')).toBeNull();
+
+  mocks.threadId = 'a-1';
+  view.rerender(<XatSection />);
+  expect(dreta.querySelector('.sdp-xat-conversa')).toBeTruthy();
+  expect(within(dreta).queryByTestId('fitxa-viva-de-comunitat')).toBeNull();
+});
+
+test('P1-55 · en mòbil (375 px) la pàgina viva no es munta ni es baixa: l’avís sobri de sempre', async () => {
+  mocks.amplada = 375;
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  render(<XatSection />);
+  await waitFor(() => expect(document.querySelector('.app-grid-shell').getAttribute('data-layout')).toBe('estret'));
+  await act(async () => { await Promise.resolve(); });
+  const dreta = document.getElementById('app-grid-main');
+  expect(mocks.fitxaViva).not.toHaveBeenCalled();
+  expect(within(dreta).queryByTestId('fitxa-viva-de-comunitat')).toBeNull();
+  expect(mocks.documentMuntat).not.toHaveBeenCalled();
+  expect(dreta.querySelector('.sdp-xat-buit--avis').textContent).toContain('Selecciona una conversa');
+});
+
+test('P1-55 · sense comunitat resolta, la columna buida de sempre: una comunitat que no és a la llista o que no es resol', async () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ comunitat: 'c-inexistent' });
+  const view = render(<XatSection />);
+  const dreta = document.getElementById('app-grid-main');
+  expect(await within(dreta).findByTestId('document-per-defecte')).toBeTruthy();
+  expect(mocks.fitxaViva).not.toHaveBeenCalled();
+
+  /* La pàgina viva no troba la fitxa (una entitat privada, un poble que no
+     hi és): torna `senseFitxa`, la columna buida, mai una altra comunitat. */
+  mocks.vivaSenseFitxa = true;
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  view.rerender(<XatSection />);
+  await waitFor(() => expect(mocks.fitxaViva).toHaveBeenCalledWith('c-1'));
+  expect(await within(dreta).findByTestId('document-per-defecte')).toBeTruthy();
+  expect(within(dreta).queryByTestId('fitxa-viva-de-comunitat')).toBeNull();
+});
+
+/* Revisió adversarial P1-55 · Un enllaç fred a /xat?comunitat=<id> amb
+   sessió en remot: la llista tarda i la comunitat encara no s'ha resolt. La
+   columna dreta espera en blanc, com «Carregant…» a la de llista, i no munta
+   (ni baixa) el document genèric d'«El Xat» abans de la pàgina viva. */
+test('P1-55 · mentre la llista carrega, la columna dreta d’una comunitat espera en blanc, sense el document genèric, i després pinta la pàgina viva', async () => {
+  mocks.threadId = null;
+  mocks.status = 'loading';
+  mocks.threads = [];
+  mocks.comunitats = [];
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  const view = render(<XatSection />);
+  const dreta = document.getElementById('app-grid-main');
+  await act(async () => { await Promise.resolve(); });
+  expect(dreta.querySelector('.sdp-xat-buit[aria-busy="true"]')).toBeTruthy();
+  expect(within(document.getElementById('app-grid-list')).getByText('Carregant…')).toBeTruthy();
+  expect(within(dreta).queryByTestId('document-per-defecte')).toBeNull();
+  expect(mocks.documentMuntat).not.toHaveBeenCalled();
+  expect(mocks.fitxaViva).not.toHaveBeenCalled();
+
+  mocks.status = 'ready';
+  ambComunitat();
+  view.rerender(<XatSection />);
+  expect(await within(dreta).findByTestId('fitxa-viva-de-comunitat')).toBeTruthy();
+  expect(dreta.querySelector('.sdp-xat-buit[aria-busy="true"]')).toBeNull();
+  expect(mocks.documentMuntat).not.toHaveBeenCalled();
+});
+
+test('P1-55 · si el tros de la pàgina viva no arriba (connexió rural), la columna buida de sempre', async () => {
+  const silenci = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    mocks.vivaFallaTros = true;
+    mocks.threadId = null;
+    ambComunitat();
+    mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+    render(<XatSection />);
+    const dreta = document.getElementById('app-grid-main');
+    expect(await within(dreta).findByTestId('document-per-defecte')).toBeTruthy();
+    expect(within(dreta).queryByTestId('fitxa-viva-de-comunitat')).toBeNull();
+  } finally { silenci.mockRestore(); }
+});
+
+/* Revisió creuada P1-55 (Codex GN-R01, Gemini 7.3) · Un tros que no ha
+   arribat en una comunitat no deixa encallada la següent: en canviar de
+   comunitat, la barrera es remunta i la pàgina viva hi torna. */
+test('P1-55 · després d’un tros que no arriba en una comunitat, la següent pinta la seua pàgina viva', async () => {
+  const silenci = vi.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    mocks.vivaFallaTros = true;
+    mocks.threadId = null;
+    ambComunitat();
+    const segona = { tipus: 'poble', id: 'la-torre', ruta: '/pobles/la-torre', titol: 'Gent de la Torre' };
+    mocks.threads = [...mocks.threads, mapejaFil({ id: 'c-2', tipus: 'comunitat', titol: 'Gent de la Torre', comunitatId: null, subjecte: segona })];
+    mocks.comunitats = agrupaComunitats(mocks.threads);
+    mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+    const view = render(<XatSection />);
+    const dreta = document.getElementById('app-grid-main');
+    expect(await within(dreta).findByTestId('document-per-defecte')).toBeTruthy();
+
+    mocks.vivaFallaTros = false;
+    mocks.params = new URLSearchParams({ comunitat: 'c-2' });
+    view.rerender(<XatSection />);
+    const viva = await within(dreta).findByTestId('fitxa-viva-de-comunitat');
+    expect(viva.getAttribute('data-comunitat')).toBe('c-2');
+    expect(within(dreta).queryByTestId('document-per-defecte')).toBeNull();
+  } finally { silenci.mockRestore(); }
 });
 
 /* T63.2 · Conversa de pàgina: «Sobre: <títol>» enllaçat a la pàgina i el

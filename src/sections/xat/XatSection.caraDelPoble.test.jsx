@@ -38,6 +38,14 @@ vi.mock('../text/TextSection', async () => {
   const { createElement } = await import('react');
   return { default: ({ pageKey }) => createElement('div', { 'data-testid': 'document-per-defecte' }, pageKey) };
 });
+/* Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb ?comunitat= en ample, la
+   columna dreta pinta la pàgina viva de la comunitat (diferida): una marca,
+   que les proves d'ací miren la cara del poble. Les seues proves són a
+   components/FitxaVivaDeComunitat.test.jsx. */
+vi.mock('./components/FitxaVivaDeComunitat.jsx', async () => {
+  const { createElement } = await import('react');
+  return { default: () => createElement('div', { 'data-testid': 'fitxa-viva-de-comunitat' }) };
+});
 /* Les fitxes de Pobles del node: d'ací ix la cara del poble. */
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ pageCopy: {}, towns: mocks.towns }) }));
 vi.mock('../../app/contexts/UIContext', () => ({

@@ -146,7 +146,14 @@ describe('Model B i maquinària existent', () => {
     expect(element).toContain("import { buildDetailSectionMeta, imatgePropiaDelDetall } from './detailSectionMeta.jsx';");
     expect(element).not.toMatch(/LLISTES_DEL_MUR|function imatgePropiaDelDetall/);
     const detall = codiDe('src/sections/detail/ItemDetailSection.jsx');
-    expect(detall).toContain('image: pagina ? pagina.heroImage : null');
+    /* Pla 261027_1154 (P1-61), Fase 1 · El <head> del Mercat, el Mur, l'agenda i
+       els Pobles el tria el selector únic (primeraImatgeSocial); la resta de
+       seccions continua amb la portada ja filtrada (pagina.heroImage, el mode
+       estricte), mai section.getImage(item) cru. */
+    expect(detall).toContain('const portadaDelHead = pagina ? pagina.heroImage : null;');
+    expect(detall).toContain('if (!SECCIONS_AMB_IMATGE_SOCIAL.has(sectionId)) return portadaDelHead;');
+    expect(detall).toContain('primeraImatgeSocial(sectionId, item, opcionsDeLaImatgeSocial())');
+    expect(detall).toContain('image: imatgeDelHead');
     expect(detall).not.toContain('section?.getImage?.(item)');
     expect(detall).toContain('avatarAutorDElement(item, pagina.authorName, section)');
     const lector = codiDe('src/sections/notes/PublicacioDetall.jsx');

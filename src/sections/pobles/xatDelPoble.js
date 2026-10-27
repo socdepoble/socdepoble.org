@@ -41,8 +41,12 @@ export function objecteDelPobleXat(town) {
 
 /* La fitxa d'un subjecte de xat 'poble': per l'id o pel slug de la fitxa, o
    per la ruta canònica /pobles/<id> (en remot el servidor pot guardar un
-   altre id). */
-function fitxaDelSubjecte(subjecte, towns) {
+   altre id).
+   Pla 261027_0845 (Guarda Nocturna), P1-55 · Exportada: la pàgina viva de
+   la comunitat d'un poble a la columna dreta del Xat (FitxaVivaDeComunitat)
+   troba el poble amb la mateixa regla, també el remot (UUID o /pobles/<slug>).
+   Cap còpia de la resolució. */
+export function fitxaDelSubjecte(subjecte, towns) {
   if (!subjecte || subjecte.tipus !== 'poble' || !Array.isArray(towns)) return null;
   const id = textDe(subjecte.id);
   const ruta = textDe(subjecte.ruta);

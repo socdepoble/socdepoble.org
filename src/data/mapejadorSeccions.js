@@ -402,8 +402,13 @@ const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
   'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
   'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId'
 ]);
+/* Llibre Mestre, P1-61 (àudio del Mestre del 27-10-2026 a les 12:08) · «el
+   model de dades i la resolució d'imatge han de prioritzar item.og_image ||
+   item.featured_image»: la imatge que l'autor tria per a xarxes
+   (config/imatgeSocial.js) és una clau d'imatge més, amb la mateixa neteja. */
 const CLAUS_D_IMATGE_DEL_PAYLOAD = Object.freeze([
-  'image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image'
+  'image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image',
+  'og_image', 'featured_image'
 ]);
 const CLAUS_DE_LLISTA_DEL_PAYLOAD = Object.freeze(['labels', 'variations', 'tags']);
 const CAMPS_DE_GEOLOCALITZACIO = Object.freeze(['lat', 'lng', 'altitud']);

@@ -1,6 +1,7 @@
 import { resolveAsset } from '../../config/assetResolver';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
+import { MARQUES, MARQUES_SVG_ANTIGUES } from '../../config/imatgeSocial.js';
 
 /* Fase C (Capacitor 8; ordre del Mestre, 261019) · L'esquema de l'app nativa
    d'iOS (iosScheme de capacitor.config.json). Android servix l'app des de
@@ -72,26 +73,14 @@ export function rutaDAutorSegura(href) {
    consumidor, ni a les proves. Les dates de la barra taronja les llig el lector
    únic (barres/pastillaCalendari.js → editorial.js). */
 
-/* Onada 8 (261009) · Els logotips de Sóc de Poble són PNG de 256 px d'alt:
-   el quadrat de 256x256 i els rectangulars de 985x256 (es pinten fins a
-   600 px CSS i han de quedar nítids). Pesen entre tres i deu vegades menys
-   que els SVG (ho fixa config/logotips.test.js). */
-const MARQUES = Object.freeze({
-  avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
-  clar: '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png',
-  fosc: '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png'
-});
-
-/* Onada 8 (261009) · Els logotips d'abans, en SVG, amb la mateixa clau que
-   el seu PNG. Els SVG continuen a public/: els porten supabase/seed.sql i
-   les files ja desades al servidor. Per això la marca es reconeix en les dues
-   formes (esMarcaDeLEntitat, camiDeLaMarca i el logotip de PageFrame): si no,
-   una fila amb l'SVG tornaria a pintar la marca com a avatar redó. */
-export const MARQUES_SVG_ANTIGUES = Object.freeze({
-  avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
-  clar: '/assets/system/ui/logo-socdepoble-rect-negre.svg',
-  fosc: '/assets/system/ui/logo-socdepoble-rect-blanc.svg'
-});
+/* Onada 8 (261009) · Els logotips de Sóc de Poble (MARQUES: els PNG de 256 px
+   d'alt) i els d'abans en SVG (MARQUES_SVG_ANTIGUES), amb la mateixa clau.
+   Pla 261027_1154 (P1-61) · Viuen a config/imatgeSocial.js, la fulla sense
+   imports del selector de la imatge social, que també els ha de reconéixer
+   com a reserves. Mateixos valors i mateixos objectes congelats: este mòdul
+   els llig d'allí i continua exportant MARQUES_SVG_ANTIGUES amb el mateix
+   nom; MARQUES continua sent interna ací. */
+export { MARQUES_SVG_ANTIGUES };
 
 /* L'avatar es resol en llegir-lo, no en importar el mòdul: així hi val la
    base de recursos que l'amfitrió fixe després (config/assetResolver.js).

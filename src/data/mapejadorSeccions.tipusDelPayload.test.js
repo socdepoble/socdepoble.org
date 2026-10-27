@@ -25,7 +25,10 @@ const CLAUS_DE_TEXT = [
   'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
   'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId'
 ];
-const CLAUS_D_IMATGE = ['image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image'];
+/* Llibre Mestre, P1-61 · og_image i featured_image (la imatge que l'autor tria
+   per a xarxes, config/imatgeSocial.js) són claus d'imatge com les altres. */
+const CLAUS_D_IMATGE = ['image', 'image_url', 'imageSrc', 'images', 'src', 'avatar_url', 'author_avatar', 'logo_image',
+  'og_image', 'featured_image'];
 
 const fila = (payload) => elementDeFilaPublicada({
   id: 'p1', payload: JSON.parse(JSON.stringify(payload)), titol: 'Nom del servidor',

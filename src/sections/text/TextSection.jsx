@@ -7,9 +7,31 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { propsDePaginaDeText } from './paginaDeText.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 
+import { useMemo } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
+import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
+/* Pla 261027_1154 (P1-61) · La imatge del <head>: el selector únic i la base
+   del Supabase de la capa del paquet. */
+import { CAP_SOCIAL_BASE, primeraImatgeSocial } from '../../config/imatgeSocial.js';
+import { capaDelPaquet } from '../../config/capaDelPaquet.js';
+/* Pla 261027_0845 (Guarda Nocturna), T1-06 · el text de les pàgines dins de
+   l'app nativa, sense cap altra plataforma mòbil (regla 2.3.10 de l'App Store). */
+import { htmlPerAppNativa, paginaPerAppNativa } from './perAppNativa.js';
+
+/* Pla 261027_1154 (P1-61) · Les opcions d'urlSocialDe, les mateixes que
+   detail/ItemDetailSection.jsx: l'origen públic només si és https (el de dev,
+   http://localhost, cau a socdepoble.org), la base del Supabase del paquet i
+   cap origen de tercers permés. */
+function opcionsDeLaImatgeSocial() {
+  const origen = origenPublic();
+  return {
+    ...(/^https:\/\//i.test(String(origen || '')) ? { origen } : null),
+    supabaseUrl: capaDelPaquet().supabaseUrl,
+    permesos: []
+  };
+}
 
 /* Ordre del Mestre (261007) · El cos d'una pàgina de text amb targetes
    incrustades (un grup data-sdp-targetes de primer nivell: la de «Drets
@@ -22,10 +44,16 @@ import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js
    targetes es pinten sincronitzades amb el seu original
    (ProveidorSincronitzacioTargetes); la instantània, de reserva.
    Grup E (261008) · Exportat: el lector del MAS (notes/PublicacioDetall.jsx)
-   pinta el cos d'una pàgina del sistema pel mateix camí. */
+   pinta el cos d'una pàgina del sistema pel mateix camí.
+   Pla 261027_0845 (Guarda Nocturna), T1-06 · Dins de l'app nativa
+   (esAppNativa), el cos passa abans per htmlPerAppNativa: cap altra plataforma
+   mòbil ni cap altra botiga (perAppNativa.js). Ho fa per a tots els qui el
+   pinten (TextSection, PublicacioDetall i PluginPage). Fora de l'app, l'HTML
+   de sempre, byte a byte. */
 export function CosDeLaPagina({ html }) {
-  if (String(html || '').includes(MARCA_GRUP)) {
-    const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(html)));
+  const cos = esAppNativa() ? htmlPerAppNativa(html) : html;
+  if (String(cos || '').includes(MARCA_GRUP)) {
+    const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(cos)));
     if (segments.some((segment) => segment.tipus === 'targetes')) {
       return (
         <ProveidorSincronitzacioTargetes>
@@ -34,7 +62,7 @@ export function CosDeLaPagina({ html }) {
       );
     }
   }
-  return <article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html)) }} />;
+  return <article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(cos)) }} />;
 }
 
 /* `children`: peces vives que van davall del text (el Tauler de Telemetria a
@@ -57,13 +85,50 @@ export function CosDeLaPagina({ html }) {
     · `objecte` (revisió del 261007, M3-10) · el descriptor de la pàgina
       quan es munta fora de la seua ruta: el xat públic de «En públic» és el
       de la pàgina, no el de la ruta on està la persona (/xat), el mateix
-      destí que el seu Connectar. Com onConnect, només es passa quan n'hi ha. */
-export default function TextSection({ page, pageKey, accioPrincipal = null, onConnect = null, objecte = null, children = null }) {
+      destí que el seu Connectar. Com onConnect, només es passa quan n'hi ha.
+   Pla 261027_0845 (Guarda Nocturna), T1-06 · Dins de l'app nativa, la pàgina
+   que es pinta (capçalera, descripció de useSEO i cos) és la de
+   paginaPerAppNativa: el Full de ruta i l'Avís legal no hi nomenen cap altra
+   plataforma mòbil. Fora de l'app, el mateix objecte. */
+export default function TextSection({ page: original, pageKey, accioPrincipal = null, onConnect = null, objecte = null, children = null }) {
+  const page = useMemo(() => paginaPerAppNativa(original), [original]);
   const { t } = useUIActions();
+  /* Pla 261027_1154 (P1-61), Fase 1 (ordre del Mestre, 261027) · Abans, la
+     targeta genèrica sempre. Ara og:image és la imatge que l'autor ha triat
+     per a xarxes (og_image, o si no, featured_image; Llibre Mestre, P1-61) o,
+     sense, la primera imatge pròpia de la pàgina (primeraImatgeSocial
+     ('pagina'): page.image i, després, les del cos), ja absoluta i https. Els
+     logotips no compten, ni el panorama que la pintura posa a una pàgina sense
+     image (HERO_PER_DEFECTE): eixa pàgina, i una primera imatge que no es pot
+     servir ('bloquejada'), porten la targeta genèrica de sempre
+     (CAP_SOCIAL_BASE, OG-1). Una pàgina que nomena el panorama ella mateixa
+     (/projecte) el porta: és la seua panoràmica (P1-60). La portada que es
+     pinta no canvia (Llei del Píxel).
+     Revisió adversarial (261027) · La triada viatja amb el seu alt: el de
+     page.image (imageAlt) si és ella, i si no (la triada per l'autor o una
+     foto del cos), el títol de la pàgina. Sense MIME ni mides: no es lligen
+     dels bytes. */
+  const imatgeDelHead = useMemo(() => {
+    const social = primeraImatgeSocial('pagina', page, opcionsDeLaImatgeSocial());
+    if (social.estat !== 'triada') return resolveAsset(CAP_SOCIAL_BASE.image.url);
+    const esLaPortada = typeof page.image === 'string' && page.image.trim() === social.ref;
+    const alt = (esLaPortada && page.imageAlt) || page.title;
+    return typeof alt === 'string' && alt.trim() ? { url: social.url, alt: alt.trim() } : social.url;
+  }, [page]);
+  /* Revisió adversarial (261027) · Una pàgina muntada en context (chrome
+     'context': el document destacat de la columna dreta del Xat) no és la de
+     la ruta: el <head> és de qui la incrusta, i ella només n'és la reserva
+     (fallback, la prioritat de RouteSEO). Abans es registrava com a vista i,
+     des que la imatge depén de la pàgina, cada canvi de la seua foto (una
+     còpia remota que arriba) la tornava a registrar darrere de SeoDelXat
+     (XatSection.jsx), que només es remunta amb el títol o la descripció: la
+     pestanya perdia «(N) Xat» i l'og:image era la foto del document. */
+  const enContext = page.chrome === 'context';
   useSEO({
     title: page.title,
     description: page.subtitle || page.lead || 'Sóc de Poble',
-    image: resolveAsset('/assets/system/ui/og-socdepoble-1200x630.png')
+    image: imatgeDelHead,
+    ...(enContext ? { fallback: true } : null)
   });
   return (
     <UniversalPage

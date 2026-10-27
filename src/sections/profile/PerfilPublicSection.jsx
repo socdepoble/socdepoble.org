@@ -224,16 +224,17 @@ function urlCanonica(ruta) {
 }
 
 /**
- * `id` (Gauntlet 261016, Bloc 3.5.1): l'identificador fix d'una ruta canònica
- * (/javillinares, /socdepoble, /rentonar; App.jsx), que no porta cap
- * paràmetre. Sense, el de la ruta (/gent/:agentId i les germanes).
+ * Pla 261027_0845 (Guarda Nocturna), P1-55 · La càrrega de la fitxa pública
+ * d'una clau (id o slug), sense useParams ni useSEO. La criden la ruta
+ * (PerfilPublicSection, davall) i la pàgina viva d'una comunitat a la columna
+ * dreta del Xat (xat/components/FitxaVivaDeComunitat.jsx), que no pot
+ * registrar cap SEO: un useSEO posterior guanyaria a seoHead i s'enduria el
+ * títol i el canònic de /xat. És la càrrega de sempre, moguda sense cap canvi:
+ * la cancel·lació, els terminis, la reserva local, el reintent i la clau de
+ * qui mira (CUR-01). Torna { perfil, carregant, senseResposta, reintenta }.
  */
-export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }) {
-  const { agentId: idDeLaRuta } = useParams();
-  const agentId = id ?? idDeLaRuta;
-  const { t } = useUIActions();
+export function usePerfilPublic(agentId, { agents = AGENTS_BUITS } = {}) {
   const { externalConfig } = useUIState();
-  const navigate = useNavigate();
   /* Gauntlet 261025_0545 (CUR-01) · L'estat porta la clau de qui mira. Si la
      sessió s'acaba (eixida en una altra pestanya, renovació fallida, expulsió
      de l'amfitrió) o passa d'A a B sense que la ruta canvie, la fitxa d'A no
@@ -389,6 +390,27 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
   const perfil = delVisor && estat.status === 'ready' ? estat.perfil : null;
   const carregant = !delVisor || estat.status === 'loading';
   const senseResposta = delVisor && estat.status === 'senseResposta';
+  /* Gauntlet 261022_0225 (Tasca 1) · «Torna-ho a provar» de l'avís
+     (REV-PERF-2: amb la clau, per al seu termini). */
+  const reintenta = () => setIntent((previ) => ({ clau: String(agentId || ''), n: previ.n + 1 }));
+  return { perfil, carregant, senseResposta, reintenta };
+}
+
+/**
+ * `id` (Gauntlet 261016, Bloc 3.5.1): l'identificador fix d'una ruta canònica
+ * (/javillinares, /socdepoble, /rentonar; App.jsx), que no porta cap
+ * paràmetre. Sense, el de la ruta (/gent/:agentId i les germanes).
+ * Pla 261027_0845 (Guarda Nocturna), P1-55 · La càrrega viu a
+ * usePerfilPublic (dalt); la ruta hi afig el SEO, la pantalla de càrrega i
+ * els avisos.
+ */
+export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }) {
+  const { agentId: idDeLaRuta } = useParams();
+  const agentId = id ?? idDeLaRuta;
+  const { t } = useUIActions();
+  const { externalConfig } = useUIState();
+  const navigate = useNavigate();
+  const { perfil, carregant, senseResposta, reintenta } = usePerfilPublic(agentId, { agents });
 
   /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · La fitxa d'una de les
      tres identitats del Mestre declara la seua URL canònica neta, s'obriga
@@ -446,7 +468,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }
             la càrrega ha fallat. Cap canvi visual. */}
         <p className="sdp-nomes-lector" role="alert">{titolSenseFitxa}</p>
         <div className="sdp-alerta__accions">
-          <Boto varietat="primari" onClick={() => setIntent((previ) => ({ clau: String(agentId || ''), n: previ.n + 1 }))}>{t('common.reintenta', 'Torna-ho a provar')}</Boto>
+          <Boto varietat="primari" onClick={reintenta}>{t('common.reintenta', 'Torna-ho a provar')}</Boto>
           <Boto varietat="secundari" onClick={() => navigate('/perfil')}>{t('section.perfil.public.directori', 'Torna al directori')}</Boto>
         </div>
       </UniversalPage>
@@ -508,9 +530,13 @@ export function PaginaDeLAgent({ identitat }) {
  *   · `ambEdita` false lleva «Edita la fitxa»: al Perfil, «La fitxa» és
  *     l'apartat del costat.
  *   · `chrome` és el de la UniversalPage: 'full' a la ruta, 'context' dins
- *     del Workspace del Perfil (com «Les vistes»).
+ *     del Workspace del Perfil (com «Les vistes») i a la columna dreta del Xat.
+ *   · Pla 261027_0845 (Guarda Nocturna), P1-55 · `ambXat` false lleva
+ *     «Escriu-li al xat» (i «Parla amb…» d'una IA) i «Comentar» de la barra
+ *     blava: la pàgina viva d'una comunitat ja és dins del Xat
+ *     (FitxaVivaDeComunitat).
  */
-export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
+export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 'full' }) {
   const { t } = useUIActions();
   /* T6b · `locale`: la data de «Veïnat connectat amb tu», en la llengua de la fitxa. */
   const { externalConfig, locale } = useUIState();
@@ -637,9 +663,11 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
      del Xat: en llavor i en local, el directe del padró (rutaDelXatDeJavi); en
      remot sense sessió, el seu xat de només lectura. En remot amb sessió el
      servidor no en coneix el compte (crea_fil_directe rebutja '0001') i el
-     botó no es pinta: cap clic que acabe en error. */
+     botó no es pinta: cap clic que acabe en error.
+     Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb `ambXat` false (la pàgina
+     viva d'una comunitat dins del Xat), cap botó de xat: ja s'és al Xat. */
   const esLaPilotDelPaquet = perfil.tipus === 'persona' && esLaPersonaDeContacte(perfil);
-  const rutaDelXat = esIAIA(perfil.id)
+  const rutaDelXat = !ambXat ? null : esIAIA(perfil.id)
     ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
     : esLaPilotDelPaquet
       ? (senseSessio ? `/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}` : rutaDelXatDeJavi(modeDades))
@@ -699,6 +727,11 @@ export function FitxaPublica({ perfil, ambEdita = true, chrome = 'full' }) {
          (ni a la del pilot, la IAIA o una entitat que representes:
          objectiuDeTargeta). */
       ambModeracio={!perfil.propietari}
+      /* Pla 261027_0845 (Guarda Nocturna), P1-55 (revisió adversarial) · Amb
+         `ambXat` false, tampoc «Comentar» a la barra blava: el xat comú
+         d'una entitat és la mateixa comunitat on ja s'és (UniversalPage:
+         onComment={false} vol dir «sense botó»). Per defecte, cap prop nova. */
+      {...(ambXat ? null : { onComment: false })}
       /* T63.2 (doctrina del Mestre, 260928) · Comentar d'una persona o d'una IA
          és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un
          grup, el xat comú de la seua pàgina (la Comunitat). «Escriu-li al xat»

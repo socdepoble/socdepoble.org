@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { registerSeo } from './seoHead.js';
+import { ATRIBUT_SSR, CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
 
 let cleanups;
 beforeEach(() => {
@@ -85,18 +86,189 @@ test('S6 · una imatge amb conjunt el publica sencer i el desmuntatge no deixa �
   cleanup(); cleanups = [];
   expect(document.head.innerHTML).toBe(before);
 });
-test('S6 · la imatge base (marcada o amb la mateixa URL) deixa intacte el conjunt del document', () => {
+/* Pla 261027_1154 (P1-61) · S3. Esta prova substituïx la que fixava el salt:
+   una imatge marcada `base` o amb la mateixa URL que el document deixava el
+   conjunt del document tal com estava. Amb un head servit particular, eixe
+   conjunt era la foto del producte d'entrada. Ara cada imatge s'escriu
+   sencera, amb el seu conjunt o cap, i desmuntar torna el document exacte. */
+test('S3 · la imatge amb la mateixa URL que el document (o marcada base) s’escriu sencera: no hereta el conjunt del document', () => {
   ambImatgeBase();
+  const before = document.head.innerHTML;
   for (const image of [{ url: 'https://example.org/una-altra-ruta.png', base: true }, LOGO]) {
+    const url = image.url || image;
     const cleanup = ambImatge(image);
-    expect(['og:image', 'og:image:width', 'og:image:height', 'og:image:alt'].map(propietat))
-      .toEqual([LOGO, '1200', '630', 'Logotip de prova']);
+    expect(['og:image', 'og:image:type', 'og:image:width', 'og:image:height', 'og:image:alt', 'twitter:image', 'twitter:image:alt']
+      .map(propietat)).toEqual([url, null, null, null, null, url, null]);
     expect(propietat('twitter:card')).toBe('summary_large_image');
     cleanup(); cleanups = [];
+    expect(document.head.innerHTML).toBe(before);
   }
+  const { type, width, height, alt } = CAP_SOCIAL_BASE.image;
+  ambImatge({ url: LOGO, type, width, height, alt });
+  expect(['og:image', 'og:image:type', 'og:image:width', 'og:image:height', 'og:image:alt', 'twitter:image', 'twitter:image:alt']
+    .map(propietat)).toEqual([LOGO, type, width, height, alt, LOGO, alt]);
 });
 test('S6 · sense imatge al document, la base marcada només publica la URL', () => {
   ambImatge({ url: LOGO, base: true });
   expect(propietat('og:image')).toBe(LOGO);
   expect(['og:image:width', 'og:image:height', 'og:image:alt'].map(propietat)).toEqual([null, null, null]);
+});
+
+/* Pla 261027_1154 (P1-61) · S3. El head que servirà el prerender per a la
+   samarreta (fila app_content.marketItems de producció, només camins): cada
+   node propi de la ruta porta ATRIBUT_SSR, i el JSON-LD també data-sdp-seo.
+   Els nodes sense marca (og:site_name i el JSON-LD WebSite d'index.html) són
+   del lloc, no de la ruta. */
+const FOTO = 'https://socdepoble.org/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png';
+const DESCRIPCIO_SAMARRETA = 'Mapa del tresor sobre cotó resistent. La imatge complementa el text, no el substituïx.';
+const HEAD_SERVIT = `
+  <title ${ATRIBUT_SSR}>Samarreta Sóc de Poble | Sóc de Poble</title>
+  <meta property="og:site_name" content="Sóc de Poble">
+  <meta name="description" content="${DESCRIPCIO_SAMARRETA}" ${ATRIBUT_SSR}>
+  <link rel="canonical" href="https://socdepoble.org/mercat/samarreta-socdepoble" ${ATRIBUT_SSR}>
+  <meta property="og:url" content="https://socdepoble.org/mercat/samarreta-socdepoble" ${ATRIBUT_SSR}>
+  <meta property="og:title" content="Samarreta Sóc de Poble | Sóc de Poble" ${ATRIBUT_SSR}>
+  <meta property="og:description" content="${DESCRIPCIO_SAMARRETA}" ${ATRIBUT_SSR}>
+  <meta property="og:type" content="product" ${ATRIBUT_SSR}>
+  <meta property="og:image" content="${FOTO}" ${ATRIBUT_SSR}>
+  <meta property="og:image:type" content="image/jpeg" ${ATRIBUT_SSR}>
+  <meta property="og:image:width" content="1024" ${ATRIBUT_SSR}>
+  <meta property="og:image:height" content="1024" ${ATRIBUT_SSR}>
+  <meta property="og:image:alt" content="Samarreta Sóc de Poble" ${ATRIBUT_SSR}>
+  <meta property="product:price:amount" content="15.00" ${ATRIBUT_SSR}>
+  <meta name="twitter:card" content="summary_large_image" ${ATRIBUT_SSR}>
+  <meta name="twitter:title" content="Samarreta Sóc de Poble | Sóc de Poble" ${ATRIBUT_SSR}>
+  <meta name="twitter:description" content="${DESCRIPCIO_SAMARRETA}" ${ATRIBUT_SSR}>
+  <meta name="twitter:image" content="${FOTO}" ${ATRIBUT_SSR}>
+  <meta name="twitter:image:alt" content="Samarreta Sóc de Poble" ${ATRIBUT_SSR}>
+  <script type="application/ld+json" data-sdp-seo="true" ${ATRIBUT_SSR}>{"@type":"Product","name":"Samarreta Sóc de Poble"}</script>
+  <script type="application/ld+json">{"@type":"WebSite","name":"Sóc de Poble"}</script>`;
+const ambHeadServit = () => { document.head.innerHTML = HEAD_SERVIT; };
+const GENERICA = new URL(CAP_SOCIAL_BASE.image.url, ORIGEN_SOCIAL_PER_DEFECTE).href;
+/* El head genèric que ha de quedar: CAP_SOCIAL_BASE i res de la ruta servida. */
+const METES_GENERIQUES = {
+  description: CAP_SOCIAL_BASE.description, 'og:site_name': 'Sóc de Poble',
+  'og:title': CAP_SOCIAL_BASE.title, 'og:description': CAP_SOCIAL_BASE.description, 'og:type': 'website',
+  'og:image': GENERICA, 'og:image:type': 'image/png', 'og:image:width': '1200', 'og:image:height': '630',
+  'og:image:alt': CAP_SOCIAL_BASE.image.alt, 'twitter:card': 'summary_large_image', 'twitter:title': CAP_SOCIAL_BASE.title,
+  'twitter:description': CAP_SOCIAL_BASE.description, 'twitter:image': GENERICA, 'twitter:image:alt': CAP_SOCIAL_BASE.image.alt
+};
+const metes = () => {
+  const files = [...document.head.querySelectorAll('meta[name], meta[property]')]
+    .map(node => [node.getAttribute('property') || node.getAttribute('name'), node.content]);
+  expect(new Set(files.map(([clau]) => clau)).size, 'cap etiqueta duplicada').toBe(files.length);
+  return Object.fromEntries(files);
+};
+const AMA = { manageDocumentHead: true };
+
+test('S3 · un head servit amb data-sdp-ssr no és la base: la ruta sense imatge pròpia porta el genèric i desmuntar torna CAP_SOCIAL_BASE', () => {
+  ambHeadServit();
+  const { type, width, height, alt } = CAP_SOCIAL_BASE.image;
+  const cleanup = registerSeo(Symbol('mur'), { path: '/mur', title: 'Mur', index: true, canonical: 'https://socdepoble.org/mur',
+    image: { url: GENERICA, type, width, height, alt } }, AMA);
+  cleanups.push(cleanup);
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(metes()).toEqual({ ...METES_GENERIQUES, 'og:title': 'Mur | Sóc de Poble', 'twitter:title': 'Mur | Sóc de Poble',
+    'og:url': 'https://socdepoble.org/mur' });
+  expect(document.title).toBe('Mur | Sóc de Poble');
+  expect(document.head.querySelector('script[data-sdp-seo]')).toBeNull();
+  expect(document.head.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+  cleanup(); cleanups = [];
+  expect(metes()).toEqual(METES_GENERIQUES);
+  expect(document.title).toBe(CAP_SOCIAL_BASE.title);
+  expect(document.head.querySelectorAll('title')).toHaveLength(1);
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}], link[rel="canonical"], script[data-sdp-seo]`)).toBeNull();
+  // El JSON-LD del lloc, sense data-sdp-seo, no és de cap ruta: es queda intacte.
+  expect([...document.head.querySelectorAll('script[type="application/ld+json"]')].map(node => node.textContent))
+    .toEqual(['{"@type":"WebSite","name":"Sóc de Poble"}']);
+});
+test('S3 · amb el head servit, una vista que no porta imatge ni descripció no hereta les del producte', () => {
+  ambHeadServit();
+  register(AMA);
+  expect([propietat('og:image'), propietat('twitter:image'), propietat('twitter:card')]).toEqual([null, null, null]);
+  expect(['description', 'og:description', 'twitter:description', 'og:type'].map(propietat))
+    .toEqual([CAP_SOCIAL_BASE.description, CAP_SOCIAL_BASE.description, CAP_SOCIAL_BASE.description, 'website']);
+  expect(document.head.querySelector('meta[property^="product:"]')).toBeNull();
+});
+test('S3 · un segon registre després de desmuntar-ho tot parteix del mateix head genèric', () => {
+  ambHeadServit();
+  registerSeo(Symbol('a'), { ...data, image: GENERICA }, AMA)();
+  const generic = document.head.innerHTML;
+  registerSeo(Symbol('b'), { ...data, ogType: 'article', image: FOTO }, AMA)();
+  expect(document.head.innerHTML).toBe(generic);
+  expect(metes()).toEqual(METES_GENERIQUES);
+});
+test('S3 · sense autoritat, el head servit no es toca: ni els nodes marcats', () => {
+  ambHeadServit();
+  const before = document.head.innerHTML;
+  for (const options of [undefined, { manageDocumentHead: false }]) register(options);
+  expect(document.head.innerHTML).toBe(before);
+  expect(document.head.querySelectorAll(`[${ATRIBUT_SSR}]`).length).toBeGreaterThan(0);
+});
+test('S3 · og:type és de la ruta: data.ogType o website, i desmuntar torna el del document', () => {
+  const before = document.head.innerHTML;
+  const producte = registerSeo(Symbol('producte'), { ...data, ogType: 'product' }, AMA);
+  cleanups.push(producte);
+  expect(propietat('og:type')).toBe('product');
+  producte(); cleanups = [];
+  expect(document.head.innerHTML).toBe(before);
+  register(AMA);
+  expect(propietat('og:type')).toBe('website');
+});
+test('S3 · sense marca, la base continua sent el head servit; la descripció de reserva, però, és la genèrica', () => {
+  const before = document.head.innerHTML;
+  const cleanup = register(AMA);
+  expect(propietat('description')).toBe(CAP_SOCIAL_BASE.description);
+  cleanup(); cleanups = [];
+  expect(document.head.innerHTML).toBe(before);
+  expect(propietat('description')).toBe('Host description');
+});
+/* Pla 261027_1154 (P1-61) · Revisió adversarial (261027) · El head servit és
+   el de la ruta que declara el seu canonical (o og:url) marcat. Mentre l'SPA
+   hi és, mana ell: ni la reserva (prioritat 0) ni la vista no el substituïxen.
+   En canviar de ruta, els nodes marcats se'n van i la base és la genèrica. Un
+   head marcat que no declara cap ruta se'n va en el primer registre. */
+const SAMARRETA = '/mercat/samarreta-socdepoble';
+test('Revisió 261027 · a la ruta que declara el head servit, cap registre no el toca; en eixir-ne, cap node servit', () => {
+  ambHeadServit();
+  const servit = document.head.innerHTML;
+  const reserva = registerSeo(Symbol('ruta'), { path: SAMARRETA, priority: 0, title: 'Mercat', index: true }, AMA);
+  cleanups.push(reserva);
+  const vista = registerSeo(Symbol('fitxa'), { path: SAMARRETA, title: null, index: true, image: null }, AMA);
+  cleanups.push(vista);
+  expect(document.head.innerHTML).toBe(servit);
+  // Amb barra final, la mateixa ruta.
+  const barra = registerSeo(Symbol('barra'), { path: `${SAMARRETA}/`, title: 'No trobat', index: true }, AMA);
+  expect(document.head.innerHTML).toBe(servit);
+  barra();
+  expect(document.head.innerHTML).toBe(servit);
+  // Una altra ruta: fora els nodes marcats, el genèric i la vista nova.
+  const mur = registerSeo(Symbol('mur'), { path: '/mur', priority: 0, title: 'Mur', index: true, canonical: 'https://socdepoble.org/mur' }, AMA);
+  cleanups.push(mur);
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.head.querySelector('meta[property^="product:"], script[data-sdp-seo]')).toBeNull();
+  expect(document.title).toBe('Mur | Sóc de Poble');
+  expect(propietat('og:type')).toBe('website');
+});
+test('Revisió 261027 · un head marcat sense canonical ni og:url marcats se’n va en el primer registre', () => {
+  ambHeadServit();
+  document.head.querySelectorAll('link[rel="canonical"], meta[property="og:url"]').forEach(node => node.remove());
+  register(AMA);
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.head.querySelector('meta[property^="product:"]')).toBeNull();
+  expect(propietat('description')).toBe(CAP_SOCIAL_BASE.description);
+});
+test('Revisió 261027 · si la primera ruta registrada no és la del head servit (una redirecció del client), els nodes marcats se’n van', () => {
+  ambHeadServit();
+  register(AMA);
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.title).toBe('Mercat | Sóc de Poble');
+});
+test('Revisió 261027 · desmuntar-ho tot a la ruta servida deixa el head servit; sense autoritat, tampoc no es toca', () => {
+  ambHeadServit();
+  const servit = document.head.innerHTML;
+  registerSeo(Symbol('fitxa'), { path: SAMARRETA, title: 'Samarreta', index: true }, AMA)();
+  expect(document.head.innerHTML).toBe(servit);
+  registerSeo(Symbol('fora'), { path: SAMARRETA, title: 'Samarreta' }, { manageDocumentHead: false })();
+  expect(document.head.innerHTML).toBe(servit);
 });

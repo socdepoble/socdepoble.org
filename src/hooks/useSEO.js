@@ -4,6 +4,7 @@ import { useLocation, useRouter } from '../app/contexts/RouterContext';
 import { registerSeo } from './seoHead.js';
 import { esMarcaDeLEntitat } from '../components/universal/UniversalUtils.js';
 import { origenPublic } from '../config/origenPublic.js';
+import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
 
 // Gestoria i tractors tracten fitxers personals: mai indexables. Robots no és
 // autorització; només evita que un cercador les llistes.
@@ -14,11 +15,28 @@ export function routeAllowsIndex(pathname) {
   return !PRIVATE.has(String(pathname).replace(/^\/+/, '').split(/[/?#]/)[0]);
 }
 
+/* Pla 261027_1154 (P1-61) · S3. És CAP_SOCIAL_BASE.image.url (useSEO.test.jsx
+   en fixa la igualtat); el literal es queda perquè pwa/manifest.test.js el
+   compara amb index.html. La targeta genèrica viatja amb el seu conjunt
+   (MIME, mides i alt): seoHead l'escriu sencera a cada ruta sense imatge. */
 const IMATGE_BASE = '/assets/system/ui/og-socdepoble-1200x630.png';
+const { type: TIPUS_BASE, width: AMPLE_BASE, height: ALT_BASE, alt: TEXT_BASE } = CAP_SOCIAL_BASE.image;
+/* Pla 261027_1154 (P1-61) · Revisió adversarial (261027) · La targeta genèrica
+   d'index.html (socdepoble.org): la que val quan l'origen públic no és https. */
+const TARGETA_D_INDEX = new URL(CAP_SOCIAL_BASE.image.url, ORIGEN_SOCIAL_PER_DEFECTE).href;
 // Les xarxes només baixen imatges http(s) i no pinten SVG.
 function imatgeServible(url, type) {
   const { protocol, pathname } = new URL(url);
   return /^https?:$/.test(protocol) && !/svg/i.test(String(type || '')) && !/\.svgz?$/i.test(pathname);
+}
+/* Una URL absoluta sobre `origin`, o null si no s'analitza (un 'http://[' no
+   penja el layout effect). */
+function absoluta(valor, origin) {
+  try {
+    return new URL(valor, origin).href;
+  } catch {
+    return null;
+  }
 }
 /* La imatge d'una vista (URL o { url, alt, width, height, type }) és un conjunt.
    Sense imatge pròpia, amb la base o amb una que les xarxes no pinten val el
@@ -26,19 +44,32 @@ function imatgeServible(url, type) {
    Onada 8 (261009) · La marca de Sóc de Poble (el quadrat o el logotip, PNG
    o SVG d'abans) tampoc és imatge social: abans era sempre SVG i les xarxes
    rebien la base de 1200x630. Ara és PNG i, sense esta guarda, la fitxa de
-   l'entitat (/empresa/socdepoble) publicaria el quadrat de 256x256. */
+   l'entitat (/empresa/socdepoble) publicaria el quadrat de 256x256.
+   Pla 261027_1154 (P1-61) · Revisió adversarial (261027) · La targeta genèrica
+   segueix la regla d'opcionsDeLaImatgeSocial (ItemDetailSection i
+   TextSection) i de seoHead: sobre l'origen públic (amb la base de
+   l'amfitrió, resolveAsset) només si és https; si no (el servidor de dev,
+   http://localhost), la d'index.html, a socdepoble.org. Abans, la triada
+   anava a https://socdepoble.org i la genèrica a http://localhost: dos
+   orígens en una mateixa sessió. La base es reconeix en les dues formes. */
 function imatgeSocial(image, urlBase, origin) {
   const propia = typeof image === 'string' ? { url: image } : image || {};
-  const base = new URL(urlBase, origin).href;
-  const url = propia.url ? new URL(propia.url, origin).href : null;
-  if (!url || url === base || !imatgeServible(url, propia.type) || esMarcaDeLEntitat(url)) return { url: base, base: true };
+  const local = absoluta(urlBase, origin);
+  const base = /^https:\/\//i.test(String(origin || '')) && local ? local : TARGETA_D_INDEX;
+  const url = propia.url ? absoluta(propia.url, origin) : null;
+  if (!url || url === base || url === local || !imatgeServible(url, propia.type) || esMarcaDeLEntitat(url)) {
+    return { url: base, type: TIPUS_BASE, width: AMPLE_BASE, height: ALT_BASE, alt: TEXT_BASE };
+  }
   const mida = valor => (Number.isInteger(Number(valor)) && Number(valor) > 0 ? String(Number(valor)) : null);
   const text = valor => (typeof valor === 'string' && valor.trim() ? valor.trim() : null);
   const [width, height] = [mida(propia.width), mida(propia.height)];
   return { url, type: text(propia.type), alt: text(propia.alt), ...(width && height ? { width, height } : {}) };
 }
 
-export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', jsonLd = null, index = true, fallback = false }) {
+/* Pla 261027_1154 (P1-61) · S3. `ogType` (opcional) és l'og:type de la vista
+   ('product', 'article'...); sense ell, 'website'. `type` continua sent el
+   @type del JSON-LD. */
+export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', ogType = null, jsonLd = null, index = true, fallback = false }) {
   const { resolveAsset } = useUIActions();
   const { externalConfig } = useUIState();
   const { pathname } = useLocation();
@@ -64,8 +95,9 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
     const structuredData = jsonLdString ? JSON.stringify({
       '@context': 'https://schema.org', '@type': type, image: imatge.url, ...JSON.parse(jsonLdString)
     }).replace(/<\//g, '<\\/') : null;
+    const tipusOg = typeof ogType === 'string' && ogType.trim() ? ogType.trim() : null;
     return registerSeo(owner.current, { path: pathname, priority: fallback ? 0 : 1,
-      title, description, image: imatge, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: true });
-  }, [pathname, basename, title, description, canonicalExplicit, index, imatgeClau, type, jsonLdString, fallback,
+      title, description, image: imatge, ogType: tipusOg, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: true });
+  }, [pathname, basename, title, description, canonicalExplicit, index, imatgeClau, type, ogType, jsonLdString, fallback,
     externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
 }

@@ -62,3 +62,26 @@ describe('L4 · /xat no porta el document destacat al seu tros', () => {
     expect(tancament.size).toBeGreaterThan(20);
   });
 });
+
+/* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina viva d'una comunitat
+   (la fitxa pública d'una entitat, la pàgina d'un poble) també va en
+   diferit i només en ample o mitjà: cap dels seus quatre mòduls no pot
+   entrar al tros de /xat per un import estàtic. */
+const PAGINA_VIVA = ['src/sections/xat/components/FitxaVivaDeComunitat.jsx', 'src/sections/profile/PerfilPublicSection.jsx',
+  'src/sections/detail/ItemDetailSection.jsx', 'src/sections/detail/detailSectionMeta.jsx'];
+
+describe('P1-55 · /xat no porta la pàgina viva de la comunitat al seu tros', () => {
+  const tancament = tancamentEstatic(ENTRADA);
+
+  test('el tancament estàtic de XatSection.jsx no arriba a la fitxa viva, al perfil públic ni al detall del poble', () => {
+    expect(PAGINA_VIVA.filter((rel) => tancament.has(rel)),
+      'un import estàtic hi porta la pàgina viva: /xat en mòbil baixaria la fitxa pública i el detall del poble').toEqual([]);
+  });
+
+  test('sanitat: XatSection la demana en diferit i la fitxa viva sí que arriba als quatre mòduls', () => {
+    const font = senseComentaris(fs.readFileSync(ENTRADA, 'utf8'));
+    expect(font).toMatch(/import\(\s*['"]\.\/components\/FitxaVivaDeComunitat\.jsx['"]\s*\)/);
+    const delaFitxa = tancamentEstatic(path.join(SRC, 'sections', 'xat', 'components', 'FitxaVivaDeComunitat.jsx'));
+    expect(PAGINA_VIVA.filter((rel) => !delaFitxa.has(rel))).toEqual([]);
+  });
+});

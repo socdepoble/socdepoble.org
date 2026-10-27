@@ -58,8 +58,13 @@ test('L’Ànima de la IAIA (/ia): les props exactes de la UniversalPage i el co
   expect(mocks.props.time).toBe('02:00');
   const cos = container.querySelector('[data-pagina] > article.cms-preview');
   expect(cos.querySelector('h3').textContent).toBe('El Despertar de la Nina de Silici');
+  /* Pla 261027_1154 (P1-61), Fase 1 · La pàgina porta imatge pròpia: el
+     <head> la porta absoluta i https, no la targeta genèrica d'abans. La
+     portada que es pinta (heroImage, dalt) no canvia. */
   expect(mocks.seo).toHaveBeenCalledWith({
-    title: "L'Ànima de la IAIA", description: pagina.subtitle, image: '/assets/system/ui/og-socdepoble-1200x630.png'
+    title: "L'Ànima de la IAIA", description: pagina.subtitle,
+    /* Revisió adversarial (261027) · Amb el seu alt: el de page.image (imageAlt). */
+    image: { url: 'https://socdepoble.org/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp', alt: pagina.imageAlt }
   });
 });
 

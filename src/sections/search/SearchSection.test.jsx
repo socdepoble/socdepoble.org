@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import SearchSection from './SearchSection';
 import { extracteDeResultat, partsRessaltades } from './indexCerca.js';
-import { oblidaEntitatDelProjecte, registraEntitatDelProjecte } from '../../config/navigation.js';
+import { oblidaEntitatDelProjecte, registraEntitatDelProjecte, resolvePageSlugPath } from '../../config/navigation.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 
 const mocks = vi.hoisted(() => ({
@@ -555,6 +555,34 @@ test('261027 · dins de l’app nativa, la cerca no troba Descàrregues; a la we
     await waitFor(() => expect(screen.getByRole('searchbox').value).toBe('android'));
     expect(resultat()).toBeNull();
     expect(document.body.textContent).not.toMatch(/Google Play|APK/);
+  } finally {
+    delete window.Capacitor;
+  }
+});
+
+/* Pla 261027_0845 (Guarda Nocturna), T1-06 · Dins de l'app nativa, el Full
+   de ruta i l'Avís legal entren a la cerca passats per paginaPerAppNativa: el
+   comentari HTML del Full de ruta («Google Play») i la frase «per a Android i
+   iPhone» de l'Avís legal no entren a l'índex, i cap cerca no els troba. A la
+   web, el text cru continua i la mateixa cerca sí que els troba. */
+test.each([
+  ['android', 'legal'],
+  ['google play', 'roadmap']
+])('T1-06 · «%s»: a la web troba «%s»; dins de l’app nativa, no', async (consulta, clau) => {
+  mocks.core = { ...mocks.core, pages: [{ key: 'roadmap', ...PAGE_COPY.roadmap }, { key: 'legal', ...PAGE_COPY.legal }] };
+  mocks.url = `?q=${encodeURIComponent(consulta)}`;
+  const ruta = resolvePageSlugPath(clau) || `/page/${clau}`;
+  const resultat = () => document.querySelector(`a[href="${ruta}"]`);
+  await pinta();
+  await waitFor(() => expect(resultat()).not.toBeNull());
+  cleanup();
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    await pinta();
+    await waitFor(() => expect(screen.getByRole('searchbox').value).toBe(consulta));
+    /* La consulta mateixa s'hi repetix («cap resultat per a…»): el que es
+       mira és que cap pàgina no isca, perquè l'índex ja no porta el nom. */
+    expect(resultat()).toBeNull();
   } finally {
     delete window.Capacitor;
   }

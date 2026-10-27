@@ -41,6 +41,18 @@ describe('targetesDeSistema', () => {
       delete window.Capacitor;
     }
   });
+
+  /* Pla 261027_0845 (Guarda Nocturna), T1-06 · Dins de l'app nativa, el copy
+     de la targeta passa per paginaPerAppNativa: la frase que nomena una altra
+     plataforma mòbil se'n va i la resta es queda. A la web, el mateix text. */
+  test('dins de l’app nativa, la targeta no nomena cap altra plataforma mòbil; a la web, el text tal qual', () => {
+    const lead = 'Baixa-la de Google Play. La web, sempre.';
+    const copy = { projecte: { title: 'El projecte', lead } };
+    const [web] = targetesDeSistema(copy, { nativa: false });
+    expect(web.lead).toBe(lead);
+    const [nativa] = targetesDeSistema(copy, { nativa: true });
+    expect(nativa).toMatchObject({ id: 'projecte', title: 'El projecte', lead: 'La web, sempre.' });
+  });
 });
 
 describe('momentDeLaTargeta i perMomentDescendent', () => {

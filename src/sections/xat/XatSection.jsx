@@ -48,6 +48,10 @@
  *     en obrir-ne una,
  *     només el xat; en tornar a /xat, torna el document. En mode estret no hi
  *     cap: una sola columna cada vegada i, sense conversa, un avís sobri.
+ *     Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb una comunitat oberta
+ *     (?comunitat=) i cap conversa, en lloc del document hi viu la pàgina
+ *     viva de la comunitat (ColumnaDretaDeLaComunitat): la fitxa pública de
+ *     l'entitat o la pàgina del poble. En obrir-ne un grup o un canal, el xat.
  *     Els ajustos del xat viuen a /control-xat, i s'hi arriba des de la
  *     targeta «Ajustos del xat» del Panell de Control (/control): «Novetats»
  *     del rail està amagada (D16) i la roda de «Menú» només replega el rail.
@@ -1585,6 +1589,18 @@ function XatWorkspace({ origen = null }) {
             {t('section.xat.missatge.reintenta', 'Torna-ho a provar')}
           </button>
         </div>
+      ) : comunitatId && !threadId && (comunitatOberta || status !== 'ready') ? (
+        /* Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb una comunitat
+           oberta i cap conversa (ni demanada: /xat/<fil> encara per resoldre
+           no hi mostra la comunitat entremig), la pàgina viva de la
+           comunitat. Una conversa oberta mana (la primera branca). Una
+           comunitat que no és a la llista, la columna buida de sempre.
+           Revisió adversarial P1-55 · Mentre la llista encara arriba (un
+           enllaç fred amb sessió en remot), la comunitat no s'ha resolt i la
+           columna espera en blanc, la mateixa regla que «Carregant…» de la
+           columna de llista: ni el document genèric ni el tros de TextSection
+           abans de la pàgina viva. */
+        <ColumnaDretaDeLaComunitat comunitat={comunitatOberta} t={t} seo={seoXat} />
       ) : (
         <ColumnaDretaBuida t={t} seo={seoXat} />
       )}
@@ -1842,12 +1858,53 @@ function ColumnaDretaBuida({ t, seo }) {
   );
 }
 
+/* ─────────────────── La columna dreta amb una comunitat oberta ────────────── */
+
+/* Pla 261027_0845 (Guarda Nocturna), P1-55 · «Pàgina viva de comunitat»
+   (Llibre Mestre, Fita 19) · Amb /xat?comunitat=<id> i cap conversa, la
+   columna dreta pinta la pàgina viva del subjecte de la comunitat (la fitxa
+   pública d'una entitat, la pàgina d'un poble), no el document genèric.
+   La porta és la de ColumnaDretaBuida: en estret (i al primer commit sense
+   mesura) l'avís sobri de sempre, i FitxaVivaDeComunitat no es munta ni es
+   baixa; en mitjà i en ample, en diferit (lazyRoute: fora del tros de /xat,
+   XatSection.pes.test.js). Ni la fitxa ni el poble registren SEO: el títol i
+   el canònic són els del Xat (seoXat, a XatWorkspace).
+   Si el tros no arriba (connexió rural) o la comunitat no es pot resoldre,
+   la columna buida de sempre (`senseFitxa`), mai el poble pilot. La `key`
+   remunta la pàgina en canviar de comunitat: res de l'anterior s'hi queda.
+   Revisió adversarial P1-55 · `comunitat` null: la llista encara arriba i
+   la columna espera en blanc (el buit del Suspense), sense baixar res. */
+const FitxaVivaDeComunitatDiferida = lazyRoute(() => import('./components/FitxaVivaDeComunitat.jsx'));
+
+function ColumnaDretaDeLaComunitat({ comunitat, t, seo }) {
+  const { mida, mesurada } = useAppGrid();
+  /* `=== false`: un context sense la clau (proves antigues) es pren per mesurat. */
+  if (mida === 'estret' || mesurada === false) return <AvisSenseConversa t={t} />;
+  if (!comunitat) return <div className="sdp-xat-buit" aria-busy="true" />;
+  const senseFitxa = <ColumnaDretaBuida t={t} seo={seo} />;
+  /* Revisió creuada P1-55 (Codex GN-R01, Gemini 7.3) · La `key` va a la
+     barrera, no només al fill: la barrera guarda l'error d'un tros que no
+     ha arribat, i sense remuntar-la la comunitat següent també quedaria en
+     la columna buida. */
+  return (
+    <BarreraDelDocumentDestacat key={String(comunitat.fil.id)} fallback={senseFitxa}>
+      <Suspense fallback={<div className="sdp-xat-buit" />}>
+        <FitxaVivaDeComunitatDiferida comunitat={comunitat} senseFitxa={senseFitxa} />
+      </Suspense>
+    </BarreraDelDocumentDestacat>
+  );
+}
+
 /* La pestanya és del Xat, «(N) Xat», també amb el document muntat. TextSection
    registra el SEO del seu document i, com que es munta després del Xat (tornar
    d'una conversa, passar d'estret a ample), guanyava a seoHead per seqüència.
    Este germà, posat darrere, torna a registrar el del Xat en el mateix commit;
    la `key` el remunta quan canvien títol o descripció del document, que és
-   quan TextSection es torna a registrar. */
+   quan TextSection es torna a registrar.
+   Pla 261027_1154 (P1-61) · Des de la revisió adversarial del 261027, el
+   TextSection muntat ací (chrome 'context') només registra el seu SEO com a
+   reserva (fallback, prioritat 0): el del Xat guanya per prioritat, no per
+   seqüència. Este germà i la seua `key` queden com a doble seguretat. */
 function SeoDelXat(seo) {
   useSEO(seo);
   return null;

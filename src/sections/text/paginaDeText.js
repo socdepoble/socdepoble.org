@@ -32,16 +32,19 @@ import { resolveAsset } from '../../config/assetResolver.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { esPaginaVisible } from '../../config/systemPages.js';
+import { HERO_PER_DEFECTE } from '../../config/imatgeSocial.js';
 import { PAGE_COPY } from './pageContent.js';
+import { paginaPerAppNativa } from './perAppNativa.js';
 
 /** Rutes de kind 'text' que no pinta TextSection: mai es resolen ací. */
 export const RUTES_SENSE_PAGINA_DE_TEXT = Object.freeze(['/disseny', '/connectar', '/control', '/realitat']);
 
-/* Onada 3 (P2) · La reserva viu a public/, que és el que viatja al paquet.
-   Abans apuntava a /assets/img/, que només servix el servidor de dev (des de
-   l'arrel del repo): /fedivers feia 404 a WordPress. Mateix fitxer, mateixa
-   mida en bytes. */
-const HERO_PER_DEFECTE = '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png';
+/* Onada 3 (P2) · La portada de reserva (HERO_PER_DEFECTE) viu a public/, que
+   és el que viatja al paquet.
+   Pla 261027_1154 (P1-61) · La constant viu ara a config/imatgeSocial.js, amb
+   el mateix camí: el selector de la imatge social la reconeix com a reserva
+   (una pàgina que només la porta no té cap imatge pròpia). L'alt es queda
+   ací. */
 const ALT_PER_DEFECTE = "Panoràmica d'un poble fictici";
 
 /**
@@ -144,6 +147,10 @@ export function rutaVigentDePagina(ruta) {
  * Ordre del Mestre (261027) · Dins de l'app nativa (`nativa`, per defecte
  * esAppNativa), una pàgina només web (esPaginaVisible: Descàrregues) no es
  * resol: el lector de connexions i la targeta incrustada no la pinten.
+ * Pla 261027_0845 (Guarda Nocturna), T1-06 · I la que es resol hi arriba
+ * passada per paginaPerAppNativa: el lector de connexions (ConnexioDetall)
+ * en pinta l'HTML pel seu compte, i el Full de ruta o l'Avís legal no hi han
+ * de nomenar cap altra plataforma mòbil. Fora de l'app, el mateix objecte.
  */
 export function paginaDeRuta(ruta, { pageCopy, pages, nativa = esAppNativa() } = {}) {
   const clau = clauDeRuta(ruta);
@@ -154,5 +161,5 @@ export function paginaDeRuta(ruta, { pageCopy, pages, nativa = esAppNativa() } =
     ? pages.find((p) => p && (String(p.slug) === pageKey || String(p.id) === pageKey)) || null
     : null;
   const page = propia(pageCopy, pageKey) || delSlug || propia(PAGE_COPY, pageKey);
-  return page ? { pageKey, page } : null;
+  return page ? { pageKey, page: paginaPerAppNativa(page, { nativa }) } : null;
 }

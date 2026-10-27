@@ -654,12 +654,17 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
        Fora les píndoles HTML (.badge-row/.pill) de la població i del nom del
        poble: repetien a la vista el que ja diuen l'H1 («Gent de …»), la
        barra taronja i les etiquetes de la capçalera. Les pestanyes es
-       tornen a muntar per a cada poble (key): un altre poble obri per «Gent». */
-    renderBody: (item, { detall = false } = {}) => (
+       tornen a muntar per a cada poble (key): un altre poble obri per «Gent».
+       Pla 261027_0845 (Guarda Nocturna), P1-55 · { senseXat: true }: sense
+       el botó blau del xat. La pàgina viva de la comunitat del poble ja és
+       dins del Xat (ItemDetailSection · VistaDelPoble). */
+    renderBody: (item, { detall = false, senseXat = false } = {}) => (
       <>
-        <div className="sdp-pagina-accio">
-          <PortaDePagina porta={{ id: 'xat-del-poble', verb: verbDelXat(item), desti: rutaXatDelPoble(item), varietat: 'primari' }} />
-        </div>
+        {senseXat ? null : (
+          <div className="sdp-pagina-accio">
+            <PortaDePagina porta={{ id: 'xat-del-poble', verb: verbDelXat(item), desti: rutaXatDelPoble(item), varietat: 'primari' }} />
+          </div>
+        )}
         {detall ? <PestanyesDelPoble key={String(item?.id ?? '')} poble={item} gent={getTitle(item)} t={t} /> : null}
       </>
     )

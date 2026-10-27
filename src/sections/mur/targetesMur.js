@@ -11,6 +11,7 @@ import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
 import { dataDeDocument, momentDElement } from '../../components/universal/editorial.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { esPaginaVisible, SYSTEM_PAGES } from '../../config/systemPages.js';
+import { paginaPerAppNativa } from '../text/perAppNativa.js';
 
 /**
  * Les pàgines del sistema (SYSTEM_PAGES) que el Mur barreja amb les
@@ -20,10 +21,13 @@ import { esPaginaVisible, SYSTEM_PAGES } from '../../config/systemPages.js';
  * Ordre del Mestre (261027) · Dins de l'app nativa (`nativa`, per defecte
  * esAppNativa), les pàgines `nomesWeb` no hi són (esPaginaVisible): no falten,
  * i no avisen. El Mur, el Calendari i usePaginesDelSistema passen tots per ací.
+ * Pla 261027_0845 (Guarda Nocturna), T1-06 · I el copy de cada targeta hi
+ * entra passat per paginaPerAppNativa: dins de l'app, cap altra plataforma
+ * mòbil al títol, al lema ni a l'entradeta (a la web, el mateix objecte).
  */
 export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa() } = {}) {
   return SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa })).map((item) => {
-    const data = pageCopy?.[item.key];
+    const data = paginaPerAppNativa(pageCopy?.[item.key], { nativa });
     if (!data) {
       quanFalta?.(item.key);
       return null;

@@ -278,21 +278,37 @@ describe('(d) og:image (useSEO)', () => {
     expect(ultimSeo().image).toBeNull();
   });
 
-  test('una portada pròpia hi arriba com abans', () => {
-    pinta('mur', publicacio({ image: '/assets/mur/festa.webp' }));
-    expect(ultimSeo().image).toBe('/assets/mur/festa.webp');
+  /* Pla 261027_1154 (P1-61), Fase 1 · La mateixa portada pròpia hi arriba,
+     però ja absoluta i https (primeraImatgeSocial: l'origen públic, o
+     socdepoble.org quan el de la pàgina no és https, com el de jsdom). La
+     portada que es pinta, la de sempre. */
+  test('una portada pròpia hi arriba, ara absoluta i https (P1-61)', () => {
+    let container = pinta('mur', publicacio({ image: '/assets/mur/festa.webp' }));
+    expect(portada(container).querySelector('img').getAttribute('src')).toBe('/assets/mur/festa.webp');
+    /* Revisió adversarial (261027) · La triada viatja amb l'alt de la portada (el títol). */
+    expect(ultimSeo().image).toEqual({ url: 'https://socdepoble.org/assets/mur/festa.webp', alt: 'Festa major' });
     cleanup();
-    pinta('mercat', producte({ images: ['/assets/mercat/a.png', '/assets/mercat/b.png'] }));
-    expect(ultimSeo().image).toBe('/assets/mercat/a.png');
+    container = pinta('mercat', producte({ images: ['/assets/mercat/a.png', '/assets/mercat/b.png'] }));
+    expect(portada(container).querySelector('img').getAttribute('src')).toBe('/assets/mercat/a.png');
+    expect(ultimSeo().image).toEqual({ url: 'https://socdepoble.org/assets/mercat/a.png', alt: 'Mel de romer' });
   });
 
   /* Onada 0.3 (Gauntlet 261016) · Esta prova fixava també la pàgina de detall
      de /multimedia/:id (la imatge tal qual a og:image). L'ordre nova la
      retira: /multimedia/:id obri l'Arxiu amb el visor (?foto=), cap pàgina de
-     detall i cap useSEO del detall. Pobles, com abans. */
-  test('Pobles, com abans: la imatge de l’element tal qual; /multimedia/:id ja no és cap detall, redirigix al visor', () => {
-    pinta('pobles', { id: 'sella', title: 'Sella', image_url: RASTREIG });
-    expect(ultimSeo().image).toBe(RASTREIG);
+     detall i cap useSEO del detall.
+     Pla 261027_1154 (P1-61), Fase 1 · Derogat «Pobles, com abans»: la imatge
+     d'un altre origen d'un poble és 'bloquejada' i el <head> porta la
+     targeta genèrica (null); la pròpia hi arriba absoluta. La portada que es
+     pinta, la de sempre (també la de fora: Pobles no té el mode estricte). */
+  test('Pobles (P1-61): la imatge d’un altre origen no arriba al <head>, la pròpia sí; /multimedia/:id redirigix al visor', () => {
+    let container = pinta('pobles', { id: 'sella', title: 'Sella', image_url: RASTREIG });
+    expect(portada(container).querySelector('img').getAttribute('src')).toBe(RASTREIG);
+    expect(ultimSeo().image).toBeNull();
+    cleanup();
+    container = pinta('pobles', { id: 'sella', title: 'Sella', image_url: '/assets/towns/sella/1.jpg' });
+    expect(portada(container).querySelector('img').getAttribute('src')).toBe('/assets/towns/sella/1.jpg');
+    expect(ultimSeo().image?.url).toBe('https://socdepoble.org/assets/towns/sella/1.jpg');
     cleanup();
     mocks.seo.mockClear();
     pinta('multimedia', { id: 'era', title: 'Era', src: RASTREIG });
