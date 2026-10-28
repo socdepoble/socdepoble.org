@@ -25,7 +25,8 @@ import {
  * el mateix `file`. Ací no es llança cap avís: si l'EXIF no hi cap o no es pot
  * conservar, el resultat ix net, i qui ho diu és fotoDinsDelPressupost
  * (pujadaImatge.js: ERROR_PRESSUPOST_EXIF, ERROR_EXIF_NO_CONSERVABLE i els
- * de la càmera).
+ * de la càmera). P1-64 (pla 261028_1526) · `precisio` arrodonix la ubicació
+ * que es torna a posar ('100m' o 'poble'; l'exacta, tal qual).
  *
  * Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Si el navegador no sap el
  * format demanat, toDataURL torna PNG (Safari 16 amb WebP). Qui comprimix una
@@ -49,11 +50,12 @@ import {
  * @param {number} options.quality Qualitat de compressió (de 0 a 1)
  * @param {boolean} options.conservaExif Torna a posar l'EXIF publicable de l'original (per defecte: false)
  * @param {Blob} options.original La foto de la qual es llig l'EXIF (per defecte: `file`)
+ * @param {string} options.precisio P1-64 · La precisió de la ubicació que es conserva ('exacta', '100m' o 'poble'; sense, l'exacta)
  * @param {Function} options.orienta La sonda del navegador per format (injectable per a les proves)
  * @returns {Promise<string>} Promesa que resol amb el DataURL (Base64)
  */
 export function compressImage(file, {
-  maxSize = 600, format = 'image/webp', quality = 0.8, conservaExif = false, original = null,
+  maxSize = 600, format = 'image/webp', quality = 0.8, conservaExif = false, original = null, precisio,
   orienta = navegadorAplicaOrientacio,
 } = {}) {
   return new Promise((resolve, reject) => {
@@ -120,8 +122,9 @@ export function compressImage(file, {
             canvas.width = 0;
             canvas.height = 0;
           }
-          // Bloc 1.2 · ambExifDeLoriginal no rebutja mai: sense EXIF publicable, el mateix data URL.
-          return conservaExif ? ambExifDeLoriginal(dataUrl, original || file) : dataUrl;
+          /* Bloc 1.2 · ambExifDeLoriginal no rebutja mai: sense EXIF publicable, el mateix data URL.
+             P1-64 · Amb `precisio`, la ubicació ja hi va arrodonida (ajustaPrecisioGps). */
+          return conservaExif ? ambExifDeLoriginal(dataUrl, original || file, { precisio }) : dataUrl;
         })().then(resolve, reject);
       };
       img.src = event.target.result;

@@ -13,12 +13,15 @@ import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
+import { useSEO } from '../../hooks/useSEO.js';
+import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
 import { esperaElRol, maquinariaALaVista } from './maquinaria.js';
+import { metadadesDeDocumentWiki, rutaDeCompartirDocumentWiki } from './seoWiki.js';
 
 // La portada és una peça estructural: si la clau desapareix, la pàgina es
 // pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
@@ -342,6 +345,23 @@ export function dataDeDocumentWiki(item) {
 
 function WikiDetail({ item }) {
   const { pageCopy } = useCoreContent();
+  /* Pla 261028_1526 (P1-61, Fase 2) · El <head> del document que es pinta
+     (seoWiki.js): el d'un document públic del manifest, amb el canonical
+     ?item=<id> (la clau de la ruta, useSEO), i el genèric sense indexar per a
+     qualsevol altre. Els hooks van davant dels retorns anticipats: l'ordre no
+     canvia mai.
+     Decisió 2 del Mestre (261028) · Compartir un document públic envia la
+     forma de camí (/wikidepoble/<id>), la que el build prerenderitza amb el
+     seu títol i la seua imatge; la resta d'ítems, el Compartir de sempre. */
+  const { search } = useLocation();
+  const { showToast } = useToast();
+  const router = useUbicacioApp();
+  const seo = useMemo(() => metadadesDeDocumentWiki(item, search, wikiManifest.items), [item, search]);
+  useSEO(seo);
+  const rutaDeCompartir = rutaDeCompartirDocumentWiki(item, wikiManifest.items);
+  const compartirDocument = rutaDeCompartir
+    ? () => compartix(seo.title, urlPerCompartir(rutaDeCompartir, router), showToast)
+    : undefined;
   if (!item || item.id === '__intro') {
     const page = copyDePortada(pageCopy, COVER_PAGE_KEYS.wiki) || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
     const data = dataHoraDeBarra({ creat: page.date });
@@ -436,6 +456,7 @@ function WikiDetail({ item }) {
       chrome="context"
       title={editorial.titol || item.title}
       subtitle={item.subtitle}
+      {...(compartirDocument ? { onShare: compartirDocument } : null)}
       lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdownEnLinia(editorial.entradilla))) }} /> : null}
       {...data}
       labels={labels}

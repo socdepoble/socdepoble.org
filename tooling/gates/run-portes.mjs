@@ -21,11 +21,16 @@ import { esMain } from '../lib/arrel.mjs';
  * Si algú torna a tancar el cicle, falla a la primera volta amb un missatge,
  * no a la centèsima amb la màquina penjada.
  */
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { constants } from 'node:os';
 
 
 const CLAU_RECURSIO = 'SDP_DINS_DE_PORTA';
 
+/* CL-08 (pla 261028_1526, §3.6.2) · potMutar: el pas pot escriure l'arbre en una passada normal
+   (la Porta Build llança `npm run build` si els artefactes han caducat). El cens se'l salta si
+   no es demana --amb-mutacions. El Llaurador i el Teixit no en porten: només escriuen amb
+   --escriu i --baseline, i --lock-token no el llig cap eina. */
 export const passos = [
   {nom:'Contracte de plantilles',cmd:'node',args:['tooling/gates/porta-plantilles.mjs'],readOnly:true,script:'porta:plantilles'},
   {nom:'Autoritat i arrencada',cmd:'node',args:['tooling/gates/porta-autoritat.mjs'],readOnly:true},
@@ -37,7 +42,7 @@ export const passos = [
   { nom: 'Porta 58px', cmd: 'node', args: ['tooling/gates/01_porta_pedra_seca_58px.mjs'], script: 'porta:58px' },
   { nom: 'Linter', cmd: 'npm', args: ['run', 'lint'] },
   { nom: 'Porta Importacions', cmd: 'npm', args: ['run', 'porta:importacions'], script: 'porta:importacions' },
-  { nom: 'Porta Build', cmd: 'node', args: ['tooling/gates/tractor-build-previ.mjs'], script: 'porta:build' },
+  { nom: 'Porta Build', cmd: 'node', args: ['tooling/gates/tractor-build-previ.mjs'], script: 'porta:build', potMutar: true },
   { nom: 'Porta Promesa', cmd: 'node', args: ['tooling/gates/tractor-promesa.mjs'], script: 'porta:promesa' },
   { nom: 'Porta TDZ', cmd: 'node', args: ['tooling/gates/tractor-tdz.mjs'], script: 'porta:tdz' },
   { nom: 'Porta Arrel', cmd: 'node', args: ['tooling/gates/tractor-arrel.mjs'], script: 'porta:arrel' },
@@ -91,10 +96,97 @@ export const passos = [
 ];
 
 /** Selecció explícita: el mode de CI conserva totes les portes del mode complet.
- * Les bateries marcades ja s'han executat a test:ci; esta selecció no les certifica. */
-export function seleccionaPassos({ diagnostic = false, nomesPortes = false } = {}) {
+ * Les bateries marcades ja s'han executat a test:ci; esta selecció no les certifica.
+ * CL-08 · El cens (--cens): totes les portes, cap bateria de proves, i les que poden mutar
+ * l'arbre (potMutar) només amb ambMutacions (--amb-mutacions). */
+export function seleccionaPassos({ diagnostic = false, nomesPortes = false, cens = false, ambMutacions = false } = {}) {
   if (diagnostic && nomesPortes) throw new Error('--diagnostic i --nomes-portes són modes diferents');
+  if (cens && (diagnostic || nomesPortes)) throw new Error('--cens, --diagnostic i --nomes-portes són modes diferents');
+  if (ambMutacions && !cens) throw new Error('--amb-mutacions només té sentit amb --cens');
+  if (cens) return passos.filter(pas => !pas.prova && (ambMutacions || !pas.potMutar));
   return passos.filter(pas => (!diagnostic || pas.readOnly) && (!nomesPortes || !pas.prova));
+}
+
+/** CL-08 · Temps màxim de cada pas del cens (--temps-per-pas=SEGONS el canvia). */
+export const TEMPS_PER_PAS_MS = 300_000;
+const cuaDe = (text, n = 8) => String(text || '').trim().split('\n').slice(-n).map((linia) => linia.slice(0, 300));
+/* De cada eixida (stdout, stderr) el cens només en guarda el final: la cua és de huit línies. */
+const MAX_EIXIDA = 1024 * 1024;
+const SENYALS_DEL_TERMINAL = ['SIGINT', 'SIGTERM', 'SIGHUP'];
+
+/**
+ * CL-08 · Un pas del cens, en el seu propi grup de processos (detached). Quan s'esgota el temps,
+ * quan el pas acaba i quan el cens rep Ctrl-C (SIGINT, SIGTERM, SIGHUP), cau el grup sencer: també
+ * els néts (la Porta Consell llança un altre node; la Porta Build, `npm run build`), que si no
+ * seguirien escrivint l'arbre després del resum. Com que el grup és a part, el Ctrl-C del terminal
+ * ja no li arriba sol: el cens el reenvia i ix amb 128 + el número del senyal.
+ */
+function executaPas(pas, { cwd, tempsMs }) {
+  return new Promise((resol) => {
+    const fill = spawn(pas.cmd, pas.args, { cwd, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const eixida = { stdout: '', stderr: '' };
+    for (const via of ['stdout', 'stderr']) {
+      fill[via].setEncoding('utf8').on('data', (tros) => {
+        const text = eixida[via] + tros;
+        eixida[via] = text.length > 2 * MAX_EIXIDA ? text.slice(-MAX_EIXIDA) : text;
+      });
+    }
+    const tombaGrup = () => { try { if (fill.pid) process.kill(-fill.pid, 'SIGKILL'); } catch { /* el grup ja no hi és */ } };
+    const atura = (senyal) => { tombaGrup(); process.exit(128 + constants.signals[senyal]); };
+    for (const senyal of SENYALS_DEL_TERMINAL) process.once(senyal, atura);
+    let tempsEsgotat = false;
+    let error = null;
+    let fet = false;
+    const rellotge = setTimeout(() => {
+      tempsEsgotat = true;
+      tombaGrup();
+      // Un procés que haja eixit del grup i retinga les canonades no penja el cens: als 2 s es tallen.
+      setTimeout(() => { if (!fet) { fill.stdout.destroy(); fill.stderr.destroy(); acaba(fill.exitCode, fill.signalCode); } }, 2000).unref();
+    }, tempsMs);
+    const acaba = (status, senyal) => {
+      if (fet) return;
+      fet = true;
+      clearTimeout(rellotge);
+      tombaGrup();
+      for (const s of SENYALS_DEL_TERMINAL) process.off(s, atura);
+      resol({ status, senyal, error, tempsEsgotat, ...eixida });
+    };
+    fill.on('error', (e) => { error = e; if (!fill.pid) acaba(null, null); });
+    fill.on('close', acaba);
+  });
+}
+
+/**
+ * CL-08 · El cens de portes: cada pas triat amb el seu temps màxim i sense parar a la primera roja.
+ * Escriu una línia JSON per pas ({ nom, exit, ms }; els omesos, { nom, omes: 'potMutar' }) i una de
+ * resum. L'inventari de l'arbre d'abans i de després (el de tancament.mjs · checkClosure) delata els
+ * efectes laterals: van al resum (efectes) i no canvien el veredicte, que només diu si alguna porta
+ * ha caigut (una altra IA pot estar escrivint alhora). `inventari` el canvien les proves.
+ */
+export async function censDePortes({ seleccionats, omesos = [], arrel = process.cwd(), tempsPerPasMs = TEMPS_PER_PAS_MS,
+  escriu = (linia) => process.stdout.write(`${linia}\n`), inventari = null } = {}) {
+  const { inventory, changes } = inventari ?? await import('../documental/turns.mjs');
+  const abans = inventory(arrel);
+  for (const pas of omesos) escriu(JSON.stringify({ nom: pas.nom, omes: 'potMutar' }));
+  const roges = [];
+  for (const pas of seleccionats) {
+    const inici = Date.now();
+    const r = await executaPas(pas, { cwd: arrel, tempsMs: tempsPerPasMs });
+    const fila = { nom: pas.nom, exit: r.status, ms: Date.now() - inici };
+    if (r.tempsEsgotat) fila.tempsEsgotat = true;
+    if (r.error) fila.error = r.error.message;
+    if (r.senyal) fila.senyal = r.senyal;
+    if (r.error || r.tempsEsgotat || r.status !== 0) {
+      roges.push(pas.nom);
+      fila.cua = cuaDe(`${r.stdout || ''}\n${r.stderr || ''}`);
+    }
+    escriu(JSON.stringify(fila));
+  }
+  const efectes = changes(abans, inventory(arrel));
+  const resum = { cens: true, total: seleccionats.length + omesos.length, executats: seleccionats.length, omesos: omesos.map((pas) => pas.nom),
+    failures: roges.length, roges, efectes, valid: roges.length === 0 };
+  escriu(JSON.stringify(resum));
+  return resum;
 }
 
 const isMain = esMain(import.meta.url);
@@ -108,13 +200,26 @@ if (isMain) {
   }
   process.env[CLAU_RECURSIO] = '1';
 
-  console.log("\n🚀 INICIANT CADENA AGREGATIVA DE PORTES...\n");
-
   const diagnostic=process.argv.includes('--diagnostic');
   const nomesPortes=process.argv.includes('--nomes-portes');
+  const cens=process.argv.includes('--cens');
+  const ambMutacions=process.argv.includes('--amb-mutacions');
+  const segons=process.argv.find(a => a.startsWith('--temps-per-pas='))?.slice('--temps-per-pas='.length);
+  if (segons !== undefined && !(Number(segons) > 0)) { console.error('--temps-per-pas=SEGONS: un nombre de segons més gran que 0'); process.exit(1); }
   let seleccionats;
-  try { seleccionats=seleccionaPassos({ diagnostic, nomesPortes }); }
+  try { seleccionats=seleccionaPassos({ diagnostic, nomesPortes, cens, ambMutacions }); }
   catch (error) { console.error(error.message); process.exit(1); }
+
+  /* CL-08 · El cens escriu JSON a l'eixida estàndard; el que és per a humans va a stderr. */
+  if (cens) {
+    const omesos = passos.filter(pas => !pas.prova && !seleccionats.includes(pas));
+    console.error(`Mode --cens: ${seleccionats.length} portes sense parar a la primera roja; cap bateria de proves${omesos.length ? `; s'ometen les que poden mutar l'arbre (${omesos.map(pas => pas.nom).join(', ')}): --amb-mutacions les executa` : ''}.`);
+    const resum = await censDePortes({ seleccionats, omesos, tempsPerPasMs: segons === undefined ? TEMPS_PER_PAS_MS : Number(segons) * 1000 });
+    if (resum.efectes.length) console.error(`Avís: l'arbre ha canviat durant el cens (${resum.efectes.length} fitxers): una porta amb efectes laterals o una escriptura concurrent.`);
+    process.exit(resum.failures ? 1 : 0);
+  }
+
+  console.log("\n🚀 INICIANT CADENA AGREGATIVA DE PORTES...\n");
   if(nomesPortes) console.log('Mode --nomes-portes: les proves documentals, Node i Vitest s’ometen intencionadament. Este mode no les executa ni les certifica.');
   let failures=0;
   for (const pas of seleccionats) {

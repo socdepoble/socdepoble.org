@@ -30,6 +30,7 @@
  */
 import { useEffect, useState } from 'react';
 import { MAX_BYTES_EXIF, llegixExif } from '../../components/universal/enquadrament/exif.js';
+import { extreuTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
@@ -178,15 +179,21 @@ async function recorreWebp(url, { resposta, bytes: prefix }, fi, signal, temps) 
  * que l'anuncia fora del prefix, el tros EXIF trobat per recorreWebp. Les
  * opcions són les de llegixExif, més `signal`, `temps` (el del recorregut) i
  * `tempsPrefix` (el de la primera petició, capçaleres i cos).
+ * P1-64 (revisió adversarial 261028) · Amb `ambTiff: true`, també `tiff`: el
+ * bloc TIFF dels bytes llegits (extreuTiff) o null, perquè qui publica
+ * (sections/notes/geoDeLesFotos.js) en llija la marca de la precisió
+ * (precisioDeGps). Sense l'opció, el resultat de sempre.
  * null si el servidor no dona la imatge; rebutja si s'avorta, falla la xarxa o
  * s'esgota algun dels dos temps.
  */
-export async function llegixExifRemot(url, { signal, temps = TEMPS_MAXIM_WEBP, tempsPrefix = TEMPS_MAXIM_PREFIX, ...opcions } = {}) {
+export async function llegixExifRemot(url, { signal, temps = TEMPS_MAXIM_WEBP, tempsPrefix = TEMPS_MAXIM_PREFIX, ambTiff = false, ...opcions } = {}) {
   const prefix = await llegixPrefixFitat(url, signal, tempsPrefix);
   if (!prefix) return null;
   const fi = webpAmbExifFora(prefix.bytes);
   const webp = fi ? await recorreWebp(url, prefix, fi, signal, temps) : null;
-  return llegixExif(webp || prefix.bytes, opcions);
+  const bytes = webp || prefix.bytes;
+  const exif = llegixExif(bytes, opcions);
+  return ambTiff === true ? { ...exif, tiff: extreuTiff(bytes) } : exif;
 }
 
 function recorda(clau, exif) {

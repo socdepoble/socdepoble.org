@@ -37,13 +37,15 @@
      En el flux de la prosa el marge col·lapsa amb el del títol o el paràgraf
      veí i guanya el major, de manera que la distància és la mateixa davall
      d'un h2, d'un h4 o d'un paràgraf. Dins d'un contenidor amb gap, el pare
-     li posa el marge a zero. */
+     li posa el marge a zero. P1-37 (261026_2057) · El buit entre els botons és
+     el del grup (--sdp-boto-separacio, 12px com abans); els 24px de dalt i de
+     baix són la distància al text, no un marge de botó. */
   .sdp-accions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: var(--sdp-space-3);
+    gap: var(--sdp-boto-separacio);
     margin-block: var(--sdp-space-6);
   }
   .sdp-accions:first-child { margin-block-start: 0; }
@@ -53,6 +55,12 @@
      Wiki és estreta fins i tot en una pantalla ampla, i en talla el sobrant. */
   .sdp-taula-prosa { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
   .sdp-taula-prosa > :where(table) { display: table; overflow: visible; }
+  /* P1-16 (pla 261028_1526 §3.5.1; abast .sdp-taula-prosa) · La capçalera es
+     distingix de les files en clar i en fosc (ΔE2000 ≥ 5). Damunt d'eixe fons
+     l'enllaç taronja de sèrie baixava a 3,84:1: dins de la capçalera, el color
+     del títol, subratllat. La resta de taules conserva sdp.css. */
+  .sdp-taula-prosa :where(thead th) { background: var(--sdp-taula-capcalera-fons); }
+  .sdp-taula-prosa :where(thead th a) { color: var(--sdp-text-titol); text-decoration: underline; }
 
   .sdp-wrap { flex-wrap: wrap; }
   .sdp-align-center { align-items: center; }

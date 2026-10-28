@@ -194,7 +194,8 @@ describe('Mercat · la samarreta de producció', () => {
   test('Fase D · d’una samarreta bloquejada, cap imatge al <head> (ni la xica)', () => {
     const container = pinta('mercat', SAMARRETA_REMOTA, { disponible: true, esElementBloquejat: () => true });
     expect(portada(container)).toBeNull();
-    expect(ultimSeo()).toEqual({ title: null, description: '', image: null });
+    /* P1-61 Fase 2 (261028) · i no indexable: el head prerenderitzat se'n va. */
+    expect(ultimSeo()).toEqual({ title: null, description: '', image: null, index: false });
   });
 });
 

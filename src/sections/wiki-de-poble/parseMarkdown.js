@@ -28,8 +28,43 @@
  */
 
 import { llevaPuntFinal } from '../../components/universal/editorial.js';
+import { marcaDeTaula } from '../../utils/sanitize.js';
 
 const escapaHtml = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const desescapaHtml = (text) => text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+/* P1-16 · Les referències de caràcter que el navegador descodifica en pintar
+   la capçalera, perquè el nom diga el mateix text: una llista tancada de
+   noms i les numèriques. Un control, un subrogat UTF-16 o un número fora de
+   rang és un espai (cap \u0000 no pot fer-se passar per un marcador); un
+   nom que no és a la llista es queda tal qual. */
+const ENTITATS = Object.freeze({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' });
+const esPuntPintable = (punt) => punt >= 0x20 && punt <= 0x10ffff && !(punt >= 0x7f && punt <= 0x9f) && !(punt >= 0xd800 && punt <= 0xdfff);
+const descodificaEntitats = (text) => text.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([a-z]+));/g, (entitat, decimal, hexa, nom) => {
+  if (nom) return Object.hasOwn(ENTITATS, nom) ? ENTITATS[nom] : entitat;
+  const punt = decimal ? Number(decimal) : parseInt(hexa, 16);
+  return esPuntPintable(punt) ? String.fromCodePoint(punt) : ' ';
+});
+
+/* P1-16 (pla 261028_1526 §3.5.1) · El nom accessible d'una taula, «Taula: »
+   i les columnes de la capçalera en text pla, per a un atribut entre cometes.
+   Regles lineals: les etiquetes fora, les referències de caràcter
+   descodificades (abans del codi, que ja és text), el codi en línia resolt al
+   seu text (si no, el pas final hi injectaria el <code>), cap angle
+   (DOMPurify esborra un atribut amb «-->» o «</style») i & i " escapats. Com
+   a molt NOM_TAULA caràcters; sense cap columna amb text, «Taula N» (l'ordre
+   en el document). */
+const NOM_TAULA = 120;
+function nomDeTaula(capcalera, enLinia, n) {
+  const columnes = capcalera.map((cella) => descodificaEntitats(cella.replace(/<[^<>]*>/g, ''))
+    .replace(/\u0000LINIA(\d+)\u0000/g, (_m, i) => desescapaHtml((enLinia[Number(i)] ?? '').replace(/<[^<>]*>/g, '')))
+    .replace(/[<>\s]+/g, ' ')
+    .trim()).filter(Boolean);
+  let nom = columnes.length ? `Taula: ${columnes.join(', ')}` : `Taula ${n}`;
+  const punts = [...nom];
+  if (punts.length > NOM_TAULA) nom = `${punts.slice(0, NOM_TAULA - 1).join('').trimEnd()}…`;
+  return nom.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
 
 /* Tipus d'avís de GitHub/Obsidian → variant de l'Alerta de Pedra Seca. */
 const VARIANT_AVIS = { note: 'info', info: 'info', important: 'info', tip: 'exit', warning: 'avis', caution: 'error', danger: 'error' };
@@ -159,14 +194,21 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
   html = html.replace(/<li class="[uo]l">/g, '<li>');
 
   // Tables
+  let taules = 0;
   html = html.replace(/^\|(.+)\|[ \t]*\n\|([-: |]+)\|[ \t]*\n((\|.*\|[ \t]*(?:\n|$))+)/gm, (match, head, sep, body) => {
-    const thead = '<thead><tr>' + head.split('|').map(c => `<th>${c.trim()}</th>`).join('') + '</tr></thead>';
+    const capcalera = head.split('|').map((c) => c.trim());
+    const thead = '<thead><tr>' + capcalera.map((c) => `<th scope="col">${c}</th>`).join('') + '</tr></thead>';
     const tbody = '<tbody>' + body.trim().split('\n').map(row => {
       return '<tr>' + row.trim().split('|').slice(1, -1).map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
     }).join('') + '</tbody>';
+    taules += 1;
     /* IDEA-26 (261025) · La taula es desplaça dins de la seua caixa: la columna
-       de la Wiki talla el que la desborda (overflow-x: hidden). */
-    return `<div class="sdp-taula-prosa"><table>\n${thead}\n${tbody}\n</table></div>`;
+       de la Wiki talla el que la desborda (overflow-x: hidden).
+       P1-16 (pla 261028_1526 §3.5.1) · La caixa és una regió amb nom i focus
+       (WCAG 2.1.1: s'hi arriba i es desplaça amb el teclat), com les taules
+       del catàleg; sanitize.js només li deixa role=region i tabindex=0 si
+       porta la marca d'esta càrrega (data-sdp-taula), que lleva en sanejar. */
+    return `<div class="sdp-taula-prosa" role="region" aria-label="${nomDeTaula(capcalera, enLinia, taules)}" tabindex="0" data-sdp-taula="${marcaDeTaula()}"><table>\n${thead}\n${tbody}\n</table></div>`;
   });
 
   // Paragraphs (grouping hard-wrapped lines)

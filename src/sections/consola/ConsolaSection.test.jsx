@@ -169,9 +169,12 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
      Revisió adversarial del carril F1 (problemes 2 i 9) · I, darrere del
      govern, el de la sala de màquines, damunt de les nou targetes: no pengen
      de l'H2 del govern. Derogat EN PART: «El Mas en xifres» just darrere del
-     Govern del Mestre. */
+     Govern del Mestre.
+     P1-35 (pla 261028_1526 §3.5.2) · I, darrere de les xifres, el dels
+     empaquetats (EmpaquetatsConsola.jsx), amb la seua targeta. Expectativa
+     actualitzada a propòsit: «El Mas en xifres» just davant de l'Índex. */
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
-    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'El Mas en xifres', 'Índex de la Consola', 'Diagnòstic del Mas']);
+    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'El Mas en xifres', 'Empaquetats i llançament', 'Índex de la Consola', 'Diagnòstic del Mas']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 

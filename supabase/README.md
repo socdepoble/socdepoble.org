@@ -716,7 +716,8 @@ description: "Documentació canònica de Sóc de Poble."
   `select correu_per_defecte from public.contacte_organitzacio('<org>');`
   torna `''`; com A, el seu correu. Pendents fora d'esta migració: la carrera
   de l'alta concurrent de membres (C11-03) i la projecció pública del contacte
-  (C11-05). Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+  (C11-05), que porta `2610281730_membres_concurrents_i_correu_public.sql`.
+  Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610250100_seguiments_des_d_entitat.sql`
   IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025, àudios
@@ -802,6 +803,51 @@ description: "Documentació canònica de Sóc de Poble."
   via que ja existix de `owner_user_id` a les publicacions signades com a
   entitat. Idempotent i en una sola transacció; **NO aplicada: l'aplica el
   Mestre, mai un agent**.
+
+- `migrations/2610281730_membres_concurrents_i_correu_public.sql`
+  P1-13 (C11-03 i C11-05; auditoria Codex 261024_2254 i 261028_1611 C28-08;
+  pla 261028_1526, §3.6.1). **C11-03**: `desa_membre_organitzacio`
+  (2610181915) bloquejava la fila de la persona amb `select … for update`,
+  però una persona que encara no és membre no té cap fila: dues altes
+  concurrents del mateix parell (la propietària la fa admin i una
+  administradora, member) acabaven amb l'UPSERT de l'administradora
+  sobreescrivint l'admin de la propietària. Torna a crear la funció amb la
+  mateixa signatura i el mateix contracte i tres canvis: `v_n`,
+  `pg_advisory_xact_lock(hashtextextended('sdp-orgmem:' || p_organization_id::text || ':' || p_membre_id::text, 0))`
+  just abans del `select … for update` (la segona crida espera el commit de
+  la primera, llig el rol confirmat i la guarda `SDP-ORGMEM-006` salta), i
+  un UPSERT amb `where actual.role <> 'owner' and (v_meu = 'owner' or
+  (actual.role <> 'admin' and excluded.role <> 'admin'))` seguit de `get
+  diagnostics v_n = row_count`: si no ha escrit cap fila, `SDP-ORGMEM-006`.
+  Els mateixos REVOKE/GRANT d'execució; cap codi nou. **C11-05**: el correu
+  que una organització ha fet públic no arribava mai a la fitxa pública en
+  remot (la vista no el projectava i el client llegia el booleà
+  `public_email` com si fora el correu). Afig la columna generada
+  `public.organizations.correu_public` (`case when public_email is true then
+  nullif(btrim(contact_email), '') end`, stored), en dona el SELECT (només
+  d'eixa columna) a `anon` i `authenticated`, i torna a crear
+  `public.organization_directory` amb les 15 columnes de 2610081401 i
+  `correu_public` al final, amb els mateixos revoke i grant. `contact_email`
+  continua sense SELECT per a cap rol públic; el client
+  (`src/data/supabase/perfils.js`) llig `correu_public` i, sense la columna,
+  torna `''` com abans; el llistat del directori (`COLUMNES_DIRECTORI`) no
+  el demana. La prova estàtica és
+  `src/data/supabase/membresConcurrents.migracio.test.js`. Va després de
+  2610250300. Abans (lectura):
+  `select column_name from information_schema.columns where table_schema = 'public' and table_name = 'organization_directory' order by ordinal_position;`
+  (15 columnes acabades en `town_name`). Després (lectura):
+  `select r.rolname, has_column_privilege(r.rolname, 'public.organizations', 'contact_email', 'select'), has_column_privilege(r.rolname, 'public.organizations', 'correu_public', 'select') from (values ('anon'), ('authenticated')) as r(rolname);`
+  (false i true) i
+  `select count(*) from public.organizations where public_email is not true and correu_public is not null;`
+  (0). Verificació manual amb dues sessions, en una base de prova (la
+  recepta sencera és a la capçalera): la propietària O fa admin una persona
+  X sense confirmar, una administradora A la fa member i espera; O confirma,
+  A rep `SDP-ORGMEM-006` i X continua admin. Pendent del Mestre: si el
+  correu triat és també per a `anon` (ara sí, com la fitxa pública i el
+  model local) o només amb sessió (caldria una lectura SECURITY DEFINER), i
+  qui fa la verificació de les dues sessions en PostgreSQL de veres abans
+  d'aplicar-la. Idempotent i en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `seed.sql`
   Contingut inicial del portal.

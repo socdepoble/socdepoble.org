@@ -481,6 +481,10 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       /* Bloc 3.9 · Les metadades (capçalera, logotip, botonera, drets i
          vistes) van a l'«Edició avançada», plegada, just damunt de les eines. */
       edicioAvancada: true,
+      /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · El cos d'una
+         publicació: l'ordre «/» Imatge pregunta si es conserven la ubicació i la
+         data de la foto (DocumentEditor · fotosDePublicacio). El Perfil no. */
+      fotosDePublicacio: true,
       /* Bloc 3.9 · La plantilla de format d'ara i la d'abans: totes dues
          s'esvaeixen al primer focus del cos (llavorNota.js). */
       seedContent: LLAVORS_NOTA,

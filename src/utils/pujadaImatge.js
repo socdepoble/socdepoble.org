@@ -20,7 +20,7 @@ import {
 } from '../components/universal/enquadrament/netejaMetadades.js';
 import {
   ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF,
-  errorExifNoConservable, esNoConservable, exifCapEnFormat, exifPublicable, teUbicacioOData,
+  ajustaPrecisioGps, errorExifNoConservable, esNoConservable, exifCapEnFormat, exifPublicable, teUbicacioOData,
 } from '../components/universal/enquadrament/exifIncrustat.js';
 
 /* Gauntlet 261016 (Codex, 02:26) · Els avisos de quan l'EXIF no es pot
@@ -200,13 +200,23 @@ export function bytesDeDataUrl(dataUrl) {
  * pressupost: sostreTiff), el mateix avís en eixe intent. Els avisos que
  * parlen de la casella porten l'etiqueta que es veu (la de la càmera, si no hi
  * ha ubicació ni data).
+ *
+ * P1-64 (pla 261028_1526 §3.1.1) · `precisio` ('exacta', '100m' o 'poble'),
+ * la de les píndoles del diàleg, passa a cada intent amb `conservaExif`: el
+ * fitxer porta la ubicació arrodonida (ajustaPrecisioGps), la mateixa que el
+ * camp. Si no es pot arrodonir, ERROR_EXIF_NO_CONSERVABLE abans de comprimir
+ * res: mai el punt exacte quan la persona n'ha triat un de vague. Sense
+ * `precisio`, cap clau nova a compressImage.
  */
 export async function fotoDinsDelPressupost(file, {
-  mida, nom = 'imatge', ambFitxer = true, conservaExif = false, original = null,
+  mida, nom = 'imatge', ambFitxer = true, conservaExif = false, original = null, precisio,
 } = {}) {
-  const exif = conservaExif ? { conservaExif: true, original: original || file } : null;
+  const exif = conservaExif
+    ? { conservaExif: true, original: original || file, ...(precisio ? { precisio } : null) }
+    : null;
   const llegit = exif ? await exifPublicable(exif.original) : null;
   if (esNoConservable(llegit)) throw new Error(errorExifNoConservable(llegit));
+  if (llegit?.tiff && !ajustaPrecisioGps(llegit.tiff, precisio)) throw new Error(errorExifNoConservable(llegit));
   let format = FORMAT_WEBP;
   // El pes més lleuger que s'ha vist (el de la qualitat més baixa): diu si l'EXIF és el que no hi cap.
   let menor = Number.POSITIVE_INFINITY;

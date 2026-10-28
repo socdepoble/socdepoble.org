@@ -20,7 +20,7 @@
  * poble) i una foto PUJADA, que el node desa com a 'sdp-media://…' i només el
  * port pot resoldre (CaraXat → AvatarResolt).
  */
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { XatContext } from './XatContext';
@@ -567,16 +567,23 @@ test.each([
 /* XATR-1 · La cerca (a l'aterratge, l'únic lloc de l'accés des de P1-54): la
    llista de filtres en obrir el camp i els resultats amb un terme. El peu és
    el mateix node que davall de la llista (obrir o tancar la cerca no el torna
-   a muntar davall del dit). */
+   a muntar davall del dit). P1-36 · La cerca s'obri amb la lupa de la fila de
+   títol, i la fila de control canvia de les píndoles al camp: el cos, amb el
+   seu peu, és el mateix node. */
 test('sense sessió, la cerca conserva l’accés al peu del cos, sense tornar-lo a muntar', () => {
   munta(senseSessio());
   const peu = peuDAccesAlCos();
+  fireEvent.click(screen.getByRole('button', { name: 'Cerca converses' }));
   const camp = document.querySelector('input[name="xatSearch"]');
   fireEvent.focus(camp);
   expect(document.querySelector('.sdp-xat-filtres-cerca')).toBeTruthy();
   expect(peuDAccesAlCos()).toBe(peu);
   fireEvent.change(camp, { target: { value: 'Torre' } });
   expect(screen.getByRole('region', { name: 'Resultats de la cerca' })).toBeTruthy();
+  expect(peuDAccesAlCos()).toBe(peu);
+  fireEvent.keyDown(camp, { key: 'Escape' });
+  fireEvent.keyDown(camp, { key: 'Escape' });
+  expect(document.querySelector('input[name="xatSearch"]')).toBeNull();
   expect(peuDAccesAlCos()).toBe(peu);
 });
 
@@ -593,9 +600,11 @@ test.each(['multimedia', 'telefonades'])('sense sessió, la vista %s no porta l�
    diu el seu text, i la crida a entrar només ix una vegada: la del peu. */
 test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
   munta(senseSessio());
-  fireEvent.click(screen.getByRole('button', { name: 'Filtra les converses' }));
-  fireEvent.click(screen.getByRole('menuitemradio', { name: /Preferits/ }));
-  const cos = document.querySelector('input[name="xatSearch"]').closest('aside').querySelector(':scope > .sdp-workspace-column__body');
+  /* P1-36 · Els filtres són píndoles (aria-pressed), no un desplegable. */
+  const pindoles = screen.getByRole('group', { name: 'Filtra les converses' });
+  fireEvent.click(within(pindoles).getByRole('button', { name: 'Preferits' }));
+  expect(within(pindoles).getByRole('button', { name: 'Preferits' }).getAttribute('aria-pressed')).toBe('true');
+  const cos = pindoles.closest('aside').querySelector(':scope > .sdp-workspace-column__body');
   expect(cos.querySelector('.sdp-workspace-state').textContent).toBe('Cap conversa amb este filtre.');
   // Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · La benvinguda substituïx la crida a entrar.
   expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Benvinguda a Sóc de Poble')).toHaveLength(1);

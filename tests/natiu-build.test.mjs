@@ -585,7 +585,9 @@ test('la config porta la política nativa als dos llocs: el connector de recurso
     const cfg = configNatiu({ mode: MODE_NATIU, command: 'build' });
     const esperada = politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: PUBLIC }));
     if (!esperada) {
-      assert.deepEqual(cfg.define, {}, 'sense bessones a public/, cap política');
+      /* P1-35 · En compilar, el define porta sempre el segell del build
+         (import.meta.env.SDP_BUILD): sense bessones, cap altra clau. */
+      assert.deepEqual(Object.keys(cfg.define).filter((clau) => clau !== 'import.meta.env.SDP_BUILD'), [], 'sense bessones a public/, cap política');
       t.skip('sense bessones a public/ en este arbre');
       return;
     }

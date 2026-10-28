@@ -7,7 +7,8 @@
  *   node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa]
  *
  * Només llig: el fitxer d'entorn (mai n'imprimix cap valor), les rutes que nomena, les eines i
- * l'estat de l'arbre. No compila, no signa i no puja res. Ix amb el codi de la primera família
+ * l'estat de l'arbre (amb iOS, també que cap fitxer porte el SDK de Facebook: P1-08, 261028).
+ * No compila, no signa i no puja res. Ix amb el codi de la primera família
  * que falla, en este ordre: fitxer (3), variable prohibida (4), variable o fitxer que falta (5),
  * eina (6), arbre (7). Els codis són a entorn.mjs (EIXIDA).
  */
@@ -47,6 +48,53 @@ const COPIA_NATIVA = Object.freeze({
   ios: ['ios', 'App', 'App', 'public', 'index.html'],
   android: ['android', 'app', 'src', 'main', 'assets', 'public', 'index.html']
 });
+
+/* P1-08 (pla 261028_1526, §3.6.2) · El SDK de Facebook per a iOS, amb els noms d'SPM i de
+   CocoaPods. Sóc de Poble no l'enllaça: només Google i Apple. El connector social de capgo el porta
+   comentat al seu Package.swift («Disabled via config») i el ganxo capacitor:sync:before el
+   descomenta si capacitor.config.json no apaga facebook (sense la clau, capgo l'encén): d'eixe
+   fitxer es mira el codi sense comentaris, i de capacitor.config.json, el proveïdor. La mateixa
+   sentinella, en precommit: src/natiu/projecteIos.test.js. */
+export const SDK_FACEBOOK = /facebook-ios-sdk|FBSDK[A-Za-z]*|\bFacebook(?:Core|Login|AEM|Share|Gaming|Basics)|\bFBAEMKit\b/i;
+const FITXERS_DEL_SDK = Object.freeze([
+  { trossos: ['ios', 'App', 'App.xcodeproj', 'project.pbxproj'] },
+  { trossos: ['ios', 'App', 'CapApp-SPM', 'Package.swift'] },
+  { trossos: ['ios', 'App', 'App.xcodeproj', 'project.xcworkspace', 'xcshareddata', 'swiftpm', 'Package.resolved'] },
+  { trossos: ['ios', 'App', 'App.xcworkspace', 'xcshareddata', 'swiftpm', 'Package.resolved'] },
+  { trossos: ['ios', 'App', 'Podfile'] },
+  { trossos: ['ios', 'App', 'Podfile.lock'] },
+  { trossos: ['node_modules', '@capgo', 'capacitor-social-login', 'Package.swift'], senseComentaris: true }
+]);
+/* Els comentaris de Swift fora («//» dins d'una URL entre cometes no és cap comentari). */
+const senseComentarisSwift = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<![:"])\/\/[^\n]*/g, '');
+
+/* Capacitor llig capacitor.config.ts, després .js i només sense cap dels dos .json (@capacitor/cli,
+   config.js · loadExtConfig). Esta sentinella no avalua cap .ts ni .js: si n'hi ha un, compta. */
+const CONFIGS_QUE_PASSEN_DAVANT = Object.freeze(['capacitor.config.ts', 'capacitor.config.js']);
+
+/** Els camins (relatius a l'arrel, amb «/») que porten el SDK de Facebook a l'app d'iOS, en l'ordre
+ *  de FITXERS_DEL_SDK; després, el capacitor.config.ts o .js que passaria davant del .json, i
+ *  capacitor.config.json si, amb el connector social instal·lat o configurat, no apaga facebook o
+ *  no hi és (sense config, capgo l'encén); [] si cap. Un fitxer del SDK que no hi és no compta; un
+ *  capacitor.config.json il·legible, sí. Només llig. */
+export function sdkFacebookIos(arrel) {
+  const trobats = FITXERS_DEL_SDK.filter(({ trossos, senseComentaris }) => {
+    const cami = path.join(arrel, ...trossos);
+    if (!fs.existsSync(cami)) return false;
+    const text = fs.readFileSync(cami, 'utf8');
+    return SDK_FACEBOOK.test(senseComentaris ? senseComentarisSwift(text) : text);
+  }).map(({ trossos }) => trossos.join('/'));
+  const davant = CONFIGS_QUE_PASSEN_DAVANT.filter((nom) => fs.existsSync(path.join(arrel, nom)));
+  trobats.push(...davant);
+  const config = path.join(arrel, 'capacitor.config.json');
+  const connector = fs.existsSync(path.join(arrel, 'node_modules', '@capgo', 'capacitor-social-login'));
+  if (fs.existsSync(config)) {
+    let social = null;
+    try { social = JSON.parse(fs.readFileSync(config, 'utf8'))?.plugins?.SocialLogin ?? null; } catch { social = { illegible: true }; }
+    if ((social || connector) && social?.providers?.facebook !== false) trobats.push('capacitor.config.json');
+  } else if (connector && !davant.length) trobats.push('capacitor.config.json');
+  return trobats;
+}
 
 /* Les dues consultes a eines de fora que fa el preflight. Les proves les canvien per unes de
    fingides, perquè la suite no arranque cap eina (ni fastlane, ni keytool, ni cap JDK). */
@@ -118,6 +166,11 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
     }
   }
   if (plataformes.includes('ios') && !projecteIos(arrel)) mal(EIXIDA.ARBRE, 'no hi ha ios/App/App.xcworkspace ni ios/App/App.xcodeproj: npx cap add ios');
+  if (plataformes.includes('ios')) {
+    const facebook = sdkFacebookIos(arrel);
+    if (facebook.length) mal(EIXIDA.ARBRE, `SDK de Facebook a ${facebook.join(', ')}: l'app no l'enllaça; deixa SocialLogin.providers.facebook a false a capacitor.config.json (l'únic config de Capacitor: sense .ts ni .js) i npx cap sync ios`);
+    else be('cap SDK de Facebook a ios/ ni al connector social');
+  }
   if (plataformes.includes('android') && !fs.existsSync(path.join(arrel, 'android', 'gradlew'))) mal(EIXIDA.ARBRE, 'no hi ha android/gradlew: npx cap add android');
 
   const ordre = [EIXIDA.FITXER, EIXIDA.PROHIBIDA, EIXIDA.FALTA, EIXIDA.EINA, EIXIDA.ARBRE];

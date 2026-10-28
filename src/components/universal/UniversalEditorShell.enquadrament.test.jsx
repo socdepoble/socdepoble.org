@@ -257,8 +257,25 @@ test('Bloc 1.2 · una foto amb GPS: la casella, marcada de sèrie, fa que compre
   expect(casella.checked).toBe(true);
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
   const exportat = await dobles.exportaRetall.mock.results[0].value;
-  expect(dobles.compressImage).toHaveBeenCalledWith(exportat, { maxSize: 1200, format: 'image/webp', quality: 0.8, conservaExif: true, original: fitxer });
+  // P1-64 · Amb una ubicació, també la precisió de sèrie (l'exacta, decisió 8 del Mestre 261028).
+  expect(dobles.compressImage).toHaveBeenCalledWith(exportat, {
+    maxSize: 1200, format: 'image/webp', quality: 0.8, conservaExif: true, original: fitxer, precisio: 'exacta',
+  });
   expect(vista.onSaveField).toHaveBeenCalledWith('heroImage', CURT, 'd1');
+});
+
+/* P1-64 (pla 261028_1526 §3.1.1) · Les píndoles de la precisió del hero: la
+   triada arriba a processaFitxer i a compressImage (el fitxer ix arrodonit). */
+test('P1-64 · la precisió triada al diàleg del hero arriba a compressImage', async () => {
+  const vista = closca();
+  const fitxer = ambGps();
+  await tria(vista.container, fitxer);
+  const dialeg = vista.getByRole('dialog', DIALEG);
+  await within(dialeg).findByRole('checkbox', CASELLA);
+  fireEvent.click(within(dialeg).getByRole('radio', { name: 'Només el poble' }));
+  expect(within(dialeg).getByText(/^Es desarà: 38\.59, -0\.42 \(uns 1\.000 m\)\./)).toBeTruthy();
+  await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
+  expect(dobles.compressImage.mock.calls[0][1]).toMatchObject({ conservaExif: true, original: fitxer, precisio: 'poble' });
 });
 
 test('Bloc 1.2 · desmarcada, la crida de sempre (la foto ix neta); sense EXIF, ni casella', async () => {

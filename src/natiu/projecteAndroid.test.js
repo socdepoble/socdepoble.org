@@ -22,6 +22,9 @@
    d'encuar, cada lectura té termini i interrupció, els sostres d'URIs, de temps
    i de text, Locale.ROOT, les restes que tornen en arrencar (una setmana) i
    l'intent sanejat abans que cap connector en llija els extres.
+   Pla 261028_1526 (Bloc D, P1-31/P1-33): l'hora de l'intent (rebutMs), el
+   sostre de bytes per compartició, la compartició que plega en destruir-se i
+   l'època de la sessió a la banda nativa (tallaSessio), desada i al nom de cada còpia.
    Sense android/app/src/main (un arbre sense el projecte), se salta dient per què. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -37,6 +40,10 @@ const HI_HA_PROJECTE = fs.existsSync(path.join(MAIN, 'AndroidManifest.xml'));
 const llig = (...trossos) => fs.readFileSync(path.join(...trossos), 'utf8');
 /* Els noms dels paquets es componen a trossos, com a projecteIos.test.js. */
 const AVISOS_LOCALS = ['@capa', 'citor/local-notifications'].join('');
+/* Pla 261028_1526 · copia rep el que queda del sostre de la compartició (P1-33) i l'època de l'intent (P1-31). */
+const COPIA = 'private JSObject copia(Uri uri, String mime, String extensio, long restant, long sessioAlRebre)';
+/* P1-31 · La comprovació de l'època dins de processa: si ha canviat, fora les còpies fetes i plega. */
+const TALLADA = /\bif \(sessio\.get\(\) != sessioAlRebre\) \{\s*esborra\(fitxers\);\s*return;\s*\}/;
 
 const senseComentarisXml = (xml) => xml.replace(/<!--[\s\S]*?-->/g, '');
 /* Els comentaris de Java fora; «content://» dins d'una cadena no és cap comentari. */
@@ -318,13 +325,13 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
      en el fil del copiador, una sense capturar tomba l'App sencera. */
   test('CompartirNatiuPlugin: copia i llegixText capturen RuntimeException, i processa va dins d’un try al fil del copiador', () => {
     const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
-    for (const signatura of ['private JSObject copia(Uri uri, String mime, String extensio)', 'private String llegixText(Uri uri)']) {
+    for (const signatura of [COPIA, 'private String llegixText(Uri uri)']) {
       const cos = cosDelMetode(codi, signatura);
       expect(cos, signatura).not.toBe('');
       expect(cos, signatura).toMatch(/\bcatch \((?:[\w.]+ \| )*RuntimeException(?: \| [\w.]+)* \w+\)/);
     }
     const nouIntent = cosDelMetode(codi, 'protected void handleOnNewIntent(Intent intent)');
-    expect(nouIntent).toMatch(/copiador\.execute\(\(\) -> \{\s*try \{\s*processa\(uris, text, assumpte, tipus\);\s*\} catch \(RuntimeException \w+\) \{/);
+    expect(nouIntent).toMatch(/copiador\.execute\(\(\) -> \{\s*try \{\s*processa\(uris, text, assumpte, tipus, rebutMs, sessioAlRebre\);\s*\} catch \(RuntimeException \w+\) \{/);
     // Cap altra crida a processa fora d'eixe try.
     expect(codi.match(/(?<!void )\bprocessa\(/g)).toHaveLength(1);
   });
@@ -363,7 +370,8 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     const jsMb = megues(llig(ARREL, 'src', 'natiu', 'compartirNatiu.js'), /const MAX_BYTES = (\d+) \* 1024 \* 1024;/);
     expect(javaMb, 'MAX_BYTES_FITXER (Java), en MB').toBe(20);
     expect(jsMb, 'MAX_BYTES (compartirNatiu.js), en MB').toBe(20);
-    expect(codi).toMatch(/if \(total > MAX_BYTES_FITXER\) throw new IOException/);
+    // Pla 261028_1526 (P1-33) · El sostre de cada fitxer passa per min(MAX_BYTES_FITXER, restant): vegeu més avall.
+    expect(cosDelMetode(codi, COPIA)).toMatch(/\blong (\w+) = Math\.min\(MAX_BYTES_FITXER, restant\);[\s\S]*if \(total > \1\) throw new IOException/);
   });
 
   /* Gauntlet 261026_1615 (Codex C1615-04 / Gemini G1615-03) · Sense handleOnDestroy,
@@ -418,18 +426,26 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     const capBucle = processa.indexOf('for (Uri uri : uris) {');
     expect(capBucle).toBeGreaterThan(finestra.index);
     const bucle = cosDelMetode(processa.slice(capBucle), 'for (Uri uri : uris)');
-    // El primer que fa el bucle: els tres sostres, i qui en passa es compta com a rebutjat.
-    const sostre = /^\s*if \(([^{]*)\) \{\s*rebutjats\+\+;\s*continue;\s*\}/.exec(bucle);
+    /* El primer que fa el bucle: plegar si el connector ja és destruït (pla
+       261028_1526, P1-33) o si la sessió ha canviat (P1-31); després, els
+       sostres, i qui en passa es compta com a rebutjat. */
+    const tancat = /^\s*if \(copiador\.isShutdown\(\)\) return;/.exec(bucle);
+    expect(tancat, 'el connector tancat, al principi del bucle').toBeTruthy();
+    const tallada = new RegExp(`^\\s*${TALLADA.source}`).exec(bucle.slice(tancat[0].length));
+    expect(tallada, 'la sessió tallada, just després').toBeTruthy();
+    const despres = bucle.slice(tancat[0].length + tallada[0].length);
+    const sostre = /^\s*if \(([^{]*)\) \{\s*rebutjats\+\+;\s*continue;\s*\}/.exec(despres);
     expect(sostre, 'els sostres, al principi del bucle').toBeTruthy();
     expect(sostre[1].split('||').map((condicio) => condicio.trim()).sort()).toEqual([
       'System.currentTimeMillis() > ' + finestra[1],
       'acceptats >= MAX_FITXERS',
+      'bytesCopiats >= MAX_BYTES_COMPARTICIO',
       'examinades >= MAX_URIS_EXAMINADES'
     ].sort());
     // Cada URI que passa els sostres compta com a examinada, abans de mirar-la.
-    expect(bucle.match(/\bexaminades\+\+;/g)).toHaveLength(1);
-    expect(bucle.indexOf('examinades++;')).toBeGreaterThan(sostre[0].length - 1);
-    expect(bucle.indexOf('examinades++;')).toBeLessThan(bucle.indexOf('esUriAcceptable(uri)'));
+    expect(despres.match(/\bexaminades\+\+;/g)).toHaveLength(1);
+    expect(despres.indexOf('examinades++;')).toBeGreaterThan(sostre[0].length - 1);
+    expect(despres.indexOf('examinades++;')).toBeLessThan(despres.indexOf('esUriAcceptable(uri)'));
 
     expect(argumentsDe(codi, 'copiador = new ThreadPoolExecutor(')?.[1]).toBe('MAX_COMPARTICIONS_ALHORA');
 
@@ -472,17 +488,20 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
         && bloc.clausules.some((clausula) => clausula.tipus === 'catch' && /\bRejectedExecutionException\b/.test(clausula.excepcions)));
       expect(protegit, `${encarrec[0]} sense catch (RejectedExecutionException)`).toBe(true);
     }
-    // Sense vigilant (connector ja tancat), la lectura continua sense termini, mai amb un null que pete.
+    /* Sense vigilant (connector ja tancat), ambTermini torna null, mai una excepció;
+       i qui llig, amb null, ja no llig (pla 261028_1526, P1-33: vegeu més avall). */
     expect(cosDelMetode(codi, 'private ScheduledFuture<?> ambTermini()')).toMatch(/catch \(RejectedExecutionException \w+\) \{\s*return null;\s*\}/);
   });
 
   /* Gauntlet 261026_1615 (Codex C1615-04) · Un proveïdor pot tornar un tub que no
      acaba mai. La lectura passa pel canal del descriptor (interrompible), i el
      vigilant interromp el fil passat LECTURA_MS. El termini es cancel·la al
-     finally, i la interrupció pendent s'esborra: no ha de passar a la lectura següent. */
+     finally, i la interrupció pendent s'esborra: no ha de passar a la lectura següent.
+     Pla 261028_1526 (P1-33) · Sense termini (el vigilant ja és tancat) no
+     s'obri cap flux: entre el termini i el try, només `if (termini == null) return null;`. */
   test('CompartirNatiuPlugin: copia i llegixText llegixen per interrompible(...) amb el termini programat abans i cancel·lat al finally', () => {
     const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
-    for (const signatura of ['private JSObject copia(Uri uri, String mime, String extensio)', 'private String llegixText(Uri uri)']) {
+    for (const signatura of [COPIA, 'private String llegixText(Uri uri)']) {
       const cos = cosDelMetode(codi, signatura);
       const termini = /\bScheduledFuture<\?> (\w+) = ambTermini\(\);/.exec(cos);
       expect(termini, `${signatura}: el termini`).toBeTruthy();
@@ -492,7 +511,7 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
       expect(lectura.recursos, signatura).toMatch(/^InputStream (\w+) = interrompible\(getContext\(\)\.getContentResolver\(\)\.openInputStream\(uri\)\)/);
       // Programat abans d'obrir el flux (openInputStream ja hi queda dins).
       expect(termini.index, signatura).toBeLessThan(lectura.inici);
-      expect(cos.slice(termini.index + termini[0].length, lectura.inici).trim(), signatura).toBe('');
+      expect(cos.slice(termini.index + termini[0].length, lectura.inici).trim(), signatura).toBe(`if (${termini[1]} == null) return null;`);
       const finals = lectura.clausules.filter((clausula) => clausula.tipus === 'finally');
       expect(finals, `${signatura}: el finally`).toHaveLength(1);
       expect(finals[0].cos.trim(), signatura).toBe(`senseTermini(${termini[1]});`);
@@ -509,6 +528,142 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     const cancela = senseTermini.indexOf('if (termini != null) termini.cancel(false);');
     expect(cancela).toBeGreaterThanOrEqual(0);
     expect(senseTermini.indexOf('Thread.interrupted();')).toBeGreaterThan(cancela);
+  });
+
+  /* Pla 261028_1526 (Bloc D, P1-33) · Deu fitxers de 20 MB eren 200 MB per
+     compartició, i tres alhora, 600 MB a la memòria cau, per a un xat que en
+     puja 20. Ara hi ha un sostre per compartició (60 MiB, decisió pendent del
+     Mestre): copia rep el que en queda i talla a min(MAX_BYTES_FITXER, restant). */
+  test('CompartirNatiuPlugin: MAX_BYTES_COMPARTICIO (long, 60 MiB) fita processa i passa a copia el que en queda', () => {
+    const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
+    const sostreTotal = constantJava(codi, 'MAX_BYTES_COMPARTICIO');
+    expect(sostreTotal).toEqual({ tipus: 'long', valor: 60 * 1024 * 1024 });
+    expect(sostreTotal.valor).toBeGreaterThanOrEqual(constantJava(codi, 'MAX_BYTES_FITXER').valor);
+    // Declarada, al sostre del bucle i al pressupost que rep copia: res més.
+    expect(codi.match(/\bMAX_BYTES_COMPARTICIO\b/g)).toHaveLength(3);
+
+    const processa = cosDelMetode(codi, 'private void processa(');
+    const compte = /\blong (\w+) = 0;/.exec(processa)?.[1];
+    expect(compte, 'el compte de bytes copiats').toBe('bytesCopiats');
+    expect(processa).toMatch(/if \([^{]*\bbytesCopiats >= MAX_BYTES_COMPARTICIO\b[^{]*\) \{\s*rebutjats\+\+;\s*continue;\s*\}/);
+    const crida = argumentsDe(processa, 'copia(');
+    expect(crida).toEqual(['uri', 'mime', 'extensio', 'MAX_BYTES_COMPARTICIO - bytesCopiats', 'sessioAlRebre']);
+    // Només el que s'ha acceptat suma, després de comprovar-lo.
+    const accepta = processa.search(/\bfitxers\.put\(fitxer\);\s*acceptats\+\+;\s*bytesCopiats \+= fitxer\.optLong\("mida"\);/);
+    expect(accepta, 'la suma, després d’acceptar el fitxer').toBeGreaterThan(processa.indexOf('if (fitxer == null)'));
+    expect(processa.match(/\bbytesCopiats \+=/g)).toHaveLength(1);
+
+    const copia = cosDelMetode(codi, COPIA);
+    expect(copia, COPIA).not.toBe('');
+    const sostre = /\blong (\w+) = Math\.min\(MAX_BYTES_FITXER, restant\);/.exec(copia);
+    expect(sostre, 'el sostre del fitxer').toBeTruthy();
+    expect(copia).toMatch(new RegExp(`if \\(total > ${sostre[1]}\\) throw new IOException\\("massa gran"\\);`));
+    // Ningú no compara amb MAX_BYTES_FITXER a soles: sempre passa per min(…, restant).
+    expect(codi.match(/\bMAX_BYTES_FITXER\b/g)).toHaveLength(2);
+  });
+
+  /* Pla 261028_1526 (Bloc D, P1-33) · handleOnDestroy tanca els executors, però
+     el processa que corria continuava: la interrupció la neteja senseTermini, i
+     amb el vigilant tancat les lectures següents anaven sense termini, fins a
+     avisar un pont destruït. Ara plega a cada volta i abans d'avisar; les
+     còpies ja fetes es queden a compartits/ i tornen en arrencar. */
+  test('CompartirNatiuPlugin: processa comprova copiador.isShutdown() a cada volta i just abans de notifyListeners', () => {
+    const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
+    const processa = cosDelMetode(codi, 'private void processa(');
+    expect(processa.match(/\bif \(copiador\.isShutdown\(\)\) return;/g)).toHaveLength(2);
+    const bucle = cosDelMetode(processa.slice(processa.indexOf('for (Uri uri : uris) {')), 'for (Uri uri : uris)');
+    expect(bucle).toMatch(/^\s*if \(copiador\.isShutdown\(\)\) return;/);
+    const avis = processa.indexOf('getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));');
+    const ultim = processa.lastIndexOf('if (copiador.isShutdown()) return;');
+    expect(avis).toBeGreaterThan(ultim);
+    expect(ultim).toBeGreaterThan(processa.indexOf(bucle) + bucle.length);
+    // Entre la comprovació i l'avís, res que tarde (cap lectura ni còpia).
+    expect(processa.slice(ultim, avis)).not.toMatch(/\b(?:copia|llegixText|openInputStream|nomVisible)\(/);
+  });
+
+  /* Pla 261028_1526 (Bloc D, P1-31) · Una còpia nativa pot tardar fins a un
+     minut: si la persona ix mentrestant, el lot no pot arribar a la sessió
+     següent. L'hora de l'intent es pren al fil principal, abans de l'encàrrec,
+     i viatja a l'esdeveniment; el web (lliuraCompartit) la compara amb l'últim
+     canvi de sessió. Les restes de load() no la porten (llavors no hi ha cap tall). */
+  test('CompartirNatiuPlugin: handleOnNewIntent pren rebutMs abans del copiador i processa l’envia com a «rebutMs»; anunciaPendents no', () => {
+    const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
+    const nouIntent = cosDelMetode(codi, 'protected void handleOnNewIntent(Intent intent)');
+    const hora = nouIntent.search(/\bfinal long rebutMs = System\.currentTimeMillis\(\);/);
+    expect(hora, 'l’hora de l’intent').toBeGreaterThanOrEqual(0);
+    expect(hora).toBeLessThan(nouIntent.indexOf('copiador.execute('));
+    expect(hora).toBeGreaterThan(nouIntent.indexOf('recullUris(intent)'));
+    expect(codi).toMatch(/private void processa\(List<Uri> uris, String text, String assumpte, String tipus, long rebutMs, long sessioAlRebre\)/);
+    const processa = cosDelMetode(codi, 'private void processa(');
+    expect(processa.match(/\bdades\.put\("rebutMs", rebutMs\);/g)).toHaveLength(1);
+    expect(processa.indexOf('dades.put("rebutMs", rebutMs);')).toBeLessThan(processa.indexOf('notifyListeners('));
+    expect(cosDelMetode(codi, 'private void anunciaPendents()')).not.toMatch(/rebutMs/);
+  });
+
+  /* Pla 261028_1526 (Bloc D, P1-31) · El tall de sessió del web vivia només a
+     la memòria del JS: una còpia que el procés deixava a mitges (o que ningú no
+     havia enviat) tornava en arrencar sense cap marca, i la prenia qui entrara.
+     Ara l'època també és ací, desada (sobreviu al procés): tallaSessio la puja
+     i esborra el que no és d'ella, cada còpia la porta al nom, la compartició
+     que la veu canviar esborra les seues i plega (també just abans d'avisar), i
+     load() la llig abans d'anunciar res. */
+  test('CompartirNatiuPlugin: tallaSessio puja i desa l’època, esborra la resta; processa, copia i anunciaPendents la respecten', () => {
+    const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
+    expect(codi).toMatch(/private final AtomicLong sessio = new AtomicLong\(\);/);
+    // Només la puja tallaSessio, i només la fixa load().
+    expect(codi.match(/\bsessio\.incrementAndGet\(\)/g)).toHaveLength(1);
+    expect(codi.match(/\bsessio\.set\(/g)).toHaveLength(1);
+    expect(codi).toMatch(/private static final String PREFERENCIES = "CompartirNatiu";/);
+    expect(codi).toMatch(/private static final String CLAU_SESSIO = "sessio";/);
+    expect(cosDelMetode(codi, 'private SharedPreferences preferencies()').trim())
+      .toBe('return getContext().getSharedPreferences(PREFERENCIES, Context.MODE_PRIVATE);');
+
+    expect(codi).toMatch(/@PluginMethod\s+public void tallaSessio\(PluginCall call\)\s*\{/);
+    const talla = cosDelMetode(codi, 'public void tallaSessio(PluginCall call)');
+    const puja = /\blong (\w+) = sessio\.incrementAndGet\(\);/.exec(talla);
+    expect(puja, 'l’època nova').toBeTruthy();
+    const nova = puja[1];
+    // commit (al disc ara mateix), mai apply: un procés que mor just després no la perd.
+    const desa = talla.indexOf(`preferencies().edit().putLong(CLAU_SESSIO, ${nova}).commit();`);
+    expect(desa).toBeGreaterThan(puja.index);
+    expect(talla).not.toMatch(/\.apply\(\)/);
+    const prefix = talla.indexOf(`String prefix = prefixDe(${nova});`);
+    expect(prefix).toBeGreaterThan(desa);
+    const esborra = talla.search(/if \((\w+)\.isFile\(\) && !\1\.getName\(\)\.startsWith\(prefix\) && \1\.delete\(\)\) esborrats\+\+;/);
+    expect(esborra, 'esborra el que no és de l’època nova').toBeGreaterThan(prefix);
+    expect(talla.indexOf('carpeta().listFiles()')).toBeGreaterThan(desa);
+    expect(talla.indexOf('call.resolve(')).toBeGreaterThan(esborra);
+    expect(cosDelMetode(codi, 'private static String prefixDe(long sessio)').trim()).toBe('return sessio + "-";');
+
+    // load(): l'època desada, abans de netejar i d'anunciar res.
+    const carrega = cosDelMetode(codi, 'public void load()');
+    const desada = carrega.indexOf('sessio.set(preferencies().getLong(CLAU_SESSIO, 0));');
+    expect(desada, 'load llig l’època').toBeGreaterThan(carrega.indexOf('super.load();'));
+    expect(desada).toBeLessThan(carrega.indexOf('anunciaPendents();'));
+
+    // L'època de l'intent, al fil principal i abans de l'encàrrec, com rebutMs.
+    const nouIntent = cosDelMetode(codi, 'protected void handleOnNewIntent(Intent intent)');
+    const epoca = nouIntent.search(/\bfinal long sessioAlRebre = sessio\.get\(\);/);
+    expect(epoca, 'l’època de l’intent').toBeGreaterThan(nouIntent.indexOf('recullUris(intent)'));
+    expect(epoca).toBeLessThan(nouIntent.indexOf('copiador.execute('));
+
+    // processa: a cada volta i just abans d'avisar, després de mirar si el connector és tancat.
+    const processa = cosDelMetode(codi, 'private void processa(');
+    expect(processa.match(new RegExp(TALLADA.source, 'g'))).toHaveLength(2);
+    const avis = processa.indexOf('getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));');
+    const ultima = processa.search(new RegExp(`${TALLADA.source}(?![\\s\\S]*${TALLADA.source})`));
+    expect(ultima).toBeGreaterThan(processa.lastIndexOf('if (copiador.isShutdown()) return;'));
+    expect(ultima).toBeLessThan(avis);
+    expect(processa.slice(ultima, avis)).not.toMatch(/\b(?:copia|llegixText|openInputStream|nomVisible)\(/);
+
+    // Cada còpia porta l'època al principi del nom.
+    expect(cosDelMetode(codi, COPIA)).toMatch(/new File\(carpeta, prefixDe\(sessioAlRebre\) \+ UUID\.randomUUID\(\)\.toString\(\) \+ "\." \+ extensio\)/);
+    expect(codi.match(/\bUUID\.randomUUID\(\)/g)).toHaveLength(1);
+    // esborra: la ruta de cada fitxer del lot, que copia ha fet dins de compartits/.
+    expect(cosDelMetode(codi, 'private static void esborra(JSArray fitxers)'))
+      .toMatch(/JSONObject (\w+) = fitxers\.optJSONObject\(i\);[\s\S]*if \(\1 != null\) new File\(\1\.optString\("ruta", ""\)\)\.delete\(\);/);
+    // El web el demana pel mateix nom (natiu/compartirNatiu.js).
+    expect(llig(ARREL, 'src', 'natiu', 'compartirNatiu.js')).toMatch(/\bdemana\('tallaSessio', \{\}\)/);
   });
 
   /* Gauntlet 261026_1615 (Codex C1615-04) · Cada URI text/plain podia sumar 10.000
@@ -558,7 +713,11 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(anuncia).toMatch(/getBridge\(\)\.execute\(\(\) -> notifyListeners\(ESDEVENIMENT, dades, true\)\);/);
     expect(anuncia.match(/\bnotifyListeners\(/g)).toHaveLength(1);
     // El que no és un fitxer d'imatge coneguda, o passa del sostre, s'esborra en lloc d'anunciar-se.
-    expect(anuncia).toMatch(/if \(!(\w+)\.isFile\(\) \|\| mime == null \|\| fitxers\.length\(\) >= MAX_FITXERS\) \{\s*\1\.delete\(\);\s*continue;\s*\}/);
+    // P1-31 · I la que no porta l'època d'ara al nom (d'una altra sessió, o d'abans de les èpoques).
+    expect(anuncia).toMatch(/if \(!(\w+)\.isFile\(\) \|\| mime == null \|\| !nom\.startsWith\(prefix\) \|\| fitxers\.length\(\) >= MAX_FITXERS\) \{\s*\1\.delete\(\);\s*continue;\s*\}/);
+    const prefix = anuncia.search(/\bString prefix = prefixDe\(sessio\.get\(\)\);/);
+    expect(prefix, 'el prefix de l’època d’ara').toBeGreaterThanOrEqual(0);
+    expect(prefix).toBeLessThan(anuncia.indexOf('for (File resta : restes)'));
     expect(anuncia).toMatch(/String mime = mimeDeLExtensio\(extensio\);/);
     const mimes = cosDelMetode(codi, 'private static String mimeDeLExtensio(String extensio)');
     expect([...mimes.matchAll(/return "([^"]+)";/g)].map((m) => m[1]).sort()).toEqual(['image/gif', 'image/jpeg', 'image/png', 'image/webp']);

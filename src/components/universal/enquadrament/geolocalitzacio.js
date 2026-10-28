@@ -18,6 +18,14 @@ export const PRECISIONS = Object.freeze([
 ]);
 /** Privacitat de sèrie (ADR §3.3): la més vaga. Qui vol el punt exacte el tria. */
 export const PRECISIO_PER_DEFECTE = 'poble';
+/**
+ * P1-64 (Mestre 261028, decisió 8) · La d'una foto de PUBLICACIÓ (el hero i
+ * les fotos del cos) quan la persona deixa marcada «Conserva la ubicació i la
+ * data de la foto»: l'exacta, el que el fitxer ja publicava (mandat 261016:
+ * fonts, arbres monumentals). La pot baixar a '100m' o 'poble' amb les
+ * píndoles. La geolocalització manual continua amb PRECISIO_PER_DEFECTE.
+ */
+export const PRECISIO_PER_DEFECTE_PUBLICACIO = 'exacta';
 
 export const ERROR_LATITUD = 'Escriu una latitud entre -90 i 90 (per exemple, 38.5919).';
 export const ERROR_LONGITUD = 'Escriu una longitud entre -180 i 180 (per exemple, -0.4184).';
@@ -48,15 +56,17 @@ export function arrodonix(valor, decimals) {
 }
 
 /**
- * El que es desa: { lat, lng, precisio_m, origen } amb les coordenades ja
- * arrodonides a la precisió triada, o null si no són vàlides.
+ * El que es desa: { lat, lng, precisio, precisio_m, origen } amb les
+ * coordenades ja arrodonides a la precisió triada, o null si no són vàlides.
+ * P1-64 (pla 261028_1526 §3.1.1) · `precisio` és el valor de PRECISIONS que
+ * s'ha aplicat (el contracte del Mapa: 'exacta' | '100m' | 'poble').
  */
 export function geolocalitzacio({ lat, lng, precisio = PRECISIO_PER_DEFECTE, origen = 'manual' }) {
   if (!coordenadesValides(lat, lng)) return null;
   const p = precisioDe(precisio);
   const arrodonida = { lat: arrodonix(lat, p.decimals), lng: arrodonix(lng, p.decimals) };
   if (!coordenadesValides(arrodonida.lat, arrodonida.lng)) return null;
-  return { ...arrodonida, precisio_m: p.precisio_m, origen: origen === 'exif' ? 'exif' : 'manual' };
+  return { ...arrodonida, precisio: p.valor, precisio_m: p.precisio_m, origen: origen === 'exif' ? 'exif' : 'manual' };
 }
 
 /** «38.59, -0.42 (uns 1.000 m)»: el que es veurà desat, abans de desar-ho. */

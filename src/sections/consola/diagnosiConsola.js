@@ -41,6 +41,7 @@ import { cobertesPols, panellsPols } from './polsConsola.js';
 import { rutaDelNode } from './problemesConsola.js';
 import { xifresDeLaGraella } from './xifresMas.js';
 import { TEXTOS_AVIS } from './mapa/grafMapa.js';
+import { versioCanonica } from '../../config/versio.js';
 
 /** El títol del bloc (l'H2) i el nom accessible de l'accés ràpid. */
 export const TITOL_DIAGNOSI = 'Diagnòstic del Mas';
@@ -49,6 +50,8 @@ export const ETIQUETA_ACCES = 'Accés ràpid a les pàgines de la Consola';
 export const MASCARA = '••••••';
 /** Una pàgina sense cap etiqueta de nivell (llegint, o sense base per al verd). */
 export const SENSE_SEMAFOR = 'Sense semàfor';
+/** P1-35 · El nom de la línia de la versió, al Diagnòstic i al peu de les pàgines (ControlsConsola). */
+export const ETIQUETA_VERSIO = 'Versió del sistema';
 
 const SAGNAT = '    ';
 const amaga = (text, privat) => (privat ? MASCARA : text);
@@ -116,13 +119,18 @@ function xifra(x, privat) {
  * mapa, estatMapa }, cap obligatòria. `ara` és el rellotge del tauler (el
  * mateix que passa a estatsPagina i etiquetesPagina); `privat`, el mode
  * privacitat. Mateixes fonts i mateix `ara` ⇒ mateixa cadena.
+ * P1-35 (pla 261028_1526 §3.5.2; decisió 6 del Mestre) · La línia 3, darrere
+ * de les dues instantànies, diu la Versió Canònica del Sistema
+ * (config/versio.js), la mateixa del peu de les pàgines. `versio` només
+ * existix perquè una prova la fixe.
  */
-export function diagnosiTextual(fonts = {}, { ara = Date.now(), locale = 'ca-ES', privat = false } = {}) {
+export function diagnosiTextual(fonts = {}, { ara = Date.now(), locale = 'ca-ES', privat = false, versio = versioCanonica() } = {}) {
   const f = normalitza(fonts);
   return [
     `DIAGNÒSTIC DEL MAS · ${copyConsola().title}`,
     instantania('del pols', f.dades?.generat, locale),
     instantania('del Mapa', f.mapa?.generat, locale),
+    `${ETIQUETA_VERSIO}: ${versio}`,
     ...(privat ? [`Mode privacitat: les rutes i les evidències diuen ${MASCARA}.`] : []),
     ...vigilancia(f.mapa, privat),
     '',

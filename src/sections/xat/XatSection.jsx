@@ -5,12 +5,13 @@
  *     patró estàndard de missatgeria (ordre del Mestre, 260928: que la base
  *     tinga l'estructura que la gent ja coneix de les apps natives; Gauntlet
  *     261017, Bloc 3.1: un patró conegut, sense cap marca aliena): una sola
- *     fila de títol amb el «+» rodó blau a la dreta
- *     (Nova conversa, un diàleg), la cerca en píndola sempre a la vista, les
- *     píndoles Tot · No llegits · Preferits · Grups darrere de la icona de
- *     filtre (XAT-A17, T12) i la llista; i la conversa a la dreta amb
- *     capçalera honesta, separadors de dia, «Carrega'n més», bombolles i el
- *     compositor.
+ *     fila de títol amb la lupa i el «+» rodó blau a la dreta
+ *     (Nova conversa, un diàleg), una fila de control amb les píndoles Tot ·
+ *     No llegits · Preferits · Grups (XAT-A17) o, amb la lupa oberta, la
+ *     cerca en píndola al seu lloc (P1-36, decisió 3 del Mestre del 261028,
+ *     que deroga el desplegable de T12/261026_2126) i la llista; i la
+ *     conversa a la dreta amb capçalera honesta, separadors de dia,
+ *     «Carrega'n més», bombolles i el compositor.
  *   · Onada 3 (T63.2, T67, T68, T69):
  *       - Les comunitats són UNA fila (FilaComunitat) que obri la seua fitxa a
  *         la columna de llista (/xat?comunitat=<id>); els seus fills (Avisos i
@@ -25,7 +26,9 @@
  *       - La cerca global: amb el focus i el camp buit, la llista VERTICAL de
  *         filtres (FiltresCerca); en escriure o triar un filtre, els resultats
  *         de cercaXat() (ResultatsCercaXat). Escape o ⊗ netegen; perdre el
- *         focus amb el camp buit i sense filtre torna la llista.
+ *         focus amb el camp buit i sense filtre torna la llista. Amb el camp
+ *         buit i sense filtre, Escape o ⊗ plegen la cerca i el focus torna a
+ *         la lupa (P1-36).
  *       - ?sobre=<tipus>:<id>&titol=…&ruta=… (el «Comentar» d'una Pàgina
  *         Universal) obri el xat comú amb obriFilDePagina i hi navega.
  *         Auditoria 261008 (B05): la conversa conserva el descriptor a la
@@ -72,7 +75,7 @@
  * camp (--sdp-focus). Ara el focus pinta la llista de filtres del patró de
  * missatgeria.
  */
-import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CircleX, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
 import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
@@ -80,7 +83,7 @@ import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
 /* Fase D (261020, L4) · El document destacat (TextSection i PAGE_COPY) arriba en diferit. */
-import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { esErrorLazy, lazyRoute, lazyRouteRenovable } from '../../apps/plataforma/lazyRoute.js';
 import { esperaDeLaLlista, useXat } from './XatContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -458,6 +461,12 @@ function XatWorkspace({ origen = null }) {
   const cercaRef = useRef(null);
   const campRef = useRef(null);
   const filtresRef = useRef(null);
+  /* P1-36 (decisió 3 del Mestre, 261028) · La lupa de la fila de títol obri
+     la cerca, que ocupa el lloc de les píndoles a la mateixa fila; el camp
+     només es munta mentre és oberta. */
+  const [cercaOberta, setCercaOberta] = useState(false);
+  const lupaRef = useRef(null);
+  const idCerca = useId();
 
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triades, setTriades] = useState(() => new Set());
@@ -910,8 +919,13 @@ function XatWorkspace({ origen = null }) {
      converses i no tenen res a marcar. Gauntlet 261016_1530 · Ni la que porta
      a la comunitat de Sóc de Poble ('entitat'). Ordre del Mestre (261026_2126,
      P1-36) · La regla viu a LlistaConverses (esFilaTriable): la mateixa que
-     decidix quines files obrin la selecció amb la pulsació llarga. */
-  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre) && (!modeSeleccio || esFilaTriable(fila)));
+     decidix quines files obrin la selecció amb la pulsació llarga.
+     P1-36 · Amb la lupa oberta, les píndoles no es veuen: la llista que torna
+     quan el camp perd el focus (el teclat del mòbil plegat) és sencera, com
+     els resultats, i no la retalla un filtre que no és enlloc. La píndola
+     triada es conserva i torna a manar en plegar la cerca. */
+  const filtreDeLaLlista = cercaOberta ? 'tot' : filtre;
+  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtreDeLaLlista) && (!modeSeleccio || esFilaTriable(fila)));
   /* La comunitat de la fila del poble (el focus la seguix quan naix). La
      fitxa automàtica només la rep amb un poble declarat (EntradaDelPoble). */
   const comunitatDelPoble = comunitats.find((c) => esComunitatDelPoble(c, pobleDeLaLlista)) || null;
@@ -1020,9 +1034,23 @@ function XatWorkspace({ origen = null }) {
     setSearchTerm('');
     setFiltreCerca(null);
     setCercaActiva(false);
+    setCercaOberta(false);
     setModeSeleccio(false);
     setTriades(new Set());
   }, [vista]);
+
+  /* P1-36 · Focus coherent de la lupa. En obrir-la, el focus entra al camp,
+     que acaba de muntar-se; en plegar-la, torna a la lupa només si el camp
+     que el tenia s'ha desmuntat (Escape o ⊗ amb el camp buit). Plegada per
+     una vista del rail o per la selecció, la lupa tampoc no hi és: res no es
+     mou. Cap plegat en perdre el focus: el teclat del mòbil no bota. */
+  const cercaObertaPrevia = useRef(cercaOberta);
+  useLayoutEffect(() => {
+    if (cercaObertaPrevia.current === cercaOberta) return;
+    cercaObertaPrevia.current = cercaOberta;
+    if (cercaOberta) { cercaRef.current?.focus(); return; }
+    if (focusPerdut(columnaRef.current)) lupaRef.current?.focus();
+  }, [cercaOberta]);
 
   /* Auditoria 261008 (B04 i B05) · El 404 només es decidix amb una llista al
      dia (`llistaFresca`: amb l'última càrrega fallida, la conversa no es
@@ -1039,10 +1067,13 @@ function XatWorkspace({ origen = null }) {
 
   const messages = activeThread ? getThreadMessages(activeThread.id) : CAP;
 
+  /* P1-36 · Netejar la cerca també la plega: cap terme amagat darrere de la
+     lupa no pot canviar la llista per uns resultats sense que es veja. */
   const netejaCerca = () => {
     setSearchTerm('');
     setFiltreCerca(null);
     setCercaActiva(false);
+    setCercaOberta(false);
   };
 
   const tancaDialegNou = () => { setDialegNou(false); setErrorObrir(null); };
@@ -1217,12 +1248,14 @@ function XatWorkspace({ origen = null }) {
     if (desti && (campRef.current?.contains(desti) || filtresRef.current?.contains(desti))) return;
     setCercaActiva(false);
   };
-  /* Teclat del cercador (T69). Escape amb text o filtre els buida; buit,
-     amaga la llista de filtres i torna la de converses SENSE traure el focus
-     del camp (no cau a <body>). Amb la llista de filtres a la vista, Fletxa
-     avall o Tab entren a la primera fila (en el DOM, el següent enfocable és
-     el botó de filtre, que la tancaria); amagada, Fletxa avall la torna a
-     obrir. Retrocés amb el camp buit lleva la fitxa del filtre. */
+  /* Teclat del cercador (T69). Escape amb text o filtre els buida i la cerca
+     continua oberta; buit i sense filtre, la plega (P1-36): el camp es
+     desmunta, torna la llista de converses i el focus va a la lupa (no cau
+     a <body>). Amb la llista de filtres a la vista, Fletxa avall entra a la
+     primera fila; amagada, la torna a obrir. Tab no es toca (P1-36): sense
+     el desplegable, l'ordre del DOM ja és camp → ⊗ → primera fila, i el ⊗,
+     sempre a la vista, no se salta. Retrocés amb el camp buit lleva la
+     fitxa del filtre. */
   const alTeclatCerca = (e) => {
     if (e.key === 'Escape') {
       if (searchTerm || filtreCerca) {
@@ -1231,11 +1264,11 @@ function XatWorkspace({ origen = null }) {
         setSearchTerm('');
         setFiltreCerca(null);
       } else {
-        setCercaActiva(false);
+        netejaCerca();
       }
       return;
     }
-    if (!cercant && (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey && cercaActiva))) {
+    if (!cercant && e.key === 'ArrowDown') {
       e.preventDefault();
       if (cercaActiva) filtresRef.current?.querySelector('button')?.focus();
       else setCercaActiva(true);
@@ -1252,10 +1285,18 @@ function XatWorkspace({ origen = null }) {
     setCercaActiva(true);
     cercaRef.current?.focus();
   };
+  /* ⊗ (sempre a la vista amb la cerca oberta, P1-36) · Amb text o filtre,
+     els buida i el focus torna al camp; buit i sense filtre, plega la cerca. */
   const buidaCerca = () => {
+    if (!searchTerm && !filtreCerca) { netejaCerca(); return; }
     setSearchTerm('');
     setFiltreCerca(null);
     cercaRef.current?.focus();
+  };
+  /* La lupa obri la cerca a la fila 2 i, si ja és oberta, la plega buida. */
+  const alternaCerca = () => {
+    if (cercaOberta) netejaCerca();
+    else setCercaOberta(true);
   };
 
   const titolLlista = t('section.xat.llista.titol', 'Converses');
@@ -1287,7 +1328,7 @@ function XatWorkspace({ origen = null }) {
      no la repetix i diu el mateix que a qui té sessió (el filtre buit o la
      llista buida). */
   let estatBuit = null;
-  if (filtre !== 'tot') estatBuit = t('section.xat.buit.filtre', 'Cap conversa amb este filtre.');
+  if (filtreDeLaLlista !== 'tot') estatBuit = t('section.xat.buit.filtre', 'Cap conversa amb este filtre.');
   else {
     estatBuit = (
       <>
@@ -1398,6 +1439,11 @@ function XatWorkspace({ origen = null }) {
         etiquetaNova={t('section.xat.novaConversaAria', 'Nova conversa')}
         onNova={() => setDialegNou(true)}
         refNova={botoNovaRef}
+        etiquetaCerca={etiquetaCerca}
+        cercaOberta={cercaOberta}
+        idCerca={idCerca}
+        onLupa={alternaCerca}
+        refLupa={lupaRef}
       />
     );
   }
@@ -1464,13 +1510,15 @@ function XatWorkspace({ origen = null }) {
   const middleColumn = (
     <aside className="sdp-workspace-column" aria-label={titolVista || titolLlista} ref={columnaRef}>
       {vistaNode || capcalera}
-      {/* La cerca en píndola, sempre a la vista (D5), menys a la fitxa d'una
-          comunitat, mentre se seleccionen xats i a les vistes del rail (que
+      {/* P1-36 (decisió 3 del Mestre, 261028; deroga el desplegable de
+          T12/261026_2126) · Una sola fila de control davall del títol: les
+          píndoles Tot · No llegits · Preferits · Grups o, amb la lupa oberta,
+          la cerca en píndola al seu lloc. Cap de les dues a la fitxa d'una
+          comunitat, mentre se seleccionen xats ni a les vistes del rail (que
           porten la seua). El filtre de cerca triat (T69) és una fitxa dins
-          del camp; el ⊗ buida terme i filtre. A la mateixa línia, la icona
-          de filtre desplega Tot · No llegits · Preferits · Grups (T12). */}
-      {!vistaNode && !comunitatId && !modeSeleccio ? (
-        <div className="sdp-xat-cerca">
+          del camp; el ⊗ buida terme i filtre i, amb el camp buit, plega. */}
+      {!vistaNode && !comunitatId && !modeSeleccio ? (cercaOberta ? (
+        <div className="sdp-xat-cerca" id={idCerca}>
           <div className={`sdp-xat-cerca__camp${cercaActiva ? ' sdp-xat-cerca__camp--actiu' : ''}`} ref={campRef} onBlur={alPerdreFocus}>
             {filtreActiu ? (
               <button
@@ -1502,21 +1550,20 @@ function XatWorkspace({ origen = null }) {
                 onKeyDown={alTeclatCerca}
               />
             </label>
-            {searchTerm || filtreCerca ? (
-              <button
-                type="button"
-                className="sdp-xat-icona"
-                aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={buidaCerca}
-              >
-                <CircleX size={20} aria-hidden="true" focusable="false" />
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className="sdp-xat-icona"
+              aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={buidaCerca}
+            >
+              <CircleX size={20} aria-hidden="true" focusable="false" />
+            </button>
           </div>
-          <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={setFiltre} t={t} />
         </div>
-      ) : null}
+      ) : (
+        <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={setFiltre} t={t} />
+      )) : null}
       {/* P1-54 · Les vistes del rail (Comunitats, Multimèdia, «En
           construcció») ja no porten l'accés: no són l'aterratge. */}
       {vistaNode ? null : <div className={peuDAcces ? 'sdp-workspace-column__body sdp-xat-cos--amb-peu' : 'sdp-workspace-column__body'}>{cos}{peuDAcces}</div>}
@@ -1665,8 +1712,16 @@ function XatWorkspace({ origen = null }) {
    Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · El «…» rodó de
    l'esquerra (MenuLlista, amb l'única opció «Seleccionar xats») era inventat
    i s'ha retirat: la selecció s'obri amb la pulsació llarga sobre una fila
-   (LlistaConverses). `refNova` deixa que el focus torne al «+». */
-function CapcaleraLlista({ titol, titolRail, etiquetaNova, onNova, refNova = null }) {
+   (LlistaConverses). `refNova` deixa que el focus torne al «+».
+   P1-36 (decisió 3 del Mestre, 261028) · Davant del «+», la lupa: un botó
+   de --sdp-touch que obri i plega la cerca de la fila 2 (aria-expanded; el
+   camp que controla només existix obert, i aria-controls només hi apunta
+   llavors). No obri cap menú: cap aria-haspopup a la fila 1. `refLupa` deixa
+   que el focus hi torne quan la cerca es plega. */
+function CapcaleraLlista({
+  titol, titolRail, etiquetaNova, onNova, refNova = null,
+  etiquetaCerca, cercaOberta = false, idCerca, onLupa, refLupa = null
+}) {
   return (
     <AppGridColumn
       esDark={true}
@@ -1674,6 +1729,18 @@ function CapcaleraLlista({ titol, titolRail, etiquetaNova, onNova, refNova = nul
       icona={MessageCircle}
       esquerra={<BotoObriRail etiqueta={titolRail} />}
     >
+      <button
+        ref={refLupa}
+        type="button"
+        className="sdp-xat-icona sdp-xat-lupa"
+        aria-label={etiquetaCerca}
+        title={etiquetaCerca}
+        aria-expanded={cercaOberta}
+        aria-controls={cercaOberta ? idCerca : undefined}
+        onClick={onLupa}
+      >
+        <Search size={24} aria-hidden="true" focusable="false" />
+      </button>
       <button
         ref={refNova}
         type="button"
@@ -1877,18 +1944,32 @@ function ColumnaDretaBuida({ t, seo }) {
    pública d'una entitat, la pàgina d'un poble), no el document genèric.
    La porta és la de ColumnaDretaBuida: en estret (i al primer commit sense
    mesura) l'avís sobri de sempre, i FitxaVivaDeComunitat no es munta ni es
-   baixa; en mitjà i en ample, en diferit (lazyRoute: fora del tros de /xat,
-   XatSection.pes.test.js). Ni la fitxa ni el poble registren SEO: el títol i
-   el canònic són els del Xat (seoXat, a XatWorkspace).
+   baixa; en mitjà i en ample, en diferit (lazyRouteRenovable: fora del tros
+   de /xat, XatSection.pes.test.js). Ni la fitxa ni el poble registren SEO:
+   el títol i el canònic són els del Xat (seoXat, a XatWorkspace).
    Si el tros no arriba (connexió rural) o la comunitat no es pot resoldre,
    la columna buida de sempre (`senseFitxa`), mai el poble pilot. La `key`
    remunta la pàgina en canviar de comunitat: res de l'anterior s'hi queda.
    Revisió adversarial P1-55 · `comunitat` null: la llista encara arriba i
-   la columna espera en blanc (el buit del Suspense), sense baixar res. */
-const FitxaVivaDeComunitatDiferida = lazyRoute(() => import('./components/FitxaVivaDeComunitat.jsx'));
+   la columna espera en blanc (el buit del Suspense), sense baixar res.
+   Pla 261028_1526 (P1-55, GN-R01) · Remuntar la barrera no bastava: React
+   guarda el rebuig d'un `lazy` i la comunitat següent rebia el mateix
+   error. `lazyRouteRenovable` torna a demanar el tros en una intenció
+   nova, mai en bucle. Revisió adversarial · La intenció és la comunitat i
+   l'entrada a la columna (el muntatge): qui només en té una hi torna (des
+   d'una conversa) i el redemana una volta; un render o una recàrrega de la
+   llista en la mateixa entrada, no. */
+const fitxaVivaDiferida = lazyRouteRenovable(() => import('./components/FitxaVivaDeComunitat.jsx'));
 
 function ColumnaDretaDeLaComunitat({ comunitat, t, seo }) {
   const { mida, mesurada } = useAppGrid();
+  const clau = comunitat ? String(comunitat.fil.id) : '';
+  /* Abans dels retorns: el `lazy` només baixa en pintar-se, i en estret no
+     es pinta. Sense comunitat (la llista encara arriba) no se'n demana cap:
+     un buit entremig no compta com a canvi de comunitat. `useId` és estable
+     en els renders d'un muntatge i nou en cada muntatge (createRoot). */
+  const entrada = useId();
+  const FitxaVivaDeComunitatDiferida = useMemo(() => (clau ? fitxaVivaDiferida.vigent(`${clau}#${entrada}`) : null), [clau, entrada]);
   /* `=== false`: un context sense la clau (proves antigues) es pren per mesurat. */
   if (mida === 'estret' || mesurada === false) return <AvisSenseConversa t={t} />;
   if (!comunitat) return <div className="sdp-xat-buit" aria-busy="true" />;
@@ -1896,9 +1977,10 @@ function ColumnaDretaDeLaComunitat({ comunitat, t, seo }) {
   /* Revisió creuada P1-55 (Codex GN-R01, Gemini 7.3) · La `key` va a la
      barrera, no només al fill: la barrera guarda l'error d'un tros que no
      ha arribat, i sense remuntar-la la comunitat següent també quedaria en
-     la columna buida. */
+     la columna buida. La `key` sola no basta: el `lazy` també es renova
+     (fitxaVivaDiferida). */
   return (
-    <BarreraDelDocumentDestacat key={String(comunitat.fil.id)} fallback={senseFitxa}>
+    <BarreraDelDocumentDestacat key={clau} fallback={senseFitxa}>
       <Suspense fallback={<div className="sdp-xat-buit" />}>
         <FitxaVivaDeComunitatDiferida comunitat={comunitat} senseFitxa={senseFitxa} />
       </Suspense>

@@ -67,13 +67,19 @@ test('un element arribat per location.state (preloadedItem) i bloquejat també p
   mocks.preloaded = DE_PEPA;
   render(arbre(bloquejaPepa(true)));
   expect(mocks.pagina.title).toBe('Contingut amagat');
-  expect(mocks.seo).toHaveBeenLastCalledWith({ title: null, description: '', image: null });
+  expect(mocks.seo).toHaveBeenLastCalledWith({ title: null, description: '', image: null, index: false });
 });
 
-test('si no està bloquejat i ja no hi és, «Element no trobat», com sempre', () => {
+test('si no està bloquejat i ja no hi és, «Element no trobat», com sempre, i no indexable', () => {
   mocks.feedPosts = [];
   render(arbre(bloquejaPepa(false)));
   expect(mocks.pagina.title).toBe('Element no trobat');
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'No trobat', index: false }));
+});
+
+test('P1-61 Fase 2 · un element que hi és continua indexable', () => {
+  render(arbre(bloquejaPepa(false)));
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ index: true }));
 });
 
 test('«Més opcions» a la barra taronja del Mur, el Mercat i l’Agenda; no a Pobles', () => {

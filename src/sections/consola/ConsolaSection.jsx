@@ -22,6 +22,10 @@ import { panellPols, segmentPols } from './polsConsola.js';
 import { GraellaXifres, PaginaXifra, XifresMas } from './XifresMas.jsx';
 import { IndexConsola } from './IndexConsola.jsx';
 import { DiagnosiConsola } from './DiagnosiConsola.jsx';
+import { ETIQUETA_VERSIO } from './diagnosiConsola.js';
+import { versioCanonica } from '../../config/versio.js';
+import { carregaEmpaquetats, esRutaEmpaquetats, paginaEmpaquetats } from './empaquetats.js';
+import { PaginaEmpaquetats, SeccioEmpaquetats } from './EmpaquetatsConsola.jsx';
 import { imatgeDePagina } from './imatgesConsola.js';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
 import { entradetaPlana } from './xifresComu.js';
@@ -288,24 +292,31 @@ export function ConsolaIncrustada() {
    viuen en un panell al peu (ordre del Mestre, 260926), perquè el que el
    visitant veu primer siga la molla de pa i el contingut. `cimRef` no depén
    de la posició: tornaAlCim puja pels pares fins al contenidor de scroll. */
-function ControlsConsola({ pagina, consola, mapa, privat, onPrivat, locale, cimRef }) {
+function ControlsConsola({ pagina, consola, mapa, empaquetats, privat, onPrivat, locale, cimRef }) {
   const { dades } = consola;
   /* Correcció 261004 (verificador de la segona passada, punt 2) · El recompte
      d'operacions immunitàries (amb la data de l'última, T12) era una xifra
      solta al peu de totes les pàgines del pols: ara és la targeta
      «operacions-immunitaries» del pols. El peu només data la instantània.
      Cada pàgina data la seua pròpia font: el pols, consola.json; la resta, el Mapa. */
+  /* P1-35 · La pàgina dels empaquetats data la seua font, /__iaia/empaquetats.json. */
   const instantania = pagina === 'pols'
     ? (dades?.generat && `Instantània: ${dataLocal(dades.generat, locale)}`)
-    : (mapa.mapa?.generat && `Instantània del Mapa: ${dataLocal(mapa.mapa.generat, locale)}`);
+    : pagina === 'empaquetats'
+      ? (empaquetats?.valor?.generat && `Instantània dels empaquetats: ${dataLocal(empaquetats.valor.generat, locale)}`)
+      : (mapa.mapa?.generat && `Instantània del Mapa: ${dataLocal(mapa.mapa.generat, locale)}`);
   return (
     <div className="sdp-consola__peu" ref={cimRef}>
       <p className="sdp-consola__instantania" role="status">
         {instantania || 'Instantània encara no disponible.'}
       </p>
+      {/* P1-35 (pla 261028_1526 §3.5.2) · La Versió Canònica del Sistema, la
+          mateixa del Diagnòstic del Mas. Sense role=status: no canvia mai
+          mentre es mira, i el peu té una sola regió viva (la instantània). */}
+      <p className="sdp-consola__instantania">{`${ETIQUETA_VERSIO}: ${versioCanonica()}`}</p>
       <Boto varietat="secundari" icona={RefreshCw}
-        carregant={consola.estat === 'loading' || mapa.estat === 'loading'}
-        onClick={() => { consola.carrega(); mapa.carrega(); }}>Refrescar</Boto>
+        carregant={consola.estat === 'loading' || mapa.estat === 'loading' || empaquetats?.estat === 'loading'}
+        onClick={() => { consola.carrega(); mapa.carrega(); empaquetats?.carrega(); }}>Refrescar</Boto>
       <Interruptor etiqueta="Privacitat: amaga rutes, ordres i empremtes"
         actiu={privat} onCanvi={onPrivat} />
     </div>
@@ -340,7 +351,7 @@ function ContingutPagina({ id, consola, mapa, locale }) {
    seua pàgina (lliçó 261004 de sdp-universal-page). No en fa la portada
    (hero): la Llei Visual del quadrat no cobrix la portada de PageFrame i
    canviaria els píxels de nou pàgines sense l'ordre del Mestre. */
-function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, privat }) {
+function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, privat }) {
   if (slugXifra !== null) {
     // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
     if (!xifra && llegint) return { title: `El Mas en xifres · ${copy.title}`, description: copy.lead };
@@ -357,6 +368,11 @@ function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGo
     if (!paginaDeGovern) return { title: `Pàgina no trobada · ${copy.title}`, description: 'Esta adreça no correspon a cap pàgina del govern del Mestre.', index: false };
     return { title: `${paginaDeGovern.title} · ${copy.title}`, description: paginaDeGovern.lead };
   }
+  // P1-35 · /consola/empaquetats.
+  if (deEmpaquetats) {
+    const p = paginaEmpaquetats();
+    return { title: `${p.title} · ${copy.title}`, description: p.lead };
+  }
   if (pagina) return { title: `${pagina.title} · ${copy.title}`, description: pagina.lead, image: imatgeDePagina(pagina.id).imatge || undefined };
   return { title: copy.title, description: copy.lead };
 }
@@ -372,7 +388,9 @@ export default function ConsolaSection() {
   const idPanell = slugXifra === null ? segmentPols(comodi) : null;
   // Onada 0.5 (pla 261016_1530) · /consola/govern/<id>, la pàgina d'un mòdul del Govern del Mestre.
   const idGovern = slugXifra === null && idPanell === null ? segmentGovern(comodi) : null;
-  const sensePropia = slugXifra === null && idPanell === null && idGovern === null;
+  // P1-35 (pla 261028_1526 §3.5.2) · /consola/empaquetats, la pàgina dels empaquetats.
+  const deEmpaquetats = slugXifra === null && idPanell === null && idGovern === null && esRutaEmpaquetats(comodi);
+  const sensePropia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats;
   const id = sensePropia ? segmentPagina(comodi) : '';
   const pagina = sensePropia && id ? paginaConsola(id) : null;
   const paginaDeGovern = idGovern === null ? null : paginaGovern(idGovern);
@@ -380,6 +398,8 @@ export default function ConsolaSection() {
   const consola = useConsola();
   const mapa = useMapa();
   const govern = useGovern();
+  // P1-35 · Els empaquetats es lligen una sola vegada per a tota la secció, com les altres fonts.
+  const empaquetats = useFontDev(carregaEmpaquetats);
   const [privat, setPrivatEstat] = useState(() => llegixPrivacitat());
   const setPrivat = useCallback((actiu) => { setPrivatEstat(actiu); desaPrivacitat(actiu); }, []);
   const cim = useRef(null);
@@ -388,11 +408,11 @@ export default function ConsolaSection() {
   const panell = idPanell === null ? null : panellPols(idPanell);
 
   const llegint = mapa.estat === 'loading' || consola.estat === 'loading';
-  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, privat }));
+  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGovern, paginaDeGovern, deEmpaquetats, privat }));
 
   /* /consola/* és un sol element muntat: canviar de pàgina no desmunta res i
      el contenidor de scroll de l'aplicació es quedava on era. */
-  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern]);
+  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell, idGovern, deEmpaquetats]);
 
   /* Obrir una pàgina amb la seua font carregada la marca com a vista: el
      tauler només dirà «Canvis nous» si el resum canvia després. */
@@ -401,7 +421,7 @@ export default function ConsolaSection() {
   }, [pagina?.id, signatura]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const peu = (quina) => (
-    <ControlsConsola pagina={quina} consola={consola} mapa={mapa} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />
+    <ControlsConsola pagina={quina} consola={consola} mapa={mapa} empaquetats={empaquetats} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />
   );
 
   /* Neteja 261007 (prompt 261007_1628, peça D) · La xifra es busca una sola
@@ -421,6 +441,8 @@ export default function ConsolaSection() {
   if (idGovern !== null) {
     return <PaginaDeGovern id={idGovern} govern={govern} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />;
   }
+
+  if (deEmpaquetats) return <PaginaEmpaquetats font={empaquetats} privat={privat} peu={peu('empaquetats')} />;
 
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
@@ -456,10 +478,14 @@ export default function ConsolaSection() {
          Pla 261027_0845 (Guarda Nocturna), §3 · Eixe cap (alerta, govern, H2 de la sala i nou
          targetes) és TaulerAmbGovern, el mateix de la Consola incrustada de la Wiki; ací, amb
          les il·lustracions. El DOM de /consola no canvia. Derogat de l'Onada 0.5: «Fora de
-         ConsolaTauler: la Consola incrustada de la Wiki conserva els seus píxels». */
+         ConsolaTauler: la Consola incrustada de la Wiki conserva els seus píxels».
+         P1-35 (pla 261028_1526 §3.5.2) · Darrere de les xifres i abans de l'Índex, la secció
+         dels empaquetats (EmpaquetatsConsola.jsx): el seu H2 i una targeta que porta a
+         /consola/empaquetats. Només ací: ni la Consola incrustada de la Wiki ni l'Índex. */
       <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}>
         <PrivacitatConsola.Provider value={privat}>
           <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges />
+          <SeccioEmpaquetats font={empaquetats} />
           <IndexConsola mapa={mapa.mapa} dades={consola.dades} locale={locale} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>

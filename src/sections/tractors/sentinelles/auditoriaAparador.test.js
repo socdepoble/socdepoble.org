@@ -73,6 +73,16 @@ describe('llegixCapcalera, en bytes', () => {
     expect(llegixCapcalera(webp([vp8x(1080, 1080, true), ['EXIF', [...ascii('Exif'), 0, 0, ...tiff({ gps: 'ubicacio' })]]]))).toMatchObject({ gps: true });
   });
 
+  test('P1-64 · amb dos EXIF, la ubicació de qualsevol compta (no només l’últim)', () => {
+    const sof0 = [0xff, 0xc0, ...u16be(17), 8, ...u16be(1080), ...u16be(1080), 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1];
+    const app1 = (exif) => [0xff, 0xe1, ...u16be(2 + 6 + exif.length), ...ascii('Exif'), 0, 0, ...exif];
+    const jpegDoble = (primer, segon) => new Uint8Array([0xff, 0xd8, ...app1(primer), ...app1(segon), ...sof0, 0xff, 0xda, 0, 2, 0xff, 0xd9]);
+    expect(llegixCapcalera(jpegDoble(tiff({ gps: 'ubicacio' }), tiff()))).toMatchObject({ exif: true, gps: true });
+    expect(llegixCapcalera(jpegDoble(tiff(), tiff({ gps: 'ubicacio' })))).toMatchObject({ exif: true, gps: true });
+    expect(llegixCapcalera(jpegDoble(tiff(), [...ascii('II'), 0x2a, 0, ...u32le(999)]))).toMatchObject({ gps: null });
+    expect(llegixCapcalera(webp([vp8x(1080, 1080, true), ['EXIF', tiff({ gps: 'ubicacio' })], ['EXIF', tiff()]]))).toMatchObject({ gps: true });
+  });
+
   test('un TIFF trencat no llança: torna null (no se sap)', () => {
     expect(tiffTeGps(new Uint8Array(ascii('XXXX')), 0, 4)).toBeNull();
     expect(tiffTeGps(new Uint8Array([...ascii('II'), 0x2a, 0, ...u32le(999)]), 0, 8)).toBeNull();

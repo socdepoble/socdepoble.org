@@ -5,6 +5,7 @@ import { registerSeo } from './seoHead.js';
 import { esMarcaDeLEntitat } from '../components/universal/UniversalUtils.js';
 import { origenPublic } from '../config/origenPublic.js';
 import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
+import { clauSocialDeRuta } from '../config/rutaSocial.js';
 
 // Gestoria i tractors tracten fitxers personals: mai indexables. Robots no és
 // autorització; només evita que un cercador les llistes.
@@ -72,8 +73,13 @@ function imatgeSocial(image, urlBase, origin) {
 export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', ogType = null, jsonLd = null, index = true, fallback = false }) {
   const { resolveAsset } = useUIActions();
   const { externalConfig } = useUIState();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { basename } = useRouter();
+  /* Pla 261028_1526 (P1-61, Fase 2) · La ruta del <head> és la clau social
+     (rutaSocial.js): el camí sense barra final i, a /wikidepoble, el seu
+     ?item=. Abans era el camí sol: el head d'un document (el servit o el del
+     client) valia per a tots, i el canonical de tots era /wikidepoble. */
+  const clau = pathname ? clauSocialDeRuta(pathname, search) : pathname;
   const owner = useRef(Symbol('seo'));
   const jsonLdString = useMemo(() => jsonLd ? JSON.stringify(jsonLd) : null, [jsonLd]);
   // Clau primitiva: un objecte d'imatge literal nou a cada render no torna a registrar.
@@ -91,13 +97,13 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
     const origin = origenPublic();
     const imatge = imatgeSocial(JSON.parse(imatgeClau), resolveAsset(IMATGE_BASE), origin);
     const canIndex = index !== false && routeAllowsIndex(pathname);
-    const canonical = canonicalExplicit || `${String(origin).replace(/\/$/, '')}${basename || ''}${pathname}`;
+    const canonical = canonicalExplicit || `${String(origin).replace(/\/$/, '')}${basename || ''}${clau}`;
     const structuredData = jsonLdString ? JSON.stringify({
       '@context': 'https://schema.org', '@type': type, image: imatge.url, ...JSON.parse(jsonLdString)
     }).replace(/<\//g, '<\\/') : null;
     const tipusOg = typeof ogType === 'string' && ogType.trim() ? ogType.trim() : null;
-    return registerSeo(owner.current, { path: pathname, priority: fallback ? 0 : 1,
+    return registerSeo(owner.current, { path: clau, priority: fallback ? 0 : 1,
       title, description, image: imatge, ogType: tipusOg, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: true });
-  }, [pathname, basename, title, description, canonicalExplicit, index, imatgeClau, type, ogType, jsonLdString, fallback,
+  }, [pathname, clau, basename, title, description, canonicalExplicit, index, imatgeClau, type, ogType, jsonLdString, fallback,
     externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
 }

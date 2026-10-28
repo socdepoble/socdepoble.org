@@ -88,7 +88,10 @@ describe('elementDeFilaPublicada · els tipus del payload', () => {
     expect(element.labels).toEqual([]);
     expect(element).not.toHaveProperty('variations');
     expect(element.tags).toEqual(['bona']);
-    expect(element.geolocalitzacio).toEqual({ lng: 1.5 });
+    /* P1-64 (revisió adversarial 261028) · Expectativa actualitzada a propòsit:
+       sense una latitud de veres no hi ha cap punt, i la clau se'n va sencera
+       (abans en quedava { lng: 1.5 }, que tapava l'EXIF al panell de la foto). */
+    expect(element).not.toHaveProperty('geolocalitzacio');
     expect(element).not.toHaveProperty('origen');
     expect(fila({ origen: 'ia' })).not.toHaveProperty('origen');
     expect(fila({ labels: textHostil() })).not.toHaveProperty('labels');

@@ -3,7 +3,7 @@
    src/entrades.capaDelPaquet.test.jsx: host.js i l'App no hi pinten res i
    s'espien; tot és sintètic. Quan arribe el selector de poble (després de la
    lease), esta prova creix amb els casos del §5 (ordre amb la tria). */
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { LANGUAGE_STORAGE_KEY, desaIdiomaTriat } from '../config/i18n.js';
 import { delVal } from '../config/storage.js';
 
@@ -47,6 +47,41 @@ vi.mock('./entradaSocial.js', async (importOriginal) => {
 vi.mock('@capgo/capacitor-social-login', () => {
   natiu.carregat = true;
   return { SocialLogin: { initialize: vi.fn(), login: vi.fn(), logout: vi.fn() } };
+});
+/* TE-05 · La fàbrica dels avisos, espiada: el canal d'Android (canalDelXat) és una opció seua. */
+vi.mock('./avisosNatius.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return { ...original, creaAvisosNatius: vi.fn((opcions) => original.creaAvisosNatius(opcions)) };
+});
+
+/* Pla 261028_1526 (P1-22, TE-05) · La llengua del dispositiu (navigator.languages
+   del WebView). La de jsdom és 'en-US'; els casos de sempre corren amb una que
+   l'app no parla ('oc'), i per això no porten cap `language`. */
+const dispositiu = vi.hoisted(() => ({ llengues: ['oc'], llengua: 'oc' }));
+/* Una porta davant del tros d'una llengua: tancada, el diccionari no arriba,
+   i «el primer pintat l'espera» no depén de quant tarda un import() que una
+   prova anterior ja ha resolt. Un vi.doMock nou a cada prova (un mòdul simulat
+   sobreviu a resetModules); oberta, el diccionari de veres. */
+const porta = vi.hoisted(() => ({ obri: () => {}, simulats: [] }));
+function tancaElTros(codi) {
+  const tancada = new Promise((obri) => { porta.obri = obri; });
+  const ruta = `../config/idiomes/${codi}.js`;
+  porta.simulats.push(ruta);
+  vi.doMock(ruta, async (importOriginal) => { await tancada; return importOriginal(); });
+}
+beforeEach(() => {
+  Object.defineProperty(window.navigator, 'languages', { configurable: true, get: () => dispositiu.llengues });
+  Object.defineProperty(window.navigator, 'language', { configurable: true, get: () => dispositiu.llengua });
+});
+afterEach(() => {
+  dispositiu.llengues = ['oc'];
+  dispositiu.llengua = 'oc';
+  porta.obri();
+  for (const ruta of porta.simulats.splice(0)) vi.doUnmock(ruta);
+});
+afterAll(() => {
+  delete window.navigator.languages;
+  delete window.navigator.language;
 });
 
 const CAPA_NATIVA = Object.freeze({
@@ -228,5 +263,84 @@ describe('Fase D · L1: el primer pintat amb una tria desada que no és el valen
     expect(pintats).toHaveLength(1);
     expect(pintats[0].props.config).toEqual({ ...CAPA_NATIVA, ...DEL_LLOC });
     expect(pintats[0].props.isFirstInstance).toBe(true);
+  });
+});
+
+/* Pla 261028_1526 (P1-22, TE-05) · Dins de l'app, la llengua del sistema fa
+   d'amfitrió: va a la config de l'element com a `language`, el primer pintat
+   espera el seu diccionari i el canal d'Android parla eixa llengua. T1 no
+   canvia: una tria explícita desada guanya, i una llengua que l'app no parla
+   no porta res. configura() continua amb el del lloc i prou. */
+describe('TE-05 · la llengua del dispositiu', () => {
+  afterEach(() => { delVal(LANGUAGE_STORAGE_KEY); });
+  const canal = async () => (await import('./avisosNatius.js')).creaAvisosNatius.mock.calls[0][0].canal();
+
+  test('un dispositiu en castellà: espera el diccionari, la config porta language: es i el canal és en castellà', async () => {
+    dispositiu.llengues = ['es-ES', 'ca'];
+    tancaElTros('es');
+    const { host } = await avalua();
+    expect(pintats).toHaveLength(0);
+    porta.obri();
+    const { carregaDiccionari } = await import('../config/i18n.js');
+    await carregaDiccionari('es');
+    await Promise.resolve();
+    expect(pintats).toHaveLength(1);
+    expect(pintats[0].props.config).toEqual({ ...CAPA_NATIVA, ...DEL_LLOC, language: 'es' });
+    expect(host.configura.mock.calls[0][0].config).toEqual(DEL_LLOC);
+    expect((await canal()).nom).toBe('Mensajes del chat');
+  });
+
+  test('ca-ES-valencia és el valencià: pinta a l’acte, amb language: ca', async () => {
+    dispositiu.llengues = ['ca-ES-valencia'];
+    await avalua();
+    expect(pintats).toHaveLength(1);
+    expect(pintats[0].props.config).toEqual({ ...CAPA_NATIVA, ...DEL_LLOC, language: 'ca' });
+    expect((await canal()).nom).toBe('Missatges del xat');
+  });
+
+  test('la tria desada guanya al dispositiu: gallec triat amb el telèfon en castellà espera el gallec', async () => {
+    expect(desaIdiomaTriat('gl')).toBe(true);
+    dispositiu.llengues = ['es-ES'];
+    tancaElTros('gl');
+    await avalua();
+    expect(pintats).toHaveLength(0);
+    porta.obri();
+    const { carregaDiccionari } = await import('../config/i18n.js');
+    await carregaDiccionari('gl');
+    await Promise.resolve();
+    expect(pintats).toHaveLength(1);
+    expect(pintats[0].props.config.language).toBe('es');
+    expect((await canal()).nom).toBe('Mensaxes do chat');
+  });
+
+  test('la primera que l’app parla: [fr-FR, en-GB] dona l’anglés', async () => {
+    dispositiu.llengues = ['fr-FR', 'en-GB'];
+    await avalua();
+    const { carregaDiccionari } = await import('../config/i18n.js');
+    await carregaDiccionari('en');
+    await Promise.resolve();
+    expect(pintats).toHaveLength(1);
+    expect(pintats[0].props.config.language).toBe('en');
+  });
+
+  test('sense cap llengua de l’app (llista buida i navigator.language buit, o etiquetes que no són text): cap language i pinta a l’acte', async () => {
+    for (const [llengues, llengua] of [[[], ''], [[42, null, {}], 'oc']]) {
+      dispositiu.llengues = llengues;
+      dispositiu.llengua = llengua;
+      await avalua();
+      expect(pintats).toHaveLength(1);
+      expect(pintats[0].props.config).toEqual({ ...CAPA_NATIVA, ...DEL_LLOC });
+    }
+  });
+
+  test('una llista buida cau a navigator.language', async () => {
+    dispositiu.llengues = [];
+    dispositiu.llengua = 'eu-ES';
+    await avalua();
+    const { carregaDiccionari } = await import('../config/i18n.js');
+    await carregaDiccionari('eu');
+    await Promise.resolve();
+    expect(pintats).toHaveLength(1);
+    expect(pintats[0].props.config.language).toBe('eu');
   });
 });

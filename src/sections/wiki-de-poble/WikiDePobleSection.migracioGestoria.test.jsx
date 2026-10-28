@@ -246,3 +246,8 @@ test('fora de DEV, igual que en DEV: una consulta antiga no importa ni obri la G
   expect(ruta()).toMatch(/^\/wikidepoble(?:\?|$)/);
   senseGestoria(container);
 });
+
+/* Pla 261028_1526 (P1-61, Fase 2) · WikiDetail registra el seu <head> amb
+   useSEO, que necessita UIProvider. Els contractes visuals d'esta suite són
+   independents del head: el real té la seua suite (WikiDePobleSection.seo.test.jsx). */
+vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));

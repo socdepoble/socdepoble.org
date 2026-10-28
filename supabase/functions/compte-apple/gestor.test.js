@@ -11,7 +11,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CORS, creaGestor } from './gestor.js';
 import { aBase64, aBase64url, deBase64url, desxifra, xifra } from '../_shared/apple.js';
 
@@ -58,7 +58,11 @@ beforeEach(() => {
     baixes: new Set(),             // user_id amb private.baixes
     revoca: () => ({ status: 200, text: '' }),
     token: null,                   // substitut de la resposta de /auth/token
-    respostes: []                  // textos de totes les respostes de la funció
+    respostes: [],                 // textos de totes les respostes de la funció
+    /* P1-18 · Substituts que tornen una Response de veres (o un doble), per a
+       provar la lectura fitada i el topall que dura fins al final del cos. */
+    gotrue: null,                  // (opcions) => resposta de /auth/v1/user
+    rpcResposta: {}                // nom → (opcions) => resposta d'eixa RPC
   };
 });
 const resposta = ({ status = 200, text = '' }) => ({ ok: status >= 200 && status < 300, status, text: async () => text, json: async () => JSON.parse(text) });
@@ -69,6 +73,7 @@ async function fetchFals(url, opcions = {}) {
   if (url === `${URL_SB}/auth/v1/user`) {
     m.crides.push('gotrue');
     expect(headers.apikey).toBe('anon-sintetica');
+    if (m.gotrue) return m.gotrue(opcions);
     const qui = Object.entries(PERSONES).find(([, p]) => headers.Authorization === `Bearer ${p.jwt}`)?.[0];
     if (!qui) return jsonResp(401, { msg: 'invalid JWT' });
     const p = PERSONES[qui];
@@ -97,6 +102,7 @@ async function fetchFals(url, opcions = {}) {
     expect(headers.apikey).toBe('sb_secret_sintetic');
     const args = JSON.parse(opcions.body);
     m.cossos.push({ etiqueta: `rpc ${nom}`, cos: args });
+    if (m.rpcResposta[nom]) return m.rpcResposta[nom](opcions);
     return rpcFalsa(nom, args);
   }
   throw new Error(`adreça desconeguda: ${url}`);
@@ -140,7 +146,9 @@ function rpcFalsa(nom, args) {
 
 /* ── La crida ── */
 function gestor(opcions = {}) {
-  const g = creaGestor({ env: entorn(opcions.env), fetch: fetchFals, ara: () => Date.UTC(2026, 9, 24, 12), topallAppleMs: opcions.topallAppleMs ?? 2000 });
+  const g = creaGestor({ env: entorn(opcions.env), fetch: fetchFals, ara: () => Date.UTC(2026, 9, 24, 12),
+    topallAppleMs: opcions.topallAppleMs ?? 2000, topallSupabaseMs: opcions.topallSupabaseMs ?? 2000,
+    topallCosMs: opcions.topallCosMs ?? 2000 });
   return async (peticio) => {
     const r = await g(peticio);
     const text = await r.clone().text();
@@ -184,10 +192,12 @@ describe('la porta', () => {
     expect(r.capcaleres.get('cache-control')).toBe('no-store');
   });
 
-  test('un altre mètode, un cos que no és JSON, massa llarg o una acció desconeguda: 405 o 400, sense cap crida', async () => {
+  test('un altre mètode, un cos que no és JSON, massa llarg o una acció desconeguda: 405, 400 o 413, sense cap crida', async () => {
     expect((await gestor()(peticio(null, { metode: 'GET' }))).estat).toBe(405);
     expect((await gestor()(peticio('no és json'))).cos).toEqual({ ok: false, error: 'peticio' });
-    expect((await gestor()(peticio({ accio: 'custodia', codi: 'x'.repeat(5000) }))).estat).toBe(400);
+    /* Actualitzada a posta (P1-18, Codex C0545-WM1 / C28-03): un cos de més de
+       MAXIM_COS bytes és 413 (abans, 400 després de llegir-lo sencer). */
+    expect((await gestor()(peticio({ accio: 'custodia', codi: 'x'.repeat(5000) })))).toMatchObject({ estat: 413, cos: { ok: false, error: 'peticio' } });
     expect((await gestor()(peticio({ accio: 'esborra-ho-tot' }))).estat).toBe(400);
     expect(m.crides).toEqual([]);
   });
@@ -447,6 +457,203 @@ describe('buida (el buidatge horari)', () => {
     expect(m.autoritzacions.size).toBe(2);
     expect(error).toHaveBeenCalledWith('[compte-apple] Acció interrompuda:', 'buida', 'config');
     error.mockRestore();
+  });
+});
+
+/* ── P1-18 (Codex C0545-WM1/WM2 i 261028_1611 C28-03) · La lectura fitada i el topall fins al final del cos ── */
+/* Un flux sintètic amb el recompte de pull i de cancel·lacions: `trossos`
+   trossos de `mida` bytes ('a') i, després, el final o, amb `penja`, res mai
+   més. highWaterMark 0: cap pull fins que algú llig. Amb `primer`, el primer
+   pull dona eixe valor tal qual (un tros que no són bytes). */
+function fluxDe({ trossos = 0, mida = 64 * 1024, penja = false, primer } = {}) {
+  const estat = { pulls: 0, cancel: 0 };
+  let fets = 0;
+  const flux = new ReadableStream({
+    pull(controlador) {
+      estat.pulls++;
+      if (primer !== undefined && estat.pulls === 1) { controlador.enqueue(primer); return undefined; }
+      if (fets < trossos) { fets++; controlador.enqueue(new Uint8Array(mida).fill(0x61)); return undefined; }
+      if (penja) return new Promise(() => {});
+      controlador.close();
+      return undefined;
+    },
+    cancel() { estat.cancel++; }
+  }, { highWaterMark: 0 });
+  return { flux, estat };
+}
+const ADRECA = `${URL_SB}/functions/v1/compte-apple`;
+const peticioDeFlux = (flux, capcaleres = {}) => new Request(ADRECA, {
+  method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'anon-sintetica', ...capcaleres }, body: flux, duplex: 'half'
+});
+/* Un cos JSON d'exactament `bytes` bytes, farcit amb `farciment` (un caràcter d'1 o 3 bytes). */
+function cosDeBytes(bytes, farciment = 'a') {
+  const [obri, tanca] = ['{"accio":"res","f":"', '"}'];
+  const fixos = new TextEncoder().encode(obri + tanca).byteLength;
+  const unitat = new TextEncoder().encode(farciment).byteLength;
+  const text = `${obri}${farciment.repeat(Math.floor((bytes - fixos) / unitat))}${'a'.repeat((bytes - fixos) % unitat)}${tanca}`;
+  expect(new TextEncoder().encode(text).byteLength).toBe(bytes);
+  return text;
+}
+
+describe('P1-18 · lectura fitada i termini complet', () => {
+  let error;
+  beforeEach(() => { error = vi.spyOn(console, 'error').mockImplementation(() => {}); });
+  afterEach(() => error.mockRestore());
+
+  test('un cos en flux massa gran es talla al primer tros que se’n passa: 413, el flux cancel·lat i cap crida', async () => {
+    const { flux, estat } = fluxDe({ trossos: 16 });   // 1 MiB si es llegira sencer
+    const r = await gestor()(peticioDeFlux(flux));
+    expect(r).toMatchObject({ estat: 413, cos: { ok: false, error: 'peticio' } });
+    expect(estat.pulls).toBeLessThanOrEqual(2);
+    expect(estat.cancel).toBe(1);
+    expect(m.crides).toEqual([]);
+  });
+
+  test('la frontera és de bytes: 4096 passa el lector, 4097 és 413, i un cos de «€» de menys de 4096 caràcters també', async () => {
+    /* L'acció desconeguda és 400: el cos s'ha llegit i s'ha passat a JSON. */
+    expect((await gestor()(peticio(cosDeBytes(4096)))).estat).toBe(400);
+    expect((await gestor()(peticio(cosDeBytes(4097)))).estat).toBe(413);
+    const euros = cosDeBytes(4500, '€');
+    expect(euros.length).toBeLessThan(4096);
+    expect(await gestor()(peticio(euros))).toMatchObject({ estat: 413, cos: { ok: false, error: 'peticio' } });
+    expect(m.crides).toEqual([]);
+  });
+
+  test('una llargària declarada de més és 413 sense llegir cap tros i el flux cancel·lat; la justa (4096) es llig', async () => {
+    const { flux, estat } = fluxDe({ trossos: 1, mida: 16 });
+    const r = await gestor()(peticioDeFlux(flux, { 'Content-Length': '999999' }));
+    expect(r).toMatchObject({ estat: 413, cos: { ok: false, error: 'peticio' } });
+    expect(estat.pulls).toBe(0);
+    expect(estat.cancel).toBe(1);
+    /* Un client honest que declara exactament MAXIM_COS: es llig i es passa a JSON (l'acció desconeguda és 400). */
+    const just = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(cosDeBytes(4096))); c.close(); } });
+    expect(await gestor()(peticioDeFlux(just, { 'Content-Length': '4096' }))).toMatchObject({ estat: 400, cos: { ok: false, error: 'peticio' } });
+    expect(m.crides).toEqual([]);
+  });
+
+  test('un cos de petició que no acaba es talla al topall: 408, el flux cancel·lat i cap crida', async () => {
+    const { flux, estat } = fluxDe({ trossos: 1, mida: 16, penja: true });
+    const penjat = new Promise((resol) => { setTimeout(() => resol({ estat: 'penja' }), 1000); });
+    const inici = Date.now();
+    const r = await Promise.race([gestor({ topallCosMs: 20 })(peticioDeFlux(flux)), penjat]);
+    expect(r).toMatchObject({ estat: 408, cos: { ok: false, error: 'peticio' } });
+    expect(Date.now() - inici).toBeLessThan(500);
+    expect(estat.cancel).toBe(1);
+    expect(m.crides).toEqual([]);
+  });
+
+  test('sense injectar res (index.ts), el topall del cos és de 10 s', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const { flux, estat } = fluxDe({ trossos: 1, mida: 16, penja: true });
+      let resposta = null;
+      creaGestor({ env: entorn(), fetch: fetchFals })(peticioDeFlux(flux)).then((r) => { resposta = r; });
+      await vi.advanceTimersByTimeAsync(9_999);
+      expect(resposta).toBe(null);
+      expect(estat.cancel).toBe(0);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(resposta?.status).toBe(408);
+      expect(estat.cancel).toBe(1);
+    } finally { vi.useRealTimers(); }
+  });
+
+  test('el rellotge del cos no sobreviu a la petició', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      expect((await gestor()(peticio({ accio: 'res' }))).estat).toBe(400);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally { vi.useRealTimers(); }
+  });
+
+  test('un tros que no són bytes talla la lectura al primer pull: 400 a la petició, 500 a GoTrue', async () => {
+    /* Sense la guarda, el recompte seria NaN i el límit de bytes no tallaria mai. */
+    const peticioDolenta = fluxDe({ trossos: 16, primer: 'x'.repeat(5000) });
+    expect(await gestor()(peticioDeFlux(peticioDolenta.flux))).toMatchObject({ estat: 400, cos: { ok: false, error: 'peticio' } });
+    expect(peticioDolenta.estat.pulls).toBeLessThanOrEqual(2);
+    expect(peticioDolenta.estat.cancel).toBe(1);
+    const respostaDolenta = fluxDe({ trossos: 16, primer: 'x'.repeat(5000) });
+    m.gotrue = () => new Response(respostaDolenta.flux, { status: 200 });
+    expect(await revoca('A')).toMatchObject({ estat: 500, cos: { ok: false, error: 'servidor' } });
+    expect(respostaDolenta.estat.pulls).toBeLessThanOrEqual(2);
+    expect(respostaDolenta.estat.cancel).toBe(1);
+    expect(m.crides).toEqual(['gotrue']);
+  });
+
+  test('un cos de GoTrue que es trenca a mitja lectura és 500 servidor (ja no 401): la sessió no s’ha desmentit', async () => {
+    m.gotrue = () => new Response(new ReadableStream({ pull(c) { c.error(new TypeError('tall')); } }), { status: 200 });
+    expect(await revoca('A')).toMatchObject({ estat: 500, cos: { ok: false, error: 'servidor' } });
+    expect(m.crides).toEqual(['gotrue']);
+    expect(error).toHaveBeenCalledWith('[compte-apple] Acció interrompuda:', 'revoca', 'TypeError');
+  });
+
+  test('el camí sense flux (un doble amb text()) també mesura bytes: 90 000 «€» passen de 256 KiB i és 500', async () => {
+    const text = JSON.stringify({ id: PERSONES.A.id, f: '€'.repeat(90_000) });
+    expect(text.length).toBeLessThan(256 * 1024);
+    m.gotrue = () => ({ ok: true, status: 200, text: async () => text });
+    expect(await revoca('A')).toMatchObject({ estat: 500, cos: { ok: false, error: 'servidor' } });
+    expect(m.crides).toEqual(['gotrue']);
+    expect(error).toHaveBeenCalledWith('[compte-apple] Acció interrompuda:', 'revoca', 'servidor');
+  });
+
+  test('GoTrue envia les capçaleres i penja el cos: el topall l’avorta, el flux es cancel·la, 500 i cap revocació', async () => {
+    const { flux, estat } = fluxDe({ trossos: 1, mida: 8, penja: true });
+    let senyal = null;
+    m.gotrue = (opcions) => { senyal = opcions.signal; return new Response(flux, { status: 200 }); };
+    const inici = Date.now();
+    const r = await revoca('A', { topallSupabaseMs: 20 });
+    expect(r).toMatchObject({ estat: 500, cos: { ok: false, error: 'servidor' } });
+    expect(Date.now() - inici).toBeLessThan(500);
+    expect(senyal.aborted).toBe(true);
+    expect(estat.cancel).toBe(1);
+    expect(m.crides).toEqual(['gotrue']);
+    expect(error).toHaveBeenCalledWith('[compte-apple] Acció interrompuda:', 'revoca', 'AbortError');
+    capSecretALesRespostes();
+  });
+
+  test('una RPC que penja el cos (un flux o un text() que no acaba): 500, cap Apple i cap registre', async () => {
+    const { flux, estat } = fluxDe({ penja: true });
+    m.rpcResposta.apple_autoritzacio_de = () => new Response(flux, { status: 200 });
+    expect(await revoca('A', { topallSupabaseMs: 20 })).toMatchObject({ estat: 500, cos: { ok: false, error: 'servidor' } });
+    expect(estat.cancel).toBe(1);
+    let senyal = null;
+    m.rpcResposta.apple_autoritzacio_de = (opcions) => { senyal = opcions.signal; return { ok: true, status: 200, text: () => new Promise(() => {}) }; };
+    expect((await revoca('A', { topallSupabaseMs: 20 })).estat).toBe(500);
+    expect(senyal.aborted).toBe(true);
+    expect(m.crides).toEqual(['gotrue', 'rpc apple_autoritzacio_de', 'gotrue', 'rpc apple_autoritzacio_de']);
+    expect(m.registres).toEqual([]);
+  });
+
+  test('un 401 de GoTrue no espera el seu cos: 401 de seguida, el cos cancel·lat i el senyal sense avortar', async () => {
+    const { flux, estat } = fluxDe({ trossos: 1, mida: 8, penja: true });
+    let senyal = null;
+    m.gotrue = (opcions) => { senyal = opcions.signal; return new Response(flux, { status: 401 }); };
+    /* Si el llegira, penjaria fins al topall (5 s) i tornaria 500. */
+    const inici = Date.now();
+    const r = await revoca('A', { topallSupabaseMs: 5000 });
+    expect(r).toMatchObject({ estat: 401, cos: { ok: false, error: 'sense-sessio' } });
+    expect(Date.now() - inici).toBeLessThan(1000);
+    expect(estat.cancel).toBe(1);
+    expect(estat.pulls).toBe(0);
+    expect(senyal.aborted).toBe(false);
+  });
+
+  test('una resposta de Supabase de més de 256 KiB es talla en passar-se’n: 500 i el flux cancel·lat', async () => {
+    const { flux, estat } = fluxDe({ trossos: 8 });   // 512 KiB
+    m.gotrue = () => new Response(flux, { status: 200 });
+    expect(await revoca('A')).toMatchObject({ estat: 500, cos: { ok: false, error: 'servidor' } });
+    expect(estat.pulls).toBeLessThanOrEqual(5);
+    expect(estat.cancel).toBe(1);
+    expect(error).toHaveBeenCalledWith('[compte-apple] Acció interrompuda:', 'revoca', 'servidor');
+  });
+
+  test('una resposta de veres dins del límit es llig sencera: la custòdia i la revocació, com abans', async () => {
+    const usuari = { id: PERSONES.A.id, identities: [{ id: PERSONES.A.sub, provider: 'apple', identity_data: { sub: PERSONES.A.sub } }] };
+    m.gotrue = () => new Response(JSON.stringify(usuari), { status: 200 });
+    expect((await custodia('A', 'codiA.0.sintetic')).cos).toEqual({ ok: true, resultat: 'desat' });
+    expect((await revoca('A')).cos).toEqual({ ok: true, resultat: 'revocat' });
+    expect(m.crides).toEqual(['gotrue', 'apple token', 'rpc apple_desa_autoritzacio',
+      'gotrue', 'rpc apple_autoritzacio_de', 'apple revoke', 'rpc apple_registra_revocacio']);
+    capSecretALesRespostes();
   });
 });
 

@@ -64,17 +64,17 @@ function CampAmbFitxa() {
             {!actiu ? <Search size={20} aria-hidden="true" focusable="false" /> : null}
             <input ref={cercaRef} type="search" autoComplete="off" value={terme} placeholder={etiquetaCerca} onChange={(e) => setTerme(e.target.value)} />
           </label>
-          {terme || filtre ? (
-            <button
-              type="button"
-              className="sdp-xat-icona"
-              aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
-              onMouseDown={noRobes}
-              onClick={() => { setTerme(''); setFiltre(null); cercaRef.current?.focus(); }}
-            >
-              <CircleX size={20} aria-hidden="true" focusable="false" />
-            </button>
-          ) : null}
+          {/* P1-36 (pla 261028_1526) · Amb la lupa, la cerca oberta porta sempre el ⊗:
+              buida, la tanca; amb terme o filtre, els lleva. */}
+          <button
+            type="button"
+            className="sdp-xat-icona"
+            aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
+            onMouseDown={noRobes}
+            onClick={() => { setTerme(''); setFiltre(null); cercaRef.current?.focus(); }}
+          >
+            <CircleX size={20} aria-hidden="true" focusable="false" />
+          </button>
         </div>
       </div>
       <div className="sdp-especimen__fila">

@@ -1,5 +1,6 @@
 import { useLocation } from '../app/contexts/RouterContext';
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from '../config/navigation.js';
+import { clauSocialDeRuta } from '../config/rutaSocial.js';
 import { useSEO } from './useSEO';
 
 /* Títol de reserva per ruta (primer tram). Una pàgina amb useSEO propi mana
@@ -24,9 +25,15 @@ const TITLES = { notes: 'Notes', xat: 'Xat', connectar: 'Connectar', registre: '
   gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers', app: 'Apps',
   ...Object.fromEntries([...Object.values(RUTES_CANONIQUES), RUTA_FITXA_IAIA].map((ruta) => [ruta.slice(1), 'Perfil'])) };
 const SENSE_INDEX = new Set(['app']);
+/* Pla 261028_1526 (P1-61, Fase 2) · Un document de la Wiki (/wikidepoble?item=
+   o la seua forma de camí) té clau pròpia (rutaSocial.js), i la reserva no
+   l'afirma: sense indexar, i per tant sense canonical ni og:url, fins que
+   WikiDetail el valida (seoWiki.js). Abans, mentre arribava el tros de la
+   Wiki, el canonical d'un id privat o inexistent quedava com a indexable. */
 export function RouteSEO() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const section = pathname.split('/').filter(Boolean)[0];
-  useSEO({ title: TITLES[section] || null, fallback: true, index: !SENSE_INDEX.has(section) });
+  const esDocument = Boolean(pathname) && clauSocialDeRuta(pathname, search).includes('?item=');
+  useSEO({ title: TITLES[section] || null, fallback: true, index: !SENSE_INDEX.has(section) && !esDocument });
   return null;
 }

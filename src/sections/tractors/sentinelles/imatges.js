@@ -59,6 +59,9 @@ export function tiffTeGps(bytes, inici, longitud) {
 }
 
 const prefixExif = (b, i) => ascii(b, i, 6) === 'Exif\u0000\u0000';
+/* P1-64 (revisió adversarial 261028) · Una imatge pot portar més d'un EXIF: si
+   qualsevol diu ubicació, en porta; si cap no ho diu i un no es llig, no se sap. */
+const ambGps = (abans, ara) => (abans === true || ara === true ? true : abans === null || ara === null ? null : false);
 
 function llegixPng(b) {
   const r = { format: 'png', amplada: null, alcada: null, exif: false, gps: false };
@@ -72,7 +75,7 @@ function llegixPng(b) {
     if (n === null || o + 12 + n > b.length) break;
     if (tipus === 'eXIf') {
       r.exif = true;
-      r.gps = tiffTeGps(b, o + 8, n);
+      r.gps = ambGps(r.gps, tiffTeGps(b, o + 8, n));
     }
     if (tipus === 'IEND') break;
     o += 12 + n;
@@ -99,7 +102,7 @@ function llegixJpeg(b) {
     if (n === null || n < 2) break;
     if (marcador === 0xe1 && prefixExif(b, o + 4)) {
       r.exif = true;
-      r.gps = tiffTeGps(b, o + 10, n - 8);
+      r.gps = ambGps(r.gps, tiffTeGps(b, o + 10, n - 8));
     } else if (MARCADORS_SOF.has(marcador)) {
       r.alcada = u16be(b, o + 5);
       r.amplada = u16be(b, o + 7);
@@ -133,7 +136,7 @@ function llegixWebp(b) {
     } else if (tipus === 'EXIF') {
       r.exif = true;
       const salt = prefixExif(b, d) ? 6 : 0;
-      r.gps = tiffTeGps(b, d + salt, n - salt);
+      r.gps = ambGps(r.gps, tiffTeGps(b, d + salt, n - salt));
     }
     o = d + n + (n % 2);
   }

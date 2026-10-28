@@ -3,6 +3,7 @@ import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import {
   ACCEPT_FOTO, PES_MAXIM_FOTO, costatDeSortida, useEnquadramentImatge,
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
+import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { AJUDA_IMATGE_PUJANT as AVIS_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 
 /* Un pas que falla sense missatge propi (no hauria de passar: el hook l'avisa). */
@@ -40,6 +41,11 @@ const paraCancel = (e) => e.stopPropagation();
  *     WebP, o passa de 10 MB): no s'obri res i l'avís va fora (toast), perquè
  *     cap modal el tapa. `tipus` només ve quan no és un error ('info').
  *   onDesat(camp) · opcional: el desat ha acabat bé (el pare hi porta el focus).
+ *   identitat (false) · P1-64 (Mestre 261028, decisió 7): la foto és
+ *     d'identitat (la capçalera d'una persona; l'avatar ja ho és per la
+ *     forma). Puja neta i sense casella i, si portava GPS, després de desar bé
+ *     es diu onError(AVIS_GPS_ELIMINAT_PERFIL, 'info'): la finestra ja s'ha
+ *     tancat i la persona ho veu igual.
  *   Torna { obri(control?), input, dialeg, pujant, obert }:
  *     · obri fa clic a l'input amagat dins del gest de la persona. Si rep el
  *       control de la closca ({ acaba }), el crida quan la imatge ja s'ha
@@ -79,7 +85,7 @@ const paraCancel = (e) => e.stopPropagation();
  *   una adreça desada sencera no té res a desar (DialegEnquadrament, T46).
  */
 export function useImatgeDeFitxa({
-  camp = 'heroImage', forma = 'capcalera', onImageUpload = null, onDesaCamp, onError, onDesat, finestra = null,
+  camp = 'heroImage', forma = 'capcalera', onImageUpload = null, onDesaCamp, onError, onDesat, finestra = null, identitat = false,
 } = {}) {
   const inputRef = useRef(null);
   const controlRef = useRef(null);
@@ -127,6 +133,7 @@ export function useImatgeDeFitxa({
 
   const enquadrament = useEnquadramentImatge({
     forma,
+    identitat,
     extres,
     onError: (missatge) => errorRef.current?.(missatge),
     onEnquadrat: async (fitxer, info, exif) => {
@@ -153,6 +160,8 @@ export function useImatgeDeFitxa({
         controlRef.current = null;
         control?.acaba?.();
         desatRef.current?.(camp);
+        // P1-64 · Només si la foto portava GPS de veres (DialegEnquadrament, avisaGpsEliminat).
+        if (info?.gpsEliminat === true) errorRef.current?.(AVIS_GPS_ELIMINAT_PERFIL, 'info');
       } catch (err) {
         // Escape a mitja pujada: la finestra ja no hi és per a dir-ho.
         if (!obertRef.current) errorRef.current?.(err?.message || ERROR_DESAT_IMATGE);

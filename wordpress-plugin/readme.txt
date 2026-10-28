@@ -38,6 +38,7 @@ The project is developed with AI assistance and is designed to remain understand
 * An optional full-screen page template supports classic and block themes.
 * The `socdepoble_enxufe_config` filter sets the default display name and village identifier.
 * Shareable addresses: the application writes its current route to the page address as `#sdp=/route` (for example `#sdp=/xat`), so a copied or reloaded address opens the same view. The `socdepoble_enxufe_ruta_a_url` filter selects `fragment` (default) or `parametre`; any other value turns the feature off. Portable embedding code for other hosts does not include it.
+* Application language: by default the application opens in Valencian and the WordPress locale does not change it; visitors can choose another language inside the application. The `socdepoble_enxufe_idioma` filter can set the starting language of this site's instance to one of the exact codes `ca`, `es`, `en`, `eu` or `gl`; any other value is ignored, and a visitor's own choice still wins. Portable embedding code for other hosts does not include it.
 * Optional DeepL translation sends selected text through the server, where the API key is configured.
 * Valencian (Catalan) translations are included for the plugin and block editor.
 

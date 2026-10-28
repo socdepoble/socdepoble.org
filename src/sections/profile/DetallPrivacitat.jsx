@@ -14,6 +14,7 @@ import { rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 import { LlistaBloquejos } from '../../components/universal/LlistaBloquejos.jsx';
 /* Gauntlet 261025_0545 (BOT-04) · Dins de l'app nativa (el pont de Capacitor o
@@ -48,7 +49,6 @@ const TIPUS_RGPD = 'rgpd_acepta';
    la portada, la fitxa o una publicació seua) o una publicació d'una altra
    persona. */
 const FITXERS_EN_US = 'que encara fa servir una entitat (la seua fitxa o una publicació) o una publicació d’una altra persona';
-const ESPERA_APPLE = `Si vas entrar amb Apple i encara no hem pogut retirar el permís, l’esborrat pot esperar fins a ${DIES_ESPERA_APPLE} dies més.`;
 
 /** socdepoble-dades-AAAA-MM-DD.json amb la data local de hui (diaIso,
     el mateix dia que compon la pastilla: cap còpia pròpia de les xifres). */
@@ -94,6 +94,97 @@ const TEXTOS_DADES_NATIU = Object.freeze({
   errorCopiar: textDades('errorCopiar', 'No s’ha pogut copiar el text. Selecciona’l al quadre i copia’l tu.'),
 });
 
+/* Pla 261028_1526 (P1-22, TE-01) · La resta dels textos de la pantalla, en
+   parells com els de dalt: cada reserva és el text de sempre, lletra per
+   lletra, i el valor valencià del diccionari. Frases senceres amb buits
+   d'omple(), mai trossos cosits: cada llengua posa la data, la versió o els
+   dies on li toca. {apple} és una frase sencera (baixa.esperaApple), i
+   l'excepció dels fitxers (FITXERS_EN_US) va dins de cada frase. */
+const textPrivacitat = (nom, reserva) => Object.freeze([`section.perfil.privacitat.${nom}`, reserva]);
+export const TEXTOS_PRIVACITAT = Object.freeze({
+  pagina: Object.freeze({
+    titol: textPrivacitat('pagina.titol', 'Privacitat i dades'),
+    lead: textPrivacitat('pagina.lead', 'Els teus drets sobre el que guardem: una còpia de les dades, el consentiment i la baixa.'),
+    buit: textPrivacitat('pagina.buit', 'Este node encara no oferix cap d’estes opcions.'),
+  }),
+  dades: Object.freeze({
+    titol: textPrivacitat('dades.titol', 'Les meues dades'),
+    explica: textPrivacitat('dades.explica', 'Descarrega una còpia de les dades que Sóc de Poble guarda del teu compte: perfil, organitzacions, '
+      + 'publicacions, notes, converses, la llista dels teus fitxers i adjunts, consentiments, les denúncies que has fet, les persones '
+      + 'i entitats que has bloquejat o que seguixes i les normes que has acceptat. Per a protegir altres persones, no hi diem qui '
+      + 't’ha denunciat, qui t’ha bloquejat ni qui et seguix: de les denúncies sobre tu només hi ha quantes han acabat amb una mesura '
+      + '(si en vols el detall, demana-nos-el per correu) i, de qui et seguix, quantes persones són. Tampoc no hi posem les empremtes '
+      + 'de l’adreça IP ni el permís xifrat d’Apple. És un fitxer JSON que pots obrir amb qualsevol editor de text.'),
+    fet: textPrivacitat('dades.fet', 'Ja tens el fitxer {nom} a les descàrregues.'),
+    descarrega: textPrivacitat('dades.descarrega', 'Descarregar les meues dades'),
+    error: textPrivacitat('dades.error', 'No s’han pogut preparar les teues dades. Torna-ho a provar.'),
+  }),
+  politica: Object.freeze({
+    llegir: textPrivacitat('politica.llegir', 'Llegir la política'),
+  }),
+  consentiment: Object.freeze({
+    titol: textPrivacitat('consentiment.titol', 'Consentiment'),
+    comprovant: textPrivacitat('consentiment.comprovant', 'Comprovant el consentiment…'),
+    errorLectura: textPrivacitat('consentiment.errorLectura', 'No s’ha pogut llegir l’estat del consentiment.'),
+    errorRegistre: textPrivacitat('consentiment.errorRegistre', 'No s’ha pogut registrar el consentiment.'),
+    errorRetirada: textPrivacitat('consentiment.errorRetirada', 'No s’ha pogut retirar el consentiment.'),
+    senseConstancia: textPrivacitat('consentiment.senseConstancia', 'No consta que hages acceptat la política de privacitat.'),
+    acceptada: textPrivacitat('consentiment.acceptada', 'L’has acceptada (versió {versio}) el {data}.'),
+    retirada: textPrivacitat('consentiment.retirada', 'La vas retirar el {data}.'),
+    vigent: textPrivacitat('consentiment.vigent', 'Política de privacitat vigent: versió {versio}.'),
+    senseVigent: textPrivacitat('consentiment.senseVigent', 'Encara no hi ha cap política de privacitat publicada.'),
+    calTitol: textPrivacitat('consentiment.calTitol', 'Cal el teu consentiment'),
+    accepta: textPrivacitat('consentiment.accepta', 'Acceptar la versió {versio}'),
+    calText: textPrivacitat('consentiment.calText', 'Sense acceptar la política vigent no apareixes al padró del poble.'),
+    retira: textPrivacitat('consentiment.retira', 'Retirar el consentiment'),
+    retiraDescripcio: textPrivacitat('consentiment.retiraDescripcio', 'Deixaràs d’aparéixer al padró del poble fins que el tornes a acceptar.'),
+    retiraConfirma: textPrivacitat('consentiment.retiraConfirma', 'Retirar-lo'),
+    retiraText: textPrivacitat('consentiment.retiraText', 'El compte no s’esborra: per a això, demana la baixa. El registre de quan l’has donat i '
+      + 'retirat es conserva, perquè la llei ens obliga a poder demostrar-ho.'),
+  }),
+  baixa: Object.freeze({
+    titol: textPrivacitat('baixa.titol', 'Donar-se de baixa'),
+    comprovant: textPrivacitat('baixa.comprovant', 'Comprovant l’estat del compte…'),
+    errorLectura: textPrivacitat('baixa.errorLectura', 'No s’ha pogut comprovar si tens una baixa pendent.'),
+    errorDemanda: textPrivacitat('baixa.errorDemanda', 'No s’ha pogut demanar la baixa.'),
+    cancelada: textPrivacitat('baixa.cancelada', 'Baixa cancel·lada. El teu perfil torna a ser com era.'),
+    errorCancela: textPrivacitat('baixa.errorCancela', 'No s’ha pogut cancel·lar la baixa.'),
+    pendentTitol: textPrivacitat('baixa.pendentTitol', 'Tens una baixa pendent'),
+    cancela: textPrivacitat('baixa.cancela', 'Cancel·lar la baixa'),
+    pendent: textPrivacitat('baixa.pendent', 'L’has demanada el {demanada}. El compte, les teues publicacions personals i els teus fitxers '
+      + `s’esborraran definitivament el {purga}, llevat dels fitxers ${FITXERS_EN_US}. {apple}`),
+    esperaApple: textPrivacitat('baixa.esperaApple', 'Si vas entrar amb Apple i encara no hem pogut retirar el permís, l’esborrat pot '
+      + 'esperar fins a {diesApple} dies més.'),
+    explica: textPrivacitat('baixa.explica', 'Si te’n vas, en el moment amaguem el teu perfil: deixa d’aparéixer al padró, hi posem un nom genèric en lloc del teu i li llevem la foto. '
+      + 'Tens {dies} dies per a penedir-te’n. Passat eixe termini, s’esborren per sempre el compte, les teues publicacions personals i '
+      + `els teus fitxers, llevat dels ${FITXERS_EN_US}; el que vas publicar en nom d’una entitat es queda a l’entitat. {apple}`),
+    boto: textPrivacitat('baixa.boto', 'Donar-me de baixa'),
+    dialegTitol: textPrivacitat('baixa.dialegTitol', 'Donar-te de baixa'),
+    dialegDescripcio: textPrivacitat('baixa.dialegDescripcio', 'Tens {dies} dies de gràcia per a tornar arrere.'),
+    confirma: textPrivacitat('baixa.confirma', 'Sí, donar-me de baixa'),
+    puntAmaga: textPrivacitat('baixa.punt.amaga', 'Ara mateix amaguem el teu perfil: deixa d’aparéixer al padró, hi posem un nom genèric en lloc del teu i li llevem la foto, '
+      + 'i les teues publicacions deixen de mostrar el teu nom i la teua foto.'),
+    puntCancela: textPrivacitat('baixa.punt.cancela', 'Durant {dies} dies pots cancel·lar-la: entra de nou com sempre (amb el correu, Apple o Google), '
+      + 'torna a «Privacitat i dades» i prem «Cancel·lar la baixa».'),
+    puntApple: textPrivacitat('baixa.punt.apple', 'Si vas entrar amb Apple, en demanar la baixa intentem retirar el permís que vas donar a Sóc de Poble; '
+      + 'si no ho aconseguim, el pots retirar tu a Configuració › el teu nom › Inici de sessió amb Apple, o a account.apple.com. Si quan passen '
+      + 'els {dies} dies encara no l’hem pogut retirar, l’esborrat definitiu pot esperar fins a {diesApple} dies més. Si l’hem retirat i '
+      + 'tornes a entrar amb Apple per a cancel·lar la baixa, Apple et tornarà a demanar permís.'),
+    puntEsborrat: textPrivacitat('baixa.punt.esborrat', 'Passats els {dies} dies, s’esborren definitivament el compte, les teues publicacions personals i '
+      + `els teus fitxers, llevat dels ${FITXERS_EN_US}. El que vas publicar en nom d’una entitat es queda a l’entitat.`),
+    puntConserva: textPrivacitat('baixa.punt.conserva', 'Es guarden, ja sense el teu compte però no del tot anònimes, la prova del consentiment, que la '
+      + 'llei ens obliga a conservar, i, per a l’historial de moderació, les denúncies que vas fer i les que altres persones han fet '
+      + 'sobre tu o sobre el teu contingut, amb l’identificador intern que tenia el teu compte.'),
+    puntSessio: textPrivacitat('baixa.punt.sessio', 'Es tancarà la sessió en tots els teus dispositius.'),
+    motiu: textPrivacitat('baixa.motiu', 'Per què te’n vas? (opcional)'),
+    motiuAjuda: textPrivacitat('baixa.motiuAjuda', 'Ens ajuda a millorar. Com a màxim 500 caràcters.'),
+  }),
+});
+const { pagina: TEXTOS_PAGINA, dades: TEXTOS_DADES, consentiment: TEXTOS_CONSENTIMENT, baixa: TEXTOS_BAIXA } = TEXTOS_PRIVACITAT;
+/* El botó de tornar dels dos diàlegs: sense etiqueta, DialegConfirmacio hi
+   posa «Cancel·lar» en totes les llengües. */
+const TEXT_CANCELA = Object.freeze(['common.cancela', 'Cancel·lar']);
+
 /** El fitxer de l'exportació per al menú de compartir, o null (sense File). */
 function fitxerDeLExportacio(text, nom) {
   try {
@@ -116,11 +207,22 @@ function potCompartirFitxer(fitxer) {
 
 const potCopiar = () => typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function';
 
-export function dataLlegible(iso) {
+export function dataLlegible(iso, locale = 'ca-ES') {
   if (!iso) return '';
   const data = new Date(iso);
   if (Number.isNaN(data.getTime())) return '';
-  return data.toLocaleDateString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  return data.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/* TE-01 · Les dates, en la llengua del text (UIContext.locale); el valencià
+   fora de l'app (sense UIProvider) o amb una prova que simula UIContext sense
+   useUIStateOpcional: el mock llança dins del try, com a useTraductorOpcional. */
+function useLocaleDeLesDates() {
+  try {
+    return useUIStateOpcional()?.locale ?? 'ca-ES';
+  } catch {
+    return 'ca-ES';
+  }
 }
 
 const missatgeDe = (error, perDefecte) => {
@@ -245,7 +347,7 @@ function BlocDades({ config }) {
         setEstat({ fase: 'repos' });
         return;
       }
-      setEstat({ fase: 'error', text: missatgeDe(e, 'No s’han pogut preparar les teues dades. Torna-ho a provar.') });
+      setEstat({ fase: 'error', text: missatgeDe(e, tradueix(t, TEXTOS_DADES.error)) });
     } finally {
       deslliga();
       if (vida.peticio === peticio) {
@@ -256,24 +358,16 @@ function BlocDades({ config }) {
   };
 
   return (
-    <Bloc titol="Les meues dades">
+    <Bloc titol={tradueix(t, TEXTOS_DADES.titol)}>
       {/* P2-08 (pla 261024_1315, T7; auditoria Codex C-04) · La llista honesta
           del que porta l'exportació (migració 2610241410) i el que no hi diu. */}
-      <p className="perfil-compte__text">
-        Descarrega una còpia de les dades que Sóc de Poble guarda del teu compte: perfil, organitzacions,
-        publicacions, notes, converses, la llista dels teus fitxers i adjunts, consentiments, les denúncies que has
-        fet, les persones i entitats que has bloquejat o que seguixes i les normes que has acceptat. Per a protegir
-        altres persones, no hi diem qui t’ha denunciat, qui t’ha bloquejat ni qui et seguix: de les denúncies sobre tu
-        només hi ha quantes han acabat amb una mesura (si en vols el detall, demana-nos-el per correu) i, de qui et
-        seguix, quantes persones són. Tampoc no hi posem les empremtes de l’adreça IP ni el permís xifrat d’Apple. És
-        un fitxer JSON que pots obrir amb qualsevol editor de text.
-      </p>
+      <p className="perfil-compte__text">{tradueix(t, TEXTOS_DADES.explica)}</p>
       {estat.fase === 'error' ? <Alerta to="error">{estat.text}</Alerta> : null}
-      {estat.fase === 'fet' ? <Alerta to="exit">{`Ja tens el fitxer ${estat.nom} a les descàrregues.`}</Alerta> : null}
+      {estat.fase === 'fet' ? <Alerta to="exit">{omple(tradueix(t, TEXTOS_DADES.fet), { nom: estat.nom })}</Alerta> : null}
       {estat.fase === 'natiu' ? <DadesDinsDeLApp nom={estat.nom} text={estat.text} t={t} /> : null}
       <div className="sdp-alerta__accions perfil-compte__accions">
         <Boto varietat="secundari" onClick={descarrega} carregant={estat.fase === 'treballant'}>
-          Descarregar les meues dades
+          {tradueix(t, TEXTOS_DADES.descarrega)}
         </Boto>
       </div>
     </Bloc>
@@ -282,15 +376,20 @@ function BlocDades({ config }) {
 
 /* ── «Consentiment» ────────────────────────────────────────────────── */
 
-function EnllacPolitica({ url }) {
+function EnllacPolitica({ url, t }) {
   if (typeof url !== 'string' || !url) return null;
-  if (url.startsWith('/') && !url.startsWith('//')) return <Link to={url}>Llegir la política</Link>;
-  if (/^https:\/\//i.test(url)) return <a href={url} target="_blank" rel="noopener noreferrer">Llegir la política</a>;
+  const text = tradueix(t, TEXTOS_PRIVACITAT.politica.llegir);
+  if (url.startsWith('/') && !url.startsWith('//')) return <Link to={url}>{text}</Link>;
+  if (/^https:\/\//i.test(url)) return <a href={url} target="_blank" rel="noopener noreferrer">{text}</a>;
   return null;
 }
 
 function BlocConsentiment({ config }) {
   const configRef = useConfigActual(config);
+  const t = useTraductorOpcional();
+  /* llig no canvia d'identitat amb la llengua: el traductor, com el config, d'un ref. */
+  const tRef = useConfigActual(t);
+  const locale = useLocaleDeLesDates();
   const [estat, setEstat] = useState(null);
   const [carregant, setCarregant] = useState(true);
   const [error, setError] = useState('');
@@ -303,11 +402,11 @@ function BlocConsentiment({ config }) {
       setEstat(resposta || null);
       setError('');
     } catch (e) {
-      setError(missatgeDe(e, 'No s’ha pogut llegir l’estat del consentiment.'));
+      setError(missatgeDe(e, tradueix(tRef.current, TEXTOS_CONSENTIMENT.errorLectura)));
     } finally {
       setCarregant(false);
     }
-  }, [configRef]);
+  }, [configRef, tRef]);
 
   useEffect(() => { llig(); }, [llig]);
 
@@ -327,52 +426,52 @@ function BlocConsentiment({ config }) {
 
   const accepta = () => actua(
     () => registraConsentiment(TIPUS_RGPD, estat.versioVigent, configRef.current),
-    'No s’ha pogut registrar el consentiment.',
+    tradueix(t, TEXTOS_CONSENTIMENT.errorRegistre),
   );
   const retira = () => actua(
     () => revocaConsentiment(TIPUS_RGPD, configRef.current),
-    'No s’ha pogut retirar el consentiment.',
+    tradueix(t, TEXTOS_CONSENTIMENT.errorRetirada),
   );
 
   const rgpd = (estat?.consentiments || []).find((c) => c.tipus === TIPUS_RGPD) || null;
   const atorgat = rgpd?.accio === 'atorga';
   const versioVigent = estat?.versioVigent || null;
 
-  let darrera = 'No consta que hages acceptat la política de privacitat.';
-  if (rgpd && atorgat) darrera = `L’has acceptada (versió ${rgpd.versio}) el ${dataLlegible(rgpd.al)}.`;
-  else if (rgpd) darrera = `La vas retirar el ${dataLlegible(rgpd.al)}.`;
+  let darrera = tradueix(t, TEXTOS_CONSENTIMENT.senseConstancia);
+  if (rgpd && atorgat) darrera = omple(tradueix(t, TEXTOS_CONSENTIMENT.acceptada), { versio: rgpd.versio, data: dataLlegible(rgpd.al, locale) });
+  else if (rgpd) darrera = omple(tradueix(t, TEXTOS_CONSENTIMENT.retirada), { data: dataLlegible(rgpd.al, locale) });
 
   return (
-    <Bloc titol="Consentiment">
-      {carregant ? <p className="perfil-compte__text" role="status">Comprovant el consentiment…</p> : null}
+    <Bloc titol={tradueix(t, TEXTOS_CONSENTIMENT.titol)}>
+      {carregant ? <p className="perfil-compte__text" role="status">{tradueix(t, TEXTOS_CONSENTIMENT.comprovant)}</p> : null}
       {/* Amb el diàleg obert, el fons és inert: l'error es pinta dins del diàleg. */}
       {error && !confirmaRetirada ? <Alerta to="error">{error}</Alerta> : null}
       {!carregant && estat ? (
         <>
           <p className="perfil-compte__text">
             {versioVigent
-              ? `Política de privacitat vigent: versió ${versioVigent}. `
-              : 'Encara no hi ha cap política de privacitat publicada. '}
-            <EnllacPolitica url={estat.url} />
+              ? `${omple(tradueix(t, TEXTOS_CONSENTIMENT.vigent), { versio: versioVigent })} `
+              : `${tradueix(t, TEXTOS_CONSENTIMENT.senseVigent)} `}
+            <EnllacPolitica url={estat.url} t={t} />
           </p>
           <p className="perfil-compte__text">{darrera}</p>
           {estat.calReconsentir && versioVigent ? (
             <Alerta
               to="avis"
-              titol="Cal el teu consentiment"
+              titol={tradueix(t, TEXTOS_CONSENTIMENT.calTitol)}
               accions={(
                 <Boto varietat="primari" onClick={accepta} carregant={treballant}>
-                  {`Acceptar la versió ${versioVigent}`}
+                  {omple(tradueix(t, TEXTOS_CONSENTIMENT.accepta), { versio: versioVigent })}
                 </Boto>
               )}
             >
-              Sense acceptar la política vigent no apareixes al padró del poble.
+              {tradueix(t, TEXTOS_CONSENTIMENT.calText)}
             </Alerta>
           ) : null}
           {atorgat ? (
             <div className="sdp-alerta__accions perfil-compte__accions">
               <Boto varietat="secundari" onClick={() => setConfirmaRetirada(true)} disabled={treballant}>
-                Retirar el consentiment
+                {tradueix(t, TEXTOS_CONSENTIMENT.retira)}
               </Boto>
             </div>
           ) : null}
@@ -382,17 +481,15 @@ function BlocConsentiment({ config }) {
         obert={confirmaRetirada}
         onTanca={() => setConfirmaRetirada(false)}
         onConfirma={retira}
-        titol="Retirar el consentiment"
-        descripcio="Deixaràs d’aparéixer al padró del poble fins que el tornes a acceptar."
-        etiquetaConfirma="Retirar-lo"
+        titol={tradueix(t, TEXTOS_CONSENTIMENT.retira)}
+        descripcio={tradueix(t, TEXTOS_CONSENTIMENT.retiraDescripcio)}
+        etiquetaConfirma={tradueix(t, TEXTOS_CONSENTIMENT.retiraConfirma)}
+        etiquetaCancela={tradueix(t, TEXT_CANCELA)}
         destructiu
         carregant={treballant}
       >
         {error ? <Alerta to="error">{error}</Alerta> : null}
-        <p className="perfil-compte__text">
-          El compte no s’esborra: per a això, demana la baixa. El registre de quan l’has donat i
-          retirat es conserva, perquè la llei ens obliga a poder demostrar-ho.
-        </p>
+        <p className="perfil-compte__text">{tradueix(t, TEXTOS_CONSENTIMENT.retiraText)}</p>
       </DialegConfirmacio>
     </Bloc>
   );
@@ -402,6 +499,11 @@ function BlocConsentiment({ config }) {
 
 function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
   const configRef = useConfigActual(config);
+  const t = useTraductorOpcional();
+  const tRef = useConfigActual(t);
+  const locale = useLocaleDeLesDates();
+  const dies = { dies: DIES_GRACIA, diesApple: DIES_ESPERA_APPLE };
+  const apple = omple(tradueix(t, TEXTOS_BAIXA.esperaApple), dies);
   const [baixa, setBaixa] = useState(null);
   const [carregant, setCarregant] = useState(true);
   const [error, setError] = useState('');
@@ -416,10 +518,10 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
     Promise.resolve()
       .then(() => estatBaixa(configRef.current))
       .then((resposta) => { if (viu) setBaixa(resposta || { demanada: false }); })
-      .catch((e) => { if (viu) setError(missatgeDe(e, 'No s’ha pogut comprovar si tens una baixa pendent.')); })
+      .catch((e) => { if (viu) setError(missatgeDe(e, tradueix(tRef.current, TEXTOS_BAIXA.errorLectura))); })
       .finally(() => { if (viu) setCarregant(false); });
     return () => { viu = false; };
-  }, [configRef]);
+  }, [configRef, tRef]);
 
   const confirma = async () => {
     setTreballant(true);
@@ -439,7 +541,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
       setDialeg(false);
       onSessioTancada?.();
     } catch (e) {
-      setError(missatgeDe(e, 'No s’ha pogut demanar la baixa.'));
+      setError(missatgeDe(e, tradueix(t, TEXTOS_BAIXA.errorDemanda)));
     } finally {
       setTreballant(false);
     }
@@ -451,30 +553,32 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
     try {
       const resposta = await cancelaBaixa(configRef.current);
       setBaixa(resposta || { demanada: false, demanadaAl: null, purgaPrevistaAl: null });
-      setAvis('Baixa cancel·lada. El teu perfil torna a ser com era.');
+      setAvis(tradueix(t, TEXTOS_BAIXA.cancelada));
       onPerfilCanviat?.();
     } catch (e) {
-      setError(missatgeDe(e, 'No s’ha pogut cancel·lar la baixa.'));
+      setError(missatgeDe(e, tradueix(t, TEXTOS_BAIXA.errorCancela)));
     } finally {
       setTreballant(false);
     }
   };
 
   return (
-    <Bloc titol="Donar-se de baixa">
-      {carregant ? <p className="perfil-compte__text" role="status">Comprovant l’estat del compte…</p> : null}
+    <Bloc titol={tradueix(t, TEXTOS_BAIXA.titol)}>
+      {carregant ? <p className="perfil-compte__text" role="status">{tradueix(t, TEXTOS_BAIXA.comprovant)}</p> : null}
       {/* Amb el diàleg obert, el fons és inert: l'error es pinta dins del diàleg. */}
       {error && !dialeg ? <Alerta to="error">{error}</Alerta> : null}
       {avis ? <Alerta to="exit">{avis}</Alerta> : null}
       {!carregant && baixa?.demanada ? (
         <Alerta
           to="avis"
-          titol="Tens una baixa pendent"
+          titol={tradueix(t, TEXTOS_BAIXA.pendentTitol)}
           accions={(
-            <Boto varietat="primari" onClick={cancela} carregant={treballant}>Cancel·lar la baixa</Boto>
+            <Boto varietat="primari" onClick={cancela} carregant={treballant}>{tradueix(t, TEXTOS_BAIXA.cancela)}</Boto>
           )}
         >
-          {`L’has demanada el ${dataLlegible(baixa.demanadaAl)}. El compte, les teues publicacions personals i els teus fitxers s’esborraran definitivament el ${dataLlegible(baixa.purgaPrevistaAl)}, llevat dels fitxers ${FITXERS_EN_US}. ${ESPERA_APPLE}`}
+          {omple(tradueix(t, TEXTOS_BAIXA.pendent), {
+            demanada: dataLlegible(baixa.demanadaAl, locale), purga: dataLlegible(baixa.purgaPrevistaAl, locale), apple,
+          })}
         </Alerta>
       ) : null}
       {!carregant && baixa && !baixa.demanada ? (
@@ -484,11 +588,9 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
               genèric i sense foto; cancela_baixa ho torna tot, per això no es
               diu que queda anònim); després s'esborra el que és personal, i el que
               es va publicar en nom d'una entitat es queda a l'entitat. */}
-          <p className="perfil-compte__text">
-            {`Si te’n vas, en el moment amaguem el teu perfil: deixa d’aparéixer al padró, hi posem un nom genèric en lloc del teu i li llevem la foto. Tens ${DIES_GRACIA} dies per a penedir-te’n. Passat eixe termini, s’esborren per sempre el compte, les teues publicacions personals i els teus fitxers, llevat dels ${FITXERS_EN_US}; el que vas publicar en nom d’una entitat es queda a l’entitat. ${ESPERA_APPLE}`}
-          </p>
+          <p className="perfil-compte__text">{omple(tradueix(t, TEXTOS_BAIXA.explica), { ...dies, apple })}</p>
           <div className="sdp-alerta__accions perfil-compte__accions">
-            <Boto varietat="perill" onClick={() => setDialeg(true)}>Donar-me de baixa</Boto>
+            <Boto varietat="perill" onClick={() => setDialeg(true)}>{tradueix(t, TEXTOS_BAIXA.boto)}</Boto>
           </div>
         </>
       ) : null}
@@ -496,30 +598,31 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
         obert={dialeg}
         onTanca={() => { if (!treballant) setDialeg(false); }}
         onConfirma={confirma}
-        titol="Donar-te de baixa"
-        descripcio={`Tens ${DIES_GRACIA} dies de gràcia per a tornar arrere.`}
-        etiquetaConfirma="Sí, donar-me de baixa"
+        titol={tradueix(t, TEXTOS_BAIXA.dialegTitol)}
+        descripcio={omple(tradueix(t, TEXTOS_BAIXA.dialegDescripcio), dies)}
+        etiquetaConfirma={tradueix(t, TEXTOS_BAIXA.confirma)}
+        etiquetaCancela={tradueix(t, TEXT_CANCELA)}
         destructiu
         carregant={treballant}
       >
         {error ? <Alerta to="error">{error}</Alerta> : null}
         <ul className="perfil-compte__llista">
           {/* Correccions 261024 (revisió R3-03; Codex C-06) · S'amaga, no queda anònim: cancela_baixa ho torna tot. */}
-          <li>Ara mateix amaguem el teu perfil: deixa d’aparéixer al padró, hi posem un nom genèric en lloc del teu i li llevem la foto, i les teues publicacions deixen de mostrar el teu nom i la teua foto.</li>
+          <li>{tradueix(t, TEXTOS_BAIXA.puntAmaga)}</li>
           {/* Fase D (261020, tasca 1) · Qui va entrar amb Apple o Google no té contrasenya: torna a entrar com sempre. */}
-          <li>{`Durant ${DIES_GRACIA} dies pots cancel·lar-la: entra de nou com sempre (amb el correu, Apple o Google), torna a «Privacitat i dades» i prem «Cancel·lar la baixa».`}</li>
+          <li>{omple(tradueix(t, TEXTOS_BAIXA.puntCancela), dies)}</li>
           {/* P2-08 (T7; T1, revocació d'Apple) · Qui va entrar amb Apple ho ha de saber abans de confirmar.
               Correccions 261024 (revisions R3-01, R1-02 i R3-04) · Només ho intentem: sense el permís custodiat
               (entrades d'abans de la custòdia) o si Apple falla, no es retira, i la purga espera fins a 7 dies més. */}
-          <li>{`Si vas entrar amb Apple, en demanar la baixa intentem retirar el permís que vas donar a Sóc de Poble; si no ho aconseguim, el pots retirar tu a Configuració › el teu nom › Inici de sessió amb Apple, o a account.apple.com. Si quan passen els ${DIES_GRACIA} dies encara no l’hem pogut retirar, l’esborrat definitiu pot esperar fins a ${DIES_ESPERA_APPLE} dies més. Si l’hem retirat i tornes a entrar amb Apple per a cancel·lar la baixa, Apple et tornarà a demanar permís.`}</li>
+          <li>{omple(tradueix(t, TEXTOS_BAIXA.puntApple), dies)}</li>
           {/* Correccions 261024 (revisió R3-10) · Amb l'excepció dels fitxers que encara fa servir algú altre. */}
-          <li>{`Passats els ${DIES_GRACIA} dies, s’esborren definitivament el compte, les teues publicacions personals i els teus fitxers, llevat dels ${FITXERS_EN_US}. El que vas publicar en nom d’una entitat es queda a l’entitat.`}</li>
+          <li>{omple(tradueix(t, TEXTOS_BAIXA.puntEsborrat), dies)}</li>
           {/* Auditoria Codex C-06 · El que es guarda no es presenta com a anònim del tot.
               Correccions 261024 (revisió R3-10) · Com diu el §10 de la política: també les denúncies sobre tu. */}
-          <li>Es guarden, ja sense el teu compte però no del tot anònimes, la prova del consentiment, que la llei ens obliga a conservar, i, per a l’historial de moderació, les denúncies que vas fer i les que altres persones han fet sobre tu o sobre el teu contingut, amb l’identificador intern que tenia el teu compte.</li>
-          <li>Es tancarà la sessió en tots els teus dispositius.</li>
+          <li>{tradueix(t, TEXTOS_BAIXA.puntConserva)}</li>
+          <li>{tradueix(t, TEXTOS_BAIXA.puntSessio)}</li>
         </ul>
-        <Camp etiqueta="Per què te’n vas? (opcional)" ajuda="Ens ajuda a millorar. Com a màxim 500 caràcters.">
+        <Camp etiqueta={tradueix(t, TEXTOS_BAIXA.motiu)} ajuda={tradueix(t, TEXTOS_BAIXA.motiuAjuda)}>
           <AreaText files={3} maxLength={500} value={motiu} onChange={(e) => setMotiu(e.target.value)} />
         </Camp>
       </DialegConfirmacio>
@@ -565,8 +668,8 @@ export function DetallPrivacitat({
     <UniversalPage
       chrome="context"
       layout="contained"
-      title="Privacitat i dades"
-      lead="Els teus drets sobre el que guardem: una còpia de les dades, el consentiment i la baixa."
+      title={tradueix(t, TEXTOS_PAGINA.titol)}
+      lead={tradueix(t, TEXTOS_PAGINA.lead)}
       /* T51 · la data real del compte de la persona (profiles). */
       {...dataDeFila(dades)}
       /* Ordre del Mestre (261007) · La barra taronja porta a la fitxa
@@ -590,7 +693,7 @@ export function DetallPrivacitat({
           <BlocBaixa config={config} onSessioTancada={tancaSessio} onPerfilCanviat={onPerfilCanviat} />
         ) : null}
         {!ambCompte && !ambConsentiment && !ambBloquejos ? (
-          <p className="perfil-compte__text">Este node encara no oferix cap d’estes opcions.</p>
+          <p className="perfil-compte__text">{tradueix(t, TEXTOS_PAGINA.buit)}</p>
         ) : null}
       </div>
     </UniversalPage>

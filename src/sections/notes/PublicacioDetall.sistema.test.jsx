@@ -120,9 +120,10 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
     // Onada 10 · El Xat no repetix res al final: un sol botó, dalt.
     expect(document.querySelector('.sdp-pagina-accio')).toBeNull();
     unmount();
-    render(<PublicacioDetall item={pagina('projecte')} />);
+    const { container } = render(<PublicacioDetall item={pagina('projecte')} />);
     expect(Object.hasOwn(mocks.pagina, 'accioPrincipal')).toBe(false);
-    expect(document.querySelector('.sdp-pagina-accio')).toBeNull();
+    // P1-60 · el cos del Projecte porta el seu accés a la Wiki dins de l'article; cap porta de pàgina fora.
+    expect([...container.querySelectorAll('.sdp-pagina-accio')].filter((caixa) => !caixa.closest('article.cms-preview'))).toEqual([]);
   });
 
   /* Onada 10 (261010; pla 261010_1121; decisió M2 del Mestre del 261010) · El

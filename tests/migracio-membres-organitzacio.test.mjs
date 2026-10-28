@@ -13,6 +13,8 @@ import { fileURLToPath } from 'node:url';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NOM = '2610081402_membres_organitzacio.sql';
+/* P1-13 · C11-03 (261028) · La correcció de la carrera de l'alta concurrent. */
+const MEMBRES_CONCURRENTS = '2610281730_membres_concurrents_i_correu_public.sql';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = fs.readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
 const CLIENT = fs.readFileSync(path.join(ARREL, 'src/data/supabase/organizations.js'), 'utf8');
@@ -119,6 +121,16 @@ test('cap permís s’hereta: només les tres RPC accedixen a la taula, també e
         `${fitxer}: el bloc de membres ha de conservar taula, RLS, RPC i permisos`);
       assert.doesNotMatch(codi.slice(0, inici) + codi.slice(fi), /organization_member_organizations/i,
         `${fitxer}: cap altre accés a la taula fora del bloc consolidat`);
+    } else if (fitxer === MEMBRES_CONCURRENTS) {
+      /* Actualitzada a posta (P1-13 · C11-03, 261028): la migració torna a crear
+         desa_membre_organitzacio (i cap altra funció), i la seua branca
+         d'organitzacions hi escriu exactament com la d'ací. Cap altre accés. */
+      const desa = funcions(codi).filter((f) => f.esquema === 'public' && f.nom === 'desa_membre_organitzacio');
+      assert.deepEqual(funcions(codi).map((f) => `${f.esquema}.${f.nom}`), ['public.desa_membre_organitzacio'], fitxer);
+      assert.equal((codi.match(/organization_member_organizations/gi) || []).length, 1, `${fitxer}: un sol accés a la taula`);
+      const insercio = (cos) => SENSE_ESPAIS(/insert into public\.organization_member_organizations[^;]*;/i.exec(cos)?.[0] ?? '');
+      assert.ok(insercio(DESA.cos), 'falta la inserció de l’original');
+      assert.equal(insercio(desa[0].cos), insercio(DESA.cos), `${fitxer}: la branca d’organitzacions no canvia`);
     } else {
       assert.doesNotMatch(codi, /organization_member_organizations/i, fitxer);
     }

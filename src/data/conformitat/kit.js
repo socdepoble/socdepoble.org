@@ -421,7 +421,8 @@ export const CASOS = Object.freeze([
       if (llista.length > 5) falles.push(`el límit era 5 i en torna ${llista.length}`);
       for (const fila of llista) {
         if (!esTextNoBuit(fila.name)) falles.push(`la fila ${fila.id} no té nom`);
-        if (['contact_email', 'public_email', 'email', 'correu'].some((camp) => Object.hasOwn(fila, camp))) {
+        /* P1-13 · C11-05 · correu_public és de la fitxa pública, mai del llistat. */
+        if (['contact_email', 'public_email', 'correu_public', 'email', 'correu'].some((camp) => Object.hasOwn(fila, camp))) {
           falles.push(`la fila ${fila.id} porta un correu`);
         }
       }

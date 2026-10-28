@@ -583,3 +583,43 @@ test('Revisió 261027 · una URL d’imatge que no s’analitza no penja la vist
   act(() => navigate('/foto/1'));
   esLaTargetaGenerica();
 });
+
+/* Pla 261028_1526 (P1-61, Fase 2) · La ruta del <head> és la clau social
+   (config/rutaSocial.js): el canonical per defecte porta el ?item= només a
+   /wikidepoble i només amb un sol id vàlid; utm_* i categoria no compten, i la
+   barra final se'n va. La reserva (RouteSEO) d'un document no l'afirma: sense
+   indexar fins que WikiDetail el valida. */
+function DocumentWiki() { useSEO({ title: 'Document', description: 'Un document públic' }); return null; }
+function ArbreWiki() {
+  const router = useRouter(); navigate = router.navigate;
+  return <><RouteSEO />{router.currentPath === '/wikidepoble' && <DocumentWiki />}</>;
+}
+const canonicalDelHead = () => document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
+test.each([
+  ['/wikidepoble?item=llibre_d_or', /\/wikidepoble\?item=llibre_d_or$/],
+  ['/wikidepoble?utm_source=whatsapp&categoria=folder%3A01_ser&item=llibre_d_or', /\/wikidepoble\?item=llibre_d_or$/],
+  ['/wikidepoble?item=a&item=b', /\/wikidepoble$/],
+  ['/wikidepoble?item=..%2Fsecret', /\/wikidepoble$/],
+  ['/wikidepoble', /\/wikidepoble$/]
+])('Fase 2 · %s té el canonical de la seua clau', (ruta, esperat) => {
+  render(<MemoryRouter><ArbreWiki /></MemoryRouter>);
+  act(() => navigate(ruta));
+  expect(document.title).toBe('Document | Sóc de Poble');
+  expect(canonicalDelHead()).toMatch(esperat);
+  expect(document.querySelector('meta[property="og:url"]').content).toBe(canonicalDelHead());
+});
+test('Fase 2 · fora de /wikidepoble, la consulta no entra al canonical i la barra final se’n va', () => {
+  render(tree());
+  act(() => navigate('/mercat/a/?item=llibre&utm_source=x'));
+  expect(canonicalDelHead()).toMatch(/\/mercat\/a$/);
+});
+test('Fase 2 · la reserva d’un document de la Wiki no l’indexa; la de la llista, sí', () => {
+  render(tree());
+  act(() => navigate('/wikidepoble?item=no_validat'));
+  expect(document.title).toBe('Wiki de Poble | Sóc de Poble');
+  expect(document.querySelector('meta[name="robots"]').content).toBe('noindex, nofollow');
+  expect(canonicalDelHead()).toBeNull();
+  act(() => navigate('/wikidepoble'));
+  expect(document.querySelector('meta[name="robots"]')).toBeNull();
+  expect(canonicalDelHead()).toMatch(/\/wikidepoble$/);
+});

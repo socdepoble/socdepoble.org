@@ -1,5 +1,6 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { sanitizeHtml, esFontImatgeSegura, esFontImatgePropia, fontImatgePropia, permetOrigenMitjans } from './sanitize.js';
+import DOMPurify from 'dompurify';
+import { sanitizeHtml, esFontImatgeSegura, esFontImatgePropia, fontImatgePropia, marcaDeTaula, permetOrigenMitjans } from './sanitize.js';
 import { fixaBaseRecursos, resolRecursPropi } from '../config/assetResolver.js';
 
 describe('sanitize.js', () => {
@@ -287,6 +288,132 @@ describe('sanitize.js', () => {
       const net = sanitizeHtml('<h5 id="esborra-compte" data-sdp-ancora="esborra-compte">Com esborrar el teu compte</h5>');
       expect(net).toContain('data-sdp-ancora="esborra-compte"');
       expect(net).not.toMatch(/\sid=/);
+    });
+  });
+});
+
+/* P1-16 (pla 261028_1526 §3.5.1) · La caixa de les taules de prosa
+   (parseMarkdown.js) és l'única que conserva role i tabindex: exactament
+   role="region" i tabindex="0", i només al div.sdp-taula-prosa que porta la
+   marca d'esta càrrega (data-sdp-taula, marcaDeTaula). ALLOWED_ATTR no
+   s'eixampla: cap altre element, cap altra classe, cap altre valor ni cap
+   caixa escrita a mà (un apunt del Mur, una Nota, el Perfil) no guanyen ni
+   l'un ni l'altre, la marca no ix mai i l'id continua fora. */
+describe('sanitize.js · la caixa de les taules de prosa (P1-16)', () => {
+  const primer = (html, opcions) => {
+    const arrel = document.createElement('div');
+    arrel.innerHTML = sanitizeHtml(html, opcions);
+    return arrel.firstElementChild;
+  };
+  const atributs = (el) => [...el.attributes].map((a) => a.name).sort();
+  const marca = ` data-sdp-taula="${marcaDeTaula()}"`;
+
+  it('la marca és a l’atzar (128 bits en hexadecimal) i la mateixa durant tota la càrrega', () => {
+    expect(marcaDeTaula()).toMatch(/^[0-9a-f]{32}$/);
+    expect(marcaDeTaula()).toBe(marcaDeTaula());
+  });
+
+  it('div.sdp-taula-prosa amb la marca conserva role=region, tabindex=0 i el nom; la marca no ix', () => {
+    const html = `<div class="sdp-taula-prosa" role="region" aria-label="Taula: A" tabindex="0"${marca}><table><tbody><tr><td>1</td></tr></tbody></table></div>`;
+    for (const opcions of [undefined, { imatgesPropies: true }]) {
+      const caixa = primer(html, opcions);
+      expect([caixa.getAttribute('role'), caixa.getAttribute('tabindex'), caixa.getAttribute('aria-label')]).toEqual(['region', '0', 'Taula: A']);
+      expect(atributs(caixa)).toEqual(['aria-label', 'class', 'role', 'tabindex']);
+      expect(caixa.querySelector('td').textContent).toBe('1');
+    }
+    expect(sanitizeHtml(html)).not.toContain(marcaDeTaula());
+  });
+
+  it('una caixa escrita a mà, sense la marca o amb una altra, no guanya res: el Mur, les Notes i el Perfil passen per ací', () => {
+    for (const html of [
+      '<div class="sdp-taula-prosa" role="region" tabindex="0">x</div>',
+      '<div class="sdp-boto sdp-taula-prosa" role="region" tabindex="0" aria-label="Navegació principal">fals botó</div>',
+      '<div class="sdp-taula-prosa" role="region" tabindex="0" aria-hidden="true">amagat però focusable</div>',
+      '<div class="sdp-taula-prosa" role="region" tabindex="0" data-sdp-taula="">x</div>',
+      `<div class="sdp-taula-prosa" role="region" tabindex="0" data-sdp-taula="${'0'.repeat(32)}">x</div>`,
+      `<div class="sdp-taula-prosa" role="region" tabindex="0" data-sdp-taula="${marcaDeTaula().toUpperCase()}">x</div>`
+    ]) {
+      for (const opcions of [undefined, { imatgesPropies: true }]) {
+        const el = primer(html, opcions);
+        expect([el.hasAttribute('role'), el.hasAttribute('tabindex'), el.hasAttribute('data-sdp-taula')], html).toEqual([false, false, false]);
+      }
+    }
+  });
+
+  it('cap altre valor: role=dialog, tabindex=5 o -1 cauen, també amb la marca', () => {
+    expect(atributs(primer(`<div class="sdp-taula-prosa" role="dialog" tabindex="5"${marca}>x</div>`))).toEqual(['class']);
+    expect(atributs(primer(`<div class="sdp-taula-prosa" role="REGION" tabindex="-1"${marca}>x</div>`))).toEqual(['class']);
+  });
+
+  it('cap altre element ni cap altra classe, encara que porten la marca', () => {
+    for (const html of [
+      '<p role="region" tabindex="0">x</p>',
+      '<div class="altra" role="region" tabindex="0">x</div>',
+      '<div class="sdp-taula-prosa-x" role="region" tabindex="0">x</div>',
+      '<span class="sdp-taula-prosa" role="region" tabindex="0">x</span>',
+      '<div role="region" tabindex="0">x</div>'
+    ]) {
+      for (const amb of [html, html.replace('>', `${marca}>`)]) {
+        const el = primer(amb);
+        expect(el.hasAttribute('role'), amb).toBe(false);
+        expect(el.hasAttribute('tabindex'), amb).toBe(false);
+        expect(el.hasAttribute('data-sdp-taula'), amb).toBe(false);
+      }
+    }
+    // Dins de la caixa, els fills tampoc no en guanyen.
+    const caixa = primer(`<div class="sdp-taula-prosa" role="region" tabindex="0"${marca}><p role="region" tabindex="0"${marca}>x</p></div>`);
+    expect(atributs(caixa)).toEqual(['class', 'role', 'tabindex']);
+    expect(atributs(caixa.firstElementChild)).toEqual([]);
+  });
+
+  it('l’id continua fora, també a la caixa', () => {
+    expect(atributs(primer(`<div class="sdp-taula-prosa" id="t1" role="region" tabindex="0"${marca}>x</div>`))).toEqual(['class', 'role', 'tabindex']);
+  });
+
+  it('si la classe cau (un class amb «-->»), role i tabindex cauen amb ella', () => {
+    expect(atributs(primer(`<div class="sdp-taula-prosa -->" role="region" tabindex="0"${marca}>x</div>`))).toEqual([]);
+  });
+
+  /* El ganxo final és la segona barrera: els ganxos són globals, i ni una
+     crida directa a DOMPurify que admeta role i tabindex no els deixa a cap
+     node que no siga una caixa marcada. */
+  it('encara que una configuració admeta role i tabindex, només la caixa marcada els conserva', () => {
+    const net = DOMPurify.sanitize(
+      `<div class="sdp-taula-prosa" role="region" tabindex="0">a</div><p role="region" tabindex="0">b</p><div class="sdp-taula-prosa" role="region" tabindex="0"${marca}>c</div>`,
+      { ADD_ATTR: ['role', 'tabindex'] }
+    );
+    expect(net).toBe('<div class="sdp-taula-prosa">a</div><p>b</p><div class="sdp-taula-prosa" role="region" tabindex="0">c</div>');
+  });
+
+  it('una cometa al nom queda inerta', () => {
+    const caixa = primer(`<div class="sdp-taula-prosa" role="region" aria-label="a&quot; onclick=&quot;alert(1)" tabindex="0"${marca}>x</div>`);
+    expect(caixa.getAttribute('aria-label')).toBe('a" onclick="alert(1)');
+    expect(caixa.hasAttribute('onclick')).toBe(false);
+  });
+
+  /* El mòdul avaluat una segona vegada sobre el mateix DOMPurify (com el HMR
+     de Vite): sense crypto, la nova avaluació no té marca i no aprova cap
+     caixa, ni la de data-sdp-taula="" (falla tancada); i les caixes de la
+     primera continuen passant amb els dos jocs de ganxos. Els ganxos nous
+     es retiren en acabar (removeHook trau l'últim de cada punt). */
+  describe('una segona avaluació del mòdul, sense crypto', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    });
+
+    it('sense marca no hi ha cap caixa aprovada; les de la primera avaluació, sí', async () => {
+      vi.stubGlobal('crypto', undefined);
+      vi.resetModules();
+      const fresc = await import('./sanitize.js');
+      try {
+        expect(fresc.marcaDeTaula()).toBe('');
+        expect(fresc.sanitizeHtml('<div class="sdp-taula-prosa" role="region" tabindex="0" data-sdp-taula="">x</div>')).toBe('<div class="sdp-taula-prosa">x</div>');
+        const caixa = primer(`<div class="sdp-taula-prosa" role="region" tabindex="0"${marca}>x</div>`);
+        expect(atributs(caixa)).toEqual(['class', 'role', 'tabindex']);
+      } finally {
+        for (const punt of ['beforeSanitizeAttributes', 'uponSanitizeAttribute', 'afterSanitizeAttributes']) DOMPurify.removeHook(punt);
+      }
     });
   });
 });

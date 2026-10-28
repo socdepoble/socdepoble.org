@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseMarkdown, parseMarkdownEnLinia, extreuEditorial } from './parseMarkdown.js';
-import { sanitizeHtml } from '../../utils/sanitize.js';
+import { marcaDeTaula, sanitizeHtml } from '../../utils/sanitize.js';
 
 /* Mateix camí que WikiDePobleSection: parser → sanejador → DOM. */
 const pinta = (md, opcions) => {
@@ -24,6 +24,75 @@ describe('parseMarkdown · taules (C15)', () => {
   it('conserva una cel·la de capçalera buida al seu lloc', () => {
     const arrel = pinta('|  | B |\n|---|---|\n| 1 | 2 |');
     expect(textos(arrel.querySelectorAll('thead th'))).toEqual(['', 'B']);
+  });
+});
+
+/* P1-16 (pla 261028_1526 §3.5.1) · La caixa de cada taula és una regió amb
+   nom i focus (s'hi arriba i es desplaça amb el teclat, WCAG 2.1.1), i cada
+   capçalera és de columna. El nom ix de les columnes en text pla, i ni el
+   codi en línia, ni una cometa, ni un angle no el trenquen: el camí sencer,
+   parser → sanejador → DOM, com a la Wiki. */
+describe('parseMarkdown · taules accessibles (P1-16)', () => {
+  const caixa = (md) => pinta(md).querySelector('div.sdp-taula-prosa');
+  const nom = (md) => caixa(md).getAttribute('aria-label');
+
+  it('la caixa és una regió amb focus i el nom de les columnes; cada th és de columna', () => {
+    const arrel = pinta('| Camp | Valor |\n| --- | --- |\n| x | y |');
+    const regio = arrel.querySelector('div.sdp-taula-prosa');
+    expect([regio.getAttribute('role'), regio.getAttribute('tabindex'), regio.tabIndex]).toEqual(['region', '0', 0]);
+    expect(regio.getAttribute('aria-label')).toBe('Taula: Camp, Valor');
+    expect([...regio.attributes].map((a) => a.name).sort()).toEqual(['aria-label', 'class', 'role', 'tabindex']);
+    expect(regio.firstElementChild.tagName).toBe('TABLE');
+    expect([...arrel.querySelectorAll('thead th')].map((th) => th.getAttribute('scope'))).toEqual(['col', 'col']);
+    expect(arrel.querySelector('tbody th, td[scope]')).toBeNull();
+  });
+
+  it('el codi en línia, la negreta i els enllaços de la capçalera donen un nom en text pla', () => {
+    const arrel = pinta('| `sanitizeHtml()` | **Gran** | [Enllaç](?item=x) |\n|---|---|---|\n| 1 | 2 | 3 |');
+    expect(arrel.querySelector('div.sdp-taula-prosa').getAttribute('aria-label')).toBe('Taula: sanitizeHtml(), Gran, Enllaç');
+    // La capçalera visible conserva el seu format.
+    expect(arrel.querySelector('thead th code').textContent).toBe('sanitizeHtml()');
+    expect(arrel.querySelector('thead th strong').textContent).toBe('Gran');
+  });
+
+  it('una cometa a la capçalera queda dins del nom: cap atribut nou', () => {
+    const regio = caixa('| a" onmouseover="alert(1) | b |\n|---|---|\n| 1 | 2 |');
+    expect(regio.getAttribute('aria-label')).toBe('Taula: a" onmouseover="alert(1), b');
+    expect([...regio.attributes].map((a) => a.name).sort()).toEqual(['aria-label', 'class', 'role', 'tabindex']);
+  });
+
+  it('cap angle al nom (DOMPurify esborra un atribut amb «-->»), i un & és text', () => {
+    expect(nom('| `a-->b` | `<b>` |\n|---|---|\n| 1 | 2 |')).toBe('Taula: a-- b, b');
+    expect(nom('| R&D | I+D |\n|---|---|\n| 1 | 2 |')).toBe('Taula: R&D, I+D');
+  });
+
+  it('les referències de caràcter diuen el que pinta la capçalera; el codi en línia continua sent text', () => {
+    const arrel = pinta('| R&amp;D | &nbsp; | &lt;b&gt; | &#65;&#x42; | &eacute; | `&amp;` | --&gt; |\n|---|---|---|---|---|---|---|\n| 1 | 2 | 3 | 4 | 5 | 6 | 7 |');
+    expect(arrel.querySelector('thead th').textContent).toBe('R&D');
+    expect(arrel.querySelector('div.sdp-taula-prosa').getAttribute('aria-label')).toBe('Taula: R&D, b, AB, &eacute;, &amp;, --');
+    // Un control no fa cap marcador: &#0; és un espai.
+    expect(nom('| `x` | &#0;LINIA0&#0; | &#xD800; |\n|---|---|---|\n| 1 | 2 | 3 |')).toBe('Taula: x, LINIA0');
+  });
+
+  it('només les caixes que fa el parser porten la marca, i el sanejador la lleva: una caixa escrita a mà no guanya res', () => {
+    const md = 'Text <div class="sdp-taula-prosa" role="region" tabindex="0" aria-label="Fals">fals</div>\n\n| A |\n|---|\n| 1 |';
+    expect(parseMarkdown(md)).toContain(` tabindex="0" data-sdp-taula="${marcaDeTaula()}"><table>`);
+    const arrel = pinta(md);
+    const caixes = [...arrel.querySelectorAll('div.sdp-taula-prosa')];
+    expect(caixes.map((c) => [c.getAttribute('aria-label'), c.getAttribute('role'), c.getAttribute('tabindex')]))
+      .toEqual([['Fals', null, null], ['Taula: A', 'region', '0']]);
+    expect(arrel.querySelector('[data-sdp-taula]')).toBeNull();
+    expect(arrel.querySelectorAll('[role], [tabindex]')).toHaveLength(1);
+  });
+
+  it('sense text a la capçalera, «Taula N» per l’ordre del document; un nom llarg es talla', () => {
+    const arrel = pinta('| A |\n|---|\n| 1 |\n\nText.\n\n|  |\n|---|\n| 2 |');
+    expect([...arrel.querySelectorAll('div.sdp-taula-prosa')].map((d) => d.getAttribute('aria-label'))).toEqual(['Taula: A', 'Taula 2']);
+    const columnes = Array.from({ length: 20 }, (_, i) => `Columna ${i + 1}`);
+    const llarg = nom(`| ${columnes.join(' | ')} |\n|${'---|'.repeat(20)}\n|${' x |'.repeat(20)}`);
+    expect([...llarg]).toHaveLength(120);
+    expect(llarg.endsWith('…')).toBe(true);
+    expect(llarg.startsWith('Taula: Columna 1, Columna 2, ')).toBe(true);
   });
 });
 

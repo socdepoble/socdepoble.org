@@ -472,6 +472,19 @@ describe('Gauntlet 261016 · Bloc 1.2 · la tria de l’EXIF arriba a la compres
     await act(async () => { await logotip.result.current.processaFitxer(foto(), { conservaExif: true, original: original() }); });
     expect(opcions().map((o) => Object.keys(o))).toEqual(new Array(5).fill(['maxSize', 'format', 'quality']));
   });
+
+  /* P1-64 (pla 261028_1526 §3.1.1) · La precisió de les píndoles del diàleg. */
+  test('P1-64 · marcada amb `precisio`: arriba a cada intent; sense, cap clau nova', async () => {
+    fetchDeVeres();
+    dobles.compressImage.mockImplementation(codificador(0.08));
+    const triada = original();
+    const { result } = munta({ onImageUpload: vi.fn(async () => URL_PUJADA) });
+    await act(async () => { await result.current.processaFitxer(foto(), { conservaExif: true, original: triada, precisio: '100m' }); });
+    opcions().forEach((o) => expect(o).toMatchObject({ conservaExif: true, original: triada, precisio: '100m' }));
+    dobles.compressImage.mockClear();
+    await act(async () => { await result.current.processaFitxer(foto(), { conservaExif: true, original: triada }); });
+    opcions().forEach((o) => expect('precisio' in o).toBe(false));
+  });
 });
 
 test('T46 · un error de pujada ix per onError i torna false', async () => {

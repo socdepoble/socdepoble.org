@@ -676,13 +676,14 @@ describe('Especímens del Xat · onada 3B', () => {
     expect(document.activeElement).toBe(files[1]);
 
     /* El camp de l'espècimen porta els controls del de XatSection i cap
-       més: la fitxa i el ⊗ «Tanca la cerca». Sense filtre ni terme, cap
-       botó (ni cap càmera inventada); tornar a posar el filtre és un botó de
-       l'espècimen, fora del camp. */
+       més: la fitxa i el ⊗ «Tanca la cerca». Sense filtre ni terme, només el
+       ⊗ (P1-36, 261028: la cerca oberta amb la lupa el porta sempre; cap
+       càmera inventada); tornar a posar el filtre és un botó de l'espècimen,
+       fora del camp. */
     const camp = document.querySelector('.sdp-xat-cerca__camp');
     expect(within(camp).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Lleva el filtre Fotos', 'Tanca la cerca']);
     fireEvent.click(within(camp).getByRole('button', { name: 'Lleva el filtre Fotos' }));
-    expect(within(camp).queryAllByRole('button')).toEqual([]);
+    expect(within(camp).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Tanca la cerca']);
     expect(document.activeElement).toBe(within(camp).getByRole('searchbox', { name: 'Cerca converses' }));
     const torna = screen.getByRole('button', { name: 'Torna a triar Fotos (espècimen)' });
     expect(camp.contains(torna)).toBe(false);

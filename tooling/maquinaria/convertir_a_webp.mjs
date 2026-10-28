@@ -7,6 +7,16 @@
  *
  * Ús CLI (requereix `python3` amb `Pillow` instal·lat en l'entorn local de maquinària):
  *   node tooling/maquinaria/convertir_a_webp.mjs <entrada> [eixida.webp] [--mode quadrat|avatar|original] [--max-kb 80]
+ *     [--sense-exif-binari | --conserva-exif]
+ *
+ * OG-7 (pla 261028_1526 §3.1.1, P1-64; Mestre 261028, decisió 7) · Una foto
+ * d'IDENTITAT no porta mai el GPS: en '--mode avatar', i en qualsevol mode quan
+ * la ruta d'eixida casa amb el patró d'identitat del test
+ * src/config/fotosPubliques.senseGps.seguretat.test.js (avatars, gent, usuaris
+ * o «perfil»), l'EXIF NO s'incrusta de sèrie. Només `--conserva-exif` (o
+ * l'opció preservaExifBinari: true) el força; el test d'OG-7 el pararia igual
+ * si la foto acabara a public/assets amb GPS. La resta de modes i rutes (les
+ * fotos de patrimoni i de publicació) el conserven com sempre.
  *
  * També exporta funcions pures de contenidor RIFF/WebP i EXIF per a proves:
  *   · extreuTiffExif(buffer)
@@ -21,6 +31,22 @@ import { fileURLToPath } from 'node:url';
 import { llegixExif } from '../../src/components/universal/enquadrament/exif.js';
 import { analitzaTiff } from '../../src/components/universal/enquadrament/exifIncrustat.js';
 
+/** OG-7 · El patró d'identitat del test fotosPubliques.senseGps.seguretat.test.js (la mateixa expressió). */
+export const IDENTITAT_DE_RUTA = /(^|\/)(avatars?|gent|usuaris)\/|perfil/i;
+const ARREL_DEL_REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+/**
+ * OG-7 · L'eixida és una foto d'identitat? Es mira el camí dins del repo
+ * (public/assets/…); fora del repo, només la carpeta i el nom del fitxer: els
+ * directoris de dalt (la casa de qui l'executa) no hi compten.
+ */
+export function esRutaDIdentitat(ruta) {
+  const absoluta = path.resolve(String(ruta || ''));
+  const relativa = path.relative(ARREL_DEL_REPO, absoluta);
+  const mirada = relativa && !relativa.startsWith('..') && !path.isAbsolute(relativa)
+    ? relativa
+    : path.join(path.basename(path.dirname(absoluta)), path.basename(absoluta));
+  return IDENTITAT_DE_RUTA.test(mirada.split(path.sep).join('/'));
+}
 export const MIDA_QUADRAT_UNIVERSAL = 1200;
 export const MIDA_AVATAR_UNIVERSAL = 400;
 export const MAX_KB_PER_DEFECTE = 80;
@@ -452,17 +478,22 @@ with Image.open(in_path) as im:
  * normalitzada i sense miniatura IFD1, imposant el pressupost de bytes (`maxKb * 1000 - 1`)
  * i escrivint de manera atòmica perquè l'original o el destí existent no queden mai truncats
  * si qualsevol pas falla.
+ * OG-7 · `opcions.preservaExifBinari`: true el força, false el lleva; sense,
+ * es conserva llevat d'un avatar o d'una ruta d'eixida d'identitat (esRutaDIdentitat).
  */
 export function convertirImatgeAWebp(inputPath, outputPath = null, opcions = {}) {
   const mode = opcions.mode || 'quadrat';
   const midaPx = opcions.midaPx || (mode === 'avatar' ? MIDA_AVATAR_UNIVERSAL : MIDA_QUADRAT_UNIVERSAL);
   const maxKb = Number.isFinite(opcions.maxKb) ? opcions.maxKb : (mode === 'avatar' ? 40 : MAX_KB_PER_DEFECTE);
-  const preservaExifBinari = opcions.preservaExifBinari !== false;
   if (!(maxKb > 0)) {
     throw new Error(`Pressupost de pes invàlid (maxKb=${maxKb}).`);
   }
   const maxBytesTotals = Math.max(1, Math.floor(maxKb * 1000) - 1);
   const desti = outputPath || inputPath.replace(/\.[^.]+$/, '.webp');
+  // OG-7 · Una foto d'identitat (avatar o ruta d'identitat) no conserva l'EXIF si no es força.
+  const preservaExifBinari = typeof opcions.preservaExifBinari === 'boolean'
+    ? opcions.preservaExifBinari
+    : !(mode === 'avatar' || esRutaDIdentitat(desti));
 
   const bytesEntrada = fs.readFileSync(inputPath);
   const formatEntrada = detectaFormatEntrada(bytesEntrada);
@@ -553,7 +584,8 @@ function parseArgs(argv) {
   const pos = [];
   let mode = 'quadrat';
   let maxKb = undefined;
-  let preservaExifBinari = true;
+  // OG-7 · Sense bandera, la decisió és de convertirImatgeAWebp (el mode i la ruta).
+  let preservaExifBinari;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--mode' && argv[i + 1]) {
@@ -564,6 +596,8 @@ function parseArgs(argv) {
       i += 1;
     } else if (arg === '--sense-exif-binari') {
       preservaExifBinari = false;
+    } else if (arg === '--conserva-exif') {
+      preservaExifBinari = true;
     } else if (!arg.startsWith('--')) {
       pos.push(arg);
     }
@@ -575,7 +609,7 @@ const esExecucioDirecta = process.argv[1] && path.resolve(process.argv[1]) === p
 if (esExecucioDirecta) {
   const { entrada, eixida, mode, maxKb, preservaExifBinari } = parseArgs(process.argv.slice(2));
   if (!entrada) {
-    console.error('Ús: node tooling/maquinaria/convertir_a_webp.mjs <entrada> [eixida.webp] [--mode quadrat|avatar|original] [--max-kb 80] [--sense-exif-binari]');
+    console.error('Ús: node tooling/maquinaria/convertir_a_webp.mjs <entrada> [eixida.webp] [--mode quadrat|avatar|original] [--max-kb 80] [--sense-exif-binari | --conserva-exif]');
     process.exit(1);
   }
   const resultat = convertirImatgeAWebp(entrada, eixida, { mode, maxKb, preservaExifBinari });

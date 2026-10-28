@@ -25,6 +25,9 @@ import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
    s'esvaeix abans de qualsevol ordre que arriba de fora del cos. */
 import { buidaLlavorVerge } from './richText/useUniversalRichText.js';
 import { useUIActions } from '../../app/contexts/UIContext';
+/* P1-64 · La casella de l'EXIF d'una foto de publicació (la del hero) i la precisió de sèrie. */
+import { CasellaExif } from './enquadrament/DialegEnquadrament.jsx';
+import { PRECISIO_PER_DEFECTE_PUBLICACIO } from './enquadrament/geolocalitzacio.js';
 
 /* Bloc 3.8 (261016) · On un cos d'editor no es veu ni rep el focus: la
    mateixa regla que la guarda del focus de la closca (AppGridShell). */
@@ -172,6 +175,21 @@ const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
  *                            // per una ref: les extensions no es refan si la
  *                            // funció canvia. Sense la clau, les ordres i les
  *                            // extensions de sempre. No passa per ...rest.
+ *   fotosDePublicacio: Boolean // Opcional (P1-64, pla 261028_1526 §3.1.1;
+ *                            // Mestre 261028, decisió 8; false). Només el cos
+ *                            // d'una PUBLICACIÓ (el Bloc de Notes): l'ordre
+ *                            // «/» Imatge rep demanaExif (estable) i, si la
+ *                            // foto porta la ubicació o la data, ho pregunta
+ *                            // en un diàleg menut, germà de la closca: la
+ *                            // casella «Conserva la ubicació i la data de la
+ *                            // foto» (marcada de sèrie, com el hero), les
+ *                            // píndoles de la precisió (l'exacta de sèrie) i
+ *                            // «Inserir». Cancel·lar no inserix res. Revisió
+ *                            // adversarial 261028 · Opt-in: el text del Perfil
+ *                            // (identitat) i el catàleg no la porten i la foto
+ *                            // del cos hi entra neta, com sempre. Sense la
+ *                            // clau, la crida i el DOM de sempre. Les fotos
+ *                            // enganxades o arrossegades entren sempre netes.
  *   placeholderTitol: String|null // Opcional (Bloc 3.9 del Gauntlet, 261016).
  *                            // El placeholder de l'H1 de la closca i el títol de
  *                            // reserva de la Vista A4 / PDF. El Bloc de Notes hi
@@ -305,6 +323,8 @@ export function DocumentEditor({ adapter, onToast }) {
     placeholderTitol = null,
     /* Bloc 3.9 (261016) · el desplegable «Edició avançada» (false: el DOM de sempre). */
     edicioAvancada = false,
+    /* P1-64 (261028) · la pregunta de l'EXIF de les fotos del cos (false: netes, com sempre). */
+    fotosDePublicacio = false,
     ...rest
   } = adapter;
 
@@ -329,13 +349,35 @@ export function DocumentEditor({ adapter, onToast }) {
     if (typeof onToastRef.current === 'function') onToastRef.current(missatge, tipus);
     else console.warn(`[slash] ${missatge}`);
   }, []);
-  /* Sense obreEmojis, la crida de sempre (cap clau nova). */
+  /* P1-64 (pla 261028_1526 §3.1.1) · La pregunta de l'EXIF d'una foto del cos
+     (l'ordre «/» Imatge): { exif, conserva, precisio } mentre és oberta, i la
+     resposta per la ref (una promesa que es resol una sola vegada). Si
+     l'editor es desmunta amb la pregunta oberta, es cancel·la. */
+  const [preguntaExif, setPreguntaExif] = useState(null);
+  const preguntaExifRef = useRef(null);
+  const respostaExif = useCallback((resposta) => {
+    const resol = preguntaExifRef.current;
+    preguntaExifRef.current = null;
+    setPreguntaExif(null);
+    resol?.(resposta);
+  }, []);
+  const demanaExifDelCos = useCallback((_original, exif) => new Promise((resol) => {
+    preguntaExifRef.current?.(null);
+    preguntaExifRef.current = resol;
+    setPreguntaExif({ exif, conserva: true, precisio: PRECISIO_PER_DEFECTE_PUBLICACIO });
+  }), []);
+  useEffect(() => () => { preguntaExifRef.current?.(null); }, []);
+  /* Sense obreEmojis ni fotosDePublicacio, la crida de sempre (cap clau nova).
+     Revisió adversarial 261028 · demanaExif només amb fotosDePublicacio === true:
+     el text d'una persona al Perfil és identitat i la foto hi entra neta. */
+  const ambExifDelCos = fotosDePublicacio === true;
   const extensions = useMemo(
     () => extensionsRiques({
       onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos,
       ...(ambEmojis ? { obreEmojis: obreEmojisDelCos } : {}),
+      ...(ambExifDelCos ? { demanaExif: demanaExifDelCos } : {}),
     }),
-    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos],
+    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, demanaExifDelCos],
   );
 
   const desaLocal = useCallback(
@@ -713,6 +755,28 @@ export function DocumentEditor({ adapter, onToast }) {
             accions={<Boto varietat="accent" onClick={tancaAvisTargeta}>{t('editor.targetes.avis.entesos', 'Entesos')}</Boto>}
           />
         </>
+      ) : null}
+      {/* P1-64 · La pregunta de l'EXIF d'una foto del cos: només mentre és oberta. */}
+      {preguntaExif ? (
+        <Dialeg
+          obert
+          onTanca={() => respostaExif(null)}
+          titol={t('editor.imatge.exif.titol', 'Esta foto porta la seua ubicació o la data')}
+          descripcio={t('editor.imatge.exif.descripcio', 'Decidix si es publiquen amb la foto i, la ubicació, amb quina precisió.')}
+          mida="s"
+          accions={(
+            <>
+              <Boto varietat="secundari" onClick={() => respostaExif(null)}>{t('editor.imatge.exif.cancela', 'Cancel·lar')}</Boto>
+              <Boto varietat="primari" onClick={() => respostaExif({ conserva: preguntaExif.conserva, precisio: preguntaExif.precisio })}>
+                {t('editor.imatge.exif.inserir', 'Inserir')}
+              </Boto>
+            </>
+          )}
+        >
+          <CasellaExif dades={preguntaExif.exif} conserva={preguntaExif.conserva}
+            onConserva={(conserva) => setPreguntaExif((p) => (p ? { ...p, conserva } : p))}
+            precisio={preguntaExif.precisio} onPrecisio={(precisio) => setPreguntaExif((p) => (p ? { ...p, precisio } : p))} />
+        </Dialeg>
       ) : null}
     </>
   );

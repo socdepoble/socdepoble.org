@@ -129,7 +129,10 @@ export default function useHeroImageHandler({
      ERROR_PRESSUPOST_EXIF_CAMERA); si no es pot conservar,
      ERROR_EXIF_NO_CONSERVABLE (o ERROR_EXIF_NO_CONSERVABLE_CAMERA): tots per
      onError, tal qual, i cap pujada. Sense, o amb false, neta com sempre. El
-     logotip no en porta mai: no té casella i, en Safari 16, ix en PNG. */
+     logotip no en porta mai: no té casella i, en Safari 16, ix en PNG.
+     P1-64 (pla 261028_1526 §3.1.1) · `opcions.precisio` ('exacta', '100m' o
+     'poble', les píndoles del diàleg) va amb `conservaExif`: la ubicació que
+     porta el fitxer ix arrodonida (fotoDinsDelPressupost). Sense, l'exacta. */
   const processaFitxer = async (file, opcions) => {
     if (!file) return false;
     const pesMaxim = Number(opcions?.pesMaxim) > 0 ? Number(opcions.pesMaxim) : maxSizeBytes;
@@ -143,7 +146,9 @@ export default function useHeroImageHandler({
     try {
       const mena = menaDeImatge(fieldName, opcions?.forma);
       const maxSize = Number(opcions?.midaMaxima) > 0 ? Math.round(Number(opcions.midaMaxima)) : MIDES[mena];
-      const exif = opcions?.conservaExif === true ? { conservaExif: true, original: opcions.original || null } : null;
+      const exif = opcions?.conservaExif === true
+        ? { conservaExif: true, original: opcions.original || null, ...(opcions.precisio ? { precisio: opcions.precisio } : null) }
+        : null;
       const valor = mena === 'logotip'
         ? await valorDelLogotip(file, maxSize, fieldName, onImageUpload)
         : await valorDeLaFoto(file, maxSize, fieldName, onImageUpload, exif);

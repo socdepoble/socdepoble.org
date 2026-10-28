@@ -13,8 +13,11 @@ import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa, origenPublic } from '../../config/origenPublic.js';
 /* Pla 261027_1154 (P1-61) · La imatge del <head>: el selector únic i la base
-   del Supabase de la capa del paquet. */
-import { CAP_SOCIAL_BASE, primeraImatgeSocial } from '../../config/imatgeSocial.js';
+   del Supabase de la capa del paquet.
+   Pla 261028_1526 (P1-61, Fase 2) · Títol, descripció i imatge ixen de
+   metadadesDePagina, la mateixa funció que crida el prerender del build. */
+import { CAP_SOCIAL_BASE } from '../../config/imatgeSocial.js';
+import { metadadesDePagina } from '../../config/metadadesSocials.js';
 import { capaDelPaquet } from '../../config/capaDelPaquet.js';
 /* Pla 261027_0845 (Guarda Nocturna), T1-06 · el text de les pàgines dins de
    l'app nativa, sense cap altra plataforma mòbil (regla 2.3.10 de l'App Store). */
@@ -107,13 +110,16 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
      Revisió adversarial (261027) · La triada viatja amb el seu alt: el de
      page.image (imageAlt) si és ella, i si no (la triada per l'autor o una
      foto del cos), el títol de la pàgina. Sense MIME ni mides: no es lligen
-     dels bytes. */
-  const imatgeDelHead = useMemo(() => {
-    const social = primeraImatgeSocial('pagina', page, opcionsDeLaImatgeSocial());
-    if (social.estat !== 'triada') return resolveAsset(CAP_SOCIAL_BASE.image.url);
-    const esLaPortada = typeof page.image === 'string' && page.image.trim() === social.ref;
-    const alt = (esLaPortada && page.imageAlt) || page.title;
-    return typeof alt === 'string' && alt.trim() ? { url: social.url, alt: alt.trim() } : social.url;
+     dels bytes.
+     Pla 261028_1526 (P1-61, Fase 2) · La regla viu a metadadesDePagina
+     (config/metadadesSocials.js), compartida amb el prerender: la descripció
+     és ara l'entradeta i, sense, el subtítol (decisió per defecte D6, igual
+     al build), en text pla i amb el seu límit; el títol, també en text pla.
+     Abans era el subtítol primer, i el head servit i el de l'app no deien el
+     mateix. */
+  const seo = useMemo(() => {
+    const metadades = metadadesDePagina(page, opcionsDeLaImatgeSocial());
+    return { ...metadades, image: metadades.image || resolveAsset(CAP_SOCIAL_BASE.image.url) };
   }, [page]);
   /* Revisió adversarial (261027) · Una pàgina muntada en context (chrome
      'context': el document destacat de la columna dreta del Xat) no és la de
@@ -125,9 +131,9 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
      pestanya perdia «(N) Xat» i l'og:image era la foto del document. */
   const enContext = page.chrome === 'context';
   useSEO({
-    title: page.title,
-    description: page.subtitle || page.lead || 'Sóc de Poble',
-    image: imatgeDelHead,
+    title: seo.title,
+    description: seo.description,
+    image: seo.image,
     ...(enContext ? { fallback: true } : null)
   });
   return (

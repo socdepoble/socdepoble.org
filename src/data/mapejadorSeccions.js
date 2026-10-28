@@ -1,4 +1,4 @@
-import { sanitizeHtml, netejaText } from '../utils/sanitize.js';
+import { sanitizeHtml, netejaText, esFontImatgePropia } from '../utils/sanitize.js';
 import { origenPublic } from './origenNota.js';
 import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
 
@@ -15,6 +15,94 @@ function generateUUID() {
    no s'importa res de les seccions: el mapejador és de la capa de dades. */
 const SLUG_DE_POBLE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAXIM_POBLE_ID = 80;
+
+/* P1-64 (pla 261028_1526 §3.1.1 i §3.7.1; contracte de dades del Mapa, Mestre
+   261028) · La ubicació de les fotos d'una publicació del Mur, que deriva
+   publishNote (sections/notes/geoDeLesFotos.js):
+     · geolocalitzacio (el hero) = { lat, lng, altitud?, precisio, precisio_m, origen };
+     · fotos_geo (les del cos) = [{ src, lat, lng, precisio, precisio_m, dataCaptura }],
+       com a molt MAX_FOTOS_GEO.
+   El servidor no les valida i són declaracions d'un veí: es netegen en
+   escriure-les (la branca 'mur' de mapSectionSubmissionToItem) i en llegir-les
+   (netejaTipusDelPayload). Les precisions són les de PRECISIONS
+   (components/universal/enquadrament/geolocalitzacio.js; la prova ho
+   comprova): ací no s'importa res d'enlloc més que utils.
+   Revisió adversarial 261028 · La precisió mana: precisio_m és la de la seua
+   fila (MESURES_DEL_MAPA, no la que declara el payload), les coordenades es
+   tornen a arrodonir als seus decimals i l'altitud d'una ubicació que no és
+   exacta, a 100 m (com ajustaPrecisioGps a l'EXIF). Una foto de l'índex és
+   pròpia i es pot obrir (cap data: ni el bucket privat). */
+export const PRECISIONS_DEL_MAPA = Object.freeze(['exacta', '100m', 'poble']);
+/** Els decimals de grau i els metres de cada precisió (les files de PRECISIONS; la prova ho comprova). */
+export const MESURES_DEL_MAPA = Object.freeze({
+  exacta: Object.freeze({ decimals: 5, precisio_m: 1 }),
+  '100m': Object.freeze({ decimals: 3, precisio_m: 100 }),
+  poble: Object.freeze({ decimals: 2, precisio_m: 1000 }),
+});
+export const ORIGENS_DEL_MAPA = Object.freeze(['exif', 'manual']);
+export const MAX_FOTOS_GEO = 24;
+const ARRODONIMENT_ALTITUD_M = 100;
+const CLAUS_FOTO_GEO = Object.freeze(['src', 'lat', 'lng', 'precisio', 'precisio_m', 'dataCaptura']);
+const FORMA_DATA_CAPTURA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?$/;
+const ENTITATS_D_ATRIBUT = Object.freeze({ '&amp;': '&', '&quot;': '"', '&#39;': "'", '&lt;': '<', '&gt;': '>' });
+/* Revisió adversarial 261028 (bloquejant, ReDoS) · Les <img> d'un cos es
+   busquen en UNA passada lineal (etiquetesDImatge, atributsDEtiqueta). Abans,
+   /<img\b[^>]*?\ssrc…/g tornava a recórrer la resta del cos per cada «<img»
+   sense '>': un payload de 400 KB d'un veí (PostgREST, sense límit) congelava
+   uns 7 s cada pestanya que llegia el Mur. */
+const INICI_D_ETIQUETA = /<(?:img\b|!--)/gi;
+const ATRIBUT_D_ETIQUETA = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`]+)))?/y;
+const SEPARADORS_D_ATRIBUT = /[\s/]+/y;
+
+/**
+ * P1-64 · El text de dins de cada etiqueta <img …> d'un HTML (el que va entre
+ * «<img» i el primer '>'), en ordre i en una passada lineal: un comentari
+ * (<!-- … -->) se salta sencer i, sense '>' (o sense '-->'), ja no hi ha cap
+ * etiqueta més de sencera. On el navegador llegiria una altra cosa (un '>'
+ * dins d'un atribut, un comentari abrupte), es perd una imatge: mai se
+ * n'inventa cap. També el fa servir sections/notes/geoDeLesFotos.js.
+ */
+export function etiquetesDImatge(html) {
+  const etiquetes = [];
+  if (typeof html !== 'string' || !html) return etiquetes;
+  const inici = new RegExp(INICI_D_ETIQUETA.source, 'gi');
+  for (let m = inici.exec(html); m; m = inici.exec(html)) {
+    const comentari = m[0] === '<!--';
+    const fi = comentari ? html.indexOf('-->', m.index + 4) : html.indexOf('>', m.index);
+    if (fi === -1) break;
+    if (!comentari) etiquetes.push(html.slice(m.index + 4, fi));
+    inici.lastIndex = comentari ? fi + 3 : fi + 1;
+  }
+  return etiquetes;
+}
+
+/**
+ * P1-64 · Els atributs del text d'una etiqueta (etiquetesDImatge): { nom en
+ * minúscules: valor cru }, el primer de cada nom mana (com el navegador) i un
+ * atribut sense valor és ''. Lineal: cada pas consumix almenys un caràcter.
+ */
+export function atributsDEtiqueta(etiqueta) {
+  const atributs = {};
+  if (typeof etiqueta !== 'string') return atributs;
+  const separadors = new RegExp(SEPARADORS_D_ATRIBUT.source, 'y');
+  const atribut = new RegExp(ATRIBUT_D_ETIQUETA.source, 'y');
+  let pos = 0;
+  while (pos < etiqueta.length) {
+    separadors.lastIndex = pos;
+    if (separadors.test(etiqueta)) pos = separadors.lastIndex;
+    if (pos >= etiqueta.length) break;
+    atribut.lastIndex = pos;
+    const m = atribut.exec(etiqueta);
+    if (!m) {
+      pos += 1;
+      continue;
+    }
+    const nom = m[1].toLowerCase();
+    if (!Object.hasOwn(atributs, nom)) atributs[nom] = m[2] ?? m[3] ?? m[4] ?? '';
+    pos = atribut.lastIndex;
+  }
+  return atributs;
+}
 
 const normalizeText = (value) =>
   String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
@@ -179,7 +267,7 @@ export function mapSectionSubmissionToItem(submission) {
   }
 
   if (sectionId === 'mur') {
-    return {
+    const element = {
       ...baseItem,
       type: netejaText(baseItem.type || 'post'),
       title: netejaText(baseItem.title || 'Publicació'),
@@ -204,6 +292,18 @@ export function mapSectionSubmissionToItem(submission) {
         baseItem.author, baseItem.town_name, baseItem.tag, baseItem.sectionId
       ]))
     };
+    /* P1-64 · La ubicació del hero i l'índex de les fotos del cos, nets (vegeu
+       dalt): el que no compleix el contracte no viatja. Una foto de l'índex
+       ha de ser al cos que es publica (el contingut ja sanejat). */
+    delete element.geolocalitzacio;
+    delete element.fotos_geo;
+    const geo = geolocalitzacioDelMapa(baseItem.geolocalitzacio);
+    if (geo) element.geolocalitzacio = geo;
+    const fotos = fotosGeoNetes(baseItem.fotos_geo, element.content);
+    if (fotos?.length) element.fotos_geo = fotos;
+    /* Revisió adversarial 261028 · I la data del hero, només el text ISO del contracte. */
+    if (Object.hasOwn(element, 'dataCaptura') && !esDataCaptura(element.dataCaptura)) delete element.dataCaptura;
+    return element;
   }
 
   if (sectionId === 'mercat') {
@@ -411,13 +511,109 @@ const CLAUS_D_IMATGE_DEL_PAYLOAD = Object.freeze([
   'og_image', 'featured_image'
 ]);
 const CLAUS_DE_LLISTA_DEL_PAYLOAD = Object.freeze(['labels', 'variations', 'tags']);
-const CAMPS_DE_GEOLOCALITZACIO = Object.freeze(['lat', 'lng', 'altitud']);
-
 function esObjecte(valor) {
   return valor !== null && typeof valor === 'object';
 }
 
 const esNumeroFinit = (valor) => typeof valor === 'number' && Number.isFinite(valor);
+
+/* P1-64 · Unes coordenades del Mapa: números finits dins de rang i no el 0/0
+   d'un GPS sense senyal (la regla de coordenadesValides, exif.js). */
+const coordenadesDelMapa = (lat, lng) => esNumeroFinit(lat) && esNumeroFinit(lng)
+  && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0);
+/* La precisió d'un valor del payload, si és de l'enum (sense convertir res: un objecte hostil no s'avalua). */
+const precisioDelMapa = (valor) => (typeof valor === 'string' && PRECISIONS_DEL_MAPA.includes(valor) ? valor : null);
+const arrodonixA = (valor, decimals) => Math.round(valor * 10 ** decimals) / 10 ** decimals;
+const desfesEntitats = (text) => text.replace(/&(?:amp|quot|lt|gt|#39);/g, (e) => ENTITATS_D_ATRIBUT[e]);
+
+/* Les fonts de les <img> d'un cos (amb les entitats d'atribut desfetes), en
+   una passada lineal (etiquetesDImatge); les de dins d'un comentari no hi són. */
+function fontsDelContingut(html) {
+  const fonts = new Set();
+  for (const etiqueta of etiquetesDImatge(html)) {
+    const { src } = atributsDEtiqueta(etiqueta);
+    if (typeof src === 'string') fonts.add(desfesEntitats(src).trim());
+  }
+  return fonts;
+}
+
+/* La font d'una foto de l'índex: una del bucket públic (sdp-media://mitjans/…,
+   en la forma canònica) o una de pròpia que qualsevol lector pot obrir
+   (esFontImatgePropia: el mateix origen o el servidor de mitjans). Revisió
+   adversarial 261028 · Mai un data: (repetiria la foto sencera dins del
+   payload), ni el bucket privat, ni un servidor de fora (el Mapa la
+   demanaria i li diria qui mira). */
+export const esFontDeFotoGeo = (src) => typeof src === 'string' && src === src.trim()
+  && (fotoDelBucketPublic(src) === src || (!/^(?:data|sdp-media):/i.test(src) && esFontImatgePropia(src)));
+
+/**
+ * P1-64 · La ubicació del hero, en escriure-la i en llegir-la: només amb unes
+ * coordenades del Mapa. Amb una precisió de l'enum, les coordenades es tornen
+ * a arrodonir als seus decimals, precisio_m és el de la seua fila i l'altitud
+ * d'una que no és exacta va a 100 m; sense, cap precisió ni metres (una fila
+ * d'abans: lat, lng i altitud). L'origen, 'exif' o 'manual'. La resta de
+ * claus no viatja.
+ */
+function geolocalitzacioDelMapa(geo) {
+  if (!esObjecte(geo) || Array.isArray(geo)) return null;
+  try {
+    const precisio = precisioDelMapa(geo.precisio);
+    const mesura = precisio ? MESURES_DEL_MAPA[precisio] : null;
+    if (!coordenadesDelMapa(geo.lat, geo.lng)) return null;
+    const lat = mesura ? arrodonixA(geo.lat, mesura.decimals) : geo.lat;
+    const lng = mesura ? arrodonixA(geo.lng, mesura.decimals) : geo.lng;
+    if (!coordenadesDelMapa(lat, lng)) return null;
+    const altitud = esNumeroFinit(geo.altitud) && precisio && precisio !== 'exacta'
+      ? Math.round(geo.altitud / ARRODONIMENT_ALTITUD_M) * ARRODONIMENT_ALTITUD_M : geo.altitud;
+    return {
+      lat,
+      lng,
+      ...(esNumeroFinit(altitud) ? { altitud } : {}),
+      ...(mesura ? { precisio, precisio_m: mesura.precisio_m } : {}),
+      ...(typeof geo.origen === 'string' && ORIGENS_DEL_MAPA.includes(geo.origen) ? { origen: geo.origen } : {}),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/* Una foto de l'índex que complix el contracte: un objecte pla amb NOMÉS les
+   claus de CLAUS_FOTO_GEO, primitives i de la forma esperada (precisio_m, el
+   de la seua precisió), una font de foto de l'índex i el src al cos. */
+function esFotoGeo(foto, fonts) {
+  try {
+    if (!esObjecte(foto) || Array.isArray(foto)) return false;
+    const prototip = Object.getPrototypeOf(foto);
+    if (prototip !== Object.prototype && prototip !== null) return false;
+    if (!Object.keys(foto).every((clau) => CLAUS_FOTO_GEO.includes(clau))) return false;
+    const { src, lat, lng, precisio_m: metres, dataCaptura = null } = foto;
+    const precisio = precisioDelMapa(foto.precisio);
+    return esFontDeFotoGeo(src) && fonts.has(src) && coordenadesDelMapa(lat, lng)
+      && precisio !== null && metres === MESURES_DEL_MAPA[precisio].precisio_m
+      && (dataCaptura === null || (typeof dataCaptura === 'string' && FORMA_DATA_CAPTURA.test(dataCaptura)));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * P1-64 · L'índex de les fotos del cos, net: null si no és una llista; si no,
+ * les que complixen, com a molt MAX_FOTOS_GEO, amb les coordenades tornades a
+ * arrodonir a la seua precisió (una que no ho resistix, fora).
+ */
+function fotosGeoNetes(llista, contingut) {
+  if (!Array.isArray(llista)) return null;
+  const fonts = fontsDelContingut(contingut);
+  return llista.filter((foto) => esFotoGeo(foto, fonts)).slice(0, MAX_FOTOS_GEO)
+    .map(({ src, lat, lng, precisio, precisio_m: metres, dataCaptura = null }) => {
+      const { decimals } = MESURES_DEL_MAPA[precisio];
+      return { src, lat: arrodonixA(lat, decimals), lng: arrodonixA(lng, decimals), precisio, precisio_m: metres, dataCaptura };
+    })
+    .filter((foto) => coordenadesDelMapa(foto.lat, foto.lng));
+}
+
+/* P1-64 · La data de captura del hero: el text ISO del contracte o res. */
+const esDataCaptura = (valor) => typeof valor === 'string' && FORMA_DATA_CAPTURA.test(valor);
 
 /* El text d'un valor del payload: una cadena, tal qual; un número finit, el
    seu text; qualsevol altra cosa, null. */
@@ -453,15 +649,24 @@ function netejaTipusDelPayload(dades) {
     if (Object.hasOwn(dades, clau) && dades[clau] != null && !Array.isArray(dades[clau])) delete dades[clau];
   }
   if (Array.isArray(dades.tags)) dades.tags = dades.tags.filter((etiqueta) => !esObjecte(etiqueta));
-  if (Object.hasOwn(dades, 'geolocalitzacio')) {
-    const geo = dades.geolocalitzacio;
-    if (esObjecte(geo) && !Array.isArray(geo)) {
-      dades.geolocalitzacio = Object.fromEntries(CAMPS_DE_GEOLOCALITZACIO
-        .filter((camp) => geo[camp] != null && !esObjecte(geo[camp]))
-        .map((camp) => [camp, geo[camp]]));
-    } else if (geo != null) {
-      delete dades.geolocalitzacio;
-    }
+  /* P1-64 · La ubicació del hero, amb la mateixa regla que en escriure-la
+     (geolocalitzacioDelMapa): lat, lng i altitud primitius i, ara, la precisió
+     de l'enum (amb els seus metres i les coordenades arrodonides) i l'origen
+     ('exif' | 'manual'). Revisió adversarial 261028 · Sense unes coordenades
+     del Mapa (un text, un 1e999, el 0/0), la clau se'n va sencera: abans en
+     quedava { lng } i el panell de la foto deixava de mirar l'EXIF. */
+  if (Object.hasOwn(dades, 'geolocalitzacio') && dades.geolocalitzacio != null) {
+    const geo = geolocalitzacioDelMapa(dades.geolocalitzacio);
+    if (geo) dades.geolocalitzacio = geo;
+    else delete dades.geolocalitzacio;
+  }
+  if (Object.hasOwn(dades, 'dataCaptura') && dades.dataCaptura != null && !esDataCaptura(dades.dataCaptura)) delete dades.dataCaptura;
+  /* P1-64 · L'índex de les fotos del cos: si no és una llista, fora; dins, només
+     les que complixen el contracte i són al cos (dades.content ja és text). */
+  if (Object.hasOwn(dades, 'fotos_geo')) {
+    const fotos = fotosGeoNetes(dades.fotos_geo, dades.content);
+    if (fotos) dades.fotos_geo = fotos;
+    else delete dades.fotos_geo;
   }
   if (Object.hasOwn(dades, 'origen') && dades.origen != null) {
     const origen = origenLlegible(dades.origen);

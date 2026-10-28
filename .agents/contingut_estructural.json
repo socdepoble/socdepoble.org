@@ -2,10 +2,10 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anima": {
-      "sha256": "45e64d859c135a49f3f5db9555dae9b2c7b79493da15a2b0ae6b2bea661da866",
-      "html": 10319,
+      "sha256": "8bde895c8402c835d7ec5861a0d247b93d358e008f3eeee049746a921942db14",
+      "html": 9373,
       "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-20"
+      "data": "2026-10-28"
     },
     "cervell": {
       "sha256": "851b3742533b81cdc557c2499537f82b8da0c3e87dd98937d789588cc3f450e4",
@@ -26,16 +26,16 @@
       "data": "2026-10-20"
     },
     "descarregues": {
-      "sha256": "48ef265e49d15eff79c7c6c92f7b57fbf66e1507f9eccb6bd8cf5b2ff8de0810",
-      "html": 5746,
-      "aprovat_per": "Javi",
-      "data": "2026-10-27"
+      "sha256": "5e3c1024bba8a099f29a1bc1a7b90f6513f042aefacc27bf6eb856b5c6dfe9f9",
+      "html": 5693,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-28"
     },
     "disseny": {
-      "sha256": "a2a85aa98ad4fbe7ec46cdf32631ac1294ccce0b1d02e10c8fa687b49abbd107",
-      "html": 2147,
-      "aprovat_per": "Javi",
-      "data": "2026-10-22"
+      "sha256": "885021d3b6457430e7e24565b3f39b10516cb4bbd08243e922208a5960c1022f",
+      "html": 1920,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-28"
     },
     "drets-autor": {
       "sha256": "d9c24886bd44117e5391631c8cc02ba75e651ad1c6b0c5465b149f94aabf53a6",
@@ -50,10 +50,10 @@
       "data": "2026-10-21"
     },
     "legal": {
-      "sha256": "ce4298a907461bec3d883c7676b87d615cf72193f623223ffca54338ad3935e2",
-      "html": 44011,
+      "sha256": "e3c33ae6c780d819e49a2b0221ef4c0dc54eada3c2ebcb6396d0a75dbe81bad7",
+      "html": 45155,
       "aprovat_per": "Mestre Javi Llinares",
-      "data": "2026-10-24"
+      "data": "2026-10-28"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -62,10 +62,10 @@
       "data": "2026-10-01"
     },
     "projecte": {
-      "sha256": "ae08fdc2f070dd32873a1fc513ed0f7479ac0b8d5ca6c2606c0009748432985b",
-      "html": 9238,
-      "aprovat_per": "MarIA",
-      "data": "2026-10-05"
+      "sha256": "678e52f278bf042fe3af0056183da0b9a5c8ec5fc1a8b380918071b87590878b",
+      "html": 8529,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-28"
     },
     "roadmap": {
       "sha256": "7515e868b2da9dd12f97d0f840ce1b51ca426534336fe14bc4f6138264df39c5",

@@ -463,7 +463,10 @@ test('D-C · radis només per token (s, m, g, xl, pastilla, boto), 0, inherit o 
      · .sdp-pestanyes__pestanya, margin-bottom -2px: encavalca la vora de 2px.
      · .sdp-anatomia, gap 2px: és el filet; el fons fa de vora entre cel·les.
      · .sdp-alerta__icona, margin-top 2px: ajust òptic de la icona de 24px a
-       la primera línia (28,8px). */
+       la primera línia (28,8px).
+   P1-37 (261026_2057) · Els tres àlies dels botons (--sdp-boto-marge-inline,
+   --sdp-boto-marge-block i --sdp-boto-separacio) també són la reixeta: valen
+   --sdp-space-4 i --sdp-space-3 (src/css/botons.capes.test.js). */
 const ESPAI_EXEMPT = new Set([
   '.sdp-nomes-lector|margin|-1px',
   '.sdp-pestanyes__pestanya|margin-bottom|-2px',
@@ -481,7 +484,7 @@ function funcioValida(t) {
 function espaiValid(valor) {
   return trossos(valor).every((t) => {
     if (/^-?(0|auto|inherit)$/.test(t)) return true;
-    if (/^var\(--sdp-(space-\d+|pad-contenidor)\)$/.test(t)) return true;
+    if (/^var\(--sdp-(space-\d+|pad-contenidor|boto-marge-inline|boto-marge-block|boto-separacio)\)$/.test(t)) return true;
     const rem = /^-?(\d*\.?\d+)rem$/.exec(t);
     if (rem) return Number.isInteger(Number(rem[1]) * 4);
     if (/^(calc|clamp|max|min|env)\(/.test(t)) return funcioValida(t);
@@ -511,6 +514,9 @@ test('D-C · la comprovació d’espais veu les formes velles i deixa passar les
   expect(espaiValid('calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px))')).toBe(true);
   expect(espaiValid('clamp(var(--sdp-space-5), 5vw, var(--sdp-space-8))')).toBe(true);
   expect(espaiValid('calc((100% - var(--sdp-touch)) / 2)')).toBe(true);
+  expect(espaiValid('var(--sdp-boto-separacio)')).toBe(true);
+  expect(espaiValid('var(--sdp-boto-marge-block) auto 0')).toBe(true);
+  expect(espaiValid('var(--sdp-touch)')).toBe(false);
 });
 
 test('D-C · títols de la targeta amb l’interlineat de títol (1.2), no el de component', () => {

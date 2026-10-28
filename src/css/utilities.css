@@ -90,6 +90,15 @@
     width: 100%;
     padding: 0 var(--sdp-pad-contenidor) var(--sdp-pad-contenidor);
   }
+  /* Pla 261028_1526 (P1-58) · La ranura `despresAutoria` de PageFrame, entre
+     la barra taronja i la capçalera de l'H1: germana de l'article, com el peu,
+     i amb el mateix coixí lateral que el cos i que el marge de la capçalera.
+     El desplegable de dins porta el seu marge de bloc (components.css). */
+  .sdp-pagina-despres-autoria {
+    flex: none;
+    width: 100%;
+    padding-inline: var(--sdp-pad-contenidor);
+  }
   .sdp-universal-page-container--contained > .bar-blue,
   .sdp-universal-page-container--contained > .bar-orange {
     flex: none;

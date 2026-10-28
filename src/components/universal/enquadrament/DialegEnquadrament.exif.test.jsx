@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  AJUDA_CONSERVA_CAMERA, AJUDA_CONSERVA_DATA, AJUDA_CONSERVA_UBICACIO, AVIS_REVISA_EXIF, DialegEnquadrament,
+  AJUDA_CONSERVA_CAMERA, AJUDA_CONSERVA_DATA, AJUDA_CONSERVA_UBICACIO, AVIS_REVISA_EXIF, DialegEnquadrament, LLEGENDA_PRECISIO,
 } from './DialegEnquadrament.jsx';
 import {
   ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, exifPublicable,
@@ -67,7 +67,10 @@ describe('sense ofereixConservarExif · el diàleg d’abans (Llei del Píxel)',
 });
 
 describe('amb ofereixConservarExif · la casella, marcada de sèrie', () => {
-  test.each(MODES)('%s: una foto amb GPS ensenya la casella marcada i l’avís de la ubicació; desar porta { conservaExif: true, original }', async (_mode, senzill, boto) => {
+  /* P1-64 (pla 261028_1526; Mestre 261028, decisió 8) · ACTUALITZADA A POSTA:
+     amb una ubicació, la tria porta també la precisió (l'exacta, de sèrie), i
+     metadades, el punt i la data de la foto. */
+  test.each(MODES)('%s: una foto amb GPS ensenya la casella marcada i l’avís de la ubicació; desar porta { conservaExif: true, original, precisio: exacta }, el punt i la data', async (_mode, senzill, boto) => {
     const font = fotoGps();
     const vista = munta({ senzill, font, ofereixConservarExif: true });
     const casella = await vista.findByRole('checkbox', CASELLA);
@@ -76,7 +79,11 @@ describe('amb ofereixConservarExif · la casella, marcada de sèrie', () => {
     expect(casella.getAttribute('aria-describedby')).toBeTruthy();
     await desa(vista, boto);
     expect(vista.onDesa).toHaveBeenCalledTimes(1);
-    expect(metadadesDe(vista.onDesa)).toEqual({ geolocalitzacio: null, dataCaptura: null, exif: { conservaExif: true, original: font } });
+    expect(metadadesDe(vista.onDesa)).toEqual({
+      geolocalitzacio: { lat: 38.5919, lng: -0.4184, precisio: 'exacta', precisio_m: 1, origen: 'exif' },
+      dataCaptura: '2017-05-14T10:22:33',
+      exif: { conservaExif: true, original: font, precisio: 'exacta' },
+    });
   });
 
   test.each(MODES)('%s: desmarcada, desar porta { conservaExif: false } (la foto ixirà neta)', async (_mode, senzill, boto) => {
@@ -225,7 +232,7 @@ describe('Bloc B · el que es publica, dit, i el re-enquadrament d’una adreça
     expect(lectorExif.mock.calls).toEqual([[blob]]);
     await AMPLIA(vista);
     await desa(vista, boto);
-    expect(metadadesDe(vista.onDesa).exif).toEqual({ conservaExif: true, original: blob });
+    expect(metadadesDe(vista.onDesa).exif).toEqual({ conservaExif: true, original: blob, precisio: 'exacta' });
   });
 
   test('P2 · una adreça desada sencera (sense ampliar): marcada, no hi ha res a desar i es tanca (l’EXIF queda on era); desmarcada, es desa neta', async () => {
@@ -282,7 +289,7 @@ describe('el temps de la lectura', () => {
     expect(vista.getByRole('alert').textContent).toContain(AVIS_REVISA_EXIF);
     await desa(vista, boto);
     expect(vista.onDesa).toHaveBeenCalledTimes(1);
-    expect(metadadesDe(vista.onDesa).exif).toEqual({ conservaExif: true, original: font });
+    expect(metadadesDe(vista.onDesa).exif).toEqual({ conservaExif: true, original: font, precisio: 'exacta' });
   });
 
   test('si es desa abans que acabe la lectura i la foto no porta res per a la casella, es desa al primer clic, com abans', async () => {
@@ -316,5 +323,62 @@ describe('el temps de la lectura', () => {
     expect(vista.queryByRole('checkbox', CASELLA)).toBeNull();
     await desa(vista, 'Desar l’enquadrament');
     expect('exif' in p.onDesa.mock.calls[0][2]).toBe(false);
+  });
+});
+
+/* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · Amb la casella
+   marcada i una ubicació a la foto, les píndoles de la precisió (l'exacta de
+   sèrie) i la línia del que es desarà; la tria va a metadades (el camp) i a
+   metadades.exif.precisio (el fitxer, que arrodonix la compressió). */
+describe('P1-64 · la precisió de la ubicació', () => {
+  const PINDOLES = { name: LLEGENDA_PRECISIO };
+
+  test.each(MODES)('%s: les píndoles només ixen amb la casella marcada i una ubicació; l’exacta, de sèrie', async (_mode, senzill) => {
+    const vista = munta({ senzill, font: fotoGps(), ofereixConservarExif: true });
+    await vista.findByRole('checkbox', CASELLA);
+    const grup = vista.getByRole('radiogroup', PINDOLES);
+    expect(within(grup).getAllByRole('radio').map((r) => [r.value, r.checked])).toEqual([['exacta', true], ['100m', false], ['poble', false]]);
+    expect(vista.getByText('Es desarà: 38.59190, -0.41840 (exacta). El punt de la foto, a un metre.')).toBeTruthy();
+    fireEvent.click(vista.getByRole('checkbox', CASELLA));
+    expect(vista.queryByRole('radiogroup', PINDOLES)).toBeNull();
+    expect(vista.queryByText(/^Es desarà:/)).toBeNull();
+  });
+
+  test('una foto amb data i sense ubicació: la casella, sense píndoles', async () => {
+    const vista = munta({ font: fotoData(), ofereixConservarExif: true });
+    await vista.findByRole('checkbox', CASELLA);
+    expect(vista.queryByRole('radiogroup', PINDOLES)).toBeNull();
+  });
+
+  test.each(MODES)('%s: triar «Uns 100 m» arrodonix el punt i la tria va a la pujada', async (_mode, senzill, boto) => {
+    const font = fotoGps();
+    const vista = munta({ senzill, font, ofereixConservarExif: true });
+    await vista.findByRole('checkbox', CASELLA);
+    fireEvent.click(vista.getByRole('radio', { name: 'Uns 100 m' }));
+    expect(vista.getByText('Es desarà: 38.592, -0.418 (uns 100 m). Es veu el paratge, no el punt exacte.')).toBeTruthy();
+    await desa(vista, boto);
+    expect(metadadesDe(vista.onDesa)).toEqual({
+      geolocalitzacio: { lat: 38.592, lng: -0.418, precisio: '100m', precisio_m: 100, origen: 'exif' },
+      dataCaptura: '2017-05-14T10:22:33',
+      exif: { conservaExif: true, original: font, precisio: '100m' },
+    });
+  });
+
+  test('desmarcada, res de la ubicació: { conservaExif: false } i el punt a null', async () => {
+    const vista = munta({ font: fotoGps(), ofereixConservarExif: true });
+    fireEvent.click(await vista.findByRole('checkbox', CASELLA));
+    await desa(vista, 'Desar l’enquadrament');
+    expect(metadadesDe(vista.onDesa)).toEqual({ geolocalitzacio: null, dataCaptura: null, exif: { conservaExif: false } });
+  });
+
+  test('una foto nova torna a l’exacta', async () => {
+    const p = props({ font: fotoGps(), ofereixConservarExif: true });
+    const vista = render(<DialegEnquadrament {...p} />);
+    await vista.findByRole('checkbox', CASELLA);
+    fireEvent.click(vista.getByRole('radio', { name: 'Només el poble' }));
+    vista.rerender(<DialegEnquadrament {...p} font={fotoGps()} />);
+    await carregat();
+    await vista.findByRole('checkbox', CASELLA);
+    expect(vista.getByRole('radio', { name: 'Exacta' }).checked).toBe(true);
   });
 });

@@ -131,3 +131,8 @@ test('el copy del core mana també en el títol de la portada i de la Consola in
   expect(arrel.querySelector('header.page-title h1').textContent).toBe('Consola del core');
   expect(textos(pastillaDeLaPagina(arrel))).toEqual([time, date]);
 });
+
+/* Pla 261028_1526 (P1-61, Fase 2) · WikiDetail registra el seu <head> amb
+   useSEO, que necessita UIProvider. Els contractes visuals d'esta suite són
+   independents del head: el real té la seua suite (WikiDePobleSection.seo.test.jsx). */
+vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));

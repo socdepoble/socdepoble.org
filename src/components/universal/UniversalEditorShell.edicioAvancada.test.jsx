@@ -15,10 +15,19 @@
        («o assigna categories» és l'exemple literal de l'ordre). Una nota
        sense res assignat no en porta cap: el flux bàsic queda net;
      · els destins del focus obrin el desplegable abans d'enfocar;
-     · `placeholderTitol`, el placeholder de l'H1. */
-import React, { useState } from 'react';
+     · `placeholderTitol`, el placeholder de l'H1.
+   Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · `posicioEdicioAvancada`:
+     · per defecte ('cos'), el lloc de sempre, dins de l'article (Notes);
+     · 'despres-autoria' (la fitxa del Perfil), un sol desplegable a la ranura
+       despresAutoria de PageFrame, després de la barra taronja i abans de
+       l'H1, i fora de l'article;
+     · el cos (TipTap) no es remunta, i els destins del focus el troben igual;
+     · dins, l'ordre de lectura Capçalera → Avatar → Logotip → classificació. */
+import { readdirSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import React, { useEffect, useState } from 'react';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
@@ -120,6 +129,103 @@ test('dins del desplegable: Editar capçalera, Editar logotip, la botonera (amb 
   expect(container.querySelectorAll('[data-sdp-drets]')).toHaveLength(1);
 });
 
+/* P1-58 · L'ordre de lectura de la fitxa: la capçalera primer, després la
+   identitat (l'avatar redó del Perfil), el logotip i la classificació. */
+test('dins del desplegable, amb identitat: Capçalera → Avatar → Logotip → classificació', () => {
+  const { container } = closca({ edicioAvancada: true, identitatEdicioAvancada: <p data-testid="avatar">Avatar</p> });
+  const cos = container.querySelector('details.sdp-edicio-avancada > .sdp-edicio-avancada__cos');
+  expect(fills(cos)).toEqual([
+    'sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera',
+    'sdp-edicio-avancada__identitat',
+    'sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip',
+    'page-title-classificacio'
+  ]);
+  expect(cos.querySelector('.sdp-edicio-avancada__identitat [data-testid="avatar"]')).not.toBeNull();
+});
+
+describe('posicioEdicioAvancada', () => {
+  test('per defecte (\'cos\'): el desplegable continua dins de l’article, damunt de les eines, i cap ranura dalt', () => {
+    const { container } = closca({ edicioAvancada: true });
+    expect(fills(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'sdp-edicio-avancada', 'sdp-editor-eines', 'ProseMirror']);
+    expect(container.querySelector('.sdp-pagina-despres-autoria')).toBeNull();
+    expect(container.querySelector('[posicioedicioavancada]')).toBeNull();
+  });
+
+  test('\'despres-autoria\': un sol desplegable, davall de la barra taronja i damunt de l’H1, fora de l’article', () => {
+    const { container } = closca({ edicioAvancada: true, posicioEdicioAvancada: 'despres-autoria' });
+    expect(fills(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'sdp-editor-eines', 'ProseMirror']);
+    expect(container.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
+    const desplegable = container.querySelector('details.sdp-edicio-avancada');
+    expect(desplegable.parentElement.className).toBe('sdp-pagina-despres-autoria');
+    expect(desplegable.closest('article')).toBeNull();
+    expect(desplegable.closest('header')).toBeNull();
+    const pagina = container.querySelector('.sdp-universal-page-container');
+    expect(fills(pagina).slice(0, 4)).toEqual(['bar-blue', 'bar-orange', 'sdp-pagina-despres-autoria', 'page-title']);
+    const h1 = container.querySelector('header.page-title h1');
+    const barra = container.querySelector('section.bar-orange');
+    expect(barra.compareDocumentPosition(desplegable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(desplegable.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // El contingut, el de sempre: plegat, amb la capçalera, el logotip, la botonera i els drets.
+    expect(desplegable.open).toBe(false);
+    expect(fills(desplegable.querySelector('.sdp-edicio-avancada__cos'))).toEqual([
+      'sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera',
+      'sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip',
+      'page-title-classificacio'
+    ]);
+    expect(container.querySelectorAll('[data-sdp-drets]')).toHaveLength(1);
+  });
+
+  test('sense edicioAvancada, \'despres-autoria\' no pinta res: el DOM de sempre', () => {
+    const sempre = closca().container.innerHTML;
+    cleanup();
+    expect(closca({ posicioEdicioAvancada: 'despres-autoria' }).container.innerHTML).toBe(sempre);
+  });
+
+  /* Un cos que compta els seus muntatges, com el TipTap de veres. */
+  test('el cos no es remunta: ni en obrir i tancar el desplegable, ni amb un títol o etiquetes nous, ni en canviar de posició', () => {
+    const muntat = vi.fn();
+    function Cos() {
+      useEffect(() => { muntat(); }, []);
+      return <div className="ProseMirror" contentEditable suppressContentEditableWarning data-testid="cos" />;
+    }
+    const pinta = (props) => (
+      <UniversalEditorShell id="d1" subtitleHtml="" leadHtml="" topBar={EINES} posicioEines="davall-entradilla"
+        classificacio={ranura()} copyright="CC BY-NC-SA 4.0" onCanviaCopyright={vi.fn()} edicioAvancada
+        posicioEdicioAvancada="despres-autoria" titleHtml="" labels={[]} {...props}>
+        <Cos />
+      </UniversalEditorShell>
+    );
+    const vista = render(pinta({}));
+    const cos = vista.getByTestId('cos');
+    expect(muntat).toHaveBeenCalledTimes(1);
+    const desplegable = vista.container.querySelector('details.sdp-edicio-avancada');
+    act(() => { desplegable.open = true; fireEvent(desplegable, new Event('toggle')); });
+    act(() => { desplegable.open = false; fireEvent(desplegable, new Event('toggle')); });
+    vista.rerender(pinta({ titleHtml: 'Títol nou', labels: [{ text: 'Hort', className: 'sdp-badge-tag' }] }));
+    expect(vista.getByTestId('cos')).toBe(cos);
+    expect(muntat).toHaveBeenCalledTimes(1);
+    // Ni tan sols si la posició canviara entre pintades: el fill de l'article queda en el seu lloc.
+    vista.rerender(pinta({ posicioEdicioAvancada: 'cos' }));
+    expect(vista.container.querySelector('.sdp-pagina-despres-autoria')).toBeNull();
+    vista.rerender(pinta({}));
+    expect(vista.getByTestId('cos')).toBe(cos);
+    expect(muntat).toHaveBeenCalledTimes(1);
+    expect(vista.container.querySelectorAll('details.sdp-edicio-avancada')).toHaveLength(1);
+  });
+
+  /* Revisió adversarial P1-58 · Només la fitxa del Perfil ho demana: Notes i
+     el DocumentEditor es queden en 'cos' (el defecte). Per text, com les
+     proves de qualitat: una opció nova ha d'entrar en esta llista. */
+  test('només el Perfil passa \'despres-autoria\'; Notes es queda en el cos', () => {
+    const arrel = resolve(process.cwd(), 'src');
+    const demanen = readdirSync(arrel, { recursive: true })
+      .filter((f) => /\.jsx?$/.test(f) && !/\.test\.jsx?$/.test(f))
+      .filter((f) => /posicioEdicioAvancada\s*[:=]\s*\{?\s*['"]despres-autoria['"]/.test(readFileSync(resolve(arrel, f), 'utf8')))
+      .map((f) => f.split('\\').join('/'));
+    expect(demanen).toEqual(['sections/profile/PerfilEditor.jsx']);
+  });
+});
+
 test('el que es configura es veu al seu lloc real: la capçalera desada dalt i el logotip desat damunt de l’H1', () => {
   const { container } = closca({ edicioAvancada: true, heroImage: '/assets/hort.webp', logoImage: '/assets/logo-hort.png' });
   const pagina = container.querySelector('.sdp-universal-page-container');
@@ -186,4 +292,20 @@ test('un destí fora del desplegable (el títol) no l’obri', () => {
   premAccio(container);
   expect(container.querySelector('details.sdp-edicio-avancada').open).toBe(false);
   expect(document.activeElement).toBe(container.querySelector('.editor-title-input'));
+});
+
+/* P1-58 · Amb el desplegable dalt (la fitxa del Perfil), els destins del focus
+   el troben igual: la ranura és dins de l'arrel de la closca. */
+test.each([
+  ['la capçalera', { camp: 'heroImage' }, '.sdp-edicio-avancada__capcalera button'],
+  ['el logotip', { camp: 'logoImage' }, '.sdp-edicio-avancada__logotip button'],
+  ['els drets', { camp: 'copyright' }, '.sdp-edicio-avancada [data-sdp-drets]'],
+  ['l’emoticona', { camp: 'icon' }, '.sdp-edicio-avancada .sdp-classificacio-botonera > button:last-child']
+])('amb \'despres-autoria\', després d’una acció d’avís de %s, el desplegable s’obri i el focus hi va', (_cas, props, desti) => {
+  const { container } = render(<AmbAvis {...props} posicioEdicioAvancada="despres-autoria" />);
+  const desplegable = container.querySelector('.sdp-pagina-despres-autoria > details.sdp-edicio-avancada');
+  expect(desplegable.open).toBe(false);
+  premAccio(container);
+  expect(desplegable.open).toBe(true);
+  expect(document.activeElement).toBe(container.querySelector(desti));
 });

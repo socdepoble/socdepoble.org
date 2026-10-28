@@ -9,11 +9,34 @@ import {
   MIDA_AVATAR_UNIVERSAL,
   MIDA_QUADRAT_UNIVERSAL,
   convertirImatgeAWebp,
+  esRutaDIdentitat,
   extreuTiffExif,
   incrustaExifEnWebp,
   llegixExifUniversal,
   normalitzaOrientacioTiff,
 } from '../tooling/maquinaria/convertir_a_webp.mjs';
+
+/* OG-7 (pla 261028_1526 §3.1.1, P1-64; Mestre 261028, decisió 7) · Un JPEG
+   real (Pillow) amb el GPS de la Torre i la data, per a les proves del tractor. */
+function jpegAmbGps(dir, nom = 'foto-camp.jpg') {
+  const jpgBase = path.join(dir, `base-${nom}`);
+  const jpgExif = path.join(dir, nom);
+  execFileSync('python3', [
+    '-c',
+    `from PIL import Image; Image.new("RGB", (1600, 1200), (45, 95, 65)).save(${JSON.stringify(jpgBase)}, "JPEG")`,
+  ]);
+  const realJpg = fs.readFileSync(jpgBase);
+  const tiffBytes = tiff({ ifd0: [orientacio(6)], exif: dataOriginal('2026:10:15 09:15:30', '+02:00'), gps: gpsTorre() });
+  const app1Len = tiffBytes.length + 8;
+  const app1 = Buffer.alloc(4 + app1Len);
+  app1[0] = 0xff;
+  app1[1] = 0xe1;
+  app1.writeUInt16BE(app1Len, 2);
+  app1.write('Exif\0\0', 4, 'ascii');
+  Buffer.from(tiffBytes).copy(app1, 10);
+  fs.writeFileSync(jpgExif, Buffer.concat([realJpg.subarray(0, 2), app1, realJpg.subarray(2)]));
+  return jpgExif;
+}
 
 test('convertir_a_webp · extrau TIFF EXIF, normalitza orientació a 1 i l’incrusta en RIFF WebP conservant GPS i dataCaptura', () => {
   const tiffOriginal = tiff({
@@ -46,7 +69,9 @@ test('convertir_a_webp · extrau TIFF EXIF, normalitza orientació a 1 i l’inc
   });
 });
 
-test('convertir_a_webp · converteix JPEG amb GPS i data de captura a WebP quadrat 1200x1200 (<80 KB) i avatar 400x400 preservant EXIF', () => {
+/* OG-7 · ACTUALITZADA A POSTA: l'avatar (400 × 400) ja no conserva l'EXIF de
+   sèrie (és identitat); el quadrat, sí. */
+test('convertir_a_webp · converteix JPEG amb GPS i data de captura a WebP quadrat 1200x1200 (<80 KB) preservant EXIF, i avatar 400x400 sense EXIF de sèrie', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-webp-test-'));
   try {
     const jpgBase = path.join(dir, 'base.jpg');
@@ -85,7 +110,9 @@ test('convertir_a_webp · converteix JPEG amb GPS i data de captura a WebP quadr
     assert.equal(resAvatar.amplada, MIDA_AVATAR_UNIVERSAL);
     assert.equal(resAvatar.alcada, MIDA_AVATAR_UNIVERSAL);
     assert.ok(resAvatar.bytes <= 40 * 1024);
-    assert.deepEqual(resAvatar.gps, { lat: 38.5919, lng: -0.4184, altitud: 456.7 });
+    assert.equal(resAvatar.exifPreservat, false);
+    assert.equal(extreuTiffExif(fs.readFileSync(webpAvatar)), null);
+    assert.equal(llegixExifUniversal(fs.readFileSync(webpAvatar)).gps, null);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -189,3 +216,50 @@ test('convertir_a_webp · imposa estrictament el pressupost maxKb i preserva l�
   }
 });
 
+
+/* OG-7 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · Una foto
+   d'identitat no porta el GPS: el mode avatar i qualsevol ruta d'eixida
+   d'identitat (el patró del test d'OG-7) no l'incrusten si no es força
+   (preservaExifBinari: true, la bandera --conserva-exif). */
+test('convertir_a_webp · OG-7 · --mode avatar i les rutes d’identitat ixen sense GPS de sèrie; només forçant-ho el conserven', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-webp-og7-'));
+  try {
+    const jpgExif = jpegAmbGps(dir);
+    const senseGps = (fitxer) => {
+      assert.equal(extreuTiffExif(fs.readFileSync(fitxer)), null, fitxer);
+      assert.equal(llegixExifUniversal(fs.readFileSync(fitxer)).gps, null, fitxer);
+    };
+
+    const avatar = path.join(dir, 'avatar-400.webp');
+    assert.equal(convertirImatgeAWebp(jpgExif, avatar, { mode: 'avatar', maxKb: 40 }).exifPreservat, false);
+    senseGps(avatar);
+
+    fs.mkdirSync(path.join(dir, 'avatars'));
+    const perCarpeta = path.join(dir, 'avatars', 'javi-1200.webp');
+    assert.equal(convertirImatgeAWebp(jpgExif, perCarpeta, { mode: 'quadrat', maxKb: 80 }).exifPreservat, false);
+    senseGps(perCarpeta);
+    const perNom = path.join(dir, 'javi-llinares-perfil-1200px.webp');
+    assert.equal(convertirImatgeAWebp(jpgExif, perNom, { mode: 'quadrat', maxKb: 80 }).exifPreservat, false);
+    senseGps(perNom);
+
+    const forcat = path.join(dir, 'avatar-forcat.webp');
+    const resForcat = convertirImatgeAWebp(jpgExif, forcat, { mode: 'avatar', maxKb: 40, preservaExifBinari: true });
+    assert.equal(resForcat.exifPreservat, true);
+    assert.deepEqual(llegixExifUniversal(fs.readFileSync(forcat)).gps, { lat: 38.5919, lng: -0.4184, altitud: 456.7 });
+
+    const patrimoni = path.join(dir, 'font-del-poble.webp');
+    assert.equal(convertirImatgeAWebp(jpgExif, patrimoni, { mode: 'quadrat', maxKb: 80 }).exifPreservat, true);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('convertir_a_webp · OG-7 · esRutaDIdentitat mira el camí dins del repo i, fora, només la carpeta i el nom', () => {
+  const arrel = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+  assert.equal(esRutaDIdentitat(path.join(arrel, 'public/assets/uploads/gent/javi-llinares/avatars/a.webp')), true);
+  assert.equal(esRutaDIdentitat(path.join(arrel, 'public/assets/uploads/avatars/b.webp')), true);
+  assert.equal(esRutaDIdentitat(path.join(arrel, 'public/assets/fotos/javi-llinares-perfil-1200px.webp')), true);
+  assert.equal(esRutaDIdentitat(path.join(arrel, 'public/assets/uploads/poble/la-torre-de-les-macanes/DSC00320.webp')), false);
+  assert.equal(esRutaDIdentitat('/Users/gent/proves/foto.webp'), false);
+  assert.equal(esRutaDIdentitat('/tmp/usuaris/foto.webp'), true);
+});

@@ -32,8 +32,12 @@ const BASELINE = process.argv.includes('--baseline');
 /** L'ÚNICA porta al Shadow DOM. Si un full no entra per ací, no existix. */
 const FULL_OMBRA = 'src/css/index.css';
 
-/** Entrades reals del graf de mòduls. */
-const ENTRADES = ['src/main.jsx', 'src/wp-standalone.js', 'tooling/brain/mapa-consola.mjs'];
+/** Entrades reals del graf de mòduls: el lloc (index.html), el paquet enxufable
+ *  (vite.standalone.config.js, lib.entry), l'app nativa (vite.natiu.config.js,
+ *  ENTRADA_NATIVA) i la Consola. P1-08 (pla 261028_1526) · Fora src/wp-standalone.js,
+ *  que ja no existix i el graf descartava sense dir res. No s'importen els configs:
+ *  porten vite. La paritat la fixa tests/pedra-debt.test.mjs. */
+const ENTRADES = ['src/main.jsx', 'src/embed.jsx', 'src/natiu/entrada.jsx', 'tooling/brain/mapa-consola.mjs'];
 
 /** Fitxers autoritzats a tocar el document amfitrió. */
 const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js',

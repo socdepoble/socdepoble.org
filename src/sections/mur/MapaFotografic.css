@@ -1,0 +1,321 @@
+/* ═══ P1-64 · MAPA FOTOGRÀFIC DEL MUR ════════════════════════════════
+   El full de MapaFotografic.jsx, que l'adopta en temps d'execució (?inline)
+   a l'arrel on es munta (el document o el shadow root de <soc-de-poble>)
+   darrere del full de Leaflet: arriba amb el tros diferit del mapa i mai al
+   paquet principal. Sense @layer, a propòsit: un full afegit en temps
+   d'execució que declarara una capa podria registrar-la abans que index.css i
+   capgirar l'ordre de tota la cascada. Totes les regles pengen de .sdp-mapa
+   (o de les classes pròpies de les targetes) i guanyen les de Leaflet per
+   especificitat. Només tokens: els colors del mapa són el bloc P1-64 de
+   tokens.css. */
+
+.sdp-mapa {
+  display: grid;
+  gap: var(--sdp-space-3);
+  min-inline-size: 0;
+}
+
+.sdp-mapa__titol {
+  margin: 0;
+  font-size: var(--sdp-text-h4);
+  line-height: var(--sdp-leading-titol);
+  color: var(--sdp-text-titol);
+}
+
+.sdp-mapa__eines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
+}
+
+.sdp-mapa__estat,
+.sdp-mapa__llegenda,
+.sdp-mapa__avis {
+  margin: 0;
+  font-size: var(--sdp-text-meta);
+  line-height: var(--sdp-leading-cos);
+  color: var(--sdp-text-suau);
+}
+
+.sdp-mapa__mostra {
+  display: inline-block;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  margin-inline-end: var(--sdp-space-1);
+  border-radius: var(--sdp-radi-pastilla);
+  vertical-align: middle;
+  background: var(--sdp-mapa-gps);
+}
+.sdp-mapa__mostra--ocre { background: var(--sdp-mapa-estimada); }
+
+/* El llenç: una capa d'apilament pròpia (isolation), perquè els panells de
+   Leaflet (z-index 400 a 1000) no passen per damunt de les barres de l'app. */
+.sdp-mapa__llenc {
+  position: relative;
+  isolation: isolate;
+  block-size: clamp(20rem, 60vh, 40rem);
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-xl);
+  overflow: hidden;
+  background: var(--sdp-mapa-fons);
+}
+.sdp-mapa .sdp-mapa__llenc.leaflet-container {
+  font-family: var(--sdp-font);
+  font-size: var(--sdp-text-meta);
+  background: var(--sdp-mapa-fons);
+}
+.sdp-mapa .leaflet-container a { color: var(--sdp-accio-text); }
+.sdp-mapa .leaflet-container:focus-visible,
+.sdp-mapa .leaflet-container a:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+  outline-offset: var(--sdp-focus-separacio);
+}
+
+/* L'atribució d'OpenStreetMap, sempre visible i llegible (decisió 9). */
+.sdp-mapa .leaflet-container .leaflet-control-attribution {
+  padding: var(--sdp-space-1) var(--sdp-space-2);
+  font-size: var(--sdp-text-meta);
+  line-height: 1.4;
+  color: var(--sdp-text-cos);
+  background: var(--sdp-fons-targeta);
+}
+
+/* Els botons + i − de Leaflet, amb l'àrea tàctil del sistema. */
+.sdp-mapa .leaflet-bar a,
+.sdp-mapa .leaflet-touch .leaflet-bar a {
+  width: var(--sdp-touch);
+  height: var(--sdp-touch);
+  line-height: var(--sdp-touch);
+  color: var(--sdp-text-titol);
+  background: var(--sdp-fons-targeta);
+}
+
+/* ── Els camins de Leaflet: el color, per classe ─────────────────── */
+.sdp-mapa .sdp-mapa-punt { stroke: var(--sdp-mapa-halo); }
+.sdp-mapa .sdp-mapa-punt--verd { fill: var(--sdp-mapa-gps); }
+.sdp-mapa .sdp-mapa-punt--ocre { fill: var(--sdp-mapa-estimada); }
+.sdp-mapa .sdp-mapa-punt--grup.sdp-mapa-punt--verd { stroke: var(--sdp-mapa-gps); }
+.sdp-mapa .sdp-mapa-punt--grup.sdp-mapa-punt--ocre { stroke: var(--sdp-mapa-estimada); }
+.sdp-mapa .sdp-mapa-punt.leaflet-interactive { cursor: pointer; }
+.sdp-mapa .sdp-mapa-linia { fill: none; }
+.sdp-mapa .sdp-mapa-linia--grup { stroke: var(--sdp-mapa-linia-grup); }
+.sdp-mapa .sdp-mapa-linia--targeta { stroke: var(--sdp-mapa-linia-targeta); stroke-opacity: 0.8; }
+.sdp-mapa .sdp-mapa-linia--verd { stroke: var(--sdp-mapa-gps); }
+.sdp-mapa .sdp-mapa-linia--ocre { stroke: var(--sdp-mapa-estimada); }
+.sdp-mapa .sdp-mapa-recorregut { fill: none; stroke: var(--sdp-mapa-recorregut); }
+.sdp-mapa .sdp-mapa-recorregut--halo { stroke: var(--sdp-mapa-halo); stroke-opacity: 0.95; }
+
+/* ── Les icones de Leaflet (targetes i noms dels pobles) ─────────── */
+.sdp-mapa .sdp-mapa-icona,
+.sdp-mapa .sdp-mapa-poble {
+  background: none;
+  border: 0;
+}
+.sdp-mapa .sdp-mapa-poble span {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: var(--sdp-text-meta);
+  color: var(--sdp-mapa-rotul);
+}
+
+/* ── Les targetes: arrossegables, i cada botó amb l'àrea tàctil ──── */
+.sdp-mapa-targeta,
+.sdp-mapa-foto {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  border: 2px solid var(--sdp-fons-targeta);
+  border-radius: var(--sdp-radi-m);
+  background: var(--sdp-fons-targeta);
+  color: var(--sdp-text-titol);
+  box-shadow: var(--sdp-ombra-2);
+  font-family: var(--sdp-font);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  pointer-events: auto;
+}
+.sdp-mapa-targeta:active,
+.sdp-mapa-foto:active { cursor: grabbing; }
+.sdp-mapa-targeta--ocre,
+.sdp-mapa-foto--ocre { border-color: var(--sdp-mapa-estimada); }
+.sdp-mapa-foto--verd { border-color: var(--sdp-mapa-gps); }
+
+.sdp-mapa-targeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-1);
+  padding: var(--sdp-space-2);
+}
+
+.sdp-mapa-targeta__cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  min-block-size: var(--sdp-touch);
+  inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: inherit;
+}
+
+.sdp-mapa-targeta__num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding-inline: var(--sdp-space-1);
+  border-radius: var(--sdp-radi-pastilla);
+  background: var(--sdp-mapa-gps);
+  color: var(--sdp-mapa-sobre);
+  font-size: var(--sdp-text-base);
+  font-weight: 700;
+}
+.sdp-mapa-targeta--ocre .sdp-mapa-targeta__num { background: var(--sdp-mapa-estimada); }
+
+.sdp-mapa-targeta__nom {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: var(--sdp-text-small);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.sdp-mapa-targeta__miniatures {
+  display: flex;
+  gap: var(--sdp-space-1);
+}
+
+.sdp-mapa-targeta__miniatura {
+  flex: 0 0 auto;
+  width: var(--sdp-touch);
+  height: var(--sdp-touch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sdp-radi-s);
+  overflow: hidden;
+  background: var(--sdp-fons-subtil);
+  cursor: pointer;
+}
+
+.sdp-mapa-targeta__miniatura img,
+.sdp-mapa-foto__miniatura {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.sdp-mapa-targeta__meta {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--sdp-text-meta);
+  line-height: 1.3;
+  color: var(--sdp-text-suau);
+}
+
+.sdp-mapa-foto {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-2);
+  text-align: start;
+  font-size: var(--sdp-text-meta);
+}
+.sdp-mapa-foto__marc {
+  flex: 0 0 auto;
+  inline-size: var(--sdp-touch);
+  block-size: var(--sdp-touch);
+  border-radius: var(--sdp-radi-s);
+  overflow: hidden;
+  background: var(--sdp-fons-subtil);
+}
+.sdp-mapa-foto__text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  line-height: 1.3;
+}
+.sdp-mapa-foto__text > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sdp-mapa-foto__num {
+  font-size: var(--sdp-text-small);
+  font-weight: 700;
+}
+
+.sdp-mapa-targeta button:focus-visible,
+.sdp-mapa-foto:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+  outline-offset: var(--sdp-focus-separacio);
+}
+
+/* ── «Agrupació per distància» ──────────────────────────────────── */
+.sdp-mapa__agrupacio {
+  display: grid;
+  gap: var(--sdp-space-2);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--sdp-space-4);
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-g);
+  background: var(--sdp-fons-targeta);
+}
+.sdp-mapa__agrupacio-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sdp-space-3);
+}
+.sdp-mapa__etiqueta {
+  font-size: var(--sdp-text-base);
+  font-weight: 700;
+  color: var(--sdp-text-titol);
+}
+.sdp-mapa__valor {
+  font-size: var(--sdp-text-base);
+  color: var(--sdp-accio-text);
+}
+.sdp-mapa__lliscador {
+  inline-size: 100%;
+  min-block-size: var(--sdp-touch);
+  margin: 0;
+  accent-color: var(--sdp-mapa-gps);
+}
+.sdp-mapa__lliscador:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+  outline-offset: var(--sdp-focus-separacio);
+}
+.sdp-mapa__extrems {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sdp-space-2);
+  font-size: var(--sdp-text-meta);
+  color: var(--sdp-text-suau);
+}
+.sdp-mapa__ajuda {
+  margin: 0;
+  font-size: var(--sdp-text-small);
+  line-height: var(--sdp-leading-cos);
+  color: var(--sdp-text-cos);
+}
+
+/* Moviment reduït: el JS ja crea el mapa sense animacions; ací, cap transició que quede. */
+@media (prefers-reduced-motion: reduce) {
+  .sdp-mapa .leaflet-zoom-anim .leaflet-zoom-animated,
+  .sdp-mapa .leaflet-fade-anim .leaflet-tile,
+  .sdp-mapa .leaflet-fade-anim .leaflet-popup { transition: none; }
+}

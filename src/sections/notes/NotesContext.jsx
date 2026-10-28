@@ -27,6 +27,7 @@ import { CODI_ENTRADA, esRebuigDeNormes } from '../../data/errorsBackend.js';
    preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
 import { netejaCamp } from './netejaCamp.js';
 import { esLlavorDeNota } from './llavorNota.js';
+import { fotosGeoDelCos, geoDelHero } from './geoDeLesFotos.js';
 
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
   // La carpeta organitza el bloc; no és una categoria editorial. Els labels
@@ -333,6 +334,20 @@ export function NotesProvider({ children }) {
         }
       }
 
+      /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028) · L'índex del Mapa
+         fotogràfic, derivat de les fotos ja promogudes (sense migració): les
+         del cos amb ubicació (els data-* de l'ordre «/» Imatge) i la ubicació
+         i la data del hero (el seu EXIF, ja arrodonit a la precisió triada).
+         Només d'una publicació pròpia (una connexió o un contingut de fora és
+         d'altri), només si la persona ha posat la capçalera (mai la reserva)
+         i, si la lectura falla o tarda més de 4 s, cap clau: publicar no
+         s'atura mai per això. */
+      const fotosGeo = compartir ? [] : fotosGeoDelCos(finalContent);
+      const geoHero = !compartir && netejaCamp('heroImage', activeNote.coverImage)
+        ? await geoDelHero(finalHeroImage).catch(() => ({}))
+        : {};
+      assertCurrent();
+
       const dataTriada = dataIsoONull(activeNote.publishDate);
       /* Onada 6 · El poble des d'on es publica (vegeu author_location, baix):
          el de qui signa; si no, el poble que declara l'amfitrió (el seu id,
@@ -387,7 +402,12 @@ export function NotesProvider({ children }) {
       ...(emojiSol(activeNote.icon) ? { icon: emojiSol(activeNote.icon) } : {}),
       /* Ordre E (261007) · Com l'emoticona: sense logotip no s'envia la clau,
          i llevar-lo i republicar el lleva també de la pàgina publicada. */
-      ...(finalLogo ? { logo_image: finalLogo } : {})
+      ...(finalLogo ? { logo_image: finalLogo } : {}),
+      /* P1-64 · Com la data: sense ubicació no s'envia la clau (l'upsert
+         reemplaça el payload: llevar-la i republicar la lleva també del Mapa). */
+      ...(fotosGeo.length ? { fotos_geo: fotosGeo } : {}),
+      ...(geoHero.geolocalitzacio ? { geolocalitzacio: geoHero.geolocalitzacio } : {}),
+      ...(geoHero.dataCaptura ? { dataCaptura: geoHero.dataCaptura } : {})
     };
 
     assertCurrent();

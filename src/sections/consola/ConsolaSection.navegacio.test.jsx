@@ -35,6 +35,7 @@ import { paginesConsola } from './consolaPagines.js';
 import { ETIQUETA_NAV_GOVERN, TITOL_GOVERN, TITOL_SALA_MAQUINES, paginesGovern } from './govern/governConsola.js';
 import { SLUGS_XIFRES, rutaXifra } from './xifresMas.js';
 import { ETIQUETA_ACCES, TITOL_DIAGNOSI } from './diagnosiConsola.js';
+import { ETIQUETA_NAV_EMPAQUETATS, RUTA_EMPAQUETATS } from './empaquetats.js';
 
 const MAPA = {
   schema: 'sdp.mapa.v1', generat: '2026-09-25T13:12:23.715Z', tall: null,
@@ -204,7 +205,12 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
      pàgina. Derogat EN PART: el total sense les quatre portes del govern. */
   const delGovern = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_NAV_GOVERN }));
   expect(delGovern).toEqual(paginesGovern().map((p) => p.ruta));
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length);
+  /* P1-35 (pla 261028_1526 §3.5.2) · I, darrere de les xifres, la targeta dels
+     empaquetats: una porta, cap a la seua pàgina. Expectativa actualitzada a
+     propòsit: el total suma eixa porta. */
+  const delsEmpaquetats = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_NAV_EMPAQUETATS }));
+  expect(delsEmpaquetats).toEqual([RUTA_EMPAQUETATS]);
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length + delGovern.length + delsEmpaquetats.length);
   expect(errors).not.toHaveBeenCalled();
 });
 

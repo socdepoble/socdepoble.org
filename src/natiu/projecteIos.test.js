@@ -9,7 +9,8 @@
      · project.pbxproj: iOS 16.0 als quatre llocs, l'identificador, els drets i els
        recursos nous (manifest de privacitat i InfoPlist.strings en 5 llengües);
      · Package.swift i Package.resolved: la plataforma, la versió de Capacitor i cap
-       SDK de Facebook;
+       SDK de Facebook (P1-08, 261028: tampoc al pbxproj, al Podfile ni al
+       connector social, i facebook: false a capacitor.config.json);
      · App.entitlements, PrivacyInfo.xcprivacy i els cinc InfoPlist.strings;
      · l'extensió «Compartir» (261026): el target App la incrusta i en depén, el
        receptor ajunta els lots en un sol lliurament i escolta l'avís Darwin que
@@ -46,6 +47,8 @@ const TEXTOS_CA = Object.freeze({
   NSPhotoLibraryUsageDescription: 'Permet triar fotografies de la teua galeria per a compartir-les amb el poble.'
 });
 const ESQUEMA_GOOGLE = /^com\.googleusercontent\.apps\.(?:pendent|[0-9]+-[a-z0-9]+)$/;
+/* P1-08 · El SDK de Facebook per a iOS amb els seus noms d'SPM i de CocoaPods. */
+const SDK_FACEBOOK = /facebook-ios-sdk|FBSDK[A-Za-z]*|\bFacebook(?:Core|Login|AEM|Share|Gaming|Basics)|\bFBAEMKit\b/i;
 const TIPUS_DE_DADES = ['EmailAddress', 'Name', 'UserID', 'PhotosorVideos', 'AudioData', 'OtherUserContent', 'EmailsOrTextMessages']
   .map((tipus) => `NSPrivacyCollectedDataType${tipus}`);
 
@@ -311,6 +314,39 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     expect(paquet).toContain(`exact: "${versio}"`);
     const resolt = path.join(PROJECTE, 'project.xcworkspace', 'xcshareddata', 'swiftpm', 'Package.resolved');
     if (fs.existsSync(resolt)) expect(fs.readFileSync(resolt, 'utf8').toLowerCase()).not.toContain('facebook');
+  });
+
+  /* P1-08 (pla 261028_1526, §3.6.2) · La sentinella de Facebook, sencera: cap
+     rastre del SDK (el paquet, els FBSDK*, els productes Facebook*) al projecte,
+     al Podfile si mai n'hi ha, ni al connector social. El de capgo el porta
+     comentat («Disabled via config») i el seu ganxo capacitor:sync:before el
+     descomenta si capacitor.config.json encén facebook: es mira sense els
+     comentaris, i el proveïdor ha de continuar apagat. Capacitor llig abans
+     capacitor.config.ts i .js (@capacitor/cli, config.js · loadExtConfig): si
+     n'hi haguera un, el .json ja no manaria. Les dues còpies de Package.resolved
+     (la del projecte i la del workspace) són les mateixes que mira el preflight. */
+  test('cap SDK de Facebook a ios/ ni al connector social', (context) => {
+    const rastre = (text) => text.match(SDK_FACEBOOK)?.[0] ?? null;
+    // El «//» d'una URL no és cap comentari: un .package descomentat es veu.
+    expect(rastre(senseComentarisSwift('.package(url: "https://github.com/facebook/facebook-ios-sdk.git"),  // ara sí'))).not.toBeNull();
+    expect(rastre(senseComentarisSwift('// .product(name: "FacebookCore", package: "facebook-ios-sdk"),'))).toBeNull();
+    const fitxers = [
+      path.join(PROJECTE, 'project.pbxproj'),
+      path.join(IOS, 'App', 'CapApp-SPM', 'Package.swift'),
+      path.join(PROJECTE, 'project.xcworkspace', 'xcshareddata', 'swiftpm', 'Package.resolved'),
+      path.join(IOS, 'App', 'App.xcworkspace', 'xcshareddata', 'swiftpm', 'Package.resolved'),
+      path.join(IOS, 'App', 'Podfile'),
+      path.join(IOS, 'App', 'Podfile.lock')
+    ].filter((fitxer) => fs.existsSync(fitxer));
+    expect(fitxers.length).toBeGreaterThanOrEqual(2);
+    for (const fitxer of fitxers) expect(rastre(fs.readFileSync(fitxer, 'utf8')), path.relative(ARREL, fitxer)).toBeNull();
+    for (const altre of ['capacitor.config.ts', 'capacitor.config.js']) {
+      expect(fs.existsSync(path.join(ARREL, altre)), `${altre}: Capacitor el llig abans que el .json`).toBe(false);
+    }
+    expect(JSON.parse(llig(ARREL, 'capacitor.config.json')).plugins.SocialLogin.providers.facebook).toBe(false);
+    const connector = path.join(ARREL, 'node_modules', '@capgo', 'capacitor-social-login', 'Package.swift');
+    context.skip(!fs.existsSync(connector), 'sense node_modules/@capgo/capacitor-social-login en este arbre');
+    expect(rastre(senseComentarisSwift(fs.readFileSync(connector, 'utf8')))).toBeNull();
   });
 
   /* 261026 (ordre del Mestre, prompt 261026_1615, tasca 1) · I l'App Group que

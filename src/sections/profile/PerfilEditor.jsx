@@ -588,8 +588,13 @@ export function PerfilEditor({ identitat }) {
   const apuntaFocusAvatar = useCallback(() => {
     focusAvatarPendent.current = arrelImatgePropia.current || document;
   }, []);
+  /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · La capçalera
+     d'una PERSONA és identitat: puja neta, sense casella, i amb l'avís si la
+     foto portava GPS. La d'una organització o d'un agent conserva la casella.
+     L'avatar (persona i agent) ja ho és per la forma (FORMES.avatar). */
   const capcalera = useImatgeDeFitxa({
     camp: 'heroImage', forma: 'capcalera', onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge,
+    identitat: mena === 'persona',
   });
   /* Ordre del Mestre (18-10-2026, Pla 2000, punt 2) · La finestra de retall
      de l'avatar (persona i agent) agrupa el que abans eren les píndoles de
@@ -961,6 +966,10 @@ export function PerfilEditor({ identitat }) {
          taronja (barAuthorAvatar). El logotip d'una organització continua
          damunt de l'H1, com el de les notes. */
       edicioAvancada: true,
+      /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · A la fitxa, el
+         desplegable va just davall de la barra taronja (l'autoria) i damunt
+         de l'H1; el Bloc de Notes el conserva damunt de les eines ('cos'). */
+      posicioEdicioAvancada: 'despres-autoria',
       /* Encàrrec 261018 (ordre del Mestre: «barra d'acció prominent, amb text
          gran i explicatiu») · El títol i el resum diuen què s'hi fa. */
       titolEdicioAvancada: TITOL_EDICIO_AVANCADA,

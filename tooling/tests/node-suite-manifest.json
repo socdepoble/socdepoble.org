@@ -458,6 +458,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/run-portes-cens.test.mjs",
+      "suite": "primary",
+      "reason": "CL-08 · Regressió portable del mode --cens de tooling/gates/run-portes.mjs: seleccionaPassos com a funció pura, un cens sobre portes fingides en una arrel temporal (dos roges, una que esgota el temps, una omesa i una que escriu) i els errors d’ús del CLI, que paren abans d’executar cap porta real."
+    },
+    {
       "path": "tests/salut-diari-miccional-estructura.test.mjs",
       "suite": "session",
       "reason": "Inventari estructural d’un full humà opcional de la sessió per a dissenyar l’importador; no és una prova portable de producte. Les regressions de Salut viuen a Vitest."
@@ -571,6 +576,36 @@
       "path": "tooling/media/optimitzar_webp.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tooling/seo/adversarial-edge.test.mjs",
+      "suite": "primary",
+      "reason": "P1-61 Fase 2 · adaptador d’edge adormit: aïllament per ?item=, títols hostils, capçaleres i shell real, amb fixtures portables."
+    },
+    {
+      "path": "tooling/seo/build-social-manifest.test.mjs",
+      "suite": "primary",
+      "reason": "P1-61 Fase 2 · productor del manifest social (pàgines, llistes, llavors i Wiki de src/data/wikiManifest.js) amb fixtures temporals i les polítiques del repositori."
+    },
+    {
+      "path": "tooling/seo/prerender-social.test.mjs",
+      "suite": "primary",
+      "reason": "P1-61 Fase 2 · prerender estàtic de dist/<ruta>/index.html: fixture de dist amb hashos i dades de veres sobre un dist temporal; cap xarxa."
+    },
+    {
+      "path": "tooling/seo/site-policy.test.mjs",
+      "suite": "primary",
+      "reason": "P1-61 Fase 2 · política HTTP derivada de firebase.json i composició amb el nucli social; fixtures portables."
+    },
+    {
+      "path": "tooling/seo/social-edge.test.mjs",
+      "suite": "primary",
+      "reason": "P1-61 Fase 2 · renderitzador únic del head social (data-sdp-ssr, canonical opcional) i nucli d’edge adormit; fixtures portables."
+    },
+    {
+      "path": "tooling/seo/social-http.test.mjs",
+      "suite": "primary",
+      "reason": "P1-61 Fase 2 · prova HTTP local del Llibre d’Or amb User-Agent de WhatsApp; genera els artefactes del repositori en una carpeta temporal."
     }
   ]
 }

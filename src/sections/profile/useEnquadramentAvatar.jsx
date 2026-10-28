@@ -59,6 +59,11 @@ export const DESCRIPCIO_ENQUADRAMENT_AVATAR = 'Mou la foto i amplia-la fins que 
  * sèrie, i la seua tria arriba a onEnquadrat (tercer argument, `exif`).
  * Marcada, la compressió hi torna a posar l'EXIF publicable de l'original
  * (DetallAjust: fotoDinsDelPressupost); desmarcada, el fitxer que puja ix net.
+ * P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · DEROGAT: un
+ * avatar és identitat i ix SEMPRE net, sense casella (conservaExif: false).
+ * Si la foto portava GPS, el retallador ho diu (avisGpsEliminat:
+ * AVIS_GPS_ELIMINAT_PERFIL) i info.gpsEliminat arriba a onEnquadrat perquè
+ * qui puja ho torne a dir. `exif` és sempre { conservaExif: false }.
  *
  * CONTRACTE
  *   onEnquadrat(fitxer, info, exif) → Promise: rep el File ja retallat (i la
@@ -90,6 +95,9 @@ const CONFIG_AVATAR_T46 = Object.freeze({
   descripcio: DESCRIPCIO_ENQUADRAMENT_AVATAR,
   valida: (font) => validaFitxerImatge(font, PES_MAXIM_FOTO_AVATAR),
   sortida: sortidaAvatar,
+  // P1-64 · Identitat: cap casella de l'EXIF, i l'avís si la foto portava GPS.
+  conservaExif: false,
+  avisGpsEliminat: true,
 });
 
 export function useEnquadramentAvatar({ onEnquadrat, onError } = {}) {

@@ -23,7 +23,16 @@
    Ordre invariable: primer Apple, després apple_registra_revocacio, que és
    l'única que esborra la fila custodiada (i, per tant, l'única que obri la
    porta de la purga). Cap resposta ni cap línia de registre porta el codi,
-   el testimoni ni el secret. */
+   el testimoni ni el secret.
+   P1-18 (auditoria Codex C0545-WM1/WM2 i 261028_1611 C28-03; pla 261028_1526
+   §3.6.1) · Cap cos es llig sencer abans de mesurar-lo: el de la petició, com
+   a molt MAXIM_COS bytes (una llargària declarada de més, o un flux que se'n
+   passa, és 413 i el flux es cancel·la) i dins de TOPALL_COS_MS (un cos que
+   no acaba és 408, abans de cap autenticació), i el de cada resposta de
+   Supabase, com a molt MAXIM_RESPOSTA_SUPABASE bytes i dins del MATEIX topall
+   que la petició: unes capçaleres que arriben i un cos que penja també
+   s'avorten. Un cos de GoTrue que no es pot llegir és 500 servidor, ja no
+   401: la sessió no s'ha desmentit. */
 import {
   APPLE, capcaleresDeServei, classificaResposta, cosDIntercanvi, cosDeRevocacio, desxifra, esErrorDelClient, postApple,
   reclamsCasen, reclamsDelTestimoni, secretDeClient, xifra
@@ -38,11 +47,15 @@ export const CORS = Object.freeze({
 const ACCIONS = new Set(['custodia', 'revoca', 'buida']);
 const FORMA_CODI = /^[A-Za-z0-9._-]{8,1024}$/;
 const FORMA_BEARER = /^Bearer\s+([\w-]+\.[\w-]+\.[\w-]+)$/i;
+/* P1-18 · Bytes, no caràcters: '€' en són tres. */
 const MAXIM_COS = 4096;
+const MAXIM_RESPOSTA_SUPABASE = 256 * 1024;
 const LOT_DEL_BUIDATGE = 50;
 /* El buidatge para abans del sostre de temps d'una Edge Function. */
 const PRESSUPOST_BUIDATGE_MS = 100_000;
 const TOPALL_SUPABASE_MS = 10_000;
+/* P1-18 · El cos de la petició (4 KiB) arriba de seguida; un que penja no reté la funció. */
+const TOPALL_COS_MS = 10_000;
 const SECRET_CRON_MINIM = 32;
 
 const respon = (estat, cos) => new Response(JSON.stringify(cos), {
@@ -69,14 +82,68 @@ function llegixEntorn(env = {}) {
 }
 const teApple = (e) => !!(e.url && e.servei && e.teamId && e.keyId && e.clientId && e.clauPem && e.clauTestimonis);
 
-/* Un fetch al nostre Supabase amb topall: mai penja la funció. */
+const errorIntern = (missatge) => Object.assign(new Error(missatge), { codi: 'servidor' });
+
+/* P1-18 (C0545-WM1/WM2) · El text d'un cos (el de la petició o el d'una
+   resposta), com a molt `maxim` BYTES: el llig tros a tros i, tan prompte com
+   se'n passa, cancel·la el flux i torna null. Amb `senyal`, cada lectura perd
+   la cursa amb el topall encara que el flux no l'escolte, i el flux es
+   cancel·la. Sense flux (body null, o un doble sense getReader), el text
+   sencer, mesurat després en bytes. Descodifica com req.text(): UTF-8 sense
+   errors fatals. */
+async function textFitat(missatge, maxim, senyal = null) {
+  const finsAlTopall = (promesa) => (!senyal ? promesa : new Promise((resol, rebutja) => {
+    const talla = () => rebutja(senyal.reason ?? new DOMException('Temps esgotat.', 'AbortError'));
+    if (senyal.aborted) { talla(); return; }
+    senyal.addEventListener('abort', talla, { once: true });
+    promesa.then(resol, rebutja).finally(() => senyal.removeEventListener('abort', talla));
+  }));
+  const flux = missatge.body;
+  if (typeof flux?.getReader !== 'function') {
+    const text = await finsAlTopall(Promise.resolve().then(() => missatge.text()));
+    return new TextEncoder().encode(text).byteLength > maxim ? null : text;
+  }
+  const lector = flux.getReader();
+  const trossos = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await finsAlTopall(lector.read());
+      if (done) break;
+      if (!ArrayBuffer.isView(value)) throw new TypeError('SDP-APPLE: un tros del cos no són bytes.');
+      total += value.byteLength;
+      if (total > maxim) { lector.cancel().catch(() => {}); return null; }
+      trossos.push(value);
+    }
+  } catch (error) {
+    lector.cancel().catch(() => {});
+    throw error;
+  }
+  const bytes = new Uint8Array(total);
+  let posicio = 0;
+  for (const tros of trossos) { bytes.set(tros, posicio); posicio += tros.byteLength; }
+  return new TextDecoder().decode(bytes);
+}
+
+/* Un fetch al nostre Supabase amb topall: mai penja la funció. P1-18 (C0545-WM2) ·
+   El topall dura fins que el cos s'ha llegit sencer (com a molt
+   MAXIM_RESPOSTA_SUPABASE bytes; si se'n passa, errorIntern). Una resposta que
+   no és 2xx no es llig: el cos es cancel·la i en torna només l'estat, sense
+   esperar-lo. Torna { ok, status, text }. */
 async function ambTopall(fetch, url, opcions, ms = TOPALL_SUPABASE_MS) {
   const controlador = new AbortController();
   const id = setTimeout(() => controlador.abort(), ms);
-  try { return await fetch(url, { ...opcions, redirect: 'error', signal: controlador.signal }); } finally { clearTimeout(id); }
+  try {
+    const resposta = await fetch(url, { ...opcions, redirect: 'error', signal: controlador.signal });
+    if (!resposta.ok) {
+      resposta.body?.cancel?.().catch(() => {});
+      return { ok: false, status: resposta.status, text: '' };
+    }
+    const text = await textFitat(resposta, MAXIM_RESPOSTA_SUPABASE, controlador.signal);
+    if (text === null) throw errorIntern('SDP-APPLE: la resposta de Supabase passa del topall de bytes.');
+    return { ok: true, status: resposta.status, text };
+  } finally { clearTimeout(id); }
 }
-
-const errorIntern = (missatge) => Object.assign(new Error(missatge), { codi: 'servidor' });
 
 /** L'usuari de la sessió, segons GoTrue; null si no n'hi ha o no val. */
 async function usuariDeLaSessio(req, entorn, fetch) {
@@ -84,10 +151,11 @@ async function usuariDeLaSessio(req, entorn, fetch) {
   if (!m || !entorn.anonima) return null;
   const resposta = await ambTopall(fetch, `${entorn.url}/auth/v1/user`, {
     method: 'GET', headers: { apikey: entorn.anonima, Authorization: `Bearer ${m[1]}`, Accept: 'application/json' }
-  });
+  }, entorn.topallSupabaseMs);
   if (resposta.status === 401 || resposta.status === 403) return null;
   if (!resposta.ok) throw errorIntern('SDP-APPLE: GoTrue no ha respost.');
-  const usuari = await resposta.json().catch(() => null);
+  let usuari = null;
+  try { usuari = JSON.parse(resposta.text); } catch { usuari = null; }
   return typeof usuari?.id === 'string' && usuari.id ? usuari : null;
 }
 
@@ -106,10 +174,9 @@ async function rpc(entorn, fetch, nom, args) {
     method: 'POST',
     headers: { ...capcaleresDeServei(entorn.servei), 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(args)
-  });
+  }, entorn.topallSupabaseMs);
   if (!resposta.ok) throw errorIntern(`SDP-APPLE: l’RPC ${nom} no s’ha confirmat (${resposta.status}).`);
-  const text = await resposta.text();
-  return text ? JSON.parse(text) : null;
+  return resposta.text ? JSON.parse(resposta.text) : null;
 }
 const files = (resposta) => (Array.isArray(resposta) ? resposta : resposta ? [resposta] : []);
 
@@ -127,14 +194,16 @@ async function igualsEnTempsConstant(a, b, subtle) {
 /**
  * El gestor de peticions de la funció.
  * @param {{ env: object, fetch?: typeof fetch, subtle?: SubtleCrypto, ara?: () => number,
- *   topallAppleMs?: number, pressupostMs?: number }} dependencies
+ *   topallAppleMs?: number, topallSupabaseMs?: number, topallCosMs?: number, pressupostMs?: number }} dependencies
  * @returns {(req: Request) => Promise<Response>}
  */
 export function creaGestor({
   env, fetch = globalThis.fetch, subtle = globalThis.crypto.subtle, ara = Date.now,
-  topallAppleMs = 10_000, pressupostMs = PRESSUPOST_BUIDATGE_MS
+  topallAppleMs = 10_000, topallSupabaseMs = TOPALL_SUPABASE_MS, topallCosMs = TOPALL_COS_MS,
+  pressupostMs = PRESSUPOST_BUIDATGE_MS
 } = {}) {
-  const entorn = llegixEntorn(env);
+  /* P1-18 · El topall de Supabase viatja amb l'entorn (les proves el retallen). */
+  const entorn = { ...llegixEntorn(env), topallSupabaseMs };
   const secret = (clientId = entorn.clientId) => secretDeClient({ teamId: entorn.teamId, keyId: entorn.keyId, clientId, clauPem: entorn.clauPem, ara: ara() }, subtle);
   /* R1-01 (261024 correccions) · Un client_secret per client_id (el seu sub ha
      de ser el client_id del cos), fet una sola vegada a cada petició. */
@@ -257,11 +326,23 @@ export function creaGestor({
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: { ...CORS } });
     if (req.method !== 'POST') return falla(405, 'peticio');
     let cos;
+    /* P1-18 (C0545-WM1) · Una llargària declarada de més es rebutja sense
+       llegir res; un flux que se'n passa es talla al tros que la passa, i un
+       que no acaba, al topall (408). Tot abans de cap autenticació. */
+    const control = new AbortController();
+    const rellotge = setTimeout(() => control.abort(), topallCosMs);
     try {
-      const text = await req.text();
-      if (text.length > MAXIM_COS) return falla(400, 'peticio');
+      const declarat = Number(req.headers.get('content-length'));
+      if (Number.isFinite(declarat) && declarat > MAXIM_COS) {
+        req.body?.cancel?.().catch(() => {});
+        return falla(413, 'peticio');
+      }
+      const text = await textFitat(req, MAXIM_COS, control.signal);
+      if (text === null) return falla(413, 'peticio');
       cos = JSON.parse(text);
-    } catch { return falla(400, 'peticio'); }
+    } catch {
+      return falla(control.signal.aborted ? 408 : 400, 'peticio');
+    } finally { clearTimeout(rellotge); }
     const accio = typeof cos?.accio === 'string' ? cos.accio : '';
     if (!ACCIONS.has(accio)) return falla(400, 'peticio');
     if (!teApple(entorn) || (accio !== 'buida' && !entorn.anonima)) return falla(503, 'config');

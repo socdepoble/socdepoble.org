@@ -300,3 +300,61 @@ test('botigues: ús i confirmació paren abans de tocar res', async () => {
     process.stderr.write = errada;
   }
 });
+
+/* P1-08 (pla 261028_1526, §3.6.2) · La sentinella del SDK de Facebook per a iOS, sobre arrels
+   temporals: un pin de Package.resolved, un Podfile.lock amb FBSDK, el connector social
+   descomentat, un capacitor.config.json que no apaga facebook (o que falta amb el connector) i un
+   capacitor.config.ts o .js que el tapa són roges; les línies comentades del connector (com les
+   porta capgo 8.5.12), no. */
+test('botigues: sdkFacebookIos troba el SDK de Facebook a ios/ i al connector social, però no als comentaris', () => {
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-botigues-facebook-'));
+  const escriu = (rel, text) => {
+    fs.mkdirSync(path.dirname(path.join(carpeta, rel)), { recursive: true });
+    fs.writeFileSync(path.join(carpeta, rel), text);
+  };
+  try {
+    assert.deepEqual(p.sdkFacebookIos(carpeta), [], 'sense ios/, sense connector i sense capacitor.config.json');
+    const connector = 'node_modules/@capgo/capacitor-social-login/Package.swift';
+    const resolt = 'ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved';
+    escriu(connector, '    dependencies: [\n        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", .upToNextMajor(from: "9.0.0")),\n'
+      + '        // .package(url: "https://github.com/facebook/facebook-ios-sdk.git", .upToNextMajor(from: "18.0.3")),  // Disabled via config (compileOnly)\n'
+      + '        /* .product(name: "FacebookCore", package: "facebook-ios-sdk"), */\n    ]\n');
+    escriu('ios/App/CapApp-SPM/Package.swift', '.package(name: "CapgoCapacitorSocialLogin", path: "../../../node_modules/@capgo/capacitor-social-login")\n');
+    escriu(resolt, JSON.stringify({ pins: [{ identity: 'googlesignin-ios', location: 'https://github.com/google/GoogleSignIn-iOS' }], version: 3 }));
+    escriu('capacitor.config.json', JSON.stringify({ plugins: { SocialLogin: { providers: { google: true, apple: true, facebook: false } } } }));
+    assert.deepEqual(p.sdkFacebookIos(carpeta), [], 'les línies comentades del connector no compten');
+    escriu(resolt, JSON.stringify({ pins: [{ identity: 'facebook-ios-sdk', kind: 'remoteSourceControl', location: 'https://github.com/facebook/facebook-ios-sdk', state: { version: '18.0.3' } }], version: 3 }));
+    escriu('ios/App/Podfile.lock', 'PODS:\n  - FBSDKCoreKit (18.0.3)\n');
+    escriu(connector, '        .package(url: "https://github.com/facebook/facebook-ios-sdk.git", .upToNextMajor(from: "18.0.3")),  // descomentat pel ganxo\n');
+    escriu('capacitor.config.json', JSON.stringify({ plugins: { SocialLogin: { providers: { google: true, apple: true } } } }));
+    assert.deepEqual(p.sdkFacebookIos(carpeta), [resolt, 'ios/App/Podfile.lock', connector, 'capacitor.config.json'], 'sense la clau, capgo encén facebook');
+    escriu('capacitor.config.json', '{ trencat');
+    assert.ok(p.sdkFacebookIos(carpeta).includes('capacitor.config.json'), 'un capacitor.config.json il·legible no certifica res');
+    // Capacitor llig capacitor.config.ts i .js abans que el .json: amb un dels dos, el .json ja no mana.
+    escriu('capacitor.config.json', JSON.stringify({ plugins: { SocialLogin: { providers: { facebook: false } } } }));
+    for (const nom of ['capacitor.config.ts', 'capacitor.config.js']) {
+      escriu(nom, 'export default { plugins: { SocialLogin: { providers: { google: true } } } };\n');
+      const trobats = p.sdkFacebookIos(carpeta);
+      assert.ok(trobats.includes(nom) && !trobats.includes('capacitor.config.json'), `${nom} passa davant del .json: ${trobats}`);
+      fs.rmSync(path.join(carpeta, nom));
+    }
+    // Sense cap config i amb el connector instal·lat, capgo encén facebook.
+    fs.rmSync(path.join(carpeta, 'capacitor.config.json'));
+    assert.deepEqual(p.sdkFacebookIos(carpeta).slice(-1), ['capacitor.config.json'], 'sense capacitor.config.json, capgo encén facebook');
+    // Sota «Arbre» i només amb iOS; el preflight no imprimix cap valor ni cap contingut dels fitxers.
+    const env = { SDP_BOTIGUES_ENV: path.join(carpeta, 'no-hi-es.env') };
+    const ambIos = p.preflight({ arrel: carpeta, plataformes: ['ios'], env, consultes: fingides(null) }).linies.join('\n');
+    assert.match(ambIos, /Arbre[\s\S]*✗ SDK de Facebook a ios\/App\/App\.xcodeproj\/project\.xcworkspace\/xcshareddata\/swiftpm\/Package\.resolved, ios\/App\/Podfile\.lock, /);
+    assert.ok(!ambIos.includes('18.0.3'));
+    const nomesAndroid = p.preflight({ arrel: carpeta, plataformes: ['android'], env, consultes: fingides(null) }).linies.join('\n');
+    assert.doesNotMatch(nomesAndroid, /Facebook/);
+  } finally {
+    fs.rmSync(carpeta, { recursive: true, force: true });
+  }
+});
+
+test('botigues: l\'arbre real no porta el SDK de Facebook a ios/ ni al connector social', () => {
+  assert.deepEqual(p.sdkFacebookIos(ARREL), []);
+  assert.equal(p.SDK_FACEBOOK.test('.product(name: "FacebookLogin", package: "facebook-ios-sdk")'), true);
+  assert.equal(p.SDK_FACEBOOK.test('.product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")'), false);
+});

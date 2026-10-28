@@ -36,6 +36,10 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
 vi.mock('./MurContext', () => ({ useMur: () => mocks.mur }));
+/* P1-64 · La pestanya «Mapa» munta el Mapa Fotogràfic en diferit (Leaflet):
+   ací només compta que no hi ha calendari. El mapa té les seues proves
+   (MapaFotografic.test.jsx i MurSection.mapa.test.jsx). */
+vi.mock('./MapaFotografic.jsx', () => ({ default: () => null }));
 import MurSection from './MurSection.jsx';
 
 const acte = (id, date, title, time) => ({

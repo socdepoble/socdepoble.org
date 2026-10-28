@@ -53,6 +53,17 @@ import { rutaDeApp } from '../apps/plataforma/manifestApp.js';
 import { RUTA_ENTRADA } from '../config/rutaEntrada.js';
 import { oblidaRecuperacioPendent } from '../data/recuperacioPendent.js';
 
+/* P1-26 · Hermètica davant del .env.local de la màquina (Vitest el carrega):
+   amb VITE_UMAMI_* la telemetria (telemetria.js · configTelemetria) envia a
+   Umami pel fetch espiat i «cap xarxa» cau; amb VITE_SUPABASE_URL la capa del
+   paquet (capaDelPaquet.js, llegida en carregar el mòdul) fa que fontServeis
+   munte el client real de Notícies a /app/lector en remot. Hoisted perquè la
+   lectura en carregar ja veja els buits; sense vi.unstubAllEnvs a afterEach:
+   la telemetria llig l'entorn a cada crida. */
+vi.hoisted(() => {
+  for (const variable of ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_DATA_MODE', 'VITE_TENANT_ID',
+    'VITE_UMAMI_WEBSITE_ID', 'VITE_UMAMI_HOST', 'VITE_UMAMI_SHARE_URL']) vi.stubEnv(variable, '');
+});
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined }));
 vi.mock('../sections/notes/GlobalSaveManager.js', async (importOriginal) => ({
   ...await importOriginal(),

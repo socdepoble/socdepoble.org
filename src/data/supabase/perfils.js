@@ -80,10 +80,13 @@ export function perfilDOrganitzacio(org) {
        seua fitxa pública no pinta cap drets, ni els desats ni el «© nom». */
     copyright: text(org.copyright),
     /* T43 (ordre del Mestre, 260928) · Només el correu que l'organització ha
-       fet públic (columna `public_email` de la vista, opt-in). El privat
+       fet públic. P1-13 · C11-05 (261028) · La vista el porta a la columna
+       generada `correu_public` (2610281730): el correu només si l'opt-in
+       és true, si no null. Abans es llegia `public_email`, que és el booleà
+       de l'opt-in i no el correu, i quedava sempre buit. El privat
        (`contact_email`) no té cap grant i mai arriba ací. Mentre la migració
-       no s'aplica, la vista no el porta i queda buit. */
-    correu: text(org.public_email),
+       no s'aplica, la vista no porta la columna i queda buit, com abans. */
+    correu: text(org.correu_public),
     /* T51 · La vista porta created_at i updated_at (2609262232). */
     creat: dataCrua(org.created_at), modificat: dataCrua(org.updated_at),
     /* T66 · Les organitzacions no tenen columna d'emoticona (deute declarat). */

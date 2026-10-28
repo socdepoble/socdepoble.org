@@ -236,6 +236,9 @@ const COPIES_IA = [
  *  /assets/system/ (la interfície) i els SVG en queden fora sense nomenar-los. */
 export const EXCLOSES = Object.freeze({
   '/assets/ui/plugins/tpv_vinyeta.jpg': 'la mateixa vinyeta en JPEG; el codi només nomena la WebP (registrePlugins.js)',
+  /* P1-26 · El mateix fitxer, byte a byte, que l'original de brain/ (el que
+     nomenen el cens i agentsSeed.js); la .webp germana en seguix l'estat. */
+  '/assets/fotos/iaia_maria_avatar_mobil.png': 'còpia de /assets/uploads/brain/iaia_maria_avatar_mobil.png',
   '/assets/uploads/avatars/el-viatjant.png': 'còpia de /assets/fotos/el-viatjant.png',
   '/assets/uploads/avatars/iaia_comic_matriarch.png': 'còpia de /assets/fotos/iaia-maria.png',
   '/assets/uploads/avatars/javi-llinares-foto_perfil-01.jpg': 'còpia de /assets/fotos/javi-llinares-perfil-1200px.jpg',

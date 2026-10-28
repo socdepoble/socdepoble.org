@@ -35,15 +35,26 @@ import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujada
  * (conservaExif: false): no és cap fotografia del poble i, en Safari 16, ix en
  * PNG, que no el porta. Una `config` sense `conservaExif: false` també
  * l'oferix (el mandat és de sèrie).
+ * P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · DEROGAT per a
+ * la IDENTITAT el «de sèrie» del Bloc 1.2: l'avatar (de totes les menes) i,
+ * amb { identitat: true }, qualsevol forma (la capçalera d'una persona)
+ * pugen SEMPRE nets, sense casella (conservaExif: false), i el diàleg diu
+ * AVIS_GPS_ELIMINAT_PERFIL només si la foto portava GPS (avisGpsEliminat:
+ * true). La capçalera d'una organització o d'un agent i les fotos de
+ * publicació conserven la casella. Una `config` amb `avisGpsEliminat: true`
+ * fa el mateix (el T46 de l'avatar, useEnquadramentAvatar).
  *
  * CONTRACTE
- *   useEnquadramentImatge({ forma, onEnquadrat, onError, config? })
+ *   useEnquadramentImatge({ forma, onEnquadrat, onError, config?, identitat? })
  *   forma ('avatar' | 'logotip' | 'capcalera') · una fila de FORMES.
+ *   identitat (false) · P1-64: la foto és d'identitat (configDeForma).
  *   onEnquadrat(fitxer, info, exif) → Promise: puja el File ja retallat. Si
  *     acaba bé, el diàleg es tanca; si llança, el missatge ix dins del diàleg,
  *     que continua obert (el modal tapa qualsevol toast). `exif` és la tria de
  *     la casella, a punt per a les opcions de la pujada ({ conservaExif: true,
  *     original } o { conservaExif: false }), o undefined si no n'hi ha hagut.
+ *     P1-64 · En una foto d'identitat, `info.gpsEliminat` diu si l'original
+ *     portava GPS (qui puja ho torna a dir: AVIS_GPS_ELIMINAT_PERFIL).
  *   onError(missatge) · la foto triada no es pot processar (validaFotoDeFitxa):
  *     no s'obri res i l'avís va fora (cap modal no el tapa).
  *   config · la configuració sencera, per a qui no és cap de les tres formes
@@ -113,7 +124,8 @@ const FORMATS_CAPCALERA = Object.freeze(FORMATS.map((f) => Object.freeze({
 export const FORMES = Object.freeze({
   avatar: Object.freeze({
     format: '1:1', formats: QUADRAT, mascara: 'cercle', titol: 'Retalla la foto', midaSortida: MIDA_AVATAR,
-    exacta: Object.freeze({ amplada: MIDA_AVATAR, alcada: MIDA_AVATAR }), conservaExif: true,
+    /* P1-64 (Mestre 261028) · L'avatar és identitat: sempre net, amb l'avís si portava GPS. */
+    exacta: Object.freeze({ amplada: MIDA_AVATAR, alcada: MIDA_AVATAR }), conservaExif: false, avisGpsEliminat: true,
   }),
   logotip: Object.freeze({
     format: '1:1', formats: QUADRAT, mascara: null, titol: 'Retalla el logotip', midaSortida: MIDA_LOGOTIP,
@@ -153,9 +165,15 @@ export function validaFotoDeFitxa(fitxer) {
    sap fer WebP: fotoDinsDelPressupost). */
 const tipusDe = (font) => tipusDeSortida(typeof Blob !== 'undefined' && font instanceof Blob ? font.type : '');
 
-/** La configuració del diàleg per a una forma (la consumix el hook). */
-export function configDeForma(forma) {
+/**
+ * La configuració del diàleg per a una forma (la consumix el hook). P1-64 ·
+ * Amb `identitat`, qualsevol forma puja neta i sense casella, amb l'avís del
+ * GPS (la capçalera d'una persona). Els noms de forma no canvien: menaDeImatge
+ * i MIDES (useHeroImageHandler.js) en depenen.
+ */
+export function configDeForma(forma, { identitat = false } = {}) {
   const f = formaDe(forma);
+  const delPerfil = identitat || f.avisGpsEliminat === true;
   return {
     senzill: true,
     mascara: f.mascara,
@@ -169,12 +187,15 @@ export function configDeForma(forma) {
       ampladaMaxima: f.midaSortida, format: tipusDe(font),
       ...(f.exacta ? { exacta: f.exacta } : null), ...(f.costatLlarg ? { costatLlarg: f.costatLlarg } : null),
     }),
-    conservaExif: f.conservaExif !== false,
+    conservaExif: delPerfil ? false : f.conservaExif !== false,
+    avisGpsEliminat: delPerfil,
   };
 }
 
-export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnquadrat, onError, extres = null } = {}) {
-  const cfg = config || configDeForma(forma);
+export function useEnquadramentImatge({
+  forma = 'avatar', config = null, onEnquadrat, onError, extres = null, identitat = false,
+} = {}) {
+  const cfg = config || configDeForma(forma, { identitat });
   const cfgRef = useRef(cfg);
   cfgRef.current = cfg;
   /* Cada obertura és una sessió pròpia (objecte nou): un desat que acaba
@@ -226,11 +247,14 @@ export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnqua
       mascara={cfg.mascara}
       titol={cfg.titol}
       descripcio={cfg.descripcio}
-      ofereixConservarExif={cfg.conservaExif !== false}
+      ofereixConservarExif={cfg.avisGpsEliminat !== true && cfg.conservaExif !== false}
+      {...(cfg.avisGpsEliminat === true ? { avisaGpsEliminat: true } : null)}
       onTanca={tanca}
       onDesa={async (fitxer, info, metadades) => {
-        // Bloc 1.2 · La tria de la casella (o res) va a qui puja, com a tercer argument.
-        await enquadratRef.current?.(fitxer, info, metadades?.exif);
+        /* Bloc 1.2 · La tria de la casella (o res) va a qui puja, com a tercer argument.
+           P1-64 · En una foto d'identitat, info diu també si s'ha eliminat el GPS. */
+        const infoDesat = cfg.avisGpsEliminat === true ? { ...info, gpsEliminat: metadades?.gpsEliminat === true } : info;
+        await enquadratRef.current?.(fitxer, infoDesat, metadades?.exif);
         setSessio((actual) => (actual === sessio ? null : actual));
         return true;
       }}

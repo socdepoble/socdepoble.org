@@ -115,6 +115,10 @@
   --sdp-fons-roca:       var(--sdp-pedra-900);
   --sdp-sobre-roca:      var(--sdp-pedra-50);
   --sdp-fons-subtil:     var(--sdp-pedra-200);
+  /* P1-16 (pla 261028_1526 §3.5.1) · Capçalera de .sdp-taula-prosa: ΔE2000
+     ≥ 5 contra totes les files (5,19 la parella; 6,17 sobre l'app, 9,78 sobre
+     la targeta) i el títol a 13,54:1 (taules.contrast.capes.test.js). */
+  --sdp-taula-capcalera-fons: var(--sdp-pedra-300);
   --sdp-fons-invers:     var(--sdp-pedra-900);
   --sdp-fons-vel:        rgba(14, 13, 12, 0.55);
   --sdp-color-focus:     var(--sdp-secondary-500);
@@ -188,6 +192,14 @@
      o rail de navegació (.sdp-workspace-nav-item, .sdp-workspace-rail__boto):
      eixes van amb 0 explícit, no amb este àlies. Un sol interruptor. */
   --sdp-radi-boto: var(--sdp-radi-pastilla);
+  /* P1-37 (ordre del Mestre, 261026_2057; pla 261028_1526 §3.5.1) · L'aire dels
+     botons, àlies de la reixeta com --sdp-radi-boto: el marge d'un botó de bloc
+     que va a soles (16px als costats, 12px dalt i baix, «Pregunta a la IAIA») i
+     el buit entre els botons d'un grup, que dona el gap del contenidor i mai un
+     marge enganxat a un divisor. Cap tema ni el Bancal els redefinix. */
+  --sdp-boto-marge-inline: var(--sdp-space-4);
+  --sdp-boto-marge-block:  var(--sdp-space-3);
+  --sdp-boto-separacio:    var(--sdp-space-3);
 
   /* Ombres · to pedra, mai negre pur (3 elevacions) */
   --sdp-ombra-1: 0 1px 3px rgba(14, 13, 12, 0.05);
@@ -604,6 +616,8 @@
   --sdp-fons-elevat:     var(--sdp-pedra-800);
   --sdp-fons-superficie: var(--sdp-pedra-850);
   --sdp-fons-subtil:     var(--sdp-pedra-750);
+  /* P1-16 · 8,69 contra la parella i 16,05 sobre la targeta; el títol, 9,09:1. */
+  --sdp-taula-capcalera-fons: var(--sdp-pedra-650);
   --sdp-fons-invers:     var(--sdp-pedra-100);
   --sdp-fons-vel:        rgba(14, 13, 12, 0.72);
 
@@ -705,6 +719,31 @@
     --sdp-escala-aparicio: 1;
     --sdp-despl-aparicio: 0;
   }
+}
+
+/* ═══ P1-64 · MAPA FOTOGRÀFIC DEL MUR ════════════════════════════════
+   Pla 261028_1526 §3.7.1 i contracte de dades del Mestre (261028): el verd
+   és el GPS real de la foto; l'ocre, una ubicació estimada, la del poble o
+   la que ha indicat l'autor. El recorregut (l'ordre de les fotos d'una
+   publicació, mai els carrers exactes) va damunt d'un halo clar, i les
+   línies discontínues lliguen cada targeta al seu punt. Només els consumix
+   src/sections/mur/MapaFotografic.css: els camins de Leaflet porten una
+   classe (className), mai un color en línia.
+   Un bloc a banda i sense tema fosc, a propòsit: el fons del mapa sense
+   tessel·les és clar en els dos temes, com les tessel·les d'OpenStreetMap
+   que s'hi poden posar damunt, i el verd i l'ocre volen dir el mateix de dia
+   i de nit. Ràtios sobre --sdp-mapa-fons (els gràfics demanen 3:1, WCAG
+   1.4.11); les xifres blanques de les targetes, sobre el verd i l'ocre. */
+:root, :host, .sdp-root {
+  --sdp-mapa-fons:          #e3e9e2;
+  --sdp-mapa-gps:           #226b5c;   /* 5,12:1 · xifra blanca 6,31:1 */
+  --sdp-mapa-estimada:      #a77022;   /* 3,42:1 · xifra blanca 4,21:1 */
+  --sdp-mapa-sobre:         var(--sdp-blanc-pur);
+  --sdp-mapa-recorregut:    #547b88;   /* 3,73:1 */
+  --sdp-mapa-halo:          #fffdf7;
+  --sdp-mapa-linia-targeta: #527567;   /* 4,15:1 */
+  --sdp-mapa-linia-grup:    #668675;   /* 3,25:1 */
+  --sdp-mapa-rotul:         var(--sdp-pedra-650);   /* 7,37:1 · el nom dels pobles sobre el fons */
 }
 
 /* Mostres de paleta · sense cap estil inline */

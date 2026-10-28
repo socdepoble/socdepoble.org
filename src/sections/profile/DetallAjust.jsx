@@ -15,6 +15,7 @@ import { fitxaDeLectura } from './perfilCamps.js';
 import { formataPoble, llistaDePobles, poblePrincipal } from './fitxaDePerfil.js';
 import { AVIS_FITXA_PUBLICA } from './visibilitatFitxa.js';
 import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
+import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
 import { SegonFactor } from '../admin/SegonFactor.jsx';
 
@@ -249,7 +250,11 @@ export default function DetallAjust({
      ERROR_EXIF_NO_CONSERVABLE (o el de la càmera).
      Gauntlet 261016 (F1) · Tots els avisos de la foto (esAvisDeLaFoto, la
      llista única de pujadaImatge.js) es diuen tal qual. Abans només en
-     reconeixia dos, i la resta eixien com un error de connexió. */
+     reconeixia dos, i la resta eixien com un error de connexió.
+     P1-64 (Mestre 261028, decisió 7) · L'avatar és identitat: el retallador
+     no oferix cap casella i `exif` és { conservaExif: false }. Si la foto
+     portava GPS (info.gpsEliminat), la línia d'èxit ho diu amb
+     AVIS_GPS_ELIMINAT_PERFIL. */
   async function pujaImatge(file, info, exif) {
     setPujant(true);
     setMissatge(null);
@@ -260,7 +265,8 @@ export default function DetallAjust({
 
       if (url) {
         setValorTemp(url);
-        setMissatge({ tipus: 'exit', text: 'Imatge pujada. Ara dóna-li a Guardar.' });
+        const pujada = 'Imatge pujada. Ara dóna-li a Guardar.';
+        setMissatge({ tipus: 'exit', text: info?.gpsEliminat === true ? `${pujada} ${AVIS_GPS_ELIMINAT_PERFIL}` : pujada });
         return;
       }
     } catch (err) {

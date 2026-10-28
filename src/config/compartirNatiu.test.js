@@ -2,7 +2,7 @@
    (compartirNatiu.js): un sol lot pendent, congelat i estable per a
    useSyncExternalStore, que només pren la conversa triada. Cada cas carrega un
    mòdul nou: el registre és d'estat de mòdul. Tot és sintètic. */
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 const carrega = async () => {
   vi.resetModules();
@@ -580,5 +580,252 @@ describe('un lot substituït no torna a la vida', () => {
     // El nou sí que pot tornar.
     expect(r.tornaFitxerCompartit(presC)).toBe(true);
     expect(r.compartitPendent().fitxers[0]).toBe(c);
+  });
+});
+
+/* Pla 261028_1526 (Bloc D, P1-31) · El canvi de sessió té època pròpia. El que
+   el pont llegia (sessio) o el natiu copiava (rebutMs) abans del canvi ja no
+   entra: s'alliberen les còpies i no s'avisa ningú. El «Descarta» del diàleg no
+   és cap canvi de sessió: un lot que encara es llegia sí que entra. */
+describe('P1-31 · l’època de la sessió', () => {
+  test('després de canviaSessioCompartit, un lliurament amb la sessió d’abans no entra: allibera totes les rutes, no avisa i no toca el lot', async () => {
+    const { r, allibera } = await ambAlliberador();
+    const abans = r.sessioCompartit();
+    const oient = vi.fn();
+    r.subscriuCompartit(oient);
+    r.canviaSessioCompartit();
+    expect(r.sessioCompartit()).toBe(abans + 1);
+    // Sense lot pendent el canvi no avisa (com descartaCompartit).
+    expect(oient).not.toHaveBeenCalled();
+    const vell = lotAmbRutes('a', 'b');
+    expect(r.lliuraCompartit({ ...vell, text: 'd’A', rebutjats: 1, sessio: abans })).toBeNull();
+    expect(r.compartitPendent()).toBeNull();
+    expect(oient).not.toHaveBeenCalled();
+    expect(allibera.mock.calls).toEqual([[[ruta('a'), ruta('b')]]]);
+
+    // Un lot de la sessió nova sí que entra; un altre de la vella no el substituïx ni n'allibera res.
+    const nou = lotAmbRutes('c');
+    const id = r.lliuraCompartit({ ...nou, sessio: r.sessioCompartit() });
+    const lot = r.compartitPendent();
+    expect(lot).toMatchObject({ id, desti: null, propietari: null });
+    expect(quins(lot.fitxers, nou.fitxers)).toEqual([0]);
+    allibera.mockClear();
+    oient.mockClear();
+    expect(r.lliuraCompartit({ ...lotAmbRutes('d'), sessio: abans })).toBeNull();
+    expect(r.compartitPendent()).toBe(lot);
+    expect(oient).not.toHaveBeenCalled();
+    expect(allibera.mock.calls).toEqual([[[ruta('d')]]]);
+    // L'id no s'ha gastat: el lot següent és l'id + 1.
+    expect(r.lliuraCompartit({ text: 'següent', sessio: r.sessioCompartit() })).toBe(id + 1);
+  });
+
+  test('canviaSessioCompartit descarta com descartaCompartit: allibera el lot i el fitxer de la mà ja no torna', async () => {
+    const { r, allibera } = await ambAlliberador();
+    r.lliuraCompartit(lotAmbRutes('a', 'b'));
+    r.triaDestiCompartit('5', 'A');
+    const pres = r.prenFitxerCompartit('5', 'A');
+    r.canviaSessioCompartit();
+    expect(r.compartitPendent()).toBeNull();
+    expect(allibera.mock.calls).toEqual([[[ruta('b')]]]);
+    expect(r.tornaFitxerCompartit(pres)).toBe(false);
+    expect(allibera).toHaveBeenLastCalledWith([ruta('a')]);
+  });
+
+  test('un lliurament amb rebutMs d’abans del tall no entra (allibera, no avisa); del tall ençà, o sense hora vàlida, sí', async () => {
+    const { r, allibera } = await ambAlliberador();
+    // Abans de cap canvi no hi ha tall: un intent de fa temps (les restes en arrencar) entra.
+    expect(r.lliuraCompartit({ ...lotAmbRutes('vell'), rebutMs: 1 })).toBe(1);
+    r.descartaCompartit();
+    allibera.mockClear();
+    r.canviaSessioCompartit(5000);
+    const oient = vi.fn();
+    r.subscriuCompartit(oient);
+    expect(r.lliuraCompartit({ ...lotAmbRutes('a', 'b'), text: 'en vol', rebutMs: 4999 })).toBeNull();
+    expect(r.compartitPendent()).toBeNull();
+    expect(oient).not.toHaveBeenCalled();
+    expect(allibera.mock.calls).toEqual([[[ruta('a'), ruta('b')]]]);
+    // Al mateix mil·lisegon del tall, o després, és de la sessió nova.
+    expect(r.lliuraCompartit({ ...lotAmbRutes('c'), rebutMs: 5000 })).toBe(2);
+    expect(r.lliuraCompartit({ ...lotAmbRutes('d'), rebutMs: 9000 })).toBe(3);
+    // Una hora que no és un número finit no talla res.
+    for (const [i, rebutMs] of [undefined, Number.NaN, '1', null, Number.NEGATIVE_INFINITY].entries()) {
+      expect(r.lliuraCompartit({ ...lotAmbRutes(`x${i}`), rebutMs }), String(rebutMs)).toBe(4 + i);
+    }
+  });
+
+  test('el «Descarta» del diàleg (descartaCompartit) no canvia la sessió: un lot que encara es llegia entra igual', async () => {
+    const { r, allibera } = await ambAlliberador();
+    r.lliuraCompartit({ ...lotAmbRutes('vell'), text: 'el que la persona descarta' });
+    // Mentrestant el pont ja llig un lot nou: en va prendre l'època en rebre'l.
+    const deLaLectura = r.sessioCompartit();
+    r.descartaCompartit();
+    expect(r.sessioCompartit()).toBe(deLaLectura);
+    expect(allibera.mock.calls).toEqual([[[ruta('vell')]]]);
+    allibera.mockClear();
+    const nou = lotAmbRutes('nou');
+    const id = r.lliuraCompartit({ ...nou, text: 'el nou', sessio: deLaLectura, rebutMs: Date.now() });
+    expect(id).toBe(2);
+    expect(r.compartitPendent()).toMatchObject({ id, text: 'el nou', desti: null, propietari: null });
+    expect(quins(r.compartitPendent().fitxers, nou.fitxers)).toEqual([0]);
+    expect(allibera).not.toHaveBeenCalled();
+  });
+
+  test('un lot amb amo no el retria ningú més, ni una crida sense persona; l’amo sí, i el sense amo, qualsevol', async () => {
+    const r = await carrega();
+    r.lliuraCompartit({ text: 'per a A' });
+    expect(r.triaDestiCompartit('5', 'A')).toBe(true);
+    const triat = r.compartitPendent();
+    expect(r.triaDestiCompartit('6', 'B')).toBe(false);
+    expect(r.triaDestiCompartit('6')).toBe(false);
+    expect(r.triaDestiCompartit('6', '')).toBe(false);
+    expect(r.compartitPendent()).toBe(triat);
+    expect(r.triaDestiCompartit(6, 'A')).toBe(true);
+    expect(r.compartitPendent()).toMatchObject({ desti: '6', propietari: 'A' });
+    r.lliuraCompartit({ text: 'de ningú' });
+    expect(r.triaDestiCompartit('1')).toBe(true);
+    expect(r.triaDestiCompartit('2', 'B')).toBe(true);
+    expect(r.compartitPendent()).toMatchObject({ desti: '2', propietari: 'B' });
+  });
+
+  test('reiniciaDestiCompartit torna a «Envia a…» només un lot sense amo amb destí; no descarta ni allibera res', async () => {
+    const { r, allibera } = await ambAlliberador();
+    expect(r.reiniciaDestiCompartit()).toBe(false);
+    const { fitxers, rutes } = lotAmbRutes('a');
+    const id = r.lliuraCompartit({ fitxers, rutes, text: 'peu' });
+    const oient = vi.fn();
+    r.subscriuCompartit(oient);
+    // Sense destí no hi ha res a tornar: ni avís.
+    expect(r.reiniciaDestiCompartit()).toBe(false);
+    expect(oient).not.toHaveBeenCalled();
+    r.triaDestiCompartit('5');
+    expect(r.reiniciaDestiCompartit()).toBe(true);
+    const tornat = r.compartitPendent();
+    expect(oient).toHaveBeenLastCalledWith(tornat);
+    expect(tornat).toMatchObject({ id, text: 'peu', desti: null, propietari: null });
+    expect(quins(tornat.fitxers, fitxers)).toEqual([0]);
+    expect(Object.isFrozen(tornat) && Object.isFrozen(tornat.fitxers)).toBe(true);
+    // Un lot amb amo no es toca (el canvi de sessió ja l'hauria descartat).
+    r.triaDestiCompartit('5', 'A');
+    const triat = r.compartitPendent();
+    expect(r.reiniciaDestiCompartit()).toBe(false);
+    expect(r.compartitPendent()).toBe(triat);
+    expect(allibera).not.toHaveBeenCalled();
+  });
+});
+
+/* Pla 261028_1526 (Bloc D, P1-31) · El tall arriba al natiu: el tallador que
+   registra el pont (receptor.tallaSessio) esborra allí les còpies d'abans i
+   talla la que encara es copiava, també si el procés mor a mitges. Només el
+   canvi de sessió el crida; el «Descarta» del diàleg, no. */
+describe('P1-31 · el tall arriba al natiu', () => {
+  test('canviaSessioCompartit crida el tallador una vegada, després del descart; descartaCompartit no el crida', async () => {
+    const { r, allibera } = await ambAlliberador();
+    const tallador = vi.fn();
+    r.registraTalladorCompartit(tallador);
+    r.lliuraCompartit(lotAmbRutes('a'));
+    r.descartaCompartit();
+    expect(tallador).not.toHaveBeenCalled();
+    r.lliuraCompartit(lotAmbRutes('b'));
+    r.canviaSessioCompartit();
+    expect(tallador).toHaveBeenCalledTimes(1);
+    expect(tallador).toHaveBeenCalledWith();
+    // El lot pendent s'allibera abans de tallar (el natiu el trobaria igual, però en ordre).
+    expect(allibera.mock.invocationCallOrder.at(-1)).toBeLessThan(tallador.mock.invocationCallOrder[0]);
+    r.canviaSessioCompartit();
+    expect(tallador).toHaveBeenCalledTimes(2);
+  });
+
+  test('un tallador que llança o rebutja no tomba el canvi; un que no és funció el desregistra', async () => {
+    const r = await carrega();
+    const senseAmo = vi.fn();
+    process.on('unhandledRejection', senseAmo);
+    try {
+      r.registraTalladorCompartit(() => { throw new Error('natiu trencat'); });
+      r.lliuraCompartit({ text: 'u' });
+      expect(() => r.canviaSessioCompartit()).not.toThrow();
+      expect(r.compartitPendent()).toBeNull();
+      expect(r.sessioCompartit()).toBe(1);
+      r.registraTalladorCompartit(() => Promise.reject(new Error('sense connector')));
+      expect(() => r.canviaSessioCompartit()).not.toThrow();
+      await new Promise((resol) => { setTimeout(resol, 0); });
+      expect(senseAmo).not.toHaveBeenCalled();
+      const vell = vi.fn();
+      r.registraTalladorCompartit(vell);
+      r.registraTalladorCompartit('no');
+      r.canviaSessioCompartit();
+      expect(vell).not.toHaveBeenCalled();
+      expect(r.sessioCompartit()).toBe(3);
+    } finally {
+      process.off('unhandledRejection', senseAmo);
+    }
+  });
+
+  /* L'hora de l'intent només talla el que encara podia estar en vol (5 minuts:
+     més que tota una còpia nativa). Un intent més vell que això, després d'un
+     tall, és un rellotge que ha tornat arrere: la compartició és bona. */
+  test('rebutMs talla fins a 5 minuts abans del tall, ni un mil·lisegon més', async () => {
+    const { r, allibera } = await ambAlliberador();
+    const EN_VOL = 5 * 60 * 1000;
+    const tall = 10 * EN_VOL;
+    r.canviaSessioCompartit(tall);
+    expect(r.lliuraCompartit({ ...lotAmbRutes('vora'), rebutMs: tall - EN_VOL })).toBeNull();
+    expect(allibera.mock.calls).toEqual([[[ruta('vora')]]]);
+    allibera.mockClear();
+    const id = r.lliuraCompartit({ ...lotAmbRutes('enrere'), rebutMs: tall - EN_VOL - 1 });
+    expect(id).not.toBeNull();
+    expect(r.compartitPendent()).toMatchObject({ id, desti: null, propietari: null });
+    expect(allibera).not.toHaveBeenCalled();
+    // La sessió del lot continua tallant, tinga l'hora que tinga.
+    expect(r.lliuraCompartit({ ...lotAmbRutes('vella'), sessio: 0, rebutMs: tall - EN_VOL - 1 })).toBeNull();
+  });
+});
+
+/* Revisió del Bloc D (mutant E1) · El receptor de l'entrada nativa és el que
+   porta l'època (sessioCompartit) i registra el tallador: sense, el tall de
+   sessió no arriba ni a la lectura en vol ni al natiu. L'entrada s'avalua com a
+   natiu/entrada.test.jsx (host, React i l'App, simulats); el registre és el de
+   veres, la mateixa instància que llig l'entrada. */
+describe('P1-31 · l’entrada nativa connecta el receptor al registre', () => {
+  afterEach(() => {
+    for (const modul of ['../host.js', 'react-dom/client', '../PedraSecaEmbed.jsx', '../css/index.css?inline']) vi.doUnmock(modul);
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    document.body.replaceChildren();
+  });
+
+  test('un canvi de sessió amb la compartició en vol: no arriba al registre, se n’allibera la còpia i el natiu talla', async () => {
+    vi.resetModules();
+    vi.doMock('../host.js', () => ({ configura: vi.fn(), arrenca: vi.fn(async () => ({ fase: 'segellat' })) }));
+    vi.doMock('react-dom/client', () => ({ createRoot: () => ({ render: () => {} }) }));
+    vi.doMock('../PedraSecaEmbed.jsx', () => ({ default: () => null }));
+    vi.doMock('../css/index.css?inline', () => ({ default: '' }));
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://paquet.supabase.test');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'sb_publishable_del_paquet');
+    const oients = [];
+    const pont = {
+      getPlatform: () => 'android',
+      addListener: vi.fn((connector, nom, cb) => { oients.push(cb); return { remove: () => {} }; }),
+      convertFileSrc: (r) => `https://localhost/_capacitor_file_${r}`,
+      nativePromise: vi.fn(async () => ({}))
+    };
+    vi.stubGlobal('Capacitor', pont);
+    let resol;
+    vi.stubGlobal('fetch', vi.fn(() => new Promise((r) => { resol = r; })));
+    document.body.innerHTML = '<div id="root"></div>';
+    await import('../natiu/entrada.jsx');
+    const r = await import('./compartirNatiu.js');
+    const buida = () => new Promise((fet) => { setTimeout(fet, 0); });
+    await buida();
+    expect(pont.addListener).toHaveBeenCalledWith('CompartirNatiu', 'compartit', expect.any(Function));
+    oients.at(-1)({ fitxers: [{ ruta: '/data/a.png', mime: 'image/png', mida: 3, nom: 'a.png' }], text: 'd’A' });
+    await buida();
+    r.canviaSessioCompartit();
+    resol({ ok: true, status: 200, blob: async () => new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }) });
+    await buida();
+    expect(r.compartitPendent()).toBeNull();
+    expect(pont.nativePromise.mock.calls).toEqual([
+      ['CompartirNatiu', 'tallaSessio', {}],
+      ['CompartirNatiu', 'allibera', { rutes: ['/data/a.png'] }]
+    ]);
   });
 });

@@ -184,10 +184,13 @@ function DetallDElement() {
     if (social.estat !== 'triada') return null;
     return altDelHead ? { url: social.url, alt: altDelHead } : social.url;
   }, [ambPagina, sectionId, item, portadaDelHead, altDelHead]);
+  /* P1-61 Fase 2 (261028) · Un bloquejat o un «No trobat» diuen «no indexes»:
+     seoHead ho llig com a ordre de retirar el head prerenderitzat d'eixa ruta. */
   useSEO({
     title: bloquejat ? null : item ? section?.getTitle?.(item) : (esperant ? null : 'No trobat'),
     description: !bloquejat && item ? (pagina?.lead || section?.getSubtitle?.(item)) : '',
-    image: imatgeDelHead
+    image: imatgeDelHead,
+    index: !(bloquejat || (!item && !esperant))
   });
 
   if (esperant) return <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />;

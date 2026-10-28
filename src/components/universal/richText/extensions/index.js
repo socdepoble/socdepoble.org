@@ -2,9 +2,14 @@ import Image, { inputRegex as regexImatgeMarkdown } from '@tiptap/extension-imag
 import { nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { compressImage } from '../../../../utils/imageUtils.js';
-import { fitxerDeDataUrl } from '../../../../utils/pujadaImatge.js';
+import { fitxerDeDataUrl, tipusReal } from '../../../../utils/pujadaImatge.js';
 import { validaFitxerImatge } from '../../../../hooks/useHeroImageHandler.js';
-import { netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
+import {
+  ajustaPrecisioGps, errorExifNoConservable, esNoConservable, exifCapEnFormat, exifPublicable, teUbicacioOData,
+} from '../../enquadrament/exifIncrustat.js';
+import { PRECISIONS, PRECISIO_PER_DEFECTE_PUBLICACIO, geolocalitzacio } from '../../enquadrament/geolocalitzacio.js';
+import { FORMAT_JPEG, FORMAT_WEBP, netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
+import { fotoDelBucketPublic } from '../../../../utils/mitjaOpac.js';
 import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import SlashMenu from './slash.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
@@ -13,15 +18,80 @@ import { TargetesIncrustades } from './targetes/targetesIncrustades.js';
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · allowBase64 es queda (les notes
    sense servidor hi desen el data URL de compressImage), però cap data URL
    d'imatge entra amb metadades: ni enganxat, ni arrossegat, ni escrit com
-   a «![alt](src)». La neteja és síncrona i no torna a codificar cap píxel. */
+   a «![alt](src)». La neteja és síncrona i no torna a codificar cap píxel.
+   P1-64 (pla 261028_1526 §3.1.1) · Una foto del cos triada amb l'ordre «/»
+   Imatge, si la persona conserva la ubicació i la data (demanaExif), porta el
+   seu registre en quatre atributs data-* de l'<img>: data-lat, data-lng
+   (ja arrodonits a la precisió), data-precisio ('exacta' | '100m' | 'poble')
+   i data-captura (ISO). Només es pinten quan hi són: el que es veu és el
+   mateix (Llei del Píxel). En llegir, un valor que no té la forma esperada
+   no entra al node (null). Les fotos enganxades o arrossegades de fora
+   continuen sempre netes i sense cap d'estos atributs (transformPastedHTML és
+   síncron); vegeu senseRegistreDeFoto per a l'enganxat intern. */
+const FORMA_COORDENADA = /^-?\d{1,3}(?:\.\d{1,7})?$/;
+const FORMA_CAPTURA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?$/;
+const VALORS_PRECISIO = new Set(PRECISIONS.map((p) => p.valor));
+const atributDeFoto = (clau, nom, valid) => ({
+  default: null,
+  parseHTML: (element) => {
+    const valor = element.getAttribute(nom);
+    return valor !== null && valid(valor) ? valor : null;
+  },
+  renderHTML: (atributs) => (atributs[clau] == null ? {} : { [nom]: String(atributs[clau]) }),
+});
+/* P1-64 · Enganxar o deixar anar HTML de fora no porta cap registre: el que
+   declara una ubicació és només l'ordre «/» Imatge, amb la casella.
+   Revisió adversarial 261028 · El registre es lleva de l'HTML ja LLEGIT
+   (DOMParser, inert), no amb una expressió: per al navegador, «src="…"data-lat=…»
+   i «src=… /data-lat=…» també són atributs. Un nom d'atribut no porta mai
+   entitats: sense «data-lat|lng|precisio|captura» al text, cap element no en
+   pot tindre i l'HTML torna IDÈNTIC. Només es conserva en un enganxat INTERN
+   (ProseMirror marca el seu portapapers amb data-pm-slice) i en una <img>
+   pujada (sdp-media:// d'un dels dos buckets, el camí net de les pujades):
+   copiar o moure una foto pròpia dins del text no la lleva del Mapa, i el seu
+   fitxer continua portant el que la persona va triar. Si no es pot llegir amb
+   seguretat, no s'enganxa res (la regla de netejaHtmlEnganxat). */
+const NOMS_DEL_REGISTRE = Object.freeze(['data-lat', 'data-lng', 'data-precisio', 'data-captura']);
+const POT_TINDRE_REGISTRE = /data-(?:lat|lng|precisio|captura)/i;
+const SELECTOR_DEL_REGISTRE = NOMS_DEL_REGISTRE.map((nom) => `[${nom}]`).join(',');
+const esPujadaPropia = (src) => typeof src === 'string'
+  && fotoDelBucketPublic(src.replace(/^\s*sdp-media:\/\/mitjans_privats\//i, 'sdp-media://mitjans/')) !== null;
+
+function senseRegistreDeFoto(html) {
+  if (typeof html !== 'string' || !POT_TINDRE_REGISTRE.test(html)) return html;
+  if (typeof DOMParser === 'undefined') return '';
+  const doc = new DOMParser().parseFromString(`<template>${html}</template>`, 'text/html');
+  const plantilla = doc.head.firstElementChild;
+  if (!plantilla || plantilla.tagName !== 'TEMPLATE' || doc.head.childElementCount !== 1 || doc.body.hasChildNodes()) return '';
+  const intern = plantilla.content.querySelector('[data-pm-slice]') !== null;
+  let canviat = false;
+  for (const element of plantilla.content.querySelectorAll(SELECTOR_DEL_REGISTRE)) {
+    if (intern && element.tagName === 'IMG' && esPujadaPropia(element.getAttribute('src'))) continue;
+    NOMS_DEL_REGISTRE.forEach((nom) => element.removeAttribute(nom));
+    canviat = true;
+  }
+  return canviat ? plantilla.innerHTML : html;
+}
+
 const SdpImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      lat: atributDeFoto('lat', 'data-lat', (v) => FORMA_COORDENADA.test(v)),
+      lng: atributDeFoto('lng', 'data-lng', (v) => FORMA_COORDENADA.test(v)),
+      precisio: atributDeFoto('precisio', 'data-precisio', (v) => VALORS_PRECISIO.has(v)),
+      captura: atributDeFoto('captura', 'data-captura', (v) => FORMA_CAPTURA.test(v)),
+    };
+  },
+
   addNodeView() {
     return ReactNodeViewRenderer(SdpImageNodeView);
   },
 
-  /* Enganxar i deixar anar HTML: ProseMirror crida esta mateixa funció. */
+  /* Enganxar i deixar anar HTML: ProseMirror crida esta mateixa funció.
+     P1-64 · I sense els data-* del registre d'una foto (sempre netes). */
   transformPastedHTML(html) {
-    return netejaHtmlEnganxat(html);
+    return senseRegistreDeFoto(netejaHtmlEnganxat(html));
   },
 
   /* La regla de Markdown de TipTap, amb la font neta. Una imatge que no es
@@ -74,6 +144,44 @@ function triaFitxer(accept = 'image/*') {
   });
 }
 
+/* P1-64 · La resposta de demanaExif quan la persona tanca la pregunta. */
+const CANCELLADA = Symbol('cancel·lada');
+
+/* P1-64 (pla 261028_1526 §3.1.1) · El que s'ha triat per a una foto del cos:
+   null (cap pregunta: sense demanaExif, sense res a conservar o desmarcada),
+   CANCELLADA, { avis } (marcada però no es pot conservar: es diu i no
+   s'inserix res, mai neta en silenci) o { exif, original, precisio, atributs }
+   (la compressió hi posarà l'EXIF; el node, els data-*). */
+async function triaDeLexif(original, demanaExif) {
+  if (typeof demanaExif !== 'function') return null;
+  const exif = await exifPublicable(original);
+  if (!teUbicacioOData(exif)) return null;
+  const resposta = await demanaExif(original, exif);
+  if (resposta === null || resposta === undefined) return CANCELLADA;
+  if (resposta.conserva !== true) return null;
+  const precisio = VALORS_PRECISIO.has(resposta.precisio) ? resposta.precisio : PRECISIO_PER_DEFECTE_PUBLICACIO;
+  if (esNoConservable(exif) || !exif?.tiff || !ajustaPrecisioGps(exif.tiff, precisio)) return { avis: errorExifNoConservable(exif) };
+  const geo = exif.gps ? geolocalitzacio({ lat: exif.gps.lat, lng: exif.gps.lng, precisio, origen: 'exif' }) : null;
+  const atributs = {
+    ...(geo ? { lat: String(geo.lat), lng: String(geo.lng), precisio: geo.precisio } : null),
+    ...(exif.dataCaptura && FORMA_CAPTURA.test(exif.dataCaptura) ? { captura: exif.dataCaptura } : null),
+  };
+  return { exif, original, precisio, atributs };
+}
+
+/* La compressió de sempre del cos; amb l'EXIF triat, el WebP (o, si el canvas
+   no en sap, el JPEG) que el pot portar. Si no hi cap, l'avís: mai neta en
+   silenci. */
+async function comprimixDelCos(original, tria) {
+  const base = { maxSize: 1200, format: FORMAT_WEBP, quality: 0.8 };
+  if (!tria) return compressImage(original, base);
+  const ambExif = { ...base, conservaExif: true, original, precisio: tria.precisio };
+  let dataUrl = await compressImage(original, ambExif);
+  if (tipusReal(dataUrl) !== FORMAT_WEBP) dataUrl = await compressImage(original, { ...ambExif, format: FORMAT_JPEG });
+  if (!exifCapEnFormat(tria.exif, tipusReal(dataUrl))) throw new Error(errorExifNoConservable(tria.exif));
+  return dataUrl;
+}
+
 /**
  * Ordres del menú Slash.
  * @param {Object} opcions
@@ -97,8 +205,19 @@ function triaFitxer(accept = 'image/*') {
  *        les ordres de sempre.
  * @param {() => void} [opcions.obreEmojis] Qui obri la graella (estable: les
  *        ordres es fixen en crear l'editor). Sense funció, l'ordre no hi és.
+ * @param {(original: File, exif: Object) => Promise<{ conserva: boolean, precisio: string }|null>} [opcions.demanaExif]
+ *        P1-64 (pla 261028_1526 §3.1.1) · Estable, com obreEmojis. Si la foto
+ *        triada porta la ubicació o la data (exifPublicable), l'ordre
+ *        «Imatge» ho pregunta abans de comprimir (el diàleg de DocumentEditor:
+ *        la casella «Conserva la ubicació i la data de la foto», marcada de
+ *        sèrie, i les píndoles de la precisió). null cancel·la: no s'inserix
+ *        res. Conservada, la foto porta l'EXIF (amb la ubicació ja arrodonida)
+ *        i el node, els data-* de SdpImage. Sense la funció, o una foto sense
+ *        res a conservar, el camí de sempre: cap pregunta i la foto neta.
  */
-export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast = null, ambEmojis = false, obreEmojis = null } = {}) {
+export function creaOrdres({
+  onImageUpload = null, ambTargetes = false, onToast = null, ambEmojis = false, obreEmojis = null, demanaExif = null,
+} = {}) {
   const avisa = typeof onToast === 'function' ? (missatge) => onToast(missatge, 'error') : null;
   const ambOrdreEmoji = ambEmojis && typeof obreEmojis === 'function';
   const ordreEmoji = {
@@ -207,9 +326,14 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast 
         }
 
         try {
-          const dataUrl = await compressImage(original, {
-            maxSize: 1200, format: 'image/webp', quality: 0.8
-          });
+          /* P1-64 · La pregunta, només si la foto porta res a conservar. */
+          const tria = await triaDeLexif(original, demanaExif);
+          if (tria === CANCELLADA) return;
+          if (tria?.avis) {
+            avisa?.(tria.avis);
+            return;
+          }
+          const dataUrl = await comprimixDelCos(original, tria);
 
           let src = dataUrl;
           if (typeof onImageUpload === 'function') {
@@ -222,7 +346,8 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast 
 
           editor.chain().focus().setImage({
             src,
-            alt: original.name || 'Imatge'
+            alt: original.name || 'Imatge',
+            ...(tria?.atributs || null)
           }).run();
         } catch (err) {
           /* La pujada (o la compressió) rebutjada ja no falla en silenci: el
@@ -251,9 +376,14 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast 
  * Bloc 3.8 del Gauntlet (261016) · `obreEmojis` (opcional i estable) afig
  * l'ordre «/» Emoji (creaOrdres · ambEmojis). Cap extensió ni node nou:
  * l'esquema és el de sempre.
+ * P1-64 (pla 261028_1526 §3.1.1) · `demanaExif` (opcional i estable) arriba a
+ * l'ordre «/» Imatge (creaOrdres). Sense, la crida de sempre.
  */
-export function extensionsRiques({ onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null } = {}) {
+export function extensionsRiques({
+  onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null, demanaExif = null,
+} = {}) {
   const ambEmojis = typeof obreEmojis === 'function';
+  const ambExif = typeof demanaExif === 'function';
   return [
     SdpImage.configure({
       inline: false,
@@ -261,7 +391,9 @@ export function extensionsRiques({ onImageUpload = null, ambTargetes = false, on
       HTMLAttributes: { class: 'sdp-imatge-cos', loading: 'lazy', decoding: 'async' }
     }),
     SlashMenu.configure({
-      ordres: creaOrdres({ onImageUpload, ambTargetes, onToast, ...(ambEmojis ? { ambEmojis, obreEmojis } : {}) })
+      ordres: creaOrdres({
+        onImageUpload, ambTargetes, onToast, ...(ambEmojis ? { ambEmojis, obreEmojis } : {}), ...(ambExif ? { demanaExif } : {}),
+      })
     }),
     ...(ambTargetes ? [TargetesIncrustades] : [])
   ];

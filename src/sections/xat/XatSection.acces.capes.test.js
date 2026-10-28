@@ -125,8 +125,11 @@ test('261026 · les dues píndoles de l’accés van en línia i de la mateixa a
   expect(valor('.sdp-xat-pindola', 'width')).toBe('100%');
 });
 
+/* P1-37 (261026_2057) · El buit i els marges de l'accés són els tokens dels
+   botons (--sdp-boto-*, tokens.css), que valen els mateixos 12px
+   (src/css/botons.capes.test.js). Expectatives actualitzades a propòsit. */
 test('261026 · la fila de l’accés porta el buit de la reixeta i com a molt l’amplària de la targeta viva', () => {
-  expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-space-3)');
+  expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-boto-separacio)');
   expect(valor(ACCIONS, 'max-inline-size')).toBe('var(--sdp-targeta-viva-ample)');
   expect(valor(ACCIONS, 'justify-content')).toBe('center');
 });
@@ -152,8 +155,8 @@ test('261026_2126 · «Descarrega l’App» és la píndola de sèrie: alçada t
   expect(valor('.sdp-xat-pindola', 'min-height')).toBe('var(--sdp-touch)');
   expect(valor('.sdp-xat-pindola', 'width')).toBe('100%');
   expect(valor(DESCARREGA, 'max-inline-size')).toBe(valor(ACCIONS, 'max-inline-size'));
-  expect(valor(DESCARREGA, 'margin')).toBe('var(--sdp-space-3) auto 0');
-  expect(valor(ACCIONS, 'margin')).toBe('var(--sdp-space-3) auto 0');
+  expect(valor(DESCARREGA, 'margin')).toBe('var(--sdp-boto-marge-block) auto 0');
+  expect(valor(ACCIONS, 'margin')).toBe('var(--sdp-boto-marge-block) auto 0');
   /* Cap regla no li desfà l'amplària ni l'alçada de sèrie. */
   for (const propietat of ['width', 'min-height', 'height', 'flex']) expect(valor(DESCARREGA, propietat), propietat).toBeNull();
 });
@@ -162,5 +165,5 @@ test('261026_2126 · P1-37 · entre «Descarrega l’App» i la parella, només 
   expect(valor(`${DESCARREGA} + .sdp-alerta__accions`, 'margin-top')).toBe('0');
   expect(valor('.sdp-alerta', 'gap', components)).toBe('var(--sdp-space-3)');
   expect(valor('.sdp-alerta.sdp-xat-acces', 'gap')).toBeNull();
-  expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-space-3)');
+  expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-boto-separacio)');
 });

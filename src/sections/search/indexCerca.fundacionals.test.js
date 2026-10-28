@@ -102,7 +102,7 @@ describe('la IAIA MarIA', () => {
      PAGE_COPY que llig useCercaGlobal) a /anima: cap resultat no confon les dues. */
   test('Bloc 3.6.3 · la IAIA ix a /iaia i el manifest, a les pàgines, a /anima', () => {
     const pagines = PAGES_SEED.map(dePagina).filter(Boolean);
-    const manifest = cercaEntrades(pagines, 'còdex forense', 'pagines').llista;
+    const manifest = cercaEntrades(pagines, 'pacte simbiòtic', 'pagines').llista;
     expect(manifest.map((entrada) => [entrada.id, entrada.titol, entrada.href])).toEqual([['anima', PAGE_COPY.anima.title, '/anima']]);
     expect(pagines.filter((entrada) => entrada.href === RUTA_FITXA_IAIA)).toEqual([]);
     const tot = [...index, ...pagines];

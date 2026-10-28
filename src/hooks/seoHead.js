@@ -1,4 +1,5 @@
 import { ATRIBUT_SSR, CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
+import { clauSocialDeRuta } from '../config/rutaSocial.js';
 
 // Un sol propietari per document. La ruta té un fallback i les vistes poden
 // concretar-lo; en desmuntar desapareixen les metadades de la vista anterior.
@@ -63,15 +64,19 @@ function baseGenerica() {
    el client no hi tornava a posar l'og:type 'product', el JSON-LD Product ni
    product:price; si la càrrega fallava, quedava «No trobat». Se'n van en
    canviar de ruta. Un head marcat que no declara cap ruta se'n va en el
-   primer registre, com abans. */
-const senseBarraFinal = cami => (cami.length > 1 ? cami.replace(/\/+$/, '') || '/' : cami);
+   primer registre, com abans.
+   Pla 261028_1526 (P1-61, Fase 2) · La ruta del head servit i la dels
+   propietaris són claus socials (rutaSocial.js · clauSocialDeRuta): a
+   /wikidepoble porten el seu ?item=. Abans es comparava el camí sol, i el
+   head servit del document A es quedava quan l'app obria el document B. */
 function rutaDelHeadServit() {
   const canonical = document.head.querySelector(`link[rel="canonical"][${ATRIBUT_SSR}]`);
   const ogUrl = document.head.querySelector(`meta[property="og:url"][${ATRIBUT_SSR}]`);
   const valor = canonical?.getAttribute('href') || ogUrl?.getAttribute('content');
   if (!valor) return null;
   try {
-    return senseBarraFinal(new URL(valor, document.baseURI).pathname);
+    const url = new URL(valor, document.baseURI);
+    return clauSocialDeRuta(url.pathname, url.search);
   } catch {
     return null;
   }
@@ -90,7 +95,19 @@ function capture() {
   return { title: document.title, nodes: selectors.map(selector => ({ selector,
     nodes: [...document.head.querySelectorAll(selector)].map(node => node.cloneNode(true)) })) };
 }
-const esLaRutaServida = () => rutaServida !== null && typeof activePath === 'string' && senseBarraFinal(activePath) === rutaServida;
+/* activePath ja és una clau (useSEO); qui crida registerSeo amb un camí
+   (amb la consulta o sense) passa per la mateixa normalització. */
+const clauDe = (ruta) => {
+  const [cami, ...consulta] = ruta.split('?');
+  return clauSocialDeRuta(cami, consulta.join('?'));
+};
+const esLaRutaServida = () => rutaServida !== null && typeof activePath === 'string' && clauDe(activePath) === rutaServida;
+/* Revisió adversarial (261028) · Una vista de la ruta (prioritat > 0: la
+   reserva de RouteSEO no compta) que diu que no s'indexa mana sobre el head
+   servit: el que has bloquejat (Fase D) o un «No trobat» no porten el títol,
+   la imatge ni el canonical del producte que el build va prerenderitzar. */
+const unaVistaNoIndexa = () => [...owners.values()]
+  .some(owner => owner.path === activePath && owner.priority > 0 && owner.data.index === false);
 function restore() {
   if (!baseline) return;
   document.title = baseline.title;
@@ -112,7 +129,7 @@ function apply() {
   /* Revisió adversarial (261027) · A la ruta del head servit, el head és el
      del servidor: no es toca. En eixir-ne, els seus nodes se'n van. */
   if (rutaServida !== null) {
-    if (esLaRutaServida()) return;
+    if (esLaRutaServida() && !unaVistaNoIndexa()) return;
     purgaServits();
   }
   const eligible = [...owners.values()].filter(owner => owner.path === activePath)

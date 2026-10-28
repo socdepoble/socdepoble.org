@@ -28,7 +28,8 @@ vi.mock('../../utils/pujadaImatge.js', async (importOriginal) => {
   };
 });
 import DetallAjust from './DetallAjust.jsx';
-import { AVISOS_DE_LA_FOTO, ERROR_PRESSUPOST_EXIF_CAMERA, PRESSUPOST_PUJADA } from '../../utils/pujadaImatge.js';
+import { AVISOS_DE_LA_FOTO } from '../../utils/pujadaImatge.js';
+import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { ETIQUETA_CONSERVA_CAMERA, exifPublicable } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { TIPUS, jpegAmbExif } from '../../components/universal/enquadrament/jpegProva.js';
 
@@ -152,25 +153,25 @@ const MARCA_MODEL = [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'Canon' }, { tag
 const ERROR_CONNEXIO = 'S\'ha produït un error al pujar la imatge. Comprova la teua connexió.';
 const avisos = () => screen.getAllByRole('alert').map((a) => a.textContent);
 
-test('Gauntlet 261016 (F1) · una foto amb només les dades de la càmera que, amb l’EXIF, no cap: l’avís de la càmera, dins i fora, mai el de connexió', async () => {
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+/* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · ACTUALITZADA A
+   POSTA. Abans, l'avatar oferia la casella de la càmera, marcada de sèrie, i
+   l'EXIF que no hi cabia donava l'avís de la càmera. Ara l'avatar és
+   identitat: cap casella, compressImage sense conservaExif i cap avís del GPS
+   si la foto no en portava. */
+test('P1-64 · una foto amb només les dades de la càmera: sense casella de la càmera; compressImage sense conservaExif, i cap avís del GPS', async () => {
   const camera = new File([jpegAmbExif({ ifd0: MARCA_MODEL })], 'camera.jpg', { type: 'image/jpeg' });
-  // Un byte més que el pressupost: sense l'EXIF de la càmera (el TIFF), hi cabria.
   expect((await exifPublicable(camera)).tiff.length).toBeGreaterThan(1);
-  dobles.compressImage.mockResolvedValue(`data:image/webp;base64,${btoa(`RIFF\u0000\u0000\u0000\u0000WEBPVP8 ${'x'.repeat(PRESSUPOST_PUJADA - 16 + 1)}`)}`);
-  fetchDeVeres();
   const pujaMitja = vi.fn(async () => MITJA);
   munta(pujaMitja);
   await tria(camera);
-  const casella = await within(screen.getByRole('dialog', RETALLADOR)).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_CAMERA) });
-  expect(casella.checked).toBe(true);
+  const retallador = screen.getByRole('dialog', RETALLADOR);
+  expect(within(retallador).queryByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_CAMERA) })).toBeNull();
+  expect(within(retallador).queryByRole('checkbox')).toBeNull();
   await desa();
-  expect(dobles.compressImage.mock.calls[0][1]).toMatchObject({ maxSize: 400, conservaExif: true, original: camera });
-  expect(pujaMitja).not.toHaveBeenCalled();
-  expect(within(screen.getByRole('dialog', RETALLADOR)).getByRole('alert').textContent).toContain(ERROR_PRESSUPOST_EXIF_CAMERA);
-  expect(avisos()).toContain(ERROR_PRESSUPOST_EXIF_CAMERA);
-  expect(avisos().join('|')).not.toContain(ERROR_CONNEXIO);
-  expect(warn).not.toHaveBeenCalled();
+  expect(dobles.compressImage.mock.calls[0][1]).toEqual({ maxSize: 400, format: 'image/webp', quality: 0.8 });
+  expect(pujaMitja).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('status').textContent).toBe('Imatge pujada. Ara dóna-li a Guardar.');
+  expect(screen.queryByText(new RegExp(AVIS_GPS_ELIMINAT_PERFIL))).toBeNull();
 });
 
 test.each(AVISOS_DE_LA_FOTO.map((avis) => [avis]))('Gauntlet 261016 (F1) · cada avís de la foto es diu tal qual, dins i fora, i no puja res: «%s»', async (avis) => {

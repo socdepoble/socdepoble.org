@@ -91,7 +91,7 @@ describe('T3a · geolocalització: encesa', () => {
     expect(fitxer.name).toBe('enquadrament.webp'); // el retall nou, no l'original
     expect(info.format).toBe('1:1');
     expect(metadades).toEqual({
-      geolocalitzacio: { lat: 38.59, lng: -0.42, precisio_m: 1000, origen: 'exif' },
+      geolocalitzacio: { lat: 38.59, lng: -0.42, precisio: 'poble', precisio_m: 1000, origen: 'exif' },
       dataCaptura: '2017-05-14T10:22:33+02:00',
     });
   });
@@ -104,7 +104,7 @@ describe('T3a · geolocalització: encesa', () => {
     expect(vista.container.textContent).toContain('Es desarà: 38.592, -0.418 (uns 100 m).');
     act(() => { fireEvent.click(vista.getByRole('radio', { name: /^Exacta/ })); });
     await desa(vista);
-    expect(metadadesDe(vista.onDesa).geolocalitzacio).toEqual({ lat: 38.59194, lng: -0.41843, precisio_m: 1, origen: 'exif' });
+    expect(metadadesDe(vista.onDesa).geolocalitzacio).toEqual({ lat: 38.59194, lng: -0.41843, precisio: 'exacta', precisio_m: 1, origen: 'exif' });
   });
 
   test('una foto sense GPS: avís, entrada a mà (amb coma decimal) i origen «manual»', async () => {
@@ -121,7 +121,7 @@ describe('T3a · geolocalització: encesa', () => {
     escriu(vista, 'Longitud', '-0.4184');
     await desa(vista);
     expect(metadadesDe(vista.onDesa)).toEqual({
-      geolocalitzacio: { lat: 38.59, lng: -0.42, precisio_m: 1000, origen: 'manual' },
+      geolocalitzacio: { lat: 38.59, lng: -0.42, precisio: 'poble', precisio_m: 1000, origen: 'manual' },
       dataCaptura: null,
     });
   });

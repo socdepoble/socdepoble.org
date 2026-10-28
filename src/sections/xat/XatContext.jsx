@@ -236,7 +236,7 @@ import {
   trobaPendent
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
-import { descartaCompartit } from '../../config/compartirNatiu.js';
+import { canviaSessioCompartit, reiniciaDestiCompartit } from '../../config/compartirNatiu.js';
 import { buidaRecents } from './emoticonesXat.js';
 import { recordaRutaForaDelXat } from './informeDError.js';
 import { recordaOrigenDelXat } from './origenDelXat.js';
@@ -2001,8 +2001,13 @@ export function XatProvider({ children, config }) {
     /* Gauntlet 261026_1615 (Codex C1615-01, Gemini G1615-00) · El que s'havia
        compartit des del menú del dispositiu tampoc: eixir d'una sessió (o canviar
        de persona o de backend) el descarta, també el que el compositor tenia en
-       vol. Compartir abans d'entrar (convidat → persona) el conserva. */
-    if (JSON.parse(previa)[1] != null) descartaCompartit();
+       vol. Compartir abans d'entrar (convidat → persona) el conserva.
+       Pla 261028_1526 (P1-31) · I el que el pont encara llegia: la sessió té
+       època pròpia (no `generacio`, que puja amb el «Descarta» del diàleg).
+       Sense ningú dins, un canvi de backend només torna el lot a «Envia a…». */
+    const [backendAbans, personaAbans] = JSON.parse(previa);
+    if (personaAbans != null) canviaSessioCompartit();
+    else if (backendAbans !== JSON.parse(clauPersona)[0]) reiniciaDestiCompartit();
   }, [clauPersona]);
 
   /* Auditoria adversarial 261016 (P3) · El xat de només lectura de Javi porta

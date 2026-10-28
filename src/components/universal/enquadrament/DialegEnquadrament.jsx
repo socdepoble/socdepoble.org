@@ -129,6 +129,32 @@
  *     que ja feia (la seua confirmació); mentre desa, desactivat.
  *   etiquetaDesa (null) · el nom del botó principal (per defecte, «Guardar»
  *     en el mode senzill i «Desar l’enquadrament» en el T46).
+ *
+ * P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisions 7 i 8) · La
+ * política diferenciada del GPS. Dues ampliacions; sense elles, el diàleg és
+ * exactament el d'abans (Llei del Píxel):
+ *   avisaGpsEliminat (false) · Una foto d'IDENTITAT (l'avatar de totes les
+ *     menes i la capçalera d'una persona): mai cap casella. La foto ix neta
+ *     sempre (el canvas la recodifica) i, NOMÉS si l'original portava una
+ *     ubicació de veres (teUbicacio: el GPS llegit o un GPS IFD amb entrades
+ *     que no són la versió), el diàleg ho diu amb AVIS_GPS_ELIMINAT_PERFIL,
+ *     literal del Mestre, on aniria la casella. Dir que s'ha eliminat el que
+ *     no hi era seria fals (Llei del Llop). onDesa rep metadades.exif =
+ *     { conservaExif: false } i metadades.gpsEliminat (boolean), perquè qui
+ *     puja ho torne a dir si la finestra ja s'ha tancat. Desar abans que acabe
+ *     la lectura espera la lectura, però no demana revisar res (no hi ha
+ *     casella). Una adreça ja desada amb GPS (re-enquadrar) no es dona per
+ *     bona encara que siga sencera: es torna a retallar, i ix neta. Mana sobre
+ *     ofereixConservarExif.
+ *   La precisió (amb ofereixConservarExif) · Amb la casella marcada i una
+ *     ubicació a la foto, davall de la casella, les píndoles de PRECISIONS
+ *     (de sèrie PRECISIO_PER_DEFECTE_PUBLICACIO, 'exacta': decisió 8) i la
+ *     línia «Es desarà: …». En desar, metadades.exif porta també `precisio`
+ *     (la compressió hi arrodonix la ubicació del fitxer: ajustaPrecisioGps),
+ *     metadades.geolocalitzacio, la de geolocalitzacio({ …, origen: 'exif' })
+ *     a eixa precisió, i metadades.dataCaptura, la de la foto. Desmarcada,
+ *     tot com abans. La casella amb les píndoles és CasellaExif, que també fa
+ *     servir l'ordre «/» Imatge del text enriquit (DocumentEditor).
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Camera, Minus, Plus, Trash2 } from 'lucide-react';
@@ -141,7 +167,9 @@ import { llegixMetadadesImatge, senseDades } from './exif.js';
 import {
   errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, teData, teExifPerConservar, teUbicacio,
 } from './exifIncrustat.js';
-import { ERROR_UBICACIO, PRECISIO_PER_DEFECTE, geolocalitzacio, llegixCoordenada } from './geolocalitzacio.js';
+import {
+  ERROR_UBICACIO, PRECISIONS, PRECISIO_PER_DEFECTE, PRECISIO_PER_DEFECTE_PUBLICACIO, geolocalitzacio, llegixCoordenada, textUbicacio,
+} from './geolocalitzacio.js';
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
 import { ERROR_HEIC, ERROR_PIXELS, comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
 import { UbicacioImatge } from './UbicacioImatge.jsx';
@@ -164,6 +192,10 @@ export const AJUDA_CONSERVA_DATA = 'Si la deixes marcada, la data es publicarà 
 export const AJUDA_CONSERVA_CAMERA = 'Si la deixes marcada, les dades de la càmera es publicaran amb la foto.';
 /* Gauntlet 261016 (Bloc B, P3) · Qui ha desat abans de veure la casella: no es desa encara. */
 export const AVIS_REVISA_EXIF = 'Esta foto porta dades que es publicarien amb ella. Revisa la casella i torna a desar.';
+/* P1-64 (Mestre 261028, decisió 7) · L'avís literal del Mestre: només quan la foto d'identitat portava GPS. */
+export const AVIS_GPS_ELIMINAT_PERFIL = '🔒 Per la teua privacitat, s\'han eliminat les dades GPS de la foto de perfil';
+/* P1-64 · Les píndoles de la precisió (nom accessible del grup) i la línia del que es desarà. */
+export const LLEGENDA_PRECISIO = 'Precisió de la ubicació';
 
 /* Gauntlet 261016 (Bloc B, P2) · Les dades que identifiquen la càmera o una
    persona que es publicarien (contingut, exifIncrustat.js), en l'ordre que es
@@ -185,6 +217,54 @@ function ajudaConservaExif(dades) {
     return camera ? `${base} També es publicaran les dades de la càmera: ${camera}.` : base;
   }
   return camera ? `Si la deixes marcada, les dades de la càmera es publicaran amb la foto: ${camera}.` : AJUDA_CONSERVA_CAMERA;
+}
+
+/**
+ * P1-64 (pla 261028_1526 §3.1.1) · La casella de l'EXIF d'una foto de
+ * PUBLICACIÓ (el hero i les fotos del cos), la de Pedra Seca. `dades` és el
+ * que ha llegit exifPublicable; l'etiqueta i l'avís diuen el que porta (Codex,
+ * 02:26). Amb `onPrecisio`, la casella marcada i una ubicació a la foto,
+ * davall, les píndoles de PRECISIONS (ràdios natius en un fieldset
+ * role="radiogroup", com les formes del mode senzill) i la línia «Es desarà:
+ * …» amb el punt ja arrodonit. Sense `onPrecisio`, només la casella: el DOM
+ * de sempre.
+ */
+export function CasellaExif({ dades, conserva, onConserva, precisio = PRECISIO_PER_DEFECTE_PUBLICACIO, onPrecisio = null, desactivat = false }) {
+  const id = useId();
+  const ambPrecisio = typeof onPrecisio === 'function' && conserva && teUbicacio(dades);
+  const triada = PRECISIONS.find((p) => p.valor === precisio) || PRECISIONS[0];
+  const punt = ambPrecisio && dades.gps ? geolocalitzacio({ lat: dades.gps.lat, lng: dades.gps.lng, precisio: triada.valor, origen: 'exif' }) : null;
+  const idLinia = `${id}-desara`;
+  return (
+    <>
+      <Casella etiqueta={etiquetaConservaExif(dades)} ajuda={ajudaConservaExif(dades)}
+        checked={conserva} disabled={desactivat} onChange={(ev) => onConserva?.(ev.target.checked)} />
+      {ambPrecisio ? (
+        <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-llegenda`}
+          aria-describedby={idLinia} disabled={desactivat}>
+          <legend id={`${id}-llegenda`} className="sdp-nomes-lector">{LLEGENDA_PRECISIO}</legend>
+          <div className="sdp-enquadrament__formats-pindoles">
+            {PRECISIONS.map((p) => {
+              const idOpcio = `${id}-precisio-${p.valor}`;
+              return (
+                <div key={p.valor} className="sdp-enquadrament__format">
+                  <input type="radio" id={idOpcio} name={`${id}-precisio`} value={p.valor}
+                    className="sdp-enquadrament__format-control sdp-nomes-lector"
+                    checked={triada.valor === p.valor} onChange={() => onPrecisio(p.valor)} />
+                  <label htmlFor={idOpcio} className="sdp-enquadrament__format-pindola">{p.etiqueta}</label>
+                </div>
+              );
+            })}
+          </div>
+        </fieldset>
+      ) : null}
+      {ambPrecisio ? (
+        <p id={idLinia} className="sdp-camp__ajuda" aria-live="polite">
+          {punt ? `Es desarà: ${textUbicacio(punt, triada.valor)}. ${triada.ajuda}` : triada.ajuda}
+        </p>
+      ) : null}
+    </>
+  );
 }
 
 /* Onada 4 (retallador senzill) · Un zoom «al límit» amb marge de coma flotant. */
@@ -226,6 +306,7 @@ export function DialegEnquadrament({
   senzill = false,
   mascara = null,
   ofereixConservarExif = false,
+  avisaGpsEliminat = false,
   onCanviaFoto = null,
   etiquetaCanviaFoto = ETIQUETA_CANVIA_FOTO,
   acceptFoto = 'image/*',
@@ -275,6 +356,10 @@ export function DialegEnquadrament({
   const [exifOriginal, setExifOriginal] = useState(null);
   const [conservaExif, setConservaExif] = useState(true);
   const lecturaExif = useRef(null);
+  /* P1-64 · La precisió triada (de sèrie, l'exacta: decisió 8) i, en una foto
+     d'identitat, si l'original portava una ubicació que s'eliminarà. */
+  const [precisioExif, setPrecisioExif] = useState(PRECISIO_PER_DEFECTE_PUBLICACIO);
+  const [gpsEliminat, setGpsEliminat] = useState(false);
   /* Gauntlet 261016 (Bloc B, P2) · El blob que el carregador ha obert per a
      una adreça ({ font, blob }): d'ell es llig l'EXIF quan la font no és un
      File. D'on es llig: el File mateix, o el blob d'esta adreça (mai el d'una
@@ -373,20 +458,27 @@ export function DialegEnquadrament({
      cap casella a la nova.
      Bloc B, P2 · Es llig d'origenExif: el File, o el blob que el carregador ha
      obert per a una adreça (arriba amb la imatge). En layout, i no després
-     del pintat: la lectura queda registrada abans que «Desar» es puga clicar. */
+     del pintat: la lectura queda registrada abans que «Desar» es puga clicar.
+     P1-64 · També es llig amb avisaGpsEliminat (identitat): cap casella, només
+     l'avís si hi havia una ubicació. Cada foto nova torna a l'exacta. */
   useLayoutEffect(() => {
     setExifOriginal(null);
     setConservaExif(true);
+    setPrecisioExif(PRECISIO_PER_DEFECTE_PUBLICACIO);
+    setGpsEliminat(false);
     lecturaExif.current = null;
-    if (!obert || !ofereixConservarExif || !origenExif) return undefined;
+    if (!obert || !(ofereixConservarExif || avisaGpsEliminat) || !origenExif) return undefined;
     let viu = true;
     const promesa = Promise.resolve().then(() => lectorExif(origenExif)).catch(() => null);
     lecturaExif.current = { font, origen: origenExif, promesa };
     promesa.then((dades) => {
-      if (viu && teExifPerConservar(dades)) setExifOriginal(dades);
+      if (!viu) return;
+      if (avisaGpsEliminat) {
+        if (teUbicacio(dades)) setGpsEliminat(true);
+      } else if (teExifPerConservar(dades)) setExifOriginal(dades);
     });
     return () => { viu = false; };
-  }, [obert, font, origenExif, ofereixConservarExif, lectorExif]);
+  }, [obert, font, origenExif, ofereixConservarExif, avisaGpsEliminat, lectorExif]);
 
   /* En layout: el canvas es buida quan canvien els atributs de mida (canvi de
      forma) i així no hi ha cap fotograma en blanc. */
@@ -562,11 +654,13 @@ export function DialegEnquadrament({
 
   /* Gauntlet 261016 (Bloc 1.2) · La casella de Pedra Seca (la mateixa de
      «Vull geolocalitzar aquesta imatge»), només si hi ha EXIF; l'etiqueta i
-     l'avís diuen el que porta (Codex, 02:26). */
+     l'avís diuen el que porta (Codex, 02:26). P1-64 · Amb les píndoles de la
+     precisió (CasellaExif) i, en una foto d'identitat amb GPS, l'avís en el
+     seu lloc. */
   const casellaExif = exifOriginal && imatge ? (
-    <Casella etiqueta={etiquetaConservaExif(exifOriginal)} ajuda={ajudaConservaExif(exifOriginal)}
-      checked={conservaExif} disabled={desant} onChange={(ev) => setConservaExif(ev.target.checked)} />
-  ) : null;
+    <CasellaExif dades={exifOriginal} conserva={conservaExif} onConserva={setConservaExif}
+      precisio={precisioExif} onPrecisio={setPrecisioExif} desactivat={desant} />
+  ) : (gpsEliminat && imatge ? <Alerta to="info">{AVIS_GPS_ELIMINAT_PERFIL}</Alerta> : null);
 
   /* Onada 4, T3a · La ubicació que es desaria ara mateix (ja arrodonida), o null. */
   const ubicacio = geo.actiu
@@ -618,9 +712,20 @@ export function DialegEnquadrament({
        a desar, llevat que haja desmarcat la casella: llavors es desa neta. */
     const casellaVista = Boolean(exifOriginal);
     const treuExif = casellaVista && !conservaExif;
+    /* P1-64 · La lectura d'esta foto (el File o el blob de l'adreça), si n'hi ha. */
+    const lecturaDeLaFont = () => (lecturaExif.current?.font === font ? lecturaExif.current : null);
     if (sencera && !esFitxer(font) && !geo.actiu && !treuExif) {
-      onTanca?.('boto');
-      return;
+      /* P1-64 · Una adreça d'identitat sencera que porta GPS no es dona per
+         bona: es torna a retallar (i ix neta). Sense GPS, es tanca com sempre. */
+      const lecturaAbans = avisaGpsEliminat ? lecturaDeLaFont() : null;
+      if (lecturaAbans) setDesant(true);
+      const llegitAbans = lecturaAbans ? await lecturaAbans.promesa : null;
+      if (lecturaAbans && (!muntatRef.current || fontRef.current !== font)) return;
+      if (!teUbicacio(llegitAbans)) {
+        if (lecturaAbans) setDesant(false);
+        onTanca?.('boto');
+        return;
+      }
     }
     if (geo.actiu && !ubicacio) {
       fallaDesat(ERROR_UBICACIO);
@@ -638,9 +743,14 @@ export function DialegEnquadrament({
          Bloc B, P3 · Si la casella no s'havia vist i la lectura porta un EXIF
          per a ella, tampoc: ix la casella (marcada de sèrie) i l'avís, i desa
          el segon clic. L'original és d'on s'ha llegit (el File o el blob). */
-      const lectura = lecturaExif.current;
-      const llegit = lectura?.font === font ? await lectura.promesa : null;
-      if (teExifPerConservar(llegit)) {
+      const lectura = lecturaDeLaFont();
+      const llegit = lectura ? await lectura.promesa : null;
+      if (avisaGpsEliminat) {
+        /* P1-64 · Identitat: sempre neta, sense casella ni AVIS_REVISA_EXIF; qui
+           puja sap si hi havia una ubicació per a dir-ho després. */
+        metadades.exif = { conservaExif: false };
+        metadades.gpsEliminat = teUbicacio(llegit);
+      } else if (teExifPerConservar(llegit)) {
         if (!casellaVista) {
           if (muntatRef.current && fontRef.current === font) setExifOriginal(llegit);
           fallaDesat(AVIS_REVISA_EXIF);
@@ -650,7 +760,18 @@ export function DialegEnquadrament({
           fallaDesat(errorExifNoConservable(llegit));
           return;
         }
-        metadades.exif = conservaExif ? { conservaExif: true, original: lectura.origen } : { conservaExif: false };
+        /* P1-64 · Marcada i amb una ubicació: la precisió triada va a la pujada
+           (el fitxer) i al camp, amb la data de la foto. */
+        const ambUbicacio = conservaExif && teUbicacio(llegit);
+        metadades.exif = conservaExif
+          ? { conservaExif: true, original: lectura.origen, ...(ambUbicacio ? { precisio: precisioExif } : null) }
+          : { conservaExif: false };
+        if (conservaExif && !geo.actiu) {
+          if (ambUbicacio && llegit.gps) {
+            metadades.geolocalitzacio = geolocalitzacio({ lat: llegit.gps.lat, lng: llegit.gps.lng, precisio: precisioExif, origen: 'exif' });
+          }
+          if (llegit.dataCaptura) metadades.dataCaptura = llegit.dataCaptura;
+        }
       }
       let fitxer = font;
       // Bloc B · Una adreça no és cap fitxer per a lliurar: sempre el retall.

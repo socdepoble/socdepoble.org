@@ -348,6 +348,36 @@ test('bloc a WordPress 5.8–6.0: el render_callback pinta el marcatge universal
   assert.deepEqual(bloc.traduccions, [['socdepoble-app-editor-script', 'socdepoble', `${fs.realpathSync(bloc.plugin)}/languages`]]);
 });
 
+/* Pla 261028_1526 (P1-22, TE-05) · La llengua opt-in del lloc. Per defecte cap
+   (T1: el locale de WordPress no força la llengua); un filtre de
+   socdepoble_enxufe_idioma (d'un tema o d'un altre plugin: ací, una línia
+   afegida al final de la còpia del plugin) emet config='{"language":"…"}' a
+   l'element, només amb un dels cinc codis exactes del selector. */
+test('TE-05 · socdepoble_enxufe_idioma: config amb la llengua només amb un codi exacte del selector', OPCIONS, t => {
+  const atributs = { nomPoble: 'Penàguila', poble: 'penaguila' };
+  const ambFiltre = (idioma) => {
+    const plugin = copiaPlugin(temporal(t), 'socdepoble');
+    if (idioma !== undefined) {
+      fs.appendFileSync(path.join(plugin, 'socdepoble-enxufe.php'),
+        "\nadd_filter( 'socdepoble_enxufe_idioma', static function () { return $GLOBALS['cas']['idioma_app']; } );\n");
+    }
+    const bloc = php(FIXTURE, [plugin], { mode: 'bloc', atributs, idioma_app: idioma });
+    const dom = new JSDOM(bloc.html);
+    t.after(() => dom.window.close());
+    return { bloc, element: dom.window.document.querySelector('soc-de-poble') };
+  };
+  for (const codi of ['ca', 'es', 'en', 'eu', 'gl']) {
+    const { bloc, element } = ambFiltre(codi);
+    assert.equal(element.getAttribute('config'), `{"language":"${codi}"}`, codi);
+    assert.ok(bloc.html.includes(` config="{&quot;language&quot;:&quot;${codi}&quot;}"`), 'JSON escapat com a atribut');
+    assert.equal(element.getAttribute('poble'), 'penaguila', 'la resta, com sempre');
+    assert.equal(bloc.render_php, bloc.html, 'el camp "render" (6.1+) i el render_callback, el mateix marcatge');
+  }
+  for (const idioma of [undefined, '', 'en-US', 'en_US', 'fr', 'ES', ' es', ['es'], 1]) {
+    assert.equal(ambFiltre(idioma).element.hasAttribute('config'), false, `sense config: ${JSON.stringify(idioma)}`);
+  }
+});
+
 const escapa = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
 test('traduccions a WordPress 5.8–6.4: sense WP_Translation_Controller, el .l10n.php es servix pels filtres gettext, també per a ca_valencia', OPCIONS, t => {
@@ -366,10 +396,15 @@ test('traduccions a WordPress 5.8–6.4: sense WP_Translation_Controller, el .l1
     assert.equal(resultat.altre, 'Village name', 'un altre text domain no es toca');
   }
 
-  // De la 6.5 ençà ho fa WordPress, i també si un paquet ja ha carregat el domini.
-  for (const cas of [{ controlador: true }, { carregat: true }, { llengua: 'es_ES' }, { llengua: 'ca', plugin_locale: 'es_ES' }]) {
+  // De la 6.5 ençà ho fa WordPress; una llengua sense catàleg, en anglés.
+  for (const cas of [{ controlador: true }, { llengua: 'es_ES' }, { llengua: 'ca', plugin_locale: 'es_ES' }]) {
     assert.equal(executa(t, { mode: 'idioma', ...cas }, ['socdepoble']).text, 'Village name', JSON.stringify(cas));
   }
+  /* P1-09 · Un paquet de translate.wordpress.org ja carregat ($cas['carregat'])
+     no apaga la reserva: el que traduïx mana (ací, com el filtre general de
+     baix) i el catàleg només posa el que el paquet no porta. */
+  assert.equal(executa(t, { mode: 'idioma', carregat: true }, ['socdepoble']).text, messages['Village name']);
+  assert.equal(executa(t, { mode: 'idioma', carregat: true, canvia: { 'Village name': 'Del paquet' } }, ['socdepoble']).text, 'Del paquet');
   // La llengua del plugin és la de plugin_locale, com a load_plugin_textdomain.
   assert.equal(executa(t, { mode: 'idioma', llengua: 'es_ES', plugin_locale: 'ca' }, ['socdepoble']).text, messages['Village name']);
 
@@ -390,6 +425,61 @@ test('traduccions a WordPress 5.8–6.4: sense WP_Translation_Controller, el .l1
   for (const llengua of ['/../socdepoble-ca', 'x/../socdepoble-ca']) {
     assert.equal(php(FIXTURE, [plugin], { mode: 'idioma', llengua }).text, 'Village name', llengua);
   }
+});
+
+/* Pla 261028_1526 (P1-09, GN-R08) · La fixture no porta cap
+   WP_Locale_Switcher: com el filtre de TE-05, el subconjunt va al final de la
+   còpia del plugin. La pila desa la llengua de determine_locale()
+   ($cas['llengua']), is_locale_switched() la llig i change_locale avisa en
+   canviar i en tornar, com WordPress. Després de la càrrega d'init, cada pas
+   de $cas['canvis'] ('restore' torna a l'anterior) anota el text i el del
+   bloc, amb context. */
+const DESCRIPCIO_DEL_BLOC = 'Embeds the Sóc de Poble app with the universal host markup.';
+const COMMUTADOR = `
+$GLOBALS['pila_llengues'] = array();
+function is_locale_switched() { return ! empty( $GLOBALS['pila_llengues'] ); }
+if ( 'canvis' === ( $GLOBALS['cas']['mode'] ?? '' ) ) {
+	if ( isset( $GLOBALS['cas']['plugin_locale'] ) ) {
+		add_filter( 'plugin_locale', static function ( $llengua, $domini ) { return 'socdepoble' === $domini ? $GLOBALS['cas']['plugin_locale'] : $llengua; }, 10, 2 );
+	}
+	socdepoble_enxufe_carrega_traduccions();
+	$passos = array();
+	foreach ( $GLOBALS['cas']['canvis'] as $pas ) {
+		if ( 'restore' === $pas ) {
+			$GLOBALS['cas']['llengua'] = array_pop( $GLOBALS['pila_llengues'] );
+		} else {
+			$GLOBALS['pila_llengues'][] = determine_locale();
+			$GLOBALS['cas']['llengua']  = $pas;
+		}
+		do_action( 'change_locale', determine_locale() );
+		$passos[] = array( __( 'Village name', 'socdepoble' ), _x( '${DESCRIPCIO_DEL_BLOC}', 'block description', 'socdepoble' ) );
+	}
+	echo json_encode( $passos, JSON_THROW_ON_ERROR );
+	exit;
+}
+`;
+
+function canvisDeLlengua(t, cas, { carpetaX = false } = {}) {
+  const plugin = copiaPlugin(temporal(t), 'socdepoble');
+  fs.appendFileSync(path.join(plugin, 'socdepoble-enxufe.php'), COMMUTADOR);
+  if (carpetaX) fs.mkdirSync(path.join(plugin, 'languages/socdepoble-x'));
+  return php(FIXTURE, [plugin], { mode: 'canvis', ...cas });
+}
+
+test('P1-09 · WordPress 5.8–6.4: la reserva seguix switch_to_locale() i la tornada, en els dos sentits', OPCIONS, t => {
+  const { messages } = executa(t, { mode: 'l10n' });
+  const EN = ['Village name', DESCRIPCIO_DEL_BLOC];
+  const CA = [messages['Village name'], messages[`block description\u0004${DESCRIPCIO_DEL_BLOC}`]];
+  assert.ok(CA[0] && CA[1] && CA[0] !== EN[0] && CA[1] !== EN[1], 'el catàleg de ca traduïx els dos textos');
+  const passos = (llengua, canvis, extra = {}) => canvisDeLlengua(t, { llengua, canvis, ...extra });
+
+  assert.deepEqual(passos('ca', ['en_US', 'restore']), [EN, CA]);
+  assert.deepEqual(passos('en_US', ['ca', 'restore']), [CA, EN], 'un lloc sense catàleg a init també canvia');
+  assert.deepEqual(passos('en_US', ['ca_valencia', 'es_ES', 'restore', 'restore']), [CA, EN, CA, EN], 'la pila, i ca_valencia amb el catàleg de ca');
+  assert.deepEqual(passos('en_US', ['ca'], { plugin_locale: 'es_ES' }), [EN], 'plugin_locale també a la llengua canviada');
+  assert.deepEqual(passos('en_US', ['es_ES'], { plugin_locale: 'ca' }), [CA]);
+  assert.deepEqual(passos('es_ES', ['ca', 'restore'], { carregat: true }), [CA, EN], 'un paquet carregat a init no apaga la reserva');
+  assert.deepEqual(canvisDeLlengua(t, { llengua: 'en_US', canvis: ['/../socdepoble-ca', 'x/../socdepoble-ca'] }, { carpetaX: true }), [EN, EN], 'la guarda del codi de llengua');
 });
 
 test('ca_valencia («Català (Valencià)») fa servir els fitxers de ca, si no en té de propis, en qualsevol versió', OPCIONS, t => {

@@ -245,9 +245,10 @@ add_filter( 'script_loader_tag', 'socdepoble_enxufe_integritat', 10, 3 );
  * l'esquelet de càrrega. Una instància pot trepitjar nomPoble, poble i
  * rutaInicial; els buits no s'emeten.
  *
- * Només la instància pròpia de WordPress porta el servei de traducció i
- * l'opt-in ruta-a-url (atributsOptIn de sdp.amfitrio.v1). El marcatge de
- * referència per a altres amfitrions es queda en el marcatge universal.
+ * Només la instància pròpia de WordPress porta el servei de traducció,
+ * l'opt-in ruta-a-url (atributsOptIn de sdp.amfitrio.v1) i, si el filtre
+ * socdepoble_enxufe_idioma la fixa, la llengua (atribut config). El marcatge
+ * de referència per a altres amfitrions es queda en el marcatge universal.
  *
  * @param array $instancia   Claus opcionals nomPoble, poble i rutaInicial.
  * @param bool  $amb_serveis Cert per a la pàgina de WordPress; fals per a la referència copiable.
@@ -287,6 +288,18 @@ function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) 
 		$ruta_a_url = apply_filters( 'socdepoble_enxufe_ruta_a_url', 'fragment' );
 		if ( in_array( $ruta_a_url, array( 'fragment', 'parametre' ), true ) ) {
 			$atributs .= ' ruta-a-url="' . esc_attr( $ruta_a_url ) . '"';
+		}
+
+		/* Pla 261028_1526 (P1-22, TE-05) · La llengua de l'app, només si el
+		   lloc la tria: per defecte cap, i el locale de WordPress no la força
+		   (T1, 260930). El filtre socdepoble_enxufe_idioma la pot fixar a un
+		   dels cinc codis exactes del selector. Va pel JSON de l'atribut config
+		   (atributsDeConfig de sdp.amfitrio.v1), l'únic canal de l'element que
+		   porta `language`: el global SocDePobleConfig només admet nomPoble i
+		   poble. */
+		$idioma = apply_filters( 'socdepoble_enxufe_idioma', '' );
+		if ( in_array( $idioma, array( 'ca', 'es', 'en', 'eu', 'gl' ), true ) ) {
+			$atributs .= ' config="' . esc_attr( wp_json_encode( array( 'language' => $idioma ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) ) . '"';
 		}
 	}
 
@@ -368,6 +381,7 @@ function socdepoble_enxufe_html_permes() {
 			'ruta-inicial' => true,
 			'ruta-a-url'   => true,
 			'traductor-url' => true,
+			'config'       => true,
 		),
 	);
 }

@@ -345,6 +345,34 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
     // Una foto sense EXIF publicable: el de sempre, encara que es triara conservar.
     await expect(fotoDinsDelPressupost(foto(), { mida: 1200, conservaExif: true })).rejects.toThrow(ERROR_PRESSUPOST);
   });
+
+  /* P1-64 (pla 261028_1526 §3.1.1) · La precisió de les píndoles va amb la
+     tria a cada intent; sense, cap clau nova. */
+  test('P1-64 · `precisio` passa a cada intent amb conservaExif; sense, cap clau nova', async () => {
+    fetchDeVeres();
+    dobles.compressImage.mockImplementation(codificador(sempre(1000)));
+    const triada = original();
+    await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: true, original: triada, precisio: 'poble' });
+    expect(opcions()).toEqual([{ maxSize: 1200, format: 'image/webp', quality: 0.8, conservaExif: true, original: triada, precisio: 'poble' }]);
+    dobles.compressImage.mockClear();
+    await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: true, original: triada });
+    expect(Object.keys(opcions()[0])).toEqual(['maxSize', 'format', 'quality', 'conservaExif', 'original']);
+    dobles.compressImage.mockClear();
+    // Desmarcada, la precisió no hi va.
+    await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: false, precisio: '100m' });
+    expect(Object.keys(opcions()[0])).toEqual(['maxSize', 'format', 'quality']);
+  });
+
+  test('P1-64 · una ubicació que no es pot arrodonir a la precisió triada: ERROR_EXIF_NO_CONSERVABLE abans de comprimir, mai el punt exacte', async () => {
+    fetchDeVeres();
+    dobles.compressImage.mockImplementation(codificador(sempre(1000)));
+    const rara = new File([jpegAmbExif({ gps: gpsTorre({ lat: [[38, 1], [35, 1], [30, 1], [1, 1]] }) })], 'rara.jpg', { type: 'image/jpeg' });
+    await expect(fotoDinsDelPressupost(foto(), { mida: 1200, conservaExif: true, original: rara, precisio: 'poble' })).rejects.toThrow(ERROR_EXIF_NO_CONSERVABLE);
+    expect(dobles.compressImage).not.toHaveBeenCalled();
+    // A l'exacta, la mateixa foto es pot conservar tal qual.
+    await fotoDinsDelPressupost(foto(), { mida: 1200, conservaExif: true, original: rara, precisio: 'exacta' });
+    expect(dobles.compressImage).toHaveBeenCalled();
+  });
 });
 
 /* ── Gauntlet 261016 (Codex, relleu 02:26) · El sostre de l'EXIF és el del

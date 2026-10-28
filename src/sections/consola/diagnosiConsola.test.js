@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · El «Diagnòstic
    del Mas» és dada abans que vista: el text del <pre> ix de les mateixes
@@ -7,8 +7,9 @@ import { describe, expect, test } from 'vitest';
    problemes sense retallar i, amb el mode privacitat, amaga el que amaguen
    les targetes (rutes i evidències), ni més ni menys. */
 import {
-  ETIQUETA_ACCES, MASCARA, SENSE_SEMAFOR, TITOL_DIAGNOSI, accesRapid, diagnosiTextual
+  ETIQUETA_ACCES, ETIQUETA_VERSIO, MASCARA, SENSE_SEMAFOR, TITOL_DIAGNOSI, accesRapid, diagnosiTextual
 } from './diagnosiConsola.js';
+import { VERSIO_SISTEMA, versioCanonica } from '../../config/versio.js';
 import {
   IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, avisosDeVigilancia, copyConsola, estatsPagina, etiquetesPagina,
   paginaConsola, paginesConsola, problemesPagina, resumPagina
@@ -104,6 +105,32 @@ describe('sense cap font', () => {
     expect(text).not.toContain('Mode privacitat');
   });
 
+  /* P1-35 (pla 261028_1526 §3.5.2; decisió 6 del Mestre) · La línia 3 diu la
+     Versió Canònica del Sistema. A les proves no hi ha segell de build: v1.0.0. */
+  test('la línia 3 diu la versió del sistema, darrere de les dues instantànies', () => {
+    expect(ETIQUETA_VERSIO).toBe('Versió del sistema');
+    expect(linies(text)[3]).toBe(`Versió del sistema: ${versioCanonica()}`);
+    expect(linies(text)[3]).toBe(`Versió del sistema: v${VERSIO_SISTEMA}`);
+    expect(linies(diagnosiTextual(SENSE, { ara: ARA, versio: 'v1.0.0 (build 261028)' }))[3]).toBe('Versió del sistema: v1.0.0 (build 261028)');
+  });
+
+  describe('amb el build segellat', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
+
+    /* El segell que posa Vite en compilar (import.meta.env.SDP_BUILD): la
+       línia 3 el diu sense passar `versio`, perquè ve de config/versio.js. */
+    test('la línia 3 porta el build de config/versio.js', async () => {
+      vi.stubEnv('SDP_BUILD', '261028');
+      vi.resetModules();
+      const { diagnosiTextual: ambSegell } = await import('./diagnosiConsola.js');
+      expect(linies(ambSegell(SENSE, { ara: ARA }))[3]).toBe(`Versió del sistema: v${VERSIO_SISTEMA} (build 261028)`);
+      expect(linies(ambSegell(SENSE, { ara: ARA, privat: true }))[3]).toBe(`Versió del sistema: v${VERSIO_SISTEMA} (build 261028)`);
+    });
+  });
+
   test('nou línies de pàgina, en ordre, amb «Sense font» i el per què de la targeta; cap número inventat', () => {
     const deLesPagines = linies(text).filter((l) => /^\[[^\]]+\] /.test(l));
     expect(deLesPagines).toEqual(paginesConsola().map((p) => `[Sense font] ${p.title} · ${resumPagina(p.id, SENSE)}`));
@@ -155,6 +182,8 @@ describe('amb el Mapa i consola.json de prova: paritat amb les targetes', () => 
   test('les dues instantànies, en hora local, com el peu de les pàgines', () => {
     expect(linies(text)[1]).toBe(`Instantània del pols: ${dataLocal(CONSOLA.generat, 'ca-ES')}`);
     expect(linies(text)[2]).toBe(`Instantània del Mapa: ${dataLocal(MAPA.generat, 'ca-ES')}`);
+    // P1-35 · I, darrere, la versió del sistema: la mateixa amb fonts o sense.
+    expect(linies(text)[3]).toBe(`Versió del sistema: ${versioCanonica()}`);
   });
 
   test('cada pàgina porta l’etiqueta de nivell i el resum de la seua targeta, en l’ordre del tauler', () => {
@@ -287,6 +316,8 @@ describe('mode privacitat', () => {
 
   test('ho diu en una línia, i no lleva ni afig cap altra línia de dades', () => {
     expect(linies(privat)).toContain(`Mode privacitat: les rutes i les evidències diuen ${MASCARA}.`);
+    // La versió continua sent la línia 3; l'avís de privacitat va just darrere.
+    expect(linies(privat).slice(3, 5)).toEqual([`Versió del sistema: ${versioCanonica()}`, `Mode privacitat: les rutes i les evidències diuen ${MASCARA}.`]);
     expect(linies(privat)).toHaveLength(linies(obert).length + 1);
     // Les pàgines, els estats i les xifres sense ruta es llegixen igual.
     for (const id of IDS_PAGINES) expect(liniaDe(privat, id)).toBe(liniaDe(obert, id));

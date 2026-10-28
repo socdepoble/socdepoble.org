@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Component, Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
@@ -8,7 +8,7 @@ import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle, Carregant, Boto } from '../../components/PedraSeca/index.js';
+import { PillToggle, Carregant, Boto, Alerta } from '../../components/PedraSeca/index.js';
 import { dataDElement } from '../../components/universal/editorial.js';
 /* Ordre del Mestre, 261001 · la targeta, les pàgines del sistema i l'ordre
    viuen fora (TargetaDelMur, targetesMur.js) perquè la pàgina /calendari pinte
@@ -22,6 +22,61 @@ import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './tar
 import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
 // T2 · L'estat d'error de les dades, compartit amb el Mercat.
 import { EstatErrorDades } from './EstatErrorDades.jsx';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { esAppNativa } from '../../config/origenPublic.js';
+
+/* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
+   Mapa Fotogràfic es carrega en diferit, només quan s'obri la pestanya
+   «Mapa»: ni el seu codi ni Leaflet viatgen amb el Mur. */
+const MapaFotografic = lazyRoute(() => import('./MapaFotografic.jsx'));
+
+/* P1-64 · Si el mapa nou falla (el tros diferit que no arriba, Leaflet que no
+   arrenca o un error en pintar), la pestanya torna al mapa de sempre: el
+   d'OpenStreetMap incrustat. Tampoc ací no es demana res a OSM sense prémer
+   «Vore mapa» (decisió 9), i a l'app nativa no hi ha botó. La barrera només
+   viu mentre la pestanya és oberta: tornar-hi la torna a provar. */
+class BarreraDelMapa extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidCatch(error) {
+    if (import.meta.env?.DEV) console.warn('[Mur] El mapa fotogràfic ha fallat: es mostra el mapa de sempre.', error);
+  }
+
+  render() {
+    return this.state.error ? this.props.recurs : this.props.children;
+  }
+}
+
+function MapaDeSempre({ t }) {
+  const [obert, setObert] = useState(false);
+  const nativa = esAppNativa();
+  if (obert) {
+    return (
+      <iframe
+        title="Mapa del territori"
+        src={buildMapEmbedUrl()}
+        className="sdp-mapa-embed"
+        loading="lazy"
+        /* Només l'origen: la ruta sencera (a WordPress, ?sdp= porta la de l'app) no ix cap a OSM (legal §21). */
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+    );
+  }
+  return (
+    <Alerta to="avis" accions={nativa ? null : <Boto onClick={() => setObert(true)}>{t('section.mur.mapa.voreMapa', 'Vore mapa')}</Boto>}>
+      {nativa
+        ? t('section.mur.mapa.falladaNativa', "El mapa fotogràfic no s'ha pogut carregar.")
+        : t('section.mur.mapa.fallada', "El mapa fotogràfic no s'ha pogut carregar. Pots vore el mapa de sempre del territori.")}
+    </Alerta>
+  );
+}
 
 /* T5 · El model de l'acte d'un element: el de la llista o, si no hi és, fet ara. */
 const modelDe = (models, item) => (models.has(item) ? models.get(item) : acteAEsdeveniment(item));
@@ -61,7 +116,7 @@ export default function MurSection() {
     status: estatMur, error: errorMur, refresh: recarregaMur, sortedEvents, sortedFeedPosts, sortedMarketItems,
     carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
   } = useMur();
-  const { pageCopy, status: estatContingut } = useCoreContent();
+  const { pageCopy, status: estatContingut, towns } = useCoreContent();
   const { t } = useUIActions();
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
@@ -221,15 +276,16 @@ export default function MurSection() {
             ]}
           />
 
+          {/* P1-64 · El Mapa Fotogràfic de les publicacions que es veuen (els
+              filtres ?date= i ?category= de la graella), amb les fitxes dels
+              pobles per a posar al seu poble les fotos sense GPS. */}
           {isMapOpen && (
             <div className="sdp-camp">
-              <iframe
-                title="Mapa del territori"
-                src={buildMapEmbedUrl()}
-                className="sdp-mapa-embed"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
+              <BarreraDelMapa recurs={<MapaDeSempre t={t} />}>
+                <Suspense fallback={<Carregant etiqueta={t('section.mur.mapa.carregant', 'Carregant el mapa fotogràfic…')} />}>
+                  <MapaFotografic items={displayedItems} pobles={towns} />
+                </Suspense>
+              </BarreraDelMapa>
             </div>
           )}
 

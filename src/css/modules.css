@@ -3330,9 +3330,9 @@ details[open] summary.accordion-header svg:last-child {
   .app-grid-shell[data-layout="estret"] .sdp-xat-capcalera--opcio { display: flex; }
   .app-grid-shell[data-layout="estret"] .sdp-xat-control__panell > h2 { display: none; }
 
-  /* Cerca en píndola, sempre a la vista davall del títol (D5): fons subtil,
-     sense vora visible i la lupa dins; la creu buida el terme. A la mateixa
-     línia, a la dreta, la icona de filtre (T12). */
+  /* Cerca en píndola davall del títol (D5): fons subtil, sense vora visible
+     i la lupa dins; la creu buida el terme. P1-36 · Només amb la lupa de la
+     fila de títol oberta, i al lloc de les píndoles (.sdp-xat-pindoles). */
   .sdp-xat-cerca {
     display: flex;
     align-items: center;
@@ -3380,26 +3380,57 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-cerca .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
 
-  /* Filtre de converses (T12, ordre del Mestre 260927): Tot · No llegits ·
-     Preferits · Grups (XAT-A17) dins d'un desplegable darrere de la icona
-     de filtre, a la línia de la cerca; la fila de píndoles que ocupava una
-     fila de la llista ha desaparegut. La icona s'il·lumina amb el to d'acció
-     quan hi ha un filtre que no és «Tot»; el menú és el patró .sdp-xat-menu,
-     el del «⋯» de CapcaleraConversa (el «…» de la fila de títol de la
-     llista s'ha retirat: ordre del Mestre 261026_2126, P1-36). */
-  .sdp-xat-filtre { position: relative; flex: none; }
-  .sdp-xat-filtre__boto { flex: none; }
-  .sdp-xat-cerca .sdp-xat-filtre__boto--actiu {
+  /* Filtres de converses (P1-36, decisió 3 del Mestre del 261028, que
+     deroga el desplegable de T12/261026_2126): Tot · No llegits · Preferits
+     · Grups (XAT-A17) en una fila horitzontal de píndoles, amb el coixí i el
+     fons de la cerca, que hi ocupa el mateix lloc amb la lupa oberta: la
+     fila fa igual d'alta amb l'una o amb l'altra: 8 + 50 + 8, perquè el
+     camp és --sdp-touch més la seua vora transparent (1 + 1) i la píndola
+     també (els 2px de la seua vora). Si no hi caben, es desplaça en
+     horitzontal; amb barres de desplaçament clàssiques, la barra s'hi suma
+     i la fila creix. Cap píndola per davall de --sdp-touch (Llei de Vida).
+     La premuda porta el to d'acció de l'antic filtre actiu i una vora de
+     --sdp-accio-text: l'estat no depén només del fons. */
+  .sdp-xat-pindoles {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-xat-pindoles__boto {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-block-size: calc(var(--sdp-touch) + 2px);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-pindoles__boto:hover { border-color: var(--sdp-vora-control); }
+  }
+  .sdp-xat-pindoles__boto[aria-pressed="true"] {
+    border-color: var(--sdp-accio-text);
     background: var(--sdp-accio-subtil);
     color: var(--sdp-accio-text);
   }
-  .sdp-xat-filtre__menu { min-width: 12rem; }
-  .sdp-xat-menu__buit {
-    display: inline-block;
-    flex: none;
-    width: var(--sdp-space-5);
-    height: var(--sdp-space-5);
-  }
+  .sdp-xat-pindoles__boto:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  /* La lupa de la fila de títol (P1-36): un .sdp-xat-icona de --sdp-touch
+     davant del «+». Oberta, conserva el fons del hover del crom: diu que la
+     cerca és a la vista. */
+  .sdp-xat-lupa[aria-expanded="true"] { background: var(--sdp-crom-hover); }
 
   /* Llista de converses: files de --sdp-xat-fila-mida (XAT-A09, UX-B01).
      Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · La targeta de
@@ -4705,12 +4736,14 @@ details[open] summary.accordion-header svg:last-child {
      reixeta entre els dos i com a molt l'amplària de la columna del llistat
      (--sdp-targeta-viva-ample), centrats. Abans cada píndola portava el 100%
      de .sdp-xat-pindola i en cada línia només en cabia una. Si en un mòbil
-     molt estret els dos textos no hi caben, cadascun baixa a la seua línia. */
+     molt estret els dos textos no hi caben, cadascun baixa a la seua línia.
+     P1-37 (261026_2057) · El buit i el marge són els tokens dels botons
+     (tokens.css), els mateixos 12px. */
   .sdp-xat-acces > .sdp-alerta__accions {
-    margin: var(--sdp-space-3) auto 0;
+    margin: var(--sdp-boto-marge-block) auto 0;
     justify-content: center;
     align-items: center;
-    gap: var(--sdp-space-3);
+    gap: var(--sdp-boto-separacio);
     width: 100%;
     max-inline-size: var(--sdp-targeta-viva-ample);
   }
@@ -4723,7 +4756,7 @@ details[open] summary.accordion-header svg:last-child {
      entre «Connectar-se» i «Registrar-se»): la parella hi perd el seu marge de
      dalt. Dins de l'app nativa no hi ha píndola i la parella el conserva. */
   .sdp-xat-acces > .sdp-xat-acces__descarrega {
-    margin: var(--sdp-space-3) auto 0;
+    margin: var(--sdp-boto-marge-block) auto 0;
     max-inline-size: var(--sdp-targeta-viva-ample);
   }
   .sdp-xat-acces > .sdp-xat-acces__descarrega + .sdp-alerta__accions { margin-top: 0; }

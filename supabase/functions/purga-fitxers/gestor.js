@@ -65,16 +65,35 @@ const resposta = (estat, cos, capcaleres = {}) => new Response(JSON.stringify(co
 
 const errorDe = (codi) => Object.assign(new Error(codi), { codi });
 
-/** fetch amb topall: AbortController i setTimeout, que tenen els dos costats. */
-async function ambTopall(fetch, url, opcions, topallMs) {
+/* Una promesa que perd la cursa amb el senyal: el topall talla encara que el cos no l'escolte. */
+const finsAlTopall = (promesa, senyal) => new Promise((resol, rebutja) => {
+  const talla = () => rebutja(errorDe('temps'));
+  if (senyal.aborted) { talla(); return; }
+  senyal.addEventListener('abort', talla, { once: true });
+  promesa.then(resol, rebutja).finally(() => senyal.removeEventListener('abort', talla));
+});
+
+/**
+ * fetch amb topall: AbortController i setTimeout, que tenen els dos costats.
+ * P1-18 (Codex C0545-WM2, el mateix patró que compte-apple) · El topall dura
+ * fins que `llig` ha consumit la resposta: unes capçaleres que arriben i un
+ * cos que penja també s'avorten («temps»). Després, el cos que `llig` no ha
+ * volgut (un 2xx de Storage, un estat que no és 2xx) es cancel·la. Un error
+ * de `llig` amb codi passa tal qual.
+ */
+async function ambTopall(fetch, url, opcions, topallMs, llig) {
   const control = new AbortController();
   const rellotge = setTimeout(() => control.abort(), topallMs);
+  let r = null;
   try {
-    return await fetch(url, { ...opcions, signal: control.signal });
-  } catch {
-    throw errorDe(control.signal.aborted ? 'temps' : 'xarxa');
+    r = await fetch(url, { ...opcions, signal: control.signal });
+    return await finsAlTopall(Promise.resolve().then(() => llig(r)), control.signal);
+  } catch (error) {
+    if (control.signal.aborted) throw errorDe('temps');
+    throw error?.codi ? error : errorDe('xarxa');
   } finally {
     clearTimeout(rellotge);
+    r?.body?.cancel?.().catch(() => {});
   }
 }
 
@@ -146,23 +165,21 @@ export function creaGestor({
     }
 
     const servei = capcaleresDeServei(clau);
-    const rpc = async (nom, cos) => {
-      const r = await ambTopall(fetch, `${base}/rest/v1/rpc/${nom}`, {
-        method: 'POST',
-        headers: { ...servei, 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(cos)
-      }, o.TOPALL_MS);
+    const rpc = (nom, cos) => ambTopall(fetch, `${base}/rest/v1/rpc/${nom}`, {
+      method: 'POST',
+      headers: { ...servei, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(cos)
+    }, o.TOPALL_MS, async (r) => {
       if (!r.ok) throw errorDe(`base ${r.status}`);
       return llegixJson(r);
-    };
+    });
     const esborra = async (bucket, noms) => {
       try {
-        const r = await ambTopall(fetch, `${base}/storage/v1/object/${encodeURIComponent(bucket)}`, {
+        return await ambTopall(fetch, `${base}/storage/v1/object/${encodeURIComponent(bucket)}`, {
           method: 'DELETE',
           headers: { ...servei, 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({ prefixes: noms })
-        }, o.TOPALL_MS);
-        return await classificaStorage(r);
+        }, o.TOPALL_MS, classificaStorage);
       } catch (error) {
         return { fet: false, error: error?.codi === 'temps' ? 'temps' : 'xarxa' };
       }

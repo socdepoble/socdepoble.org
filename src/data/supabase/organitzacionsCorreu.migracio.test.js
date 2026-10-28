@@ -16,6 +16,8 @@ const NOM = '2610181915_organitzacions_correu_i_membres.sql';
 const NOU = '2610211715_revoca_correu_organitzacions.sql';
 /* C11-02 (Codex 261024_2254) · La correcció del correu d'accés de la propietària. */
 const CORREU_TITULAR = '2610242320_correu_propietaria_nomes_titular.sql';
+/* P1-13 · C11-05 (261028) · El correu que l'organització ha fet públic, en una columna generada. */
+const CORREU_PUBLIC = '2610281730_membres_concurrents_i_correu_public.sql';
 const sensComentaris = (sql) => sql.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
 const sentencies = (sql) => sensComentaris(sql).split(';').map((s) => s.replace(/\s+/g, ' ').trim().toLowerCase()).filter(Boolean);
 const SENTENCIES = sentencies(readFileSync(path.join(MIGRACIONS, NOM), 'utf8'));
@@ -74,13 +76,22 @@ describe('P0-01 · contact_email fora dels rols públics', () => {
   });
 
   test('cap vista ni funció llig contact_email fora de les dues RPC de qui administra', () => {
-    const altres = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql') && f !== NOM && f !== NOU && f !== CORREU_TITULAR);
+    const altres = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql') && f !== NOM && f !== NOU && f !== CORREU_TITULAR && f !== CORREU_PUBLIC);
     expect(altres.filter((f) => /\bcontact_email\b/i.test(sensComentaris(readFileSync(path.join(MIGRACIONS, f), 'utf8'))))).toEqual([]);
     /* C11-02 (2610242320) · La correcció només torna a crear contacte_organitzacio:
        contact_email no hi apareix fora del seu cos (correuPropietaria.migracio.test.js). */
     const titular = sensComentaris(readFileSync(path.join(MIGRACIONS, CORREU_TITULAR), 'utf8'));
     expect([...titular.matchAll(/create or replace function public\.(\w+)\(/gi)].map(([, nom]) => nom)).toEqual(['contacte_organitzacio']);
     expect(titular.replace(/\$\$[\s\S]*?\$\$/g, '$$$$')).not.toMatch(/\bcontact_email\b/i);
+    /* Actualitzada a posta (P1-13 · C11-05, 261028) · 2610281730 llig contact_email
+       una sola vegada: dins de l'expressió de la columna generada correu_public,
+       que només el porta si public_email és true. Cap funció, vista ni permís no
+       el nomena (els GRANT, «cap altra migració dona contact_email a un rol públic»). */
+    const correuPublic = sensComentaris(readFileSync(path.join(MIGRACIONS, CORREU_PUBLIC), 'utf8'));
+    expect(correuPublic.match(/\bcontact_email\b/gi)).toHaveLength(1);
+    expect(sentencies(correuPublic.replace(/\$\$[\s\S]*?\$\$/g, '$$$$')).filter((s) => /\bcontact_email\b/.test(s))).toEqual([
+      "alter table public.organizations add column if not exists correu_public text generated always as (case when public_email is true then nullif(btrim(contact_email), '') end) stored"
+    ]);
     const cru = sensComentaris(readFileSync(path.join(MIGRACIONS, NOM), 'utf8'));
     const cossos = [...cru.matchAll(/create or replace function public\.(\w+)\([\s\S]*?\$\$([\s\S]*?)\$\$/gi)];
     expect(cossos.filter(([, , cos]) => /\bcontact_email\b/i.test(cos)).map(([, nom]) => nom))

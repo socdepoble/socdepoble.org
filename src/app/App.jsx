@@ -31,6 +31,7 @@ import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { destiDeMultimedia } from '../sections/multimedia/rutesMultimedia.js';
+import { idDeDocumentWiki, RUTA_WIKI } from '../config/rutaSocial.js';
 import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
@@ -970,6 +971,24 @@ function RedireccioMultimedia() {
   return <Navigate to={destiDeMultimedia(itemId, search, hash ?? '') || '/multimedia'} replace />;
 }
 
+/* Decisió 2 del Mestre (261028; pla 261028_1526, P1-61 Fase 2) ·
+   /wikidepoble/<id>, la forma de camí que envia Compartir d'un document de la
+   Wiki i que el build prerenderitza amb el seu head (títol i imatge): porta a
+   /wikidepoble?item=<id>, on viu el document, amb replace i conservant la
+   resta de la consulta. El canonical continua sent ?item=. Un id que no
+   valida (ID_DOCUMENT_WIKI, config/rutaSocial.js), a la Wiki sense document.
+   Abans del comodí ':sectionId/:itemId', que en faria «Element no trobat». */
+function RedireccioWikiDePoble() {
+  const { itemId } = useParams();
+  const { search } = useLocation();
+  const consulta = new URLSearchParams(search);
+  const id = idDeDocumentWiki(itemId);
+  if (id) consulta.set('item', id);
+  else consulta.delete('item');
+  const resta = consulta.toString();
+  return <Navigate to={resta ? `${RUTA_WIKI}?${resta}` : RUTA_WIKI} replace />;
+}
+
 /* T4 (ordre del Mestre, 260930) · Els àlies d'entrada (/login, /accedir,
    /entrar, /crear-compte) porten a /registre amb el mode que obrin i
    conserven la consulta rebuda. El ?tornar només passa si és intern i no
@@ -1082,6 +1101,8 @@ function ActorRoutes({ agents }) {
 
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
       <Route path="wikidepoble" element={<RutaWikiDePoble />} />
+      {/* Decisió 2 del Mestre (261028) · La forma de camí d'un document: a ?item=. */}
+      <Route path="wikidepoble/:itemId" element={<RedireccioWikiDePoble />} />
       <Route path="skills" element={<Navigate to="../wikidepoble" replace />} />
       {/* P0-09 (ordre del Mestre, 261020) · /wiki, l'adreça curta que enllaça la pàgina «anima»: porta a la Wiki de Poble com /skills. */}
       <Route path="wiki" element={<Navigate to="../wikidepoble" replace />} />

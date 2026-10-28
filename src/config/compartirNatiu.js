@@ -11,11 +11,17 @@
    no: la persona ha tornat a compartir, com a les apps de missatgeria.
    Gauntlet 261026_1615 (Codex C1615-01/02/03/08, Gemini G1615-00/04):
      · el lot és de qui tria la conversa (propietari) i un canvi de sessió el
-       descarta (descartaCompartit, des de XatContext), també el que hi ha en vol;
+       descarta (canviaSessioCompartit, des de XatContext), també el que hi ha en vol;
      · prendre un fitxer no el perd: si la preparació s'avorta (canvi de
        conversa, arrere), el compositor el torna (tornaFitxerCompartit);
      · la còpia nativa només s'allibera quan s'envia o es descarta: fins
-       llavors sobreviu a un reinici de l'App (el pont la torna a anunciar). */
+       llavors sobreviu a un reinici de l'App (el pont la torna a anunciar).
+   Pla 261028_1526 (Bloc D, P1-31) · El canvi de sessió té època pròpia
+   (canviaSessioCompartit): el que el pont llegia o copiava abans ja no entra,
+   i un lot amb amo no canvia de mans. No és `generacio`, que també puja amb
+   el «Descarta» del diàleg i tiraria un lot nou que encara s'està llegint.
+   El tall arriba també al natiu (registraTalladorCompartit): les còpies d'abans
+   no tornen en arrencar, encara que el procés mora a mitja còpia. */
 export const MAX_FITXERS_COMPARTITS = 10;
 export const MAX_TEXT_COMPARTIT = 4096;
 
@@ -23,7 +29,15 @@ let pendent = null;
 let comptador = 0;
 /* Puja a cada descart: el que s'havia pres abans ja no pot tornar. */
 let generacio = 0;
+/* Puja només quan canvia la sessió (persona o backend); tallSessioMs, l'hora del canvi. */
+let sessio = 0;
+let tallSessioMs = 0;
+/* Més que tota una còpia nativa (60 s, i una lectura de 20 s): el que fa més
+   temps que es va rebre ja l'ha tallat el natiu, i un rellotge que torna
+   arrere després del tall no tira sense fi les comparticions bones. */
+const EN_VOL_MS = 5 * 60 * 1000;
 let alliberador = null;
+let tallador = null;
 const oients = new Set();
 /* La còpia nativa de cada fitxer (la ruta del pont), fora del lot congelat. */
 const rutaDe = new WeakMap();
@@ -37,6 +51,11 @@ const textNet = (valor) => (typeof valor === 'string' ? Array.from(valor.trim())
 /** El pont natiu diu com s'allibera la seua còpia: fn(rutes). */
 export function registraAlliberadorCompartit(fn) {
   alliberador = typeof fn === 'function' ? fn : null;
+}
+
+/** El pont natiu diu com talla la sessió a la seua banda: fn(). */
+export function registraTalladorCompartit(fn) {
+  tallador = typeof fn === 'function' ? fn : null;
 }
 
 /* Allibera les còpies natives d'estos fitxers. Mai llança. */
@@ -53,16 +72,26 @@ function allibera(fitxers) {
 /**
  * El pont natiu hi deixa un lot. Sense cap fitxer ni text, només es guarda si
  * hi ha rebutjats, perquè el Xat diga que no s'ha pogut rebre.
- * @param {{ fitxers?: Blob[], rutes?: (string|null)[], text?: string, rebutjats?: number }} lot
- *   `rutes`, alineades amb `fitxers`: la còpia nativa de cadascun.
+ * @param {{ fitxers?: Blob[], rutes?: (string|null)[], text?: string, rebutjats?: number, sessio?: number, rebutMs?: number }} lot
+ *   `rutes`, alineades amb `fitxers`: la còpia nativa de cadascun. `sessio`
+ *   (sessioCompartit() quan el pont el va rebre) i `rebutMs` (l'hora de
+ *   l'intent natiu): si són d'abans de l'últim canvi de sessió, el lot no entra
+ *   (`rebutMs`, si és d'una còpia que encara podia estar en vol: EN_VOL_MS).
  * @returns {number|null} l'id del lot, o null si no hi havia res
  */
-export function lliuraCompartit({ fitxers = [], rutes = [], text = '', rebutjats = 0 } = {}) {
+export function lliuraCompartit({ fitxers = [], rutes = [], text = '', rebutjats = 0, sessio: sessioDelLot, rebutMs } = {}) {
   const llista = Array.isArray(fitxers) ? fitxers : [];
   llista.forEach((fitxer, i) => {
     const ruta = Array.isArray(rutes) ? rutes[i] : null;
     if (esFitxer(fitxer) && typeof ruta === 'string' && ruta) rutaDe.set(fitxer, ruta);
   });
+  /* P1-31 · Llegit o copiat en una sessió que ja no és: fora, amb les seues
+     còpies, sense avisar ningú ni tocar el lot pendent. */
+  const copiatAbans = Number.isFinite(rebutMs) && rebutMs < tallSessioMs && tallSessioMs - rebutMs <= EN_VOL_MS;
+  if ((sessioDelLot !== undefined && sessioDelLot !== sessio) || copiatAbans) {
+    allibera(llista.filter(esFitxer));
+    return null;
+  }
   const valids = llista.filter(esFitxer);
   const sobrers = Math.max(0, valids.length - MAX_FITXERS_COMPARTITS);
   const net = textNet(text);
@@ -93,7 +122,8 @@ const esDe = (lot, propietari) => lot.propietari == null || lot.propietari === S
 
 /** La persona (propietari: el seu id) tria la conversa on va el lot. */
 export function triaDestiCompartit(filId, propietari = null) {
-  if (!pendent || filId == null || filId === '') return false;
+  // P1-31 · Defensa en profunditat: un lot amb amo no el retria ningú més (ni una crida sense persona).
+  if (!pendent || filId == null || filId === '' || !esDe(pendent, propietari)) return false;
   pendent = congela({ ...pendent, desti: String(filId), propietari: propietari == null ? null : String(propietari) });
   avisa();
   return true;
@@ -169,4 +199,35 @@ export function descartaCompartit() {
   allibera(pendent.fitxers);
   pendent = null;
   avisa();
+}
+
+/** L'època de la sessió: el pont la pren en rebre un lot i la torna amb lliuraCompartit. */
+export const sessioCompartit = () => sessio;
+
+/**
+ * Pla 261028_1526 (P1-31) · La sessió ha canviat (ix la persona, n'entra una
+ * altra o canvia el backend amb algú dins). Ho crida XatContext; el «Descarta»
+ * del diàleg no, que no és cap sessió nova. A més del descart, el que el pont
+ * tenia en vol (una lectura, una còpia nativa d'abans d'ara) ja no entrarà, i
+ * el natiu (el tallador) esborra les còpies d'abans: cap no torna en arrencar.
+ */
+export function canviaSessioCompartit(araMs = Date.now()) {
+  sessio += 1;
+  tallSessioMs = Number.isFinite(araMs) ? araMs : Date.now();
+  descartaCompartit();
+  if (!tallador) return;
+  try { Promise.resolve(tallador()).catch(() => {}); } catch { /* El tall d'ací ja s'ha fet: un natiu que falla només hi deixa restes. */ }
+}
+
+/**
+ * Pla 261028_1526 (P1-31) · El backend ha canviat sense ningú dins: la
+ * conversa triada era de l'altre. Un lot sense amo torna a «Envia a…»; no se'n
+ * descarta res (en fred, la config pot assentar-se després de la compartició).
+ * Torna cert si l'ha tornat.
+ */
+export function reiniciaDestiCompartit() {
+  if (!pendent || pendent.desti == null || pendent.propietari != null) return false;
+  pendent = congela({ ...pendent, desti: null });
+  avisa();
+  return true;
 }

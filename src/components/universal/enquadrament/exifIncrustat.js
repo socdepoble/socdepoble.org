@@ -77,6 +77,7 @@
  * avança, i cada marca de bytes és lineal (capes), no per rang.
  */
 import { llegixExif, teExif } from './exif.js';
+import { PRECISIONS } from './geolocalitzacio.js';
 import { PES_MAXIM_ENTRADA } from './limits.js';
 import { FORMAT_JPEG, FORMAT_PNG, FORMAT_WEBP, formatImatge } from './netejaMetadades.js';
 
@@ -608,6 +609,233 @@ export function preparaTiff(entrada) {
   return analisi?.estat === ESTAT_EXIF.PUBLICABLE ? analisi.tiff : null;
 }
 
+/* ─── La precisió de la ubicació (P1-64, pla 261028_1526 §3.1.1) ──────── */
+
+/* P1-64 (Mestre 261028, decisió 8) · La persona que conserva la ubicació d'una
+   foto de publicació en tria la precisió (PRECISIONS: 'exacta', '100m' o
+   'poble'). El fitxer és el registre del consentiment: el que porta i el camp
+   que se'n deriva (geolocalitzacio) han de dir el MATEIX punt. Per això, amb
+   '100m' o 'poble', les coordenades del GPS IFD es reescriuen EN EL LLOC, cap
+   offset no es mou (el MakerNote en porta de propis: capçalera d'analitzaTiff):
+     · GPSLatitude (2) i GPSLongitude (4), i els del destí (20 i 22) si n'hi ha:
+       els tres RATIONAL passen a (round(v·10^d), 10^d), (0, 1), (0, 1), amb d
+       els decimals de la precisió. El denominador fa de marca: precisioDeGps
+       la recupera en llegir el fitxer;
+     · GPSAltitude (6), arrodonida a 100 m.
+   'exacta' (o cap precisió) torna la MATEIXA referència. Una estructura que no
+   s'entén (un tipus, una quantitat o un denominador inesperats) torna null: no
+   es pot conservar la ubicació a eixa precisió, i qui ho crida no hi posa cap
+   EXIF (mai el punt exacte d'amagat; pujadaImatge.js ho diu). Mai llança. */
+const GPS_LAT = 2;
+const GPS_LNG = 4;
+const GPS_REF_LAT = 1;
+const GPS_REF_LNG = 3;
+const GPS_ALT = 6;
+const GPS_DESTI_LAT = 20;
+const GPS_DESTI_LNG = 22;
+const GPS_DESTI_REF_LAT = 19;
+const GPS_DESTI_REF_LNG = 21;
+const TIPUS_ASCII = 2;
+const TIPUS_RATIONAL = 5;
+/* Les coordenades que es reescriuen: [tag del valor, tag de la referència (N/S, E/W)]. */
+const COORDENADES_GPS = Object.freeze([
+  [GPS_LAT, GPS_REF_LAT], [GPS_LNG, GPS_REF_LNG], [GPS_DESTI_LAT, GPS_DESTI_REF_LAT], [GPS_DESTI_LNG, GPS_DESTI_REF_LNG],
+]);
+/** L'altitud d'una ubicació que no és exacta, arrodonida a tants metres. */
+export const ARRODONIMENT_ALTITUD_M = 100;
+
+const decimalsDe = (precisio) => PRECISIONS.find((p) => p.valor === precisio)?.decimals;
+const arrodonixA = (valor, decimals) => Math.round(valor * 10 ** decimals) / 10 ** decimals;
+const arrodonix7 = (x) => Math.round(x * 1e7) / 1e7; // el mateix soroll que lleva exif.js
+
+/* Revisió adversarial 261028 · Els tags de text lliure (l'XMP, l'IPTC i el
+   bloc de Photoshop) on pot viatjar una altra còpia de la ubicació, que no
+   s'arrodonix: amb '100m' o 'poble', cap d'ells. I el mateix en text pla, en
+   qualsevol lloc del bloc (el MakerNote inclòs). */
+const TAGS_AMB_TEXT_LLIURE = new Set([0x02bc, 0x83bb, 0x8649]);
+const GPS_EN_TEXT = /GPS(?:Dest)?(?:Latitude|Longitude)/;
+const MAX_U32 = 0xffffffff;
+
+/* El text latin1 d'uns bytes, a trossos (sense passar mai de la pila). */
+function textLatin1(bytes) {
+  let text = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return text;
+}
+
+/* El GPS IFD d'un bloc TIFF: { t, v, le, dins, entrades: Map(tag → entrada),
+   dirs }, false si no en porta (res a arrodonir) o null si no s'entén.
+   Revisió adversarial 261028 · Es recorre tot el graf (IFD0, Exif, GPS,
+   Interoperabilitat i SubIFD, com analitzaTiff) perquè cap lector no puga
+   llegir un punt que no s'ha arrodonit: un tag repetit dins d'un directori
+   (cada lector en tria un: analitzaTiff el primer, exif.js l'últim), un tipus
+   desconegut, un directori repetit o un GPS IFD que no penja de l'IFD0 amb un
+   sol punter tornen null. `dirs` són tots els directoris: { offset, rang,
+   entrades }, amb `rang` el [a, b) que ocupen. */
+function gpsDelTiff(bytes) {
+  const t = aBytes(bytes);
+  if (!t || t.length < 8) return null;
+  const v = new DataView(t.buffer, t.byteOffset, t.byteLength);
+  const marca = v.getUint16(0);
+  const le = marca === 0x4949;
+  if ((!le && marca !== 0x4d4d) || v.getUint16(2, le) !== 42) return null;
+  const dins = (pos, n) => Number.isInteger(pos) && pos >= 0 && n >= 0 && pos + n <= t.length;
+  const directori = (offset) => {
+    if (!dins(offset, 2)) return null;
+    const nombre = v.getUint16(offset, le);
+    if (nombre > MAX_ENTRADES_IFD || !dins(offset + 2, nombre * 12)) return null;
+    const entrades = new Map();
+    for (let i = 0; i < nombre; i += 1) {
+      const p = offset + 2 + i * 12;
+      const tag = v.getUint16(p, le);
+      const tipus = v.getUint16(p + 2, le);
+      if (entrades.has(tag) || !MIDA_TIPUS[tipus]) return null;
+      const quantitat = v.getUint32(p + 4, le);
+      const bytes = MIDA_TIPUS[tipus] * quantitat;
+      entrades.set(tag, { tipus, quantitat, bytes, pos: bytes <= 4 ? p + 8 : v.getUint32(p + 8, le) });
+    }
+    return { offset, rang: [offset, offset + 2 + nombre * 12 + 4], entrades };
+  };
+  const ifd0 = directori(v.getUint32(4, le));
+  if (!ifd0) return null;
+  const dirs = [ifd0];
+  const vistos = new Set([ifd0.offset]);
+  let gps = null;
+  for (let i = 0; i < dirs.length; i += 1) {
+    for (const [tag, e] of dirs[i].entrades) {
+      if (!TAGS_IFD.has(tag)) continue;
+      if ((e.tipus !== TIPUS_LONG && e.tipus !== TIPUS_IFD) || e.quantitat > MAX_IFD || !dins(e.pos, e.quantitat * 4)) return null;
+      if (tag === TAG_GPS_IFD && (i !== 0 || e.quantitat !== 1)) return null;
+      for (let k = 0; k < e.quantitat; k += 1) {
+        const offset = v.getUint32(e.pos + k * 4, le);
+        if (!offset) continue;
+        const fill = vistos.has(offset) || dirs.length >= MAX_IFD ? null : directori(offset);
+        if (!fill) return null;
+        vistos.add(offset);
+        dirs.push(fill);
+        if (tag === TAG_GPS_IFD) gps = fill;
+      }
+    }
+  }
+  return gps ? { t, v, le, dins, entrades: gps.entrades, dirs } : false;
+}
+
+/* Els tres RATIONAL d'una coordenada: [[num, den] ×3] o null. */
+function racionalsDe(gps, e, n) {
+  if (!e || e.tipus !== TIPUS_RATIONAL || e.quantitat !== n || !gps.dins(e.pos, n * 8)) return null;
+  return Array.from({ length: n }, (_, i) => [gps.v.getUint32(e.pos + i * 8, gps.le), gps.v.getUint32(e.pos + i * 8 + 4, gps.le)]);
+}
+
+function refDe(gps, e) {
+  if (!e || e.tipus !== TIPUS_ASCII || e.quantitat < 1 || !gps.dins(e.pos, 1)) return '';
+  return String.fromCharCode(gps.t[e.pos]);
+}
+
+/**
+ * El bloc TIFF amb la ubicació arrodonida a la precisió (vegeu dalt): la
+ * mateixa referència amb 'exacta', sense precisió o sense GPS IFD; una còpia
+ * nova amb '100m' o 'poble'; null si no s'entén o la precisió és desconeguda.
+ */
+export function ajustaPrecisioGps(tiff, precisio) {
+  try {
+    if (precisio === undefined || precisio === null || precisio === 'exacta') return tiff;
+    const decimals = decimalsDe(precisio);
+    if (!Number.isInteger(decimals)) return null;
+    const llegit = gpsDelTiff(tiff);
+    if (llegit === false) return tiff;
+    if (!llegit) return null;
+    if (llegit.dirs.some((dir) => [...dir.entrades.keys()].some((tag) => TAGS_AMB_TEXT_LLIURE.has(tag)))) return null;
+    if (!reescripturaNeta(llegit)) return null;
+    const copia = new Uint8Array(llegit.t);
+    const gps = { ...llegit, t: copia, v: new DataView(copia.buffer) };
+    const k = 10 ** decimals;
+    for (const [tag, tagRef] of COORDENADES_GPS) {
+      const e = gps.entrades.get(tag);
+      if (!e) continue;
+      const v = racionalsDe(gps, e, 3);
+      if (!v || v.some(([, den]) => den === 0)) return null;
+      const [g, m, s] = v.map(([num, den]) => num / den);
+      const signe = /^[SW]$/.test(refDe(gps, gps.entrades.get(tagRef))) ? -1 : 1;
+      // El mateix arrodoniment que el camp (geolocalitzacio): sobre el valor amb signe.
+      const n = Math.round(Math.abs(arrodonixA(arrodonix7(signe * (g + m / 60 + s / 3600)), decimals)) * k);
+      if (!Number.isFinite(n) || n > 0xffffffff) return null;
+      [[n, k], [0, 1], [0, 1]].forEach(([num, den], i) => {
+        gps.v.setUint32(e.pos + i * 8, num, gps.le);
+        gps.v.setUint32(e.pos + i * 8 + 4, den, gps.le);
+      });
+    }
+    const alt = gps.entrades.get(GPS_ALT);
+    if (alt) {
+      const v = racionalsDe(gps, alt, 1);
+      if (!v || v[0][1] === 0) return null;
+      const metres = Math.round(v[0][0] / v[0][1] / ARRODONIMENT_ALTITUD_M) * ARRODONIMENT_ALTITUD_M;
+      if (!Number.isFinite(metres) || metres > MAX_U32) return null;
+      gps.v.setUint32(alt.pos, metres, gps.le);
+      gps.v.setUint32(alt.pos + 4, 1, gps.le);
+    }
+    return arrodonitDeVeres(copia, precisio, decimals) ? copia : null;
+  } catch {
+    return null;
+  }
+}
+
+/* Revisió adversarial 261028 · Es pot reescriure EN EL LLOC sense trencar res?
+   Cap valor que es reescriu (els 24 bytes d'una coordenada, els 8 de
+   l'altitud) no pot tocar un directori, un altre valor conservat (el MakerNote
+   inclòs, i les referències N/S i E/W) ni un altre valor que es reescriu: un
+   fitxer així eixiria amb el graf trencat o les coordenades barrejades. */
+function reescripturaNeta(llegit) {
+  const reescrites = [...COORDENADES_GPS.map(([tag]) => [tag, 24]), [GPS_ALT, 8]]
+    .map(([tag, n]) => [llegit.entrades.get(tag), n])
+    .filter(([e]) => e);
+  const propies = new Set(reescrites.map(([e]) => e));
+  const rangs = reescrites.map(([e, n]) => [e.pos, e.pos + n]);
+  const protegits = llegit.dirs.flatMap((dir) => [dir.rang, ...[...dir.entrades.values()]
+    .filter((e) => e.bytes > 4 && !propies.has(e)).map((e) => [e.pos, e.pos + e.bytes])]);
+  const toca = ([a, b], [c, d]) => a < d && c < b;
+  return rangs.every((r, i) => !protegits.some((p) => toca(r, p)) && rangs.every((q, j) => j === i || !toca(r, q)));
+}
+
+/* Revisió adversarial 261028 · La comprovació de després, amb els lectors de
+   veres: el bloc continua sent publicable (analitzaTiff), la marca de la
+   precisió es llig (precisioDeGps), el GPS que se'n llig no té més decimals
+   que la precisió ni l'altitud més de 100 m d'exactitud, i cap text no hi diu
+   cap altra latitud ni longitud. Si no, null: mai el punt exacte d'amagat. */
+function arrodonitDeVeres(copia, precisio, decimals) {
+  if (GPS_EN_TEXT.test(textLatin1(copia))) return false;
+  const analisi = analitzaTiff(copia);
+  if (analisi?.estat !== ESTAT_EXIF.PUBLICABLE) return false;
+  const llegit = gpsDelTiff(copia);
+  if (!llegit) return false;
+  if ((llegit.entrades.has(GPS_LAT) || llegit.entrades.has(GPS_LNG)) && precisioDeGps(copia) !== precisio) return false;
+  const k = 10 ** decimals;
+  const ambDecimals = (x) => Math.abs(x * k - Math.round(x * k)) < 1e-6;
+  const { gps } = analisi;
+  return !gps || (ambDecimals(gps.lat) && ambDecimals(gps.lng) && (gps.altitud === null || gps.altitud % ARRODONIMENT_ALTITUD_M === 0));
+}
+
+/**
+ * La precisió que porta un bloc TIFF (la marca que hi deixa ajustaPrecisioGps):
+ * '100m' o 'poble' si la latitud i la longitud porten (n, 10^d), (0, 1), (0, 1)
+ * amb els decimals d'eixa precisió; 'exacta' si porten un GPS d'una altra
+ * forma (el de la càmera); null sense GPS o si no s'entén. Mai llança.
+ */
+export function precisioDeGps(tiff) {
+  try {
+    const gps = gpsDelTiff(tiff);
+    if (!gps) return null;
+    const lat = racionalsDe(gps, gps.entrades.get(GPS_LAT), 3);
+    const lng = racionalsDe(gps, gps.entrades.get(GPS_LNG), 3);
+    if (!lat || !lng) return null;
+    const marca = (v) => (v[1][0] === 0 && v[1][1] === 1 && v[2][0] === 0 && v[2][1] === 1
+      ? PRECISIONS.find((p) => p.valor !== 'exacta' && 10 ** p.decimals === v[0][1])?.valor : null);
+    const delLat = marca(lat);
+    return delLat && delLat === marca(lng) ? delLat : 'exacta';
+  } catch {
+    return null;
+  }
+}
+
 /* ─── Incrustar-lo a la foto que ix del canvas ────────────────────────── */
 
 /** El bloc TIFF més gran que cap en la foto d'un format (0 si el format no en porta). */
@@ -816,11 +1044,15 @@ export const errorExifNoConservable = (dades) => (teUbicacioOData(dades) ? ERROR
  * cap o el format no l'admet (o no hi cap: sostreTiff), el mateix data URL
  * (net). Mai rebutja: qui ha triat conservar-lo i no hi cap rep l'avís de
  * fotoDinsDelPressupost (pujadaImatge.js), que mira el format que ha eixit.
+ * P1-64 · `precisio` ('exacta' | '100m' | 'poble'): la ubicació s'arrodonix
+ * abans d'incrustar-la (ajustaPrecisioGps). Si no es pot arrodonir, la foto
+ * ix neta, mai amb el punt exacte (fotoDinsDelPressupost ja ho ha dit abans).
  */
-export async function ambExifDeLoriginal(dataUrl, original) {
+export async function ambExifDeLoriginal(dataUrl, original, { precisio } = {}) {
   try {
     const exif = await exifPublicable(original);
-    return (exif?.tiff && incrustaEnDataUrl(dataUrl, exif.tiff)) || dataUrl;
+    const tiff = exif?.tiff ? ajustaPrecisioGps(exif.tiff, precisio) : null;
+    return (tiff && incrustaEnDataUrl(dataUrl, tiff)) || dataUrl;
   } catch {
     return dataUrl;
   }

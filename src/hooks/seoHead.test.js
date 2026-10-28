@@ -272,3 +272,91 @@ test('Revisió 261027 · desmuntar-ho tot a la ruta servida deixa el head servit
   registerSeo(Symbol('fora'), { path: SAMARRETA, title: 'Samarreta' }, { manageDocumentHead: false })();
   expect(document.head.innerHTML).toBe(servit);
 });
+
+/* Pla 261028_1526 (P1-61, Fase 2) · La ruta del head servit i la dels
+   propietaris són claus socials (config/rutaSocial.js): a /wikidepoble porten
+   el seu ?item=. El head servit del document A no es congela quan l'app obri
+   el document B al mateix camí; el de la forma de camí (/wikidepoble/<id>,
+   decisió 2 del Mestre) és el mateix document que ?item=<id>. */
+const LLIBRE = 'https://socdepoble.org/wikidepoble?item=03_llibre_d_or_memoria_episodica';
+const ambHeadDeDocument = (canonical = LLIBRE) => {
+  document.head.innerHTML = `
+    <title ${ATRIBUT_SSR}>El Llibre d'Or | Sóc de Poble</title>
+    <meta property="og:site_name" content="Sóc de Poble">
+    <meta name="description" content="Memòria contrastada" ${ATRIBUT_SSR}>
+    <meta property="og:title" content="El Llibre d'Or | Sóc de Poble" ${ATRIBUT_SSR}>
+    <meta property="og:type" content="article" ${ATRIBUT_SSR}>
+    ${canonical ? `<link rel="canonical" href="${canonical}" ${ATRIBUT_SSR}>
+    <meta property="og:url" content="${canonical}" ${ATRIBUT_SSR}>` : ''}`;
+};
+test('Fase 2 · el head servit de ?item=A es queda a A (també amb altres paràmetres) i se’n va en obrir ?item=B', () => {
+  ambHeadDeDocument();
+  const servit = document.head.innerHTML;
+  const reserva = registerSeo(Symbol('reserva'), { path: '/wikidepoble?item=03_llibre_d_or_memoria_episodica', priority: 0, title: 'Wiki de Poble', index: false }, AMA);
+  const documentA = registerSeo(Symbol('document'), { path: '/wikidepoble?categoria=folder%3A01_ser&item=03_llibre_d_or_memoria_episodica', title: 'El Llibre d’Or', index: true }, AMA);
+  expect(document.head.innerHTML).toBe(servit);
+  // L'app obri B al mateix camí: la reserva de la ruta (RouteSEO) es torna a registrar amb la clau nova.
+  documentA(); reserva();
+  cleanups.push(registerSeo(Symbol('reserva B'), { path: '/wikidepoble?item=el_projecte', priority: 0, title: 'Wiki de Poble', index: false }, AMA));
+  cleanups.push(registerSeo(Symbol('b'), { path: '/wikidepoble?item=el_projecte', title: 'El projecte', index: true,
+    canonical: 'https://socdepoble.org/wikidepoble?item=el_projecte' }, AMA));
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.title).toBe('El projecte | Sóc de Poble');
+  expect(document.head.querySelector('link[rel="canonical"]').href).toBe('https://socdepoble.org/wikidepoble?item=el_projecte');
+  expect(propietat('og:type')).toBe('website');
+  expect(document.head.querySelectorAll('meta[property="og:site_name"]')).toHaveLength(1);
+});
+test('Fase 2 · el camí sol (/wikidepoble) no és la ruta d’un document servit: els nodes marcats se’n van', () => {
+  ambHeadDeDocument();
+  cleanups.push(registerSeo(Symbol('llista'), { path: '/wikidepoble', priority: 0, title: 'Wiki de Poble', index: true }, AMA));
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.title).toBe('Wiki de Poble | Sóc de Poble');
+});
+test('Fase 2 · la forma de camí /wikidepoble/<id> és la mateixa clau que ?item=<id>: el head servit no es purga en la redirecció', () => {
+  ambHeadDeDocument();
+  const servit = document.head.innerHTML;
+  cleanups.push(registerSeo(Symbol('camí'), { path: '/wikidepoble/03_llibre_d_or_memoria_episodica', priority: 0, title: 'Wiki de Poble', index: false }, AMA));
+  expect(document.head.innerHTML).toBe(servit);
+  cleanups.push(registerSeo(Symbol('consulta'), { path: '/wikidepoble?item=03_llibre_d_or_memoria_episodica', title: 'El Llibre d’Or', index: true }, AMA));
+  expect(document.head.innerHTML).toBe(servit);
+});
+test('Fase 2 · el head servit de la llista (/wikidepoble, sense canonical) se’n va en el primer registre', () => {
+  ambHeadDeDocument(null);
+  cleanups.push(registerSeo(Symbol('document'), { path: '/wikidepoble?item=03_llibre_d_or_memoria_episodica', title: 'El Llibre d’Or', index: true,
+    canonical: LLIBRE }, AMA));
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.title).toBe('El Llibre d’Or | Sóc de Poble');
+  expect(document.head.querySelector('link[rel="canonical"]').href).toBe(LLIBRE);
+});
+
+/* Revisió adversarial (261028) · Una vista que diu que la seua ruta no
+   s'indexa (el que has bloquejat, «No trobat») mana sobre el head servit; la
+   reserva de RouteSEO (prioritat 0) sense indexar, no. */
+test('Revisió 261028 · a la ruta servida, una vista sense indexar purga el head servit; la reserva sense indexar, no', () => {
+  ambHeadServit();
+  const servit = document.head.innerHTML;
+  cleanups.push(registerSeo(Symbol('reserva'), { path: SAMARRETA, priority: 0, title: 'Mercat', index: false }, AMA));
+  expect(document.head.innerHTML).toBe(servit);
+  // Una vista d'una altra ruta que encara no s'ha desmuntat no compta.
+  const altra = registerSeo(Symbol('altra'), { path: '/notes', title: 'Notes', index: false }, AMA);
+  expect(document.head.innerHTML).toBe(servit);
+  altra();
+  const esperant = registerSeo(Symbol('esperant'), { path: SAMARRETA, title: null, index: true }, AMA);
+  expect(document.head.innerHTML).toBe(servit);
+  esperant();
+  cleanups.push(registerSeo(Symbol('bloquejat'), { path: SAMARRETA, title: null, index: false }, AMA));
+  expect(document.head.querySelector(`[${ATRIBUT_SSR}]`)).toBeNull();
+  expect(document.head.querySelector('meta[property^="product:"], script[data-sdp-seo], link[rel="canonical"], meta[property="og:url"]')).toBeNull();
+  expect(document.title).toBe('Sóc de Poble');
+  expect(propietat('robots')).toBe('noindex, nofollow');
+  expect(propietat('og:image')).not.toBe(FOTO);
+  expect(propietat('description')).toBe(CAP_SOCIAL_BASE.description);
+});
+test('Revisió 261028 · el head d’un document servit a /wikidepoble/<id> (og:url de camí, canonical ?item=) es queda a ?item=<id>', () => {
+  ambHeadDeDocument();
+  document.head.querySelector('meta[property="og:url"]').setAttribute('content', 'https://socdepoble.org/wikidepoble/03_llibre_d_or_memoria_episodica');
+  const servit = document.head.innerHTML;
+  cleanups.push(registerSeo(Symbol('camí'), { path: '/wikidepoble/03_llibre_d_or_memoria_episodica', priority: 0, title: 'Wiki de Poble', index: false }, AMA));
+  cleanups.push(registerSeo(Symbol('consulta'), { path: '/wikidepoble?item=03_llibre_d_or_memoria_episodica', title: 'El Llibre d’Or', index: true }, AMA));
+  expect(document.head.innerHTML).toBe(servit);
+});

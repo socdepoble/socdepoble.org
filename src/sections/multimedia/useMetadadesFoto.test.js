@@ -362,3 +362,18 @@ describe('la reproducció de Codex, amb WebP reals del repositori', () => {
     expect(peticio).toHaveBeenCalledTimes(1);
   });
 });
+
+
+/* P1-64 (revisió adversarial 261028) · ambTiff: el bloc TIFF dels bytes
+   llegits, per a la marca de la precisió (geoDeLesFotos · precisioDeGps). */
+test('ambTiff: el TIFF del tros EXIF trobat; sense l’opció, cap clau tiff', async () => {
+  const { peticio } = servidor(GRAN);
+  vi.stubGlobal('fetch', peticio);
+  const amb = await llegixExifRemot(URL_FOTO, { ...OPCIONS, ambTiff: true });
+  expect(amb.camera).toEqual(CANON);
+  expect([...amb.tiff]).toEqual([...extreuTiff(GRAN)]);
+  oblidaMetadades();
+  const { peticio: altra } = servidor(GRAN);
+  vi.stubGlobal('fetch', altra);
+  expect(await llegixExifRemot(URL_FOTO, OPCIONS)).not.toHaveProperty('tiff');
+});

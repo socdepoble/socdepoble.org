@@ -664,6 +664,17 @@ export function PageFrame({
      de sempre. */
   peuDePagina = null,
   etiquetaPeuDePagina,
+  /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · `despresAutoria`: el
+     que va just davall de la barra taronja (l'autoria) i damunt de la
+     capçalera de l'H1, en un div.sdp-pagina-despres-autoria dins del
+     contenidor que fa scroll. Com `peuDePagina`, queda fora de la capçalera
+     (capcaleraRef) i de l'article (containerRef): l'Índex, la traducció i el
+     Lector no el recullen. No depén de la barra ni de la capçalera. Hui el
+     passa l'editor de la fitxa (UniversalEditorShell, posicioEdicioAvancada
+     'despres-autoria'): «Edició avançada de la fitxa». UniversalPage el pren
+     només de les seues props, mai del config. Sense la prop, el DOM de
+     sempre. */
+  despresAutoria = null,
   /* Decisió del Mestre (261008, drets d'autor dins de l'editor) ·
      `onCanviaCopyright`: només el passa l'editor (DocumentEditor, quan la
      persona pot triar els drets). Si és una funció, el text del copyright de
@@ -1009,6 +1020,10 @@ export function PageFrame({
           ) : null}
         />
       )}
+
+      {/* P1-58 · Sempre en esta posició: la capçalera i l'article no canvien
+          de lloc quan apareix, i el cos que s'escriu (TipTap) no es remunta. */}
+      {despresAutoria ? <div className="sdp-pagina-despres-autoria">{despresAutoria}</div> : null}
 
       {hasHeader && (
         <header className="page-title" ref={capcaleraRef}>

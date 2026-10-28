@@ -142,12 +142,13 @@ test('el registre de llavors per defecte; pàgina pròpia només on n’hi ha un
 /* ── De punta a punta, amb l'app real ─────────────────────────────────────
    Cada destí distint, amb l'encapçalament que en justifica l'elecció (§2 del
    F2_LLAVORS.txt): el registre de llavors, la secció «3. Llei de l'Orgull
-   Rural» d'identitat_visual i «4. El Càlcul del Risc» de l'Ànima (/anima des
-   del Bloc 3.6.3; abans /iaia). */
+   Rural» d'identitat_visual i «Pensar abans d’actuar» de l'Ànima (/anima des
+   del Bloc 3.6.3; abans /iaia; P1-60, 261028: la reforma editorial va retirar
+   «4. El Càlcul del Risc»). */
 const PAGINA_DEL_DESTI = Object.freeze({
   [REGISTRE_DE_LLAVORS]: '🗺️ Full de ruta de Sóc de Poble',
   '/wikidepoble?item=identitat_visual': "3. Llei de l'Orgull Rural",
-  '/anima': '4. El Càlcul del Risc (La Por Orgànica)'
+  '/anima': 'Pensar abans d’actuar'
 });
 /* Cada espera caduca abans que la prova: si falla, falla amb el missatge de
    l'asserció, no amb un «timed out» de vitest. */

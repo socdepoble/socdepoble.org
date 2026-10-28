@@ -81,6 +81,25 @@ export function resolIdioma({ triat, amfitrio } = {}) {
   return DEFAULT_LANGUAGE;
 }
 
+/* Pla 261028_1526 (P1-22, TE-05) · Només per a l'entrada nativa
+   (natiu/entrada.jsx), on l'app no té cap amfitrió i la llengua del sistema
+   en fa de «language» (T1: tria explícita > dispositiu > ca). La
+   de navigator.languages del WebView ve en etiquetes BCP 47 ('ca-ES-valencia',
+   'es-419', 'en_GB'): se'n pren la subetiqueta primària. Cap altre canal no
+   passa per ací: l'amfitrió ha de dir el codi exacte (PedraSecaEmbed.jsx). */
+const MAXIM_D_ETIQUETES = 16;
+
+/** La primera llengua de l'app entre les etiquetes del dispositiu (llista o text), o undefined. */
+export function llenguaDelDispositiu(etiquetes) {
+  const llista = Array.isArray(etiquetes) ? etiquetes.slice(0, MAXIM_D_ETIQUETES) : [etiquetes];
+  for (const etiqueta of llista) {
+    if (typeof etiqueta !== 'string') continue;
+    const primaria = etiqueta.trim().toLowerCase().split(/[-_]/)[0];
+    if (esLlenguaSuportada(primaria)) return primaria;
+  }
+  return undefined;
+}
+
 /* ── Fase D (261020, tasca 4.1) · L1 · Diccionaris sota demanda ─────────
    El valencià (idiomes/ca.js) viatja dins del tros d'entrada: és la llengua
    per defecte i la reserva clau per clau de totes les altres. Les altres

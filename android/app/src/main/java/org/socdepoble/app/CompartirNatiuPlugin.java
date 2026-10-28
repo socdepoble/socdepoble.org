@@ -2,7 +2,9 @@ package org.socdepoble.app;
 
 import android.content.ClipData;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
@@ -37,6 +39,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import org.json.JSONObject;
 
 /**
  * Receptor del menú «Compartir» d'Android (SEND i SEND_MULTIPLE).
@@ -56,6 +60,17 @@ import java.util.concurrent.TimeUnit;
  *    a molt tres alhora), cada lectura té termini i interrupció, i hi ha sostres
  *    d'URIs examinades i de text acumulat;
  *  · en destruir el connector, els fils es tanquen.
+ *
+ * Pla 261028_1526 (Bloc D, P1-31/P1-33):
+ *  · cada compartició porta l'hora de l'intent (rebutMs): si la sessió del web
+ *    ha canviat després, el web la descarta i n'allibera les còpies;
+ *  · un sostre de bytes per compartició, a més del de cada fitxer;
+ *  · destruït el connector, la compartició en curs ja no llig res ni avisa, i
+ *    cap lectura no es fa sense termini;
+ *  · la sessió també té època a esta banda (tallaSessio, que el web crida en
+ *    canviar de sessió), desada perquè sobreviu al procés: cada còpia porta la
+ *    del seu intent al nom, la compartició que la veu canviar esborra les seues
+ *    i plega, i en arrencar no torna cap resta d'una altra època.
  */
 @CapacitorPlugin(name = "CompartirNatiu")
 public class CompartirNatiuPlugin extends Plugin {
@@ -66,6 +81,8 @@ public class CompartirNatiuPlugin extends Plugin {
     private static final int MAX_FITXERS = 10;
     // El sostre del bucket xat_adjunts i de l'adaptador web (natiu/compartirNatiu.js).
     private static final long MAX_BYTES_FITXER = 20L * 1024 * 1024;
+    // Tota una compartició: 60 MiB, tres fitxers plens. El valor és decisió pendent del Mestre (P1-33).
+    private static final long MAX_BYTES_COMPARTICIO = 60L * 1024 * 1024;
     private static final int MAX_CARACTERS_TEXT = 10000;
     private static final int MAX_URIS_EXAMINADES = 32;
     private static final int MAX_COMPARTICIONS_ALHORA = 3;
@@ -73,6 +90,11 @@ public class CompartirNatiuPlugin extends Plugin {
     private static final long COMPARTICIO_MS = 60_000;
     // Una compartició sense enviar es conserva una setmana (també si l'App es tanca).
     private static final long CADUCITAT_MS = 7L * 24 * 60 * 60 * 1000;
+    private static final String PREFERENCIES = "CompartirNatiu";
+    private static final String CLAU_SESSIO = "sessio";
+
+    // L'època de la sessió (P1-31): la llig load() i només la puja tallaSessio.
+    private final AtomicLong sessio = new AtomicLong();
 
     private final ExecutorService copiador = new ThreadPoolExecutor(
         0, MAX_COMPARTICIONS_ALHORA, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), CompartirNatiuPlugin::filDeFons);
@@ -87,6 +109,8 @@ public class CompartirNatiuPlugin extends Plugin {
     @Override
     public void load() {
         super.load();
+        // L'època desada, abans de cap anunci ni intent.
+        sessio.set(preferencies().getLong(CLAU_SESSIO, 0));
         // Abans de cap intent (BridgeActivity el passa després del load): el que
         // es va compartir i encara no s'ha enviat torna a «Envia a…».
         netejaCaducats();
@@ -126,11 +150,15 @@ public class CompartirNatiuPlugin extends Plugin {
             Logger.error("CompartirNatiu", "Intent de compartir il·legible", e);
             return;
         }
+        // L'hora de l'intent, abans de copiar res: el web la compara amb l'últim canvi de sessió.
+        final long rebutMs = System.currentTimeMillis();
+        // I l'època: si tallaSessio la puja mentre es copia, la compartició plega.
+        final long sessioAlRebre = sessio.get();
         // Còpia fora del fil principal: una foto gran no ha de bloquejar l'app.
         try {
             copiador.execute(() -> {
                 try {
-                    processa(uris, text, assumpte, tipus);
+                    processa(uris, text, assumpte, tipus, rebutMs, sessioAlRebre);
                 } catch (RuntimeException e) {
                     // Una excepció en este fil tombaria l'App sencera.
                     Logger.error("CompartirNatiu", "No s'ha pogut processar el contingut compartit", e);
@@ -170,6 +198,32 @@ public class CompartirNatiuPlugin extends Plugin {
         call.resolve(resposta);
     }
 
+    /**
+     * Pla 261028_1526 (P1-31) · La sessió del web ha canviat (ix la persona,
+     * n'entra una altra, canvia el backend). Puja l'època i la desa amb commit,
+     * no apply: si el procés mor just després, l'època nova ja és al disc. Tot
+     * el que hi ha a compartits/ d'una altra època s'esborra, i la compartició
+     * que encara copiava ho veu i plega. Capacitor crida els mètodes d'un
+     * connector d'un en un: no hi ha dos talls alhora.
+     */
+    @PluginMethod
+    public void tallaSessio(PluginCall call) {
+        long nova = sessio.incrementAndGet();
+        //noinspection ApplySharedPref
+        preferencies().edit().putLong(CLAU_SESSIO, nova).commit();
+        String prefix = prefixDe(nova);
+        int esborrats = 0;
+        File[] restes = carpeta().listFiles();
+        if (restes != null) {
+            for (File resta : restes) {
+                if (resta.isFile() && !resta.getName().startsWith(prefix) && resta.delete()) esborrats++;
+            }
+        }
+        JSObject resposta = new JSObject();
+        resposta.put("esborrats", esborrats);
+        call.resolve(resposta);
+    }
+
     private List<Uri> recullUris(Intent intent) {
         Set<Uri> uris = new LinkedHashSet<>();
         if (Intent.ACTION_SEND.equals(intent.getAction())) {
@@ -190,16 +244,25 @@ public class CompartirNatiuPlugin extends Plugin {
         return new ArrayList<>(uris);
     }
 
-    private void processa(List<Uri> uris, String text, String assumpte, String tipus) {
+    private void processa(List<Uri> uris, String text, String assumpte, String tipus, long rebutMs, long sessioAlRebre) {
         JSArray fitxers = new JSArray();
         StringBuilder textDeFitxers = new StringBuilder();
         int rebutjats = 0;
         int acceptats = 0;
         int examinades = 0;
+        long bytesCopiats = 0;
         long finestra = System.currentTimeMillis() + COMPARTICIO_MS;
         for (Uri uri : uris) {
-            // Sostres: fitxers acceptats, URIs examinades i temps total de la compartició.
-            if (acceptats >= MAX_FITXERS || examinades >= MAX_URIS_EXAMINADES || System.currentTimeMillis() > finestra) {
+            // Connector destruït: res més no es llig (les còpies fetes tornaran en arrencar).
+            if (copiador.isShutdown()) return;
+            // La sessió ha canviat (tallaSessio): ni una còpia més, i les fetes, fora.
+            if (sessio.get() != sessioAlRebre) {
+                esborra(fitxers);
+                return;
+            }
+            // Sostres: fitxers acceptats, URIs examinades, bytes copiats i temps total de la compartició.
+            if (acceptats >= MAX_FITXERS || examinades >= MAX_URIS_EXAMINADES || bytesCopiats >= MAX_BYTES_COMPARTICIO
+                || System.currentTimeMillis() > finestra) {
                 rebutjats++;
                 continue;
             }
@@ -226,13 +289,14 @@ public class CompartirNatiuPlugin extends Plugin {
                 rebutjats++;
                 continue;
             }
-            JSObject fitxer = copia(uri, mime, extensio);
+            JSObject fitxer = copia(uri, mime, extensio, MAX_BYTES_COMPARTICIO - bytesCopiats, sessioAlRebre);
             if (fitxer == null) {
                 rebutjats++;
                 continue;
             }
             fitxers.put(fitxer);
             acceptats++;
+            bytesCopiats += fitxer.optLong("mida");
         }
 
         String textFinal = uneix(text, textDeFitxers.toString());
@@ -246,6 +310,14 @@ public class CompartirNatiuPlugin extends Plugin {
         dades.put("text", textFinal);
         dades.put("assumpte", assumpte);
         dades.put("rebutjats", rebutjats);
+        dades.put("rebutMs", rebutMs);
+        // Destruït mentre es copiava: cap avís a un pont mort (les còpies tornaran en arrencar).
+        if (copiador.isShutdown()) return;
+        // Tallada mentre es copiava: el lot ja no és de ningú.
+        if (sessio.get() != sessioAlRebre) {
+            esborra(fitxers);
+            return;
+        }
         // Al fil dels connectors, on també corre addListener: els mapes de
         // Plugin no estan sincronitzats.
         getBridge().execute(() -> notifyListeners(ESDEVENIMENT, dades, true));
@@ -288,12 +360,20 @@ public class CompartirNatiuPlugin extends Plugin {
         }
     }
 
-    private JSObject copia(Uri uri, String mime, String extensio) {
+    /**
+     * `restant`: el que queda del sostre de la compartició (MAX_BYTES_COMPARTICIO).
+     * `sessioAlRebre`: l'època de l'intent, al principi del nom de la còpia.
+     */
+    private JSObject copia(Uri uri, String mime, String extensio, long restant, long sessioAlRebre) {
         File carpeta = carpeta();
         if (!carpeta.isDirectory() && !carpeta.mkdirs()) return null;
-        File desti = new File(carpeta, UUID.randomUUID().toString() + "." + extensio);
+        File desti = new File(carpeta, prefixDe(sessioAlRebre) + UUID.randomUUID().toString() + "." + extensio);
         long total = 0;
+        // Ni més de 20 MB per fitxer ni més del que queda de la compartició.
+        long sostre = Math.min(MAX_BYTES_FITXER, restant);
         ScheduledFuture<?> termini = ambTermini();
+        // Sense vigilant (connector tancat) no hi ha termini: no es llig res.
+        if (termini == null) return null;
         try (InputStream entrada = interrompible(getContext().getContentResolver().openInputStream(uri));
              OutputStream eixida = new FileOutputStream(desti)) {
             if (entrada == null) throw new IOException("sense flux");
@@ -301,7 +381,7 @@ public class CompartirNatiuPlugin extends Plugin {
             int llegits;
             while ((llegits = entrada.read(tampo)) != -1) {
                 total += llegits;
-                if (total > MAX_BYTES_FITXER) throw new IOException("massa gran");
+                if (total > sostre) throw new IOException("massa gran");
                 eixida.write(tampo, 0, llegits);
             }
         } catch (IOException | RuntimeException e) {
@@ -328,6 +408,8 @@ public class CompartirNatiuPlugin extends Plugin {
 
     private String llegixText(Uri uri) {
         ScheduledFuture<?> termini = ambTermini();
+        // Sense vigilant (connector tancat) no hi ha termini: no es llig res.
+        if (termini == null) return null;
         try (InputStream entrada = interrompible(getContext().getContentResolver().openInputStream(uri))) {
             if (entrada == null) return null;
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -374,12 +456,14 @@ public class CompartirNatiuPlugin extends Plugin {
         File[] restes = carpeta().listFiles();
         if (restes == null || restes.length == 0) return;
         java.util.Arrays.sort(restes, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
+        // P1-31 · Una resta d'una altra època (o sense, d'abans d'haver-ne) no és de la sessió d'ara: fora.
+        String prefix = prefixDe(sessio.get());
         JSArray fitxers = new JSArray();
         for (File resta : restes) {
             String nom = resta.getName();
             String extensio = nom.substring(nom.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
             String mime = mimeDeLExtensio(extensio);
-            if (!resta.isFile() || mime == null || fitxers.length() >= MAX_FITXERS) {
+            if (!resta.isFile() || mime == null || !nom.startsWith(prefix) || fitxers.length() >= MAX_FITXERS) {
                 //noinspection ResultOfMethodCallIgnored
                 resta.delete();
                 continue;
@@ -430,6 +514,24 @@ public class CompartirNatiuPlugin extends Plugin {
 
     private File carpeta() {
         return new File(getContext().getCacheDir(), CARPETA);
+    }
+
+    private SharedPreferences preferencies() {
+        return getContext().getSharedPreferences(PREFERENCIES, Context.MODE_PRIVATE);
+    }
+
+    /* El principi del nom de cada còpia: l'època de la sessió que la va rebre. */
+    private static String prefixDe(long sessio) {
+        return sessio + "-";
+    }
+
+    /* Les còpies d'una compartició que ja no arribarà a ningú. */
+    private static void esborra(JSArray fitxers) {
+        for (int i = 0; i < fitxers.length(); i++) {
+            JSONObject fitxer = fitxers.optJSONObject(i);
+            //noinspection ResultOfMethodCallIgnored
+            if (fitxer != null) new File(fitxer.optString("ruta", "")).delete();
+        }
     }
 
     private void netejaCaducats() {

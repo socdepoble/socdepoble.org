@@ -5,8 +5,8 @@ export const CATALOG_CATEGORIES = [
   { id: 'fonaments', label: 'Fonaments', order: 10, icon: '🧱' },
   { id: 'estructura', label: 'Estructura', order: 20, icon: '📐' },
   { id: 'formularis', label: 'Formularis', order: 30, icon: '📝' },
-  { id: 'superposicions', label: 'Superposicions', order: 40, icon: '🗂️' },
-  { id: 'retroalimentacio', label: 'Retroalimentació', order: 50, icon: '🔔' },
+  { id: 'superposicions', label: 'Diàlegs i calaixos', order: 40, icon: '🗂️' },
+  { id: 'retroalimentacio', label: 'Estats i avisos', order: 50, icon: '🔔' },
   { id: 'navegacio', label: 'Navegació', order: 60, icon: '🧭' },
   { id: 'inventari', label: 'Inventari', order: 70, icon: '📦' },
   { id: 'emoticones', label: 'Emojis XL', order: 80, icon: '🌻' }
@@ -96,21 +96,21 @@ const especimen = (categoria, slug, title, subtitle, tags, lead, cerca = '') => 
    navegació. L'ordre és el de lectura: contracte → color → tipografia →
    espaiat → targeta mestra → controls → àtoms → maquetes heretades. */
 const FONAMENTS = [
-  especimen('fonaments', 'panell', 'Panell de Disseny', 'Ajustos del mode Bancal, ombres i lletra', ['sistema', 'ajustos', 'bancal'],
-    'Sistema de control viu. Gestió del contrast (Mode Bancal), la intensitat de les ombres universals i la tipografia (Noto Sans), amb botons per modelar l\'arquitectura de pedra seca des de dins del propi sistema. Disposa de restabliment i exemples aplicats al moment.',
-    'panell disseny ajustos contrast bancal ombra lletra restablir human'),
+  especimen('fonaments', 'panell', 'Panell de Disseny', 'Contrast, ombres i lletra', ['sistema', 'ajustos', 'bancal'],
+    'Ajusta el contrast del mode Bancal, les ombres i la lletra Noto Sans. Els exemples mostren els canvis al moment, i pots restablir els valors.',
+    "panell disseny ajustos contrast bancal ombra lletra restablir human Ajustos del mode Bancal, ombres i lletra"),
   especimen('fonaments', 'contracte', 'Contracte de Pedra Seca', 'Lleis, arquitectura universal i pàgines de sistema', ['llei', 'arquitectura', 'sistema']),
-  especimen('fonaments', 'color', 'Identitat cromàtica', 'Paleta OKLCH, contrast i escala Pedra', ['token', 'color', 'contrast'],
-    'La paleta de Sóc de Poble en OKLCH: tokens semàntics per a fons, text i accents, amb el contrast comprovat en clar i en fosc. Cap component pinta amb un color cru.'),
-  especimen('fonaments', 'tipografia', 'Estudi tipogràfic', 'Noto Sans, nivells de títol i ritme vertical', ['token', 'tipografia', 'ritme'],
-    'Una sola família, Noto Sans, amb nivells de títol fixos i ritme vertical de lectura. Pensada per a llegir al sol i per a la gent gran.'),
-  especimen('fonaments', 'espaiat', 'Espaiat i graella', 'Escala 4/8, mètriques del layout i radis', ['token', 'espaiat', 'graella'],
-    'L’escala 4/8 de marges, coixins i separacions, i les mètriques amb nom del layout: alçades de barra, amplades de columna i radis. Cap número solt.'),
-  especimen('fonaments', 'universalcard', 'UniversalCard', 'PedraSeca/organismes/UniversalCard.jsx', ['organisme', 'targeta', 'contingut'],
-    'La targeta mestra: tota publicació hereta la mateixa anatomia. És una versió reduïda de PageFrame (capçalera taronja d’autoria, mitjà quadrat, cos i peu blau d’accions) amb codi propi: un canvi a les barres no hi arriba sol.',
+  especimen('fonaments', 'color', 'Identitat cromàtica', 'Colors amb contrast', ['token', 'color', 'contrast'],
+    'La paleta de Sóc de Poble en OKLCH: tokens semàntics per a fons, text i accents, amb el contrast comprovat en clar i en fosc. Cap component pinta amb un color cru.', "Paleta OKLCH, contrast i escala Pedra"),
+  especimen('fonaments', 'tipografia', 'Estudi tipogràfic', 'Noto Sans i ritme de lectura', ['token', 'tipografia', 'ritme'],
+    'Una sola família, Noto Sans, amb nivells de títol fixos i ritme vertical de lectura. Pensada per a llegir al sol i per a la gent gran.', "Noto Sans, nivells de títol i ritme vertical"),
+  especimen('fonaments', 'espaiat', 'Espaiat i graella', 'Espais, columnes i radis', ['token', 'espaiat', 'graella'],
+    'L’escala 4/8 de marges, coixins i separacions, i les mètriques amb nom del layout: alçades de barra, amplades de columna i radis. Cap número solt.', "Escala 4/8, mètriques del layout i radis"),
+  especimen('fonaments', 'universalcard', 'UniversalCard', 'Una mateixa anatomia per a cada publicació', ['organisme', 'targeta', 'contingut'],
+    'La targeta mestra resumix una publicació: autoria, mitjà quadrat, cos i accions. Té codi propi; els canvis de PageFrame no hi arriben automàticament.',
     /* P5 · Onada 4 (261003) · la targeta de doble acció del Panell de Control (PortesTargeta),
        amb l'ESMENA 261003 22:34: la targeta estàndard amb la boina de socdepoble. */
-    'targeta plana pla emoticona ancorar pin avis portes porta doble accio publicar saber mes control obres socdepoble xat'),
+    "targeta plana pla emoticona ancorar pin avis portes porta doble accio publicar saber mes control obres socdepoble xat PedraSeca/organismes/UniversalCard.jsx"),
   /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · la targeta del document que s'escriu.
      Bloc 3.4 del Gauntlet (261016) · Sense l'aside de la dreta de l'editor ni el seu xip: cap editor els munta. */
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
@@ -118,9 +118,9 @@ const FONAMENTS = [
     'previsualitzacio vista targeta xip aside llista dreta notes perfil vistes'),
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · s'hi afig RellotgeViu, la data i
      l'hora d'ara, vives, a la dreta de la barra taronja de les apps que la demanen. */
-  especimen('fonaments', 'controls-barra', 'Controls de barra', 'BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu', ['atom', 'barra', 'icona'],
+  especimen('fonaments', 'controls-barra', 'Controls de barra', 'Navegació, autoria i accions', ['atom', 'barra', 'icona'],
     'Les dues barres de color de PageFrame, ja components propis (BarraBlava i BarraTaronja), i els àtoms que les omplin. La capçalera i el peu de la UniversalCard fan servir els mateixos àtoms.',
-    'pin ancorar data hora pastilla rellotge viu ara minut'),
+    "pin ancorar data hora pastilla rellotge viu ara minut BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu"),
   /* T51 (ordre del Mestre, 260928) · l'espai central de la barra taronja. */
   especimen('fonaments', 'emoticona-barra', 'Emoticona de la barra', 'EmoticonaBarra · l’espai central de la barra taronja (T51)', ['molecula', 'barra', 'emoticona'],
     'Al centre de la barra taronja. En edició, el botó que obri el diàleg d’emoticona: la ploma blanca mentre no n’hi ha cap. En lectura, només l’emoticona triada; sense, la cel·la queda buida.',
@@ -171,18 +171,18 @@ const FONAMENTS = [
 /* Estructura: primer l'arbre (qui és el pare de qui), després la closca
    d'App.jsx i les plantilles que penjen d'ella. */
 const ESTRUCTURA = [
-  especimen('estructura', 'arbre', 'Arbre universal', 'Qui és el pare de qui: closca, gestor, pàgina, targeta i editor', ['plantilla', 'arquitectura'],
-    'El mapa de les peces universals. La closca d’App.jsx conté el gestor (UniversalWorkspace → AppGridShell) i la pàgina (UniversalPage → PageFrame). L’editor instancia PageFrame amb ranures i n’hereta els canvis; la targeta n’és una versió reduïda i no n’hereta res. Cada espècimen diu d’on penja.',
-    'pare fill jerarquia llinatge munta versio instancia'),
+  especimen('estructura', 'arbre', 'Arbre universal', 'Com s’encaixen les peces', ['plantilla', 'arquitectura'],
+    'La closca conté el gestor i la pàgina. L’editor hereta PageFrame; la targeta té codi propi. El mapa i els espècimens expliquen com es relacionen estes peces.',
+    "pare fill jerarquia llinatge munta versio instancia Qui és el pare de qui: closca, gestor, pàgina, targeta i editor"),
   /* Sense subtítol, etiquetes ni lead: editorial.test.js hi fixa «En curs». */
   especimen('estructura', 'shell', 'Closca (Shell)', '', [], null, 'app.jsx barra negra barra lateral main navegacio mobil'),
-  especimen('estructura', 'page', 'Page', 'UniversalPage → PageFrame, el pare universal de pàgina', ['plantilla', 'pagina'],
-    'L’anatomia de tota pàgina: barra blava de navegació, imatge, barra taronja d’autoria, capçalera amb el títol i article. UniversalPage l’adapta a la ruta; PageFrame és el pare que la pinta.'),
-  especimen('estructura', 'gestor', 'Gestor', 'AppGridShell · graella de tres columnes', ['plantilla', 'columnes'],
-    'La graella de tres columnes: mesura el seu contenidor i passa d’ample a mitjà i a estret. UniversalWorkspace l’omple; AppGridColumn en fa les capçaleres i AppGridResizer, els separadors.'),
-  especimen('estructura', 'universalworkspace', 'UniversalWorkspace', 'Espai de treball de tres columnes', ['plantilla', 'espai', 'columnes'],
-    'El pare dels gestors (Notes, Disseny, la Wiki, Perfil i Admin): rep dades i funcions de pintat i munta AppGridShell amb navegació, llistat i detall. No sap res de cap domini. El Xat no en penja: munta AppGridShell directament.',
-    'universal workspace'),
+  especimen('estructura', 'page', 'Page', 'L’anatomia d’una pàgina', ['plantilla', 'pagina'],
+    'L’anatomia de tota pàgina: barra blava de navegació, imatge, barra taronja d’autoria, capçalera amb el títol i article. UniversalPage l’adapta a la ruta; PageFrame és el pare que la pinta.', "UniversalPage → PageFrame, el pare universal de pàgina"),
+  especimen('estructura', 'gestor', 'Gestor', 'Una graella de tres columnes', ['plantilla', 'columnes'],
+    'La graella de tres columnes: mesura el seu contenidor i passa d’ample a mitjà i a estret. UniversalWorkspace l’omple; AppGridColumn en fa les capçaleres i AppGridResizer, els separadors.', "AppGridShell · graella de tres columnes"),
+  especimen('estructura', 'universalworkspace', 'UniversalWorkspace', 'Carpetes, llista i detall', ['plantilla', 'espai', 'columnes'],
+    'Un espai comú per a Notes, Disseny, Wiki, Perfil i Admin: rep dades i munta navegació, llista i detall. El Xat usa AppGridShell directament. Cada secció aporta les seues dades.',
+    "universal workspace Espai de treball de tres columnes"),
   especimen('estructura', 'columnes', 'Columnes', 'AppGridColumn · capçaleres de columna', ['plantilla', 'columnes', 'capcalera'],
     'La capçalera única de cada columna d’AppGridShell, en les seues variants: oberta, replegable sencera, amb el grup plegable i carril plegat.'),
   especimen('estructura', 'divisor', 'Divisor', 'Divisor (PedraSeca) · AppGridResizer (layout)', ['atom', 'separador'],

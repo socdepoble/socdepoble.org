@@ -348,9 +348,9 @@ export function UniversalEditorShell({
   /* Encàrrec d'harmonització (261018, ordre del Mestre: «fitxa neta; la gestió
      d'imatges va dins d'Edició avançada») · Opcionals, i sense elles el DOM de
      sempre (el Bloc de Notes no en passa cap):
-     · `identitatEdicioAvancada`: un node que es pinta el primer dins del
-       desplegable (el Perfil hi posa l'avatar redó amb «Avatar» i «Llevar
-       l'avatar», que abans anaven damunt de l'H1);
+     · `identitatEdicioAvancada`: un node que es pinta dins del desplegable,
+       després de la capçalera (P1-58; el Perfil hi posa l'avatar redó amb
+       «Avatar» i «Llevar l'avatar», que abans anaven damunt de l'H1);
      · `logoAlTitol` (true): amb false, el logotip desat no es repinta damunt
        de l'H1 (a la persona, el logotip és l'avatar, i ja va a la barra
        taronja);
@@ -362,6 +362,15 @@ export function UniversalEditorShell({
   logoAlTitol = true,
   resumEdicioAvancada = null,
   titolEdicioAvancada = null,
+  /* Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · `posicioEdicioAvancada`:
+     on va el desplegable. 'cos' (per defecte, Notes i DocumentEditor), el lloc
+     de sempre, dins de l'article damunt de les eines; 'despres-autoria' (la
+     fitxa del Perfil), la ranura despresAutoria de PageFrame, davall de la
+     barra taronja i damunt de l'H1, fora de l'article (l'Índex no el llig).
+     Un sol node i una sola posició per muntatge: mai dos desplegables, i el
+     cos (TipTap) no es remunta. Dins, l'ordre de lectura: Capçalera →
+     identitat (l'avatar) → Logotip → classificació. */
+  posicioEdicioAvancada = 'cos',
   classificacio,
   copyright,
   onCanviaCopyright,
@@ -524,6 +533,7 @@ export function UniversalEditorShell({
     ...(copyright !== undefined ? { copyright } : null),
     ...(onCanviaCopyright !== undefined ? { onCanviaCopyright } : null),
   };
+  const desplegableDalt = edicioAvancada && posicioEdicioAvancada === 'despres-autoria';
   const desplegable = edicioAvancada ? (
     <details className="sdp-edicio-avancada">
       <summary className="sdp-edicio-avancada__resum">
@@ -539,9 +549,12 @@ export function UniversalEditorShell({
           </>
         ) : ETIQUETA_EDICIO_AVANCADA}
       </summary>
+      {/* P1-58 · L'ordre de lectura de la fitxa: Capçalera → Avatar →
+          Logotip. Les classes de cada embolcall no canvien: hi apunten els
+          destins del focus (DESTINS_FOCUS, DESTI_FOCUS_AVATAR del Perfil). */}
       <div className="sdp-edicio-avancada__cos">
-        {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
         <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__capcalera">{shellData.topBarData.heroComponent}</div>
+        {identitatEdicioAvancada ? <div className="sdp-edicio-avancada__identitat">{identitatEdicioAvancada}</div> : null}
         {shellData.topBarData.logoComponent ? (
           <div className="sdp-edicio-avancada__imatge sdp-edicio-avancada__logotip">{shellData.topBarData.logoComponent}</div>
         ) : null}
@@ -561,6 +574,10 @@ export function UniversalEditorShell({
             {...rest}
             {...deLaRanura}
             {...(logoDesat ? { logoEntitat: logoDesat } : null)}
+            /* P1-58 · Amb 'despres-autoria', el desplegable va a la ranura de
+               PageFrame (davall de la barra taronja); després de ...rest: és
+               de la closca. */
+            {...(desplegableDalt ? { despresAutoria: desplegable } : null)}
             /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà.
                T7 · Cap avís en línia davall de la barra blava (tampoc d'un
                adaptador): el missatge és el ràpid de cada botó.
@@ -630,8 +647,10 @@ export function UniversalEditorShell({
             {/* T47 · Sempre en esta posició (null sense avisos): el cos no es remunta. */}
             {avisosCamps ? <AvisosCamps avisos={avisosCamps} onAccio={executaAccioDeCamp} /> : null}
             {/* Bloc 3.9 (261016) · «Edició avançada», just damunt de les eines.
-                També sempre en esta posició (null sense la prop): el cos no es remunta. */}
-            {desplegable}
+                També sempre en esta posició (null sense la prop): el cos no es remunta.
+                P1-58 · Amb 'despres-autoria' va dalt (despresAutoria) i ací queda
+                el null: el fill no canvia de posició. */}
+            {desplegableDalt ? null : desplegable}
             {einesDavall ? <div className="sdp-editor-eines">{topBar}</div> : null}
             {children}
           </UniversalPage>
@@ -932,7 +951,10 @@ function useEditorShell({
      el costat del retall que ja ix exacte (costatDeSortida): la foto es
      comprimix a eixa mateixa mida, dins del pressupost, sense dependre del nom
      del camp. Directiva 261024 · costatDeSortida és el costat llarg (1.200),
-     que compressImage (maxSize) no torna a reduir en cap forma. */
+     que compressImage (maxSize) no torna a reduir en cap forma.
+     P1-64 (pla 261028_1526 §3.1.1) · metadades.exif porta també la precisió
+     de les píndoles (`precisio`): el fitxer ix amb la ubicació arrodonida, i
+     publishNote la deriva a payload.geolocalitzacio (geoDeLesFotos.js). */
   const desaEnquadrament = async (fitxer, info, metadades) => {
     // La sessió d'este diàleg: en acabar es tanca ella, mai una altra.
     const sessio = enquadrament;

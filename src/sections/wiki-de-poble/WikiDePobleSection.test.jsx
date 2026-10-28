@@ -231,3 +231,8 @@ test('el filtre explícit de carpeta es conserva amb un document obert', () => {
   render(<WikiDePobleSection />);
   expect(fixture.props.selection).toEqual({ categoryId: 'folder:02_saber', itemId: 'doc_llarg' });
 });
+
+/* Pla 261028_1526 (P1-61, Fase 2) · WikiDetail registra el seu <head> amb
+   useSEO, que necessita UIProvider. Els contractes visuals d'esta suite són
+   independents del head: el real té la seua suite (WikiDePobleSection.seo.test.jsx). */
+vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));

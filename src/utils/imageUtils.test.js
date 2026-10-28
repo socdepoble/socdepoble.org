@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { compressImage } from './imageUtils.js';
 import { llegixExif, teExif } from '../components/universal/enquadrament/exif.js';
-import { extreuTiff, preparaTiff } from '../components/universal/enquadrament/exifIncrustat.js';
+import { extreuTiff, precisioDeGps, preparaTiff } from '../components/universal/enquadrament/exifIncrustat.js';
 import {
   APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio,
 } from '../components/universal/enquadrament/jpegProva.js';
@@ -233,6 +233,15 @@ describe('Bloc 1.2 · conservaExif: la tria de sèrie conserva l’EXIF publicab
     const app1 = 2 + APP0_JFIF.length;
     const longitud = (bytes[app1 + 2] << 8) | bytes[app1 + 3];
     expect([...bytes.subarray(0, app1), ...bytes.subarray(app1 + 2 + longitud)]).toEqual([...SORTIDA_CANVAS]);
+  });
+
+  /* P1-64 (pla 261028_1526 §3.1.1) · Amb `precisio`, la ubicació que torna a
+     la foto ja va arrodonida (ajustaPrecisioGps); l'exacta, tal qual. */
+  test('P1-64 · conservaExif amb `precisio`: el GPS del canvas ix arrodonit a la precisió triada', async () => {
+    const poble = deDataUrl(await compressImage(fotoGps(), { maxSize: 1200, quality: 0.8, conservaExif: true, precisio: 'poble' })).bytes;
+    expect(llegixExif(poble).gps).toEqual({ lat: 38.59, lng: -0.42, altitud: 500 });
+    expect(precisioDeGps(extreuTiff(poble))).toBe('poble');
+    esperaAmbExif(deDataUrl(await compressImage(fotoGps(), { maxSize: 1200, quality: 0.8, conservaExif: true, precisio: 'exacta' })).bytes);
   });
 
   test('conservaExif amb un WebP del canvas: tros EXIF i bit E de VP8X, creat amb les mides reals', async () => {

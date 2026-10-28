@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import {
   ESTAT_EXIF, ETIQUETA_CONSERVA_CAMERA, ETIQUETA_CONSERVA_EXIF, MAX_BYTES_TIFF, MAX_BYTES_TIFF_WEBP, MOTIU_EXIF,
-  ambExifDeLoriginal, analitzaTiff, etiquetaConservaExif, exifCapEnFormat, exifPublicable, extreuTiff,
-  incrustaEnDataUrl, incrustaEnJpeg, incrustaEnWebp, preparaTiff, sostreTiff, teExifPerConservar, teUbicacioOData,
+  ajustaPrecisioGps, ambExifDeLoriginal, analitzaTiff, etiquetaConservaExif, exifCapEnFormat, exifPublicable, extreuTiff,
+  incrustaEnDataUrl, incrustaEnJpeg, incrustaEnWebp, precisioDeGps, preparaTiff, sostreTiff, teExifPerConservar, teUbicacioOData,
 } from './exifIncrustat.js';
+import { geolocalitzacio } from './geolocalitzacio.js';
 import { llegixExif, teExif } from './exif.js';
 import {
   APP0_JFIF, IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, segment, tiff,
@@ -708,5 +709,146 @@ describe('Bloc B · P2 · l’etiqueta diu el que es publica: el GPS IFD i les d
     // Una entrada buida (només el NUL) no publica res.
     const nomesMarca = analitzaTiff(tiff({ ifd0: [MARCA], exif: [textTiff(0xa431, '')] }));
     expect(nomesMarca.contingut).toEqual({ ubicacio: false, data: false, marca: true, model: false, serie: false, nom: false });
+  });
+});
+
+/* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · La precisió de
+   la ubicació, EN EL LLOC: el fitxer (el registre del consentiment) i el camp
+   (geolocalitzacio) diuen el mateix punt, i el denominador en fa de marca. */
+describe('P1-64 · ajustaPrecisioGps i precisioDeGps', () => {
+  /* Els bytes on van els valors de GPSLatitude (2), GPSLongitude (4) i GPSAltitude (6). */
+  function rangsGps(bloc, ordre) {
+    const le = ordre === 'II';
+    const v = new DataView(bloc.buffer, bloc.byteOffset, bloc.byteLength);
+    const { pos } = directoriDe(bloc, ordre, 0x8825);
+    const rangs = [];
+    for (let i = 0; i < v.getUint16(pos, le); i += 1) {
+      const p = pos + 2 + i * 12;
+      const tag = v.getUint16(p, le);
+      if (tag === 2 || tag === 4) rangs.push([v.getUint32(p + 8, le), 24]);
+      if (tag === 6) rangs.push([v.getUint32(p + 8, le), 8]);
+    }
+    return rangs;
+  }
+
+  test.each(['MM', 'II'])('%s · el viatge d’anada i tornada per a les tres precisions, amb el camp i el fitxer d’acord', (ordre) => {
+    const net = preparaTiff(tiffDeCamera({ ordre }).bloc);
+    expect(precisioDeGps(net)).toBe('exacta');
+    expect(ajustaPrecisioGps(net, 'exacta')).toBe(net);
+    expect(ajustaPrecisioGps(net)).toBe(net);
+    for (const precisio of ['100m', 'poble']) {
+      const ajustat = ajustaPrecisioGps(net, precisio);
+      expect(ajustat).not.toBe(net);
+      expect(ajustat.length).toBe(net.length);
+      expect(precisioDeGps(ajustat)).toBe(precisio);
+      const camp = geolocalitzacio({ lat: 38.5919, lng: -0.4184, precisio, origen: 'exif' });
+      expect(llig(ajustat).gps).toEqual({ lat: camp.lat, lng: camp.lng, altitud: 500 });
+    }
+    // L'entrada no es toca.
+    expect(llig(net).gps).toEqual({ lat: 38.5919, lng: -0.4184, altitud: 456.7 });
+  });
+
+  test('cap offset es mou i el MakerNote queda intacte: només canvien els valors de la latitud, la longitud i l’altitud', () => {
+    const net = preparaTiff(tiffDeCamera().bloc);
+    const ajustat = ajustaPrecisioGps(net, 'poble');
+    const rangs = rangsGps(net, 'MM');
+    expect(rangs).toHaveLength(3);
+    const dinsDelGps = (i) => rangs.some(([a, n]) => i >= a && i < a + n);
+    const canviats = [...net.keys()].filter((i) => net[i] !== ajustat[i]);
+    expect(canviats.length).toBeGreaterThan(0);
+    expect(canviats.filter((i) => !dinsDelGps(i))).toEqual([]);
+    expect(posicio(ajustat, MAKER_NOTE)).toBe(posicio(net, MAKER_NOTE));
+    expect(posicio(ajustat, MAKER_NOTE)).toBeGreaterThan(0);
+    expect(analitzaTiff(ajustat).estat).toBe(ESTAT_EXIF.PUBLICABLE);
+  });
+
+  test('el sud i l’oest arrodonixen igual que el camp; sense GPS IFD, la mateixa referència; una precisió desconeguda, null', () => {
+    const sud = tiff({ gps: gpsTorre({ latRef: 'S', lngRef: 'W', lat: [[38, 1], [35, 1], [3084, 100]], lng: [[0, 1], [24, 1], [5580, 100]] }) });
+    const ajustat = ajustaPrecisioGps(sud, '100m');
+    const camp = geolocalitzacio({ lat: -38.5919, lng: -0.4155, precisio: '100m', origen: 'exif' });
+    expect(llig(ajustat).gps).toMatchObject({ lat: camp.lat, lng: camp.lng });
+    const senseGps = tiff({ ifd0: [orientacio(1)], exif: dataOriginal('2017:05:14 10:22:33') });
+    expect(ajustaPrecisioGps(senseGps, 'poble')).toBe(senseGps);
+    expect(precisioDeGps(senseGps)).toBeNull();
+    expect(ajustaPrecisioGps(sud, 'mil·límetre')).toBeNull();
+  });
+
+  test('una estructura inesperada no es pot arrodonir: null, mai el punt exacte', () => {
+    const quatre = tiff({ gps: gpsTorre({ lat: [[38, 1], [35, 1], [30, 1], [1, 1]] }) });
+    expect(ajustaPrecisioGps(quatre, 'poble')).toBeNull();
+    const zero = tiff({ gps: gpsTorre({ lat: [[38, 0], [35, 1], [30, 1]] }) });
+    expect(ajustaPrecisioGps(zero, '100m')).toBeNull();
+    expect(ajustaPrecisioGps(Uint8Array.of(1, 2, 3), 'poble')).toBeNull();
+    expect(ajustaPrecisioGps(null, 'poble')).toBeNull();
+    expect(precisioDeGps(null)).toBeNull();
+  });
+
+  test('ambExifDeLoriginal amb `precisio`: el WebP del canvas porta el punt arrodonit', async () => {
+    const foto = new File([jpegDeCamera(tiffDeCamera().bloc)], 'arbre.jpg', { type: 'image/jpeg' });
+    const canvas = `data:image/webp;base64,${aBase64(riff(tros('VP8 ', VP8_1200)))}`;
+    const amb = extreuTiff(deBase64(await ambExifDeLoriginal(canvas, foto, { precisio: 'poble' })));
+    expect(precisioDeGps(amb)).toBe('poble');
+    expect(llig(amb).gps).toEqual({ lat: 38.59, lng: -0.42, altitud: 500 });
+  });
+});
+
+/* Revisió adversarial 261028 (privacitat, 2 i 3) · ajustaPrecisioGps és de
+   tancament segur: tot el que podria deixar el punt exacte dins del fitxer
+   publicat, o trencar-lo en reescriure'l en el lloc, torna null (qui ho crida
+   avisa i no hi posa cap EXIF). L'exacta continua tornant la mateixa referència. */
+describe('P1-64 · revisió adversarial · ajustaPrecisioGps no deixa cap punt exacte d’amagat', () => {
+  const GPS_LAT = { tag: 2, tipus: TIPUS.RATIONAL, valors: [[38, 1], [35, 1], [3084, 100]] };
+  const posDelGps = (bloc) => directoriDe(bloc, 'MM', 0x8825).pos;
+  /* El GPS de la Torre amb l'offset d'una entrada forçat (fitxers trencats). */
+  const ambOffset = (tag, offset) => tiff({ gps: gpsTorre().map((e) => (e.tag === tag ? { ...e, offset } : e)) });
+  const esperaNull = (bloc, motiu) => {
+    for (const precisio of ['100m', 'poble']) expect(ajustaPrecisioGps(bloc, precisio), `${motiu} · ${precisio}`).toBeNull();
+    expect(ajustaPrecisioGps(bloc, 'exacta'), motiu).toBe(bloc);
+  };
+
+  test('un tag repetit (dues latituds o dos punters GPS): cada lector en llegiria un de diferent', () => {
+    const duesLatituds = tiff({ gps: [...gpsTorre(), { ...GPS_LAT, valors: [[38, 1], [36, 1], [2817, 100]] }].sort((a, b) => a.tag - b.tag) });
+    esperaNull(duesLatituds, 'dues latituds');
+    expect(precisioDeGps(duesLatituds)).toBeNull();
+    const dosPunters = tiff({ ifd0: [{ tag: 0x8825, tipus: TIPUS.LONG, valors: [0] }], gps: gpsTorre() });
+    esperaNull(dosPunters, 'dos punters GPS');
+  });
+
+  test('un GPS IFD que penja d’un altre directori (l’Exif) no s’arrodonix', () => {
+    const base = tiff({ exif: dataOriginal('2017:05:14 10:22:33'), gps: gpsTorre() });
+    const desdeExif = tiff({ exif: [...dataOriginal('2017:05:14 10:22:33'), { tag: 0x8825, tipus: TIPUS.LONG, valors: [posDelGps(base)] }], gps: gpsTorre() });
+    esperaNull(desdeExif, 'GPS dins de l’Exif');
+  });
+
+  test('l’XMP (0x02BC), l’IPTC (0x83BB) o el bloc de Photoshop (0x8649) dins del TIFF, o un «GPSLatitude» en text: null', () => {
+    // Un text lliure que no diu «GPSLatitude» (la ciutat, la posició en un altre esquema): el tag ja n'és prou.
+    const xmp = '<x:xmpmeta><rdf:Description photoshop:City="La Torre" drone:Pos="38.59194,-0.41843"/></x:xmpmeta>';
+    for (const tag of [0x02bc, 0x83bb, 0x8649]) {
+      esperaNull(tiff({ ifd0: [orientacio(1), { tag, tipus: TIPUS.BYTE, valors: [...ascii(xmp)] }], gps: gpsTorre() }), `tag ${tag.toString(16)}`);
+    }
+    // Sense cap tag de text lliure, un «GPSLatitude» en text dins d'un MakerNote.
+    const makerNote = { tag: 0x927c, tipus: TIPUS.BYTE, valors: [...ascii(`Nota GPSLatitude=38.5919 ${'.'.repeat(16)}`)] };
+    esperaNull(tiff({ exif: [makerNote], gps: gpsTorre() }), 'text al MakerNote');
+  });
+
+  test('un valor que es reescriu i toca un directori, un altre valor o una referència: null (el graf no es trenca)', () => {
+    const base = tiff({ gps: gpsTorre() });
+    const pos = posDelGps(base);
+    const d = directoriDe(base, 'MM', 0x8825);
+    const offsetDe = (tag) => d.valor(d.tags.indexOf(tag));
+    esperaNull(ambOffset(4, offsetDe(2)), 'la longitud damunt de la latitud');
+    esperaNull(ambOffset(2, pos), 'la latitud damunt del directori GPS');
+    esperaNull(ambOffset(6, offsetDe(4) + 16), 'l’altitud damunt de la longitud');
+    // La referència N/S fora de línia (5 bytes) que apunta damunt de la latitud.
+    const ambRefLlarga = (offset) => tiff({ gps: gpsTorre().map((e) => (e.tag === 1 ? { ...e, valors: 'NNNN', offset } : e)) });
+    const llarga = directoriDe(ambRefLlarga(), 'MM', 0x8825);
+    esperaNull(ambRefLlarga(llarga.valor(llarga.tags.indexOf(2))), 'la referència damunt de la latitud');
+    expect(precisioDeGps(ajustaPrecisioGps(ambRefLlarga(), '100m'))).toBe('100m');
+    // La forma bona del mateix bloc sí que s'arrodonix.
+    expect(precisioDeGps(ajustaPrecisioGps(base, 'poble'))).toBe('poble');
+  });
+
+  test('una altitud que no cap en 32 bits en arrodonir-la: null', () => {
+    esperaNull(tiff({ gps: gpsTorre({ alt: [[0xffffffff, 1]] }) }), 'altitud');
   });
 });

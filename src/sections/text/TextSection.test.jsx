@@ -61,8 +61,11 @@ test('L’Ànima de la IAIA (/ia): les props exactes de la UniversalPage i el co
   /* Pla 261027_1154 (P1-61), Fase 1 · La pàgina porta imatge pròpia: el
      <head> la porta absoluta i https, no la targeta genèrica d'abans. La
      portada que es pinta (heroImage, dalt) no canvia. */
+  /* Pla 261028_1526 (P1-61, Fase 2; decisió per defecte D6) · La descripció
+     és l'entradeta (lead-first), la mateixa que escriu el prerender
+     (metadadesSocials.js · metadadesDePagina). */
   expect(mocks.seo).toHaveBeenCalledWith({
-    title: "L'Ànima de la IAIA", description: pagina.subtitle,
+    title: "L'Ànima de la IAIA", description: pagina.lead,
     /* Revisió adversarial (261027) · Amb el seu alt: el de page.image (imageAlt). */
     image: { url: 'https://socdepoble.org/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp', alt: pagina.imageAlt }
   });
@@ -199,5 +202,6 @@ test('el chrome del copy mana i els fills van davall del text', () => {
   const fills = container.querySelector('[data-pagina]').children;
   expect(fills[0].tagName).toBe('ARTICLE');
   expect(fills[1].className).toBe('viu');
-  expect(mocks.seo).toHaveBeenCalledWith(expect.objectContaining({ description: 'Sóc de Poble' }));
+  // Sense entradeta ni subtítol, la descripció genèrica (CAP_SOCIAL_BASE), com el prerender.
+  expect(mocks.seo).toHaveBeenCalledWith(expect.objectContaining({ description: 'Portal de pobles connectats' }));
 });

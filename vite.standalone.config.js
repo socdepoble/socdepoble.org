@@ -591,7 +591,20 @@ export function descripcioDelPaquet(format, paquet) {
 
 const versioDePackageJson = () => JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version;
 
-export default defineConfig(({ mode }) => {
+/* P1-35 (decisió 6 del Mestre, 261028) · El build del sistema: la data de
+   compilació aammdd a Europe/Madrid (src/config/versio.js la llig de
+   import.meta.env.SDP_BUILD). Amb SOURCE_DATE_EPOCH, la d'eixe instant, com
+   `generat` del manifest. La mateixa de vite.config.js (versio.test.js);
+   vite.natiu.config.js la importa d'ací. */
+export function segellDeBuild(env = process.env) {
+  const epoca = Number(env.SOURCE_DATE_EPOCH);
+  const quan = env.SOURCE_DATE_EPOCH && Number.isFinite(epoca) ? new Date(epoca * 1000) : new Date();
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en', { timeZone: 'Europe/Madrid', year: '2-digit', month: '2-digit', day: '2-digit' })
+    .formatToParts(quan).map(({ type, value }) => [type, value]));
+  return `${parts.year}${parts.month}${parts.day}`;
+}
+
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isCI = !!process.env.CI;
   const supabaseUrl = env.VITE_SUPABASE_URL || (isCI ? 'https://mock.supabase.co' : undefined);
@@ -692,7 +705,9 @@ export default defineConfig(({ mode }) => {
        que la porta: el directori i l'autònom; a l'app nativa, que també la
        porta, n'hi ha dos). Sense política (un public/
        sense bessones), la clau no hi és. */
-    ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {})
+    ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {}),
+    /* P1-35 · El segell del build, només en compilar (segellDeBuild). */
+    ...(command === 'build' ? { 'import.meta.env.SDP_BUILD': JSON.stringify(segellDeBuild(env)) } : {})
   },
   resolve: {
     alias: {

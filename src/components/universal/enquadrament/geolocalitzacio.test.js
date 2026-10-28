@@ -16,12 +16,14 @@ describe('T3a · precisions', () => {
 
   test('geolocalitzacio arrodonix a la precisió triada i anota precisio_m i origen', () => {
     const punt = { lat: 38.591937, lng: -0.418426 };
-    expect(geolocalitzacio({ ...punt, precisio: 'exacta', origen: 'exif' })).toEqual({ lat: 38.59194, lng: -0.41843, precisio_m: 1, origen: 'exif' });
-    expect(geolocalitzacio({ ...punt, precisio: '100m', origen: 'exif' })).toEqual({ lat: 38.592, lng: -0.418, precisio_m: 100, origen: 'exif' });
-    expect(geolocalitzacio({ ...punt, precisio: 'poble' })).toEqual({ lat: 38.59, lng: -0.42, precisio_m: 1000, origen: 'manual' });
+    expect(geolocalitzacio({ ...punt, precisio: 'exacta', origen: 'exif' })).toEqual({ lat: 38.59194, lng: -0.41843, precisio: 'exacta', precisio_m: 1, origen: 'exif' });
+    expect(geolocalitzacio({ ...punt, precisio: '100m', origen: 'exif' })).toEqual({ lat: 38.592, lng: -0.418, precisio: '100m', precisio_m: 100, origen: 'exif' });
+    expect(geolocalitzacio({ ...punt, precisio: 'poble' })).toEqual({ lat: 38.59, lng: -0.42, precisio: 'poble', precisio_m: 1000, origen: 'manual' });
     // Sense precisió, la de sèrie; una de desconeguda, també.
     expect(geolocalitzacio(punt).precisio_m).toBe(1000);
     expect(geolocalitzacio({ ...punt, precisio: 'mil·límetre' }).precisio_m).toBe(1000);
+    // P1-64 · El resultat diu la precisió aplicada (la de sèrie si no se'n coneix cap).
+    expect(geolocalitzacio({ ...punt, precisio: 'mil·límetre' }).precisio).toBe('poble');
   });
 
   test('un origen que no és «exif» és «manual»', () => {

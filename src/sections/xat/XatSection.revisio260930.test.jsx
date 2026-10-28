@@ -215,6 +215,8 @@ test('P3 · si la comunitat arriba sense que ningú haja premut la fila, el focu
   mocks.threadId = null;
   mocks.externalConfig = { poble: POBLE.id, nomPoble: POBLE.nom };
   const vista = render(<XatSection />);
+  /* P1-36 · La cerca s'obri amb la lupa de la fila de títol (el focus hi entra). */
+  fireEvent.click(screen.getByRole('button', { name: 'Cerca converses' }));
   const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
   cerca.focus();
   cerca.blur();

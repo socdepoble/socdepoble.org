@@ -6,8 +6,9 @@
  *   · cap funció ni constant del plugin cridada sense definir ni definida dues
  *     vegades, i cap identificador de callback sense funció;
  *   · el contracte d'amfitrió: només els atributs universals a l'element (i,
- *     a la instància de WordPress, l'opt-in ruta-a-url), només nomPoble i
- *     poble al global, cap atribut ni clau de backend;
+ *     a la instància de WordPress, l'opt-in ruta-a-url i el config de la
+ *     llengua opt-in), només nomPoble i poble al global, cap atribut ni clau
+ *     de backend;
  *   · capçaleres (plugin, readme, block.json) coherents entre elles i amb el
  *     filtre update_plugins_{host};
  *   · text domain únic i traducció valenciana completa;
@@ -24,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { CONTRACTE_AMFITRIO } from '../vite.standalone.config.js';
 import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
+import { SUPPORTED_LANGUAGES } from '../src/config/i18n.js';
 import { foraDelDirectori, patronsActualitzadorEn, requisitsDe, variantDirectori, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -144,6 +146,7 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
     'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', // secció i camps d'ajustos
     'socdepoble_enxufe_config', 'socdepoble_enxufe_ruta_a_url',                            // filtres públics
     'socdepoble_enxufe_seo',                                                                 // filtre públic (Onada 11, 261010, tasca 7): OpenGraph de la ruta
+    'socdepoble_enxufe_idioma',                                                              // filtre públic (pla 261028_1526, TE-05): la llengua opt-in
     'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet',                                  // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
     'socdepoble_enxufe_http', 'socdepoble_enxufe_url', 'socdepoble_enxufe_temporal', 'socdepoble_enxufe_arrel', 'socdepoble_enxufe_bloqueig' // codis d'error
@@ -183,13 +186,16 @@ test('cap constant del plugin s\'usa sense definir ni es definix dues vegades', 
 
 const ATRIBUTS_DE_BACKEND = /\b(supabase-url|supabase-anon-key|backend-url|tenant-id|data-mode|bot-api-url|oauth-relay-url|sollutia-issuer|config-id)\b/;
 
-test('l\'element només porta atributs del contracte (universals i l\'opt-in ruta-a-url), i el global només nomPoble i poble', () => {
+test('l\'element només porta atributs del contracte (universals, l\'opt-in ruta-a-url i el config de la llengua), i el global només nomPoble i poble', () => {
   const marcatge = llig('includes/marcatge.php');
   const cos = marcatge.slice(marcatge.indexOf('function socdepoble_enxufe_element('), marcatge.indexOf('function socdepoble_enxufe_te_bundle('));
   const emesos = [...cos.matchAll(/ ([a-z-]+)="/g)].map((m) => m[1]).sort();
-  assert.deepEqual(emesos, ['fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-a-url', 'ruta-inicial', 'traductor-url']);
+  /* Actualitzada a posta (pla 261028_1526, P1-22, TE-05): motiu, la llengua opt-in
+     del lloc va pel JSON de l'atribut config (atributsDeConfig), sense canvi de contracte. */
+  assert.deepEqual(emesos, ['config', 'fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-a-url', 'ruta-inicial', 'traductor-url']);
   for (const atribut of emesos) {
-    assert.ok(CONTRACTE_AMFITRIO.atributs.includes(atribut) || CONTRACTE_AMFITRIO_V1.atributsOptIn.includes(atribut), atribut);
+    assert.ok(CONTRACTE_AMFITRIO.atributs.includes(atribut) || CONTRACTE_AMFITRIO_V1.atributsOptIn.includes(atribut)
+      || (atribut === 'config' && CONTRACTE_AMFITRIO_V1.atributsDeConfig.includes(atribut)), atribut);
   }
 
   /* Onada 5 (ordre del Mestre, 261009): la instància pròpia de WordPress
@@ -202,6 +208,17 @@ test('l\'element només porta atributs del contracte (universals i l\'opt-in rut
   const modes = nomesWordpress.match(/in_array\(\s*\$ruta_a_url,\s*array\(([^)]*)\),\s*true\s*\)/)?.[1];
   assert.ok(modes, 'comparació estricta amb in_array');
   assert.deepEqual([...modes.matchAll(/'([a-z]+)'/g)].map((m) => m[1]), [...CONTRACTE_AMFITRIO_V1.rutaAUrl.modes], 'els modes del contracte');
+  /* TE-05 · config només a la instància pròpia, només amb un filtre que per defecte no
+     tria res (T1: el locale de WordPress no força la llengua), només amb un codi exacte
+     del selector i amb un JSON que només porta `language`, escapat dues vegades. */
+  assert.equal((cos.match(/ config="/g) ?? []).length, 1);
+  assert.match(nomesWordpress, / config="/, 'la llengua només a la instància pròpia de WordPress');
+  assert.match(nomesWordpress, /\$idioma = apply_filters\(\s*'socdepoble_enxufe_idioma',\s*''\s*\);/, 'per defecte, cap llengua');
+  const codis = nomesWordpress.match(/in_array\(\s*\$idioma,\s*array\(([^)]*)\),\s*true\s*\)/)?.[1];
+  assert.ok(codis, 'comparació estricta amb in_array');
+  assert.deepEqual([...codis.matchAll(/'([a-z]+)'/g)].map((m) => m[1]), SUPPORTED_LANGUAGES.map((l) => l.code), 'els cinc codis del selector');
+  assert.match(nomesWordpress, / config="' \. esc_attr\( wp_json_encode\( array\( 'language' => \$idioma \), JSON_HEX_TAG \| JSON_HEX_AMP \| JSON_HEX_APOS \| JSON_HEX_QUOT \) \) \. '"'/);
+  assert.doesNotMatch(marcatge.slice(marcatge.indexOf('function socdepoble_enxufe_config('), marcatge.indexOf('function socdepoble_enxufe_declaracio_amfitrio(')), /language|idioma/, 'el global no porta la llengua');
   const referencia = marcatge.slice(marcatge.indexOf('function socdepoble_enxufe_marcatge_de_referencia('), marcatge.indexOf('function socdepoble_enxufe_afig_plantilla('));
   assert.match(referencia, /socdepoble_enxufe_element\( array\(\), false \)/, 'la referència copiable no porta l\'opt-in');
 
@@ -355,8 +372,8 @@ const FUNCIONS_WP = {
   get_bloginfo: '0.71', get_file_data: '2.9', get_main_site_id: '4.9', get_option: '1.5', get_page_template_slug: '3.4',
   get_permalink: '1.0', get_queried_object: '3.1', get_queried_object_id: '3.1', get_site_option: '2.8',
   get_site_transient: '2.9', get_sites: '4.6', get_transient: '2.8', has_block: '5.0', has_shortcode: '3.6',
-  have_posts: '1.5', home_url: '3.0', is_multisite: '3.0', is_page: '1.5', is_php_version_compatible: '5.2',
-  is_singular: '1.5', is_textdomain_loaded: '3.0', is_wp_error: '2.1', is_wp_version_compatible: '5.2',
+  have_posts: '1.5', home_url: '3.0', is_locale_switched: '4.7', is_multisite: '3.0', is_page: '1.5', is_php_version_compatible: '5.2',
+  is_singular: '1.5', is_wp_error: '2.1', is_wp_version_compatible: '5.2',
   language_attributes: '2.1', load_plugin_textdomain: '1.5', plugin_basename: '1.5', plugin_dir_path: '2.8',
   plugins_url: '2.6', register_activation_hook: '2.0', register_block_template: '6.7',
   register_block_type: '5.8', // 5.0; amb la ruta de block.json com a primer paràmetre, 5.8
@@ -383,6 +400,7 @@ const METODES_WP = {
 // Els que el plugin enganxa o aplica; els dinàmics, amb el nom del nucli: {$…} és la part variable.
 const GANXOS_WP = {
   admin_init: '2.5', admin_menu: '1.5', 'admin_post_{$action}': '2.6', all_admin_notices: '3.1', body_class: '2.8',
+  change_locale: '4.7', // el de switch_to_locale() i restore_*_locale(): la reserva de idioma-local.php seguix la llengua viva (P1-09)
   'delete_site_transient_{$transient}': '3.0', 'gettext_{$domain}': '5.5', 'gettext_with_context_{$domain}': '5.5',
   http_allowed_safe_ports: { des_de: '5.9', inert: 'sense ell, només el canal de proves local en un port no estàndard deixa de respondre' },
   http_request_host_is_external: '3.6', init: '1.5', load_script_translation_file: '5.0.2', load_textdomain_mofile: '2.9',

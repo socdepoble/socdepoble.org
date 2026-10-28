@@ -123,17 +123,21 @@ test('Onada 4 · una organització que no és la pilot: «Logotip» dins d’«E
 /* Encàrrec d'harmonització (261018, ordre del Mestre: «fora l'avatar gegant de
    300px del centre») · L'avatar redó amb la càmera ja no és abans de l'H1:
    damunt del nom no queda res (l'avatar ja va a la barra taronja) i el control
-   viu, el primer, dins d'«Edició avançada».
+   viu dins d'«Edició avançada» (P1-58: després de la capçalera).
    Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · Expectativa
    actualitzada a propòsit: davall del cercle ja no hi ha ni «Avatar», ni
    «Llevar l'avatar», ni la línia d'ajuda; el clic obri directament la
-   finestra de retall amb la imatge que ja hi ha, no el selector. */
+   finestra de retall amb la imatge que ja hi ha, no el selector.
+   Pla 261028_1526 (P1-58; Llibre Mestre, Fita 22) · Expectativa actualitzada
+   a propòsit: el desplegable va davall de la barra taronja i damunt de l'H1,
+   i dins, l'ordre de lectura Capçalera → Avatar → Logotip. */
 test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d’«Edició avançada» i res damunt de l’H1; el clic obri el retall de la imatge que ja hi ha', async () => {
   render(<PerfilEditor identitat={ambAvatar} />);
   expect(capcalera().querySelector('.page-title-avatar')).toBeNull();
   expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();
   expect(capcalera().querySelector('img.page-title-logo')).toBeNull();
-  expect(abansDe(titol(), desplegable())).toBe(true);
+  expect(abansDe(barraTaronja(), desplegable())).toBe(true);
+  expect(abansDe(desplegable(), titol())).toBe(true);
   // Un sol avatar gran a la pàgina, el del desplegable; el de la barra taronja és el discret.
   expect(document.querySelectorAll('.sdp-editor-document .page-title-avatar')).toHaveLength(1);
   expect(barraTaronja().querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/a.webp');
@@ -150,8 +154,8 @@ test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d
   expect(within(identitat).getAllByRole('button')).toEqual([avatar]);
   expect(identitat.querySelector('.page-title-avatar-accions, .sdp-camp__ajuda')).toBeNull();
   expect(identitat.textContent).not.toContain('10 MB');
-  // L'avatar és el primer del desplegable, abans de la capçalera; cap ranura.
-  expect(abansDe(identitat, details.querySelector('.sdp-edicio-avancada__capcalera'))).toBe(true);
+  // P1-58 · La capçalera és la primera del desplegable, l'avatar després; cap ranura.
+  expect(abansDe(details.querySelector('.sdp-edicio-avancada__capcalera'), identitat)).toBe(true);
   expect(details.querySelector('.sdp-edicio-avancada__logotip')).toBeNull();
   const obri = vi.spyOn(selector('logoImage'), 'click');
   await act(async () => { fireEvent.click(avatar); });
@@ -162,8 +166,8 @@ test('Onada 4 · una persona amb avatar: l’avatar redó amb la càmera, dins d
 /* Encàrrec d'harmonització (261018) · La ranura «Avatar» de qui no té foto ja
    no és damunt de l'H1: va dins d'«Edició avançada», després de «Capçalera».
    Pla 2000 (punt 2) · Expectativa actualitzada a propòsit: ja no és cap
-   ranura (amb el seu text dels 10 MB), és el cercle buit amb la càmera, el
-   primer del desplegable, que obri el mateix selector de l'avatar. */
+   ranura (amb el seu text dels 10 MB), és el cercle buit amb la càmera
+   (P1-58: després de la capçalera), que obri el mateix selector de l'avatar. */
 test('Onada 4 · una persona sense avatar: el cercle buit dins d’«Edició avançada», que obri el selector de l’avatar; «Capçalera», el seu', () => {
   render(<PerfilEditor identitat={jo} />);
   expect(capcalera().querySelector('.page-title-logo-personalitzat')).toBeNull();

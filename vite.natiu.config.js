@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { esquemaInvertitDeGoogleIos, validatePublicCredentials } from './src/config/publicCredentials.js';
-import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin } from './vite.standalone.config.js';
+import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin, segellDeBuild } from './vite.standalone.config.js';
 
 /**
  * Build de l'app nativa (Fases 1 i 2 de l'empaquetat mòbil, 261003).
@@ -423,7 +423,10 @@ export default defineConfig(({ mode, command, isPreview }) => {
        abans que cap mòdul resolga cap imatge. Sense política (un public/
        sense bessones), la clau no hi és i tot resol com al lloc. */
     define: {
-      ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {})
+      ...(mitjans ? { 'import.meta.env.SDP_POLITICA_DE_MITJANS': JSON.stringify(mitjans) } : {}),
+      /* P1-35 · El segell del build (segellDeBuild), només en compilar: la
+         previsualització no compila res. */
+      ...(command === 'build' ? { 'import.meta.env.SDP_BUILD': JSON.stringify(segellDeBuild(env)) } : {})
     },
     resolve: {
       alias: {

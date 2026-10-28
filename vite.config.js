@@ -41,6 +41,21 @@ export function cacheDirPropi(arrel, tmp = os.tmpdir()) {
     : path.join(fs.realpathSync(tmp), 'sdp-vite-cache', empremta);
 }
 
+/* P1-35 (decisió 6 del Mestre, 261028) · El build del sistema: la data de
+   compilació aammdd a Europe/Madrid, que src/config/versio.js llig de
+   import.meta.env.SDP_BUILD. Amb SOURCE_DATE_EPOCH (build reproduïble), la
+   d'eixe instant. La mateixa funció viu a vite.standalone.config.js (el natiu
+   la importa d'allà); ací no s'importa per no fer d'eixe fitxer i de les seues
+   dependències de src/ una dependència del servidor de desenvolupament, que es
+   reiniciaria amb cada canvi. versio.test.js comprova que diuen el mateix. */
+export function segellDeBuild(env = process.env) {
+  const epoca = Number(env.SOURCE_DATE_EPOCH);
+  const quan = env.SOURCE_DATE_EPOCH && Number.isFinite(epoca) ? new Date(epoca * 1000) : new Date();
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en', { timeZone: 'Europe/Madrid', year: '2-digit', month: '2-digit', day: '2-digit' })
+    .formatToParts(quan).map(({ type, value }) => [type, value]));
+  return `${parts.year}${parts.month}${parts.day}`;
+}
+
 /* calendari-7 (T5, 260930) · Les proves corren amb la zona del poble. Sense,
    la CI (UTC) no passa mai per un dia de 23 o 25 hores i les proves del canvi
    d'hora queden verdes sense provar-lo. Es fixa ací, al procés principal i
@@ -114,6 +129,10 @@ export default defineConfig(({ command, mode, isPreview }) => {
     }
   },
   cacheDir: cacheDirPropi(__dirname),
+  /* P1-35 · El segell del build només en compilar: el servidor de
+     desenvolupament i les proves (que avaluen este fitxer com a `serve`) no el
+     porten, i la versió s'hi llig «v1.0.0» sense build. */
+  ...(command === 'build' ? { define: { 'import.meta.env.SDP_BUILD': JSON.stringify(segellDeBuild()) } } : {}),
   resolve: {
     /* Assegurança barata, la forma que recomana Vite: si un dia apareix una
        segona còpia de React a node_modules, totes les importacions van a la de

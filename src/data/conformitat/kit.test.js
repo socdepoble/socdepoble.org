@@ -441,6 +441,16 @@ describe('IDEA-22 · els casos de la titular', () => {
       .toMatchObject({ estat: 'falla', falles: ['la titular té tipus "entitat"', 'la titular no té id de text', 'la titular no té nom', 'l’avatar de la titular no és text'] });
   });
 
+  /* P1-13 · C11-05 (261028) · Cap camp de correu al llistat del directori, tampoc la columna nova correu_public. */
+  test('el directori amb qualsevol camp de correu és una falla, també correu_public', async () => {
+    const directori = cas('listPublicOrganizations', 'sense correu');
+    for (const camp of ['contact_email', 'public_email', 'correu_public', 'email', 'correu']) {
+      const fila = { id: 'org-1', name: 'Forn', [camp]: camp === 'public_email' ? true : 'forn@poble.invalid' };
+      expect(await executaCas(directori, { listPublicOrganizations: async () => [fila] }, ctx()), camp)
+        .toMatchObject({ estat: 'falla', falles: ['la fila org-1 porta un correu'] });
+    }
+  });
+
   test('el directori deixa al context una organització pública per a la titular', async () => {
     const c = ctx();
     const directori = cas('listPublicOrganizations', 'sense correu');

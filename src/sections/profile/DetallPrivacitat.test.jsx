@@ -2,7 +2,7 @@ import React from 'react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   caps: new Set(), navigate: vi.fn(),
   exporta: vi.fn(), estatBaixa: vi.fn(), demana: vi.fn(), cancela: vi.fn(),
@@ -31,7 +31,17 @@ vi.mock('../../data/backendPort.js', () => ({
   exportaLesMeuesDades: m.exporta, estatBaixa: m.estatBaixa, demanaBaixa: m.demana, cancelaBaixa: m.cancela,
   estatConsentiment: m.estatConsentiment, registraConsentiment: m.registra, revocaConsentiment: m.revoca,
 }));
-import { DetallPrivacitat, nomFitxerExportacio, dataLlegible, pagina } from './DetallPrivacitat.jsx';
+import { DetallPrivacitat, TEXTOS_PRIVACITAT, nomFitxerExportacio, dataLlegible, pagina } from './DetallPrivacitat.jsx';
+import { UIProvider } from '../../app/contexts/UIContext.jsx';
+import { LANGUAGE_STORAGE_KEY } from '../../config/i18n.js';
+import { delVal } from '../../config/storage.js';
+import CA from '../../config/idiomes/ca.js';
+import ES from '../../config/idiomes/es.js';
+import EN from '../../config/idiomes/en.js';
+import EU from '../../config/idiomes/eu.js';
+import GL from '../../config/idiomes/gl.js';
+/* TE-01 · Les proves en castellà pinten des del primer fotograma amb els cinc diccionaris. */
+import '../../../tests/helpers/diccionaris.js';
 
 const config = { tenantId: '00000000-0000-4000-8000-000000000000' };
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', dades: { full_name: 'Pep', email: 'pep@poble.test', is_public: false, town_name: 'La Torre' } };
@@ -298,6 +308,7 @@ test('consentiment: versió vigent, darrera acció i retirada amb confirmació',
   expect(within(bloc).getByText(`L’has acceptada (versió v1) el ${dataLlegible('2026-09-15T10:00:00Z')}.`)).toBeTruthy();
   expect(within(bloc).getByRole('link', { name: 'Llegir la política' }).getAttribute('href')).toBe('/legal');
   fireEvent.click(within(bloc).getByRole('button', { name: 'Retirar el consentiment' }));
+  expect(within(screen.getByRole('dialog', { name: 'Retirar el consentiment' })).getByRole('button', { name: 'Cancel·lar' })).toBeTruthy();
   m.estatConsentiment.mockResolvedValue({ ...ACCEPTAT, calReconsentir: true,
     consentiments: [{ tipus: 'rgpd_acepta', accio: 'revoca', versio: 'v1', al: '2026-09-26T10:00:00Z' }] });
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Retirar-lo' })); });
@@ -318,4 +329,93 @@ test('consentiment: si cal reconsentir, s’accepta la versió vigent', async ()
   await act(async () => { fireEvent.click(boto); });
   expect(m.registra).toHaveBeenCalledWith('rgpd_acepta', 'v2', config);
   expect(m.estatConsentiment).toHaveBeenCalledTimes(2);
+});
+
+/* Pla 261028_1526 (P1-22, TE-01) · Els textos de la pantalla passen pel
+   traductor: cada parell de TEXTOS_PRIVACITAT té la clau a les cinc llengües,
+   el valencià és la reserva (la pantalla en valencià no canvia ni un caràcter)
+   i cada llengua porta els mateixos buits d'omple(). Els textos RGPD de les
+   altres quatre llengües estan pendents de validació legal. */
+const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+const PARELLS_PRIVACITAT = Object.values(TEXTOS_PRIVACITAT).flatMap(Object.values);
+const buitsDe = (text) => [...String(text).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+
+test('TE-01 · cada text de TEXTOS_PRIVACITAT és a les cinc llengües, el valencià és la reserva i els buits són els mateixos', () => {
+  expect(PARELLS_PRIVACITAT.length).toBeGreaterThan(45);
+  expect(new Set(PARELLS_PRIVACITAT.map(([clau]) => clau)).size).toBe(PARELLS_PRIVACITAT.length);
+  for (const [clau, reserva] of PARELLS_PRIVACITAT) {
+    expect(clau).toMatch(/^section\.perfil\.privacitat\.(?:pagina|dades|politica|consentiment|baixa)\./);
+    expect(CA[clau], clau).toBe(reserva);
+    for (const [codi, dic] of Object.entries(DICCIONARIS)) {
+      expect(typeof dic[clau] === 'string' && dic[clau].trim() !== '', `${codi}: ${clau}`).toBe(true);
+      expect(buitsDe(dic[clau]), `${codi}: ${clau}`).toEqual(buitsDe(reserva));
+    }
+  }
+});
+
+test('TE-01 · la font no porta cap text visible fora dels parells', () => {
+  const font = readFileSync(path.join(process.cwd(), 'src/sections/profile/DetallPrivacitat.jsx'), 'utf8');
+  const vistes = font.slice(font.indexOf('function DadesDinsDeLApp('));
+  /* Cap text JSX solt, cap titol= ni etiqueta= literal (la font de HEAD en tenia 13 i 14). */
+  expect(vistes.replace(/\{\/\*[^]*?\*\/\}/g, '').match(/>\s*[A-ZÀ-Úa-zà-ú][^<>{}\n]*\s*</g) ?? []).toEqual([]);
+  expect(vistes.match(/\b(?:titol|title|lead|descripcio|etiqueta|etiquetaConfirma|ajuda)="[^"]+"/g) ?? []).toEqual([]);
+});
+
+describe('TE-01 · en castellà', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({
+      matches: false, media: query, onchange: null, addListener: vi.fn(), removeListener: vi.fn(),
+      addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn()
+    })));
+    delVal(LANGUAGE_STORAGE_KEY);
+  });
+  afterEach(() => { vi.unstubAllGlobals(); delVal(LANGUAGE_STORAGE_KEY); });
+  const pintaEnCastella = () => render(
+    <UIProvider externalConfig={{ language: 'es' }}><DetallPrivacitat identitat={jo} config={config} /></UIProvider>
+  );
+
+  test('títol, blocs, botons i la data de la baixa pendent, en castellà i amb el format es-ES', async () => {
+    m.caps = new Set(['compte', 'consentiment']);
+    const pendent = { demanada: true, demanadaAl: '2026-09-20T10:00:00Z', purgaPrevistaAl: '2026-10-20T10:00:00Z' };
+    m.estatBaixa.mockResolvedValue(pendent);
+    pintaEnCastella();
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacidad y datos' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 1, name: 'Privacitat i dades' })).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Mis datos', 'Consentimiento', 'Darse de baja']);
+    await screen.findByRole('button', { name: 'Cancelar la baja' });
+    const data = dataLlegible(pendent.purgaPrevistaAl, 'es-ES');
+    expect(data).not.toBe(dataLlegible(pendent.purgaPrevistaAl));
+    const avis = screen.getByText(new RegExp(data)).textContent;
+    expect(avis).toContain(`La solicitaste el ${dataLlegible(pendent.demanadaAl, 'es-ES')}.`);
+    expect(avis).toContain(`se borrarán definitivamente el ${data}, salvo los archivos`);
+    expect(avis).toContain('el borrado puede esperar hasta 7 días más.');
+    expect(await screen.findByText(`La aceptaste (versión v1) el ${dataLlegible('2026-09-15T10:00:00Z', 'es-ES')}.`)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Leer la política' }).getAttribute('href')).toBe('/legal');
+    expect(screen.getByRole('button', { name: 'Descargar mis datos' })).toBeTruthy();
+  });
+
+  test('el diàleg de la baixa, amb els 30 dies dins de cada punt', async () => {
+    m.caps = new Set(['compte']);
+    pintaEnCastella();
+    fireEvent.click(await screen.findByRole('button', { name: 'Darme de baja' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Darte de baja' });
+    const punts = within(dialeg).getAllByRole('listitem').map((li) => li.textContent);
+    expect(punts).toHaveLength(6);
+    expect(punts[1]).toMatch(/^Durante 30 días puedes cancelarla/);
+    expect(punts[2]).toContain('hasta 7 días más');
+    expect(within(dialeg).getByLabelText(/¿Por qué te vas\?/)).toBeTruthy();
+    expect(within(dialeg).getByRole('button', { name: 'Sí, darme de baja' })).toBeTruthy();
+    expect(within(dialeg).getByRole('button', { name: 'Cancelar' })).toBeTruthy();
+    expect(dialeg.textContent).not.toContain('Cancel·lar');
+  });
+
+  test('el diàleg de retirar el consentiment, amb el botó de tornar en castellà', async () => {
+    m.caps = new Set(['consentiment']);
+    pintaEnCastella();
+    fireEvent.click(await screen.findByRole('button', { name: 'Retirar el consentimiento' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Retirar el consentimiento' });
+    expect(within(dialeg).getByRole('button', { name: 'Retirarlo' })).toBeTruthy();
+    expect(within(dialeg).getByRole('button', { name: 'Cancelar' })).toBeTruthy();
+    expect(dialeg.textContent).not.toContain('Cancel·lar');
+  });
 });

@@ -272,6 +272,92 @@ describe('una passada', () => {
   });
 });
 
+describe('P1-18 (Codex C0545-WM2) · el topall dura fins al final del cos', () => {
+  /* Un cos sintètic que envia `text` i després penja (o acaba), amb el recompte de pull i de cancel·lacions. */
+  function cosDe({ text = '', penja = false } = {}) {
+    const estat = { pulls: 0, cancel: 0 };
+    let enviat = !text;
+    const flux = new ReadableStream({
+      pull(controlador) {
+        estat.pulls++;
+        if (!enviat) { enviat = true; controlador.enqueue(new TextEncoder().encode(text)); return undefined; }
+        if (penja) return new Promise(() => {});
+        controlador.close();
+        return undefined;
+      },
+      cancel() { estat.cancel++; }
+    }, { highWaterMark: 0 });
+    return { flux, estat };
+  }
+
+  test('la reclamació envia les capçaleres i penja el cos: «temps» al topall, 502 i cap DELETE', async () => {
+    const { flux } = cosDe({ text: '[{"id":1,', penja: true });
+    let senyal = null;
+    const mon = creaMon({
+      cua: [{ bucket_id: 'mitjans', nom: NOM_A }],
+      base: (cami, _cos, opcions) => {
+        if (!cami.endsWith('purga_fitxers_reclama')) return null;
+        senyal = opcions.signal;
+        return new Response(flux, { status: 200 });
+      }
+    });
+    const inici = Date.now();
+    const r = await gestorDe(mon, { opcions: { TOPALL_MS: 20 } })(peticio());
+    expect(r.status).toBe(502);
+    expect(await r.json()).toMatchObject({ ok: false, error: 'base' });
+    expect(Date.now() - inici).toBeLessThan(1000);
+    expect(senyal.aborted).toBe(true);
+    expect(registre.linies).toContain('[purga-fitxers] La base no respon: temps');
+    expect(mon.crides.filter((c) => c.metode === 'DELETE')).toEqual([]);
+  });
+
+  test('un 400 de Storage que penja el cos és fallit per «temps», no un DELETE penjat', async () => {
+    const { flux } = cosDe({ text: '{"statusCode":', penja: true });
+    let senyal = null;
+    const mon = creaMon({
+      cua: [{ bucket_id: 'mitjans', nom: NOM_A }], objectes: [`mitjans/${NOM_A}`],
+      base: (cami, _cos, opcions) => {
+        if (!cami.startsWith('/storage/v1/object/')) return null;
+        senyal = opcions.signal;
+        return new Response(flux, { status: 400 });
+      }
+    });
+    const r = await gestorDe(mon, { opcions: { TOPALL_MS: 20 } })(peticio());
+    expect(await r.json()).toMatchObject({ ok: true, fets: 0, fallits: 1 });
+    expect(senyal.aborted).toBe(true);
+    expect(mon.cua[0].ultim_error).toBe('temps');
+  });
+
+  test('el cos que ningú llig es cancel·la sense esperar-lo: un 2xx de Storage i un error de la base', async () => {
+    const storage = cosDe({ text: '[]', penja: true });
+    const mon = creaMon({
+      cua: [{ bucket_id: 'mitjans', nom: NOM_A }],
+      base: (cami) => (cami.startsWith('/storage/v1/object/') ? new Response(storage.flux, { status: 200 }) : null)
+    });
+    const r = await gestorDe(mon, { opcions: { TOPALL_MS: 5000 } })(peticio());
+    expect(await r.json()).toMatchObject({ ok: true, fets: 1, fallits: 0 });
+    expect(storage.estat).toEqual({ pulls: 0, cancel: 1 });
+
+    const base = cosDe({ text: '{"message":"x"}', penja: true });
+    let senyal = null;
+    const mon2 = creaMon({
+      cua: [{ bucket_id: 'mitjans', nom: NOM_A }],
+      base: (cami, _cos, opcions) => {
+        if (!cami.endsWith('purga_fitxers_reclama')) return null;
+        senyal = opcions.signal;
+        return new Response(base.flux, { status: 500 });
+      }
+    });
+    const inici = Date.now();
+    const r2 = await gestorDe(mon2, { opcions: { TOPALL_MS: 5000 } })(peticio());
+    expect(r2.status).toBe(502);
+    expect(Date.now() - inici).toBeLessThan(1000);
+    expect(base.estat).toEqual({ pulls: 0, cancel: 1 });
+    expect(senyal.aborted).toBe(false);
+    expect(registre.linies).toContain('[purga-fitxers] La base no respon: base 500');
+  });
+});
+
 describe('cap nom d’objecte ni cap secret ix del worker', () => {
   test('ni a les respostes ni al registre, en cap dels camins', async () => {
     const camins = [

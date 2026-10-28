@@ -247,6 +247,10 @@ export function UniversalPage(props) {
          només amb `true`. Ni la config del ContentProvider ni topBarData la
          poden posar: ací es torna a escriure des de les props. */
       senseLogo={props.senseLogo === true}
+      /* Pla 261028_1526 (P1-58) · El mateix patró: el que va davall de la
+         barra taronja (despresAutoria) és una prop explícita de la pàgina;
+         la config del ContentProvider no hi pot injectar res. */
+      despresAutoria={props.despresAutoria ?? null}
       onConnect={handleConnect}
       showConnect={senseConnectar ? false : (props.showConnect ?? config.showConnect)}
       onBack={handleBack}

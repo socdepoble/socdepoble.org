@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { MAX_BYTES_EXIF, llegixExif, llegixMetadadesImatge, teExif } from './exif.js';
 import { IMATGE, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio, segment, tiff } from './jpegProva.js';
+import { ESTAT_EXIF, ajustaPrecisioGps, analitzaTiff, extreuTiff, precisioDeGps } from './exifIncrustat.js';
 
 /* Onada 4 · revisió adversarial (K5) · Fuzz DETERMINISTA del lector d'EXIF.
    Milers de JPEG mutats a partir de dos mostres vàlides (II i MM) amb un
@@ -269,6 +270,51 @@ describe('Onada 0.3 · fuzz determinista de llegixExif amb ambCamera', () => {
     expect(fallades.slice(0, 5)).toEqual([]);
     // No és trivial: una part dels mutants encara porta la càmera.
     expect(ambCamera).toBeGreaterThan(CASOS * 0.05);
+    expect(performance.now() - inici).toBeLessThan(5000);
+  });
+});
+
+/* P1-64 (pla 261028_1526 §3.1.1) · La precisió de la ubicació
+   (ajustaPrecisioGps, precisioDeGps, exifIncrustat.js) amb els mateixos
+   mutants: mai llança, i torna la mateixa referència, una còpia de la mateixa
+   mida o null; la lectura de la precisió, una de les tres o null. */
+describe('P1-64 · fuzz determinista de la precisió del GPS', () => {
+  test('4.000 blocs TIFF mutats: cap excepció i cap forma inesperada', () => {
+    const CASOS = 4000;
+    const aleatori = generador(0x64ec15);
+    const fallades = [];
+    let arrodonits = 0;
+    const inici = performance.now();
+    for (let cas = 0; cas < CASOS; cas += 1) {
+      const bytes = muta(MOSTRES[cas % 2], aleatori, MOSTRES[(cas + 1) % 2]);
+      const bloc = extreuTiff(bytes) || bytes.subarray(12);
+      const precisio = ['exacta', '100m', 'poble'][cas % 3];
+      let r;
+      let llegida;
+      try {
+        r = ajustaPrecisioGps(bloc, precisio);
+        llegida = precisioDeGps(r || bloc);
+      } catch (err) {
+        fallades.push({ cas, motiu: `ha llançat: ${err?.message}` });
+        continue;
+      }
+      if (precisio === 'exacta' && r !== bloc) fallades.push({ cas, motiu: 'l’exacta no torna la mateixa referència' });
+      if (r !== null && r !== bloc && (!(r instanceof Uint8Array) || r.length !== bloc.length)) fallades.push({ cas, motiu: 'una còpia d’una altra mida' });
+      /* Revisió adversarial 261028 (privacitat, 3) · L'oracle: una còpia és publicable, porta la marca i el
+         GPS que se'n llig no té més decimals que la precisió (abans, uns quants mutants eixien trencats). */
+      if (r && r !== bloc) {
+        const decimals = precisio === '100m' ? 3 : 2;
+        const ambDecimals = (x) => Math.abs(x * 10 ** decimals - Math.round(x * 10 ** decimals)) < 1e-6;
+        const { gps } = llegixExif(concatena(SOI, app1Exif(r)));
+        if (analitzaTiff(r)?.estat !== ESTAT_EXIF.PUBLICABLE) fallades.push({ cas, motiu: 'la còpia ja no és publicable' });
+        if (gps && precisioDeGps(r) !== precisio) fallades.push({ cas, motiu: `la marca diu ${precisioDeGps(r)}` });
+        if (gps && !(ambDecimals(gps.lat) && ambDecimals(gps.lng))) fallades.push({ cas, motiu: 'un GPS sense arrodonir' });
+      }
+      if (![null, 'exacta', '100m', 'poble'].includes(llegida)) fallades.push({ cas, motiu: `precisió ${llegida}` });
+      if (r && r !== bloc) arrodonits += 1;
+    }
+    expect(fallades.slice(0, 5)).toEqual([]);
+    expect(arrodonits).toBeGreaterThan(CASOS * 0.05);
     expect(performance.now() - inici).toBeLessThan(5000);
   });
 });

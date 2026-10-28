@@ -52,7 +52,13 @@ export const PRECOMMIT_INCLUDE = Object.freeze([
   'src/natiu/{projecte*,avisosNatius}.test.js',
   'src/config/{compartirNatiu,avisosNatius}.test.js',
   'src/sections/xat/{ReceptorCompartit,XatContext.avisosNatius}.test.jsx',
-  'src/sections/xat/components/{DialegCompartir,ControlsAdjunt.compartir}.test.jsx'
+  'src/sections/xat/components/{DialegCompartir,ControlsAdjunt.compartir}.test.jsx',
+  /* Pla 261028_1526 (Bloc D, P1-31) · El canvi de sessió descarta el lot, també el que el pont encara llegia. */
+  'src/sections/xat/XatContext.compartir.test.jsx',
+  /* Pla 261028_1526 (Bloc F, P1-26) · El cens de l'Arxiu (mil·lisegons, entorn node). Les apps
+     locals (src/app/App.appsLocals.test.jsx) es queden fora: amb elles la suite passava de 30 s
+     (26,3 s → 32,1 s, 261028); continuen a la suite sencera. */
+  'src/sections/multimedia/censImatges.test.js'
 ]);
 
 /* La suite principal en fa servir 2 (vite.config.js: no satura els imports del catàleg); esta, que

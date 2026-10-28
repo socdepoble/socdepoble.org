@@ -13,10 +13,11 @@
      botó, no un grup: el separen els seus marges (un grup, el gap del seu
      contenidor). L'amplària la dona el contenidor (flex en columna,
      .sdp-xat-conversa) menys els marges; el doble selector guanya el 100%
-     de .sdp-xat-pindola siga quin siga l'ordre dels fulls. */
+     de .sdp-xat-pindola siga quin siga l'ordre dels fulls. P1-37 · Els
+     marges són els tokens del botó de bloc (tokens.css), els mateixos 16/12px. */
   .sdp-xat-pindola.sdp-xat-pindola--iaia {
     width: auto;
-    margin-inline: var(--sdp-space-4);
-    margin-block: var(--sdp-space-3);
+    margin-inline: var(--sdp-boto-marge-inline);
+    margin-block: var(--sdp-boto-marge-block);
   }
 }

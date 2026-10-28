@@ -94,6 +94,23 @@ test('grup C · una organització del directori porta el seu poble; sense column
   expect(await loadPerfilPublic('rentonar')).toMatchObject({ tipus: 'grup', poble: 'Relleu' });
 });
 
+/* P1-13 · C11-05 (261028) · El correu que l'organització ha fet públic arriba
+   per la columna generada correu_public de la vista (2610281730). El booleà
+   public_email és l'opt-in, mai el correu: abans es llegia ell i la fitxa
+   remota quedava sempre sense correu. Sense la columna (vista d'abans) o sense
+   opt-in (null), buit. */
+test('C11-05 · una organització del directori porta el correu públic de correu_public; mai el booleà public_email', async () => {
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', public_email: true, correu_public: 'forn@exemple.cat' }).correu).toBe('forn@exemple.cat');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', public_email: true }).correu).toBe('');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', public_email: 'forn@exemple.cat' }).correu).toBe('');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', correu_public: null }).correu).toBe('');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn' }).correu).toBe('');
+  /* El privat no arriba mai al DTO, encara que una fila el portara. */
+  expect(JSON.stringify(perfilDOrganitzacio({ id: 'o', name: 'Forn', contact_email: 'privat@exemple.cat' }))).not.toContain('privat@exemple.cat');
+  m.request.mockResolvedValue([{ id: 'org-real', name: 'Forn', slug: 'forn', kind: 'company', public_email: true, correu_public: 'forn@exemple.cat' }]);
+  expect(await loadPerfilPublic('forn')).toMatchObject({ tipus: 'entitat', correu: 'forn@exemple.cat' });
+});
+
 test('T51 · la fitxa pròpia (profiles) porta created_at i updated_at com a creat i modificat', async () => {
   const id = '11111111-1a1a-4000-8000-000000000000';
   m.user = { id };

@@ -57,6 +57,33 @@ export function permetOrigenMitjans(url) {
   }
 }
 
+/* P1-16 (pla 261028_1526 §3.5.1) · La marca de les caixes de taula que fa
+   parseMarkdown.js (data-sdp-taula). La classe sola no basta: qualsevol
+   autor la pot escriure, i este sanejador és també el del Mur, les Notes i
+   el Perfil. La marca és a l'atzar per a cada càrrega del mòdul i només viu
+   entre parseMarkdown i sanitizeHtml: el sanejador la lleva sempre, i un
+   contingut desat no la pot conéixer. Sense crypto, cap marca: cap caixa no
+   guanya role ni tabindex (falla tancada). */
+const MARCA_TAULA = (() => {
+  try {
+    return Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return '';
+  }
+})();
+
+/** La marca que parseMarkdown posa a data-sdp-taula de cada caixa de taula. */
+export const marcaDeTaula = () => MARCA_TAULA;
+
+const esCaixaDeTaula = (node) => node?.tagName === 'DIV' && node.classList?.contains('sdp-taula-prosa') === true;
+/* Una caixa amb la marca bona s'anota al node abans de sanejar-ne cap
+   atribut. Symbol.for i no una WeakSet del mòdul: si el mòdul s'avalua dues
+   vegades sobre el mateix DOMPurify (el HMR de Vite, vi.resetModules), els
+   ganxos de cada avaluació veuen la caixa que n'ha aprovat l'altra. L'HTML
+   no pot posar cap propietat de JavaScript a un node. */
+const CAIXA_MARCADA = Symbol.for('sdp.sanitize.caixaDeTaula');
+const esCaixaMarcada = (node) => esCaixaDeTaula(node) && node[CAIXA_MARCADA] === true;
+
 function posaGanxos() {
   if (ganxosPosats) return;
   /* Pla 261018_1605 (Tasca 0 i 3; ordre del Mestre, 18-10-2026) · Sense DOM
@@ -69,7 +96,38 @@ function posaGanxos() {
   if (typeof DOMPurify.addHook !== 'function') return;
   ganxosPosats = true;
 
+  /* P1-16 (pla 261028_1526 §3.5.1) · La caixa d'una taula de prosa
+     (parseMarkdown.js) és una regió amb focus: role="region" i tabindex="0",
+     exactament eixos dos valors i només al div.sdp-taula-prosa que porta la
+     marca d'esta càrrega (MARCA_TAULA). ALLOWED_ATTR no s'eixampla: el
+     sanejador és el de Notes, el Perfil i el Mur, i cap altre element, cap
+     caixa escrita a mà ni cap altre valor no guanya role ni tabindex. La
+     marca es mira abans de sanejar cap atribut (DOMPurify els recorre de
+     l'últim al primer i la lleva) i no ix mai. */
+  DOMPurify.addHook('beforeSanitizeAttributes', (node) => {
+    if (MARCA_TAULA && esCaixaDeTaula(node) && node.getAttribute('data-sdp-taula') === MARCA_TAULA) node[CAIXA_MARCADA] = true;
+  });
+
+  DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+    if (data.attrName === 'data-sdp-taula') {
+      data.keepAttr = false;
+      return;
+    }
+    if (node[CAIXA_MARCADA] !== true) return;
+    if ((data.attrName === 'role' && data.attrValue === 'region') || (data.attrName === 'tabindex' && data.attrValue === '0')) {
+      data.forceKeepAttr = true;
+    }
+  });
+
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    /* P1-16 · Si la classe de la caixa ha caigut després de guardar-los (un
+       class amb «-->», que DOMPurify esborra sencer), role i tabindex cauen
+       amb ella: fora d'una caixa marcada no n'hi ha cap. */
+    if (node.nodeType === 1 && !esCaixaMarcada(node) && (node.hasAttribute('role') || node.hasAttribute('tabindex'))) {
+      node.removeAttribute('role');
+      node.removeAttribute('tabindex');
+    }
+
     // 1. Cap far de tercers. Només imatges del nostre origen o data: URI.
     if (node.tagName === 'IMG') {
       const src = node.getAttribute('src') || '';

@@ -29,7 +29,15 @@
  *     foto sense retallar) ni cap altre byte de l'original;
  *   · desmarcada: net, com abans;
  *   · el logotip (sense casella) i el contracte T46 sense la casella: net.
- * El que no canvia: mai puja l'original ni el retall sense passar pel canvas. */
+ * El que no canvia: mai puja l'original ni el retall sense passar pel canvas.
+ *
+ * P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 7) · GIRADA A POSTA
+ * una altra vegada, només per a la IDENTITAT: l'avatar (de totes les menes),
+ * la capçalera d'una persona i l'avatar de DetallAjust pugen SEMPRE nets,
+ * sense casella, i la persona llig «🔒 Per la teua privacitat, s'han eliminat
+ * les dades GPS de la foto de perfil» (dins de la finestra i, en acabar, fora)
+ * només quan la foto portava GPS. La capçalera d'una organització o d'un agent
+ * continua amb la casella marcada de sèrie i l'EXIF publicable. */
 import React, { useRef } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -46,7 +54,9 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
 import DetallAjust from './DetallAjust.jsx';
 import { useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
-import { AJUDA_CONSERVA_UBICACIO, DialegEnquadrament } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import {
+  AJUDA_CONSERVA_UBICACIO, AVIS_GPS_ELIMINAT_PERFIL, DialegEnquadrament,
+} from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { llegixExif, teExif } from '../../components/universal/enquadrament/exif.js';
 import { ETIQUETA_CONSERVA_EXIF, extreuTiff, preparaTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
 import {
@@ -168,13 +178,13 @@ test('la foto de prova porta de veres l’EXIF, el GPS de la Torre i la miniatur
    Els tres botons (useImatgeDeFitxa): el retall ix SEMPRE recodificat (també
    desat sense ampliar) i la pujada el torna a passar pel canvas. */
 
-function Fitxa({ camp, forma, onImageUpload }) {
-  const imatge = useImatgeDeFitxa({ camp, forma, onImageUpload, onDesaCamp: vi.fn(), onError: vi.fn() });
+function Fitxa({ camp, forma, onImageUpload, identitat = false, onError = vi.fn() }) {
+  const imatge = useImatgeDeFitxa({ camp, forma, onImageUpload, onDesaCamp: vi.fn(), onError, identitat });
   return <>{imatge.input}{imatge.dialeg}</>;
 }
 
-async function obriFitxa(camp, forma, onImageUpload) {
-  const vista = render(<Fitxa camp={camp} forma={forma} onImageUpload={onImageUpload} />);
+async function obriFitxa(camp, forma, onImageUpload, extra = {}) {
+  const vista = render(<Fitxa camp={camp} forma={forma} onImageUpload={onImageUpload} {...extra} />);
   await act(async () => {
     fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [fotoGps()] } });
   });
@@ -182,25 +192,55 @@ async function obriFitxa(camp, forma, onImageUpload) {
   return vista;
 }
 
-test('Bloc 1.2 · avatar i capçalera de la fitxa, desats sense ampliar i amb la casella marcada de sèrie: puja el canvas amb l’EXIF publicable, mai l’original', async () => {
-  const casos = [['logoImage', 'avatar', 'Retalla la foto'], ['heroImage', 'capcalera', 'Retalla la capçalera']];
-  for (const [camp, forma, finestra] of casos) {
+test('P1-64 · l’avatar i la capçalera d’una persona pugen nets, sense casella, i amb l’avís del GPS (dins i, en acabar, fora)', async () => {
+  const casos = [['logoImage', 'avatar', 'Retalla la foto', false], ['heroImage', 'capcalera', 'Retalla la capçalera', true]];
+  for (const [camp, forma, finestra, identitat] of casos) {
     const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
-    await obriFitxa(camp, forma, onImageUpload);
+    const onError = vi.fn();
+    await obriFitxa(camp, forma, onImageUpload, { identitat, onError });
     const dialeg = screen.getByRole('dialog', { name: finestra });
-    const casella = await within(dialeg).findByRole('checkbox', CASELLA);
-    expect(casella.checked, forma).toBe(true);
-    expect(within(dialeg).getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+    expect(await within(dialeg).findByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeTruthy();
+    expect(within(dialeg).queryByRole('checkbox'), forma).toBeNull();
     await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
     expect(dobles.exportaRetall, forma).toHaveBeenCalledTimes(1);
-    await esperaPujades(onImageUpload, 1, esperaAmbExif);
+    await esperaPujades(onImageUpload, 1, esperaNet);
+    expect(onError, forma).toHaveBeenCalledWith(AVIS_GPS_ELIMINAT_PERFIL, 'info');
     cleanup();
     dobles.exportaRetall.mockClear();
   }
 });
 
-test('Bloc 1.2 · amb la casella desmarcada, la capçalera i l’avatar pugen nets; el logotip no té casella i puja net', async () => {
-  for (const [camp, forma, finestra] of [['heroImage', 'capcalera', 'Retalla la capçalera'], ['logoImage', 'avatar', 'Retalla la foto']]) {
+test('P1-64 · una foto d’identitat sense GPS (només la data): cap avís, ni dins ni fora; puja neta', async () => {
+  const foto = new File([concatena(SOI, APP0_JFIF, app1Exif(tiff({ exif: dataOriginal('2017:05:14 10:22:33') })), IMATGE)], 'data.jpg', { type: 'image/jpeg' });
+  const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
+  const onError = vi.fn();
+  const vista = render(<Fitxa camp="logoImage" forma="avatar" onImageUpload={onImageUpload} onError={onError} />);
+  await act(async () => { fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [foto] } }); });
+  await act(async () => {});
+  const dialeg = screen.getByRole('dialog', { name: 'Retalla la foto' });
+  expect(within(dialeg).queryByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeNull();
+  expect(within(dialeg).queryByRole('checkbox')).toBeNull();
+  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+  await esperaPujades(onImageUpload, 1, esperaNet);
+  expect(onError).not.toHaveBeenCalled();
+});
+
+test('Bloc 1.2 · la capçalera d’una organització o d’un agent continua amb la casella marcada de sèrie: puja el canvas amb l’EXIF publicable, mai l’original', async () => {
+  const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/organitzacions/a.webp');
+  await obriFitxa('heroImage', 'capcalera', onImageUpload);
+  const dialeg = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+  const casella = await within(dialeg).findByRole('checkbox', CASELLA);
+  expect(casella.checked).toBe(true);
+  expect(within(dialeg).getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+  expect(within(dialeg).queryByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeNull();
+  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+  expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
+  // P1-64 · La precisió de sèrie és l'exacta (decisió 8): l'EXIF publicable, tal qual.
+  await esperaPujades(onImageUpload, 1, esperaAmbExif);
+});
+
+test('Bloc 1.2 · amb la casella desmarcada, la capçalera d’una organització puja neta; el logotip no té casella i puja net', async () => {
+  for (const [camp, forma, finestra] of [['heroImage', 'capcalera', 'Retalla la capçalera']]) {
     const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
     await obriFitxa(camp, forma, onImageUpload);
     const dialeg = screen.getByRole('dialog', { name: finestra });
@@ -228,7 +268,7 @@ const desaRetall = () => act(async () => {
   fireEvent.click(within(screen.getByRole('dialog', RETALLADOR)).getByRole('button', { name: 'Desar l’enquadrament' }));
 });
 
-test('Bloc 1.2 · DetallAjust: l’avatar que puja és el del canvas, amb l’EXIF publicable de sèrie', async () => {
+test('P1-64 · DetallAjust: l’avatar puja net, sense casella, i la línia d’èxit diu que s’ha eliminat el GPS', async () => {
   const ajust = { id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: '', obert: true };
   const pujaMitja = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
   render(<DetallAjust ajust={ajust} identitat={{ id: 'jo', mena: 'persona', nom: 'Pep', dades: {} }} guardarAjust={vi.fn()} pujaMitja={pujaMitja} />);
@@ -236,9 +276,12 @@ test('Bloc 1.2 · DetallAjust: l’avatar que puja és el del canvas, amb l’EX
     fireEvent.change(screen.getByLabelText('Nou valor per a foto de perfil:'), { target: { files: [fotoGps()] } });
   });
   await act(async () => {});
-  expect((await within(screen.getByRole('dialog', RETALLADOR)).findByRole('checkbox', CASELLA)).checked).toBe(true);
+  const retallador = screen.getByRole('dialog', RETALLADOR);
+  expect(await within(retallador).findByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeTruthy();
+  expect(within(retallador).queryByRole('checkbox')).toBeNull();
   await desaRetall();
-  await esperaPujades(pujaMitja, 1, esperaAmbExif);
+  await esperaPujades(pujaMitja, 1, esperaNet);
+  expect(screen.getByText(/Imatge pujada\./).textContent).toBe(`Imatge pujada. Ara dóna-li a Guardar. ${AVIS_GPS_ELIMINAT_PERFIL}`);
 });
 
 /* ── El contracte T46: «Original» sense zoom torna el MATEIX File ── */

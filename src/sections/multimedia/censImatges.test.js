@@ -133,6 +133,8 @@ describe('el cens de l’Arxiu visual', () => {
     const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
     expect(ALIES_DEL_CENS['/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg']).toBe('/assets/fotos/javi-llinares-perfil-1200px.jpg');
     expect(ALIES_DEL_CENS['/assets/uploads/gent/avatars/andreu-soler-comic.png']).toBe('/assets/uploads/avatars/andreu-soler-comic.png');
+    // P1-26 · L'avatar mòbil de la IAIA duplicat a fotos/ apunta a l'original de brain/.
+    expect(ALIES_DEL_CENS['/assets/fotos/iaia_maria_avatar_mobil.png']).toBe('/assets/uploads/brain/iaia_maria_avatar_mobil.png');
     for (const [copia, original] of Object.entries(ALIES_DEL_CENS)) {
       expect(Object.hasOwn(EXCLOSES, copia), copia).toBe(true);
       expect(delCens.has(original), `${copia} → ${original}`).toBe(true);

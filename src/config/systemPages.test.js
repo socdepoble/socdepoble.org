@@ -252,7 +252,8 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     for (const cami of ['Google Play', 'APK', 'TestFlight', 'App Store', 'Windows, Mac i Linux', 'CRDT', 'ADR-2026-08']) {
       expect([cami, html.includes(cami)]).toEqual([cami, true]);
     }
-    expect(html).toContain('hui això és una visió, no una funció');
+    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent;
+    expect(text).toContain('hui això és una visió, no una funció');
   });
 
   /* Revisió (261026_2126, segona volta) · De cada camí, el que diuen les actes
@@ -262,9 +263,10 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
      demanat. */
   test('honestedat: de TestFlight i de l’APK, només el fet', () => {
     const { html } = PAGE_COPY.descarregues;
-    expect(html).toContain('ja la pot instal·lar el grup de treball intern');
+    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent;
+    expect(text).toContain('ja la pot instal·lar el grup de treball intern');
     expect(html).not.toContain('la fa servir el grup');
-    expect(html).toContain("<strong>Hui encara no hi ha cap APK públic de Sóc de Poble.</strong> Quan n'hi haja un, l'enllaç oficial eixirà en esta pàgina.");
+    expect(text).toContain("Hui encara no hi ha APK públic de Sóc de Poble. Quan n'hi haja un, l'enllaç oficial eixirà en esta pàgina.");
     expect(html).not.toContain('no instal·les');
   });
 });

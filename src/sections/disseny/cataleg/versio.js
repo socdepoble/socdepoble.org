@@ -15,7 +15,15 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: AssignacioEmoji.jsx, EspecimenXatLlista.jsx i EspecimenUniversalWorkspace.jsx,
+ * Darrera posada al dia: manifest.js, EspecimenEnquadrament.jsx i EspecimenXatCerca.jsx,
+ * 2026-10-28T19:14:50+01:00, pla 261028_1526 (P1-60, P1-64 i P1-36; decisions del Mestre en xat): el
+ * manifest porta el copy editorial nou de Disseny (H2 simplificats de deu fitxes conceptuals i dues
+ * carpetes, «Diàlegs i calaixos» i «Estats i avisos»; els subtítols tècnics passen als termes de cerca;
+ * mateixos ids); EspecimenEnquadrament.jsx documenta que l'avatar ja no oferix la casella de la
+ * ubicació i que avisaGpsEliminat pinta l'avís de privacitat quan la foto en portava; i a
+ * EspecimenXatCerca.jsx el ⊗ «Tanca la cerca» hi és sempre, com a la cerca oberta amb la lupa. Cap
+ * espècimen ni entrada de manifest nous.
+ * Versió anterior: AssignacioEmoji.jsx, EspecimenXatLlista.jsx i EspecimenUniversalWorkspace.jsx,
  * 2026-10-26T23:12:37+01:00, pla 261026_2130 (ordre del Mestre 261026_2126, P1-36; revisió del torn):
  * els destins d'AssignacioEmoji.jsx són files senzilles (sdp-xat-fila--senzilla) i conserven els 72px
  * d'abans, no la targeta de conversa de 96 px (Llei del Píxel); el contracte de FilaConversa i de
@@ -238,4 +246,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-26T23:12:37+01:00';
+export const VERSIO_CATALEG = '2026-10-28T19:14:50+01:00';

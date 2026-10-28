@@ -28,8 +28,8 @@ import { configura, arrenca } from '../host.js';
 import { capaDelPaquet, fixaCapaDelPaquet } from '../config/capaDelPaquet.js';
 import { registraEntradaNativa } from '../config/entradaNativa.js';
 import { creaEntradaSocial, entradaSenseProveidors, plataformaDelDispositiu } from './entradaSocial.js';
-import { createTranslator, llegeixIdiomaTriat, pintaAmbDiccionari, resolIdioma } from '../config/i18n.js';
-import { lliuraCompartit, registraAlliberadorCompartit } from '../config/compartirNatiu.js';
+import { createTranslator, llegeixIdiomaTriat, llenguaDelDispositiu, pintaAmbDiccionari, resolIdioma } from '../config/i18n.js';
+import { lliuraCompartit, registraAlliberadorCompartit, registraTalladorCompartit, sessioCompartit } from '../config/compartirNatiu.js';
 import { registraAvisosNatius } from '../config/avisosNatius.js';
 import { creaReceptorCompartit } from './compartirNatiu.js';
 import { creaAvisosNatius } from './avisosNatius.js';
@@ -74,10 +74,16 @@ const init = () => {
        escoltes natives, abans del primer pintat perquè una compartició o el
        toc d'un avís que han obert l'App no es perden. El menú «Compartir» i
        els avisos del xat; cap dels dos tomba mai l'arrencada. */
+    /* Pla 261028_1526 (P1-22, TE-05) · Dins de l'app, la llengua del sistema
+       fa d'amfitrió (T1: tria explícita > dispositiu > ca): el WebView porta
+       la del telèfon a navigator.languages. Una que l'app no parla, cap. */
+    const idioma = llenguaDelDispositiu(typeof navigator === 'undefined'
+      ? []
+      : (navigator.languages?.length ? navigator.languages : [navigator.language]));
     /* El nom del canal d'Android es llig en crear-lo (el primer avís), amb el
        diccionari de la llengua triada ja carregat. */
     const canalDelXat = () => {
-      const t = createTranslator(resolIdioma({ triat: llegeixIdiomaTriat() }));
+      const t = createTranslator(resolIdioma({ triat: llegeixIdiomaTriat(), amfitrio: idioma }));
       return {
         nom: t('section.xat.avisNatiu.canal', 'Missatges del xat'),
         descripcio: t('section.xat.avisNatiu.canalDescripcio', 'Avisos dels missatges nous de Sóc de Poble')
@@ -85,7 +91,9 @@ const init = () => {
     };
     try { registraAvisosNatius(creaAvisosNatius({ plataforma: plataformaDelDispositiu(), canal: canalDelXat })); }
     catch (e) { console.error('[natiu] Avisos natius no registrats:', e); }
-    const receptor = creaReceptorCompartit();
+    /* Un canvi de sessió caduca el lot que encara es llig, i el natiu (el
+       tallador) en talla la còpia i les restes (pla 261028_1526, P1-31). */
+    const receptor = creaReceptorCompartit({ sessio: sessioCompartit, registraTallador: registraTalladorCompartit });
     if (receptor) {
       // La còpia nativa la tanca el registre: en enviar o descartar (Gauntlet 261026_1615).
       registraAlliberadorCompartit(receptor.allibera);
@@ -121,9 +129,14 @@ const init = () => {
     /* Fase D (261020, tasca 4.1) · L1 · Com main.jsx: amb una tria desada que
        no és el valencià, el primer pintat espera el seu diccionari (un tros
        local, capacitor:// o https://localhost), com a molt
-       ESPERA_DEL_PRIMER_PINTAT ms. Cap fotograma en valencià en obrir l'app. */
+       ESPERA_DEL_PRIMER_PINTAT ms. Cap fotograma en valencià en obrir l'app.
+       TE-05 · La del dispositiu, com la `language` d'un amfitrió: també espera
+       el seu diccionari. No va a configura(), que només porta el del lloc. */
     const root = createRoot(arrel);
-    pintaAmbDiccionari(() => root.render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...DEL_LLOC }} isFirstInstance={true} targetNode={arrel} />));
+    const delDispositiu = idioma ? { language: idioma } : {};
+    pintaAmbDiccionari(() => root.render(
+      <PedraSecaEmbed config={{ ...capaDelPaquet(), ...DEL_LLOC, ...delDispositiu }} isFirstInstance={true} targetNode={arrel} />
+    ), { amfitrio: idioma });
   }
 };
 
