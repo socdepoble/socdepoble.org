@@ -90,11 +90,4 @@ Aquesta visió evita regressions i garanteix que qualsevol pàgina d'entitat o u
 
 ## Vincles
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[03_llibre_mestre_tasques_i_idees]]
-- [[../90_arxiu_historic/261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema|261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema]]
-- [[../90_arxiu_historic/261024_1800_prompt_claude_gemini_codex_fortificacio_total_i_blindatge_sistema|261024_1800_prompt_claude_gemini_codex_fortificacio_total_i_blindatge_sistema]]
-- [[90_arxiu_historic/261024_1315_auditoria_claude]]
-- [[90_arxiu_historic/261024_1315_auditoria_gemini]]
-- [[90_arxiu_historic/261024_1315_auditoria_codex]]
 

@@ -22,7 +22,10 @@
  * MASCARA.
  *
  * Només al tauler de /consola (ConsolaSection.jsx): la Consola incrustada de
- * la Wiki (ConsolaIncrustada) no el pinta i conserva els seus píxels.
+ * la Wiki (ConsolaIncrustada) no el pinta.
+ * Pla 261027_0845 (Guarda Nocturna), §3 · Derogat: «conserva els seus
+ * píxels». La Consola incrustada ja pinta el Govern (TaulerAmbGovern); el
+ * Diagnòstic, l'Índex i les il·lustracions continuen només a /consola.
  */
 import { useContext, useId } from 'react';
 import { Link } from '../../app/contexts/RouterContext';

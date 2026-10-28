@@ -64,4 +64,3 @@ L'incident termodinàmic per manca de quota ha estat resolt gràcies a l'arquite
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

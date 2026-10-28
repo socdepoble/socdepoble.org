@@ -127,6 +127,5 @@ requereix_auditoria: false
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
 - `261016_0015_pla_implementacio_gauntlet_autonom`
 - `261016_0015_prompt_gauntlet_claude_codex_gemini`

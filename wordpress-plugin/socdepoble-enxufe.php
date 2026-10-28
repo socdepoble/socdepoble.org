@@ -37,7 +37,9 @@
  * llegirà Sollutia.
  *
  * Peces (includes/):
- *   idioma.php        traduccions locals (languages/);
+ *   idioma.php        la correspondència ca_valencia → ca dels fitxers de
+ *                     traducció, a les dues variants;
+ *   idioma-local.php  traduccions locals (languages/), només al canal propi;
  *   copies.php        les altres còpies actives (activació de xarxa i
  *                     uninstall.php);
  *   manifest.php      identitat del paquet (sdp.release.v1), només lectura;
@@ -49,9 +51,10 @@
  *   ajustos.php       Ajustos → Sóc de Poble: identitat de l'amfitrió i diagnosi;
  *   salut.php         proves de Salut del lloc;
  *   traduccio.php     servei opcional DeepL (clau només al servidor);
- *   actualitzador.php canal propi d'actualitzacions signat. És l'ÚNIC fitxer
- *                     que l'empaquetador lleva de la variant per al directori
- *                     de WordPress.org, junt amb la línia Update URI.
+ *   actualitzador.php canal propi d'actualitzacions signat. Amb
+ *                     idioma-local.php i languages/, és el que l'empaquetador
+ *                     lleva de la variant per al directori de WordPress.org,
+ *                     junt amb les línies Update URI i Domain Path.
  *
  * NO L'ACTIVEU ALHORA QUE EL PLUGIN VELL «soc-de-poble»: els dos bundles
  * escriuen `window.SocDePoble` i definixen la mateixa etiqueta.
@@ -132,6 +135,13 @@ const SOCDEPOBLE_ENXUFE_PLANTILLA = 'socdepoble-enxufe-pantalla-completa';
 const SOCDEPOBLE_ENXUFE_OPCIO     = 'socdepoble_enxufe';
 
 require_once __DIR__ . '/includes/idioma.php';
+/* Revisió de WordPress.org (261027) · Les traduccions locals (languages/) són
+   del canal propi: la variant del directori no porta ni la carpeta ni este
+   fitxer, i les seues les servix translate.wordpress.org. Va després de
+   idioma.php, que en definix la correspondència ca_valencia → ca. */
+if ( is_readable( __DIR__ . '/includes/idioma-local.php' ) ) {
+	require_once __DIR__ . '/includes/idioma-local.php';
+}
 require_once __DIR__ . '/includes/copies.php';
 require_once __DIR__ . '/includes/manifest.php';
 require_once __DIR__ . '/includes/marcatge.php';

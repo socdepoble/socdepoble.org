@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { CONTRACTE_AMFITRIO } from '../vite.standalone.config.js';
 import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
-import { patronsActualitzadorEn, requisitsDe, variantDirectori, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { foraDelDirectori, patronsActualitzadorEn, requisitsDe, variantDirectori, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = path.join(ARREL, 'wordpress-plugin');
@@ -387,7 +387,7 @@ const GANXOS_WP = {
   http_allowed_safe_ports: { des_de: '5.9', inert: 'sense ell, només el canal de proves local en un port no estàndard deixa de respondre' },
   http_request_host_is_external: '3.6', init: '1.5', load_script_translation_file: '5.0.2', load_textdomain_mofile: '2.9',
   no_texturize_tags: '2.8', 'plugin_action_links_{$plugin_file}': '2.7',
-  plugin_locale: '3.0', // el de load_plugin_textdomain, que la reserva de idioma.php també aplica
+  plugin_locale: '3.0', // el de load_plugin_textdomain, que la reserva de idioma-local.php també aplica
   plugins_api: '2.7', pre_get_document_title: '4.4',
   rest_api_init: '4.4', script_loader_tag: '4.1', site_status_tests: '5.2', template_include: '3.0',
   theme_page_templates: '3.9', 'update_plugins_{$hostname}': '5.8', upgrader_pre_download: '3.7',
@@ -415,8 +415,9 @@ const DADES_WP = {
   'block.json supports': '5.5', 'block.json textdomain': '5.7', 'block.json title': '5.5', 'block.json version': '5.8',
   'traduccions .l10n.php': {
     des_de: '6.5',
-    reserva: 'els filtres gettext_socdepoble de idioma.php quan no hi ha WP_Translation_Controller (WP-03)',
-    comprova: (t) => /add_filter\(\s*'gettext_socdepoble'/.test(t['includes/idioma.php'])
+    // Revisió de WordPress.org (261027) · la reserva viatja amb languages/: només al canal propi.
+    reserva: 'els filtres gettext_socdepoble de idioma-local.php quan no hi ha WP_Translation_Controller (WP-03)',
+    comprova: (t) => /add_filter\(\s*'gettext_socdepoble'/.test(t['includes/idioma-local.php'] ?? '')
   },
   'traduccions .json de l\'editor': '5.0',
   'script react': '5.0', 'script react-dom': '5.0',
@@ -568,11 +569,41 @@ test('sòl de WordPress 5.8: el codi ja hi funciona, i sense el render_callback 
   assert.deepEqual(perDamuntDelSol('5.8', { ...TEXTOS, 'includes/marcatge.php': senseCallback }), ['block.json render (6.1) a includes/bloc/block.json']);
   assert.equal(solMinim({ ...TEXTOS, 'includes/marcatge.php': senseCallback }), '6.1');
 
-  const idioma = TEXTOS['includes/idioma.php'];
+  const idioma = TEXTOS['includes/idioma-local.php'];
   const senseReserva = idioma.replace(/\n\tif \( class_exists\( 'WP_Translation_Controller' \)[^]*?\n\}\nadd_action\( 'init'/, "\n}\nadd_action( 'init'");
   assert.notEqual(senseReserva, idioma, 'la reserva té la forma que la prova espera');
-  assert.deepEqual(perDamuntDelSol('5.8', { ...TEXTOS, 'includes/idioma.php': senseReserva }), ['traduccions .l10n.php (6.5) a languages/']);
-  assert.equal(solMinim({ ...TEXTOS, 'includes/idioma.php': senseReserva }), '6.5');
+  assert.deepEqual(perDamuntDelSol('5.8', { ...TEXTOS, 'includes/idioma-local.php': senseReserva }), ['traduccions .l10n.php (6.5) a languages/']);
+  assert.equal(solMinim({ ...TEXTOS, 'includes/idioma-local.php': senseReserva }), '6.5');
+});
+
+/* Revisió de WordPress.org (261027) · La variant del directori no porta languages/ ni
+   idioma-local.php (foraDelDirectori de l'empaquetador), i les capçaleres del seu fitxer principal
+   són les de variantDirectori() (la taula ja la hi aplica per a react-jsx-runtime). La mateixa taula
+   de versions, sobre el que hi viatja de veritat: cap traducció local ni cap load_plugin_textdomain,
+   i res per damunt del seu sòl. */
+test('sòl de WordPress de la variant del directori: sense traduccions locals ni load_plugin_textdomain, i res per damunt del seu Requires at least', () => {
+  const directori = Object.fromEntries(Object.entries(TEXTOS).filter(([rel]) => !foraDelDirectori(rel)));
+  const principal = variantDirectori(directori['socdepoble-enxufe.php']);
+  assert.ok('includes/idioma-local.php' in TEXTOS && Object.keys(TEXTOS).some((rel) => rel.startsWith('languages/')), 'el canal propi les porta');
+  assert.deepEqual(Object.keys(directori).filter((rel) => rel.startsWith('languages/') || rel === 'includes/idioma-local.php'), []);
+  const { usos, fora } = usosDeWordPress(directori);
+  // Les funcions que només porta el canal propi (actualitzador.php), sempre darrere de function_exists.
+  const senseGuarda = fora.filter((entrada) => {
+    const [, rel, nom] = entrada.match(/^(.+): funció (socdepoble_enxufe_\w+)$/) ?? [];
+    return !nom || !new RegExp(`\\bfunction_exists\\(\\s*'${nom}'\\s*\\)`).test(directori[rel]);
+  });
+  assert.deepEqual(senseGuarda, [], 'cap crida sense versió ni cap funció absent al directori sense function_exists');
+  const apis = new Set(usos.map(({ api }) => api));
+  for (const api of ['traduccions .l10n.php', 'traduccions .json de l\'editor', 'funció load_plugin_textdomain', 'ganxo gettext_{$domain}']) {
+    assert.ok(!apis.has(api), `${api} no viatja al directori`);
+  }
+  assert.ok(apis.has('ganxo load_textdomain_mofile') && apis.has('ganxo load_script_translation_file'), 'la correspondència ca_valencia → ca (idioma.php) sí');
+  assert.doesNotMatch(Object.values(directori).join('\n'), /load_plugin_textdomain/);
+  const sol = capcalera(principal, 'Requires at least');
+  assert.equal(sol, '6.6');
+  assert.equal(capcalera(principal, 'Domain Path'), null, 'cap Domain Path cap a una carpeta absent');
+  assert.equal(capcalera(principal, 'Text Domain'), 'socdepoble');
+  assert.deepEqual(perDamuntDelSol(sol, directori), []);
 });
 
 /* ─────────── Guardes de les correccions de la revisió adversarial ───────────
@@ -684,7 +715,14 @@ test('doble còpia: el fitxer principal no declara cap funció ni classe, i la g
   assert.match(cos, /add_action\(\s*'all_admin_notices',\s*static function[^]*current_user_can\( 'activate_plugins' \)/);
   assert.match(cos, /dirname\( SOCDEPOBLE_ENXUFE_FITXER \)[^]*__DIR__/, 'nomena les dues carpetes');
   assert.match(cos, /\n\treturn;\n\}\n+$/, 'la segona còpia no carrega res més');
-  assert.match(llig('includes/idioma.php'), /^add_action\( 'init', 'socdepoble_enxufe_carrega_traduccions', 1 \);$/m);
+  assert.match(llig('includes/idioma-local.php'), /^add_action\( 'init', 'socdepoble_enxufe_carrega_traduccions', 1 \);$/m);
+  /* Revisió de WordPress.org (261027) · idioma-local.php és opcional, com l'actualitzador, i va
+     just després de idioma.php, que definix socdepoble_enxufe_fitxer_ca. */
+  const local = "if ( is_readable( __DIR__ . '/includes/idioma-local.php' ) ) {\n\trequire_once __DIR__ . '/includes/idioma-local.php';\n}\n";
+  assert.ok(principal.includes(`require_once __DIR__ . '/includes/idioma.php';\n/* `) && principal.includes(local), 'inclusió condicional');
+  assert.ok(principal.indexOf(local) > principal.indexOf("require_once __DIR__ . '/includes/idioma.php';") && principal.indexOf(local) < principal.indexOf("require_once __DIR__ . '/includes/copies.php';"));
+  assert.match(cosDe('includes/idioma.php', 'socdepoble_enxufe_fitxer_ca'), /socdepoble-ca/);
+  assert.doesNotMatch(llig('includes/idioma.php'), /load_plugin_textdomain|socdepoble_enxufe_carrega_traduccions|gettext_socdepoble/, 'idioma.php només porta el que servix a les dues variants');
 
   /* Activació a tota la xarxa: la còpia d'un lloc secundari no es carrega i
      la guarda no la veu. El refús va abans del ganxo de l'actualitzador. */

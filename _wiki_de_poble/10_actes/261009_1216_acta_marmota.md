@@ -60,4 +60,3 @@ Durant aquesta sessió s'ha assolit el tancament complet de l'**Onada 6** i l'es
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

@@ -554,9 +554,11 @@ describe('el compositor d’un fil de només lectura que no és uns Avisos', () 
     expect(screen.getByRole('status').textContent).toBe('En Avisos només escriuen els administradors.');
   });
 
-  /* Gauntlet 261022_0225 (XAT-4) · L'accés d'un fil de mostra és la parella
-     del peu de la conversa (AccesAlXat, XatSection.avatars.test.jsx): el
-     compositor ja no hi afig cap enllaç cru a /registre. */
+  /* Gauntlet 261022_0225 (XAT-4) · El compositor d'un fil de mostra no hi
+     afig cap enllaç cru a /registre. Pla 261027_0845 (Guarda Nocturna),
+     P1-54 · Tampoc no hi ha cap parella d'accés al peu de la conversa:
+     l'accés (AccesAlXat) viu només a l'aterratge del Xat
+     (XatSection.avatars.test.jsx). */
   test('un fil de mostra no porta cap enllaç propi a la pàgina de registre', () => {
     const { container } = pinta({ id: 'fake-javi', tipus: 'persona', potEscriure: false, avisNomesLectura: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!" });
     expect(screen.queryByRole('link')).toBeNull();

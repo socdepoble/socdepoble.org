@@ -14,12 +14,14 @@
  *     WordPress) com qualsevol altre fitxer; la variant del directori és
  *     sempre monolítica. Els trossos orfes de builds anteriors ixen com a
  *     restes i no s'empaqueten;
- *   · soc-de-poble-X.zip              l'arbre estàtic, per a Sollutia o per a
+ *   · AAMMDD_HHMM_estatic_spa_vX.zip  l'arbre estàtic, per a Sollutia o per a
  *                                     qualsevol amfitrió, amb el manifest;
- *   · socdepoble-enxufe-X.zip         el MATEIX arbre dins de l'adaptador de
+ *   · AAMMDD_HHMM_wordpress_enxufe_vX.zip  el MATEIX arbre dins de l'adaptador de
  *                                     WordPress, amb la versió estampada;
- *   · socdepoble-enxufe-X-directori.zip  la variant per a WordPress.org: sense
- *                                     actualitzador ni Update URI, amb React del nucli;
+ *   · AAMMDD_HHMM_wordpress_directori_vX.zip  la variant per a WordPress.org: sense
+ *                                     actualitzador, Update URI, languages/ ni Domain
+ *                                     Path, amb React del nucli (--directori en fa
+ *                                     només esta, a builds/directori/socdepoble.zip);
  *   · stable.json (o --canal) i X.json  el canal (el manifest universal més els
  *                                     paquets), amb la signatura Ed25519 al
  *                                     costat (.sig, hexadecimal).
@@ -60,8 +62,21 @@ export const ADAPTADOR = Object.freeze({
   carpetes: Object.freeze(['includes', 'templates', 'languages'])
 });
 
-/** L'única peça que no va a la variant del directori de WordPress.org. */
+/** L'actualitzador del canal propi: porta la clau pública (clauIncrustada) i no va al directori. */
 export const NOMES_CANAL_PROPI = 'includes/actualitzador.php';
+
+/** El carregador de languages/ (load_plugin_textdomain i la reserva de davall de la 6.5): només al canal propi. */
+export const IDIOMA_LOCAL = 'includes/idioma-local.php';
+
+/* Revisió de WordPress.org (261027) · Font única del que no va a la variant del directori:
+   l'actualitzador i les traduccions locals, que al directori servix translate.wordpress.org
+   (languages/ i idioma-local.php, que les carrega). Un camí acabat en «/» és una carpeta. */
+export const FORA_DEL_DIRECTORI = Object.freeze([NOMES_CANAL_PROPI, IDIOMA_LOCAL, 'languages/']);
+
+/** Si un camí de l'adaptador (relatiu a wordpress-plugin/) es queda fora del directori. */
+export function foraDelDirectori(rel) {
+  return FORA_DEL_DIRECTORI.some((cami) => (cami.endsWith('/') ? rel.startsWith(cami) : rel === cami));
+}
 
 /** Mida màxima del zip al formulari d'alta de WordPress.org (10 MB). */
 export const LIMIT_DIRECTORI = 10 * 1024 * 1024;
@@ -305,9 +320,14 @@ export function estampaReadme(textReadme, versio) {
   return substituixUna(textReadme, /^(Stable tag:\s*).*$/m, `$1${versio}`, 'Stable tag del readme');
 }
 
-/** El fitxer principal sense la capçalera Update URI (variant del directori). */
+/**
+ * El fitxer principal sense les capçaleres Update URI i Domain Path (variant
+ * del directori). Revisió de WordPress.org (261027) · el directori no porta
+ * languages/, i Plugin Check marca un Domain Path que apunta a una carpeta absent.
+ */
 export function variantDirectori(textPhp) {
-  return minimWordPress(substituixUna(textPhp, /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m, '', 'Capçalera Update URI'));
+  const senseCanal = substituixUna(textPhp, /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m, '', 'Capçalera Update URI');
+  return minimWordPress(substituixUna(senseCanal, /^[ \t]*\*[ \t]*Domain Path:.*\r?\n/m, '', 'Capçalera Domain Path'));
 }
 
 function minimWordPress(text) {
@@ -330,7 +350,26 @@ export function variantDirectoriReadme(textReadme, mitjans = null) {
     ? `6. Sóc de Poble media server: the service's content images (the village archive and community photos and illustrations: ${mitjans.externs.map((prefix) => prefix.replace(/^assets\//, '').replace(/\/$/, '')).join(', ')}) are not bundled. The visitor's browser loads each one from ${mitjans.origen}/assets/ when a page shows it; like any image request, this sends the visitor's IP address, browser user agent and the address of the page. Terms and privacy information: https://socdepoble.org/legal\n\n`
     : '';
   // Una funció i no el text: cap «$» de l'origen no es llig com un patró de replace().
-  return minimWordPress(substituixUna(textReadme, /^(?:Update channel|Canal d'actualització) \(.*\r?\n\r?\n/m, () => servei, 'Paràgraf del canal del readme'));
+  const senseCanal = substituixUna(textReadme, /^(?:Update channel|Canal d'actualització) \(.*\r?\n\r?\n/m, () => servei, 'Paràgraf del canal del readme');
+  /* Revisió de WordPress.org (261027) · el directori no porta languages/: les traduccions
+     arriben de translate.wordpress.org, i el readme no pot dir que van dins del paquet. */
+  return minimWordPress(substituixUna(senseCanal, /^\* Valencian \(Catalan\) translations are included for the plugin and block editor\.$/m,
+    () => '* Translation-ready (text domain `socdepoble`): translations for the plugin and the block editor come from translate.wordpress.org.',
+    'Línia de les traduccions del readme'));
+}
+
+/**
+ * Revisió de WordPress.org (261027) · includes/marcatge.php a la variant del directori: les
+ * traduccions de l'editor del bloc sense la ruta de languages/, que no hi és. Sense ruta,
+ * WordPress les busca a WP_LANG_DIR, on deixa les de translate.wordpress.org (el mateix que fa
+ * register_block_type amb el textdomain de block.json). Al canal propi la ruta cal: el JSON
+ * amb el nom del handle només es busca dins d'ella.
+ */
+export function variantDirectoriMarcatge(textPhp) {
+  return substituixUna(textPhp,
+    /^([ \t]*)\/\*(?:(?!\*\/)[^])*\*\/\r?\n[ \t]*wp_set_script_translations\(\s*'socdepoble-app-editor-script',\s*'socdepoble',\s*plugin_dir_path\(\s*SOCDEPOBLE_ENXUFE_FITXER\s*\)\s*\.\s*'languages'\s*\);[ \t]*$/m,
+    (_, sagnat) => `${sagnat}/* Traduccions de l'editor del bloc: WordPress les busca a WP_LANG_DIR,\n${sagnat}   on deixa les de translate.wordpress.org. */\n${sagnat}wp_set_script_translations( 'socdepoble-app-editor-script', 'socdepoble' );`,
+    'Traduccions de l\'editor a includes/marcatge.php');
 }
 
 /**
@@ -471,13 +510,22 @@ export function verificaPaquet(dist, release, camins) {
  * públic; amb `prova`, també un host local (http o https), per a WordPress
  * Studio. Torna { externs, substituits } (quants camins de l'autònom se'n
  * queden fora).
+ *
+ * Revisió de WordPress.org (261027) · Amb `nomesDirectori` (--directori) el
+ * paquet autònom no s'empaqueta, i el seu build pot ser el lleuger
+ * (SDP_MITJANS=externs): la primera regla no s'hi aplica, però l'origen que
+ * declare ha de ser el del directori, i les bessones han de coincidir igual.
  */
-export function verificaMitjans(release, releaseDirectori, caminsAutonom, caminsDirectori, { prova = false } = {}) {
+export function verificaMitjans(release, releaseDirectori, caminsAutonom, caminsDirectori, { prova = false, nomesDirectori = false } = {}) {
   const autonom = release?.mitjans;
-  if (autonom !== undefined && (autonom?.origen !== null || !Array.isArray(autonom?.externs) || autonom.externs.length > 0)) {
+  const mitjans = releaseDirectori?.mitjans;
+  if (nomesDirectori && autonom?.origen) {
+    if (autonom.origen !== mitjans?.origen) {
+      throw new Error(`L'autònom lleuger i el directori no apunten al mateix origen de mitjans (${autonom.origen} i ${mitjans?.origen}): compileu-los amb el mateix.`);
+    }
+  } else if (autonom !== undefined && (autonom?.origen !== null || !Array.isArray(autonom?.externs) || autonom.externs.length > 0)) {
     throw new Error('El paquet autònom no pot declarar mitjans externs: ho porta tot (com a molt, la bessona en lloc de l\'original).');
   }
-  const mitjans = releaseDirectori?.mitjans;
   if (autonom !== undefined && mitjans !== undefined && autonom.bessones !== mitjans.bessones) {
     throw new Error(`Les dues variants no substituïxen les mateixes bessones (${autonom.bessones} i ${mitjans.bessones}): compileu-les des del mateix public/.`);
   }
@@ -511,14 +559,26 @@ export function verificaMitjans(release, releaseDirectori, caminsAutonom, camins
   return { externs, substituits };
 }
 
-/** Fitxers de l'adaptador (llista blanca), sense ocults. */
+/* Cap enllaç simbòlic de wordpress-plugin/ cap avall fins a `rel`: recorre() ja els para dins
+   de les carpetes, però no en la carpeta mateixa ni en els fitxers solts de l'arrel. Torna la
+   ruta absoluta. */
+function senseEnllacos(arrelPlugin, rel) {
+  let actual = path.resolve(arrelPlugin);
+  for (const segment of rel.split('/')) {
+    actual = path.join(actual, segment);
+    if (fs.lstatSync(actual, { throwIfNoEntry: false })?.isSymbolicLink()) throw new Error(`Enllaç simbòlic dins del paquet: ${rel}`);
+  }
+  return actual;
+}
+
+/** Fitxers de l'adaptador (llista blanca), sense ocults ni enllaços simbòlics. */
 export function fitxersAdaptador(arrelPlugin = ARREL_PLUGIN) {
   const rels = [...ADAPTADOR.fitxers];
   for (const carpeta of ADAPTADOR.carpetes) rels.push(...recorre(arrelPlugin, carpeta, []));
   return rels
     .filter((rel) => !rel.split('/').some((segment) => segment.startsWith('.')))
     .sort()
-    .map((rel) => ({ rel, dades: fs.readFileSync(path.join(arrelPlugin, rel)) }));
+    .map((rel) => ({ rel, dades: fs.readFileSync(senseEnllacos(arrelPlugin, rel)) }));
 }
 
 /**
@@ -527,7 +587,7 @@ export function fitxersAdaptador(arrelPlugin = ARREL_PLUGIN) {
  * No necessita ni modifica el canal signat, ni la variant de WordPress.org.
  */
 export function creaPaquetLleuger({ arrelPlugin = ARREL_PLUGIN } = {}) {
-  const dist = path.join(arrelPlugin, 'dist');
+  const dist = senseEnllacos(arrelPlugin, 'dist');
   const manifestText = fs.readFileSync(path.join(dist, FITXER_RELEASE));
   const release = JSON.parse(manifestText);
   const errors = errorsDelBuild(release);
@@ -547,7 +607,9 @@ export function creaPaquetLleuger({ arrelPlugin = ARREL_PLUGIN } = {}) {
   const { camins, restes } = verificaInventari(dist, release);
   verificaPaquet(dist, release, camins);
   if (camins.some(cami => cami.startsWith('assets/'))) throw new Error('El connector lleuger encara porta assets locals.');
-  const adaptador = fitxersAdaptador(arrelPlugin).map(({ rel, dades }) => {
+  const fitxers = fitxersAdaptador(arrelPlugin);
+  comprovaCarregadorLocal(fitxers);
+  const adaptador = fitxers.map(({ rel, dades }) => {
     if (rel === 'socdepoble-enxufe.php') {
       comprovaSlug(dades.toString('utf8'));
       dades = Buffer.from(estampaVersio(dades.toString('utf8'), release.versio));
@@ -580,6 +642,21 @@ export function patronsActualitzadorEn(entrades) {
   return trobats;
 }
 
+/* Revisió de WordPress.org (261027) · El que els revisors demanen que el directori no porte, en
+   unes entrades de zip: la carpeta languages/ del plugin, cap traducció compilada (.l10n.php, .mo,
+   .po) i cap PHP que carregue el text domain, que des de la 4.6 fa WordPress amb les de
+   translate.wordpress.org (Plugin Check avisa de load_plugin_textdomain). */
+export function traduccionsLocalsEn(entrades) {
+  const trobats = [];
+  for (const { nom, dades } of entrades) {
+    const rel = nom.startsWith(`${SLUG}/`) ? nom.slice(SLUG.length + 1) : nom;
+    if (rel.startsWith('languages/')) trobats.push(`${nom}: carpeta languages/`);
+    else if (/\.(?:l10n\.php|mo|po)$/i.test(nom)) trobats.push(`${nom}: fitxer de traducció`);
+    if (/\.php$/i.test(nom) && dades.toString('utf8').includes('load_plugin_textdomain')) trobats.push(`${nom}: load_plugin_textdomain`);
+  }
+  return trobats;
+}
+
 function validaUrlBase(urlBase, { prova }) {
   let url;
   try { url = new URL(urlBase); } catch { throw new Error(`--url-base no és una URL: ${urlBase}`); }
@@ -606,59 +683,17 @@ function validaUrlBase(urlBase, { prova }) {
 export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPem, notes, prova = false, canal: nomCanal = 'stable' }) {
   if (prova && clauPem) throw new Error('--prova no signa mai: una signatura només cobrix builds que passen les portes de release.');
   if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(nomCanal) || SEMVER.test(nomCanal)) throw new Error(`Nom de canal no vàlid: ${nomCanal}`);
-  const dist = path.join(arrelPlugin, 'dist');
-  const textRelease = fs.readFileSync(path.join(dist, FITXER_RELEASE));
-  const release = JSON.parse(textRelease.toString('utf8'));
-  const errors = errorsDelBuild(release, { prova });
-  if (errors.length) throw new Error(`Este build no es pot empaquetar:\n- ${errors.join('\n- ')}`);
-  const { versio } = release;
-  const { camins, restes } = verificaInventari(dist, release);
-  verificaPaquet(dist, release, camins);
-  // Cap substitució silenciosa, tampoc en --prova: els dos builds són obligatoris.
-  const distDirectori = path.join(arrelPlugin, 'builds/directori/dist');
-  const manifestDirectori = path.join(distDirectori, FITXER_RELEASE);
-  if (!fs.existsSync(manifestDirectori)) throw new Error('Falta build:wp:directori; compila les dues variants.');
-  const textDirectori = fs.readFileSync(manifestDirectori);
-  const releaseDirectori = JSON.parse(textDirectori.toString('utf8'));
-  const errorsDirectori = errorsDelBuild(releaseDirectori, { prova });
-  if (errorsDirectori.length) throw new Error(`Build del directori invàlid: ${errorsDirectori.join('; ')}`);
-  const runtimeCorrecte = (r, amfitrio, dependencies) => r?.amfitrio === amfitrio
-    && JSON.stringify(r.dependencies) === JSON.stringify(dependencies);
-  if (!runtimeCorrecte(release.runtime, 'autonom', [])
-      || !runtimeCorrecte(releaseDirectori.runtime, 'wordpress', ['react', 'react-dom', 'react-jsx-runtime'])
-      || releaseDirectori.runtime.wordpressMinim !== '6.6') {
-    throw new Error('Runtime incoherent: dist ha de ser autònom i builds/directori/dist ha de ser WordPress.');
-  }
-  if (release.versio !== releaseDirectori.versio
-      || JSON.stringify(release.node) !== JSON.stringify(releaseDirectori.node)
-      || JSON.stringify(release.contracte) !== JSON.stringify(releaseDirectori.contracte)) {
-    throw new Error('Les dues variants han de compartir versió, node i contracte.');
-  }
-  const inventariDirectori = verificaInventari(distDirectori, releaseDirectori);
-  /* Decisió 5 (261007): el directori usa el React del nucli i no trosseja. */
-  if (releaseDirectori.formatDelPaquet !== undefined && releaseDirectori.formatDelPaquet?.format !== 'monolitic') {
-    throw new Error('La variant del directori ha de ser monolítica: SDP_VARIANT=wordpress no trosseja.');
-  }
-  verificaPaquet(distDirectori, releaseDirectori, inventariDirectori.camins);
-  const mitjansDirectori = verificaMitjans(release, releaseDirectori, camins, inventariDirectori.camins, { prova });
+  const builds = llegixBuilds(arrelPlugin, { prova });
+  const { dist, textRelease, release, versio, camins, restes, releaseDirectori, inventariDirectori } = builds;
 
   if (!urlBase) throw new Error('Cal --url-base: la URL des d’on es podran baixar els zips.');
   validaUrlBase(urlBase, { prova });
   if (notes && !/^https:\/\//.test(notes)) throw new Error('--notes ha de ser una URL https.');
 
   const adaptador = fitxersAdaptador(arrelPlugin);
-  const text = (rel) => {
-    const fitxer = adaptador.find((f) => f.rel === rel);
-    if (!fitxer) throw new Error(`Falta ${rel} a l'adaptador.`);
-    return fitxer.dades.toString('utf8');
-  };
-  comprovaSlug(text('socdepoble-enxufe.php'));
-  const requisits = requisitsDe(text('socdepoble-enxufe.php'), text('readme.txt'));
-  const phpEstampat = estampaVersio(text('socdepoble-enxufe.php'), versio);
-  const readmeEstampat = estampaReadme(text('readme.txt'), versio);
-  const phpDirectori = variantDirectori(phpEstampat);
-  const readmeDirectori = variantDirectoriReadme(readmeEstampat, releaseDirectori.mitjans);
-  const requisitsDirectori = requisitsDe(phpDirectori, readmeDirectori);
+  comprovaCarregadorLocal(adaptador);
+  const textos = textosDelPaquet(adaptador, versio, releaseDirectori);
+  const { text, requisits, phpEstampat, readmeEstampat, requisitsDirectori } = textos;
 
   const incrustada = clauIncrustada(text(NOMES_CANAL_PROPI));
   if (clauPem) {
@@ -687,24 +722,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     ...deDist.map((f) => ({ nom: `${SLUG}/dist/${f.rel}`, dades: f.dades }))
   ];
   comprovaSecretsDeepL(entradesWp);
-  const deDistDirectori = [
-    ...inventariDirectori.camins.map(cami => ({ rel: cami, dades: fs.readFileSync(path.join(distDirectori, cami)) })),
-    { rel: FITXER_RELEASE, dades: textDirectori },
-    { rel: FITXER_INVENTARI, dades: fs.readFileSync(path.join(distDirectori, FITXER_INVENTARI)) }
-  ];
-  const entradesDirectori = [
-    ...entradesWp.filter(e => !e.nom.startsWith(`${SLUG}/dist/`)),
-    ...deDistDirectori.map(f => ({ nom: `${SLUG}/dist/${f.rel}`, dades: f.dades }))
-  ]
-    .filter((e) => e.nom !== `${SLUG}/${NOMES_CANAL_PROPI}`)
-    .map((e) => {
-      if (e.nom === `${SLUG}/socdepoble-enxufe.php`) return { ...e, dades: Buffer.from(phpDirectori) };
-      if (e.nom === `${SLUG}/readme.txt`) return { ...e, dades: Buffer.from(readmeDirectori) };
-      return e;
-    });
-  comprovaSecretsDeepL(entradesDirectori);
-  const patrons = patronsActualitzadorEn(entradesDirectori);
-  if (patrons.length) throw new Error(`La variant del directori encara porta patrons d'actualitzador:\n- ${patrons.join('\n- ')}`);
+  const entradesDirectori = entradesDelDirectori(builds, adaptador, textos);
 
   const noms = {
     estatic: `${marca}_estatic_spa_v${versio}.zip`,
@@ -718,14 +736,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     wordpress: creaZip(entradesWp, { data }),
     directori: creaZip(entradesDirectori, { data })
   };
-  const avisos = [];
-  if (zips.directori.length > LIMIT_DIRECTORI) {
-    avisos.push(`${noms.directori} fa ${zips.directori.length} B i el formulari d'alta de WordPress.org n'admet ${LIMIT_DIRECTORI}: no es pot enviar tal com està (cal decidir quins mitjans de dist/ porta el paquet).`);
-  }
-  const slugInicial = slugDelNom(capcalera(text('socdepoble-enxufe.php'), 'Plugin Name'));
-  if (slugInicial !== SLUG) {
-    avisos.push(`WordPress.org derivaria l'slug «${slugInicial}» del Plugin Name: en l'alta cal demanar «${SLUG}» abans de la revisió.`);
-  }
+  const avisos = avisosDelDirectori(noms.directori, zips.directori, text);
   const base = urlBase.split('{versio}').join(versio).replace(/\/?$/, '/');
   const paquet = (clau) => ({ nom: noms[clau], url: new URL(noms[clau], base).href, mida: zips[clau].length, sha256: sha256(zips[clau]) });
 
@@ -767,8 +778,168 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   }
   return { versio, desti, escrits, signat: Boolean(signatura), restes, avisos, entrada: release.entrada.sha256, canal,
     restesDirectori: inventariDirectori.restes,
-    mitjans: { ...mitjansDirectori, origen: releaseDirectori.mitjans?.origen ?? null, bessones: releaseDirectori.mitjans?.bessones ?? 0,
-      bessonesAutonom: release.mitjans?.bessones ?? 0, directori: zips.directori.length } };
+    mitjans: resumMitjans(builds, zips.directori.length) };
+}
+
+/** On escriu --directori: dins de wordpress-plugin/builds/, al costat del build del directori. */
+export const ZIP_DIRECTORI = 'directori/socdepoble.zip';
+
+/**
+ * Revisió de WordPress.org (261027) · Només el zip del directori, a partir dels dos builds de
+ * release que ja hi ha (dist/ i builds/directori/dist/), amb les mateixes portes i les mateixes
+ * entrades que el directori d'empaqueta(): no compila res, no necessita cap clau i no toca el
+ * canal (ni stable.json, ni X.json, ni cap .sig). Escriu builds/directori/socdepoble.zip.
+ * L'única porta que canvia és la de l'autònom a verificaMitjans (nomesDirectori): ací no
+ * s'empaqueta, i el seu build pot ser el lleuger.
+ */
+export function empaquetaDirectori({ arrelPlugin = ARREL_PLUGIN } = {}) {
+  const builds = llegixBuilds(arrelPlugin, { prova: false, nomesDirectori: true });
+  const adaptador = fitxersAdaptador(arrelPlugin);
+  const textos = textosDelPaquet(adaptador, builds.versio, builds.releaseDirectori);
+  const zip = creaZip(entradesDelDirectori(builds, adaptador, textos), { data: new Date(builds.release.generat) });
+  const arrelBuilds = path.join(path.resolve(arrelPlugin), 'builds');
+  const fitxer = path.join(arrelBuilds, ZIP_DIRECTORI);
+  comprovaDestinacio(arrelPlugin, path.dirname(fitxer), [path.basename(fitxer)]);
+  fs.writeFileSync(fitxer, zip);
+  const avisos = avisosDelDirectori(path.basename(fitxer), zip, textos.text);
+  /* Amb l'autònom lleuger (verificaMitjans, nomesDirectori), el directori no es pot contrastar
+     amb cap inventari que porte tots els mitjans: que l'operador ho sàpia abans de pujar-lo. */
+  if (builds.release.mitjans?.origen) {
+    avisos.push(`dist/ és l'autònom lleuger (mitjans des de ${builds.release.mitjans.origen}): no s'ha pogut contrastar que builds/directori/dist porte tots els mitjans locals que no són externs; el contrast només es pot fer amb l'autònom sencer (sense SDP_MITJANS=externs) del mateix public/.`);
+  }
+  return { fitxer, zip, versio: builds.versio, mida: zip.length, sha256: sha256(zip),
+    avisos,
+    restes: builds.restes, restesDirectori: builds.inventariDirectori.restes, mitjans: resumMitjans(builds, zip.length) };
+}
+
+/** Llig i verifica els dos builds (autònom i directori): totes les portes que no depenen de l'adaptador. */
+function llegixBuilds(arrelPlugin, { prova, nomesDirectori = false }) {
+  const dist = senseEnllacos(arrelPlugin, 'dist');
+  const textRelease = fs.readFileSync(path.join(dist, FITXER_RELEASE));
+  const release = JSON.parse(textRelease.toString('utf8'));
+  const errors = errorsDelBuild(release, { prova });
+  if (errors.length) throw new Error(`Este build no es pot empaquetar:\n- ${errors.join('\n- ')}`);
+  const { versio } = release;
+  const { camins, restes } = verificaInventari(dist, release);
+  verificaPaquet(dist, release, camins);
+  // Cap substitució silenciosa, tampoc en --prova: els dos builds són obligatoris.
+  const distDirectori = senseEnllacos(arrelPlugin, 'builds/directori/dist');
+  const manifestDirectori = path.join(distDirectori, FITXER_RELEASE);
+  if (!fs.existsSync(manifestDirectori)) throw new Error('Falta build:wp:directori; compila les dues variants.');
+  const textDirectori = fs.readFileSync(manifestDirectori);
+  const releaseDirectori = JSON.parse(textDirectori.toString('utf8'));
+  const errorsDirectori = errorsDelBuild(releaseDirectori, { prova });
+  if (errorsDirectori.length) throw new Error(`Build del directori invàlid: ${errorsDirectori.join('; ')}`);
+  const runtimeCorrecte = (r, amfitrio, dependencies) => r?.amfitrio === amfitrio
+    && JSON.stringify(r.dependencies) === JSON.stringify(dependencies);
+  if (!runtimeCorrecte(release.runtime, 'autonom', [])
+      || !runtimeCorrecte(releaseDirectori.runtime, 'wordpress', ['react', 'react-dom', 'react-jsx-runtime'])
+      || releaseDirectori.runtime.wordpressMinim !== '6.6') {
+    throw new Error('Runtime incoherent: dist ha de ser autònom i builds/directori/dist ha de ser WordPress.');
+  }
+  if (release.versio !== releaseDirectori.versio
+      || JSON.stringify(release.node) !== JSON.stringify(releaseDirectori.node)
+      || JSON.stringify(release.contracte) !== JSON.stringify(releaseDirectori.contracte)) {
+    throw new Error('Les dues variants han de compartir versió, node i contracte.');
+  }
+  const inventariDirectori = verificaInventari(distDirectori, releaseDirectori);
+  /* Decisió 5 (261007): el directori usa el React del nucli i no trosseja. */
+  if (releaseDirectori.formatDelPaquet !== undefined && releaseDirectori.formatDelPaquet?.format !== 'monolitic') {
+    throw new Error('La variant del directori ha de ser monolítica: SDP_VARIANT=wordpress no trosseja.');
+  }
+  verificaPaquet(distDirectori, releaseDirectori, inventariDirectori.camins);
+  const mitjansDirectori = verificaMitjans(release, releaseDirectori, camins, inventariDirectori.camins, { prova, nomesDirectori });
+  return { dist, textRelease, release, versio, camins, restes, distDirectori, textDirectori, releaseDirectori, inventariDirectori, mitjansDirectori };
+}
+
+/** Els textos de l'adaptador per a cada variant (versió estampada, directori) i els seus requisits. */
+function textosDelPaquet(adaptador, versio, releaseDirectori) {
+  const text = (rel) => {
+    const fitxer = adaptador.find((f) => f.rel === rel);
+    if (!fitxer) throw new Error(`Falta ${rel} a l'adaptador.`);
+    return fitxer.dades.toString('utf8');
+  };
+  comprovaSlug(text('socdepoble-enxufe.php'));
+  const requisits = requisitsDe(text('socdepoble-enxufe.php'), text('readme.txt'));
+  const phpEstampat = estampaVersio(text('socdepoble-enxufe.php'), versio);
+  const readmeEstampat = estampaReadme(text('readme.txt'), versio);
+  const phpDirectori = variantDirectori(phpEstampat);
+  const readmeDirectori = variantDirectoriReadme(readmeEstampat, releaseDirectori.mitjans);
+  const marcatgeDirectori = variantDirectoriMarcatge(text('includes/marcatge.php'));
+  const requisitsDirectori = requisitsDe(phpDirectori, readmeDirectori);
+  return { text, requisits, phpEstampat, readmeEstampat, phpDirectori, readmeDirectori, marcatgeDirectori, requisitsDirectori };
+}
+
+/* Revisió de WordPress.org (261027) · Al canal propi, WordPress 6.5+ només llig languages/ amb
+   la ruta que li dona load_plugin_textdomain (idioma-local.php), i el require condicional del
+   fitxer principal callaria que falta: cap paquet que porte languages/ sense el seu carregador. */
+function comprovaCarregadorLocal(adaptador) {
+  if (!adaptador.some((f) => f.rel.startsWith('languages/'))) return;
+  const carregador = adaptador.find((f) => f.rel === IDIOMA_LOCAL)?.dades.toString('utf8') ?? '';
+  const principal = adaptador.find((f) => f.rel === 'socdepoble-enxufe.php')?.dades.toString('utf8') ?? '';
+  if (!/\bload_plugin_textdomain\(/.test(carregador) || !principal.includes(`'/${IDIOMA_LOCAL}'`)) {
+    throw new Error(`El paquet del canal propi porta languages/ sense ${IDIOMA_LOCAL} (load_plugin_textdomain) o sense el require del fitxer principal: WordPress 6.5+ no en carregaria cap traducció. Comproveu que el fitxer és a l'adaptador (i al commit).`);
+  }
+}
+
+/**
+ * Revisió de WordPress.org (261027) · L'únic lloc que decidix les entrades del zip del
+ * directori, per a empaqueta() i per a --directori: l'adaptador sense FORA_DEL_DIRECTORI, amb
+ * el fitxer principal i el readme de la variant, més el build del directori. Abans d'escriure
+ * res, ni secrets, ni patrons d'actualitzador, ni traduccions locals.
+ */
+function entradesDelDirectori({ distDirectori, textDirectori, inventariDirectori }, adaptador, { phpDirectori, readmeDirectori, marcatgeDirectori }) {
+  const substitucions = new Map([
+    ['socdepoble-enxufe.php', Buffer.from(phpDirectori)],
+    ['readme.txt', Buffer.from(readmeDirectori)],
+    ['includes/marcatge.php', Buffer.from(marcatgeDirectori)]
+  ]);
+  const deDistDirectori = [
+    ...inventariDirectori.camins.map(cami => ({ rel: cami, dades: fs.readFileSync(path.join(distDirectori, cami)) })),
+    { rel: FITXER_RELEASE, dades: textDirectori },
+    { rel: FITXER_INVENTARI, dades: fs.readFileSync(path.join(distDirectori, FITXER_INVENTARI)) }
+  ];
+  const entradesDirectori = [
+    ...adaptador.filter((f) => !foraDelDirectori(f.rel)).map((f) => ({ nom: `${SLUG}/${f.rel}`, dades: substitucions.get(f.rel) ?? f.dades })),
+    ...deDistDirectori.map(f => ({ nom: `${SLUG}/dist/${f.rel}`, dades: f.dades }))
+  ];
+  comprovaSecretsDeepL(entradesDirectori);
+  const patrons = patronsActualitzadorEn(entradesDirectori);
+  if (patrons.length) throw new Error(`La variant del directori encara porta patrons d'actualitzador:\n- ${patrons.join('\n- ')}`);
+  const traduccions = traduccionsLocalsEn(entradesDirectori);
+  if (traduccions.length) {
+    throw new Error(`La variant del directori encara porta traduccions locals, i la revisió de WordPress.org (261027) demana que les servisca només translate.wordpress.org:\n- ${traduccions.join('\n- ')}`);
+  }
+  return entradesDirectori;
+}
+
+/** Els avisos del zip del directori: la mida del formulari d'alta i l'slug que derivaria el Plugin Name. */
+function avisosDelDirectori(nom, zip, text) {
+  const avisos = [];
+  if (zip.length > LIMIT_DIRECTORI) {
+    avisos.push(`${nom} fa ${zip.length} B i el formulari d'alta de WordPress.org n'admet ${LIMIT_DIRECTORI}: no es pot enviar tal com està (cal decidir quins mitjans de dist/ porta el paquet).`);
+  }
+  const slugInicial = slugDelNom(capcalera(text('socdepoble-enxufe.php'), 'Plugin Name'));
+  if (slugInicial !== SLUG) {
+    avisos.push(`WordPress.org derivaria l'slug «${slugInicial}» del Plugin Name: en l'alta cal demanar «${SLUG}» abans de la revisió.`);
+  }
+  return avisos;
+}
+
+/** El recordatori d'abans de publicar un zip del directori amb mitjans externs (empaqueta() i --directori). */
+export function missatgeMitjansDirectori(mitjans) {
+  // Amb l'autònom lleuger no hi ha inventari sencer on comptar-los: les carpetes que declara el directori.
+  const externs = mitjans.contrastat === false
+    ? `els mitjans de ${mitjans.carpetes.length} carpetes externes (${mitjans.carpetes.join(', ')})`
+    : `${mitjans.externs} mitjans externs`;
+  return `Directori (${mitjans.directori} B): ${externs} des de ${mitjans.origen} i ${mitjans.bessones} originals substituïts per la seua bessona .webp. Abans de publicar el zip, l'origen ha de servir cada mitjà extern i la seua bessona com a imatge (content-type image/*, no una pàgina de reserva) i amb CORS (Access-Control-Allow-Origin i Access-Control-Expose-Headers: Content-Range, ETag) per a l'EXIF i el reenquadrament.`;
+}
+
+/** El resum dels mitjans del directori per al registre. */
+function resumMitjans({ release, releaseDirectori, mitjansDirectori }, midaDirectori) {
+  return { ...mitjansDirectori, origen: releaseDirectori.mitjans?.origen ?? null, bessones: releaseDirectori.mitjans?.bessones ?? 0,
+    bessonesAutonom: release.mitjans?.bessones ?? 0, directori: midaDirectori,
+    carpetes: releaseDirectori.mitjans?.externs ?? [], contrastat: !release.mitjans?.origen };
 }
 
 /** Hora termodinàmica del build, estable encara que s'empaquete un altre dia o fus. */
@@ -807,6 +978,7 @@ export const AJUDA = `Empaquetador de l'enxufe (sdp.release.v1)
 Ús:
   SDP_MITJANS=externs SDP_RELEASE=1 SDP_VERSIO=1.1.10-beta.1 npm run build:wp
   node wordpress-plugin/eines/empaqueta.mjs --lleuger
+  node wordpress-plugin/eines/empaqueta.mjs --directori
   node wordpress-plugin/eines/empaqueta.mjs --url-base URL --clau FITXER.pem [--notes URL] [--sortida DIR]
   node wordpress-plugin/eines/empaqueta.mjs --genera-clau FITXER.pem
   node wordpress-plugin/eines/empaqueta.mjs --prova --url-base http://localhost:8881/enxufe/
@@ -819,15 +991,20 @@ Una release, en ordre:
   2. node wordpress-plugin/eines/empaqueta.mjs \\
        --url-base https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v{versio}/ \\
        --clau ~/.sdp/enxufe-ed25519.pem
-  3. Els ZIP queden en wordpress-plugin/builds/: socdepoble-spa-vX-AAMMDD_HHMM.zip i
-     socdepoble-enxufe-vX-AAMMDD_HHMM.zip. La data és la del build autònom, en Europe/Madrid.
+  3. Els ZIP queden en wordpress-plugin/builds/: AAMMDD_HHMM_estatic_spa_vX.zip i
+     AAMMDD_HHMM_wordpress_enxufe_vX.zip. La data és la del build autònom, en Europe/Madrid.
      Puja estos dos fitxers a la release enxufe-v0.2.0 de socdepoble/socdepoble.org.
-     directori/socdepoble-enxufe-vX-AAMMDD_HHMM.zip és la variant per a WordPress.org.
+     AAMMDD_HHMM_wordpress_directori_vX.zip és la variant per a WordPress.org (sense
+     actualitzador, Update URI, languages/ ni Domain Path); --directori en fa només eixa.
   4. DESPRÉS, copia stable.json, 0.2.0.json i les seues .sig a public/enxufe/ i desplega socdepoble.org.
 
 Opcions:
   --lleuger          Crea ../_builds_de_poble/wordpress/socdepoble.zip (<2.500.000 B).
                      Requerix el build autònom amb SDP_MITJANS=externs. No publica cap canal.
+  --directori        Crea wordpress-plugin/builds/directori/socdepoble.zip, la variant per a
+                     WordPress.org, amb els dos builds de release que ja hi ha (no compila res):
+                     sense actualitzador, Update URI, languages/ ni Domain Path. No necessita
+                     clau, no publica cap canal i no es combina amb cap altra opció.
   --url-base URL      On es podran baixar els zips ({versio} es substituïx).
   --clau FITXER       Clau privada Ed25519 (PEM). Ha de correspondre a SOCDEPOBLE_ENXUFE_CLAU_PUBLICA.
   --notes URL         Notes de la versió (https).
@@ -848,7 +1025,7 @@ function llegixArguments(argv) {
     if (ambValor.has(nom)) {
       if (i + 1 >= argv.length) throw new Error(`Falta el valor de --${nom}.`);
       opcions[nom] = argv[i += 1];
-    } else if (nom === 'prova' || nom === 'ajuda' || nom === 'lleuger') {
+    } else if (nom === 'prova' || nom === 'ajuda' || nom === 'lleuger' || nom === 'directori') {
       opcions[nom] = true;
     } else {
       throw new Error(`Opció desconeguda: --${nom}`);
@@ -873,6 +1050,18 @@ export function executa(argv, registre = console) {
     const resultat = creaPaquetLleuger();
     fs.writeFileSync(fitxer, resultat.zip);
     registre.log(`${fitxer}\n${resultat.mida} B; SHA-256 ${resultat.sha256}\nMitjans: ${resultat.origen}/assets/\nPaquet manual; canal estable intacte.`);
+    return 0;
+  }
+
+  /* Revisió de WordPress.org (261027) · Només el zip del directori, sense compilar ni tocar el canal. */
+  if (opcions.directori) {
+    if (Object.keys(opcions).length !== 1) throw new Error('--directori no es combina amb cap altra opció: no signa, no publica cap canal i no admet --prova.');
+    const resultat = empaquetaDirectori();
+    registre.log(`${resultat.fitxer}\n${resultat.mida} B; SHA-256 ${resultat.sha256}\nVariant del directori de WordPress.org ${resultat.versio}: sense actualitzador, Update URI, languages/ ni Domain Path. Canal (stable.json, X.json i .sig) intacte.`);
+    if (resultat.restes.length) registre.log(`${resultat.restes.length} fitxer(s) de dist/ fora de l'inventari (restes velles): no s'han empaquetat.`);
+    if (resultat.restesDirectori.length) registre.log(`${resultat.restesDirectori.length} fitxer(s) de builds/directori/dist fora de l'inventari (restes velles): no s'han empaquetat.`);
+    if (resultat.mitjans.origen) registre.log(missatgeMitjansDirectori(resultat.mitjans));
+    for (const avis of resultat.avisos) registre.log(`AVÍS: ${avis}`);
     return 0;
   }
 
@@ -901,9 +1090,7 @@ export function executa(argv, registre = console) {
   registre.log(`Bundle autònom (sha256, canal propi i estàtic): ${resultat.entrada}`);
   if (!resultat.signat) registre.log('SENSE SIGNATURA (--prova): cap lloc amb clau configurada no acceptarà este canal.');
   if (resultat.restes.length) registre.log(`${resultat.restes.length} fitxer(s) de dist/ fora de l'inventari (restes velles): no s'han empaquetat.`);
-  if (resultat.mitjans.origen) {
-    registre.log(`Directori (${resultat.mitjans.directori} B): ${resultat.mitjans.externs} mitjans externs des de ${resultat.mitjans.origen} i ${resultat.mitjans.bessones} originals substituïts per la seua bessona .webp. Abans de publicar el zip, l'origen ha de servir cada mitjà extern i la seua bessona com a imatge (content-type image/*, no una pàgina de reserva) i amb CORS (Access-Control-Allow-Origin i Access-Control-Expose-Headers: Content-Range, ETag) per a l'EXIF i el reenquadrament.`);
-  }
+  if (resultat.mitjans.origen) registre.log(missatgeMitjansDirectori(resultat.mitjans));
   if (resultat.mitjans.bessonesAutonom) registre.log(`Autònom: ${resultat.mitjans.bessonesAutonom} originals substituïts per la seua bessona .webp, sense cap origen extern.`);
   if (resultat.restesDirectori.length) registre.log(`${resultat.restesDirectori.length} fitxer(s) de builds/directori/dist fora de l'inventari (restes velles): no s'han empaquetat.`);
   for (const avis of resultat.avisos) registre.log(`AVÍS: ${avis}`);

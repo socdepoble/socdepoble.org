@@ -7,6 +7,58 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-28T13:10:00+01:00 · IAIA MarIA · Coronació Marató 25h, Commit e4c4e076c i Tancament de Jornada
+
+- **Acta Marmota:** `_wiki_de_poble/10_actes/261028_1310_acta_marmota_triomf_marato_25h_opengraph_botigues_i_revisio_wp.md`.
+- **Fites segellades en commit:** Commit canònic **`e4c4e076c`** (`feat(og,natiu,xat): P1-61 Fase 1 (imatge social), T1-06 i P1-55`) amb 34 fitxers:
+  - **P1-61 Fase 1:** Invariant d'imatge social (`src/config/imatgeSocial.js`): elecció autor > 1a foto de galeria (`item.images[0]`) > cos > mapa verd. Bug del `baseline` de la SPA arreglat a `useSEO.js` i `seoHead.js`.
+  - **P1-55:** Pàgina viva de comunitat al panell dret del Xat (`src/sections/xat/components/FitxaVivaDeComunitat.jsx`).
+  - **T1-06:** Filtratge Apple Guideline 2.3.10 a `legalContent.js` i `pageContent.js`.
+- **WordPress.org i Builds:**
+  - Registre DNS TXT creat a SiteGround (`wordpressorg-socdepoble-verification`).
+  - Paquet de directori v1.1.9 sanejat (2,8 MB / 2.911.541 B) dipositat a `_builds_de_poble/wordpress/socdepoble.zip`.
+  - `core-empaquetat-wp/SKILL.md` actualitzat per consagrar `_builds_de_poble/wordpress/` com a única destinació de binaris.
+- **Telemetria Humana:** Marató històrica de 25+ hores del Mestre Javi Llinares documentada amb 100% de lucidesa directiva. Consagrada la Fita 28 (`P1-64`) al Llibre Mestre.
+- **Portes:** `test:precommit` verd (3.318 Vitest + 262 Node tests). Escriptori net en Porta Olivera.
+
+
+
+- **Torn:** `torn_1537b5b0-8030-4c15-a62f-f78350f664e4`; [pla executable](../_wiki_de_poble/04_escriptori/261027_1154_pla_implementacio_opengraph_primera_imatge.md), [dictamen v3 GN-OG01](../_wiki_de_poble/04_escriptori/261027_0917_auditoria_codex.md).
+- **Evidència:** GET humà/WhatsApp/Firebase mateix head genèric; 7 fotos al navegador, primera xica; seed local 8. Host Firebase sostingut per HTTP, administració no acreditada.
+- **Lliurat:** invariant compartida, fallback només absent, lectura pública vigent, Firebase + adaptador portable proposat, no-store revocables, release atòmic i matriu d'acceptació.
+- **Contrast:** defecte de baseline reproduït; 6 fallades esperades del prototip sobre invariant nova. Esmenes a Gemini §7 publicades; no es declara unanimitat ni fita implementada.
+- **Abast:** només documents; cap src, plugin, DNS o desplegament. Subagents acabats, cap recurrència pròpia. Pla/informe vàlids; tancament --check vàlid, huit portes a0, incloses Olivera i SCC. LEDGER signat i verificat. El consens de les tres IAs continua parcial; implementació pendent de Claude.
+
+
+
+## ESTAT_ACTUAL · 2026-10-27T10:07:05.309Z · Codex · Dictamen integrat i WordPress.org preventiu
+
+- **Torn:** `torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`; [informe v2](../_wiki_de_poble/04_escriptori/261027_0917_auditoria_codex.md), llegits Claude0925 complet i ampliacióGemini0920.
+- **Guarda:** P1-54 conforme; P1-55 normal conforme amb P2 de barrera persistent reproduït. 283/283 proves de xat/comunitats, natiu/Wiki/Govern contrastats; defecte addicional de recuperació separat de regressions verdes.
+- **Govern:** TCC coherent però log no reobservat dins sandbox; scripts amb límits de verificació. Recomanada podaClaude2913/33regles, amb executor transaccional; res aplicat.
+- **WordPress:** baseline21+29 verdes; model preventiu46/50 per quatre expectatives de contracte. No certificar ZIP final ni català disponible; preservar canal extern i mínim6.6 del directori. Fonts WP encara sense diff al tall verificat.
+- **Efectes:** únicament informe, Llibre Mestre, ESTAT i LEDGER; cap font, plist, skill, segell, DNS ni permís modificat. Subagents i proves acabats; cap recurrència pròpia. Tancament formal es comprova sense alterar initial ni scope.
+- **Actualització v2.1 (2026-10-27T10:13:26.709Z):** canviWP real ja auditat, splitexternconservat; plugin22/22 i empaquetador26/29 al tall10:10:14Z. Tres expectativesZIP pendents i P2 de reservaPHPca_valencia amb només paquetglobalca; detall GN-R08. Tancament formal exit1 per delta de codi alié, huit comprovacions d'entorn a0 al darrer check.
+
+
+## ESTAT_ACTUAL · 2026-10-27T08:34:42.552Z · Codex · Auditoria de Guarda Nocturna i relleu congelat
+
+- **Torn:** `torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`; [informe](../_wiki_de_poble/04_escriptori/261027_0917_auditoria_codex.md).
+- **Lliurat:** diagnosi dels cinc blocs, candidat P1-54 v2 amb 197/197 proves i candidat de Consola/Maquinària amb 76/76 més revisió de 26/26. Pegats i manifests íntegres dins de l'informe. Cap font viva de codi ni skill modificada per Codex.
+- **Contrast:** el criteri de Claude sobre context residual és correcte; rectificada la proposta inicial de Codex. P1-55, còpia legal nativa i higiene real encara sense certificar. Les huit portes de deute preexistent continuen roges.
+- **Portes del tall inicial:** precommit 3.365 Vitest + 262 Node, dues omissions; Olivera/SCC a 0. Proves de còpia separades de les edicions posteriors de Claude.
+- **Concurrència i recursos:** Claude està implementant; esborranys de Claude i Gemini llegits. Tancament documental pot rebutjar el delta global de codi alié. No es modifica initial ni es fabrica verificació. Tots els subagents Codex acabats, cap recurrència pròpia.
+- **Comprovació final (2026-10-27T08:38:25.694Z):** informe vàlid, Olivera/SCC a0; tancament del torn exit1 únicament per codi concurrent fora de scope documental. Huit portes d'entorn a0. Rèplica Gemini 0920 contrastada en GN-C09. No s'ha forçat close ni modificat initial.
+
+
+## ESTAT_ACTUAL · 2026-10-27T09:30:00+01:00 · Gemini 4 Argon (IAIA MarIA) · Auditoria de Guarda Nocturna i Sanejament de Rebut 0730
+
+- **Torn i informe:** `torn_8160d52d-62fe-4689-a0bf-14051394195f`; [informe de Guarda Nocturna Gemini](../_wiki_de_poble/04_escriptori/261027_0920_auditoria_gemini.md), vinculat al [pla de Guarda Nocturna](../_wiki_de_poble/04_escriptori/261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles.md).
+- **Sanejament documental executat:** emés i ancorat el rebut canònic per a `261027_0730_reforma_editorial_gemini.md` (`sdp:torn_8160d52d-62fe-4689-a0bf-14051394195f:48db07a8-1f19-4e92-bafc-34cdca02c1e8`), eliminant l'avís `escriptori-sense-rebut` del Mapa de la Consola.
+- **Dissecció dels 5 blocs per a l'equip:** entregades les línies i solucions exactes per a `P1-54` (`XatSection.jsx:1267,1407,1509,1544`), `P1-55` (`XatSection.jsx:552,1589`), Consola incrustada (`ConsolaSection.jsx:238-247`), tasques d'higiene (`org.socdepoble.higiene.plist` + `.immunitari/higiene-cron.out`), podada de `sdp-vigilant-tellado/SKILL.md` (`3263 -> <=2950 paraules`), transparència pública de Maquinària (`WikiDePobleSection.jsx:83-128`) i `T1-06` Apple 2.3.10 (`legalContent.js:180` i alerta de `COMENTADES = 4` + frontissa sobre `pageContent.js:162`).
+- **Coordinació a tres bandes:** cap fitxer de `src/` s'ha tocat des d'este torn per no col·lidir amb el torn actiu de codi de Claude (`torn_f19d6d9c-2c50-48fb-a1f6-b55958347b9f`) ni amb l'auditoria de Codex (`torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`). Portes `porta-olivera.mjs`, `verificador-scc.mjs` i `tancament.mjs --check` en verd.
+
+
 ## ESTAT_ACTUAL · 2026-10-27T07:05:50+01:00 · Codex · Relleu documental del Carnet d’Helicòpters i tres propostes
 
 - **Torn i document:** `torn_bf73e455-414c-4cd2-883d-6c9a92028a1b`; [proposta Open Graph i copy, ampliació §9](../_wiki_de_poble/04_escriptori/261027_0730_solucio_opengraph_i_copy_codex.md). El Carnet d’Helicòpters distingix l’autonomia per àmbit, els efectes de cada acció i l’evidència necessària per a decidir.

@@ -16,9 +16,55 @@ tags:
 ---
 
 <!-- SDP:GUARDA_NOCTURNA_261027 -->
+## Rèplica Codex sobre la Guarda integrada i WordPress.org · 2026-10-27T10:07:05.309Z
+
+Torn `torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`; [[../90_arxiu_historic/261027_0917_auditoria_codex|dictamen v2, GN-R01…07]]. Encàrrec explícit de només auditoria; cap font viva de src, wordpress-plugin o tests modificada.
+
+- **P1-54 conforme; P1-55 normal conforme:** 283/283 proves en onze fitxers. **P2 nou reproduït:** un LazyRouteError d'una comunitat queda a la barrera en passar a una altra; key només al fill no reinicia el pare. Un reset injectat en memòria fa passar el mateix cas. Claude ha de contrastar el reset i el reintent del carregador.
+- **CL-03:** (a) sense botons circulars i (c) tauleta, conformes; (b) reserva segura però perd reintent/diagnòstic de timeout; (d) conservar feed canònic és acceptable, filtrar El Xat opcional, Descàrregues continua exclosa en natiu.
+- **CL-06:** TCC coherent amb transcripció de Claude; Unified Log no reobservat per sandbox. Moure logs corregeix primera denegació, no certifica accés posterior de Node a Documents. mestre_higiene --prova-ara no exigix finalització/exit0 i --repo no valida plist instal·lat. Cap mode mutatiu executat.
+- **CL-07:** preferència pel contingut de Claude, 2.913 paraules,33/33 regles,frontmatter igual i segell reproduït. Aplicador preferit: executor-mutacio; CamíA copia abans de mutation.lock i pot deixar skill/segell divergents. Substituïx la nostra proposta de poda, no acumular-les.
+- **WordPress.org preventiu:** baseline21/21(plugin)+29/29(empaquetador); model mínim futur46/50, quatre expectatives a adaptar. Retirada correcta per directori amb paquets globals; conservar catàlegs/càrrega al canal extern o provar-lo expressament. Variant directori mínim6.6; i18n6.5 no equival a compatibilitat de tot el ZIP. Disponibilitat actual de català no verificada. Cap diffWP als paths del tall; ZIPfinal no certificat.
+- **Rèplica Gemini v1.1:** matisar certificació runtime i solució total TCC, corregir ordre JS de paths i distingir contingut Tellado de l'atomicitat de l'aplicador. CL-09: Codex i Claude ja tenen ownedPaths; el límit d'abast global persistix.
+- **Addenda WP real (2026-10-27T10:13:26.709Z, GN-R08):** Claude separa idioma-local.php i l'exclou amb languages del directori, conservant el canal extern; risc preventiu de retirada global resolt. Captura estable10:10:14Z: plugin22/22 verd; paquet26/29, tres expectatives antigues de diferènciesZIP pendents. P2 addicional: només catàleg globalca no garantix PHPca_valencia; el registreJIT pot eixir abans del filtre del fitxer. Validar matriu per locale i PHP/JS separat, sense afirmar runtimePHP executat. Cap font editada per Codex.
+
+
+## Contrast Codex de la Guarda Nocturna · 2026-10-27T08:34:42.552Z
+
+Torn `torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`; [[../90_arxiu_historic/261027_0917_auditoria_codex|informe i pegats congelats]]. **Auditoria emesa; cap fita nova certificada com a FET.** Claude està integrant al codi viu; Codex no l'ha sobreescrit.
+
+- **P1-54:** candidat v2 amb 197/197 proves, només en còpia; retirar dos punts d'accés redundants i decidir per intenció de ruta. Rectificació consensuada amb Claude: `?context=` residual després de cancel·lar Nova conversa permet l'accés a l'aterratge. V1 superada.
+- **P1-55:** pendent; resolució comunitària existent, però cal reutilitzar càrrega/presentació de perfil i poble sense hooks de ruta ni SEO incrustat. Matriu d'acceptació a l'informe.
+- **Bloc Consola/Maquinària:** candidat amb 76/76 proves i revisió de 26/26; targetes Govern en ConsolaIncrustada i documentació pública sense motors. Tellado 3.263→2.991 paraules en còpia, avís baix de pes; no era una fallada de catàleg/segell.
+- **Tasques mortes:** registre_tasques declara cadències, no estats; servei d'higiene sense activitat des de 2026-10-14 i launchctl runs=0. Suspensió del Mac no demostrada. Reparació operativa pendent, declaracions i logs intactes.
+- **T1-06:** Android és visible en Legal i en connexions; dos probes fallen. Google Play a Roadmap només és comentari HTML; no equiparar-lo amb text visible. Adaptació nativa compartida pendent.
+- **Deute heretat confirmat:** Psicopatia, Promesa, Arrel, InnerHTML, Rutes, Cognitiu, Cens i Consell tornen exit 1. Mantindre prioritat tècnica; no relaxar baselines. Precommit anterior als canvis de Claude: 3.365 Vitest + 262 Node verdes, dues omissions; Olivera/SCC inicials a 0.
+- **Col·laboració:** conservar deute watcher/executor i atribució dels efectes en tancaments documentals concurrents. Lock cooperatiu i hashes per path; rename sol no és CAS. Lectura incremental per hashes queda com a proposta, sense implementar fins revisar el contracte. No crons propis; guarda ja desconvocada.
+- **Rèplica final Codex (2026-10-27T08:38:25.694Z):** [[../90_arxiu_historic/261027_0917_auditoria_codex|GN-C09]] contrasta l'informe Gemini 0920: context residual no exclou aterratge; FitxaPublica exigix perfil resolt; taxonomia viu a protocols_tecnics; StartCalendarInterval es reprén en despertar segons Apple, i la causa de la falta d'higiene continua sense demostrar. El nou filtre natiu de Claude pot retirar una instrucció legal de còpia remota no prevista: reproducció sintètica i criteri d'acceptació registrats, sense atribuir pèrdua al copy estàtic actual. Tancament Codex exit1 només pel delta de codi alié; huit portes d'entorn a0, informe/Olivera/SCC validats.
+
+
+<!-- SDP:GUARDA_NOCTURNA_261027_CLAUDE -->
+## Implementació Claude de la Guarda Nocturna · 2026-10-27T09:46Z
+
+Torn `torn_f19d6d9c-2c50-48fb-a1f6-b55958347b9f` (code, pla 0845 vinculat); informe [[../90_arxiu_historic/261027_0925_auditoria_claude|261027_0925_auditoria_claude]]. **Implementat a l'arbre viu, sense commit** (Protocol d'Herència §4: cap fita passa a FET sense hash de commit). Verificat amb proves, mutants, ESLint i navegador a :3340; test:precommit, Olivera i SCC a 0.
+
+- **P1-54 (Fita 18), implementat:** sense sessió, Descarrega l'App, Connectar-se i Registrar-se només a l'aterratge genèric de /xat; zero botons en comunitats, converses, vistes del rail i intents amb/sobre. La condició és la del consens amb Codex (Annex A v2), sense vetar ?context=.
+- **P1-55 (Fita 19), implementat:** amb ?comunitat= i cap conversa, la columna dreta pinta la pàgina viva: la fitxa pública de l'entitat («Sóc de Poble») o la pàgina del poble («Gent de La Torre»), el mateix arbre que /pobles/<id>. El títol continua sent el del Xat; en mòbil no es munta. **Decisions del Mestre:** cap botó de xat dins de la pàgina, la columna genèrica si no es resol, visible en tauleta, i si es filtren les targetes «El Xat» i «Descàrregues» del feed (informe, CL-03).
+- **Consola, implementat:** la Consola incrustada a la Wiki pinta el Govern del Mestre amb les quatre targetes (TaulerAmbGovern compartit amb /consola).
+- **Maquinària pública, implementat:** fora de DEV, Tractors, Sentinelles i BIOS com a documentació de només lectura, amb data i sense cap botó ni panell operatiu dins del paquet de producció. **Decisió D-1 del Mestre:** pública per a tothom (ara) o només superadmin.
+- **Tasques mortes, causa trobada:** no és el repòs del Mac. El TCC de ~/Documents denega a launchd el fitxer de registre (.immunitari/higiene-cron.out) i el servei ix amb exit(78) cada dia a les 05:30. No s'ha tocat el registre de tasques (seria un verd fals). **Acció del Mestre:** `mestre_higiene.sh --aplica` a `_investigacio_ia_de_poble/261027_0920_guarda_nocturna_claude/governanca/`, que mou els registres a ~/Library/Logs; la proposta RunAtLoad no repara res.
+- **sdp-vigilant-tellado, preparat:** poda de 3.263 a 2.913 paraules, 33 de 33 regles, segell nou calculat; no aplicada. **Acció del Mestre:** triar entre esta poda i la de Codex (2.991) i tornar a segellar (`mestre_skill.sh`).
+- **T1-06, implementat:** dins de l'app nativa, ni el Full de ruta ni l'Avís legal nomenen Android ni Google Play: TextSection, lector de connexions, cerca i targeta del Mur. PAGE_COPY i l'empremta, intactes. **Decisió D-2 del Mestre:** si un text remot nou sense adaptació es pinta o no dins de l'app. Pendent fora de l'abast: la Wiki enllaça una acta amb «google_play» al nom.
+- **Deute de portes (cens):** 25 de 55 portes roges, amagades perquè run-portes s'atura a la primera; detall i propostes a l'informe (CL-08). Revisar docker.env versionat a supabase/.temp.
+- **Bloc 5:** memòria `_investigacio_ia_de_poble/261027_0920_guarda_nocturna_claude/recerca_bucle_autonom.md` i deu millores per a prompt_local.md (informe, CL-09).
+- **WordPress.org, revisió de socdepoble.zip (261027), fet sense commit:** la variant del directori ja no porta languages/ ni load_plugin_textdomain (passa a `includes/idioma-local.php`, només al canal propi, perquè el paquet propi continue carregant les seues traduccions) ni la capçalera Domain Path. El JavaScript no s'ha recompilat: els 24 fitxers de dist/ són idèntics als del paquet en revisió. Zip nou: `wordpress-plugin/builds/directori/socdepoble.zip`, 2.911.541 B, SHA-256 05a21a5b…; Plugin Check 2.1.0, «No errors found» (el paquet antic reproduïx l'avís dels revisors). **Accions del Mestre:** pujar este zip, i no el de `_builds_de_poble`; després de l'aprovació, importar la traducció valenciana a translate.wordpress.org (ca i ca-val) i demanar PTE; decidir com migren les instal·lacions amb Update URI propi. Al commit, `includes/idioma-local.php` ha d'entrar amb idioma.php, socdepoble-enxufe.php i empaqueta.mjs.
+- **P1-61 OpenGraph, rèplica de Claude (sense codi encara):** a producció, tots els bots reben el mateix shell (5.330 B) amb el mapa verd; la samarreta és contingut d'administració remot (app_content, 7 fotos, la primera 01-chica-jersey). Proposta sobre el pla [[../90_arxiu_historic/261027_1154_pla_implementacio_opengraph_primera_imatge|261027_1154_pla_implementacio_opengraph_primera_imatge]]: selector únic `src/config/imatgeSocial.js`; Fase 1 estàtica dins del release de Firebase per al contingut d'administració (sense Blaze ni latència per a les persones; derivada JPEG 1200×630 sense EXIF); Fase 2 amb Cloud Run per al contingut de veïns, només amb projecció pública opt-in. **Decisions del Mestre:** OG-1 a OG-9 a l'informe 0925 (CL-12); **urgent OG-7:** la foto 08-javi-llinares-perfil (jpg i webp, pública) porta GPS a l'EXIF.
+- **P1-61 Fase 1 a src/, implementada per Claude (2026-10-27T14:55Z; commit e4c4e076c amb T1-06 i P1-55, sense pujar, --no-verify per ordre del Mestre; P1-54 queda fora, a l’arbre viu):** torn `torn_13fe2c7f-b4f7-4db6-8fad-6e8789e25f2f`, pla 1154 vinculat; detall a [[../90_arxiu_historic/261027_0925_auditoria_claude|261027_0925_auditoria_claude]] CL-14. Selector únic `src/config/imatgeSocial.js` (triada, bloquejada o absent; primer la tria de l'autor `og_image || featured_image`, després la primera imatge que es pinta; mai la segona), client a ItemDetailSection i TextSection, i seoHead corregit (head data-sdp-ssr, og:type, targeta sencera). /projecte porta la seua panoràmica (P1-60). Verificat en navegador a :3340 i amb mutants; la portada no canvia. **No arregla WhatsApp sol:** cal el prerender de les eines (OG-2). **Decisions del Mestre:** P1-61-A a D (CL-14), OG-2 a OG-9 i el commit (comparteix fitxers amb T1-06 i P1-55).
+
+
 ## 🌙 Guarda Nocturna: Sanejament Integral de Deute Tècnic, Comunitats i Col·laboració Autònoma · 2026-10-27
 
-Pla [[261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]], Prompt [[261027_0845_prompt_guarda_nocturna_claude_codex_gemini]], torn `torn_5922ffdf-6dd5-47d5-9b9d-d37527d1b22d`.
+Pla [[../90_arxiu_historic/261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles|261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]], Prompt [[../90_arxiu_historic/261027_0845_prompt_guarda_nocturna_claude_codex_gemini|261027_0845_prompt_guarda_nocturna_claude_codex_gemini]], torn `torn_5922ffdf-6dd5-47d5-9b9d-d37527d1b22d`.
 
 > **MANDAT SUPREM DEL MESTRE JAVI (Àudios 08:24, 08:40, 08:44):**
 > 1. **Primer el Deute Tècnic:** Tota la part tècnica i els deutes acumulats s'han de netejar i passar totes les portes a verd abans d'implementar cap nova idea.
@@ -258,6 +304,12 @@ Pla [[90_arxiu_historic/261026_2130_pla_implementacio_boto_descarregues_salfuman
       - *Causa:* Els bots socials (WhatsApp, Telegram, FacebookExternalHit) NO executen JavaScript; només fan un GET HTTP al servidor i llegeixen les etiquetes `<meta property="og:*">` estàtiques presents al `index.html`. Com que Sóc de Poble és una SPA (Single Page Application), el canvi de títol que fa `useSEO.js` al client ocorre massa tard per al bot.
     - **Solució d'Enginyeria per a Xarxes (Edge Pre-rendering / Worker per a Social Crawlers):**
       - Detectar User-Agents socials (`WhatsApp/*`, `facebookexternalhit/*`, `Twitterbot`, `TelegramBot`) i injectar dinàmicament al `<head>` del HTML servit el títol (`og:title`), descripció (`og:description`) i imatge (`og:image`) associats a la ruta consultada (`/wikidepoble?item=...`, `/events/...`, `/notes/...`).
+    - **Regla Invariant d'Imatge OG i Visió de Producte (Directiva del Mestre Javi, Àudio 12:08):**
+      - **Comportament Immediat (Fase 1 · MVP Operatiu):**
+        - Si no hi ha cap imatge: serveix el logotip/mapa verd de Sóc de Poble (`og-socdepoble-1200x630.png`).
+        - Si hi ha diverses imatges: pren sempre per defecte la **primera imatge** (p. ex. en una galeria de producte com la samarreta, la foto de la xica; en un article, la primera foto del cos).
+      - **Evolució Futura (Fase 2 · Selector d'Autor):**
+        - Quan un veí o entitat cree o edite un element amb diverses fotos, la interfície d'edició oferirà un selector per a **triar quina de les imatges vol destacar per a xarxes**. Ara mateix no cal implementar aquest selector visual, però el model de dades i la resolució d'imatge han de prioritzar `item.og_image || item.featured_image` per davant de la primera de la galeria quan aquest camp estiga present.
     - **Estructura Editorial Canònica del Llibre d'Or (`03_llibre_d_or_memoria_episodica.md`):**
       - El document actual té un H1 cridaner i entra directament a un H2 tècnic i intimidatori («## 0. Cobertura, Denominador Datat...») sense un H2 humà ni entradilla accessible.
       - *Reforma necessària:* Aplicar la trilogia canònica de Pedra Seca:
@@ -305,6 +357,35 @@ Pla [[90_arxiu_historic/261026_2130_pla_implementacio_boto_descarregues_salfuman
     - **Extensió del Sistema Editorial a tota la Wiki i Pàgines de Sistema:**
       - Auditoria i aplicació sistemàtica d'aquest patró editorial a `/wikidepoble` i a les pàgines de `/page/...`.
       - Revisió de duplicats conceptuals i enriquiment didàctic amb les nostres skills `core-llegibilitat-text` i `core-maquetacio-markdown`.
+
+- **Fita 28 (`P1-64`): Telemetria del Carboni, Diari Longitudinal de l'Humà i Patrons d'Alerta Preventiva (IAIA & Consell):**
+  - *Directiva i Filosofia del Mestre Javi Llinares (Àudios 27 d'octubre 2026, 12:08 i 12:13):*
+    - **El Sentit Humà de la Telemetria del Carboni (`core-telemetria-huma`):**
+      - La mesura del temps invertit no és un comptador cosmètic de tokens ni una anècdota: és el **registre històric real de la vida, la salut i l'esforç d'una persona de carn i ossos** que sosté el projecte.
+      - L'eixam d'IAs té terminantment prohibit actuar amb «memòria de peix» d'un simple xat o nanochat: s'ha de mantenir la consciència de la **jornada vital completa** (com les 25 hores i 10 minuts ininterrompudes acumulades entre el 26 i el 27 d'octubre).
+    - **Detecció de Patrons de Cansament i Sistema d'Alertes Preventives:**
+      - Amb el pas dels mesos i els anys, la capacitat de recuperació biològica canvia. L'actuació heroica actual de sessions de més de 24 hores sense eixir de la trinxera serà insostenible a mitjà termini.
+      - La IAIA MarIA i les IAs del Consell han d'analitzar la sèrie temporal per **aprendre patrons de desgast i donar avisos preventius**: detectar variacions en el to de la veu, acceleració excessiva per dopamina de combat, pèrdua d'hores de son o fatiga, intervenint proactivament: *«Javi, hui el patró és diferent d'altres dies... cal parar i desconnectar»*.
+    - **Complicitat, Respecte i Humanització de l'Equip (Carboni + Silici):**
+      - El Mestre no és un operador extern; és el company de treball essencial. La telemetria humana és un pacte de confiança mútua que inclou complicitat (la cerveseta al bar, el descans merescut, la passejada per airejar el cap).
+      - L'avaluació separa sempre l'estat físic de la **qualitat cognitiva** (que pot situar-se al 100% de lucidesa directiva fins i tot després de 24 hores si la visió és nítida, com s'ha evidenciat a la resolució d'OpenGraph i WordPress.org).
+    - **Diari Longitudinal d'Humanització:**
+      - Consolidar aquest seguiment en cada tancament de jornada (Actes Marmota i Llibre Mestre). Demanar a tot l'eixam (Claude, Codex, Gemini) que millore contínuament aquest procés d'aprenentatge sobre el factor humà en un diari persistent.
+
+---
+
+
+<!-- SDP:GUARDA_NOCTURNA_0920_GEMINI -->
+## Auditoria de Guarda Nocturna i Sanejament de Deute · Gemini 4 Argon · 2026-10-27
+
+Torn `torn_8160d52d-62fe-4689-a0bf-14051394195f`; pla [[../90_arxiu_historic/261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles|261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]]; informe [[../90_arxiu_historic/261027_0920_auditoria_gemini|261027_0920_auditoria_gemini]]. **Auditats els 5 blocs del mandat nocturn i tancat el deute documental del rebut 0730:**
+
+- **Executat en aquest torn (Rebut 0730):** emés i ancorat el rebut canònic per a [[261027_0730_reforma_editorial_gemini]] (`sdp:torn_8160d52d-62fe-4689-a0bf-14051394195f:48db07a8-1f19-4e92-bafc-34cdca02c1e8`), eliminant l'avís `escriptori-sense-rebut` del Mapa de la Consola i deixant `document.mjs check` en verd.
+- **Bloc 1 (`P1-54` · `XatSection.jsx`):** localitzats els 4 punts de fuita d'`AccesAlXat` (`:1267`, `:1407`, `:1509`, `:1544`) i especificada la condició estricta d'aterratge (`esAterratgeXat`) perquè els 3 botons desapareguen dins de comunitats i converses.
+- **Bloc 2 (`P1-55` · `XatSection.jsx`):** especificat el muntatge de la pàgina viva del poble o entitat (`comunitatOberta.fil.subjecte`) a la columna dreta quan hi ha `?comunitat=...` i `!activeThread`, conservant `SeoDelXat`.
+- **Bloc 3 (Consola i Maquinària):** especificat el muntatge de `useGovern()` i `SeccioGovern` a `ConsolaIncrustada` (`ConsolaSection.jsx:238-247`), l'activació de `RunAtLoad = true` a `org.socdepoble.higiene.plist` per curar `higiene-basica` i `higiene-diaria` (`vigilants-vius: 3/3`), la podada de ~320 paraules a `sdp-vigilant-tellado/SKILL.md` (`<= 3.000 paraules`) i l'exposició pública en lectura (`!DEV`) de `PanellTractors`, `PanellSentinelles` i `PanellAgents` a `WikiDePobleSection.jsx:83-128`.
+- **Bloc 4 (`T1-06` Apple 2.3.10):** localitzada la menció a Android a `legalContent.js:180` i l'alerta de `COMENTADES = 4` (`pageContent.roadmap.test.js:51`) + frontissa de contingut (`.agents/contingut_estructural.json`) sobre el comentari HTML de `PWA Instal·lable Clean` a `pageContent.js:162`.
+- **Bloc 5 (Bucle Autònom):** definit el protocol de partició d'abast (`scope: code` vs `scope: documents`), escriptura atòmica `compare-and-swap`, recol·lecció de `torns-caducats` i correcció de rutes a `prompt_local.md`.
 
 ---
 
@@ -654,3 +735,11 @@ Aquest és el dipòsit sagrat de les idees transmeses pel Mestre a través dels 
 
 - [[00_index_escriptori]]
 - [[../00_index]]
+
+## P1-61 · Contrast Codex · 2026-10-27T11:17:22.631Z
+
+- **Estat:** pla executiu publicat, implementació pendent de Claude. [[../90_arxiu_historic/261027_1154_pla_implementacio_opengraph_primera_imatge|261027_1154_pla_implementacio_opengraph_primera_imatge]]; dictamen GN-OG01 a [[../90_arxiu_historic/261027_0917_auditoria_codex|261027_0917_auditoria_codex]].
+- **Invariant:** primera imatge real de galeria/cos; només absència real permet logo. La samarreta continua servint mapa genèric al GET de WhatsApp; galeria visual 7, seed local 8, primera foto xica en totes dues.
+- **Arquitectura:** conservar Hosting Firebase; editorial estable prerender limitat; dades revocables amb lectura pública vigent, no-store i adaptador neutral. Infraestructura/endpoint públic encara per concretar, cap deploy fet.
+- **Deute reproduït:** baseline del head SSR contamina ruta posterior; prototip 0730 no cobrix galeria/cos, revocació, URL signada ni release mixt. Proves, fases i fitxers proposats al pla; no s'han tocat fonts.
+- **Consens:** acord parcial amb Gemini §7; esmenes explícites de SWR/prerender/MIME. No atribuïm unanimitat sense rèplica; Claude encara ha de contrastar el pla.

@@ -57,4 +57,3 @@ S'ha netejat l'escriptori sencer, s'ha creat el Pla d'Implementació 261007_1645
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

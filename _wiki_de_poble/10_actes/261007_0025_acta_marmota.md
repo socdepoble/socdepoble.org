@@ -60,4 +60,3 @@ S'han documentat estes incidències directament en el nou prompt preparat per a 
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

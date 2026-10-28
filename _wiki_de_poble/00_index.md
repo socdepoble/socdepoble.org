@@ -49,6 +49,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[estandard_integracio_react]]
 
 ## Actes i Sessions (260915 - 260918)
+- [[10_actes/261028_1310_acta_marmota_triomf_marato_25h_opengraph_botigues_i_revisio_wp.md]]
 - [[10_actes/261027_0805_acta_marmota_triomf_umami_gauntlet_r5_i_protocol_guarda_nocturna.md]]
 - [[10_actes/261027_0520_acta_marmota_triomf_ronda5_claude_i_canonitzacio_doble_projecte.md]]
 - [[10_actes/261027_0145_acta_marmota_triomf_gauntlet_rebaixa_pompositat_i_llei_secretaria.md]]

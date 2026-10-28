@@ -226,7 +226,7 @@ test('doble còpia, controls negatius: sense la guarda, o amb una funció al fit
   };
   assert.match(peta((text) => text.replace(/^if \( defined\( 'SOCDEPOBLE_ENXUFE_FITXER' \) \) \{\n[^]*?\n\treturn;\n\}\n/m, '')), /already defined/);
   /* El fatal del lloc: PHP vincula la funció en compilar el fitxer, abans
-     d'executar la guarda, i la primera còpia ja l'ha declarada (idioma.php). */
+     d'executar la guarda, i la primera còpia ja l'ha declarada (idioma-local.php). */
   assert.match(peta((text) => text.replace("defined( 'ABSPATH' ) || exit;\n", "defined( 'ABSPATH' ) || exit;\nfunction socdepoble_enxufe_carrega_traduccions() {}\n")), /Cannot redeclare/);
 });
 

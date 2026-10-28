@@ -18,8 +18,11 @@ import {
   ENTRADA,
   FITXER_INVENTARI,
   FITXER_RELEASE,
+  FORA_DEL_DIRECTORI,
+  IDIOMA_LOCAL,
   NOMES_CANAL_PROPI,
   SLUG,
+  ZIP_DIRECTORI,
   clauIncrustada,
   clauPublicaHex,
   crc32,
@@ -28,19 +31,24 @@ import {
   LIMIT_LLEUGER,
   comprovaSecretsDeepL,
   empaqueta,
+  empaquetaDirectori,
   errorsDelBuild,
   estampaReadme,
   estampaVersio,
   executa,
   fitxersAdaptador,
+  foraDelDirectori,
   generaClau,
   llegixZip,
   marcaDelBuild,
+  missatgeMitjansDirectori,
   patronsActualitzadorEn,
   signa,
   slugDelNom,
   slugDelPlugin,
+  traduccionsLocalsEn,
   variantDirectori,
+  variantDirectoriMarcatge,
   variantDirectoriReadme,
   verifica
 } from '../wordpress-plugin/eines/empaqueta.mjs';
@@ -99,6 +107,11 @@ function fixture({ node = NODE_BO, versio = '0.2.0', clauPublica = '' } = {}) {
 
 const neteja = (f) => fs.rmSync(f.arrel, { recursive: true, force: true });
 const entradesDe = (fitxer) => new Map(llegixZip(fs.readFileSync(fitxer)).map((e) => [e.nom, e.dades]));
+
+/* Revisió de WordPress.org (261027) · El que porta el canal propi i no el directori, llegit del
+   disc i no de l'empaquetador: l'actualitzador, idioma-local.php i cada fitxer de languages/. */
+const LLENGUES_REALS = fs.readdirSync(path.join(PLUGIN_REAL, 'languages')).filter((nom) => !nom.startsWith('.')).sort().map((nom) => `languages/${nom}`);
+const NOMES_AL_CANAL_PROPI = Object.freeze([NOMES_CANAL_PROPI, 'includes/idioma-local.php', ...LLENGUES_REALS].map((rel) => `${SLUG}/${rel}`).sort());
 
 /* ─────────────────────────────── ZIP ─────────────────────────────── */
 
@@ -294,7 +307,7 @@ test('una release: tres paquets amb dos runtimes explícits i un canal signat qu
 
     assert.ok(!directori.has(`${SLUG}/${NOMES_CANAL_PROPI}`));
     assert.deepEqual(patronsActualitzadorEn([...directori].map(([nom, dades]) => ({ nom, dades }))), []);
-    assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)), [`${SLUG}/${NOMES_CANAL_PROPI}`], 'l\'única diferència és l\'actualitzador');
+    assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)).sort(), NOMES_AL_CANAL_PROPI, 'les úniques diferències són l\'actualitzador i les traduccions locals (revisió de WordPress.org, 261027)');
   } finally { neteja(f); }
 });
 
@@ -473,6 +486,8 @@ if ( 1 !== count( $principals ) ) {
 require $principals[0];
 $fitxer  = plugin_basename( SOCDEPOBLE_ENXUFE_FITXER );
 $sortida = array( 'fitxer' => $fitxer, 'slug' => SOCDEPOBLE_ENXUFE_SLUG, 'filtres' => array_keys( $GLOBALS['filtres'] ), 'zip' => class_exists( 'ZipArchive' ) );
+$sortida['traduccions'] = function_exists( 'socdepoble_enxufe_carrega_traduccions' );
+$sortida['ca']          = function_exists( 'socdepoble_enxufe_fitxer_ca' );
 if ( function_exists( 'socdepoble_enxufe_analitza_canal' ) ) {
 	$cos = (string) file_get_contents( $cas['canal'] );
 	$sig = (string) file_get_contents( $cas['canal'] . '.sig' );
@@ -585,7 +600,7 @@ test('CLI: ajuda, genera-clau fora del repositori i mai sobreescriu una clau', (
 
 test('l\'adaptador real: la llista blanca porta tot el plugin i res de dist/, eines/ ni ocults', () => {
   const rels = fitxersAdaptador(PLUGIN_REAL).map((f) => f.rel);
-  for (const rel of ['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt', 'includes/actualitzador.php', 'includes/bloc/block.json', 'includes/bloc/render.php', 'includes/bloc/editor.js', 'includes/bloc/editor.asset.php', 'templates/pantalla-completa.php', 'languages/socdepoble-ca.l10n.php', 'languages/socdepoble-ca-socdepoble-app-editor-script.json']) {
+  for (const rel of ['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt', 'includes/actualitzador.php', 'includes/idioma.php', 'includes/idioma-local.php', 'includes/bloc/block.json', 'includes/bloc/render.php', 'includes/bloc/editor.js', 'includes/bloc/editor.asset.php', 'templates/pantalla-completa.php', 'languages/socdepoble-ca.l10n.php', 'languages/socdepoble-ca-socdepoble-app-editor-script.json']) {
     assert.ok(rels.includes(rel), rel);
   }
   assert.ok(rels.every((rel) => !rel.startsWith('dist/') && !rel.startsWith('eines/') && !rel.split('/').some((s) => s.startsWith('.'))));
@@ -775,7 +790,7 @@ test('empaqueta amb mitjans: el directori no porta els externs ni els originals 
     assert.doesNotMatch(propi.get(`${SLUG}/readme.txt`).toString('utf8'), /media server/);
     // La diferència entre el canal propi i el directori: l'actualitzador i el que la política declara.
     assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)).sort(),
-      [`${SLUG}/${NOMES_CANAL_PROPI}`, `${SLUG}/dist/assets/fotos/àrea.png`, `${SLUG}/dist/assets/ui/v.jpg`].sort());
+      [...NOMES_AL_CANAL_PROPI, `${SLUG}/dist/assets/fotos/àrea.png`, `${SLUG}/dist/assets/ui/v.jpg`].sort());
   } finally { neteja(f); }
 });
 
@@ -797,6 +812,302 @@ test('empaqueta amb l’autònom substituint també (D3): cap zip porta l’orig
     // El canal signat porta el manifest de l'autònom: la clau additiva hi va, sense cap origen extern.
     assert.deepEqual(r.canal.mitjans, { origen: null, externs: [], bessones: 1 });
     assert.deepEqual([...propi.keys()].filter((nom) => !directori.has(nom)).sort(),
-      [`${SLUG}/${NOMES_CANAL_PROPI}`, `${SLUG}/dist/assets/fotos/àrea.png`].sort());
+      [...NOMES_AL_CANAL_PROPI, `${SLUG}/dist/assets/fotos/àrea.png`].sort());
+  } finally { neteja(f); }
+});
+
+/* ───────────── Revisió de WordPress.org (261027) · Traduccions i --directori ─────────────
+   El dictamen de la revisió de socdepoble.zip: la variant del directori no porta languages/
+   (les traduccions les servix translate.wordpress.org) ni cap load_plugin_textdomain. El canal
+   propi les continua portant (idioma-local.php), i --directori fa només el zip del directori. */
+
+/** La clau pública de la fixture, per a poder signar el canal propi. */
+function posaClau(f, publicaHex) {
+  const actualitzador = path.join(f.plugin, NOMES_CANAL_PROPI);
+  fs.writeFileSync(actualitzador, fs.readFileSync(actualitzador, 'utf8')
+    .replace(/define\(\s*'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA'\s*,\s*'[0-9a-fA-F]*'\s*\)/, `define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '${publicaHex}' )`));
+}
+
+test('Revisió de WordPress.org (261027): el directori no porta languages/, idioma-local.php, load_plugin_textdomain ni Domain Path; el canal propi, tot com abans', () => {
+  const { pem, publicaHex } = generaClau();
+  const f = fixture({ clauPublica: publicaHex });
+  try {
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem });
+    const zipDe = (prefix) => entradesDe(path.join(f.sortida, r.escrits.find((nom) => nom.includes(prefix))));
+    const propi = zipDe('_wordpress_enxufe_');
+    const directori = zipDe('_wordpress_directori_');
+    assert.ok(LLENGUES_REALS.some((rel) => rel.endsWith('.l10n.php')) && LLENGUES_REALS.some((rel) => rel.endsWith('.json')), 'la font porta traduccions .l10n.php i .json');
+
+    assert.deepEqual([...directori.keys()].filter((nom) => nom.startsWith(`${SLUG}/languages/`) || /\.(?:l10n\.php|mo|po)$/i.test(nom)), [], 'cap traducció local al directori');
+    assert.ok(!directori.has(`${SLUG}/includes/idioma-local.php`), 'ni el fitxer que les carrega');
+    assert.ok(directori.has(`${SLUG}/includes/idioma.php`), 'la correspondència ca_valencia → ca sí que hi va');
+    for (const [nom, dades] of directori) {
+      if (nom.endsWith('.php')) assert.doesNotMatch(dades.toString('utf8'), /load_plugin_textdomain/, nom);
+    }
+    assert.deepEqual(traduccionsLocalsEn([...directori].map(([nom, dades]) => ({ nom, dades }))), []);
+    const principalDirectori = directori.get(`${SLUG}/socdepoble-enxufe.php`).toString('utf8');
+    assert.doesNotMatch(principalDirectori, /Domain Path:/, 'cap Domain Path cap a una carpeta absent');
+    assert.doesNotMatch(principalDirectori, /Update URI:/);
+    assert.match(principalDirectori, /^ \* Text Domain:\s+socdepoble$/m);
+    assert.match(principalDirectori, /^ \* Requires at least:\s+6\.6$/m);
+
+    for (const rel of LLENGUES_REALS) assert.deepEqual(propi.get(`${SLUG}/${rel}`), fs.readFileSync(path.join(PLUGIN_REAL, rel)), `canal propi: ${rel}`);
+    assert.deepEqual(propi.get(`${SLUG}/includes/idioma-local.php`), fs.readFileSync(path.join(PLUGIN_REAL, 'includes/idioma-local.php')));
+    assert.match(propi.get(`${SLUG}/includes/idioma-local.php`).toString('utf8'), /\tload_plugin_textdomain\( 'socdepoble', false, /);
+    const principalPropi = propi.get(`${SLUG}/socdepoble-enxufe.php`).toString('utf8');
+    assert.match(principalPropi, /^ \* Domain Path:\s+\/languages$/m);
+    assert.match(principalPropi, /^ \* Update URI:/m);
+    assert.equal(principalDirectori, principalPropi.replace(/^ \* Update URI:.*\n/m, '').replace(/^ \* Domain Path:.*\n/m, '')
+      .replace(/^( \* Requires at least:\s+)6\.5$/m, '$16.6'), 'el fitxer principal només perd les dues capçaleres (i puja el mínim)');
+    for (const [nom, dades] of directori) {
+      if (nom.startsWith(`${SLUG}/dist/`) || [`${SLUG}/socdepoble-enxufe.php`, `${SLUG}/readme.txt`, `${SLUG}/includes/marcatge.php`].includes(nom)) continue;
+      assert.deepEqual(dades, propi.get(nom), `la resta de l'adaptador, idèntica: ${nom}`);
+    }
+
+    // Cap ruta cap a la carpeta absent: les traduccions de l'editor, de WP_LANG_DIR.
+    const marcatgePropi = propi.get(`${SLUG}/includes/marcatge.php`).toString('utf8');
+    assert.equal(marcatgePropi, fs.readFileSync(path.join(PLUGIN_REAL, 'includes/marcatge.php'), 'utf8'), 'el canal propi, el de la font');
+    assert.match(marcatgePropi, /wp_set_script_translations\( 'socdepoble-app-editor-script', 'socdepoble', plugin_dir_path\( SOCDEPOBLE_ENXUFE_FITXER \) \. 'languages' \);/);
+    const marcatgeDirectori = directori.get(`${SLUG}/includes/marcatge.php`).toString('utf8');
+    assert.equal(marcatgeDirectori, variantDirectoriMarcatge(marcatgePropi));
+    assert.match(marcatgeDirectori, /^\twp_set_script_translations\( 'socdepoble-app-editor-script', 'socdepoble' \);$/m);
+    for (const [nom, dades] of directori) {
+      if (nom.endsWith('.php')) assert.doesNotMatch(dades.toString('utf8'), /'languages'|des de languages\//, `cap ruta a languages/: ${nom}`);
+    }
+
+    // El readme del directori no diu que porta les traduccions; el del canal propi, sí.
+    const linia = /^\* Valencian \(Catalan\) translations are included for the plugin and block editor\.$/m;
+    assert.match(propi.get(`${SLUG}/readme.txt`).toString('utf8'), linia);
+    const readmeDirectori = directori.get(`${SLUG}/readme.txt`).toString('utf8');
+    assert.doesNotMatch(readmeDirectori, linia);
+    assert.match(readmeDirectori, /^\* Translation-ready \(text domain `socdepoble`\): translations for the plugin and the block editor come from translate\.wordpress\.org\.$/m);
+  } finally { neteja(f); }
+});
+
+test('Revisió de WordPress.org (261027): el readme i el marcatge del directori canvien una sola línia i paren si falta o està repetida', () => {
+  const readme = fs.readFileSync(path.join(PLUGIN_REAL, 'readme.txt'), 'utf8');
+  const linia = '* Valencian (Catalan) translations are included for the plugin and block editor.';
+  assert.equal(readme.split('\n').filter((l) => l === linia).length, 1, 'la font en porta una');
+  const directori = variantDirectoriReadme(readme);
+  assert.ok(!directori.includes(linia) && directori.includes('come from translate.wordpress.org.'));
+  assert.ok(directori.includes('* Valencian (Catalan) translations for the plugin and block editor.'), 'el Changelog és història i es queda');
+  assert.throws(() => variantDirectoriReadme(readme.replace(`${linia}\n`, '')), /Línia de les traduccions del readme: esperava una sola coincidència i n'hi ha 0/);
+  assert.throws(() => variantDirectoriReadme(readme.replace(`${linia}\n`, `${linia}\n${linia}\n`)), /Línia de les traduccions del readme: esperava una sola coincidència i n'hi ha 2/);
+
+  const marcatge = fs.readFileSync(path.join(PLUGIN_REAL, 'includes/marcatge.php'), 'utf8');
+  const variant = variantDirectoriMarcatge(marcatge);
+  assert.equal(variant.split('\n').length, marcatge.split('\n').length, 'el comentari i la crida, línia per línia');
+  assert.doesNotMatch(variant, /'languages'|des de languages\//);
+  assert.equal(variant.match(/wp_set_script_translations\(/g)?.length, 1);
+  assert.equal(variantDirectoriMarcatge(marcatge.replace(/\n/g, '\r\n')).includes("wp_set_script_translations( 'socdepoble-app-editor-script', 'socdepoble' );"), true, 'també amb CRLF');
+  const crida = marcatge.match(/^\t\/\*(?:(?!\*\/)[^])*\*\/\n\twp_set_script_translations\([^\n]*\n/m)[0];
+  assert.equal(crida.split('\n').length, 4, 'el comentari de dues línies i la crida');
+  assert.throws(() => variantDirectoriMarcatge(marcatge.replace(crida, '')), /Traduccions de l'editor a includes\/marcatge\.php: esperava una sola coincidència i n'hi ha 0/);
+  assert.throws(() => variantDirectoriMarcatge(marcatge.replace(crida, `${crida}${crida}`)), /n'hi ha 2/);
+});
+
+test('Revisió de WordPress.org (261027): cap paquet del canal propi porta languages/ sense idioma-local.php ni el seu require', () => {
+  for (const cas of ['sense fitxer', 'sense crida', 'sense require']) {
+    const { pem, publicaHex } = generaClau();
+    const f = fixture({ clauPublica: publicaHex });
+    try {
+      const local = path.join(f.plugin, IDIOMA_LOCAL);
+      const principal = path.join(f.plugin, 'socdepoble-enxufe.php');
+      if (cas === 'sense fitxer') fs.rmSync(local);
+      else if (cas === 'sense crida') fs.writeFileSync(local, fs.readFileSync(local, 'utf8').replace(/\tload_plugin_textdomain\([^\n]*\n/, ''));
+      else fs.writeFileSync(principal, fs.readFileSync(principal, 'utf8').replace(/^if \( is_readable\( __DIR__ \. '\/includes\/idioma-local\.php' \) \) \{\n[^\n]*\n\}\n/m, ''));
+      assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem }), /languages\/ sense includes\/idioma-local\.php/, cas);
+      assert.equal(fs.existsSync(f.sortida), false, `zero paquets parcials: ${cas}`);
+      // El directori no el porta: --directori no en depén.
+      if (cas === 'sense fitxer') assert.ok(empaquetaDirectori({ arrelPlugin: f.plugin }).mida > 0);
+    } finally { neteja(f); }
+  }
+});
+
+test('Revisió de WordPress.org (261027): l\'adaptador i els builds no es lligen a través d\'enllaços simbòlics', () => {
+  for (const cas of ['readme.txt', 'includes', 'builds/directori/dist']) {
+    const f = fixture();
+    try {
+      const desti = path.join(f.plugin, cas);
+      const exterior = path.join(f.arrel, 'exterior');
+      fs.cpSync(desti, exterior, { recursive: true });
+      fs.rmSync(desti, { recursive: true, force: true });
+      fs.symlinkSync(exterior, desti);
+      assert.throws(() => empaquetaDirectori({ arrelPlugin: f.plugin }), new RegExp(`Enllaç simbòlic dins del paquet: ${cas}`), cas);
+      assert.equal(fs.existsSync(path.join(f.plugin, 'builds', ZIP_DIRECTORI)), false, cas);
+    } finally { neteja(f); }
+  }
+});
+
+test('Revisió de WordPress.org (261027): variantDirectori lleva Domain Path una sola vegada i para si falta o està repetit', () => {
+  const php = fs.readFileSync(path.join(PLUGIN_REAL, 'socdepoble-enxufe.php'), 'utf8');
+  assert.match(php, /^ \* Domain Path:\s+\/languages$/m, 'la font el conserva per al canal propi');
+  const variant = variantDirectori(php);
+  assert.doesNotMatch(variant, /Domain Path:/);
+  assert.equal(variant.split('\n').length, php.split('\n').length - 2, 'només les línies Update URI i Domain Path');
+  assert.throws(() => variantDirectori(php.replace(/^ \* Domain Path:.*\n/m, '')), /Capçalera Domain Path: esperava una sola coincidència i n'hi ha 0/);
+  assert.throws(() => variantDirectori(php.replace(/^( \* Domain Path:.*\n)/m, '$1$1')), /Capçalera Domain Path: esperava una sola coincidència i n'hi ha 2/);
+});
+
+test('Revisió de WordPress.org (261027): una sola llista del que no va al directori, i una porta que para les traduccions locals abans d\'escriure', () => {
+  assert.ok(Object.isFrozen(FORA_DEL_DIRECTORI));
+  assert.deepEqual([...FORA_DEL_DIRECTORI], [NOMES_CANAL_PROPI, 'includes/idioma-local.php', 'languages/']);
+  for (const rel of [NOMES_CANAL_PROPI, 'includes/idioma-local.php', 'languages/socdepoble-ca.l10n.php', 'languages/x/y.json']) assert.ok(foraDelDirectori(rel), rel);
+  for (const rel of ['includes/idioma.php', 'languages', 'languagesx/a.php', 'includes/languages/a.php', 'socdepoble-enxufe.php']) assert.ok(!foraDelDirectori(rel), rel);
+
+  const entrada = (nom, text = '') => ({ nom, dades: Buffer.from(text) });
+  assert.deepEqual(traduccionsLocalsEn([entrada(`${SLUG}/includes/idioma.php`, "add_filter( 'load_textdomain_mofile', 'f' );"),
+    entrada(`${SLUG}/dist/rag-index.json`), entrada(`${SLUG}/readme.txt`, 'load_plugin_textdomain')]), []);
+  assert.deepEqual(traduccionsLocalsEn([
+    entrada(`${SLUG}/languages/socdepoble-ca.json`), entrada(`${SLUG}/includes/socdepoble-ca.l10n.php`), entrada(`${SLUG}/a.mo`), entrada(`${SLUG}/b/c.PO`),
+    entrada(`${SLUG}/includes/x.php`, "load_plugin_textdomain( 'socdepoble' );")
+  ]).map((trobat) => trobat.split(': ')[1]), ['carpeta languages/', 'fitxer de traducció', 'fitxer de traducció', 'fitxer de traducció', 'load_plugin_textdomain']);
+
+  // Si se'n cola cap per una altra carpeta, ni empaqueta() ni --directori escriuen res.
+  for (const [rel, text] of [['includes/socdepoble-ca.mo', 'mo'], ['includes/carrega.php', "<?php\ndefined( 'ABSPATH' ) || exit;\nload_plugin_textdomain( 'socdepoble' );\n"]]) {
+    const { pem, publicaHex } = generaClau();
+    const f = fixture({ clauPublica: publicaHex });
+    try {
+      fs.writeFileSync(path.join(f.plugin, rel), text);
+      assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem }), /traduccions locals[^]*261027[^]*socdepoble\/includes\//, rel);
+      assert.equal(fs.existsSync(f.sortida), false, 'zero paquets parcials');
+      assert.throws(() => empaquetaDirectori({ arrelPlugin: f.plugin }), /traduccions locals/, rel);
+      assert.equal(fs.existsSync(path.join(f.plugin, 'builds', ZIP_DIRECTORI)), false);
+    } finally { neteja(f); }
+  }
+});
+
+test('Revisió de WordPress.org (261027): --directori escriu només builds/directori/socdepoble.zip, sense clau ni canal, determinista i igual que el directori d\'empaqueta()', () => {
+  const f = fixture(); // sense clau pública: --directori no en necessita
+  try {
+    const builds = path.join(f.plugin, 'builds');
+    const canal = { 'stable.json': '{"canal":"stable"}\n', 'stable.json.sig': `${'a'.repeat(128)}\n`, '0.2.0.json': '{}\n', '0.2.0.json.sig': `${'b'.repeat(128)}\n` };
+    for (const [nom, text] of Object.entries(canal)) fs.writeFileSync(path.join(builds, nom), text);
+    const llista = (carpeta) => fs.readdirSync(carpeta, { recursive: true }).map(String).sort();
+    const abans = llista(builds);
+
+    const primer = empaquetaDirectori({ arrelPlugin: f.plugin });
+    assert.equal(ZIP_DIRECTORI, 'directori/socdepoble.zip');
+    assert.equal(primer.fitxer, path.join(builds, ZIP_DIRECTORI));
+    assert.deepEqual(llista(builds), [...abans, ZIP_DIRECTORI].sort(), 'només el zip del directori és nou a builds/');
+    for (const [nom, text] of Object.entries(canal)) assert.equal(fs.readFileSync(path.join(builds, nom), 'utf8'), text, `canal intacte: ${nom}`);
+    const zip = fs.readFileSync(primer.fitxer);
+    assert.deepEqual(zip, primer.zip);
+    assert.equal(primer.mida, zip.length);
+    assert.equal(primer.sha256, sha256(zip));
+    assert.equal(primer.versio, '0.2.0');
+    assert.ok(!primer.avisos.some((avis) => /autònom lleuger/.test(avis)), 'amb l\'autònom sencer, el contrast de mitjans es fa');
+    assert.deepEqual(fs.readFileSync(empaquetaDirectori({ arrelPlugin: f.plugin }).fitxer), zip, 'determinista: dues execucions, els mateixos bytes');
+
+    const entrades = new Map(llegixZip(zip).map((e) => [e.nom, e.dades]));
+    assert.ok([...entrades.keys()].every((nom) => nom.startsWith(`${SLUG}/`)), `arrel ${SLUG}/`);
+    assert.ok(!entrades.has(`${SLUG}/${NOMES_CANAL_PROPI}`) && !entrades.has(`${SLUG}/includes/idioma-local.php`));
+    assert.ok(![...entrades.keys()].some((nom) => nom.startsWith(`${SLUG}/languages/`)));
+    assert.equal(sha256(entrades.get(`${SLUG}/dist/${ENTRADA}`)), JSON.parse(fs.readFileSync(path.join(f.directori, FITXER_RELEASE), 'utf8')).entrada.sha256, 'el bundle del build del directori');
+
+    // El mateix zip que fa empaqueta() amb la mateixa fixture: una sola manera de fer el directori.
+    const { pem, publicaHex } = generaClau();
+    posaClau(f, publicaHex);
+    const r = empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: URL_BASE, clauPem: pem });
+    assert.deepEqual(fs.readFileSync(path.join(f.sortida, r.escrits.find((nom) => nom.includes('_wordpress_directori_')))), zip);
+    assert.equal(r.canal.adaptadors.wordpress.directori.sha256, primer.sha256);
+  } finally { neteja(f); }
+});
+
+test('Revisió de WordPress.org (261027): --directori no travessa enllaços simbòlics, no es combina amb res i l\'ajuda diu la veritat', () => {
+  for (const cas of ['fitxer', 'carpeta']) {
+    const f = fixture();
+    try {
+      const exterior = path.join(f.arrel, 'exterior');
+      fs.mkdirSync(exterior);
+      const sentinel = path.join(exterior, 'socdepoble.zip');
+      fs.writeFileSync(sentinel, 'intacte');
+      if (cas === 'fitxer') fs.symlinkSync(sentinel, path.join(f.plugin, 'builds', ZIP_DIRECTORI));
+      else {
+        const directori = path.join(f.plugin, 'builds/directori');
+        fs.cpSync(directori, exterior, { recursive: true });
+        fs.rmSync(directori, { recursive: true, force: true });
+        fs.symlinkSync(exterior, directori, 'dir');
+      }
+      // La carpeta enllaçada ja la para la lectura del build (senseEnllacos), abans de la destinació.
+      assert.throws(() => empaquetaDirectori({ arrelPlugin: f.plugin }), cas === 'fitxer' ? /enllaços simbòlics/ : /Enllaç simbòlic dins del paquet: builds\/directori\/dist/, cas);
+      assert.equal(fs.readFileSync(sentinel, 'utf8'), 'intacte', cas);
+    } finally { neteja(f); }
+  }
+
+  const registre = { linies: [], log(missatge) { this.linies.push(missatge); } };
+  for (const altres of [['--prova'], ['--url-base', URL_BASE], ['--clau', 'x.pem'], ['--canal', 'rc'], ['--sortida', 'x'], ['--genera-clau', 'x.pem'], ['--lleuger']]) {
+    assert.throws(() => executa(['--directori', ...altres], registre), /no es combina/, altres.join(' '));
+  }
+  assert.deepEqual(registre.linies, [], 'cap opció combinada arriba a escriure res');
+  assert.match(AJUDA, /^ {2}node wordpress-plugin\/eines\/empaqueta\.mjs --directori$/m);
+  assert.match(AJUDA, /--directori +Crea wordpress-plugin\/builds\/directori\/socdepoble\.zip/);
+  assert.match(AJUDA, /AAMMDD_HHMM_wordpress_directori_vX\.zip és la variant per a WordPress\.org/);
+  assert.doesNotMatch(AJUDA, /socdepoble-enxufe-vX|socdepoble-spa-vX/, 'cap nom de zip que l\'empaquetador ja no fa');
+
+  // El recordatori de CORS dels mitjans externs ix també amb --directori, que és el que es puja.
+  const font = fs.readFileSync(path.join(PLUGIN_REAL, 'eines/empaqueta.mjs'), 'utf8');
+  const branca = font.slice(font.indexOf('if (opcions.directori) {'), font.indexOf("if (opcions['genera-clau'])"));
+  assert.match(branca, /if \(resultat\.mitjans\.origen\) registre\.log\(missatgeMitjansDirectori\(resultat\.mitjans\)\);/);
+  const missatge = missatgeMitjansDirectori({ directori: 7, externs: 3, origen: 'https://socdepoble.org', bessones: 2 });
+  assert.match(missatge, /^Directori \(7 B\): 3 mitjans externs des de https:\/\/socdepoble\.org i 2 originals substituïts/);
+  assert.match(missatge, /content-type image\/\*[^]*Access-Control-Allow-Origin/);
+  // Amb l'autònom lleuger no hi ha cap recompte fals de «0 mitjans externs»: les carpetes del directori.
+  assert.match(missatgeMitjansDirectori({ directori: 7, externs: 0, origen: 'https://socdepoble.org', bessones: 2, contrastat: false, carpetes: ['assets/uploads/', 'assets/towns/'] }),
+    /^Directori \(7 B\): els mitjans de 2 carpetes externes \(assets\/uploads\/, assets\/towns\/\) des de https:\/\/socdepoble\.org i 2 originals/);
+});
+
+test('Revisió de WordPress.org (261027): amb PHP real, el directori carrega sense idioma-local.php ni languages/, i el canal propi encara les carrega', AMB_PHP, () => {
+  const f = fixture();
+  try {
+    const propi = canalAmbPhp(f, 'enxufe');
+    assert.equal(propi.traduccions, true, 'el canal propi carrega languages/ (idioma-local.php)');
+    assert.equal(propi.ca, true);
+    assert.ok(propi.filtres.includes('init') && propi.filtres.includes('load_textdomain_mofile') && propi.filtres.includes('load_script_translation_file'));
+  } finally { neteja(f); }
+  const g = fixture();
+  try {
+    const directori = canalAmbPhp(g, 'directori');
+    assert.equal(directori.fitxer, `${SLUG}/socdepoble-enxufe.php`, 'el fitxer principal carrega sense idioma-local.php');
+    assert.equal(directori.traduccions, false, 'cap càrrega local del text domain al directori');
+    assert.equal(directori.ca, true, 'la correspondència ca_valencia → ca també hi és');
+    assert.ok(directori.filtres.includes('load_textdomain_mofile') && directori.filtres.includes('load_script_translation_file'));
+    assert.equal(fs.existsSync(path.join(g.arrel, 'plugins-directori', SLUG, 'languages')), false);
+    assert.equal(fs.existsSync(path.join(g.arrel, 'plugins-directori', SLUG, 'includes/idioma-local.php')), false);
+  } finally { neteja(g); }
+});
+
+/* Revisió de WordPress.org (261027) · El dist/ d'ara és l'autònom lleuger (SDP_MITJANS=externs, per a
+   --lleuger): empaqueta() el refusa, perquè el canal propi i l'estàtic ho han de portar tot, però
+   --directori no l'empaqueta i només el contrasta (versió, node, contracte, origen i bessones). */
+test('Revisió de WordPress.org (261027): --directori admet un autònom lleuger amb el mateix origen; empaqueta() continua refusant-lo', async () => {
+  const { verificaMitjans } = await import('../wordpress-plugin/eines/empaqueta.mjs');
+  const lleuger = { origen: 'https://socdepoble.org', externs: ['assets/'], bessones: 1 };
+  const mitjans = { origen: 'https://socdepoble.org', externs: ['assets/fotos/'], bessones: 1 };
+  const directori = ['assets/ui/v.webp', ENTRADA];
+  assert.throws(() => verificaMitjans({ mitjans: lleuger }, { mitjans }, [ENTRADA], directori), /autònom no pot declarar/);
+  assert.deepEqual(verificaMitjans({ mitjans: lleuger }, { mitjans }, [ENTRADA], directori, { nomesDirectori: true }), { externs: 0, substituits: 0 });
+  assert.throws(() => verificaMitjans({ mitjans: { ...lleuger, origen: 'https://altre.example' } }, { mitjans }, [ENTRADA], directori, { nomesDirectori: true }), /mateix origen de mitjans/);
+  assert.throws(() => verificaMitjans({ mitjans: { ...lleuger, bessones: 2 } }, { mitjans }, [ENTRADA], directori, { nomesDirectori: true }), /mateixes bessones \(2 i 1\)/);
+  assert.throws(() => verificaMitjans({ mitjans: lleuger }, { mitjans: { ...mitjans, origen: 'http://socdepoble.org' } }, [ENTRADA], directori, { nomesDirectori: true }), /origen dels mitjans|mateix origen/);
+  assert.throws(() => verificaMitjans({}, { mitjans }, [ENTRADA], [...directori, 'assets/fotos/a.png'], { nomesDirectori: true }), /porta un mitjà extern/, 'les portes del directori no canvien');
+
+  const f = fixtureAmbMitjans();
+  try {
+    const fitxers = [ENTRADA, 'fonts/noto-sans.css', 'rag-index.json'].map((cami) => ({ cami, contingut: fs.readFileSync(path.join(f.dist, cami)) }));
+    fs.rmSync(path.join(f.dist, 'assets'), { recursive: true, force: true });
+    const segellat = manifestDeRelease({ versio: '0.2.0', node: NODE_BO, fitxers, generat: '2026-09-29T20:00:00.000Z',
+      mitjans: { origen: 'https://socdepoble.org', externs: ['assets/'], bessones: MITJANS.bessones } });
+    fs.writeFileSync(path.join(f.dist, FITXER_RELEASE), segellat.manifestText);
+    fs.writeFileSync(path.join(f.dist, FITXER_INVENTARI), segellat.inventariText);
+    assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida: f.sortida, urlBase: 'http://localhost:8881/enxufe/', prova: true }), /autònom no pot declarar/);
+    const r = empaquetaDirectori({ arrelPlugin: f.plugin });
+    const entrades = new Map(llegixZip(r.zip).map((e) => [e.nom, e.dades]));
+    assert.ok(entrades.has(`${SLUG}/dist/assets/ui/v.webp`) && !entrades.has(`${SLUG}/dist/assets/fotos/àrea.png`), 'el build del directori, tal qual');
+    assert.match(entrades.get(`${SLUG}/readme.txt`).toString('utf8'), /6\. Sóc de Poble media server/);
+    assert.deepEqual({ externs: r.mitjans.externs, origen: r.mitjans.origen, bessones: r.mitjans.bessones }, { externs: 0, origen: 'https://socdepoble.org', bessones: 1 });
+    assert.equal(r.mitjans.contrastat, false);
+    assert.deepEqual(r.mitjans.carpetes, ['assets/fotos/']);
+    assert.ok(r.avisos.some((avis) => /^dist\/ és l'autònom lleuger \(mitjans des de https:\/\/socdepoble\.org\): no s'ha pogut contrastar/.test(avis)), 'el contrast que no es fa, avisat');
   } finally { neteja(f); }
 });

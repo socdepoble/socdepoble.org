@@ -37,8 +37,9 @@
  *     s'oferix mai a un lloc real.
  *   · Les peticions s'identifiquen com a socdepoble-enxufe, sense l'URL del lloc.
  *
- * Esta és l'única peça que no va a la variant per al directori de
- * WordPress.org: allà les actualitzacions ja són natives.
+ * No va a la variant per al directori de WordPress.org (amb idioma-local.php i
+ * languages/, Revisió de WordPress.org (261027)): allà les actualitzacions ja
+ * són natives.
  *
  * Gauntlet 261025_0545 (WP-01, WP-03) · Decisió del Mestre (261023): una sola
  * variant universal, carpeta i slug 'socdepoble', actualitzada per

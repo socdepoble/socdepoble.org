@@ -81,10 +81,3 @@ Claude Opus 5.5 ha consolidat amb èxit damunt de `fe14e1756` el commit de forti
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[03_llibre_mestre_tasques_i_idees]]
-- [[../90_arxiu_historic/261024_1945_prompt_codex_gemini_gauntlet_loop_revisio_adversarial_postcommit|261024_1945_prompt_codex_gemini_gauntlet_loop_revisio_adversarial_postcommit]]
-- [[../90_arxiu_historic/261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema|261024_1800_pla_implementacio_fortificacio_total_i_blindatge_sistema]]
-- [[../90_arxiu_historic/261024_1800_auditoria_claude|261024_1800_auditoria_claude]]
-- [[../90_arxiu_historic/261024_1800_auditoria_codex|261024_1800_auditoria_codex]]
-- [[../90_arxiu_historic/261024_1800_auditoria_gemini|261024_1800_auditoria_gemini]]

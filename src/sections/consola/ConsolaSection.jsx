@@ -58,8 +58,14 @@ import { TITOL_SALA_MAQUINES, paginaGovern, segmentGovern } from './govern/gover
    comandament del Mestre) · Damunt de les nou targetes, el Govern del Mestre
    (govern/GovernConsola.jsx): quatre targetes i una pàgina per a cada una,
    /consola/govern/<id>. La matriu del govern també es llig una sola vegada
-   per a tota la secció (useGovern). La Consola incrustada de la Wiki no la
-   llig ni la pinta. */
+   per a tota la secció (useGovern).
+   Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
+   pinta el mateix Govern del Mestre que /consola, amb el mateix cap de tauler
+   (TaulerAmbGovern): l'alerta de vigilància, les quatre targetes, l'H2 de la
+   sala de màquines i les nou targetes. Llig la matriu una sola vegada per a
+   tota la fitxa, com les seues altres dues fonts, i les targetes porten a
+   /consola/govern/<id>, com les nou porten a /consola/<pàgina>. Derogat:
+   «La Consola incrustada de la Wiki no la llig ni la pinta». */
 
 const ICONES = Object.freeze({
   pols: Activity, explorador: Network, fluxos: Workflow, calendari: CalendarClock,
@@ -191,7 +197,9 @@ const fontsDe = (consola, mapa) => ({
  * centrada (Llei Visual del quadrat), i la icona d'ICONES deixa de pintar-se
  * (TargetaConsola: «la imatge o la icona»). Només el tauler de /consola en
  * porta: la Consola incrustada de la Wiki (ConsolaIncrustada) no passa
- * `ambImatges` i conserva els seus píxels. Derogat EN PART per l'ordre del
+ * `ambImatges`, i les seues nou targetes continuen amb la icona (des del pla
+ * 261027_0845, §3, la resta del seu tauler sí que canvia: TaulerAmbGovern,
+ * avall). Derogat EN PART per l'ordre del
  * Mestre del 13-10-2026 (pla 261013_1405, front F): l'Onada 12 (261011;
  * ordres 261011_0130, punt 2), «fora de l'índex, el tauler no guanya cap
  * imatge de contingut», i l'ordre del 260926 «la icona de la part en el lloc
@@ -202,8 +210,11 @@ const fontsDe = (consola, mapa) => ({
  * Diagnòstic del Mas (DiagnosiConsola.jsx). Sense, el d'ara.
  * Revisió adversarial del carril F1 (problema 10) · Amb `alertaFora`, el
  * tauler no pinta l'alerta de vigilància: la pinta qui el munta, dalt de tot
- * (a /consola, damunt del Govern del Mestre). Sense la prop, el DOM de sempre:
- * la Consola incrustada de la Wiki conserva els seus píxels.
+ * (a /consola, damunt del Govern del Mestre). Sense la prop, el DOM de sempre.
+ * Pla 261027_0845 (Guarda Nocturna), §3 · Les dues que el munten (/consola i
+ * la Consola incrustada de la Wiki) passen per TaulerAmbGovern i porten la
+ * prop. Derogat: «la Consola incrustada de la Wiki conserva els seus píxels»
+ * (sense la prop).
  */
 export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alertaFora = false, ara = Date.now() }) {
   const fonts = fontsDe(consola, mapa);
@@ -231,17 +242,44 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
   );
 }
 
+/**
+ * Pla 261027_0845 (Guarda Nocturna), §3 · El cap del tauler, un sol per a
+ * /consola i per a la Consola incrustada de la Wiki, perquè no tornen a
+ * divergir: l'alerta de vigilància al cim, el Govern del Mestre (SeccioGovern:
+ * el seu H2 i quatre targetes que porten a /consola/govern/<id>), l'H2 de la
+ * sala de màquines (TITOL_SALA_MAQUINES) i les nou targetes, que ja no pinten
+ * l'alerta (alertaFora). `ara` és el rellotge de tota la pintada. Les
+ * il·lustracions (ambImatges) continuen sent només del tauler de /consola, i
+ * l'Índex i el Diagnòstic, que van darrere, també.
+ */
+function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = false }) {
+  return (
+    <>
+      <AlertaVigilancia mapa={mapa.mapa} />
+      <SeccioGovern govern={govern} ara={ara} />
+      <h2>{TITOL_SALA_MAQUINES}</h2>
+      <ConsolaTauler consola={consola} mapa={mapa} cimRef={cimRef} ambImatges={ambImatges} alertaFora ara={ara} />
+    </>
+  );
+}
+
 /** El tauler dins d'un altre marc (la Wiki): llig les seues fonts, i la
     privacitat que el visitant va deixar a la Consola, pel seu compte.
-    Higiene d'amfitrió (261004) · La Wiki és pública: fora de DEV les dues
-    fonts no es demanen i el tauler diu que no hi ha dades. */
+    Higiene d'amfitrió (261004) · La Wiki és pública: fora de DEV les fonts
+    no es demanen i el tauler diu que no hi ha dades.
+    Pla 261027_0845 (Guarda Nocturna), §3 · També el Govern del Mestre, amb
+    el mateix cap que /consola (TaulerAmbGovern). useGovern es munta una sola
+    vegada per a tota la fitxa, com consola.json i el Mapa: fora de DEV no
+    demana /__iaia/govern.json, i el registre de certificacions és el d'este
+    navegador, el mateix que llig /consola. */
 export function ConsolaIncrustada() {
   const consola = useConsola({ actiu: import.meta.env.DEV === true });
   const mapa = useMapa({ actiu: import.meta.env.DEV === true });
+  const govern = useGovern({ actiu: import.meta.env.DEV === true });
   const [privat] = useState(() => llegixPrivacitat());
   return (
     <PrivacitatConsola.Provider value={privat}>
-      <ConsolaTauler consola={consola} mapa={mapa} />
+      <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={Date.now()} />
     </PrivacitatConsola.Provider>
   );
 }
@@ -396,7 +434,8 @@ export default function ConsolaSection() {
          Onada 11 (261010; prompt 261010_1730, tasca 5) · Davall de totes les targetes, l'Índex de
          la Consola (IndexConsola.jsx): text pur, H2, H3 per pàgina i H4 per targeta, cada títol
          enllaçat a la seua pàgina. Només ací, a /consola: la Consola incrustada de la Wiki
-         (ConsolaIncrustada) no el pinta i conserva els seus píxels. Dins del mateix proveïdor
+         (ConsolaIncrustada) no el pinta (el pla 261027_0845, §3, només hi afig el Govern del
+         Mestre; l'Índex, no). Dins del mateix proveïdor
          de privacitat: les entradetes porten rutes en <Mono>.
          Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Les targetes del tauler porten
          la il·lustració de la seua pàgina (ambImatges), i darrere de l'Índex, tancant el tauler,
@@ -413,13 +452,14 @@ export default function ConsolaSection() {
          navegació per encapçalaments ja no posen les nou targetes davall del Govern del Mestre.
          I l'alerta de vigilància continua al cim del tauler, damunt del govern (alertaFora).
          Derogat EN PART: el separador (Divisor) entre el govern i la sala de màquines, i
-         l'alerta just davant de les nou targetes. */
+         l'alerta just davant de les nou targetes.
+         Pla 261027_0845 (Guarda Nocturna), §3 · Eixe cap (alerta, govern, H2 de la sala i nou
+         targetes) és TaulerAmbGovern, el mateix de la Consola incrustada de la Wiki; ací, amb
+         les il·lustracions. El DOM de /consola no canvia. Derogat de l'Onada 0.5: «Fora de
+         ConsolaTauler: la Consola incrustada de la Wiki conserva els seus píxels». */
       <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}>
         <PrivacitatConsola.Provider value={privat}>
-          <AlertaVigilancia mapa={mapa.mapa} />
-          <SeccioGovern govern={govern} ara={ara} />
-          <h2>{TITOL_SALA_MAQUINES}</h2>
-          <ConsolaTauler consola={consola} mapa={mapa} cimRef={cim} ambImatges alertaFora ara={ara} />
+          <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges />
           <IndexConsola mapa={mapa.mapa} dades={consola.dades} locale={locale} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>

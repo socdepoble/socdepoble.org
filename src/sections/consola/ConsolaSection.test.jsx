@@ -862,13 +862,21 @@ test('/consola: una alerta al cim quan el Mapa porta un codi de vigilància, amb
   expect(screen.getAllByText('La vigilància del cervell està trencada')).toHaveLength(1);
 });
 
-test('la Consola incrustada de la Wiki conserva l’alerta just davant de les nou targetes', async () => {
+/* Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
+   porta el mateix cap que /consola (TaulerAmbGovern): l'alerta al cim, damunt
+   del Govern del Mestre, i una sola. Derogat: «la Consola incrustada de la
+   Wiki conserva l'alerta just davant de les nou targetes». */
+test('la Consola incrustada de la Wiki porta l’alerta al cim, damunt del Govern del Mestre, com /consola', async () => {
   fonts.mapa = MAPA_VIGILANCIA_TRENCADA();
-  render(<ConsolaIncrustada />);
+  const { container } = render(<ConsolaIncrustada />);
   await screen.findByText('Dades no disponibles en este entorn');
   const alerta = alertaDeVigilancia();
   expect(alerta).not.toBeNull();
-  expect(alerta.nextElementSibling).toBe(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
+  expect(container.firstElementChild).toBe(alerta);
+  expect(alerta.nextElementSibling).toBe(screen.getByRole('region', { name: 'Govern del Mestre' }));
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  expect(Boolean(alerta.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+  expect(screen.getAllByText('La vigilància del cervell està trencada')).toHaveLength(1);
 });
 
 test('/consola: sense codis de vigilància (o sense Mapa) no hi ha cap alerta', async () => {

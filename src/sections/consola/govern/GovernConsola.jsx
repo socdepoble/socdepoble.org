@@ -12,6 +12,12 @@
  * les nou targetes de la maquinària). La Consola incrustada de la Wiki
  * (ConsolaIncrustada), l'Índex de la Consola i el Diagnòstic del Mas no la
  * pinten: conserven els seus píxels.
+ * Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
+ * també pinta la secció (SeccioGovern), amb el mateix cap de tauler que
+ * /consola (TaulerAmbGovern, ConsolaSection.jsx): les quatre targetes porten
+ * a /consola/govern/<id>. L'Índex de la Consola i el Diagnòstic del Mas
+ * continuen sense pintar-la, i la Wiki no en porta cap dels dos. Derogat:
+ * «La Consola incrustada de la Wiki (ConsolaIncrustada) […] no la pinten».
  *
  * Cap número solt: les xifres del govern són les mètriques de les seues
  * quatre targetes (TargetaConsola, amb boina i pàgina pròpia); dins de les

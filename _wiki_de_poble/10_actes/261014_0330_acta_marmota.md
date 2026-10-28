@@ -79,6 +79,5 @@ Quan el Mestre torne a obrir el xat dient **"Sóc de Poble"**:
 
 ## Vincles
 - [[00_index]]
-- [[00_index_escriptori]]
 - `261014_0148_auditoria_gemini4`
 - `261014_0235_auditoria_codex`

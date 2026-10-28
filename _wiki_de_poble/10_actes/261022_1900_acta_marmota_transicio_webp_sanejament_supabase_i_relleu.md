@@ -100,8 +100,4 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[../90_arxiu_historic/261022_1645_pla_implementacio_transicio_webp_i_salvavides|261022_1645_pla_implementacio_transicio_webp_i_salvavides]]
-- [[../90_arxiu_historic/261022_1700_auditoria_gemini|261022_1700_auditoria_gemini]]
-- [[../90_arxiu_historic/261022_1725_auditoria_claude|261022_1725_auditoria_claude]]
 

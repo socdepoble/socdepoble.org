@@ -31,23 +31,30 @@ La **categoria** reflectix l'amfitrió o sistema al qual s'enxufa el paquet:
 - Per a la SPA autònoma (servidor estàtic/Sollutia): `AAMMDD_HHMM_estatic_spa_v[MAJOR].[MINOR].[PATCH].zip`
 - Per a altres amfitrions futurs: `AAMMDD_HHMM_sollutia_enxufe_vX.Y.Z.zip`, `AAMMDD_HHMM_joomla_enxufe_vX.Y.Z.zip`, `AAMMDD_HHMM_wikimedia_enxufe_vX.Y.Z.zip`
 
-## 2. Destinació Única (wordpress-plugin/builds/)
-D'acord amb la Llei de l'Enxufabilitat i per mantindre l'ordre, els productes finals i zips de prova del connector (plugin) van EXCLUSIVAMENT a la carpeta del mateix plugin:
-**Ruta canònica:** `wordpress-plugin/builds/`
+## 2. Destinació Única Satèl·lit (_builds_de_poble/wordpress/)
+D'acord amb la Llei de la Puresa de Capes i per no ofegar el repositori de codi font (`socdepoble.org`), tots els productes finals, binaris compilats i arxius ZIP del connector de WordPress van **EXCLUSIVAMENT** al magatzem satèl·lit extern:
+**Ruta canònica externa:** `../_builds_de_poble/wordpress/`
 
-Està **ESTRICTAMENT PROHIBIT** guardar arxius `.zip`, `.tar.gz` o carpetes de compilat soltes a:
-- L'arrel del repositori `/` (ni crear carpetes `release/` per a proves manuals)
+Està **ESTRICTAMENT PROHIBIT** guardar arxius `.zip`, `.tar.gz`, `.apk`, `.aab` o binaris compilats pesats a:
+- L'arrel del repositori `/`
+- L'arbre intern de `wordpress-plugin/` (ni a `wordpress-plugin/builds/` ni subcarpetes)
 - La carpeta `scratch/`
-- `_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/`
+- `_wiki_de_poble/04_escriptori/`
+
+Dins de `wordpress-plugin/builds/` només hi poden residir els manifests lleugers en text JSON per a l'actualitzador autònom (`stable.json`, signatures `.sig`), mai binaris ZIP.
 
 ## 3. Neteja de Brossa Temporal (Acte Reflex)
-El ZIP es queda on el deixa `wordpress-plugin/eines/empaqueta.mjs`: `wordpress-plugin/builds/`, i la variant del directori a `wordpress-plugin/builds/directori/`. No se'n fa cap còpia a `01_produccio/`, que és zona humana. Si la generació deixa directoris o fitxers temporals fora de `builds/`, es diu al Mestre a l'informe de la sessió: els retira ell o el cron d'higiene (`node tooling/higiene/cron_higiene.mjs`), i cap agent no esborra res.
+Quan es genere un paquet ZIP per a la comunitat o per a WordPress.org (`socdepoble.zip`), es diposita directament a `../_builds_de_poble/wordpress/`. Si cap eina d'empaquetat o procés intermedi deixa fitxers temporals o còpies locals de `.zip` a l'arbre de treball de `socdepoble.org`, s'han de moure immediatament a `_builds_de_poble/wordpress/` o purgar de l'arbre abans de tancar el torn.
 
-## 4. Retenció
-A `wordpress-plugin/builds/` i a `wordpress-plugin/builds/directori/` es conserven sempre: els paquets que nomena `stable.json` (el canal estable), el més recent de cada producte i carpeta, i els que cita l'última Acta Marmota de `_wiki_de_poble/10_actes/`. La resta són candidats a retirar. El cron d'higiene els llista cada dia a `.immunitari/higiene/aammdd.json` (L0) i només els trasllada a una paperera germana del repositori (`../.sdp-paperera-builds/retencio-ISO/`, amb `MANIFEST.json` i el sha256 de cada paquet) quan el Mestre confirma la proposta des d'un terminal: `node tooling/higiene/cron_higiene.mjs --l2` mostra la proposta i el seu codi, i `--l2 --confirma CODI` l'aplica (L2). El cron no esborra mai cap ZIP: la paperera germana no entra a cap purga, i la buida el Mestre a mà quan vulga. Els `*.zip` no es versionen (`.gitignore`).
+## 4. Retenció a _builds_de_poble/wordpress/
+A `_builds_de_poble/wordpress/` es conserven:
+- L'últim paquet vigent per a WordPress.org (`socdepoble.zip`).
+- Els paquets datats per versió (`AAMMDD_HHMM_wordpress_...zip`).
+- Els informes de validació JSON associats a cada paquet.
+Els fitxers ZIP mai es versionen a Git (`.gitignore`).
 
 ## 5. Constància
-El paquet que es lliura es cita amb el seu nom exacte a l'informe o a l'Acta Marmota de la sessió: és el que la retenció conserva.
+El paquet que es lliura es cita amb el seu nom exacte a l'informe o a l'Acta Marmota de la sessió: és el que la retenció a `_builds_de_poble/wordpress/` conserva.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

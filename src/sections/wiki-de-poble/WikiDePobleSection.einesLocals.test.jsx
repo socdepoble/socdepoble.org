@@ -18,7 +18,12 @@
    Ordre del Mestre (pla 261007_0012, §0.7) · Les carpetes de la Wiki (les
    fixes i les del manifest) i la portada porten el seu emoji
    (iconesWiki.js); la fitxa de la portada ja no porta la imatge, i la
-   capçalera de la portada oberta, sí. */
+   capçalera de la portada oberta, sí.
+   Pla 261027_0845 (Guarda Nocturna), §3 · Les eines (els seus botons)
+   continuen sent només de desenvolupament; la seua documentació pública es
+   llig fora de DEV (documentacioMaquinariaActiva, provada ací en pur i en mode
+   producció a WikiDePobleSection.produccio.test.jsx). En desenvolupament, cap
+   ítem de documentació: hi són les eines, com sempre. */
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -58,7 +63,9 @@ vi.mock('../tractors/PanellAgents.jsx', () => ({ default: () => <p>Doble dels Ag
 vi.mock('../gestoria/tauler/ShellGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
 
-import WikiDePobleSection, { AVIS_EINA_LOCAL_SENSE_TRADUCCIO, modulsLocalsActius } from './WikiDePobleSection.jsx';
+import WikiDePobleSection, {
+  AVIS_EINA_LOCAL_SENSE_TRADUCCIO, DATA_DOCUMENTACIO, TIPUS_DOCUMENTACIO, documentacioMaquinariaActiva, modulsLocalsActius
+} from './WikiDePobleSection.jsx';
 import * as modulWiki from './WikiDePobleSection.jsx';
 import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 
@@ -127,6 +134,63 @@ describe('modulsLocalsActius: la decisió, pura', () => {
   });
 });
 
+/* Pla 261027_0845 (Guarda Nocturna), §3 · Transparència radical: la
+   documentació pública de les tres peces, la decisió pura. */
+describe('documentacioMaquinariaActiva: la documentació pública, pura', () => {
+  test('amb DEV cert, cap ítem: en desenvolupament hi són les eines', () => {
+    expect(documentacioMaquinariaActiva({ DEV: true })).toEqual({ items: [] });
+  });
+
+  test.each([
+    ['DEV fals (el build de producció)', { DEV: false, PROD: true }],
+    ['DEV com a text', { DEV: 'true' }],
+    ['sense DEV', {}],
+    ['sense entorn', undefined],
+    ['entorn nul', null]
+  ])('%s: les tres peces, amb la fitxa de l’eina i el tipus de la documentació (el costat segur)', (_cas, env) => {
+    const eines = modulsLocalsActius({ DEV: true }).items;
+    const { items } = documentacioMaquinariaActiva(env);
+    /* Revisió adversarial del bloc B (Guarda Nocturna 261027) · Proves
+       actualitzades a propòsit: la data del text (T51) a attributes.date, menys
+       al BIOS, que no en té, i el subtítol dels Sentinelles sense «aprova’ls».
+       Derogat: «la fitxa de l’eina» sencera, amb el seu subtítol. */
+    const SUBTITOL_SENTINELLES = 'Els set sentinelles d’autonomia: què observen i com s’aproven';
+    expect(items).toEqual(eines.map((eina) => ({
+      ...eina,
+      subtitle: eina.id === 'sentinelles_panell' ? SUBTITOL_SENTINELLES : eina.subtitle,
+      attributes: {
+        type: TIPUS_DOCUMENTACIO,
+        author: 'Sistema',
+        ...(eina.id === 'agents_panell' ? {} : { date: DATA_DOCUMENTACIO[eina.id] })
+      }
+    })));
+    expect(items.map((i) => [i.id, i.categoryId, i.icon])).toEqual([
+      ['tractors_aprovacio', 'maquinaria_cat', '🚜'], ['sentinelles_panell', 'maquinaria_cat', '💂'], ['agents_panell', 'maquinaria_cat', '🤖']
+    ]);
+    expect(TIPUS_DOCUMENTACIO).toBe('Documentació');
+  });
+
+  /* T51 (regla del Mestre, 260928): «Cap document existeix sense data». Una
+     data real, amb hora i zona (la pastilla és completa: data i hora), i mai
+     posterior al moment de la prova (no és la d'ara: és la de la versió). */
+  test('T51 · la data de cada text és un instant real, amb hora i zona, i el BIOS no en té', () => {
+    expect(Object.keys(DATA_DOCUMENTACIO)).toEqual(['tractors_aprovacio', 'sentinelles_panell']);
+    for (const [id, data] of Object.entries(DATA_DOCUMENTACIO)) {
+      expect(data, id).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?[+-]\d{2}:\d{2}$/);
+      expect(Number.isNaN(Date.parse(data)), id).toBe(false);
+      expect(Date.parse(data), id).toBeLessThanOrEqual(Date.now());
+    }
+  });
+
+  /* Una pàgina que només es llig no convida a cap acció que no fa. */
+  test('cap subtítol ni entradilla de la documentació convida a aprovar', () => {
+    for (const item of documentacioMaquinariaActiva({ DEV: false }).items) {
+      expect(item.subtitle, item.id).not.toMatch(/aprova[’']ls/i);
+      expect(item.lead ?? '', item.id).not.toMatch(/aprova[’']ls/i);
+    }
+  });
+});
+
 describe('en desenvolupament', () => {
   test('la Maquinària de la IAIA va darrere de la portada; la Consola i les tres eines hi pengen, i ja no hi ha carpeta de la Consola ni dels Tractors', () => {
     render(<WikiDePobleSection />);
@@ -139,6 +203,8 @@ describe('en desenvolupament', () => {
     expect(maquinaria.icon).toBe('🎛️');
     expect(model.items.filter((i) => i.categoryId === 'maquinaria_cat').map((i) => i.id))
       .toEqual(['consola_termodinamica', ...LOCALS.map(([id]) => id)]);
+    // Pla 261027_0845 (Guarda Nocturna), §3 · En desenvolupament, les eines: cap ítem de documentació.
+    expect(model.items.filter((i) => i.attributes?.type === TIPUS_DOCUMENTACIO)).toEqual([]);
     for (const item of model.items.filter((i) => i.categoryId === 'maquinaria_cat')) {
       expect(item.categoryIds, item.id).toEqual(['maquinaria_cat']);
       // Regla del glif (261004): cap fitxa de la Maquinària hereta la carpeta.

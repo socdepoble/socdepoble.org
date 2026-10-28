@@ -13,6 +13,11 @@ const ERROR_DE_TIPUS = Object.freeze({
  * El Govern del Mestre per a totes les pàgines de /consola: es munta una
  * sola vegada a ConsolaSection (com consola.json i el Mapa), i navegar entre
  * el tauler i les quatre pàgines no torna a llegir res ni perd el fitxer obert.
+ * Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
+ * (ConsolaIncrustada) en munta un altre, també una sola vegada per a tota la
+ * fitxa, amb `actiu` només en desenvolupament: fora de DEV no demana
+ * /__iaia/govern.json. Derogat: «es munta una sola vegada a ConsolaSection»
+ * (ara, una per a /consola i una per a la fitxa de la Wiki).
  *
  *  · `servidor`: la lectura de /__iaia/govern.json (useFontDev). Fora de DEV,
  *    o mentre MarIA no endolle la ruta, 'absent'.

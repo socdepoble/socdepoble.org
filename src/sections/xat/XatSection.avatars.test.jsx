@@ -59,6 +59,14 @@ vi.mock('../text/TextSection', async () => {
   const { createElement } = await import('react');
   return { default: ({ pageKey }) => createElement('div', { 'data-testid': 'document-per-defecte' }, pageKey) };
 });
+/* Pla 261027_0845 (Guarda Nocturna), P1-55 · Amb ?comunitat= en ample, la
+   columna dreta pinta la pàgina viva de la comunitat (diferida): una marca,
+   que les proves d'ací miren la columna de llista i els avatars. Les seues
+   proves són a components/FitxaVivaDeComunitat.test.jsx. */
+vi.mock('./components/FitxaVivaDeComunitat.jsx', async () => {
+  const { createElement } = await import('react');
+  return { default: () => createElement('div', { 'data-testid': 'fitxa-viva-de-comunitat' }) };
+});
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', pageCopy: {}, towns: mocks.towns }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ t: (_, alternativa) => alternativa, resolveAsset: (v) => v }),
@@ -385,37 +393,120 @@ test('una foto pujada (sdp-media) en un node sense la capacitat «mitjans»: ini
 });
 
 
-test.each([null, 'fake-javi', 'fake-iaia'])('sense sessió els botons d’accés són visibles també al peu del fil %s', (filId) => {
-  mocks.threadId = filId;
+/* Pla 261027_0845 (Guarda Nocturna), P1-54 · Desempapussament: sense sessió,
+   els tres botons d'accés viuen NOMÉS a l'aterratge genèric (/xat sense fil,
+   comunitat, vista ni conversa demanada). Revertix XATR-1. */
+test('sense sessió, a l’aterratge, una sola parella d’accés al peu del cos de la llista', () => {
   munta(senseSessio());
-  const tornar = filId ? `/xat/${filId}` : '/xat';
   fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
-  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
   fireEvent.click(screen.getByRole('button', { name: 'Registrar-se' }));
-  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ mode: 'crear', tornar }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ mode: 'crear', tornar: '/xat' }));
   /* Gauntlet 261022_0225 (XAT-4) · Una sola parella a la pantalla: cap
      «Registra't» del compositor ni cap enllaç cru a /registre. */
   expect(screen.getAllByRole('button', { name: /^(Connectar-se|Registrar-se)$/ })).toHaveLength(2);
   expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
   expect(document.querySelector('a[href^="/registre"]')).toBeNull();
-  /* XAT-1 · Al DOM: a la llista, l'accés és l'últim fill del cos amb scroll,
-     darrere de la llista; a la conversa, el seu peu. La cascada que el deixa
-     baixar al fons i compactar-se en una pantalla baixa, jsdom no la resol:
-     la comprova XatSection.acces.capes.test.js. */
+  /* XAT-1 · Al DOM: l'accés és l'últim fill del cos amb scroll, darrere de
+     la llista. La cascada que el deixa baixar al fons i compactar-se en una
+     pantalla baixa, jsdom no la resol: la comprova
+     XatSection.acces.capes.test.js. */
   const acces = document.querySelector('.sdp-xat-acces');
-  if (filId) expect(acces.parentElement.classList.contains('sdp-xat-conversa')).toBe(true);
-  else {
-    expect(peuDAccesAlCos()).toBe(acces.parentElement);
-    expect(acces.parentElement.previousElementSibling).toBe(llista());
-  }
+  expect(peuDAccesAlCos()).toBe(acces.parentElement);
+  expect(acces.parentElement.previousElementSibling).toBe(llista());
+});
+
+/* P1-54 · Cap rastre de l'accés: ni la parella, ni «Descarrega l'App», ni el
+   peu, ni el cos amb peu; i, com sempre (XAT-4), cap «Registra't» ni cap
+   enllaç cru a /registre. */
+function capAcces() {
+  expect(document.querySelectorAll('.sdp-xat-acces')).toHaveLength(0);
+  expect(document.querySelectorAll('.sdp-xat-llista__peu--acces')).toHaveLength(0);
+  expect(document.querySelectorAll('.sdp-xat-cos--amb-peu')).toHaveLength(0);
+  expect(screen.queryAllByRole('button', { name: /^(Connectar-se|Registrar-se|Descarrega l'App)$/ })).toEqual([]);
+  expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
+  expect(document.querySelector('a[href^="/registre"]')).toBeNull();
+}
+
+/* P1-54 · Dins d'una conversa (Javi Llinares, la IAIA, un canal d'una
+   comunitat) els tres botons desapareixen sencers: del peu de la conversa i
+   del peu de la llista que l'acompanya en ample. */
+test.each(['fake-javi', 'fake-iaia', 'fake-poble-avisos'])('sense sessió, dins del fil %s no hi ha cap botó d’accés', (filId) => {
+  mocks.threadId = filId;
+  munta(senseSessio());
+  expect(document.querySelector('.sdp-xat-conversa')).toBeTruthy();
+  expect(llista()).toBeTruthy();
+  capAcces();
+});
+
+/* P1-54 · Les rutes de pas tampoc no són l'aterratge: «Escriu-li» (?amb=),
+   «Comentar» (?sobre=, que sense sessió porta a entrar), una fila d'ajuda
+   (/xat/sdp-per-defecte:<clau>) i el fil d'una comunitat (/xat/<comunitat>). */
+test.each([
+  ['?amb=', null, 'amb=ajuda:ia'],
+  ['?sobre=', null, 'sobre=pagina:/iaia&titol=IAIA%20MarIA&ruta=/iaia'],
+  ['una fila d’ajuda', 'sdp-per-defecte:iaia', ''],
+  ['el fil d’una comunitat', 'fake-poble', '']
+])('sense sessió, la ruta de pas %s no porta l’accés', (_, filId, consulta) => {
+  mocks.threadId = filId;
+  mocks.params = new URLSearchParams(consulta);
+  munta(senseSessio());
+  capAcces();
+});
+
+/* P1-54 · L'aterratge és /xat sense fil, comunitat, vista ni conversa
+   demanada: ?context= (Connectar, «Nova conversa») no en trau, perquè tancar
+   el diàleg deixa ?context= a la URL i l'accés no tornaria. */
+test('sense sessió, /xat?context= continua sent l’aterratge i porta l’accés', () => {
+  mocks.params = new URLSearchParams('context=Hola');
+  munta(senseSessio());
+  peuDAccesAlCos();
+  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat?context=Hola' }));
+});
+
+/* P1-54 · Tornar a /xat (la fletxa d'una conversa o d'una comunitat) hi
+   torna a portar l'accés, al mateix lloc, amb la tornada a /xat. */
+test.each([
+  ['una conversa', 'fake-iaia', ''],
+  ['la comunitat de Sóc de Poble', null, 'comunitat=fake-sdp'],
+  ['la comunitat del poble', null, 'comunitat=fake-poble']
+])('sense sessió, tornar a /xat des de %s hi torna a portar l’accés', (_, filId, consulta) => {
+  mocks.threadId = filId;
+  mocks.params = new URLSearchParams(consulta);
+  const xat = senseSessio();
+  const { rerender } = munta(xat);
+  capAcces();
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams();
+  rerender(<XatContext.Provider value={xat}><XatSection /></XatContext.Provider>);
+  const peu = peuDAccesAlCos();
+  expect(peu.previousElementSibling).toBe(llista());
+  expect(screen.getAllByRole('button', { name: /^(Descarrega l'App|Connectar-se|Registrar-se)$/ })).toHaveLength(3);
+  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
+});
+
+/* P1-54 · Amb sessió, l'accés no ix mai: ni a l'aterratge, ni en una
+   conversa, ni en una comunitat, ni en una vista del rail. */
+test.each([
+  ['l’aterratge', null, ''],
+  ['una conversa', 'f-pepa', ''],
+  ['una comunitat', null, 'comunitat=c-torre'],
+  ['la vista Comunitats', null, 'vista=comunitats']
+])('amb sessió, %s no porta mai l’accés', (_, filId, consulta) => {
+  mocks.threadId = filId;
+  mocks.params = new URLSearchParams(consulta);
+  munta(ambSessio());
+  capAcces();
 });
 
 /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38) · Damunt
    de la parella, «Descarrega l'App»: la píndola de sèrie, entre la frase i la
-   parella, una sola a la pantalla (també al peu d'un fil), porta a
-   /descarregues, l'adreça curta de la pàgina (App.jsx). */
-test.each([null, 'fake-iaia'])('sense sessió, «Descarrega l’App» va damunt de la parella i porta a /descarregues (fil %s)', (filId) => {
-  mocks.threadId = filId;
+   parella, una sola a la pantalla, porta a /descarregues, l'adreça curta de
+   la pàgina (App.jsx). P1-54 · Només a l'aterratge: dins d'un fil, cap
+   (capAcces, damunt). */
+test('sense sessió, a l’aterratge «Descarrega l’App» va damunt de la parella i porta a /descarregues', () => {
   munta(senseSessio());
   expect(screen.getAllByRole('button', { name: "Descarrega l'App" })).toHaveLength(1);
   const boto = screen.getByRole('button', { name: "Descarrega l'App" });
@@ -458,24 +549,25 @@ function peuDAccesAlCos() {
   return peu;
 }
 
-/* Gauntlet 261022_0225 (XATR-1) · Sense sessió, la parella d'accés no és
-   només de la llista: com quan vivia davall del cos, també la porten la fitxa
-   d'una comunitat i «Comunitats», dins del seu cos amb scroll. */
+/* Pla 261027_0845 (Guarda Nocturna), P1-54 · Revertix XATR-1 (Gauntlet
+   261022_0225): sense sessió, la fitxa d'una comunitat («Sóc de Poble»,
+   «Gent de la Torre») i la vista «Comunitats» ja no porten l'accés al peu
+   del seu cos. Només l'aterratge. */
 test.each([
-  ['la fitxa d’una comunitat', 'comunitat=fake-poble', '.sdp-xat-fitxa-comunitat'],
+  ['la fitxa de la comunitat del poble', 'comunitat=fake-poble', '.sdp-xat-fitxa-comunitat'],
+  ['la fitxa de la comunitat de Sóc de Poble', 'comunitat=fake-sdp', '.sdp-xat-fitxa-comunitat'],
   ['la vista Comunitats', 'vista=comunitats', '.sdp-xat-vista-comunitats']
-])('sense sessió, %s porta l’accés al peu del seu cos', (_, consulta, contingut) => {
+])('sense sessió, %s no porta l’accés', (_, consulta, contingut) => {
   mocks.params = new URLSearchParams(consulta);
   munta(senseSessio());
-  const peu = peuDAccesAlCos();
-  expect(peu.previousElementSibling.matches(contingut)).toBe(true);
-  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
-  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: `/xat?${consulta}` }));
+  expect(document.querySelector(contingut)).toBeTruthy();
+  capAcces();
 });
 
-/* XATR-1 · La cerca: la llista de filtres en obrir el camp i els resultats
-   amb un terme. El peu és el mateix node que davall de la llista (obrir o
-   tancar la cerca no el torna a muntar davall del dit). */
+/* XATR-1 · La cerca (a l'aterratge, l'únic lloc de l'accés des de P1-54): la
+   llista de filtres en obrir el camp i els resultats amb un terme. El peu és
+   el mateix node que davall de la llista (obrir o tancar la cerca no el torna
+   a muntar davall del dit). */
 test('sense sessió, la cerca conserva l’accés al peu del cos, sense tornar-lo a muntar', () => {
   munta(senseSessio());
   const peu = peuDAccesAlCos();
@@ -488,16 +580,13 @@ test('sense sessió, la cerca conserva l’accés al peu del cos, sense tornar-l
   expect(peuDAccesAlCos()).toBe(peu);
 });
 
-/* XATR-1 · Multimèdia pinta el seu cos (VistaMultimedia, fora d'esta
-   secció): l'accés hi va darrere, a la columna, com abans. */
-test('sense sessió, la vista Multimèdia porta l’accés darrere del seu cos', () => {
-  mocks.params = new URLSearchParams('vista=multimedia');
+/* P1-54 · Multimèdia i les vistes «En construcció» pinten el seu cos
+   (fora d'esta secció) i ja no porten l'accés darrere: no són l'aterratge. */
+test.each(['multimedia', 'telefonades'])('sense sessió, la vista %s no porta l’accés', (vista) => {
+  mocks.params = new URLSearchParams(`vista=${vista}`);
   munta(senseSessio());
-  const totes = document.querySelectorAll('.sdp-xat-acces');
-  expect(totes).toHaveLength(1);
-  const peu = totes[0].parentElement;
-  expect([...peu.classList]).toEqual(['sdp-xat-llista__peu', 'sdp-xat-llista__peu--acces']);
-  expect(peu.previousElementSibling.classList.contains('sdp-workspace-column__body')).toBe(true);
+  expect(screen.queryByRole('list', { name: 'Converses' })).toBeNull();
+  capAcces();
 });
 
 /* Gauntlet 261022_0225 (XAT-6) · Sense sessió, un filtre sense cap conversa

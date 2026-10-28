@@ -11,6 +11,11 @@
  * (polsConsola.js): un id per pàgina, la seua ruta i el seu copy. El grup no
  * entra a IDS_PAGINES, i per això ni l'Índex de la Consola ni el Diagnòstic
  * del Mas ni la Consola incrustada de la Wiki canvien.
+ * Pla 261027_0845 (Guarda Nocturna), §3 · El grup continua fora
+ * d'IDS_PAGINES, i l'Índex i el Diagnòstic continuen igual; la Consola
+ * incrustada de la Wiki, no: ara pinta la secció del govern pel mateix cap
+ * de tauler que /consola (TaulerAmbGovern, ConsolaSection.jsx), no per
+ * IDS_PAGINES. Derogat: «ni […] la Consola incrustada de la Wiki canvien».
  *
  * El copy és provisional (el patró de COPY_PROVISIONAL de consolaPagines.js):
  * quan el Mestre aprove la clau PAGE_COPY.consola.govern, mana eixa.

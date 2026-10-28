@@ -14,8 +14,6 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261027_0845_prompt_guarda_nocturna_claude_codex_gemini]]
-- [[261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]]
 - [[./261027_0730_og_llibre_d_or_codex.png|Prototip targeta Open Graph Llibre d'Or]] · Mestre 261027: prototip visual Open Graph WhatsApp P1-61
 - [[261027_0730_reforma_editorial_gemini]] · Mestre 261027: reforma editorial canònica P1-60 i P1-63
 - [[261027_0730_solucio_opengraph_i_copy_codex]] · Mestre 261027: P1-60/P1-61/P1-63 per a integrar amb Claude; [targeta social PNG](./261027_0730_og_llibre_d_or_codex.png)

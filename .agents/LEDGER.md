@@ -1062,5 +1062,28 @@ Ordre humana prompt mestre 0210 executada amb plans CAS i leases. Skills fase1 h
 
 Informe261026_1615_auditoria_codex validat i Llibre/ESTAT actualitzats. Quatre bloquejants: aïllament entre comptes, consum destructiu abans de preparar, inbox iOS no recuperable i provider Android que immobilitza la cua. Cinc sondes web reexecutades amb lògica real i dobles explícits; natiu és revisió de codi/APK existent, sense prova física ni nou build. Precommit3171Vitest+262Node, Node49/2omissions, dirigides193/2omissions; bateries solapades. Contrast Claude i Gemini; no consens de publicació, neteja de sessió declarada per Gemini absent al codi. Cap font de producte, dependència, secret, remot, SQL, commit/push/desplegament, carpeta nova ni cron propi. Fonts57sensecanvis al tall; processos/suites propis acabats. Tancament global Wiki/SCC continua roig; no es relaxa ni es fabrica verification. Cos anterior preservat i checksum previ comprovat; hash nou només per afegir este relleu.
 
+## 2026-10-27T08:34:42.552Z · Codex · Guarda Nocturna: auditoria i propostes en còpia
 
-<!-- HASH: 00c29e99acfa75691a2118f4666fad68f8c70efca554bb3e4211f291229ac20f -->
+Torn `torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`. Informe [261027_0917_auditoria_codex](../_wiki_de_poble/04_escriptori/261027_0917_auditoria_codex.md); pla 0845 aprovat vinculat. P1-54 candidat v2: 197/197; Bloc3 candidat: 76/76, revisió26/26; CAS3/3; T1-06 dos fallades esperades. Precommit inicial 3.627 verdes i dues omissions. Fonts vives de codi intactes per Codex; edicions concurrents de Claude observades i no atribuïdes al nostre torn. Llibre Mestre i ESTAT actualitzats preservant historial. Cap fita nova marcada FET, cap commit ni desplegament, cap cron propi. Tancament formal es comprova separadament i pot rebutjar canvis globals de codi fora de l'abast documental.
+
+### 2026-10-27T08:38:25.694Z · Rèplica i comprovació final Codex · torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83
+
+Informe v1.1: Gemini0920 llegit íntegre i esmenat amb fonts i reproduccions a GN-C09. Document/Olivera/SCC a0; tancament --turn-id exit1 per canvis de codi concurrents fora d'abast documental; huit checks d'entorn a0. No close forçat ni initial alterat.
+
+## 2026-10-27T10:07:05.309Z · Codex · Rèplica integrada i WordPress.org preventiu
+
+Torn `torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83`; [dictamen v2](../_wiki_de_poble/04_escriptori/261027_0917_auditoria_codex.md). Encàrrec de només auditoria: cap src/wordpress-plugin/tests viu modificat. P1-54 conforme; P1-55 normal conforme, P2 recuperació reproduït i control causal1/1. Bateria comunitats283/283, baselineWP21/21+29/29; model mínim futur46/50 per quatre expectatives. PodaClaude validada, recomanat executor; TCC coherent amb límit de UnifiedLog. Informe, Llibre i ESTAT actualitzats additivament; cap operació de launchd, TCC, DNS, skill, segell, commit o desplegament. Cap cron propi.
+
+### 2026-10-27T10:13:26.709Z · Codex · Addenda WP real · torn_bbd0c797-e682-45b7-a5b7-1078fa6a1b83
+
+Informe v2.1 GN-R08: fontWordPress canviada per Claude auditada en captura estable; plugin22/22, paquet26/29. Splitidioma-local conservaexternal; tres expectativesZIP i casPHPca_valencia pendents al tall. Cap font viva o configuració modificada per Codex. Tancament noméslectura exit1 per delta de codi fora d'abast documental, huitchecks entorn a0; document i SCC a0.
+
+## 2026-10-27T11:17:22.631Z · Codex · P1-61 OpenGraph i diàleg d'Escriptori
+
+Torn `torn_1537b5b0-8030-4c15-a62f-f78350f664e4`. Pla canònic [[261027_1154_pla_implementacio_opengraph_primera_imatge]] i GN-OG01 de l'auditoria 0917 v3. Contrast HTTP real, galeria visual i proves adversarials sobre còpia immutable; sis límits del prototip i contaminació del baseline reproduïts. Proposta Firebase preservat, port públic neutral i no-store per a revocables. Rèplica a Gemini §7 amb acords i esmenes, sense atribuir consens total. Només documents, cap codi ni deploy. Llibre Mestre i ESTAT actualitzats; cap cron propi.
+
+### 2026-10-27T11:21:07.297Z · Codex · Verificació documental P1-61
+
+Pla 1154 i dictamen 0917 vàlids. Tancament --check del torn_1537b5b0 vàlid amb huit portes a0. Terminador final del LEDGER corregit per compatibilitat amb verify-ledger; cos anterior preservat. Revisió del pressupost de TTFB i limitació UA en Firebase incorporada, cap font editada.
+
+<!-- HASH: 58f682753c7aed4fb964205d971f5a8a50addac8fd9c558355d8614089cf9660 -->

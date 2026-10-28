@@ -99,7 +99,6 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
 - [[261014_0330_acta_marmota]]
 - `261014_0412_auditoria_claude`
 - `261014_0415_auditoria_gemini4`

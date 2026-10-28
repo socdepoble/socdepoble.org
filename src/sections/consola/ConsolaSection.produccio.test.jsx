@@ -52,6 +52,8 @@ describe('fora de DEV, cap petició a /__iaia/*', () => {
     const peticio = ambFetch();
     render(<ConsolaIncrustada />);
     expect(screen.getByRole('navigation', { name: 'Pàgines de la Consola' })).toBeTruthy();
+    // Pla 261027_0845 (Guarda Nocturna), §3 · També el Govern del Mestre, sense demanar govern.json.
+    expect(screen.getByRole('region', { name: 'Govern del Mestre' })).toBeTruthy();
     await act(async () => { await Promise.resolve(); });
     expect(peticio).not.toHaveBeenCalled();
   });
@@ -87,12 +89,15 @@ describe('fora de DEV, cap petició a /__iaia/*', () => {
   });
 });
 
-/* El contrast: a DEV les dues fonts es demanen, com sempre. Sense açò, la
-   prova de dalt passaria també amb un fetch que no es crida mai per error. */
-test('a DEV la Consola incrustada llig les dues fonts del middleware', async () => {
+/* El contrast: a DEV les fonts es demanen, com sempre. Sense açò, la
+   prova de dalt passaria també amb un fetch que no es crida mai per error.
+   Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada també pinta
+   el Govern del Mestre: a DEV llig la seua matriu (/__iaia/govern.json), una
+   sola vegada, com les altres dues. Derogat: «les dues fonts del middleware». */
+test('a DEV la Consola incrustada llig les tres fonts del middleware, cada una una sola vegada', async () => {
   vi.stubEnv('DEV', true);
   const peticio = ambFetch();
   render(<ConsolaIncrustada />);
   await act(async () => { await Promise.resolve(); });
-  expect(demanatsIaia(peticio).sort()).toEqual(['/__iaia/consola.json', '/__iaia/mapa.json']);
+  expect(demanatsIaia(peticio).sort()).toEqual(['/__iaia/consola.json', '/__iaia/govern.json', '/__iaia/mapa.json']);
 });

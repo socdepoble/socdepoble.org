@@ -85,5 +85,4 @@ Aquesta acta marmota tanca netament la sessió actual. El Mestre pot eixir d'Ant
 
 ## Vincles
 - [[00_index]]
-- [[03_llibre_mestre_tasques_i_idees]]
 - [core-secretaria-auditoria](../../.agents/skills/core-secretaria-auditoria/SKILL.md)

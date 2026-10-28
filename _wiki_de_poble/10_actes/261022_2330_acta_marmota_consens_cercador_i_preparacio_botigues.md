@@ -85,9 +85,4 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[../90_arxiu_historic/261022_1955_pla_implementacio_cercador_universal|261022_1955_pla_implementacio_cercador_universal]]
-- [[../90_arxiu_historic/261022_2210_auditoria_gemini|261022_2210_auditoria_gemini]]
-- [[../90_arxiu_historic/261022_2220_auditoria_claude|261022_2220_auditoria_claude]]
 - [[261022_2215_acta_marmota_cercador_universal_desbloqueig_supabase_i_relleu]]
-- [[03_llibre_mestre_tasques_i_idees]]

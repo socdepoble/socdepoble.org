@@ -134,4 +134,3 @@ requereix_auditoria: true
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

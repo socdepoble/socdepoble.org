@@ -17,6 +17,14 @@
  * consolaDemanaSessio: així les dues branques es proven (a vitest DEV sempre
  * és true). Només un true literal obri; qualsevol altra cosa tanca.
  *
+ * Pla 261027_0845 (Guarda Nocturna), §3 · Transparència radical: a la Wiki,
+ * fora de desenvolupament, la carpeta ix també per a tothom amb la
+ * documentació pública de Tractors, Sentinelles i el BIOS
+ * (WikiDePobleSection · documentacioMaquinariaActiva). Esta funció continua
+ * decidint el que no és públic: la Consola incrustada i, en desenvolupament,
+ * les eines amb botons. La pantalla «Assignar» encara la llig per a la
+ * carpeta sencera.
+ *
  * @param {{ DEV?: unknown, esSuperadmin?: unknown }} [entorn]
  * @returns {boolean}
  */

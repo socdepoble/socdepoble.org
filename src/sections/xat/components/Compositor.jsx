@@ -117,10 +117,13 @@ export default function Compositor({
        línia i la mateixa classe, amb la icona de persona.
        Ordre del Mestre (261020, 23:30) · L'accés directe a la pàgina de
        registre des del peu del xat. Gauntlet 261022_0225 (XAT-4) · El fa la
-       parella «Connectar-se» / «Registrar-se» del peu de la conversa
-       (AccesAlXat, XatSection: pel router, cada una amb el seu mode i la
-       tornada). L'enllaç cru «Registra't» d'ací obria «Entrar», recarregava
-       la pàgina i repetia el nom del botó que crea el compte: ja no hi és. */
+       parella «Connectar-se» / «Registrar-se» (AccesAlXat, XatSection: pel
+       router, cada una amb el seu mode i la tornada). L'enllaç cru «Registra't»
+       d'ací obria «Entrar», recarregava la pàgina i repetia el nom del botó
+       que crea el compte: ja no hi és.
+       Pla 261027_0845 (Guarda Nocturna), P1-54 · La parella viu només a
+       l'aterratge genèric del Xat: un fil de mostra o de només lectura ja no
+       en porta, i este avís no hi afig cap botó. */
     const avisPropi = typeof fil.avisNomesLectura === 'string' && fil.avisNomesLectura ? fil.avisNomesLectura : null;
     return (
       <div className="sdp-xat-compositor-barra-avis">

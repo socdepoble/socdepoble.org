@@ -114,9 +114,5 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[../90_arxiu_historic/261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia|261021_0015_pla_implementacio_llancament_apps_i_desbloqueig_sollutia]]
-- [[../90_arxiu_historic/261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia|261021_0015_prompt_claude_llancament_apps_i_desbloqueig_sollutia]]
-- [[../90_arxiu_historic/261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia|261021_0015_prompt_gemini_auditoria_llancament_apps_i_sollutia]]
 - [[261020_2345_acta_marmota_relleu_salfumant_markdown_i_llancament_app]]
 

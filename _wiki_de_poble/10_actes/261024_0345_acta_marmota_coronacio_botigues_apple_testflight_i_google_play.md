@@ -60,6 +60,4 @@ Aquesta matinada s'ha assolit el cim operatiu de la distribució mòbil de **Só
 
 ## Vincles
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[03_llibre_mestre_tasques_i_idees]]
 - [[261024_0035_acta_marmota_consens_trio_botigues_i_oficina_de_poble]]

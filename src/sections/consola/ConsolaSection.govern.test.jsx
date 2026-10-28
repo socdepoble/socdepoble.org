@@ -11,7 +11,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
    màquina, peu de dades), l'estat buit honest mentre govern.json no existix,
    el fitxer obert en este navegador, la caducitat que no pinta mai de verd, el
    balanç amb el trasllat, la certificació on només s'afig i els resums en
-   paraules planes. La Consola incrustada de la Wiki no el pinta ni el llig.
+   paraules planes.
+   Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
+   pinta el mateix govern, amb el mateix cap que /consola, i el llig una sola
+   vegada. Derogat: «La Consola incrustada de la Wiki no el pinta ni el llig».
    Només es falsegen les fonts, la sessió i el que no té res a vore (SEO,
    avisos, graf, la closca de la UniversalPage). */
 const fonts = vi.hoisted(() => ({ govern: null, sessio: null }));
@@ -201,14 +204,49 @@ describe('el tauler de /consola', () => {
     expect(metriques(perTitol(navGovern())['Comunicació amb les IAs'])).toEqual(['2 P1 obertes', '3 responsables', '1 fila sense responsable']);
   });
 
-  test('la Consola incrustada de la Wiki no llig ni pinta el govern: conserva els seus píxels', async () => {
+  /* Pla 261027_0845 (Guarda Nocturna), §3 · La Consola incrustada de la Wiki
+     pinta les mateixes quatre targetes que /consola, amb les mateixes xifres,
+     i porten a /consola/govern/<id> (la ruta de la Consola, com les nou porten
+     a /consola/<pàgina>), no a cap ítem de la Wiki. La matriu es llig una sola
+     vegada per a tota la fitxa, també quan la Wiki la torna a pintar. Derogat:
+     «la Consola incrustada de la Wiki no llig ni pinta el govern». */
+  test('la Consola incrustada de la Wiki pinta el mateix govern que /consola, el llig una sola vegada i les targetes porten a /consola/govern/<id>', async () => {
     fonts.govern = delServidor();
-    render(<RouterProvider><ConsolaIncrustada /></RouterProvider>);
+    await obri('/consola');
+    const deLaConsola = [...navGovern().querySelectorAll('article.sp-card')].map((t) => [
+      t.querySelector('h3').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
+    ]);
+    const sala = seccio().nextElementSibling;
+    expect(sala.textContent).toBe(TITOL_SALA_MAQUINES);
+    cleanup();
+    carregaGovern.crides = 0;
+
+    window.history.replaceState(null, '', '/wikidepoble?item=consola_termodinamica');
+    const vista = render(<RouterProvider><ConsolaIncrustada /></RouterProvider>);
     await act(async () => {});
-    expect(screen.queryByRole('region', { name: TITOL_GOVERN })).toBeNull();
-    expect(screen.queryByRole('navigation', { name: ETIQUETA_NAV_GOVERN })).toBeNull();
-    expect(carregaGovern.crides).toBe(0);
-    expect(screen.getByRole('navigation', { name: 'Pàgines de la Consola' })).toBeTruthy();
+    await waitFor(() => expect(metriques(perTitol(navGovern())['Estat dels requeriments'])).not.toEqual([]));
+    const s = seccio();
+    expect(s.tagName).toBe('SECTION');
+    expect([...s.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_GOVERN]);
+    const targetes = [...navGovern().querySelectorAll('article.sp-card')];
+    expect(targetes).toHaveLength(4);
+    expect(targetes.map((t) => [
+      t.querySelector('h3').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
+    ])).toEqual(deLaConsola);
+    expect(targetes.map((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href'))).toEqual(paginesGovern().map((p) => p.ruta));
+    // Darrere, l'H2 de la sala de màquines i les nou targetes, com a /consola; sense il·lustracions.
+    const maquinaria = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+    expect(s.nextElementSibling.tagName).toBe('H2');
+    expect(s.nextElementSibling.textContent).toBe(TITOL_SALA_MAQUINES);
+    expect(s.nextElementSibling.nextElementSibling).toBe(maquinaria);
+    expect(s.contains(maquinaria)).toBe(false);
+    expect(document.querySelectorAll('img.sp-card-media')).toHaveLength(0);
+    // Una sola lectura per a tota la fitxa: tornar a pintar no torna a llegir.
+    expect(carregaGovern.crides).toBe(1);
+    vista.rerender(<RouterProvider><ConsolaIncrustada /></RouterProvider>);
+    await act(async () => {});
+    expect(carregaGovern.crides).toBe(1);
+    expect(errors).not.toHaveBeenCalled();
   });
 });
 

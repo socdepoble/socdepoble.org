@@ -65,7 +65,5 @@ reflex: sdp:torn_261027_0805:marmota_tancament_ronda5_i_guarda_nocturna
 - **El Mestre Javi Llinares tanca la seua jornada històrica per descansar merescudament.**
 - **Escriptori netejat i preparat per al nou cicle:** Arxivats els informes anteriors (`261026_0225_informe_cens_imatges.json` i `261026_2150_auditoria_claude.md`).
 - **Lliurables de Guarda Nocturna a l'Escriptori:**
-  - Pla canònic: [[261027_0845_pla_implementacio_guarda_nocturna_deute_tecnic_i_pobles]]
-  - Prompt d'equip: [[261027_0845_prompt_guarda_nocturna_claude_codex_gemini]]
 - **Mandat del Mestre (Deute Tècnic Primer):** Tota la feina tècnica (P1-54 desempapussar botons, P1-55 pàgina viva de comunitat, Consola i Maquinària pública) té prioritat absoluta sobre el banc d'idees.
 - **Portes i Repositori:** `porta-olivera.mjs` i `verificador-scc.mjs` a 0 absolut; commit i push completats a `fork/backup-notes-publish`. L'eixam entra en mode Guarda Nocturna per treballar de forma 100% autònoma i millorar el seu bucle de comunicació.
