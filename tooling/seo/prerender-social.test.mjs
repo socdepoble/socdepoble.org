@@ -11,7 +11,7 @@ import {createRequire} from 'node:module';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {comprovaFirebaseHosting,prerenderSocial,rutaEscrivible,sniffImage} from './prerender-social.mjs';
-import {buildSocialManifest,LLISTES} from './build-social-manifest.mjs';
+import {buildSocialManifest,LLISTES,llegixSnapshot} from './build-social-manifest.mjs';
 
 const projectRoot=process.env.SDP_PROJECT_ROOT || process.cwd();
 const {JSDOM}=createRequire(path.join(projectRoot,'package.json'))('jsdom');
@@ -195,14 +195,22 @@ test('porta roja: firebase.json absent, sense trailingSlash false o amb cleanUrl
   assert.equal(comprovaFirebaseHosting(projectRoot),undefined);
 });
 
-test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre d’Or; la CLI ix amb 1 si torna a passar',async t=>{
+/* Un dist/ temporal per a les dades de veres: el shell del repositori i les
+   imatges que nomena el seu manifest (amb el snapshot, si n'hi ha). */
+async function distReal(t,publicSnapshot=[]) {
   const dist=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-prerender-real-'));t.after(()=>fs.rmSync(dist,{recursive:true,force:true}));
-  const {manifest}=await buildSocialManifest({root:projectRoot,origin,estricte:true});
+  const {manifest}=await buildSocialManifest({root:projectRoot,origin,estricte:true,publicSnapshot});
   for(const entrada of Object.values(manifest.routes)) {
     const rel=decodeURIComponent(new URL(entrada.image.url).pathname);
+    if(fs.existsSync(path.join(dist,rel)))continue;
     fs.mkdirSync(path.dirname(path.join(dist,rel)),{recursive:true});fs.copyFileSync(path.join(projectRoot,'public',rel),path.join(dist,rel));
   }
   fs.writeFileSync(path.join(dist,'index.html'),fs.readFileSync(path.join(projectRoot,'index.html')));
+  return dist;
+}
+
+test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre d’Or; la CLI ix amb 1 si torna a passar',async t=>{
+  const dist=await distReal(t);
   const cli=()=>spawnSync(process.execPath,[SCRIPT,'--root',projectRoot,'--dist',dist,'--origin',origin],{encoding:'utf8'});
   const primer=cli();
   assert.equal(primer.status,0,primer.stderr);
@@ -218,6 +226,47 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
   assert.equal(llig(dist,'wikidepoble/03_llibre_d_or_memoria_episodica/index.html').querySelector('link[rel="canonical"]').href,origin+'/wikidepoble?item=03_llibre_d_or_memoria_episodica');
   const segon=cli();
   assert.equal(segon.status,1);assert.equal(JSON.parse(segon.stderr.trim()).valid,false);
+});
+
+/* QA-01 de Codex (261028) · El prerender passa el snapshot públic al
+   manifest: abans, la publicació remota no tenia fitxer i el rastrejador en
+   rebia la targeta genèrica. La projecció és sintètica; les privades, res. */
+test('snapshot públic: una publicació remota té el seu fitxer, per l’API i per --snapshot; la privada i la pendent, cap',async t=>{
+  const publicSnapshot=[
+    {sectionId:'mur',id:'publicacio-sintetica-01',visibility:'public',status:'published',title:'Aplec de prova',description:'Una publicació sintètica del mur',image:'/assets/system/ui/og-llibre-d-or-1200x630.png',imageAlt:'Portada de prova'},
+    {sectionId:'mur',id:'remota-storage-01',visibility:'public',status:'published',title:'Foto remota',description:'Una imatge d’un altre origen',image:'https://exemple.supabase.co/storage/v1/object/public/mur/foto.jpg'},
+    {sectionId:'mur',id:'privada-01',visibility:'private',status:'published',title:'NO_EXPORTAR',description:'no'},
+    {sectionId:'events',id:'pendent-01',visibility:'public',status:'draft',title:'NO_EXPORTAR',description:'no'}];
+  const {root,dist}=fixture(t);
+  const rebut=await run(root,{publicSnapshot});
+  assert.ok(rebut.routesWritten.includes('/mur/publicacio-sintetica-01'),rebut.routesWritten.join(' '));
+  const d=llig(dist,'mur/publicacio-sintetica-01/index.html');
+  const prop=nom=>d.querySelector(`meta[property="${nom}"]`)?.content??null;
+  assert.equal(d.title,'Aplec de prova | Sóc de Poble');
+  assert.equal(d.querySelector('meta[name="description"]').content,'Una publicació sintètica del mur');
+  assert.deepEqual(['og:type','og:url','og:image','og:image:alt'].map(prop),['article',origin+'/mur/publicacio-sintetica-01',origin+'/assets/system/ui/og-llibre-d-or-1200x630.png','Portada de prova']);
+  assert.equal(d.querySelector('link[rel="canonical"]').href,origin+'/mur/publicacio-sintetica-01');
+  // Una imatge d'un altre origen (Storage) no és del dist: la targeta genèrica.
+  assert.equal(llig(dist,'mur/remota-storage-01/index.html').querySelector('meta[property="og:image"]').content,origin+'/assets/system/ui/og-socdepoble-1200x630.png');
+  assert.notEqual(llig(dist,'mur/index.html').title,d.title,'la llista /mur conserva el seu head');
+  for(const rel of ['mur/privada-01','events/pendent-01'])assert.equal(fs.existsSync(path.join(dist,rel)),false,rel);
+  for(const rel of fitxers(dist))assert.ok(!fs.readFileSync(path.join(dist,rel),'utf8').includes('NO_EXPORTAR'),rel);
+  // La CLI, amb les dades de veres i el mateix snapshot en un fitxer .json.
+  const snapshots=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-prerender-snapshot-'));t.after(()=>fs.rmSync(snapshots,{recursive:true,force:true}));
+  const fitxer=path.join(snapshots,'snapshot.json');fs.writeFileSync(fitxer,JSON.stringify(publicSnapshot));
+  const distCli=await distReal(t,publicSnapshot);
+  const cli=extra=>spawnSync(process.execPath,[SCRIPT,'--root',projectRoot,'--dist',distCli,'--origin',origin,...extra],{encoding:'utf8'});
+  const bo=cli(['--snapshot',fitxer]);
+  assert.equal(bo.status,0,bo.stderr);
+  assert.ok(JSON.parse(bo.stdout).routesWritten.includes('/mur/publicacio-sintetica-01'));
+  assert.equal(llig(distCli,'mur/publicacio-sintetica-01/index.html').title,'Aplec de prova | Sóc de Poble');
+  // Un snapshot enllaçat o que no és .json: refusat; per la CLI, rebut JSON d'error i cap fitxer nou.
+  const enllac=path.join(snapshots,'enllac.json');fs.symlinkSync(fitxer,enllac);
+  assert.throws(()=>llegixSnapshot(enllac),/JSON regular/);
+  const abans=fitxers(distCli);const txt=path.join(snapshots,'snapshot.txt');fs.writeFileSync(txt,'[]');
+  const dolent=cli(['--snapshot',txt]);
+  assert.equal(dolent.status,1);assert.match(JSON.parse(dolent.stderr.trim()).error,/snapshot/);
+  assert.deepEqual(fitxers(distCli),abans);
 });
 
 test('les llistes: cada secció continua registrant les claus del seu títol i la seua descripció',()=>{

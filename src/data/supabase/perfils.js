@@ -11,7 +11,10 @@
  *         creat, modificat (T51: created_at i updated_at de la fila; la
  *         pastilla de la fitxa pública en llig la més recent),
  *         emoticona (T66: la de la persona, profiles.icon passada per
- *         emojiSol; '' sense tria i per a les organitzacions) }
+ *         emojiSol; '' sense tria i per a les organitzacions),
+ *         usuari (P1-68: l'identificador @usuari de la persona, sense @;
+ *         null si la fila no en porta. perfil_public només el torna d'una
+ *         fitxa sencera; no és cap slug: clauFundacional no el llig mai) }
  *   - listMyAgents(config) → Agent[] (buit en remot mentre no hi haja taula)
  *   - updateAgent(id, updates, config) → Agent
  *   - IDEA-22, punt 2 (pla 261025_0200) · capacitats 'titularPublic' i
@@ -103,7 +106,14 @@ export function perfilDePersona(fila, usuari) {
     propietari: Boolean(usuari?.id) && fila.id === usuari.id, copyright: text(fila.copyright),
     creat: dataCrua(fila.created_at), modificat: dataCrua(fila.updated_at),
     /* T66 · profiles.icon (2609282035): Postgres no valida la forma; ací sí. */
-    emoticona: emojiSol(fila.icon) || ''
+    emoticona: emojiSol(fila.icon) || '',
+    /* P1-68 (decisió del Mestre 261028: camp separat) · profiles.username de
+       la fila pròpia o la columna `usuari` de perfil_public (2610282100), que
+       només el porta d'una fitxa sencera (la fila pròpia el porta a
+       `username`: llegixPerfilRemot l'hi passa). `slug` continua null: un
+       identificador triat per qualsevol no pot ser mai la clau d'una
+       identitat fundacional. */
+    usuari: text(fila.usuari) || null
   };
 }
 
@@ -190,7 +200,7 @@ async function llegixPerfilRemot(clau, tenantId, config) {
   if (esUuid && usuari?.id === clau) {
     try {
       const files = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(clau)}&limit=1`, config, { signal: config.signal });
-      if (files?.[0]) return perfilDePersona(files[0], usuari);
+      if (files?.[0]) return perfilDePersona({ ...files[0], usuari: files[0].username }, usuari);
     } catch (error) {
       if (senseResposta(error)) throw error;
     }

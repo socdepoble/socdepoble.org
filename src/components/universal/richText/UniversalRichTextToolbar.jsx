@@ -19,6 +19,10 @@ export function UniversalRichTextToolbar({
   publishPopup,
   onDelete,
   deleteDisabled,
+  /* IDEA-41 · «🎴 Proposa Card», de pas cap a UniversalToolbar (sense: cap botó). */
+  onProposaCard,
+  proposaCardDisabled,
+  proposaCardDesfer,
 
   t = (key, def) => def
 }) {
@@ -40,6 +44,9 @@ export function UniversalRichTextToolbar({
       publishPopup={publishPopup}
       onDelete={onDelete}
       deleteDisabled={deleteDisabled}
+      onProposaCard={onProposaCard}
+      proposaCardDisabled={proposaCardDisabled}
+      proposaCardDesfer={proposaCardDesfer}
       formatState={formatState}
       formatActions={formatActions}
       t={t}

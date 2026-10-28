@@ -17,6 +17,8 @@ import {
   valorPerDesar,
 } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
+import { IdentitatAlPoble, TITOL_IDENTITAT_AL_POBLE } from '../onboarding/IdentitatAlPoble.jsx';
+import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
@@ -744,6 +746,36 @@ export function PerfilEditor({ identitat }) {
     setDialegEmoticona(false);
   }, [fitxa.icon, updateLocal, saveRemote, identitat.id]);
 
+  /* P1-68 (pla 261028_1526, §3.8.2.3; decisions del Mestre, 261028) · El
+     @usuari i el poble principal de la persona, al peu de la fitxa: la
+     proposta de l'alta es diu en la primera entrada (també després de
+     Google o Apple) fins que la persona la tria. Només amb la columna del
+     servidor (2610282100: dades.username) i qui pot editar (mai la fila de
+     reserva ni una baixa). L'identificador va per guardarCampPerfil →
+     updateProfile → RPC, fora de l'autodesament; el poble, per la columna
+     de sempre (town_name). Els pobles, del catàleg del Mas.
+     Revisió del Bloc H (R1) · Germà del DocumentEditor, el detall
+     (overflow: hidden, PerfilShell.css) deixava l'editor a 0 px en mòbil i
+     el selector del poble retallat. Ara va per la ranura peuDePagina de
+     l'adaptador: dins del contenidor que fa scroll, després de l'article.
+     Memoritzat, com demana DocumentEditor: un JSX nou a cada pintada
+     refaria l'adaptador. */
+  const { towns } = useCoreContent();
+  const ambIdentitatAlPoble = mena === 'persona' && potEditar && !deReserva
+    && typeof dades.username === 'string' && dades.username !== '';
+  const desaUsuari = useCallback((valor) => guardarCampPerfil('username', valor, identitat.id), [guardarCampPerfil, identitat.id]);
+  const desaPoble = useCallback((valor) => guardarCampPerfil('town_name', valor, identitat.id), [guardarCampPerfil, identitat.id]);
+  const identitatAlPoble = useMemo(() => (ambIdentitatAlPoble ? (
+    <IdentitatAlPoble
+      usuari={dades.username}
+      confirmat={Boolean(dades.username_confirmat_at)}
+      poble={typeof dades.town_name === 'string' ? dades.town_name : ''}
+      pobles={(Array.isArray(towns) ? towns : []).map((town) => town?.title)}
+      onDesaUsuari={desaUsuari}
+      onDesaPoble={desaPoble}
+    />
+  ) : null), [ambIdentitatAlPoble, dades.username, dades.username_confirmat_at, dades.town_name, towns, desaUsuari, desaPoble]);
+
   /* Les píndoles (fitxaDePerfil.js): el rol i, si cal, «Baixa en curs»,
      «Sense connexió» o l'avís d'IA. */
   const etiquetes = useMemo(() => etiquetesDeFitxa(identitat), [identitat]);
@@ -1012,10 +1044,15 @@ export function PerfilEditor({ identitat }) {
          camp CRU i, en edició, el botó que obri el diàleg. */
       emoticona: fitxa.icon || '',
       onObriEmoticona: ambEmoticona ? obriEmoticona : null,
+      /* Revisió del Bloc H (R1) · L'@usuari i el poble (P1-68), al peu de la
+         pàgina: PageFrame el pinta dins del contenidor que fa scroll, en un
+         section amb nom. Sense el bloc, cap clau: el DOM de sempre. La ranura
+         despresAutoria ja la porta «Edició avançada de la fitxa». */
+      ...(identitatAlPoble ? { peuDePagina: identitatAlPoble, etiquetaPeuDePagina: TITOL_IDENTITAT_AL_POBLE } : null),
     };
   }, [mena, esAgent, ambAvatarRedo, esPilot, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
     obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera, avatarDeLEdicio,
-    logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona]);
+    logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona, identitatAlPoble]);
 
   /* Només qui pot editar la fitxa té els selectors i les finestres de retall.
      Germans del DocumentEditor i no fills de cap altre diàleg. La confirmació

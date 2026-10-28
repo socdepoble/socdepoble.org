@@ -236,6 +236,8 @@ export function midaDelPreu(valor) {
   return 'minima';
 }
 
+const SEMAFORS_DEL_QUADRAT = new Set(['exit', 'avis', 'error']);
+
 function SquareBadge({ badge }) {
   const isCalendar = badge.dia || badge.mes || badge.any || badge.type === 'calendar';
   const isPrice = badge.type === 'price';
@@ -281,13 +283,18 @@ function SquareBadge({ badge }) {
      amb `label` és una imatge amb nom (role="img"): un aria-label en un <div>
      sense rol no el llig cap lector. Un de `decoratiu` (insigniaEmojiXL sense
      label: la targeta viva, que ja diu el títol) no té nom i s'amaga. La
-     resta, com sempre. Cap píxel canvia. */
+     resta, com sempre. Cap píxel canvia.
+     IDEA-40 (decisió del Mestre, 261028, pla 261028_1526) · Un quadrat
+     personalitzat pot portar el to del semàfor de la targeta (`semafor`:
+     'exit', 'avis' o 'error'), com a data-semafor: el pinta el full de qui
+     el demana (modules.css § CONSOLA), sense cap :has(). Sense, el DOM de sempre. */
   const personalitzat = !isPrice;
+  const semafor = personalitzat && SEMAFORS_DEL_QUADRAT.has(badge.semafor) ? badge.semafor : undefined;
   if (personalitzat && badge.decoratiu) {
-    return <div className="sp-card-calendar-badge" aria-hidden="true">{contingut}</div>;
+    return <div className="sp-card-calendar-badge" aria-hidden="true" data-semafor={semafor}>{contingut}</div>;
   }
   return (
-    <div className="sp-card-calendar-badge" role={personalitzat && badge.label ? 'img' : undefined} aria-label={etiqueta}>{contingut}</div>
+    <div className="sp-card-calendar-badge" role={personalitzat && badge.label ? 'img' : undefined} aria-label={etiqueta} data-semafor={semafor}>{contingut}</div>
   );
 }
 

@@ -297,6 +297,9 @@ export function ajustosOrganitzacio(org = {}, contacte = org.contacte, { pobles 
  * organització: PerfilShell hi passa el refresh d'IdentitatContext perquè
  * el selector d'identitat no quede desfasat fins a recarregar.
  */
+/* P1-68 · Columnes de la fila del perfil que no van mai a user_metadata. */
+const CAMPS_FORA_DE_LES_METADADES = new Set(['username', 'username_confirmat_at']);
+
 export function PerfilProvider({ children, config = {}, onCanviOrganitzacions }) {
   /* L'àmbit és l'ENTRADA, no la generació del servei: la renovació horària del JWT
      mou la generació però és la mateixa sessió, i desmuntar ací perdria el que
@@ -539,11 +542,14 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     }
     if (entitat === ENTITATS_FITXA.persona) {
       setDadesPerfil((prev) => (prev ? { ...prev, ...canvis } : prev));
+      /* P1-68 · L'@usuari i la seua confirmació són columnes de la fila, mai
+         metadades del compte (user_metadata va dins del JWT): no s'hi copien. */
+      const metadades = Object.fromEntries(Object.entries(canvis).filter(([camp]) => !CAMPS_FORA_DE_LES_METADADES.has(camp)));
       setUsuari((prev) => (prev ? {
         ...prev,
         user_metadata: {
           ...(prev.user_metadata || {}),
-          ...canvis,
+          ...metadades,
           name: Object.hasOwn(canvis, 'full_name') ? canvis.full_name : prev.user_metadata?.name,
         },
       } : prev));
@@ -576,9 +582,15 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
 
     if (objectiu.mena === 'persona') {
       const desat = camp === 'town_name' ? valorDePoblePersona(valor) : valor;
-      await updateProfile({ [camp]: desat }, configRef.current);
+      const fila = await updateProfile({ [camp]: desat }, configRef.current);
       assertCurrent();
-      aplicaColumnes(ENTITATS_FITXA.persona, objectiu.id, { [camp]: desat });
+      /* P1-68 · L'@usuari el normalitza i el confirma la RPC: es fusiona el que
+         torna (l'identificador i username_confirmat_at), no el que s'ha teclejat.
+         Sense, «Et proposem» tornava en remuntar l'editor fins a recarregar. */
+      const canvis = camp === 'username' && typeof fila?.username === 'string'
+        ? { username: fila.username, username_confirmat_at: fila.username_confirmat_at ?? null }
+        : { [camp]: desat };
+      aplicaColumnes(ENTITATS_FITXA.persona, objectiu.id, canvis);
     } else if (objectiu.mena === 'agent') {
       await updateAgent(objectiu.id, { [camp]: valor }, configRef.current);
       assertCurrent();

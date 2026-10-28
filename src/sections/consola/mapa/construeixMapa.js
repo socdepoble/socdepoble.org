@@ -794,6 +794,30 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   salut.push(metrica('torns-tancats', torns
     ? { numerador: torns.filter((t) => t?.state === 'closed').length, denominador: torns.length, font: FONT_TORNS, prova: PROVA_MAPA }
     : { font: FONT_TORNS }));
+  /* Emowe C1 (pla 261028_1526, Bloc H) · Un torn tancat que no va rebre mai
+     cap rebut (rebuts === 0, el recompte de fonts-vigilancia.mjs; sense dada,
+     no compta): es va obrir i es va tancar sense deixar cap document. Avís baix,
+     que no para res: el recompte sobre els tancats i, un per evidència, quins
+     són (el més antic primer). No depén del rellotge. I la mètrica que va
+     decidir el Mestre, sobre tots els torns com les altres dues: sense torns,
+     N/A, i amb torns però cap de tancat, un 0 mesurat, mai un N/A nou. */
+  const tancats = torns ? torns.filter((t) => t?.state === 'closed') : [];
+  const senseRebut = tancats.filter((t) => t?.rebuts === 0);
+  salut.push(metrica('torns-tancats-sense-rebut', torns
+    ? { numerador: senseRebut.length, denominador: torns.length, font: FONT_TORNS, prova: PROVA_MAPA }
+    : { font: FONT_TORNS }));
+  if (senseRebut.length) {
+    const carpeta = nodeRuta(FONT_TORNS);
+    avis(carpeta.id, 'torns-tancats-sense-rebut', 'baixa',
+      `${senseRebut.length} ${de(tancats.length, plural(tancats.length, 'torn tancat', 'torns tancats'))} sense cap rebut`);
+    const creat = (t) => { const x = Date.parse(t?.createdAt); return Number.isFinite(x) ? x : Infinity; };
+    const llista = [...senseRebut]
+      .sort((x, y) => creat(x) - creat(y) || String(x?.id ?? '').localeCompare(String(y?.id ?? '')));
+    for (const t of llista) {
+      const quan = Number.isFinite(creat(t)) ? `obert el ${t.createdAt}` : 'sense data d’obertura llegible';
+      avis(carpeta.id, 'torns-tancats-sense-rebut', 'baixa', [t?.id ?? 'torn sense id', t?.actor, quan].filter(Boolean).join(' · '));
+    }
+  }
   if (caducats) {
     const carpeta = nodeRuta(FONT_TORNS);
     avis(carpeta.id, 'torns-caducats', 'mitjana', `${caducats} ${de(torns.length, plural(torns.length, 'torn caducat', 'torns caducats'))} sense tancar`);

@@ -187,7 +187,10 @@ test('261002 · la fitxa mínima (mateix poble, no publicada): nom, foto i poble
     bio: null, presentacio_html: null, copyright: null, icon: null, is_public: false, created_at: null, updated_at: null }]);
   expect(await loadPerfilPublic(ELLA)).toEqual({
     tipus: 'persona', id: ELLA, slug: null, nom: 'Pepa Soler', avatar: '', hero: '', lema: '', bio: '', presentacioHtml: '',
-    poble: 'Benifallim', esIA: false, publicat: false, propietari: false, copyright: '', creat: null, modificat: null, emoticona: ''
+    poble: 'Benifallim', esIA: false, publicat: false, propietari: false, copyright: '', creat: null, modificat: null, emoticona: '',
+    /* Expectativa actualitzada a propòsit: P1-68 (2610282100). La fitxa
+       mínima no porta l'identificador: perfil_public el torna null. */
+    usuari: null
   });
 });
 

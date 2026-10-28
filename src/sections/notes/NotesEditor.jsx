@@ -29,6 +29,7 @@ import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js'
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, modeDeDadesResolt, signaturaDeNota } from './autoriaNota.js';
 import { TITOL_NOTA_PREPARADA, useNotaPreparadaDelBloc } from './notaPreparada.js';
 import { LLAVORS_NOTA } from './llavorNota.js';
+import { proposaCard } from './proposaCard.js';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -485,6 +486,17 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          publicació: l'ordre «/» Imatge pregunta si es conserven la ubicació i la
          data de la foto (DocumentEditor · fotosDePublicacio). El Perfil no. */
       fotosDePublicacio: true,
+      /* IDEA-41 (Llibre Mestre; Mestre 261028, Bloc H) · «🎴 Proposa Card» a la
+         barra d'eines: el títol, el subtítol i l'entradilla des de les primeres
+         línies del cos, sense IA (proposaCard.js). Pel canal de cada nota (la
+         pròpia, la còpia de prova i la preparada), com la resta de camps; el
+         Perfil no el porta. Constant: l'adaptador no es refà. Revisió
+         adversarial 261028 · Una connexió o un contingut de fora (citaOrigen)
+         no el porten: el seu cos comença amb el text del sistema (la
+         presentació de l'original, «Connectat per a llegir-lo més tard.»,
+         «Font: …»), que pujat als camps perdria l'enllaç i eixiria al Mur per
+         l'entradilla, sense el filtre dels paràgrafs privats (connexions.js). */
+      proposaCard: citaOrigen ? null : proposaCard,
       /* Bloc 3.9 · La plantilla de format d'ara i la d'abans: totes dues
          s'esvaeixen al primer focus del cos (llavorNota.js). */
       seedContent: LLAVORS_NOTA,

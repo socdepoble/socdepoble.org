@@ -4,10 +4,12 @@
    «Envia el fitxer». Res no s'envia tot sol. El registre és el de veres
    (config/compartirNatiu.js); preparaAdjunt i el port, de mentides, com a
    ControlsAdjunt.test.jsx. */
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import ControlsAdjunt from './ControlsAdjunt.jsx';
+import Compositor from './Compositor.jsx';
 import { compartitPendent, descartaCompartit, lliuraCompartit, registraAlliberadorCompartit, triaDestiCompartit } from '../../../config/compartirNatiu.js';
 import { MISSATGE_QUOTA_XAT } from '../../../data/xatMultimedia.js';
 
@@ -19,6 +21,19 @@ const t = (_, alternativa) => alternativa;
 const fil = { id: 'fil-A' };
 const deferred = () => { let resolve, reject; const promise = new Promise((r, j) => { resolve = r; reject = j; }); return { promise, resolve, reject }; };
 const PEU = 'Text del fitxer (opcional)';
+/* Pla 261028_1526 (P1-66) · La barra única, com la munta Conversa: els
+   controls guarden l'estat i el Compositor porta el + i el botó redó. */
+function Barra(props) {
+  const [valor, setValor] = useState('');
+  return (
+    <AppGridContext.Provider value={{ mida: 'ample', setPanellObert: () => {} }}>
+      <ControlsAdjunt {...props}>
+        {(adjunts) => <Compositor valor={valor} onCanvia={setValor} onEnvia={() => setValor('')} t={t} adjunts={adjunts} />}
+      </ControlsAdjunt>
+    </AppGridContext.Provider>
+  );
+}
+const mes = () => screen.getByRole('button', { name: 'Adjunta' });
 /* Els fitxers que arriben del dispositiu i l'adjunt preparat de cadascun. */
 const captura = new Blob(['captura'], { type: 'image/png' });
 const segona = new Blob(['segona'], { type: 'image/jpeg' });
@@ -46,7 +61,7 @@ afterEach(() => { cleanup(); descartaCompartit(); registraAlliberadorCompartit(n
 /* La persona ja ha triat esta conversa a «Envia a…». */
 const compartitPer = (filId, dades) => { lliuraCompartit(dades); triaDestiCompartit(filId); };
 const pinta = (envia = vi.fn().mockResolvedValue([{ id: 'm' }]), extra = {}) => {
-  render(<ControlsAdjunt usuariId="A" fil={fil} servei={servei} onEnvia={envia} t={t} {...extra} />);
+  render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={envia} t={t} {...extra} />);
   return envia;
 };
 const peu = () => screen.getByRole('textbox', { name: PEU });
@@ -125,7 +140,7 @@ test('amb dos fitxers, el segon arriba quan s’ha enviat el primer, i sense el 
 test('un lot per a una altra conversa, o sense conversa triada, no es pren; triar esta, sí', async () => {
   lliuraCompartit({ fitxers: [captura], text: 'Per a la Comissió' });
   pinta();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
   await act(async () => {});
   expect(m.preparaAdjunt).not.toHaveBeenCalled();
   await act(async () => { triaDestiCompartit('fil-B'); });
@@ -178,7 +193,7 @@ test('«Cancel·la» buida el peu: la foto següent, triada a mà, no l’hereta
   expect(screen.queryByRole('textbox', { name: PEU })).toBeNull();
   // El lot ja s'havia pres: cancel·lar no el torna a carregar.
   expect(compartitPendent()).toBeNull();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [segona] } });
   await screen.findByAltText('Foto adjunta');
   expect(m.preparaAdjunt).toHaveBeenCalledTimes(2);
@@ -199,7 +214,7 @@ const rescatIFotoAMa = async ({ onTextOrfe, envia, alerta }) => {
   expect(screen.queryByRole('textbox', { name: PEU })).toBeNull();
   // El lot ja s'ha pres sencer: el text no hi torna.
   expect(compartitPendent()).toBeNull();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(selector(), { target: { files: [segona] } });
   await screen.findByAltText('Foto adjunta');
   expect(screen.queryByRole('alert')).toBeNull();
@@ -238,13 +253,13 @@ test('una foto triada a mà mai no mostra el camp de peu, i l’adjunt viatja se
   m.preparaAdjunt.mockRejectedValueOnce(new Error('Imatge malmesa'));
   const onTextOrfe = vi.fn();
   const envia = pinta(undefined, { onTextOrfe });
-  const boto = await screen.findByRole('button', { name: 'Foto o vídeo' });
-  await waitFor(() => expect(boto.disabled).toBe(false));
+  const boto = await screen.findByRole('button', { name: 'Adjunta' });
+  await waitFor(() => expect(boto.hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(selector(), { target: { files: [segona] } });
   expect((await screen.findByRole('alert')).textContent).toBe('Imatge malmesa');
   await act(async () => {});
   expect(onTextOrfe).not.toHaveBeenCalled();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(selector(), { target: { files: [captura] } });
   await screen.findByAltText('Foto adjunta');
   expect(screen.queryByRole('textbox', { name: PEU })).toBeNull();
@@ -271,7 +286,7 @@ const ambRuta = ({ text = 'Mireu el cartell', propietari = null } = {}) => {
   return fitxer;
 };
 const munta = ({ envia = vi.fn().mockResolvedValue([{ id: 'm' }]), ...props } = {}) => {
-  const controls = (extra = {}) => <ControlsAdjunt usuariId="A" fil={fil} servei={servei} onEnvia={envia} t={t} {...props} {...extra} />;
+  const controls = (extra = {}) => <Barra usuariId="A" fil={fil} servei={servei} onEnvia={envia} t={t} {...props} {...extra} />;
   const vista = render(controls());
   return { envia, ...vista, repinta: (extra) => vista.rerender(controls(extra)) };
 };
@@ -319,11 +334,11 @@ test('si la conversa es tanca mentre es prepara, el fitxer torna al lot amb el p
 test('amb StrictMode i la quota desada, el fitxer compartit es prepara una volta, queda en mà i en enviar-lo s’allibera sense tornar', async () => {
   // Un primer muntatge només per a desar la quota d'esta persona en este port.
   const primer = munta();
-  await screen.findByRole('button', { name: 'Foto o vídeo' });
+  await screen.findByRole('button', { name: 'Adjunta' });
   primer.unmount();
   const fitxer = ambRuta();
   const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
-  render(<StrictMode><ControlsAdjunt usuariId="A" fil={fil} servei={servei} onEnvia={envia} t={t} /></StrictMode>);
+  render(<StrictMode><Barra usuariId="A" fil={fil} servei={servei} onEnvia={envia} t={t} /></StrictMode>);
   expect(await screen.findAllByAltText('Foto adjunta')).toHaveLength(1);
   expect(peu().value).toBe('Mireu el cartell');
   await act(async () => {});
@@ -463,7 +478,7 @@ test('si la imatge compartida no es pot preparar, la còpia s’allibera una vol
 test('un lot que ha triat una altra persona per a esta conversa no es pren; el de la mateixa persona, sí', async () => {
   const fitxer = ambRuta({ propietari: 'A', text: 'Només per a A' });
   const deB = munta({ usuariId: 'B' });
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
   await act(async () => {});
   expect(m.preparaAdjunt).not.toHaveBeenCalled();
   expect(screen.queryByAltText('Foto adjunta')).toBeNull();
@@ -477,4 +492,36 @@ test('un lot que ha triat una altra persona per a esta conversa no es pren; el d
   expect(m.preparaAdjunt.mock.calls[0][0]).toBe(fitxer);
   expect(peu().value).toBe('Només per a A');
   expect(compartitPendent()).toBeNull();
+});
+
+/* Revisió adversarial P1-66 (F3) · Amb la barra única, els controls viuen
+   muntats encara que la conversa no admeta fitxers (`actiu` fals): no han de
+   prendre res del lot, ni tan sols amb la quota ja a la memòria. */
+test('P1-66 · amb la quota ja desada, actiu fals no pren el fitxer compartit: el lot espera sencer', async () => {
+  const primer = render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} t={t} />);
+  await screen.findByRole('button', { name: 'Adjunta' });
+  primer.unmount();
+  compartitPer('fil-A', { fitxers: [captura], text: 'Mireu' });
+  pinta(vi.fn(), { actiu: false });
+  await act(async () => {}); await act(async () => {});
+  expect(m.preparaAdjunt).not.toHaveBeenCalled();
+  expect(compartitPendent().fitxers).toEqual([captura]);
+  expect(screen.queryByRole('textbox', { name: PEU })).toBeNull();
+});
+test('P1-66 · un fitxer compartit que arriba amb el focus al redó que envia text no li pren el focus', async () => {
+  const preparant = deferred();
+  m.preparaAdjunt.mockReturnValueOnce(preparant.promise);
+  pinta();
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: 'Bon dia' } });
+  const redo = document.querySelector('.sdp-xat-compositor__envia');
+  expect(redo.getAttribute('aria-label')).toBe('Envia');
+  redo.focus();
+  act(() => { compartitPer('fil-A', { fitxers: [captura] }); });
+  await waitFor(() => expect(m.preparaAdjunt).toHaveBeenCalledOnce());
+  expect(screen.getByRole('button', { name: 'Cancel·la' })).toBeTruthy();
+  expect(document.activeElement).toBe(redo);
+  await act(async () => { preparant.resolve(preparatDe(captura)); });
+  expect(await screen.findByRole('button', { name: 'Envia el fitxer' })).toBe(redo);
+  expect(document.activeElement).toBe(redo);
 });

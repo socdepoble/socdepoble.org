@@ -316,17 +316,19 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   return {manifest,evidence};
 }
 
+/** El --snapshot de les CLI (aquesta i prerender-social.mjs): un .json regular de 8 MiB com a màxim. */
+export function llegixSnapshot(fitxer) {
+  const st=fs.lstatSync(fitxer);
+  if(!st.isFile()||st.size>MAX_SNAPSHOT||!fitxer.endsWith('.json'))throw new Error('El snapshot ha de ser un JSON regular de 8MiB com a màxim.');
+  return JSON.parse(fs.readFileSync(fitxer,'utf8'));
+}
+
 async function main(argv) {
   const args={};
   for(let i=0;i<argv.length;i+=2) {
     const k=argv[i];if(!['--root','--origin','--out','--evidence','--snapshot','--policy-root'].includes(k)||!argv[i+1]||args[k])throw new Error('Ús: --root RUTA --origin HTTPS [--out JSON] [--evidence JSON] [--snapshot JSON]');args[k]=argv[i+1];
   }
-  let publicSnapshot=[];
-  if(args['--snapshot']) {
-    const st=fs.lstatSync(args['--snapshot']);
-    if(!st.isFile()||st.size>MAX_SNAPSHOT||!args['--snapshot'].endsWith('.json'))throw new Error('El snapshot ha de ser un JSON regular de 8MiB com a màxim.');
-    publicSnapshot=JSON.parse(fs.readFileSync(args['--snapshot'],'utf8'));
-  }
+  const publicSnapshot=args['--snapshot']?llegixSnapshot(args['--snapshot']):[];
   const result=await buildSocialManifest({root:args['--root'],origin:args['--origin'],policyRoot:args['--policy-root']||args['--root'],publicSnapshot});
   const json=JSON.stringify(result.manifest,null,2)+'\n';
   if(args['--out'])fs.writeFileSync(args['--out'],json);else process.stdout.write(json);

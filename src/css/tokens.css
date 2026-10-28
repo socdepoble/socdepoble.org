@@ -102,6 +102,13 @@
   --sdp-avis-500:  #9c6902;  --sdp-avis-50:  #fff1df;  --sdp-avis-700:  #6e4901;
   --sdp-exit-500:  #027e38;  --sdp-exit-50:  #e4f8e7;  --sdp-exit-700:  #005c27;
 
+  /* IDEA-40 (decisió del Mestre, 261028, Bloc H) · El verd de marca, un sol
+     token: el de la icona i la pantalla d'inici natives, el logotip i la barra
+     del Lector. El blanc al damunt fa 6,996:1: AA, no AAA (WCAG no arredonix;
+     el «7,19:1» del Llibre no és cert). No és l'èxit (--sdp-exit-500, que no
+     canvia) ni la Capa 0 (design-tokens.json): no canvia amb el tema. */
+  --sdp-verd: #0f672f; /* 6,99:1 sobre blanc · AA, no AAA */
+
   /* ═══ CAPA 2 · SEMÀNTICS · TEMA CLAR ═══════════════════════════
      Cada línia porta el contrast mesurat i el nivell que compleix.  */
 
@@ -360,8 +367,13 @@
      plugins (directriu 261003_2320). */
 
   /* Una mateixa plantilla tipogràfica per al menú, les categories i les
-     capçaleres de columna, també quan es mostren com a pestanyes. */
-  --sdp-font-barra: 600 var(--sdp-text-small)/1.5 var(--sdp-font);
+     capçaleres de columna, també quan es mostren com a pestanyes.
+     P1-67 (Mestre, 261028) · Totes les barres en SemiCondensed: la barra
+     principal, els rails, les pestanyes i les capçaleres de totes les apps.
+     semi-condensed és el 87.5% de --sdp-font-amplada-semi: dins de
+     l'abreujat `font` només hi cap la paraula clau, mai un percentatge ni un
+     var() que el valga. */
+  --sdp-font-barra: 600 semi-condensed var(--sdp-text-small)/1.5 var(--sdp-font);
 
   /* Tipografia d'Interfície (Compacta). Cap per davall del sòl de 14px. */
   --sdp-ui-base: 0.9375rem;    /* 15px */
@@ -507,8 +519,9 @@
      .sdp-app-barra__titol[data-sdp-app="lector"] (apps.css). La lletra hi
      continua en --sdp-crom-text (blanc pur): 6,996 a 1, AA amb escreix i a un
      pèl de l'AAA de 7 a 1; el títol és de 700. Va en línia pròpia: C2
-     (tractor-cromatic) mesura contra la targeta blanca. */
-  --sdp-crom-barra-lector:      #0f672f;
+     (tractor-cromatic) mesura contra la targeta blanca. IDEA-40 (Mestre,
+     261028) · Cita el verd de marca únic, --sdp-verd: el mateix píxel. */
+  --sdp-crom-barra-lector:      var(--sdp-verd);
 
 
   /* === ANELLS DE FOCUS I VALIDACIO ==============================

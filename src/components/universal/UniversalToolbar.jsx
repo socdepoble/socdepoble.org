@@ -1,4 +1,4 @@
-import { ArrowLeft, List, ListOrdered, Heading2, Heading3, Bold, Italic, Strikethrough } from 'lucide-react';
+import { ArrowLeft, List, ListOrdered, Heading2, Heading3, Bold, Italic, Strikethrough, Undo2 } from 'lucide-react';
 import { useContext, useState, useRef, useEffect, useId, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 import { PUNTS_DE_TALL } from '../layout/graella.js';
@@ -70,6 +70,14 @@ export default function UniversalToolbar({
   publishPopup = null,
   onDelete,
   deleteDisabled = false,
+  /* IDEA-41 (Mestre 261028, Bloc H) · «🎴 Proposa Card»: en ample, el primer
+     botó del grup de publicació; en compacte, l'últim del grup d'«Aa». Només
+     si l'editor el demana (onProposaCard). Apagat quan no hi ha res a
+     proposar; amb proposaCardDesfer, el mateix botó desfà la proposta. La
+     barra continua muda: només rep dades. */
+  onProposaCard = null,
+  proposaCardDisabled = false,
+  proposaCardDesfer = false,
   formatState = {},
   formatActions = {},
   t = (key, fallback) => fallback
@@ -101,6 +109,22 @@ export default function UniversalToolbar({
   /* MD (261003) · La mateixa tornada que la fletxa blava quan la closca
      l'oferix (mestre-detall en estret); si no, la d'abans. */
   const handleBack = onBack || gridCtx?.tornaDelDetall || (() => gridCtx?.setPanellObert('middle'));
+
+  /* IDEA-41 · Una cel·la de 48px amb el glif i el nom accessible (aria-label
+     i title), ampla o compacta. Revisió adversarial 261028 · La pastilla amb
+     el text (181px, 229px com «Desfés la proposta») passava la barra a dues
+     files fins a 800-850px d'amplària i, en desfer, la canviava davall del
+     punter; la cel·la fa sempre 48px. R2 (revisió final 261028) · En
+     compacte, al grup de publicació, els 48px i el gap passaven la barra a
+     dues files als telèfons: va dins d'«Aa», darrere de les llistes. */
+  const etiquetaProposaCard = proposaCardDesfer
+    ? t('section.notes.proposaCardDesfer', 'Desfés la proposta')
+    : t('section.notes.proposaCard', 'Proposa Card');
+  const glifProposaCard = proposaCardDesfer ? <Undo2 {...iconProps} /> : <span aria-hidden="true">🎴</span>;
+  const botoProposaCard = typeof onProposaCard !== 'function' ? null : (
+    <button type="button" className="sdp-bloc-icon" aria-label={etiquetaProposaCard} title={etiquetaProposaCard}
+      disabled={proposaCardDisabled} onClick={onProposaCard}>{glifProposaCard}</button>
+  );
 
   const { isHeading, isSubheading, isList, isOrderedList, isBold, isItalic, isStrike } = formatState;
   const { toggleHeading, toggleSubheading, toggleList, toggleOrderedList, toggleBold, toggleItalic, toggleStrike } = formatActions;
@@ -178,9 +202,11 @@ export default function UniversalToolbar({
             onClick={toggleOrderedList} 
             disabled={!toggleOrderedList} 
           />
+          {compact ? botoProposaCard : null}
         </div>
 
         <div className="sdp-editor-tools__group sdp-editor-tools__group--publicacio">
+          {compact ? null : botoProposaCard}
           {onDelete && (
             <BlocAction
               label={t('section.notes.delete', 'Borrar')}

@@ -16,8 +16,10 @@
     <!-- CSP estricte: Sense unsafe-inline en scripts. Connect-src acotat. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: https: wss: ws://localhost:* http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:* sdp-media:; media-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*; font-src 'self' https: data:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">
     <meta name="description" content="Portal de pobles connectats" />
-    <!-- Noto Sans de casa (261004): cap servidor de fonts de tercers. El preload avança el woff2 llatí. -->
+    <!-- Noto Sans de casa (261004): cap servidor de fonts de tercers. El preload avança el woff2 llatí
+         i, des de P1-67 (261028), el variable amb l'eix wdth de les barres semi-condensades. -->
     <link rel="preload" href="/fonts/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5a7duw.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/noto-sans-wdth-wght-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/fonts/noto-sans.css" />
     <!-- SEO tags · Onada 5 (261009): la imatge per defecte és el logotip verd de
          Sóc de Poble en panoràmica 1200×630 (la mateixa IMATGE_BASE de useSEO.js),

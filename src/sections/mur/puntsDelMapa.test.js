@@ -127,6 +127,34 @@ describe('els punts del mapa', () => {
     expect(punts.fotos.every((f) => punts.parades[f.parada].fotos.includes(punts.fotos.indexOf(f)))).toBe(true);
   });
 
+  /* Emowe M1 · Cada punt porta d'on ve el lloc (origen) i, si no és el seu, com
+     s'ha deduït (inferencia); la parada, els de la seua primera foto. Les
+     publicacions d'entrada no es toquen (congelades a fons: un canvi llançaria). */
+  test('M1 · fotos i parades porten origen i inferència per separat, i les publicacions d’entrada no canvien', () => {
+    const congela = (valor) => {
+      if (valor && typeof valor === 'object') { Object.values(valor).forEach(congela); Object.freeze(valor); }
+      return valor;
+    };
+    const entrada = congela(structuredClone([B, A, D, C]));
+    const r = puntsDelMapa(entrada);
+    expect(entrada).toEqual([B, A, D, C]);
+    const per = Object.fromEntries(r.fotos.map((f) => [f.src, f]));
+    expect(per[FOTO('a1')]).toMatchObject({ estat: 'gps', origen: 'exif', inferencia: null });
+    expect(per[FOTO('a3')]).toMatchObject({
+      estat: 'estimada', origen: null, inferencia: { tipus: 'estimada', referencia: `feed:a|${FOTO('a2')}`, diferencia_s: 1200, incertesaAlta: false }
+    });
+    expect(per[FOTO('b1')]).toMatchObject({ estat: 'poble', origen: null, inferencia: { tipus: 'poble', referencia: null, incertesaAlta: true } });
+    expect(r.parades.map((p) => [p.id, p.origen, p.inferencia?.tipus ?? null])).toEqual([
+      ['patrimoni:c~0', 'exif', null],
+      ['feed:a~0', 'exif', null],
+      ['feed:a~1', null, 'estimada'],
+      ['event:d~0', 'exif', null],
+      ['feed:b~0', null, 'poble']
+    ]);
+    // Cap punt barreja els dos.
+    expect([...r.fotos, ...r.parades].every((p) => p.origen === null || p.inferencia === null)).toBe(true);
+  });
+
   test('escala: 1 000 publicacions de 25 fotos, en una sola passada (abans, una volta sencera per parada: 7 s)', () => {
     const items = Array.from({ length: 1000 }, (_, i) => ({
       id: `e${i}`, type: 'feed', image_url: FOTO(`e${i}`), geolocalitzacio: GPS(38 + (i % 40) * 0.05, -1 + Math.floor(i / 40) * 0.05),

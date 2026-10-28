@@ -1695,5 +1695,31 @@ export default {
   'section.mur.mapa.vorePoble': "Ver o pobo",
   'section.mur.mapa.voreTot': "Ver todo",
   'section.mur.mapa.zonaSenseNom': "Zona sen nome no catálogo",
-  'section.mur.mapa.zonesMes': "{nom} · {n} zonas máis"
+  'section.mur.mapa.zonesMes': "{nom} · {n} zonas máis",
+  // P1-66 (pla 261028_1526, Bloc H) · La barra única del compositor: el menú + dels adjunts.
+  'section.xat.adjunts.camera': "Cámara",
+  'section.xat.adjunts.fotos': "Fotos e vídeos",
+  'section.xat.adjunts.menu': "Anexar",
+  'section.xat.adjunts.selectorCamera': "Fai unha foto coa cámara",
+  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
+  'editor.proposaCard.feta': "Card proposta. Para desfacela: «Desfai a proposta» ou Cmd/Ctrl+Z.",
+  'editor.proposaCard.res': "Non hai nada que propor: os campos da tarxeta xa están cheos ou o corpo non comeza con texto.",
+  'section.notes.proposaCard': "Propón Card",
+  'section.notes.proposaCardDesfer': "Desfai a proposta",
+  // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
+  'section.login.registre.ajudaPoble': "Se es de máis dunha, as outras escóllense no teu perfil.",
+  'section.login.registre.ajudaUsuari': "Faise co teu nome e vese cunha @ diante se o teu perfil é público. Se xa é de alguén, engadirémoslle -2.",
+  'section.login.registre.poble': "A túa vila",
+  'section.login.registre.triaPoble': "Escolle unha vila…",
+  'section.login.registre.usuari': "O teu identificador",
+  // P1-69 (pla 261028_1526, Bloc H) · Instal·lar l'App (PWA) a Descàrregues.
+  'section.descarregues.cancelada': "Instalación cancelada. Se cambias de opinión, tamén o podes facer desde o menú do navegador.",
+  'section.descarregues.guia.ios.pas1': "Preme Compartir ⬆️ (o cadrado coa frecha cara arriba).",
+  'section.descarregues.guia.ios.pas2': "Toca «Engadir á pantalla de inicio».",
+  'section.descarregues.guia.ios.safari': "Se non ves a opción, abre esta páxina con Safari.",
+  'section.descarregues.guia.mac': "No Safari do Mac (macOS Sonoma ou posterior): menú Ficheiro → «Engadir ao Dock».",
+  'section.descarregues.guia.menu': "Abre o menú do navegador e escolle a opción de instalar Sóc de Poble como aplicación (no móbil, «Engadir á pantalla de inicio»).",
+  'section.descarregues.guia.vore': "Ver as instrucións de cada navegador",
+  'section.descarregues.instalada': "Aplicación xa instalada neste dispositivo",
+  'section.descarregues.instalar': "Instalar a App (PWA)"
 };

@@ -39,7 +39,13 @@ const CENS = Object.freeze([
   'src/config/entradaNativa.test.js',
   'src/data/supabase/auth.testimoni.test.js',
   /* Gauntlet 261025_0545 (TE-01) · /registre en la llengua triada. */
-  'src/sections/onboarding/OnboardingSection.idioma.test.jsx'
+  'src/sections/onboarding/OnboardingSection.idioma.test.jsx',
+  /* P1-68 (pla 261028_1526, §3.8.2.3) · L'@usuari i el poble, a /registre i a la fitxa. */
+  'src/sections/onboarding/IdentitatAlPoble.jsx',
+  'src/sections/onboarding/CampsDIdentitatALAlta.jsx',
+  'src/sections/onboarding/IdentitatAlPoble.test.jsx',
+  'src/sections/onboarding/OnboardingSection.usuari.test.jsx',
+  'src/sections/onboarding/onboardingModel.username.test.js'
 ]);
 
 describe('el cens', () => {

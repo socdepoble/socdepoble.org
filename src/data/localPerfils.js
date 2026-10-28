@@ -83,6 +83,9 @@ import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
 import { errorDeMembre, errorDeTitular, membreDOrganitzacio } from './contracte.js';
 import { esDelPobleDelFiltre, pobleDelFiltre } from './pobleOrganitzacio.js';
 import { emojiSol } from '../utils/emoji.js';
+import {
+  FORMA_USERNAME, MINIM_USERNAME, errorDUsername, esUsernameReservat, normalitzaUsername, primerUsernameLliure
+} from '../sections/onboarding/onboardingModel.js';
 
 const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
 /* T66 · `icon`: l'emoticona de la fitxa de la persona (profiles.icon). Còpia de
@@ -145,7 +148,9 @@ function creaMagatzem(entitats, naixement) {
     organitzacionsMembre: new Map(),
     /* IDEA-22, punt 2 · orgId → usuariId de la propietària que ha triat
        mostrar-se, o null si ha dit que no (mana sobre la marca de la llavor). */
-    titulars: new Map()
+    titulars: new Map(),
+    /* P1-68 · Les proves de desaElMeuUsername: { id, al } (ms), la darrera hora. */
+    intentsUsername: []
   };
 }
 
@@ -192,6 +197,10 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
         /* T66 · Com la columna nova del servidor: null fins que se'n tria una. */
         icon: null,
         baixa_demanada_at: null, slug: PERSONA_PILOT.slug, alies: [...PERSONA_PILOT.alies],
+        /* P1-68 (2610282100) · L'identificador @usuari, com la columna del
+           servidor: el de la persona pilot (PERSONA_PILOT.slug, reservat i
+           seu), ja confirmat. Es canvia només per desaElMeuUsername. */
+        username: PERSONA_PILOT.slug, username_confirmat_at: naix,
         created_at: naix, updated_at: naix
       });
     }
@@ -303,7 +312,10 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
     poble: perfil.town_name || '', esIA: false, publicat: Boolean(perfil.is_public), propietari: Boolean(usuari?.id) && perfil.id === usuari.id,
     copyright: perfil.copyright || '', creat: perfil.created_at, modificat: perfil.updated_at,
     /* T66 · L'emoticona triada, ja passada per emojiSol; '' sense tria. */
-    emoticona: emojiSol(perfil.icon) || ''
+    emoticona: emojiSol(perfil.icon) || '',
+    /* P1-68 · Com perfil_public: l'identificador només d'una fitxa sencera
+       (la pròpia o una de publicada). */
+    usuari: (perfil.is_public || (Boolean(usuari?.id) && perfil.id === usuari.id)) && perfil.username ? perfil.username : null
   });
   const publicDEntitat = (org, usuari) => ({
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: org.name, avatar: org.logo_url || '',
@@ -348,6 +360,32 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       if (!perfil) throw new Error('Cal iniciar sessió per a desar la fitxa.');
       actualitza(perfil, updates, CAMPS_PERFIL, moment());
       return { ...perfil };
+    },
+
+    /**
+     * P1-68 · desa_el_meu_usuari (2610282100) en memòria, amb les mateixes
+     * regles i la mateixa resposta: la sessió (SDP-USER-000), la forma (001),
+     * la baixa (004), la reserva (002, llevat del que ja té), 10 proves per
+     * hora (003) i, si és d'una altra fitxa, { desat: false, motiu:
+     * 'ocupat', proposta } amb el primer -N lliure (primerUsernameLliure,
+     * private.usuari_lliure: 100 candidats com a molt).
+     */
+    desaElMeuUsername(usuari, valor) {
+      if (!usuari?.id) throw errorDUsername('SDP-USER-000');
+      const username = normalitzaUsername(valor);
+      if (username.length < MINIM_USERNAME || !FORMA_USERNAME.test(username)) throw errorDUsername('SDP-USER-001');
+      const perfil = perfilDe(usuari);
+      if (perfil.baixa_demanada_at) throw errorDUsername('SDP-USER-004');
+      if (esUsernameReservat(username) && username !== perfil.username) throw errorDUsername('SDP-USER-002');
+      const instant = ara().getTime();
+      estat.intentsUsername = estat.intentsUsername.filter((intent) => intent.id !== usuari.id || instant - intent.al < 3600000);
+      if (estat.intentsUsername.filter((intent) => intent.id === usuari.id).length >= 10) throw errorDUsername('SDP-USER-003');
+      estat.intentsUsername.push({ id: usuari.id, al: instant });
+      const dAltri = (candidat) => [...estat.perfils.values()].some((fitxa) => fitxa.id !== usuari.id && fitxa.username === candidat);
+      if (dAltri(username)) return { desat: false, motiu: 'ocupat', proposta: primerUsernameLliure(username, { ocupat: dAltri }) };
+      const confirmat = moment();
+      Object.assign(perfil, { username, username_confirmat_at: confirmat, updated_at: confirmat });
+      return { desat: true, usuari: username, confirmat_al: confirmat };
     },
 
     listMyOrganizations(usuari) {

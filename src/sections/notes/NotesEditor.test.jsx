@@ -59,6 +59,7 @@ import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { dataOriginal, gpsTorre, jpegAmbExif } from '../../components/universal/enquadrament/jpegProva.js';
 import { llegixExif } from '../../components/universal/enquadrament/exif.js';
+import { proposaCard } from './proposaCard.js';
 
 beforeEach(() => {
   mocks.notes = [];
@@ -1160,4 +1161,34 @@ test('ID4 · amb una nota oberta, la restauració no l’amaga ni la canvia per 
   expect(mocks.adapter.document.id).toBe('p');
   // Encara sense sessió: no es pot publicar.
   expect(mocks.adapter.visibilitat.bloqueig).not.toBeNull();
+});
+
+/* IDEA-41 (Llibre Mestre; Mestre 261028, Bloc H) · El Bloc passa a l'editor el
+   motor de «🎴 Proposa Card» (proposaCard.js): constant, el mateix a cada
+   pintada (l'adaptador no es refà per ell). */
+test('IDEA-41 · l’adaptador del Bloc porta el motor de «Proposa Card», el mateix a cada pintada', () => {
+  const { rerender } = render(<NotesEditor />);
+  expect(mocks.adapter.proposaCard).toBe(proposaCard);
+  rerender(<NotesEditor />);
+  expect(mocks.adapter.proposaCard).toBe(proposaCard);
+});
+
+/* Revisió adversarial 261028 · Una connexió i un contingut de fora comencen el
+   cos amb el text del sistema (la presentació, «Connectat per a llegir-lo més
+   tard.», «Font: …»): no porten «Proposa Card», que el pujaria als camps i
+   l'entradilla eixiria al Mur sense el filtre dels paràgrafs privats. */
+test('IDEA-41 · una connexió i un contingut de fora no porten el motor de «Proposa Card»; una nota pròpia, sí', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  const connectada = { id: 'c', folderId: 'f-connectats', categories: ['Sistema'], tags: [], origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa' } };
+  render(<NotesEditor activeNote={connectada} />);
+  expect(mocks.adapter.document.id).toBe('c');
+  expect(mocks.adapter.proposaCard).toBeNull();
+  cleanup();
+  render(<NotesEditor activeNote={EXTERN} />);
+  expect(mocks.adapter.document.id).toBe('e');
+  expect(mocks.adapter.proposaCard).toBeNull();
+  cleanup();
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.document.id).toBe('p');
+  expect(mocks.adapter.proposaCard).toBe(proposaCard);
 });

@@ -996,15 +996,11 @@ export default function Conversa({
 
       {consultaIAIA && !modeSeleccio ? <ConsultaIAIA t={t} /> : null}
 
-      {!modeSeleccio && potRespondre && !contrapartBloquejada && fil.participant !== false && onSendMedia ? (
-        <ControlsAdjunt fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}
-          onTextOrfe={(orfe) => canviaText(text.trim() ? `${text}\n\n${orfe}` : orfe)}
-          onEnvia={async (conversa, adjunt, opcions) => {
-          const resultat = await onSendMedia(conversa, { ...adjunt, respostaA: resposta?.id || null }, opcions);
-          if (resultat?.length) cancelaResposta();
-          return resultat;
-        }} />
-      ) : null}
+      {/* Pla 261028_1526 (P1-66) · Una sola barra: ControlsAdjunt guarda
+          l'estat dels adjunts i munta el Compositor (render-prop), sempre el
+          mateix element. Sense adjunts (convidats, llavor, IAIA, només
+          lectura, bloquejats, fora de la conversa: actiu fals) el Compositor
+          ix com sempre; si `actiu` canvia, el camp no es torna a muntar. */}
       {modeSeleccio ? (
         <div className="sdp-xat-compositor sdp-xat-compositor--seleccio">
           <button
@@ -1019,17 +1015,31 @@ export default function Conversa({
           </button>
         </div>
       ) : (
-        <Compositor
-          valor={text}
-          onCanvia={canviaText}
-          onEnvia={envia}
-          t={t}
-          fil={fil}
-          entitatActiva={entitatActiva}
-          campRef={campRef}
-          onEscapa={resposta ? cancelaResposta : null}
-          barra={resposta ? <BarraResposta missatge={resposta} onCancela={cancelaResposta} t={t} /> : null}
-        />
+        <ControlsAdjunt
+          actiu={potRespondre && !contrapartBloquejada && fil.participant !== false && Boolean(onSendMedia)}
+          fil={fil} externalConfig={configAdjunts} usuariId={usuariAdjunts} t={t} locale={locale}
+          onTextOrfe={(orfe) => canviaText(text.trim() ? `${text}\n\n${orfe}` : orfe)}
+          onEnvia={async (conversa, adjunt, opcions) => {
+            const resultat = await onSendMedia(conversa, { ...adjunt, respostaA: resposta?.id || null }, opcions);
+            if (resultat?.length) cancelaResposta();
+            return resultat;
+          }}
+        >
+          {(adjunts) => (
+            <Compositor
+              valor={text}
+              onCanvia={canviaText}
+              onEnvia={envia}
+              t={t}
+              fil={fil}
+              entitatActiva={entitatActiva}
+              campRef={campRef}
+              onEscapa={resposta ? cancelaResposta : null}
+              barra={resposta ? <BarraResposta missatge={resposta} onCancela={cancelaResposta} t={t} /> : null}
+              adjunts={adjunts}
+            />
+          )}
+        </ControlsAdjunt>
       )}
       {peu}
     </div>

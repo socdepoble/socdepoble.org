@@ -84,14 +84,115 @@ describe('esFinestraDApp', () => {
 describe('creaInstalacio · captura', () => {
   test('amb un motiu no registra cap escolta', () => {
     const magatzem = creaInstalacio();
-    for (const opcions of [{ suport: false }, { segur: false }, { incrustat: true }, { modes: ['standalone'] }, { mobil: true }]) {
+    for (const opcions of [{ suport: false }, { segur: false }, { incrustat: true }, { modes: ['standalone'] }]) {
       const { finestra, navegador } = entorn(opcions);
       const resultat = magatzem.captura({ finestra, navegador });
       expect(resultat.escolta).toBe(false);
       expect(typeof resultat.motiu).toBe('string');
+      expect(magatzem.motiuDeLaCaptura()).toBe(resultat.motiu);
       expect(finestra.addEventListener).not.toHaveBeenCalled();
     }
     expect(magatzem.captura({ finestra: undefined, navegador: undefined })).toEqual({ escolta: false, motiu: 'sense-finestra' });
+  });
+
+  /* P1-69 (ordre del Mestre, 261028 20:13) · Al mòbil s'escolta, però sense
+     preventDefault (Chrome conserva la seua oferta), i la pastilla de la
+     barra negra continua sent d'escriptori: pot() no veu l'oferta del mòbil. */
+  test('P1-69 · al mòbil escolta i guarda l’oferta sense preventDefault: ofereix() sí, pot() no', async () => {
+    const { finestra, navegador, escoltes } = entorn({ mobil: true });
+    const magatzem = creaInstalacio();
+    expect(magatzem.motiuDeLaCaptura()).toBe('sense-captura');
+    expect(magatzem.captura({ finestra, navegador }).escolta).toBe(true);
+    expect(magatzem.motiuDeLaCaptura()).toBe('mobil');
+    expect([...escoltes.keys()].sort()).toEqual(['appinstalled', 'beforeinstallprompt']);
+    const e = oferta();
+    escoltes.get('beforeinstallprompt')(e);
+    expect(e.preventDefault).not.toHaveBeenCalled();
+    expect([magatzem.ofereix(), magatzem.pot()]).toEqual([true, false]);
+    // El botó de Descàrregues l'obri igual: una volta, de manera síncrona.
+    const promesa = magatzem.demana();
+    expect(e.prompt).toHaveBeenCalledTimes(1);
+    expect(magatzem.ofereix()).toBe(false);
+    await expect(promesa).resolves.toBe('accepted');
+  });
+
+  /* Revisió adversarial de P1-69 (261028) · La tauleta Android diu
+     userAgentData.mobile === false, però és Android: sense preventDefault
+     (Chrome conserva la seua oferta) i fora de la pastilla d'escriptori. */
+  test('P1-69 · Android també a la tauleta (o sense userAgentData): sense preventDefault, ofereix() sí, pot() no', () => {
+    const tauletes = [
+      { userAgentData: { mobile: false, platform: 'Android' } },
+      { userAgent: 'Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' }
+    ];
+    for (const navegador of tauletes) {
+      const { finestra, escoltes } = entorn();
+      const magatzem = creaInstalacio();
+      expect(magatzem.captura({ finestra, navegador }).escolta).toBe(true);
+      expect(magatzem.motiuDeLaCaptura()).toBeNull();
+      const e = oferta();
+      escoltes.get('beforeinstallprompt')(e);
+      expect([e.preventDefault.mock.calls.length, magatzem.ofereix(), magatzem.pot()]).toEqual([0, true, false]);
+    }
+    // Linux d'escriptori no és Android: la pastilla, com sempre.
+    const { finestra, escoltes } = entorn();
+    const magatzem = creaInstalacio();
+    magatzem.captura({ finestra, navegador: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', userAgentData: { mobile: false, platform: 'Linux' } } });
+    const e = oferta();
+    escoltes.get('beforeinstallprompt')(e);
+    expect([e.preventDefault.mock.calls.length, magatzem.pot()]).toEqual([1, true]);
+  });
+
+  /* Revisió adversarial de P1-69 · Safari i Firefox no tenen l'esdeveniment
+     ('sense-suport' ve abans d''incrustat'): dins d'un iframe, Descàrregues
+     ha de saber que la pàgina és de l'amfitrió. La pastilla no canvia. */
+  test('P1-69 · Safari dins d’un iframe: motiuDeLaCaptura() és incrustat i el motiu que torna, el de sempre', () => {
+    const magatzem = creaInstalacio();
+    const { finestra, navegador } = entorn({ suport: false, incrustat: true });
+    expect(magatzem.captura({ finestra, navegador })).toEqual({ escolta: false, motiu: 'sense-suport' });
+    expect(magatzem.motiuDeLaCaptura()).toBe('incrustat');
+    const creuat = entorn({ suport: false });
+    Object.defineProperty(creuat.finestra, 'top', { get() { throw new Error('SecurityError'); } });
+    magatzem.captura(creuat);
+    expect(magatzem.motiuDeLaCaptura()).toBe('incrustat');
+    magatzem.captura(entorn({ suport: false }));
+    expect(magatzem.motiuDeLaCaptura()).toBe('sense-suport');
+    expect(finestra.addEventListener).not.toHaveBeenCalled();
+  });
+
+  /* Revisió adversarial de P1-69 · Al mòbil l'oferta pròpia de Chrome és el
+     camí principal: la instal·lació es fa en qualsevol pàgina, i Descàrregues
+     ho ha de saber quan s'hi arriba després. */
+  test('P1-69 · estaInstalada(): appinstalled (amb oferta o sense) se’n recorda; una oferta nova o una captura nova l’obliden', () => {
+    const { finestra, navegador, escoltes } = entorn({ mobil: true });
+    const magatzem = creaInstalacio();
+    magatzem.captura({ finestra, navegador });
+    const avisat = vi.fn();
+    magatzem.subscriu(avisat);
+    expect(magatzem.estaInstalada()).toBe(false);
+    // Pel menú del navegador, sense cap oferta guardada: també compta, i avisa una volta.
+    escoltes.get('appinstalled')({});
+    expect([magatzem.estaInstalada(), avisat.mock.calls.length]).toEqual([true, 1]);
+    escoltes.get('appinstalled')({});
+    expect(avisat).toHaveBeenCalledTimes(1);
+    // El navegador la torna a oferir: ja no hi és.
+    escoltes.get('beforeinstallprompt')(oferta());
+    expect([magatzem.estaInstalada(), magatzem.ofereix()]).toEqual([false, true]);
+    escoltes.get('appinstalled')({});
+    expect([magatzem.estaInstalada(), magatzem.ofereix()]).toEqual([true, false]);
+    magatzem.captura({ finestra, navegador });
+    expect(magatzem.estaInstalada()).toBe(false);
+  });
+
+  test('P1-69 · a escriptori, ofereix() i pot() diuen el mateix i motiuDeLaCaptura() és null', () => {
+    const { finestra, navegador, escoltes } = entorn({ mobil: false });
+    const magatzem = creaInstalacio();
+    magatzem.captura({ finestra, navegador });
+    expect(magatzem.motiuDeLaCaptura()).toBeNull();
+    expect([magatzem.ofereix(), magatzem.pot()]).toEqual([false, false]);
+    escoltes.get('beforeinstallprompt')(oferta());
+    expect([magatzem.ofereix(), magatzem.pot()]).toEqual([true, true]);
+    escoltes.get('appinstalled')({});
+    expect([magatzem.ofereix(), magatzem.pot()]).toEqual([false, false]);
   });
 
   test('sense motiu escolta beforeinstallprompt i appinstalled', () => {
@@ -188,6 +289,17 @@ describe('creaInstalacio · demana', () => {
     await expect(magatzem.demana()).resolves.toBe('dismissed');
     await expect(magatzem.demana()).resolves.toBe('no-disponible');
     expect(e.prompt).toHaveBeenCalledTimes(1);
+    expect(magatzem.estaInstalada()).toBe(false);
+  });
+
+  test('P1-69 · «accepted» deixa estaInstalada() a true i avisa', async () => {
+    const magatzem = ambOferta(oferta({ outcome: 'accepted' }));
+    const avisat = vi.fn();
+    magatzem.subscriu(avisat);
+    await expect(magatzem.demana()).resolves.toBe('accepted');
+    expect(magatzem.estaInstalada()).toBe(true);
+    // Una per a l'oferta gastada i una per a la instal·lació.
+    expect(avisat).toHaveBeenCalledTimes(2);
   });
 
   test('Chrome antic: prompt() resol buit i l\'elecció ve de userChoice', async () => {
@@ -225,7 +337,7 @@ describe('creaInstalacio · demana', () => {
 describe('el de la pàgina', () => {
   test('INSTALACIO és congelat, amb referències estables, i capturaInstalacio n\'és la captura', () => {
     expect(Object.isFrozen(INSTALACIO)).toBe(true);
-    expect(Object.keys(INSTALACIO).sort()).toEqual(['captura', 'demana', 'pot', 'subscriu']);
+    expect(Object.keys(INSTALACIO).sort()).toEqual(['captura', 'demana', 'estaInstalada', 'motiuDeLaCaptura', 'ofereix', 'pot', 'subscriu']);
     expect(capturaInstalacio).toBe(INSTALACIO.captura);
     expect(INSTALACIO.pot).toBe(INSTALACIO.pot);
   });

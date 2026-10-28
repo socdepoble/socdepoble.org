@@ -76,3 +76,26 @@ test('l’espècimen 7 té la mateixa anatomia que la TargetaConsola: boina, cos
   // Cap línia de data al cos: la data és a la boina.
   expect(especimen.querySelector('.sdp-consola__data')).toBeNull();
 });
+
+/* IDEA-40 (decisió del Mestre, 261028, pla 261028_1526, Bloc H) · El quadrat
+   de l'espècimen 7 porta el mateix semàfor que la de veres amb «Cal reparar»:
+   roig (data-semafor="error") i el nom del quadrat diu l'estat. */
+test('l’espècimen 7 pinta el semàfor del quadrat com la TargetaConsola', () => {
+  const quadrat = (article) => {
+    const insignia = article.querySelector('.sp-card-calendar-badge');
+    return {
+      semafor: insignia.getAttribute('data-semafor'),
+      nom: insignia.getAttribute('aria-label')
+    };
+  };
+  const real = pinta(
+    <TargetaConsola icona={CalendarClock} titol="Calendari de processos" etiquetes={[{ text: 'Cal reparar', to: 'error' }]}
+      metriques={['10 tasques']} generat="2026-09-26T01:42:00" a="/consola/calendari" />
+  ).querySelector('article.sp-card');
+  const delReal = quadrat(real);
+  cleanup();
+  const especimen = [...pinta(<EspecimenUniversalCard />).querySelectorAll('article.sp-card')]
+    .find((t) => t.querySelector('h3')?.textContent === 'Calendari de processos');
+  expect(delReal).toEqual({ semafor: 'error', nom: 'Calendari de processos · Cal reparar' });
+  expect(quadrat(especimen)).toEqual(delReal);
+});

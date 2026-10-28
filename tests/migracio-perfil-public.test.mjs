@@ -155,11 +155,26 @@ test('cap dada sensible: ni correu, ni rol, ni visibilitat, ni consentiment, ni 
   assert.doesNotMatch(RPC.cos, /\bauth\.users\b/i);
 });
 
-test('el client la crida amb p_id i llig columnes que la RPC torna', () => {
+/* Expectativa actualitzada a propòsit: P1-68 (2610282100). El client es
+   contrasta amb la versió VIGENT de la RPC (l'última migració que la crea),
+   que hi afig `usuari` al final; la història de 2610021520 la fixen les
+   proves de dalt. */
+function columnesDeLaVigent() {
+  const migracions = fs.readdirSync(path.join(ARREL, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
+  const vigent = migracions.filter((f) => /create\s+(or\s+replace\s+)?function\s+public\.perfil_public\b/i
+    .test(fs.readFileSync(path.join(ARREL, 'supabase/migrations', f), 'utf8'))).at(-1);
+  const codi = fs.readFileSync(path.join(ARREL, 'supabase/migrations', vigent), 'utf8').split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');
+  const rpc = funcions(codi).find((f) => f.esquema === 'public' && f.nom === 'perfil_public');
+  const taula = rpc.capcalera.match(/returns\s+table\s*\(([\s\S]*?)\)\s*language/i);
+  return taula[1].split(',').map((c) => c.trim().split(/\s+/)[0].toLowerCase());
+}
+
+test('el client la crida amb p_id i llig columnes que la RPC vigent torna', () => {
   assert.match(CLIENT, /rpc\('perfil_public', \{ p_id: clau \}/);
   const llegides = new Set([...CLIENT.slice(CLIENT.indexOf('export function perfilDePersona'))
     .slice(0, 1200).matchAll(/fila\.(\w+)/g)].map((m) => m[1]));
-  const tornades = new Set(columnesDeRetorn());
+  const tornades = new Set(columnesDeLaVigent());
+  assert.deepEqual(columnesDeLaVigent().slice(0, columnesDeRetorn().length), columnesDeRetorn(), 'la vigent conserva les columnes de 2610021520 en ordre');
   const fora = [...llegides].filter((c) => !tornades.has(c));
   assert.deepEqual(fora, [], `perfilDePersona llig columnes que la RPC no torna: ${fora.join(', ')}`);
 });

@@ -74,7 +74,8 @@ const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
 const ALTRES = ['es', 'en', 'eu', 'gl'];
 const TENANT = '00000000-0000-4000-8000-0000000000de';
 const DIR = path.join(process.cwd(), 'src/sections/onboarding');
-const FITXERS = ['OnboardingSteps.jsx', 'RecuperacioSteps.jsx', 'OnboardingSection.jsx'];
+/* P1-68 (pla 261028_1526) · Els camps de l'alta per a l'@usuari i el poble viuen a CampsDIdentitatALAlta.jsx. */
+const FITXERS = ['OnboardingSteps.jsx', 'RecuperacioSteps.jsx', 'OnboardingSection.jsx', 'CampsDIdentitatALAlta.jsx'];
 const FONTS = Object.fromEntries(FITXERS.map((nom) => [nom, readFileSync(path.join(DIR, nom), 'utf8')]));
 
 /* t('clau', 'reserva') i tr(…): la reserva, si n'hi ha, és un literal d'una

@@ -5,7 +5,7 @@
    fetch: cap fitxer ni connector de veres. La finestra és un EventTarget amb
    el CustomEvent del sistema, per escoltar «sdp:compartir_natiu» de debò. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { ESDEVENIMENT_FINESTRA, creaReceptorCompartit } from './compartirNatiu.js';
+import { ESDEVENIMENT_FINESTRA, LECTURA_COMPARTIT_MS, creaReceptorCompartit } from './compartirNatiu.js';
 import {
   MAX_FITXERS_COMPARTITS, MAX_TEXT_COMPARTIT, canviaSessioCompartit, compartitPendent, descartaCompartit,
   lliuraCompartit, registraAlliberadorCompartit, registraTalladorCompartit, sessioCompartit
@@ -26,21 +26,22 @@ function llegixFals(respostes = {}) {
   });
 }
 
-function muntatge({ llegix = llegixFals(), finestra: base = {}, sessio, registraTallador } = {}) {
+function muntatge({ llegix = llegixFals(), finestra: base = {}, sessio, registraTallador, terminiMs } = {}) {
   const oients = [];
+  const asa = { remove: vi.fn(async () => {}) };
   const pont = {
-    addListener: vi.fn((connector, nom, cb) => { oients.push(cb); return { remove: () => {} }; }),
+    addListener: vi.fn((connector, nom, cb) => { oients.push(cb); return asa; }),
     convertFileSrc: vi.fn(urlDe),
     nativePromise: vi.fn(async () => ({}))
   };
   const finestra = Object.assign(new EventTarget(), { Capacitor: pont, CustomEvent: globalThis.CustomEvent }, base);
   const avisos = [];
   finestra.addEventListener(ESDEVENIMENT_FINESTRA, (e) => avisos.push(e.detail));
-  const receptor = creaReceptorCompartit({ finestra, llegix, sessio, registraTallador });
+  const receptor = creaReceptorCompartit({ finestra, llegix, sessio, registraTallador, terminiMs });
   const lliura = vi.fn();
   /* Com el natiu: crida el callback de l'esdeveniment retingut. */
   const comparteix = (dades, error) => oients.at(-1)(dades, error);
-  return { pont, receptor, lliura, llegix, avisos, comparteix };
+  return { pont, asa, receptor, lliura, llegix, avisos, comparteix };
 }
 
 /* El llegix fals i l'allibera només fan microtasques: una volta de temporitzador ho buida tot. */
@@ -90,7 +91,8 @@ describe('un lot', () => {
     expect(fitxer).toMatchObject({ name: 'cap_tura.png', type: 'image/png', size: PNG.length });
     expect(new Uint8Array(await fitxer.arrayBuffer())).toEqual(PNG);
     expect(pont.convertFileSrc).toHaveBeenCalledWith('/data/x.png');
-    expect(llegix).toHaveBeenCalledWith(urlDe('/data/x.png'));
+    // QA-03 · Cada lectura porta el seu senyal d'avortament.
+    expect(llegix).toHaveBeenCalledWith(urlDe('/data/x.png'), { signal: expect.any(AbortSignal) });
     // La còpia nativa bona continua al disc: cap allibera en llegir-la.
     expect(pont.nativePromise).not.toHaveBeenCalled();
     // L'allibera, quan cal, la crida el registre amb receptor.allibera.
@@ -469,5 +471,237 @@ describe('P1-31 · un canvi de sessió amb la lectura en vol', () => {
     } finally {
       process.off('unhandledRejection', senseAmo);
     }
+  });
+});
+
+/* QA-03 (Codex 261028_1611, residu C28-02) · Cada lectura porta un AbortSignal
+   fins a fetch i al cos, i un termini (LECTURA_COMPARTIT_MS, el LECTURA_MS del
+   natiu). El tall de sessió les avorta totes, i la cua no espera mai un llegix
+   que no escolta el senyal. Amb el registre de veres i el tallador connectat,
+   com entrada.jsx. El «Descarta» del diàleg no avorta res. */
+describe('QA-03 · el senyal i el termini de cada lectura', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    descartaCompartit();
+    registraAlliberadorCompartit(null);
+    registraTalladorCompartit(null);
+    vi.unstubAllGlobals();
+  });
+  const connectat = (opcions = {}) => {
+    const m = muntatge({ ...opcions, sessio: sessioCompartit, registraTallador: registraTalladorCompartit });
+    registraAlliberadorCompartit(m.receptor.allibera);
+    m.lliura.mockImplementation(lliuraCompartit);
+    return m;
+  };
+
+  test.each(['llegix', 'blob'])('el canvi de sessió avorta la lectura en vol (%s): el lot no entra, s’alliberen totes les rutes i el natiu talla primer', async (on) => {
+    const senyals = [];
+    const llegix = vi.fn((url, { signal }) => {
+      senyals.push(signal);
+      const espera = new Promise((_, rebutja) => { signal.addEventListener('abort', () => rebutja(signal.reason), { once: true }); });
+      return on === 'llegix' ? espera : Promise.resolve({ ok: true, status: 200, blob: () => espera });
+    });
+    const { pont, receptor, lliura, avisos, comparteix } = connectat({ llegix });
+    await receptor.escolta(lliura);
+    comparteix({ fitxers: [imatge('/data/1.png'), imatge('/data/2.png')], text: 'la foto d’A' });
+    await buida();
+    expect(senyals).toHaveLength(1);
+    expect(senyals[0].aborted).toBe(false);
+    canviaSessioCompartit();
+    expect(senyals[0].aborted).toBe(true);
+    await buida();
+    expect(lliura).not.toHaveBeenCalled();
+    expect(avisos).toEqual([]);
+    expect(compartitPendent()).toBeNull();
+    // La segona ni es llig.
+    expect(llegix).toHaveBeenCalledTimes(1);
+    expect(pont.nativePromise.mock.calls).toEqual([
+      ['CompartirNatiu', 'tallaSessio', {}], ['CompartirNatiu', 'allibera', { rutes: ['/data/1.png', '/data/2.png'] }]
+    ]);
+  });
+
+  test('entra una foto, canvia la sessió i un lot nou només de text arriba sense esperar la lectura vella, encara que el llegix no escolte el senyal', async () => {
+    const senseAmo = vi.fn();
+    process.on('unhandledRejection', senseAmo);
+    try {
+      /* Una funció nua, no vi.fn: el vi.fn s'enganxa a la promesa que torna i
+         amagaria un rebuig sense amo. No escolta el senyal i no s'acaba sola. */
+      const urls = [];
+      let rebutja;
+      const llegix = (url) => { urls.push(url); return new Promise((_, no) => { rebutja = no; }); };
+      const { pont, receptor, lliura, avisos, comparteix } = connectat({ llegix });
+      await receptor.escolta(lliura);
+      comparteix({ fitxers: [imatge('/data/vella.png')] });
+      await buida();
+      canviaSessioCompartit();
+      comparteix({ text: 'de la sessió nova' });
+      await buida();
+      expect(lliura).toHaveBeenCalledTimes(1);
+      expect(lliura.mock.calls[0][0]).toMatchObject({ fitxers: [], text: 'de la sessió nova', sessio: sessioCompartit() });
+      expect(compartitPendent()).toMatchObject({ text: 'de la sessió nova' });
+      expect(avisos.map((detall) => detall.text)).toEqual(['de la sessió nova']);
+      expect(urls).toEqual([urlDe('/data/vella.png')]);
+      expect(pont.nativePromise.mock.calls).toEqual([
+        ['CompartirNatiu', 'tallaSessio', {}], ['CompartirNatiu', 'allibera', { rutes: ['/data/vella.png'] }]
+      ]);
+      // La lectura vella acaba tard: ni un lot més ni cap rebuig sense amo.
+      rebutja(new Error('tard'));
+      await buida();
+      expect(lliura).toHaveBeenCalledTimes(1);
+      expect(senseAmo).not.toHaveBeenCalled();
+    } finally {
+      process.off('unhandledRejection', senseAmo);
+    }
+  });
+
+  test('amb el senyal ja avortat abans d’esperar el cos, el rebuig del cos també té amo', async () => {
+    const senseAmo = vi.fn();
+    process.on('unhandledRejection', senseAmo);
+    try {
+      let receptor;
+      // Funcions nues: el cos avorta el senyal (tallaSessio del receptor) i després es rebutja.
+      const llegix = async () => ({ ok: true, status: 200, blob: () => { receptor.tallaSessio(); return Promise.reject(new Error('cos')); } });
+      const m = connectat({ llegix });
+      ({ receptor } = m);
+      await receptor.escolta(m.lliura);
+      m.comparteix({ fitxers: [imatge('/data/1.png')], text: 'x' });
+      await buida();
+      await buida();
+      expect(m.lliura).toHaveBeenCalledWith(expect.objectContaining({ text: 'x', rebutjats: 1 }));
+      expect(senseAmo).not.toHaveBeenCalled();
+    } finally {
+      process.off('unhandledRejection', senseAmo);
+    }
+  });
+
+  /* Revisió del Bloc H · Amb el senyal ja avortat, l'abort no torna a sonar
+     (ni el del termini): si el cos no s'acaba mai, només la comprovació
+     d'abans d'esperar evita que la cua es quede penjada per sempre. */
+  test('amb el senyal ja avortat abans d’esperar el cos, un cos que no s’acaba mai tampoc reté el lot', async () => {
+    let receptor;
+    const llegix = async () => ({ ok: true, status: 200, blob: () => { receptor.tallaSessio(); return new Promise(() => {}); } });
+    const m = connectat({ llegix });
+    ({ receptor } = m);
+    await receptor.escolta(m.lliura);
+    m.comparteix({ fitxers: [imatge('/data/1.png')], text: 'x' });
+    await buida();
+    await buida();
+    expect(m.lliura).toHaveBeenCalledWith(expect.objectContaining({ fitxers: [], text: 'x', rebutjats: 1 }));
+    expect(m.pont.nativePromise.mock.calls).toEqual([
+      ['CompartirNatiu', 'tallaSessio', {}], ['CompartirNatiu', 'allibera', { rutes: ['/data/1.png'] }]
+    ]);
+  });
+
+  test('passat LECTURA_COMPARTIT_MS, la lectura penjada (també la del cos) es compta com a rebutjada, se n’allibera la còpia i el lot entra amb la resta', async () => {
+    vi.useFakeTimers();
+    expect(LECTURA_COMPARTIT_MS).toBe(20_000);
+    // llegixFals no escolta el senyal: el termini el talla igualment.
+    const llegix = llegixFals({
+      [urlDe('/data/penjat.png')]: new Promise(() => {}),
+      [urlDe('/data/cos.png')]: { ok: true, status: 200, blob: () => new Promise(() => {}) }
+    });
+    const { pont, receptor, lliura, comparteix } = connectat({ llegix });
+    await receptor.escolta(lliura);
+    comparteix({ fitxers: [imatge('/data/penjat.png'), imatge('/data/cos.png'), imatge('/data/bo.png')], text: 'A' });
+    await vi.advanceTimersByTimeAsync(LECTURA_COMPARTIT_MS - 1);
+    expect(llegix).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    // Cada lectura té el seu termini: la del cos compta des que comença.
+    expect(llegix).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(LECTURA_COMPARTIT_MS - 1);
+    expect(lliura).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(lliura).toHaveBeenCalledTimes(1);
+    expect(lliura.mock.calls[0][0]).toMatchObject({ rutes: ['/data/bo.png'], text: 'A', rebutjats: 2 });
+    expect(compartitPendent().fitxers.map((f) => f.name)).toEqual(['bo.png']);
+    expect(pont.nativePromise.mock.calls).toEqual([['CompartirNatiu', 'allibera', { rutes: ['/data/penjat.png', '/data/cos.png'] }]]);
+  });
+
+  test.each([0, -5, Number.NaN, Number.POSITIVE_INFINITY, '1000', null])('un terminiMs que no és un número més gran que 0 (%s) torna al de sempre', async (terminiMs) => {
+    vi.useFakeTimers();
+    const { receptor, lliura, comparteix } = connectat({ llegix: llegixFals({ [urlDe('/data/penjat.png')]: new Promise(() => {}) }), terminiMs });
+    await receptor.escolta(lliura);
+    comparteix({ fitxers: [imatge('/data/penjat.png')], text: 't' });
+    await vi.advanceTimersByTimeAsync(LECTURA_COMPARTIT_MS - 1);
+    expect(lliura).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(lliura).toHaveBeenCalledWith(expect.objectContaining({ text: 't', rebutjats: 1 }));
+  });
+
+  test('un terminiMs vàlid és el que mana', async () => {
+    vi.useFakeTimers();
+    const { receptor, lliura, comparteix } = connectat({ llegix: llegixFals({ [urlDe('/data/penjat.png')]: new Promise(() => {}) }), terminiMs: 50 });
+    await receptor.escolta(lliura);
+    comparteix({ fitxers: [imatge('/data/penjat.png')], text: 't' });
+    await vi.advanceTimersByTimeAsync(49);
+    expect(lliura).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(lliura).toHaveBeenCalledWith(expect.objectContaining({ text: 't', rebutjats: 1 }));
+  });
+
+  test('el «Descarta» del diàleg no avorta cap lectura: el lot nou entra sencer', async () => {
+    const senyals = [];
+    const oberta = promesaOberta();
+    const llegix = vi.fn((url, { signal }) => { senyals.push(signal); return oberta.promesa; });
+    const { pont, receptor, lliura, comparteix } = connectat({ llegix });
+    await receptor.escolta(lliura);
+    lliuraCompartit({ text: 'el lot que la persona tenia davant' });
+    comparteix({ fitxers: [imatge('/data/nou.png')], text: 'el nou' });
+    await buida();
+    descartaCompartit();
+    expect(senyals[0].aborted).toBe(false);
+    oberta.resol(respostaBona());
+    await buida();
+    expect(compartitPendent()).toMatchObject({ text: 'el nou', rebutjats: 0 });
+    expect(compartitPendent().fitxers).toHaveLength(1);
+    expect(pont.nativePromise).not.toHaveBeenCalled();
+  });
+
+  test('el llegix per defecte passa el senyal a fetch', async () => {
+    const fetch = vi.fn(async () => respostaBona());
+    vi.stubGlobal('fetch', fetch);
+    const oients = [];
+    const receptor = creaReceptorCompartit({ finestra: { Capacitor: { addListener: (c, n, cb) => { oients.push(cb); }, convertFileSrc: urlDe } } });
+    const lliura = vi.fn();
+    await receptor.escolta(lliura);
+    oients[0]({ fitxers: [imatge('/data/x.png')] });
+    await buida();
+    expect(fetch).toHaveBeenCalledWith(urlDe('/data/x.png'), { signal: expect.any(AbortSignal) });
+    expect(lliura).toHaveBeenCalledTimes(1);
+  });
+
+  test('tanca() avorta la lectura en vol, deixa d’escoltar i no allibera cap còpia (el natiu les torna a anunciar en arrencar)', async () => {
+    const senyals = [];
+    const llegix = vi.fn((url, { signal }) => { senyals.push(signal); return new Promise(() => {}); });
+    const { pont, asa, receptor, lliura, avisos, comparteix } = connectat({ llegix });
+    await receptor.escolta(lliura);
+    comparteix({ fitxers: [imatge('/data/1.png'), imatge('/data/2.png')], text: 'x' });
+    comparteix({ text: 'a la cua' });
+    await buida();
+    receptor.tanca();
+    expect(senyals[0].aborted).toBe(true);
+    await buida();
+    expect(lliura).not.toHaveBeenCalled();
+    expect(avisos).toEqual([]);
+    expect(llegix).toHaveBeenCalledTimes(1);
+    expect(pont.nativePromise).not.toHaveBeenCalled();
+    expect(asa.remove).toHaveBeenCalledTimes(1);
+    // Un avís que encara arribara no fa res, i no es torna a escoltar.
+    comparteix({ text: 'tard' });
+    await buida();
+    expect(lliura).not.toHaveBeenCalled();
+    await expect(receptor.escolta(lliura)).resolves.toBe(false);
+    expect(pont.addListener).toHaveBeenCalledTimes(1);
+    // El registre encara el pot fer servir per a alliberar.
+    receptor.allibera(['/data/1.png']);
+    await buida();
+    expect(pont.nativePromise.mock.calls).toEqual([['CompartirNatiu', 'allibera', { rutes: ['/data/1.png'] }]]);
+    // Mai llança: dues voltes, sense escoltar o amb un remove que falla.
+    expect(() => receptor.tanca()).not.toThrow();
+    expect(() => muntatge().receptor.tanca()).not.toThrow();
+    const trencat = muntatge();
+    trencat.asa.remove.mockImplementation(() => { throw new Error('pont trencat'); });
+    await trencat.receptor.escolta(trencat.lliura);
+    expect(() => trencat.receptor.tanca()).not.toThrow();
   });
 });

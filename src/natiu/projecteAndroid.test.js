@@ -378,12 +378,13 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
      els fils del connector sobreviuen a l'activitat (i a la lectura encallada que
      la reté). Han de ser camps de la instància: un executor estàtic tancat en
      destruir-se una activitat ja no serviria la següent. */
-  test('CompartirNatiuPlugin: handleOnDestroy tanca el copiador i el vigilant amb shutdownNow; executors propis de la instància i fils dimonis', () => {
+  test('CompartirNatiuPlugin: handleOnDestroy tanca el copiador, el vigilant i el consultor amb shutdownNow; executors propis de la instància i fils dimonis', () => {
     const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
     expect(codi).toMatch(/@Override\s+protected void handleOnDestroy\(\)\s*\{/);
     const destrueix = cosDelMetode(codi, 'protected void handleOnDestroy()');
     expect(destrueix).toMatch(/\bsuper\.handleOnDestroy\(\);/);
-    for (const executor of ['copiador', 'vigilant']) {
+    // QA-04 · El consultor (getType i query) també es tanca.
+    for (const executor of ['copiador', 'vigilant', 'consultor']) {
       expect(destrueix, executor).toMatch(new RegExp(`\\b${executor}\\.shutdownNow\\(\\);`));
     }
     expect(codi).toMatch(/private final ExecutorService copiador = new ThreadPoolExecutor\(/);
@@ -480,8 +481,8 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     expect(codi).not.toMatch(/\bnewSingleThreadExecutor\(|\bnewFixedThreadPool\(|\bnewCachedThreadPool\(|\b(?:LinkedBlocking|ArrayBlocking|PriorityBlocking)(?:Queue|Deque)\b/);
     expect(codi).not.toMatch(/\b(?:CallerRuns|Discard|DiscardOldest)Policy\b/);
 
-    const encarrecs = [...codi.matchAll(/\b(copiador|vigilant)\.(?:execute|submit|schedule\w*|invokeA(?:ll|ny))\(/g)];
-    expect(encarrecs.map(([crida]) => crida)).toEqual(expect.arrayContaining(['copiador.execute(', 'vigilant.schedule(']));
+    const encarrecs = [...codi.matchAll(/\b(copiador|vigilant|consultor)\.(?:execute|submit|schedule\w*|invokeA(?:ll|ny))\(/g)];
+    expect(encarrecs.map(([crida]) => crida)).toEqual(expect.arrayContaining(['copiador.execute(', 'vigilant.schedule(', 'consultor.submit(']));
     const trys = blocsTry(codi);
     for (const encarrec of encarrecs) {
       const protegit = trys.some((bloc) => bloc.obri < encarrec.index && encarrec.index < bloc.fi
@@ -491,6 +492,63 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’Android (android/)', () => {
     /* Sense vigilant (connector ja tancat), ambTermini torna null, mai una excepció;
        i qui llig, amb null, ja no llig (pla 261028_1526, P1-33: vegeu més avall). */
     expect(cosDelMetode(codi, 'private ScheduledFuture<?> ambTermini()')).toMatch(/catch \(RejectedExecutionException \w+\) \{\s*return null;\s*\}/);
+  });
+
+  /* QA-04 (Codex 261028_1611, residu C28-07) · getType i la consulta del nom són
+     crides Binder al proveïdor: la interrupció del vigilant no les talla, i
+     anaven fora de tot termini (getType abans de la còpia; el nom, després de
+     cancel·lar-lo). Ara van al consultor (fitat i sense cua, com el copiador) i
+     s'esperen CONSULTA_MS com a molt: passat, el senyal i el futur es
+     cancel·len i la compartició continua amb el tipus de l'intent o el nom genèric. */
+  test('CompartirNatiuPlugin: getType i query només dins de consulta(...), al consultor fitat i amb termini CONSULTA_MS', () => {
+    const codi = senseComentarisJava(llig(JAVA, 'CompartirNatiuPlugin.java'));
+    expect(codi).toMatch(/private final ExecutorService consultor = new ThreadPoolExecutor\(/);
+    const args = argumentsDe(codi, 'consultor = new ThreadPoolExecutor(');
+    // Sis arguments (AbortPolicy), el sostre propi, cap cua i fils dimonis.
+    expect(args).toHaveLength(6);
+    expect(args[1]).toBe('MAX_CONSULTES_ALHORA');
+    expect(args[3]).toMatch(/^TimeUnit\.\w+$/);
+    expect(args[4]).toMatch(/^new SynchronousQueue<\w*>\(\)$/);
+    expect(args[5]).toBe('CompartirNatiuPlugin::filDeFons');
+    expect(constantJava(codi, 'MAX_CONSULTES_ALHORA')).toEqual({ tipus: 'int', valor: 3 });
+    /* Revisió del Bloc H · Per damunt dels 3 s (CONTENT_PROVIDER_TIMEOUT_MILLIS, API 36) que
+       el mateix getType dona a un proveïdor ja connectat: amb 2 s, un proveïdor lent però viu
+       quedava sense tipus, i amb un intent «image/*» totes les fotos es rebutjaven. */
+    expect(constantJava(codi, 'CONSULTA_MS')).toEqual({ tipus: 'long', valor: 5_000 });
+    // Les dues consultes i la lectura d'un fitxer caben dins de la finestra de la compartició.
+    expect(2 * constantJava(codi, 'CONSULTA_MS').valor + constantJava(codi, 'LECTURA_MS').valor)
+      .toBeLessThan(constantJava(codi, 'COMPARTICIO_MS').valor);
+
+    // Cap crida al proveïdor fora d'una lambda de consulta(...): un getType (mimeDe) i un query (nomVisible).
+    const crides = [...codi.matchAll(/\.(getType|query)\(uri\b/g)];
+    expect(crides.map(([, nom]) => nom).sort()).toEqual(['getType', 'query']);
+    const consultes = [...codi.matchAll(/\bconsulta\(\(\) ->/g)].map((c) => {
+      const obri = c.index + 'consulta'.length;
+      return { inici: c.index, fi: parellJava(codi, obri) };
+    });
+    expect(consultes).toHaveLength(2);
+    for (const crida of crides) {
+      expect(consultes.some(({ inici, fi }) => inici < crida.index && crida.index < fi), `${crida[1]} fora de consulta(...)`).toBe(true);
+    }
+    expect(cosDelMetode(codi, 'private String mimeDe(Uri uri, String tipusIntent)')).toMatch(/String mime = consulta\(\(\) -> \w+\.getType\(uri\), null\);/);
+    const nom = cosDelMetode(codi, 'private String nomVisible(Uri uri, String extensio)');
+    const senyal = /\bCancellationSignal (\w+) = new CancellationSignal\(\);/.exec(nom)?.[1];
+    expect(senyal, 'el senyal de la consulta del nom').toBeTruthy();
+    // El query rep el senyal, i consulta també (per a cancel·lar-lo passat el termini).
+    expect(nom).toContain(`.query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null, ${senyal})`);
+    expect(nom).toMatch(new RegExp(`\\}, ${senyal}\\);`));
+    // El cursor d'una altra app es tanca dins del consultor (try-with-resources), també si arriba tard.
+    expect(nom, 'el cursor es tanca al consultor').toMatch(/consulta\(\(\) -> \{\s*try \(Cursor \w+ = \w+\.query\(uri\b/);
+
+    const consulta = cosDelMetode(codi, 'private <T> T consulta(Callable<T> crida, CancellationSignal senyal)');
+    expect(consulta, 'consulta').not.toBe('');
+    expect(consulta).toMatch(/futur = consultor\.submit\(crida\);\s*\} catch \(RejectedExecutionException \w+\) \{\s*return null;\s*\}/);
+    expect(consulta).toMatch(/return futur\.get\(CONSULTA_MS, TimeUnit\.MILLISECONDS\);/);
+    expect(consulta).toMatch(/catch \(TimeoutException \w+\) \{\s*if \(senyal != null\) senyal\.cancel\(\);\s*futur\.cancel\(true\);\s*return null;\s*\}/);
+    expect(consulta).toMatch(/catch \(InterruptedException \w+\) \{\s*futur\.cancel\(true\);\s*Thread\.currentThread\(\)\.interrupt\(\);\s*return null;\s*\}/);
+    expect(consulta).toMatch(/catch \(ExecutionException \| CancellationException \w+\) \{\s*return null;\s*\}/);
+    // Un sol futur, sempre amb termini.
+    expect(codi.match(/\bfutur\.get\(/g)).toHaveLength(1);
   });
 
   /* Gauntlet 261026_1615 (Codex C1615-04) · Un proveïdor pot tornar un tub que no

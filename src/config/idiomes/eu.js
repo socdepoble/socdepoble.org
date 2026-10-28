@@ -1696,5 +1696,31 @@ export default {
   'section.mur.mapa.vorePoble': "Ikusi herria",
   'section.mur.mapa.voreTot': "Ikusi dena",
   'section.mur.mapa.zonaSenseNom': "Katalogoan izenik gabeko eremua",
-  'section.mur.mapa.zonesMes': "{nom} · beste {n} eremu"
+  'section.mur.mapa.zonesMes': "{nom} · beste {n} eremu",
+  // P1-66 (pla 261028_1526, Bloc H) · La barra única del compositor: el menú + dels adjunts.
+  'section.xat.adjunts.camera': "Kamera",
+  'section.xat.adjunts.fotos': "Argazkiak eta bideoak",
+  'section.xat.adjunts.menu': "Erantsi",
+  'section.xat.adjunts.selectorCamera': "Atera argazki bat kamerarekin",
+  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
+  'editor.proposaCard.feta': "Txartela proposatuta. Desegiteko: «Desegin proposamena» edo Cmd/Ctrl+Z.",
+  'editor.proposaCard.res': "Ez dago ezer proposatzeko: txartelaren eremuak beteta daude edo gorputza ez da testuarekin hasten.",
+  'section.notes.proposaCard': "Proposatu txartela",
+  'section.notes.proposaCardDesfer': "Desegin proposamena",
+  // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
+  'section.login.registre.ajudaPoble': "Bat baino gehiagotakoa bazara, besteak zure profilean aukeratzen dira.",
+  'section.login.registre.ajudaUsuari': "Zure izenarekin sortzen da, eta @ bat aurrean duela ikusten da zure profila publikoa bada. Norbaitek badu jada, -2 gehituko diogu.",
+  'section.login.registre.poble': "Zure herria",
+  'section.login.registre.triaPoble': "Aukeratu herri bat…",
+  'section.login.registre.usuari': "Zure erabiltzaile-izena",
+  // P1-69 (pla 261028_1526, Bloc H) · Instal·lar l'App (PWA) a Descàrregues.
+  'section.descarregues.cancelada': "Instalazioa bertan behera utzi da. Iritziz aldatzen baduzu, nabigatzailearen menutik ere egin dezakezu.",
+  'section.descarregues.guia.ios.pas1': "Sakatu Partekatu ⬆️ (gorantz begira dagoen geziadun laukia).",
+  'section.descarregues.guia.ios.pas2': "Sakatu «Gehitu hasierako pantailan».",
+  'section.descarregues.guia.ios.safari': "Aukera ikusten ez baduzu, ireki orri hau Safarirekin.",
+  'section.descarregues.guia.mac': "Mac-eko Safarin (macOS Sonoma edo berriagoa): Fitxategia menua → «Gehitu Dock-ean».",
+  'section.descarregues.guia.menu': "Ireki nabigatzailearen menua eta aukeratu Sóc de Poble aplikazio gisa instalatzeko aukera (mugikorrean, «Gehitu hasierako pantailan»).",
+  'section.descarregues.guia.vore': "Ikusi nabigatzaile bakoitzaren argibideak",
+  'section.descarregues.instalada': "Aplikazioa gailu honetan instalatuta dago jada",
+  'section.descarregues.instalar': "Instalatu aplikazioa (PWA)"
 };

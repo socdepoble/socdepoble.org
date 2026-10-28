@@ -423,11 +423,13 @@
     display: flex; gap: var(--sdp-space-1); overflow-x: auto; scrollbar-width: thin;
     border-bottom: 2px solid var(--sdp-vora);
   }
+  /* P1-67 (decisió del Mestre, 261028, pla 261028_1526) · Les pestanyes són
+     barres: SemiCondensed 87.5%, com --sdp-font-barra; la mida i el pes, els de sempre. */
   .sdp-pestanyes__pestanya {
     display: inline-flex; align-items: center; gap: var(--sdp-space-2); flex: none;
     min-height: var(--sdp-touch-min); padding: 0 var(--sdp-space-4); margin-bottom: -2px;
     border: 0; border-bottom: 4px solid transparent; background: transparent;
-    color: var(--sdp-text-suau); font: inherit; font-weight: 700; cursor: pointer;
+    color: var(--sdp-text-suau); font: inherit; font-weight: 700; font-stretch: var(--sdp-font-amplada-semi); cursor: pointer;
   }
   @media (hover: hover) and (pointer: fine) {
     .sdp-pestanyes__pestanya:hover { color: var(--sdp-text-titol); background: var(--sdp-fons-subtil); }
@@ -2463,10 +2465,17 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
    confirmació 4) ── La porta Publicar de la targeta, al final del text de
    la seua UniversalPage (PublicarDeLaPagina.jsx), amb la pell de Boto gran i
    ple (sdp-boto--gran, sdp-boto--ple). Ací només l'aire de dalt i de baix,
-   perquè no s'apegue al darrer paràgraf ni a la navegació de baix. */
+   perquè no s'apegue al darrer paràgraf ni a la navegació de baix.
+   P1-69 (revisió adversarial, 261028) · Un avís dins del bloc de l'H1 (la
+   guia d'instal·lar de /page/descarregues) es llig a l'inici de la línia,
+   com a qualsevol altre lloc: no hereta el centrat de header.page-title,
+   que deixava els passos de l'<ol> centrats i els números a l'esquerra. */
 @layer components {
   .sdp-pagina-accio {
     margin-block: var(--sdp-space-8) var(--sdp-space-10);
+  }
+  .page-title-accio .sdp-alerta {
+    text-align: start;
   }
 }
 

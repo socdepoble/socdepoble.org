@@ -30,6 +30,18 @@ describe('T3a · precisions', () => {
     expect(geolocalitzacio({ lat: 38.5, lng: -0.4, origen: 'gps' }).origen).toBe('manual');
   });
 
+  /* Emowe M1 · La inferència del mapa (estimada o poble) viu només als punts
+     del Mapa Fotogràfic: el payload continua sent 'exif' | 'manual', sense
+     cap camp d'inferència encara que l'entrada en porte. */
+  test('M1 · cap inferència del mapa arriba al payload: origen «exif» o «manual», i res més', () => {
+    for (const origen of ['estimada', 'poble', null, undefined, 42]) {
+      expect(geolocalitzacio({ lat: 38.5, lng: -0.4, origen }).origen).toBe('manual');
+    }
+    const ambInferencia = geolocalitzacio({ lat: 38.5, lng: -0.4, origen: 'exif', inferencia: { tipus: 'estimada' }, estat: 'estimada' });
+    expect(Object.keys(ambInferencia).sort()).toEqual(['lat', 'lng', 'origen', 'precisio', 'precisio_m']);
+    expect(ambInferencia.origen).toBe('exif');
+  });
+
   test('coordenades impossibles o buides: null', () => {
     expect(geolocalitzacio({ lat: null, lng: -0.4 })).toBeNull();
     expect(geolocalitzacio({ lat: 91, lng: -0.4 })).toBeNull();

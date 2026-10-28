@@ -798,7 +798,9 @@ test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en 
   mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, usuari));
   const ambSessio = render(<PerfilPublicSection agents={[]} />);
   await screen.findByRole('heading', { level: 1, name: 'Javi Pilot' });
-  expect(etiquetesDelTitol(ambSessio.container)).toEqual(['La Torre de les Maçanes', 'La teua fitxa']);
+  /* Expectativa actualitzada a propòsit: P1-68 (2610282100). La fitxa pròpia
+     i publicada porta el seu @usuari (localPerfils: el de la persona pilot). */
+  expect(etiquetesDelTitol(ambSessio.container)).toEqual(['La Torre de les Maçanes', `@${PERSONA_PILOT.slug}`, 'La teua fitxa']);
   expect(dretsDelTitol(ambSessio.container)).toBeNull();
   cleanup();
   mocks.config = { dataMode: 'remote' };

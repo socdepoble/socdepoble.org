@@ -29,6 +29,12 @@
  * amb tipus 'llista_comu': la llista viva (TargetaLlistaComu, memoritzada) en
  * lloc del text, que canvia en el lloc amb cada toc, i la mateixa en el mode de
  * selecció (només lectura). Dades de mostra.
+ *
+ * P1-66 (barra única del compositor) · Els adjunts es mostren com els munta
+ * Conversa: ControlsAdjunt guarda l'estat i munta el Compositor (render-prop)
+ * amb el + (menú amb «Fotos i vídeos» i la quota al peu), la carona dins del
+ * camp i el botó redó que grava, atura, envia el fitxer o envia el text. En
+ * local i en la llavor no hi ha adjunts (només en remot): ací es poden vore.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -262,15 +268,32 @@ function CompositorDeMostra() {
   );
 }
 
+/* P1-66 · La barra única amb els adjunts de veres (el port de mostra no puja
+   res): el +, la carona dins del camp i el botó redó, i la safata que només
+   apareix mentre hi ha un fitxer a mig fer. */
+function BarraAmbAdjuntsDeMostra() {
+  const [valor, setValor] = useState('');
+  return (
+    <AppGridContext.Provider value={{ mida: 'ample' }}>
+      <div className="sdp-xat-conversa">
+        <ControlsAdjunt fil={FIL_PAGINA} servei={SERVEI_ADJUNTS_DE_MOSTRA} onEnvia={ENVIA_ADJUNT_DE_MOSTRA} t={t} locale={LOCALE}>
+          {(adjunts) => <Compositor valor={valor} onCanvia={setValor} onEnvia={() => setValor('')} t={t} adjunts={adjunts} />}
+        </ControlsAdjunt>
+      </div>
+    </AppGridContext.Provider>
+  );
+}
+
 export default function EspecimenXat() {
   return (
     <Especimen id="xat" nom="Xat i missatgeria" fitxer="src/sections/xat/components/ · src/css/modules.css (sdp-xat-*)"
-      descripcio="Les peces del Xat F0 tal com es munten sobre AppGridShell: fila de conversa de 96 px (--sdp-xat-fila-mida, 2 × 48) amb l'avatar gran de 76 px (--sdp-xat-avatar-mida), nom, hora, previsualització i comptador; bombolles pròpies a la dreta (--sdp-accio-subtil) i alienes a l'esquerra (--sdp-accent-subtil), amb variants de sistema, esborrada, amb enllaç i en error; compositor amb textarea que creix fins a 6 línies; marques d'estat amb forma i text, mai només color."
+      descripcio="Les peces del Xat F0 tal com es munten sobre AppGridShell: fila de conversa de 96 px (--sdp-xat-fila-mida, 2 × 48) amb l'avatar gran de 76 px (--sdp-xat-avatar-mida), nom, hora, previsualització i comptador; bombolles pròpies a la dreta (--sdp-accio-subtil) i alienes a l'esquerra (--sdp-accent-subtil), amb variants de sistema, esborrada, amb enllaç i en error; compositor d'una sola barra (+ dels adjunts, carona dins del camp i botó redó) amb textarea que creix fins a 6 línies; marques d'estat amb forma i text, mai només color."
       contracte={[
         ['FilaConversa', '{ fil, activa, onSelect, locale, t }', '—', 'Un botó per conversa; ressalta si hi ha no llegits o marca manual.'],
         ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia?, primerDelGrup?, citat?, onVesACita?, onRespon?, ressaltat?, actorLlista?, onMutaLlista? }', 'primerDelGrup = true', 'Un <li data-missatge> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament. La cua i el nom, només a la primera del grup; amb respostaA, la cita dalt; «Respon» al menú si hi ha onRespon i el missatge és confirmat. Amb tipus \'llista_comu\' i una instantània a metadades.llista, el cos és la llista viva (actorLlista toca, onMutaLlista és el port); sense instantània, el text.'],
         ['TargetaLlistaComu', '{ llista, actor?, interactiva?, onMuta? }', 'interactiva = true', 'La llista viva d’«El Comú» dins de la bombolla (UniversalListCard, variant bombolla). Memoritzada: una tecla al compositor no la repinta. En el mode de selecció, interactiva = false i cap control.'],
-        ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil?, barra?, onEscapa?, campRef? }', '—', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt. barra es pinta just damunt del camp; Escape crida onEscapa.'],
+        ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil?, barra?, onEscapa?, campRef?, adjunts? }', 'adjunts = null', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt. barra es pinta just damunt del camp; Escape crida onEscapa. Amb adjunts (el dona ControlsAdjunt), el + i el que fa el botó redó; sense, només envia text.'],
+        ['ControlsAdjunt', '{ fil, onEnvia, servei?, usuariId?, externalConfig?, actiu?, onTextOrfe?, t?, locale?, children(adjunts) }', 'actiu = true', 'Guarda l’estat de les fotos, els vídeos i les notes de veu i munta el Compositor (render-prop) sempre al mateix lloc. adjunts és null sense capacitat, sense la migració, sense quota llegida o amb actiu fals; la safata de damunt només ocupa lloc mentre hi ha un fitxer a mig fer.'],
         ['SeparadorNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «1 missatge no llegit» o «{n} missatges no llegits».'],
         ['BotoBaixar', '{ nous, onBaixa, t }', '0', 'Botó redó «Baixa al final»; la pastilla ix amb nous > 0 («99+» per damunt de 99).'],
         ['BarraResposta', '{ missatge, onCancela, t }', '—', 'Autor («Tu» si és teu) i text a una línia; la ✕ «Cancel·la la resposta».'],
@@ -283,7 +306,8 @@ export default function EspecimenXat() {
         'La fila és un <button> amb aria-current per a la conversa oberta; l’avatar porta alt="" perquè el nom ja està escrit.',
         'Cada marca d’estat i cada pastilla porten text en .sdp-nomes-lector: el color és secundari.',
         'La bombolla en error porta role="alert" i dos botons de 44 px: «Torna-ho a provar» i «Descarta».',
-        'El compositor és un <textarea> amb aria-label; el botó d’enviar té nom i es desactiva sense text.',
+        'El compositor és un <textarea> amb aria-label; el botó redó és un sol control que canvia de nom (Grava àudio, Atura la gravació, Envia el fitxer, Envia) i, sense adjunts, es desactiva sense text. El segon toc d’un doble toc no fa l’acció que el primer hi ha deixat (ni obri el micròfon ni envia una nota sense escoltar-la).',
+        'El + porta aria-haspopup="menu", aria-expanded i aria-controls; el focus entra a la primera opció, les fletxes s’hi mouen i Escape el tanca abans que la resposta i torna el focus al +.',
         'Els enllaços ixen amb rel="noopener noreferrer" i avís si el domini porta caràcters enganyosos.',
         '«Baixa al final» porta el recompte com a descripció en text; la barra de resposta és un grup amb nom i la ✕ té nom propi.',
         'La cita és un botó amb el prefix «Missatge citat» per al lector i porta el focus a l’original; en triar «Respon» el focus va al camp i Escape cancel·la la resposta.',
@@ -297,7 +321,7 @@ export default function EspecimenXat() {
       ]}
       noFacis={[
         'Un punt de color com a únic senyal de no llegits: sempre el número dins de la pastilla.',
-        'Prometre accions que no fan res (trucades, adjunts, micròfon): F1 és F1.',
+        'Prometre accions que no fan res (trucades, documents, enquestes): el + només oferix el que funciona.',
         'Formatar hores al context: la UI ho fa amb temps.js i el locale de la llengua.'
       ]}>
       <h4>Fila de conversa (UX-B01)</h4>
@@ -327,9 +351,9 @@ export default function EspecimenXat() {
       <p>Els dos botons canvien la mostra: el mode (en ample, Retorn envia; en estret, fa salt de línia) i la resposta a Pepica, que posa la barra damunt del camp. La ✕, Escape o enviar la tanquen.</p>
       <CompositorDeMostra />
 
-      <h4>Adjunts: previsualitza abans d’enviar</h4>
-      <p>Foto comprimida, vídeo de fins a 10 segons o gravació de veu. Esta mostra no puja cap fitxer.</p>
-      <ControlsAdjunt fil={FIL_PAGINA} servei={SERVEI_ADJUNTS_DE_MOSTRA} onEnvia={ENVIA_ADJUNT_DE_MOSTRA} />
+      <h4>Adjunts a la barra única: previsualitza abans d’enviar (P1-66)</h4>
+      <p>Toca + per a triar una foto o un vídeo de fins a 10 segons; amb el camp buit, el botó redó grava àudio; amb text o un fitxer preparat, envia. Esta mostra no puja cap fitxer.</p>
+      <BarraAmbAdjuntsDeMostra />
 
       <h4>Capçalera de la conversa: una pàgina («Sobre:» i participants) i els Avisos (el megàfon)</h4>
       <CapcaleresDeMostra />

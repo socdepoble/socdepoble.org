@@ -26,9 +26,11 @@
  *   · Mai llança: una entrada que no és una llista és un arbre buit, i un punt
  *     sense coordenades vàlides només s'ajunta amb «Tot junt» (també quan n'hi
  *     ha molts: mai no entren a la matriu).
- *   · Per damunt de MAX_PUNTS_AGRUPABLES punts, les coordenades idèntiques es
- *     fonen abans, a altura 0 (el resultat de cada tall és el mateix). Si
- *     encara en queden més de MAX_PUNTS_DE_LA_MATRIU de diferents, s'ajunten
+ *   · Emowe M2 (decisió del Mestre, 261028: preagrupament exacte) · Les
+ *     coordenades idèntiques es fonen sempre abans, a altura 0, siga quin siga
+ *     el nombre de punts: el resultat de cada tall és el mateix que el de la
+ *     matriu sencera (i el de l'oracle), però la matriu només porta els llocs
+ *     diferents. Si encara en queden més de MAX_PUNTS_DE_LA_MATRIU, s'ajunten
  *     per cel·les (de 0,0001° en sèrie 1-2-5) fins que hi caben, i l'arbre ho
  *     diu (retallat: true, amb resolucioKm, la diagonal de la cel·la): la
  *     matriu de distàncies és quadràtica i un telèfon no n'ha de carregar més.
@@ -58,8 +60,6 @@ export const ZOOM_PARADES = 13;
 export const ZOOM_FOTO_A_FOTO = 16;
 /** Una estimació amb més distància que esta (o d'un altre dia) porta «incertesa alta». */
 export const INCERTESA_ALTA_S = 7200;
-/** Per damunt d'estos punts, les coordenades idèntiques es fonen abans de fer la matriu. */
-export const MAX_PUNTS_AGRUPABLES = 600;
 /** El sostre de la matriu de distàncies (punts diferents): per damunt, s'arrodonix. */
 export const MAX_PUNTS_DE_LA_MATRIU = 1500;
 /** La línia discontínua de cada targeta al seu punt (stroke-dasharray de Leaflet). */
@@ -281,11 +281,7 @@ export function arbreDAgrupacio(punts) {
   const llista = esLlista(punts) ? punts : [];
   const n = llista.length;
   try {
-    if (n <= MAX_PUNTS_AGRUPABLES) {
-      const fusions = [];
-      enllacComplet(llista, llista.map((_, index) => index), fusions);
-      return arbreFet(n, fusions, 0);
-    }
+    // M2 · Sempre, també amb pocs punts: les coordenades idèntiques, a altura 0 (clau exacta, cap arrodoniment).
     let fosos = fonPerClau(llista, (punt) => `${punt.lat}|${punt.lng}`);
     let pas = 0;
     for (const mida of PASSOS_DE_RETALL) {
@@ -332,16 +328,22 @@ export function agrupaPerDistancia(punts, km) {
 }
 
 /**
- * El punt que representa un grup: la mitjana de les latituds i de les
- * longituds dels seus punts vàlids, o null. Es trenca a través del meridià
- * ±180° (el Pacífic): fora de l'abast d'un mapa de pobles d'Europa.
+ * El punt que representa un grup: la mitjana de les latituds i la mitjana
+ * circular de les longituds dels seus punts vàlids, o null. QA-02 (Codex
+ * 261028_1611): amb la mitjana aritmètica, dos punts a ±179,8° tenien el
+ * centre a 0°, a l'altra banda del món; amb sinus i cosinus, al Pacífic. Si
+ * les longituds s'anul·len (punts antipodals), no hi ha cap direcció: la
+ * mitjana aritmètica, com abans.
  */
 export function centreDelGrup(punts, ids) {
   const valids = (esLlista(ids) ? ids : []).map((id) => punts?.[id]).filter(esPuntValid);
   if (!valids.length) return null;
+  const mitjana = (valor) => valids.reduce((suma, punt) => suma + valor(punt), 0) / valids.length;
+  const sinus = mitjana((punt) => Math.sin(punt.lng * RAD));
+  const cosinus = mitjana((punt) => Math.cos(punt.lng * RAD));
   return {
-    lat: valids.reduce((suma, punt) => suma + punt.lat, 0) / valids.length,
-    lng: valids.reduce((suma, punt) => suma + punt.lng, 0) / valids.length
+    lat: mitjana((punt) => punt.lat),
+    lng: Math.hypot(sinus, cosinus) < 1e-9 ? mitjana((punt) => punt.lng) : Math.atan2(sinus, cosinus) / RAD
   };
 }
 
@@ -429,7 +431,22 @@ export function formataHora(text) {
 
 /* ═══ L'ESTIMACIÓ ═════════════════════════════════════════════════ */
 
+/** Emowe M1 · Com s'ha deduït el lloc d'una foto que no en porta de propi. */
+export const INFERENCIES = Object.freeze(['estimada', 'poble']);
+
 const esGps = (foto) => foto.origen === 'exif' && coordenadesValides(foto.lat, foto.lng);
+
+/**
+ * L'estat d'una foto, derivat del seu origen i de la seua inferència (M1): la
+ * inferència mana ('estimada' o 'poble'); sense, 'gps' si el lloc és de
+ * l'EXIF, 'indicada' si és d'un altre origen i 'pendent' si no n'hi ha.
+ */
+export function estatDe(foto) {
+  const tipus = foto?.inferencia?.tipus;
+  if (INFERENCIES.includes(tipus)) return tipus;
+  if (!coordenadesValides(foto?.lat, foto?.lng)) return 'pendent';
+  return foto.origen === 'exif' ? 'gps' : 'indicada';
+}
 
 /**
  * Les fotos d'UNA publicació amb el seu estat: 'gps' (GPS de la foto),
@@ -437,15 +454,29 @@ const esGps = (foto) => foto.origen === 'exif' && coordenadesValides(foto.lat, f
  * GPS més pròxima en el temps de la mateixa publicació, amb referencia,
  * diferencia_s i incertesaAlta), 'poble' (el centre del poble) o 'pendent'
  * (sense lloc: no es pinta). Mai no es compara una hora amb zona amb una sense.
+ *
+ * Emowe M1 · D'on ve el lloc i com s'ha deduït van a banda. `origen` és el de
+ * les coordenades PRÒPIES de la foto ('exif' o 'manual'), i null si no en té:
+ * les de l'estimada són d'una altra foto, i les del poble, del poble.
+ * `inferencia` és { tipus: 'estimada' | 'poble', referencia, diferencia_s,
+ * incertesaAlta }, o null si el lloc és el seu. `estat` ix d'estatDe, i
+ * l'estimada continua portant referencia, diferencia_s i incertesaAlta en solt:
+ * el que es pinta no canvia (la precisió 'poble' del centre del poble, tampoc:
+ * són els decimals que en mostra el visor). Res d'açò no torna al payload, on
+ * geolocalitzacio.origen només és 'exif' o 'manual' (geolocalitzacio.js).
  */
 export function estimaUbicacions(fotos, { centreDelPoble = null } = {}) {
   const llista = (esLlista(fotos) ? fotos : []).filter((foto) => foto && typeof foto === 'object');
   const ambInstant = llista.map((foto) => ({ foto, instant: instantDeCaptura(foto.dataCaptura) }));
   const referencies = ambInstant.filter(({ foto, instant }) => instant && esGps(foto));
   const poble = esPuntValid(centreDelPoble) ? centreDelPoble : null;
+  const amb = (foto, camps) => {
+    const nova = { ...foto, ...camps };
+    return { ...nova, estat: estatDe(nova) };
+  };
   return ambInstant.map(({ foto, instant }) => {
-    if (esGps(foto)) return { ...foto, estat: 'gps' };
-    if (coordenadesValides(foto.lat, foto.lng)) return { ...foto, estat: 'indicada' };
+    if (esGps(foto)) return amb(foto, { origen: 'exif', inferencia: null });
+    if (coordenadesValides(foto.lat, foto.lng)) return amb(foto, { origen: 'manual', inferencia: null });
     let millor = null;
     if (instant) {
       for (const ref of referencies) {
@@ -456,14 +487,21 @@ export function estimaUbicacions(fotos, { centreDelPoble = null } = {}) {
     }
     if (millor) {
       const { ref, diferencia } = millor;
-      return {
-        ...foto, lat: ref.foto.lat, lng: ref.foto.lng, precisio: null, precisio_m: null, estat: 'estimada',
-        referencia: ref.foto.id ?? null, diferencia_s: diferencia,
+      const inferencia = Object.freeze({
+        tipus: 'estimada', referencia: ref.foto.id ?? null, diferencia_s: diferencia,
         incertesaAlta: diferencia > INCERTESA_ALTA_S || ref.instant.dia !== instant.dia
-      };
+      });
+      return amb(foto, {
+        lat: ref.foto.lat, lng: ref.foto.lng, precisio: null, precisio_m: null, origen: null, inferencia,
+        referencia: inferencia.referencia, diferencia_s: inferencia.diferencia_s, incertesaAlta: inferencia.incertesaAlta
+      });
     }
-    if (poble) return { ...foto, lat: poble.lat, lng: poble.lng, precisio: 'poble', precisio_m: null, estat: 'poble' };
-    return { ...foto, lat: null, lng: null, estat: 'pendent' };
+    if (poble) {
+      // El centre del poble no diu on es va fer la foto: incertesa alta, sempre.
+      const inferencia = Object.freeze({ tipus: 'poble', referencia: null, diferencia_s: null, incertesaAlta: true });
+      return amb(foto, { lat: poble.lat, lng: poble.lng, precisio: 'poble', precisio_m: null, origen: null, inferencia });
+    }
+    return amb(foto, { lat: null, lng: null, origen: null, inferencia: null });
   });
 }
 

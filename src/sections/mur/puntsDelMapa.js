@@ -180,12 +180,15 @@ function paradesDe(fotos) {
 /**
  * Els punts del mapa d'una llista d'elements del Mur:
  *   · fotos: cada foto amb lloc, en ordre de captura, amb { publicacio, titol,
- *     estat, lloc, parada, ordre } i, si és estimada, { referencia,
- *     diferencia_s, incertesaAlta };
- *   · parades: { id, publicacio, titol, lat, lng, estat, precisio,
- *     precisio_m, dataCaptura, lloc, fotos: [índexs de fotos], estimada }, en
- *     ordre de la primera captura (el número de cada grup és el de la seua
- *     primera visita);
+ *     estat, origen, inferencia, lloc, parada, ordre } i, si és estimada,
+ *     { referencia, diferencia_s, incertesaAlta } (els d'inferencia, en solt);
+ *   · parades: { id, publicacio, titol, lat, lng, estat, origen, inferencia,
+ *     precisio, precisio_m, dataCaptura, lloc, fotos: [índexs de fotos],
+ *     estimada }, en ordre de la primera captura (el número de cada grup és el
+ *     de la seua primera visita);
+ * Emowe M1 · `origen` ('exif' | 'manual', o null) és el de les coordenades
+ * pròpies de la foto, i `inferencia` (estimaUbicacions) diu com s'ha deduït el
+ * lloc quan no en té: mai no es barregen, i cap dels dos torna al payload.
  *   · pendents: les fotos sense lloc ni poble.
  * L'ordre es decidix una vegada per a tot el conjunt (modeDeComparacio): per
  * l'instant si totes les fotos amb data porten zona, si no per l'hora de
@@ -233,6 +236,8 @@ export function puntsDelMapa(items, { pobles = null } = {}) {
       lat: primera.lat,
       lng: primera.lng,
       estat: primera.estat,
+      origen: primera.origen ?? null,
+      inferencia: primera.inferencia ?? null,
       precisio: primera.precisio ?? null,
       precisio_m: primera.precisio_m ?? null,
       dataCaptura: datada ? datada.dataCaptura : null,

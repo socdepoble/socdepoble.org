@@ -56,8 +56,10 @@ export default function EspecimenPage() {
           /* Relleu 261007 (històric de l'actor, esmena 2 del pla 261007_1645) ·
              La ranura del peu, que el contracte encara no llistava.
              Gauntlet 261017 (WP7a) · Des del Gauntlet 261016 (Bloc 3.9, F45)
-             el peu ja no va davall de l'editor: només de PublicacioDetall. */
-          ['peuDePagina', 'node', 'null', 'El peu de la pàgina (esmena 2 del pla 261007_1645): després de l’article i de la traducció, dins del contenidor que fa scroll i fora de l’Índex (ni la traducció ni el Lector el recullen), en un section.sdp-pagina-peu. Hi va l’històric de l’actor (PublicacionsDeLActor) davall d’una publicació oberta al Bloc de Notes (PublicacioDetall); l’editor ja no en porta. Sense, el DOM de sempre.'],
+             el peu ja no va davall de l'editor: només de PublicacioDetall.
+             Revisió final del Bloc H (29-10-2026, R1) · L'editor de la fitxa
+             del Perfil hi torna a portar un peu: IdentitatAlPoble (P1-68). */
+          ['peuDePagina', 'node', 'null', 'El peu de la pàgina (esmena 2 del pla 261007_1645): després de l’article i de la traducció, dins del contenidor que fa scroll i fora de l’Índex (ni la traducció ni el Lector el recullen), en un section.sdp-pagina-peu. Hi va l’històric de l’actor (PublicacionsDeLActor) davall d’una publicació oberta al Bloc de Notes (PublicacioDetall) i, a l’editor de la fitxa del Perfil, l’identificador i el poble (IdentitatAlPoble, P1-68, pla 261028_1526): dins del contenidor que fa scroll, i no germà de l’editor, que es quedava sense alçada als telèfons. Sense, el DOM de sempre.'],
           ['etiquetaPeuDePagina', 'string', '—', 'El nom accessible del section del peu (aria-label).'],
         ]}
         a11y={[

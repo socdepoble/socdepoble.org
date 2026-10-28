@@ -319,7 +319,10 @@ describe('correcció R5-09 · la barra verda és només del Lector', () => {
     expect(base).toMatch(/color:\s*var\(--sdp-crom-text\)/);
     const lector = apps.match(/\n\.sdp-app-barra__titol\[data-sdp-app="lector"\] \{([^}]*)\}/)[1];
     expect(lector.trim()).toBe('background-color: var(--sdp-crom-barra-lector);');
-    expect(llig('src/css/tokens.css')).toMatch(/--sdp-crom-barra-lector:\s*#0f672f;/i);
+    // IDEA-40 (Mestre, 261028) · El token del Lector cita el verd de marca únic, --sdp-verd.
+    expect(llig('src/css/tokens.css')).toMatch(/--sdp-crom-barra-lector:\s*var\(--sdp-verd\);/);
+    const verdDeMarca = /* ALLOW_RAW_COLOR */ '#0f672f'; // el valor que va fixar el Mestre (IDEA-40)
+    expect(llig('src/css/tokens.css')).toMatch(new RegExp(`--sdp-verd:\\s*${verdDeMarca};`, 'i'));
     expect(apps.match(/data-sdp-app/g)).toHaveLength(1);
   });
 

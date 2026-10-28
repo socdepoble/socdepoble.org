@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.provider.OpenableColumns;
 import androidx.core.content.IntentCompat;
 import com.getcapacitor.JSArray;
@@ -31,14 +32,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.json.JSONObject;
 
@@ -71,6 +77,12 @@ import org.json.JSONObject;
  *    canviar de sessió), desada perquè sobreviu al procés: cada còpia porta la
  *    del seu intent al nom, la compartició que la veu canviar esborra les seues
  *    i plega, i en arrencar no torna cap resta d'una altra època.
+ *
+ * QA-04 (Codex 261028_1611, residu C28-07): getType i la consulta del nom són
+ * crides Binder al proveïdor que la interrupció del vigilant no talla. Van en
+ * un fil a banda (consultor, com a molt MAX_CONSULTES_ALHORA) amb termini,
+ * CONSULTA_MS: passat, el copiador continua amb el tipus de l'intent i el nom
+ * genèric. Cap crida al proveïdor no es fa sense termini.
  */
 @CapacitorPlugin(name = "CompartirNatiu")
 public class CompartirNatiuPlugin extends Plugin {
@@ -88,6 +100,10 @@ public class CompartirNatiuPlugin extends Plugin {
     private static final int MAX_COMPARTICIONS_ALHORA = 3;
     private static final long LECTURA_MS = 20_000;
     private static final long COMPARTICIO_MS = 60_000;
+    // QA-04 · getType i query: fils propis i termini (5 + 20 + 5 s per fitxer, dins de COMPARTICIO_MS).
+    // Més que els 3 s que ContentResolver.getType ja espera un proveïdor connectat: a un de viu no li talla res.
+    private static final int MAX_CONSULTES_ALHORA = 3;
+    private static final long CONSULTA_MS = 5_000;
     // Una compartició sense enviar es conserva una setmana (també si l'App es tanca).
     private static final long CADUCITAT_MS = 7L * 24 * 60 * 60 * 1000;
     private static final String PREFERENCIES = "CompartirNatiu";
@@ -99,6 +115,9 @@ public class CompartirNatiuPlugin extends Plugin {
     private final ExecutorService copiador = new ThreadPoolExecutor(
         0, MAX_COMPARTICIONS_ALHORA, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), CompartirNatiuPlugin::filDeFons);
     private final ScheduledExecutorService vigilant = Executors.newSingleThreadScheduledExecutor(CompartirNatiuPlugin::filDeFons);
+    // Fitat i sense cua, com el copiador: tres consultes encallades i la quarta ni es fa.
+    private final ExecutorService consultor = new ThreadPoolExecutor(
+        0, MAX_CONSULTES_ALHORA, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), CompartirNatiuPlugin::filDeFons);
 
     private static Thread filDeFons(Runnable tasca) {
         Thread fil = new Thread(tasca, "CompartirNatiu");
@@ -122,6 +141,7 @@ public class CompartirNatiuPlugin extends Plugin {
         super.handleOnDestroy();
         copiador.shutdownNow();
         vigilant.shutdownNow();
+        consultor.shutdownNow();
     }
 
     @Override
@@ -338,7 +358,9 @@ public class CompartirNatiuPlugin extends Plugin {
     }
 
     private String mimeDe(Uri uri, String tipusIntent) {
-        String mime = getContext().getContentResolver().getType(uri);
+        ContentResolver resolver = getContext().getContentResolver();
+        // Sense resposta a temps, el de l'intent: un tipus genèric d'imatge continua rebutjat (llista blanca).
+        String mime = consulta(() -> resolver.getType(uri), null);
         if (mime == null || mime.isEmpty()) mime = tipusIntent;
         return mime == null ? "" : mime.toLowerCase(Locale.ROOT);
     }
@@ -439,6 +461,34 @@ public class CompartirNatiuPlugin extends Plugin {
         }
     }
 
+    /* QA-04 · Una crida Binder (getType, query) al consultor, amb termini: un
+       proveïdor encallat ja no ocupa el copiador. Plens els fils (o el connector
+       tancat), null sense cridar res. Passat CONSULTA_MS, el senyal (si n'hi ha)
+       i el futur es cancel·len: el fil queda lliure quan el proveïdor torna. */
+    private <T> T consulta(Callable<T> crida, CancellationSignal senyal) {
+        Future<T> futur;
+        try {
+            futur = consultor.submit(crida);
+        } catch (RejectedExecutionException e) {
+            return null;
+        }
+        try {
+            return futur.get(CONSULTA_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            if (senyal != null) senyal.cancel();
+            futur.cancel(true);
+            return null;
+        } catch (InterruptedException e) {
+            futur.cancel(true);
+            // El copiador s'està tancant (shutdownNow): la interrupció continua per a processa.
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (ExecutionException | CancellationException e) {
+            // RuntimeException del proveïdor: alguns no responen a query().
+            return null;
+        }
+    }
+
     private static void senseTermini(ScheduledFuture<?> termini) {
         if (termini != null) termini.cancel(false);
         // La interrupció del termini no ha de passar a la lectura següent.
@@ -501,12 +551,14 @@ public class CompartirNatiuPlugin extends Plugin {
 
     /** El nom original només es mostra; mai fa de ruta. */
     private String nomVisible(Uri uri, String extensio) {
-        String nom = null;
-        try (Cursor cursor = getContext().getContentResolver().query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) nom = cursor.getString(0);
-        } catch (RuntimeException ignorat) {
-            // Alguns proveïdors no responen a query(): fem servir un nom genèric.
-        }
+        ContentResolver resolver = getContext().getContentResolver();
+        CancellationSignal senyal = new CancellationSignal();
+        // Sense resposta a temps (o si el proveïdor llança), un nom genèric.
+        String nom = consulta(() -> {
+            try (Cursor cursor = resolver.query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null, senyal)) {
+                return cursor != null && cursor.moveToFirst() ? cursor.getString(0) : null;
+            }
+        }, senyal);
         if (nom == null || nom.trim().isEmpty()) nom = "captura." + extensio;
         nom = nom.replaceAll("[\\\\/\\p{Cntrl}]", "_").trim();
         return nom.length() > 120 ? nom.substring(0, 120) : nom;

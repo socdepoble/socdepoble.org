@@ -110,6 +110,21 @@ it('manté l’edició normal de la sessió vigent', async () => {
   expect(value.identitats[0].nom).toBe('Nom nou');
 });
 
+/* P1-68 (pla 261028_1526) · L'@usuari es desa per la RPC, que el normalitza i
+   el confirma: la fitxa pren l'identificador i username_confirmat_at que
+   tornen (no el text teclejat), i cap dels dos va a user_metadata. */
+it('P1-68 · desar l’@usuari fusiona el que torna la RPC i no el copia a user_metadata', async () => {
+  await open();
+  mock.updateProfile.mockResolvedValue({ id: 'A', username: 'annaperez', username_confirmat_at: '2026-10-28T21:00:00Z' });
+  await act(async () => value.guardarCampPerfil('username', ' @AnnaPerez ', 'jo'));
+  expect(mock.updateProfile).toHaveBeenCalledWith({ username: ' @AnnaPerez ' }, expect.any(Object));
+  expect([value.identitats[0].dades.username, value.identitats[0].dades.username_confirmat_at]).toEqual(['annaperez', '2026-10-28T21:00:00Z']);
+  // La còpia del compte en memòria es posa al dia (user_metadata), però sense l'@usuari.
+  expect(value.usuari.user_metadata).toEqual(expect.any(Object));
+  expect(value.usuari.user_metadata).not.toHaveProperty('username');
+  expect(value.usuari.user_metadata).not.toHaveProperty('username_confirmat_at');
+});
+
 /* ── T47 (ordre del Mestre, 260928) · correccions de la revisió ── */
 
 it('T47 · una confirmació de la cua mentre es llig el perfil no la trepitja la lectura feta abans del PATCH', async () => {

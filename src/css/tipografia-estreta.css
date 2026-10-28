@@ -7,10 +7,15 @@
    un @font-face només compta al document). Ací només hi ha l'ús, i va dins
    d'index.css perquè arribe també a l'element incrustat.
 
-   Mentre no hi haja el woff2 amb eix wdth, el text estret ix a amplada
-   normal amb Noto Sans, mai amb la lletra del sistema
-   (02_investigacio_ia/261003_1330_onada4_claude/FONTS_LOCALS.txt).
-   Per a etiquetes curtes que no caben; mai per a la prosa.
+   P1-67 (Mestre, 261028) · La cara estreta ja pinta amb el woff2 variable
+   en wdth (public/fonts/noto-sans-wdth-wght-latin.woff2). Si no arriba, el
+   text estret ix a amplada normal amb Noto Sans, mai amb la lletra del
+   sistema (_investigacio_ia_de_poble/261003_1330_onada4_claude/FONTS_LOCALS.txt,
+   fora del repositori).
+   Per a rètols d'una línia que no caben: les barres (--sdp-font-barra, en
+   semi-condensed), els noms i els resums de la llista de converses i les
+   etiquetes de les opcions, dels filtres i dels ajustos del xat
+   (modules.css). Mai per a la prosa: paràgrafs i bombolles.
    ═══════════════════════════════════════════════════════════════════ */
 
 @layer components {

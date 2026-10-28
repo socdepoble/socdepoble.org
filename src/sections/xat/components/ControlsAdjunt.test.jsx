@@ -1,7 +1,10 @@
 import '../../../../tests/helpers/diccionaris.js';
+import { useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import ControlsAdjunt from './ControlsAdjunt.jsx';
+import Compositor from './Compositor.jsx';
 import AdjuntXat, { _reiniciaVeus } from './AdjuntXat.jsx';
 import { urlAdjuntXat } from '../../../data/backendPort.js';
 import { createTranslator } from '../../../config/i18n.js';
@@ -24,15 +27,39 @@ beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.useRealTimers(); });
+/* Pla 261028_1526 (P1-66) · La barra única, com la munta Conversa: els
+   controls guarden l'estat i el Compositor porta el + i el botó redó. */
+const enValencia = (_, alternativa) => alternativa;
+function Barra({ t, ...props }) {
+  const [valor, setValor] = useState('');
+  return (
+    <AppGridContext.Provider value={{ mida: 'ample', setPanellObert: () => {} }}>
+      <ControlsAdjunt t={t} {...props}>
+        {(adjunts) => <Compositor valor={valor} onCanvia={setValor} onEnvia={() => setValor('')} t={t ?? enValencia} adjunts={adjunts} />}
+      </ControlsAdjunt>
+    </AppGridContext.Provider>
+  );
+}
+const mes = () => screen.getByRole('button', { name: 'Adjunta' });
+// En una altra llengua, el + es busca per la classe.
+const plus = () => document.querySelector('.sdp-xat-compositor__adjunta');
+/* Obri el menú del +, en llig el peu (la quota, discreta: una línia per avís)
+   i el torna a tancar. */
+const peuDelMenu = (boto = mes()) => {
+  fireEvent.click(boto);
+  const linies = [...document.getElementById('xat-message-adjunts-peu').querySelectorAll('p')].map((p) => p.textContent);
+  fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+  return linies;
+};
 const tria = async () => {
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
 };
 /* Amb micròfon (jsdom no en porta): l'API i el gravador, de mentides. */
 const ambMicrofon = () => { vi.stubGlobal('navigator', { ...globalThis.navigator, mediaDevices: { getUserMedia: vi.fn() } }); };
 test('triar mostra la foto local i exigeix un enviament explícit', async () => {
   const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria();
   expect((await screen.findByAltText('Foto adjunta')).getAttribute('src')).toBe('blob:foto-local');
   expect(envia).not.toHaveBeenCalled();
@@ -43,7 +70,7 @@ test('triar mostra la foto local i exigeix un enviament explícit', async () => 
 });
 test('error de servidor conserva previsualització i mateix ID per a reintentar', async () => {
   const envia = vi.fn().mockRejectedValue(new Error('Servidor temporalment ocupat'));
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   await screen.findByText('Servidor temporalment ocupat');
@@ -54,19 +81,19 @@ test('error de servidor conserva previsualització i mateix ID per a reintentar'
 });
 test('canviar d’usuari descarta foto privada i revoca la URL', async () => {
   const envia = vi.fn();
-  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
-  m.user = 'B'; vista.rerender(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  m.user = 'B'; vista.rerender(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await waitFor(() => expect(screen.queryByAltText('Foto adjunta')).toBeNull());
   expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:foto-local'); expect(envia).not.toHaveBeenCalled();
 });
 test('canviar de conversa aborta upload i ignora la confirmació tardana', async () => {
   const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
-  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   const signal = envia.mock.calls[0][2].signal;
-  vista.rerender(<ControlsAdjunt usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={envia} />);
+  vista.rerender(<Barra usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={envia} />);
   expect(signal.aborted).toBe(true);
   await act(async () => { tard.resolve([{ id: 'm' }]); });
   expect(screen.queryByAltText('Foto adjunta')).toBeNull(); expect(screen.queryByRole('alert')).toBeNull();
@@ -74,72 +101,87 @@ test('canviar de conversa aborta upload i ignora la confirmació tardana', async
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-10) · Sense migració, el xat es veu com abans. */
 test('un node sense migració no pinta cap panell ni cap alerta', async () => {
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('sense-capacitat'));
-  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await waitFor(() => expect(servei.quotaXat).toHaveBeenCalledOnce());
   await act(async () => {});
-  expect(vista.container.firstChild).toBeNull();
+  expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
   expect(screen.queryByRole('alert')).toBeNull();
-  expect(screen.queryByRole('button')).toBeNull();
+  // P1-66 · El Compositor ix com sempre: ni + ni micròfon.
+  expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Emoticones', 'Envia']);
 });
 test('sense la capacitat al port, ni tan sols es pregunta la quota', () => {
   const sense = { teCapacitat: () => false, quotaXat: vi.fn() };
-  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={sense} onEnvia={vi.fn()} />);
-  expect(vista.container.firstChild).toBeNull();
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={sense} onEnvia={vi.fn()} />);
+  expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
   expect(sense.quotaXat).not.toHaveBeenCalled();
 });
 test('mentre es llig la quota no hi ha cap panell que després desaparega', () => {
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
-  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  expect(vista.container.firstChild).toBeNull();
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
 });
 test('una quota que no es pot llegir es diu sense alerta i es pot tornar a provar', async () => {
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('xarxa'));
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  fireEvent.click(await screen.findByRole('button', { name: 'Torna-ho a provar' }));
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Adjunta' }));
+  expect(document.getElementById('xat-message-adjunts-peu').textContent).toBe('No hem pogut llegir l’espai que et queda per a fitxers.');
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Torna-ho a provar' }));
+  expect(screen.queryByRole('menu')).toBeNull();
+  expect(document.activeElement).toBe(mes());
   expect(screen.queryByRole('alert')).toBeNull();
-  await screen.findByRole('button', { name: 'Foto o vídeo' });
+  await waitFor(() => expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat'));
+  fireEvent.click(mes());
+  expect(screen.getByRole('menuitem', { name: 'Fotos i vídeos' })).toBeTruthy();
   expect(servei.quotaXat).toHaveBeenCalledTimes(2);
 });
 test('un fitxer pujat sense missatge és recuperable després de recarregar', async () => {
   const serveiAmbPendents = { teCapacitat: () => true, quotaXat: vi.fn().mockResolvedValueOnce({ usats: 12_000_000, limit: 20_000_000, pendents: [{ id: 'pendent', bytes: 12_000_000 }] }).mockResolvedValue({ usats: 0, limit: 20_000_000, pendents: [] }), descartaAdjuntXat: vi.fn().mockResolvedValue(true) };
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={serveiAmbPendents} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={serveiAmbPendents} onEnvia={vi.fn()} />);
   fireEvent.click(await screen.findByRole('button', { name: 'Descarta el fitxer pendent (12,0 MB)' }));
   await waitFor(() => expect(serveiAmbPendents.descartaAdjuntXat).toHaveBeenCalledWith('pendent', expect.objectContaining({ signal: expect.any(AbortSignal) })));
   await waitFor(() => expect(screen.queryByLabelText('Fitxers pendents d’enviar')).toBeNull());
-  expect(screen.getByText('0,0 de 20 MB del xat')).toBeTruthy();
+  expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat');
 });
 test('mentre descarta un pendent no permet iniciar una altra preparació', async () => {
   const tard = deferred();
   const serveiAmbPendents = { teCapacitat: () => true, quotaXat: vi.fn().mockResolvedValueOnce({ usats: 12_000_000, limit: 20_000_000, pendents: [{ id: 'pendent', bytes: 12_000_000 }] }).mockResolvedValue({ usats: 0, limit: 20_000_000, pendents: [] }), descartaAdjuntXat: vi.fn().mockReturnValue(tard.promise) };
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={serveiAmbPendents} onEnvia={vi.fn()} />);
+  ambMicrofon();
+  render(<Barra usuariId={m.user} fil={fil} servei={serveiAmbPendents} onEnvia={vi.fn()} />);
   fireEvent.click(await screen.findByRole('button', { name: 'Descarta el fitxer pendent (12,0 MB)' }));
-  expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(true);
-  expect(screen.getByRole('button', { name: 'Grava àudio' }).disabled).toBe(true);
+  // P1-66 · El + i el micròfon continuen enfocables però no fan res (aria-disabled).
+  expect(mes().getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(mes());
+  expect(screen.queryByRole('menu')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Grava àudio' }).getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(screen.getByRole('button', { name: 'Grava àudio' }));
+  expect(m.gravaVeu).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['foto'], { type: 'image/jpeg' })] } });
   expect(m.preparaAdjunt).not.toHaveBeenCalled();
   await act(async () => { tard.resolve(true); });
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(mes().hasAttribute('aria-disabled')).toBe(false));
 });
 /* MEDIA-12 · Si només falla tornar a llegir la quota, l'enviament ja fet no és un error. */
 test('un refresc de quota fallit després d’enviar no mostra cap error', async () => {
   const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
   servei.quotaXat.mockResolvedValueOnce({ usats: 0, limit: 20_000_000 }).mockRejectedValueOnce(errorAdjuntXat('xarxa'));
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   await waitFor(() => expect(servei.quotaXat).toHaveBeenCalledTimes(2));
   await act(async () => {});
   expect(screen.queryByRole('alert')).toBeNull();
   expect(screen.queryByAltText('Foto adjunta')).toBeNull();
-  expect(screen.getByText('0,0 de 20 MB del xat')).toBeTruthy();
+  expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat');
 });
 /* MEDIA-5 · Els codis del servidor arriben com a text humà, en la llengua de la interfície. */
 test('un codi SDP del servidor es diu en la llengua de qui envia', async () => {
   const envia = vi.fn().mockRejectedValue(errorAdjuntXat('SDP-XAT-011'));
   const t = createTranslator('es');
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={t} />);
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
-  expect(screen.getByText('0,0 de 20 MB del chat')).toBeTruthy();
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={t} />);
+  await waitFor(() => expect(plus().hasAttribute('aria-disabled')).toBe(false));
+  expect(peuDelMenu(plus())[0]).toBe('0,0 de 20 MB del chat');
   fireEvent.change(screen.getByLabelText('Elige una foto o un vídeo de hasta 10 segundos'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   fireEvent.click(await screen.findByRole('button', { name: 'Envía el archivo' }));
   expect((await screen.findByRole('alert')).textContent).toBe('En esta conversación no puedes enviar archivos.');
@@ -147,17 +189,17 @@ test('un codi SDP del servidor es diu en la llengua de qui envia', async () => {
 });
 test('la quota esgotada diu literalment el text del Mestre', async () => {
   servei.quotaXat.mockResolvedValue({ usats: 19_999_999, limit: 20_000_000 });
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await tria();
   expect((await screen.findByRole('alert')).textContent).toBe("Espera't, que no tenim més diners per a pagar el servidor... ja et direm quan en pots pujar més!");
 });
 /* MEDIA-6 · El focus segueix el pas: mai no cau al principi de la pàgina. */
-test('triar una foto porta el focus a Envia i enviar-la el torna a Foto o vídeo', async () => {
+test('triar una foto porta el focus a Envia i enviar-la el torna al +', async () => {
   const preparant = deferred();
   m.preparaAdjunt.mockReturnValueOnce(preparant.promise);
   const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
-  const foto = await screen.findByRole('button', { name: 'Foto o vídeo' });
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  const foto = await screen.findByRole('button', { name: 'Adjunta' });
   foto.focus();
   fireEvent.change(screen.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel·la' })));
@@ -165,13 +207,13 @@ test('triar una foto porta el focus a Envia i enviar-la el torna a Foto o vídeo
   await act(async () => { preparant.resolve(adjunt()); });
   await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Envia el fitxer' })));
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
-  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Foto o vídeo' })));
+  await waitFor(() => expect(document.activeElement).toBe(mes()));
 });
 test('gravar: espera el permís amb el seu text, el focus va a Atura i després a Envia', async () => {
   ambMicrofon();
   const permis = deferred(); const nota = deferred();
   m.gravaVeu.mockReturnValueOnce(permis.promise);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   const grava = await screen.findByRole('button', { name: 'Grava àudio' });
   grava.focus(); fireEvent.click(grava);
   await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel·la' })));
@@ -189,14 +231,14 @@ test('gravar: espera el permís amb el seu text, el focus va a Atura i després 
 test('un micròfon sense permís explica on activar-lo', async () => {
   ambMicrofon();
   m.gravaVeu.mockRejectedValueOnce(errorAdjuntXat('micro-permis'));
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   fireEvent.click(await screen.findByRole('button', { name: 'Grava àudio' }));
   expect((await screen.findByRole('alert')).textContent).toBe(ERRORS_ADJUNT_XAT['micro-permis']);
 });
 /* MEDIA-4 · Un vídeo que no s'ha pogut netejar mai no s'envia en silenci. */
 test('un vídeo amb la ubicació sense netejar avisa abans del botó d’enviar', async () => {
   m.preparaAdjunt.mockResolvedValueOnce({ id: 'video', tipus: 'video', duradaMs: 4000, senseUbicacio: false, fitxer: new Blob(['v'], { type: 'video/webm' }) });
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await tria();
   const envia = await screen.findByRole('button', { name: 'Envia el fitxer' });
   const avis = screen.getByText(/si el mòbil hi va guardar la ubicació/);
@@ -204,7 +246,7 @@ test('un vídeo amb la ubicació sense netejar avisa abans del botó d’enviar'
 });
 test('un vídeo net no porta cap avís', async () => {
   m.preparaAdjunt.mockResolvedValueOnce({ id: 'video', tipus: 'video', duradaMs: 4000, senseUbicacio: true, fitxer: new Blob(['v'], { type: 'video/mp4' }) });
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await tria();
   expect((await screen.findByRole('button', { name: 'Envia el fitxer' })).getAttribute('aria-describedby')).toBeNull();
   expect(screen.queryByText(/ubicació/)).toBeNull();
@@ -212,7 +254,7 @@ test('un vídeo net no porta cap avís', async () => {
 /* MEDIA-9 · Amb el temps proporcional, una pujada llarga es pot parar. */
 test('durant la pujada es pot cancel·lar i Envia continua enfocable', async () => {
   const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   const boto = screen.getByRole('button', { name: 'Envia el fitxer' });
   boto.focus(); fireEvent.click(boto);
@@ -227,29 +269,29 @@ test('durant la pujada es pot cancel·lar i Envia continua enfocable', async () 
    controls nous a cada fil: amb la quota ja llegida, el panell hi és des del
    primer frame i la llista no s'encongix quan torna la lectura. */
 test('després d’una quota llegida, el fil següent pinta el panell des del primer frame', async () => {
-  const primer = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  await screen.findByText('0,0 de 20 MB del xat');
+  const primer = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await screen.findByRole('button', { name: 'Adjunta' });
   primer.unmount();
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
-  render(<ControlsAdjunt usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={vi.fn()} />);
-  expect(screen.getByText('0,0 de 20 MB del xat')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Foto o vídeo' })).toBeTruthy();
+  render(<Barra usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={vi.fn()} />);
+  expect(mes()).toBeTruthy();
+  expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat');
   expect(servei.quotaXat).toHaveBeenCalledTimes(2);
 });
 test('la quota desada és de cada persona, i un node sense adjunts l’oblida', async () => {
-  const primer = render(<ControlsAdjunt usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  await screen.findByText('0,0 de 20 MB del xat');
+  const primer = render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await screen.findByRole('button', { name: 'Adjunta' });
   primer.unmount();
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
-  const altra = render(<ControlsAdjunt usuariId="B" fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  expect(altra.container.firstChild).toBeNull();
+  const altra = render(<Barra usuariId="B" fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  expect(altra.container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull();
   altra.unmount();
   servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('sense-capacitat'));
-  const sense = render(<ControlsAdjunt usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />);
-  await waitFor(() => expect(sense.container.firstChild).toBeNull());
+  const sense = render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await waitFor(() => expect(sense.container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull());
   sense.unmount();
   servei.quotaXat.mockReturnValueOnce(new Promise(() => {}));
-  expect(render(<ControlsAdjunt usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />).container.firstChild).toBeNull();
+  expect(render(<Barra usuariId="A" fil={fil} servei={servei} onEnvia={vi.fn()} />).container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull();
 });
 /* ADV-MEDIA-5 · A l'encastat, el ShadowRoot no té activeElement quan el focus
    és a la pàgina amfitriona: acabar un pas llarg no el pren. */
@@ -266,9 +308,9 @@ test('a l’encastat, acabar de preparar la foto no pren el focus a la pàgina a
   const preparant = deferred();
   m.preparaAdjunt.mockReturnValueOnce(preparant.promise);
   const e = dinsDUnShadow();
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />, { container: e.arrel });
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />, { container: e.arrel });
   const dins = within(e.arrel);
-  await waitFor(() => expect(dins.getByRole('button', { name: 'Foto o vídeo' }).disabled).toBe(false));
+  await waitFor(() => expect(dins.getByRole('button', { name: 'Adjunta' }).hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(dins.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   e.amfitrio.focus();
   await act(async () => { preparant.resolve(adjunt()); });
@@ -281,10 +323,10 @@ test('a l’encastat, el focus perdut dins del panell continua passant al pas no
   const preparant = deferred();
   m.preparaAdjunt.mockReturnValueOnce(preparant.promise);
   const e = dinsDUnShadow();
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />, { container: e.arrel });
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />, { container: e.arrel });
   const dins = within(e.arrel);
-  const foto = await dins.findByRole('button', { name: 'Foto o vídeo' });
-  await waitFor(() => expect(foto.disabled).toBe(false));
+  const foto = await dins.findByRole('button', { name: 'Adjunta' });
+  await waitFor(() => expect(foto.hasAttribute('aria-disabled')).toBe(false));
   foto.focus();
   fireEvent.change(dins.getByLabelText('Tria una foto o un vídeo de fins a 10 segons'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   await waitFor(() => expect(e.shadow.activeElement).toBe(dins.getByRole('button', { name: 'Cancel·la' })));
@@ -295,7 +337,7 @@ test('a l’encastat, el focus perdut dins del panell continua passant al pas no
 /* ADV-MEDIA-7 · Rebutjar les normes de convivència (AbortError de sendChatMedia) calla, com al compositor. */
 test('rebutjar les normes calla i conserva la previsualització per a tornar-ho a provar', async () => {
   const envia = vi.fn().mockRejectedValue(new DOMException('Cal acceptar les normes de convivència.', 'AbortError'));
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   await waitFor(() => expect(envia).toHaveBeenCalledOnce());
@@ -309,7 +351,7 @@ test('massa fitxers pendents ho diu i mostra els pendents per descartar', async 
   const envia = vi.fn().mockRejectedValue(errorAdjuntXat('SDP-XAT-022'));
   servei.quotaXat.mockResolvedValueOnce({ usats: 0, limit: 20_000_000 })
     .mockResolvedValueOnce({ usats: 1_200_000, limit: 20_000_000, pendents: [{ id: 'vell', bytes: 1_200_000 }] });
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   expect((await screen.findByRole('alert')).textContent).toBe('Tens massa fitxers pendents d’enviar. Descarta’n algun per a continuar.');
@@ -322,7 +364,7 @@ test('cancel·lar durant la pujada torna a llegir la quota i el pendent es pot d
   }));
   servei.quotaXat.mockResolvedValueOnce({ usats: 0, limit: 20_000_000 })
     .mockResolvedValueOnce({ usats: 1_200_000, limit: 20_000_000, pendents: [{ id: 'mateix-id', bytes: 1_200_000 }] });
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Cancel·la' }));
@@ -335,7 +377,7 @@ const veuGravada = (extra = {}) => ({ id: 'veu', tipus: 'veu', duradaMs: 12_000,
 const comencaAGravar = async (resultat = new Promise(() => {})) => {
   ambMicrofon();
   m.gravaVeu.mockResolvedValueOnce({ atura: vi.fn(), cancella: vi.fn(), resultat });
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   const grava = await screen.findByRole('button', { name: 'Grava àudio' });
   await waitFor(() => expect(grava.disabled).toBe(false));
   return grava;
@@ -373,7 +415,7 @@ test.each([
   ambMicrofon();
   m.gravaVeu.mockResolvedValueOnce({ atura: vi.fn(), cancella: vi.fn(), resultat: nota.promise });
   const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   const grava = await screen.findByRole('button', { name: 'Grava àudio' });
   await waitFor(() => expect(grava.disabled).toBe(false));
   fireEvent.click(grava);
@@ -404,7 +446,7 @@ test('una gravació aturada a mà no porta cap avís', async () => {
 /* ── XAT-03 · El progrés de la pujada ── */
 test('mentre envia, una barra de progrés amb nom i percentatge; en acabar se’n va', async () => {
   const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   expect(screen.queryByRole('progressbar')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
@@ -429,7 +471,7 @@ test('el progrés d’una pujada cancel·lada o d’una altra conversa no es pin
   const envia = vi.fn((_fil, _adjunt, { signal }) => new Promise((_resol, rebutja) => {
     signal.addEventListener('abort', () => rebutja(new DOMException('Operació cancel·lada.', 'AbortError')), { once: true });
   }));
-  const vista = render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
   await screen.findByRole('progressbar');
@@ -448,7 +490,7 @@ test('el progrés d’una pujada cancel·lada o d’una altra conversa no es pin
   await act(async () => { cancellada(0.9); });
   expect(barra.value).toBeCloseTo(0.3);
   // Una altra conversa: la pujada d'abans ja no pinta en la barra de la de B.
-  vista.rerender(<ControlsAdjunt usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={envia} />);
+  vista.rerender(<Barra usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={envia} />);
   await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
   await tria(); await screen.findByAltText('Foto adjunta');
   fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
@@ -460,8 +502,8 @@ test('el progrés d’una pujada cancel·lada o d’una altra conversa no es pin
 });
 test('el percentatge parla la llengua de qui envia', async () => {
   const tard = deferred(); const envia = vi.fn().mockReturnValue(tard.promise);
-  render(<ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={createTranslator('en')} locale="en-GB" />);
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Photo or video' }).disabled).toBe(false));
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} t={createTranslator('en')} locale="en-GB" />);
+  await waitFor(() => expect(plus().hasAttribute('aria-disabled')).toBe(false));
   fireEvent.change(screen.getByLabelText('Choose a photo or a video of up to 10 seconds'), { target: { files: [new Blob(['original'], { type: 'image/jpeg' })] } });
   fireEvent.click(await screen.findByRole('button', { name: 'Send the file' }));
   const barra = await screen.findByRole('progressbar', { name: 'Upload progress' });
@@ -476,7 +518,7 @@ test('G2120-01 · gravar calla la nota de veu que sonava', async () => {
   ambMicrofon();
   urlAdjuntXat.mockResolvedValue('https://node.test/storage/v1/object/sign/xat_adjunts/v?token=1');
   m.gravaVeu.mockReturnValueOnce(deferred().promise);
-  const vista = render(<><AdjuntXat adjunt={{ id: 'veu-g1', mime: 'audio/mp4', duradaMs: 5_000 }} tipus="veu" externalConfig={{ dataMode: 'remote' }} usuariId="A" /><ControlsAdjunt usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} /></>);
+  const vista = render(<><AdjuntXat adjunt={{ id: 'veu-g1', mime: 'audio/mp4', duradaMs: 5_000 }} tipus="veu" externalConfig={{ dataMode: 'remote' }} usuariId="A" /><Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} /></>);
   const audio = vista.container.querySelector('audio');
   fireEvent.click(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' }));
   await waitFor(() => expect(audio.getAttribute('src')).toBeTruthy());
@@ -489,4 +531,71 @@ test('G2120-01 · gravar calla la nota de veu que sonava', async () => {
   expect(screen.getByRole('button', { name: 'Reprodueix el missatge de veu' })).toBeTruthy();
   expect(m.gravaVeu).toHaveBeenCalledOnce();
   _reiniciaVeus();
+});
+
+/* Revisió adversarial P1-66 (F3) · El que decidix el botó redó i el + quan la
+   quota ja és a la memòria: cada prova mata un mutant que abans sobrevivia. */
+const redo = () => document.querySelector('.sdp-xat-compositor__envia');
+test('P1-66 · amb micròfon, escriure fa del redó «Envia» (submit) i buidar-lo el torna «Grava àudio»', async () => {
+  ambMicrofon();
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  const boto = await screen.findByRole('button', { name: 'Grava àudio' });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: 'hola' } });
+  expect(screen.getByRole('button', { name: 'Envia' })).toBe(boto);
+  expect(boto.type).toBe('submit');
+  fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: '' } });
+  expect(screen.getByRole('button', { name: 'Grava àudio' })).toBe(boto);
+});
+test('P1-66 · sense micròfon, el redó amb el camp buit és «Envia» desactivat, mai «Grava àudio»', async () => {
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await screen.findByRole('button', { name: 'Adjunta' });
+  expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
+  expect(redo().disabled).toBe(true);
+  expect(redo().hasAttribute('data-accio')).toBe(false);
+});
+test('P1-66 · amb un fitxer preparat, el + no obri el menú (cap foto triada a mà damunt de la preparada)', async () => {
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await tria();
+  await screen.findByRole('button', { name: 'Envia el fitxer' });
+  expect(mes().getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(mes());
+  expect(screen.queryByRole('menu')).toBeNull();
+});
+test('P1-66 · amb la quota ja desada, actiu fals no pinta + ni micròfon ni safata, i no torna a llegir-la', async () => {
+  ambMicrofon();
+  const primer = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await screen.findByRole('button', { name: 'Adjunta' });
+  primer.unmount();
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} actiu={false} />);
+  await act(async () => {});
+  expect(screen.queryByRole('button', { name: 'Adjunta' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Grava àudio' })).toBeNull();
+  expect(vista.container.querySelector('.sdp-xat-adjunts')).toBeNull();
+  expect(servei.quotaXat).toHaveBeenCalledOnce();
+});
+test('P1-66 · enviar una nota de veu deixa el focus al botó redó, que torna a ser «Grava àudio»', async () => {
+  ambMicrofon();
+  const nota = deferred();
+  m.gravaVeu.mockResolvedValueOnce({ atura: vi.fn(), cancella: vi.fn(), resultat: nota.promise });
+  const envia = vi.fn().mockResolvedValue([{ id: 'm' }]);
+  render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={envia} />);
+  const boto = await screen.findByRole('button', { name: 'Grava àudio' });
+  boto.focus(); fireEvent.click(boto);
+  await screen.findByRole('button', { name: 'Atura la gravació' });
+  await act(async () => { nota.resolve({ id: 'veu', tipus: 'veu', duradaMs: 3_000, fitxer: new Blob(['veu'], { type: 'audio/mp4' }) }); });
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Envia el fitxer' })));
+  fireEvent.click(screen.getByRole('button', { name: 'Envia el fitxer' }));
+  await waitFor(() => expect(envia).toHaveBeenCalledOnce());
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Grava àudio' })).toBe(boto));
+  expect(document.activeElement).toBe(boto);
+});
+test('P1-66 · una lectura bona esborra l’error d’abans: «sense migració» en un fil no amaga el + en el següent', async () => {
+  servei.quotaXat.mockRejectedValueOnce(errorAdjuntXat('SDP-XAT-001'));
+  const vista = render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
+  await waitFor(() => expect(servei.quotaXat).toHaveBeenCalledOnce());
+  await act(async () => {});
+  expect(vista.container.querySelector('.sdp-xat-compositor__adjunta')).toBeNull();
+  vista.rerender(<Barra usuariId={m.user} fil={{ id: 'fil-B' }} servei={servei} onEnvia={vi.fn()} />);
+  expect(await screen.findByRole('button', { name: 'Adjunta' })).toBeTruthy();
+  expect(peuDelMenu()[0]).toBe('0,0 de 20 MB del xat');
 });

@@ -541,7 +541,9 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   font-size: var(--sdp-text-meta);
   font-weight: 700;
 }
-.sdp-workspace-settings__carpetes { margin: 0; padding: 0; list-style: none; }
+/* P1-67 (Mestre, 261028) · Llista de menú, no prosa: la mida de la barra
+   principal (16px), no la fluida de ul (base.css, fins a 20px). */
+.sdp-workspace-settings__carpetes { margin: 0; padding: 0; list-style: none; font-size: var(--sdp-text-small); }
 .sdp-workspace-settings__carpetes > li { margin: 0; padding: 0; }
 .sdp-workspace-settings__carpetes > li + li { border-top: 1px solid var(--sdp-vora); }
 .sdp-workspace-settings__carpeta .sdp-interruptor__etiqueta {
@@ -3437,10 +3439,34 @@ details[open] summary.accordion-header svg:last-child {
      conversa fa 96px (2 × --sdp-touch; abans 72) amb l'avatar gran de 76px
      (--sdp-xat-avatar-mida): 8 de coixí + 76 + 8 = 92 ≤ 96, cap buit gratuït.
      El nom i l'últim missatge van a 4px (el gap de __cos) i el bloc de text
-     es centra al costat de l'avatar. L'interlineat de 1,5 no baixa: amb Noto
-     Sans (àrea de contingut 1,362em) i l'overflow de l'el·lipsi, menys es
-     menjaria els accents de «À» i la cua de la «ç». */
+     es centra al costat de l'avatar. L'interlineat no baixa de 1,5 (és el
+     1,6 de --sdp-leading-cos, heretat de ul): amb Noto Sans (àrea de
+     contingut 1,362em) i l'overflow de l'el·lipsi, menys es menjaria els
+     accents de «À» i la cua de la «ç». */
   .sdp-xat-llista { list-style: none; margin: 0; padding: 0; }
+  /* P1-67 (Mestre, 261028; captura 261028_1650_produccio_tipografia_sidebar_vs_xat.png)
+     · Els menús i les llistes del xat no hereten la prosa fluida de ul
+     (base.css, legacy: --sdp-fluid-cos, 20px des d'una arrel de 1024px): fan
+     la mida de la barra principal, --sdp-text-small (16px), mai més. Va al
+     contenidor perquè les files el prenguen pel seu `font: inherit`. Les
+     bombolles (.sdp-xat-missatges) continuen sent prosa. El menú d'opcions
+     (.sdp-xat-menu) també: al missatge penja de l'ol de les bombolles i en
+     prenia la prosa (20px); a la capçalera i al + ja feia 16px. */
+  .sdp-xat-llista,
+  .sdp-xat-filtres-cerca,
+  .sdp-xat-ajustos__targeta,
+  .sdp-xat-menu { font-size: var(--sdp-text-small); }
+  /* P1-67 · SemiCondensed als rètols de la llista de converses i dels menús
+     del xat, com la barra (--sdp-font-barra). Va al rètol i no al ul: l'hora
+     tabular i les inicials de l'avatar conserven l'amplada normal. El botó
+     d'acció va dins de la targeta (0,2,0): el seu `font: inherit` de més
+     avall (0,1,0) reinicia el font-stretch i, al mateix pes, guanyaria. */
+  .sdp-xat-fila__nom,
+  .sdp-xat-fila__previa,
+  .sdp-xat-opcio__titol,
+  .sdp-xat-targeta .sdp-xat-opcio-accio,
+  .sdp-xat-filtres-cerca__nom,
+  .sdp-xat-ajustos__etiqueta { font-stretch: var(--sdp-font-amplada-semi); }
   /* P1-53 (Llibre Mestre, 261027) · Cada <li> heretava el marge editorial de
      base.css (8px davall i 4px a l'esquerra): la línia de cada fila quedava
      8px per damunt de la següent, i el pas era de 104px. Les files van arran:
@@ -4212,11 +4238,89 @@ details[open] summary.accordion-header svg:last-child {
   /* Hover en blau fort: igual en clar; en fosc, 9,21:1 (abans 2,66:1). */
   @media (hover: hover) and (pointer: fine) {
     .sdp-xat-compositor__envia:hover:not(:disabled) { background: var(--sdp-accio-control); }
+    /* P1-66 · Aria-disabled («Enviant…») no s'enfosquix davall del ratolí:
+       no ha de semblar clicable (la mateixa especificitat, i va darrere). */
+    .sdp-xat-compositor__envia[aria-disabled="true"]:hover { background: var(--sdp-accio); }
   }
   .sdp-xat-compositor__envia:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-compositor__envia:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
-  /* Pla 261022_1425 (emojis grans, paritat WhatsApp) · La carona, a
-     l'esquerra del camp, i el calaix que obri damunt del compositor
+  /* Pla 261028_1526 (P1-66, barra única) · El botó redó també grava, atura i
+     envia el fitxer: mentre puja és aria-disabled (el focus no cau). */
+  .sdp-xat-compositor__envia[aria-disabled="true"] { opacity: 0.5; cursor: default; }
+  /* El + dels adjunts, a l'esquerra del camp: la diana i la forma de la carona. */
+  .sdp-xat-compositor__adjunta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-text-suau);
+    cursor: pointer;
+  }
+  .sdp-xat-compositor__adjunta[aria-expanded="true"] { color: var(--sdp-accio-text); background: var(--sdp-fons-elevat); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-compositor__adjunta:hover:not([aria-disabled="true"]) { color: var(--sdp-accio-text); background: var(--sdp-fons-elevat); }
+  }
+  .sdp-xat-compositor__adjunta[aria-disabled="true"] { opacity: 0.5; cursor: default; }
+  .sdp-xat-compositor__adjunta:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  /* El menú del +: la llista de la casa (.sdp-xat-menu, files de 48px), que
+     obri cap amunt des de la vora de dalt del compositor, com el calaix. Amb
+     ell obert, el compositor puja damunt de «Baixa al final» (P1-37). En una
+     columna baixa (mòbil apaïsat) no es retalla: no passa de mitja pantalla
+     (primer vh, com el calaix) i es desplaça; el Compositor encara el retalla
+     a l'espai fins a dalt de la conversa (style del menú). */
+  .sdp-xat-menu--adjunts {
+    top: auto;
+    right: auto;
+    bottom: calc(100% + var(--sdp-space-1));
+    left: var(--sdp-space-2);
+    transform-origin: bottom left;
+    max-inline-size: calc(100% - var(--sdp-space-2) * 2);
+    max-block-size: min(20rem, 50vh);
+    max-block-size: min(20rem, 50dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sdp-xat-menu__peu {
+    margin-block-start: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-4) 0;
+    border-block-start: 1px solid var(--sdp-vora);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+  /* Les línies del peu són <p>: sense heretar, la regla p de base.css
+     (legacy) els posa la prosa fluida (20px, 1,6, color del cos). */
+  .sdp-xat-menu__peu p { margin: 0; font-size: inherit; line-height: inherit; color: inherit; }
+  .sdp-xat-compositor--adjunts { z-index: 3; }
+  /* La carona dins del camp, a l'esquerra (només amb el modificador:
+     ConsultaIAIA usa el mateix camp sense carona). El text i el seu mirall
+     (::after) passen a la segona columna. El coixí curt va a l'esquerra en
+     físic: el textarea porta dir="auto" (XU-14) i, en àrab o en hebreu, el
+     seu inici seria la dreta; la carona, en canvi, sempre és a l'esquerra. */
+  .sdp-xat-compositor__camp--carona { grid-template-columns: auto minmax(0, 1fr); }
+  .sdp-xat-compositor__camp--carona > .sdp-xat-compositor__emojis { grid-area: 1 / 1 / 2 / 2; align-self: end; }
+  .sdp-xat-compositor__camp--carona::after,
+  .sdp-xat-compositor__camp--carona > .sdp-xat-compositor__textarea { grid-area: 1 / 2 / 2 / 3; padding-left: var(--sdp-space-1); }
+  .sdp-xat-compositor__camp--carona > .sdp-xat-compositor__emojis:focus-visible { outline-offset: -2px; }
+  /* La safata dels adjunts (AdjuntXat.css) només ocupa lloc mentre té feina:
+     buida (sense --activa) col·lapsa a 0, sense coixí ni filet. Activa, la
+     previsualització (o el rellotge) i Cancel·la van en una fila. */
+  .sdp-xat-adjunts:not(.sdp-xat-adjunts--activa) { padding-block: 0; border-top: 0; }
+  .sdp-xat-adjunts__fila { display: flex; align-items: flex-start; gap: var(--sdp-space-2); }
+  .sdp-xat-adjunts__fila > :first-child:not(.sdp-xat-adjunts__cancella) { flex: 1 1 auto; min-width: 0; }
+  .sdp-xat-adjunts__cancella { margin-inline-start: auto; }
+  .sdp-xat-adjunts .sdp-xat-icona { color: var(--sdp-text-suau); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-adjunts .sdp-xat-icona:hover { background: var(--sdp-fons-elevat); }
+  }
+  .sdp-xat-adjunts .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
+  /* Pla 261022_1425 (emojis grans, paritat WhatsApp) · La carona, dins del
+     camp a l'esquerra (P1-66), i el calaix que obri damunt del compositor
      (SelectorEmoticones.jsx). El calaix és un popover: no empeny la llista,
      s'ancora a la vora de dalt del compositor i no passa mai de l'amplada de
      la columna (també encastat en un web més estret que la pantalla). En
@@ -5876,6 +5980,21 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-consola__targeta .sp-card-text > p { margin: 0 0 var(--sdp-space-2); }
   .sdp-consola__targeta .sp-card-text > p:last-child { margin-bottom: 0; }
+  /* IDEA-40 (decisió del Mestre, 261028, Bloc H) · El semàfor a la insígnia
+     quadrada (peces.jsx · TargetaConsola): el color més greu de les etiquetes
+     de la targeta pinta el quadrat. Tres colors i cap quart: verd (el de
+     marca, --sdp-verd), taronja (--sdp-avis) i roig (--sdp-error). «Canvis
+     nous», «Sense font» i el que només informa no porten data-semafor: el
+     gris del crom de sempre. Mai només el color (WCAG 1.4.1): l'etiqueta de
+     la targeta el diu en text i el nom del quadrat també. El to va al mateix
+     quadrat (data-semafor, UniversalCard): cap embolcall ni cap :has(), que
+     el xat no admet (tests/lint_xat) i Chrome 100–104 no coneix; la icona
+     no es mou ni un píxel. Icona blanca: 6,99:1 sobre el verd, 4,73:1 sobre
+     el taronja i 6,10:1 sobre el roig (1.4.11 demana 3:1). */
+  .sdp-consola__targeta .sp-card-calendar-badge[data-semafor] { color: var(--sdp-sobre-color); }
+  .sdp-consola__targeta .sp-card-calendar-badge[data-semafor="exit"] { background-color: var(--sdp-verd); }
+  .sdp-consola__targeta .sp-card-calendar-badge[data-semafor="avis"] { background-color: var(--sdp-avis); }
+  .sdp-consola__targeta .sp-card-calendar-badge[data-semafor="error"] { background-color: var(--sdp-error); }
   .sdp-consola__dada {
     color: var(--sdp-text-cos);
     font-weight: 700;
@@ -8175,7 +8294,9 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   /* Calaix «Amb qui actues?» (CalaixIdentitats): fora de la closca, un
-     <dialog> amb el tema. L'activa es pinta des d'aria-current. */
+     <dialog> amb el tema. L'activa es pinta des d'aria-current.
+     P1-67 (Mestre, 261028) · Llista de menú, no prosa: la mida de la barra
+     principal (16px), no la fluida de ul (base.css, fins a 20px). */
   .sdp-calaix-identitats {
     display: flex;
     flex-direction: column;
@@ -8183,6 +8304,7 @@ details[open] summary.accordion-header svg:last-child {
     margin: 0;
     padding: 0;
     list-style: none;
+    font-size: var(--sdp-text-small);
   }
   .sdp-calaix-identitats__item {
     display: flex;

@@ -7,6 +7,7 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
 import { retallaProblemes } from './problemesConsola.js';
+import { semaforDEtiquetes } from './semafor.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
@@ -122,7 +123,14 @@ export function Xifra({ etiqueta, valor, icona, a }) {
    Sense problemes (null o buida), el cos és el de sempre. Correcció de
    l'Onada 6 (revisió adversarial) · la `marca` de cada problema (la severitat
    d'un avís, l'estat d'una tasca, el color d'una skill) va davant, en una
-   Insignia amb el color del semàfor: la llista també fa de semàfor. */
+   Insignia amb el color del semàfor: la llista també fa de semàfor.
+   IDEA-40 (decisió del Mestre, 261028, Bloc H) · La insígnia lateral porta el
+   semàfor de les `etiquetes` (semafor.js · semaforDEtiquetes): la més greu
+   d'entre verd, taronja i roig va al quadrat com a data-semafor (UniversalCard
+   · semafor; modules.css § CONSOLA, sense :has()) i el nom del quadrat diu el seu text
+   («Inventari de skills · Important»): el color mai no va sol. «Canvis nous»
+   i el que només informa no hi compten; sense cap color, el DOM de sempre.
+   Les targetes amb imatge no porten insígnia (front F, 13-10-2026). */
 export function TargetaConsola({
   icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, problemes, creat, generat, a, onObri, etiquetes,
   imatge = null, imatgeAlt = ''
@@ -134,6 +142,8 @@ export function TargetaConsola({
   const ambEstats = Array.isArray(estats) && estats.length > 0;
   const { visibles, resta } = retallaProblemes(problemes);
   const quan = dataHoraDeBarra({ creat, modificat: generat });
+  const semafor = imatge ? null : semaforDEtiquetes(etiquetes);
+  const iconaPart = imatge ? null : <Icona size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />;
   return (
     <UniversalCard
       className={activa ? 'sdp-consola__targeta' : 'sdp-consola__targeta sdp-consola__quieta'}
@@ -146,8 +156,9 @@ export function TargetaConsola({
       imageAlt={imatgeAlt}
       squareBadge={imatge ? null : {
         type: 'custom',
-        label: titol,
-        content: <Icona size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
+        label: semafor?.text ? `${titol} · ${semafor.text}` : titol,
+        content: iconaPart,
+        ...(semafor ? { semafor: semafor.to } : null)
       }}
       title={titol}
       subtitle={subtitol}

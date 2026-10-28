@@ -1,9 +1,6 @@
 @layer components {
   .sdp-xat-adjunts { flex: none; padding: var(--sdp-space-2) var(--sdp-space-4); border-top: 1px solid var(--sdp-vora); background: var(--sdp-fons-subtil); color: var(--sdp-text-cos); }
   .sdp-xat-adjunts p { margin: var(--sdp-space-1) 0; }
-  .sdp-xat-adjunts__quota { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
-  .sdp-xat-adjunts__accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
-  .sdp-xat-adjunts__accions button { display: inline-flex; align-items: center; gap: var(--sdp-space-1); min-height: var(--sdp-touch); }
   /* Gauntlet 261022_0225 (crítica Claude) · La regió viva dels passos sempre
      hi és (un anunci per canvi); buida, no ocupa espai. L'avís del vídeo sense
      netejar va amb el color d'avís, abans del botó d'enviar. */

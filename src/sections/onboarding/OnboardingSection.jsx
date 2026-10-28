@@ -335,11 +335,21 @@ export default function OnboardingSection() {
 
   const activeStep = 0;
 
+  /* P1-68 (pla 261028_1526, §3.8.2.3) · L'identificador editat i el poble
+     triat a /registre viatgen a les metadades de l'alta: el disparador de
+     2610282100 els llig una sola vegada (l'identificador, normalitzat i amb
+     -2 si ja és d'algú; el poble, si la fila no en porta cap). Sense, el
+     servidor fa l'identificador del nom i hi posa el poble de sèrie. */
   const handleRegister = async (fields) => {
     const op = obriIntent('register');
     setErrorEntrada(null);
     try {
-      const resultat = await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: normalizedConfig.tenantId }, externalConfig);
+      const metadades = {
+        full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: normalizedConfig.tenantId,
+        ...(fields.username ? { username: fields.username } : null),
+        ...(fields.poble ? { town_name: fields.poble } : null)
+      };
+      const resultat = await registerWithPassword(fields.email, fields.password, metadades, externalConfig);
       if (!op.viu()) return;
       if (resultat?.access_token) {
         showToast(tr('section.login.benvinguda.compteCreat', 'Compte creat. Benvinguda al Mas.'), 'success');

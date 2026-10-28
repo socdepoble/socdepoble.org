@@ -16,6 +16,7 @@ import { CODI_ENTRADA, ambCodi, esBackendInabastable } from '../errorsBackend.js
 import { ErrorColumnaAbsent, columnaAbsent } from '../autodesament/errors.js';
 import { hidrataPerfilPersonaPilot } from '../identitatsSeed.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
+import { FORMA_USERNAME, MINIM_USERNAME, errorDUsername, normalitzaUsername } from '../../sections/onboarding/onboardingModel.js';
 
 let renovacioEnCurs = null;
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Exportat: el verify del
@@ -289,7 +290,70 @@ function errorDeColumnaAbsent(error, cos) {
   ), { cause: error });
 }
 
+/* P1-68 (pla 261028_1526, §3.8.2.3; decisió del Mestre 261028: «RPC pròpia
+   i camp separat») · L'identificador @usuari NO és cap columna de
+   CAMPS_PERFIL: cap PATCH no l'escriu (no en té permís de columna) i mai va a
+   user_metadata (dins del JWT). updateProfile({ username }) el desa per la
+   RPC desa_el_meu_usuari (2610282100), que el normalitza i en mira la forma,
+   la reserva, la baixa, el ritme i si és lliure; en seed i local,
+   localPerfils, amb les mateixes regles. La forma es mira ací abans de cap
+   xarxa. Els errors porten el `code` de MISSATGES_USERNAME
+   (onboardingModel.js) pel prefix SDP-USER del missatge, mai per l'estat
+   HTTP; ocupat és 'ocupat' amb la `proposta` del servidor. Torna
+   { id, username, username_confirmat_at }. */
+const RE_CODI_USERNAME = /SDP-USER-\d{3}/;
+function traduixErrorDUsername(error) {
+  if (!error || typeof error !== 'object' || error.name === 'AbortError' || esBackendInabastable(error)) return error;
+  const missatge = String(error.message ?? '');
+  const prefix = RE_CODI_USERNAME.exec(missatge)?.[0];
+  if (prefix) return errorDUsername(prefix, { causa: error });
+  if (error.status === 404 || /PGRST20[25]/.test(missatge)) return errorDUsername('NO-DISPONIBLE', { causa: error });
+  if (error.status === 401) return errorDUsername('SDP-USER-000', { causa: error });
+  return errorDUsername('DESCONEGUT', { causa: error });
+}
+
+/* La resposta de la RPC (o del servidor local), amb la mateixa forma. */
+function filaDUsername(resposta, id) {
+  const r = Array.isArray(resposta) ? resposta[0] : resposta;
+  if (r?.desat === true && typeof r.usuari === 'string') {
+    return { id, username: r.usuari, username_confirmat_at: typeof r.confirmat_al === 'string' ? r.confirmat_al : new Date().toISOString() };
+  }
+  if (r?.desat === false && r.motiu === 'ocupat') throw errorDUsername('ocupat', { proposta: typeof r.proposta === 'string' ? r.proposta : null });
+  throw errorDUsername('DESCONEGUT');
+}
+
+async function desaElMeuUsername(valor, config = {}) {
+  const username = normalitzaUsername(valor);
+  if (username.length < MINIM_USERNAME || !FORMA_USERNAME.test(username)) throw errorDUsername('SDP-USER-001');
+  const current = capturaSessio();
+  const capturedConfig = { ...config };
+  if (esModeLocal(capturedConfig)) {
+    const local = await perfilsLocals();
+    current();
+    const usuari = getCurrentUser();
+    if (!usuari) throw errorDUsername('SDP-USER-000');
+    return filaDUsername(local.desaElMeuUsername(usuari, username), usuari.id);
+  }
+  const user = (jwtEnviable() && getCurrentUser()) || await asseguraUsuari(capturedConfig, current);
+  current();
+  if (!user) throw errorDUsername('SDP-USER-000');
+  let resposta;
+  try {
+    resposta = await rpc('desa_el_meu_usuari', { p_usuari: username }, capturedConfig);
+  } catch (error) {
+    throw traduixErrorDUsername(error);
+  }
+  current();
+  return filaDUsername(resposta, user.id);
+}
+
 export async function updateProfile(entrada, config = {}) {
+  /* P1-68 · L'identificador va per la seua RPC; la resta, pel PATCH de sempre. */
+  if (entrada && typeof entrada === 'object' && Object.hasOwn(entrada, 'username')) {
+    const { username, ...resta } = entrada;
+    const fila = await desaElMeuUsername(username, config);
+    return Object.keys(resta).length ? { ...(await updateProfile(resta, config)), ...fila } : fila;
+  }
   const updates = ambIconNormalitzat(entrada);
   const current = capturaSessio();
   const capturedConfig = { ...config };

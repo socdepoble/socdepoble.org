@@ -10,6 +10,7 @@ import TextSection from '../text/TextSection';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
+import { InstalaLaPwa, useInstalacioDeLaPagina } from './InstalaLaPwa.jsx';
 
 /* Ordre del Mestre (261007) · L'acció gran d'una pàgina del sistema
    (accioDeLaPagina de systemPages.js): «Anar al xat» a /page/xat, «Obrir la
@@ -87,10 +88,19 @@ function AccioDeLaPagina({ clau, lloc = 'dalt' }) {
  * amb accioAlFinal(slug), pura. El fill de TextSection continua sent UN sol
  * element: o el botó del final o PublicarDeLaPagina, que en una pàgina sense
  * destí no pinta res. /page/xat no canvia: un sol botó, dalt.
+ *
+ * P1-69 (ordre del Mestre, 261028 20:13; deroga per a esta pàgina el «sense
+ * acció gran» de P1-38, 261026_2126) · /page/descarregues porta «📲
+ * Instal·lar l'App (PWA)» DALT I AL FINAL, com la Consola (InstalaLaPwa.jsx).
+ * No és cap porta del router (PortaDePagina no pot cridar prompt()): la dada
+ * ix d'useInstalacioDeLaPagina, que es crida abans de cap retorn (l'ordre dels
+ * hooks) i torna null fora de Descàrregues, a l'app nativa, fora de l'entrada
+ * pròpia o quan no hi ha res honest que oferir. Amb null, el DOM de sempre.
  */
 export default function PageDetailSection() {
   const { slug = '' } = useParams();
   const { pages = [], pageCopy = {}, status } = useCoreContent();
+  const instalacio = useInstalacioDeLaPagina(slug);
 
   const canonica = resolvePageSlugPath(slug);
   if (canonica) return <Navigate to={canonica} replace />;
@@ -106,9 +116,13 @@ export default function PageDetailSection() {
     let accioPrincipal = null;
     if (destiDePagina(slug)) accioPrincipal = <PublicarDeLaPagina clau={slug} lloc="dalt" />;
     else if (accioDeLaPagina(slug)) accioPrincipal = <AccioDeLaPagina clau={slug} />;
+    else if (instalacio) accioPrincipal = <InstalaLaPwa instalacio={instalacio} />;
+    let alFinal = <PublicarDeLaPagina clau={slug} />;
+    if (accioAlFinal(slug)) alFinal = <AccioDeLaPagina clau={slug} lloc="baix" />;
+    else if (instalacio) alFinal = <InstalaLaPwa instalacio={instalacio} lloc="baix" />;
     return (
       <TextSection page={page} pageKey={slug} accioPrincipal={accioPrincipal}>
-        {accioAlFinal(slug) ? <AccioDeLaPagina clau={slug} lloc="baix" /> : <PublicarDeLaPagina clau={slug} />}
+        {alFinal}
       </TextSection>
     );
   }

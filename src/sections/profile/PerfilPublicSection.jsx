@@ -32,6 +32,7 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { entradaSessio } from '../../data/identitat.js';
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
+import { FORMA_USERNAME } from '../onboarding/onboardingModel.js';
 import { rutaFitxaOrganitzacio } from './perfilModel.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
@@ -610,9 +611,16 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      (IDS_REMOTS_FUNDACIONALS): un homònim d'un altre poble, amb el mateix
      slug, ja no rep La Torre de les Maçanes. */
   const poble = perfil.poble || (clauFundacional(perfil) ? POBLE_FUNDACIONAL : '');
+  /* P1-68 (decisió del Mestre 261028: «públic si el perfil és públic») · El
+     @usuari d'una persona, només amb la fitxa publicada i en la forma del
+     servidor (2610282100). perfil_public ja no el dona d'una fitxa privada;
+     ací es torna a mirar, també per a la fitxa pròpia sense publicar. */
+  const usuari = esPersona && perfil.publicat === true && typeof perfil.usuari === 'string' && FORMA_USERNAME.test(perfil.usuari)
+    ? perfil.usuari : '';
   const etiquetes = [
     ...(etiquetaDelTipus ? [{ text: etiquetaDelTipus, className: perfil.esIA ? 'sdp-badge-accent' : 'sdp-badge-system' }] : []),
     ...(poble ? [{ text: poble, className: 'sdp-badge-category' }] : []),
+    ...(usuari ? [{ text: `@${usuari}`, className: 'sdp-badge-tag' }] : []),
     ...(perfil.propietari ? [{ text: t('section.perfil.public.teua', 'La teua fitxa'), className: 'sdp-badge-tag' }] : [])
   ];
 

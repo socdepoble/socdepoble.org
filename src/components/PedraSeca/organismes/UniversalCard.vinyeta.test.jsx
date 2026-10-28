@@ -484,6 +484,23 @@ describe('P6 · el preu va al quadrat de 128 px, mai a la píndola', () => {
     render(<MemoryRouter><UniversalCard title="C" calendarBadge={data} /></MemoryRouter>);
     expect(quadrat().tagName).toBe('TIME');
   });
+
+  /* IDEA-40 (decisió del Mestre, 261028, pla 261028_1526) · Un quadrat
+     personalitzat porta el to del semàfor com a data-semafor (només 'exit',
+     'avis' o 'error'); el preu, la data i un to desconegut, mai. */
+  test('el semàfor del quadrat personalitzat: data-semafor només amb un to vàlid', () => {
+    const pinta = (squareBadge, extra = {}) => {
+      render(<MemoryRouter><UniversalCard title="S" squareBadge={squareBadge} {...extra} /></MemoryRouter>);
+      const valor = quadrat().getAttribute('data-semafor');
+      cleanup();
+      return valor;
+    };
+    expect(['exit', 'avis', 'error'].map((to) => pinta({ type: 'custom', label: 'Q', content: <svg />, semafor: to }))).toEqual(['exit', 'avis', 'error']);
+    expect(pinta({ type: 'custom', decoratiu: true, content: <svg />, semafor: 'error' })).toBe('error');
+    for (const to of [undefined, 'neutre', 'info', 'blau', '"><x']) expect(pinta({ type: 'custom', label: 'Q', content: <svg />, semafor: to }), String(to)).toBeNull();
+    expect(pinta({ type: 'price', value: '15 €', semafor: 'error' })).toBeNull();
+    expect(pinta(null, { calendarBadge: { dia: '14', mes: 'AGOST', semafor: 'error' } })).toBeNull();
+  });
 });
 
 describe('P6 · el peu blau de la targeta amb portes porta a la seua pàgina', () => {

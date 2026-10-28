@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { closeHistory } from '@tiptap/pm/history';
+import { createDocument, getHTMLFromFragment } from '@tiptap/core';
 import { UniversalEditorShell } from './UniversalEditorShell';
 import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.jsx';
 import BotoDretsAutor from './CopyrightSelector.jsx';
@@ -32,6 +34,23 @@ import { PRECISIO_PER_DEFECTE_PUBLICACIO } from './enquadrament/geolocalitzacio.
 /* Bloc 3.8 (261016) · On un cos d'editor no es veu ni rep el focus: la
    mateixa regla que la guarda del focus de la closca (AppGridShell). */
 const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
+
+/* IDEA-41 · Els motius del motor de «Proposa Card»: alguna cosa a pujar, o
+   text a l'inici que no complix cap regla. */
+const MOTIU_PROPOSTA = 'proposta';
+const MOTIU_RES = 'res';
+/* El text d'un camp per a comparar-lo: sense etiquetes, entitats ni espais de més. */
+const textDelCamp = (html) => String(html ?? '')
+  .replace(/<[^>]*>/g, ' ')
+  .replace(/&nbsp;/gi, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+  .replace(/\s+/g, ' ')
+  .trim();
+/* Els camps que encara diuen `de` passen a dir `a`; un camp que la persona ha tocat després, no. */
+function campsQueTornen(actual, de, a) {
+  const valors = {};
+  for (const camp of Object.keys(a)) if (textDelCamp(actual?.[camp]) === textDelCamp(de[camp])) valors[camp] = a[camp];
+  return valors;
+}
 
 /**
  * Interfície Adapter requerida:
@@ -190,6 +209,18 @@ const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
  *                            // del cos hi entra neta, com sempre. Sense la
  *                            // clau, la crida i el DOM de sempre. Les fotos
  *                            // enganxades o arrossegades entren sempre netes.
+ *   proposaCard: (contingut, { previsio }) => { motiu, camps, cos } // Opcional
+ *                            // (IDEA-41, Mestre 261028; Bloc H). El motor pur
+ *                            // del consumidor (el Bloc: sections/notes/
+ *                            // proposaCard.js; el component universal no
+ *                            // importa cap secció, C06): rep { title, subtitle,
+ *                            // lead, content } i torna motiu ('proposta' si hi
+ *                            // ha res a pujar), els camps buits que s'omplin i
+ *                            // el cos sense les línies pujades. Amb
+ *                            // ell i updateLocal, la barra d'eines porta
+ *                            // «🎴 Proposa Card», apagat si no hi ha res a
+ *                            // proposar. Sense la clau, la barra i el DOM de
+ *                            // sempre (Perfil i catàleg). No passa per ...rest.
  *   placeholderTitol: String|null // Opcional (Bloc 3.9 del Gauntlet, 261016).
  *                            // El placeholder de l'H1 de la closca i el títol de
  *                            // reserva de la Vista A4 / PDF. El Bloc de Notes hi
@@ -325,6 +356,8 @@ export function DocumentEditor({ adapter, onToast }) {
     edicioAvancada = false,
     /* P1-64 (261028) · la pregunta de l'EXIF de les fotos del cos (false: netes, com sempre). */
     fotosDePublicacio = false,
+    /* IDEA-41 (261028) · el motor de «🎴 Proposa Card» (null: cap botó). */
+    proposaCard = null,
     ...rest
   } = adapter;
 
@@ -394,8 +427,14 @@ export function DocumentEditor({ adapter, onToast }) {
     [saveRemote],
   );
 
+  /* IDEA-41 · L'últim cos que ha emés l'editor: mentre document.content siga
+     eixe, la previsió de «Proposa Card» el llig tal qual (hiHaProposta). */
+  const cosEmes = useRef(null);
   const handleChange = useCallback(
-    (html, id) => desaLocal('content', html, id),
+    (html, id) => {
+      cosEmes.current = html;
+      desaLocal('content', html, id);
+    },
     [desaLocal],
   );
 
@@ -572,6 +611,148 @@ export function DocumentEditor({ adapter, onToast }) {
     };
   }, [registraInsercio, editor]);
 
+  /* IDEA-41 (Llibre Mestre; Mestre 261028, Bloc H: determinista, sense IA) ·
+     «🎴 Proposa Card» a la barra d'eines. El motor és del consumidor
+     (adapter.proposaCard, pur) i ací només s'aplica, d'una sola passada:
+       · el cos, en UNA transacció de TipTap amb l'historial tancat davant i
+         darrere (closeHistory): Cmd/Ctrl+Z la desfà sencera i sola, sense
+         ajuntar-la amb el que s'havia escrit just abans ni amb el que vinga;
+       · els camps buits que s'omplin, pel camí de sempre (updateLocal i
+         saveRemote).
+     Els camps no són de TipTap: quan el cos torna exactament al d'abans de la
+     proposta (Cmd/Ctrl+Z, o el mateix botó, que diu «Desfés la proposta»
+     mentre ningú no ha tocat el cos), els camps que encara diuen el que s'hi
+     va pujar tornen al que eren; si es refà (Cmd/Ctrl+Maj+Z), es tornen a
+     omplir els que no s'han tocat. Un camp que la persona ha canviat després
+     no es toca mai. La disponibilitat (el botó apagat quan no hi ha res a
+     proposar) és la previsió del motor sobre els camps i el cos que ja
+     arriben a cada tecla per updateLocal. Sense updateLocal, cap botó: no hi
+     ha on escriure els camps.
+     Revisió adversarial 261028 · Es recorden totes les propostes del
+     document, no només l'última: Cmd/Ctrl+Z fins al principi desfà també els
+     camps de les d'abans (cap línia no queda al cos i al camp alhora). I
+     «Desfés la proposta» posa el cos d'abans en un pas propi, no l'últim pas
+     de l'historial: escriure i esborrar torna al mateix cos amb dos passos
+     damunt de la proposta. */
+  const ambProposta = typeof proposaCard === 'function' && Boolean(updateLocal);
+  const proposaCardRef = useRef(proposaCard);
+  proposaCardRef.current = proposaCard;
+  const documentViu = useRef(document);
+  documentViu.current = document;
+  const propostesFetes = useRef([]);
+  const [, repintaProposta] = useReducer((n) => n + 1, 0);
+  const teDocument = Boolean(document);
+  const titolDelDocument = document?.title;
+  const subtitolDelDocument = document?.subtitle;
+  const entradillaDelDocument = document?.lead;
+  const cosDelDocument = document?.content;
+  /* Revisió adversarial 261028 · El clic llig el cos de l'editor (getHTML),
+     que TipTap normalitza: un cos desat en text pla o dins d'un <div> pot
+     tindre proposta encara que la cadena no en tinga. Un cos que no ha eixit
+     de l'editor (el que es carrega, o una sincronia) es llig normalitzat amb
+     l'esquema de l'editor, sense tocar-lo, una sola vegada per cos: teclejar
+     al títol, al subtítol o a l'entradeta no el torna a llegir (un cos de 2 MB
+     costava ~65 ms per tecla); el que ja ha emés ell no costa res de més. */
+  const cosNormalitzat = useMemo(() => {
+    if (!ambProposta || !editor || editor.isDestroyed || typeof cosDelDocument !== 'string' || cosDelDocument === cosEmes.current) return null;
+    try {
+      return getHTMLFromFragment(createDocument(cosDelDocument, editor.schema).content, editor.schema);
+    } catch {
+      return null;
+    }
+  }, [ambProposta, cosDelDocument, editor]);
+  const hiHaProposta = useMemo(() => {
+    if (!ambProposta || !teDocument) return false;
+    const preveu = (content) => proposaCard({
+      title: titolDelDocument, subtitle: subtitolDelDocument, lead: entradillaDelDocument, content
+    }, { previsio: true })?.motiu;
+    try {
+      const motiu = preveu(cosDelDocument);
+      if (motiu === MOTIU_PROPOSTA) return true;
+      if (motiu !== MOTIU_RES || cosNormalitzat === null) return false;
+      return preveu(cosNormalitzat) === MOTIU_PROPOSTA;
+    } catch {
+      return false;
+    }
+  }, [ambProposta, proposaCard, teDocument, titolDelDocument, subtitolDelDocument, entradillaDelDocument, cosDelDocument, cosNormalitzat]);
+  const escriuCamps = useCallback((id, valors) => {
+    for (const [camp, valor] of Object.entries(valors)) {
+      desaLocal(camp, valor, id);
+      desaCamp(camp, valor, id);
+    }
+  }, [desaLocal, desaCamp]);
+  /* Cmd/Ctrl+Z i Cmd/Ctrl+Maj+Z (i el botó «Desfés la proposta»): els camps
+     seguixen el cos quan torna al d'abans o al de després de la proposta. */
+  useEffect(() => {
+    if (!ambProposta || !editor) return undefined;
+    const seguix = () => {
+      if (!propostesFetes.current.length || editor.isDestroyed) return;
+      const actual = documentViu.current;
+      // Les propostes d'un altre document ja no tenen res a seguir.
+      propostesFetes.current = propostesFetes.current.filter((feta) => actual && feta.id === actual.id);
+      const doc = editor.state.doc;
+      for (const feta of propostesFetes.current) {
+        if (!feta.desfeta && doc.eq(feta.docAbans)) {
+          escriuCamps(feta.id, campsQueTornen(actual, feta.camps, feta.abans));
+          feta.desfeta = true;
+        } else if (feta.desfeta && doc.eq(feta.docDespres)) {
+          escriuCamps(feta.id, campsQueTornen(actual, feta.abans, feta.camps));
+          feta.desfeta = false;
+        }
+      }
+      repintaProposta();
+    };
+    editor.on('update', seguix);
+    return () => {
+      editor.off('update', seguix);
+    };
+  }, [ambProposta, editor, escriuCamps]);
+  const proposaOdesfes = useCallback(() => {
+    const actual = documentViu.current;
+    const motor = proposaCardRef.current;
+    if (!actual || !editor || editor.isDestroyed || !editor.isEditable || typeof motor !== 'function') return;
+    const feta = propostesFetes.current[propostesFetes.current.length - 1];
+    if (feta && !feta.desfeta && feta.id === actual.id && editor.state.doc.eq(feta.docDespres)) {
+      /* «Desfés la proposta»: el cos d'abans, en un pas propi tancat davant i
+         darrere (el de dalt de la pila pot ser un altre); seguix() hi torna
+         els camps i Cmd/Ctrl+Z la torna a aplicar. */
+      editor.chain()
+        .command(({ tr }) => {
+          closeHistory(tr);
+          tr.replaceWith(0, tr.doc.content.size, feta.docAbans.content);
+          return true;
+        })
+        .run();
+      editor.chain().command(({ tr }) => { closeHistory(tr); return true; }).run();
+      return;
+    }
+    let proposta = null;
+    try {
+      proposta = motor({ title: actual.title, subtitle: actual.subtitle, lead: actual.lead, content: editor.getHTML() });
+    } catch {
+      proposta = null;
+    }
+    if (proposta?.motiu !== MOTIU_PROPOSTA || typeof proposta.cos !== 'string') {
+      onToastRef.current?.(t('editor.proposaCard.res', 'No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.'));
+      return;
+    }
+    const docAbans = editor.state.doc;
+    editor.chain()
+      .command(({ tr }) => { closeHistory(tr); return true; })
+      .setContent(proposta.cos, { emitUpdate: true })
+      .run();
+    editor.chain().command(({ tr }) => { closeHistory(tr); return true; }).run();
+    const camps = { ...proposta.camps };
+    const abans = Object.fromEntries(Object.keys(camps).map((camp) => [camp, actual[camp] ?? '']));
+    propostesFetes.current = [
+      ...propostesFetes.current.filter((f) => f.id === actual.id),
+      { id: actual.id, docAbans, docDespres: editor.state.doc, camps, abans, desfeta: false }
+    ];
+    escriuCamps(actual.id, camps);
+    onToastRef.current?.(t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.'));
+    repintaProposta();
+  }, [editor, escriuCamps, t]);
+
   if (!document) {
     return (
       <EmptyDocumentPage
@@ -597,6 +778,11 @@ export function DocumentEditor({ adapter, onToast }) {
   const visibilitatOberta = visibilitatDe != null && visibilitatDe === document.id;
   const etiquetaVisibilitat = `${esPublica ? textosVisibilitat.publica.etiqueta : textosVisibilitat.privada.etiqueta}: canviar la visibilitat`;
 
+  /* IDEA-41 · «Desfés la proposta» mentre el cos és el que va deixar la proposta. */
+  const propostaViva = propostesFetes.current[propostesFetes.current.length - 1];
+  const propostaDesfeible = Boolean(ambProposta && propostaViva && !propostaViva.desfeta && propostaViva.id === document.id
+    && editor && !editor.isDestroyed && editor.state.doc.eq(propostaViva.docDespres));
+
   const topBar = (
     <UniversalRichTextToolbar
       state={state}
@@ -605,6 +791,12 @@ export function DocumentEditor({ adapter, onToast }) {
       publishPopup="dialog"
       publishLabel={publishLabel}
       onDelete={deleteDocument ? esborra : undefined}
+      /* IDEA-41 · Sense motor, cap clau nova: la barra de sempre. */
+      {...(ambProposta ? {
+        onProposaCard: proposaOdesfes,
+        proposaCardDisabled: !propostaDesfeible && !hiHaProposta,
+        proposaCardDesfer: propostaDesfeible
+      } : null)}
       t={t}
     />
   );

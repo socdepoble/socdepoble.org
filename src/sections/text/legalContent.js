@@ -145,6 +145,7 @@ export const legalContent = {
     <p>Perquè el poble puga parlar, cal que et veja. Concretament:</p>
     <ul>
       <li>El teu <strong>nom o pseudònim</strong> i la teua <strong>imatge de perfil</strong> són visibles per a la resta de membres verificats del teu poble.</li>
+      <li>El teu <strong>identificador</strong> (el nom amb una @ davant que es fa amb el teu nom i que pots canviar al teu perfil) <strong>només el veuen les altres persones si el teu perfil és públic</strong>. Mentre la baixa està en curs no es mostra enlloc, i el guardem perquè ningú no te'l prenga fins que s'esborra el compte.</li>
       <li>Si <strong>seguixes</strong> una persona, ella veu el teu nom i des de quan la seguixes. Si seguixes una entitat, les persones que l'administren veuen el teu nom i des de quan la seguixes, siga quin siga el teu poble.</li>
       <li>El que publiques al <strong>Mur</strong> o al <strong>Mercat</strong> és visible segons la visibilitat que hages triat en publicar-ho.</li>
       <li>Els <strong>missatges de xat</strong> els veuen les persones del fil.</li>

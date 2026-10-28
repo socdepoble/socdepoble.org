@@ -364,7 +364,7 @@ describe('construeixMapa · funció de salut', () => {
     expect(metrica(m, 'frontmatter-skills-valid')).toMatchObject({ numerador: 3, denominador: 4, valor: 0.75, prova: PROVA_MAPA });
     for (const nom of ['integritat-contingut', 'frescor-instantania', 'conformitat-documental', 'cadena-portes',
       // T12: el segell de la fixture no porta data, i les fonts de vigilància encara no arriben.
-      'antiguitat-segell', 'torns-caducats-oberts', 'torns-tancats', 'escriptori-ancorat', 'escriptori-amb-rebut',
+      'antiguitat-segell', 'torns-caducats-oberts', 'torns-tancats', 'torns-tancats-sense-rebut', 'escriptori-ancorat', 'escriptori-amb-rebut',
       'safata-entrada', 'recaigudes-ledger', 'integritat-ledger', 'frescor-relleu-estat']) {
       expect(metrica(m, nom)).toMatchObject({ valor: 'N/A', numerador: null, denominador: null, prova: null });
     }
@@ -598,7 +598,8 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
   const torn = (id, state, expiresAt) => ({ id, actor: 'claude', scope: 'code', state, createdAt: '2026-09-20T00:00:00Z', expiresAt, rebuts: 0, ambPla: false });
   const VIGILANCIA = Object.freeze({
     torns: [
-      torn('t1', 'closed', '2026-09-20T00:00:00Z'),          // caducat però tancat: no compta
+      // caducat però tancat: no compta; amb el seu rebut (Emowe C1), tampoc avisa com a tancat sense rebut
+      { ...torn('t1', 'closed', '2026-09-20T00:00:00Z'), rebuts: 1 },
       torn('t2', 'context_loaded', '2026-09-23T00:00:00Z'),  // caducat sense tancar
       torn('t3', 'context_loaded', '2026-09-25T00:00:00Z'),  // encara viu
       torn('t4', 'context_loaded', 'sense data')              // obert sense caducitat llegible: caducat (turns.mjs)
@@ -638,6 +639,7 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     // t2 (vençut) i t4 (sense data llegible): el mateix criteri que readTurn de turns.mjs.
     expect(metrica(m, 'torns-caducats-oberts')).toMatchObject({ numerador: 2, denominador: 4, valor: 0.5, prova: PROVA_MAPA });
     expect(metrica(m, 'torns-tancats')).toMatchObject({ numerador: 1, denominador: 4, prova: PROVA_MAPA });
+    expect(metrica(m, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 0, denominador: 4, valor: 0, prova: PROVA_MAPA });
     expect(avisosDe(m, 'document:.agents/runtime/turns')).toEqual(['torns-caducats']);
     expect(m.avisos.find((x) => x.codi === 'torns-caducats')).toMatchObject({ severitat: 'mitjana', evidencia: '2 de 4 torns caducats sense tancar' });
   });
@@ -646,6 +648,44 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     const torns = [torn('a', 'planned', null), { id: 'b', state: 'opened' }, torn('c', 'closed', null)];
     const m = construeixMapa({ ...fontsBase(), torns }, { existeix, ara: ARA });
     expect(metrica(m, 'torns-caducats-oberts')).toMatchObject({ numerador: 2, denominador: 3 });
+  });
+
+  /* Emowe C1 (pla 261028_1526, Bloc H) · Un torn tancat sense cap rebut: avís
+     baix (no para res) amb el recompte sobre els tancats i, un per evidència,
+     quins són, el més antic primer. Un tancat amb rebut, un obert sense rebut i
+     un sense la dada no compten; i no depén del rellotge. La mètrica (decisió
+     del Mestre) va sobre tots els torns: amb torns, sempre mesurada. */
+  it('C1 · torns tancats sense cap rebut: un avís baix amb el recompte i cadascun, i la mètrica', () => {
+    const torns = [
+      { ...torn('c2', 'closed', '2026-09-20T00:00:00Z'), createdAt: '2026-09-21T00:00:00Z' },
+      { ...torn('c1', 'closed', '2026-09-20T00:00:00Z'), createdAt: '2026-09-19T00:00:00Z', actor: 'codex' },
+      { ...torn('c3', 'closed', null), createdAt: 'sense data' },
+      { ...torn('amb', 'closed', null), rebuts: 2 },
+      torn('obert', 'context_loaded', '2026-09-25T00:00:00Z'), // obert sense rebut: no és d'este avís
+      { id: 'sense-dada', state: 'closed' }                    // sense recompte de rebuts: no compta
+    ];
+    for (const opcions of [{ existeix, ara: ARA }, { existeix }]) {
+      const m = construeixMapa({ ...fontsBase(), torns }, opcions);
+      const avis = m.avisos.find((x) => x.codi === 'torns-tancats-sense-rebut');
+      expect(avis).toMatchObject({ node: 'document:.agents/runtime/turns', severitat: 'baixa', evidencia: '3 de 5 torns tancats sense cap rebut' });
+      expect(avis.evidencies).toEqual([
+        '3 de 5 torns tancats sense cap rebut',
+        'c1 · codex · obert el 2026-09-19T00:00:00Z',
+        'c2 · claude · obert el 2026-09-21T00:00:00Z',
+        'c3 · claude · sense data d’obertura llegible'
+      ]);
+      expect(metrica(m, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 3, denominador: 6, valor: 0.5, font: '.agents/runtime/turns', prova: PROVA_MAPA });
+      expect(() => normalitzaMapa(m)).not.toThrow();
+    }
+    const un = construeixMapa({ ...fontsBase(), torns: [torn('u', 'closed', null)] }, { existeix, ara: ARA });
+    expect(un.avisos.find((x) => x.codi === 'torns-tancats-sense-rebut').evidencia).toBe('1 d’1 torn tancat sense cap rebut');
+    expect(metrica(un, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 1, denominador: 1, valor: 1 });
+    const net = construeixMapa({ ...fontsBase(), torns: [{ ...torn('a', 'closed', null), rebuts: 1 }, torn('b', 'context_loaded', null)] }, { existeix, ara: ARA });
+    expect(net.avisos.some((x) => x.codi === 'torns-tancats-sense-rebut')).toBe(false);
+    expect(metrica(net, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 0, denominador: 2, valor: 0, prova: PROVA_MAPA });
+    // Cap torn tancat encara: un 0 mesurat, no un N/A que trauria «Avisos i salut» del verd.
+    const capTancat = construeixMapa({ ...fontsBase(), torns: [torn('b', 'context_loaded', null)] }, { existeix, ara: ARA });
+    expect(metrica(capTancat, 'torns-tancats-sense-rebut')).toMatchObject({ numerador: 0, denominador: 1, valor: 0, prova: PROVA_MAPA });
   });
 
   it('Escriptori: ancoratge, rebut i safata; un avís baix per document sense àncora', () => {
@@ -692,6 +732,7 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     const m = vigilat({ existeix });
     for (const nom of ['torns-caducats-oberts', 'recaigudes-ledger', 'frescor-relleu-estat']) expect(metrica(m, nom).valor).toBe('N/A');
     expect(metrica(m, 'torns-tancats').valor).toBe(0.25);
+    expect(metrica(m, 'torns-tancats-sense-rebut').valor).toBe(0);
     expect(avisosDe(m, 'document:.agents/runtime/turns')).toEqual([]);
   });
 
@@ -703,7 +744,7 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
 
   it('sense les fonts noves no hi ha cap avís de vigilància', () => {
     const codis = new Set(mapa().avisos.map((x) => x.codi));
-    for (const codi of ['torns-caducats', 'escriptori-sense-ancora', 'escriptori-sense-rebut', 'ledger-invalid', 'recaiguda-recent']) {
+    for (const codi of ['torns-caducats', 'torns-tancats-sense-rebut', 'escriptori-sense-ancora', 'escriptori-sense-rebut', 'ledger-invalid', 'recaiguda-recent']) {
       expect(codis.has(codi)).toBe(false);
     }
     for (const nom of ['ledger-fossils', 'ledger-mal-formades']) expect(metrica(mapa(), nom).valor).toBe('N/A');

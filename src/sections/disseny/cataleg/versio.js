@@ -15,7 +15,19 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: manifest.js, EspecimenEnquadrament.jsx i EspecimenXatCerca.jsx,
+ * Darrera posada al dia: EspecimenPage.jsx, 2026-10-29T00:01:53+01:00, pla 261028_1526 (Bloc H, P1-68;
+ * revisió adversarial final del 29-10-2026, R1): el contracte de peuDePagina diu que l'editor de la fitxa del
+ * Perfil hi porta ara l'identificador i el poble (IdentitatAlPoble), dins del contenidor que fa
+ * scroll, i ja no germà de l'editor, que es quedava sense alçada als telèfons. Cap espècimen ni
+ * entrada de manifest nous.
+ * Versió anterior: EspecimenUniversalCard.jsx i EspecimenXat.jsx, 2026-10-28T22:26:58+01:00,
+ * pla 261028_1526 (Bloc H: IDEA-40 i P1-66; decisions del Mestre en xat): a EspecimenUniversalCard.jsx,
+ * el quadrat de l'espècimen 7 (la targeta explicativa de la Consola) porta el semàfor de les seues
+ * etiquetes com la TargetaConsola de veres («Cal reparar» el pinta roig, amb data-semafor, i el nom
+ * del quadrat diu l'estat); a EspecimenXat.jsx, la barra única del compositor (el + amb el menú
+ * d'adjunts, la carona dins del camp i el botó redó que fa de micròfon, d'atura o d'envia), amb el
+ * contracte, l'accessibilitat i el «no facis» al dia. Cap espècimen ni entrada de manifest nous.
+ * Versió anterior: manifest.js, EspecimenEnquadrament.jsx i EspecimenXatCerca.jsx,
  * 2026-10-28T19:14:50+01:00, pla 261028_1526 (P1-60, P1-64 i P1-36; decisions del Mestre en xat): el
  * manifest porta el copy editorial nou de Disseny (H2 simplificats de deu fitxes conceptuals i dues
  * carpetes, «Diàlegs i calaixos» i «Estats i avisos»; els subtítols tècnics passen als termes de cerca;
@@ -246,4 +258,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-28T19:14:50+01:00';
+export const VERSIO_CATALEG = '2026-10-29T00:01:53+01:00';

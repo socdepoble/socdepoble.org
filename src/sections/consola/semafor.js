@@ -91,3 +91,21 @@ export function colorDeTasques(tasques) {
 
 /** Una etiqueta de targeta amb el seu to: el vocabulari de les UniversalCard de la Consola (peces.jsx · aEtiqueta). */
 export const etiquetaDeTo = (text, to) => Object.freeze({ text, to });
+
+/* IDEA-40 (decisió del Mestre, 261028, Bloc H) · La insígnia quadrada d'una
+   targeta porta el semàfor de les seues etiquetes: la més greu d'entre les
+   dels tres colors (roig > taronja > verd), amb el seu text, que és el que en
+   diu l'estat sense el color. «Canvis nous», «Sense font» i la resta del que
+   només informa (neutre, o un to que no és del semàfor) no hi compten: sense
+   cap etiqueta del semàfor, null, i la insígnia es queda amb el gris de sempre. */
+const PES_DEL_TO = Object.freeze(Object.fromEntries(Object.entries(TO_SEMAFOR).map(([color, to]) => [to, PES[color]])));
+
+/** L'etiqueta del semàfor més greu d'unes etiquetes ({ text, to }), com a { to, text }; cap del semàfor, null. */
+export function semaforDEtiquetes(etiquetes) {
+  let greu = null;
+  for (const e of Array.isArray(etiquetes) ? etiquetes : []) {
+    if (!e || typeof e !== 'object' || !Object.hasOwn(PES_DEL_TO, e.to)) continue;
+    if (!greu || PES_DEL_TO[e.to] > PES_DEL_TO[greu.to]) greu = e;
+  }
+  return greu ? Object.freeze({ to: greu.to, text: String(greu.text ?? '') }) : null;
+}

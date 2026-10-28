@@ -1686,5 +1686,31 @@ export default {
   'section.mur.mapa.vorePoble': "Show the town",
   'section.mur.mapa.voreTot': "Show all",
   'section.mur.mapa.zonaSenseNom': "Area not named in the catalogue",
-  'section.mur.mapa.zonesMes': "{nom} · {n} more areas"
+  'section.mur.mapa.zonesMes': "{nom} · {n} more areas",
+  // P1-66 (pla 261028_1526, Bloc H) · La barra única del compositor: el menú + dels adjunts.
+  'section.xat.adjunts.camera': "Camera",
+  'section.xat.adjunts.fotos': "Photos and videos",
+  'section.xat.adjunts.menu': "Attach",
+  'section.xat.adjunts.selectorCamera': "Take a photo with the camera",
+  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
+  'editor.proposaCard.feta': "Card suggested. To undo it: “Undo the suggestion” or Cmd/Ctrl+Z.",
+  'editor.proposaCard.res': "Nothing to suggest: the card fields are already filled in or the body does not start with text.",
+  'section.notes.proposaCard': "Suggest Card",
+  'section.notes.proposaCardDesfer': "Undo the suggestion",
+  // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
+  'section.login.registre.ajudaPoble': "If you belong to more than one, choose the others in your profile.",
+  'section.login.registre.ajudaUsuari': "It is made from your name and shows with an @ in front if your profile is public. If someone already has it, we will add -2.",
+  'section.login.registre.poble': "Your town",
+  'section.login.registre.triaPoble': "Choose a town…",
+  'section.login.registre.usuari': "Your username",
+  // P1-69 (pla 261028_1526, Bloc H) · Instal·lar l'App (PWA) a Descàrregues.
+  'section.descarregues.cancelada': "Installation cancelled. If you change your mind, you can also do it from the browser menu.",
+  'section.descarregues.guia.ios.pas1': "Tap Share ⬆️ (the square with the arrow pointing up).",
+  'section.descarregues.guia.ios.pas2': "Tap “Add to Home Screen”.",
+  'section.descarregues.guia.ios.safari': "If you don't see the option, open this page in Safari.",
+  'section.descarregues.guia.mac': "In Safari on the Mac (macOS Sonoma or later): File menu → “Add to Dock”.",
+  'section.descarregues.guia.menu': "Open the browser menu and choose the option to install Sóc de Poble as an app (on mobile, “Add to Home screen”).",
+  'section.descarregues.guia.vore': "See the instructions for each browser",
+  'section.descarregues.instalada': "App already installed on this device",
+  'section.descarregues.instalar': "Install the App (PWA)"
 };

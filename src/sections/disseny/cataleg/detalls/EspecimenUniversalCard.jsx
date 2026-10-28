@@ -6,6 +6,9 @@ import { PortaDePagina, PortesTargeta } from '../../../../components/PedraSeca/o
 import { BotoVisibilitat } from '../../../../components/universal/barres/BotoVisibilitat.jsx';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../../../components/universal/editorial.js';
 import { insigniaEmojiXL } from '../../../../components/universal/insigniaEmoji.jsx';
+
+/* La insígnia del quadrat amb el semàfor d'una targeta de la Consola (TargetaConsola · UniversalCard semafor). */
+const ambSemafor = (insignia, to) => ({ ...insignia, semafor: to });
 import { propsDeTargetaDeLaPagina } from '../../../../components/universal/targetaDeLaPagina.js';
 import { useNavigate } from '../../../../app/contexts/RouterContext';
 import { objecteDePagina } from '../../../../config/objecteConnectable.js';
@@ -269,7 +272,10 @@ export default function EspecimenUniversalCard() {
             pròpia a /consola/xifres/<slug>; cap no és ja una targeta compacta
             del Control. La instància real és TargetaConsola
             (src/sections/consola/peces.jsx), que pinta TargetaXifra
-            (src/sections/consola/XifresMas.jsx). */}
+            (src/sections/consola/XifresMas.jsx). IDEA-40 (decisió del Mestre,
+            261028, pla 261028_1526, Bloc H) · el quadrat porta el semàfor de
+            les etiquetes, com la de veres: «Cal reparar» el pinta roig i el
+            seu nom diu l'estat («Calendari de processos · Cal reparar»). */}
         <UniversalCard
           className="sdp-consola__targeta"
           {...BOINA_SDP}
@@ -286,7 +292,7 @@ export default function EspecimenUniversalCard() {
               </div>
             </>
           )}
-          squareBadge={insigniaEmojiXL('Calendari de processos', '⚙️')}
+          squareBadge={ambSemafor(insigniaEmojiXL('Calendari de processos · Cal reparar', '⚙️'), 'error')}
           labels={[{ text: 'Cal reparar', className: 'sdp-insignia sdp-insignia--error' }]}
           mainHref="/consola/calendari"
           hasFooter onConnect={() => navega('/consola/calendari')}

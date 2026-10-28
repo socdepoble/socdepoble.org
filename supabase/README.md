@@ -849,6 +849,49 @@ description: "Documentació canònica de Sóc de Poble."
   d'aplicar-la. Idempotent i en una sola transacció;
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2610282100_usuari_i_poble_canonic.sql`
+  P1-68 (pla 261028_1526, §3.8.2.3; decisions del Mestre 261028: RPC pròpia
+  i camp separat, públic si el perfil és públic, amagat durant la quarantena
+  de la baixa). Les altes naixien amb `username`, `town_uuid` i
+  `primary_town` a NULL. Afig (IF NOT EXISTS) `profiles.username`,
+  `username_confirmat_at`, `town_uuid`, `primary_town`, `provinces`,
+  `comarcas` i `secondary_towns`, i `towns.provincia` i `towns.comarca`
+  (omplides una vegada del catàleg `towns` d'`app_content`). La regla de
+  l'identificador és la del client (`onboardingModel.js`, literal a literal):
+  el primer nom i el primer cognom sense partícules, en minúscules ASCII i
+  sense separadors (24 com a molt; menys de 3, `veina`), amb `-2`, `-3`… si
+  és d'algú, retingut o reservat (la llista, `baixa`, les còpies de les
+  identitats de la plataforma i les fundacionals de `private.ajustos`
+  `usuaris_reservats`, que hi posa el Mestre: cap nom de persona al SQL),
+  `veina` si la base no pot dur cap sufix i 100 candidats com a molt, cada
+  candidat sota el seu pany consultiu, i l'índex únic `profiles_usuari_unic`
+  sobre `lower(username)` com a última guarda. Backfill genèric (abans del
+  disparador, amb `trg_profiles_touch` desactivat) de les files sense
+  identificador i dels camps de poble NULL o buits: cap camp que ja en porte
+  no es reescriu. Guardes que avorten (`SDP-USER-022`) si una política, una
+  vista o una regla de fora llig les columnes noves o si la lectura de
+  `profiles` no és només la pròpia. El disparador `trg_profiles_usuari_i_poble`
+  cobrix les tres altes sense redefinir-les (l'alta no cau mai:
+  `SDP-REG-903`), valida els canvis (amb sessió, només per la RPC:
+  `SDP-USER-006`; cap retingut: `SDP-USER-007`), reté l'identificador durant
+  la baixa (`private.usuaris_retinguts`, `baixa-…` a la fila) i deriva el
+  poble a l'alta i quan canvia `town_name` (`La Torre de les Maçanes` si no
+  n'hi ha cap; una tria no es reescriu). La RPC `desa_el_meu_usuari(p_usuari)`
+  (només `authenticated`) canvia o confirma el propi identificador, amb 10
+  proves per hora (`private.usuari_intents`). `perfil_public` es torna a crear
+  amb `usuari` al final, només a la fitxa sencera. Codis `SDP-USER-000`..`007`
+  i `020`..`024`. Cap permís ni política nova; no toca `town_memberships`.
+  Abans, les nou consultes de lectura de la capçalera (columnes,
+  restriccions, polítiques, permisos, disparadors, repetits, pobles, ajustos i
+  funcions que llegixen el poble) i, del Mestre, les identitats fundacionals
+  a `private.ajustos`; després,
+  `select count(*) from public.profiles where username is null;` (0) i la
+  comprovació dels sufixos de les identitats fundacionals. La
+  verificació de les dues sessions és a la capçalera. La prova estàtica és
+  `src/data/supabase/usuariIPoble.migracio.test.js`. Va després de
+  2610281730. Idempotent i en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 

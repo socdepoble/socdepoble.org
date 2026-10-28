@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
-import { LONGITUD_MINIMA_CONTRASENYA, toDeLErrorDEntrada, validateRegistration } from './onboardingModel.js';
+import {
+  LONGITUD_MINIMA_CONTRASENYA, netejaUsernameEnEscriure, normalitzaUsername, proposaUsername, toDeLErrorDEntrada,
+  validaUsername, validateRegistration
+} from './onboardingModel.js';
+import { CampsDIdentitatALAlta } from './CampsDIdentitatALAlta.jsx';
 import { Alerta, Boto, ControlContrasenya, PillToggle } from '../../components/PedraSeca/index.js';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { ESTAT_RECUPERACIO_INICIAL, RecuperacioStep } from './RecuperacioSteps.jsx';
 import { createTranslator } from '../../config/i18n.js';
+import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 
 /* Gauntlet 261025_0545 (TE-01) · El formulari parla la llengua triada: els
    textos passen pel traductor `t` (el de la interfície, des
@@ -51,12 +57,32 @@ const modeDelFormulari = (modeInicial, potRecuperar = false) => {
  *
  * Gauntlet 261025_0545 (TE-01) · `t` (opcional): el traductor de la interfície,
  * que també rep la vista de recuperació. Sense, el valencià de sempre.
+ *
+ * P1-68 (pla 261028_1526, §3.8.2.3; decisions del Mestre, 261028) · Crear
+ * compte proposa l'identificador @usuari (proposaUsername, la regla del
+ * servidor) i el va seguint mentre s'escriu el nom; quan la persona l'edita,
+ * mana el seu, i buidar-lo torna a la proposta. Només un identificador
+ * editat arriba a `onRegister` (`username`): sense, el servidor el fa del
+ * nom, que és el mateix. El poble ve preseleccionat (La Torre de les
+ * Maçanes, si és al catàleg) i va a `poble`; si el catàleg no la porta,
+ * «Tria un poble…» i cap poble fins que la persona en tria un; sense catàleg
+ * (useCoreContent buit) no es pinta. Sense poble, el servidor hi posa el de
+ * sèrie.
  */
 export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null, introEntrada = null, t = TRADUCTOR_DE_RESERVA }) {
   const potRecuperar = typeof onRecupera === 'function';
   const [mode, setMode] = useState(() => modeDelFormulari(modeInicial, potRecuperar));
   const [modeRebut, setModeRebut] = useState(modeInicial);
-  const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '', rgpd: false });
+  const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '', rgpd: false, username: '', poble: '' });
+  const [usernameTocat, setUsernameTocat] = useState(false);
+  const { towns } = useCoreContent();
+  const pobles = useMemo(() => [...new Set((Array.isArray(towns) ? towns : [])
+    .map((town) => (typeof town?.title === 'string' ? town.title.trim() : '')).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'ca')), [towns]);
+  /* Només La Torre ve preseleccionada; si el catàleg no la porta, cap poble
+     triat per la persona (el servidor hi posa el de sèrie). */
+  const pobleTriat = fields.poble || (pobles.includes(POBLE_FUNDACIONAL) ? POBLE_FUNDACIONAL : '');
+  const usernameVist = usernameTocat ? fields.username : (fields.name.trim() ? proposaUsername(fields.name) : '');
   const [errors, setErrors] = useState({});
   const [estatRecuperacio, setEstatRecuperacio] = useState(ESTAT_RECUPERACIO_INICIAL);
   const enviant = useRef(false);
@@ -81,6 +107,14 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
+    if (name === 'username') {
+      const net = netejaUsernameEnEscriure(value);
+      setUsernameTocat(net !== '');
+      setFields((current) => ({ ...current, username: net }));
+      setErrors((current) => ({ ...current, username: undefined }));
+      if (onClearError && error) onClearError();
+      return;
+    }
     setFields((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
     setErrors((current) => ({ ...current, [name]: undefined }));
     if (onClearError && error) onClearError();
@@ -91,6 +125,9 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     if (desactivat || enviant.current) return;
     if (mode === 'register') {
       const nextErrors = validateRegistration(fields);
+      const username = usernameTocat ? normalitzaUsername(fields.username) : '';
+      const motiuUsername = username ? validaUsername(username) : null;
+      if (motiuUsername) nextErrors.username = motiuUsername;
       if (fields.password !== fields.confirmPassword) {
         nextErrors.confirmPassword = t('section.login.registre.errorContrasenyes', 'Les contrasenyes no coincidixen');
       }
@@ -101,7 +138,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
       if (Object.keys(nextErrors).length) return;
       enviant.current = true;
       try {
-        await onRegister(fields);
+        await onRegister({ ...fields, username, poble: pobleTriat });
         /* Les dues: un reintent no hereta mitja parella de contrasenyes. */
         setFields((current) => ({ ...current, password: '', confirmPassword: '' }));
       } finally { enviant.current = false; }
@@ -230,6 +267,18 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                 {errors.name ? <p id="onboarding-name-error" className="sdp-camp__error">{errors.name}</p> : null}
               </div>
             )}
+
+            {mode === 'register' ? (
+              <CampsDIdentitatALAlta
+                t={t}
+                error={errors.username}
+                usuari={usernameVist}
+                poble={pobleTriat}
+                pobles={pobles}
+                onChange={updateField}
+                desactivat={desactivat}
+              />
+            ) : null}
             
 
             <div className={errors.email ? 'sdp-camp ' : 'sdp-camp'}>

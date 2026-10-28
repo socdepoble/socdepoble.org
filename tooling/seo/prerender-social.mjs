@@ -3,14 +3,16 @@
  * pública per a Firebase Hosting, sense JavaScript al navegador (WhatsApp,
  * Telegram i la resta de rastrejadors lligen l'HTML tal com ix del servidor).
  *
- *   node tooling/seo/prerender-social.mjs --root . --dist dist --origin https://socdepoble.org
+ *   node tooling/seo/prerender-social.mjs --root . --dist dist --origin https://socdepoble.org [--snapshot JSON]
  *
  * Després de vite build (npm run build:social, l'últim pas de npm run build;
  * mai a build:natiu ni a build:wp):
  *   1. Llig dist/index.html (fitxer regular, com a molt 1 MiB) i en guarda el
  *      sha256; prepareShell en lleva el head de la ruta i hi deixa un forat.
  *   2. Les metadades són les de buildSocialManifest (estricte): les mateixes
- *      regles que el client (metadadesSocials.js i seoWiki.js).
+ *      regles que el client (metadadesSocials.js i seoWiki.js), més les
+ *      publicacions públiques de publicSnapshot (--snapshot JSON; QA-01 de
+ *      Codex, 261028), que ixen a dist/<secció>/<id>/index.html.
  *   3. Escriu dist/<ruta>/index.html per a cada ruta sense consulta, per a
  *      cada àlies (el canonical és el del destí) i, per a cada document
  *      públic de la Wiki, la forma de camí dist/wikidepoble/<id>/index.html
@@ -41,7 +43,7 @@ import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {ATRIBUT_SSR} from '../../src/config/imatgeSocial.js';
-import {buildSocialManifest} from './build-social-manifest.mjs';
+import {buildSocialManifest, llegixSnapshot} from './build-social-manifest.mjs';
 import {prepareShell} from './prepare-social-shell.mjs';
 import {renderSocialHead, SOCIAL_SLOT} from './social-edge.mjs';
 
@@ -141,7 +143,7 @@ export function rutaEscrivible(distDir, served) {
   return target;
 }
 
-export async function prerenderSocial({root, dist = 'dist', origin, policyRoot = root, JSDOM: JSDOMArg = null}) {
+export async function prerenderSocial({root, dist = 'dist', origin, policyRoot = root, publicSnapshot = [], JSDOM: JSDOMArg = null}) {
   if (!root || !origin) throw new Error('root i origin són obligatoris.');
   root = fs.realpathSync(root);
   comprovaFirebaseHosting(root);
@@ -162,7 +164,7 @@ export async function prerenderSocial({root, dist = 'dist', origin, policyRoot =
   const shellDom = new JSDOM(html);
   const recursosDelShell = recursos(shellDom.window.document);
   shellDom.window.close();
-  const {manifest, evidence} = await buildSocialManifest({root, origin, policyRoot, estricte: true});
+  const {manifest, evidence} = await buildSocialManifest({root, origin, policyRoot, publicSnapshot, estricte: true});
   const warnings = [];
   const images = new Map();
   /* La imatge d'una ruta, comprovada sobre dist/ (el que es desplega): mateix
@@ -273,14 +275,16 @@ function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 2) {
     const k = argv[i];
-    if (!['--root', '--dist', '--origin'].includes(k) || !argv[i + 1] || args[k]) throw new Error('Ús: --root RUTA --dist dist --origin https://socdepoble.org');
+    if (!['--root', '--dist', '--origin', '--snapshot'].includes(k) || !argv[i + 1] || args[k]) throw new Error('Ús: --root RUTA --dist dist --origin https://socdepoble.org [--snapshot JSON]');
     args[k] = argv[i + 1];
   }
-  return {root: args['--root'], dist: args['--dist'] || 'dist', origin: args['--origin']};
+  const publicSnapshot = args['--snapshot'] ? llegixSnapshot(args['--snapshot']) : [];
+  return {root: args['--root'], dist: args['--dist'] || 'dist', origin: args['--origin'], publicSnapshot};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  prerenderSocial(parseArgs(process.argv.slice(2)))
+  // Dins de la promesa: un ús o un snapshot dolents també ixen com a rebut JSON.
+  Promise.resolve().then(() => prerenderSocial(parseArgs(process.argv.slice(2))))
     .then(receipt => { process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`); })
     .catch(error => { console.error(JSON.stringify({valid: false, error: error.message})); process.exitCode = 1; });
 }

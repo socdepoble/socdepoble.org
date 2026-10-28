@@ -4,8 +4,9 @@
 import { describe, expect, test } from 'vitest';
 import {
   COLOR_DE_SEVERITAT, COLOR_D_ESTAT, COLOR_D_ESTAT_TASCA, NEUTRE, TO_SEMAFOR, colorDAvisos, colorDeTasques, etiquetaDeTo,
-  pitjor, toDEstat, toDeColor
+  pitjor, semaforDEtiquetes, toDEstat, toDeColor
 } from './semafor.js';
+import { ETIQUETES } from './consolaPagines.js';
 import { ESTATS_TASCA, SEVERITATS } from './mapa/contracteMapa.js';
 import { TO_ESTAT } from './mapa/grafMapa.js';
 import {
@@ -111,5 +112,36 @@ describe('les marques dels problemes', () => {
     // Una part: mai «ambre» d'una skill que l'Inventari pinta roja.
     expect(problemaDeSkill(s, s.avisos.slice(0, 1))).toEqual({ clau: 'skill:a', text: 'a · orfe', marca: 'mitjana', to: 'avis' });
     expect(problemaDeSkill(s, s.avisos.slice(1))).toEqual({ clau: 'skill:a', text: 'a · fora-segell', marca: 'alta', to: 'error' });
+  });
+});
+
+/* IDEA-40 (decisió del Mestre, 261028, Bloc H) · La insígnia quadrada porta el
+   semàfor de les etiquetes: la més greu dels tres colors, amb el seu text. El
+   que només informa («Canvis nous», «Sense font», neutre o un to de fora del
+   semàfor) no hi compta. Cap quart color. */
+describe('el semàfor de la insígnia', () => {
+  test('cada etiqueta del tauler: Cal reparar roig, Important taronja, En ordre verd; Canvis nous i Sense font, cap', () => {
+    expect(semaforDEtiquetes([ETIQUETES.reparar])).toEqual({ to: 'error', text: 'Cal reparar' });
+    expect(semaforDEtiquetes([ETIQUETES.important])).toEqual({ to: 'avis', text: 'Important' });
+    expect(semaforDEtiquetes([ETIQUETES.enOrdre])).toEqual({ to: 'exit', text: 'En ordre' });
+    expect(semaforDEtiquetes([ETIQUETES.nou])).toBeNull();
+    expect(semaforDEtiquetes([ETIQUETES.senseFont])).toBeNull();
+  });
+
+  test('la més greu mana, siga on siga de la llista; «Canvis nous» al costat no canvia res', () => {
+    expect(semaforDEtiquetes([ETIQUETES.enOrdre, ETIQUETES.reparar, ETIQUETES.important])).toEqual({ to: 'error', text: 'Cal reparar' });
+    expect(semaforDEtiquetes([ETIQUETES.important, ETIQUETES.nou])).toEqual({ to: 'avis', text: 'Important' });
+    expect(semaforDEtiquetes([ETIQUETES.nou, ETIQUETES.enOrdre])).toEqual({ to: 'exit', text: 'En ordre' });
+    // Dues del mateix color: la primera.
+    expect(semaforDEtiquetes([{ text: 'A', to: 'avis' }, { text: 'B', to: 'avis' }]).text).toBe('A');
+  });
+
+  test('cap quart color: el blau (info), neutre, el text pla i el que no és etiqueta no hi compten', () => {
+    for (const etiquetes of [undefined, null, [], ['VIU'], [null], [{ text: 'Acció', to: 'info' }], [{ text: 'x', to: 'neutre' }], [{ text: 'x' }], 'En ordre']) {
+      expect(semaforDEtiquetes(etiquetes), JSON.stringify(etiquetes)).toBeNull();
+    }
+    const tons = new Set([ETIQUETES.reparar, ETIQUETES.important, ETIQUETES.enOrdre].map((e) => semaforDEtiquetes([e]).to));
+    expect(tons).toEqual(new Set(Object.values(TO_SEMAFOR)));
+    expect(Object.isFrozen(semaforDEtiquetes([ETIQUETES.enOrdre]))).toBe(true);
   });
 });

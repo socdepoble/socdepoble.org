@@ -9,9 +9,9 @@
    codi): el tall de l'arbre ha de donar exactament els mateixos grups. */
 import { describe, expect, test } from 'vitest';
 import {
-  GUIONS, INCERTESA_ALTA_S, LLINDARS_KM, MAX_PUNTS_AGRUPABLES, ZOOM_FOTO_A_FOTO, ZOOM_PARADES,
+  GUIONS, INCERTESA_ALTA_S, INFERENCIES, LLINDARS_KM, ZOOM_FOTO_A_FOTO, ZOOM_PARADES,
   agrupaPerDistancia, ajudaDelLliscador, arbreDAgrupacio, caixaLliure, centreDelGrup, clauDeContingut, clauDelConjunt,
-  comparaCaptures, distanciaKm, estimaUbicacions, etiquetaDistancia, formataDia, formataHora, indexDelLlindar,
+  comparaCaptures, distanciaKm, estatDe, estimaUbicacions, etiquetaDistancia, formataDia, formataHora, indexDelLlindar,
   instantDeCaptura, llindarDelLliscador, llindarDelZoom, modeDeComparacio, modeDelMapa, nomDeLaZona, nomDelGrup,
   omplix, ordenaPerCaptura, pobleMesProper, puntDeLaVora, solapen, tallaArbre, tonDeLaUbicacio
 } from './mapaFotografic.js';
@@ -197,7 +197,39 @@ describe('arbre d’enllaç complet i talls', () => {
     expect(arbre.fusions.every((f) => f.a < f.b)).toBe(true);
   });
 
-  test(`més de ${MAX_PUNTS_AGRUPABLES} punts: les coordenades idèntiques es fonen abans, amb el mateix resultat`, () => {
+  /* Emowe M2 (decisió del Mestre, 261028: preagrupament exacte) · Les
+     coordenades idèntiques es fonen abans de la matriu també amb pocs punts:
+     les fusions d'altura 0 van per ordre del duplicat (el node que queda és el
+     primer del lloc), i cada tall és el de l'oracle. */
+  test('M2 · amb pocs punts, les coordenades idèntiques també es fonen abans, a altura 0, i cada tall és el de l’oracle', () => {
+    const [P, , , Q] = PUNTS;
+    const pqqp = [P, Q, Q, P];
+    const arbre = arbreDAgrupacio(pqqp);
+    // La matriu sencera ajuntava primer (0, 3); la fusió prèvia, per ordre del duplicat: (1, 2) i després (0, 3).
+    expect(arbre.fusions.slice(0, 2)).toEqual([{ a: 1, b: 2, altura: 0 }, { a: 0, b: 3, altura: 0 }]);
+    expect(arbre).toMatchObject({ n: 4, retallat: false, resolucioKm: 0 });
+    expect(arbre.fusions).toHaveLength(3);
+    for (const km of LLINDARS_KM) expect(tallaArbre(arbre, km)).toEqual(oracle(pqqp, km));
+    // 60 punts de 15 llocs, amb buits, NaN i el 0/0: els deu llindars, com l'oracle.
+    const rnd = aleatori(17);
+    const llocs = nuvol(15, rnd);
+    const brossa = [null, { lat: Number.NaN, lng: 1 }, { lat: 0, lng: 0 }];
+    const punts = Array.from({ length: 60 }, (_, i) => (i % 11 === 5 ? brossa[i % 3] : llocs[Math.floor(rnd() * llocs.length)]));
+    const mesclat = arbreDAgrupacio(punts);
+    expect(mesclat.retallat).toBe(false);
+    for (const km of LLINDARS_KM) expect(tallaArbre(mesclat, km)).toEqual(oracle(punts, km));
+    // A altura 0 només s'ajunten els duplicats vàlids: la matriu porta els llocs diferents.
+    const valids = punts.filter((p) => p && Number.isFinite(p.lat) && !(p.lat === 0 && p.lng === 0));
+    const diferents = new Set(valids.map((p) => `${p.lat}|${p.lng}`)).size;
+    expect(mesclat.fusions.filter((f) => f.altura === 0)).toHaveLength(valids.length - diferents);
+    expect(mesclat.fusions.filter((f) => f.altura > 0 && f.altura < Infinity)).toHaveLength(diferents - 1);
+    // Exacte, cap cel·la ni arrodoniment: dos llocs a 1,1 m, o a 0,01 mm, no es fonen a altura 0.
+    for (const lat of [38.59191, 38.5919000001]) {
+      expect(arbreDAgrupacio([TORRE, { lat, lng: TORRE.lng }]).fusions[0].altura).toBeGreaterThan(0);
+    }
+  });
+
+  test('5 000 punts de 40 llocs: les coordenades idèntiques es fonen abans, amb el mateix resultat', () => {
     const llocs = nuvol(40, aleatori(3));
     const molts = Array.from({ length: 5000 }, (_, index) => llocs[(index * 7) % llocs.length]);
     const inici = performance.now();
@@ -213,7 +245,7 @@ describe('arbre d’enllaç complet i talls', () => {
     }
   });
 
-  test(`més de ${MAX_PUNTS_AGRUPABLES} punts a la mateixa latitud i a 1 km: la fusió prèvia mira les dues coordenades, i a altura 0`, () => {
+  test('700 punts a la mateixa latitud i a 1 km: la fusió prèvia mira les dues coordenades, i a altura 0', () => {
     const dos = [{ lat: 38.5919, lng: -0.4184 }, { lat: 38.5919, lng: -0.4069 }];
     expect(distanciaKm(dos[0], dos[1])).toBeCloseTo(1.0, 1);
     const alterns = Array.from({ length: 700 }, (_, index) => dos[index % 2]);
@@ -225,7 +257,7 @@ describe('arbre d’enllaç complet i talls', () => {
     expect(tallaArbre(arbre, 2)).toHaveLength(1);
   });
 
-  test(`molts punts no vàlids (més de ${MAX_PUNTS_AGRUPABLES}): mai no entren a la matriu i només s'ajunten a «Tot junt»`, () => {
+  test(`molts punts no vàlids (1 601): mai no entren a la matriu i només s'ajunten a «Tot junt»`, () => {
     const valids = nuvol(10, aleatori(13));
     const barreja = [...Array.from({ length: 1600 }, () => null), ...valids, { lat: Number.NaN, lng: 1 }];
     const arbre = arbreDAgrupacio(barreja);
@@ -295,6 +327,25 @@ describe('arbre d’enllaç complet i talls', () => {
     expect(nomDelGrup([0, 1, 2, 3, 4], parades, { nomDeTot: 'Totes les fotos del Mur' })).toBe('Totes les fotos del Mur');
     expect(nomDelGrup([4], parades, { nomSenseLloc: 'Lloc sense nom' })).toBe('Lloc sense nom');
     expect(nomDelGrup([0, 2, 3], parades, { formataMes: (primer, n) => `${primer} +${n}` })).toBe('La Torre +2');
+  });
+
+  /* QA-02 (Codex 261028_1611) · Dos punts a 5° de latitud i ±179,8° de
+     longitud estan a uns 44 km: el centre és al Pacífic, entre ells, i no a
+     0° (uns 18 900 km). Antipodals, la mitjana aritmètica de sempre. */
+  test('centre d’un grup a través de l’antimeridià: al Pacífic, prop dels seus punts', () => {
+    const pacific = [{ lat: 5, lng: 179.8 }, { lat: 5, lng: -179.8 }];
+    expect(distanciaKm(pacific[0], pacific[1])).toBeLessThan(45);
+    for (const ids of [[0, 1], [1, 0]]) {
+      const centre = centreDelGrup(pacific, ids);
+      expect(centre.lat).toBe(5);
+      expect(Math.abs(centre.lng)).toBeCloseTo(180, 9);
+      for (const punt of pacific) expect(distanciaKm(centre, punt)).toBeLessThan(23);
+    }
+    expect(centreDelGrup([{ lat: 10, lng: 90 }, { lat: 10, lng: -90 }], [0, 1])).toEqual({ lat: 10, lng: 0 });
+    // Antipodals on l'atan2 del soroll no és la mitjana aritmètica (-60): la regla, en qualsevol ordre.
+    for (const ids of [[0, 1], [1, 0]]) expect(centreDelGrup([{ lat: 0, lng: 30 }, { lat: 0, lng: -150 }], ids)).toEqual({ lat: 0, lng: -60 });
+    // Amb direcció, encara que el vector siga curt (0,42), l'arc curt: -125, no l'aritmètica (55).
+    expect(centreDelGrup([{ lat: 0, lng: 170 }, { lat: 0, lng: -60 }], [0, 1]).lng).toBeCloseTo(-125, 9);
   });
 });
 
@@ -366,6 +417,65 @@ describe('estimació (la foto amb GPS més pròxima en el temps de la mateixa pu
     expect(estimaUbicacions([{ id: 'm', origen: 'manual', lat: 38.6, lng: -0.4 }])[0].estat).toBe('indicada');
     expect(estimaUbicacions(null)).toEqual([]);
     expect(['gps', 'estimada', 'poble', 'indicada', 'pendent', 'res'].map(tonDeLaUbicacio)).toEqual(['verd', 'ocre', 'ocre', 'ocre', null, null]);
+  });
+
+  /* Emowe M1 · D'on ve el lloc (origen: les coordenades pròpies de la foto) i
+     com s'ha deduït (inferencia) van a banda; l'estat que es pinta n'ix
+     (estatDe) i no canvia, ni els camps en solt de l'estimada. */
+  test('M1 · origen i inferència separats: GPS i indicada sense inferència; estimada i poble sense origen propi', () => {
+    const [a, b, c, d, e, f] = estimaUbicacions(GALERIA, { centreDelPoble: TORRE });
+    for (const gps of [a, c]) expect(gps).toMatchObject({ estat: 'gps', origen: 'exif', inferencia: null });
+    expect(b).toMatchObject({ estat: 'estimada', origen: null, inferencia: { tipus: 'estimada', referencia: 'c', diferencia_s: 1200, incertesaAlta: false } });
+    expect(d.inferencia).toEqual({ tipus: 'estimada', referencia: 'c', diferencia_s: 79200, incertesaAlta: true });
+    // Compatibilitat: els camps en solt de l'estimada són els de la inferència.
+    for (const x of [b, d]) {
+      expect([x.referencia, x.diferencia_s, x.incertesaAlta]).toEqual([x.inferencia.referencia, x.inferencia.diferencia_s, x.inferencia.incertesaAlta]);
+    }
+    // El centre del poble: cap GPS ni referència, incertesa alta; la precisió que es mostra no canvia.
+    for (const poble of [e, f]) {
+      expect(poble).toMatchObject({ estat: 'poble', origen: null, precisio: 'poble', inferencia: { tipus: 'poble', referencia: null, diferencia_s: null, incertesaAlta: true } });
+      expect(poble).not.toHaveProperty('referencia');
+      expect(Object.isFrozen(poble.inferencia)).toBe(true);
+    }
+    expect(estimaUbicacions([{ id: 'm', origen: 'manual', lat: 38.6, lng: -0.4 }])[0]).toMatchObject({ estat: 'indicada', origen: 'manual', inferencia: null });
+    // Unes coordenades que no són de l'EXIF (sense origen o amb un origen estrany) són de l'autor.
+    for (const brut of [null, 'estimada', 'poble']) {
+      expect(estimaUbicacions([{ origen: brut, lat: 38.6, lng: -0.4 }])[0]).toMatchObject({ estat: 'indicada', origen: 'manual', inferencia: null });
+    }
+    // Un «exif» sense coordenades vàlides no és cap origen: el lloc ix d'una inferència.
+    const [, cec] = estimaUbicacions([GALERIA[0], { id: 'x', origen: 'exif', lat: 'x', lng: 1, dataCaptura: '2026-10-12T10:05:00+02:00' }]);
+    expect(cec).toMatchObject({ estat: 'estimada', origen: null, lat: 38.5919, inferencia: { tipus: 'estimada', referencia: 'a', diferencia_s: 300 } });
+    expect(estimaUbicacions([{ id: 'p', origen: 'exif' }])[0]).toMatchObject({ estat: 'pendent', origen: null, inferencia: null, lat: null, lng: null });
+    expect(INFERENCIES).toEqual(['estimada', 'poble']);
+    expect(Object.isFrozen(b.inferencia)).toBe(true);
+    // estatDe: la inferència mana; una de desconeguda no compta.
+    expect(estatDe({ origen: 'exif', lat: 38.6, lng: -0.4, inferencia: { tipus: 'poble' } })).toBe('poble');
+    expect(estatDe({ origen: 'exif', lat: 38.6, lng: -0.4, inferencia: { tipus: 'altra' } })).toBe('gps');
+    // Amb lloc i sense inferència, tot el que no és l'EXIF és «indicada», també sense origen.
+    for (const origen of ['manual', null, undefined]) expect(estatDe({ origen, lat: 38.6, lng: -0.4, inferencia: null })).toBe('indicada');
+    expect(estatDe(null)).toBe('pendent');
+  });
+
+  test('M1 · propietat: l’estat és sempre estatDe(foto), gps ⇔ origen «exif» sense inferència, i mai origen i inferència alhora', () => {
+    const rnd = aleatori(29);
+    const tria = (llista) => llista[Math.floor(rnd() * llista.length)];
+    for (let volta = 0; volta < 40; volta += 1) {
+      const fotos = Array.from({ length: 8 }, (_, i) => ({
+        id: `f${i}`,
+        origen: tria(['exif', 'manual', null, 'estimada', 'poble']),
+        ...(rnd() < 0.5 ? { lat: 38 + rnd(), lng: -0.5 + rnd() } : { lat: tria([null, 'x', Number.NaN]), lng: 1 }),
+        dataCaptura: rnd() < 0.7 ? `2026-10-${tria(['12', '13'])}T${String(Math.floor(rnd() * 24)).padStart(2, '0')}:00:00${tria(['+02:00', ''])}` : null
+      }));
+      for (const centreDelPoble of [null, TORRE]) {
+        for (const foto of estimaUbicacions(fotos, { centreDelPoble })) {
+          expect(foto.estat).toBe(estatDe(foto));
+          expect(foto.estat === 'gps').toBe(foto.origen === 'exif' && foto.inferencia === null);
+          expect(['exif', 'manual', null]).toContain(foto.origen);
+          expect(foto.inferencia === null || INFERENCIES.includes(foto.inferencia.tipus)).toBe(true);
+          expect(foto.origen !== null && foto.inferencia !== null).toBe(false);
+        }
+      }
+    }
   });
 });
 

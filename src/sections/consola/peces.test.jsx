@@ -498,3 +498,79 @@ test('Onada 6 · TargetaConsola: sense problemes (null o cap), el cos és el de 
     cleanup();
   }
 });
+
+/* IDEA-40 (decisió del Mestre, 261028, Bloc H) · La insígnia quadrada porta el
+   semàfor de les etiquetes de la targeta: tres colors (verd, taronja, roig),
+   el més greu, amb el seu text al nom del quadrat (el color mai no va sol).
+   «Canvis nous» i «Sense font» són neutres: la insígnia de sempre, sense
+   data-semafor. El to va al quadrat mateix, sense cap embolcall. */
+const insignia = () => document.querySelector('.sp-card-body.has-aside .sp-card-calendar-badge');
+const targetaAmb = (etiquetes, extra = {}) => render(<TargetaConsola icona={Puzzle} titol="Inventari de skills"
+  subtitol="Per a saber quines skills cal cuidar" a="/consola/inventari" etiquetes={etiquetes} {...extra} />);
+
+test('IDEA-40 · cada etiqueta del semàfor pinta la insígnia: En ordre verd, Important taronja, Cal reparar roig', () => {
+  for (const [etiqueta, to] of [[{ text: 'En ordre', to: 'exit' }, 'exit'], [{ text: 'Important', to: 'avis' }, 'avis'], [{ text: 'Cal reparar', to: 'error' }, 'error']]) {
+    targetaAmb([etiqueta]);
+    const quadrat = insignia();
+    expect(quadrat.getAttribute('data-semafor'), etiqueta.text).toBe(to);
+    // La icona de la part continua dins, filla directa, amb la mida i el traç de sempre.
+    expect([...quadrat.children].map((el) => el.tagName.toLowerCase())).toEqual(['svg']);
+    expect(quadrat.querySelector(':scope > svg').getAttribute('width')).toBe('48');
+    // El color mai no va sol: el nom del quadrat diu l'estat.
+    expect(screen.getByRole('img', { name: `Inventari de skills · ${etiqueta.text}` })).toBe(quadrat);
+    cleanup();
+  }
+});
+
+test('IDEA-40 · amb dues etiquetes, la més greu; «Canvis nous» no hi compta', () => {
+  targetaAmb([{ text: 'Important', to: 'avis' }, { text: 'Canvis nous', to: 'neutre' }]);
+  expect(insignia().getAttribute('data-semafor')).toBe('avis');
+  expect(insignia().getAttribute('aria-label')).toBe('Inventari de skills · Important');
+  cleanup();
+  targetaAmb([{ text: 'En ordre', to: 'exit' }, { text: 'Cal reparar', to: 'error' }]);
+  expect(insignia().getAttribute('data-semafor')).toBe('error');
+});
+
+test('IDEA-40 · neutre, sense etiquetes o amb text pla: la insígnia de sempre (cap embolcall, el títol com a nom)', () => {
+  for (const etiquetes of [undefined, [], [{ text: 'Canvis nous', to: 'neutre' }], [{ text: 'Sense font', to: 'neutre' }], ['Text pla'], [{ text: 'Acció', to: 'info' }]]) {
+    targetaAmb(etiquetes);
+    const quadrat = insignia();
+    expect(quadrat.hasAttribute('data-semafor'), JSON.stringify(etiquetes)).toBe(false);
+    expect(quadrat.querySelector(':scope > svg').getAttribute('width')).toBe('48');
+    expect(quadrat.getAttribute('aria-label')).toBe('Inventari de skills');
+    cleanup();
+  }
+});
+
+test('IDEA-40 · una targeta amb imatge continua sense insígnia, encara que porte etiquetes del semàfor', () => {
+  targetaAmb([{ text: 'Cal reparar', to: 'error' }], { imatge: '/assets/nano_cards/lector_rss_nano_card.jpg', imatgeAlt: '' });
+  expect(document.querySelector('.sp-card-calendar-badge')).toBeNull();
+  expect(document.querySelector('[data-semafor]')).toBeNull();
+});
+
+/* IDEA-40 · El full: el verd del quadrat és el de marca (--sdp-verd, un sol
+   token amb el valor que va fixar el Mestre, el mateix de la barra del
+   Lector), el taronja i el roig són els d'estat, i no hi ha cap quart color.
+   La icona hi va en blanc. Els hex de les proves són els valors que la
+   decisió fixa (ALLOW_RAW_COLOR): ningú no pinta res amb ells. */
+test('IDEA-40 · el full: tres colors, el verd de marca únic, icona blanca i cap quart color', () => {
+  const net = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const declaracio = (css, nom) => css.split(/[;{}]/).map((d) => d.trim()).find((d) => d.startsWith(`${nom}:`))?.slice(nom.length + 1).trim();
+  const tokens = net('src/css/tokens.css');
+  const verd = ['--sdp', 'verd'].join('-');
+  expect(declaracio(tokens, verd)).toBe(/* ALLOW_RAW_COLOR */ '#0f672f');
+  expect(declaracio(tokens, '--sdp-crom-barra-lector')).toBe(`var(${verd})`);
+  // L'èxit no canvia (Mestre 261028: cap canvi a --sdp-exit-500 ni a --sdp-exit-700).
+  expect(['500', '700'].map((pas) => declaracio(tokens, `--sdp-exit-${pas}`))).toEqual([/* ALLOW_RAW_COLOR */ '#027e38', /* ALLOW_RAW_COLOR */ '#005c27']);
+  const moduls = net('src/css/modules.css');
+  const regles = [...moduls.matchAll(/\.sdp-consola__targeta \.sp-card-calendar-badge\[data-semafor(?:="([a-z]+)")?\] \{([^}]*)\}/g)]
+    .map(([, to, cos]) => [to ?? '*', cos.trim()]);
+  expect(regles).toEqual([
+    ['*', 'color: var(--sdp-sobre-color);'],
+    ['exit', `background-color: var(${verd});`],
+    ['avis', 'background-color: var(--sdp-avis);'],
+    ['error', 'background-color: var(--sdp-error);']
+  ]);
+  // Cap :has() (tests/lint_xat i lint_logica_usuari) ni cap embolcall.
+  expect(moduls).not.toMatch(/sdp-consola__semafor|sp-card-calendar-badge:has\(/);
+});

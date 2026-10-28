@@ -499,6 +499,13 @@ test('els recursos de public/ que viatgen a l\'app: els del connector, sense wor
   for (const rel of ['sw.js', 'manifest.webmanifest']) assert.ok(!rels.includes(rel), rel);
   assert.ok(rels.every((rel) => !rel.startsWith('auth/') && !rel.split('/').some((s) => s.startsWith('.'))));
   if (fs.existsSync(path.join(publicReal, 'fonts', 'noto-sans.css'))) assert.ok(rels.includes('fonts/noto-sans.css'), 'les fonts locals hi van');
+  /* P1-67 (261028) · Tot public/fonts viatja: els dos woff2, el full i
+     OFL.txt (la SIL OFL 1.1 demana la llicència amb cada còpia de la font). */
+  const fonts = path.join(publicReal, 'fonts');
+  if (fs.existsSync(fonts)) {
+    const quedenFora = fs.readdirSync(fonts).filter((nom) => !nom.startsWith('.')).map((nom) => `fonts/${nom}`).filter((rel) => !rels.includes(rel));
+    assert.deepEqual(quedenFora, [], 'cada fitxer de public/fonts hi va');
+  }
 });
 
 /* ─────────────────── La política de mitjans de l'app ───────────────────
