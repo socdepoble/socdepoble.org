@@ -23,13 +23,15 @@ reflex: sdp:torn_261028_1310:marmota_coronacio_marato_25h_i_commit_e4c4e076c
 | Camp | Valor |
 | --- | --- |
 | Identificador | `sdp:torn_261028_1310:marmota_coronacio_marato_25h_i_commit_e4c4e076c` |
-| Versió del document | 1.0.0 |
-| Data | 2026-10-28T13:10:00+01:00 |
+| Versió del document | 1.1.0 |
+| Data | 2026-10-28T14:30:00+01:00 |
 | Propietari | IAIA MarIA (Secretària Tècnica & Orquestradora) |
 | Aprovació humana | Dictada i aprovada pel Mestre Javi Llinares en àudios i captures |
 | Model IA | Antigravity (IAIA MarIA) + Claude Opus 5.5 + GPT-6.1 Codex + Gemini 4 Argon |
 | Branca | `backup-notes-publish` |
-| Commit canònic | **`e4c4e076c`** (`feat(og,natiu,xat): P1-61 Fase 1 (imatge social), T1-06 i P1-55`) |
+| Commits canònics | **`e4c4e076c`** (`feat(og,natiu,xat): P1-61 Fase 1, T1-06 i P1-55`)<br>**`565392e26`** (`feat(wp,consola,xat): P1-54, Consola, Maquinaria, revisio WordPress.org i tancament marato 25h`) |
+| Sincronització Git | `git push fork backup-notes-publish` (arbre net, 0 diferències) |
+| Estat a Producció | Desplegat amb èxit a **Firebase Hosting** (`soc-de-poble` / `https://socdepoble.org`) |
 
 ---
 
@@ -47,7 +49,7 @@ reflex: sdp:torn_261028_1310:marmota_coronacio_marato_25h_i_commit_e4c4e076c
   - Eliminada la carpeta `languages/` i la capçalera `Domain Path` de la variant de directori per a WordPress.org.
   - Els 81 tests de l'enxufador (`tests/enxufe-*.test.mjs`) passen al 100% en verd (0 errors).
 - **Consagració del magatzem satèl·lit de binaris:**
-  - Mogut el nou paquet net de 2,8 MB (2.911.541 B) a `_builds_de_poble/wordpress/socdepoble.zip` i `261027_1157_wordpress_directori_v1.1.9.zip`.
+  - Mogut el nou paquet net de 2,8 MB (2.911.541 B) a `../_builds_de_poble/wordpress/socdepoble.zip` i `261027_1157_wordpress_directori_v1.1.9.zip`.
   - Eliminats tots els zips pesats de l'arbre intern de Git (`wordpress-plugin/builds/directori/`).
   - Actualitzada la skill `core-empaquetat-wp` per blindar que **tots els paquets binaris** resideixen exclusivament a `../_builds_de_poble/wordpress/`.
 - **Diagnosi de la columna buida:** Aclarit que a `gentdelatorre.net`, la cel·la «Actualitzacions automàtiques» apareixerà nativament per WordPress un cop aprovat el plugin a `api.wordpress.org`.
@@ -65,25 +67,58 @@ reflex: sdp:torn_261028_1310:marmota_coronacio_marato_25h_i_commit_e4c4e076c
 - Creat el component `src/sections/xat/components/FitxaVivaDeComunitat.jsx`.
 - En navegar a una comunitat (`/xat?comunitat=<id>`), la columna dreta munta dinàmicament la fitxa viva de l'entitat (`FitxaPublica`) o la pàgina del poble (`VistaDelPoble`), amb scroll resilient i aïllament d'errors (`BarreraDelDocumentDestacat` amb `key={comunitat.fil.id}`).
 
-### 5. 🍏 Blindatge Natiu d'Apple (`T1-06`)
-- Depurades mencions a Google Play i Android en entorns d'App nativa iOS a `legalContent.js` i `pageContent.js`.
+### 5. 🧹 Desempapussament dels Botons d'Accés al Xat (`P1-54`)
+- Els botons `[ Descarrega l'App ]`, `[ Connectar-se ]` i `[ Registrar-se ]` queden confinats exclusivament a la pàgina d'aterratge inicial del Xat (`esAterratgeXat`).
+- Erradicats per complet quan l'usuari entra a comunitats, converses particulars, vistes del rail o intents específics.
+
+### 6. 🏛️ Consola Termodinàmica i Maquinària Pública (Bloc 3)
+- La Consola incrustada a la Wiki mostra fidelment el Govern del Mestre (`useGovern()` i targetes de govern compartides).
+- Tractors, Sentinelles i BIOS queden exposats com a documentació pública de només lectura (`!DEV`), garantint transparència sense botons operatius en el paquet de producció.
+
+### 7. 🍏 Blindatge Natiu d'Apple (`T1-06`)
+- Depurades totes les mencions a Google Play i Android en entorns d'App nativa iOS a `legalContent.js` i `pageContent.js` per complir la Directriu 2.3.10 d'App Store.
 
 ---
 
-## 3. Bateria de Proves i Commit Canònic
+## 3. Bateria de Proves, Portes i Desplegament
 
-- **Commit segellat:** `e4c4e076c` (34 fitxers).
-- **Proves:** `test:precommit` en verd absolut (**3.318 Vitest i 262 Node tests passats, 0 fallades**).
-- **Porta Olivera:** Exit 0 (Escriptori net i sincronitzat).
+- **Commits atòmics a Git:** `e4c4e076c` (34 fitxers) + `565392e26` (94 fitxers).
+- **GitHub Sync:** `git push fork backup-notes-publish` completat amb èxit.
+- **Producció:** Compilació `npm run build` neta (3,85 s) i desplegament a Firebase Hosting (`soc-de-poble`).
+- **Proves:** `test:precommit` en verd absolut (**3.318 Vitest + 262 Node = 3.580 proves passades, 0 fallades**).
+- **Les 8 Portes de Govern (`tancament.mjs`):** EXIT 0 en totes (Olivera, Plantilles, Autoritat, Ledger, Segell Llei Z, Skills, Wiki, SCC).
 
 ---
 
-## 4. Relleu per a la Propera Sessió
+## 4. Full de Ruta per a la Propera Sessió (Relleu Sense Oblit)
 
-1. **Desplegament a Producció (`firebase deploy`):** Compilar la SPA amb el commit `e4c4e076c` i desplegar a Firebase Hosting perquè `socdepoble.org/xat` mostre immediatament la Pàgina Viva de Comunitats.
-2. **Consolidar P1-54 i Bloc 3:** Fer el commit de la neteja de botons d'accés al xat (`P1-54`) i de la Consola Termodinàmica / Maquinària un cop validats.
-3. **Tràmit WordPress.org:** Comprovar la propagació del DNS TXT i respondre al correu de WordPress.org adjuntant el nou zip sanejat de `_builds_de_poble/wordpress/socdepoble.zip`.
-4. **Fase 2 d'OpenGraph:** Generar els fitxers estàtics `dist/<ruta>/index.html` durant el postbuild per al crawler de WhatsApp.
+Perquè el Mestre i l'eixam puguen reprendre el fil exactament on l'hem deixat en obrir el proper xat, ací tenim la guia de prioritats:
+
+### 1. 📬 Tràmit de Revisió de WordPress.org (Acció Humana Ràpida)
+- **Estat:** El registre DNS TXT `socdepoble.org. TXT wordpressorg-socdepoble-verification` ja està actiu i propagat a SiteGround.
+- **Fitxer a lliurar:** El paquet net v1.1.9 (2.911.541 B) es troba llest a `../_builds_de_poble/wordpress/socdepoble.zip` (i `261027_1157_wordpress_directori_v1.1.9.zip`).
+- **Acció del Mestre:** Respondre al correu de `plugins@wordpress.org` confirmant que el registre TXT està llest i adjuntant el zip.
+- **Passos posteriors:** Un cop aprovat, importar la traducció valenciana a `translate.wordpress.org` (`ca` i `ca-val`) i demanar el rol de PTE.
+
+### 2. 🖼️ OpenGraph Fase 2 (`P1-61` Pre-render Estàtic per a WhatsApp)
+- **Objectiu:** Aconseguir que en compartir una samarreta, joia o publicació a WhatsApp o Telegram, es veja la foto del producte en lloc del mapa per defecte.
+- **Motiu tècnic:** La Fase 1 (resolució client a React) ja està desplegada i funciona al navegador. Però els bots de WhatsApp no executen JavaScript; només llegeixen les etiquetes `<meta property="og:image">` de l'HTML inicial.
+- **Solució per a la pròxima sessió:** Crear un generador estàtic a les eines post-build (`dist/<ruta>/index.html`) per al contingut editorial d'administració, sense dependre de servidors externs de pagament.
+
+### 3. 📱 Seguiment de Botigues Oficials (Apple & Google Play)
+- **Apple App Store:** El paquet TestFlight `Build 1.0.0 (1)` està validat i completat en verd a App Store Connect. Quan el Mestre vulga, es pot enviar a revisió pública ("Submit for Review", procés de 24–48 h).
+- **Google Play Console:** Compte de desenvolupador de Francisco Javier Llinares pagat i a l'espera de la revisió d'identitat de Google per engegar el requisit dels 20 testers durant 14 dies. (L'APK beta directe a `_builds_de_poble/android/` i la PWA continuen 100% operatives).
+
+### 4. 🔒 Neteja de Metadades GPS a la Foto de Perfil Pública (Alerta OG-7)
+- **Ubicació:** `public/assets/fotos/javi-llinares-perfil-1200px.jpg` (i versió `.webp`).
+- **Problema:** Claude va detectar coordenades GPS reals gravades a les dades EXIF de la càmera.
+- **Acció:** Purgar les metadades EXIF d'aquest fitxer per protegir la privacitat física i residencial del Mestre.
+
+### 5. 💡 Cartera de Noves Idees al Llibre Mestre
+- `IDEA-46`: Cercador Especialitzat per pobles.
+- `P1-56`: Proposa Card.
+- `P1-42`: Baremador Universal.
+- Totes estan preservades íntegres a `03_llibre_mestre_tasques_i_idees.md`.
 
 ---
 
