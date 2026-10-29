@@ -1086,4 +1086,22 @@ Torn `torn_1537b5b0-8030-4c15-a62f-f78350f664e4`. Pla canònic [[261027_1154_pla
 
 Pla 1154 i dictamen 0917 vàlids. Tancament --check del torn_1537b5b0 vàlid amb huit portes a0. Terminador final del LEDGER corregit per compatibilitat amb verify-ledger; cos anterior preservat. Revisió del pressupost de TTFB i limitació UA en Firebase incorporada, cap font editada.
 
-<!-- HASH: 58f682753c7aed4fb964205d971f5a8a50addac8fd9c558355d8614089cf9660 -->
+### 2026-10-28T18:29:32.567Z · Claude · Deute tècnic d'OpenGraph, edició i xat (pla 261028_1526)
+
+Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Pla [[261028_1526_pla_implementacio_deute_tecnic_opengraph_edicio_i_xat]] vinculat i informe [[261028_1620_auditoria_claude]] vàlid. Blocs A-G implementats a l'arbre viu amb revisió adversarial per bloc, sense commit ni desplegament. Executor `3c28d6a4` amb 22 fitxers de governança i segell intacte. Precommit 0, ESLint 0, suite sencera amb una roja heretada. Migració `2610281730` no aplicada; empremta de `legal` pendent del Mestre.
+
+### 2026-10-28T19:00:19.126Z · Claude · Commit del deute tècnic 261028_1526
+
+Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. El Mestre aprova en xat l'empremta de legal (executor a685ef91, frontissa 15/15) i mana el commit: `cd3b5b56c`, 223 fitxers de codi per índex temporal, --no-verify per la seua ordre i sense pujar, després d'assajar l'arbre exacte 2cc3812b (precommit i ESLint verds). Documents i evidències de .agents fora, per al commit documental.
+
+### 2026-10-28T19:10:49.272Z · Claude · Push del deute tècnic 261028_1526
+
+Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Per ordre del Mestre en xat, el commit `cd3b5b56c` es puja a fork/backup-notes-publish (3dbdecb16..cd3b5b56c). Cap desplegament ni migració aplicada.
+
+261028 | correcció | sdp-workflow | Chrome headless: mkdtemp absolut, mock-keychain i password-store basic
+
+### 2026-10-28T23:23:34.984Z · Claude · Bloc H del pla 261028_1526
+
+Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Per ordre del Mestre en xat, el commit `e36606db2` (99 fitxers, Bloc H: P1-66..69, IDEA-40/41, QA-01..04, M1, M2, C1 i les correccions de la revisió final) es puja a `fork/backup-notes-publish`. El paquet de WordPress.org 1.1.9 es regenera des de la còpia neta (`8fb6792d…`). L'empremta de `legal` l'ha aprovat el Mestre. No s'ha aplicat cap migració ni s'ha desplegat res.
+
+<!-- HASH: ae6afec760e48813e7feb0d8c3f874fe70fd0209fd26a9227de46c28535ffa21 -->

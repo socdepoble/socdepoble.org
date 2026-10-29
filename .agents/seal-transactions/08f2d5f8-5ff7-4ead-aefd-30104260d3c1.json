@@ -1,0 +1,22 @@
+{
+  "id": "08f2d5f8-5ff7-4ead-aefd-30104260d3c1",
+  "session": "8f66ad56-3bea-4245-bd86-868b025412a2",
+  "operationId": "torn_74bad4b9-llico-8f66ad56",
+  "claim": "8f66ad56-3bea-4245-bd86-868b025412a2:governance-write",
+  "planHash": "9135a6833601ac124bbbee6d951d7fdf9127fe4a0e18520163f351e0704ddd1b",
+  "beforeSeal": "0df39eba18be13625b9806a085593c4f98c56d82f44e8bd14527dcc96c2151f7",
+  "files": [
+    {
+      "path": ".agents/skills/sdp-workflow/SKILL.md",
+      "before": "9770359c113a0fedead87ce0b4a31fadac3b7e249a03bb98a39ed66b50ff5b80",
+      "after": "44ad0c2e035bac2c0bde381ba36f56aa3c573dbb4c42665abb1954d63df43047"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "80379cce1bea638ced4cb694a678ef889a158a229149ee87fb9633dfdb40122a",
+      "after": "426a3b78c708903d8c1df2da8f2cf4f4a858c45ce130e42756863f7a0cdfee81"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "f210378d8680fe39fbeb24c52bce3c93f573aa40cdc5593ec1143834661561b7"
+}

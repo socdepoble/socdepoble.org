@@ -1,0 +1,17 @@
+{
+  "id": "a685ef91-778e-45da-8959-b35d62cc05e8",
+  "session": "22869649-a11f-4036-bbe1-c2d973292c0c",
+  "operationId": "torn_74bad4b9-frontissa-legal-22869649",
+  "claim": "22869649-a11f-4036-bbe1-c2d973292c0c:governance-write",
+  "planHash": "15d15c001189fcf1b424eec5ecd8aba8c84b753349c91174177d274c935ae818",
+  "beforeSeal": "334c7bae221ae7be46bb3157b6fd360ac5b9dbe18e116f4f49fbd5d7abde9441",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "61553eab44030da2dd51bb4f2e8b00a8681c9b7a028e12ec12a22de09d106b26",
+      "after": "2b3e5edaed116b9a11bfa11dbb4b52bdf54a2422baff771cf0e4fa2a82a8bc41"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4ee3e545aa642611c06754edccf3b5c7ba5349efe042b4b27ae7d991f8366448"
+}

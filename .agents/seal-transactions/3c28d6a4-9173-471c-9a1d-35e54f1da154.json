@@ -1,0 +1,122 @@
+{
+  "id": "3c28d6a4-9173-471c-9a1d-35e54f1da154",
+  "session": "ca9ffc98-1be3-485f-9d8e-565e521f7df0",
+  "operationId": "torn_74bad4b9-governanca-ca9ffc98",
+  "claim": "ca9ffc98-1be3-485f-9d8e-565e521f7df0:governance-write",
+  "planHash": "4efc0e0692365c394d1b190060eb0c8bd43c3871a30c7fdce065d3d3c5584f12",
+  "beforeSeal": "7067508dd8b205dbfd6aa12772ad0b56a63bb99832fcba2eb78d90b9a41176d6",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "20efd646c11202f125dd57e8839c82e9ea5671f09aff212b56f2c38c498b4840",
+      "after": "39066e22944367428b031ebefc536ab780d2fdbc76676ced4b64bb9d22ec12ae"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "739d67839b74644a1477c45340775f0104d107cd222cb0362bd0abce8e182599",
+      "after": "3a2393952089c0ded847ab19c9c4ab14abc94fc59bd08eb505249d8b02637888"
+    },
+    {
+      "path": "tooling/seo/adversarial-edge.test.mjs",
+      "before": null,
+      "after": "cfa6b5c69fb8e404a2f6fd49145acc1b208b236bd82a3d7d6485d40e890239a6"
+    },
+    {
+      "path": "tooling/seo/apply-site-policy.mjs",
+      "before": null,
+      "after": "bcec58e41880d84eea2a8da0049084c823f38acf4c820b24993290bae972d61a"
+    },
+    {
+      "path": "tooling/seo/build-site-policy.mjs",
+      "before": null,
+      "after": "cd84535af4aa2c6cb5af691c06dcb86449e04a60bfb25e0eda7478147612195b"
+    },
+    {
+      "path": "tooling/seo/build-social-manifest.mjs",
+      "before": null,
+      "after": "4b8d288a11138edc49977546a1c45e115839f5f5c63495e5674a1a877a21c4dd"
+    },
+    {
+      "path": "tooling/seo/build-social-manifest.test.mjs",
+      "before": null,
+      "after": "fe14ab38beff9972b1b92d060332200edadf17d229caf1298c9e7b8502dfc4d7"
+    },
+    {
+      "path": "tooling/seo/check-editorial-copy.mjs",
+      "before": null,
+      "after": "f6633d68145989ad04d8f0b6bd596fd7b21468d499726a5f16b6a8022ab2389c"
+    },
+    {
+      "path": "tooling/seo/prepare-social-shell.mjs",
+      "before": null,
+      "after": "271e8d695136ee4fcfac8d66ca1be91d9fa06fad7912942fc9645ae66d8aecb7"
+    },
+    {
+      "path": "tooling/seo/prerender-social.mjs",
+      "before": null,
+      "after": "a876b0653d70d27d05c7ac60dde189ba9d19cc1b98e4ece97b78d6d2a7bba788"
+    },
+    {
+      "path": "tooling/seo/prerender-social.test.mjs",
+      "before": null,
+      "after": "9ed4092e17f8e39711009ae80c81ccd053f41cd3faa6e42d7e4acc3d8e49bb5c"
+    },
+    {
+      "path": "tooling/seo/site-policy.test.mjs",
+      "before": null,
+      "after": "534c3fda17cabd28c93dfa491606294b644d0a7655f7f601dd139a4913d15f58"
+    },
+    {
+      "path": "tooling/seo/social-edge.mjs",
+      "before": null,
+      "after": "0e823deae9cffb2dc29afc73416de19efc7cef1585f8fe94f13d84e116a3c83f"
+    },
+    {
+      "path": "tooling/seo/social-edge.test.mjs",
+      "before": null,
+      "after": "8d042caaeced5bc8513b4a1d81a3afa3559f651b646e61c8fd685aa217ae1861"
+    },
+    {
+      "path": "tooling/seo/social-http.test.mjs",
+      "before": null,
+      "after": "05e5dcb61d94fe53a022dedf42699d4221f18536052255a732ded9227778143d"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "1238df391c918845979be83a765f6fa022bf4d39b34a6e1f6a67ae7996998732",
+      "after": "5cce460788fa86b5f805867bb0b934d4473a9f386d2a85e216f4c8fda98ac960"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "2778a776619d8c97d8a69549d47c4b4022714877b2003ede1d29e01930b4ac9e",
+      "after": "c99eca8c42658e29d932e586e748c377ba3f00b825346ee83095c58596d2eaaa"
+    },
+    {
+      "path": "scripts/botigues/preflight.mjs",
+      "before": "661f882811708ec0eea6aac4d4189ae5572dcf761c8f0ae4738b934d343f3708",
+      "after": "17f8dc8ce9f7ccea664c89e726810288673c70d0f1f731d5d46885021591b258"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "ace399dbc8e657198824366524c8f4bec11f70d146a7a7dbe75399839d6fdd28",
+      "after": "6a442c2cfd0dd14b3572b13a60acdfe80ce4091e638b5558936566266258d303"
+    },
+    {
+      "path": "tooling/vite/consola-iaia.mjs",
+      "before": "d56c49f67e1f60cd204f964407d71218432fcfaab9cbbe570211dd2018b1161b",
+      "after": "a3c5aa4d9abb12307c23c9c57b5bf28a0ceceeb3ec5f8ae8b008597c23fdd017"
+    },
+    {
+      "path": "tooling/maquinaria/convertir_a_webp.mjs",
+      "before": "b5c6f93447f25d233896678f044f3ee2f5d9ced51b71621e9a1d8c8e56b5f46f",
+      "after": "482816bb4818b322e2711b310379c968794f37224d891364dbb76aaaadbb4432"
+    },
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "7b4000ffbbd76c0ab0e11b4bb51e64648baf1d040fb46b5e98f7004927b34408",
+      "after": "61553eab44030da2dd51bb4f2e8b00a8681c9b7a028e12ec12a22de09d106b26"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4ee3e545aa642611c06754edccf3b5c7ba5349efe042b4b27ae7d991f8366448"
+}

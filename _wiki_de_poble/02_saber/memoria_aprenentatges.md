@@ -82,6 +82,14 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **El ritual de la Memòria Episòdica:** Quan la IA revisa l'arxiu històric per encàrrec explícit del Mestre (mai com a RAG automàtic), **d'un colp de vista** veu la línia temporal completa. En repassar-los abans de proposar-ne cap retirada, la IA descobreix patrons globals (ex. *"fa tres dies seguits que les auditories alerten sobre fallades tècniques amb els prompts"*). Sense aquesta revisió plana i holística, la IA no madura, patint amnèsia i tractant cada dia com si fóra el primer.
 - **Taxonomia estricta:** Per facilitar aquesta anàlisi visual, els noms de fitxer han d'utilitzar categories canòniques (`auditoria`, `informe`, `pla_implementacio`, `acta`). **La paraula "petorreta" està terminantment PROHIBIDA per a categoritzar arxius.**
 
+### 🎬 Lliçó 12: Extracció Multimodal Autònoma de Vídeos i Reels (Mode Jarvis · Zero Fricció per al Mestre)
+- **El cas d'ús real:** Moltes de les troballes d'avantguarda del Mestre arriben en format de **Reels d'Instagram, Shorts o vídeos de xarxes socials**. Demanar-li al Mestre que descarregue el vídeo, que en grave l'àudio o que ho transcriga a mà incompleix la **Regla 7 del BIOS (`AGENTS.md` · Mode Jarvis: «No faces que l'usuari treballe per a tu»)**.
+- **El protocol canònic d'extracció en 4 passos:**
+  1. **Resolució de l'Endpoint d'Incrustació (`embed`):** Quan el Mestre compartisca un enllaç d'Instagram (`/p/CODI/` o `/reel/CODI/`) o similar, consultar amb `curl` l'endpoint públic `/embed/` i extreure amb `node -e` el bloc `contextJSON` (`gql_data.shortcode_media.video_url` + `edge_media_to_caption`).
+  2. **Descàrrega Temporal a `scratch/`:** Baixar el fitxer `.mp4` directament a la carpeta temporal `scratch/` de la sessió (mai embrutant l'arrel del repositori ni l'Escriptori amb megabytes innecessaris).
+  3. **Inspecció Multimodal Nadiua (`read_file`):** Llegir el fitxer `.mp4` (o l'àudio extret) directament amb `read_file`, que permet a la IAIA MarIA **escoltar la locució sencera i llegir cada fotograma i captura de pantalla de GitHub** que apareix al vídeo.
+  4. **Llei de l'Oblit Saludable (`AGENTS.md` §16):** Tan bon punt les troballes s'hagen destil·lat i registrat al Llibre Mestre o a la Wiki, **eliminar immediatament el fitxer `.mp4` temporal de `scratch/`** (`rm -f`) per no deixar brossa ni pes mort.
+
 ***
 
 ## 3. Protocol de Consulta Històrica Abans d'Actuar

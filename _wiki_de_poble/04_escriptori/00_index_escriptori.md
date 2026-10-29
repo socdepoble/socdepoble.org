@@ -14,9 +14,8 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[./261027_0730_og_llibre_d_or_codex.png|Prototip targeta Open Graph Llibre d'Or]] · Mestre 261027: prototip visual Open Graph WhatsApp P1-61
-- [[261027_0730_reforma_editorial_gemini]] · Mestre 261027: reforma editorial canònica P1-60 i P1-63
-- [[261027_0730_solucio_opengraph_i_copy_codex]] · Mestre 261027: P1-60/P1-61/P1-63 per a integrar amb Claude; [targeta social PNG](./261027_0730_og_llibre_d_or_codex.png)
+- [[261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]] — Prompt actiu per a la Reunió de l'Olivera (Claude Code compte nou, Gemini CLI i GPT Codex): tancament 10/10 del Bloc H (`QA-H01`, `QA-H02`, `QA-H04`, `APP-D1`, `R-01/02/07`, `M-01`, `socdepoble.zip`) i Fase 1/2 d'E2EE (`P1-12` + `IDEA-48`)
+- [[261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]] — Pla d'Implementació rector de l'onada `261029_0216` (ordre d'execució de 6 passos per assolir el 10/10 verificable)
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
@@ -68,6 +67,14 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261027_0730_solucio_opengraph_i_copy_codex]]
+- [[../90_arxiu_historic/261027_0730_informe_reforma_editorial_gemini]]
+- [[../90_arxiu_historic/261028_1526_pla_implementacio_deute_tecnic_opengraph_edicio_i_xat]]
+- [[../90_arxiu_historic/261028_1526_prompt_deute_tecnic_opengraph_edicio_i_xat]]
+- [[../90_arxiu_historic/261028_1611_auditoria_codex]]
+- [[../90_arxiu_historic/261028_1614_auditoria_gemini]]
+- [[../90_arxiu_historic/261028_1620_auditoria_claude]]
+- [[../90_arxiu_historic/261028_2020_auditoria_claude]]
 - [[../90_arxiu_historic/261026_2150_auditoria_claude]]
 - [[../90_arxiu_historic/261027_0650_auditoria_codex]]
 - [[../90_arxiu_historic/261027_0535_prompt_codex_auditoria_gauntlet_ronda5_claude]]
@@ -94,3 +101,4 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 - 261026 · `261026_1930_prompt_codex_gauntlet_share_target`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - [[../10_actes/261026_2115_acta_marmota_triomf_gauntlet_share_target_commit_d83188d2_i_relleu_rea]]
+- [[../10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude]]

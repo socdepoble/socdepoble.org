@@ -1,0 +1,22 @@
+{
+  "id": "b8f47260-7b8d-437f-932b-9248c104f660",
+  "session": "5780df10-eb41-4878-8cd0-1377771346d8",
+  "operationId": "torn_74bad4b9-commit-5780df10",
+  "claim": "5780df10-eb41-4878-8cd0-1377771346d8:governance-write",
+  "planHash": "76b5f52cbe4c297e273eab487ff9308e61dd39dff774831dca837cb6299e16ba",
+  "beforeSeal": "3f31ea29924e8c77d7d4fbfbf57ac6d99488a5497b0c4b324017ff440e53a5fc",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "cefb276ce070c03bfaf3f49a028522b7064b828a56a1db4826240a2b40253f5e",
+      "after": "91112210b9cbcce319578e912f42b8f59328c630960bad6878dc95cda8198371"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "dc3072d0f9282d8ac1736b66509aac04cb5bf302f50d83c972243a5802d4ec5a",
+      "after": "d0c343ccd08b839b6e0af7e14f4589313b8a337d039a624c3cfb6e9b7ce7ce94"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "4ee3e545aa642611c06754edccf3b5c7ba5349efe042b4b27ae7d991f8366448"
+}

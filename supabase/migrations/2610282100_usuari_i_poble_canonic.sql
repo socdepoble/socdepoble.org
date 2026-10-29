@@ -32,7 +32,11 @@
 --      provinces, comarcas i secondary_towns (jsonb, '[]' de sèrie), i
 --      towns.provincia i towns.comarca (com a molt 120 caràcters), que
 --      s'omplin una sola vegada del catàleg 'towns' d'app_content pel títol
---      del poble.
+--      del poble; un homònim (QA-H02), per l'entrada amb el seu slug (el seu
+--      id, slugDelPoble) i, si no n'hi ha cap, pel títol, mai amb l'entrada
+--      que du el slug d'una altra fila i només si és la fila que eixe títol
+--      tria (la regla de poble_derivat): un homònim que la regla no tria es
+--      queda sense regió, mai amb la d'un altre.
 --   3. Dues taules privades (RLS activa, cap política i tot revocat):
 --      private.usuaris_retinguts, l'identificador d'una persona mentre la
 --      seua baixa és en quarantena (el reté perquè ningú no el prenga i la
@@ -69,7 +73,13 @@
 --      Després, cada camp de poble NULL (o '[]') rep el derivat; cap camp que
 --      ja en porte no es reescriu. Es deriva de town_name, o de primary_town
 --      si la fila en porta un altre (una tria d'abans); town_name buit rep
---      el derivat.
+--      el derivat. Una fila que ja porta town_uuid (d'una forma antiga) el
+--      conserva, i eixa fila només desempata els homònims (QA-H02): el poble
+--      triat amb el seu nom la pren a ella i no una homònima. No canvia ni
+--      l'ordre ni els pobles triats. Una fila amb el town_uuid d'un poble que
+--      no és el seu primer no rep cap camp de poble (mai camps de dues
+--      files) i ix a la comprovació de DESPRÉS; una amb el town_uuid d'una
+--      fila que ja no existix el conserva i la resta ix del nom.
 --   7. NOT NULL a username (si cap fila no en queda sense), l'índex únic
 --      profiles_usuari_unic sobre lower(username) i el CHECK
 --      profiles_usuari_forma (^[a-z0-9]+(-[a-z0-9]+)*$, de 3 a 30), que
@@ -108,10 +118,13 @@
 --        town_name buit → 'La Torre de les Maçanes' (el mateix literal que
 --        el default de 2609110600; ordre del Mestre del 261028, que deroga la
 --        del 261009 de no inventar-lo); una tria explícita no es reescriu
---        mai. town_uuid i primary_town, del primer poble de town_name a
---        public.towns (amb el poble_per_defecte de private.ajustos primer, si
---        n'hi ha dos amb el mateix nom); secondary_towns, la resta; provinces
---        i comarcas, les de public.towns dels pobles triats, sense repetir.
+--        mai. Cada poble de town_name, UNA sola fila de public.towns (slug
+--        és únic, name no; si n'hi ha dos amb el mateix nom: en un canvi de
+--        town_name, la que ja tenia, old.town_uuid; després, el
+--        poble_per_defecte de private.ajustos, el nom escrit igual, obert, el
+--        més antic i el slug, QA-H02). town_uuid i primary_town, de la fila
+--        del primer; secondary_towns, la resta; provinces i comarcas, les
+--        d'eixes mateixes files, sense repetir: dos homònims no es barregen.
 --        Qualsevol altra escriptura amb sessió (un permís antic) deixa els
 --        cinc camps derivats com eren; sense sessió (el SQL Editor), mana el
 --        que s'escriu.
@@ -143,6 +156,10 @@
 --     d'escriptura al poble i la continua decidint l'alta.
 --   · No crea files a public.towns: un poble del catàleg sense fila té
 --     town_uuid NULL i primary_town amb el seu nom.
+--   · No desfà els homònims: town_name és un nom, i l'homònim que la regla
+--     no tria (QA-H02) no es pot triar per nom (només el conserva qui ja el
+--     tenia, pel town_uuid) ni rep pel títol la regió del catàleg; cal que
+--     public.towns li done un nom diferent.
 --   · No reescriu cap camp de poble que ja en porte: el backfill només
 --     omple els NULL (i els '[]'), i el disparador no torna a derivar una
 --     fila fins que hi canvia town_name.
@@ -213,6 +230,12 @@
 --      select count(*) from public.profiles where username !~ '^[a-z0-9]+(-[a-z0-9]+)*$' or char_length(username) not between 3 and 30;
 --   7. select id, slug, name, is_open from public.towns order by created_at;
 --      select town_uuid, primary_town, town_name, count(*) from public.profiles group by 1, 2, 3;
+--      select lower(name), array_agg(slug order by created_at) from public.towns group by 1 having count(*) > 1;
+--      (els homònims: cada poble triat en tria una sola fila, QA-H02; el
+--      catàleg dona a cada homònim la regió de l'entrada amb el seu slug i,
+--      només si no n'hi ha cap, la del títol que no du el slug d'una altra
+--      fila, a la fila que el títol tria; a un nom únic, la del títol, com
+--      abans)
 --   8. select clau, valor from private.ajustos where clau in ('poble_per_defecte', 'usuaris_reservats');
 --   9. select n.nspname, p.proname from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid = p.pronamespace
 --       where p.prosrc ~ '\m(town_uuid|primary_town|secondary_towns|provinces|comarcas)\M'
@@ -231,7 +254,20 @@
 --        on conflict (clau) do update set valor = excluded.valor;
 --   select count(*) from public.profiles where username is null;  (0)
 --   select count(*) from public.profiles where town_uuid is null or primary_town is null;
---   (només les files d'un poble sense fila a public.towns)
+--   (només les files d'un poble sense fila a public.towns i les que el
+--   backfill no toca, les de la consulta següent)
+--   select count(*) from public.profiles p join public.towns t on t.id = p.town_uuid
+--    where lower(p.primary_town) is distinct from lower(t.name)
+--       or (nullif(btrim(t.provincia), '') is not null and p.provinces ->> 0 is distinct from t.provincia)
+--       or (nullif(btrim(t.comarca), '') is not null and p.comarcas ->> 0 is distinct from t.comarca);
+--   (0, QA-H02: primary_town i la primera província i comarca són els de la
+--   fila de town_uuid; llevat de les files d'una forma antiga amb un
+--   town_uuid que no és el seu primer poble (el backfill no les toca) o que
+--   ja portaven regions: es miren a mà. Una, a favor del seu town_name i
+--   sense sessió:
+--      update public.profiles p set (town_name, town_uuid, primary_town, secondary_towns, provinces, comarcas) =
+--        (select d.town_name, d.town_uuid, d.primary_town, d.secondary_towns, d.provinces, d.comarcas
+--           from private.poble_derivat(p.town_name) as d) where p.id = '<id>';)
 --   i la consulta 4 d'abans ha de tornar exactament el mateix.
 --   Abans de publicar el client, les identitats fundacionals:
 --   select id, full_name, username from public.profiles where username ~ '-[0-9]+$' order by created_at limit 20;
@@ -359,23 +395,42 @@ end
 $$;
 
 -- La província i la comarca de cada poble, una sola vegada, del catàleg pel
--- títol. Si n'hi ha diversos, mana el del poble per defecte i, després, el
--- més nou. Una fila que ja en porta no es toca.
+-- títol. QA-H02: el nom no és únic, el slug sí. Un homònim pren l'entrada
+-- amb el seu slug (l'id de l'entrada, slugDelPoble) i, si no n'hi ha cap, la
+-- del títol, mai la que du el slug d'una altra fila i només si és la fila
+-- que eixe títol tria (el mateix ordre que poble_derivat, sense la fila
+-- d'abans): els altres homònims es queden sense regió, mai amb la d'un
+-- altre. Un nom únic, la del títol, com abans. Si n'hi ha diverses, mana la
+-- del poble per defecte, després la més nova i, al final, l'ordre del
+-- catàleg. Una fila que ja en porta no es toca.
 update public.towns t
    set provincia = nullif(left(btrim(c.provincia), 120), ''),
        comarca = nullif(left(btrim(c.comarca), 120), '')
-  from (select distinct on (lower(e ->> 'title'))
-               e ->> 'title' as titol, e ->> 'provincia' as provincia, e ->> 'comarca' as comarca
-          from public.app_content ac
+  from (select distinct on (w.id)
+               w.id, l.e ->> 'provincia' as provincia, l.e ->> 'comarca' as comarca
+          from public.towns w
+          cross join lateral (select exists (select 1 from public.towns o
+                                             where lower(o.name) = lower(w.name) and o.id <> w.id) as homonim) as h
+          join public.app_content ac on ac.key = 'towns'
           cross join lateral jsonb_array_elements(
-            case when jsonb_typeof(ac.payload) = 'array' then ac.payload else '[]'::jsonb end) as e
-         where ac.key = 'towns'
-           and jsonb_typeof(e) = 'object'
-           and jsonb_typeof(e -> 'title') = 'string'
-         order by lower(e ->> 'title'),
+            case when jsonb_typeof(ac.payload) = 'array' then ac.payload else '[]'::jsonb end) with ordinality as l(e, n)
+         where jsonb_typeof(l.e) = 'object'
+           and jsonb_typeof(l.e -> 'title') = 'string'
+           and case when h.homonim
+                    then l.e ->> 'id' = w.slug
+                         or (lower(l.e ->> 'title') = lower(w.name)
+                             and not exists (select 1 from public.towns o where o.slug = l.e ->> 'id' and o.id <> w.id)
+                             and w.id = (select o.id from public.towns o
+                                          where lower(o.name) = lower(w.name)
+                                          order by (o.id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
+                                                   (o.name = l.e ->> 'title') desc, o.is_open desc, o.created_at, o.slug, o.id
+                                          limit 1))
+                    else lower(l.e ->> 'title') = lower(w.name) end
+         order by w.id,
+                  coalesce(h.homonim and l.e ->> 'id' = w.slug, false) desc,
                   (ac.tenant_id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
-                  ac.updated_at desc) as c
- where lower(c.titol) = lower(t.name)
+                  ac.updated_at desc, ac.tenant_id, l.n) as c
+ where c.id = t.id
    and t.provincia is null
    and t.comarca is null;
 
@@ -537,8 +592,18 @@ $$;
 revoke execute on function private.llista_pobles(text) from public, anon, authenticated;
 
 -- Els cinc camps de poble d'un town_name ('A · B'), i el town_name mateix
--- (buit → 'La Torre de les Maçanes').
-create or replace function private.poble_derivat(p_town_name text,
+-- (buit → 'La Torre de les Maçanes'). QA-H02: towns.slug és únic, name no.
+-- Cada poble triat es resol a UNA sola fila de public.towns (p_town_uuid, el
+-- poble_per_defecte, el nom escrit igual, obert, el més antic i el slug), i
+-- town_uuid, primary_town, provinces i comarcas ixen d'eixes mateixes files:
+-- dos homònims de regions diferents no es barregen. p_town_uuid és la fila
+-- que ja porta la persona (el backfill i un canvi de town_name): només
+-- desempata els homònims, mai no canvia ni l'ordre ni els pobles triats.
+-- Amb noms únics, el resultat és el d'abans.
+-- La signatura d'un sol argument se'n va: amb totes dues, la crida
+-- poble_derivat(text) seria ambigua.
+drop function if exists private.poble_derivat(text);
+create or replace function private.poble_derivat(p_town_name text, p_town_uuid uuid default null,
   out town_name text, out town_uuid uuid, out primary_town text,
   out secondary_towns jsonb, out provinces jsonb, out comarcas jsonb)
 language plpgsql
@@ -553,29 +618,34 @@ begin
     v_pobles := array['La Torre de les Maçanes'];
     town_name := v_pobles[1];
   end if;
-  select t.id, t.name into town_uuid, primary_town
-    from public.towns t
-   where lower(t.name) = lower(v_pobles[1])
-   order by (t.id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
-            t.is_open desc, t.created_at, t.id
-   limit 1;
-  primary_town := coalesce(primary_town, v_pobles[1]);
+  with triades as (
+    select l.ordre, f.id, f.name, f.provincia, f.comarca
+      from unnest(v_pobles) with ordinality as l(nom, ordre)
+      cross join lateral (
+        select t.id, t.name, t.provincia, t.comarca
+          from public.towns t
+         where lower(t.name) = lower(l.nom)
+         order by (t.id = p_town_uuid) desc nulls last,
+                  (t.id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
+                  (t.name = l.nom) desc, t.is_open desc, t.created_at, t.slug, t.id
+         limit 1) as f)
+  select (select r.id from triades r where r.ordre = 1),
+         coalesce((select r.name from triades r where r.ordre = 1), v_pobles[1]),
+         (select coalesce(jsonb_agg(x.provincia order by x.primer), '[]'::jsonb)
+            from (select r.provincia, min(r.ordre) as primer
+                    from triades r
+                   where nullif(btrim(r.provincia), '') is not null
+                   group by r.provincia) as x),
+         (select coalesce(jsonb_agg(x.comarca order by x.primer), '[]'::jsonb)
+            from (select r.comarca, min(r.ordre) as primer
+                    from triades r
+                   where nullif(btrim(r.comarca), '') is not null
+                   group by r.comarca) as x)
+    into town_uuid, primary_town, provinces, comarcas;
   secondary_towns := to_jsonb(coalesce(v_pobles[2:], '{}'::text[]));
-  select coalesce(jsonb_agg(x.provincia order by x.primer), '[]'::jsonb) into provinces
-    from (select t.provincia, min(l.ordre) as primer
-            from unnest(v_pobles) with ordinality as l(nom, ordre)
-            join public.towns t on lower(t.name) = lower(l.nom)
-           where nullif(btrim(t.provincia), '') is not null
-           group by t.provincia) as x;
-  select coalesce(jsonb_agg(x.comarca order by x.primer), '[]'::jsonb) into comarcas
-    from (select t.comarca, min(l.ordre) as primer
-            from unnest(v_pobles) with ordinality as l(nom, ordre)
-            join public.towns t on lower(t.name) = lower(l.nom)
-           where nullif(btrim(t.comarca), '') is not null
-           group by t.comarca) as x;
 end;
 $$;
-revoke execute on function private.poble_derivat(text) from public, anon, authenticated;
+revoke execute on function private.poble_derivat(text, uuid) from public, anon, authenticated;
 
 
 -- ── 4 · Backfill (abans del disparador; updated_at no es mou) ─────────────────
@@ -626,7 +696,10 @@ begin
   end loop;
 
   -- El poble: només els camps NULL (o '[]'). Es deriva de town_name, o de
-  -- primary_town si la fila en porta un altre (una tria d'abans).
+  -- primary_town si la fila en porta un altre (una tria d'abans); el
+  -- town_uuid que ja porta, si n'hi ha, desempata els homònims (QA-H02). Si
+  -- és d'un poble que no és el primer, la fila no es toca: mai camps de dues
+  -- files (DESPRÉS la llista). El d'una fila que ja no existix es conserva.
   update public.profiles p
      set town_name = coalesce(nullif(btrim(p.town_name), ''), d.town_name),
          town_uuid = coalesce(p.town_uuid, d.town_uuid),
@@ -639,11 +712,14 @@ begin
             cross join lateral private.poble_derivat(
               case when f.primary_town is null
                      or lower(btrim(f.primary_town)) = lower(coalesce((private.llista_pobles(f.town_name))[1], ''))
-                   then f.town_name else f.primary_town end) as x
+                   then f.town_name else f.primary_town end,
+              f.town_uuid) as x
            where f.town_uuid is null or f.primary_town is null or nullif(btrim(f.town_name), '') is null
               or coalesce(f.secondary_towns, '[]'::jsonb) = '[]'::jsonb or coalesce(f.provinces, '[]'::jsonb) = '[]'::jsonb
               or coalesce(f.comarcas, '[]'::jsonb) = '[]'::jsonb) as d
-   where d.id = p.id;
+   where d.id = p.id
+     and (p.town_uuid is null or d.town_uuid is not distinct from p.town_uuid
+          or not exists (select 1 from public.towns t where t.id = p.town_uuid));
 
   if v_meu then
     alter table public.profiles enable trigger trg_profiles_usuari_i_poble;
@@ -797,12 +873,13 @@ begin
   end if;
 
   -- El poble canònic: a l'alta i quan canvia town_name, la tria de la
-  -- persona. Una alta no cau mai per ell.
+  -- persona; en un canvi, la fila que ja tenia desempata els homònims
+  -- (QA-H02). Una alta no cau mai per ell.
   if tg_op = 'INSERT' or new.town_name is distinct from old.town_name then
     begin
       select d.town_name, d.town_uuid, d.primary_town, d.secondary_towns, d.provinces, d.comarcas
         into new.town_name, new.town_uuid, new.primary_town, new.secondary_towns, new.provinces, new.comarcas
-        from private.poble_derivat(new.town_name) as d;
+        from private.poble_derivat(new.town_name, case when tg_op = 'UPDATE' then old.town_uuid end) as d;
     exception when others then
       if tg_op <> 'INSERT' then
         raise;

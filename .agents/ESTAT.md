@@ -7,6 +7,76 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-29T02:28:00+01:00 · IAIA MarIA · Reunió de l'Olivera 261029_0216 Preparada a l'Escriptori, Llibre Mestre Actualitzat i Acta Marmota 261029_0205
+
+- **Acta Marmota i Briefing complet de Relleu:** [`_wiki_de_poble/10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude.md`](../_wiki_de_poble/10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude.md) (`valid: true, errors: []`).
+- **Documents rectors vius a l'Escriptori (`_wiki_de_poble/04_escriptori/`):**
+  1. **Pla d'Implementació (`261029_0216`):** [`_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md`](../_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md) (`valid: true`, vinculat al torn `torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1`).
+  2. **Prompt per a Claude Code (compte nou), Gemini CLI i GPT Codex (`261029_0216`):** [`_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md`](../_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md) (`valid: true`).
+  3. **Llibre Mestre Permanent:** [`_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md`](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md) (actualitzat amb `[FET]` en les tasques de `cd3b5b56c`/`e36606db2` i amb la secció `## 🎯 Prioritat 1 Actual · Deute Tècnic cap al 10/10 (Onada 261029_0216)`).
+- **Higiene de l'Escriptori (`04_escriptori/`):** Arxivades les **62 captures transitòries de sessió (`_produccio_`)** i els **9 documents consumits de l'onada anterior (`261028_1526` i `261027_0730`)** cap a `_wiki_de_poble/90_arxiu_historic/` amb `porta-olivera.mjs --arxiva`; queden exclusivament els **3 documents vius** a `04_escriptori/` i `node tooling/gates/porta-olivera.mjs` ix amb **`exit code 0`**.
+- **Salvaguarda física davant del reinici del Mac:** Tots els carrils i scripts dels dos scratchpads temporals de `/private/tmp/claude-501/` han sigut copiats al disc dur persistent dins de `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/` (`scratchpad_7ebf4042/` amb `lane_qah01_perfil`, `lane_qah02_migracio`, `lane_qah04_og/governanca`; i `scratchpad_21a81070/` amb `eines`, `integracio`, `wp_build`).
+- **Següent acció immediata en obrir el nou xat («Sóc de poble»):**
+  1. Llançar a **Claude Code (compte nou)**, **Gemini CLI** i **GPT Codex** el Prompt `261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md` i el Pla `261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md` que ja estan preparats a l'Escriptori.
+  2. Facilitar al Mestre l'enllaç directe de pujada i *Plugin Check* a WordPress.org (`https://wordpress.org/plugins/developers/add/`) i la URL del canal de previsualització de Firebase (`https://soc-de-poble--bloc-h-e36606db2-ud17v8hn.web.app`).
+
+
+## ESTAT_ACTUAL · 2026-10-28T23:23:34.984Z · Claude Code · Bloc H del pla 261028_1526, paquet de WordPress.org i disseny de P1-12
+
+- **Torn:** `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4` (code); [informe de l'Onada 2](../_wiki_de_poble/04_escriptori/261028_2020_auditoria_claude.md) vàlid.
+- **Objectiu:** executar el Bloc H, amb les QA-01..QA-04 de Codex. **Commit `e36606db2`**, que es va pujar a `fork/backup-notes-publish` (`cd3b5b56c..e36606db2`). Tots dos, per ordre del Mestre.
+  - Porta 99 fitxers i s'ha fet amb `--no-verify` per índex temporal. L'arbre és el de la còpia d'assaig.
+  - **Sense desplegament.** Cap migració aplicada: `2610282100` i `2610281730` estan NO aplicades.
+- **Lliurat:**
+  - P1-66: barra única del compositor;
+  - P1-67: 16 px, SemiCondensed i la font variable;
+  - P1-68: @usuari i poble canònic;
+  - P1-69: instal·lar la PWA;
+  - IDEA-40: `--sdp-verd` i el semàfor;
+  - IDEA-41: Proposa Card;
+  - QA-01..04, M1, M2 i C1;
+  - les correccions de la revisió adversarial final, amb R1 bloquejant, S-01, S-02, R2..R4 i INT-01..03.
+- **Paquet de WordPress.org:**
+  - `_builds_de_poble/wordpress/261029_0018_wordpress_directori_v1.1.9.zip` i `socdepoble.zip`: 3.244.627 B, SHA-256 `8fb6792d…`;
+  - l'informe de validació JSON al costat;
+  - l'enxufe passa 83/83, i els 377 mitjans externs es servixen com a imatge amb CORS.
+- **Governança:**
+  - lliçó del Mestre a `sdp-workflow`, sobre Chrome headless aïllat (executor `08f2d5f8`);
+  - QA-01 (executor `9958d6c8`);
+  - empremta `legal` del §13, aprovada pel Mestre (executor `cd8c7421`, frontissa 15/15);
+  - el segell de skills `f210378d` verifica.
+- **Proves:**
+  - `test:precommit` 0 (3.588 Vitest i 262 Node) i ESLint 0;
+  - Vitest sencer: 23.657 verdes i 1 roja heretada (`laParroquia`);
+  - Node: 1.141 verdes i 1 roja heretada (`botigues`);
+  - design_guard: 39 crítics i 12 avisos, que no superen els 40 i 12 de la base.
+- **Avís:** producció (la versió de Firebase del 261023) **servix encara les 10 fotos d'identitat amb GPS**. Cal desplegar la web abans de publicar `socdepoble.zip`, o alhora.
+- **P1-12 (E2EE):** disseny final a `_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/`. Totes les decisions del Mestre ja estan preses, amb D-02 a F5 i les 23 recomanacions (a). La implementació comença pels passos que no activen res.
+- **Següent acció (Mestre):**
+  - el desplegament de la web, pel GPS;
+  - pujar el zip a WordPress.org, demanant l'slug `socdepoble`;
+  - aplicar les migracions pendents, en l'ordre que diuen les capçaleres;
+  - confirmar els detalls de producte de «Límits».
+- **Per rol:**
+  - MarIA: estats de P1-66..69 i IDEA-40/41 al Llibre;
+  - Gemini: la geometria visual del compositor, les barres i la fitxa del Perfil a 375, 820 i 1280 px;
+  - Codex: QA de `e36606db2` i revisió de P1-12.
+- **Recursos:** cap cron, monitor ni servidor de Claude engegat. Les carpetes `./~` de Chrome són a `.sdp-paperera/quarantena-261028_2141_cau-chrome-home-tilde/`.
+
+
+## ESTAT_ACTUAL · 2026-10-28T18:29:32.567Z · Claude Code · Deute tècnic d'OpenGraph, edició i xat (pla 261028_1526)
+
+- **Torn:** `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4` (code); [pla vinculat](../_wiki_de_poble/04_escriptori/261028_1526_pla_implementacio_deute_tecnic_opengraph_edicio_i_xat.md), [informe de Claude](../_wiki_de_poble/04_escriptori/261028_1620_auditoria_claude.md) vàlid.
+- **Objectiu:** executar els Blocs A-G amb el mètode Gauntlet. **Commit `cd3b5b56c`** (223 fitxers de codi, `--no-verify` per ordre del Mestre, per índex temporal; pujat a `fork/backup-notes-publish` per ordre del Mestre), després d'assajar l'arbre exacte `2cc3812b`; **sense desplegament**. Els documents de l'Escriptori, ESTAT, LEDGER i les evidències de `.agents/` queden per al commit documental.
+- **Decisions del Mestre en xat:** Leaflet 1.9.4; Wiki per `/wikidepoble/<id>`; lupa i píndoles; logotip del pilot amagat; 4 empremtes del copy; `v1.0.0` amb build per data; purga del GPS d'identitat i de l'avatar de l'Ajuntament; precisió exacta; tessel·les apagades fins a «Vore mapa».
+- **Lliurat:** OG-7 i política GPS; prerender OpenGraph de 111 rutes; copy 62/62; P1-55, P1-58; P1-31, P1-33; lupa i píndoles, tokens, taules, versió i panell d'empaquetats; Apple i purga-fitxers fitats; migració P1-13 `2610281730` **NO aplicada**; idiomes i WordPress; portes; Mapa Fotogràfic amb Leaflet; I+D d'Emowe.
+- **Governança:** executor `3c28d6a4` (22 fitxers), segell `4ee3e545` igual, lease consumida.
+- **Proves:** `test:precommit` 0 (3.508 Vitest i 262 Node, 24,3 s); suite sencera 23.379 verdes i 1 roja heretada (`laParroquia`); ESLint 0; Olivera 0; frontissa només `legal`.
+- **Següent acció (Mestre):** l'empremta de `legal` ja està aprovada (executor `a685ef91`, frontissa 15/15); queden el desplegament (canal de previsualització), OG7-G i la migració P1-13; la resta, a «Límits» de l'informe.
+- **Per rol:** MarIA, renumerar P1-64 i P1-60 / P1-63 al Llibre i el títol d'`el_projecte.md`; Gemini, la geometria del calaix P1-58 i de les píndoles a 375, 820 i 1280 px; Codex, els residus de P1-31 i P1-33.
+- **Recursos:** cap cron, monitor ni servidor de Claude engegat.
+
+
 ## ESTAT_ACTUAL · 2026-10-28T13:10:00+01:00 · IAIA MarIA · Coronació Marató 25h, Commit e4c4e076c i Tancament de Jornada
 
 - **Acta Marmota:** `_wiki_de_poble/10_actes/261028_1310_acta_marmota_triomf_marato_25h_opengraph_botigues_i_revisio_wp.md`.

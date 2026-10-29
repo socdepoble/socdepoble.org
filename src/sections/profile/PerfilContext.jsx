@@ -299,6 +299,29 @@ export function ajustosOrganitzacio(org = {}, contacte = org.contacte, { pobles 
  */
 /* P1-68 · Columnes de la fila del perfil que no van mai a user_metadata. */
 const CAMPS_FORA_DE_LES_METADADES = new Set(['username', 'username_confirmat_at']);
+/* QA-H01 (auditoria 261028_1611) · El comodí de l'alta sense confirmar
+   («veina», «veina-2», «veina-1a2b3c4d»): l'únic @usuari que el disparador de
+   2610282100 regenera quan el nom de veres arriba després (Apple). La mateixa
+   expressió que el SQL. */
+const RE_USUARI_COMODI = /^veina(-[0-9a-f]+)?$/;
+const teUsuariComodi = (fila) => typeof fila?.username === 'string'
+  && RE_USUARI_COMODI.test(fila.username) && !fila.username_confirmat_at;
+/* L'@usuari d'una fila del servidor, o null si no el porta: una base sense
+   2610282100 no té la columna, i no se n'inventa cap. */
+const usuariDeLaFila = (fila) => (typeof fila?.username === 'string'
+  ? { username: fila.username, username_confirmat_at: fila.username_confirmat_at ?? null }
+  : null);
+/* Una fila de la persona de la sessió (sense id, la del port), mai la de reserva. */
+const esFilaDe = (fila, usuariId) => Boolean(fila) && !fila.reserva
+  && (fila.id == null || String(fila.id) === String(usuariId));
+/* El que diu un desat del nom aterra damunt del comodí sense confirmar o, si
+   ja ve confirmat (una altra pestanya l'ha triat), damunt de qualsevol
+   @usuari sense confirmar: el servidor només lleva la confirmació en l'alta
+   (INSERT). Una resposta tardana no desfà mai un @usuari triat ni el torna
+   del regenerat al comodí. */
+const prevalDerivat = (fila, derivat) => teUsuariComodi(fila)
+  || (!fila?.username_confirmat_at && Boolean(derivat.username_confirmat_at));
+const ambUsuariDerivat = (fila, derivat) => (derivat && prevalDerivat(fila, derivat) ? { ...fila, ...derivat } : fila);
 
 export function PerfilProvider({ children, config = {}, onCanviOrganitzacions }) {
   /* L'àmbit és l'ENTRADA, no la generació del servei: la renovació horària del JWT
@@ -316,9 +339,13 @@ export function PerfilProvider({ children, config = {}, onCanviOrganitzacions })
 /* T47 · La clau d'una fila confirmada per la cua: la persona és una sola
    (l'editor li diu 'jo'); una organització o un agent, pel seu id. */
 const clauConfirmada = (entitat, id) => (entitat === ENTITATS_FITXA.persona ? entitat : `${entitat}\u0000${String(id)}`);
+/* QA-H01 · L'@usuari derivat d'un desat del nom, a banda de les columnes
+   escrites: damunt de la lectura, amb la mateixa regla del comodí. */
+const CLAU_USUARI_DERIVAT = `${ENTITATS_FITXA.persona}\u0000@usuari`;
 const ambConfirmades = (confirmades, entitat, fila) => {
   const canvis = fila ? confirmades.get(clauConfirmada(entitat, fila.id)) : null;
-  return canvis ? { ...fila, ...canvis } : fila;
+  const ambCanvis = canvis ? { ...fila, ...canvis } : fila;
+  return entitat === ENTITATS_FITXA.persona ? ambUsuariDerivat(ambCanvis, confirmades.get(CLAU_USUARI_DERIVAT)) : ambCanvis;
 };
 
 function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitzacions }) {
@@ -561,14 +588,52 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     }
   }, [avisaOrganitzacions]);
 
+  /* QA-H01 (auditoria 261028_1611) · Desar el nom pot moure també l'@usuari:
+     el disparador de 2610282100 regenera el comodí sense confirmar quan arriba
+     el nom de veres. Es pren de la resposta del desat si el porta; si no, i
+     només amb el comodí a la fitxa, es rellig la fila. Sense la migració la
+     fitxa no té username: cap lectura i cap columna. Un canvi de sessió pel
+     camí (assertCurrent) o la fila d'una altra persona no aterren, i
+     l'@usuari no va a user_metadata (només a la fila). De millor esforç: el
+     nom ja és desat, cap fallada d'ací el desfà i ningú no l'espera. */
+  const dadesPerfilRef = useRef(dadesPerfil);
+  dadesPerfilRef.current = dadesPerfil;
+  const reconciliaUsuari = useCallback(async (canvis, fila) => {
+    if (!Object.hasOwn(canvis, 'full_name')) return;
+    if (fila && !esFilaDe(fila, usuariId)) return;
+    let derivat = usuariDeLaFila(fila);
+    if (!derivat) {
+      if (!teUsuariComodi(dadesPerfilRef.current)) return;
+      try {
+        assertCurrent();
+        const rellegida = await getProfile(configRef.current);
+        assertCurrent();
+        derivat = esFilaDe(rellegida, usuariId) ? usuariDeLaFila(rellegida) : null;
+      } catch (e) {
+        if (e?.name !== 'AbortError') console.warn('[PerfilContext] No s’ha pogut rellegir l’@usuari:', e?.message);
+        return;
+      }
+      if (!derivat) return;
+    }
+    const captura = confirmadesRef.current;
+    if (captura) {
+      const previ = captura.get(CLAU_USUARI_DERIVAT);
+      if (!previ || prevalDerivat(previ, derivat)) captura.set(CLAU_USUARI_DERIVAT, derivat);
+    }
+    setDadesPerfil((prev) => (prev ? ambUsuariDerivat(prev, derivat) : prev));
+  }, [assertCurrent, usuariId]);
+
   /* T47 · El que confirma la cua d'autodesament (encara que l'editor ja no
-     hi siga) arriba ací, i la fitxa el veu en tornar a obrir-se. */
+     hi siga) arriba ací, i la fitxa el veu en tornar a obrir-se. QA-H01 · El
+     nom de la fitxa (el títol) també hi ix: s'hi reconcilia l'@usuari. */
   useEffect(() => {
     if (!ambit) return undefined;
     return cuaDesament.quanConfirma((confirmat) => {
-      if (confirmat.ambit === ambit) aplicaColumnes(confirmat.entitat, confirmat.id, confirmat.canvis);
+      if (confirmat.ambit !== ambit) return;
+      aplicaColumnes(confirmat.entitat, confirmat.id, confirmat.canvis);
+      if (confirmat.entitat === ENTITATS_FITXA.persona) void reconciliaUsuari(confirmat.canvis, confirmat.fila);
     });
-  }, [ambit, aplicaColumnes]);
+  }, [ambit, aplicaColumnes, reconciliaUsuari]);
 
   const guardarCampPerfil = useCallback(async (camp, valor, identitatObjectiuId) => {
     assertCurrent();
@@ -591,6 +656,10 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
         ? { username: fila.username, username_confirmat_at: fila.username_confirmat_at ?? null }
         : { [camp]: desat };
       aplicaColumnes(ENTITATS_FITXA.persona, objectiu.id, canvis);
+      /* QA-H01 · El nom tardà mou el comodí: la fitxa pren l'@usuari nou
+         (reconciliaUsuari només mira el nom). Sense esperar-lo: una relectura
+         lenta no reté el desat, que ja és fet. */
+      void reconciliaUsuari(canvis, fila);
     } else if (objectiu.mena === 'agent') {
       await updateAgent(objectiu.id, { [camp]: valor }, configRef.current);
       assertCurrent();
@@ -603,7 +672,7 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
       assertCurrent();
       aplicaColumnes(ENTITATS_FITXA.organitzacio, objectiu.id, { [camp]: desat });
     }
-  }, [identitats, assertCurrent, aplicaColumnes]);
+  }, [identitats, assertCurrent, aplicaColumnes, reconciliaUsuari]);
 
   /* Signatura TRENCADORA a propòsit: guardarAjust(identitat, ajust, valor). */
   const guardarAjust = useCallback(async (identitatObjectiuId, ajustId, valor) => {

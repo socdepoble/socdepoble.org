@@ -25,7 +25,26 @@
    Correccions H (revisió final, S-01 i S-02): el camí 'Veí/na' només des de
    l'identificador de reserva (una sola volta, cap oracle sense ritme) i
    «profiles read own» només amb una de les tres qual de fila pròpia del
-   repositori i per a authenticated (la de 2609110600 avorta). */
+   repositori i per a authenticated (la de 2609110600 avorta).
+   QA-H02 (certificació de Codex sobre e36606db2): towns.slug és únic, name
+   no. poble_derivat resol cada poble triat a UNA sola fila (la que la fila
+   ja porta, el poble per defecte, el nom escrit igual, obert, el més antic i
+   el slug) i en trau town_uuid, primary_town, provinces i comarcas; el
+   town_uuid que ja hi ha (backfill: f.town_uuid; disparador: old.town_uuid)
+   només desempata els homònims, mai no canvia ni l'ordre ni els pobles
+   triats, i el cos sencer està fixat. El catàleg dona a un homònim la regió
+   de l'entrada amb el seu slug (mai la que du el slug d'una altra fila) i,
+   pel títol, només a la fila que eixe títol tria (el mateix ordre que
+   poble_derivat); a un nom únic, la del títol, com abans. Revisió
+   adversarial: el backfill no escriu cap camp de poble en una fila amb el
+   town_uuid d'un altre poble que el primer (mai camps de dues files; ix a
+   DESPRÉS). Verificat a PGlite 0.3.16 (fora del repositori): amb homònims
+   de regions diferents, els camps ixen de la mateixa fila (backfill, alta,
+   canvi de town_name i crida directa) i un canvi de town_name conserva
+   l'homònim; amb noms únics, idèntic a e36606db2 (disparador, catàleg, 401
+   crides i backfill, llevat de les files d'una forma antiga amb el town_uuid
+   d'un altre poble, que ara no es toquen); la segona execució no canvia
+   res. */
 import { randomUUID } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -86,6 +105,7 @@ const RESERVAT = funcio(CODI, 'private', 'usuari_reservat');
 const LLIURE = funcio(CODI, 'private', 'usuari_lliure');
 const DISPARADOR = funcio(CODI, 'private', 'profiles_usuari_i_poble');
 const RPC = funcio(CODI, 'public', 'desa_el_meu_usuari');
+const DERIVAT = funcio(CODI, 'private', 'poble_derivat');
 
 /* Els literals de la regla, tal com els escriu el SQL. */
 const literals = (text) => [...text.matchAll(/'((?:[^']|'')*)'/g)].map((m) => m[1].replace(/''/g, "'"));
@@ -143,7 +163,7 @@ function nomesPerLaRpc(disparador, rpc) {
 const pobleNomesAmbTria = (cos) => normal(cos).includes(normal(`if tg_op = 'INSERT' or new.town_name is distinct from old.town_name then begin
     select d.town_name, d.town_uuid, d.primary_town, d.secondary_towns, d.provinces, d.comarcas
       into new.town_name, new.town_uuid, new.primary_town, new.secondary_towns, new.provinces, new.comarcas
-      from private.poble_derivat(new.town_name) as d;`))
+      from private.poble_derivat(new.town_name, case when tg_op = 'UPDATE' then old.town_uuid end) as d;`))
   && normal(cos).includes(normal(`elsif v_sessio then new.town_uuid := old.town_uuid; new.primary_town := old.primary_town;
     new.secondary_towns := old.secondary_towns; new.provinces := old.provinces; new.comarcas := old.comarcas; end if; return new;`));
 /** Fixer · El backfill del poble només omple els camps NULL o '[]', dins de la primera finestra i abans del disparador. */
@@ -196,6 +216,94 @@ const appleUnaVegada = (cos) => normal(cos).includes(normal(`elsif old.full_name
     and old.username_confirmat_at is null and old.username ~ '^${USERNAME_DE_RESERVA}(-[0-9a-f]+)?$'
     and old.baixa_demanada_at is null and new.baixa_demanada_at is null then
     new.username := private.usuari_lliure(private.usuari_base(new.full_name), new.id); end if;`));
+/** QA-H02 · Cada poble triat, UNA fila de public.towns (desempat total: el slug és únic), i town_uuid,
+    primary_town, provinces i comarcas d'eixes mateixes files; cap join per nom que n'aplegue diverses. */
+function pobleDUnaFila(cos) {
+  const c = normal(cos);
+  return c.includes(normal(`with triades as ( select l.ordre, f.id, f.name, f.provincia, f.comarca
+      from unnest(v_pobles) with ordinality as l(nom, ordre) cross join lateral (
+      select t.id, t.name, t.provincia, t.comarca from public.towns t where lower(t.name) = lower(l.nom)
+      order by (t.id = p_town_uuid) desc nulls last,
+      (t.id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
+      (t.name = l.nom) desc, t.is_open desc, t.created_at, t.slug, t.id limit 1) as f)`))
+    && c.includes(normal(`select (select r.id from triades r where r.ordre = 1),
+      coalesce((select r.name from triades r where r.ordre = 1), v_pobles[1]),`))
+    && ['provincia', 'comarca'].every((camp) => c.includes(normal(`(select coalesce(jsonb_agg(x.${camp} order by x.primer), '[]'::jsonb)
+      from (select r.${camp}, min(r.ordre) as primer from triades r
+      where nullif(btrim(r.${camp}), '') is not null group by r.${camp}) as x)`)))
+    && c.includes('into town_uuid, primary_town, provinces, comarcas;')
+    && (c.match(/\bfrom public\.towns t\b/g) || []).length === 1
+    && !/\bjoin public\.towns\b/.test(c);
+}
+/* QA-H02 (fixer) · El cos sencer de poble_derivat: una línia de més després
+   del select (town_uuid := null, primary_town := v_pobles[1]) passava els
+   fragments de pobleDUnaFila. */
+const COS_DERIVAT = `declare v_pobles text[] := private.llista_pobles(p_town_name);
+  begin town_name := p_town_name;
+    if cardinality(v_pobles) = 0 then v_pobles := array['${POBLE_FUNDACIONAL}']; town_name := v_pobles[1]; end if;
+    with triades as ( select l.ordre, f.id, f.name, f.provincia, f.comarca
+        from unnest(v_pobles) with ordinality as l(nom, ordre)
+        cross join lateral ( select t.id, t.name, t.provincia, t.comarca from public.towns t where lower(t.name) = lower(l.nom)
+          order by (t.id = p_town_uuid) desc nulls last,
+            (t.id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
+            (t.name = l.nom) desc, t.is_open desc, t.created_at, t.slug, t.id
+          limit 1) as f)
+    select (select r.id from triades r where r.ordre = 1),
+      coalesce((select r.name from triades r where r.ordre = 1), v_pobles[1]),
+      (select coalesce(jsonb_agg(x.provincia order by x.primer), '[]'::jsonb)
+        from (select r.provincia, min(r.ordre) as primer from triades r where nullif(btrim(r.provincia), '') is not null group by r.provincia) as x),
+      (select coalesce(jsonb_agg(x.comarca order by x.primer), '[]'::jsonb)
+        from (select r.comarca, min(r.ordre) as primer from triades r where nullif(btrim(r.comarca), '') is not null group by r.comarca) as x)
+      into town_uuid, primary_town, provinces, comarcas;
+    secondary_towns := to_jsonb(coalesce(v_pobles[2:], '{}'::text[]));
+  end;`;
+const derivatSencer = (cos) => normal(cos) === normal(COS_DERIVAT);
+/** QA-H02 (fixer) · El town_uuid que la fila ja porta (backfill: f.town_uuid; disparador: old.town_uuid en un
+    UPDATE) només desempata els homònims: cap altra assignació de v_pobles ni cap altre ús de p_town_uuid. */
+const ancoraNomesDesempata = (cos, codi, disparador) => (normal(cos).match(/\bv_pobles :=/g) || []).length === 1
+  && (normal(cos).match(/\bp_town_uuid\b/g) || []).length === 1
+  && normal(cos).includes('order by (t.id = p_town_uuid) desc nulls last,')
+  && normal(codi).includes(normal('then f.town_name else f.primary_town end, f.town_uuid) as x'))
+  && normal(disparador).includes(normal("from private.poble_derivat(new.town_name, case when tg_op = 'UPDATE' then old.town_uuid end) as d;"));
+/* QA-H02 (fixer) · El catàleg, sencer: un nom únic, pel títol com e36606db2;
+   un homònim, l'entrada amb el seu slug i, si no n'hi ha cap, la del títol
+   que no du el slug d'una altra fila, i només a la fila que eixe títol tria
+   (revisió adversarial: una entrada sense id ja no arriba a tots els
+   homònims). */
+const CATALEG = `update public.towns t set provincia = nullif(left(btrim(c.provincia), 120), ''), comarca = nullif(left(btrim(c.comarca), 120), '')
+  from (select distinct on (w.id) w.id, l.e ->> 'provincia' as provincia, l.e ->> 'comarca' as comarca
+    from public.towns w
+    cross join lateral (select exists (select 1 from public.towns o where lower(o.name) = lower(w.name) and o.id <> w.id) as homonim) as h
+    join public.app_content ac on ac.key = 'towns'
+    cross join lateral jsonb_array_elements( case when jsonb_typeof(ac.payload) = 'array' then ac.payload else '[]'::jsonb end) with ordinality as l(e, n)
+    where jsonb_typeof(l.e) = 'object' and jsonb_typeof(l.e -> 'title') = 'string'
+      and case when h.homonim then l.e ->> 'id' = w.slug
+        or (lower(l.e ->> 'title') = lower(w.name) and not exists (select 1 from public.towns o where o.slug = l.e ->> 'id' and o.id <> w.id)
+          and w.id = (select o.id from public.towns o where lower(o.name) = lower(w.name)
+            order by (o.id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
+              (o.name = l.e ->> 'title') desc, o.is_open desc, o.created_at, o.slug, o.id limit 1))
+        else lower(l.e ->> 'title') = lower(w.name) end
+    order by w.id, coalesce(h.homonim and l.e ->> 'id' = w.slug, false) desc,
+      (ac.tenant_id::text = (select a.valor from private.ajustos a where a.clau = 'poble_per_defecte')) desc nulls last,
+      ac.updated_at desc, ac.tenant_id, l.n) as c
+  where c.id = t.id and t.provincia is null and t.comarca is null;`;
+const cataleguPerHomonim = (codi) => normal(codi.slice(codi.indexOf('update public.towns t'), codi.indexOf('create table if not exists private.usuaris_retinguts')))
+  === normal(CATALEG);
+/** Revisió adversarial · El títol d'un homònim tria la fila amb el mateix ordre que poble_derivat, sense la fila d'abans. */
+const ordreDe = (re, text) => {
+  const m = re.exec(text);
+  return m ? normal(m[1]) : null;
+};
+function mateixOrdre(codi, derivat) {
+  const cataleg = ordreDe(/and w\.id = \(select o\.id from public\.towns o\s+where lower\(o\.name\) = lower\(w\.name\)\s+order by ([\s\S]*?)\s+limit 1\)\)/, codi);
+  const triada = ordreDe(/order by \(t\.id = p_town_uuid\) desc nulls last,\s+([\s\S]*?)\s+limit 1\) as f\)/, derivat);
+  return cataleg !== null && triada !== null && cataleg === triada.replace(/\bt\./g, 'o.').replace('o.name = l.nom', "o.name = l.e ->> 'title'");
+}
+/** Revisió adversarial · El backfill no escriu cap camp de poble en una fila amb el town_uuid d'un altre poble que el
+    primer (mai camps de dues files); el d'una fila que ja no existix es conserva i la resta ix del nom. */
+const backfillSenseBarreja = (codi) => normal(codi).includes(normal(`or coalesce(f.comarcas, '[]'::jsonb) = '[]'::jsonb) as d
+  where d.id = p.id and (p.town_uuid is null or d.town_uuid is not distinct from p.town_uuid
+    or not exists (select 1 from public.towns t where t.id = p.town_uuid));`));
 /** Una sonda que no canvia el text no prova res. */
 const muta = (text, de, a) => {
   const nou = text.replace(de, a);
@@ -297,6 +405,8 @@ describe('P1-68 · ordre, alta i codis', () => {
        només els camps buits: «Backfill: només files amb NULL». */
     expect((CODI.match(/disable trigger trg_profiles_touch;/g) || []).length).toBe(1);
     expect(backfillNomesBuits(CODI)).toBe(true);
+    /* Revisió adversarial (QA-H02): cap fila no rep camps de dues files. */
+    expect(backfillSenseBarreja(CODI)).toBe(true);
     expect(normal(CODI)).toContain(normal(`case when f.primary_town is null
       or lower(btrim(f.primary_town)) = lower(coalesce((private.llista_pobles(f.town_name))[1], '')) then f.town_name else f.primary_town end`));
   });
@@ -452,8 +562,64 @@ describe('P1-68 · paritat amb el client', () => {
     expect(llig('2609110600_perfil_avatar_i_permisos.sql')).toContain(`town_name text default '${POBLE_FUNDACIONAL}'`);
     /* El catàleg es llig per la clau 'towns' i cap nom de poble escrit a mà. */
     const omple = CODI.slice(CODI.indexOf('update public.towns t'), CODI.indexOf('create table if not exists private.usuaris_retinguts'));
-    expect(omple).toMatch(/where ac\.key = 'towns'/);
-    expect(new Set(literals(omple))).toEqual(new Set(['', '[]', 'array', 'comarca', 'object', 'poble_per_defecte', 'provincia', 'string', 'title', 'towns']));
+    expect(omple).toMatch(/\bac\.key = 'towns'/);
+    expect(new Set(literals(omple))).toEqual(new Set(['', '[]', 'array', 'comarca', 'id', 'object', 'poble_per_defecte', 'provincia', 'string', 'title', 'towns']));
+  });
+});
+
+describe('QA-H02 · el poble canònic amb homònims: una sola fila per poble triat', () => {
+  test('la premissa: towns.slug és únic i name no', () => {
+    expect(llig('2609080000_initial_schema.sql')).toMatch(/create table if not exists public\.towns \(\s+id uuid primary key default gen_random_uuid\(\),\s+slug text not null unique,\s+name text not null,/);
+    expect(sensComentaris(llig('2609080000_initial_schema.sql'))).not.toMatch(/unique\s*\(\s*(lower\()?name\b/i);
+  });
+
+  test('poble_derivat: una fila per poble (desempat total) i els camps de poble d’eixes mateixes files', () => {
+    expect(pobleDUnaFila(DERIVAT.cos)).toBe(true);
+    /* El cos sencer: town_name és la tria, tal qual (buit → La Torre, com
+       e36606db2); secondary_towns, la resta dels noms triats. */
+    expect(derivatSencer(DERIVAT.cos)).toBe(true);
+    expect(normal(DERIVAT.cos)).toContain(normal(`town_name := p_town_name; if cardinality(v_pobles) = 0 then
+      v_pobles := array['${POBLE_FUNDACIONAL}']; town_name := v_pobles[1]; end if;`));
+    expect(DERIVAT.capcalera).toMatch(/^language plpgsql stable set search_path = ''$/);
+  });
+
+  test('la signatura: el backfill i el disparador (old.town_uuid) porten la fila que ja hi ha, que només desempata', () => {
+    expect(DERIVAT.params).toBe(normal(`p_town_name text, p_town_uuid uuid default null, out town_name text, out town_uuid uuid,
+      out primary_town text, out secondary_towns jsonb, out provinces jsonb, out comarcas jsonb`));
+    expect(FUNCIONS.filter((f) => f.nom === 'poble_derivat')).toHaveLength(1);
+    const drop = CODI.search(/drop function if exists private\.poble_derivat\(text\);/);
+    expect(drop).toBeGreaterThan(0);
+    expect(drop).toBeLessThan(DERIVAT.inici);
+    expect(CODI).toMatch(/revoke execute on function private\.poble_derivat\(text, uuid\) from public, anon, authenticated;/);
+    expect(ancoraNomesDesempata(DERIVAT.cos, CODI, DISPARADOR.cos)).toBe(true);
+    expect(pobleNomesAmbTria(DISPARADOR.cos)).toBe(true);
+    expect(DISPARADOR.cos).not.toMatch(/poble_derivat\(new\.town_name, new\.town_uuid\)/);
+    expect((CODI.match(/\b(?:lateral|from) private\.poble_derivat\(/g) || []).length).toBe(2);
+  });
+
+  test('el catàleg: un nom únic pel títol (com e36606db2); un homònim pel seu slug, mai pel d’una altra fila, i pel títol només la fila que tria', () => {
+    expect(cataleguPerHomonim(CODI)).toBe(true);
+    expect(mateixOrdre(CODI, DERIVAT.cos)).toBe(true);
+    expect(CODI).not.toMatch(/where lower\(c\.titol\) = lower\(t\.name\)/);
+  });
+
+  test('la capçalera: el desempat, els homònims abans d’aplicar-la i la comprovació de després', () => {
+    const text = normal(CAPCALERA.replace(/^--/gm, ''));
+    expect(text).toContain(normal(`Cada poble de town_name, UNA sola fila de public.towns (slug
+      és únic, name no; si n'hi ha dos amb el mateix nom: en un canvi de town_name, la que ja tenia, old.town_uuid; després,
+      el poble_per_defecte de private.ajustos, el nom escrit igual, obert, el més antic i el slug, QA-H02).`));
+    expect(text).toContain(normal(`Una fila que ja porta town_uuid (d'una forma antiga) el conserva, i eixa fila només desempata
+      els homònims (QA-H02)`));
+    expect(text).toContain(normal(`Una fila amb el town_uuid d'un poble que no és el seu primer no rep cap camp de poble (mai camps
+      de dues files) i ix a la comprovació de DESPRÉS`));
+    expect(text).toContain(normal(`update public.profiles p set (town_name, town_uuid, primary_town, secondary_towns, provinces, comarcas) =
+      (select d.town_name, d.town_uuid, d.primary_town, d.secondary_towns, d.provinces, d.comarcas
+      from private.poble_derivat(p.town_name) as d) where p.id = '<id>';`));
+    expect(CAPCALERA).toContain('select lower(name), array_agg(slug order by created_at) from public.towns group by 1 having count(*) > 1;');
+    expect(text).toContain(normal(`select count(*) from public.profiles p join public.towns t on t.id = p.town_uuid
+      where lower(p.primary_town) is distinct from lower(t.name)
+      or (nullif(btrim(t.provincia), '') is not null and p.provinces ->> 0 is distinct from t.provincia)
+      or (nullif(btrim(t.comarca), '') is not null and p.comarcas ->> 0 is distinct from t.comarca);`));
   });
 });
 
@@ -530,6 +696,59 @@ describe('P1-68 · les sondes: els detectors veuen una variant dolenta', () => {
     expect(lecturaNomesPropia(muta(CODI, /\(pp\.qual is null\s+or /, '('))).toBe(false);
     expect(lecturaNomesPropia(muta(CODI, "'(( SELECT auth.uid() AS uid) = id)'", "'(( select auth.uid() as uid) = id)'"))).toBe(false);
     expect(lecturaNomesPropia(muta(CODI, "and pp.policyname = 'profiles read own'\n", ''))).toBe(false);
+  });
+
+  test('QA-H02 · regions de tots els homònims, un desempat parcial, una línia de més, una àncora que reordena o que falta, o el catàleg desquadrat', () => {
+    const cos = DERIVAT.cos;
+    /* La forma de e36606db2: les regions de totes les files amb el mateix nom. */
+    expect(pobleDUnaFila(muta(cos, /from triades r\s+where nullif\(btrim\(r\.provincia\), ''\) is not null/,
+      "from unnest(v_pobles) with ordinality as l(nom, ordre) join public.towns r on lower(r.name) = lower(l.nom) where nullif(btrim(r.provincia), '') is not null"))).toBe(false);
+    expect(pobleDUnaFila(muta(cos, /\s+limit 1\) as f\)/, ') as f)'))).toBe(false);
+    expect(pobleDUnaFila(muta(cos, 't.created_at, t.slug, t.id', 't.created_at, t.id'))).toBe(false);
+    expect(pobleDUnaFila(muta(cos, '(t.name = l.nom) desc, ', ''))).toBe(false);
+    expect(pobleDUnaFila(muta(cos, '(t.id = p_town_uuid) desc nulls last,', ''))).toBe(false);
+    expect(pobleDUnaFila(muta(cos, 'select (select r.id from triades r where r.ordre = 1),',
+      'select (select t.id from public.towns t where lower(t.name) = lower(v_pobles[1]) limit 1),'))).toBe(false);
+    /* Revisió adversarial (troballa 2): una línia de més després del select
+       passa els fragments; només el cos sencer la veu. */
+    const anula = muta(cos, 'into town_uuid, primary_town, provinces, comarcas;', 'into town_uuid, primary_town, provinces, comarcas;\n  town_uuid := null;');
+    expect(pobleDUnaFila(anula)).toBe(true);
+    expect(derivatSencer(anula)).toBe(false);
+    expect(derivatSencer(muta(cos, 'into town_uuid, primary_town, provinces, comarcas;', 'into town_uuid, primary_town, provinces, comarcas;\n  primary_town := v_pobles[1];'))).toBe(false);
+    /* F1 i troballa 1: l'àncora de b03cdc3d posava el poble de town_uuid
+       davant, o en un town_name buit, en lloc de desempatar. */
+    const davant = muta(cos, /(town_name := v_pobles\[1\];\s+end if;)/,
+      '$1\n  if p_town_uuid is not null then v_pobles := array[(select t.name from public.towns t where t.id = p_town_uuid)] || v_pobles; end if;');
+    expect(ancoraNomesDesempata(davant, CODI, DISPARADOR.cos)).toBe(false);
+    expect(derivatSencer(davant)).toBe(false);
+    const buit = muta(cos, `array['${POBLE_FUNDACIONAL}']`, `array[coalesce((select t.name from public.towns t where t.id = p_town_uuid), '${POBLE_FUNDACIONAL}')]`);
+    expect(ancoraNomesDesempata(buit, CODI, DISPARADOR.cos)).toBe(false);
+    expect(derivatSencer(buit)).toBe(false);
+    expect(ancoraNomesDesempata(cos, muta(CODI, /then f\.town_name else f\.primary_town end,\s+f\.town_uuid\) as x/,
+      'then f.town_name else f.primary_town end) as x'), DISPARADOR.cos)).toBe(false);
+    /* Troballa 4: el disparador sense l'àncora (la forma d'abans) o amb la que escriu la sessió. */
+    const senseAncora = muta(DISPARADOR.cos, "poble_derivat(new.town_name, case when tg_op = 'UPDATE' then old.town_uuid end)", 'poble_derivat(new.town_name)');
+    expect(ancoraNomesDesempata(cos, CODI, senseAncora)).toBe(false);
+    expect(pobleNomesAmbTria(senseAncora)).toBe(false);
+    expect(pobleNomesAmbTria(muta(DISPARADOR.cos, "then old.town_uuid end)", "then new.town_uuid end)"))).toBe(false);
+    /* El catàleg: F2 (el slug abans que el títol també per a un nom únic),
+       troballa 3 (el títol amb el slug d'una altra fila) i la forma de b03cdc3d. */
+    expect(cataleguPerHomonim(muta(CODI, 'coalesce(h.homonim and l.e ->> \'id\' = w.slug, false) desc,', "(l.e ->> 'id' = w.slug) desc nulls last,"))).toBe(false);
+    expect(cataleguPerHomonim(muta(CODI, /\s+and not exists \(select 1 from public\.towns o where o\.slug = l\.e ->> 'id' and o\.id <> w\.id\)/, ''))).toBe(false);
+    /* Revisió adversarial: el títol d'una entrada sense id a tots els homònims
+       (la forma de d7e9893a), o amb un ordre que ja no és el de poble_derivat. */
+    expect(cataleguPerHomonim(muta(CODI, /\s+and w\.id = \(select o\.id from public\.towns o[\s\S]*?limit 1\)\)/, ')'))).toBe(false);
+    expect(mateixOrdre(muta(CODI, /(lower\(w\.name\)\s+order by [\s\S]*?)o\.is_open desc, /, '$1'), cos)).toBe(false);
+    expect(mateixOrdre(muta(CODI, "(o.name = l.e ->> 'title') desc, ", ''), cos)).toBe(false);
+    expect(mateixOrdre(CODI, muta(cos, 't.is_open desc, t.created_at', 't.created_at, t.is_open desc'))).toBe(false);
+    /* Revisió adversarial: el backfill sense la guarda (la forma de d7e9893a:
+       camps de dues files) o amb una guarda que deixa passar un altre poble. */
+    expect(backfillSenseBarreja(muta(CODI, /\s+and \(p\.town_uuid is null or d\.town_uuid is not distinct from p\.town_uuid\s+or not exists \(select 1 from public\.towns t where t\.id = p\.town_uuid\)\);/, ';'))).toBe(false);
+    expect(backfillSenseBarreja(muta(CODI, 'd.town_uuid is not distinct from p.town_uuid', 'd.town_uuid is not null'))).toBe(false);
+    expect(backfillSenseBarreja(muta(CODI, /or not exists \(select 1 from public\.towns t where t\.id = p\.town_uuid\)\);/, 'or true);'))).toBe(false);
+    expect(cataleguPerHomonim(muta(CODI, /and case when h\.homonim[\s\S]*?else lower\(l\.e ->> 'title'\) = lower\(w\.name\) end/,
+      "and (l.e ->> 'id' = w.slug or lower(l.e ->> 'title') = lower(w.name))"))).toBe(false);
+    expect(cataleguPerHomonim(muta(CODI, /where c\.id = t\.id/, 'where lower(c.id::text) = lower(t.name)'))).toBe(false);
   });
 
   test('una alta que pot caure o una regla desquadrada', () => {

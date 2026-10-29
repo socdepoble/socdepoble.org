@@ -125,6 +125,31 @@ it('P1-68 · desar l’@usuari fusiona el que torna la RPC i no el copia a user_
   expect(value.usuari.user_metadata).not.toHaveProperty('username_confirmat_at');
 });
 
+/* QA-H01 (auditoria 261028_1611) · Paritat amb el disparador de 2610282100:
+   només el comodí sense confirmar (^veina(-[0-9a-f]+)?$) es rellig quan la
+   resposta del nom no porta l'@usuari. Cap altre identificador, ni un comodí
+   ja triat amb «D'acord», no costa cap lectura ni canvia. La resta de casos
+   del nom tardà, a PerfilContext.usuariTardana.test.jsx. */
+it.each([
+  ['veina', null, true], ['veina-2', null, true], ['veina-100', null, true], ['veina-1a2b3c4d', null, true],
+  ['veina-joan', null, false], ['veinat', null, false], ['veina-', null, false], ['xveina', null, false],
+  ['veina-2a-b', null, false], ['veina-2', '2026-10-20T10:00:00Z', false],
+])('QA-H01 · @%s (confirmat: %s) és el comodí del SQL: %s', async (handle, confirmat, comodi) => {
+  mock.getProfile.mockImplementation(async () => ({ id: 'A', full_name: 'Veí/na', username: handle, username_confirmat_at: confirmat }));
+  await open();
+  const lectures = mock.getProfile.mock.calls.length;
+  mock.updateProfile.mockResolvedValueOnce({ id: 'A', full_name: 'Anna Pérez' });
+  mock.getProfile.mockImplementation(async () => ({
+    id: 'A', full_name: 'Anna Pérez', username: comodi ? 'annaperez' : handle, username_confirmat_at: confirmat,
+  }));
+  await act(async () => value.guardarCampPerfil('full_name', 'Anna Pérez', 'jo'));
+  // La reconciliació no s'espera: deixa córrer la relectura, si n'hi ha.
+  await act(async () => { await new Promise((r) => { setTimeout(r, 0); }); });
+  expect(mock.getProfile).toHaveBeenCalledTimes(lectures + (comodi ? 1 : 0));
+  expect([value.identitats[0].dades.username, value.identitats[0].dades.username_confirmat_at])
+    .toEqual([comodi ? 'annaperez' : handle, confirmat]);
+});
+
 /* ── T47 (ordre del Mestre, 260928) · correccions de la revisió ── */
 
 it('T47 · una confirmació de la cua mentre es llig el perfil no la trepitja la lectura feta abans del PATCH', async () => {

@@ -1,0 +1,27 @@
+{
+  "id": "8f056b90-4d79-42f5-9899-b4876582f584",
+  "session": "9958d6c8-b3d3-4277-b5c3-3c907bc83dd7",
+  "operationId": "torn_74bad4b9-qa01-9958d6c8",
+  "claim": "9958d6c8-b3d3-4277-b5c3-3c907bc83dd7:governance-write",
+  "planHash": "0f463a77767c5d84ba3fac06553d81e0caa2b2714170d7a79d7537e0eb751a11",
+  "beforeSeal": "8e284aa3760e1a2ef6fc95e11e5b01866a814a8f1b4e9ce1655c151ce248219e",
+  "files": [
+    {
+      "path": "tooling/seo/prerender-social.mjs",
+      "before": "a876b0653d70d27d05c7ac60dde189ba9d19cc1b98e4ece97b78d6d2a7bba788",
+      "after": "25844f3790358ab887edb455e481c5d943da4e5d0a247b33bd7450cb80875543"
+    },
+    {
+      "path": "tooling/seo/prerender-social.test.mjs",
+      "before": "9ed4092e17f8e39711009ae80c81ccd053f41cd3faa6e42d7e4acc3d8e49bb5c",
+      "after": "182016f308fba8e8f21eba59b9a57908d409bc7cbaea9e424920ec4ecc3bb5fa"
+    },
+    {
+      "path": "tooling/seo/build-social-manifest.mjs",
+      "before": "4b8d288a11138edc49977546a1c45e115839f5f5c63495e5674a1a877a21c4dd",
+      "after": "9766b8a511162211cc1024474b1d60e7716e75205344359fcca98fc987e65d5e"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "f210378d8680fe39fbeb24c52bce3c93f573aa40cdc5593ec1143834661561b7"
+}
