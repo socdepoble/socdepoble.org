@@ -2,10 +2,13 @@
  * Dropdown.jsx
  * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
 
 export function Dropdown({ trigger, children, className = '', right = false, minWidth = '200px' }) {
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+  usePropietatsCss(menuRef, { '--sdp-desplegable-ample': isOpen ? minWidth : null });
   
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -36,8 +39,8 @@ export function Dropdown({ trigger, children, className = '', right = false, min
       </div>
       {isOpen && (
         <div 
+          ref={menuRef}
           className={`xat-header-dropdown ${right ? 'xat-header-dropdown--right' : 'xat-header-dropdown--left'}`}
-          style={{ '--sdp-desplegable-ample': minWidth }}
         >
           {children}
         </div>

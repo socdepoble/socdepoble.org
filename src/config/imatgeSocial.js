@@ -240,7 +240,17 @@ export const VARIANTS_SOCIALS = Object.freeze({
   /* Revisió final (261029, OG-01) · El cartell de l'Aplec (723x1024) és la foto
      d'una publicació remota de producció: la seua bessona .webp arribava al
      <head>. */
-  '/assets/events/aplec_2023_cartell.jpg': '/assets/events/aplec_2023_cartell-social-1200x630.jpg'
+  '/assets/events/aplec_2023_cartell.jpg': '/assets/events/aplec_2023_cartell-social-1200x630.jpg',
+  /* OG-02 (pla 261029_1305, Bloc B, M1.1) · Les sis imatges de llavor que no
+     feien 1200x630: les dos vinyetes de les pàgines del Cervell i de la Consola
+     (480x480) i quatre portades de pobles. Mateixa convenció que la resta:
+     retall de cobertura centrat, JPEG baseline, ≤300 000 B, sense APP1. */
+  '/assets/ui/plugins/cervell_vinyeta.jpg': '/assets/ui/plugins/cervell_vinyeta-social-1200x630.jpg',
+  '/assets/ui/plugins/consola_vinyeta.jpg': '/assets/ui/plugins/consola_vinyeta-social-1200x630.jpg',
+  '/assets/towns/la-torre-de-les-macanes/1.jpg': '/assets/towns/la-torre-de-les-macanes/1-social-1200x630.jpg',
+  '/assets/towns/orxeta/1.jpg': '/assets/towns/orxeta/1-social-1200x630.jpg',
+  '/assets/towns/sella/1.jpg': '/assets/towns/sella/1-social-1200x630.jpg',
+  '/assets/towns/tibi/1.jpg': '/assets/towns/tibi/1-social-1200x630.jpg'
 });
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o

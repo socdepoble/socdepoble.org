@@ -26,3 +26,7 @@ El meu context ha arribat als 186 artefactes i el pes memòric estava començant
 2. Agafar el Prompt que hi ha a l'Escriptori (`260929_2145_prompt_claude_plugin_wp.md`) i passar-lo a Claude per a començar el desenvolupament del plugin de WordPress.
 
 **Bona nit i a continuar a la següent finestra!**
+
+## Vincles
+
+- [[00_index]]

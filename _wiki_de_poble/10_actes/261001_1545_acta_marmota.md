@@ -3,7 +3,7 @@ type: acta
 status: canonic
 description: Acta Marmota del tancament de la sessió del matí.
 tags:
-  - sessio
+  - acta
   - marmota
 ---
 
@@ -23,3 +23,7 @@ S'ha donat per finalitzada una sessió extensa (que ha acumulat fins a 200 artef
 ## 3. Higiene d'Escriptori
 S'ha netejat l'escriptori en part, tot i que el Mestre ha indicat que falten eliminar certs arxius "extraterrestres" del dia 21 que campen lliures. El pròxim torn pot fer una batuda.
 S'ha deixat creat el ZIP al directori `release/enxufe-1.0.0-dev/` del projecte.
+
+## Vincles
+
+- [[00_index]]

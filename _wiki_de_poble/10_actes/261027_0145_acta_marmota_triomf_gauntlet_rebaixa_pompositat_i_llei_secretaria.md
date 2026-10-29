@@ -1,7 +1,7 @@
 ---
 type: acta
 status: canonic
-description: Acta Marmota del cicle nocturn. Destil·lació de la Llei de la Secretària Tècnica (core-secretaria-auditoria, zero tocar codi), to de poble autèntic (anti-pompositat, anti-empapussament), caça del fantasma de 10px i el cercle perfecte de Comunitat i Poble.
+description: Acta Marmota del cicle nocturn. Destil·lació de la Llei de la Secretària Tècnica (core-secretaria-auditoria, zero tocar codi), to de poble autèntic (anti-pompositat, anti-empapussament), caça del f...
 tags:
   - acta
   - marmota
@@ -85,4 +85,3 @@ Aquesta acta marmota tanca netament la sessió actual. El Mestre pot eixir d'Ant
 
 ## Vincles
 - [[00_index]]
-- [core-secretaria-auditoria](../../.agents/skills/core-secretaria-auditoria/SKILL.md)

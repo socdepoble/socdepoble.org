@@ -30,6 +30,7 @@
     "tests/git-hooks.test.mjs",
     "tests/hooks-local.test.mjs",
     "tests/lint_enxufe.test.mjs",
+    "tests/llaurador-managed-region.test.mjs",
     "tests/mapa-consola.test.mjs",
     "tests/migracio-convergencia-perfil.test.mjs",
     "tests/migracio-xat-de-pagina.test.mjs",
@@ -45,9 +46,14 @@
     "tests/t11-arxiu-fossils-bundle.test.mjs",
     "tests/t11-cens-documental.test.mjs",
     "tests/t11-equip-contracte.test.mjs",
+    "tests/t11-gate-prose.test.mjs",
+    "tests/t11-legacy-prompt.test.mjs",
+    "tests/t11-legacy-restoration.test.mjs",
     "tests/t11-parser-consumers.test.mjs",
+    "tests/t11-restoration-contract.test.mjs",
     "tests/t11-retirada-planificacio.test.mjs",
     "tests/t11-retrieval-provenance.test.mjs",
+    "tests/tractor-rls-r2-ddl.test.mjs",
     "tests/verificador-scc.test.mjs",
     "tests/vite-empremta-dev.test.mjs",
     "tests/wiki-backlinks-readonly.test.mjs",
@@ -358,6 +364,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/llaurador-managed-region.test.mjs",
+      "suite": "primary",
+      "reason": "Regió gestionada de l’índex: només marques actives de prosa, conservació d’exemples i rebuig d’ambigüitat abans d’escriure."
+    },
+    {
       "path": "tests/llaurador-progress.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -543,9 +554,29 @@
       "reason": "Contracte de rols, cens vigent i referències de l’equip IA sense duplicar fonts d’autoritat."
     },
     {
+      "path": "tests/t11-gate-prose.test.mjs",
+      "suite": "primary",
+      "reason": "Regressions portables del graf de prosa, resolució local i portes de proves amb registres Node."
+    },
+    {
+      "path": "tests/t11-legacy-prompt.test.mjs",
+      "suite": "primary",
+      "reason": "Retirada del generador duplicat: cap còpia, document o bundle fora del circuit documental vigent."
+    },
+    {
+      "path": "tests/t11-legacy-restoration.test.mjs",
+      "suite": "primary",
+      "reason": "Retirada inert de la restauració duplicada: cap Git ni delegació, import segur i diagnòstic per àlies."
+    },
+    {
       "path": "tests/t11-parser-consumers.test.mjs",
       "suite": "primary",
       "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
+    },
+    {
+      "path": "tests/t11-restoration-contract.test.mjs",
+      "suite": "primary",
+      "reason": "Contracte de restauració: segell sobre commit, HEAD, bytes i modes, CAS i còpia prèvia verificada."
     },
     {
       "path": "tests/t11-retirada-planificacio.test.mjs",
@@ -596,6 +627,11 @@
       "path": "tests/tractor-orfes-brain.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/tractor-rls-r2-ddl.test.mjs",
+      "suite": "primary",
+      "reason": "Regressions estàtiques R2: només DDL real acredita RLS; comentaris, literals i cossos SQL no compten."
     },
     {
       "path": "tests/tractor-rls-realtime.test.mjs",

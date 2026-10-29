@@ -106,3 +106,7 @@ El pre-hook comú denega governança directa, zona humana de qualsevol extensió
 Un segell previ trencat requerix reconciliació revisada amb `segella.mjs --update --expected-hash=HASH_ACTUAL --expected-previous=HASH_ANTERIOR --reason=JUSTIFICACIO`. Un pending incomplet prohibix l’actualització i noves mutacions; no s’elimina ni es restaura automàticament. El post-hook només comprova. Les evidències de generació són `.agents/seal-transactions/` i han d’acompanyar el segell en Git; el log de runtime és diagnòstic local.
 
 Estos controls no confinen processos amb els mateixos permisos ni acrediten activació de clients. Cal supervisió externa i protecció de branca per cobrir hooks absents, timeouts i bypassos locals.
+
+## Vincles
+
+- [[00_index]]

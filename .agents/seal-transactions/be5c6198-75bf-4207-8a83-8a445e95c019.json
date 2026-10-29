@@ -1,0 +1,82 @@
+{
+  "id": "be5c6198-75bf-4207-8a83-8a445e95c019",
+  "session": "c723d68d-e749-4944-85a3-f52302bc681e",
+  "operationId": "g1-t11-reconciliat",
+  "claim": "c723d68d-e749-4944-85a3-f52302bc681e:governance-write",
+  "planHash": "a14c75ddff1309ff0a223cc5d15b947d506df680f29620278102bee8becdcf79",
+  "beforeSeal": "2d443f9f401eda634ebd3b16934ce3605bc2dc0037d3d348b98221aa89cbde3f",
+  "files": [
+    {
+      "path": "tooling/scripts/desenterrar.mjs",
+      "before": "c5c4a387a8e395c7c9b40204f06fc3c99da31059466aae1e332f5ba67fe5dc44",
+      "after": "413579d5daf3119af2ca4ff725906d894037176c18b8dde356f6caa13790bc58"
+    },
+    {
+      "path": "tests/t11-legacy-restoration.test.mjs",
+      "before": null,
+      "after": "4852aa214b34b6f4738c82ab591e753cb7ef3184f13397174f44aeecc7ec0faa"
+    },
+    {
+      "path": "tests/t11-legacy-prompt.test.mjs",
+      "before": null,
+      "after": "ff149bb428e92dc3db66e7410343699af13c8aa1dc7037e6a36649da96010857"
+    },
+    {
+      "path": "tooling/wiki/llaurador_indexs.mjs",
+      "before": "e014c7d7709099823069142c359c20abe0ac98dd4e69956344484e8ae49b173b",
+      "after": "d7d06c59831cc35007f86bc98b128fc3df231ab2691a86343de4fbdd87f07840"
+    },
+    {
+      "path": "tooling/wiki/core/parse.mjs",
+      "before": "7070d62fd740fabfab63b73ca0f3385ef4ad13e82a5a0a4463655bbc79927899",
+      "after": "8682de377c35172966da9aeb79c46c1d9abdab557503040e8c747bf98aecf1d9"
+    },
+    {
+      "path": "tooling/gates/tractor-arrel.mjs",
+      "before": "c566593c56d7e7d7b78dcf9d3cd735ca8769d8349ab3fc10dc24a7bdfa48efcd",
+      "after": "ededefbfe8a4d31f4d492d47c684db53b1b8c82e250294ab12214310abffcdfb"
+    },
+    {
+      "path": "tests/t11-gate-prose.test.mjs",
+      "before": null,
+      "after": "e62a48825fe63024983f380513cd55968362761201ce6621dd9c12ed7cfd7d14"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "b84fab7efde7c1d1cd0635e08af7971a68fc35798f910df3de7adf129f5586c8",
+      "after": "0c151ee5c7c5574f510e68b4eafc16961295b9ea3bc17199679331e31bc731b8"
+    },
+    {
+      "path": "tooling/gates/tractor-rls.mjs",
+      "before": "99b89350d8db471fe7fd9d213433329a9301acc737c2e4563c8b432371f73bf9",
+      "after": "7bf7f64de043d944f6b71800114a43509ef87f3329f50bd8c401c581c6cbf866"
+    },
+    {
+      "path": "tests/tractor-rls-r2-ddl.test.mjs",
+      "before": null,
+      "after": "07ebac277ebeb506715f78b9a92a138a0f5d6f7c002d3c2572d73c90c4ea079a"
+    },
+    {
+      "path": "tests/llaurador-managed-region.test.mjs",
+      "before": null,
+      "after": "22e9f100868ceaa5148f62868e41e7c51508074887ca8d598d5f3a9375797de7"
+    },
+    {
+      "path": "tooling/brain/desenterrar.mjs",
+      "before": "dd006d389611fd75888509cd79ca31d888ab3b9df8d30c626a3da3cf98b04343",
+      "after": "ced38016fab3f105545d5e6a0a6129ed1bce9972047727d1334692792dd2dfa6"
+    },
+    {
+      "path": "tests/t11-restoration-contract.test.mjs",
+      "before": null,
+      "after": "38de3e02df34e27556612b4bf9ad2f692e260c76284a279911fb3970e4dafe0c"
+    },
+    {
+      "path": ".agents/skills/core-restauracio-segellada/SKILL.md",
+      "before": "6986ee269036c83387c7c121f758456a89f681b44fef963f124a69a55065bad0",
+      "after": "f5af04efce51f732ea5c0af39248b395857c5e4fb3a36df2225addcc0165fc16"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "8383b20410a556acca13b53d7fc79ae62b88cd1950e515d69240786410da0637"
+}

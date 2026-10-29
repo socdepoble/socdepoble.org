@@ -211,3 +211,7 @@ export async function urlAdjuntXat(id, config = {}, { renova = false } = {}) {
   recordaSignatura(usuari, id, { ruta, url, caducaAl: inici + SEGONS_SIGNATURA * 1000 });
   return url;
 }
+
+/* E1.2 (pla 261029_1305) · Les peces del transport que la branca xifrada
+   (xatXifrat.js) reutilitza, sense duplicar la pujada ni la traducció d'errors. */
+export const transportAdjunts = Object.freeze({ BUCKET, SEGONS_SIGNATURA, UUID, context, vigent, tradueix, crida, primera, puja });

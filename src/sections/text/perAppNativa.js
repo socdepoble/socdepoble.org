@@ -62,8 +62,8 @@ import { llevaEtiquetes } from '../../config/contentHelpers.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 
 /* L'espai entre dos paraules d'un nom: també el dur, el guió baix i el guionet
-   (google_play, Google-Play), o cap (GooglePlay). */
-const JUNT = '(?:[\\s_-]|&nbsp;|&#160;)*';
+   (google_play, Google-Play), o cap (GooglePlay). ALLOW_RAW_COLOR: &#160; és entitat HTML */
+const JUNT = /* ALLOW_RAW_COLOR */ '(?:[\\s_-]|&nbsp;|&#160;)*';
 
 /** Les altres plataformes mòbils i les seues botigues. «androide» (el robot) i «display store» no en són cap. */
 export const PLATAFORMA_ALIENA = new RegExp(
@@ -82,7 +82,7 @@ export function nomenaPlataformaAliena(text) {
 }
 
 /* El text que es veu d'un tros d'HTML, per a dir què s'ha retirat. */
-const textDe = (html) => llevaEtiquetes(html).replace(/&nbsp;|&#160;/g, ' ').replace(/\s+/g, ' ').trim();
+const textDe = (html) => llevaEtiquetes(html).replace(/* ALLOW_RAW_COLOR */ /&nbsp;|&#160;/g, ' ').replace(/\s+/g, ' ').trim();
 
 const DISPOSITIU = "(?:l['’])?(?:Android|iPhone|iPad|iPadOS|iOS)";
 
@@ -115,7 +115,10 @@ const MAX_VOLTES = 64;
    que hi ha entre dos talls, amb les seues etiquetes de línia (<em>, <a>…). */
 const TALLS = `${ETIQUETES_DE_BLOC}|br|hr`;
 const TROS_DE_LINIA = new RegExp(`(<\\/?(?:${TALLS})\\b[^<>]*>)|((?:(?!<\\/?(?:${TALLS})\\b)[\\s\\S])+)`, 'gi');
-const ETIQUETA_BUIDA = /<([a-z][a-z0-9-]*)\b[^<>]*>(?:\s|&nbsp;|&#160;)*<\/\1\s*>/gi;
+const ETIQUETA_BUIDA = new RegExp(
+  '<([a-z][a-z0-9-]*)\\b[^<>]*>' + /* ALLOW_RAW_COLOR */ '(?:\\s|&nbsp;|&#160;)*<\\/\\1\\s*>',
+  'gi'
+);
 /* Les etiquetes que, pintades, separen dos paraules (també una imatge). */
 const SEPARA = new RegExp(`^<\\/?(?:${TALLS}|img)\\b`, 'i');
 
@@ -125,7 +128,7 @@ const ATRIBUT_QUE_ES_LLIG = /\s(?:title|alt|aria-label|aria-description|aria-rol
 
 /* Un tros de text tal com es llig: l'espai dur, un espai; el guionet de
    partició (&shy;), res. */
-const comEsLlig = (text) => text.replace(/&nbsp;|&#160;|&#xa0;/gi, ' ').replace(/&shy;|&#173;|&#xad;|­/gi, '');
+const comEsLlig = (text) => text.replace(/* ALLOW_RAW_COLOR */ /&nbsp;|&#160;|&#xa0;/gi, ' ').replace(/* ALLOW_RAW_COLOR */ /&shy;|&#173;|&#xad;|­/gi, '');
 
 /* Les dos lectures d'un HTML (vegeu la capçalera) i els seus trossos de text:
    on són a l'HTML (des, fins) i on comencen a cada lectura. Les etiquetes es

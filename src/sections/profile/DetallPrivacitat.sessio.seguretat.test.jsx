@@ -54,7 +54,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, children }) => <main><h1>{title}</h1>{children}</main>,
+  UniversalPage: ({ title, children }) => <main><header className="page-title"><h1>{title}</h1></header>{children}</main>,
 }));
 import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
 import { DetallPrivacitat } from './DetallPrivacitat.jsx';

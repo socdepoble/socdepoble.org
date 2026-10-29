@@ -59,3 +59,6 @@ decisions_clau:
 requereix_auditoria: false
 ```
 
+## Vincles
+
+- [[00_index]]

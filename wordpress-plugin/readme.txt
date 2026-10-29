@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.9
+Stable tag: 1.1.10
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -130,6 +130,14 @@ Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enx
 
 == Changelog ==
 
+= 1.1.10 =
+* Plugins list: View details opens the description, installation steps, FAQ and changelog from the plugin's own readme, with Tested up to aligned to the running WordPress version; the Plugin URI points to https://socdepoble.org.
+* Settings → Sóc de Poble: a three-step guide (name and village, shortcode or block, full-screen template and home page); the welcome names no active village until one is saved.
+* Application language: the socdepoble_enxufe_idioma filter sets the starting language to ca, es, en, eu or gl; a visitor's own choice still wins.
+* WordPress 5.8–6.4: the block renders through a render callback and the Valencian translation loads without WP_Translation_Controller.
+* Slug and text domain are socdepoble. The directory variant ships no languages/ folder: its translations come from translate.wordpress.org; the package distributed by Sóc de Poble keeps them.
+* Application: social preview images at 1200×630 for every seed page, seed PNG assets re-encoded as real PNG, native icons on the AAA green.
+
 = 1.1.9 =
 * Full-screen template: unused font preloads from fonts.gstatic.com are removed through wp_preload_resources, also with block themes.
 * WordPress.org review: prefixed template variable, documented direct database queries, complete external services list, no remote image in the readme.
@@ -178,6 +186,9 @@ Packages are written under wordpress-plugin/builds/ as AAMMDD_HHMM_wordpress_enx
 * Shortcode and full-screen template.
 
 == Upgrade Notice ==
+
+= 1.1.10 =
+View details from the plugin's own readme, a three-step setup guide, WordPress 5.8–6.4 support, the socdepoble slug and text domain, and 1200×630 social preview images.
 
 = 1.1.9 =
 Cleaner browser console on full-screen pages and WordPress.org review fixes.

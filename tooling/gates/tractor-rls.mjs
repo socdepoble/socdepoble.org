@@ -44,6 +44,7 @@ function sentencies(sql) {
     if (c === '"') {                              // identificador entre cometes
       buf += c; i++;
       while (i < n) {
+        if (sql[i] === '"' && sql[i + 1] === '"') { buf += '""'; i += 2; continue; }
         buf += sql[i];
         if (sql[i] === '"') { i++; break; }
         i++;
@@ -72,6 +73,40 @@ function sentencies(sql) {
   }
   if (buf.trim()) fora.push(buf);
   return fora;
+}
+
+const SQL_IDENTIFIER = String.raw`(?:"(?:[^"]|"")+"|[a-zA-Z_][a-zA-Z0-9_$]*)`;
+const RE_SQL_RELATION = new RegExp(`^\\s*(${SQL_IDENTIFIER})(?:\\s*\\.\\s*(${SQL_IDENTIFIER}))?(?=\\s|\\(|$)`);
+const sqlIdentifier = (raw) => raw.startsWith('"')
+  ? raw.slice(1, -1).replace(/""/g, '"')
+  : raw.toLowerCase();
+
+/** CREATE i ALTER compartixen la caixa i els escapaments dels identificadors. */
+function sqlRelation(text) {
+  const match = RE_SQL_RELATION.exec(text);
+  if (!match) return null;
+  return {
+    schema: match[2] ? sqlIdentifier(match[1]) : 'public',
+    table: sqlIdentifier(match[2] ?? match[1]),
+    rest: text.slice(match[0].length),
+  };
+}
+
+/* R2: només DDL de nivell superior acredita ENABLE. Comentaris, literals i
+ * cossos dollar-quoted no són evidència. L'últim ENABLE/DISABLE del fitxer
+ * per a la mateixa relació governa el control estàtic; no s'executa SQL.
+ */
+function rlsActivat(statements,schema,table) {
+  let enabled=false;
+  for(const statement of statements) {
+    const prefix=/^\s*alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?/i.exec(statement);
+    if(!prefix)continue;
+    const relation=sqlRelation(statement.slice(prefix[0].length));
+    if(!relation)continue;
+    const action=/^\s+(enable|disable)\s+row\s+level\s+security\s*$/i.exec(relation.rest);
+    if(action&&relation.schema===schema&&relation.table===table)enabled=action[1].toLowerCase()==='enable';
+  }
+  return enabled;
 }
 
 /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
@@ -155,15 +190,15 @@ for (const file of files) {
   }
 
   // R2: RLS-ABSENT
-  const createTableLines = sentencies(content).filter(s => s.toLowerCase().includes('create table '));
+  const statements=sentencies(content);
+  const createTableLines = statements.filter(s => /^\s*create\s+table\b/i.test(s));
   for (const block of createTableLines) {
-    const tableMatch = /create table (?:if not exists )?(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/i.exec(block);
-    if (tableMatch) {
-      const schema = tableMatch[1] || 'public';
-      const table = tableMatch[2];
+    const prefix = /^\s*create\s+table\s+(?:if\s+not\s+exists\s+)?/i.exec(block);
+    const relation = prefix && sqlRelation(block.slice(prefix[0].length));
+    if (relation) {
+      const { schema, table } = relation;
       if (schema === 'private' || schema === 'storage') continue;
-      const hasRLS = content.toLowerCase().includes(`alter table ${schema}.${table} enable row level security`) || 
-                     content.toLowerCase().includes(`alter table ${table} enable row level security`);
+      const hasRLS = rlsActivat(statements,schema,table);
       if (!hasRLS) {
         falla('R2', file, `La taula ${schema}.${table} no té RLS activat.`);
       }

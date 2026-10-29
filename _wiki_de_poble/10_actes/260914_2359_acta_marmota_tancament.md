@@ -25,3 +25,7 @@ tags:
 ## Properes passes (Per al pròxim torn)
 1. Pujar un `commit` complet al repositori, el `Reflex` el validarà com a íntegre amb les noves baselines establertes hui.
 2. Centrar-se en avançar en qualsevol altra feature estipulada del full de ruta o refactoritzar codi de vistes.
+
+## Vincles
+
+- [[00_index]]

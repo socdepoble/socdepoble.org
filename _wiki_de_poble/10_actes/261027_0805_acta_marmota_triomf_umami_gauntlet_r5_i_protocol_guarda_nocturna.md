@@ -1,7 +1,7 @@
 ---
 type: acta
 status: canonic
-description: Acta Marmota de tancament de la sessió històrica de la Ronda 5 del Gauntlet, activació de la telemetria ètica d'Umami (Tauler Públic), incorporació del Carnet d'Helicòpters (P1-62) i consens del Protocol de Guarda Nocturna per a la neteja de la Consola Termodinàmica.
+description: Acta Marmota de tancament de la sessió històrica de la Ronda 5 del Gauntlet, activació de la telemetria ètica d'Umami (Tauler Públic), incorporació del Carnet d'Helicòpters (P1-62) i consens del Pr...
 tags:
   - acta
   - marmota
@@ -67,3 +67,7 @@ reflex: sdp:torn_261027_0805:marmota_tancament_ronda5_i_guarda_nocturna
 - **Lliurables de Guarda Nocturna a l'Escriptori:**
 - **Mandat del Mestre (Deute Tècnic Primer):** Tota la feina tècnica (P1-54 desempapussar botons, P1-55 pàgina viva de comunitat, Consola i Maquinària pública) té prioritat absoluta sobre el banc d'idees.
 - **Portes i Repositori:** `porta-olivera.mjs` i `verificador-scc.mjs` a 0 absolut; commit i push completats a `fork/backup-notes-publish`. L'eixam entra en mode Guarda Nocturna per treballar de forma 100% autònoma i millorar el seu bucle de comunicació.
+
+## Vincles
+
+- [[00_index]]

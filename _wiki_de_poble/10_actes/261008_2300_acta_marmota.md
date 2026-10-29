@@ -29,3 +29,7 @@ Quan inicies el xat, recorda la teua directiva principal: l'Escriptori no està 
 El Mestre et donarà les seues últimes instruccions o correccions sobre Claude, o possiblement voldrà que faces l'auditoria i reempaquetes. Mantín la puresa arquitectònica i el "trellat" en valencià, no esborres l'historial del repositori, i assegurat que qualsevol prompt destinat a Claude va exclusivament a `_wiki_de_poble/04_escriptori/`.
 
 *(L'Escriptori físic actual de treball té els plans vigents per a l'auditoria i no s'ha d'arxivar res fins que s'use)*.
+
+## Vincles
+
+- [[00_index]]

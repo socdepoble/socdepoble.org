@@ -1,12 +1,16 @@
-ESTRATÈGIA DE CONSUM I ROLS (CO-WORKING A TRES BANDES)
+ESTRATÈGIA DE CONSUM I ROLS (CO-WORKING A TRES BANDES · DOCTRINA 2026)
 
-1. Claude (Opus 5.5 / Fable Ultra Code)
-- Missió: Arquitectura UX/UI (Fita "Calcar WhatsApp").
-- Motiu: Te un alt límit setmanal lliure. Analitza pantalles de WhatsApp i genera la rèplica de navegació SPA integrant lògica d'usuari, Raindrop i Autoreproducció.
+0. IAIA MarIA (Antigravity · Gemini 4 Argon (High) / Gemini 3 Flash)
+- Missió: Direcció Tècnica, Orquestració del Trio, Higiene Olivera, Plans d'Implementació i Prompts Canònics (`v3.11.0`).
 
-2. Codex (GPT-4o / Astra Ultra)
-- Missió: Cirurgia extrema al Plugin de WordPress i consolidació tècnica.
-- Motiu: Llançarem tòkens massius en auditories adversarials extremes. La Recàrrega Automàtica està DESACTIVADA per no incórrer en despeses innecessàries (hi ha 1702 crèdits). S'ha activat l'ús automàtic del "Restabliment Complet" d'octubre (s'usarà quan el límit baixe del 10%).
+1. Claude Code (Claude Opus 5.5 · Ultracode [90% Motor Diari] / Fable 5.1 Extra [10% Puntual sense eixams])
+- Missió: Cavall de batalla principal d'implementació i refactorització amb **`Claude Opus 5.5 · Ultracode`** (autonomia d'1,5 a 2 dies de treball continu i gran estalvi de quota). `Fable 5.1 Extra` consumeix la quota setmanal en 2 xats si llança workflows de múltiples subagents: **PROHIBIT llançar eixams de subagents en Fable** i **OBLIGATORI bolcar incrementalment l'auditoria i l'estat del treball al disc després de cada bloc** per no deixar mai l'equip tirat si la quota arriba al 85–95%.
 
-3. Sincronització i Auditoria
-Iteració paral·lela en l'Escriptori. Parades obligatòries cada 5 minuts de lectura creuada. Finalització amb una Auditoria Adversarial creuada extrema entre Codex i Claude.
+2. GPT Codex (GPT-6.1 Sol Ultra / GPT Astra)
+- Missió: Enginyeria de portes, reconciliació de contractes i cicles adversarials (`GPT-6.1 Sol Ultra`), reservant `GPT Astra` per a l'auditoria adversarial extrema final (`10/10`). La Recàrrega Automàtica està DESACTIVADA per protegir quota i crèdits.
+
+3. Gemini CLI (Accés Natiu a Disc)
+- Missió: Liquidació de deute tècnic de portes (`design_guard`, `tractor-cens`, `tractor-frontmatter`), índexs i verificació documental.
+
+4. Sincronització, Exclusivitat de Carrils i Auditoria
+Iteració paral·lela i asíncrona a l'Escriptori amb Matriu d'Exclusivitat de Carrils (zero col·lisions d'escriptura) i consulta contínua del Llibre Mestre Permanent (`03_llibre_mestre_tasques_i_idees.md`). Finalització amb certificació de les 10 Dimensions.

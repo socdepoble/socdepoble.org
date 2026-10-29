@@ -2,7 +2,9 @@
 type: document
 status: canonic
 description: "Acta Marmota de tancament nocturn: triomf de l'Escàner Local i Cofre Xifrat de la Gestoria, 300 canvis a git i pla per a Claude Code"
-tags: [acta, marmota, gestoria, escaner, finestreta, cofre, git]
+tags:
+  - acta
+  - marmota
 visibility: private
 ---
 
@@ -62,3 +64,7 @@ Els 6 fronts d'obra definits:
 1. El Mestre pot reiniciar l'ordinador amb total tranquil·litat: el Git està net i la Fitxa està xifrada al seu disc dur.
 2. En arrencar el nou xat, l'orquestradora entrant ha de llegir esta acta i el pla `261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat.md`.
 3. Claude Code podrà començar directament l'execució autònoma dels 6 fronts encomanats.
+
+## Vincles
+
+- [[00_index]]

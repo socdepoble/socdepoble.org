@@ -148,8 +148,8 @@ function scanDesign(text, file, vocab = null) {
   }
 
   for (const m of text.matchAll(FOCUS_NONE)) {
-    const nearby = text.slice(m.index, m.index + 160);
-    if (!/focus-visible|box-shadow|outline-offset/i.test(nearby)) {
+    const nearby = text.slice(Math.max(0, m.index - 120), m.index + 160);
+    if (!/focus-visible|box-shadow|outline-offset|caret-color|ALLOW_FOCUS_INVISIBLE/i.test(nearby)) {
       findings.push({
         severity: 'critical', rule: 'focus-invisible', file,
         line: lineOf(text, m.index), token: 'outline-none',

@@ -45,3 +45,7 @@ En obrir el nou Xat, has de proporcionar aquesta acta al nou agent MarIA perquè
 **ATENCIÓ NOU AGENT:** 
 No dissenyes res nou fins que la purga del sistema estiga confirmada i l'enrutament funcioni.
 ---
+
+## Vincles
+
+- [[00_index]]

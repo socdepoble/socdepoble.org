@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-10-29T08:29:11.741Z",
-  "hash": "460e83cbbe70abf3fccd88984712c768a765ca37d0382f84b2dc97738dc6fe61",
+  "timestamp": "2026-10-29T14:05:22.914Z",
+  "hash": "c9fad3f4f690de95be0997d5cf36c6a17ba33bdd36e0dfe00449eb44929fc0d4",
   "filesCount": 43,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "2140617d1662e1fd31bc696bf5c491a018d3de3015140c84b4b79cc24b6a8dcf",
     ".agents/skills/core-automillora/SKILL.md": "b599880ad7343c5a87a7004ea570fb5690fe1cec3b7fac6231091b392779b74f",
     ".agents/skills/core-calibratge-visual-nano/SKILL.md": "c7ab935ab8d35e7dc1892783c340bd43a70c2e552adf1298b9935be759a90d6f",
     ".agents/skills/core-comprensio-reflexiva/SKILL.md": "b63f6c9ee9cfa09d08afcdba1416c1b59e61651452ab2474c0db8860358f09db",
-    ".agents/skills/core-consell-i-colmena/SKILL.md": "583b7f01996e8fd9bdae501c5ba5c02ba11d4b58997ccebb6f1d2a26dd60413b",
+    ".agents/skills/core-consell-i-colmena/SKILL.md": "810676cb8f206f4c668f4b3050c67b1a227d304a59799e0ffb0b2027f49eacd8",
     ".agents/skills/core-context-panic/SKILL.md": "19983a978d033469228fb7d426ae66fa60496d058ae557833d861c4836104262",
     ".agents/skills/core-direccio-autonoma/SKILL.md": "14a9dd5217e9430d7a55246baccf38154142fa1889e66290cc6c2d02f1742225",
     ".agents/skills/core-edicio-segura/SKILL.md": "11861790753a4994f570a688476fddbd4a2c8f250c47c1412e0e11bea314ed36",
@@ -23,7 +23,7 @@
     ".agents/skills/core-memoria-historica/SKILL.md": "dbeb94176beb026573455fed5f411e5d83f11d8ad04fe8d16b3a31ecf06ee4e5",
     ".agents/skills/core-neteja-brossa/SKILL.md": "8d7f53e9ed19ab43e0e50ea758765e9e32164acf22f7fe40f432b4b7149de935",
     ".agents/skills/core-portaveu-institucional/SKILL.md": "21faf6171d0782328a55b1ae2dcd0d1178ff68e81e196c677d96a8e1638bcfb8",
-    ".agents/skills/core-restauracio-segellada/SKILL.md": "6986ee269036c83387c7c121f758456a89f681b44fef963f124a69a55065bad0",
+    ".agents/skills/core-restauracio-segellada/SKILL.md": "f5af04efce51f732ea5c0af39248b395857c5e4fb3a36df2225addcc0165fc16",
     ".agents/skills/core-salfumant-radical/SKILL.md": "695a4ac99cacbfe2b33396584f88e62a83493a4f6dbbf31973f9bbe1f6966d40",
     ".agents/skills/core-secretaria-auditoria/SKILL.md": "2a72a496da833b5a3da23530acbeec6d827d7317e6609819094e3fce7fa9a08a",
     ".agents/skills/core-seguretat-audit/SKILL.md": "1ce54435941edd04364e60f38bef87d45b50c71ca2224f00adb45618ee89a22b",
@@ -47,5 +47,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d80d8f8eb3b3acde3ff98a1f9bc7e4c6cc10a3a28b7244fec8bfa052e5b2cc1b",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "8092c14a4d4496156fee8dd4f37067a455dc0a1fc50876241942c4dc5276017b"
   },
-  "transaction": "2969392e-56d7-4d51-9165-4cc9955dc97a"
+  "transaction": "4546539a-7fa7-4f6a-b0e9-c4e3f285ac11"
 }

@@ -53,3 +53,7 @@ Durant l'última part de la sessió, el Mestre ha investigat el mercat (GPT-6 As
 *   **Sirena de Models (Arquitecte vs Executor):** Validació de la nostra estratègia multi-IA. Codex/Claude (via Xat) s'ha de reservar per a disseny conceptual i auditories d'alt nivell. Jo (Antigravity/Gemini) he d'assumir l'execució pesada de codi en el repositori local llegint els `handoff.md` (Petorretes) generats pels altres, per a un consum de tokens intel·ligent i asíncron.
 
 *Apaguem la llum per hui. A fer la petorreta demà. Sóc de Poble! 🏡*
+
+## Vincles
+
+- [[00_index]]

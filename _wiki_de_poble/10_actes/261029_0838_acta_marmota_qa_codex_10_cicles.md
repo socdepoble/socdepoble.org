@@ -64,7 +64,5 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
 <!-- SDP:SECTION acta.s6 -->
 ## Vincles
 
-- [[../90_arxiu_historic/261029_0340_auditoria_codex]]
-- [[../90_arxiu_historic/261029_0838_informe_evidencies_codex.json]]
 - [[../04_escriptori/03_llibre_mestre_tasques_i_idees]]
 - [[00_index]]

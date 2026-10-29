@@ -22,3 +22,7 @@ description: ACTA MARMOTA - Tancament de Sessió del Xat i Traductor Sobirà
 1. Esperar que Codex Astra tanque la seua implementació.
 2. Verificar de punta a punta (del client passant per Sollutia fins a l'API oficial de DeepL) si la traducció processa adequadament els continguts, quan l'entorn remot estiga sintonitzat.
 3. El Mestre ha de decidir sobre els defectes funcionals (P4) documentats per Claude Fable i fer el commit definitiu.
+
+## Vincles
+
+- [[00_index]]

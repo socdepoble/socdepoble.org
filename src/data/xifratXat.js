@@ -42,6 +42,8 @@
 
 import { E2EE_ACTIU_PER_DEFECTE, esOrigenDeConfianca } from '../config/xifratXat.js';
 import { ambitDelFil, teMarcaApegalosa } from './xifratXatAbast.js';
+import { creaMagatzemXat } from './xifratXatMagatzem.js';
+import { ESTAT_OBLIT, creaMotorXifrat } from './xifratXatPipeline.js';
 
 import { serveiXifratXatDe, registraServeiXifratXat } from './xifratXatServei.js';
 
@@ -107,7 +109,7 @@ function normalitzaEntradaAmbit(entrada, segonaClau) {
  * Crea el gestor de les 4 claus (`clauIdentitat`, `ambitEstable`, `genAmbit`,
  * `genIdentitat`) i de les memòries en RAM de l'àmbit (§8.6 i §21.1).
  */
-export function creaServeiAmbitXat({ revocaUrl = () => {} } = {}) {
+export function creaServeiAmbitXat({ revocaUrl = () => {}, motorRef = {} } = {}) {
   let ambitEstable = null;
   let clauIdentitat = null;
   let genAmbit = 0;
@@ -120,6 +122,11 @@ export function creaServeiAmbitXat({ revocaUrl = () => {} } = {}) {
   const registreFils = new Map();
   const marquesApegaloses = new Set();
   const blobsActius = new Set();
+  /* Fase 4 (E1) · RAM de l'àmbit del motor: índex d'adjunts rebuts, URL blob: per
+     clau (adjunt, SHA-256(FK)) i l'últim estat de l'oblit (D-09, sobreviu a l'àmbit). */
+  const adjuntsRebuts = new Map();
+  const urlsAdjunts = new Map();
+  let estatOblit = null;
 
   const revocaTotsElsBlobs = () => {
     for (const url of blobsActius) {
@@ -134,6 +141,8 @@ export function creaServeiAmbitXat({ revocaUrl = () => {} } = {}) {
     resumUltimXifrat.clear();
     textosDesxifrats.clear();
     registreFils.clear();
+    adjuntsRebuts.clear();
+    urlsAdjunts.clear();
     revocaTotsElsBlobs();
   };
 
@@ -288,7 +297,29 @@ export function creaServeiAmbitXat({ revocaUrl = () => {} } = {}) {
     desaResumUltimXifrat: (filId, ultimId, textClar) => {
       resumUltimXifrat.set(`${filId}::${ultimId}`, textClar);
     },
-    llegixResumUltimXifrat: (filId, ultimId) => resumUltimXifrat.get(`${filId}::${ultimId}`) ?? null
+    llegixResumUltimXifrat: (filId, ultimId) => resumUltimXifrat.get(`${filId}::${ultimId}`) ?? null,
+    /* Fase 4 (E1) · El motor guarda ací, sota l'àmbit, l'estat del protocol de cada fil
+       (clausEpocaRam), els textos desxifrats per (fil, id), els adjunts rebuts i les URL. */
+    estatFilDesat: (filId) => clausEpocaRam.get(filId) ?? null,
+    desaEstatFil: (filId, context) => { if (context) clausEpocaRam.set(filId, context); else clausEpocaRam.delete(filId); },
+    textDesxifrat: (filId, id) => textosDesxifrats.get(`${filId}::${id}`) ?? null,
+    desaTextDesxifrat: (filId, id, valor) => { textosDesxifrats.set(`${filId}::${id}`, valor); },
+    adjuntDesat: (id) => adjuntsRebuts.get(id) ?? null,
+    desaAdjunt: (id, info) => { adjuntsRebuts.set(id, info); },
+    urlAdjuntDesada: (clau) => urlsAdjunts.get(clau) ?? null,
+    desaUrlAdjunt: (clau, url) => { urlsAdjunts.set(clau, url); blobsActius.add(url); },
+    /* La cua F7 i l'oblit (D-09) passen pel motor quan n'hi ha; sense motor, l'oblit és només RAM i ho diu. */
+    drenaSafata: (config = {}) => (typeof motorRef.drena === 'function'
+      ? motorRef.drena(config)
+      : Promise.resolve(Object.freeze({ enviats: [], pendents: [], error: errorXifrat('sense-motor-xifrat', 'Este entorn no té el motor del pipeline xifrat.') }))),
+    oblidaTotXat: (opcions = {}) => {
+      if (typeof motorRef.oblidaTot === 'function') return motorRef.oblidaTot(opcions);
+      oblidaClausXat();
+      estatOblit = Object.freeze({ estat: ESTAT_OBLIT.oblidat, pendents: Object.freeze([]), causes: Object.freeze([]), nomesRam: true });
+      return Promise.resolve(estatOblit);
+    },
+    estatOblit: () => estatOblit,
+    desaEstatOblit: (estat) => { estatOblit = estat; }
   });
 }
 
@@ -319,7 +350,21 @@ export function ambXifratXat(impl, entorn = {}) {
   const actiu = entorn?.actiu ?? E2EE_ACTIU_PER_DEFECTE;
   const modeDades = entorn?.modeDades ?? 'remote';
   if (actiu !== true || modeDades !== 'remote') return impl;
-  const servei = creaServeiAmbitXat({ revocaUrl: entorn?.revocaUrl });
+  const motorRef = {};
+  const servei = creaServeiAmbitXat({ revocaUrl: entorn?.revocaUrl, motorRef });
+  /* Fase 4 (pla 261029_1305, E1) · El motor del pipeline només quan l'entorn porta
+     WebCrypto i un magatzem de claus (o IndexedDB amb IDBKeyRange i CryptoKey
+     injectats); si no, el decorador es comporta com a la Fase 3 (fallar tancat). */
+  const potTindreMotor = Boolean(entorn?.cripto?.subtle)
+    && (Boolean(entorn?.magatzem) || (Boolean(entorn?.indexedDB) && Boolean(entorn?.IDBKeyRange) && typeof entorn?.ClasseClau === 'function'));
+  let motor = null;
+  if (potTindreMotor) {
+    const magatzem = entorn.magatzem ?? creaMagatzemXat({
+      idb: entorn.indexedDB, rangs: entorn.IDBKeyRange, cripto: entorn.cripto, ClasseClau: entorn.ClasseClau, ...(entorn.ara ? { ara: entorn.ara } : {})
+    });
+    motor = creaMotorXifrat({ cripto: entorn.cripto, impl, servei, magatzem, ...(entorn.ara ? { ara: entorn.ara } : {}), creaBlob: entorn.creaBlob ?? null, creaUrl: entorn.creaUrl ?? null });
+    motorRef.oblidaTot = (opcions = {}) => motor.oblidaTot({ sessio: entorn.sessio ?? null, preferencies: entorn.preferencies ?? null, ...opcions });
+  }
 
   const delega = (nom) => {
     const fn = impl[nom];
@@ -365,28 +410,50 @@ export function ambXifratXat(impl, entorn = {}) {
       return fil;
     };
 
+    const classificaFil = (fil) => ambitDelFil(fil, { modeDades, marcatApegalos: servei.esFilApegalos(fil?.id ?? '') });
+    if (motor) {
+      motorRef.drena = (config = {}) => servei.guardaAmbit(async (exigix) => motor.drena({
+        config, exigix, classifica: classificaFil,
+        carregaFil: (filId) => carregaFilAlRegistre(filId, config, exigix),
+        envia: (filId, paquet) => Reflect.apply(impl.enviaXifratXat, impl, [filId, paquet, config])
+      }));
+    }
+
     if (typeof impl.loadFils === 'function') {
       decorat.loadFils = async function loadFilsDecorat(config = {}) {
         return servei.guardaAmbit(async (exigix) => {
           const fils = await Reflect.apply(impl.loadFils, impl, [config]);
           exigix();
           if (!Array.isArray(fils)) return fils;
-          return fils.map((fil) => {
+          const resultat = [];
+          for (const fil of fils) {
             const registrat = servei.anotaFilAlRegistre(fil);
             const ultimId = registrat?.ultimXifrat?.id ?? registrat?.ultim_id ?? null;
             if (ultimId && registrat?.id) {
               const enCau = servei.llegixResumUltimXifrat(registrat.id, ultimId);
               if (enCau !== null) {
-                return { ...registrat, ultimTextDesxifrat: enCau };
+                resultat.push({ ...registrat, ultimTextDesxifrat: enCau });
+                continue;
               }
               if (typeof entorn.desxifraResum === 'function' && registrat.ultimXifrat) {
                 const textClar = entorn.desxifraResum(registrat);
                 servei.desaResumUltimXifrat(registrat.id, ultimId, textClar);
-                return { ...registrat, ultimTextDesxifrat: textClar };
+                resultat.push({ ...registrat, ultimTextDesxifrat: textClar });
+                continue;
+              }
+              /* Fase 4 · El resum el desxifra el motor (memòria cau per (fil, últim id) sota l'àmbit). */
+              if (motor && registrat.ultimXifrat?.xifrat) {
+                const textClar = await motor.resumDelFil({ fil: registrat, tipusFil: classificaFil(registrat).tipusFil, config, exigix });
+                if (textClar !== null) {
+                  servei.desaResumUltimXifrat(registrat.id, ultimId, textClar);
+                  resultat.push({ ...registrat, ultimTextDesxifrat: textClar });
+                  continue;
+                }
               }
             }
-            return registrat;
-          });
+            resultat.push(registrat);
+          }
+          return resultat;
         });
       };
     }
@@ -396,6 +463,13 @@ export function ambXifratXat(impl, entorn = {}) {
         return servei.guardaAmbit(async (exigix) => {
           const files = await Reflect.apply(impl.loadMissatges, impl, [filId, config]);
           exigix();
+          /* Fase 4 · Recepció i historial: cada fila amb sobre es desxifra (o queda amb l'estat explícit). */
+          if (motor && Array.isArray(files) && files.some((f) => f && typeof f === 'object' && f.xifrat)) {
+            const idDelFil = typeof filId === 'string' ? filId.trim() : '';
+            const fil = await carregaFilAlRegistre(idDelFil, config, exigix);
+            exigix();
+            if (fil) return motor.obri({ fil, tipusFil: classificaFil(fil).tipusFil, files, config, exigix });
+          }
           return files;
         });
       };
@@ -451,6 +525,26 @@ export function ambXifratXat(impl, entorn = {}) {
           }
 
           exigix();
+          /* Fase 4 · El motor prepara el sobre (gènesi dins de l'enviament si cal); amb les claus
+             bloquejades el missatge s'encua a la safata (F7) amb el mateix id i la interfície ho sap. */
+          if (motor && !(cos && typeof cos === 'object' && cos.xifrat)) {
+            let paquet;
+            try {
+              paquet = await motor.prepara({ fil, tipusFil: classificacio.tipusFil, cos, config, exigix });
+            } catch (error) {
+              if (error?.encuable === true) return motor.encua({ fil, cos, exigix });
+              throw error;
+            }
+            let resultat;
+            try {
+              resultat = await Reflect.apply(impl.enviaXifratXat, impl, [fil.id, paquet, config]);
+            } catch (error) {
+              if (paquet.epocaNova) motor.descarta(fil.id);
+              throw error;
+            }
+            exigix();
+            return motor.eco(resultat, paquet, cos, fil.id);
+          }
           if (!cos || typeof cos !== 'object' || !cos.xifrat || cos.text !== null) {
             throw errorXifrat(
               'clar-rebutjat',
@@ -478,12 +572,25 @@ export function ambXifratXat(impl, entorn = {}) {
               { id: entrada?.id ?? null, reintentable: false });
           }
           if (classificacio.xifrat) {
-            throw errorXifrat('adjunt-xifrat-pendent', 'Encara no es poden publicar adjunts xifrats en este fil.',
-              { id: entrada?.id ?? null, reintentable: false });
+            /* Fase 4 · Amb motor: xifrar abans de pujar (xatMultimediaXifrat.js); sense motor, fallar tancat com a la Fase 3. */
+            if (!motor) {
+              throw errorXifrat('adjunt-xifrat-pendent', 'Encara no es poden publicar adjunts xifrats en este fil.',
+                { id: entrada?.id ?? null, reintentable: false });
+            }
+            return motor.publicaAdjunt({ fil, tipusFil: classificacio.tipusFil, entrada, config, exigix });
           }
           exigix();
           return Reflect.apply(impl.publicaAdjuntXat, impl, [filId, entrada, config]);
         });
+      };
+    }
+
+    /* Fase 4 · Un adjunt rebut xifrat es servix com a blob: desxifrat (hash abans de desxifrar);
+       la resta d'ids van pel camí de sempre (URL signada). */
+    if (motor && claus.has('urlAdjuntXat') && typeof impl.urlAdjuntXat === 'function') {
+      decorat.urlAdjuntXat = async function urlAdjuntXatDecorat(id, config = {}, opcions = {}) {
+        if (!servei.adjuntDesat(typeof id === 'string' ? id : '')) return Reflect.apply(impl.urlAdjuntXat, impl, [id, config, opcions]);
+        return servei.guardaAmbit(async (exigix, anotaBlob) => anotaBlob(await motor.urlAdjunt({ id, config, exigix, renova: opcions?.renova === true })));
       };
     }
 

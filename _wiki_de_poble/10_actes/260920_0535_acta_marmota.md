@@ -47,3 +47,7 @@ S'ha aplicat un patró d'alta eficiència energètica:
 5. NO HAS DE CREAR CAP PROMPT ni document sense llegir prèviament les plantilles o invocar la skill de documentació. 
 
 Endavant. El sistema t'espera preparat per a mutar.
+
+## Vincles
+
+- [[00_index]]

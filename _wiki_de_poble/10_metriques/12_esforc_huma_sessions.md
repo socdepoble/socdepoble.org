@@ -19,3 +19,7 @@ Aquesta fulla de càlcul serveix per a traçar el temps real que el Mestre inver
 - **Ràtio de Peticions per Hora**: ~278 peticions/hora en la jornada de 16,5h.
 - **Rendiment del Context**: El consum de 8.3M de tokens en lectura de caché (Frontal) indica que el context s'arrastra pesadament de sessió en sessió. 
 - **Algorisme proposat d'Optimització**: *Tallafocs Termodinàmic*. Si una sessió supera les 4 hores ininterrompudes i/o els 2M de tokens processats de rebot, s'ha de forçar una *Acta Marmota* de condensació i netejar el context abans d'obrir el següent nanochat, estalviant així arrossegar la memòria a curt termini innecessària.
+
+## Vincles
+
+- [[00_index]]

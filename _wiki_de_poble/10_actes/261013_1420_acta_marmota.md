@@ -1,8 +1,10 @@
 ---
 type: document
 status: canonic
-description: "Acta Marmota de tancament matinal i preparació de la fase Gestoria JARVIS, Cabina d'Avió i Arquitectura Atòmica"
-tags: [acta, marmota, gestoria, jarvis, cabina_avio, codex, claude]
+description: Acta Marmota de tancament matinal i preparació de la fase Gestoria JARVIS, Cabina d'Avió i Arquitectura Atòmica
+tags:
+  - acta
+  - marmota
 visibility: private
 ---
 
@@ -62,3 +64,7 @@ Durant el torn s'han fixat les directrius fonamentals de la Gestoria i l'arquite
 2. **Entrada al Nou Xat:**
    - Iniciar amb la contrasenya sanejada (`socdepoble2026`) i l'usuari `socdepoblecom@gmail.com`.
    - L'orquestradora entrant ha de llegir aquesta Acta Marmota i contrastar-la amb `ESTAT.md`.
+
+## Vincles
+
+- [[00_index]]

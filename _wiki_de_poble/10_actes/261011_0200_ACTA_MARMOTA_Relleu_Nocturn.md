@@ -22,3 +22,7 @@ Hem donat a Fable 5 grans encàrrecs per a una sessió nit de caça lliure i con
 - S'ha escombrat tot el sediment de l'Onada 11 i s'ha guardat a l'Històric amb la `porta-olivera`.
 - A la taula només queden les directives vitals que Claude llegirà demà quan l'usuari invoqui la Terminal.
 - El servidor es reiniciarà i jo tancaré els meus cicles ara mateix.
+
+## Vincles
+
+- [[00_index]]

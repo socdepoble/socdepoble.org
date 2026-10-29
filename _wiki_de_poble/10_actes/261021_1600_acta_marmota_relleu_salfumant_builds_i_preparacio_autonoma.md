@@ -3,11 +3,8 @@ type: document
 status: canonic
 description: ACTA MARMOTA — Relleu Salfumant Radical, Purga de 763 MB a WordPress, Extracció a _builds_de_poble i Preparació del Torn Autònom de Vesprada
 tags:
+  - acta
   - marmota
-  - relleu
-  - govern
-  - arquitectura
-  - salfumant
 ---
 
 # 📜 ACTA MARMOTA — Relleu Salfumant Radical, Purga de Builds i Preparació del Torn Autònom
@@ -89,3 +86,7 @@ Quan el Mestre torne i òbriga una nova sessió amb la frase canònica **«Sóc 
 3. Es podran llançar les IAs locals en solitari per a continuar l'auditoria radical sense cap pèrdua de context.
 
 **Bon profit, Mestre Javi! El Mas queda net, segellat i guardat.** 🌿✨
+
+## Vincles
+
+- [[00_index]]

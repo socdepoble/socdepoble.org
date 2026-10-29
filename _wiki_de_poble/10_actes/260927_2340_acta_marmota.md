@@ -29,3 +29,7 @@ El Mestre pot ara obrir una nova finestra del navegador (`localhost:3340`) per a
 3. Les decisions D1-D9 plantejades per Claude que estaran a la safata d'auditories pendents.
 
 **Salut i Trellat.**
+
+## Vincles
+
+- [[00_index]]

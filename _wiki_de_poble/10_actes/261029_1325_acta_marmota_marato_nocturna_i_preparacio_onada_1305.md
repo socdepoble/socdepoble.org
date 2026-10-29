@@ -26,7 +26,7 @@ reflex: sdp:torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1:f8dcf106-1d97-415a-8d70-e9
 | Propietari | IAIA MarIA |
 | Aprovació humana | aprovada |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/acta.md (v2.1.0) |
-| Model IA | Gemini 3.1 Pro (High) |
+| Model IA | Gemini 4 Argon (High) |
 | Tokens consumits | ~25.000 tokens |
 
 <!-- SDP:SECTION acta.s2 -->
@@ -80,6 +80,3 @@ En tornar a encendre el Mac Mini, el Mestre llançarà l'**Onada `261029_1305`**
 - [[../04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
 - [[../04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
 - [[261029_0838_acta_marmota_qa_codex_10_cicles]]
-- [[../90_arxiu_historic/261029_0350_auditoria_claude]]
-- [[../90_arxiu_historic/261029_0340_auditoria_codex]]
-- [[../90_arxiu_historic/261029_0336_auditoria_gemini]]

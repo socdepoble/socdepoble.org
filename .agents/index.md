@@ -38,3 +38,7 @@ Aquest directori conté els contractes d'operació i els arxius de governança p
 - [[PROTOCOL_PETORRETA.md]]
 - [[QUI_SOC.md]]
 - [[skills/00_INDEX_SKILLS.md]]
+
+## Vincles
+
+- [[00_index]]

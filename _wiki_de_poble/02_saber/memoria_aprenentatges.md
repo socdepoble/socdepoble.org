@@ -140,7 +140,5 @@ L'arxiu històric (`90_arxiu_historic/`) queda fora del graf operatiu i del RAG 
 ## Vincles
 - [[00_index_identitat]]
 - [[00_index]]
-- `261017_2133_auditoria_codex_final_gauntlet`
-- `261017_2133_acta_tancament_codex_gauntlet`
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]
 

@@ -1,7 +1,7 @@
 ---
 type: acta
 status: canonic
-description: Acta Marmota de cloenda de matinada. Gesta de Claude Opus 5.5 (6h 50m, 10M tokens), reconciliació de la porta frontmatter, i destil·lació de les Fites 20 a 25 del Mestre (Canonització, Doble Enquadrament A4, Anti-Efecte Facebook, vCard, Harmonització El Projecte i Open Graph per a WhatsApp).
+description: Acta Marmota de cloenda de matinada. Gesta de Claude Opus 5.5 (6h 50m, 10M tokens), reconciliació de la porta frontmatter, i destil·lació de les Fites 20 a 25 del Mestre (Canonització, Doble Enquad...
 tags:
   - acta
   - marmota
@@ -89,4 +89,3 @@ Aquesta acta marmota certifica la culminació d'aquesta sessió de nit. El Mestr
 
 ## Vincles
 - [[00_index]]
-- [core-secretaria-auditoria](../../.agents/skills/core-secretaria-auditoria/SKILL.md)

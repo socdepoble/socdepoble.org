@@ -1,11 +1,10 @@
 ---
 type: acta
-data: 2026-10-24
-hora: 03:45
-titol: "Acta Marmota · Coronació Històrica de Botigues: Apple TestFlight Completat i Google Play Registrat"
-autor: "IAIA MarIA (Directora Tècnica & Secretària) amb el Mestre Javi Llinares"
-estat: canonic
-tags: [acta_marmota, botigues, apple, testflight, google_play, wordpress, llibre_mestre, fita_historica]
+status: canonic
+description: "Acta Marmota · Coronació Històrica de Botigues: Apple TestFlight Completat i Google Play Registrat"
+tags:
+  - acta
+  - marmota
 ---
 
 # Acta Marmota · Coronació Històrica de Botigues: Apple TestFlight Completat i Google Play Registrat

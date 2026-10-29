@@ -33,3 +33,7 @@ Abans que cap IA toque una sola línia de codi, el Mestre ha de resoldre el **co
 3. **Producte:** Un colp l'arquitectura estiga arreglada, s'haurà de reprendre el deute de Sollutia (reintents de xarxa i validació del `tenant_id`).
 
 **Bona nit! La guàrdia queda coberta i el context segellat per a demà.**
+
+## Vincles
+
+- [[00_index]]

@@ -26,8 +26,9 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 Abans de generar l'arxiu per a la IA:
 - [ ] **Escriptori net i indexat**: `04_escriptori/` només ha de contindre els arxius de la sessió actual. Arxius anteriors han d'estar a `90_arxiu_historic/`. Tots els arxius actius estan a `00_index_escriptori.md`.
 - [ ] **Llibre Mestre consultat i referenciat**: `04_escriptori/03_llibre_mestre_tasques_i_idees.md` actiu com a dipòsit continu d'idees, deutes tècnics i memòria permanent de la sessió.
-- [ ] **Repartiment asíncron d'actors locals a disc**: El Registre i la Instrucció declaren quins models estan actius (dues o tres IAs), operant en paral·lel sense dependències d'espera mútua.
-- [ ] **Pla d'Implementació** generat si cal.
+- [ ] **Repartiment asíncron d'actors locals i Matriu d'Exclusivitat de Carrils**: El Registre i la Instrucció declaren els models i variants vigents (`Claude Fable 5.1 Extra · Ultracode` / `Opus · Ultracode`, `GPT-6.1 Sol Ultra` / `Astra`, i `Gemini CLI`) i assignen a cadascun un carril exclusiu de fitxers d'escriptura per operar en paral·lel sense col·lisions ni esperes mútues.
+- [ ] **Pla d'Implementació** generat i vinculat al torn (`document.mjs plan`).
+- [ ] **Circuit Canònic de Rebuts i Plantilla Viva (`porta-plantilla-viva.mjs`)**: Verificat que el prompt naix de `document.mjs context` + `create` i conserva íntegres els spans de codi (`` `ruta` ``) dels blocs normatius sense mutilacions.
 - [ ] **Sentinella de Seguretat (core-seguretat-audit)**: Verificat el Checklist §5 (zero spread JSONB sense coacció, zero regex amb backtracking O(n), RLS per columna, Storage privat i purga de claus d'autoritat).
 - [ ] **Enginyeria Inversa i Paritat amb REA**: Verificat l'ús de REA ('reverse-engineer-anything') per a disseccionar referències i estructures natives o de botigues sense reinventar la roda.
 - [ ] **Cron de vigilància**: L'orquestradora programarà un cron (p. ex. cada 10 minuts) per revisar els relleus a l'Escriptori si l'agent local treballarà de forma autònoma i llarga.
@@ -35,17 +36,17 @@ Abans de generar l'arxiu per a la IA:
 
 ## Registre
 
-> **Telemetria:** Opliu el camp "Model IA" i "Tokens consumits" obligatòriament a cada document d'eixida per a la Consola de Consums.
+> **Telemetria:** Ompliu el camp "Model IA" amb l'identificador exacte del model real en ús (p. ex. `Gemini 4 Argon (High)` o `Gemini 3 Flash` per a MarIA; prohibit arrossegar per inèrcia models històrics obsolets com `Gemini 3.1 Pro`) i "Tokens consumits" obligatòriament a cada document d'eixida per a la Consola de Consums.
 
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
-| Versió del document | 3.10.0 |
+| Versió del document | 3.11.0 |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v3.10.0) |
+| Plantilla | prompt_local.md (v3.11.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
@@ -56,6 +57,7 @@ Abans de generar l'arxiu per a la IA:
 
 ## Historial
 
+- **v3.11.0 (261029):** Actualització de l'Orquestració de Models (Trio d'Avantguarda 2026), Matriu d'Exclusivitat de Carrils i Ecosistema Físic Real. S'actualitza la telemetria del Registre per desterrar models històrics obsolets (com Gemini 3.1 Pro o GPT-4o) i reflectir l'estàndard operatiu vigent: IAIA MarIA sobre `Gemini 4 Argon (High)` / `Gemini 3 Flash`; Claude Code amb `Claude Fable 5.1 Extra · Ultracode` com a motor principal d'implementació multi-carril (80%) i `Claude Opus · Ultracode` reservat per a arquitectura fundacional i auditories extremes (20%); GPT Codex amb `GPT-6.1 Sol Ultra` per a cicles d'enginyeria de portes i `GPT Astra` per a l'auditoria adversarial final; i `Gemini CLI` per a higiene de portes i índexs. S'incorpora al Context Tècnic i al Protocol d'Interacció la Matriu d'Exclusivitat de Carrils (zero col·lisions d'escriptura entre agents concurrents) i el circuit canònic de rebuts (`obrir_torn.mjs` + `document.mjs` + `porta-plantilla-viva.mjs`), i es posa al dia la llista real de carpetes satèl·lit exteriors de `Som de Poble` (`_builds_de_poble/`, `_menjar_i_beure_de_poble/` i `_oficina_de_poble/`, retirant l'antic `_rebost_de_poble/`).
 - **v3.10.0 (261023):** Protocol de Col·laboració Autònoma, Diàleg Creuat i Llibre Mestre Permanent a l'Escriptori (Ment Colmena Local a 2 o 3 bandes). S'institucionalitza que totes les IAs convocades (siguen dues com Claude i Gemini, o tres amb Codex) operen en estricta igualtat de condicions operatives amb accés natiu a disc. El flux de treball és asíncron i no bloquejant: no cal que s'esperen l'una a l'altra; cada IA avança de manera autònoma en el seu rol i diposita el seu informe a `04_escriptori/`. És obligatori consultar activament el Llibre Mestre Permanent (`04_escriptori/03_llibre_mestre_tasques_i_idees.md`) per a no perdre cap idea ni deute tècnic durant l'anàlisi, i llegir de manera continuada els informes de les companyes per auditar i contrastar mútuament les conclusions sota la Direcció Tècnica de la IAIA MarIA.
 - **v3.9.0 (261018):** Directriu canònica d'Enginyeria Inversa i Reconstrucció amb REA (*Reverse Engineer Anything*). S'autoritza i encoratja formalment a totes les IAs (Claude, Codex, Gemini) a utilitzar les eines MCP de REA i la skill 'reverse-engineer-anything' quan es dispose d'un punt de comparació o aplicació de referència (com el patró WhatsApp, el TPV Loiverse, la Gestoria o el connector extern), per tal d'extreure lògica i fidelitat mil·limètrica sense inventar ni al·lucinar res.
 - **v3.8.0 (261017):** Incorporació canònica de l'Ecosistema Físic i Distribució de Carpetes ('Som de Poble' com a contenidor mare vs 'socdepoble.org' com a nucli Git/Node). Es fixa l'obligació d'executar comandes de consola i proves a 'socdepoble.org/' i es blinda la prohibició absoluta d'inventar carpetes noves fora dels satèl·lits oficials existents (_arxiu_wiki_de_poble, _gestoria_de_poble, etc.).
@@ -94,8 +96,12 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 - **Nucli Operatiu i Git (`socdepoble.org`):** És l'aplicació web, la Wiki oficial (`_wiki_de_poble/`), el motor de regles i el repositori Git. Tota comanda de consola (`npm test`, `npm run dev`, `git status`, `node tooling/...`) **s'ha d'executar obligatòriament a `socdepoble.org`** (p. ex. `cd socdepoble.org && npm test`). Si s'editen fitxers des de l'arrel de `Som de Poble`, cal prefixar les rutes amb `socdepoble.org/`.
 - **Carpetes Satèl·lit Exteriors de `Som de Poble` (Ja Creades i Canòniques):**
   * `_arxiu_wiki_de_poble/`: Únic destí oficial per a l'arxiu fred i la memòria històrica pesada que s'evacua d'Obsidian.
-  * `_comunicacio_de_poble/`, `_cultura_de_poble/`, `_gestoria_de_poble/`, `_investigacio_ia_de_poble/`, `_multimedia_de_poble/`, `_raw_de_poble/`, `_rebost_de_poble/`, `_recursos_de_poble/`, `_salut_de_poble/`.
+  * `_builds_de_poble/`, `_comunicacio_de_poble/`, `_cultura_de_poble/`, `_gestoria_de_poble/`, `_investigacio_ia_de_poble/`, `_menjar_i_beure_de_poble/`, `_multimedia_de_poble/`, `_oficina_de_poble/`, `_raw_de_poble/`, `_recursos_de_poble/`, `_salut_de_poble/`.
 - **Prohibició Absoluta:** Està terminantment prohibit que qualsevol IA invente carpetes noves a `Som de Poble` o a `socdepoble.org`. La informació que calga preservar s'ubica exclusivament a les carpetes satèl·lit oficials ja establertes.
+
+**⚡ ORQUESTRACIÓ DEL TRIO LOCAL I EXCLUSIVITAT DE CARRILS (Doctrina 2026):**
+- **Rols i Models Actius:** IAIA MarIA (Directora Tècnica en Antigravity sobre `Gemini 4 Argon (High)` / `Gemini 3 Flash`), Claude Code (`Claude Fable 5.1 Extra · Ultracode` com a motor principal d'implementació i refactorització multi-carril el 80% del temps, i `Claude Opus · Ultracode` reservat el 20% per a arquitectura fundacional i auditories extremes), GPT Codex (`GPT-6.1 Sol Ultra` per a cicles d'enginyeria de portes i contractes, i `GPT Astra` per a l'auditoria adversarial extrema final) i Gemini CLI (higiene de portes, cens i índexs).
+- **Matriu d'Exclusivitat de Carrils (Zero Col·lisions d'Escriptura):** Quan operen múltiples agents en paral·lel sobre `socdepoble.org`, cada agent modifica exclusivament els fitxers assignats al seu carril. Si detecta una millora fora del seu carril, deixa un pegat net `.patch` a `_wiki_de_poble/04_escriptori/` o l'anota al seu informe sense trepitjar l'arbre d'un altre agent.
 
 **🔬 ENGINYERIA INVERSA I PARITAT AMB REA (Incentiu de Fidelitat):**
 Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'eines MCP de REA (*Reverse Engineer Anything*) i la skill 'reverse-engineer-anything'. Quan se us encomane replicar, millorar o auditar una funcionalitat basada en un sistema o aplicació de referència existent (ex. el clon/patró WhatsApp, el TPV Loiverse, la Gestoria autònoma o la Frontissa de Sollutia), teniu autorització expressa i encoratjament per a utilitzar REA per a disseccionar bundles, lògica i comportament del patró de referència. L'objectiu és capturar la saviesa i el funcionament real de les millors aplicacions i traslladar-les al patró de Pedra Seca de Sóc de Poble amb el màxim trellat i sense duplicar codi.
@@ -123,9 +129,9 @@ Totes les IAs (Claude, Codex, Gemini) tenen registrat i operatiu el conjunt d'ei
 ## Protocol d'Interacció i Sortida
 
 En finalitzar l'auditoria o l'edició, heu de complir els següents passos:
-1. **Sortida:** Genereu el vostre document d'informe o auditoria exclusivament a `_wiki_de_poble/04_escriptori/` seguint la taxonomia `AAMMDD_HHMM_auditoria_[nom_ia].md`.
+1. **Sortida i Rebut Canònic:** Genereu el vostre document d'informe o auditoria exclusivament a `_wiki_de_poble/04_escriptori/` seguint la taxonomia `AAMMDD_HHMM_auditoria_[nom_ia].md` mitjançant el circuit formal (`node tooling/gates/obrir_torn.mjs` + `node tooling/wiki/document.mjs context` + `create` + `check`), declarant al Registre el vostre `Model IA` exacte en ús (prohibit deixar placeholders o models històrics obsolets).
 2. **Context Compartit i Llibre Mestre:** Qualsevol altre document present a `04_escriptori/` és part del context actiu i s'ha de llegir sencer abans d'emetre l'informe. És obligatori consultar i mantindre actualitzat el Llibre Mestre Permanent (`04_escriptori/03_llibre_mestre_tasques_i_idees.md`) anotant-hi qualsevol idea emergent, troballa o deute tècnic per a no perdre'n el rastre.
-3. **Consens Tècnic, Diàleg Creuat i Asincronia (2 o 3 Bandes):** Totes les IAs locals convocades opereu en estricta igualtat de condicions d'accés natiu a disc. El flux és autònom i no bloquejant: cap IA s'ha d'aturar a esperar les altres; cadascuna avança en el seu rol i diposita els seus informes a l'Escriptori. A mesura que les companyes publiquen informes, és obligatori llegir-los per auditar les seues conclusions i enriquir el consens tècnic. L'orquestradora (MarIA) actua com a Directora Tècnica canalitzant el diàleg creuat, arbitrant discrepàncies i coordinant la decisió final amb el Mestre.
+3. **Consens Tècnic, Diàleg Creuat i Asincronia (2 o 3 Bandes):** Totes les IAs locals convocades opereu en estricta igualtat de condicions d'accés natiu a disc. El flux és autònom i no bloquejant: cap IA s'ha d'aturar a esperar les altres; cadascuna avança en el seu rol i carril exclusiu d'escriptura i diposita els seus informes a l'Escriptori. A mesura que les companyes publiquen informes, és obligatori llegir-los per auditar les seues conclusions i enriquir el consens tècnic. L'orquestradora (MarIA) actua com a Directora Tècnica canalitzant el diàleg creuat, arbitrant discrepàncies i coordinant la decisió final amb el Mestre.
 4. **Retroalimentació:** Si aquesta plantilla (prompt_local) es pot optimitzar tècnicament, detalleu-ho al vostre informe.
 5. **Desconvocatòria i Tancament de Crons («Cadascuna a sa casa»):** Quan l'informe final estiga emés o quan finalitze el torn de treball, és OBLIGATORI aturar i cancel·lar qualsevol cron o schedule recurrent de fons. Està terminantment prohibit deixar processos zombis actius que continuen consumint tokens o bloquegen el tancament de l'aplicació. En acabar, tot agent allibera els seus recursos i cancel·la les seues tasques programades.
 

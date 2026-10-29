@@ -70,11 +70,13 @@ test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls
   }
 });
 
-/* Registrar el contracte no implementa ni activa el transport del servidor. */
-test('l’adaptador actual no anuncia les capacitats E2EE noves ni les fabrica', () => {
+/* P1-12 Fase 4 (pla 261029_1305, E1.1 i E1.2) · L'adaptador anuncia les dos
+   capacitats E2EE senceres (transport opac, src/data/supabase/xatXifrat.js).
+   Anunciar-les no activa el decorador: la bandera continua a false. */
+test('l’adaptador anuncia les capacitats E2EE senceres (transport opac), sense activar res', () => {
   setBackendImplementation({ ...supabase });
   for (const cap of ['clausXat', 'xatMultimediaXifrat']) {
-    expect(teCapacitat(cap)).toBe(false);
-    for (const nom of CAPACITATS[cap]) expect(typeof supabase[nom], nom).toBe('undefined');
+    expect(teCapacitat(cap)).toBe(true);
+    for (const nom of CAPACITATS[cap]) expect(typeof supabase[nom], nom).toBe('function');
   }
 });

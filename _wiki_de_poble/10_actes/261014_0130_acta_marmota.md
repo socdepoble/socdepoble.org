@@ -2,7 +2,9 @@
 type: document
 status: canonic
 description: "Acta Marmota de fundació de la Taula dels 4 agents: missió WhatsApp per a beta testers demà, sanejament de la Consola Termodinàmica, i autoreproducció immortal de Sóc de Poble"
-tags: [acta, marmota, relleu, consell4ias, whatsapp, gemini4, codex, claude, facturadirecta, pedra_seca]
+tags:
+  - acta
+  - marmota
 visibility: private
 ---
 
@@ -75,3 +77,7 @@ El Mestre Javi Llinares deixa les directrius fundacionals abans d'anar-se'n a do
 1. Aquest xat es tanca per higiene i estalvi cognitiu (alliberament de 39 artefactes).
 2. El Mestre (o l'agent en obrir la nova sessió) arrenca a Antigravity IDE amb **Gemini 4 Argon High** (mode *Auto (Preview)* o *Turbo*).
 3. Només dient «**Sóc de Poble!**», l'agent entrant llig esta acta canònica i activa la coordinació de la Taula dels 4 agents durant tota la nit.
+
+## Vincles
+
+- [[00_index]]

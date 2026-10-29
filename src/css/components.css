@@ -251,7 +251,7 @@
   .sdp-grup__cos { display: grid; gap: 0 var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
 
   .sdp-casella { display: flex; align-items: flex-start; gap: var(--sdp-space-3); min-height: var(--sdp-touch-min); padding-block: var(--sdp-space-2); }
-  .sdp-casella__control { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--sdp-accio); cursor: pointer; }
+  .sdp-casella__control { flex: none; width: var(--sdp-space-6); height: var(--sdp-space-6); margin: 0; accent-color: var(--sdp-accio); cursor: pointer; }
   .sdp-casella__control:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-casella__etiqueta { display: flex; flex-direction: column; gap: var(--sdp-space-1); cursor: pointer; color: var(--sdp-text-titol); }
   .sdp-casella__ajuda { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }

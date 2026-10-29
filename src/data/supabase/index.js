@@ -13,7 +13,8 @@ export * from './organizations.js';
 export * from './auth.js';
 export * from './notes.js';
 export * from './xat.js';
-export * from './xatMultimedia.js';
+/* E1.2 (pla 261029_1305) · Explícit: transportAdjunts és intern de la branca xifrada, no del port. */
+export { quotaXat, publicaAdjuntXat, urlAdjuntXat, descartaAdjuntXat } from './xatMultimedia.js';
 export * from './storage.js';
 export * from './realtime.js';
 export * from './utils.js';
@@ -38,6 +39,14 @@ export { comprovaServidor } from './auth.js';
 /* Fase D (261020, tasca 1) · Capacitat 'entradaAmbToken' (Apple i Google des
    del full natiu). Explícita pel mateix motiu. */
 export { entraAmbTokenDeProveidor } from './auth.js';
+/* P1-12 Fase 4 (pla 261029_1305, Bloc C, E1.1 i E1.2) · Capacitats 'clausXat' i
+   'xatMultimediaXifrat': transport opac (src/data/supabase/xatXifrat.js). Les
+   dos llistes senceres, perquè una capacitat parcial tomba la validació del port. */
+export {
+  publicaIdentitatXat, laMevaIdentitatXat, desaFraseXat, clausDeXat, desaLlibretaXat, laMevaLlibretaXat, estatXifratXat,
+  epoquesDelFilXat, sobresMeusXat, obriEpocaXat, enviaXifratXat, reembolcallaXat, demanaXifratXat,
+  publicaAdjuntXifratXat, bytesAdjuntXat
+} from './xatXifrat.js';
 /* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · Capacitat
    'mitjansPropis', la biblioteca de fotos pròpies. Explícita pel mateix motiu. */
 export { llistaElsMeusMitjans, esborraElMeuMitja } from './storage.js';

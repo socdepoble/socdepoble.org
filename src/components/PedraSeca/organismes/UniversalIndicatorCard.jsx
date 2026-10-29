@@ -5,6 +5,9 @@
  * classes. Sense canvi visual: .sdp-indicator-card és flex en columna (els
  * fills es fan bloc) i títol i subtítol ja fixen font, color i margin: 0.
  */
+import { useRef } from 'react';
+import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
+
 export function UniversalIndicatorCard({
   icon,
   title,
@@ -14,6 +17,9 @@ export function UniversalIndicatorCard({
   iconColor,
   className = ''
 }) {
+  const iconRef = useRef(null);
+  usePropietatsCss(iconRef, { '--custom-icon-color': iconColor || null });
+
   return (
     <button 
       type="button"
@@ -21,7 +27,7 @@ export function UniversalIndicatorCard({
       onClick={onClick}
       aria-pressed={active}
     >
-      <span className="sdp-indicator-card-icon" style={iconColor ? { '--custom-icon-color': iconColor } : {}}>
+      <span ref={iconRef} className="sdp-indicator-card-icon">
         {icon}
       </span>
       <span className="sdp-indicator-card-title">{title}</span>

@@ -2,17 +2,17 @@ import { Especimen } from '../Especimen.jsx';
 import { Alerta, Taula } from '../../../../components/PedraSeca/index.js';
 
 const MARCA = [
-  ['sw-primary-500', 'Taronja · fons', '#ff7300', '--sdp-primary-500'],
-  ['sw-primary-700', 'Taronja fort', '#ad4c03', '--sdp-primary-700 · text accent sobre clar'],
-  ['sw-secondary-500', 'Blau · fons', '#016ebf', '--sdp-secondary-500'],
-  ['sw-secondary-600', 'Blau fort', '#00599d', '--sdp-secondary-600'],
+  ['sw-primary-500', 'Taronja · fons', /* ALLOW_RAW_COLOR */ '#ff7300', '--sdp-primary-500'],
+  ['sw-primary-700', 'Taronja fort', /* ALLOW_RAW_COLOR */ '#ad4c03', '--sdp-primary-700 · text accent sobre clar'],
+  ['sw-secondary-500', 'Blau · fons', /* ALLOW_RAW_COLOR */ '#016ebf', '--sdp-secondary-500'],
+  ['sw-secondary-600', 'Blau fort', /* ALLOW_RAW_COLOR */ '#00599d', '--sdp-secondary-600'],
   ['sw-blanc-pur', 'Blanc', '#ffffff', 'Fons principal'],
-  ['sw-negre-pur', 'Negre', '#0e0d0c', '--sdp-pedra-900 · text principal']
+  ['sw-negre-pur', 'Negre', /* ALLOW_RAW_COLOR */ '#0e0d0c', '--sdp-pedra-900 · text principal']
 ];
 const ESTAT = [
-  ['sw-error-500', 'Alerta', '#c2181d', '--sdp-error-500'],
-  ['sw-avis-500', 'Avís', '#9c6902', '--sdp-avis-500'],
-  ['sw-exit-500', 'Èxit', '#027e38', '--sdp-exit-500']
+  ['sw-error-500', 'Alerta', /* ALLOW_RAW_COLOR */ '#c2181d', '--sdp-error-500'],
+  ['sw-avis-500', 'Avís', /* ALLOW_RAW_COLOR */ '#9c6902', '--sdp-avis-500'],
+  ['sw-exit-500', 'Èxit', /* ALLOW_RAW_COLOR */ '#027e38', '--sdp-exit-500']
 ];
 /* Selecció de la navegació secundària sobre crom (T62b): la fila activa de la
    1a columna i dels rails plegats. Cada hex és el valor resolt del seu token
@@ -23,10 +23,10 @@ const CROM_SELECCIO = [
   ['sw-crom-seleccio-vora', 'Vora de l’arrel', /* ALLOW_RAW_COLOR */ '#49a3fa', '--sdp-crom-seleccio-vora · Blau 400']
 ];
 const PEDRA = [
-  ['50', 'Blanc trencat', '#ffffff'], ['100', 'Núvol', '#ffffff'], ['200', 'Arena', '#efece7'],
-  ['300', 'Calç', '#dcd7cd'], ['400', 'Cendra', '#b7b1a5'], ['500', 'Pedra', '#8b857b'],
-  ['600', 'Pedra fosca', '#5b564e'], ['700', 'Grafit', '#3d3b35'], ['750', 'Pissarra', '#302e29'],
-  ['800', 'Carbó', '#22211e'], ['850', 'Sutja', '#181715'], ['900', 'Negre', '#0e0d0c']
+  ['50', 'Blanc trencat', '#ffffff'], ['100', 'Núvol', '#ffffff'], ['200', 'Arena', /* ALLOW_RAW_COLOR */ '#efece7'],
+  ['300', 'Calç', /* ALLOW_RAW_COLOR */ '#dcd7cd'], ['400', 'Cendra', /* ALLOW_RAW_COLOR */ '#b7b1a5'], ['500', 'Pedra', /* ALLOW_RAW_COLOR */ '#8b857b'],
+  ['600', 'Pedra fosca', /* ALLOW_RAW_COLOR */ '#5b564e'], ['700', 'Grafit', /* ALLOW_RAW_COLOR */ '#3d3b35'], ['750', 'Pissarra', /* ALLOW_RAW_COLOR */ '#302e29'],
+  ['800', 'Carbó', /* ALLOW_RAW_COLOR */ '#22211e'], ['850', 'Sutja', /* ALLOW_RAW_COLOR */ '#181715'], ['900', 'Negre', /* ALLOW_RAW_COLOR */ '#0e0d0c']
 ];
 
 function Paleta({ mostres }) {

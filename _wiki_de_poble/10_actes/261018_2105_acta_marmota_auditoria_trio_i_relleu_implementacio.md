@@ -99,7 +99,3 @@ requereix_auditoria: false
 ## Vincles
 
 - [[00_index]]
-- `261018_2000_pla_implementacio_capacitats_matrix_i_poda_wiki`
-- `261018_2030_auditoria_codex`
-- `261018_2030_auditoria_gemini`
-- `261018_2045_auditoria_claude`

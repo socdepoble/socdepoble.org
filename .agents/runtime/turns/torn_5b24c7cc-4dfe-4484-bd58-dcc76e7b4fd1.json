@@ -4,10 +4,10 @@
   "actor": "IAIA MarIA",
   "scope": "documents",
   "state": "planned",
-  "revision": 43,
+  "revision": 51,
   "createdAt": "2026-10-28T14:26:28.202Z",
-  "updatedAt": "2026-10-29T12:24:38.033Z",
-  "expiresAt": "2026-10-29T14:26:28.203Z",
+  "updatedAt": "2026-10-29T14:17:07.017Z",
+  "expiresAt": "2026-10-30T15:12:21.016Z",
   "contractHash": "a8df528a91df48232a7820e8253fef8737d4039b1954ca2fc51a9acd6f9cd31b",
   "humanInventoryVersion": 1,
   "initial": {
@@ -4089,11 +4089,63 @@
         "committedAt": "2026-10-29T12:24:38.033Z",
         "documentHash": "e1d0404a22961c4199e72f28ac5e8099c36d3e2c62bfa24e2654ea6e1ed9ab6d"
       }
+    },
+    "c8bbe3a6-529a-4f2c-9490-a658cf6d2052": {
+      "id": "c8bbe3a6-529a-4f2c-9490-a658cf6d2052",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "contractSnapshot": "dd50e00a8184dcda1a212a8e24073399b29036006c3d29e8e26fff71aa7bd631",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-10-29T13:24:04.631Z"
+    },
+    "a69f4c82-ee86-4a5b-a9ab-1d46a499a7c4": {
+      "id": "a69f4c82-ee86-4a5b-a9ab-1d46a499a7c4",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1514_auditoria_gemini.md",
+      "contractSnapshot": "985a663040770056f07c4141f691545c3ef0853f8caafe759248464923d9e325",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "f537f054c68a648cc755a61c2b3037b375ec37304d98ff1631e290212d2bcd6c",
+      "issuedAt": "2026-10-29T14:16:59.537Z"
+    },
+    "65e51fd7-cd0a-4381-abdc-91c356694f23": {
+      "id": "65e51fd7-cd0a-4381-abdc-91c356694f23",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1514_auditoria_gemini.md",
+      "contractSnapshot": "985a663040770056f07c4141f691545c3ef0853f8caafe759248464923d9e325",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "f537f054c68a648cc755a61c2b3037b375ec37304d98ff1631e290212d2bcd6c",
+      "issuedAt": "2026-10-29T14:16:59.576Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-10-29T14:16:59.577Z",
+        "failedAt": "2026-10-29T14:16:59.582Z",
+        "absent": true
+      }
+    },
+    "7e6d81c1-1b8d-4fe3-a11b-b8333701b807": {
+      "id": "7e6d81c1-1b8d-4fe3-a11b-b8333701b807",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1514_auditoria_gemini.md",
+      "contractSnapshot": "985a663040770056f07c4141f691545c3ef0853f8caafe759248464923d9e325",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "f537f054c68a648cc755a61c2b3037b375ec37304d98ff1631e290212d2bcd6c",
+      "issuedAt": "2026-10-29T14:17:06.989Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-29T14:17:06.989Z",
+        "committedAt": "2026-10-29T14:17:07.017Z",
+        "documentHash": "27d9b6f01ba3fafda602a192ac5a09eeeb16591fe8f008f2bdcf76afd0d3fc95"
+      }
     }
   },
   "plan": {
     "file": "_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
-    "hash": "707e30a2a6a05c6f49226161428b1de1bb09b1f95b9fb1d05c73173e02d545e1"
+    "hash": "671ff917fcdf7c17ee696e612c483a4fe22cbbfdb6d8b736ecb534fd73cdbced"
   },
   "verification": null,
   "history": [
@@ -4334,6 +4386,50 @@
       "file": "_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md",
       "at": "2026-10-29T12:24:38.033Z",
       "hash": "e1d0404a22961c4199e72f28ac5e8099c36d3e2c62bfa24e2654ea6e1ed9ab6d"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T13:24:04.575Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T13:24:04.631Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T13:46:19.948Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T14:16:59.538Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T14:16:59.577Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "65e51fd7-cd0a-4381-abdc-91c356694f23",
+      "file": "_wiki_de_poble/04_escriptori/261029_1514_auditoria_gemini.md",
+      "at": "2026-10-29T14:16:59.582Z",
+      "absent": true
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T14:17:06.989Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "7e6d81c1-1b8d-4fe3-a11b-b8333701b807",
+      "file": "_wiki_de_poble/04_escriptori/261029_1514_auditoria_gemini.md",
+      "at": "2026-10-29T14:17:07.017Z",
+      "hash": "27d9b6f01ba3fafda602a192ac5a09eeeb16591fe8f008f2bdcf76afd0d3fc95"
     }
   ],
   "ownedPaths": [

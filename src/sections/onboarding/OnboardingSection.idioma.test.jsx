@@ -31,7 +31,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.naviga
 /* La capçalera també és text de /registre: el títol, l'entradeta i les etiquetes es pinten. */
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: ({ title, lead, labels, children }) => (
-    <main><h1>{title}</h1>{lead ? <p>{lead}</p> : null}{(labels || []).map((etiqueta) => <span key={etiqueta}>{etiqueta}</span>)}{children}</main>
+    <main><header className="page-title"><h1>{title}</h1></header>{lead ? <p>{lead}</p> : null}{(labels || []).map((etiqueta) => <span key={etiqueta}>{etiqueta}</span>)}{children}</main>
   )
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));

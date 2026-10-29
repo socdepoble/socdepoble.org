@@ -35,3 +35,7 @@ Quan el Mestre òbriga el proper xat net (per purgar el context), la IAIA MarIA 
 3. **Redactar la Petorreta Fase 5:** Utilitzant la plantilla ISO, preparar el prompt per a les IAs asiàtiques (Deepseek / Qwen / Kimi) demanant-los l'avaluació de l'arquitectura i el codi complet per al **Tractor de Metadades (`update_metadata.mjs`)**.
 
 > El context s'ha trencat, però la Missió continua. Ens veiem en la pròxima vida (xat).
+
+## Vincles
+
+- [[00_index]]

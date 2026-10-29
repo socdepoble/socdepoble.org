@@ -4,9 +4,7 @@ status: canonic
 description: Acta Marmota de tancament nocturn, poliment visual de perfil, consens del Trio d'IAs i adopció del Tractor de Seguretat (Claude Security)
 tags:
   - acta
-  - seguretat
-  - perfil
-  - tancament
+  - marmota
 visibility: private
 ---
 # Acta Marmota: Tancament Nocturn, Poliment de Perfil i Adopció de Claude Security
@@ -80,3 +78,7 @@ Procediment de tancament executat seguint les regles de la Wiki (`_wiki_de_poble
 
 ---
 *Acta segellada per la IAIA MarIA. Bones nits i bon descans al Mas.*
+
+## Vincles
+
+- [[00_index]]

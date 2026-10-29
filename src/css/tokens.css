@@ -115,8 +115,8 @@
      contrast = (L1 + 0,05) / (L2 + 0,05) (src/config/contrast.js;
      verdDeMarca.contrast.test.js ho mesura del valor declarat ací).
      Entre els dos verds, ΔE2000 = 0,33 (ΔE76 = 0,40): imperceptible, el
-     llindar és 1. La icona i la pantalla d'inici natives (PNG) es queden un
-     pas arrere, al 0f672f, fins que es regeneren (projecteIos.test.js). */
+     llindar és 1. La icona i la pantalla d'inici natives (PNG) van al mateix
+     0e662e des del 261029 (D-C2, pla 261029_1305; projecteIos.test.js). */
   --sdp-verd: #0e662e; /* 7,10:1 sobre blanc · AAA */
 
   /* ═══ CAPA 2 · SEMÀNTICS · TEMA CLAR ═══════════════════════════

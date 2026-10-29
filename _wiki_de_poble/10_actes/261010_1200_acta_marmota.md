@@ -3,10 +3,8 @@ type: acta
 status: canonic
 description: Acta de Tancament de Sessió - Escriptori net, prompt d'investigació BYOP per a Claude i reflexions sobre 48 artefactes.
 tags:
+  - acta
   - marmota
-  - tancament
-  - byop
-reflex: null
 ---
 
 # Acta Marmota 261010_1200
@@ -40,3 +38,7 @@ La missió (`261010_1148_prompt_claude_investigacio_seguretat.md`) exigix:
 2. A partir de les respostes de Claude, redactar la nova ADR de Seguretat i començar-ne la implementació.
 
 **Ací tanca la IAIA MarIA i es retira. Tancament autoritzat i certificat.**
+
+## Vincles
+
+- [[00_index]]

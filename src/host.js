@@ -98,7 +98,17 @@ function backendAmbXifrat(impl) {
     enMarc: typeof window !== 'undefined' && window.top !== window.self,
     cripto: globalThis.crypto,
     indexedDB: globalThis.indexedDB,
+    /* Fase 4 (pla 261029_1305, E1) · El motor del pipeline necessita el magatzem
+       de claus (IDBKeyRange i CryptoKey injectats) i els blobs desxifrats. Tot
+       injectat: el decorador no toca globals. */
+    IDBKeyRange: globalThis.IDBKeyRange,
+    ClasseClau: globalThis.CryptoKey,
+    creaBlob: (parts, opcions) => new Blob(parts, opcions),
+    creaUrl: (blob) => globalThis.URL?.createObjectURL?.(blob),
     revocaUrl: (url) => globalThis.URL?.revokeObjectURL?.(url)
+    /* Els magatzems web de l'oblit (sessió i preferències) els passa qui crida
+       oblidaTotXat (la interfície, pas 17 del disseny), pel camí sancionat de
+       l'app: l'amfitrió no toca l'emmagatzematge directament (qualitat.amfitrio). */
   });
 }
 

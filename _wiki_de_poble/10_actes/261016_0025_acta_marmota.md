@@ -81,7 +81,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
   - Simulació d'1.000 a 40.000 usuaris concurrents per detectar colls d'ampolla, memory leaks i validar la fortificació prèvia a la integració amb Sollutia.
 
 ### 2. Part Termodinàmica Psiquiàtrica (El Temps, Incidències i Trellat)
-- **Protecció del Son del Mestre:** S'ha evitat carregar de feina o consultes al Mestre en horari nocturn (passada la mitjanit). El Mestre deixa el prompt complet a les 3 IAs i tanca Antigravity per descansar.
+- **Protecció del Son del Mestre:** S'ha evitat carregar de feina o consultes al Mestre en horari nocturn (passada la mitjanit). El Mestre deixa el prompt complet als 3 agents locals i tanca Antigravity per descansar.
 - **Estat del Mestre:** Pragmàtic, exigent amb el rigor arquitectònic (no vol "cards inventades", vol el `UniversalWorkspace` canònic; no vol "del poble", vol `Carregant el mur...`), i molt lúcid detectant l'ús de REA a Claude.
 - **Gestió de la Fatiga de Context:** La sessió anterior acumulava més de 60 torns. L'acta marmota fixa el punt exacte de relleu al disc dur per poder iniciar un xat net al matí amb zero pèrdua de coneixement.
 - **Trellat Aplicat:** Es posposa l'enviament de missatges als beta-testers per a demà de dia per no molestar a la nit i permetre que el sistema s'afiance durant el Gauntlet autònom.
@@ -127,5 +127,3 @@ requereix_auditoria: false
 ## Vincles
 
 - [[00_index]]
-- `261016_0015_pla_implementacio_gauntlet_autonom`
-- `261016_0015_prompt_gauntlet_claude_codex_gemini`

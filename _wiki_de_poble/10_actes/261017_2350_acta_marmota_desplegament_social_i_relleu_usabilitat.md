@@ -100,3 +100,7 @@ La jornada acaba amb un salt qualitatiu excepcional:
 - S'ha respectat el fusible humà: no fer pedaços nocturns que puguen comprometre la robustesa del sistema.
 
 Demà abordarem el refinament de l'Espai d'Usuari amb màxima energia i claredat mental. Bona nit i bona feina, Mestre!
+
+## Vincles
+
+- [[00_index]]

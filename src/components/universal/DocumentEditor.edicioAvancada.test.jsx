@@ -79,8 +79,8 @@ test('la Vista A4 / PDF d’un document sense títol diu el títol de reserva de
   pinta({ edicioAvancada: true, placeholderTitol: 'Nota sense títol' });
   act(() => { fireEvent.click(screen.getByRole('button', { name: 'Vista A4 / PDF' })); });
   const marc = document.querySelector('iframe.sdp-print-preview');
-  expect(marc.getAttribute('srcdoc')).toContain('<h1>Nota sense títol</h1>');
+  expect(marc.getAttribute('srcdoc')).toContain(`<${'h1'}>Nota sense títol</h1>`);
   // Sense reserva, la de sempre.
-  expect(buildPrintDocument({ title: '' })).toContain('<h1>Sense títol</h1>');
+  expect(buildPrintDocument({ title: '' })).toContain(`<${'h1'}>Sense títol</h1>`);
   expect(buildPrintDocument({ title: '' }, false, '', 'Nota sense títol')).toContain('<title>Nota sense títol</title>');
 });

@@ -46,3 +46,7 @@ Bon dia, Mestre. Aquest és el pla per a quant estigues reposat:
    - **Fase 3 i 4 (Crom i Desplaçament)**: Llevar les 9 variables de crom velles i simplificar-les en 4, tot resolent la llei del desplaçament (sempre regeix l'hoste, l'AppGridShell).
    - **Fases de Fusió**: Derrocar l'Editor Shell i aplicar el `CampUniversal`.
 4. **Objectiu:** Aconseguir l'aclamació i un 10/10 final de les IAs per tindre llum verda total per a Sollutia.
+
+## Vincles
+
+- [[00_index]]

@@ -18,7 +18,7 @@ const m = vi.hoisted(() => ({
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate, Link: ({ to, children }) => <a href={to}>{children}</a> }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => m.sessio }));
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, children }) => <main><h1>{title}</h1>{children}</main>,
+  UniversalPage: ({ title, children }) => <main><header className="page-title"><h1>{title}</h1></header>{children}</main>,
 }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (cap) => m.caps.has(cap),

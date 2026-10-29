@@ -915,7 +915,7 @@ describe('la imatge que tria l’autor (og_image, o featured_image) va primera',
 describe('VARIANTS_SOCIALS: la variant va al <head>; l’original, a la pàgina (R-01, R-02)', () => {
   test('cada parell existix a public/, a la mateixa carpeta i amb el sufix -social-1200x630.jpg; congelat; cap variant és reserva', () => {
     expect(Object.isFrozen(VARIANTS_SOCIALS)).toBe(true);
-    expect(Object.keys(VARIANTS_SOCIALS).length).toBeGreaterThanOrEqual(17);
+    expect(Object.keys(VARIANTS_SOCIALS).length).toBeGreaterThanOrEqual(24);
     for (const [original, variant] of Object.entries(VARIANTS_SOCIALS)) {
       expect(variant).toBe(original.replace(/\.[^./]+$/, '-social-1200x630.jpg'));
       expect(existsSync(path.join(ARREL, 'public', original)), original).toBe(true);
@@ -945,6 +945,6 @@ describe('VARIANTS_SOCIALS: la variant va al <head>; l’original, a la pàgina 
     expect(primeraImatgeSocial('pobles', { image_url: '/assets/towns/relleu/1.jpg' }))
       .toEqual({ estat: 'triada', ref: '/assets/towns/relleu/1.jpg', url: 'https://socdepoble.org/assets/towns/relleu/1-social-1200x630.jpg', posicio: 0 });
     // Un original sense variant, com sempre.
-    expect(primeraImatgeSocial('pobles', { image_url: '/assets/towns/sella/1.jpg' }).url).toBe('https://socdepoble.org/assets/towns/sella/1.jpg');
+    expect(primeraImatgeSocial('pobles', { image_url: '/assets/towns/sella/2.jpg' }).url).toBe('https://socdepoble.org/assets/towns/sella/2.jpg');
   });
 });

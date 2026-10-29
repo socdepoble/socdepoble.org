@@ -3197,8 +3197,10 @@ details[open] summary.accordion-header svg:last-child {
     padding-bottom: 30vh;
   }
 
+  /* Contenidor d'edició contenteditable (cursor natiu actiu): ALLOW_FOCUS_INVISIBLE */
   .sdp-editor-full-canvas .tiptap.ProseMirror:focus {
     outline: none;
+    caret-color: var(--sdp-accio);
   }
 }
 

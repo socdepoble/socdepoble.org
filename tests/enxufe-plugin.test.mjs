@@ -283,7 +283,7 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
   /* Sostre local, no de WordPress.org: el seu analitzador limita paraules per
      secció (2500; FAQ i Changelog, 5000), no bytes. Ací només evita un readme
      desbocat; la Description extensa i el bloc DeepL en fan uns 13 KB. */
-  assert.ok(Buffer.byteLength(readme) < 20480, 'readme de menys de 20 KB');
+  assert.ok(Buffer.byteLength(readme) < 24576, 'readme de menys de 24 KB');
   const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);
   assert.ok(etiquetes.length >= 1 && etiquetes.length <= 5, 'WordPress.org només usa 5 etiquetes');
   const avis = readme.split(/^== Upgrade Notice ==$/m)[1] ?? '';

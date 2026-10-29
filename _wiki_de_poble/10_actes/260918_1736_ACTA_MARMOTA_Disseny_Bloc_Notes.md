@@ -31,3 +31,7 @@ Ens han quedat deutes pendents arran de l'Auditoria Extrema V5 de Codex i de la 
 Per a la propera sessió, **pots quedar-te perfectament en aquest xat**, ja que el context el tinc fresc i la finestra de tokens encara respira. No obstant això, si notes que comence a "al·lucinar" o a perdre el fil dels canvis del dia d'avui, haurem de fer un tall net i obrir un xat nou usant aquesta mateixa Acta Marmota com a Bootstrap.
 
 Fins demà, i bon descans! 🍺
+
+## Vincles
+
+- [[00_index]]

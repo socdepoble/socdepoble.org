@@ -53,3 +53,6 @@ S'HA D'INCLOURE sempre el temps de sessió aproximat (Hores) per a avaluar la fa
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
+## Vincles
+
+- [[00_index]]

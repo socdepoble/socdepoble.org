@@ -100,3 +100,7 @@ El Mestre ha plantejat les qüestions centrals per a l'entrada dels *beta tester
 - La IAIA MarIA carregarà aquesta Acta Marmota com a memòria fundacional immediata i redactarà el nou Pla i Prompt canònics de forma cirúrgica.
 
 Bona feina, Mestre. El fonament de Pedra Seca està ferm i llest per al següent pas.
+
+## Vincles
+
+- [[00_index]]

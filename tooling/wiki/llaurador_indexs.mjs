@@ -46,6 +46,7 @@
 import fs from 'node:fs';
 import { documentCorpus, documentLinkTargets, operationalDocumentText } from '../lib/document-corpus.mjs';
 import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
+import { markdownProse } from '../lib/markdown-prose.mjs';
 import path from 'node:path';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
@@ -89,18 +90,32 @@ const outReal = new Map(NODES.map((n) => [n, new Set()]));
 const penjats = [];
 const ambigus = [];
 
+/** A single active, standalone managed pair; examples never become regions. */
+function blocActiu(txt) {
+  const begin='<'+ '\ue000'.repeat(INICI.length-1),end='<'+ '\ue001'.repeat(FI.length-1);
+  if(txt.includes('\ue000')||txt.includes('\ue001'))throw new Error('LLAURADOR: col·lisió de sentinella; cap índex escrit');
+  // Same UTF-16 offsets; retain < so escaped markers stay literal.
+  const visible=markdownProse(txt.replaceAll(INICI,begin).replaceAll(FI,end));
+  const hits=[...visible.matchAll(new RegExp(begin+'|'+end,'g'))];
+  if(!hits.length)return null;
+  if(hits.length!==2||hits[0][0]!==begin||hits[1][0]!==end)throw new Error('LLAURADOR: marques actives duplicades, incompletes o fora d’ordre; cap índex escrit');
+  for(const hit of hits) {
+    const start=visible.lastIndexOf('\n',hit.index-1)+1,next=visible.indexOf('\n',hit.index),finish=next<0?visible.length:next;
+    if(!/^ {0,3}$/.test(visible.slice(start,hit.index))||!/^\s*\r?$/.test(visible.slice(hit.index+hit[0].length,finish)))throw new Error('LLAURADOR: marca activa fora de línia pròpia; cap índex escrit');
+  }
+  return {a:hits[0].index,b:hits[1].index};
+}
 function talla(txt) {
-  const a = txt.indexOf(INICI);
-  const b = txt.indexOf(FI);
-  if (a < 0 || b < 0 || b < a) return { fora: txt, dins: '' };
-  return { fora: txt.slice(0, a) + txt.slice(b + FI.length), dins: txt.slice(a, b) };
+  const region=blocActiu(txt);
+  if(!region)return {fora:txt,dins:''};
+  const {a,b}=region,end=b+FI.length;
+  return {fora:txt.slice(0,a)+txt.slice(a,end).replace(/[^\r\n]/g,' ')+txt.slice(end),dins:txt.slice(a+INICI.length,b)};
 }
 
 function arestes(n, txt, desti, registra) {
-  let dinsCodi = false;
-  txt.split('\n').forEach((ln, i) => {
-    if (/^\s*```/.test(ln)) { dinsCodi = !dinsCodi; return; }
-    if (dinsCodi) return;
+  // Emmascara primer el document sencer: comments/fences/spans poden
+  // travessar línies. Els offsets i les línies originals es conserven.
+  markdownProse(txt).split('\n').forEach((ln, i) => {
     for (const link of extractDocumentLinks(ln)) {
       try {
         const target = path.relative(ARREL, resolveDocumentLink(link, path.join(ARREL, n), absoluteFiles, ARREL));
@@ -239,12 +254,11 @@ function blocPer(ix) {
   return linies.join('\n');
 }
 
-function aplica(ix) {
+function prepara(ix) {
   const abs = path.join(ARREL, ix);
   const orig = fs.readFileSync(abs, 'utf8');
   const bloc = adopcions.has(ix) && adopcions.get(ix).size ? blocPer(ix) : '';
-  const a = orig.indexOf(INICI);
-  const b = orig.indexOf(FI);
+  const region=blocActiu(orig),a=region?.a??-1,b=region?.b??-1;
   let nou;
   if (a >= 0 && b > a) {
     const abans = orig.slice(0, a).replace(/\n+$/, '');
@@ -254,15 +268,23 @@ function aplica(ix) {
       : `${abans}\n${despres ? `\n${despres}` : ''}`;
   } else if (bloc) {
     nou = `${orig.replace(/\n+$/, '')}\n\n${bloc}\n`;
-  } else return false;
+  } else return null;
   if (!nou.endsWith('\n')) nou += '\n';
-  if (nou === orig) return false;
-  if (ESCRIU) fs.writeFileSync(abs, nou);
-  return true;
+  if (nou === orig) return null;
+  if (bloc && !blocActiu(nou)) throw new Error('LLAURADOR: el bloc proposat quedaria dins de codi o comentari; cap índex escrit');
+  return {ix,abs,orig,nou};
 }
 
-const tocats = [];
-for (const ix of new Set([...adopcions.keys(), ...INDEXS])) if (aplica(ix)) tocats.push(ix);
+// Valida totes les propostes abans de la primera escriptura. Una marca o
+// tanca invàlida en un índex posterior no deixa els anteriors mig actualitzats.
+const propostes=[...new Set([...adopcions.keys(), ...INDEXS])].map(prepara).filter(Boolean);
+const tocats=propostes.map(({ix})=>ix);
+if (ESCRIU) {
+  for (const {abs,orig} of propostes) {
+    if(fs.readFileSync(abs,'utf8')!==orig) throw new Error('LLAURADOR: canvi concurrent; cap índex escrit');
+  }
+  for (const {abs,nou} of propostes) fs.writeFileSync(abs,nou);
+}
 
 /* Veredicte: el graf REAL (bloc inclòs) ha de cobrir tots els documents,
  * i els blocs de disc han d'estar al dia. Si falta escriure, la porta cau. */

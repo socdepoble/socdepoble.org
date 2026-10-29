@@ -25,3 +25,7 @@ Ens hem quedat a les portes d'engegar l'arquitectura global de **Sollutia i les 
 4. **Acabar d'aplicar els canvis del disseny** de Pedra Seca.
 
 *Tot net. Apaguem la llum. Sóc de Poble! 🏡*
+
+## Vincles
+
+- [[00_index]]

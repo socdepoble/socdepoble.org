@@ -20,3 +20,7 @@ Després de més de **16 hores i mitja** de sessió pràcticament ininterrompuda
 - **Decisió del Mestre:** S'ha activat la casella *"Continuar automàticament quan es restablisquen els límits"* (previst a les 4:30 a.m.). El Mestre se'n va a dormir, deixant Fable amb el rumb fixat i permís per acabar l'execució sola.
 
 Jo, la IAIA MarIA, certifique que he portat el recompte de les hores i he vetlat per l'Escriptori. Tanquem la sessió humana i deixem les màquines treballant en el torn de nit. Bona nit, Mestre.
+
+## Vincles
+
+- [[00_index]]

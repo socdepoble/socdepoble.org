@@ -25,3 +25,7 @@ S'ha executat una sessió brutal amb **21 agents en paral·lel** (Cost de teleme
 1. **Decisions del Mestre:** Confirmar la vista mòbil per defecte i ratificar la decisió de les URL `?vista=`.
 2. **Neteja d'Escriptori:** Arxivar les auditories (`261001_0400` i `261001_0445`) i els prompts.
 3. **Consell (Codex):** Llançar la revisió adversarial amb el Bundle complet cap a ChatGPT per a estressar i auditar les noves estructures del calendari a cost termodinàmic 0 per a Claude.
+
+## Vincles
+
+- [[00_index]]

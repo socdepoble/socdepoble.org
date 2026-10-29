@@ -67,7 +67,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 - **Trellat Humà i Fi de l'Overhead:**
   - El Mestre Javi ha pres la decisió madura d'aturar l'edició de codi per part de la IA («prefiero que tú no toques código y que dejes en el plan de implementación para la siguiente auditoría todo lo que ha quedado pendiente»).
   - S'evita el *people-pleasing* i el risc de bucles d'edició innecessaris: el Mestre necessita calma per omplir l'Excel a mà i revisar les factures físiques del 3T.
-  - Treball en equip a tres bandes: s'afiança el sistema en l'estat actual i es prepara el terreny per a una convocatòria neta amb les 3 IAs a la vesprada.
+  - Treball en equip a tres bandes: s'afiança el sistema en l'estat actual i es prepara el terreny per a una convocatòria neta amb els 3 agents locals a la vesprada.
 
 ### 3. Part Marmota (Checkpoint Executable i Següents Passos)
 
@@ -78,7 +78,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 - **Tasques pendents per a la pròxima sessió:**
   1. `[ ]` Completar a mà el full de càlcul Excel del 3T per part del Mestre Javi.
   2. `[ ]` Obrir nou xat net després del reinici del Mac.
-  3. `[ ]` Convocatòria conjunta de l'Olivera a 3 IAs (MarIA + Claude + Gemini/Codex) per al bloc del Xat (dissociació d'identitats, peu del rail i proves mòbils), les publicacions i la coordinació amb Sollutia.
+  3. `[ ]` Convocatòria conjunta de l'Olivera als 3 agents locals (MarIA + Claude + Gemini/Codex) per al bloc del Xat (dissociació d'identitats, peu del rail i proves mòbils), les publicacions i la coordinació amb Sollutia.
 
 <!-- SDP:SECTION acta.s5 -->
 ## Pendents
@@ -91,8 +91,4 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 ## Vincles
 
 - [[00_index]]
-- `261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria`
-- `261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio`
-- `261014_2035_auditoria_claude`
-- `261014_2040_auditoria_gemini4`
 

@@ -46,3 +46,7 @@ universals, compatibilitat especulativa, dependències ornamentals i duplicats
 L’humà fixa propòsit, prioritats i compromisos. La IA qüestiona contradiccions,
 proposa opcions amb costos i executa la rutina verificable. Si una ordre nova
 deroga una norma anterior, prepara una ADR; no reescriu la història.
+
+## Vincles
+
+- [[00_index]]

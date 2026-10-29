@@ -165,6 +165,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/uploads/brain/nano_mixa_socis_1774215027069.png', 'La Mixa i els socis', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_oli_oliva_1774198089084.png', 'Oli d’oliva', 'contingut', 'ia'),
   e('/assets/uploads/brain/nano_pedra_seca_1777089570387.webp', 'Pedra seca', 'contingut', 'ia'),
+  e('/assets/uploads/brain/nano_versions_ibanez_v1_1_10.webp', 'El tauler de versions del poble', 'contingut', 'ia'),
   e('/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png', 'Termodinàmica i maquinari d’IA', 'contingut', 'ia'),
   e('/assets/uploads/brain/xat_portada.webp', 'Portada del Xat', 'contingut', 'ia'),
 

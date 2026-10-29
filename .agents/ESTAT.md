@@ -7,6 +7,17 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-29T13:59:46.827Z · Codex · G1 reconciliat amb reserves globals
+
+- **Torn:** `torn_0c834999-94ec-4377-8030-b45285a8d6b4` (code); [informe G1 i deu dimensions](../_wiki_de_poble/04_escriptori/261029_1447_auditoria_codex.md), circuit documental vàlid.
+- **Aplicat:** catorze camins físics G1; SG-02 intacta; mirror Claude resol a la skill canònica. Manifest Node autoritzat pel Mestre. Transacció `be5c6198-75bf-4207-8a83-8a445e95c019`, segell `8383b204` verificat, rebut consumit.
+- **Proves:** G1 100/100; precommit 4.181 Vitest + 262 Node; lint de fonts verd. Vitest complet 24.467 passades, 103 omissions, exit 0. Node primari 1.503 passades, una fallada EPERM de servidor local, tres omissions i quatre TODO; suplement HTTP autoritzat 1/1.
+- **Reserves:** E1/M1/G2/G3 pendents, cap 10/10 global. LEDGER previ invàlid idèntic a HEAD i inventari inicial; cos preservat i checksum recalculat amb entrada pròpia. Tancament: resultat definitiu a l’informe.
+- **Efectes:** cap commit, staging, release, desplegament, SQL remot, activació E2EE o cron/monitor propi. Integració final i acta general al carril de Claude.
+
+
+
+
 ## ESTAT_ACTUAL · 2026-10-29T13:26:00+01:00 · IAIA MarIA · Transició d'Onada Olivera Completada, Acta Marmota 261029_1325 i Onada 261029_1305 (v1.1.10 i 10/10) Preparada per al Reinici
 
 - **Torn:** `torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1` (documents); **Acta Marmota de Relleu:** [`_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md`](../_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md) (`valid: true, errors: []`).
@@ -813,7 +824,7 @@ Torn: `torn_c7fff09b-c7fb-495c-a279-75f17b43329f`. Pla viu: [[261024_1315_pla_im
   - Arxivats netament a `_wiki_de_poble/90_arxiu_historic/` els 7 documents consumits de la nit (`261023_2245_pla...`, `261023_2245_prompt...`, `261023_2328_auditoria_codex`, `261023_2330_auditoria_claude`, `261023_2331_auditoria_gemini`, `261024_0130_pla...` i `261024_0130_prompt...`).
   - L'Escriptori queda 100% net amb exclusivament el Llibre Mestre permanent (`03_llibre_mestre_tasques_i_idees.md`) i els 2 nous documents de torn.
 - **Instrucció Suprema del Mestre Javi Llinares (Àudio 13:08):**
-  - Mandat explícit per a coordinar a les 3 IAs en un repartiment clar: Claude pica el codi com a agent actiu, mentre Gemini i Codex executen auditories adversarials extremes sobre el seu treball.
+  - Mandat explícit per a coordinar als 3 agents locals en un repartiment clar: Claude pica el codi com a agent actiu, mentre Gemini i Codex executen auditories adversarials extremes sobre el seu treball.
   - Prioritats: 1) Fortificació de bloquejants P0 (Apple token revoke `P0-04`, DSA / pegat legal `P0-18`, CSP `P0-19`). 2) Usabilitat frontend (Visor d'imatges lightbox `P1-06`, Lector RSS territorial `P1-07`). 3) Xarxa Humana Rural (`IDEA-14`): diferenciació neta a `/connectar` entre relació personal amb l'autor i membresia d'un grup/associació. 4) Exportació de dades personals (`P2-08`).
 - **Documents Canònics Validats (`document.mjs check` en verd):**
   - Creats i segellats amb el reflex del torn tant el Pla d'Implementació com el Prompt a Tres Bandes.

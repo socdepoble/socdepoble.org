@@ -28,7 +28,7 @@
     },
     "LocalNotifications": {
       "smallIcon": "ic_stat_sdp",
-      "iconColor": "#0F672F"
+      "iconColor": "#0e662e"
     },
     "SocialLogin": {
       "providers": {

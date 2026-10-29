@@ -84,7 +84,7 @@ export default function EspecimenTipografia() {
 
       <h4>Espècimen viu</h4>
       <div className="component-doc-preview">
-        <h1>Títol de pàgina (h1)</h1>
+        <header className="page-title"><h1>Títol de pàgina (h1)</h1></header>
         <h2>Subtítol que acompanya la lectura (h2)</h2>
         <p className="lead">Entradeta o resum que convida a entrar en matèria. Sempre davall del subtítol.</p>
         <h3>Apartat (h3)</h3>

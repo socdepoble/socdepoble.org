@@ -29,3 +29,7 @@ El Mestre ha dirigit una sessió intensiva per polir l'arquitectura i l'UI de S�
 2. Verificar el **ZIP 1.0.2** generat per Claude i prendre decisió sobre les menudalles que ha deixat penjades (el botó de CopyrightTrencat i el menú a 320px).
 3. Entregar el nou Prompt (`_wiki_de_poble/04_escriptori/261004_0320_prompt_claude_gestoria.md`) a Claude en un xat fresc per arrencar el motor de la Gestoria, refactoritzar l'RSS/Nevera, i tancar el Xat Multimèdia.
 4. Codex continuarà reservat per entrar només en punts crítics (quan la Gestoria estiga implementada) i validar el Codi, i així no cremar el 51% lliure que li queda de quota setmanal.
+
+## Vincles
+
+- [[00_index]]

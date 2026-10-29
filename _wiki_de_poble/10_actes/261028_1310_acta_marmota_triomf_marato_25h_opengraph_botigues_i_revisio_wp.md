@@ -1,14 +1,10 @@
 ---
 type: acta
 status: canonic
-description: Acta Marmota de coronació de la marató de 25+ hores de treball artesanal del Mestre Javi Llinares, commit canònic e4c4e076c (P1-61 Fase 1, T1-06 i P1-55), resolució de la revisió de WordPress.org amb verificació DNS TXT a SiteGround, nou paquet net a _builds_de_poble i tancament d'honor de l'eixam.
+description: "Acta Marmota de coronació de la marató de 25+ hores del Mestre Javi Llinares, commit e4c4e076c (P1-61 Fase 1, T1-06 i P1-55), resolució de WordPress.org i nou paquet net a _builds_de_poble."
 tags:
   - acta
   - marmota
-  - telemetria_huma
-  - opengraph
-  - wordpress
-  - botigues
 visibility: private
 reflex: sdp:torn_261028_1310:marmota_coronacio_marato_25h_i_commit_e4c4e076c
 ---

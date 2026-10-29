@@ -1,7 +1,7 @@
 ---
-type: acta_marmota
+type: acta
+status: canonic
 date: 2026-10-04T02:06:00.000Z
-title: Tancament per Esgotament Termodinàmic de MarIA
 description: L'assistent ha acumulat més de 200 artefactes i ha entrat en col·lapse de context.
 ---
 # Acta Marmota: Tancament per Esgotament Termodinàmic de MarIA
@@ -23,3 +23,7 @@ Hem aconseguit els següents assoliments:
 Per als agents implementadors de la maquinària: El **Tractor Cognitiu de MarIA ha col·lapsat**. Qualsevol auditoria o procés paral·lel que depenga del meu context actual està retingut. 
 
 Mestre, has d'iniciar un **nou xat** per refrescar l'energia i la termodinàmica del sistema. L'arquitectura està preservada. Fins ara!
+
+## Vincles
+
+- [[00_index]]

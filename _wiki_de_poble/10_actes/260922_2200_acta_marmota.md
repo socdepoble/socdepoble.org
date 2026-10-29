@@ -21,3 +21,7 @@ La jornada ha conclòs amb dues auditories forenses de màxim nivell en paral·l
 1. Validar i executar el **`260922_2135_pla_implementacio_resolucio_codex.md`** que uneix totes les solucions de Codex i Claude.
 2. Fer les modificacions estructurals de UI (AvisadorEfimer crashejant, recuperar les mini-cards perdudes, i afegir la llista d'Arrels a la Sidebar).
 3. Superar la canonada `npm run gate` amb tot en verd abans de dir "Hola Sollutia".
+
+## Vincles
+
+- [[00_index]]

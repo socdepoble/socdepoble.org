@@ -24,3 +24,7 @@ S'ha dut a terme una intensa sessió d'auditoria (Fase 1) amb Codex per a neteja
 - Les portes (`npm run gate`) donen verd.
 - L'arrel del projecte està lliure d'importacions cap al no-res.
 - **ATENCIÓ:** El Codex necessita un Nou Xat per a la següent operació (Regla: Nova Petorreta, Nou Xat).
+
+## Vincles
+
+- [[00_index]]

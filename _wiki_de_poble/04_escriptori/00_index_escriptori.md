@@ -14,8 +14,13 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]] — Prompt operatiu per a l'Onada `261029_1305` (Claude Code, Gemini CLI i GPT Codex): liquidació del deute tècnic de portes (`design_guard`, `tractor-cens`, `tractor-frontmatter`, `0838` `T11`), actius (`OG-02`, `R-02`, `D-C2`) i Fase 4 d'E2EE fins al `10,0/10` unànime
-- [[261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]] — Pla d'Implementació rector de l'onada `261029_1305` amb matriu d'exclusivitat de carrils (`E1`, `M1`, `G1`, `G2`, `G3`)
+- [[261029_1605_prompt_opus_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]] — Prompt operatiu `261029_1605` per a Claude Opus 5.5 Ultracode (Àlbum Multimèdia Local `IDEA-54`, negreta al Xat `IDEA-53` i deute E2EE/PWA) · per a 
+- [[261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]] — Pla d'Implementació `261029_1605` per a l'Àlbum Multimèdia Local estil Gestoria, negreta al Xat i liquidació E2EE/PWA · per a 
+-  — Auditoria Gemini 4 Argon (High) dels carrils `G2` i `G3` de l'Onada `261029_1305`: `design_guard` a `0` crítics, estils inline a `0`, fitxa gestor a `0`, cens `C2=0`/`C4=0` i `tractor-frontmatter` `F9` · per a 
+-  — Informe de Claude Code (Fable 5.1) dels carrils `E1` i `M1` de l'Onada `261029_1305` (E2EE Fase 4, `OG-02`, `R-02`, `D-C2`, WP `1.1.10`) · per a 
+-  — Auditoria de GPT Codex del carril `G1` de l'Onada `261029_1305` (`0838` `T11`, `100/100` tests) · per a  i 
+-  — Prompt operatiu per a l'Onada `261029_1305` (Claude Code, Gemini CLI i GPT Codex): liquidació del deute tècnic de portes (`design_guard`, `tractor-cens`, `tractor-frontmatter`, `0838` `T11`), actius (`OG-02`, `R-02`, `D-C2`) i Fase 4 d'E2EE fins al `10,0/10` unànime · per a 
+-  — Pla d'Implementació rector de l'onada `261029_1305` amb matriu d'exclusivitat de carrils (`E1`, `M1`, `G1`, `G2`, `G3`) · per a 
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
@@ -67,6 +72,11 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
+- [[../90_arxiu_historic/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
+- [[../90_arxiu_historic/261029_1447_auditoria_codex]]
+- [[../90_arxiu_historic/261029_1455_auditoria_claude]]
+- [[../90_arxiu_historic/261029_1514_auditoria_gemini]]
 - [[../90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
 - [[../90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
 - [[../90_arxiu_historic/261029_0336_auditoria_gemini]]

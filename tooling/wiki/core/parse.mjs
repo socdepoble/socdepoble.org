@@ -232,6 +232,12 @@ export function resolveLink(link, source, resolver) {
   }
 
   const base = path.posix.basename(target);
+  // Un basename local existent té precedència sobre homònims globals,
+  // igual que el resolutor de disc compartit d'Olivera/SCC.
+  const localPath = posix(path.posix.normalize(path.posix.join(path.posix.dirname(source.relPath), target)));
+  const localHits = resolver.byPath.get(normalitza(localPath)) || [];
+  if (localHits.length === 1) return { status: 'resolved', doc: localHits[0] };
+  if (localHits.length > 1) return { status: 'ambiguous', docs: localHits };
   const baseHits = resolver.byBase.get(normalitza(base)) || [];
   if (baseHits.length === 1) return { status: 'resolved', doc: baseHits[0] };
   if (baseHits.length > 1) {

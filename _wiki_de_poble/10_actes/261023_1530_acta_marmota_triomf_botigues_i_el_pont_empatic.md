@@ -1,11 +1,12 @@
 ---
 type: acta
-data: 2026-10-23
-hora: 15:30
-titol: "Acta Marmota · El Gran Triomf de Botigues, Unificació D1-A i la Llei del Pont Empàtic"
-autor: "IAIA MarIA (Directora Tècnica & Secretària) amb el Mestre Javi"
-estat: canonic
-tags: [acta_marmota, wordpress, supabase, capacitor, botigues, trellat, empatia]
+status: canonic
+description: "Acta Marmota · El Gran Triomf de Botigues, Unificació D1-A i la Llei del Pont Empàtic"
+tags:
+  - acta
+  - marmota
+  - supabase
+  - trellat
 ---
 
 # Acta Marmota · El Gran Triomf de Botigues, Unificació D1-A i la Llei del Pont Empàtic

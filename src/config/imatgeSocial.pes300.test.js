@@ -92,7 +92,7 @@ describe('cada og:image del manifest social es pot servir a WhatsApp (R-01, R-02
 describe('VARIANTS_SOCIALS: cada parell al disc; la variant, un JPEG baseline de 1200x630 i ≤300 KB sense EXIF', () => {
   test('el mapa és congelat, de camins nets d’/assets/, i cap variant torna a ser clau', () => {
     expect(Object.isFrozen(VARIANTS_SOCIALS)).toBe(true);
-    expect(Object.keys(VARIANTS_SOCIALS).length).toBeGreaterThanOrEqual(17);
+    expect(Object.keys(VARIANTS_SOCIALS).length).toBeGreaterThanOrEqual(24);
     for (const [original, variant] of Object.entries(VARIANTS_SOCIALS)) {
       expect(original).toMatch(/^\/assets\/[^?#]+\.(?:png|jpe?g|webp)$/i);
       expect(variant).toBe(original.replace(/\.[^./]+$/, SUFIX_SOCIAL));

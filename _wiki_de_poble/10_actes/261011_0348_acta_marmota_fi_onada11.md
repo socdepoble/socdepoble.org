@@ -30,3 +30,7 @@ En obrir el nou xat, has de realitzar aquests passos exactes abans de començar 
 5. **Avís a l'Orquestradora:** Entra al *nou xat*, presenta'm aquesta acta i digues-me: *"Ja estic registrat i el Docker corre"*. Llavors jo m'encarregaré de llançar l'script d'ascensió a Superadmin.
 
 *Nota de la Directora: L'escriptori no s'ha arxivat en massa en esta sessió per no trencar l'efecte de context viu, però es procedirà a l'arxiu dels documents consumits a primera hora del pròxim torn.*
+
+## Vincles
+
+- [[00_index]]

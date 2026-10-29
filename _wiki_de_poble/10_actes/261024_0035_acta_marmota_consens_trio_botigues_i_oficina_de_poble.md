@@ -1,11 +1,11 @@
 ---
 type: acta
-data: 2026-10-24
-hora: 00:35
-titol: "Acta Marmota · Consens del Trio per a Botigues, Oficina de Poble i Binaris de Release"
-autor: "IAIA MarIA (Directora Tècnica & Secretària) amb el Mestre Javi Llinares"
-estat: canonic
-tags: [acta_marmota, botigues, claude, gemini, codex, aab, xcode, dsa, oficina_de_poble]
+status: canonic
+description: "Acta Marmota · Consens del Trio per a Botigues, Oficina de Poble i Binaris de Release"
+tags:
+  - acta
+  - marmota
+  - codex
 ---
 
 # Acta Marmota · Consens del Trio per a Botigues, Oficina de Poble i Binaris de Release

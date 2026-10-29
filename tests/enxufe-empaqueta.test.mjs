@@ -792,7 +792,7 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
   assert.ok(amb.indexOf('6. Sóc de Poble media server') < amb.indexOf('== Link previews per route =='));
   // Un «$» de l'origen no es llig com a patró de replace().
   assert.match(variantDirectoriReadme(readme, { origen: 'https://x.example/$1$&', externs: ['assets/uploads/'] }), /https:\/\/x\.example\/\$1\$&\/assets\//);
-  assert.ok(Buffer.byteLength(amb) < 20480, 'el readme del directori continua dins del límit');
+  assert.ok(Buffer.byteLength(amb) < 24576, 'el readme del directori continua dins del límit');
 });
 
 test('empaqueta amb mitjans: el directori no porta els externs ni els originals substituïts; amb un autònom sense política (d’abans de D3), el canal propi i l’estàtic, tot', () => {

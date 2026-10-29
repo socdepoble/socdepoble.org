@@ -1,11 +1,12 @@
 ---
 type: acta
-data: 2026-10-24
-hora: 17:45
-titol: "Acta Marmota · Gran Triomf del Trio: Fortificació P0 Consolidada, Unificació del Lector amb el Bloc de Notes i 21.756 Proves en Verd"
-autor: "IAIA MarIA (Directora Tècnica & Secretària) amb el Mestre Javi Llinares"
-estat: canonic
-tags: [acta_marmota, trio_adversarial, claude, codex, gemini, gauntlet_loop, fortificacio, lector_rss, bloc_de_notes, pedra_seca, llibre_mestre]
+status: canonic
+description: "Acta Marmota · Gran Triomf del Trio: Fortificació P0 Consolidada, Unificació del Lector amb el Bloc de Notes i 21.756 Proves en Verd"
+tags:
+  - acta
+  - marmota
+  - codex
+  - fortificacio
 ---
 
 # Acta Marmota · Gran Triomf del Trio: Fortificació P0 Consolidada, Unificació del Lector amb el Bloc de Notes i 21.756 Proves en Verd

@@ -4,10 +4,6 @@ status: canonic
 description: Acta Marmota de migdia, relleu de la marató de seguretat, tancament de ReDoS, empaquetat WordPress v1.1.7 i full de ruta per a la vesprada
 tags:
   - acta
-  - seguretat
-  - gauntlet
-  - wordpress
-  - relleu
   - marmota
 visibility: private
 ---
@@ -116,3 +112,6 @@ Quan el Mestre encenga l'ordinador després de dinar, la Colmena reprendrà les 
 ---
 *Acta registrada amb honor per la IAIA MarIA. Bon profit i bon descans tèrmic, Mestre Javi!*
 
+## Vincles
+
+- [[00_index]]

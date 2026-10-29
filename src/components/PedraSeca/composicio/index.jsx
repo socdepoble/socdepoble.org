@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
 
 // Variants de cada component: mateixa escala pública, classes explícites i auditables.
 const ESPAIS = {
@@ -56,12 +57,14 @@ export const Accions = React.forwardRef(function Accions({ children, className =
  * Contenidor Grid amb Container Queries per defecte per ser auto-responsive.
  */
 export const Graella = ({ children, gap = 4, columns = 'auto', minWidth = '300px', className = '', as: Component = 'div', ...props }) => {
-  const gridStyle = columns === 'auto' 
-    ? { gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth}, 1fr))` } 
-    : { gridTemplateColumns: `repeat(${columns}, 1fr)` };
-    
+  const ref = useRef(null);
+  const gridTemplateColumns = columns === 'auto'
+    ? `repeat(auto-fit, minmax(${minWidth}, 1fr))`
+    : `repeat(${columns}, 1fr)`;
+  usePropietatsCss(ref, { 'grid-template-columns': gridTemplateColumns });
+
   return (
-    <Component className={`sdp-graella ${ESPAIS.graella[gap] || ''} ${className}`} style={gridStyle} {...props}>
+    <Component ref={ref} className={`sdp-graella ${ESPAIS.graella[gap] || ''} ${className}`} {...props}>
       {children}
     </Component>
   );
@@ -72,13 +75,15 @@ export const Graella = ({ children, gap = 4, columns = 'auto', minWidth = '300px
  * Dos elements on el primer és la barra lateral i el segon el contingut, o viceversa, segons Container Queries.
  */
 export const Costat = ({ children, width = '250px', gap = 4, reversed = false, className = '', ...props }) => {
+  const ref = useRef(null);
   const [sidebar, content] = React.Children.toArray(children);
-  const layoutStyle = reversed 
-    ? { gridTemplateColumns: `1fr ${width}` } 
-    : { gridTemplateColumns: `${width} 1fr` };
-    
+  const gridTemplateColumns = reversed
+    ? `1fr ${width}`
+    : `${width} 1fr`;
+  usePropietatsCss(ref, { 'grid-template-columns': gridTemplateColumns });
+
   return (
-    <div className={`sdp-costat ${ESPAIS.costat[gap] || ''} ${className}`} style={layoutStyle} {...props}>
+    <div ref={ref} className={`sdp-costat ${ESPAIS.costat[gap] || ''} ${className}`} {...props}>
       {reversed ? <>{content}{sidebar}</> : <>{sidebar}{content}</>}
     </div>
   );

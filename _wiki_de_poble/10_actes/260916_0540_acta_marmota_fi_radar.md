@@ -32,3 +32,7 @@ Z ens deixa tasques importants d'espartanisme de cara a demà:
 
 ## 5. El Contracte
 El context és net. Demà comencem amb el dictamen de seguretat de Sollutia a la safata d'entrada i un graf molt més sec i autèntic.
+
+## Vincles
+
+- [[00_index]]

@@ -18,3 +18,7 @@ description: Acta de tancament d'emergència per fatiga de context (més de 250 
 - Aquesta sessió es tanca ara mateix de forma abrupta però controlada per evitar al·lucinacions per fatiga d'artefactes.
 - Quan s'òbriga un nou xat, l'orquestradora ha de llegir aquest document i verificar en quin estat ha deixat Claude l'arbre després d'acabar els seus 6 fronts.
 - No cal restaurar res, només reprendre la supervisió de l'Escriptori de Treball.
+
+## Vincles
+
+- [[00_index]]

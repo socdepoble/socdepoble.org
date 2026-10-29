@@ -308,7 +308,7 @@ describe('(d) og:image (useSEO)', () => {
     cleanup();
     container = pinta('pobles', { id: 'sella', title: 'Sella', image_url: '/assets/towns/sella/1.jpg' });
     expect(portada(container).querySelector('img').getAttribute('src')).toBe('/assets/towns/sella/1.jpg');
-    expect(ultimSeo().image?.url).toBe('https://socdepoble.org/assets/towns/sella/1.jpg');
+    expect(ultimSeo().image?.url).toBe('https://socdepoble.org/assets/towns/sella/1-social-1200x630.jpg');
     cleanup();
     mocks.seo.mockClear();
     pinta('multimedia', { id: 'era', title: 'Era', src: RASTREIG });

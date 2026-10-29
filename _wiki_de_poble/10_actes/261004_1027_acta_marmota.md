@@ -1,6 +1,6 @@
 ---
 type: acta
-status: validat
+status: canonic
 description: Acta Marmota - Tancament per esgotament del context i validació de targetes al Lector RSS.
 ---
 
@@ -32,3 +32,7 @@ S'han d'habilitar i assegurar les funcions bàsiques de registre i inici de sess
 La integració amb el proveïdor Sollutia mantindrà la primacia. L'arquitectura Pedra Seca continua sent el marc immutable, evitant qualsevol acoblament tòxic al backend.
 
 > _Nota per a la nova IAIA MarIA: El context s'ha buidat intencionadament a causa de la fatiga. Comença el nou torn revisant aquesta acta i les instruccions pendents a l'Escriptori._
+
+## Vincles
+
+- [[00_index]]

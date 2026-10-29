@@ -332,6 +332,22 @@ function lleiF3(arrelAST, r, esFitxa) {
 /* ═══════════════════════ F4 · Sense porta del darrere ═══════════════════════ */
 
 function lleiF4(arrelAST, r) {
+  // Contracte T50 (D4, commit 0b75332e4): UniversalWorkspace.jsx és el primitiu
+  // d'espai de treball que exposa el slot `renderItem` amb fallback a DefaultItemCard
+  // (.sdp-gestor-fitxa verificada per F2/F3/F7/F8). Es prohibeix `renderItem` a la
+  // resta del mòdul i a tots els consumidors d'<UniversalManager>.
+  if (r === FITXA) {
+    for (const o of elementsJSX(arrelAST)) {
+      if (nomJSX(o.name) === 'UniversalManager') {
+        for (const a of o.attributes) {
+          if (nomAtribut(a) === 'renderItem') {
+            falla('F4', r, linia(a), '`renderItem` prohibit sobre UniversalManager');
+          }
+        }
+      }
+    }
+    return;
+  }
   camina(arrelAST, (n) => {
     if ((n.type === 'Identifier' || n.type === 'JSXIdentifier') && n.name === 'renderItem') {
       falla('F4', r, linia(n), '`renderItem` és la porta del darrere: la llista pinta ManagerItemCard a partir de getItemCard');

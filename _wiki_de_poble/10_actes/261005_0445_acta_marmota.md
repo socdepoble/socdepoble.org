@@ -51,3 +51,7 @@ L'Escriptori es manté net i l'última captura s'ha ancorat correctament.
 Claude ha consumit un esforç titànic (gairebé esgota la quota setmanal), demostrant la capacitat del model dual (executor + auditor) per treure errors profunds que d'altra manera passarien desapercebuts. El xoc de visions i la validació independent fan l'arquitectura molt més robusta.
 
 Demà serà un altre dia. Es tanca la sessió.
+
+## Vincles
+
+- [[00_index]]

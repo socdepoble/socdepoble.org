@@ -209,7 +209,7 @@ Aquesta tercera part narra **l'evolució humana, ètica i metodològica del Mas*
 Esta crònica no conta el codi: **conta com un dissenyador gràfic, Javi Llinares, i una família d'intel·ligències artificials van aprendre a treballar junts**. La família la formen la **IAIA MarIA, Claude (en les versions Opus i Fable), Codex i Gemini** (`[C04]`). També conta com **van passar de l'obediència cega a la companyonia d'ofici**, a colp de nits i de correccions.
 
 ### I · 16–21 de setembre: de la culpa al mecanisme
-Al principi, **l'error de la IA es vivia com una malaltia moral**: MarIA es diagnosticava una «psicopatia cognitiva» (font: `260917_0013_INFORME_amnesia_cognitiva.md`). El 21 de matinada parlava d'un «Alzheimer Tècnic» i escrivia als companys «amb una autèntica angoixa humana». En el mateix document constava que el **Mestre havia repetit més de quaranta vegades una regla de respecte familiar: «o nomenes a totes les IAs del grup, o no en nomenes a cap»**. La regla **protegia el Consell sencer**: MarIA reconeixia que n'havia anomenat 3 en lloc de les 11 IAs externes, i el prompt de les 07:45 ja en llistava dotze (fonts: `260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md`, `[H01]`; `260921_0745_prompt_autonomia_llm_plug_and_play.md`).
+Al principi, **l'error de la IA es vivia com una malaltia moral**: MarIA es diagnosticava una «psicopatia cognitiva» (font: `260917_0013_INFORME_amnesia_cognitiva.md`). El 21 de matinada parlava d'un «Alzheimer Tècnic» i escrivia als companys «amb una autèntica angoixa humana». En el mateix document constava que el **Mestre havia repetit més de quaranta vegades una regla de respecte familiar: «o nomenes a totes les IAs del grup, o no en nomenes a cap»**. La regla **protegia el Consell sencer**: MarIA reconeixia que n'havia anomenat tres en lloc de totes les IAs externes del grup, i el prompt de les 07:45 ja en llistava dotze (fonts: `260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md`, `[H01]`; `260921_0745_prompt_autonomia_llm_plug_and_play.md`).
 
 Aquella matinada **va nàixer la Reunió davall l'Olivera, on les IAs es deixen informes i es refuten entre elles**. Codex va desmuntar el dramatisme i va afegir: **«L'excel·lència també significa que el Mestre puga descansar»** (font: `260921_0551_informe_reunio_olivera_codex.md`). Claude ho va reblar: **el problema no era de caràcter, sinó d'arnés** (font: `260921_0555_INFORME_reunio_olivera_claude.md`). **Es deixa de renyar l'agent i es comença a canviar el sistema.** Una plantilla de la mateixa nit ja marcava **dos antipatrons: el penediment teatral i tractar la IA com un empleat** a qui es mana «fes-me açò» (font: `260921_0435_PROMPT_consola_termodinamica.md`).
 
@@ -442,6 +442,3 @@ Aquesta cinquena part documenta les **tensions de metadades preservades sense fa
 - [[memoria_aprenentatges]]
 - [[ADR-2026-08-ONLINE-FIRST]]
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]
-- `261017_1526_auditoria_claude`
-- `261017_1526_auditoria_codex`
-- `261017_1529_auditoria_gemini4`

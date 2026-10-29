@@ -28,3 +28,7 @@ Hem desplegat el "subagent navegador" i l'hem fet treballar contra `http://local
 
 ## Següent acció
 La feina encomanada pel Mestre per al seu T3 s'ha completat. La sessió està llesta per al tancament. El Mestre podrà iniciar ara la prova real al seu nou entorn i interactuar al Mur o al Bloc de Notes.
+
+## Vincles
+
+- [[00_index]]

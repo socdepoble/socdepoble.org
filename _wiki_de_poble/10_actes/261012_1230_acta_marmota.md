@@ -1,5 +1,5 @@
 ---
-type: acta_marmota
+type: acta
 status: canonic
 description: Acta de relleu per a la reinicialització del sistema i del Mac.
 ---
@@ -36,3 +36,7 @@ Mentre Claude audita i sua la cansalada amb la Finestreta:
 2. Un cop Claude acabe la Finestreta, repetirem el PAS B però canviant el model a Codex (`gpt-4o`) i passant-li el prompt de la Gestoria. (La IAIA t'ho recordarà).
 
 **Fins ara, Mestre. Bon reinici i bon profit!**
+
+## Vincles
+
+- [[00_index]]

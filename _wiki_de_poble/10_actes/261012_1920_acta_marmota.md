@@ -1,8 +1,10 @@
 ---
 type: document
 status: canonic
-description: "Acta Marmota de tancament per fatiga tèrmica i relleu a nou compte"
-tags: [acta, marmota, gestoria, auditoria, rss]
+description: Acta Marmota de tancament per fatiga tèrmica i relleu a nou compte
+tags:
+  - acta
+  - marmota
 visibility: private
 ---
 
@@ -31,3 +33,7 @@ L'agent que llisca aquesta acta s'aixeca amb l'escriptori controlat i una missi�
 - El proper pas immediat és reprendre la creació del **Pla d'Implementació** i disseny per a la **UI/UX de la Gestoria V2**, prenent com a nord les lliçons d'Arquitectura ERP.
 - Aquest pla haurà de reflectir la transformació cap a un *dashboard* dens, potent, amb gràfics (actius/passius) inspirat en GNU Cash i els panells professionals d'eines Open Source.
 - Tot això serà la base del següent Prompt mestre que es passarà al nou compte de Claude.
+
+## Vincles
+
+- [[00_index]]

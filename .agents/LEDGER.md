@@ -1120,4 +1120,9 @@ Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Per ordre del Mestre en xat, e
 
 Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Pla [[261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]] vinculat i informe [[261029_0350_auditoria_claude]] vàlid. Sota el consentiment nocturn delegat pel Mestre (03:22) a la IAIA MarIA i a l'Olivera: commit `feaaf0e07` (243 camins, índex temporal, --no-verify) pujat a `fork/backup-notes-publish`, amb el deute 10/10 de l'onada anterior, T5.1, T11, P1-22/43/44/52 i P1-12 Fases 1-3 apagades per flag; assajat sobre la còpia exacta `8bd7096a` (precommit, ESLint, Vitest i Node sencers verds; design_guard i cens heretats, amb menys deute que al HEAD). Executor `c57b5fe2` (segell `460e83cb`). Paquet `socdepoble.zip` (`89b3125f739d80cda5166db222a41e404f2353890f45cfc6ac4530eb05af6d93`) des d'archive net i canal preview `tancament-feaaf0e07` (https://soc-de-poble--tancament-feaaf0e07-xmpk60bs.web.app, caduca el 2026-11-05). Cap migració aplicada, cap desplegament a `live`, cap activació d'E2EE.
 
-<!-- HASH: 89721b4309e3aa94ca96d244591948700f0dbb955e87b9022e8700f4d639d664 -->
+## 2026-10-29T13:59:46.827Z · Codex · torn_0c834999-94ec-4377-8030-b45285a8d6b4
+
+G1 0838 aplicat per executor amb manifest Node autoritzat. Transacció be5c6198-75bf-4207-8a83-8a445e95c019; SG-02 intacta; segell 8383b204. Informe 261029_1447_auditoria_codex.md vàlid; G1 100/100, precommit, lint de fonts i Vitest complet verds. Reserves globals i límits del sandbox documentats. LEDGER previ idèntic a HEAD i inventari inicial però checksum invàlid (cos 967823b10057f2e4c0326eeaa9fe11305daba95c1012b2c5e099da4105b8ccc8; marcador 89721b4309e3aa94ca96d244591948700f0dbb955e87b9022e8700f4d639d664); cos preservat i signatura recalculada amb esta entrada. Consulta inicial --help va obrir el torn reutilitzat de codi amb actor genèric, sense falsejar inventari. Cap commit, desplegament, SQL remot, flag o recurrència propis.
+
+
+<!-- HASH: e56af28c3c7d47374b0b98d7bbed79a11dfa106ac2795e4147d584af1180edd4 -->

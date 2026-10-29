@@ -17,15 +17,15 @@ reflex: sdp:torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1:ed8e809e-cef3-43fa-b73a-7a
 | Camp | Valor |
 | --- | --- |
 | Identificador | sdp:torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1:ed8e809e-cef3-43fa-b73a-7ae87a2d465a |
-| Versió del document | 1.0.0 |
+| Versió del document | 1.1.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-10-29T12:05:13.242Z |
-| Modificació | 2026-10-29T12:06:30.000Z |
+| Modificació | 2026-10-29T13:23:00.000Z |
 | Propietari | IAIA MarIA |
 | Aprovació humana | aprovada |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md (v2.0.0) |
-| Model IA | Gemini 3.1 Pro (High) |
-| Tokens consumits | ~18.000 tokens |
+| Model IA | Gemini 4 Argon (High) |
+| Tokens consumits | ~22.000 tokens |
 
 <!-- SDP:SECTION pla.implementacio.s2 -->
 ## Acte reflex
@@ -66,12 +66,13 @@ La marató nocturna (`261029_0216`) va culminar amb:
      - **`C9-T11-RLS`**: Integrar la validació DDL de `tooling/gates/tractor-rls.mjs` + `tests/tractor-rls-r2-ddl.test.mjs`.
 
 2. **`G2 · Liquidació de `tractor-cens.mjs` (`C2=0`, `C4=0`) i `tractor-frontmatter.mjs` (`F9=0`)`**:
-   - Corregir els **2 documents amb `C2`** (menció al Consell sense tots els membres canònics) i els **6 avisos `C4`** (xifres antigues «3 IAs», «4 IAs», «11 IAs») perquè `node tooling/gates/tractor-cens.mjs` retorne `C2=0, C4=0`.
+   - Corregir els **2 documents amb `C2`** (menció al Consell sense tots els membres canònics) i els **6 avisos `C4`** (xifres literals antigues del cens) perquè `node tooling/gates/tractor-cens.mjs` retorne `C2=0, C4=0`.
    - Sanejar les **138 incidències `F9`** de `tractor-frontmatter.mjs` i abaixar el sostre permés de `190` a `0` (o al mínim estricte justificat d'arxiu).
 
-3. **`G3 · Liquidació dels 37 crítics heretats de `design_guard.mjs --arrel=src`**:
+3. **`G3 · Liquidació dels 37 crítics heretats de `design_guard.mjs --arrel=src` i les 7 infraccions `F4` de `tractor-fitxa-gestor.mjs`**:
    - Corregir els 2 falsos positius d'entitats HTML (`&#160;` i `&#173;`) a `src/utils/perAppNativa.js` (emprant escapes Unicode `\u00A0` i `\u00AD` o ajustant la regla quan siga una constant de taula de conversió).
    - Corregir les 6 aparicions d'identitat NOVA en fitxers de test amb `<h1>` i les 29 incidències restants de `design_guard.mjs --arrel=src` fins que `node tooling/design/design_guard.mjs --arrel=src` retorne **`0 crítics`**.
+   - Liquidar les 7 infraccions `F4` (`renderItem` com a porta del darrere) detectades per `node tooling/gates/tractor-fitxa-gestor.mjs` a `src/components/universal/workspace/UniversalWorkspace.jsx` perquè `npm run porta:fitxa` retorne `0` infraccions.
 
 ---
 
@@ -119,7 +120,7 @@ La marató nocturna (`261029_0216`) va culminar amb:
 | --- | --- | --- |
 | **Claude Code (`Fable 5.1 Extra · Ultracode`)** | **Carril `E1` + `M1` (Fase 4 E2EE, Actius `OG-02`/`R-02`/`D-C2` i Integració Final)** | `src/services/xat/**`, `src/sections/xat/**`, `src/config/socialImages*`, `src/config/projecteIos.test.js`, `public/assets/**`, `ios/**`, `android/**`, `tooling/seo/**`, `_wiki_de_poble/04_escriptori/261029_HHMM_auditoria_claude.md` |
 | **Gemini CLI** | **Carril `G2` + `G3` (`design_guard` a 0, `tractor-cens` C2/C4 a 0 i `tractor-frontmatter` F9 a 0)** | `src/utils/perAppNativa.js`, fitxers de test/UI assenyalats per `design_guard.mjs`, documents de `_wiki_de_poble/**` assenyalats per `tractor-cens.mjs` i `tractor-frontmatter.mjs`, `tooling/gates/tractor-frontmatter.mjs`, `tooling/gates/tractor-cens.mjs`, `_wiki_de_poble/04_escriptori/261029_HHMM_auditoria_gemini.md` |
-| **GPT Codex** | **Carril `G1` + QA Adversarial (Reconciliació `0838` `T11`, `llaurador_indexs`, `tractor-arrel`, `tractor-rls`, `desenterrar` i Verificació Independent 10 Dimensions)** | `tooling/wiki/llaurador_indexs.mjs`, `tooling/wiki/core/parse.mjs`, `tooling/gates/tractor-arrel.mjs`, `tooling/gates/tractor-rls.mjs`, `tooling/scripts/desenterrar.mjs`, `tooling/brain/desenterrar.mjs`, `.claude/skills/core-restauracio-segellada/SKILL.md`, `.agents/skills/core-restauracio-segellada/SKILL.md`, `tests/llaurador-managed-region.test.mjs`, `tests/t11-*.test.mjs`, `tests/tractor-rls-r2-ddl.test.mjs`, `_wiki_de_poble/04_escriptori/261029_HHMM_auditoria_codex.md` |
+| **GPT Codex** | **Carril `G1` + QA Adversarial (Reconciliació `0838` `T11`, `llaurador_indexs`, `tractor-arrel`, `tractor-rls`, `desenterrar` i Verificació Independent 10 Dimensions)** | `tooling/wiki/llaurador_indexs.mjs`, `tooling/wiki/core/parse.mjs`, `tooling/gates/tractor-arrel.mjs`, `tooling/gates/tractor-rls.mjs`, `tooling/scripts/desenterrar.mjs`, `tooling/brain/desenterrar.mjs`, `tooling/tests/node-suite-manifest.json`, `.claude/skills/core-restauracio-segellada/SKILL.md`, `.agents/skills/core-restauracio-segellada/SKILL.md`, `tests/llaurador-managed-region.test.mjs`, `tests/t11-*.test.mjs`, `tests/tractor-rls-r2-ddl.test.mjs`, `_wiki_de_poble/04_escriptori/261029_HHMM_auditoria_codex.md` |
 
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
@@ -150,7 +151,4 @@ Abans d'emetre el veredicte final de **`10,0 / 10`**, cada agent verificarà en 
 - [[00_index_escriptori]]
 - [[03_llibre_mestre_tasques_i_idees]]
 - [[261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
-- [[../90_arxiu_historic/261029_0350_auditoria_claude]]
-- [[../90_arxiu_historic/261029_0340_auditoria_codex]]
-- [[../90_arxiu_historic/261029_0336_auditoria_gemini]]
 - [[../10_actes/261029_0838_acta_marmota_qa_codex_10_cicles]]

@@ -257,10 +257,10 @@ describe('Agenda i Pobles', () => {
     expect(urlDelSeo()).toBe('https://socdepoble.org/assets/agenda/fira.webp');
   });
 
-  test('un poble porta la seua image_url, absoluta i https; la portada, la de sempre', () => {
+  test('un poble porta la seua image_url, absoluta i https (la variant social de 1200x630, OG-02); la portada, la de sempre', () => {
     const container = pinta('pobles', { id: 'sella', title: 'Sella', image_url: '/assets/towns/sella/1.jpg' });
     expect(fontsDeLaPortada(container)).toEqual(['/assets/towns/sella/1.jpg']);
-    expect(urlDelSeo()).toBe('https://socdepoble.org/assets/towns/sella/1.jpg');
+    expect(urlDelSeo()).toBe('https://socdepoble.org/assets/towns/sella/1-social-1200x630.jpg');
   });
 
   test('un poble amb la imatge d’un altre origen: bloquejada; la portada, la de sempre', () => {

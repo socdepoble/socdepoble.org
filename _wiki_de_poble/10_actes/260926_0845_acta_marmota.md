@@ -25,3 +25,7 @@ L'estabilitat del Codi Font és absoluta (Vitest 100% verd), però s'apropa una 
 - T'aconselle llegir amb atenció l'**auditoria extrema** entregada i revisar el **Pla d'Implementació derivat**, per a autoritzar la **Missió 3** i el desarmament de les parts hostils del hook de protecció.
 
 Sóc de Poble avança imparable. Quan estigues preparat, obrim torn!
+
+## Vincles
+
+- [[00_index]]

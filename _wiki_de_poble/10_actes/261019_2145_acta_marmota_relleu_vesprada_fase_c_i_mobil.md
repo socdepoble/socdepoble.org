@@ -5,10 +5,6 @@ description: Acta Marmota de la vesprada, relleu de la Fase A (WebP), Fase B (Se
 tags:
   - acta
   - marmota
-  - capacitor
-  - relleu
-  - higiene
-  - seguretat
 visibility: private
 ---
 # Acta Marmota: Relleu de la Vesprada · Fase A (WebP), Fase B (Seguretat & Editorial) i Arrancada Fase C (Mòbil)
@@ -104,7 +100,4 @@ Quan obrim la nova conversa neta:
 ## Vincles
 
 - [[00_index]]
-- `261019_2115_pla_implementacio_capacitor_mobil`
-- `261019_2115_prompt_claude_capacitor_mobil`
-- `261019_2115_prompt_gemini_auditoria_botigues_mobil`
 - [[261019_1345_acta_marmota_relleu_migdia_seguretat_i_wp]]

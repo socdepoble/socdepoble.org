@@ -194,10 +194,26 @@ function entradaCanonica(text) {
     && /if\s*\(\s*esMain\s*\(\s*import\.meta\.url\s*\)\s*\)/.test(text);
 }
 
+function registraProvesNode(text) {
+  const bindings=[];
+  for(const match of text.matchAll(/^\s*import\s+(?:([\w$]+)|\{([^}]+)\})\s+from\s*['"]node:test['"]/gm)) {
+    if(match[1])bindings.push(match[1]);
+    for(const part of (match[2]||'').split(',')) {
+      const named=/^\s*(?:test|it|describe)(?:\s+as\s+([\w$]+))?\s*$/.exec(part);
+      if(named)bindings.push(named[1]||part.trim());
+    }
+  }
+  return bindings.some(name=>new RegExp('^\\s*'+name.replace(/[$]/g,'\\$&')+'\\s*\\(','m').test(text));
+}
 for (const abs of fitxers(CAMINS.portes)) {
   const r = rel(abs);
-  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) continue;
   const text = senseComentaris(llegeix(abs));
+  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) {
+    const invocat=Object.values(pkg?.scripts||{}).some(command=>String(command).includes(r));
+    // Una fixture no necessita CLI. Si npm la presenta com a script,
+    // cal una entrada real o registres Node:test, no sols el sufix del nom.
+    if(!invocat||registraProvesNode(text))continue;
+  }
   if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
   if (!bibliotecaDeclarada(r, text) && !entradaCanonica(text) && !RE_ENTRADA.some((re) => re.test(text))) {
     anota('A4', r, 'no té punt d\'entrada CLI: Node l\'importaria i eixiria amb codi 0',

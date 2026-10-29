@@ -25,7 +25,7 @@ vi.mock('../../hooks/useResolvedAsset.js', () => ({ useResolvedAsset: (valor) =>
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: (props) => {
     m.titols.push(props.title);
-    return <article><h1>{props.title}</h1>{props.subtitle && <h2>{props.subtitle}</h2>}<p>{props.lead}</p></article>;
+    return <article><header className="page-title"><h1>{props.title}</h1></header>{props.subtitle && <h2>{props.subtitle}</h2>}<p>{props.lead}</p></article>;
   }
 }));
 /* Gauntlet 261025_0545 (DF-03) · L'adaptador ja no s'importa ací: el compon

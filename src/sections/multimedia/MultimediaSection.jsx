@@ -11,6 +11,7 @@ import { SENSE_DATA, agrupaPerMes, etiquetaDelMes } from './cronologia.js';
 import { origenDe } from './origenImatges.js';
 import { useCensImatges } from './useCensImatges.js';
 import { VisorDeLArxiu } from './VisorDeLArxiu.jsx';
+import { GestorMultimediaLocal } from './GestorMultimediaLocal.jsx';
 
 /* Onada 0.3 (Gauntlet 261016, M04) · La marca de l'entrada de l'historial que
    ha obert el visor des de la graella: tancar-lo és tornar arrere (el botó
@@ -112,9 +113,11 @@ export default function MultimediaSection() {
     ? `IAIA (${deLaIaia.length})`
     : viewMode === 'timeline'
       ? `${t('section.multimedia.timeline', 'CRONOLOGIA').toUpperCase()} (${totes.length})`
-      : `${t('section.multimedia.all', 'TOTS')} (${totes.length})`;
+      : viewMode === 'local'
+        ? 'CARPETA LOCAL (_MULTIMEDIA_DE_POBLE)'
+        : `${t('section.multimedia.all', 'TOTS')} (${totes.length})`;
   const elementDestacat = viewMode === 'iaia' ? deLaIaia[0] : totes[0];
-  const mesDestacat = elementDestacat?.created_at ? new Date(elementDestacat.created_at).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' }) : '';
+  const mesDestacat = viewMode === 'local' ? '' : (elementDestacat?.created_at ? new Date(elementDestacat.created_at).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' }) : '');
 
   return (
     <UniversalPage
@@ -138,6 +141,7 @@ export default function MultimediaSection() {
               { valor: 'grid', text: t('section.multimedia.gallery', 'Galeria') },
               { valor: 'timeline', text: t('section.multimedia.timeline', 'Cronologia') },
               { valor: 'iaia', text: t('section.multimedia.iaia', 'IAIA') },
+              { valor: 'local', text: 'Carpeta local' },
             ]}
           />
         </div>
@@ -145,7 +149,9 @@ export default function MultimediaSection() {
 
 
 
-      {viewMode !== 'timeline' ? (
+      {viewMode === 'local' ? (
+        <GestorMultimediaLocal cens={cens} mitjansWeb={totes} />
+      ) : viewMode !== 'timeline' ? (
         <div className="photo-grid">
           {/* Ordre del Mestre (18-10-2026, relleu del Pla 2000; Gemini 2030, A3.2) ·
               La clau és l'id de la foto (únic: fusionaMitjans no en repetix cap),

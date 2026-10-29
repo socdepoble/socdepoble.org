@@ -663,21 +663,25 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     }
   });
 
-  /* QA-H03 (pla 261029_0216, Pas 8; 261029) · El token CSS --sdp-verd ha passat
-     a 0e662e (7,10:1 sobre blanc, AAA). Els PNG natius (icona i pantalla
-     d'inici) es queden deliberadament un pas arrere, al 0F672F (15, 103, 47):
-     ΔE2000 = 0,33, imperceptible; regenerar binaris és d'un torn natiu
-     (AppIcon, Splash, LaunchScreen.storyboard, ic_launcher_background.xml i
-     iconColor de capacitor.config.json junts), no d'un pegat de CSS. El literal
-     és el píxel que hi ha de veres: quan es regeneren, s'actualitza ací. Els
-     hex van sense coixinet: design_guard (raw-color) llig també els textos. */
-  test('Assets.xcassets: AppIcon (1024×1024) i Splash (2732×2732) en RGB sense alfa i amb el verd natiu 0F672F (un pas arrere del token --sdp-verd)', () => {
-    const capcaleraPng = (cami) => {
+  /* QA-H03 (pla 261029_0216, Pas 8) i D-C2 (pla 261029_1305, Bloc B, M1.3;
+     261029) · El token CSS --sdp-verd és 0e662e (7,10:1 sobre blanc, AAA) i
+     els PNG natius (icona i pantalla d'inici) ja van al mateix verd: 14, 102,
+     46, regenerats el 261029 amb un remapa exacte del 0F672F anterior (les
+     vores d'antialiàsing, resoltes per alfa). El literal és el píxel que hi ha
+     de veres, i el control negatiu baix garantix que no en queda cap de
+     l'antic: cap excepció de retard. Els hex van sense coixinet: design_guard
+     (raw-color) llig també els textos. */
+  test('Assets.xcassets: AppIcon (1024×1024) i Splash (2732×2732) en RGB sense alfa i amb el verd AAA 0e662e del token --sdp-verd, sense cap píxel del 0F672F anterior', () => {
+    /* Descodificador PNG mínim (RGB 8 bits, sense entrellaçat): els cinc filtres
+       de la línia (None, Sub, Up, Average, Paeth), com els escriu qualsevol
+       codificador; així la prova no depén del filtre que trie el codificador. */
+    const pixelsPng = (cami) => {
       const buf = fs.readFileSync(cami);
       const ample = buf.readUInt32BE(16);
       const alt = buf.readUInt32BE(20);
       const profunditat = buf.readUInt8(24);
       const tipusColor = buf.readUInt8(25);
+      const entrellacat = buf.readUInt8(28);
       let pos = 8;
       const trossos = [];
       while (pos < buf.length) {
@@ -686,17 +690,58 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
         if (etiqueta === 'IDAT') trossos.push(buf.subarray(pos + 8, pos + 8 + mida));
         pos += 12 + mida;
       }
-      const descomprimit = zlib.inflateSync(Buffer.concat(trossos));
-      const filtre = descomprimit[0];
-      const primerPixel = filtre === 0 ? [descomprimit[1], descomprimit[2], descomprimit[3]] : null;
-      return { ample, alt, profunditat, tipusColor, primerPixel };
+      const dades = zlib.inflateSync(Buffer.concat(trossos));
+      const bpp = 3;
+      const amplada = ample * bpp;
+      const pixels = Buffer.alloc(alt * amplada);
+      for (let y = 0; y < alt; y += 1) {
+        const filtre = dades[y * (amplada + 1)];
+        const entrada = y * (amplada + 1) + 1;
+        const eixida = y * amplada;
+        for (let x = 0; x < amplada; x += 1) {
+          const cru = dades[entrada + x];
+          const a = x >= bpp ? pixels[eixida + x - bpp] : 0;
+          const b = y > 0 ? pixels[eixida - amplada + x] : 0;
+          const c = x >= bpp && y > 0 ? pixels[eixida - amplada + x - bpp] : 0;
+          let predit = 0;
+          if (filtre === 1) predit = a;
+          else if (filtre === 2) predit = b;
+          else if (filtre === 3) predit = (a + b) >> 1;
+          else if (filtre === 4) {
+            const p = a + b - c;
+            const pa = Math.abs(p - a);
+            const pb = Math.abs(p - b);
+            const pc = Math.abs(p - c);
+            predit = pa <= pb && pa <= pc ? a : (pb <= pc ? b : c);
+          }
+          pixels[eixida + x] = (cru + predit) & 0xff;
+        }
+      }
+      let antics = 0;
+      let nous = 0;
+      for (let i = 0; i < pixels.length; i += bpp) {
+        if (pixels[i] === 15 && pixels[i + 1] === 103 && pixels[i + 2] === 47) antics += 1;
+        else if (pixels[i] === 14 && pixels[i + 1] === 102 && pixels[i + 2] === 46) nous += 1;
+      }
+      return { ample, alt, profunditat, tipusColor, entrellacat, primerPixel: [pixels[0], pixels[1], pixels[2]], antics, quotaNous: nous / (ample * alt) };
     };
-    const icona = capcaleraPng(path.join(APP, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png'));
-    expect(icona).toEqual({ ample: 1024, alt: 1024, profunditat: 8, tipusColor: 2, primerPixel: [15, 103, 47] });
-    for (const nom of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png']) {
-      const splash = capcaleraPng(path.join(APP, 'Assets.xcassets', 'Splash.imageset', nom));
-      expect(splash, nom).toEqual({ ample: 2732, alt: 2732, profunditat: 8, tipusColor: 2, primerPixel: [15, 103, 47] });
+    const icona = pixelsPng(path.join(APP, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png'));
+    expect(icona).toEqual({ ample: 1024, alt: 1024, profunditat: 8, tipusColor: 2, entrellacat: 0, primerPixel: [14, 102, 46], antics: 0, quotaNous: expect.any(Number) });
+    expect(icona.quotaNous).toBeGreaterThan(0.8);
+    const splash = pixelsPng(path.join(APP, 'Assets.xcassets', 'Splash.imageset', 'splash-2732x2732.png'));
+    expect(splash).toEqual({ ample: 2732, alt: 2732, profunditat: 8, tipusColor: 2, entrellacat: 0, primerPixel: [14, 102, 46], antics: 0, quotaNous: expect.any(Number) });
+    expect(splash.quotaNous).toBeGreaterThan(0.99);
+    /* Les tres escales del Splash són el mateix fitxer byte a byte (Contents.json 1x/2x/3x). */
+    const referencia = fs.readFileSync(path.join(APP, 'Assets.xcassets', 'Splash.imageset', 'splash-2732x2732.png'));
+    for (const nom of ['splash-2732x2732-1.png', 'splash-2732x2732-2.png']) {
+      expect(fs.readFileSync(path.join(APP, 'Assets.xcassets', 'Splash.imageset', nom)).equals(referencia), nom).toBe(true);
     }
+    /* El color de fons del LaunchScreen i de l'adaptive icon d'Android van al mateix verd (14, 102, 46). */
+    const storyboard = fs.readFileSync(path.join(APP, 'Base.lproj', 'LaunchScreen.storyboard'), 'utf8');
+    const fons = storyboard.match(/<color key="backgroundColor" red="([\d.]+)" green="([\d.]+)" blue="([\d.]+)"/);
+    expect(fons && fons.slice(1, 4).map((v) => Math.round(Number(v) * 255))).toEqual([14, 102, 46]);
+    const fonsAndroid = fs.readFileSync(path.join(ARREL, 'android', 'app', 'src', 'main', 'res', 'values', 'ic_launcher_background.xml'), 'utf8');
+    expect(fonsAndroid.toLowerCase()).toContain(`${'#'}0e662e`);
   });
 
   test('.gitignore: el que copia `cap sync` no entra a git; el projecte, sí', (context) => {

@@ -198,7 +198,7 @@ describe('sense xarxa: el tros del visor no arriba', () => {
     const { VisorDePublicacio } = await modul({ senseXarxa: true });
     render(
       <main>
-        <h1>Mac Mini M4</h1>
+        <header className="page-title"><h1>Mac Mini M4</h1></header>
         <VisorDePublicacio fotos={FOTOS} dades={DADES} etiquetaObri={OBRI} alt="Mac Mini M4" />
       </main>
     );
@@ -254,7 +254,7 @@ describe('sense xarxa: el tros del visor no arriba', () => {
       });
       render(
         <main>
-          <h1>Mac Mini M4</h1>
+          <h2>Mac Mini M4</h2>
           <VisorDePublicacio fotos={FOTOS} dades={DADES} etiquetaObri={OBRI} alt="Mac Mini M4" />
         </main>
       );

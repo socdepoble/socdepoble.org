@@ -40,7 +40,7 @@ import {
 /* ═══════════════════════════ Constants ═══════════════════════════ */
 
 const OPERACIO = 'restauracio-segellada';
-const DOMINI_SEGELL = 'sdp.desenterrar.segell.v2';
+const DOMINI_SEGELL = 'sdp.desenterrar.segell.v3';
 const PAPERERA = '.sdp-paperera';
 const MODES_ADMESOS = new Set(['100644', '100755']);
 const RE_REF = /^[A-Za-z0-9._/^~@{}-]{1,255}$/;
@@ -151,12 +151,32 @@ function llegeixRevisio(arrel, ref, rutaRel) {
 /* ═══════════════════════════ Segell ═══════════════════════════ */
 
 /**
- * Segell amb separador NUL i domini explícit. La V7 concatenava
+ * Segell v3 lligat a commit resolt, HEAD, bytes i mode actual. La V7 concatenava
  * `ref + fitxer + old + curr`: («abc»,«def») i («abcd»,«ef») donaven la
  * mateixa cadena. Amb NUL cap parell distint col·lisiona.
  */
-const calculaSegell = ({ ref, ruta, modeAntic, shaAntic, shaActual }) =>
-  sha256([DOMINI_SEGELL, ref, ruta, modeAntic, shaAntic, shaActual].join('\0'));
+const calculaSegell = ({ ref, head, ruta, modeAntic, shaAntic, shaActual, modeActual }) =>
+  sha256([DOMINI_SEGELL, ref, head, ruta, modeAntic, shaAntic, shaActual, modeActual].join('\0'));
+
+/** Capture bytes and filesystem mode; absence is distinct from an empty file. */
+function estatFitxer(abs) {
+  const st = fs.lstatSync(abs, { throwIfNoEntry: false });
+  if (st && (!st.isFile() || st.isSymbolicLink() || st.nlink !== 1)) {
+    throw new Error('El destí no és un fitxer regular amb identitat exclusiva.');
+  }
+  const blob = st ? fs.readFileSync(abs) : Buffer.alloc(0);
+  return { st, blob, hash: st ? sha256(blob) : '(absent)', mode: st ? (st.mode & 0o777).toString(8) : '(absent)' };
+}
+
+function comprovaCAS(arrel, abs, head, actual) {
+  const ara = estatFitxer(abs);
+  if (git(['rev-parse', '--verify', 'HEAD'], { arrel }).trim() !== head
+      || ara.hash !== actual.hash || ara.mode !== actual.mode
+      || Boolean(ara.st) !== Boolean(actual.st)
+      || (ara.st && (ara.st.dev !== actual.st.dev || ara.st.ino !== actual.st.ino))) {
+    throw new Error('CAS divergent: HEAD o el destí han canviat; cap substitució.');
+  }
+}
 
 /* ═══════════════════════════ Paperera ═══════════════════════════ */
 
@@ -164,26 +184,44 @@ const calculaSegell = ({ ref, ruta, modeAntic, shaAntic, shaActual }) =>
  * Còpia del que estem a punt de destruir. Sense açò, restaurar un fitxer amb
  * feina no compromesa és irreversible — i la llei diu que no ho pot ser.
  */
-function soterra(arrel, rutaRel, contingut, mode) {
+function soterra(arrel, rutaRel, contingut, mode, context) {
   const marca = new Date().toISOString().replace(/[:.]/g, '-');
   const desti = path.join(arrel, PAPERERA, marca, rutaRel);
   fs.mkdirSync(path.dirname(desti), { recursive: true, mode: 0o700 });
-  fs.writeFileSync(desti, contingut, { flag: 'wx', mode });
-  return posix(path.relative(arrel, desti));
+  if (!dins(arrel, fs.realpathSync(path.dirname(desti)))) throw new Error('Còpia de recuperació fora del repositori.');
+  const fd = fs.openSync(desti, 'wx', mode);
+  try {
+    fs.writeFileSync(fd, contingut);
+    fs.fchmodSync(fd, mode);
+    fs.fsyncSync(fd);
+  } finally { fs.closeSync(fd); }
+  if (!fs.readFileSync(desti).equals(contingut) || (fs.statSync(desti).mode & 0o777) !== mode) {
+    throw new Error('La còpia prèvia no conserva els bytes i el mode; cap substitució.');
+  }
+  const manifest = { schema: 'sdp.restauracio.backup.v1', ...context,
+    ruta: rutaRel, backup: posix(path.relative(arrel, desti)), beforeSha256: sha256(contingut),
+    beforeMode: mode.toString(8), createdAt: new Date().toISOString() };
+  fs.writeFileSync(`${desti}.restauracio.json`, JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  return manifest;
 }
 
 /* ═══════════════════════════ Escriptura ═══════════════════════════ */
 
-function escriuAtomic(abs, blob, mode) {
+function escriuAtomic(abs, blob, mode, abansDeRename) {
   const tmp = path.join(path.dirname(abs), `.${path.basename(abs)}.desenterrar-${process.pid}`);
   fs.writeFileSync(tmp, blob, { flag: 'wx', mode: mode === '100755' ? 0o755 : 0o644 });
   try {
+    abansDeRename();
     fs.renameSync(tmp, abs);
   } catch (e) {
     fs.rmSync(tmp, { force: true });
     throw e;
   }
   fs.chmodSync(abs, mode === '100755' ? 0o755 : 0o644);
+  const escrit = estatFitxer(abs);
+  if (!escrit.blob.equals(blob) || escrit.mode !== (mode === '100755' ? '755' : '644')) {
+    throw new Error('La verificació dels bytes o mode restaurats ha fallat.');
+  }
 }
 
 /* ═══════════════════════════ Programa ═══════════════════════════ */
@@ -201,7 +239,7 @@ async function main() {
   const { ref, fitxer, segell, forca, rebut } = values;
 
   if (!ref || !fitxer) {
-    console.error('Ús: node tooling/brain/desenterrar.mjs --ref <sha> --fitxer <ruta> [--segell <sha256>] [--forca]');
+    console.error('Ús: node tooling/brain/desenterrar.mjs --ref <sha> --fitxer <ruta> [--segell <sha256> --rebut <rebut.json>] [--forca]');
     process.exit(1);
   }
   if (!RE_REF.test(ref)) {
@@ -212,26 +250,25 @@ async function main() {
   const rutaRel = rutaCanonica(arrel, fitxer);
   const abs = path.join(arrel, rutaRel);
 
-  /* ── Estat actual al disc ── */
-  const st = fs.lstatSync(abs, { throwIfNoEntry: false });
-  if (st && !st.isFile()) throw new Error(`«${rutaRel}» no és un fitxer regular.`);
-  if (st && st.isSymbolicLink()) throw new Error(`«${rutaRel}» és un symlink.`);
-  if (st && st.nlink !== 1) throw new Error(`«${rutaRel}» és un hardlink: no té identitat exclusiva.`);
-  const blobActual = st ? fs.readFileSync(abs) : Buffer.alloc(0);
-  const shaActual = st ? sha256(blobActual) : '(absent)';
-
-  const { blob: blobAntic, mode: modeAntic } = llegeixRevisio(arrel, ref, rutaRel);
+  // Resolve moving names once; all reads, the seal and output use the same commit.
+  const revisio = git(['rev-parse', '--verify', `${ref}^{commit}`], { arrel }).trim();
+  const head = git(['rev-parse', '--verify', 'HEAD'], { arrel }).trim();
+  const actual = estatFitxer(abs);
+  const { st, blob: blobActual, hash: shaActual, mode: modeActual } = actual;
+  const { blob: blobAntic, mode: modeAntic } = llegeixRevisio(arrel, revisio, rutaRel);
   const shaAntic = sha256(blobAntic);
-
-  const segellEsperat = calculaSegell({ ref, ruta: rutaRel, modeAntic, shaAntic, shaActual });
+  const segellEsperat = calculaSegell({ ref: revisio, head, ruta: rutaRel, modeAntic, shaAntic, shaActual, modeActual });
 
   /* ─────────────── Mode inspecció ─────────────── */
   if (!segell) {
-    const data = git(['show', '-s', '--format=%ci', ref], { arrel }).trim();
+    const data = git(['show', '-s', '--format=%ci', revisio], { arrel }).trim();
     const brut = git(['status', '--porcelain=v1', '-z', '--', rutaRel], { arrel });
     console.log(`\n--- AUTÒPSIA: ${rutaRel} ---`);
     console.log(`Arrel del repositori : ${arrel}`);
+    console.log(`Commit resolt        : ${revisio}`);
+    console.log(`HEAD actual          : ${head}`);
     console.log(`Data de la revisió   : ${data}`);
+    console.log(`Mode actual          : ${modeActual}`);
     console.log(`Mode a la revisió    : ${modeAntic}`);
     console.log(`SHA-256 revisió      : ${shaAntic}`);
     console.log(`SHA-256 disc         : ${shaActual}`);
@@ -239,7 +276,7 @@ async function main() {
     console.log(`\nSegell per aplicar   : ${segellEsperat}\n`);
     console.log('--- DIFF (revisió → disc) ---');
     try {
-      process.stdout.write(git(['diff', '--no-ext-diff', ref, '--', rutaRel], { arrel }));
+      process.stdout.write(git(['diff', '--no-ext-diff', revisio, '--', rutaRel], { arrel }));
     } catch { console.log('(sense diff llegible)'); }
     return;
   }
@@ -261,6 +298,8 @@ async function main() {
     process.exit(1);
   }
 
+  comprovaCAS(arrel, abs, head, actual);
+
   // Rebut del Reflex. Fail-closed: sense lease no s'escriu.
   let claim;
   try {
@@ -278,22 +317,26 @@ async function main() {
 
   let lapida = null;
   try {
-    if (st) lapida = soterra(arrel, rutaRel, blobActual, st.mode & 0o777);
-    escriuAtomic(abs, blobAntic, modeAntic);
+    comprovaCAS(arrel, abs, head, actual);
+    if (st) lapida = soterra(arrel, rutaRel, blobActual, st.mode & 0o777, { head, revisio, segell: segellEsperat });
+    escriuAtomic(abs, blobAntic, modeAntic, () => comprovaCAS(arrel, abs, head, actual));
     await completeMutationClaim({ receiptPath: rebut, operation: OPERACIO }, claim.claimToken);
   } catch (e) {
     console.error(`❌ Restauració avortada: ${e.message}`);
-    if (lapida) console.error(`   La còpia prèvia està a ${lapida}`);
+    if (lapida) console.error(`   La còpia prèvia està a ${lapida.backup}`);
     process.exit(1);
   }
 
-  console.log(`✅ ${rutaRel} restaurat a ${ref} (mode ${modeAntic}).`);
-  if (lapida) console.log(`   Còpia del contingut anterior: ${lapida}`);
-  console.log(`   Lease consumida: ${claim.receipt.sessionId}`);
+  console.log(`✅ ${rutaRel} restaurat a ${revisio} (mode ${modeAntic}).`);
+  if (lapida) {
+    console.log(`   Còpia verificada del contingut anterior: ${lapida.backup}`);
+    console.log(`   Manifest de retorn: ${lapida.backup}.restauracio.json`);
+  }
+  console.log(`   Claim completat del rebut: ${claim.receipt.sessionId}`);
 }
 
 const esPrincipal = Boolean(process.argv[1])
-  && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+  && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href;
 if (esPrincipal) {
   main().catch((e) => {
     console.error(`❌ [DESENTERRAR] ${e.message}`);

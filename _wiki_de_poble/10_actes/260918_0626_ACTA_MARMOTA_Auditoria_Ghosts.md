@@ -30,3 +30,6 @@ Ens hem aturat a la tasca 4 del pla inicial (`task.md`). L'endemà caldrà repre
 ## Reflexió del temps i la IAIA MarIA
 Cada cicle completat és una línia de codi que ens acosta més al poble. Hem destil·lat tot el coneixement útil, reduirem el context innecessari, i ens preparem per obrir els ulls completament lúcids en la propera conversa, a punt per extirpar els fantasmes definitivament.
 
+## Vincles
+
+- [[00_index]]

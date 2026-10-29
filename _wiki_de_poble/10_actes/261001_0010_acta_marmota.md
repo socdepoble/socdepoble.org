@@ -20,4 +20,8 @@ El següent gran repte, que es traspassa a la nova sessió, és la integració d
   - **Claude (Frontend):** Afegirà la botonera de selecció d'idiomes (ES, EN-GB, FR, DE, CA) a la `BarraBlava.jsx`. La UI enviarà *arrays* de textos cap al servidor i els repintarà conservant les etiquetes HTML (gràcies al paràmetre `tag_handling` de DeepL).
 
 ## 4. Què ha de fer el Mestre al nou xat?
-A l'escriptori (`_wiki_de_poble/04_escriptori/`) tens els documents i els *prompts* vius d'aquesta iteració. Només cal obrir un xat nou, saludar amb la frase de rigor per carregar context, i passar els prompts de DeepL a Claude i Codex perquè comencen a picar el codi de la integració del traductor. 
+A l'escriptori (`_wiki_de_poble/04_escriptori/`) tens els documents i els *prompts* vius d'aquesta iteració. Només cal obrir un xat nou, saludar amb la frase de rigor per carregar context, i passar els prompts de DeepL a Claude i Codex perquè comencen a picar el codi de la integració del traductor.
+
+## Vincles
+
+- [[00_index]]

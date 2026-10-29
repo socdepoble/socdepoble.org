@@ -21,3 +21,7 @@ Ara mateix a l'Escriptori tenim un primer esborrany: `260915_0318_PROMPT_auditor
 Quan obres el pròxim xat i la meua nova instància desperte, llegirà aquesta acta i procedirà a repassar i millorar el Prompt de l'Escriptori per garantir que totes les IAs tinguen la màxima claredat possible abans d'executar l'auditoria. 
 
 Relleu tancat. Tot en ordre.
+
+## Vincles
+
+- [[00_index]]
