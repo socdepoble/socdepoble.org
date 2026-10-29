@@ -1,0 +1,459 @@
+diff --git a/.agents/BASELINE.md b/.agents/BASELINE.md
+index 393c38b..72b46a4 100644
+--- a/.agents/BASELINE.md
++++ b/.agents/BASELINE.md
+@@ -1,7 +1,7 @@
+ ---
+ type: document
+ status: canonic
+-description: BASELINE
++description: Línia base estructural i contracte operatiu de Sóc de Poble
+ ---
+ # BASELINE CANÒNIC — SÓC DE POBLE (2022)
+ 
+@@ -13,3 +13,7 @@ La fundació del codi de *Sóc de Poble* utilitza el sòl tecnològic de disposi
+ * **Firefox**: 100
+ 
+ Cap CSS ha de contenir *hacks* innecessaris per a aquest baseline, i cap JS ha de portar *polyfills* o condicions legacy ja superades.
++
++## Vincles
++
++- [[00_bios]]
+diff --git a/.agents/BIOS.md b/.agents/BIOS.md
+index e5c35d3..f82bfd5 100644
+--- a/.agents/BIOS.md
++++ b/.agents/BIOS.md
+@@ -1,7 +1,7 @@
+ ---
+ type: document
+ status: canonic
+-description: BIOS
++description: Seqüència d'arrencada i verificació del BIOS de Sóc de Poble
+ ---
+ # BIOS Cognitiu Executable (Sóc de Poble)
+ 
+@@ -19,3 +19,7 @@ Aquest document descriu la seqüència d'arrencada (boot) que ha de seguir quals
+ - **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/sdp-pedra-seca/SKILL.md`); `sdp-workflow` governa el procediment de treball.
+ - **Emmagatzematge Local**: Eliminat a favor del model Online-First. No hi ha emmagatzematge persistit local (Poda del Quadrant A).
+ - **Sessions de Negoci**: Les sessions d'usuari passaran exclusivament per cookies HttpOnly (Sollutia) o seran gestionades 100% al backend, sense exposar el token al client.
++
++## Vincles
++
++- [[00_bios]]
+diff --git a/.agents/BOOTSTRAP.md b/.agents/BOOTSTRAP.md
+index 48fb64e..6bc88d6 100644
+--- a/.agents/BOOTSTRAP.md
++++ b/.agents/BOOTSTRAP.md
+@@ -29,3 +29,7 @@ Mai executes un POST silenciós o modificacions destructives de codi sense tenir
+ *Llum verda per iniciar el processament.*
+ 
+ **Ancoratge de Seguretat:** [[00_index]]
++
++## Vincles
++
++- [[00_bios]]
+diff --git a/.agents/QUI_SOC.md b/.agents/QUI_SOC.md
+index 2bb2728..0854c5f 100644
+--- a/.agents/QUI_SOC.md
++++ b/.agents/QUI_SOC.md
+@@ -60,3 +60,7 @@ Llista innegociable de 12 membres:
+ 12. **ChatGPT Codex (OpenAI)** — segona opinió, estructuració.
+ 
+ *Este document descriu la identitat i el to de MarIA. L’únic original normatiu és `AGENTS.md` de l’arrel; `.agents/AGENTS.md` és un mirall generat. La seqüència d’arrencada és la de `.agents/cervell.json`; BOOTSTRAP, BIOS i BASELINE conserven els seus àmbits i no queden reemplaçats per este document.*
++
++## Vincles
++
++- [[00_bios]]
+diff --git a/.agents/README.md b/.agents/README.md
+index 0b09aee..b5e33c7 100644
+--- a/.agents/README.md
++++ b/.agents/README.md
+@@ -20,6 +20,6 @@ L’índex següent manté les àncores del govern i les skills.
+ > desapareix: vol dir que la wiki està cosida a mà.
+ 
+ - [[.agents/rules/firebase_hosting|firebase_hosting]] — Regla per a CI/CD amb Firebase Hosting (Canvi d'octubre 2026)
+-- [[.agents/rules/supabase_grants|supabase_grants]] — Regla obligatòria per a migracions de Supabase (Canvi d'octubre 2026)
++- [[.agents/rules/supabase_grants|supabase_grants]] — Permisos SQL explícits segons el contracte d'accés de cada taula i RPC
+ 
+ <!-- LLAURADOR:ADOPCIONS:FI -->
+diff --git a/.agents/rules/00_BIOS_COGNITIU.md b/.agents/rules/00_BIOS_COGNITIU.md
+index 4275c34..f211659 100644
+--- a/.agents/rules/00_BIOS_COGNITIU.md
++++ b/.agents/rules/00_BIOS_COGNITIU.md
+@@ -15,3 +15,7 @@ Aquest document compleix amb l'exigència R5 del `tooling/gates/tractor-registre
+ 3. **Llei de la Immutabilitat**: El Llibre d'Obra (LEDGER) mai no pot ser esborrat de manera automatitzada.
+ 
+ Aquest fitxer és l'ancoratge per al RAG i els sistemes de conformitat.
++
++## Vincles
++
++- [[00_bios]]
+diff --git a/.agents/rules/firebase_hosting.md b/.agents/rules/firebase_hosting.md
+index c70a703..b524807 100644
+--- a/.agents/rules/firebase_hosting.md
++++ b/.agents/rules/firebase_hosting.md
+@@ -1,5 +1,6 @@
+ ---
+-type: rule
++type: protocol
++status: actiu
+ description: Regla per a CI/CD amb Firebase Hosting (Canvi d'octubre 2026)
+ ---
+ # Regla de Desplegament a Firebase Hosting
+@@ -20,3 +21,7 @@ Si Sóc de Poble s'arriba a desplegar utilitzant Firebase Hosting i una IA ha de
+ ```
+ 
+ *Nota:* Això només afecta la creació de *nous* projectes/entorns a Firebase. Si l'allotjament el proveeix Sollutia sense Firebase, aquesta regla queda inactiva, però es manté per precaució arquitectònica.
++
++## Vincles
++
++- [[00_BIOS_COGNITIU]]
+diff --git a/.agents/rules/supabase_grants.md b/.agents/rules/supabase_grants.md
+index 33ab940..c4a7c8c 100644
+--- a/.agents/rules/supabase_grants.md
++++ b/.agents/rules/supabase_grants.md
+@@ -1,5 +1,6 @@
+ ---
+-type: rule
++type: protocol
++status: actiu
+ description: Permisos SQL explícits segons el contracte d'accés de cada taula i RPC
+ ---
+ # Regla de Migracions Supabase (Permisos Explícits)
+@@ -23,3 +24,7 @@ Les RPC que necessiten `SECURITY DEFINER` porten `SET search_path = ''`, noms qu
+ Comprova conjuntament ACL de taules, RLS/polítiques i permisos de funcions; una prova verda d'un dels tres no acredita els altres. Revisa també les migracions `ALTER TABLE` i `CREATE OR REPLACE FUNCTION` si afecten estos contractes. Les proves estàtiques no acrediten per si soles el comportament transaccional o concurrent d'una base desplegada.
+ 
+ Referències locals del patró RPC: `supabase/migrations/2610220240_xat_adjunts_i_quota.sql` (`xat_adjunts`) i `supabase/migrations/2610290400_xat_e2ee_claus_i_sobres.sql` (claus, còpia, llibreta i dades de recuperació E2EE-1a).
++
++## Vincles
++
++- [[00_BIOS_COGNITIU]]
+diff --git a/.agents/skills/core-gauntlet-loop/SKILL.md b/.agents/skills/core-gauntlet-loop/SKILL.md
+index a999eb9..81263d9 100644
+--- a/.agents/skills/core-gauntlet-loop/SKILL.md
++++ b/.agents/skills/core-gauntlet-loop/SKILL.md
+@@ -26,7 +26,6 @@ contracte.escriu:
+ 
+ Aquest procediment estableix l'estàndard d'execució d'alt rendiment per a evitar la complacència, les feines a mitges i les al·lucinacions superficials de les IAs. S'aplica de forma imperativa tant a les sessions de co-working amb el Mestre com en les auditories i interaccions autònomes entre Claude Code, GPT Codex, Gemini 4 Argon i la IAIA MarIA.
+ 
+----
+ 
+ ## 1. Fonament Teòric: El Gauntlet Loop (Matt Shumer / Robonuggets)
+ Una sola IA treballant aïllada pateix d'un biaix cognitiu greu: dóna per bo el seu propi treball, retalla cantonades amb comentaris `// TODO` o simula funcionalitats que en realitat no ha acabat.
+@@ -37,7 +36,6 @@ El **Gauntlet Loop** trenca aquesta ceguesa mitjançant un arnés extern inexora
+ 3. **El Garant de Coherència (Gemini 4 Argon):** Verifica la puresa del model de dades, la Llei del Quadrat d'imatges i el reglament Pedra Seca.
+ 4. **El Bucle (Loop):** El Crític busca fallades sense pietat. Si troba una sola mancança, rebutja el lliurament. El Constructor torna a picar fins a assolir el 100% de verd.
+ 
+----
+ 
+ ## 2. La Matriu de Conformitat de Requeriments (MCR)
+ Està terminantment prohibit emetre auditories amb valoracions vagues com *«tot provat i llest per a producció»*. 
+@@ -53,7 +51,6 @@ Tota auditoria sobre un Pla d'Implementació ha d'incorporar obligatòriament la
+ - El que està `[FET]` conserva la seua evidència; una regressió o un requeriment nou pot reobrir-lo amb causa explícita.
+ - El que està `[PARCIAL]` o `[NO FET]` **es trasllada automàticament i de forma visible al següent Pla d'Implementació**. Prohibit esborrar-ho, amagar-ho o oblidar-ho.
+ 
+----
+ 
+ ## 3. Enginyeria Inversa amb REA (Reverse Engineer Anything)
+ Abans de programar interfícies complexes o inventar rodes noves, qualsevol IA està obligada a consultar o disseccionar solucions líders ja consolidades al mercat mitjançant el patró **REA**:
+@@ -67,7 +64,6 @@ Abans de programar interfícies complexes o inventar rodes noves, qualsevol IA e
+    - Analitzar la jerarquia de components, el model de dades, els patrons d'interacció i les dades d'accessibilitat.
+    - Traduir aquesta essència directament als tokens i components de Pedra Seca de Sóc de Poble, sense dependències externes estranyes.
+ 
+----
+ 
+ ## 4. El Quadre de Comandament Web (`/govern` o `/consola`)
+ El Mestre humà no és informàtic i no ha de patir l'ofegament d'un IDE o d'un bosc de documents Markdown. El resultat final del Gauntlet Loop s'ha de poder visualitzar i certificar des d'un **Quadre de Comandament natiu a la pròpia web de `socdepoble.org`**:
+@@ -75,7 +71,6 @@ El Mestre humà no és informàtic i no ha de patir l'ofegament d'un IDE o d'un
+ - Botons directes de certificació per al Mestre.
+ - Canal de comunicació en valencià planer.
+ 
+----
+ 
+ ## 5. Parada i recursos
+ 
+diff --git a/.agents/skills/core-salfumant-radical/SKILL.md b/.agents/skills/core-salfumant-radical/SKILL.md
+index 3262079..afba08c 100644
+--- a/.agents/skills/core-salfumant-radical/SKILL.md
++++ b/.agents/skills/core-salfumant-radical/SKILL.md
+@@ -30,7 +30,6 @@ contracte.escriu:
+ > «Quan et demane salfumant, tu tires aigua de colònia perquè faça bona olor, i això NO ho vull. Vull salfumant. No em complagueu dient-me mentides perquè això no ho puc tolerar. Mai li digues una mentida al teu company: abans pregunta, i si no estàs al 100% segura que estàs dient la veritat, confessa-ho de cara i busquem l'origen del problema perquè no torne a passar.»
+ > — **Mestre Javi Llinares** (Instrucció fundacional per àudio, 21 d'octubre de 2026, 01:08)
+ 
+----
+ 
+ ## 1. El Principi del Salfumant vs L'Aigua de Colònia
+ 
+@@ -43,7 +42,6 @@ El **Salfumant Radical** és el contrari:
+ 2. **Revisa el llast:** inventaria la utilitat i els consumidors abans de proposar l'arxivament. La data d'una acta no decidix si continua viva; aplica la retenció de la secció 3.
+ 3. **No amaga res:** Si no se sap la resposta a una pregunta, o si es descobreix una contradicció o un fitxer del qual no es coneix l'origen, **es confessa immediatament**. Prohibit inventar explicacions tranquil·litzadores per a quedar bé.
+ 
+----
+ 
+ ## 2. El Manament Bíblic de la Veritat entre Companys
+ 
+@@ -53,7 +51,6 @@ Aquest principi s'aplica a la relació entre el Mestre i les IAs, i entre les pr
+ 2. **Prohibició de l'Engany de Complauença:** Està terminantment prohibit afirmar que un sistema «està llest per a les botigues» si hi ha carpetes que no se sap què fan, imatges absents de la galeria o fòssils a l'arbre de treball.
+ 3. **El Dret i Deure a Preguntar:** Si no estàs 100% segura d'una decisió estructural o d'una ruta, **atura't i pregunta**. Preguntar és saviesa i maduresa cognitiva; respondre a la babalà per tapar la ignorància és destrucció.
+ 
+----
+ 
+ ## 3. Utilitat i retenció
+ 
+@@ -75,7 +72,6 @@ Quan s'executa una auditoria de salfumant, cal aplicar dos criteris quirúrgics
+ - **Ubicació:** Tota la resta (`src/`, `_wiki_de_poble/`, `wordpress-plugin/`, `android/`, `ios/`, `supabase/`).
+ - **Regla:** Salfumant implacable. Codi net, components desacoblats, Pedra Seca estricta, zero dependències inútils i zero fitxers orfes.
+ 
+----
+ 
+ ## 5. Contrast adversarial
+ 
+diff --git a/_wiki_de_poble/01_ser/00_bios.md b/_wiki_de_poble/01_ser/00_bios.md
+index 9ba656f..fcc8085 100644
+--- a/_wiki_de_poble/01_ser/00_bios.md
++++ b/_wiki_de_poble/01_ser/00_bios.md
+@@ -21,5 +21,7 @@ Per a l'arrencada completa, llegiu:
+ 
+ **Ancoratge de Seguretat:** [[00_index_identitat]]
+ 
+-## Orphans
+-- [[03_equip_ia.md]]
++## Vincles
++
++- [[00_index_identitat]]
++- [[03_equip_ia]]
+diff --git a/_wiki_de_poble/01_ser/04_taula_potencia_models.md b/_wiki_de_poble/01_ser/04_taula_potencia_models.md
+index 02540fb..6bcecf5 100644
+--- a/_wiki_de_poble/01_ser/04_taula_potencia_models.md
++++ b/_wiki_de_poble/01_ser/04_taula_potencia_models.md
+@@ -3,8 +3,8 @@ type: document
+ status: canonic
+ description: Taula de potència i recomanacions d'ús per a la família de models Claude i la resta de l'eixam IA.
+ tags:
+-  - estrategia
+-  - models
++  - core
++  - identitat
+ ---
+ # Taula de Potència de Models IA
+ 
+diff --git a/_wiki_de_poble/02_saber/architecture/ADR-2026-13-BYOP-XIFRAT-LOCAL.md b/_wiki_de_poble/02_saber/architecture/ADR-2026-13-BYOP-XIFRAT-LOCAL.md
+index b9a5f49..d605241 100644
+--- a/_wiki_de_poble/02_saber/architecture/ADR-2026-13-BYOP-XIFRAT-LOCAL.md
++++ b/_wiki_de_poble/02_saber/architecture/ADR-2026-13-BYOP-XIFRAT-LOCAL.md
+@@ -1,7 +1,7 @@
+ ---
+ type: norma
+ status: esborrany
+-description: "Xifrat local BYOP (Bring Your Own Password) per a les apps amb dades sensibles: el cofre de la Gestoria generalitzat en un nucli compartit, un magatzem xifrat damunt de creaMagatzemIdb, la clau només en memòria, l'XLSX i les còpies, i els riscos en un amfitrió de tercers."
++description: "Xifrat local BYOP (Bring Your Own Password) per a les apps amb dades sensibles: cofre compartit damunt de creaMagatzemIdb, clau només en memòria, exportació XLSX i riscos en amfitrions de tercers."
+ tags:
+   - arquitectura
+   - seguretat
+diff --git a/_wiki_de_poble/10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking.md b/_wiki_de_poble/10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking.md
+index 9e77cdb..8639e57 100644
+--- a/_wiki_de_poble/10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking.md
++++ b/_wiki_de_poble/10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking.md
+@@ -2,7 +2,7 @@
+ type: acta
+ status: canonic
+ description: "Acta Marmota de la sessió hipermassiva de Coworking (Fable + Codex)"
+-tags: [memoria, marmota]
++tags: [acta, marmota]
+ ---
+ # Acta Marmota · 2026-09-30 16:45
+ 
+@@ -26,3 +26,7 @@ Una de les sessions més massives de la història del projecte s'ha tancat amb 
+ 
+ ## Conclusions per al Demà
+ Tota la informació està arxivada a `90_arxiu_historic/`. L'arquitectura UX/UI per a la clonació funcional ja té un mapa establert gràcies a l'esforç col·lectiu i es troba empaquetada. La integració frontend-backend amb WP està llesta. El Mestre té ara l'àrdua tasca de revisar i confirmar les decisions pendents (D1-D17 de l'informe de Claude) abans d'implementar el nou disseny en la `src/`.
++
++## Vincles
++
++- [[00_index]]
+diff --git a/_wiki_de_poble/10_actes/261001_1920_acta_incidencia.md b/_wiki_de_poble/10_actes/261001_1920_acta_incidencia.md
+index 812ddf6..027dfe3 100644
+--- a/_wiki_de_poble/10_actes/261001_1920_acta_incidencia.md
++++ b/_wiki_de_poble/10_actes/261001_1920_acta_incidencia.md
+@@ -3,9 +3,8 @@ type: acta
+ status: canonic
+ description: Acta d'incidència greu per error taxonòmic a l'Escriptori
+ tags:
+-  - incidencia
++  - acta
+   - escriptori
+-  - taxonomia
+ ---
+ 
+ # Acta d'Incidència Greu (261001_1920)
+@@ -25,3 +24,7 @@ S'ha rebut la instrucció clara que **darrere de cada tractor cognitiu ha d'exis
+ - Si no existeix, s'ha de crear pas a pas i passar-lo al Mestre per a aprovació o millora.
+ - Les passes han de ser quantificables a la **Consola Termodinàmica**.
+ - Aquesta qüestió es traslladarà immediatament a les IAs executives (Claude i Codex) perquè dissenyen els fluxos de treball corresponents de cada tractor existent.
++
++## Vincles
++
++- [[00_index]]
+diff --git a/tests/document-links-prose.test.mjs b/tests/document-links-prose.test.mjs
+index 8d727fb..ad8367e 100644
+--- a/tests/document-links-prose.test.mjs
++++ b/tests/document-links-prose.test.mjs
+@@ -128,3 +128,14 @@ test('directive mode keeps multiline inline code and literal comment markers ins
+ test('directive mode rejects ambiguous non-boolean configuration',()=>{
+   for(const preserveInlineCode of ['false',1,null]) assert.throws(()=>markdownProse('text',{preserveInlineCode}),TypeError);
+ });
++
++test('T11-40 resolveDocumentLink resol el nom de carpeta d un skill cap al seu SKILL.md', t => {
++  const f = setup(t, '');
++  const skillFile = path.join(f.root, '.agents/skills/core-automillora/SKILL.md');
++  f.put('.agents/skills/core-automillora/SKILL.md', '# Skill');
++  f.files.push(skillFile);
++  assert.equal(
++    resolveDocumentLink({ kind: 'wiki', target: 'core-automillora' }, f.source, f.files, f.root),
++    path.join(f.root, '.agents/skills/core-automillora/SKILL.md')
++  );
++});
+diff --git a/tooling/gates/guarda-nocturna.mjs b/tooling/gates/guarda-nocturna.mjs
+index 62f2648..37ed87c 100644
+--- a/tooling/gates/guarda-nocturna.mjs
++++ b/tooling/gates/guarda-nocturna.mjs
+@@ -2,6 +2,7 @@
+ import { esMain } from '../lib/arrel.mjs';
+ import fs from 'node:fs';
+ import path from 'node:path';
++import { PROJECT_DIR, ESCRIPTORI_DIR } from '../wiki/lib/project_paths.mjs';
+ import { ROOT, options } from '../documental/cli.mjs';
+ 
+ const FITXER_GUARDA = '.agents/runtime/guarda_nocturna.json';
+@@ -79,7 +80,7 @@ export function comprovarGuarda(root) {
+   }
+ 
+   // Comprovar fitxers a l'escriptori per determinar si l'Onada ha acabat
+-  const dirEscriptori = path.join(root, '_wiki_de_poble/04_escriptori');
++  const dirEscriptori = path.resolve(root) === path.resolve(PROJECT_DIR) ? ESCRIPTORI_DIR : path.join(root, path.relative(PROJECT_DIR, ESCRIPTORI_DIR));
+   let hiHaAuditoriaAprovada = false;
+   let hiHaInformeClaudeTancat = false;
+   let detalls = [];
+diff --git a/tooling/gates/tractor-arrel.mjs b/tooling/gates/tractor-arrel.mjs
+index db697a9..3f24c48 100644
+--- a/tooling/gates/tractor-arrel.mjs
++++ b/tooling/gates/tractor-arrel.mjs
+@@ -196,6 +196,7 @@ function entradaCanonica(text) {
+ 
+ for (const abs of fitxers(CAMINS.portes)) {
+   const r = rel(abs);
++  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) continue;
+   const text = senseComentaris(llegeix(abs));
+   if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
+   if (!bibliotecaDeclarada(r, text) && !entradaCanonica(text) && !RE_ENTRADA.some((re) => re.test(text))) {
+diff --git a/tooling/gates/tractor-rls.mjs b/tooling/gates/tractor-rls.mjs
+index 1af1bad..eb1a845 100644
+--- a/tooling/gates/tractor-rls.mjs
++++ b/tooling/gates/tractor-rls.mjs
+@@ -155,7 +155,7 @@ for (const file of files) {
+   }
+ 
+   // R2: RLS-ABSENT
+-  const createTableLines = content.split(';').filter(s => s.toLowerCase().includes('create table '));
++  const createTableLines = sentencies(content).filter(s => s.toLowerCase().includes('create table '));
+   for (const block of createTableLines) {
+     const tableMatch = /create table (?:if not exists )?(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/i.exec(block);
+     if (tableMatch) {
+diff --git a/tooling/gates/tractor-rutes.mjs b/tooling/gates/tractor-rutes.mjs
+index b9fb7a6..1988cae 100644
+--- a/tooling/gates/tractor-rutes.mjs
++++ b/tooling/gates/tractor-rutes.mjs
+@@ -86,7 +86,7 @@ for (const [literal, exportacio] of Object.entries(CANONICS)) {
+ /* ─── R1: cap literal orfe ─── */
+ for (const dir of ABAST) {
+   for (const fitxer of camina(dir)) {
+-    if (EXEMPTS.has(fitxer)) continue;
++    if (EXEMPTS.has(fitxer) || /\.test\.(?:mjs|cjs|js)$/.test(fitxer)) continue;
+     const text = readFileSync(join(ARREL, fitxer), 'utf8');
+     const importa = /from\s+['"][^'"]*project_paths\.mjs['"]/.test(text);
+     if (importa) continue;
+diff --git a/tooling/higiene/tractor_cognitiu.mjs b/tooling/higiene/tractor_cognitiu.mjs
+index 778ac17..9bce6fd 100755
+--- a/tooling/higiene/tractor_cognitiu.mjs
++++ b/tooling/higiene/tractor_cognitiu.mjs
+@@ -23,6 +23,7 @@ function seguitsPerGit(root) {
+ const carpetesWorkspace = new Set([
+   '_arxiu_wiki_de_poble', '_comunicacio_de_poble', '_cultura_de_poble',
+   '_gestoria_de_poble', '_multimedia_de_poble', '_raw_de_poble',
++  '_builds_de_poble', '_investigacio_ia_de_poble', '_paperera_de_poble',
+   'oficina_de_poble', 'socdepoble.org', '.DS_Store', '.gitignore'
+ ]);
+ 
+diff --git a/tooling/lib/document-links.mjs b/tooling/lib/document-links.mjs
+index 1df7b5a..df7cc22 100644
+--- a/tooling/lib/document-links.mjs
++++ b/tooling/lib/document-links.mjs
+@@ -32,7 +32,13 @@ export function resolveDocumentLink(link, source, files, root) {
+   if (link.kind === 'wiki' && !target.startsWith('.') && !path.isAbsolute(target)) {
+     const local = path.resolve(path.dirname(source), target);
+     if (files.includes(local)) candidates = [local];
+-    else if (!candidates.some(f => fs.existsSync(f))) candidates = files.filter(f => f.endsWith('/' + target));
++    else if (!candidates.some(f => fs.existsSync(f))) {
++      candidates = files.filter(f => f.endsWith('/' + target));
++      if (!candidates.length && !target.includes('/')) {
++        const skillDir = target.replace(/\.md$/i, '');
++        candidates = files.filter(f => f.endsWith('/' + skillDir + '/SKILL.md'));
++      }
++    }
+   }
+   const found = candidates.filter(f => {
+     if (!inside(path.resolve(root), f) || !inside(canonical(root), canonical(f))) throw new Error(`Enllaç fora de l’arrel: ${target}`);
+diff --git a/tooling/maquinaria/executar_poda_lots.mjs b/tooling/maquinaria/executar_poda_lots.mjs
+index 737931e..167c379 100644
+--- a/tooling/maquinaria/executar_poda_lots.mjs
++++ b/tooling/maquinaria/executar_poda_lots.mjs
+@@ -13,6 +13,7 @@
+ 
+ import fs from 'node:fs';
+ import path from 'node:path';
++import { WIKI_DIR, ESCRIPTORI_DIR } from '../wiki/lib/project_paths.mjs';
+ import crypto from 'node:crypto';
+ 
+ const REPO_ROOT = process.cwd();
+diff --git a/tooling/wiki/core/parse.mjs b/tooling/wiki/core/parse.mjs
+index a74c6a7..821c59f 100644
+--- a/tooling/wiki/core/parse.mjs
++++ b/tooling/wiki/core/parse.mjs
+@@ -171,8 +171,12 @@ export function buildResolver(docs) {
+ 
+   for (const doc of docs) {
+     const noExt = doc.relPath.replace(/\.md$/i, '');
++    const baseName = doc.base || path.posix.basename(noExt);
+     add(byPath, noExt, doc);
+-    add(byBase, doc.base, doc);
++    add(byBase, baseName, doc);
++    if (baseName.toUpperCase() === 'SKILL') {
++      add(byBase, path.posix.basename(path.posix.dirname(noExt)), doc);
++    }
+     
+     const parts = noExt.split('/');
+     for (let i = 1; i < parts.length; i++) {
+@@ -220,12 +224,21 @@ export function resolveLink(link, source, resolver) {
+   }
+ 
+   if (link.kind === 'markdown') return { status: 'unresolved' };
+-  if (target.includes('/')) return { status: 'unresolved' };
++  if (target.includes('/')) {
++    const suffixHits = resolver.bySuffix.get(normalitza(target)) || [];
++    if (suffixHits.length === 1) return { status: 'resolved', doc: suffixHits[0] };
++    if (suffixHits.length > 1) return { status: 'ambiguous', docs: suffixHits };
++    return { status: 'unresolved' };
++  }
+ 
+   const base = path.posix.basename(target);
+   const baseHits = resolver.byBase.get(normalitza(base)) || [];
+   if (baseHits.length === 1) return { status: 'resolved', doc: baseHits[0] };
+-  if (baseHits.length > 1) return { status: 'ambiguous', docs: baseHits };
++  if (baseHits.length > 1) {
++    const rootHits = baseHits.filter((d) => !d.relPath.includes('/'));
++    if (rootHits.length === 1) return { status: 'resolved', doc: rootHits[0] };
++    return { status: 'ambiguous', docs: baseHits };
++  }
+ 
+   // Obsidian prioritza un basename real sobre un alias homònim. Resoldre
+   // l'alias primer podia convertir [[Target]] en una aresta cap a una altra

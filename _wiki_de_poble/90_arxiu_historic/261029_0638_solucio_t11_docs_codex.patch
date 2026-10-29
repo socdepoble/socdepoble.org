@@ -1,0 +1,168 @@
+--- a/_wiki_de_poble/01_ser/00_bios.md
++++ b/_wiki_de_poble/01_ser/00_bios.md
+@@ -1,7 +1,7 @@
+ ---
+ type: petorreta
+ status: arxivat
+-description: Redirecció històrica. La BIOS executable és a .agents/BIOS.md.
++description: Redirecció històrica. L’original executable és AGENTS.md; .agents/AGENTS.md és el mirall generat.
+ tags:
+   - core
+   - genoma
+@@ -12,10 +12,10 @@
+ > [!CAUTION]
+ > Aquest document és històric i **no s'utilitza com a punt d'arrencada**.
+ 
+-La BIOS executable actual és **`.agents/AGENTS.md`**.
++L’original executable actual és **`AGENTS.md`** de l’arrel. **`.agents/AGENTS.md`** és el mirall generat; esta nota històrica no el substituïx.
+ 
+ Per a l'arrencada completa, llegiu:
+-- `.agents/AGENTS.md`
++- `AGENTS.md` (original) i `.agents/AGENTS.md` (mirall generat)
+ - `.agents/PROTOCOL_PETORRETA.md`
+ - `.agents/skills/core-identitat/SKILL.md`
+ 
+--- a/_wiki_de_poble/02_saber/00_full_de_ruta.md
++++ b/_wiki_de_poble/02_saber/00_full_de_ruta.md
+@@ -11,6 +11,8 @@
+ 
+ Registre de les llavors de Sóc de Poble, des del que ja funciona fins a les idees que encara s'han de sembrar. Els estats són declaracions històriques, no proves: el que depenia de l'arquitectura offline es va retirar amb l'ADR-2026-08.
+ 
++La presència de codi o una bateria local verda no acredita el desplegament d’una versió ni un paquet publicat. L’estat d’execució, els commits i els pendents es contrasten amb [[03_llibre_mestre_tasques_i_idees]].
++
+ Cada llavor porta el trimestre previst i la seua categoria. La direcció general és a [[00_visio_i_pilars]], i una llavor només es dona per implementada quan complix els criteris de [[00_arquitectura_tecnica_unificada]].
+ 
+ ## 🟢 En producció
+@@ -21,7 +23,7 @@
+ 
+ ## 🍏 Collita tancada (fet)
+ 
+-- **Connector WordPress (`socdepoble.zip`) i Port Neutral Model B** [ Fedivers / Integracions ]: plugin oficial v1.0.1 amb verificació d'estat per `state` efímer (`T5.1`) i traduccions completes.
++- **Connector WordPress i Port Neutral Model B** [Fedivers / Integracions]: el codi del connector i les millores `T5.1` tenen verificació local. La versió del ZIP, la publicació i els pendents de distribució es comproven al Llibre Mestre; esta fila no declara un paquet desplegat.
+ - ** Sistema Documental Reflex i Portes Mecàniques** [Governança]: taxonomia termodinàmica, Porta Olivera v4, verificador SCC i blindatge de les 42 skills (`SKILLS_SEAL.json`).
+ 
+ ## 🍊 Sementeres vives (beta)
+@@ -38,7 +40,7 @@
+ 
+ ## 🍂 Retirades per l'ADR-2026-08 (història superada)
+ 
+-Estes llavors es van declarar collides o en beta sobre la pila offline: doctrina A10, Y.js i malla local. L'[[ADR-2026-08-ONLINE-FIRST]] va retirar la sincronització offline general, mentre que la PWA instal·lable (`P1-69`, [[ADR-2026-10-APPS-DEL-DISPOSITIU]]) i l'ús exclusiu d'IndexedDB per a claus/safata E2EE (`P1-12`, [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]) continuen vigents. La matriu viva d'execució és a [[03_llibre_mestre_tasques_i_idees]].
++Estes llavors es van declarar collides o en beta sobre la pila offline: doctrina A10, Y.js i malla local. L'[[ADR-2026-08-ONLINE-FIRST]] va retirar la sincronització offline general, mentre que la PWA instal·lable (`P1-69`, [[ADR-2026-10-APPS-DEL-DISPOSITIU]]) i les dades del dispositiu en IndexedDB de l’ADR-2026-10 continuen vigents. El cofre BYOP per a apps amb dades locals sensibles té el seu abast propi a [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]; no és una autorització exclusiva de claus o safata E2EE. La matriu viva d'execució és a [[03_llibre_mestre_tasques_i_idees]].
+ 
+ 
+ ## Vincles
+--- a/_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md
++++ b/_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md
+@@ -68,8 +68,23 @@
+ | crida a una skill inexistent | un document o una skill cita una skill que no té carpeta a `.agents/skills/` | text + disc |
+ | skill fora de l'índex | té carpeta a `.agents/skills/` però no és a `.agents/skills_index.json` | disc + índex |
+ 
+-La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava. *(Nota d'estat 2026-10-29: el cens real unificat i segellat a `.agents/SKILLS_SEAL.json`, `.agents/skills_index.json`, `.agents/skills/` i `.claude/skills/` és de **42 skills** actives: 9 `core-*` i 33 `sdp-*/wiki-*`, verificades per `tooling/brain/cataleg_skills.mjs --check`).*
++La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava.
+ 
++## Cens vigent (261029)
++
++Font executiva: les carpetes de `.agents/skills/`. `tooling/brain/cataleg_skills.mjs --check` comprova el catàleg; el segell i els miralls tenen comprovacions pròpies. El prefix d’un nom no equival a la marca `core: true` del frontmatter.
++
++| Mesura | Valor |
++| --- | --- |
++| skills actives | 42 |
++| marca core: true | 9 |
++| sense marca core: true | 33 |
++| prefix core- | 27 |
++| prefix sdp- | 11 |
++| prefix wiki- | 4 |
++
++Els recomptes de la secció del 24-09 són evidència històrica i es conserven amb la seua data; no són el cens vigent.
++
+ ## Salut agregada
+ 
+ Segons el contracte de la [[00_portada]], la xifra de l'inventari no és un percentatge d'ànim. És `skills sense cap avís / skills del cens`, amb numerador, denominador, font, data i l'ordre que la reproduïx. Si una font falta, el valor és `N/A`.
+--- a/_wiki_de_poble/02_saber/sistema_immunitari.md
++++ b/_wiki_de_poble/02_saber/sistema_immunitari.md
+@@ -70,7 +70,7 @@
+ 
+ ## Limitacions honestes de v1.1
+ 
+-La detecció de fantasmes compara noms base en minúscules (o una ruta existent des de l'arrel), sense resoldre àlies: un nom base repetit en dos carpetes compta com a resolt, amb el mateix criteri laxista que Obsidian. Els incrustats (enllaços precedits de `!`) compten com un enllaç més, i LAPIDA també els reescriu. Un enllaç fantasma amb fragment, o amb àlies fora d'un índex, es diagnostica però LAPIDA no el reescriu: continua trencat fins que un humà el corregix. El codi en línia amb doble accent greu no s'emmascara. L'aprovació per hash garantix *lectura conscient de la recepta*, no identitat: la garantia d'identitat és la lease de `PROTOCOL_PETORRETA` i la cadena Git.
++La detecció de fantasmes compara noms base en minúscules (o una ruta existent des de l'arrel), sense resoldre àlies: un nom base repetit en dos carpetes compta com a resolt, amb el mateix criteri laxista que Obsidian. Els incrustats (enllaços precedits de `!`) compten com un enllaç més, i LAPIDA també els reescriu. Un enllaç fantasma amb fragment, o amb àlies fora d'un índex, es diagnostica però LAPIDA no el reescriu: continua trencat fins que un humà el corregix. El lexer compartit `markdownProse` emmascara fences de backticks o tildes, spans en línia de qualsevol longitud, comentaris HTML i escapaments literals; `extreuFantasmes` reutilitza `extractDocumentLinks` de `tooling/lib/document-links.mjs`. L’aprovació per hash acredita la coincidència de la recepta aprovada amb els bytes proposats; no prova comprensió ni identitat. La lease del Reflex i la cadena Git mantenen els seus controls propis.
+ 
+ ## Vincles
+ 
+--- /dev/null
++++ b/tests/t11-cens-documental.test.mjs
+@@ -0,0 +1,52 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import {fileURLToPath} from 'node:url';
++import {inventari} from '../tooling/brain/cataleg_skills.mjs';
++import {parseDocument,validateSchema,sha} from '../tooling/documental/core.mjs';
++import {auditContractClaims} from '../tooling/wiki/lib/contract_consistency.mjs';
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
++const CENS='_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md';
++const FILES=['_wiki_de_poble/01_ser/00_bios.md','_wiki_de_poble/02_saber/00_full_de_ruta.md',CENS,'_wiki_de_poble/02_saber/sistema_immunitari.md'];
++const read=rel=>fs.readFileSync(path.join(ROOT,rel),'utf8');
++function canonical(){const skills=inventari(ROOT),core=skills.filter(s=>s.core).length;return new Map([
++ ['skills actives',skills.length],['marca core: true',core],['sense marca core: true',skills.length-core],
++ ...['core-','sdp-','wiki-'].map(prefix=>['prefix '+prefix,skills.filter(s=>s.id.startsWith(prefix)).length])
++]);}
++function auditCensus(content){
++ const values=canonical(),lines=content.split(/\r?\n/);let active=false;
++ const claims=[];for(let i=0;i<lines.length;i++){
++  if(/^## Cens vigent\b/.test(lines[i])){active=true;continue;}
++  if(active&&/^## /.test(lines[i]))active=false;
++  const row=active&&/^\|\s*([^|]+?)\s*\|\s*(\d+)\s*\|$/.exec(lines[i]);
++  if(row&&values.has(row[1]))claims.push({id:row[1],value:row[2],path:CENS,line:i+1,text:lines[i]});
++ }
++ const scope='cens-documental-vigent';return auditContractClaims({scope,documents:[{path:CENS,content,authority:'active'}],catalog:{scope,canonical:[...values].map(([id,value])=>({id,value:String(value)})),claims}});
++}
++test('quatre documents preserven el contracte de frontmatter vigent',()=>{
++ const schema=JSON.parse(read('tooling/wiki/schema.json'));for(const file of FILES)assert.deepEqual(validateSchema(parseDocument(read(file)).data,schema),[],file);
++});
++test('cens vigent compara sis mesures contra les42skills reals, distingint marca i prefix',()=>{
++ const r=auditCensus(read(CENS));assert.equal(r.status,'no-explicit-disagreements');assert.equal(r.coverage.catalog.comparedIds,6);assert.equal(r.coverage.catalog.activeClaims,6);
++ assert.notEqual(canonical().get('marca core: true'),canonical().get('prefix core-'));
++});
++test('confondre core:true amb core- genera desacord explícit localitzat',()=>{
++ const raw=read(CENS),wrong=raw.replace(/(\| prefix core- \| )\d+( \|)/,'$1'+canonical().get('marca core: true')+'$2');
++ const r=auditCensus(wrong);assert.equal(r.status,'explicit-disagreements');assert.equal(r.findings.length,1);assert.equal(r.findings[0].contract,'catalog:prefix core-');assert.equal(r.findings[0].requiresReview,true);
++});
++test('sense taula vigent el cens és incomplet, mai un verd per buit',()=>{
++ const r=auditCensus('# Inventari\nLectura històrica:17skills,8nucli i9connectables.');assert.equal(r.status,'incomplete');assert.equal(r.coverage.catalog.activeClaims,0);
++});
++test('un altre recompte històric fora de la secció vigent no altera el contracte actual',()=>{
++ const a=auditCensus(read(CENS)),b=auditCensus(read(CENS)+'\n## Història addicional\n| prefix core- | 9 |\n');
++ assert.deepEqual(a.findings,b.findings);assert.deepEqual(a.coverage.catalog,b.coverage.catalog);
++});
++test('un canvi real de xifra del cens requereix revisar la declaració, sense inferir salut',()=>{
++ const raw=read(CENS),wrong=raw.replace(/(\| skills actives \| )\d+( \|)/,'$199$2');const r=auditCensus(wrong);
++ assert.equal(r.findings.length,1);assert.equal(r.findings[0].canonical.value,String(inventari(ROOT).length));assert.equal(Object.hasOwn(r,'score'),false);
++});
++test('lectures i comparacions deixen intactes documents i skills',()=>{
++ const paths=[...FILES,...inventari(ROOT).map(s=>s.ruta)],before=paths.map(p=>sha(fs.readFileSync(path.join(ROOT,p))));auditCensus(read(CENS));
++ assert.deepEqual(paths.map(p=>sha(fs.readFileSync(path.join(ROOT,p)))),before);
++});
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -41,6 +41,7 @@
+     "tests/security-chain.test.mjs",
+     "tests/sistema_nervios.test.mjs",
+     "tests/standalone-build.test.mjs",
++    "tests/t11-cens-documental.test.mjs",
+     "tests/t11-parser-consumers.test.mjs",
+     "tests/t11-retirada-planificacio.test.mjs",
+     "tests/verificador-scc.test.mjs",
+@@ -516,6 +517,11 @@
+       "path": "tests/standalone-build.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/t11-cens-documental.test.mjs",
++      "suite": "primary",
++      "reason": "T11: cens verificable de skills, esquema documental, invariants i pins exactes de font; no score semàntic general."
+     },
+     {
+       "path": "tests/t11-parser-consumers.test.mjs",

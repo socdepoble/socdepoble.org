@@ -4,9 +4,9 @@
   "actor": "IAIA MarIA",
   "scope": "documents",
   "state": "planned",
-  "revision": 29,
+  "revision": 43,
   "createdAt": "2026-10-28T14:26:28.202Z",
-  "updatedAt": "2026-10-29T01:41:04.479Z",
+  "updatedAt": "2026-10-29T12:24:38.033Z",
   "expiresAt": "2026-10-29T14:26:28.203Z",
   "contractHash": "a8df528a91df48232a7820e8253fef8737d4039b1954ca2fc51a9acd6f9cd31b",
   "humanInventoryVersion": 1,
@@ -3880,37 +3880,76 @@
       "id": "e2554ab6-47cc-4c52-b11a-fca4612ef0c7",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
       "contractSnapshot": "84d5d22a1ddcd05df685b81ff237ce9782a90e1a2e24e88f4a17894894253377",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
-      "issuedAt": "2026-10-29T01:17:41.954Z"
+      "issuedAt": "2026-10-29T01:17:41.954Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "hash": "4a41d16bed2f1ce28a41968d52a1eb2c0a66b24ad48d699867d84d74d6210f44",
+          "at": "2026-10-29T12:05:35.291Z",
+          "receiptIds": [
+            "e2554ab6-47cc-4c52-b11a-fca4612ef0c7",
+            "ba3cc8f1-a4cf-40ec-be54-3b9459a24ba1",
+            "23cb53c9-f6c6-499e-b93d-cc4cb82cc40b"
+          ]
+        }
+      ]
     },
     "9177d51e-e4b8-486c-b5e1-7c0b8684872c": {
       "id": "9177d51e-e4b8-486c-b5e1-7c0b8684872c",
       "route": "prompt.local",
       "routeVersion": "3.10.0",
-      "file": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
       "contractSnapshot": "b860a8e9c65b6905ac3705dda5c9365638a1dd54e4e557e11906a5eb96a105a4",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "1186c19e82c2aa1a29514c64220e45b495e1abfb77a4c3acd27716c1affc5c4c",
-      "issuedAt": "2026-10-29T01:17:42.015Z"
+      "issuedAt": "2026-10-29T01:17:42.015Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "hash": "bd60ded9fbeb36d76cfd06e99247d23efc8edc3953d8581f1e9ec398b667465b",
+          "at": "2026-10-29T12:04:06.099Z",
+          "receiptIds": [
+            "9177d51e-e4b8-486c-b5e1-7c0b8684872c",
+            "040eba57-22f6-4edd-87cb-305e3bedff9a",
+            "f0a3a9b4-c326-4f9f-a94e-f5b58dde483e"
+          ]
+        }
+      ]
     },
     "ba3cc8f1-a4cf-40ec-be54-3b9459a24ba1": {
       "id": "ba3cc8f1-a4cf-40ec-be54-3b9459a24ba1",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
       "contractSnapshot": "84d5d22a1ddcd05df685b81ff237ce9782a90e1a2e24e88f4a17894894253377",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
-      "issuedAt": "2026-10-29T01:23:27.584Z"
+      "issuedAt": "2026-10-29T01:23:27.584Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "hash": "4a41d16bed2f1ce28a41968d52a1eb2c0a66b24ad48d699867d84d74d6210f44",
+          "at": "2026-10-29T12:05:35.291Z",
+          "receiptIds": [
+            "e2554ab6-47cc-4c52-b11a-fca4612ef0c7",
+            "ba3cc8f1-a4cf-40ec-be54-3b9459a24ba1",
+            "23cb53c9-f6c6-499e-b93d-cc4cb82cc40b"
+          ]
+        }
+      ]
     },
     "23cb53c9-f6c6-499e-b93d-cc4cb82cc40b": {
       "id": "23cb53c9-f6c6-499e-b93d-cc4cb82cc40b",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
       "contractSnapshot": "84d5d22a1ddcd05df685b81ff237ce9782a90e1a2e24e88f4a17894894253377",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
@@ -3920,23 +3959,49 @@
         "preparedAt": "2026-10-29T01:23:35.867Z",
         "committedAt": "2026-10-29T01:23:35.887Z",
         "documentHash": "03665b542289a55ac26af1d87ff1bfa3418237bd9346a3f17be12d0daf7cde60"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "hash": "4a41d16bed2f1ce28a41968d52a1eb2c0a66b24ad48d699867d84d74d6210f44",
+          "at": "2026-10-29T12:05:35.291Z",
+          "receiptIds": [
+            "e2554ab6-47cc-4c52-b11a-fca4612ef0c7",
+            "ba3cc8f1-a4cf-40ec-be54-3b9459a24ba1",
+            "23cb53c9-f6c6-499e-b93d-cc4cb82cc40b"
+          ]
+        }
+      ]
     },
     "040eba57-22f6-4edd-87cb-305e3bedff9a": {
       "id": "040eba57-22f6-4edd-87cb-305e3bedff9a",
       "route": "prompt.local",
       "routeVersion": "3.10.0",
-      "file": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
       "contractSnapshot": "b860a8e9c65b6905ac3705dda5c9365638a1dd54e4e557e11906a5eb96a105a4",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "1186c19e82c2aa1a29514c64220e45b495e1abfb77a4c3acd27716c1affc5c4c",
-      "issuedAt": "2026-10-29T01:25:04.675Z"
+      "issuedAt": "2026-10-29T01:25:04.675Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "hash": "bd60ded9fbeb36d76cfd06e99247d23efc8edc3953d8581f1e9ec398b667465b",
+          "at": "2026-10-29T12:04:06.099Z",
+          "receiptIds": [
+            "9177d51e-e4b8-486c-b5e1-7c0b8684872c",
+            "040eba57-22f6-4edd-87cb-305e3bedff9a",
+            "f0a3a9b4-c326-4f9f-a94e-f5b58dde483e"
+          ]
+        }
+      ]
     },
     "f0a3a9b4-c326-4f9f-a94e-f5b58dde483e": {
       "id": "f0a3a9b4-c326-4f9f-a94e-f5b58dde483e",
       "route": "prompt.local",
       "routeVersion": "3.10.0",
-      "file": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
       "contractSnapshot": "b860a8e9c65b6905ac3705dda5c9365638a1dd54e4e557e11906a5eb96a105a4",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "1186c19e82c2aa1a29514c64220e45b495e1abfb77a4c3acd27716c1affc5c4c",
@@ -3946,12 +4011,89 @@
         "preparedAt": "2026-10-29T01:25:04.719Z",
         "committedAt": "2026-10-29T01:25:04.746Z",
         "documentHash": "e6a07aa48239fec5364a539cb404916a9b8302b7d4f7dc523706578352290fc3"
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "hash": "bd60ded9fbeb36d76cfd06e99247d23efc8edc3953d8581f1e9ec398b667465b",
+          "at": "2026-10-29T12:04:06.099Z",
+          "receiptIds": [
+            "9177d51e-e4b8-486c-b5e1-7c0b8684872c",
+            "040eba57-22f6-4edd-87cb-305e3bedff9a",
+            "f0a3a9b4-c326-4f9f-a94e-f5b58dde483e"
+          ]
+        }
+      ]
+    },
+    "578725dd-7699-45b1-a58b-1418b9d6e8b4": {
+      "id": "578725dd-7699-45b1-a58b-1418b9d6e8b4",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "contractSnapshot": "1111d4117327a87cbd94f3c303f87d36513959452afdf9b33ea5b301b8b37842",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
+      "issuedAt": "2026-10-29T12:05:00.750Z",
+      "creation": {
+        "state": "failed",
+        "preparedAt": "2026-10-29T12:05:00.750Z",
+        "failedAt": "2026-10-29T12:05:00.756Z",
+        "absent": true
+      }
+    },
+    "ed8e809e-cef3-43fa-b73a-7ae87a2d465a": {
+      "id": "ed8e809e-cef3-43fa-b73a-7ae87a2d465a",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "contractSnapshot": "1111d4117327a87cbd94f3c303f87d36513959452afdf9b33ea5b301b8b37842",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
+      "issuedAt": "2026-10-29T12:05:13.239Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-29T12:05:13.239Z",
+        "committedAt": "2026-10-29T12:05:13.266Z",
+        "documentHash": "67bf4b16c04ce3c9ebf5f5223d422902fc89cd69b3d2ab0e3015111a17a48ccc"
+      }
+    },
+    "5b987c0f-2d28-480e-837f-447617cb439a": {
+      "id": "5b987c0f-2d28-480e-837f-447617cb439a",
+      "route": "prompt.local",
+      "routeVersion": "3.10.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "contractSnapshot": "872e415e9db6044c13ad1427b2e4103e699cbb873410385b9c438fa86fffcff4",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "1186c19e82c2aa1a29514c64220e45b495e1abfb77a4c3acd27716c1affc5c4c",
+      "issuedAt": "2026-10-29T12:05:13.318Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-29T12:05:13.318Z",
+        "committedAt": "2026-10-29T12:05:13.345Z",
+        "documentHash": "74b007a93e3608402780100c072301f43a689b30e4d9088ebb75be4067c2acb8"
+      }
+    },
+    "f8dcf106-1d97-415a-8d70-e900ec55a001": {
+      "id": "f8dcf106-1d97-415a-8d70-e900ec55a001",
+      "route": "acta",
+      "routeVersion": "2.1.0",
+      "file": "_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md",
+      "contractSnapshot": "4c3b6b936f8b66a3cfbb82557a8974a9a939a26097bbacf797248febc15dcf3d",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "4d4b9d269e40c3084dead7c3f14cf63dd58fd4a7e7f4d075d2d09ef90f8a6d48",
+      "issuedAt": "2026-10-29T12:24:38.004Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-29T12:24:38.005Z",
+        "committedAt": "2026-10-29T12:24:38.033Z",
+        "documentHash": "e1d0404a22961c4199e72f28ac5e8099c36d3e2c62bfa24e2654ea6e1ed9ab6d"
       }
     }
   },
   "plan": {
-    "file": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
-    "hash": "2c53fec67f8e9ee688534f98d4c0210b288c6a533378675e23726e0ae932acb8"
+    "file": "_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+    "hash": "707e30a2a6a05c6f49226161428b1de1bb09b1f95b9fb1d05c73173e02d545e1"
   },
   "verification": null,
   "history": [
@@ -4114,14 +4256,96 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-29T01:41:04.478Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-29T12:04:06.099Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T12:05:00.750Z"
+    },
+    {
+      "action": "create-failed",
+      "receiptId": "578725dd-7699-45b1-a58b-1418b9d6e8b4",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "at": "2026-10-29T12:05:00.756Z",
+      "absent": true
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T12:05:13.239Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "ed8e809e-cef3-43fa-b73a-7ae87a2d465a",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "at": "2026-10-29T12:05:13.266Z",
+      "hash": "67bf4b16c04ce3c9ebf5f5223d422902fc89cd69b3d2ab0e3015111a17a48ccc"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T12:05:13.318Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "5b987c0f-2d28-480e-837f-447617cb439a",
+      "file": "_wiki_de_poble/04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md",
+      "at": "2026-10-29T12:05:13.345Z",
+      "hash": "74b007a93e3608402780100c072301f43a689b30e4d9088ebb75be4067c2acb8"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T12:05:35.255Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-10-29T12:05:35.291Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T12:09:07.745Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T12:12:29.118Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T12:20:01.062Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T12:24:38.005Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "f8dcf106-1d97-415a-8d70-e900ec55a001",
+      "file": "_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md",
+      "at": "2026-10-29T12:24:38.033Z",
+      "hash": "e1d0404a22961c4199e72f28ac5e8099c36d3e2c62bfa24e2654ea6e1ed9ab6d"
     }
   ],
   "ownedPaths": [
     "_wiki_de_poble/90_arxiu_historic/261028_1526_pla_implementacio_deute_tecnic_opengraph_edicio_i_xat.md",
-    "_wiki_de_poble/90_arxiu_historic/261028_1526_prompt_deute_tecnic_opengraph_edicio_i_xat.md"
+    "_wiki_de_poble/90_arxiu_historic/261028_1526_prompt_deute_tecnic_opengraph_edicio_i_xat.md",
+    "_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+    "_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
   ],
   "relocated": [
     "_wiki_de_poble/04_escriptori/261028_1526_pla_implementacio_deute_tecnic_opengraph_edicio_i_xat.md",
-    "_wiki_de_poble/04_escriptori/261028_1526_prompt_deute_tecnic_opengraph_edicio_i_xat.md"
+    "_wiki_de_poble/04_escriptori/261028_1526_prompt_deute_tecnic_opengraph_edicio_i_xat.md",
+    "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+    "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
   ]
 }

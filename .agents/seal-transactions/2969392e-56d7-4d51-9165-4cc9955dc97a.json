@@ -1,0 +1,22 @@
+{
+  "id": "2969392e-56d7-4d51-9165-4cc9955dc97a",
+  "session": "143e4dff-e0e8-4c3a-99af-0c1ed54d97cb",
+  "operationId": "torn_74bad4b9-relleu_estat_i_ledger_tancament_marato_nocturna_claude_olivera-143e4dff",
+  "claim": "143e4dff-e0e8-4c3a-99af-0c1ed54d97cb:governance-write",
+  "planHash": "20162c5c10bd132fe66210ab00997c35cb17dfd94bb91982b28f8612ddad2f76",
+  "beforeSeal": "12451c6b9291ace8c4679843ebd3146f225a41e9a4a1462969d6a238a2d3686d",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "b49adda4ce6520c98e4dfa1cdde939ce38b3e0518968903511afe8812b8642d4",
+      "after": "396ba622b20d8dd92636589956b4974594324b939037476b61b9746f9bfdf140"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "5d768cd36ce098e7ec7b927aaea6d075886e5c93fa44918d2a4c6c65e1c036ff",
+      "after": "1acfe46237edc9902809793d540f83113929ddc2937d99d64de88f0c1b87bc71"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "460e83cbbe70abf3fccd88984712c768a765ca37d0382f84b2dc97738dc6fe61"
+}

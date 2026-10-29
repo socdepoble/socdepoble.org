@@ -1,0 +1,972 @@
+{
+  "schema": "sdp.qa-nocturna.cycle.v1",
+  "cycle": 1,
+  "startedAt": "2026-10-29T03:08:15.936Z",
+  "completedAt": "2026-10-29T03:28:19.208Z",
+  "timezone": "Europe/Madrid",
+  "head": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+  "source": {
+    "cycle": 1,
+    "startedAt": "2026-10-29T03:08:15.936Z",
+    "head": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+    "changedFromBaseline": [
+      "src/css/tokens.css",
+      "src/css/components.css",
+      "src/css/modules.css",
+      "src/config/firebaseHosting.test.js",
+      "src/natiu/projecteIos.test.js",
+      "src/data/wikiManifest.js",
+      "src/apps/lector/lector261024.test.jsx",
+      "src/apps/bar/llavors/laParroquia.test.js",
+      "src/data/supabase/auth.js",
+      "src/components/universal/UniversalEditorShell.edicioAvancada.test.jsx",
+      "src/sections/consola/peces.test.jsx",
+      "src/sections/mur/MapaFotografic.test.jsx",
+      "src/sections/onboarding/IdentitatAlPoble.jsx",
+      "tests/botigues.test.mjs",
+      "vercel.json",
+      "firebase.json",
+      "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "_wiki_de_poble/04_escriptori/261029_0336_auditoria_gemini.md",
+      "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+      "_wiki_de_poble/03_actuar/plantilles/00_index_plantilles.md",
+      "_wiki_de_poble/03_actuar/plantilles/acta.md"
+    ],
+    "documents": {
+      "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md": "6fd90d07b50357f16c96b60585712321d2020a933125c5f4caf404f65bc10fa0",
+      "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md": "970e462a350510cb299191f312a064240041eef20b83b00c5d97ae59e3d41f0f",
+      "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md": "bcc1cd7b29c485951ec44b7b431372826725cabf0ff279b8e02ce3cb98968190",
+      "_wiki_de_poble/04_escriptori/261029_0350_auditoria_claude.md": "fb303483a4939a17825a4aa340d44232a217c474b1eb13985b7dc771cf256634",
+      "_wiki_de_poble/04_escriptori/261029_0336_auditoria_gemini.md": "12905b0d296bbebd1b566b2a7250b5e8ba80a964d70a967a417bcee0dbf3c073"
+    }
+  },
+  "t11": {
+    "manifest": {
+      "cycle": 1,
+      "files": [
+        {
+          "path": "tooling/wiki/contradiction_engine.mjs",
+          "beforeSha256": "589472cf0a29aaae9b68fc78d8c2b152b9ec581b49155c735001ce17cfabebc7",
+          "afterSha256": "2057c3fa1efc71706549db5ed437d49784016b818f139a8536b27f324e1b21ef"
+        },
+        {
+          "path": "tooling/wiki/lib/contract_consistency.mjs",
+          "beforeSha256": null,
+          "afterSha256": "cddf5ed0ad0d679ae994fd53e31ece7223e5b9e6c5448ef040729f32c67cfcfc"
+        },
+        {
+          "path": "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "671fda11f3d94d17b3412532f10998d2426fa5e9c90807931badbc4073c89247"
+        },
+        {
+          "path": "tooling/wiki/tests/contract_consistency.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "e48bf193e50c510560f7aeff178bef45dbc600346b5923e676bd7bb3d6278d2e"
+        },
+        {
+          "path": "tooling/documental/draft-write.mjs",
+          "beforeSha256": "a42b8957049f7a76a796651322f4939a6cc40cc8c08572b98b163714cf1972c5",
+          "afterSha256": "ef33c3fac65875d0fb0cff0819fce1beb02c203304ccd1f780c7d544bc9e5d30"
+        },
+        {
+          "path": "tooling/lib/document-links.mjs",
+          "beforeSha256": "33910f300a84f1fcca839545526ed9e8307caf7039924a807079bd7e16fd4a8e",
+          "afterSha256": "fbcc21984ce7365687c49ff802f68c03d6fdced2b8e76ec05392ded203a8bb82"
+        },
+        {
+          "path": "tests/draft-attachment-anchoring.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "3d3fc74d56d3a9590e76a4797db99eae123dc7e91a895bbb3ae6beab9fb899a4"
+        },
+        {
+          "path": "scripts/teixidor-backlinks.mjs",
+          "beforeSha256": "acd29ea1ac6f3b1c1cd08d5d2f57a664e46cca9f8d6771852e93f40f89e89e01",
+          "afterSha256": "c332f435032f2a26073b7a96efcb9677650a92980366fd708ec9af23c1a0d18b"
+        },
+        {
+          "path": "tests/wiki-backlinks-readonly.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "51c59d22ce941dbdb7880a35e6f28a3ae5b62a03ff0380e3975752a4a0ca028d"
+        },
+        {
+          "path": "tooling/tests/node-suite-manifest.json",
+          "beforeSha256": "5cce460788fa86b5f805867bb0b934d4473a9f386d2a85e216f4c8fda98ac960",
+          "afterSha256": "4135ae75942fa53f5a23b8cd86295d1dbdefb77b9db47209081a2e0701e57c3c"
+        }
+      ],
+      "patchSha256": "1142f73de1886cbca0fc841edad9ef29a5572f64da3efaceb9333173bc6a3298",
+      "tests": {
+        "nodePassed": 83,
+        "nodeFailed": 0,
+        "nodeSkipped": 0,
+        "eslintErrors": 0,
+        "eslintWarnings": 0
+      }
+    },
+    "combinedTestsLog": "✔ T11-12 productor: .patch queda ancorat en Olivera i SCC sense modificar el binari (29.787958ms)\n✔ T11-12 productor: .json queda ancorat en Olivera i SCC sense modificar el binari (16.301625ms)\n✔ T11-12 productor: .html queda ancorat en Olivera i SCC sense modificar el binari (13.754209ms)\n✔ T11-12 productor: .png queda ancorat en Olivera i SCC sense modificar el binari (13.344667ms)\n✔ T11-12 productor: .bin queda ancorat en Olivera i SCC sense modificar el binari (14.425958ms)\n✔ T11-12 productor: .tar.gz queda ancorat en Olivera i SCC sense modificar el binari (13.699333ms)\n✔ T11-12 adjunt sense extensió i Markdown homònim mantenen dos destins exactes (25.224042ms)\n✔ T11-12 .patch i .patch.md homònims no compartixen àncora ni aresta (24.263292ms)\n✔ T11-12 Markdown simple conserva abreviatura i inserció dins Activitat en curs (12.592ms)\n✔ T11-12 àncora existent explícita amb àlies es conserva sense duplicació (8.122709ms)\n✔ T11-12 un adjunt d’altra carpeta no queda acreditat per un homònim local (12.885416ms)\n✔ T11-12 lock ocupat impedix escriptura i conserva l’índex (1.513416ms)\n✔ T11-12 ruta relativa sense extensió preferix el recurs exacte; abreviatura .md continua disponible (1.291ms)\n✔ T11-12 ruta explícita fora de l’arrel continua rebutjada (0.855542ms)\n✔ T11-12 crear adjunt després del Markdown homònim conserva l’abreviatura anterior amb destí exacte (20.660958ms)\n✔ T11-12 una àncora anticipada bare s’actualitza sense duplicar i conserva àlies/fragment (11.231917ms)\nCI · Node=1 · Vitest=0\nCI · Node=0 · Vitest=1\nCI · Node=0 · Vitest=0\n✔ el manifest viu classifica cada prova i protegeix les cobertures noves de CI i T5 (6.346334ms)\n✔ la descoberta és recursiva i totes les eines entren al cens (3.1765ms)\n✔ una prova nova sense classificació bloqueja la cadena (1.415417ms)\n✔ no s’accepten dobles assignacions, entrades absents ni exclusions sense motiu (3.25625ms)\n✔ la cobertura requerida no es pot excloure canviant-ne la categoria (6.602333ms)\n✔ cada corredor selecciona els fitxers exactes i conserva els codis de fallada (7.594792ms)\n✔ CI executa Node i Vitest run, també amb Node roig, i qualsevol fallada conserva exit 1 (2.159542ms)\n✔ el mode de CI manté totes les portes i elimina només les bateries ja executades (0.22425ms)\n✔ la comanda real del workflow arriba al CLI de les portes amb --nomes-portes (105.803041ms)\n✔ el teixidor antic sense dry-run falla abans de modificar cap document (31.94125ms)\n✔ dry-run conserva hashes i exclou arxiu i zones protegides de cerca i cens (35.489125ms)\n✔ l enllaçador existent ja rebutja write i no necessita retirar la consulta (29.460834ms)\n✔ el bloqueig per defecte precedix fins i tot la lectura d un directori absent (26.702708ms)\n✔ enllaços explícits no incorporen documents externs ni de zones protegides (36.252917ms)\n✔ opcions ambigües o mutatives no consulten ni escriuen el corpus, encara que porten dry-run (105.327833ms)\n✔ dir amb signe igual es conserva sencer (24.084792ms)\n✔ un directori protegit no es pot seleccionar directament com a corpus (65.328292ms)\n✔ directoris simbòlics no amplien el corpus i no poden ser la seua arrel (47.382666ms)\n✔ els noms iguals es resolen per directori font, sense reutilitzar una altra destinació local (24.814958ms)\n✔ un ancestre simbòlic tampoc permet seleccionar una arrel protegida amb un nom alié (23.45675ms)\n✔ prose nine versus an explicit ten-dimension rubric is reported with lines (1.866458ms)\n✔ nine versus ten in different active prose is within the same explicit scope (0.104416ms)\n✔ matching prose and rubric has no explicit disagreement (0.107083ms)\n✔ a number table without dimension header is not a rubric (0.070209ms)\n✔ gapped or duplicate ordinal rows do not invent a rubric (0.079958ms)\n✔ microphone self versus empty is reported separately from equal camera (0.873041ms)\n✔ policy allowlists normalize whitespace, ordering, duplicate tokens and quoting (0.078041ms)\n✔ all explicitly named policy features can disagree, not just microphone (0.134917ms)\n✔ history is counted but cannot contribute a claim (0.161084ms)\n✔ zero active documents is incomplete even with a historical text (0.110917ms)\n✔ quotations, fenced examples, frontmatter and explicit example lines are excluded (0.151916ms)\n✔ a shorter or different fence marker does not close a longer code fence (0.051958ms)\n✔ indented code and example list items do not contribute claims (0.066583ms)\n✔ reversed input produces exactly the same serialized bytes and codepoint order (0.094208ms)\n✔ scope and document input errors fail explicitly (0.406291ms)\n✔ path order uses Unicode codepoints rather than a locale or UTF-16 code units (0.085042ms)\n✔ an inherited authority is not explicit document authority (0.177625ms)\n✔ 300k characters are scanned without dropping later claims (0.163125ms)\n✔ unlabelled policy fragments and malformed directives do not become claims (0.046542ms)\n✔ explicit catalog mapping reports a changed meaning with canonical and located evidence (0.532125ms)\n✔ matching explicit catalog labels have no explicit disagreement (0.090208ms)\n✔ arbitrary natural-language QA associations are not automatically interpreted (0.031167ms)\n✔ catalog labels are exact and support arbitrary caller-defined ids (0.046959ms)\n✔ catalog history is census only, even when its label conflicts (0.04225ms)\n✔ catalog locations in code, quotations and example lines are excluded (0.058375ms)\n✔ catalog input requires its own explicit scope matching the requested scope (0.115458ms)\n✔ document and claim scopes cannot silently leak into another audit scope (0.084167ms)\n✔ canonical ids and labels must be explicit, unique and nonempty (0.078625ms)\n✔ each configured claim needs a mapped id and an existing positive line location (0.319666ms)\n✔ no active catalog evidence reports incomplete rather than a successful comparison (0.059542ms)\n✔ catalog comparison is deterministic when document, canonical and claim arrays reverse (0.13025ms)\n✔ duplicate catalog evidence is counted once and same-id claims group together (0.044ms)\n✔ catalog evidence and 300k characters do not require searching natural-language meanings (0.1355ms)\n✔ explicitly numbered nested list items remain active claims rather than indented code (0.047333ms)\n✔ an optional exact source line prevents reuse of a stale configured label (0.051667ms)\n✔ T11 llig carpetes actuals, skills i rutes; solapament no equival a contradicció (24.517458ms)\n✔ T11 corpus buit queda incomplet (8.94375ms)\n✔ T11 exclou arxiu, zona humana i laboratori abans de llegir-ne continguts (18.259792ms)\n✔ T11 no seguix symlinks i declara la cobertura incompleta (4.5735ms)\n✔ T11 treball i actes són evidència censada, sense proposar-ne fusió normativa (13.64075ms)\n✔ T11 conserva forma API v2 i jurisdiccions legacy (14.238583ms)\n✔ T11 conserva errors de frontmatter/schema legacy (10.070417ms)\n✔ T11 detecta el mateix selector amb plantilles incompatibles (13.172625ms)\n✔ T11 registra ruta absent i no confon API documentada pendent amb salut (11.17825ms)\n✔ T11 determinista davant mateix tall, amb exclusions i problemes ordenats (14.593583ms)\n✔ T11 no seguix un directori .agents que siga symlink (9.857667ms)\n✔ T11 CLI JSON retorna 2 davant corpus buit, també amb entrada per symlink (33.915875ms)\nℹ tests 83\nℹ suites 0\nℹ pass 83\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 490.518959\n",
+    "anchorReview": {
+      "schema": "sdp.t11-12-anchors.v1",
+      "cycle": 1,
+      "scope": "04:08 Europe/Madrid 2026-10-29",
+      "copy": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-t11-anchors-i8ugkowx",
+      "liveEdits": false,
+      "sourceReadManifest": [
+        {
+          "path": "AGENTS.md",
+          "bytes": 12078,
+          "sha256": "eb60995fa1720860f5236cb60f0d6c1143c91bfecf4a63fb1b79f64040b5e6e2"
+        },
+        {
+          "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "bytes": 37175,
+          "sha256": "6fd90d07b50357f16c96b60585712321d2020a933125c5f4caf404f65bc10fa0"
+        },
+        {
+          "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+          "bytes": 40199,
+          "sha256": "970e462a350510cb299191f312a064240041eef20b83b00c5d97ae59e3d41f0f"
+        },
+        {
+          "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+          "bytes": 301407,
+          "sha256": "bcc1cd7b29c485951ec44b7b431372826725cabf0ff279b8e02ce3cb98968190"
+        }
+      ],
+      "files": [
+        {
+          "path": "tooling/documental/draft-write.mjs",
+          "beforeSha256": "a42b8957049f7a76a796651322f4939a6cc40cc8c08572b98b163714cf1972c5",
+          "afterSha256": "ef33c3fac65875d0fb0cff0819fce1beb02c203304ccd1f780c7d544bc9e5d30",
+          "matchesLiveBaseline": true
+        },
+        {
+          "path": "tooling/lib/document-links.mjs",
+          "beforeSha256": "33910f300a84f1fcca839545526ed9e8307caf7039924a807079bd7e16fd4a8e",
+          "afterSha256": "fbcc21984ce7365687c49ff802f68c03d6fdced2b8e76ec05392ded203a8bb82",
+          "matchesLiveBaseline": true
+        },
+        {
+          "path": "tests/draft-attachment-anchoring.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "3d3fc74d56d3a9590e76a4797db99eae123dc7e91a895bbb3ae6beab9fb899a4",
+          "matchesLiveBaseline": true
+        },
+        {
+          "path": "tooling/tests/node-suite-manifest.json",
+          "beforeSha256": "8a080fd17f519338ef7f386a763f9aacc3565c9dfe34c80e528ae9a8d81588e3",
+          "afterSha256": "4bf1580626bb52325484975cadac7adadce9582d77d94105b0d9379283eeaeb8",
+          "matchesLiveBaseline": false
+        }
+      ],
+      "patch": "/private/tmp/t11-12-anchors-codex.patch",
+      "patchSha256": "41327aa8d23194d115b23603d21ffdda8b568ca889062b60ec2b57c32691a458",
+      "changes": [
+        "El productor emet [[./nom.ext|nom.ext]] per als adjunts del primer nivell, amb independència de la seua presència en el cens Markdown de SCC.",
+        "Normalitza àncores anticipades sense duplicar; conserva àlies i fragments.",
+        "Conserva el destí anterior de Markdown abreviat quan naix un adjunt homònim sense extensió.",
+        "Correcció mínima en document-links: camí explícit sense extensió preferix recurs exacte i, si absent, conserva abreviatura .md; els wikilinks bare mantenen comportament anterior.",
+        "Una sola entrada incremental al manifest Node; no modifica cap altre test/entrada ni fitxer QA."
+      ],
+      "tests": {
+        "newRegressionTests": 16,
+        "combined": {
+          "tests": 164,
+          "pass": 134,
+          "fail": 0,
+          "skipped": 30,
+          "cancelled": 0,
+          "durationMs": 2211.987
+        },
+        "eslint": {
+          "exit": 0,
+          "warnings": 0,
+          "errors": 0
+        },
+        "originalProducerControl": {
+          "control": "original-producer",
+          "oliveraValid": true,
+          "sccValid": false,
+          "errors": [
+            {
+              "code": "LINK_INVALID",
+              "message": "Enllaç inexistent: 261029_0408_solucio_qa.patch",
+              "affected_files": [
+                "_wiki_de_poble/04_escriptori/00_index_escriptori.md"
+              ]
+            }
+          ]
+        },
+        "commands": [
+          "node --test tests/draft-attachment-anchoring.test.mjs tests/cognitive-preflight.test.mjs tests/cognitive-document-handoff.test.mjs tests/porta-olivera-v3.test.mjs tests/olivera-arxiva-261002.test.mjs tests/verificador-scc.test.mjs tests/node-suite-policy.test.mjs",
+          "node node_modules/eslint/bin/eslint.js tooling/documental/draft-write.mjs tooling/lib/document-links.mjs tests/draft-attachment-anchoring.test.mjs --max-warnings=0"
+        ]
+      },
+      "logs": {
+        "cycle1-anchor-regressions-final.log": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-t11-anchors-i8ugkowx/cycle1-anchor-regressions-final.log",
+        "cycle1-anchor-eslint.log": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-t11-anchors-i8ugkowx/cycle1-anchor-eslint.log",
+        "cycle1-control-original-producer.json": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-t11-anchors-i8ugkowx/cycle1-control-original-producer.json",
+        "cycle1-adjacent-census.json": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-t11-anchors-i8ugkowx/cycle1-adjacent-census.json"
+      },
+      "adjacentFinding": {
+        "id": "T11-13-proposta",
+        "status": "reproduït; no corregit en este pegat focal",
+        "issue": "SCC interpreta wikilinks dins de fences ~~~ com a enllaços vius; Olivera els emmascara. Fals positiu LINK_INVALID sobre un exemple de codi.",
+        "evidence": [
+          "tooling/lib/document-links.mjs:7",
+          "tooling/gates/porta-olivera.mjs:244"
+        ],
+        "fixtureResult": {
+          "case": "tilde-code-fence",
+          "oliveraValid": true,
+          "sccValid": false,
+          "errors": [
+            {
+              "code": "LINK_INVALID",
+              "message": "Enllaç inexistent: document_inexistent_dins_exemple.md",
+              "affected_files": [
+                "_wiki_de_poble/04_escriptori/00_index_escriptori.md"
+              ]
+            },
+            {
+              "code": "LINK_INVALID",
+              "message": "Enllaç inexistent: document_inexistent_dins_exemple.md",
+              "affected_files": [
+                "_wiki_de_poble/04_escriptori/00_index_escriptori.md"
+              ]
+            }
+          ]
+        }
+      },
+      "falsePositiveEffects": [
+        "No es resol un basename d’adjunt cercant tot el repositori; la ruta relativa identifica només el recurs local.",
+        "Un fitxer d’altra carpeta amb el mateix nom no acredita el recurs del primer nivell.",
+        "Es conserva abreviatura de .md sense homònim; quan n’apareix un, s’explicita el destí Markdown previ en lloc de canviar-ne la identitat.",
+        "Àncores en comentaris/exemples, locks, inode/CAS i rollback continuen sota les comprovacions existents.",
+        "No s’amplia el corpus de SCC a fitxers binaris; es resol el camí explícit sense llegir-ne contingut."
+      ],
+      "limits": [
+        "No s’ha executat tota la suite global; les30 omissions són de les regressions legacy seleccionades, sense cap canvi d’assercions.",
+        "Formats de nom segons taxonomia vigent; no s’afirma suport nou per caràcters reservats de sintaxi de wikilinks.",
+        "El manifest before ja inclou el pegat T11 basal del temporal compartit; el diff només afig la suite nova i no reemplaça el catàleg del repositori."
+      ],
+      "applyCheckLiveExit": 0
+    },
+    "backlinksReview": {
+      "scripts/teixidor-backlinks.mjs": {
+        "parentBefore": "fb75fad7704f6e2740acaa04e0d9a3e9ce81a74ccaea07bb0278758a017f26c4",
+        "reviewAfter": "c332f435032f2a26073b7a96efcb9677650a92980366fd708ec9af23c1a0d18b"
+      },
+      "tests/wiki-backlinks-readonly.test.mjs": {
+        "parentBefore": "e1062ac7801aaf96eebc5712c5c9b01e0aef8ef7115cf66a609763269773869f",
+        "reviewAfter": "51c59d22ce941dbdb7880a35e6f28a3ae5b62a03ff0380e3975752a4a0ca028d"
+      }
+    },
+    "backlinksControl": {
+      "oldScriptSha256": "acd29ea1ac6f3b1c1cd08d5d2f57a664e46cca9f8d6771852e93f40f89e89e01",
+      "oldHead": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+      "exit": 0,
+      "fixture": "/private/tmp/sdp-backlinks-independent-r6g1hvsw/control-fixture",
+      "changed": [
+        "02_saber/desti.md"
+      ],
+      "before": {
+        "01_ser/font.md": "7358f4eb7cfb0b2bea380f8c22906214e835eac06e68fa45b50ad2e8aec5d221",
+        "02_saber/desti.md": "f667514d23ada90499a0061aee76861f74005ce85fe9cd8b02d682d2937b2367"
+      },
+      "after": {
+        "01_ser/font.md": "7358f4eb7cfb0b2bea380f8c22906214e835eac06e68fa45b50ad2e8aec5d221",
+        "02_saber/desti.md": "4df16639071339c47772ab6127309c4ba5e386e77e9423187c78cd9ad490fd98"
+      }
+    },
+    "backlinksSummary": "Revisió independent curta de T11 backlinks, només en còpia temporal.\nEstat inicial del parent: 5 tests; tots passen. S'han afegit 5 regressions independents, que fallaven contra la primera versió:\n1) --dry-run amb --write/opció desconeguda o opcions repetides s'acceptava; ara es rebutja amb exit2 abans de llegir el corpus.\n2) --dir amb signe = era truncat per split; ara slice conserva el camí complet.\n3) Seleccionar directament --dir d'arxiu/protegit els tornava a incloure; ara es rebutja abans d'escanejar.\n4) Una arrel --dir simbòlica s'acceptava; ara requereix directori regular. La ruta real d’arrels amb ancestres simbòlics es contrasta també amb els segments protegits. Symlinks fills continuen exclosos; fitxer extern intacte.\n5) resolvedCache només amb nom enllaç mesclava homònims locals de dues carpetes; ara la clau inclou directori font i nom.\nCorreccions fetes només a /private/tmp/sdp-qah-261029-1ttv030r/copy/scripts/teixidor-backlinks.mjs i tests/wiki-backlinks-readonly.test.mjs. Parent conserva exportació final del patch.\n11/11 Node, 0 omesos, 0 fallades; ESLint0. Logs i hashes a este directori.\nControl negatiu executat amb script original HEAD, capturat com fitxer .mjs, NOMÉS sobre control-fixture sintètica pròpia. Exit0 i hash del destí canviat; apareix Sinapsis després de Vincles. Cap execució sobre Wiki real. control-original.json/log contenen evidència.\nEl default corregit continua amb exit2 i stdout buit abans de tocar fins i tot un directori absent. Només la consulta explícita amb --dry-run únic pot arribar al lector. No s'ha tocat cap font viva ni cap procés de fons.\n",
+    "catalogConfig": {
+      "scope": "0216",
+      "catalog": {
+        "scope": "0216",
+        "canonical": [
+          {
+            "id": "QA-S01",
+            "value": "sas-commitment"
+          },
+          {
+            "id": "QA-S02",
+            "value": "circle-revocation"
+          },
+          {
+            "id": "QA-S03",
+            "value": "release-envelope"
+          },
+          {
+            "id": "QA-S04",
+            "value": "not-me-state-machine"
+          },
+          {
+            "id": "QA-S05",
+            "value": "linear-reconstruction-budget"
+          },
+          {
+            "id": "QA-S06",
+            "value": "shamir-interoperability"
+          }
+        ],
+        "claims": [
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 151,
+            "id": "QA-S01",
+            "value": "epoch-rotation",
+            "text": "    2. `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js` (protocol d'embolcall de claus, rotació d'`epoch` en canviar membres `QA-S01`, SAS de 12 dígits amb transcript ordenat `QA-S03`, metadades d'adjunts `QA-S04`, `navigator.locks` `QA-S05` i `DOMPurify` post-desxifratge `QA-S06`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 150,
+            "id": "QA-S02",
+            "value": "shamir-reconstruction",
+            "text": "    1. `src/data/xifratXatRecuperacio.js` + `src/data/xifratXatRecuperacio.seguretat.test.js` (`IDEA-48`: compartició secreta de Shamir sobre $\\text{GF}(2^8)$ amb $k=3$, cercle obert de confiança d'amics/familiars i verificació de consistència en viu al xat `QA-S02`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 151,
+            "id": "QA-S03",
+            "value": "sas-transcript",
+            "text": "    2. `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js` (protocol d'embolcall de claus, rotació d'`epoch` en canviar membres `QA-S01`, SAS de 12 dígits amb transcript ordenat `QA-S03`, metadades d'adjunts `QA-S04`, `navigator.locks` `QA-S05` i `DOMPurify` post-desxifratge `QA-S06`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 151,
+            "id": "QA-S04",
+            "value": "attachment-metadata",
+            "text": "    2. `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js` (protocol d'embolcall de claus, rotació d'`epoch` en canviar membres `QA-S01`, SAS de 12 dígits amb transcript ordenat `QA-S03`, metadades d'adjunts `QA-S04`, `navigator.locks` `QA-S05` i `DOMPurify` post-desxifratge `QA-S06`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 151,
+            "id": "QA-S05",
+            "value": "multi-tab-lock",
+            "text": "    2. `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js` (protocol d'embolcall de claus, rotació d'`epoch` en canviar membres `QA-S01`, SAS de 12 dígits amb transcript ordenat `QA-S03`, metadades d'adjunts `QA-S04`, `navigator.locks` `QA-S05` i `DOMPurify` post-desxifratge `QA-S06`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 151,
+            "id": "QA-S06",
+            "value": "post-decryption-sanitize",
+            "text": "    2. `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js` (protocol d'embolcall de claus, rotació d'`epoch` en canviar membres `QA-S01`, SAS de 12 dígits amb transcript ordenat `QA-S03`, metadades d'adjunts `QA-S04`, `navigator.locks` `QA-S05` i `DOMPurify` post-desxifratge `QA-S06`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 165,
+            "id": "QA-S01",
+            "value": "sas-commitment",
+            "text": "  3. **`[NEW]` `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js`:** Màquina d'estats d'embolcall de claus en suite única HPKE mode base (RFC 9180; DHKEM P-256 `0x0010`, HKDF-SHA256 `0x0001`, AES-256-GCM `0x0002`), rotació d'època (`SDPE`) amb `ckCommit`, dos codis SAS de 6 dígits (d'anada i de tornada amb compromís previ `SDPP`, `QA-S01`), sobre d'alliberament `SDPL`/`SDPO` i `SDPH` de `87 B` (`QA-S03`), màquina d'estats d'alarma «No sóc jo» (`SDPN`, `QA-S04`), protecció de metadades d'adjunts (`SDPA`, Padmé) i desbloqueig atòmic multi-pestanya amb `navigator.locks`."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 164,
+            "id": "QA-S02",
+            "value": "circle-revocation",
+            "text": "  2. **`[NEW]` `src/data/xifratXatRecuperacio.js` + `src/data/xifratXatRecuperacio.seguretat.test.js` (`IDEA-48`):** Compartició secreta de Shamir sobre $\\text{GF}(2^8)$ (`0x11B`, `QA-S06`) amb llindar fix $k = 3$ i cercle obert de confiança ($N \\in [3, 255]$ amics/familiars), fragments de `33 B` (`aval` de `49 B`, `alliberament` de `113 B`), compromís `hF`, verificació de consistència lineal (`QA-S05`) i 4 nivells de revocació (`QA-S02`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 165,
+            "id": "QA-S03",
+            "value": "release-envelope",
+            "text": "  3. **`[NEW]` `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js`:** Màquina d'estats d'embolcall de claus en suite única HPKE mode base (RFC 9180; DHKEM P-256 `0x0010`, HKDF-SHA256 `0x0001`, AES-256-GCM `0x0002`), rotació d'època (`SDPE`) amb `ckCommit`, dos codis SAS de 6 dígits (d'anada i de tornada amb compromís previ `SDPP`, `QA-S01`), sobre d'alliberament `SDPL`/`SDPO` i `SDPH` de `87 B` (`QA-S03`), màquina d'estats d'alarma «No sóc jo» (`SDPN`, `QA-S04`), protecció de metadades d'adjunts (`SDPA`, Padmé) i desbloqueig atòmic multi-pestanya amb `navigator.locks`."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 165,
+            "id": "QA-S04",
+            "value": "not-me-state-machine",
+            "text": "  3. **`[NEW]` `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js`:** Màquina d'estats d'embolcall de claus en suite única HPKE mode base (RFC 9180; DHKEM P-256 `0x0010`, HKDF-SHA256 `0x0001`, AES-256-GCM `0x0002`), rotació d'època (`SDPE`) amb `ckCommit`, dos codis SAS de 6 dígits (d'anada i de tornada amb compromís previ `SDPP`, `QA-S01`), sobre d'alliberament `SDPL`/`SDPO` i `SDPH` de `87 B` (`QA-S03`), màquina d'estats d'alarma «No sóc jo» (`SDPN`, `QA-S04`), protecció de metadades d'adjunts (`SDPA`, Padmé) i desbloqueig atòmic multi-pestanya amb `navigator.locks`."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 164,
+            "id": "QA-S05",
+            "value": "linear-reconstruction-budget",
+            "text": "  2. **`[NEW]` `src/data/xifratXatRecuperacio.js` + `src/data/xifratXatRecuperacio.seguretat.test.js` (`IDEA-48`):** Compartició secreta de Shamir sobre $\\text{GF}(2^8)$ (`0x11B`, `QA-S06`) amb llindar fix $k = 3$ i cercle obert de confiança ($N \\in [3, 255]$ amics/familiars), fragments de `33 B` (`aval` de `49 B`, `alliberament` de `113 B`), compromís `hF`, verificació de consistència lineal (`QA-S05`) i 4 nivells de revocació (`QA-S02`)."
+          },
+          {
+            "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "line": 164,
+            "id": "QA-S06",
+            "value": "shamir-interoperability",
+            "text": "  2. **`[NEW]` `src/data/xifratXatRecuperacio.js` + `src/data/xifratXatRecuperacio.seguretat.test.js` (`IDEA-48`):** Compartició secreta de Shamir sobre $\\text{GF}(2^8)$ (`0x11B`, `QA-S06`) amb llindar fix $k = 3$ i cercle obert de confiança ($N \\in [3, 255]$ amics/familiars), fragments de `33 B` (`aval` de `49 B`, `alliberament` de `113 B`), compromís `hF`, verificació de consistència lineal (`QA-S05`) i 4 nivells de revocació (`QA-S02`)."
+          }
+        ]
+      },
+      "provenance": {
+        "canonicalSource": "../_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/disseny_final_e2ee.md",
+        "canonicalLines": [
+          73,
+          74,
+          75,
+          76,
+          77,
+          78
+        ],
+        "method": "Explicitly configured review labels; the engine does not infer meanings from prose. Claim.text pins the source line."
+      }
+    },
+    "catalogResult": {
+      "scope": "0216",
+      "status": "explicit-disagreements",
+      "coverage": {
+        "documents": 2,
+        "activeDocuments": 2,
+        "historicalDocuments": 0,
+        "scannedActiveLines": 461,
+        "explicitClaims": 34,
+        "contracts": 10,
+        "catalog": {
+          "canonicalIds": 6,
+          "configuredClaims": 12,
+          "activeClaims": 12,
+          "historicalClaims": 0,
+          "excludedClaims": 0,
+          "comparedIds": 6,
+          "status": "evaluated"
+        }
+      },
+      "findings": [
+        {
+          "code": "EXPLICIT_CATALOG_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "catalog:QA-S02",
+          "values": [
+            "circle-revocation",
+            "shamir-reconstruction"
+          ],
+          "canonical": {
+            "id": "QA-S02",
+            "value": "circle-revocation"
+          },
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "id": "QA-S02",
+              "contract": "catalog:QA-S02",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 164,
+              "value": "circle-revocation",
+              "source": "configured-catalog"
+            },
+            {
+              "id": "QA-S02",
+              "contract": "catalog:QA-S02",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 150,
+              "value": "shamir-reconstruction",
+              "source": "configured-catalog"
+            }
+          ],
+          "requiresReview": true
+        },
+        {
+          "code": "EXPLICIT_CATALOG_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "catalog:QA-S05",
+          "values": [
+            "linear-reconstruction-budget",
+            "multi-tab-lock"
+          ],
+          "canonical": {
+            "id": "QA-S05",
+            "value": "linear-reconstruction-budget"
+          },
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "id": "QA-S05",
+              "contract": "catalog:QA-S05",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 164,
+              "value": "linear-reconstruction-budget",
+              "source": "configured-catalog"
+            },
+            {
+              "id": "QA-S05",
+              "contract": "catalog:QA-S05",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 151,
+              "value": "multi-tab-lock",
+              "source": "configured-catalog"
+            }
+          ],
+          "requiresReview": true
+        },
+        {
+          "code": "EXPLICIT_CATALOG_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "catalog:QA-S06",
+          "values": [
+            "post-decryption-sanitize",
+            "shamir-interoperability"
+          ],
+          "canonical": {
+            "id": "QA-S06",
+            "value": "shamir-interoperability"
+          },
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "id": "QA-S06",
+              "contract": "catalog:QA-S06",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 164,
+              "value": "shamir-interoperability",
+              "source": "configured-catalog"
+            },
+            {
+              "id": "QA-S06",
+              "contract": "catalog:QA-S06",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 151,
+              "value": "post-decryption-sanitize",
+              "source": "configured-catalog"
+            }
+          ],
+          "requiresReview": true
+        },
+        {
+          "code": "EXPLICIT_CATALOG_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "catalog:QA-S04",
+          "values": [
+            "attachment-metadata",
+            "not-me-state-machine"
+          ],
+          "canonical": {
+            "id": "QA-S04",
+            "value": "not-me-state-machine"
+          },
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "id": "QA-S04",
+              "contract": "catalog:QA-S04",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 165,
+              "value": "not-me-state-machine",
+              "source": "configured-catalog"
+            },
+            {
+              "id": "QA-S04",
+              "contract": "catalog:QA-S04",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 151,
+              "value": "attachment-metadata",
+              "source": "configured-catalog"
+            }
+          ],
+          "requiresReview": true
+        },
+        {
+          "code": "EXPLICIT_CATALOG_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "catalog:QA-S03",
+          "values": [
+            "release-envelope",
+            "sas-transcript"
+          ],
+          "canonical": {
+            "id": "QA-S03",
+            "value": "release-envelope"
+          },
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "id": "QA-S03",
+              "contract": "catalog:QA-S03",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 165,
+              "value": "release-envelope",
+              "source": "configured-catalog"
+            },
+            {
+              "id": "QA-S03",
+              "contract": "catalog:QA-S03",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 151,
+              "value": "sas-transcript",
+              "source": "configured-catalog"
+            }
+          ],
+          "requiresReview": true
+        },
+        {
+          "code": "EXPLICIT_CATALOG_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "catalog:QA-S01",
+          "values": [
+            "epoch-rotation",
+            "sas-commitment"
+          ],
+          "canonical": {
+            "id": "QA-S01",
+            "value": "sas-commitment"
+          },
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "id": "QA-S01",
+              "contract": "catalog:QA-S01",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 165,
+              "value": "sas-commitment",
+              "source": "configured-catalog"
+            },
+            {
+              "id": "QA-S01",
+              "contract": "catalog:QA-S01",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 151,
+              "value": "epoch-rotation",
+              "source": "configured-catalog"
+            }
+          ],
+          "requiresReview": true
+        }
+      ]
+    },
+    "catalogSources": [
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "snapshot": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-contract-cycle1-eauw0pyq/inputs/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "6fd90d07b50357f16c96b60585712321d2020a933125c5f4caf404f65bc10fa0",
+        "bytes": 37175,
+        "lines": 213
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "snapshot": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-contract-cycle1-eauw0pyq/inputs/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "970e462a350510cb299191f312a064240041eef20b83b00c5d97ae59e3d41f0f",
+        "bytes": 40199,
+        "lines": 246
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+        "snapshot": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-contract-cycle1-eauw0pyq/inputs/03_llibre_mestre_tasques_i_idees.md",
+        "sha256": "bcc1cd7b29c485951ec44b7b431372826725cabf0ff279b8e02ce3cb98968190",
+        "bytes": 301407,
+        "lines": 850
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/_wiki_de_poble/04_escriptori/261029_0336_auditoria_gemini.md",
+        "snapshot": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-contract-cycle1-eauw0pyq/inputs/261029_0336_auditoria_gemini.md",
+        "sha256": "12905b0d296bbebd1b566b2a7250b5e8ba80a964d70a967a417bcee0dbf3c073",
+        "bytes": 28790,
+        "lines": 275
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/_wiki_de_poble/04_escriptori/261029_0350_auditoria_claude.md",
+        "snapshot": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-contract-cycle1-eauw0pyq/inputs/261029_0350_auditoria_claude.md",
+        "sha256": "4b069b6036a52b905c1e0d655a52d7075c9d3b5d3f7d41e4888af3e4f7644609",
+        "bytes": 14542,
+        "lines": 119
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/disseny_final_e2ee.md",
+        "snapshot": "/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-contract-cycle1-eauw0pyq/inputs/disseny_final_e2ee.md",
+        "sha256": "619b717115598c90dd4de6dca821d7be9bcf81adac679be44bfcb5e68b108d07",
+        "bytes": 233273,
+        "lines": 2227
+      }
+    ],
+    "unchangedE2ee": [
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatCripto.vectors.json",
+        "old": "f0451a5a437c0f8cd3d61a72ee7853238035d47f75a5eac35c38070e2d9793a4",
+        "new": "f0451a5a437c0f8cd3d61a72ee7853238035d47f75a5eac35c38070e2d9793a4",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatParaules.js",
+        "old": "50d03eea0e0ffe06a3769695b22d529953f96e15e41c032c7731f488dfee7dd4",
+        "new": "50d03eea0e0ffe06a3769695b22d529953f96e15e41c032c7731f488dfee7dd4",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatFormats.seguretat.test.js",
+        "old": "ce177e0eff12281e71eb1c37468ffe33e39c414989a77df4dd3cb95d72a9d2b4",
+        "new": "ce177e0eff12281e71eb1c37468ffe33e39c414989a77df4dd3cb95d72a9d2b4",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatCripto.js",
+        "old": "638be70f9cfe11f2ca7b10e52de01d34cb1e65d6400a78dde621e5e383a6cbe8",
+        "new": "638be70f9cfe11f2ca7b10e52de01d34cb1e65d6400a78dde621e5e383a6cbe8",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatFormats.vectors.json",
+        "old": "83c3565b2d2df9f6c47bef8035da8009032e0bc1cf3a1e0b164f1f83a44f955d",
+        "new": "83c3565b2d2df9f6c47bef8035da8009032e0bc1cf3a1e0b164f1f83a44f955d",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatParaules.seguretat.test.js",
+        "old": "909ec77fbf80ffa86cc39c366aca36b12118ff024ff88f982f964f81135a10f1",
+        "new": "909ec77fbf80ffa86cc39c366aca36b12118ff024ff88f982f964f81135a10f1",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatMagatzem.seguretat.test.js",
+        "old": "aee1c732edead44c16aea471c88a8ba756a388dce3e4964b41c4686105d0967b",
+        "new": "aee1c732edead44c16aea471c88a8ba756a388dce3e4964b41c4686105d0967b",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatMagatzem.js",
+        "old": "ce59c24577f42983e587db36bf0f63701c3f13604360367a8e1c1e50e5b4e20b",
+        "new": "ce59c24577f42983e587db36bf0f63701c3f13604360367a8e1c1e50e5b4e20b",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatCripto.seguretat.test.js",
+        "old": "8aaa601ec41fb543f759f33efe2250437511c3ee507fed1e56200f67ab59a0ec",
+        "new": "8aaa601ec41fb543f759f33efe2250437511c3ee507fed1e56200f67ab59a0ec",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xifratXatFormats.js",
+        "old": "2fcfd016941c19cb2becbdf9881648c93cdeec728ea44fabdb19cec9df998bd7",
+        "new": "2fcfd016941c19cb2becbdf9881648c93cdeec728ea44fabdb19cec9df998bd7",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/data/xatMultimedia.js",
+        "old": "f9e45cbfd6a7bd3d3ed6993182f761d4969cc10949b4fb92615d09330f4b632e",
+        "new": "f9e45cbfd6a7bd3d3ed6993182f761d4969cc10949b4fb92615d09330f4b632e",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/tests/helpers/idbFalsEstructurat.js",
+        "old": "f5d392c2598b1812b7e31b066c4eafccd07067169eb0724df00e67afa7ea1ec5",
+        "new": "f5d392c2598b1812b7e31b066c4eafccd07067169eb0724df00e67afa7ea1ec5",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/xat/XatContext.jsx",
+        "old": "493b9e6191bd8310ddaf90fa5777337a694f4aa9dd6a48fa64f093a462c28c49",
+        "new": "493b9e6191bd8310ddaf90fa5777337a694f4aa9dd6a48fa64f093a462c28c49",
+        "changed": false
+      },
+      {
+        "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/disseny_final_e2ee.md",
+        "old": "619b717115598c90dd4de6dca821d7be9bcf81adac679be44bfcb5e68b108d07",
+        "new": "619b717115598c90dd4de6dca821d7be9bcf81adac679be44bfcb5e68b108d07",
+        "changed": false
+      }
+    ]
+  },
+  "frontend": {
+    "headersRuntime": {
+      "m01-politica": {
+        "patch": "/private/tmp/sdp-c1-qah-m2ae49x0/m01-politica.patch",
+        "sha256": "4839ae397ca39b45c3e038008c56982e3c90700025c70fdacc7749994a98d5f7",
+        "files": [
+          {
+            "path": "firebase.json",
+            "before": "f8b9cb9d5fa9a7a2e0f858498678e74bdae2657c27a4f5abe156135c56d4b8f4",
+            "after": "c47794fd65c240dd7bc3f29112ec6048c43e0207ffd6096913aa8a23fd55eb50"
+          },
+          {
+            "path": "vercel.json",
+            "before": "9bda1adc596527cff9b95cf045d9fd33c12ce1c30a4f7a371524869b208b92fe",
+            "after": "1da0faa6b5be6e9ff4d167f24a1b463b37ff88bb7b6b1478b7cd191538e7fc99"
+          },
+          {
+            "path": "src/config/firebaseHosting.test.js",
+            "before": "c1e611a3af8a562a990ec40a50ee19c3d169bde25e427bb39b90182d8cfb7530",
+            "after": "cef22cf66044cc83ce930263bc49981caaa219a720658e0987da08d7e7605354"
+          }
+        ],
+        "applyCheck": 0
+      },
+      "t51-runtime": {
+        "patch": "/private/tmp/sdp-c1-qah-m2ae49x0/t51-runtime.patch",
+        "sha256": "4f3ee1e20a70ee6469e409ec6c937eb3978e31d670268ed7a2e541180e220160",
+        "files": [
+          {
+            "path": "src/config/runtimePolicy.js",
+            "before": "acb26085c068d3881f9b3a43a7d13b691704c6581d78f89c19c0aa08306151f2",
+            "after": "fff2bc5d80f71b5be2ff04b8e6717e3d9dba1233679298bc1f4aac79531b6478"
+          },
+          {
+            "path": "src/config/runtimePolicy.test.js",
+            "before": "d123671f75b011a59f476ad5d94c777e4256988407711f40a40e93396eb94b21",
+            "after": "2c999b34f9a06488d264dcf27ae0faa1db85afa05d3ad9f511d249d94f8f7f60"
+          }
+        ],
+        "applyCheck": 0
+      },
+      "validation": {
+        "vitest": {
+          "files": 8,
+          "passed": 125
+        },
+        "eslintExit": 0,
+        "m01OldCameraExit": 1,
+        "runtimeBeforeExit": 1
+      }
+    },
+    "summary": "Cicle 1 · Bloc H / M-01 / T5.1 · 2026-10-29 04:13 CET\nCaptura: /private/tmp/sdp-c1-qah-m2ae49x0/copy. HEAD 7a87205f3 abans/després, 5230 fitxers SHA-256. Delta explícit respecte del tall inicial a delta.json. No tests al viu, no edicions al repo.\n\nLectura completa de prompt/pla 261029_0216, Claude 0350 i Gemini 0336 actuals; Llibre Mestre consultat en les seccions de prioritats i relleu. Claude 0350 encara cita Codex com esborrany sense troballes a03:05Z; Gemini0336 v1.2 aprova explícitament contrast i T11 Codex. No atribuir consens de Claude abans de la seua rèplica nova.\n\nQA-M01-C01: contradicció verificable d'implementació amb el Pla/Prompt vius. El contracte aprova camera=(self), microphone=(self), geolocation=(self). Els firebase.json/vercel.json capturats i les seues expectatives permanents implementen camera=(). Microphone=(self) sí preserva el getUserMedia({audio:true}) real d'adjuntLocal.js. La càmera actual usa input file capture; no s'ha demostrat una regressió actual del selector de fitxers. El pegat m01-politica.patch alinea els tres fitxers al contracte (camera=self), sense canviar CSP/CORS/cache/reescriptures.\n\nT5.1-RP01: reproducció exacta de l'avís en arrencada sense sessió externa: dos tests nous fallen abans per console.warn1 (arrencada implícita i configuració explícita). El pegat t51-runtime.patch suprimix l'avís de setRuntimePolicy i deixa intactes issuer/orígens/immutabilitat. El diagnòstic de rebuig ja existix en adoptaSessioExterna:569; els nous tests verifiquen integració real, rebuig i console.error únicament quan s'intenta l'adopció sense emissor. No es relaxa cap validació JWT ni backend.\n\nVerificació sobre còpia:\n- Base M-01/runtime/host/àudio/CSP: 6fitxers,101/101 verds (m01-base.log), sense demostrar concordança del camera amb el Pla.\n- Amb dos pegats: 8fitxers,125/125 verds en2,59s (m01-t51-patched.log): firebaseHosting,runtimePolicy,hostAdapter,hostIframeAdapter,pwa/recursosEstatics,AdjuntXat.porta,adjuntLocal,identitat.\n- ESLint3fitxers modificats: exit0(m01-t51-eslint.log).\n- Control negatiu camera(): els dos JSON tornats al valor antic fan fallar les expectatives noves de M-01; fitxers restaurats després(m01-control-antic.log).\n- git apply --check sobre preimatges:0per cada pegat; hashes abans/després+patch a patch-manifest.json.\n\nDues famílies heretades: el canvi nou incorpora skips i no repara la dependència versionada. A còpia aïllada laParroquia+MapaFotografic:45passen/2omesos(heretades-vitest.log); un omés és el mapa obligatori del laboratori. Botigues:10passen/3omesos de13(heretades-node.log), inclosa comprovació de plantilla/rebuts. scripts/botigues/entorn.mjs encara conserva el LABORATORI antic dins Wiki; el test nou el deixa de comprovar en CI quan no hi ha laboratori germà. Per tant no tancar T2.5 com a100%verificat: adoptar els dos recursos reals versionats que Gemini2.3 accepta o provar l'entrega obligatòria sense ometre-la.\n\nT5.1WP continua sense integrar al tall: PluginURI encara/enxufe/, ajustos.php:224-225 continua afirmant9municipis, no s'han localitzat plugins_api/plugin_row_meta al PHP ni crèdit Noto/OFL a readme. No s'ha reconstruït ni publicat cap ZIP ací.\n\nLímit: simulacions/fixtures locals no certifiquen capçalera servida en hosting, permisos reals Safari/iOS ni captura amb dispositiu. Incrustació WP usa script/WebComponent: la política del document amfitrió governa els seus permisos; les capçaleres del JS remot no la substituïxen. El pont iframe requerix concessió del pare segons W3C Permissions Policy; les proves host del port passen sense canviar eixa frontera.\nFonts primàries consultades: https://www.w3.org/TR/mediacapture-streams/#permissions-policy-integration ; https://www.w3.org/TR/permissions-policy/#examples .\n",
+    "appd1": {
+      "head": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+      "snapshotManifest": "snapshot-manifest.json",
+      "liveRecheck": "live-recheck.json",
+      "focalOriginal": {
+        "files": 11,
+        "passed": 283,
+        "failed": 0,
+        "durationSeconds": 4.27,
+        "log": "focus-css-appd1.log"
+      },
+      "independentOriginal": {
+        "passed": 2,
+        "failed": 1,
+        "log": "qa-independent-appd1.log",
+        "finding": "APP-D1 session change during missing username RPC permits fallback PATCH to the newly current synthetic person"
+      },
+      "localGuard": {
+        "files": 5,
+        "passed": 127,
+        "failed": 0,
+        "durationSeconds": 1.74,
+        "log": "qa-appd1-with-guard.log",
+        "patch": "appd1-session-guard.patch",
+        "sha256": "8664f10a4274f29e7213c31e8c43c5bddb0c509eaf73318fca27ac681834db20"
+      },
+      "limits": [
+        "No production services accessed",
+        "No repository edits",
+        "No browser geometry/native UI validation",
+        "No SQL concurrency verification",
+        "No repeat of unchanged 265 E2EE tests"
+      ]
+    },
+    "appd1PermanentPatch": {
+      "files": [
+        {
+          "path": "src/data/supabase/auth.js",
+          "beforeSha256": "3622921eb451fb1aefe83794642d70191fc756d27405c65b1a2397145fa03fc2",
+          "afterSha256": "c85f2a8281d359f29e1aeb2abd2b1e24f7f4da21cf6600bfb9758e8983358334"
+        },
+        {
+          "path": "src/data/supabase/auth.perfilDeSessio.test.js",
+          "beforeSha256": null,
+          "afterSha256": "31a262185d33b57b6ab6ce1a3370ec46e517a4aec7b596746aef1dbb73a77b30"
+        },
+        {
+          "path": "src/sections/onboarding/IdentitatAlPoble.servidorPendent.test.jsx",
+          "beforeSha256": null,
+          "afterSha256": "5ffcb321c687c83302960e4c683426f1ad9839818cb38708c83e9f932c667d09"
+        }
+      ],
+      "patchSha256": "8e40baf419713adead58f498d6ff2bd734586e58edd19456cd1e5c035ed444ec",
+      "tests": {
+        "permanentFocusedPassed": 42,
+        "eslintErrors": 0,
+        "eslintWarnings": 0,
+        "independentOriginalPassed": 2,
+        "independentOriginalFailed": 1
+      }
+    },
+    "appd1PermanentTestsLog": "\n RUN  v4.1.10 /private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-css-appd1-c1-rzt8sd2b/copy\n\n\n Test Files  5 passed (5)\n      Tests  42 passed (42)\n   Start at  04:26:37\n   Duration  4.97s (transform 2.16s, setup 0ms, import 3.50s, tests 618ms, environment 3.54s)\n\n",
+    "cssAuthFocalTestsLog": "\n RUN  v4.1.10 /private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-css-appd1-c1-rzt8sd2b/copy\n\n\n Test Files  11 passed (11)\n      Tests  283 passed (283)\n   Start at  04:20:14\n   Duration  4.27s (transform 1.22s, setup 0ms, import 2.39s, tests 2.24s, environment 2.55s)\n\n"
+  },
+  "artifacts": [
+    {
+      "file": "261029_0408_solucio_t11_codex.patch",
+      "sha256": "1142f73de1886cbca0fc841edad9ef29a5572f64da3efaceb9333173bc6a3298"
+    },
+    {
+      "file": "261029_0408_solucio_m01_codex.patch",
+      "sha256": "4839ae397ca39b45c3e038008c56982e3c90700025c70fdacc7749994a98d5f7"
+    },
+    {
+      "file": "261029_0408_solucio_runtime_codex.patch",
+      "sha256": "4f3ee1e20a70ee6469e409ec6c937eb3978e31d670268ed7a2e541180e220160"
+    },
+    {
+      "file": "261029_0408_solucio_appd1_sessio_codex.patch",
+      "sha256": "8e40baf419713adead58f498d6ff2bd734586e58edd19456cd1e5c035ed444ec"
+    }
+  ],
+  "limits": [
+    "Pegat T11 C1 substituïx el pegat T11 basal; no aplicar tots dos cegament.",
+    "Totes les verificacions de codi han sigut en còpies temporals amb dades sintètiques.",
+    "283,127,42i125 són bateries solapades, no se sumen.",
+    "83 Node són T11+manifest; no són les proves del connector WordPress.",
+    "Sense desplegament, migració remota, activació E2EE ni consens atribuït sense rèplica."
+  ],
+  "documentalClosureCheck": {
+    "valid": false,
+    "mode": "check",
+    "turn_id": "torn_51c9489b-9b68-4f5b-8152-b6acd2989e53",
+    "state": "planned",
+    "errors": [
+      "Canvis de codi fora de l’abast documental",
+      "ORPHAN_OPERATIVE: El document és un satèl·lit orfe. Està a la zona operativa però no hi ha cap camí actiu des de 00_INDEX.md per arribar-hi. _wiki_de_poble/03_actuar/plantilles/pla.md",
+      "Escriptura concurrent o comprovació amb efectes laterals"
+    ],
+    "checks": [
+      {
+        "name": "olivera",
+        "exit": 0
+      },
+      {
+        "name": "plantilles",
+        "exit": 0
+      },
+      {
+        "name": "autoritat",
+        "exit": 0
+      },
+      {
+        "name": "ledger",
+        "exit": 0
+      },
+      {
+        "name": "segell",
+        "exit": 0
+      },
+      {
+        "name": "skills",
+        "exit": 0
+      },
+      {
+        "name": "wiki",
+        "exit": 0
+      },
+      {
+        "name": "scc",
+        "exit": 1
+      }
+    ],
+    "snapshot": "12a83d7fef4f5e9c00629e1456255d15fbbdde93bbe4dad84d5c4017fa24b2ba"
+  }
+}

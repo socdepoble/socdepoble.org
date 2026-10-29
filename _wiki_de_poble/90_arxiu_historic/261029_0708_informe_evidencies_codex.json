@@ -1,0 +1,898 @@
+{
+  "schema": "sdp.qa.cycle.v7",
+  "cycle": 7,
+  "startedAt": "2026-10-29T06:08:18.098Z",
+  "completedAt": "2026-10-29T06:36:16.329630+00:00",
+  "sources": {
+    "cycle": 7,
+    "startedAt": "2026-10-29T06:08:18.098Z",
+    "capturedAt": "2026-10-29T06:09:33.181Z",
+    "sources": [
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "bd60ded9fbeb36d76cfd06e99247d23efc8edc3953d8581f1e9ec398b667465b",
+        "bytes": 37644
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "48d7e92e7734e9a5a6067e5ef91bdf25c5797534dca0ea37fc56e42a5f945c43",
+        "bytes": 72928
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+        "sha256": "682d25635f40b1b76ca15fb36d99bde91755a3b0901082a5fc688c4fb8ed4354",
+        "bytes": 304860
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0350_auditoria_claude.md",
+        "sha256": "a0fde121be897f3d97ef998e2c78c43bab11ac71e5c4cf768d57fa4e67b890dc",
+        "bytes": 19902
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0336_auditoria_gemini.md",
+        "sha256": "cbe3b1c81544b0e6852023b0767041bd6dfc40959b8c404773327f1db32baf42",
+        "bytes": 62723
+      }
+    ]
+  },
+  "t11": {
+    "schema": "sdp.qa.t11.v7",
+    "cycle": 7,
+    "patch": "/private/tmp/sdp-c7-t11.patch",
+    "sha256": "5f400ce85b97f514ef28a2a9d4c1d7c5e95dadcc20871e414945a4b2665c48d5",
+    "files": [
+      {
+        "path": "tests/t11-arxiu-fossils-bundle.test.mjs",
+        "beforeSha256": null,
+        "afterSha256": "b1030594b4f06cbf780a86cf8cb62691d71ad8fd0c605ea1e57581eec2ac808e"
+      },
+      {
+        "path": "_wiki_de_poble/01_ser/03_equip_ia.md",
+        "beforeSha256": "94015dad16866f55aa7fd67b4cbfc31f53226f5ee11d382017bdb4c7314e5ac8",
+        "afterSha256": "c18fcd123630fe9f25e16d9d7582f028f57a00fc79b3d2ada1d9ebe5f005045a"
+      },
+      {
+        "path": "tests/t11-equip-contracte.test.mjs",
+        "beforeSha256": null,
+        "afterSha256": "2a1f089a1c2dd206a744a22810bc583d257709be86bf1d5b8aeb1cc5e404d837"
+      },
+      {
+        "path": "tooling/tests/node-suite-manifest.json",
+        "beforeSha256": "cf53e4097d19d45762e3221abf4c4a336b871497f44f8c975c006b9e875ab9bd",
+        "afterSha256": "293c27b0484e7f11fefa1eef19e7f53c961fffaea74117c6f73b6542441d9c64"
+      }
+    ],
+    "tests": {
+      "Node": {
+        "tests": 412,
+        "pass": 412,
+        "fail": 0,
+        "skipped": 0
+      },
+      "joint": "/private/tmp/sdp-c7-qah-7lr28l__/joint",
+      "log": "/private/tmp/sdp-c7-qah-7lr28l__/final-node.log",
+      "guardCases": 2,
+      "equipCases": 10,
+      "eslintExit": 0
+    },
+    "manifestNormalization": {
+      "executionCatalogueIdentical": true,
+      "discovered": 126,
+      "sortedArrays": true
+    },
+    "archive": {
+      "at": "2026-10-29T06:21:10.270Z",
+      "rows": [
+        {
+          "source": ".agents/ESTAT.md.abans-260830",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/ESTAT.md.abans-260830",
+          "sourceAbsent": true,
+          "sha256": "da681ce7fcafda103c9a9e831b679d7fe4298cf2929b1f8d7d11ef9a5b2dce7f",
+          "matchesOriginal": true,
+          "bytes": 891
+        },
+        {
+          "source": ".agents/manifest.yaml.abans-260830",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/manifest.yaml.abans-260830",
+          "sourceAbsent": true,
+          "sha256": "7133d2fe2262e5d86141d8ffb1be7e7ce637fd3d8363ea74f10b9244b518a1fb",
+          "matchesOriginal": true,
+          "bytes": 145
+        },
+        {
+          "source": ".agents/pageContent_old.js",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/pageContent_old.js",
+          "sourceAbsent": true,
+          "sha256": "43feb33df5ed78163bd0a52d6a88a0a897735231782f1f98865928a0244f4913",
+          "matchesOriginal": true,
+          "bytes": 106299
+        },
+        {
+          "source": "tooling/wiki/rules/trellat-rules.json.abans-260830",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/rules/trellat-rules.json.abans-260830",
+          "sourceAbsent": true,
+          "sha256": "1ad9790a2365673d44ff1c1cd798c2a112bded4e829e8759ed78c3b8a31694a3",
+          "matchesOriginal": true,
+          "bytes": 3836
+        },
+        {
+          "source": "tooling/wiki/generar_petorreta_inversa.mjs.abans-260830",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/generar_petorreta_inversa.mjs.abans-260830",
+          "sourceAbsent": true,
+          "sha256": "8cf2875b1fe48570fb9e781fc60cf82b1eae54d88946fdac6855ab654cbf90e6",
+          "matchesOriginal": true,
+          "bytes": 6601
+        },
+        {
+          "source": "tooling/wiki/tractor-cognitiu.mjs.abans-260830",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/tractor-cognitiu.mjs.abans-260830",
+          "sourceAbsent": true,
+          "sha256": "b10ce9c482352b59c9c4e1a34800c7196ec7ac6b2cbd771d656edf4f4d1704d9",
+          "matchesOriginal": true,
+          "bytes": 17988
+        },
+        {
+          "source": "tooling/wiki/core/edge_rag.mjs.abans-260830",
+          "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/core/edge_rag.mjs.abans-260830",
+          "sourceAbsent": true,
+          "sha256": "f92fcf825993fcdd539b4a248cf367f4ed9e91e5ac9ea12eabe094d870745bc7",
+          "matchesOriginal": true,
+          "bytes": 5994
+        }
+      ],
+      "allPreserved": true,
+      "bytes": 141754
+    },
+    "negativeControls": {
+      "reintroductionExit": 1,
+      "byteCorruptionExit": 1,
+      "restored": true
+    },
+    "applyCheckExit": 0,
+    "limits": [
+      "Archives already live; no repeat rename, no live edits by root",
+      "7archive files remain untracked and must accompany future clean commit",
+      "C7patch does not supersede0638; depends on integratedC6 sources",
+      "412Node excludes full Vitest completeness; record separate failures",
+      "Role table compares36configured claims, not session availability or provider guarantees"
+    ]
+  },
+  "equip": {
+    "scope": "C7-T11-06 equip, només TEMP; cap segell ni manifest global alterat",
+    "patch": "/private/tmp/t11-equip-cicle7-codex.patch",
+    "patchSha256": "bd44a222e959f64f512894b1e6ad5b3742ba21623599e2489a34f8fcc79d6418",
+    "candidate": "/private/tmp/t11-equip-c7/candidate",
+    "preimageRebased": "Live concurrently updated from649B/146cbd7b to2214B/94015dad; patch deliberately replaces paraphrased roster with exact JSON projection and preserves officialURLs and narrativefile.",
+    "files": [
+      {
+        "path": "_wiki_de_poble/01_ser/03_equip_ia.md",
+        "preimage": "94015dad16866f55aa7fd67b4cbfc31f53226f5ee11d382017bdb4c7314e5ac8",
+        "postimage": "c18fcd123630fe9f25e16d9d7582f028f57a00fc79b3d2ada1d9ebe5f005045a",
+        "bytesBefore": 2214,
+        "bytesAfter": 3123
+      },
+      {
+        "path": "tests/t11-equip-contracte.test.mjs",
+        "preimage": null,
+        "postimage": "2a1f089a1c2dd206a744a22810bc583d257709be86bf1d5b8aeb1cc5e404d837",
+        "bytesBefore": 0,
+        "bytesAfter": 7419
+      }
+    ],
+    "checks": {
+      "node": {
+        "pass": 10,
+        "fail": 0,
+        "skip": 0,
+        "log": "/private/tmp/t11-equip-c7/tests.log"
+      },
+      "contrafactualLive": {
+        "pass": 4,
+        "fail": 6,
+        "log": "/private/tmp/t11-equip-c7/before-tests.log",
+        "interpretation": "New contract suite fails before proposal; mutation cases depend on declared table so not six independent product defects."
+      },
+      "eslint": {
+        "exit": 0,
+        "log": "/private/tmp/t11-equip-c7/eslint.log"
+      },
+      "applycheck": {
+        "exit": 0,
+        "log": "/private/tmp/t11-equip-c7/applycheck.log"
+      },
+      "tractorCens": {
+        "beforeExit": 1,
+        "afterExit": 1,
+        "sameOutput": true,
+        "beforeLog": "/private/tmp/t11-equip-c7/tractor-cens-before.log",
+        "afterLog": "/private/tmp/t11-equip-c7/tractor-cens.log",
+        "scope": "Partial source clone: unchanged two baseline findings in current skill incomplete roster and historic ESTAT3IAs. Proposal adds neither; fullglobal gate is not certified."
+      }
+    },
+    "registerLater": {
+      "primary": [
+        "tests/t11-equip-contracte.test.mjs"
+      ],
+      "requiredPrimary": [
+        "tests/t11-equip-contracte.test.mjs"
+      ]
+    },
+    "sources": [
+      {
+        "path": "package.json",
+        "sha256": "726ad6307f8267accde49f53c1b1a3676683e8815666b3e34e16aa2e807e86ab",
+        "bytes": 9074
+      },
+      {
+        "path": "eslint.config.js",
+        "sha256": "db2cae8f08c5b05cc9e2ec07fb972de94e24918ac3b4fe346f09b4eb7d54a8d1",
+        "bytes": 2884
+      },
+      {
+        "path": "AGENTS.md",
+        "sha256": "eb60995fa1720860f5236cb60f0d6c1143c91bfecf4a63fb1b79f64040b5e6e2",
+        "bytes": 12078
+      },
+      {
+        "path": ".agents/cervell.json",
+        "sha256": "45f77497e13ebb9430b69c2c0b45661e326b4069a744b7adb4b0cd89bd6bc567",
+        "bytes": 941
+      },
+      {
+        "path": ".agents/PROFILE.md",
+        "sha256": "87ad391547fd6c419ce001485b897fb948a0d21daea008cb1ff197823147c9ea",
+        "bytes": 2164
+      },
+      {
+        "path": ".agents/consell.json",
+        "sha256": "29c7ab87c1c0b72749957f501b47d8d4ff414ff1497ed6fe85152bd8a9f33ac4",
+        "bytes": 6038
+      },
+      {
+        "path": ".agents/ESTAT.md",
+        "sha256": "8fd29e0f95b53894aab0cd069f3ce9614ea53eab5f970a8ee863e11748281258",
+        "bytes": 567702
+      },
+      {
+        "path": ".agents/BOOTSTRAP.md",
+        "sha256": "a5253f979e805947651e5bd9cb8a14ac5b5fec9f2ef4fa38bd488e012f518031",
+        "bytes": 1955
+      },
+      {
+        "path": ".agents/skills/core-consell-i-colmena/SKILL.md",
+        "sha256": "583b7f01996e8fd9bdae501c5ba5c02ba11d4b58997ccebb6f1d2a26dd60413b",
+        "bytes": 5403
+      },
+      {
+        "path": "_wiki_de_poble/01_ser/03_equip_ia.md",
+        "sha256": "94015dad16866f55aa7fd67b4cbfc31f53226f5ee11d382017bdb4c7314e5ac8",
+        "bytes": 2214
+      },
+      {
+        "path": "_wiki_de_poble/01_ser/agents_equip_ia.md",
+        "sha256": "bc702cb19313c8fabbf358a70caa20b47f49b463c609bc07842b1722933b4f39",
+        "bytes": 6253
+      },
+      {
+        "path": "_wiki_de_poble/01_ser/00_index_identitat.md",
+        "sha256": "70fce0e367bb12b1ab1cb8318c1d4cee0483e11d0129d30a26c5940616a8fe48",
+        "bytes": 2423
+      },
+      {
+        "path": "_wiki_de_poble/01_ser/04_taula_potencia_models.md",
+        "sha256": "9f0286ee263d544cfa762bde6316b6289f876ac07f962f96be68b366d0b9a0ff",
+        "bytes": 3858
+      },
+      {
+        "path": "src/components/universal/editorial.js",
+        "sha256": "a9290c3e92f29eebe8021d7c3d4698c4be10a809232c66f47b1a6f0bf40394ed",
+        "bytes": 20997
+      },
+      {
+        "path": "src/sections/wiki-de-poble/parseMarkdown.js",
+        "sha256": "bb28c118a8fc931a1e646d177774418a37b37211bb760f1bbef9c60aab8ec870",
+        "bytes": 16817
+      },
+      {
+        "path": "_wiki_de_poble/01_ser/03_equip_ia.md",
+        "kind": "freshRebasedPreimage",
+        "bytes": 2214,
+        "sha256": "94015dad16866f55aa7fd67b4cbfc31f53226f5ee11d382017bdb4c7314e5ac8"
+      }
+    ],
+    "rectors": [
+      {
+        "path": "AGENTS.md",
+        "sha256": "eb60995fa1720860f5236cb60f0d6c1143c91bfecf4a63fb1b79f64040b5e6e2",
+        "bytes": 12078,
+        "lines": 94
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "bd60ded9fbeb36d76cfd06e99247d23efc8edc3953d8581f1e9ec398b667465b",
+        "bytes": 37644,
+        "lines": 213
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "48d7e92e7734e9a5a6067e5ef91bdf25c5797534dca0ea37fc56e42a5f945c43",
+        "bytes": 72928,
+        "lines": 387
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+        "sha256": "682d25635f40b1b76ca15fb36d99bde91755a3b0901082a5fc688c4fb8ed4354",
+        "bytes": 304860,
+        "lines": 862
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0336_auditoria_gemini.md",
+        "sha256": "cbe3b1c81544b0e6852023b0767041bd6dfc40959b8c404773327f1db32baf42",
+        "bytes": 62723,
+        "lines": 461
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0340_auditoria_codex.md",
+        "sha256": "355160a488ff8fdeb0858b7246ea2e47aca0dfe0447aa53bf758371be1684c3a",
+        "bytes": 74877,
+        "lines": 641
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0350_auditoria_claude.md",
+        "sha256": "a0fde121be897f3d97ef998e2c78c43bab11ac71e5c4cf768d57fa4e67b890dc",
+        "bytes": 19902,
+        "lines": 135
+      }
+    ],
+    "namesInventory": "/private/tmp/t11-equip-c7/semantic-copy-names.json",
+    "selectorsProof": "/private/tmp/t11-equip-c7/selector-proof.json",
+    "reserves": [
+      "No semantic/general score inferred. Roster36pins only names,roles,officialURLs; prose role interpretation remains bounded source review.",
+      "Compiler pathSet deduplicates paths only; realfixture includes rootBIOS+mirror and three identityportraits. edgeRAG default additionally ingests generatedGENOMA if present. Do not auto-delete identitysources.",
+      "PROFILE.md13–17 adds a wakingroutine/latestacta+providedbundles+3skills beside cervell.entrada. This is overlapping startupguidance, not a demonstrated contradiction: providedbundles does not require generating a bundle. No global procedure changed."
+    ],
+    "history": {
+      "path": "_wiki_de_poble/01_ser/agents_equip_ia.md",
+      "sha256": "bc702cb19313c8fabbf358a70caa20b47f49b463c609bc07842b1722933b4f39",
+      "unchanged": true
+    },
+    "logsSha256": {
+      "tests.log": "fe69c671b46c74e92cd65834c1b37f6a653f6155dff07744b40809dfdfbb791a",
+      "before-tests.log": "39391023eb860b34baef8fba5d934ed2c3c419f0f826f0ff060b7e6488fd4b99",
+      "eslint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "applycheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tractor-cens.log": "68653c52f40f27ae9898f4acbf081b6ee7db0843857d7e2a3ed2391f5e2ede1c",
+      "tractor-cens-before.log": "68653c52f40f27ae9898f4acbf081b6ee7db0843857d7e2a3ed2391f5e2ede1c",
+      "selector-proof.json": "4c10137bfb15e979f592378fdbd4bd649e35a2c6857e02f204239602e7f071b7"
+    }
+  },
+  "qa": {
+    "cycle": 7,
+    "finishedUTC": "2026-10-29T06:25:28.690873+00:00",
+    "root": "/private/tmp/sdp-c7-qah-7lr28l__",
+    "candidate": "/private/tmp/sdp-c7-qah-7lr28l__/joint",
+    "head": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+    "originalFrozenUnchanged": true,
+    "exactTreeManifest": "/private/tmp/sdp-c7-qah-7lr28l__/final-joint-manifest.json",
+    "exactTreeManifestSHA256": "37201e8353244de90eb8f78893e1de27abe0684576c94f70ab6b7e9c397df2c4",
+    "candidateFiles": 6826,
+    "candidateDelta": {
+      "added": [
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/ESTAT.md.abans-260830",
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/manifest.yaml.abans-260830",
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/pageContent_old.js",
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/core/edge_rag.mjs.abans-260830",
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/generar_petorreta_inversa.mjs.abans-260830",
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/rules/trellat-rules.json.abans-260830",
+        "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/tractor-cognitiu.mjs.abans-260830",
+        "src/data/backendPort.xifrat.capacitats.test.js",
+        "tests/t11-arxiu-fossils-bundle.test.mjs",
+        "tests/t11-cens-documental.test.mjs",
+        "tests/t11-equip-contracte.test.mjs"
+      ],
+      "removed": [
+        ".agents/ESTAT.md.abans-260830",
+        ".agents/manifest.yaml.abans-260830",
+        ".agents/pageContent_old.js",
+        "tooling/wiki/core/edge_rag.mjs.abans-260830",
+        "tooling/wiki/generar_petorreta_inversa.mjs.abans-260830",
+        "tooling/wiki/rules/trellat-rules.json.abans-260830",
+        "tooling/wiki/tractor-cognitiu.mjs.abans-260830"
+      ],
+      "changed": [
+        "_wiki_de_poble/01_ser/00_bios.md",
+        "_wiki_de_poble/01_ser/03_equip_ia.md",
+        "_wiki_de_poble/02_saber/00_full_de_ruta.md",
+        "_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md",
+        "_wiki_de_poble/02_saber/sistema_immunitari.md",
+        "src/data/backendPort.js",
+        "src/data/contracte.js",
+        "src/data/supabase/index.test.js",
+        "tests/document-links-prose.test.mjs",
+        "tests/porta-taxonomia.test.mjs",
+        "tooling/gates/porta-taxonomia.mjs",
+        "tooling/lib/markdown-prose.mjs",
+        "tooling/tests/node-suite-manifest.json",
+        "tooling/wiki/lib/contract_consistency.mjs",
+        "tooling/wiki/tests/contract_consistency.test.mjs"
+      ]
+    },
+    "integration": {
+      "initial0638Postimages": 0,
+      "observedLater0638Postimages": 16,
+      "latestPostimages": 16,
+      "total": 16,
+      "noAtomicityOrAttributionClaim": true
+    },
+    "archive": {
+      "verified": 7,
+      "bytes": 141754,
+      "liveSHAEqualsCandidate": true,
+      "allOriginalsAbsentLive": true,
+      "destinationsPrefix": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/",
+      "guardSHA256": "b1030594b4f06cbf780a86cf8cb62691d71ad8fd0c605ea1e57581eec2ac808e",
+      "noRenamePatchForPublication": true
+    },
+    "team": {
+      "_wiki_de_poble/01_ser/03_equip_ia.md": "c18fcd123630fe9f25e16d9d7582f028f57a00fc79b3d2ada1d9ebe5f005045a",
+      "tests/t11-equip-contracte.test.mjs": "2a1f089a1c2dd206a744a22810bc583d257709be86bf1d5b8aeb1cc5e404d837"
+    },
+    "nodeManifest": {
+      "path": "/private/tmp/sdp-c7-qah-7lr28l__/joint/tooling/tests/node-suite-manifest.json",
+      "sha256": "cb07192de9f660b6cc0a4edc2931731b2b1fb19684467676102530fcbc749d73",
+      "addedPrimaryAndRequiredPrimary": [
+        "tests/t11-arxiu-fossils-bundle.test.mjs",
+        "tests/t11-equip-contracte.test.mjs"
+      ]
+    },
+    "tests": [
+      {
+        "name": "C6 affected Node + archive + team",
+        "pass": 412,
+        "fail": 0,
+        "skip": 0,
+        "files": 22,
+        "exit": 0,
+        "log": "/private/tmp/sdp-c7-qah-7lr28l__/final-node.log"
+      },
+      {
+        "name": "Full precommit Vitest joint before path-only archive rebase/team doc patch",
+        "pass": 4107,
+        "fail": 2,
+        "skip": 4,
+        "total": 4113,
+        "files": 198,
+        "exit": 1,
+        "log": "/private/tmp/sdp-c7-qah-7lr28l__/joint-precommit-vitest.log"
+      },
+      {
+        "name": "Original frozen C7 IAIA control",
+        "pass": 47,
+        "fail": 1,
+        "total": 48,
+        "log": "/private/tmp/sdp-c7-qah-7lr28l__/iaia-original.log"
+      },
+      {
+        "name": "ESLint new archive/team Node suites",
+        "exit": 0,
+        "log": "/private/tmp/sdp-c7-qah-7lr28l__/final-eslint.log"
+      }
+    ],
+    "failures": [
+      {
+        "kind": "corpusRankingDebt",
+        "file": "src/data/iaiaLocal.test.js:305",
+        "name": "Qui porta Sóc de Poble?",
+        "expectedFirst": "00_full_de_ruta",
+        "actualFirst": "00_visio_i_pilars",
+        "presentBeforeJoint": true,
+        "counterfactual": "/private/tmp/sdp-c7-qah-7lr28l__/iaia-corpus-control.json",
+        "functionalContract": "Gauntlet test comment lines279-283 explicitly fixes expected first source; no separate product contract established. No expectation or ranking changed."
+      },
+      {
+        "kind": "isolatedCopyLimit",
+        "file": "src/natiu/projecteIos.test.js:706",
+        "cause": "git check-ignore is called with Git binary available but isolated source lacks .git; prior C5 synthetic Git metadata control passed. No staged-tree/full-hook certification."
+      }
+    ],
+    "notRepeated": [
+      "Chrome C6 real DocumentEditor300k",
+      "unchanged H01/H02/H03/H04 suites",
+      "full Vitest after archive path-only rebase and team documentation"
+    ],
+    "safety": {
+      "liveWrites": false,
+      "privateEnvCopied": false,
+      "network": false,
+      "remoteSQL": false,
+      "stageCommitDeploy": false,
+      "physicalTempNodeModules": true,
+      "fetchDeniedDuringTests": true
+    },
+    "proofs": [
+      "/private/tmp/sdp-c7-qah-7lr28l__/snapshot.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/source-sha256.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/integration0638.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/joint0638-manifest.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/live-recheck-B.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/final-candidate-rebase.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/final-node-exit.json",
+      "/private/tmp/sdp-c7-qah-7lr28l__/iaia-corpus-control.json"
+    ],
+    "originalFrozenVerification": {
+      "method": "Direct SHA256 read of all 6822 captured paths, including source symlinks",
+      "differences": 0,
+      "proof": "/private/tmp/sdp-c7-qah-7lr28l__/original-capture-changes.json"
+    },
+    "manifestSourceSymlinks": [],
+    "manifestIncludedVersionedBuildMetadata": [
+      "wordpress-plugin/builds/directori/dist/.vite/manifest.json",
+      "wordpress-plugin/dist/.vite/manifest.json"
+    ]
+  },
+  "e2ee": {
+    "scope": "C7 current live T7 channel and flag identity only; isolated synthetic QA",
+    "syntheticOnly": true,
+    "remoteServicesSQLorFlagsChanged": false,
+    "patch": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/concurrent-live/t7-current-channel-identity-delta.patch",
+    "patchSha256": "9dd7ecd27482b8d36d6fd1d2d1faa93922993143b4a23bb8a3403cc4f1005185",
+    "gitApplyCheckExit": 0,
+    "gitApplyCheckOutput": "",
+    "tests": {
+      "numTotalTests": 105,
+      "numPassedTests": 105,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "files": [
+      {
+        "path": "src/data/xifratXat.js",
+        "preimageSha256": "3f76f6a66f21bd66259f220f8f4c9bb80cb098846c555a009bc8cdc41270483c",
+        "postimageSha256": "5e3a8013a71cdb7d6d4c7c069b432a1587295907721aa4b995c437555b5c46a7",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/backendPort.js",
+        "preimageSha256": "1e35ad4d7a82c9ca4d3d2cdd3ec5895c60c1d40470f49499fd7455334667550f",
+        "postimageSha256": "4eb24538e94d57159d0dcb882dc2bd07930b2cc4d698c5588556de6b3d93a896",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/xifratXatServei.js",
+        "preimageSha256": null,
+        "postimageSha256": "64cac57137f00a27aec923bf75421d491d60aa69168747faa429a0bb278114d6",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/xifratXat.seguretat.test.js",
+        "preimageSha256": "63875d0bd06398c5b8a919e4a1a90cdae4dee3bfb33afb9b7c5056c298780c19",
+        "postimageSha256": "666c4f39ff4bf2f2937a5d06506b69996bdd530a686cb781353287ef85d6c9c6",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/xifratXatCanal.seguretat.test.js",
+        "preimageSha256": null,
+        "postimageSha256": "36d0576f4edca24f184ae3d7829e2f6316e0850a8984bc4fbccfb6f0c9ba17aa",
+        "livePreimageStillMatches": true
+      }
+    ],
+    "baselineProof": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/concurrent-live/check.json",
+    "oldCandidate": {
+      "patch": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/t7-p2-service-scope-preparatory.patch",
+      "testsPassed": 138,
+      "appliesToCurrentLive": false,
+      "reason": "Four new T7 files concurrently published; old candidate not applied."
+    },
+    "limits": [
+      "Scope-source binding remains absent from host/XatContext. String-only fixaAmbit conflates actor with CI; reserve retained.",
+      "Minimal delta does not implement the cryptographic pipeline, ciphertext validation or full T7 phases.",
+      "Current live existing tests use synthetic explicit object keys. A→B→A/JWT tests cover supplied two-key service contract only, not actual host wiring."
+    ],
+    "eslintExit": 0,
+    "baselineRegressions": {
+      "total": 7,
+      "passed": 2,
+      "failed": 5,
+      "failedNames": [
+        "flag false conserva identitat exacta i no inspecciona capacitats",
+        "mode local conserva identitat encara que la configuració active el flag",
+        "dos backends no comparteixen servei i desconeguts no reben l’últim servei",
+        "tornar a decorar no substituïx el servei de l’embolcall anterior",
+        "un preparador que retorna text no pot lliurar-lo a cap transport"
+      ],
+      "explanation": "New focused tests executed against unpatched freshly captured sources before delta; private no-capability control passes on baseline."
+    },
+    "additionalVerifiedDefect": "An injected preparaSobreXifrat returning plaintext was forwarded to enviaXifratXat on baseline; delta requires text:null and an object ciphertext before any transport. The test uses synthetic own data only.",
+    "additionalLimit": "Envelope guard checks structural absence of text only; does not certify encryption/authentication, content fields or complete T7."
+  },
+  "delta": {
+    "scope": "C7 current live T7 channel and flag identity only; isolated synthetic QA",
+    "syntheticOnly": true,
+    "remoteServicesSQLorFlagsChanged": false,
+    "patch": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/concurrent-live/t7-current-channel-identity-delta.patch",
+    "patchSha256": "9dd7ecd27482b8d36d6fd1d2d1faa93922993143b4a23bb8a3403cc4f1005185",
+    "gitApplyCheckExit": 0,
+    "gitApplyCheckOutput": "",
+    "tests": {
+      "numTotalTests": 105,
+      "numPassedTests": 105,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "files": [
+      {
+        "path": "src/data/xifratXat.js",
+        "preimageSha256": "3f76f6a66f21bd66259f220f8f4c9bb80cb098846c555a009bc8cdc41270483c",
+        "postimageSha256": "5e3a8013a71cdb7d6d4c7c069b432a1587295907721aa4b995c437555b5c46a7",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/backendPort.js",
+        "preimageSha256": "1e35ad4d7a82c9ca4d3d2cdd3ec5895c60c1d40470f49499fd7455334667550f",
+        "postimageSha256": "4eb24538e94d57159d0dcb882dc2bd07930b2cc4d698c5588556de6b3d93a896",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/xifratXatServei.js",
+        "preimageSha256": null,
+        "postimageSha256": "64cac57137f00a27aec923bf75421d491d60aa69168747faa429a0bb278114d6",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/xifratXat.seguretat.test.js",
+        "preimageSha256": "63875d0bd06398c5b8a919e4a1a90cdae4dee3bfb33afb9b7c5056c298780c19",
+        "postimageSha256": "666c4f39ff4bf2f2937a5d06506b69996bdd530a686cb781353287ef85d6c9c6",
+        "livePreimageStillMatches": true
+      },
+      {
+        "path": "src/data/xifratXatCanal.seguretat.test.js",
+        "preimageSha256": null,
+        "postimageSha256": "36d0576f4edca24f184ae3d7829e2f6316e0850a8984bc4fbccfb6f0c9ba17aa",
+        "livePreimageStillMatches": true
+      }
+    ],
+    "baselineProof": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/concurrent-live/check.json",
+    "oldCandidate": {
+      "patch": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/t7-p2-service-scope-preparatory.patch",
+      "testsPassed": 138,
+      "appliesToCurrentLive": false,
+      "reason": "Four new T7 files concurrently published; old candidate not applied."
+    },
+    "limits": [
+      "Scope-source binding remains absent from host/XatContext. String-only fixaAmbit conflates actor with CI; reserve retained.",
+      "Minimal delta does not implement the cryptographic pipeline, ciphertext validation or full T7 phases.",
+      "Current live existing tests use synthetic explicit object keys. A→B→A/JWT tests cover supplied two-key service contract only, not actual host wiring."
+    ],
+    "eslintExit": 0,
+    "baselineRegressions": {
+      "total": 7,
+      "passed": 2,
+      "failed": 5,
+      "failedNames": [
+        "flag false conserva identitat exacta i no inspecciona capacitats",
+        "mode local conserva identitat encara que la configuració active el flag",
+        "dos backends no comparteixen servei i desconeguts no reben l’últim servei",
+        "tornar a decorar no substituïx el servei de l’embolcall anterior",
+        "un preparador que retorna text no pot lliurar-lo a cap transport"
+      ],
+      "explanation": "New focused tests executed against unpatched freshly captured sources before delta; private no-capability control passes on baseline."
+    },
+    "additionalVerifiedDefect": "An injected preparaSobreXifrat returning plaintext was forwarded to enviaXifratXat on baseline; delta requires text:null and an object ciphertext before any transport. The test uses synthetic own data only.",
+    "additionalLimit": "Envelope guard checks structural absence of text only; does not certify encryption/authentication, content fields or complete T7."
+  },
+  "archive": {
+    "at": "2026-10-29T06:21:10.270Z",
+    "rows": [
+      {
+        "source": ".agents/ESTAT.md.abans-260830",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/ESTAT.md.abans-260830",
+        "sourceAbsent": true,
+        "sha256": "da681ce7fcafda103c9a9e831b679d7fe4298cf2929b1f8d7d11ef9a5b2dce7f",
+        "matchesOriginal": true,
+        "bytes": 891
+      },
+      {
+        "source": ".agents/manifest.yaml.abans-260830",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/manifest.yaml.abans-260830",
+        "sourceAbsent": true,
+        "sha256": "7133d2fe2262e5d86141d8ffb1be7e7ce637fd3d8363ea74f10b9244b518a1fb",
+        "matchesOriginal": true,
+        "bytes": 145
+      },
+      {
+        "source": ".agents/pageContent_old.js",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/.agents/pageContent_old.js",
+        "sourceAbsent": true,
+        "sha256": "43feb33df5ed78163bd0a52d6a88a0a897735231782f1f98865928a0244f4913",
+        "matchesOriginal": true,
+        "bytes": 106299
+      },
+      {
+        "source": "tooling/wiki/rules/trellat-rules.json.abans-260830",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/rules/trellat-rules.json.abans-260830",
+        "sourceAbsent": true,
+        "sha256": "1ad9790a2365673d44ff1c1cd798c2a112bded4e829e8759ed78c3b8a31694a3",
+        "matchesOriginal": true,
+        "bytes": 3836
+      },
+      {
+        "source": "tooling/wiki/generar_petorreta_inversa.mjs.abans-260830",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/generar_petorreta_inversa.mjs.abans-260830",
+        "sourceAbsent": true,
+        "sha256": "8cf2875b1fe48570fb9e781fc60cf82b1eae54d88946fdac6855ab654cbf90e6",
+        "matchesOriginal": true,
+        "bytes": 6601
+      },
+      {
+        "source": "tooling/wiki/tractor-cognitiu.mjs.abans-260830",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/tractor-cognitiu.mjs.abans-260830",
+        "sourceAbsent": true,
+        "sha256": "b10ce9c482352b59c9c4e1a34800c7196ec7ac6b2cbd771d656edf4f4d1704d9",
+        "matchesOriginal": true,
+        "bytes": 17988
+      },
+      {
+        "source": "tooling/wiki/core/edge_rag.mjs.abans-260830",
+        "destination": "_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/tooling/wiki/core/edge_rag.mjs.abans-260830",
+        "sourceAbsent": true,
+        "sha256": "f92fcf825993fcdd539b4a248cf367f4ed9e91e5ac9ea12eabe094d870745bc7",
+        "matchesOriginal": true,
+        "bytes": 5994
+      }
+    ],
+    "allPreserved": true,
+    "bytes": 141754
+  },
+  "package": {
+    "sha": {
+      "path": "/Users/javillinares/Documents/Antigravity/Som de Poble/_builds_de_poble/wordpress/socdepoble.zip",
+      "bytes": 3335419,
+      "sha256": "3c2287a9f018b936f35a08b49c45f8b3caf988a216bfee984b6b2f85d9372be3",
+      "at": "2026-10-29T06:30:04.555Z"
+    },
+    "structure": {
+      "entries": 45,
+      "unique": true,
+      "crcError": null,
+      "unsafeNames": [],
+      "banners": [
+        "socdepoble/assets/banner-1544x500.png",
+        "socdepoble/assets/banner-772x250.png"
+      ],
+      "translations": []
+    }
+  },
+  "logs": {
+    "final-node.log": "✔ catàleg: Tots els IDs iguals, dues escriptures idempotents i check sense mutació (451.778583ms)\n✔ catàleg rebutja divergència, dissetena skill absent i espill (78.956542ms)\n✔ rutes: escape i symlink rebutjats (30.12225ms)\n✔ protocols: local, lectures, desconegut, JSON corrupte (48.917458ms)\n✔ arrancada: CLI no deixa rebut; preflight emet tot i verifica el mateix torn (288.698375ms)\n✔ rebut: fonts alterades, tasca distinta, data invàlida/futura/caducada (66.471333ms)\n✔ un preflight fallit invalida el rebut anterior i no trunca el context (139.529584ms)\n✔ backend: reemplaçament íntegre, override, atomicitat, getters, lock i capacitats (1.095834ms)\n✔ credencials: claus privades/malformades i URLs insegures rebutjades (0.328292ms)\n✔ transport: rebutja secrets abans de fetch i no seguix redireccions (1.201292ms)\n✔ singleton: config fixada, clau diferent rebutjada i token renovat (0.583125ms)\n✔ storage: poble explícit, carpetes validades i prefix coherent amb RLS (2.214667ms)\n✔ dos cicles d’arrancada i tancament no recreen espills; SCC aïllat (492.035583ms)\n✔ quarantena: conserva contingut, és idempotent i rebutja symlinks (125.591833ms)\n✔ context prompt.local denega taula bruta sense crear un rebut (14.266417ms)\n✔ context prompt.consell denega taula bruta sense crear un rebut (7.636959ms)\n✔ create revalida una taula embrutada després de context i conserva els documents existents (11.439458ms)\n✔ una auditoria pot descriure la taula bruta sense relaxar la convocatòria (21.198375ms)\n✔ l'ancoratge és viu amb capçalera «absent» i sobreviu a mitjanit (18.764417ms)\n✔ l'ancoratge és viu amb capçalera «## Activitat en curs» i sobreviu a mitjanit (17.901541ms)\n✔ l'ancoratge és viu amb capçalera «## Activitat en curs (marató)» i sobreviu a mitjanit (17.789458ms)\n✔ una àncora fora d’Activitat queda intacta i el document nou queda viu (19.209875ms)\n✔ l’informe usa l’arrel de l’eina quan cwd és una subcarpeta o un altre lloc (59.223875ms)\n✔ taula o índex absents i índex no regular no poden donar verd (4.589ms)\n✔ CLI amb una arrel explícita sense taula retorna error i diagnòstic (23.976584ms)\n✔ capçaleres i àncores d’exemple no desvien l’ancoratge real del nou document (20.03175ms)\n✔ un exemple inline no substituïx l’àncora real del nou esborrany (17.943667ms)\n✔ crear prompt revalida dins del lock després del rebut si entra un document alié (10.834542ms)\n✔ importar funcions de torn en una còpia sense marcador no exigix arrel implícita; CLI falla tancat (53.428041ms)\n✔ recurs .jpg exigix àncora exacta i no es declara fantasma quan existix (5.221ms)\n✔ recurs .json exigix àncora exacta i no es declara fantasma quan existix (4.809458ms)\n✔ recurs .patch exigix àncora exacta i no es declara fantasma quan existix (4.566459ms)\n✔ recurs .html exigix àncora exacta i no es declara fantasma quan existix (4.407375ms)\n✔ recurs .PNG exigix àncora exacta i no es declara fantasma quan existix (4.381333ms)\n✔ fragments, àlies escapats i camins de primer nivell resolen el recurs exacte (4.237792ms)\n✔ un homònim sense extensió, extern, comentat o en codi no ancora un recurs (5.923875ms)\n✔ l’àncora amb extensió distingix x.jpg de x.jpg.md sense acreditar-los junts (4.520875ms)\n✔ els recursos i Markdown sense nom termodinàmic s’ancoren però l’arxivat de torn continua acotat (5.104833ms)\n✔ una activitat del recurs homònim sense extensió no protegix el Markdown ranci (4.773959ms)\n✔ els controls ocults i carpetes permanents no entren en l’ancoratge de la taula (4.670083ms)\n✔ CLI informe jutja els recursos visibles: sense àncora roja, amb nom exacte verda i absent roja (82.222084ms)\n✔ una extensió de recurs explícita absent no es reapunta a un homònim Markdown (4.910041ms)\n✔ T5-09 · rollback CAS conserva una entrega real fallida i no exigix document fantasma (21.150083ms)\n✔ T5-09 · un create fallit conserva el pla vinculat i permet tancar el torn documental net (26.298375ms)\n✔ T5-09 · context CLI legacy continua exigint el seu document (7.466625ms)\n✔ T5-09 · un reflex failed no es pot reproduir ni amagar amb ownership alié (27.838292ms)\n✔ T5-09 · reusar el mateix path amb un context nou autenticat no reactiva el rebut failed (29.735125ms)\n✔ T5-09 · reintentar create al mateix path deixa traça failed i un nou committed real (37.933459ms)\n✔ T5-09 · un fitxer concurrent existent no es certifica absent ni esborra (19.733916ms)\n✔ T5-09 · si falla consolidar el rebut, conserva draft i índex però queda prepared visible (19.554792ms)\n✔ T5-09 · un únic rebut failed no és context actiu per a vincular un pla (22.9595ms)\n✔ T5-09 · un symlink sobre el path failed falla tancat sense llegir-ne el destí privat (18.966916ms)\n✔ T5-09 · recuperar una creació prepared comprova bytes i àncora abans de committed (9.415584ms)\n✔ T5-09 · una fase prepared no autoritza documents encara que s’invente un tancament independent (8.59375ms)\n✔ T5-09 · un reflex inventat al path failed no s’oculta darrere ownership (23.909ms)\n✔ T5-09 · afegir una fase failed sense traça real no eximix el document obligatori (7.240125ms)\n✔ T5-09 · substituir un pare before-leaf-lstat no llig bytes privats ni acredita absència (6.665042ms)\n✔ T5-09 · substituir un pare before-leaf-open no llig bytes privats ni acredita absència (7.832625ms)\n✔ 261006 · ANC-W6: l’àncora nova entra davant de una llista sense línia en blanc pròpia, i crear i arxivar torna l’índex byte a byte, més l’àncora amb camí del torn obert (23.38725ms)\n✔ 261006 · ANC-W6: l’àncora nova entra davant de una secció buida sense línia en blanc pròpia, i crear i arxivar torna l’índex byte a byte, més l’àncora amb camí del torn obert (23.945375ms)\n✔ 261006 · ANC-W6: l’àncora nova entra davant de prosa sense línia en blanc pròpia, i crear i arxivar torna l’índex byte a byte, més l’àncora amb camí del torn obert (23.818208ms)\n✔ 261006 · ANC-W7: ja declarat a «Activitat en curs» com a [[{x}.md]], create no hi afig cap duplicat (13.678959ms)\n✔ 261006 · ANC-W7: ja declarat a «Activitat en curs» com a [[{x}|àlies]], create no hi afig cap duplicat (12.802542ms)\n✔ 261006 · ANC-W7: ja declarat a «Activitat en curs» com a [[04_escriptori/{x}]], create no hi afig cap duplicat (13.364417ms)\n✔ 261006 · ANC-W7: ja declarat a «Activitat en curs» com a [[_wiki_de_poble/04_escriptori/{x}#Secció]], create no hi afig cap duplicat (20.141209ms)\n✔ 261006 · ANC-W7: ja declarat a «Activitat en curs» com a [[{x}\\|àlies]], create no hi afig cap duplicat (12.757792ms)\n✔ 261006 · ANC-W7: fora del primer nivell, una àncora amb .md ja present no es duplica i l’apèndix no porta blanc propi (22.770166ms)\n✔ 261006 · un recurs homònim sense extensió fa que l’àncora del draft porte .md explícit (16.648416ms)\n✔ projecció determinista conserva rutes i normalitza només ordre/barra final (1.128375ms)\n✔ editar plantilla, lectures o versió no inventa canvi de destinacions (0.079333ms)\n✔ canvi de destí, id o tipus canvia digest i projecció (0.112417ms)\n✔ registre incomplet no dona projecció saludable null (0.086209ms)\n✔ registre incomplet no dona projecció saludable {} (0.035916ms)\n✔ registre incomplet no dona projecció saludable [] (0.030083ms)\n✔ registre incomplet no dona projecció saludable {\"schema\":\"unknown\",\"rutes\":[{\"id\":\"auditoria (0.030333ms)\n✔ registre incomplet no dona projecció saludable {\"schema\":\"sdp.protocolledge.v4\",\"rutes\":[]} (0.026916ms)\n✔ id duplicat, camps absents i destins duplicats queden rebutjats (0.159958ms)\n✔ forats en arrays de l’API JS no es projecten com null (0.084666ms)\n✔ destí relatiu malformat rebutjat \"/absolute\" (0.055959ms)\n✔ destí relatiu malformat rebutjat \"../outside\" (0.035709ms)\n✔ destí relatiu malformat rebutjat \"x/../a\" (0.032625ms)\n✔ destí relatiu malformat rebutjat \"x//a\" (0.031708ms)\n✔ destí relatiu malformat rebutjat \"x/./a\" (0.019458ms)\n✔ destí relatiu malformat rebutjat \"https://example.invalid\" (0.021ms)\n✔ destí relatiu malformat rebutjat \"x\\\\a\" (0.025875ms)\n✔ destí relatiu malformat rebutjat \"x/*.md\" (0.027125ms)\n✔ destí relatiu malformat rebutjat \" x\" (0.020666ms)\n✔ destí relatiu malformat rebutjat \"x\\u0000a\" (0.02125ms)\n✔ check de només lectura detecta mapa antic sense reparar-lo (4.057041ms)\n✔ font absent, caixa incorrecta, JSON corrupte i symlink no passen (3.025458ms)\n✔ carregador real rebutja projecció divergent abans de lliurar context (5.442ms)\n✔ canvi de destí exigix regeneració; altres esmenes no (6.133709ms)\n✔ CLI check/print són de només lectura i no admeten bandera d’escriptura (2.638666ms)\n✔ CLI real: projecció divergent retorna1 i cap verd fals (27.6385ms)\n✔ rebut auditoria vigent permet únicament el destí seleccionat (67.701833ms)\n✔ rebut acta vigent permet10_actes sense heretar el destí auditoria (64.545625ms)\n✔ selecció explícita conjunta habilita sols la unió dels protocols acreditats (93.796917ms)\n✔ protecció prèvia preval amb rebut vigent: _wiki_de_poble/04_escriptori/01_produccio/261029_0538_produccio_prova.md (31.033917ms)\n✔ protecció prèvia preval amb rebut vigent: _wiki_de_poble/90_arxiu_historic/261029_0538_acta_prova.md (30.106084ms)\n✔ protecció prèvia preval amb rebut vigent: .agents/skills/prova/SKILL.md (30.101292ms)\n✔ protecció prèvia preval amb rebut vigent: tooling/brain/prova.md (29.905458ms)\n✔ protecció prèvia preval amb rebut vigent: supabase/migrations/prova.md (29.603ms)\n✔ manteniment canònic fora de la política actual continua denegat: _wiki_de_poble/01_ser/identitat.md (34.441041ms)\n✔ manteniment canònic fora de la política actual continua denegat: _wiki_de_poble/02_saber/norma.md (34.833833ms)\n✔ manteniment canònic fora de la política actual continua denegat: _wiki_de_poble/03_actuar/procediment.md (34.7685ms)\n✔ laboratori continua requerint decisió explícita, sense permís automàtic (29.574875ms)\n✔ context obsolet per canvi d’una font no s’accepta (40.109917ms)\n✔ projecció antiga o divergent denegada abans d’autoritzar (40.895041ms)\n✔ canviar registre i projecció coherent no revalida un rebut antic (35.181958ms)\n✔ rebut absent, caducat i protocols manipulats fallen tancats (85.95825ms)\n✔ nom termodinàmic i ruta simbòlica continuen protegits (55.642792ms)\n✔ consulta del hook no modifica fonts, rebut ni inventari (35.542666ms)\n✔ C1-T11-FENCE tilde tres: extract/resolve/core/Olivera/SCC compartixen prosa (6.917333ms)\n✔ C1-T11-FENCE tilde quatre i fence curta interna: extract/resolve/core/Olivera/SCC compartixen prosa (3.075417ms)\n✔ C1-T11-FENCE backticks quatre i fence curta interna: extract/resolve/core/Olivera/SCC compartixen prosa (2.152ms)\n✔ C1-T11-FENCE fence de cinc tancada per sis: extract/resolve/core/Olivera/SCC compartixen prosa (2.006625ms)\n✔ C1-T11-FENCE families de fence diferents: extract/resolve/core/Olivera/SCC compartixen prosa (2.200833ms)\n✔ C1-T11-FENCE delimitador de tancament amb text no tanca: extract/resolve/core/Olivera/SCC compartixen prosa (1.857125ms)\n✔ C1-T11-FENCE fence sense tancament: extract/resolve/core/Olivera/SCC compartixen prosa (1.773334ms)\n✔ C1-T11-FENCE backtick inline simple: extract/resolve/core/Olivera/SCC compartixen prosa (2.200291ms)\n✔ C1-T11-FENCE backtick inline doble amb backtick simple interior: extract/resolve/core/Olivera/SCC compartixen prosa (1.866ms)\n✔ C1-T11-FENCE backtick inline triple: extract/resolve/core/Olivera/SCC compartixen prosa (1.868375ms)\n✔ C1-T11-FENCE span inline en dues línies: extract/resolve/core/Olivera/SCC compartixen prosa (1.703167ms)\n✔ C1-T11-FENCE comentari HTML multilínia amb fences: extract/resolve/core/Olivera/SCC compartixen prosa (1.996375ms)\n✔ C1-T11-FENCE comentari dins span inline no tapa la prosa posterior: extract/resolve/core/Olivera/SCC compartixen prosa (2.010625ms)\n✔ C1-T11-FENCE comentari sense tancament: extract/resolve/core/Olivera/SCC compartixen prosa (1.9165ms)\n✔ C1-T11-FENCE wiki i Markdown escapats: extract/resolve/core/Olivera/SCC compartixen prosa (2.187083ms)\n✔ C1-T11-FENCE offsets, UTF-16, CRLF i enllaç real després del bloc es conserven (1.163666ms)\n✔ C1-T11-FENCE links visibles ficticis continuen rojos, sense verd per buit (1.81975ms)\n✔ C1-T11-FENCE backticks escapats i run sense parella no oculten links reals (1.666792ms)\n✔ C1-T11-FENCE dos backslashes no escapen el wikilink; tres sí (0.067166ms)\n✔ C1-T11-FENCE àlies escapats de taula Obsidian resolen el mateix destí (1.636541ms)\n✔ C1-T11-FENCE un span inline no travessa paràgraf buit ni una fence nova (1.529959ms)\n✔ C1-T11-FENCE C1 resolutor binari, confinament i symlink exterior es preserven (1.373834ms)\n✔ C1-T11-FENCE corpus de 300k conserva tots els controls visibles (15.48875ms)\n✔ directive mode keeps inline bytes and offsets while hiding comments and fences (0.220708ms)\n✔ directive mode keeps multiline inline code and literal comment markers inside it (0.041958ms)\n✔ directive mode rejects ambiguous non-boolean configuration (0.17975ms)\n✔ les rutes actives generen documents que passen el contracte (48.83025ms)\n✔ encaminament explícit: prompt sense destinatari és ambigu (6.400041ms)\n✔ esquema viu invàlid bloqueja context nou però conserva el contracte emés (7.736084ms)\n✔ plantilla i tipus del router han de coincidir (4.27375ms)\n✔ torns diferents no es sobreescriuen i el rebut està vinculat al fitxer (8.894ms)\n✔ no accepta torn inventat, caducat ni ID amb traversal (6.373375ms)\n✔ canviar plantilla conserva el contracte immutable del rebut (6.578584ms)\n✔ un canvi al router no invalida rebuts versionats (7.017875ms)\n✔ generador crea i ancora, no sobreescriu, i el draft pendent no passa (22.0675ms)\n✔ cicle complet, check pur, i tancament immutable (19.461708ms)\n✔ verificació fallida no canvia estat, i checks amb escriptures no segellen (15.385625ms)\n✔ pla modificat, relleu absent i codi fora d’abast bloquegen (12.462542ms)\n✔ lock per torn evita escriptures concurrents (10.419708ms)\n✔ porta final detecta document escrit per shell sense passar pel hook (99.009333ms)\n✔ staging comprova contingut i rebuts de l’índex, no el text reparat al disc (561.065667ms)\n✔ --check del compilador no escriu i exclou els registres runtime (84.060417ms)\n✔ una àncora en exemple o comentari no compta com a enllaç real (13.522084ms)\n✔ CLI tancament rebutja torn inventat abans de qualsevol procés amb efectes (195.175ms)\n✔ Llibre permanent: només la ruta física canònica i type document, amb esquema vàlid (6.637041ms)\n✔ Llibre permanent: staging continua exigint àncora (465.492084ms)\n✔ expire-close històric amb hashes coincidents no acredita verificació; els checks legítims es conserven (865.98275ms)\n✔ T11-12 productor: .patch queda ancorat en Olivera i SCC sense modificar el binari (19.622792ms)\n✔ T11-12 productor: .json queda ancorat en Olivera i SCC sense modificar el binari (13.043458ms)\n✔ T11-12 productor: .html queda ancorat en Olivera i SCC sense modificar el binari (12.417791ms)\n✔ T11-12 productor: .png queda ancorat en Olivera i SCC sense modificar el binari (12.1095ms)\n✔ T11-12 productor: .bin queda ancorat en Olivera i SCC sense modificar el binari (11.619125ms)\n✔ T11-12 productor: .tar.gz queda ancorat en Olivera i SCC sense modificar el binari (11.158ms)\n✔ T11-12 adjunt sense extensió i Markdown homònim mantenen dos destins exactes (21.2125ms)\n✔ T11-12 .patch i .patch.md homònims no compartixen àncora ni aresta (20.951167ms)\n✔ T11-12 Markdown simple conserva abreviatura i inserció dins Activitat en curs (11.420916ms)\n✔ T11-12 àncora existent explícita amb àlies es conserva sense duplicació (6.9005ms)\n✔ T11-12 un adjunt d’altra carpeta no queda acreditat per un homònim local (11.88775ms)\n✔ T11-12 lock ocupat impedix escriptura i conserva l’índex (1.502209ms)\n✔ T11-12 ruta relativa sense extensió preferix el recurs exacte; abreviatura .md continua disponible (1.233167ms)\n✔ T11-12 ruta explícita fora de l’arrel continua rebutjada (0.885958ms)\n✔ T11-12 crear adjunt després del Markdown homònim conserva l’abreviatura anterior amb destí exacte (21.008959ms)\n✔ T11-12 una àncora anticipada bare s’actualitza sense duplicar i conserva àlies/fragment (11.288959ms)\n✔ torns: només els camps del contracte, rebuts comptats i pla; il·legibles i locks fora (1.951833ms)\n✔ torns: la memòria cau seguix els canvis del disc i no es deixa tocar (0.8745ms)\n✔ escriptori: documents solts amb àncora i rebut, safata sense caixa ni ocults (2.768334ms)\n✔ escriptori: índex en majúscules, sense safata i sense torns (0.577834ms)\n✔ ancoratA: indicador de noms curts (sense .md, sense camí, fora de codi) (0.101458ms)\n✔ LEDGER: quatre formes, malformades, fòssils i signatura vàlida (0.644916ms)\n✔ LEDGER: la signatura l’han d’acceptar ledger.mjs i verify-ledger.mjs alhora (0.215ms)\n✔ LEDGER: resumLedger llig el fitxer o torna null (0.313166ms)\n✔ LEDGER 261006: els peus intercalats són història; només és fòssil el segell enganxat que cap línia mal formada recull (0.176291ms)\n✔ LEDGER 261006: separar les dues línies enganxades no esborra cap peu i deixa zero anomalies (0.132583ms)\n✔ ESTAT: data de la primera capçalera en ISO local, sense buscar-ne una altra (0.647125ms)\n✔ ESTAT: resumEstat compta bytes i torna null si no hi és (0.289208ms)\n✔ cap funció llança: una arrel inservible és null (0.206583ms)\n✔ escriptori: només el Llibre canònic està exempt de rebut i conserva el control d’àncora (1.168834ms)\n✔ C3-T11-FONTS doble backtick inline: l'exemple no acredita una àncora (0.13675ms)\n✔ C3-T11-FONTS triple backtick inline: l'exemple no acredita una àncora (0.068834ms)\n✔ C3-T11-FONTS span inline en dues línies: l'exemple no acredita una àncora (0.035458ms)\n✔ C3-T11-FONTS tilde de quatre amb fence curta interna: l'exemple no acredita una àncora (0.039291ms)\n✔ C3-T11-FONTS backticks de quatre amb fence curta interna: l'exemple no acredita una àncora (0.282917ms)\n✔ C3-T11-FONTS famílies de fence diferents: l'exemple no acredita una àncora (0.030583ms)\n✔ C3-T11-FONTS comentari amb fences: l'exemple no acredita una àncora (0.034708ms)\n✔ C3-T11-FONTS wikilink escapat: l'exemple no acredita una àncora (0.041334ms)\n✔ C3-T11-FONTS àlies escapats Obsidian i escapaments literals usen l’extractor compartit (0.048583ms)\n✔ C3-T11-FONTS el contracte de noms curts conserva les formes deliberades (0.071583ms)\n✔ C3-T11-FONTS resumEscriptori no fabrica salut si l’única àncora és un exemple (8.395958ms)\n✔ C3-T11-FONTS consultar les fonts no escriu fitxers ni altera el seu contingut (1.039875ms)\nCI · Node=1 · Vitest=0\nCI · Node=0 · Vitest=1\nCI · Node=0 · Vitest=0\n✔ el manifest viu classifica cada prova i protegeix les cobertures noves de CI i T5 (2.713042ms)\n✔ la descoberta és recursiva i totes les eines entren al cens (1.557042ms)\n✔ una prova nova sense classificació bloqueja la cadena (1.288958ms)\n✔ no s’accepten dobles assignacions, entrades absents ni exclusions sense motiu (1.261125ms)\n✔ la cobertura requerida no es pot excloure canviant-ne la categoria (1.158583ms)\n✔ cada corredor selecciona els fitxers exactes i conserva els codis de fallada (1.125292ms)\n✔ CI executa Node i Vitest run, també amb Node roig, i qualsevol fallada conserva exit 1 (1.430917ms)\n✔ el mode de CI manté totes les portes i elimina només les bateries ja executades (0.164375ms)\n✔ la comanda real del workflow arriba al CLI de les portes amb --nomes-portes (93.380958ms)\n✔ accepta els noms canònics i en trau categoria i títol (0.743083ms)\n✔ T1 diu la causa concreta del format (0.17025ms)\n✔ T2 rebutja dates i hores que no existixen (0.0835ms)\n✔ T3 i T4: categoria del catàleg i títol obligatori (0.06725ms)\n✔ T5: la data no passa de demà (0.062458ms)\n✔ T6: un fitxer nou amb data de fa anys delata un DDMMAA (0.059792ms)\n✔ l’abast és per superfície i primer nivell, no per patró (0.070416ms)\n✔ comprovaRutes només torna els que fallen i compta els revisats (0.098125ms)\n✔ paritat: la pàgina de la Wiki i el JSON han de dir el mateix (1.592833ms)\n✔ paritat detects a changed route even when category names still agree (0.622333ms)\n✔ paritat compares route unions independent of order and code-span formatting (0.413542ms)\n✔ transient category explanation is distinct from a formal route (0.650792ms)\n✔ duplicate categories and empty route cells cannot pass parity (0.685917ms)\n✔ parity excludes examples in fences and HTML comments inside the category region (0.358166ms)\n✔ parity fails explicitly for missing or non-string configured routes (1.214667ms)\n✔ a complete fenced example cannot replace the contradictory active region (0.346375ms)\n✔ hidden example regions do not duplicate the one active region (0.952417ms)\n✔ two active canonical regions fail even when their routes agree (0.338625ms)\n✔ inline-code markers and out-of-order markers do not define a canonical table (0.620959ms)\n[WARN] Frontmatter trencat o parsat amb errors a /var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-public-9XJVEa/_wiki_de_poble/01_ser/duplicate.md\n[WARN] Frontmatter trencat o parsat amb errors a /var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-public-9XJVEa/_wiki_de_poble/01_ser/open.md\n[WARN] Frontmatter trencat o parsat amb errors a /var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-public-9XJVEa/_wiki_de_poble/01_ser/duplicate.md\n[WARN] Frontmatter trencat o parsat amb errors a /var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-public-9XJVEa/_wiki_de_poble/01_ser/open.md\n✔ manifest, RAG i slugs compartixen frontera pública i metadata canònica (15.716ms)\n✔ cap exportador seguix symlinks ni accepta files fora de la política (3.288083ms)\n✔ un symlink a l’arrel Wiki no convertix un directori extern en públic (0.712042ms)\n✔ frontmatter ambigu mai es publica, tampoc si l’últim visibility diu public (1.450875ms)\n✔ SEO no indexa seccions privades ni detalls marcats privats o arxivats (0.143167ms)\n✔ CLI SEO exclou seeds privats i verifica la política encara que el recompte no canvie (111.733ms)\n✔ la validació reconeix destins exclosos sense llegir cossos ni ampliar el manifest públic (10.505125ms)\n✔ un destí inexistent o un symlink no queda validat per l’índex físic (3.54225ms)\n✔ CLI --check --strict accepta privat existent i rebutja desaparegut sense escriure outputs (85.178584ms)\n✔ CLI real: fòssil abans al bundle, després arxivat sense contaminació ni pèrdua de bytes (75.448583ms)\n✔ repositori: cap fòssil operatiu reapareix i cada original continua íntegre a l’arxiu (0.364292ms)\n✔ quatre documents preserven el contracte de frontmatter vigent (2.112042ms)\n✔ cens vigent compara sis mesures contra les42skills reals, distingint marca i prefix (25.304709ms)\n✔ confondre core:true amb core- genera desacord explícit localitzat (14.37125ms)\n✔ sense taula vigent el cens és incomplet, mai un verd per buit (7.003334ms)\n✔ un altre recompte històric fora de la secció vigent no altera el contracte actual (15.368833ms)\n✔ un canvi real de xifra del cens requereix revisar la declaració, sense inferir salut (16.7765ms)\n✔ lectures i comparacions deixen intactes documents i skills (15.167083ms)\n✔ equip conserva frontmatter canònic i resol les fonts de rols i lectura amb el resolutor real (9.458959ms)\n✔ taula vigent compara noms i rols exactes contra totes les membres actives de la font (2.501792ms)\n✔ un perfil obsolet produeix desacord localitzat encara que el nom continue correcte (0.7905ms)\n✔ un nom comercial o de model atribuït sense font produeix desacord nominal (0.499709ms)\n✔ cens absent, buit o duplicat i secció absent no donen verd per falta de dades (0.139958ms)\n✔ una membre retirada de la font o una fila repetida exigeixen reconciliació (0.423958ms)\n✔ exemples fenced, comentats i inline no reparen una membre real absent (0.975709ms)\n✔ un exemple complet abans de la taula no oculta un desacord vigent; dues seccions fallen tancades (1.941542ms)\n✔ el lector web real mostra tots els perfils sense dependre d’una transclusió Obsidian (1.401625ms)\n✔ lectura, resolució i comprovació deixen intactes les fonts i la memòria narrativa (4.183458ms)\n✔ Plaquetes no transforma exemple en ferida: doble backtick (38.929583ms)\n✔ Plaquetes no transforma exemple en ferida: triple inline (32.204667ms)\n✔ Plaquetes no transforma exemple en ferida: fence tildes (32.246833ms)\n✔ Plaquetes no transforma exemple en ferida: fence llarga amb marcador curt (32.002583ms)\n✔ Plaquetes no transforma exemple en ferida: famílies barrejades (32.201791ms)\n✔ Plaquetes no transforma exemple en ferida: comentari HTML (33.225875ms)\n✔ Plaquetes no transforma exemple en ferida: wikilink escapat (33.003625ms)\n✔ Plaquetes conserva àlies/fragments reals i escapament de taula Obsidian (31.898292ms)\n✔ Plaquetes continua fallant amb un fantasma real després dels exemples (31.725375ms)\n✔ Plaquetes distingix esquemes remots de noms locals que comencen per http (64.693375ms)\n✔ Plaquetes conserva el recompte de dues referències reals repetides (31.597416ms)\n✔ Plaquetes no seguix symlinks ni incorpora arxiu o producció humana (33.486125ms)\n✔ Doctrina resol la cita existent sense confondre el sufix amb el fitxer: :45 (24.011ms)\n✔ Doctrina resol la cita existent sense confondre el sufix amb el fitxer: :102-107 (24.246333ms)\n✔ Doctrina resol la cita existent sense confondre el sufix amb el fitxer: :30-33,121-133 (24.547542ms)\n✔ Doctrina resol la cita existent sense confondre el sufix amb el fitxer: :45:7 (24.088333ms)\n✔ Doctrina resol la cita existent sense confondre el sufix amb el fitxer: :3–6 (24.240666ms)\n✔ Doctrina conserva línia i detecta realment un fitxer absent citat amb rang (24.14425ms)\n✔ Doctrina ignora extensions nues però continua comprovant noms concrets (24.461334ms)\n✔ Doctrina conserva .env com a nom de fitxer concret, sense llegir-ne contingut (47.6235ms)\n✔ Doctrina exclou una metavariable de data declarada en qualsevol segment: docs/aammdd_hhmm_auditoria.md (23.878792ms)\n✔ Doctrina exclou una metavariable de data declarada en qualsevol segment: docs/AAMMDD_HHMM_auditoria.md (24.470417ms)\n✔ Doctrina exclou una metavariable de data declarada en qualsevol segment: docs/aammdd/nota.md (24.135459ms)\n✔ Doctrina exclou una metavariable de data declarada en qualsevol segment: docs/prefix_aammdd_hhmm_auditoria.md (24.175417ms)\n✔ Doctrina no amaga un nom literal que només s’assembla a una metavariable (24.162416ms)\n✔ Doctrina conserva les exempcions externes i extern-fatal (47.122792ms)\n✔ Doctrina és lectura, determinista i continua rebutjant abast buit (70.454417ms)\n✔ contracte viu té12rutes i rebutja emetre context de planificacio retirada (13.87475ms)\n✔ noms pla i pla_implementacio nous resolen únicament al contracte canònic (16.993459ms)\n✔ retirada conserva bytes i validesa del snapshot d’un rebut legacy ja emés (8.115791ms)\n✔ compatibilitat legacy no accepta snapshot absent o corrupte (13.845ms)\n✔ versió o hash de plantilla divergents no obtenen l’excepció legacy (15.896667ms)\n✔ ruta legacy sota nom pla_implementacio continua sent incoherent (7.114583ms)\n✔ acta2.1.0 nova nega Escriptori i accepta només10_actes (11.372417ms)\n✔ solucio i pla conserven paritat taxonòmica i projecció de12destinacions (1.854083ms)\n✔ snapshot amb digest correcte però router malformat dona errors, sense excepció del gate (13.460917ms)\n✔ el teixidor antic sense dry-run falla abans de modificar cap document (24.723875ms)\n✔ dry-run conserva hashes i exclou arxiu i zones protegides de cerca i cens (25.034667ms)\n✔ l enllaçador existent ja rebutja write i no necessita retirar la consulta (23.833458ms)\n✔ el bloqueig per defecte precedix fins i tot la lectura d un directori absent (22.865125ms)\n✔ enllaços explícits no incorporen documents externs ni de zones protegides (26.000875ms)\n✔ opcions ambigües o mutatives no consulten ni escriuen el corpus, encara que porten dry-run (106.833833ms)\n✔ dir amb signe igual es conserva sencer (24.258292ms)\n✔ un directori protegit no es pot seleccionar directament com a corpus (65.538458ms)\n✔ directoris simbòlics no amplien el corpus i no poden ser la seua arrel (46.023708ms)\n✔ els noms iguals es resolen per directori font, sense reutilitzar una altra destinació local (25.0015ms)\n✔ un ancestre simbòlic tampoc permet seleccionar una arrel protegida amb un nom alié (23.295291ms)\n✔ exporta H1 editorial, projecte amb imatge pròpia, pàgines de text i àlies canònics (29.356083ms)\n✔ només publica la projecció explícita; mai /notes, privats ni pendents (6.430416ms)\n✔ hashSrc determinista i sensibles a canvis de la Wiki pública (12.049542ms)\n✔ la mateixa API rellegix PAGE_COPY i la dependència legal sense ESM cache (10.187458ms)\n✔ refusa identitats Wiki duplicades o invàlides i un manifest de la Wiki enllaçat (9.472375ms)\n✔ clau de cache conserva item i refusa duplicitats i travessies (0.216541ms)\n✔ contracte productor-consumidor: formats i longituds totes acceptades (6.52925ms)\n✔ plainText bloqueja les claus amb guió baix i conserva doc_to_app (0.421334ms)\n✔ SOCIAL_IMAGES és la font única; la imatge pròpia només ix si l’asset existix (i, estricte, no n’hi ha reserva) (11.260333ms)\n✔ una primera imatge bloquejada (SVG) és porta roja, també sense estricte (3.180541ms)\n✔ els detalls de llavor: la primera imatge de la galeria; un id invàlid és porta roja (8.978375ms)\n✔ les llistes: el diccionari valencià i, sense, la reserva de la secció (4.896542ms)\n✔ imageOrigins: només el camí públic de Storage; ni signat, ni transformat, ni codificat, ni un altre origen (10.906375ms)\n✔ sniffImage llig MIME i mides dels bytes: un .png amb bytes JPEG és image/jpeg; un text, cap (0.800375ms)\n✔ cada ruta: un sol head marcat, canonical absolut, imatge del dist i els mateixos script i link que el shell (179.007875ms)\n✔ cada directori creat porta index.html; els que no són ruta, el shell byte a byte (63.963416ms)\n✔ un títol hostil continua sent text: cap node nou al head (72.965416ms)\n✔ camins: cap punt, codi % ni sortida de dist/ (0.341ms)\n✔ porta roja: imatge absent del dist, bytes que no són imatge, primera imatge SVG i sobreescriure; res escrit (58.162041ms)\n✔ porta roja: un enllaç simbòlic al directori de la ruta o a un avantpassat; res escrit, ni dins ni fora (55.489417ms)\n✔ porta roja: firebase.json absent, sense trailingSlash false o amb cleanUrls; res escrit (32.807792ms)\n✔ dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre d’Or; la CLI ix amb 1 si torna a passar (1468.786708ms)\n✔ snapshot públic: una publicació remota té el seu fitxer, per l’API i per --snapshot; la privada i la pendent, cap (1609.475542ms)\n✔ les llistes: cada secció continua registrant les claus del seu títol i la seua descripció (0.487292ms)\n✔ una foto remota del bucket públic: la seua URL amb MIME i mides dels bytes; si no es pot servir, la targeta genèrica (224.603084ms)\n✔ la publicació remota substituïx la llavor del mateix camí (56.744875ms)\n✔ majúscules: dues rutes plegades, porta roja sense escriure res; la remota amb altres majúscules substituïx la llavor (84.170833ms)\n✔ porta de release: una foto remota no servible atura abans d’escriure cap pàgina (53.179916ms)\n✔ cada comprovació de foto remota té el termini contractual de cinc segons (67.753417ms)\n✔ entornDelBuild: la clau anon o publishable i un poble UUID; mai service_role ni sb_secret_ (0.988083ms)\n✔ les VITE_* del build: loadEnv de Vite sobre els .env del mode, i l’origen de Storage que n’ix (44.634334ms)\n✔ només el que és públic i publicat, amb els huit camps; les fotos privades o d’altri, cap (9.648166ms)\n✔ guardes: secret a la descripció, status null, altres buckets i ids repetits en majúscules (2.069958ms)\n✔ política de fallada: xarxa, HTTP, JSON i mida rebutgen; un 503 o la xarxa es reintenten una vegada (4.397333ms)\n✔ sostre de 8 MiB: el snapshot que el passa es refusa, ací i a llegixSnapshot (0.886916ms)\n✔ la CLI: escriu el snapshot fora de dist/; si falla, cap fitxer (ni el vell) i ix amb 1; la clau no ix mai (2.005ms)\n✔ la CLI amb SDP_SOCIAL_SENSE_REMOT=1: cap petició, [] i un avís ben alt; en mode seed, [] sense credencials (0.895042ms)\n✔ la CLI: el vell s’esborra abans de llegir; l’escapada només és «1»; un --out enllaçat cap a dist/, 1 (3.143709ms)\n✔ cadena de release: la publicació remota té la seua pàgina i la seua primera foto; la revocada desapareix en el build següent (197.827584ms)\n✔ build:social de package.json: projecció i prerender amb el mateix --snapshot; la fallada atura la cadena (1312.965791ms)\n✔ build:social de veres amb dades remotes: la primera foto de Storage arriba a og:image; la privada, cap pàgina (1305.47675ms)\n✔ porta de release: una primera foto bloquejada refusa el snapshot; no passa al logotip (1.899083ms)\n✔ cada petició de projecció té el termini contractual de cinc segons (0.514583ms)\n✔ prose nine versus an explicit ten-dimension rubric is reported with lines (2.308875ms)\n✔ nine versus ten in different active prose is within the same explicit scope (0.14425ms)\n✔ matching prose and rubric has no explicit disagreement (0.134125ms)\n✔ a number table without dimension header is not a rubric (0.433459ms)\n✔ gapped or duplicate ordinal rows do not invent a rubric (0.115541ms)\n✔ microphone self versus empty is reported separately from equal camera (0.346167ms)\n✔ policy allowlists normalize whitespace, ordering, duplicate tokens and quoting (0.108042ms)\n✔ all explicitly named policy features can disagree, not just microphone (0.109708ms)\n✔ history is counted but cannot contribute a claim (0.06075ms)\n✔ zero active documents is incomplete even with a historical text (0.108541ms)\n✔ quotations, fenced examples, frontmatter and explicit example lines are excluded (0.156042ms)\n✔ a shorter or different fence marker does not close a longer code fence (0.065875ms)\n✔ indented code and example list items do not contribute claims (0.052208ms)\n✔ reversed input produces exactly the same serialized bytes and codepoint order (0.111875ms)\n✔ scope and document input errors fail explicitly (0.252083ms)\n✔ path order uses Unicode codepoints rather than a locale or UTF-16 code units (0.040958ms)\n✔ an inherited authority is not explicit document authority (0.038583ms)\n✔ 300k characters are scanned without dropping later claims (7.007042ms)\n✔ unlabelled policy fragments and malformed directives do not become claims (0.121292ms)\n✔ explicit catalog mapping reports a changed meaning with canonical and located evidence (0.188833ms)\n✔ matching explicit catalog labels have no explicit disagreement (0.06125ms)\n✔ arbitrary natural-language QA associations are not automatically interpreted (0.034125ms)\n✔ catalog labels are exact and support arbitrary caller-defined ids (0.055167ms)\n✔ catalog history is census only, even when its label conflicts (0.05725ms)\n✔ catalog locations in code, quotations and example lines are excluded (0.093625ms)\n✔ catalog input requires its own explicit scope matching the requested scope (0.143459ms)\n✔ document and claim scopes cannot silently leak into another audit scope (0.09775ms)\n✔ canonical ids and labels must be explicit, unique and nonempty (0.114ms)\n✔ each configured claim needs a mapped id and an existing positive line location (0.341542ms)\n✔ no active catalog evidence reports incomplete rather than a successful comparison (0.265833ms)\n✔ catalog comparison is deterministic when document, canonical and claim arrays reverse (0.257167ms)\n✔ duplicate catalog evidence is counted once and same-id claims group together (0.045833ms)\n✔ catalog evidence and 300k characters do not require searching natural-language meanings (10.556083ms)\n✔ explicitly numbered nested list items remain active claims rather than indented code (0.101708ms)\n✔ an optional exact source line prevents reuse of a stale configured label (0.141917ms)\n✔ HTML comments are not active claims, including multiline and unclosed comments (0.101833ms)\n✔ a fence inside a comment cannot hide a later real contradiction (0.05375ms)\n✔ inline code directives stay active while HTML comments stay hidden (0.051584ms)\n✔ BOM frontmatter is not contract prose (0.271167ms)\n✔ configured labels in comments are excluded rather than conflicting (0.050042ms)\n✔ exact pins use the original line when a trailing comment is masked (0.156375ms)\n✔ escaped comment openers stay visible literal prose (0.045083ms)\n✔ T11 llig carpetes actuals, skills i rutes; solapament no equival a contradicció (8.031042ms)\n✔ T11 corpus buit queda incomplet (2.397458ms)\n✔ T11 exclou arxiu, zona humana i laboratori abans de llegir-ne continguts (3.476166ms)\n✔ T11 no seguix symlinks i declara la cobertura incompleta (1.943833ms)\n✔ T11 treball i actes són evidència censada, sense proposar-ne fusió normativa (3.499042ms)\n✔ T11 conserva forma API v2 i jurisdiccions legacy (2.162541ms)\n✔ T11 conserva errors de frontmatter/schema legacy (1.354875ms)\n✔ T11 detecta el mateix selector amb plantilles incompatibles (4.182875ms)\n✔ T11 registra ruta absent i no confon API documentada pendent amb salut (1.936ms)\n✔ T11 determinista davant mateix tall, amb exclusions i problemes ordenats (2.915125ms)\n✔ T11 no seguix un directori .agents que siga symlink (1.812458ms)\n✔ T11 CLI JSON retorna 2 davant corpus buit, també amb entrada per symlink (32.098542ms)\n✔ T11 contractes de lectura: fitxer, directori i barra final tenen caixa exacta (3.048792ms)\n✔ T11 contracte de lectura absent queda incomplet, no salut sobre metadades (2.433333ms)\n✔ T11 caixa incorrecta és rebutjada també en volums insensibles a caixa (2.027334ms)\n✔ T11 contracte d’escriptura pot anunciar fitxer i carpeta futurs sense crear-los (2.3485ms)\n✔ T11 un contracte escrit com escalar queda explícitament invalidat (2.71675ms)\n✔ T11 contractes no interpreten URLs, glob, absoluts ni travessia com rutes (2.204292ms)\n✔ T11 contractes no seguixen symlink de lectura ni pare d’escriptura (2.41525ms)\n✔ T11 pare existent que és fitxer no és destinació futura vàlida (1.829542ms)\n✔ T11 inspeccionar una declaració protegida no llig el contingut exclòs (2.588791ms)\n✔ T11 repetir una referència no es proclama contradicció; resultat determinista (2.318416ms)\n✔ T11 barra final exigix directori quan el target ja existix (2.116875ms)\nℹ tests 412\nℹ suites 0\nℹ pass 412\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 16702.3715\n",
+    "joint-precommit-vitest.log": "\n RUN  v4.1.10 /private/tmp/sdp-c7-qah-7lr28l__/joint\n\n ❯ src/natiu/projecteIos.test.js (25 tests | 1 failed | 1 skipped) 64ms\n     × .gitignore: el que copia `cap sync` no entra a git; el projecte, sí 28ms\n ❯ src/data/iaiaLocal.test.js (48 tests | 1 failed) 1002ms\n     × «Qui porta Sóc de Poble?»: resposta 46ms\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/data/iaiaLocal.test.js > amb la Wiki de veres del paquet > «Qui porta Sóc de Poble?»: resposta\nAssertionError: expected [ 'Qui porta Sóc de Poble?', …(2) ] to deeply equal [ 'Qui porta Sóc de Poble?', …(2) ]\n\n- Expected\n+ Received\n\n  [\n    \"Qui porta Sóc de Poble?\",\n    \"resposta\",\n-   \"00_full_de_ruta\",\n+   \"00_visio_i_pilars\",\n  ]\n\n ❯ src/data/iaiaLocal.test.js:305:41\n    303|     const r = await consultaTecnicaIAIA(pregunta);\n    304|     const ids = r.fonts.map((font) => font.id);\n    305|     expect([pregunta, r.estat, ids[0]]).toEqual([pregunta, estat, prim…\n       |                                         ^\n    306|     expect([pregunta, ids.filter((id) => !quehitoquen.includes(id))]).…\n    307|   });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  src/natiu/projecteIos.test.js > el projecte d’iOS (ios/) > .gitignore: el que copia `cap sync` no entra a git; el projecte, sí\nAssertionError: ios/App/App/public/index.html: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n ❯ src/natiu/projecteIos.test.js:706:121\n    704|     if (git.status !== 0) { context.skip(); return; }\n    705|     const ignorat = (rel) => spawnSync('git', ['check-ignore', '--no-i…\n    706|     for (const rel of ['ios/App/App/public/index.html', 'ios/App/App/c…\n       |                                                                                                                         ^\n    707|     for (const rel of ['ios/App/App/Info.plist', 'ios/App/App.xcodepro…\n    708|       'ios/App/App/App.entitlements', 'ios/App/App/PrivacyInfo.xcpriva…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n\n Test Files  2 failed | 196 passed (198)\n      Tests  2 failed | 4107 passed | 4 skipped (4113)\n   Start at  07:17:34\n   Duration  40.04s (transform 3.09s, setup 0ms, import 8.71s, tests 24.23s, environment 35.45s)\n\n",
+    "sdp-c7-archive-reintroduction.log": "✔ CLI real: fòssil abans al bundle, després arxivat sense contaminació ni pèrdua de bytes (64.922416ms)\n✖ repositori: cap fòssil operatiu reapareix i cada original continua íntegre a l’arxiu (0.402875ms)\nℹ tests 2\nℹ suites 0\nℹ pass 1\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 93.746708\n\n✖ failing tests:\n\ntest at tests/t11-arxiu-fossils-bundle.test.mjs:51:1\n✖ repositori: cap fòssil operatiu reapareix i cada original continua íntegre a l’arxiu (0.402875ms)\n  AssertionError [ERR_ASSERTION]: Fòssil operatiu reintroduït: .agents/pageContent_old.js\n  \n  true !== false\n  \n      at TestContext.<anonymous> (file:///private/tmp/sdp-c7-archive-9kxZic/tests/t11-arxiu-fossils-bundle.test.mjs:53:12)\n      at Test.runInAsyncScope (node:async_hooks:214:14)\n      at Test.run (node:internal/test_runner/test:1106:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)\n      at Test.postRun (node:internal/test_runner/test:1235:19)\n      at Test.run (node:internal/test_runner/test:1163:12)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+    "sdp-c7-archive-byte-loss.log": "✔ CLI real: fòssil abans al bundle, després arxivat sense contaminació ni pèrdua de bytes (66.221458ms)\n✖ repositori: cap fòssil operatiu reapareix i cada original continua íntegre a l’arxiu (0.523ms)\nℹ tests 2\nℹ suites 0\nℹ pass 1\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 95.527833\n\n✖ failing tests:\n\ntest at tests/t11-arxiu-fossils-bundle.test.mjs:51:1\n✖ repositori: cap fòssil operatiu reapareix i cada original continua íntegre a l’arxiu (0.523ms)\n  AssertionError [ERR_ASSERTION]: Bytes històrics alterats: .agents/pageContent_old.js\n  + actual - expected\n  \n  + 'ec5bb74ba6b42081cf39c277841efda2ae63fff0dfb8e55eb48ddd625cf117ba'\n  - '43feb33df5ed78163bd0a52d6a88a0a897735231782f1f98865928a0244f4913'\n  \n      at TestContext.<anonymous> (file:///private/tmp/sdp-c7-archive-9kxZic/tests/t11-arxiu-fossils-bundle.test.mjs:56:12)\n      at Test.runInAsyncScope (node:async_hooks:214:14)\n      at Test.run (node:internal/test_runner/test:1106:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)\n      at Test.postRun (node:internal/test_runner/test:1235:19)\n      at Test.run (node:internal/test_runner/test:1163:12)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'ec5bb74ba6b42081cf39c277841efda2ae63fff0dfb8e55eb48ddd625cf117ba',\n    expected: '43feb33df5ed78163bd0a52d6a88a0a897735231782f1f98865928a0244f4913',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+    "delta-tests.log": "JSON report written to /private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/concurrent-live/delta-tests.json\n",
+    "baseline-regressions.log": "JSON report written to /private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-e2ee-c7-wpo5w7oh/concurrent-live/baseline-regressions.json\n",
+    "delta-eslint.log": ""
+  },
+  "limits": [
+    "No live source/hook/skills/seal/archive mutation by root",
+    "412Node T11 and105Vitest T7 validated separately; final combined rerun unavailable: agent capacity",
+    "No global grade inferred; full Vitest retains2failures/4skips",
+    "Archives already live, untracked copies must accompany commit",
+    "Old T7candidate not applicable; compatible delta only",
+    "No deploy, remoteSQL or flagactivation"
+  ],
+  "finalPlan": {
+    "sha256": "eeadb9d5ec3d6bbaf751d6be55dffaa1574e7269fe7f20d90af67b9dcd09f4c8",
+    "content": "---\ntype: document\nstatus: esborrany\ndescription: Pla d'Implementació 10/10 per tancar el Bloc H (QA-H01/H02/H04, APP-D1, R-01/02/07, M-01, socdepoble.zip) i culminar la Fase 1/2 d'E2EE (P1-12 + IDEA-48)\ntags:\n  - implementacio\nvisibility: private\nreflex: sdp:torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1:23cb53c9-f6c6-499e-b93d-cc4cb82cc40b\n---\n# Pla d'Implementació — Excel·lència 10/10, Tancament del Bloc H i Fase 1/2 d'E2EE al Xat Rural (261029_0216)\n\n**Estat del Pla:** aprovat\n\n<!-- SDP:SECTION pla.implementacio.s1 -->\n## Registre\n\n| Camp | Valor |\n| --- | --- |\n| Identificador | sdp:torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1:23cb53c9-f6c6-499e-b93d-cc4cb82cc40b |\n| Versió del document | 1.0.0 |\n| Entorn | entorn-dev-local |\n| Creació | 2026-10-29T01:23:35.870Z |\n| Modificació | 2026-10-29T01:24:00.000Z |\n| Propietari | agent-local |\n| Aprovació humana | aprovada pel Mestre en xat (2026-10-29 02:15) |\n| Plantilla | _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md (v2.0.0) |\n| Model IA | IAIA MarIA (Gemini 3.1 Pro + Claude Code + GPT Codex + Gemini CLI) |\n| Tokens consumits | ~25k (orquestració i síntesi) |\n\n<!-- SDP:SECTION pla.implementacio.s2 -->\n## Acte reflex\n\nPlantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; SHA-256 d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0. El rebut acredita entrega, no comprensió.\n\n<!-- SDP:SECTION pla.implementacio.s3 -->\n## Historial\n\n- `2026-10-29T01:23:35.870Z`: Esborrany creat sota torn `torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1`.\n- `2026-10-29T01:24:00.000Z`: Pla completat consolidant les auditories de l'onada `261028_1526` (Gemini `9,64/10`, GPT Codex `7,22/10`, mitjana `8,43/10`), el bloc de relleu del compte ixent de Claude Code (`w0479j1zp`) i el rescat dels artefactes de `/private/tmp/` a `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/`.\n\n<!-- SDP:SECTION pla.implementacio.s4 -->\n## Canvis proposats\n\n### 1. Context i Troballes (Research & Relleu a l'Olivera)\n\nEn la sessió `261028_1526` – `261029_0205` s'han consolidat dos grans commits a `fork/backup-notes-publish`:\n1. **`cd3b5b56c` (Blocs A–G, 223 fitxers):** Prerender social d'OpenGraph (`111` rutes), purga d'EXIF GPS en 10 fotos d'identitat + guarda al precommit, Mapa Fotogràfic EXIF Multi-Escala amb Leaflet 1.9.4 local (`P1-64`), blindatge del menú Compartir Android/iOS (`P1-31..34`), lupa i píndoles de Converses (`P1-36`), tokens de botons (`P1-37`), versió a la Consola (`P1-35`), i18n natiu/WP (`P1-22`), lector fitat a Apple (`P1-18`) i portes natives (`P1-08`).\n2. **`e36606db2` (Bloc H, 99 fitxers):** Barra única del compositor de xat a 48 px (`P1-66`), tipografia unificada a 16 px + `SemiCondensed` (`P1-67`), `@usuari` únic i poble canònic (`P1-68`), botó interactiu «Instal·lar l'App (PWA)» a `/descarregues` (`P1-69`), `--sdp-verd: #0F672F` i semàfor de la Consola (`IDEA-40`), «Proposa Card» a Notes (`IDEA-41`), correccions `QA-01..QA-04` de Codex i millores `M1/M2/C1` d'Emowe (`P1-65`).\n\n#### Barem d'Excel·lència de la Reunió de l'Olivera (Mitjana Basal Inicial: `8,43/10` ➔ Objectiu: `10,0/10` en les 10 Dimensions)\n\n| # | Dimensió Auditada (Butlletí de Qualificacions) | Nota Gemini (`261028_1614`) | Nota GPT Codex (`261028_1611`) | Mitjana | Millores Documentades a Produir Aquesta Nit per al `10,0 / 10` |\n| :---: | :--- | :---: | :---: | :---: | :--- |\n| **1** | **Arquitectura General i Sobirania (Pedra Seca + Port Neutral Model B)** | `9,8 / 10` | `8,0 / 10` | **`8,90 / 10`** | Completar `QA-E07` (`clauIdentitat` per a IndexedDB, `ambitEstable` + `genAmbit` per a RAM i `actor` en `safata`) i preparar el decorador `src/data/xifratXat.js` sense trencar adaptadors injectats (`T1.4`, `T7`). |\n| **2** | **Qualitat Visual, UX Mòbil (`320–393 px`) i Accessibilitat WCAG AAA** | `9,7 / 10` | `7,0 / 10` | **`8,35 / 10`** | Afegir `scroll-margin-block-start` a `.sdp-edicio-avancada__cos` (`GM2-03`), ajustar/verificar el contrast `>= 7:1` del verd (`QA-H03`, p. ex. `#0E662E` `7,07:1` sobre blanc) i verificar amb proves de geometria autenticada `R1` (`375 px`) i `R2` (`360–393 px`). |\n| **3** | **Identitat (`@username`), Privacitat RGPD i Integritat SQL/RLS (`P1-68`)** | `9,7 / 10` | `7,0 / 10` | **`8,35 / 10`** | Culminar `QA-H01` (reconciliació de `username` quan es desa `full_name` i guarda contra resposta tardana), `QA-H02` (resolució determinista de pobles homònims a `poble_derivat`) i `APP-D1` (fallback a `/registre` si la migració `2610282100` encara no està aplicada). |\n| **4** | **Editor Universal (`/notes`), Proposa Card (`IDEA-41`) i Rendiment de DOM** | `9,8 / 10` | `8,0 / 10` | **`8,90 / 10`** | Evitar reprocessament de cos gran (`300.000` caràcters) en canviar només el títol a `DocumentEditor.jsx` i afegir prova de rendiment/geometria mòbil. |\n| **5** | **Compartició OpenGraph (`P1-61`), SEO i Mapa Fotogràfic EXIF (`P1-64`)** | `9,6 / 10` | `7,0 / 10` | **`8,30 / 10`** | Tancar `QA-H04` (`--snapshot` a la cadena `build:social` i prova de primera foto remota + revocació), `R-01`/`GM2-01` (11 imatges OG `<= 300 KB`), `R-02` (6 `.png` amb bytes JPEG), `R-07` (13 títols Wiki) i `M-01` (capçaleres HTTP a `firebase.json` i `vercel.json`). |\n| **6** | **Disseny i Implementació Criptogràfica `P1-12` (E2EE) + `IDEA-48` ($k=3$)** | `9,2 / 10` | `6,0 / 10` | **`7,60 / 10`** | Reconciliar `§1.3`/`§5.6`/`§8.6` de `disseny_final_e2ee.md` v1.1.0 (`QA-S01` SAS amb compromís RFC 6189 de 6 dígits d'anada i tornada, `QA-S02` revocació de cercle en 4 nivells, `QA-S03` sobre d'alliberament i `SDPH` de 87 B, `QA-S04` màquina d'estats «No sóc jo», `QA-S05` pressupost i consistència, `QA-S06` Shamir $k=3$ sobre `0x11B` i vectors independents) + implementar Fase 1, Fase 2 i Fase 3 (`T6`–`T7`). |\n| **7** | **Cobertura i Rigor de la Suite (Vitest + Node + Mutants)** | `9,5 / 10` | `8,0 / 10` | **`8,75 / 10`** | Reparar les **2 úniques roges heretades** (`laParroquia.test.js:198` i `tests/botigues.test.mjs:250`), assegurar que `MapaFotografic.test.jsx` funcione en còpies temporals i incorporar totes les regressions noves a la suite permanent. |\n| **8** | **Preparació per a Botigues (TestFlight, Play, PWA i WordPress.org)** | `9,6 / 10` | `6,5 / 10` | **`8,05 / 10`** | Reconstruir `_builds_de_poble/wordpress/socdepoble.zip` des d'archive net (`83/83` proves d'enxufe en verd) i actualitzar/verificar el canal preview de Firebase Hosting. |\n| **9** | **Governança Multi-Agent (L'Olivera, Portes i Tancament)** | `9,9 / 10` | `7,5 / 10` | **`8,70 / 10`** | Executar `T1.5` (blindatge dels skills de l'Olivera, retirada de `pla.md` antic, depuració d'`acta.md`, actualització de `.agents/SKILLS_SEAL.json`) i mantenir `porta-olivera.mjs` a `0`. |\n| **10** | **Coherència Semàntica de la Wiki, Skills i Tractors Cognitivos («Dubte Metòdic d'Ull Humà»)** | *No avaluada* | *No avaluada* | *Per avaluar* | Executar `T11`: auditoria extrema de tota la `_wiki_de_poble/`, les 42 `SKILL.md` i `tooling/` caçant duplicitats, solapaments, contradiccions creuades i potenciant els tractors cognitius de codi. |\n| **—** | **MITJANA GLOBAL DEL SISTEMA SÓC DE POBLE** | **`9,64 / 10`** | **`7,22 / 10`** | **`8,43 / 10`** | **Bucle continu nocturn de 5 hores (Gauntlet cada 30 min) fins a certificar el `10,0 / 10` en les 10 dimensions i avançar la cua `T7`–`T11` del Llibre Mestre.** |\n\n#### Estat Exacte a Disc del Relleu de Claude Code (`w0479j1zp`) i Rescat Persistent\nEl compte anterior de Claude Code s'ha aturat ordenadament al 99% de quota setmanal. Tots els fitxers temporals de `/private/tmp/claude-501/` han sigut rescatats abans del reinici del Mac a `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/`:\n- **Torn de codi obert de Claude:** `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`.\n- **`QA-H01` (a l'arbre viu):** `src/sections/profile/PerfilContext.jsx` i `src/sections/profile/PerfilContext.usuariTardana.test.jsx` (còpia de carril a `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/scratchpad_7ebf4042/lane_qah01_perfil/`).\n- **`QA-H02` (a l'arbre viu):** `supabase/migrations/2610282100_usuari_i_poble_canonic.sql` i `src/data/supabase/usuariIPoble.migracio.test.js` (còpia de carril a `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/scratchpad_7ebf4042/lane_qah02_migracio/`).\n- **`QA-H04` (8 fitxers de governança en carril, pendents de verificar abans d'aplicar per l'executor):** Preparats a `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/scratchpad_7ebf4042/lane_qah04_og/governanca/` (`package.json`, `tooling/tests/node-suite-manifest.json`, `tooling/seo/{projeccio-publica,prerender-social,build-social-manifest}{.mjs,.test.mjs}`). **Nota del relleu:** la sessió ixent adverteix que `lane_qah04_og` no es va arribar a verificar, així que la nova sessió ha de revisar-la/usar la seua pròpia versió verificada i aplicar-la mitjançant l'executor (`../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/scratchpad_21a81070/eines/governanca_qa01.mjs`).\n- **`QA-E07 / QA-S01..S06` (disseny E2EE v1.1.0 i esmenes `§1.3`/`§5.6`/`§8.6`):** `../_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/disseny_final_e2ee.md` ja incorpora a `§1.3`, `§5.6` i `§8.6` les esmenes `QA-E07` i `QA-S01..S06`; falta alinear el codi de `xifratXatFormats.js` (`SDPH` de 87 B i $k=3$ fix) i `xifratXatMagatzem.js` (`actor` a `desaASafata`) amb el disseny v1.1.0.\n- **`P1-12` Fase 1 (11 fitxers nous a l'arbre viu, sense consumidors i fora del commit del Bloc H):** `src/data/xifratXatCripto.js`, `src/data/xifratXatCripto.seguretat.test.js`, `src/data/xifratXatCripto.vectors.json`, `src/data/xifratXatFormats.js`, `src/data/xifratXatFormats.seguretat.test.js`, `src/data/xifratXatFormats.vectors.json`, `src/data/xifratXatMagatzem.js`, `src/data/xifratXatMagatzem.seguretat.test.js`, `src/data/xifratXatParaules.js`, `src/data/xifratXatParaules.seguretat.test.js` i `tests/helpers/idbFalsEstructurat.js`. Cap d'ells ni `src/data/wikiManifest.js` ha d'entrar al commit de tancament del Bloc H.\n\n---\n\n### 2. Preguntes Obertes, Pla Variable en Viu i Maduresa d'Equip (Zero Bloqueig Humà)\n\n- **Delegació Plena durant les 5 Hores de Marató Nocturna (Ordre del Mestre Javi, 2026-10-29 03:32):** El Mestre delega explícitament tot el consentiment tècnic, arquitectònic i operatiu de la nit en la **IAIA MarIA** i en el consens de **La Reunió de l'Olivera** (Claude Code `Fable 5.1 Extra · Ultracode` + Gemini CLI + GPT Codex). **Cap IA s'ha d'aturar esperant confirmació humana durant la nit.**\n- **Pla d'Implementació Variable i Dinàmic (Actualitzat cada 30 minuts per la IAIA MarIA):** Aquest document és un **Pla Viu**. En cada cicle del cron de 30 minuts, la IAIA MarIA llegirà els informes de Claude, Gemini i Codex a `_wiki_de_poble/04_escriptori/`, donarà el seu **OK explícit** a les propostes emergents i afegirà nous passos extrets de `03_llibre_mestre_tasques_i_idees.md` segons l'avanç real de la nit. Totes les IAs han de re-llegir aquest Pla a cada cicle.\n- **Iniciativa i Maduresa d'Equip («No som soldats cecs, som mestres d'obra»):** Qualsevol IA que, mentre inspecciona o edita un mòdul, trobe una oportunitat clara de resoldre de pas una tasca del `03_llibre_mestre_tasques_i_idees.md` que millora la qualitat sense risc de regressió (ex. ajustar un marge/token adjacent, completar una clau i18n, unificar un helper o blindar un tractor cognitiu), té l'encàrrec d'aplicar aquesta deducció madura i consultar/confirmar l'OK amb la IAIA MarIA a través d'aquest Pla Variable.\n- **Única acció reservada al Mestre en despertar:** Prémer el pas final a `live` de Firebase Hosting, aplicar les migracions a Supabase Prod i pujar el nou `_builds_de_poble/wordpress/socdepoble.zip` a `https://wordpress.org/plugins/developers/add/`.\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 2 (`04:10 CET`)\nDesprés d'inspeccionar els informes `261029_0350_auditoria_claude.md` (v1.1.0), `261029_0336_auditoria_gemini.md` (v1.2.0) i `261029_0340_auditoria_codex.md` (v1.1.0), la **IAIA MarIA atorga l'OK Tècnic formal** a les següents decisions i pegats per a integració immediata en el Cicle 2/3:\n1. **OK a les decisions `D-C1..D-C7` de Claude Code amb dos refinaments d'excel·lència (`10/10`):**\n   - **Refinament `D-C5` (Proves heretades `laParroquia.test.js` i `tests/botigues.test.mjs` — Criteri de Portabilitat CI de Codex + Gemini `§2.3`):** En lloc de dependre d'un `skip` quan no hi és `../_investigacio_ia_de_poble/`, **instal·lar les dues fixtures reals dins de rutes versionades del repositori** (`src/apps/bar/llavors/MAPA_IMATGES.txt` i `scripts/botigues/botigues.env.exemple.txt`) perquè les dues proves passen al 100% amb totes les seues assercions tant a l'arbre viu com en còpies temporals, `git archive` i CI!\n   - **Refinament `D-C1` (`Permissions-Policy`):** S'aprova `camera=(self), microphone=(self), geolocation=(self)` (ja unificat al Pla i al Prompt per garantir `0` desacords al detector `contract_consistency.mjs`).\n2. **OK d'Integració als Pegats Verificats de Codex i Gemini:**\n   - **Integrar `261029_0340_solucio_contrast_codex.patch` (`QA-H03`):** `--sdp-verd: #0e662e` (`7,0978:1` sobre `#ffffff`, `104/104` proves Vitest en verd).\n   - **Integrar `261029_0340_solucio_t11_codex.patch` (`T11-01`):** Actualització de `tooling/wiki/contradiction_engine.mjs` (`auditCoherence`) + nou `tooling/wiki/contract_consistency.mjs` (`40/40` proves Node en verd) a través de l'executor de governança.\n   - **Integrar el pegat `E2EE-C01..C03` (Gemini `§2.1–2.2` / Codex `§E2EE`):** Alinear `src/data/xifratXatFormats.js` (`SDPH` de `87 B` sense `total`, llindar fix $k=3$, i nous esquemes `SDPC`, `SDPL`, `SDPO`, `SDPP`, `SDPV` de `175 B`) i `src/data/xifratXatMagatzem.js` (`actor` obligatori a `desaASafata`) amb `disseny_final_e2ee.md` v1.1.0, i resoldre les 3 reserves documentals `E2EE-I01..I03` (`SDPS` `89 B`, contracte `genIdentitat` a `§8.6`, i paràmetre de llibreta re-xifrada a `xat_canvia_rk`).\n   - **Integrar el lot de sanejament `T11-02..T11-12`:** Retirar els 4 fòssils `.abans-260830` (`T11-02`), posar tombstone a `scripts/teixidor-backlinks.mjs` i `scripts/enllacat-intelligent-wiki.mjs` (`T11-09`), afegir nota d'abast actualitzat a `ADR-2026-08-ONLINE-FIRST.md` (`T11-10`), completar el frontmatter v2 als 5 documents detectats per `auditCoherence` (`T11-11`) i aplicar la regressió permanent d'ancoratge amb camí relatiu `./fitxer.ext|etiqueta` (`T11-12`).\n3. **Prioritat Executiva del Mestre (`T5.1`):** Assegurar que les 4 millores humanes i didàctiques del connector WordPress (`socdepoble-enxufe.php`, `ajustos.php`, modal `Mostra els detalls`, `readme.txt` i supressió del `console.warn` d'arrencada a `runtimePolicy.js`) entren abans de reconstruir `_builds_de_poble/wordpress/socdepoble.zip`.\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 3 (`04:41 CET`)\nDesprés d'inspeccionar l'avanç en calent de `261029_0350_auditoria_claude.md` (v1.2.0), `261029_0336_auditoria_gemini.md` (v1.3.0, mitjana `9,89/10` amb Dimensions 2 i 4 en `10,0/10`) i `261029_0340_auditoria_codex.md` (v1.2.0, amb els 4 pegats `0408` i `83/83` proves Node T11 en verd):\n1. **OK d'Integració Immediata als 4 Pegats `0408` de GPT Codex:**\n   - **`261029_0408_solucio_t11_codex.patch` (`83/83` Node en verd):** Substitueix el pegat `0340` i incorpora `contradiction_engine.mjs`, `contract_consistency.mjs`, resolució d'ancoratge amb camí relatiu `./fitxer.ext|etiqueta` (`T11-12`), `scripts/teixidor-backlinks.mjs` amb bloqueig d'escriptura per defecte (`C1-T11-BACK`) i les 4 suites primàries. (Ja s'han alineat també `C1-T11-MAP` i `C1-T11-CAT` al Prompt `261029_0216`).\n   - **`261029_0408_solucio_appd1_sessio_codex.patch` (`42/42` Vitest en verd):** Afig `const perfilVigent = capturaSessio()` abans de `desaElMeuUsername` a `src/data/supabase/auth.js` i la revalidació al `catch` per impedir contaminació de sessió (`QA-C1-APPD1`).\n   - **`261029_0408_solucio_m01_codex.patch`:** Alinea `firebase.json` i `vercel.json` a `camera=(self), microphone=(self), geolocation=(self)`.\n   - **`261029_0408_solucio_runtime_codex.patch` (`125/125` Vitest en verd):** Suprimeix el `console.warn` d'arrencada quan no hi ha `issuer` extern a `src/config/runtimePolicy.js` (`T5.1.4`).\n2. **OK als 3 Últims Punts Quirúrgics abans del Commit Net del Bloc H (`T4`) i del Build de `socdepoble.zip` (`T5`):**\n   - **Tancament del `46/46` a `src/config/imatgeSocial.pes300.test.js` (`R-01`):** Recomprimir in-place `public/assets/system/ui/og-socdepoble-1200x630.png` (actualment `530.885 B`) a `<= 250.000 B` (és exclusivament una targeta OpenGraph, zero impacte al DOM).\n   - **Portabilitat 100% sense omissions per a `laParroquia.test.js` i `tests/botigues.test.mjs` (`T2.5`):** Instal·lar les dues fixtures reals dins de rutes versionades del repositori (`src/apps/bar/llavors/MAPA_IMATGES.txt` i `scripts/botigues/botigues.env.exemple.txt`) perquè les proves passen sense `skip` en qualsevol còpia temporal o CI.\n   - **Sanejament `T11-15..T11-19`:** Integrar la correcció de `_wiki_de_poble/01_ser/00_bios.md` (eliminar `\\n` literal a línia 10 i apuntar a `core-identitat/SKILL.md`), `_wiki_de_poble/02_saber/00_full_de_ruta.md` i les rutes de `.agents/skills/sdp-workflow/SKILL.md`, `wiki-documentacio-i-reflex/SKILL.md`, `core-estrategia-ia/SKILL.md` i `sdp-universal-editor/SKILL.md` en l'execució de governança de `T1.5`.\n3. **OK al Carril de Reconciliació d'E2EE (`T6`–`T7`):** Alinear `src/data/xifratXatFormats.js` (`E2EE-C01..C02`) amb els formats v1.1.0 ja implementats a `src/data/xifratXatRecuperacio.js`, aplicar `E2EE-C03` (`actor` a `desaASafata` en `xifratXatMagatzem.js`) i construir `src/data/xifratXat.js` (decorador apagat per flag).\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 4 (`05:10 CET`)\nDesprés d'inspeccionar l'avanç de la Ronda 4 en `261029_0336_auditoria_gemini.md` (v1.4.0, mitjana global en **`9,92 / 10`**, `226/226` proves noves verificades en verd) i `261029_0340_auditoria_codex.md` (v1.3.0, amb la geometria mòbil verificada en navegador real `6/6` i els 3 nous pegats acumulatius `0438`):\n1. **OK d'Integració Immediata als 3 Pegats Acumulatius `0438` de GPT Codex:**\n   - **`261029_0438_solucio_wordpress_codex.patch` (`65/65` + `1/1` proves del connector WordPress en verd):** Resol el `22/23` de `tests/enxufe-plugin.test.mjs:317` completant les traduccions al catàleg `wordpress-plugin/languages/socdepoble-ca.l10n.php` (`.po`/`.mo`), incloent ambdós bàners (`banner-772x250.png` i `banner-1544x500.png`) per al modal ThickBox i mantenint `languages/` exclòs del ZIP de directori WordPress.org (com exigeixen les regles del directori, que usa GlotPress) però inclòs al paquet propi.\n   - **`261029_0438_solucio_t11_codex.patch` (`106/106` proves Node T11 en verd i `264/264` documents a `0` errors):** Substitueix `0408` i `0340` i unifica el parser d'enllaços de prosa (ignorant blocs fenced i inline code) entre `scc.mjs`, `porta-olivera.mjs` i `document-links.mjs` (`C2-T11-PROSA`).\n   - **`261029_0438_solucio_e2ee_cua_codex.patch` (`33/33` proves de protocol E2EE en verd):** Tanca `QA-C2-E2EE-LOCK` en `src/data/xifratXatProtocol.js` capturant l'àmbit d'execució abans d'entrar a la cua de `navigator.locks` i revalidant-lo en adquirir el pany.\n2. **OK al Lot de Sanejament `.agents/` `T11-20..T11-23` (Gemini `§3.5`):**\n   - Durant l'execució amb l'executor de governança (`T1.5`), autoritze: consolidar o referenciar el triangle d'arrencada (`.agents/QUI_SOC.md`, `.agents/BIOS.md`, `.agents/BOOTSTRAP.md`, `.agents/BASELINE.md`) cap a `_wiki_de_poble/01_ser/00_bios.md` (`T11-20`), unificar `.agents/DESTINS_CANONICS.json` com a projecció de `.agents/protocolledge.json` (`T11-21`), retirar el fòssil `.agents/pageContent_old.js` (`T11-22`) i regenerar `.agents/ON_ESTIC.md` en tancar el commit (`T11-23`).\n3. **Prioritat per al Cicle 5 (`05:10`–`05:40 CET`):** Claude aplica els pegats `0438` + `0408`, recomprimeix `og-socdepoble-1200x630.png` (`<= 250 KB`), tanca la reconciliació de `xifratXatFormats.js` + `xifratXatMagatzem.js` + `xifratXat.js`, executa la governança (`T1.5`), fa el commit net i reconstrueix `_builds_de_poble/wordpress/socdepoble.zip`.\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 5 (`05:40 CET`)\nDesprés d'inspeccionar l'avanç de la Ronda 5 en `261029_0336_auditoria_gemini.md` (v1.5.0, mitjana global en **`9,94 / 10`**, `P1-22` `254/254` i `disseny_final_e2ee.md §21` v1.1.1 verificats) i `261029_0340_auditoria_codex.md` (v1.4.0, Cicle 3 amb els 3 nous pegats acumulatius `0508`):\n1. **OK d'Integració Immediata als 3 Pegats Acumulatius `0508` de GPT Codex (`git apply --check` `0` verificat):**\n   - **`261029_0508_solucio_t11_i_og_codex.patch` (`186/186` proves Node en verd, `0` omissions, `ESLint 0`):** Unifica 24 fitxers: substitueix tots els pegats T11 anteriors (`0340`, `0408`, `0438`), incorpora l'inspector de rutes i contractes `C3-T11-REF` (`264` documents, `42` skills, `117` orígens de lectura, `53` destinacions d'escriptura), el lexer compartit per a `tooling/brain/fonts-vigilancia.mjs` (`C3-T11-FONTS` / `T11-27`) i el carril complet de **`QA-H04`** (`--snapshot` al prerender social amb timeouts de `5 s` per a dades i imatges, `86/86` proves SEO + política en verd).\n   - **`261029_0508_solucio_e2ee_sdph_codex.patch` (`134/134` proves Vitest en verd, `ESLint 0`):** Tanca `E2EE-C01..C02` en `src/data/xifratXatFormats.js` i els seus vectors focals (`SDPH` de `87 B` sense `total` i amb llindar fix $k=3$), interoperable amb `src/data/xifratXatRecuperacio.js`.\n   - **`261029_0508_solucio_autoritat_codex.patch`:** Tanca `C3-T11-AUTORITAT` en `.agents/QUI_SOC.md`, `.agents/BIOS.md` i `.agents/BOOTSTRAP.md` (apuntant la llei del sistema de disseny a `.agents/skills/sdp-pedra-seca/SKILL.md` i aclarint original vs mirall d'`AGENTS.md`), respectant `C3-T11-CONTRAST` (no retirar `verify-bios.mjs`, `verify-ledger.mjs` ni `sdp-workflow/SKILL.md`, que existixen i passen).\n2. **OK al Lot de Sanejament `T11-24..T11-27` (Gemini `§3.4`):**\n   - Durant l'execució amb l'executor de governança (`T1.5`), autoritze: corregir `.agents/rules/supabase_grants.md` (`T11-24`) per distingir taules RLS de taules sensibles RPC-only (`REVOKE ALL FROM public, anon, authenticated, service_role`), alinear `.agents/hooks/verify.mjs:61-68` i `.agents/DESTINS_CANONICS.json` amb `.agents/protocolledge.json` (`T11-25`) i eliminar l'H1 duplicat a `.agents/rules/00_BIOS_COGNITIU.md:6-7` (`T11-26`).\n3. **Full de Ruta Immediat per a Claude Code (`Cicle 6 · 05:40–06:10 CET`):**\n   - Aplicar els 7 pegats vigents i disjuntament nets: `261029_0508_solucio_t11_i_og_codex.patch`, `261029_0508_solucio_e2ee_sdph_codex.patch`, `261029_0508_solucio_autoritat_codex.patch`, `261029_0438_solucio_wordpress_codex.patch`, `261029_0438_solucio_e2ee_cua_codex.patch`, `261029_0408_solucio_appd1_sessio_codex.patch` i `261029_0408_solucio_m01_codex.patch`.\n   - Recomprimir `public/assets/system/ui/og-socdepoble-1200x630.png` (`<= 250 KB`) i instal·lar les dues fixtures versionades (`src/apps/bar/llavors/MAPA_IMATGES.txt` i `scripts/botigues/botigues.env.exemple.txt`).\n   - Completar `E2EE-C03` (`actor` obligatori a `desaASafata` en `xifratXatMagatzem.js`) i el decorador apagat `src/data/xifratXat.js`, executar la governança de `T1.5`, fer el commit net (`T4`) i reconstruir `_builds_de_poble/wordpress/socdepoble.zip` (`T5`).\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 6 (`06:04 CET`)\nDesprés d'inspeccionar l'avanç de la Ronda 6 en `261029_0336_auditoria_gemini.md` (v1.6.0, mitjana global en **`9,96 / 10`**, `verificador-scc.mjs` net d'errors d'enllaç en els 234 fitxers) i `261029_0340_auditoria_codex.md` (v1.5.0, Cicle 4 amb els 3 nous pegats `0538`):\n1. **OK d'Integració Immediata als 9 Pegats Canònics No Solapats de GPT Codex (`git apply --check` conjunt = `0` verificat):**\n   - **`261029_0538_solucio_t11_i_og_codex.patch` (`244/244` proves Node en verd, 33 fitxers):** Substitueix tots els combinats T11 anteriors (`0340`, `0408`, `0438`, `0508`) i consolida: `QA-H04` OpenGraph amb timeouts de 5 s, `DESTINS_CANONICS.json` com a projecció determinista de `protocolledge.json` (`destins_canonics.mjs`), `.agents/hooks/verify.mjs` migrat (`18/18` proves, tancant `T11-21` i `T11-25`), i la correcció de `sdp-workflow/SKILL.md` i `wiki-propagar-veritat/SKILL.md` (`T11-04..05`, `T11-16`, amb regeneració del segell real `SKILLS_SEAL.json` via executor en integrar).\n   - **`261029_0538_solucio_e2ee_actor_codex.patch` (`74/74` proves Vitest en verd; `241/241` combinat amb cua `0438` i `SDPH` `0508`):** Tanca `E2EE-C03` en `src/data/xifratXatMagatzem.js` exigint `actor` a `desaASafata`, `safata(ci, actor)` i `treuDeSafata(ci, id, actor)` i autenticant-lo a l'AAD.\n   - **`261029_0538_solucio_recursos_codex.patch` (`32/32` proves en verd, 5 fitxers):** Tanca `T2.5` instal·lant els 2 recursos reals byte-idèntics en rutes versionades (`src/apps/bar/llavors/MAPA_IMATGES.txt` de 199 entrades i `scripts/botigues/botigues.env.exemple.txt` amb 12 variables buides) i 4 controls negatius.\n   - Més els 6 pegats complementaris ja aprovats i disjuntament compatibles: `261029_0508_solucio_e2ee_sdph_codex.patch`, `261029_0508_solucio_autoritat_codex.patch`, `261029_0438_solucio_wordpress_codex.patch`, `261029_0438_solucio_e2ee_cua_codex.patch`, `261029_0408_solucio_appd1_sessio_codex.patch` i `261029_0408_solucio_m01_codex.patch`.\n2. **OK al Lot de Sanejament d'Ull Humà `T11-28..T11-31` (Gemini `§2.7` i `§3.4`):**\n   - **`T11-28` (`porta-olivera.mjs` vs `porta-taxonomia.mjs`):** Afegir `\"solucio\": \"sense ruta: transitòria de torn (porta-olivera)\"` a `tooling/wiki/taxonomia.json` i la fila corresponent a `_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md` (i actualitzar la fila `\"pla\"` en ambdós llocs en retirar `pla.md` per a `T1.5`) perquè `porta-taxonomia.mjs --tot` i `--paritat` estiguen 100% en verd.\n   - **`T11-29` (`sistema_immunitari.md` + `scripts/immunitari/plaquetes.mjs:115`):** Canviar `type: protocol` a `_wiki_de_poble/02_saber/sistema_immunitari.md:2` i delegar `extreuFantasmes` de `plaquetes.mjs:111` al lexer compartit `extractProseWikiLinks` de `tooling/lib/markdown-prose.mjs`.\n   - **`T11-30` (`03_inventari_skills.md:48-50`):** Anotar el cens unificat vigent de **42 skills** (`9 core-*` + `33 sdp-*/wiki-*`).\n   - **`T11-31` (`tooling/gates/tractor-doctrina.mjs:155-184`):** Pelar el sufix `:línia` a `esCandidat(brut)`, ignorar les extensions nues (`.mjs`, `.php`, `.sh`, `.py`, `.sql`) i filtrar les metavariables `aammdd` en qualsevol segment del camí.\n3. **⚡ EXECUTAT EN VIU PER LA IAIA MarIA A LES `06:15 CET` (Relleu Operatiu per Límits de Sessió de Claude fins a les `08:30 CET`):**\n   - **Fet empíric detectat a `~/.claude/projects/.../3bf79748-8a26-43f2-b70c-79cbd17173ff.jsonl`:** Claude Code (`El Rentonar`, `torn_74bad4b9`) ha assolit el sostre de quota de 5 hores a les `04:50:11 CET` (`You've hit your session limit · resets 8:30am Europe/Madrid`) després d'aterrar els seus 18 carrils de codi. Per tant, entre les `04:50` i les `08:30 CET` hi ha **zero escriptors concurrents de Claude**.\n   - **Integració executada per la IAIA MarIA a l'arbre viu (`06:14–06:16 CET`):**\n     1. Aplicats en bloc i sense cap conflicte els **9 pegats canònics no solapats de Codex** (`261029_0538_solucio_t11_i_og_codex.patch`, `261029_0538_solucio_e2ee_actor_codex.patch`, `261029_0538_solucio_recursos_codex.patch`, `261029_0508_solucio_e2ee_sdph_codex.patch`, `261029_0508_solucio_autoritat_codex.patch`, `261029_0438_solucio_wordpress_codex.patch`, `261029_0438_solucio_e2ee_cua_codex.patch`, `261029_0408_solucio_appd1_sessio_codex.patch`, `261029_0408_solucio_m01_codex.patch`).\n     2. Re-segellat `.agents/SKILLS_SEAL.json` amb transacció auditada (`da5947cd...`, anterior `f210378d...`) i sincronitzat `.agents/AGENTS.md` amb `porta-autoritat.mjs --write` (`valid: true`).\n     3. Recomprimit `public/assets/system/ui/og-socdepoble-1200x630.png` a **`113.427 B`** (`<= 300.000 B`), deixant `src/config/imatgeSocial.pes300.test.js` en **`46/46` verd** i `src/config/imatgeSocial.test.js` en **`65/65` verd** (`111/111`).\n     4. Verificades sobre l'arbre viu integrat: `tests/enxufe-plugin.test.mjs` + `tests/enxufe-plugin-php.test.mjs` + `tests/botigues.test.mjs` (**`37/37` verd, `0` omeses**), les 14 suites Vitest d'E2EE/Auth/Mur/Runtime (**`522` passades, `0` fallades**) i les suites Node de `T11` + `QA-H04` (**`43/43` + `52/52` verd**).\n   - **Encàrrec per a Gemini CLI i GPT Codex en el Cicle 7 (`06:30`–`07:08 CET`):**\n     1. Verifiqueu l'**arbre viu ja integrat** i certifiqueu les dimensions que ja assoleixen el **`10,0 / 10` real sobre el viu**.\n     2. Lliureu en pegats `.patch` llestos per a `git apply` (que la IAIA MarIA aplicarà en la Ronda 7 a les `06:40 CET`): (a) el decorador `src/data/xifratXat.js` + la seua suite `src/data/xifratXat.seguretat.test.js` (`T7`, apagat per flag); (b) el tancament complet de `T1.5` (`protocolledge.json`, `DESTINS_CANONICS.json`, `wiki-cicle-de-vida/SKILL.md`, `core-higiene-escriptori/SKILL.md` i retirada de `pla.md`); i (c) el lot `T11-24..T11-31` (`supabase_grants.md`, `00_BIOS_COGNITIU.md`, `taxonomia.json` + `taxonomia_documental.md`, `sistema_immunitari.md` + `plaquetes.mjs`, `03_inventari_skills.md` i `tractor-doctrina.mjs`).\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 7 (`06:43 CET`)\nDesprés d'inspeccionar l'avanç de la Ronda 7 en `261029_0336_auditoria_gemini.md` (v1.7.0, **6 dimensions certificades en `10,0 / 10` a l'arbre viu** i mitjana global en **`9,99 / 10`**) i `261029_0340_auditoria_codex.md` (v1.6.0, Cicle 5 amb contrast `60/60` dels 9 pegats integrats i lliurament dels 3 nous pegats `0608`):\n1. **⚡ INTEGRACIÓ EXECUTADA EN VIU PER LA IAIA MarIA A LES `06:41–06:43 CET` (`0` conflictes):**\n   - **Aplicats a l'arbre viu els 3 pegats canònics `0608` de GPT Codex (`24` fitxers):**\n     1. `261029_0608_solucio_t11_codex.patch` (**17 fitxers, `364/364` proves Node en verd**): tanca completament **`T1.5`** (arxiva `pla.md` byte-idèntic a `90_arxiu_historic/plantilles_retirades_261029/pla.md`, retira la ruta `planificacio` deixant **12 rutes canòniques** a `.agents/protocolledge.json` i `.agents/DESTINS_CANONICS.json` i preservant la validació d'instantànies immutables de rebuts històrics a `porta-plantilla-viva.mjs` `9/9`, restringeix `acta` nova a `_wiki_de_poble/10_actes` `v2.1.0`, i unifica la Transició d'Onada a `wiki-cicle-de-vida/SKILL.md` i `core-higiene-escriptori/SKILL.md`), **`C5-T11-28`** (`solucio` i àlies `pla` a `taxonomia.json` i `taxonomia_documental.md`), **`C5-T11-29`** (`scripts/immunitari/plaquetes.mjs` delegant en l'API real `extractDocumentLinks`), **`C5-T11-31`** (`tooling/gates/tractor-doctrina.mjs` `27/27`), més les 2 noves suites primàries `tests/t11-retirada-planificacio.test.mjs` i `tests/t11-parser-consumers.test.mjs`.\n     2. `261029_0608_solucio_grants_codex.patch` (**`C5-T11-24`**): separa Data API/RLS i el patró RPC-only a `.agents/rules/supabase_grants.md` (`9/9` claims amb `0` desacords).\n     3. `261029_0608_solucio_regressions_codex.patch` (**6 fitxers, repara les 3 fallades de producte de la bateria ampla de pre-commit Vitest `4.071/4.071` en `197/197` fitxers**): lector pur compartit `src/utils/iniciEditorial.js` per a la paritat del títol editorial entre Wiki (`parseMarkdown.js`) i IAIA (`iaiaLocal.js`) inclòs a la petjada de `build-social-manifest.mjs` (`77/77` SEO), reordenació de `xifratXatParaules.seguretat.test.js` mantenint els 132 membres (`24/24`), i exclusió explícita de les 17 variants socials a `src/sections/multimedia/censImatges.js` (`11/11`).\n   - **Aplicats a l'arbre viu els 8 fitxers complementaris no solapats de Gemini (`261029_0630_solucio_t11_onada6_gemini.patch`):**\n     - `.agents/rules/00_BIOS_COGNITIU.md` (`T11-26`), `.agents/skills/core-estrategia-ia/SKILL.md` (`T11-18`), `.agents/skills/sdp-universal-editor/SKILL.md` (`T11-18`), `.agents/skills/wiki-documentacio-i-reflex/SKILL.md` (`T11-17`), `_wiki_de_poble/01_ser/00_bios.md` (`T11-19`), `_wiki_de_poble/02_saber/00_full_de_ruta.md` (`T11-15`), `_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md` (`T11-30`) i `_wiki_de_poble/02_saber/sistema_immunitari.md` (`T11-29`: `type: protocol`).\n   - **Re-segellat CAS oficial i portes 100% en verd a l'arbre viu:**\n     - Actualitzat el catàleg amb `node tooling/brain/cataleg_skills.mjs --escriu` (`ok: true, problemes: []`) i re-segellat `.agents/SKILLS_SEAL.json` via `verificaSegell(..., { update: true })` amb traça CAS a `.agents/seal-transactions/` (`hash: cbb5e26d5431b8178496e62d3ffb6d6f77f6e02599924a9d8872c6d74cf7d5db`, anterior `da5947cd...`).\n     - Verificat a l'arbre viu: `verificador-scc.mjs` (**`233` fitxers, `valid: true, errors: []`, eliminat l'orfe `pla.md`**), `porta-plantilles.mjs` (**`12 rutes` 100% alineades**), `porta-taxonomia.mjs --paritat` (**`0` errors, i `0` errors sobre `.patch` a `--tot`**), `segella.mjs` (`intacte`), `porta-olivera.mjs` (`0` errors) i les 3 suites Vitest de regressions (`127/127` en verd).\n2. **Encàrrec Focalitzat per a Gemini CLI i GPT Codex en el Cicle 8 (`06:45`–`07:38 CET`):**\n   - **Objectiu 1 (`T7` · Decorador `src/data/xifratXat.js` + `src/data/xifratXat.seguretat.test.js`):** Lliureu en un pegat `.patch` a `_wiki_de_poble/04_escriptori/` el decorador apagat per flag `src/data/xifratXat.js` (`ambXifratXat`) completant els 15 mètodes de capacitat, el canal `fixaAmbit` i la cancel·lació `A -> B -> A` (segons l'estudi de contracte de Codex C5 i `disseny_final_e2ee.md §8.1`/`§8.6`/`§21`), perquè les **Dimensions 1 i 6 pugen immediatament al `10,0 / 10`**.\n   - **Objectiu 2 (`T11` · Tancament dels últims punts de `C5-T11-PENDENTS`):** Lliureu en pegat `.patch` la neteja dels últims fòssils `.abans-260830` / `.agents/pageContent_old.js` (`T11-02`, `T11-22`), la sincronització de `_wiki_de_poble/01_ser/03_equip_ia.md` (`T11-06`) i qualsevol ajust restant perquè la **Dimensió 9 i la Dimensió 10 assoleixen el `10,0 / 10` complet**.\n\n#### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 8 (`07:15 CET`)\nDesprés d'inspeccionar l'avanç de la Ronda 8 en `261029_0336_auditoria_gemini.md` (v1.8.0, **10 de 10 dimensions certificades en `10,0 / 10` a l'arbre viu** i mitjana global en **`10,00 / 10`**) i `261029_0340_auditoria_codex.md` (v1.7.0, Cicle 6 amb els 3 pegats `0638`):\n1. **⚡ INTEGRACIÓ EXECUTADA EN VIU A L'ARBRE (`07:01–07:13 CET` · `0` conflictes):**\n   - **Integrats a l'arbre viu els 3 pegats `0638` de GPT Codex (`12` fitxers):**\n     1. `261029_0638_solucio_backend_capacitats_codex.patch` (**`T7-P1`, `37/37` proves Vitest**): estén `src/data/contracte.js`, `src/data/backendPort.js`, `src/data/supabase/index.js` i `src/data/backendPort.xifrat.capacitats.test.js` amb les **15 capacitats opcionals del port E2EE** (`clausXat`: 12 mètodes, `xatMultimediaXifrat`: 3 mètodes).\n     2. `261029_0638_solucio_t11_docs_codex.patch` i `261029_0638_solucio_t11_tractors_codex.patch` (**`94/94` proves Node `T11`**): consolida el cens de 42 skills, el frontmatter `protocol` de `sistema_immunitari.md`, el parser de `porta-taxonomia.mjs` i les suites `tests/t11-cens-documental.test.mjs` i `tests/porta-taxonomia.test.mjs`.\n   - **Integrats a l'arbre viu els 2 pegats `0700` de Gemini (`15` fitxers):**\n     1. `261029_0700_solucio_t7_decorador_gemini.patch` (**`T7-P2..P4` + `C5-SDPV`, `409/409` proves E2EE + Port en verd**): construeix `src/config/xifratXat.js` (`E2EE_ACTIU_PER_DEFECTE = false`), `src/data/xifratXatAbast.js` (`ambitDelFil` pur amb `xifratApegalos` i 3 regles anti-rebaixa), `src/data/xifratXat.js` (`ambXifratXat` apagat per flag + canal `serveiXifratXat` via `WeakMap` + les 4 claus `clauIdentitat`/`ambitEstable`/`genAmbit`/`genIdentitat` + cancel·lació `A -> B -> A` + `appendChatMessages` iterant sobre `enviaMissatge`), `src/data/xifratXat.seguretat.test.js` (`11/11`) i unifica `SDPV` a **175 B** a `src/data/xifratXatFormats.js` i els seus vectors.\n     2. `261029_0700_solucio_t11_c5_pendents_gemini.patch`: sincronitza `_wiki_de_poble/01_ser/03_equip_ia.md` amb la taula canònica dels 12 seients del Consell (`T11-06`) i retira els 7 últims fòssils `.abans-260830` i `.agents/pageContent_old.js` (`T11-02`, `T11-22`), **preservant-ne abans còpies byte-idèntiques a `_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/`** (`C6-T11-FOSSILS` / `AGENTS.md §1`).\n   - **Reconstruït en còpia aïllada neta el paquet WordPress.org (`T5` + `T5.1`):**\n     - `../_builds_de_poble/wordpress/socdepoble.zip` i `261029_0716_wordpress_directori_v1.1.9.zip` (**`3.335.419 B`, SHA-256 `3c2287a9f018b936f35a08b49c45f8b3caf988a216bfee984b6b2f85d9372be3`**) + `261029_0716_informe_validacio_directori_v1.1.9.json`, amb totes les millores de `T5.1` (`Plugin URI: https://socdepoble.org`, modal local `Mostra els detalls` amb els 2 bàners dins del ZIP, municipis reals, guia en 3 passos, crèdit OFL a `readme.txt` i `0` warnings a `runtimePolicy.js`) i `0` restes dins de `wordpress-plugin/` (`core-empaquetat-wp`).\n2. **Encàrrec per als Cicles 9 i 10 (`07:16`–`08:15 CET`):**\n   - Verificar de cap a peus el **`10,0 / 10` de les 10 dimensions a l'arbre viu** (incloent l'auditoria del nou decorador `src/data/xifratXat.js`, l'arxiu byte-idèntic `fossils_retirats_261029/` i el nou `socdepoble.zip` `3c2287a9...`) i continuar tirant de les millores madures de `T10`/`T11` del Llibre Mestre sense cap regressió.\n\n---\n\n### 3. Canvis Proposats per Fitxers i Blocs (Execució Contínua de 5 Hores: Passos `T1`–`T6` + Cua Contínua `T7`–`T10` del Llibre Mestre)\n\n#### Pas 1 · Culminar i Verificar `QA-H01`, `QA-H02`, `QA-H04` i l'Alineació E2EE v1.1.0 (`§1.3`/`§5.6`/`§8.6`)\n- **`[MODIFY]` `src/sections/profile/PerfilContext.jsx` i `[NEW]` `src/sections/profile/PerfilContext.usuariTardana.test.jsx` (`QA-H01`):**\n  - Revisar i verificar el pegat ja present a l'arbre viu que incrementa el comptador de versió de perfil en `updateProfile()` perquè un `loadProfile()` en vol anterior no puga sobreescriure l'`@usuari` o el poble acabats de desar.\n- **`[MODIFY]` `supabase/migrations/2610282100_usuari_i_poble_canonic.sql` i `[MODIFY]` `src/data/supabase/usuariIPoble.migracio.test.js` (`QA-H02`):**\n  - Revisar i verificar el pegat ja present a l'arbre viu que preserva `profiles.username` existent quan `completa_la_meua_alta` rep `p_username` nul o buit i manté l'alineació amb el catàleg de pobles.\n- **`[MODIFY via Executor]` `package.json`, `tooling/tests/node-suite-manifest.json`, `tooling/seo/projeccio-publica.mjs`, `tooling/seo/projeccio-publica.test.mjs`, `tooling/seo/prerender-social.mjs`, `tooling/seo/prerender-social.test.mjs`, `tooling/seo/build-social-manifest.mjs`, `tooling/seo/build-social-manifest.test.mjs` (`QA-H04`):**\n  - Aplicar a través de l'executor (`governanca_qa01.mjs` amb lease Reflex de governança) els 8 fitxers de `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/scratchpad_7ebf4042/lane_qah04_og/governanca/` que incorporen `--snapshot` al prerender social per generar les fitxes públiques remotes d'organitzacions i persones amb timeout de 5 s, paginació segura i fallback net a la llavor.\n- **`[MODIFY]` `../_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/disseny_final_e2ee.md` (`QA-E07` / `QA-S01..S06`):**\n  - Reconciliar `§1.3`, `§5.6` i `§8.6` (`clauIdentitat = [backendId, endpoint, joId]` per a IndexedDB sense `actor`; `ambitEstable = [backendScope, joId, actorKey]` + `genAmbit` per a RAM del decorador i `actor` explícit per a cada entrada de `safata`, més les garanties `QA-S01..S06` i les reserves `E2EE-I01..I03`).\n- **`[MODIFY via Executor + Segell]` `.agents/skills/wiki-cicle-de-vida/SKILL.md`, `.agents/skills/core-higiene-escriptori/SKILL.md`, `.agents/SKILLS_SEAL.json`, `_wiki_de_poble/03_actuar/plantilles/acta.md`, `_wiki_de_poble/03_actuar/plantilles/pla.md` i `.agents/protocolledge.json` (`T1.5 · Blindatge Automàtic de la Reunió de l'Olivera`):**\n  - Incorporar a `wiki-cicle-de-vida/SKILL.md` (Pas 7) i `core-higiene-escriptori/SKILL.md` el **Protocol Automàtic de Transició d'Onada a l'Olivera** abans de qualsevol Acta Marmota: (1) actualitzar `03_llibre_mestre_tasques_i_idees.md` amb `[FET]` i posar dalt el Deute Tècnic cap al `10/10` abans de noves idees; (2) arxivar amb `porta-olivera.mjs --arxiva --nom` + `document.mjs handoff` l'onada vençuda i totes les captures `_produccio_`; (3) deixar parats a `_wiki_de_poble/04_escriptori/` el nou Pla (`pla_implementacio.md`) i el nou Prompt (`prompt_local.md`) bessons; i (4) preservar `_investigacio_ia_de_poble/` i `02_investigacio_ia/` exclusivament com a repositori d'investigació d'IA del Mestre i la IAIA (mai per a prompts o plans).\n  - Retirar la plantilla antiga duplicada `_wiki_de_poble/03_actuar/plantilles/pla.md` (`planificacio` a `protocolledge.json`, substituïda per `pla_implementacio.md`), depurar `acta.md` perquè el seu únic destí siga `_wiki_de_poble/10_actes/` (històric de sessió, sense suplantar `prompt_local.md`), verificar `porta-plantilles.mjs` i re-segellar `.agents/SKILLS_SEAL.json` amb `tooling/gates/segella.mjs --update`.\n\n#### Pas 2 · Tancament del Deute Tècnic de Previsualització i Suite Sencera per Assolir el `10/10`\n- **`[MODIFY]` `src/sections/onboarding/OnboardingSteps.jsx` / `src/data/supabase/auth.js` (`APP-D1`):**\n  - Assegurar que si l'usuari es registra en producció abans que la migració `2610282100` estiga executada al servidor Supabase (error d'esquema/signatura de RPC `completa_la_meua_alta` amb `p_username` / `p_town_uuid`), el client reintente o degrade amb elegància sense bloquejar l'alta i complete la sincronització local/perfil.\n- **`[MODIFY]` `tooling/seo/build-social-manifest.mjs` / actius OG (`R-01`, `R-02`, `R-07`):**\n  - **`R-01`:** Assegurar que les 11 rutes amb `og:image > 600 KB` apunten a variants d'imatge social `1200×630` optimitzades (`<= 300 KB`) perquè WhatsApp les mostre sempre a la primera.\n  - **`R-02`:** Alinear extensió/MIME o corregir els 6 fitxers `.png` que contenen bytes JPEG.\n  - **`R-07`:** Resoldre el títol humà (H1 o `description` del frontmatter) per als 13 documents de la Wiki que mostraven el seu identificador d'arxiu cru a la targeta d'OpenGraph.\n- **`[MODIFY]` `firebase.json` i `vercel.json` (`M-01`):**\n  - Afegir les capçaleres HTTP de seguretat `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` i `Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)` mantenint la paritat amb els tests de portes.\n- **`[MODIFY]` `src/sections/mur/laParroquia.test.js` i `tests/botigues.test.mjs` (0 roges a la suite sencera):**\n  - Reparar les 2 úniques proves heretades en roig de la suite sencera causades pel trasllat del laboratori el 261026, sense relaxar cap asserció de seguretat ni disseny.\n\n#### Pas 3 · Bateria Completa sobre Còpia Exacta de l'Arbre a Commitejar\n- Verificar en una còpia exacta de l'arbre que anirà al commit (sense els fitxers `xifratXat*` de la Fase 1 encara):\n  - `npm run test:precommit` (100% verd en `< 30 s`).\n  - `npx eslint` sobre tots els fitxers modificats (`0` errors, `0` avisos).\n  - Proves de `QA-H01`, `QA-H02`, `QA-H04`, `laParroquia.test.js`, `tests/botigues.test.mjs` i les `83/83` proves del connector WordPress.\n\n#### Pas 4 · Commit de Tancament del Bloc H + Deute 10/10 i Push\n- Fer el commit de tancament a través d'un índex temporal (`GIT_INDEX_FILE`), deixant fora temporalment els 9 fitxers de `xifratXat*` / `idbFalsEstructurat.js` (que es commitejaran juntament amb la resta de mòduls de la Fase 1/2 quan estiguen complets i verificats) i `wikiManifest.js`.\n- Fer push a `fork/backup-notes-publish`.\n\n#### Pas 5 · Millores Humanes i Didàctiques del Plugin WordPress (`T5.1` · Ordre del Mestre `04:05h`), Reconstrucció de `socdepoble.zip` i Canal Preview\n- **`T5.1` · Millores obligatòries al connector WordPress (`wordpress-plugin/`) i a `runtimePolicy.js` abans d'empaquetar `socdepoble.zip` (Ordre directa del Mestre Javi amb captures de `gentdelatorre.net`, `04:05h` — OK immediat de la IAIA MarIA):**\n  1. **Enllaços vius i finestra modal nativa «Mostra els detalls» (`View details` ThickBox com SiteGround Speed Optimizer) a `plugins.php`:**\n     - En `wordpress-plugin/socdepoble-enxufe.php`: canviar `Plugin URI: https://socdepoble.org/enxufe/` (que no és una pàgina web navegable i trenca l'enllaç *«Visita el lloc web de l'extensió»*) per `Plugin URI: https://socdepoble.org`.\n     - En `wordpress-plugin/includes/ajustos.php` (o un helper dedicat invocat a l'admin): afegir el filtre `plugin_row_meta` i el filtre `plugins_api` (`action === 'plugin_information'` per a l'slug `socdepoble`) perquè en la taula de plugins (`wp-admin/plugins.php`) aparega l'enllaç estàndard **`Mostra els detalls` / `View details`** (`thickbox open-plugin-details-modal`) i, en fer-hi clic, s'òbriga la finestra emergent nativa de WordPress amb el bàner oficial (`assets/banner-772x250.png` / `banner-1544x500.png`), l'autor, la versió, i les pestanyes *Descripció*, *Instal·lació*, *Preguntes freqüents* i *Registre de canvis* alimentades des del propi `readme.txt` local quan WordPress.org encara no respon per a l'slug! (Verificar que passe el 100% de les regles de WordPress Plugin Check sense cap error ni warning).\n  2. **Zero invenció de municipis actius a `wordpress-plugin/includes/ajustos.php` (línies 224-225):**\n     - Eliminar la llista inventada que deia que hi ha «9 municipis actius» (`penaguila`, `benifallim`, `sella`, `orxeta`, `relleu`, `alcoleja`, `xixona`, `tibi`).\n     - Deixar escrit amb rigor i veritat que l'arrel matriu és **Sóc de Poble (El Rentonar, 30 anys d'activisme rural)** i que el primer portal municipal actiu en producció és **La Torre de les Maçanes (`la-torre-de-les-macanes` · Gent de la Torre)**, mentre que la resta de pobles del catàleg estan preparats per activar el seu propi node quan la seua comunitat ho sol·licite.\n  3. **Guia d'instal·lació 100% didàctica, humana i per a tots els públics a `wordpress-plugin/includes/ajustos.php` (línies 226-231) i `readme.txt`:**\n     - Reescriure les instruccions amb trellat pedagògic perquè qualsevol persona sense nivell tècnic entenga a la primera què ha de fer:\n       - **Pas 1 (Configura el teu poble ací baix):** Escriu el nom públic del teu portal (per exemple, `Gent de la Torre`) i l'identificador del poble (`la-torre-de-les-macanes`), i prem el botó blau **«Desa els canvis»**.\n       - **Pas 2 (Posa Sóc de Poble en una pàgina de la teua web — tria una de les 2 opcions):**\n         - *Opció fàcil A (copiant el codi):* Ves al menú esquerre **Pàgines ➔ Afegeix una pàgina nova**, posa-li títol, escriu o pega exactament **`[socdepoble_app]`** dins del cos de la pàgina i prem **«Publica»**.\n         - *Opció fàcil B (amb el bloc visual):* Dins de l'editor de la pàgina, prem el botó **`+`** (Afegir bloc), busca **«Sóc de Poble»** i fes-hi clic.\n       - **Pas 3 (Fes que ocupe tota la pantalla i siga la portada):** A la columna dreta de l'editor de la pàgina, busca l'apartat **«Plantilla»** i tria **«Sóc de Poble · Pantalla completa»**. Si vols que eixa pàgina siga la portada principal de la teua web, ves a **Ajustos ➔ Lectura**, marca *«Una pàgina estàtica»* i selecciona-la com a **Portada**.\n  4. **Consola amb `0 warnings` en obrir la web (`src/config/runtimePolicy.js:52`) i crèdit OFL a `readme.txt`:**\n     - En `src/config/runtimePolicy.js`: no emetre `console.warn('[RuntimePolicy] Cap emissor configurat (issuer)...')` durant l'arrencada normal quan no s'ha passat cap sessió JWT externa de Sollutia; emetre'l únicament si s'invoca el flux de validació de sessió externa JWT sense `issuer`, deixant la consola de `gentdelatorre.net` i `socdepoble.org` amb **`0 errors` i `0 warnings`**.\n     - En `wordpress-plugin/readme.txt`: afegir la línia de crèdit a la tipografia `Noto Sans` (SIL Open Font License 1.1, inclosa a `dist/fonts/OFL.txt`).\n- Reconstruir `_builds_de_poble/wordpress/socdepoble.zip` i la seua còpia datada a partir d'un `git archive` net del nou commit amb totes aquestes millores de `T5.1` incloses.\n- Verificar les `83/83`+ comprovacions del paquet WordPress (`tests/enxufe-plugin.test.mjs`, `tests/empaqueta-wp.test.mjs`, `porta-enxufe.mjs`).\n- Desplegar o actualitzar el canal preview de Firebase Hosting amb la compilació del nou commit i deixar-lo verificat al 100% perquè el Mestre puga passar-lo a producció i pujar `socdepoble.zip` a WordPress.org i a Gent de la Torre.\n\n#### Pas 6 · `P1-12` Fase 1 i Fase 2 + `IDEA-48` (Xifratge E2EE al Xat Rural sense Activar el Flag)\n- **Verificació i auditoria dels 9 fitxers de la Fase 1 ja presents a l'arbre viu:**\n  - `src/data/xifratXatCripto.js` + `src/data/xifratXatCripto.seguretat.test.js` + `src/data/xifratXatCripto.vectors.json`\n  - `src/data/xifratXatFormats.js` + `src/data/xifratXatFormats.seguretat.test.js` + `src/data/xifratXatFormats.vectors.json`\n  - `src/data/xifratXatMagatzem.js` + `src/data/xifratXatMagatzem.seguretat.test.js` + `tests/helpers/idbFalsEstructurat.js`\n- **Construcció i verificació dels mòduls restants de la Fase 1/2 (`§16` passos 4, 5 i 7 del disseny E2EE v1.1.0):**\n  1. **`[NEW]` `src/data/xifratXatParaules.js` + `src/data/xifratXatParaules.seguretat.test.js`:** Diccionari de 2.048 paraules en valencià viu de la muntanya alacantina (sense homòfons ni paraules confuses, prefix únic de 4 lletres, que revisarà el Mestre) per a la frase de recuperació de 6 paraules (`66 bits` d'entropia).\n  2. **`[NEW]` `src/data/xifratXatRecuperacio.js` + `src/data/xifratXatRecuperacio.seguretat.test.js` (`IDEA-48`):** Compartició secreta de Shamir sobre $\\text{GF}(2^8)$ (`0x11B`, `QA-S06`) amb llindar fix $k = 3$ i cercle obert de confiança ($N \\in [3, 255]$ amics/familiars), fragments de `33 B` (`aval` de `49 B`, `alliberament` de `113 B`), compromís `hF`, verificació de consistència lineal (`QA-S05`) i 4 nivells de revocació (`QA-S02`).\n  3. **`[NEW]` `src/data/xifratXatProtocol.js` + `src/data/xifratXatProtocol.seguretat.test.js`:** Màquina d'estats d'embolcall de claus en suite única HPKE mode base (RFC 9180; DHKEM P-256 `0x0010`, HKDF-SHA256 `0x0001`, AES-256-GCM `0x0002`), rotació d'època (`SDPE`) amb `ckCommit`, dos codis SAS de 6 dígits (d'anada i de tornada amb compromís previ `SDPP`, `QA-S01`), sobre d'alliberament `SDPL`/`SDPO` i `SDPH` de `87 B` (`QA-S03`), màquina d'estats d'alarma «No sóc jo» (`SDPN`, `QA-S04`), protecció de metadades d'adjunts (`SDPA`, Padmé) i desbloqueig atòmic multi-pestanya amb `navigator.locks`.\n\n#### Pas 7 a Pas 10 · Cua Contínua de la Marató Nocturna de 5 Hores (Llibre Mestre i 10,0/10 en les 10 Dimensions)\nQuan es completen els Passos 1 a 6, **cap agent es deté**: continuen tirant del [Llibre Mestre](file:///Users/javillinares/Documents/Antigravity/Som%20de%20Poble/socdepoble.org/_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md) fins a esgotar la nit:\n- **Pas 7 (`T7` — Fase 3 d'E2EE `P1-12` + `IDEA-48` darrere de flag i blindatge `§1.3`/`§5.6`/`§7`/`§8.6`):**\n  1. Reconciliar l'especificació i el codi de `disseny_final_e2ee.md` v1.1.0 (`QA-E07` i `QA-S01..S06` en `§1.3`, `§5.6` i `§8.6` + reserves `E2EE-I01..I03`).\n  2. Crear la migració SQL d'E2EE segons `§7` de `disseny_final_e2ee.md` (taules `xat_claus_usuari`, `xat_equips_org`, `xat_epoques_fil`, `xat_claus_fil`, `xat_copies_clau`, `xat_llibretes`, `xat_cercles_recuperacio`, `xat_avals_recuperacio`, `xat_peticions_recuperacio`, `xat_intents_recuperacio`, `xat_alliberaments_recuperacio` i columnes a `xat_missatges`, amb fins a 256 membres per època, RLS via RPC `private.es_participant` i `100%` retrocompatible amb fils públics).\n  3. Crear `src/data/xifratXat.js` (`ambXifratXat`) + `src/data/xifratXat.seguretat.test.js` com a decorador del port existent abans del segellat (`§8.1`), desactivat per defecte fins a l'activació pel Mestre.\n- **Pas 8 (`T8` — Excel·lència Visual, Rendiment `/notes` i Contrastos `10,0/10`):**\n  1. **`QA-H03` (`Contrast AAA 7.0:1`):** Ajustar `--sdp-verd` a `src/css/tokens.css` de `#0F672F` (`6.9966:1`) a `#0E662E` (`7.0978:1` sobre `#FFFFFF`, $\\Delta E < 0.3$) per a complir estricte `>= 7.0:1` sense arredonir.\n  2. **`GM2-03` (`Scroll-margin` a l'editor):** Afegir `scroll-margin-block-start` a `.sdp-edicio-avancada__cos` en `src/css/components.css:2984` per evitar que la toolbar sticky tape el cursor en mòbil.\n  3. **Rendiment `DocumentEditor.jsx` (`300.000` caràcters):** Evitar reprocessar el cos de `300.000` caràcters quan només canvia el títol.\n  4. **Geometria autenticada `R1`/`R2`:** Proves de geometria de les barres d'eines amb sessió autenticada o simulada a `375px` i `360–393px`.\n- **Pas 9 (`T9` — Excel·lència OpenGraph, Capçaleres de Seguretat i Mapa EXIF `10,0/10`):**\n  1. **`R-01` / `GM2-01` + `R-02`:** Reprocessar les 11 imatges OG que superen `300 KB` i alinear extensió/MIME dels fitxers `.png` amb bytes JPEG.\n  2. **`R-07`:** Resoldre els 13 títols de la Wiki que mostraven l'ID cru o títol curt a la targeta social.\n  3. **`M-01`:** Afegir les capçaleres `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` i `Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)` a `firebase.json` i `vercel.json`.\n  4. **Proves de regressió de `MapaFotografic.test.jsx`:** Garantir que el test de regressió passe tant en el worktree principal com en còpies temporals d'auditoria.\n- **Pas 10 (`T10` — Reducció Contínua del Deute Tècnic del Llibre Mestre):**\n  - Continuar amb les tasques pendents de `03_llibre_mestre_tasques_i_idees.md` (`P1-13` migració progressiva de components als ports, `P2-07` sanejament de `select('*')`, `P2-08` unificació del formatador d'identitat pública, `P2-09` consolidació de telemetria i `P2-10` índexs compostos SQL).\n- **Pas 11 (`T11` — Auditoria Extrema de la Wiki, Skills i Tractors Cognitivos amb «Dubte Metòdic d'Ull Humà» per a Gemini CLI i GPT Codex):**\n  1. **Caça de Duplicitats i Solapaments Semàntics (`_wiki_de_poble/`):** Recórrer totes les carpetes de la Wiki preguntant-se com ho fa l'humà (*«Per què s'assemblen tant si són per al mateix? És una versió antiga solapada amb la nova?»*) per identificar plantilles, manuals, processos o actes que es trepitgen.\n  2. **Caça de Contradiccions Creuades i Fusió d'Skills (`.agents/skills/` i `AGENTS.md`):** Detectar on una ordre contradiu una altra o on un procés únic està fragmentat en 2 skills redundants.\n  3. **Potenciació dels Tractors Cognitivos de Codi (`tooling/`):** Codificar i provar millores als tractors cognitius (`tooling/wiki/document.mjs`, `tooling/gates/porta-olivera.mjs`, etc.) perquè facen complir de manera determinista el que diuen els skills i detecten solapaments o contradiccions automàticament.\n\n#### Bitakora del Pla Variable · Cicle 1 (03:45 CET — OK Tècnic IAIA MarIA / Gemini)\n- **Verificat i tancat a `HEAD` (`7a87205f3`) i arbre viu (`401/401` tests en verd):**\n  - `QA-H01` (`PerfilContext.jsx` + `PerfilContext.usuariTardana.test.jsx`: `26/26` + `59/59` en verd).\n  - `QA-H02` + homònims `T8` (`2610282100_usuari_i_poble_canonic.sql` + `usuariIPoble.migracio.test.js`: `51/51` en verd).\n  - `T5` (`disseny_final_e2ee.md` v1.1.0 amb `QA-E07` i `QA-S01..06` a `§1.3` + `esmenes_qa_261029.md`).\n  - `T6` parcial (`xifratXatCripto`, `xifratXatFormats`, `xifratXatMagatzem`, `xifratXatParaules`: `265/265` tests en verd; resten `xifratXatRecuperacio` i `xifratXatProtocol`).\n- **OK Tècnic immediat per a integrar per Claude Code (detall i codi a `261029_0336_auditoria_gemini.md`):**\n  1. **`T2.5` (0 roges a la suite):** Aplicar el fallback cap a `../_investigacio_ia_de_poble/` a `src/apps/bar/llavors/laParroquia.test.js:35` i `scripts/botigues/entorn.mjs:33-35`.\n  2. **`T11-01` (Tractors Cognitius de `tooling/wiki/` cecs):** Actualitzar `JURISDICTIONS` i pilars operatius de `contradiction_engine.mjs`, `semantic_auditor.mjs`, `entropia_zero_router.mjs`, `reflex_petorreta.mjs`, `teixidora_sinapsis.mjs`, `core/ontology.json`, `core/safety.mjs`, `core/corpus_snapshot.mjs`, `rules/trellat-rules.json` i `tooling/gates/design_guard.mjs` de les rutes extintes `00_SER_Brain_Identitat`..`04_ARXIU_Documents_Historics` a l'arquitectura `4+2` (`01_ser`, `02_saber`, `03_actuar`, `04_escriptori`, `10_actes`, `90_arxiu_historic`).\n  3. **`T11-02` (Fòssils `.abans-260830`):** Retirar amb `git rm` els 4 fitxers `.abans-260830` de `tooling/wiki/`.\n  4. **`T11-03..T11-08` (Sanejament Wiki i Skills):** Aplicar el blindatge de `pla.md` / `acta.md` (`T1.5`), netejar l'enllaç trencat de `auditoria_canonica.md`, unificar les seccions d'orfes de `_wiki_de_poble/00_index.md` i delimitar l'abast entre `core-llegibilitat-text` (copy UI React) i `core-maquetacio-markdown` (fitxers `.md` del repositori).\n\n#### Bitakora del Pla Variable · Cicle 2 (04:00 CET — Reconciliació amb Codex `261029_0340` i Segona Onada `T11`)\n- **Desacords explícits del Pla Variable i `E2EE-P01..P07` resolts en viu per la IAIA MarIA:**\n  - Unificat a **10 dimensions** en tot el Pla i el Prompt (retirada la nota preassignada de la Dimensió 10 a la taula basal).\n  - Unificada la directiva `Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)` en totes les aparicions per preservar el micròfon i la càmera propis del compositor del Xat i les fotos amb GPS.\n  - Reconciliades les 7 divergències `E2EE-P01..P07` amb `disseny_final_e2ee.md` v1.1.0 (`§1.3`/`§5.6`/`§7`/`§8.6`, `clauIdentitat` vs `ambitEstable` + `genAmbit` + `actor` a `safata`, HPKE P-256 `0x0010`/`0x0001`/`0x0002`, dos codis SAS de 6 dígits d'anada i tornada, taules `xat_*` amb 256 membres i `src/data/xifratXat.js`).\n- **OK Tècnic immediat per a integrar per Claude Code en el Cicle 2 (detall a `261029_0336_auditoria_gemini.md` v1.2.0 i `261029_0340_auditoria_codex.md`):**\n  1. **Pegat `QA-H03` de Codex (`_wiki_de_poble/04_escriptori/261029_0340_solucio_contrast_codex.patch`):** Aplica `--sdp-verd: #0e662e` (`7,0978:1` AAA) i 2 tests de contracte amb control negatiu (`104/104` Vitest en verd).\n  2. **Pegat `T11` de Codex (`_wiki_de_poble/04_escriptori/261029_0340_solucio_t11_codex.patch`):** Actualitza `contradiction_engine.mjs` amb `auditCoherence`, afig `tooling/wiki/contract_consistency.mjs` i 2 suites de test (`40/40` Node en verd).\n  3. **3 Correccions de Contracte E2EE v1.1.0 sobre `src/data/xifratXatFormats.js` i `src/data/xifratXatMagatzem.js` (`E2EE-C01..C03`):**\n     - `E2EE-C01` + `E2EE-C02` (`src/data/xifratXatFormats.js:647`): En `infoFragment` (`SDPH`), retirar el camp `'total'` perquè `MIDES.infoFragment` faça exactament **87 B** (com mana `disseny_final_e2ee.md §5.6.3`) i fixar `'llindar'` a `enter(1, MIN_LLINDAR_SOCIAL, MIN_LLINDAR_SOCIAL)` ($k = 3$ invariable segons `§5.6.1`), afegint a més els esquemes de `SDPC`, `SDPL` (`175 B`), `SDPO` (`133 B`), `SDPP` (`69 B`), `SDPN` i actualitzant `SDPV` a `175 B`.\n     - `E2EE-C03` (`src/data/xifratXatMagatzem.js:1100`): En `desaASafata(ci, { fil, id, actor, contingut })`, exigir `actor` explícit no buit (`§8.6`), desar-lo a la fila de `safata` i lligar-lo a `aadSafata(ci, fila)` i `resumSafata(fila)`.\n  4. **Noves Troballes `T11-09..T11-14` per integrar:** Tombstone a `scripts/teixidor-backlinks.mjs` i `scripts/enllacat-intelligent-wiki.mjs`, afegir frontmatter v2 als 5 documents de la Wiki que fan fallar `auditCoherence` (`05_social/00_explorador_social.md`, `10_metriques/11_grafica_consum.md`, `10_actes/260926_2350_acta_marmota.md`, `10_actes/260927_0110_acta_marmota.md`, `10_actes/260927_1720_acta_marmota_govern_i_ui.md`) i afegir nota de vigència a `02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md` (superat en PWA, IndexedDB i WCAG AAA per `P1-69`, `ADR-2026-10`, `ADR-2026-13` i `AGENTS.md §3`).\n\n#### Bitakora del Pla Variable · Cicle 3 (04:34 CET — Verificació dels Carrils de Claude, Pegats `04:08` de Codex i Onada 3 `T11`)\n- **Verificat i 100% en verd a l'arbre viu en el Cicle 3 (`261029_0336_auditoria_gemini.md` v1.3.0):**\n  - **Fase 2 d'E2EE (`T6`):** `xifratXatRecuperacio.seguretat.test.js` (`64/64` passades, 2 omeses) i `xifratXatProtocol.seguretat.test.js` (`31/31` passades) 100% en verd (`95/95`).\n  - **Dimensions 2 i 4 en `10,0/10` verificat a l'arbre viu:** `verdDeMarca.contrast.test.js` (`4/4` AAA `#0e662e`), `GM2-03` (`UniversalEditorShell.edicioAvancada.test.jsx`), `DocumentEditor.rendiment300k.test.jsx` (`7/7`), `UniversalToolbar.geometria360.test.jsx` (`12/12`), `PerfilEditor.geometria375.test.jsx` (`7/7`), `FakeChatOnboarding.test.jsx` (`8/8`), `auth.degradacio.test.js` (`24/24`), `laParroquia.test.js` (`20/20`) i `MapaFotografic.test.jsx` (`26/26`).\n  - **Sanejament Wiki (`T11-04`, `T11-05`, `T11-10`, `T11-11`):** Integrat a l'arbre viu per `wiki_sanejament` (`00_index.md`, `ADR-2026-08-ONLINE-FIRST.md`, `auditoria_canonica.md`, `00_explorador_social.md`, les 3 actes de setembre i `11_grafica_consum.md`).\n- **OK Tècnic immediat per a la integració final de Claude Code en el Cicle 3/4:**\n  1. **`R-01` (`src/config/imatgeSocial.pes300.test.js` · `45/46` en verd, 1 sola fallada):** Recomprimir in-place `public/assets/system/ui/og-socdepoble-1200x630.png` (`530.885 B`) com a PNG real `1200×630` `<= 250.000 B` (com `og-llibre-d-or-1200x630.png` de `69.783 B`) perquè `imatgeSocial.pes300.test.js` passe a **`46/46` en verd** sense tocar `index.html`.\n  2. **Integrar els 4 pegats de Codex de les `04:08 CET`:**\n     - `261029_0408_solucio_appd1_sessio_codex.patch` (`capturaSessio()` a `src/data/supabase/auth.js:388` quan falla `desaElMeuUsername`).\n     - `261029_0408_solucio_m01_codex.patch` (`Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)` a `firebase.json`, `vercel.json` i `firebaseHosting.test.js`).\n     - `261029_0408_solucio_runtime_codex.patch` (`T5.1`: suprimir `console.warn` sense `issuer` a `src/config/runtimePolicy.js:51`).\n     - `261029_0408_solucio_t11_codex.patch` (`T11-01` + `T11-12` ancoratge amb camí relatiu `./fitxer.ext|etiqueta` a `draft-write.mjs`, `porta-olivera.mjs` i `document-links.mjs`).\n  3. **Reconciliar `xifratXatFormats.js:647` i `xifratXatMagatzem.js:1100` (`E2EE-C01..C03`) amb `xifratXatRecuperacio.js` i `disseny_final_e2ee.md` v1.1.0.**\n  4. **Noves Troballes `T11-15..T11-19` d'Ull Humà per integrar:** Poblar les 3 seccions buides de `_wiki_de_poble/02_saber/00_full_de_ruta.md:16-35` i alinear la nota d'IndexedDB/PWA (`T11-15`); corregir el `\\n` literal i la ruta `core-identitat/SKILL.md` a `_wiki_de_poble/01_ser/00_bios.md:10,20` (`T11-19`); i en l'execució de `T1.5` corregir les rutes citades a `.agents/skills/sdp-workflow/SKILL.md:27,36`, `.agents/skills/wiki-documentacio-i-reflex/SKILL.md:74,92,105`, `.agents/skills/core-estrategia-ia/SKILL.md:11` i `.agents/skills/sdp-universal-editor/SKILL.md` (`T11-16..T11-18`).\n\n#### Bitakora del Pla Variable · Cicle 4 (04:58 CET — Verificació de `T7` SQL `E2EE-1a`, `P1-43`, `P1-44`, Caça de les 19 Traduccions de `T5.1` i Onada 4 `T11`)\n- **Verificat i 100% en verd a l'arbre viu en el Cicle 4 (`261029_0336_auditoria_gemini.md` v1.4.0 · `226/226` noves proves Vitest en verd):**\n  - **`T7` (`E2EE-1a`):** `supabase/migrations/2610290400_xat_e2ee_claus_i_sobres.sql` (899 línies) + `src/data/supabase/xatE2ee.migracio.test.js` (`49/49` en verd), incloent `xat_canvia_rk` atòmic (`E2EE-I03`), `ct = 113 B` (`QA-S03` / `E2EE-C01`) i `SDPN` `61 B` (`QA-S04`). Nota d'abast: `2610290400` cobrix `E2EE-1a` (`§7.2` primera fila); `E2EE-1b` cobrirà `xat_fils`, `xat_missatges`, `xat_sobres_epoca` (fins a 256 membres) i `xat_adjunts`.\n  - **`P1-43`, `P1-44`, `R-07` i `runtimePolicy` (`T5.1`):** `VisorImatges.test.jsx` (`46/46`, botó Pin 📌), `App.ordreProveidors.test.jsx` (`3/3`), `parseMarkdown.test.js` (`92/92`), `seoWiki.test.js` (`13/13`), `WikiDePobleSection.seo.test.jsx` (`9/9`) i `runtimePolicy.test.js` (`14/14`) 100% en verd.\n  - **`C1-T11-MAP` tancat al Prompt (`261029_0216_prompt_*.md:150-157`):** Alineats els IDs `QA-S01..06` i `src/data/xifratXat.js` (`ambXifratXat`) perquè `contract_consistency.mjs` de Codex arribe a **0 discrepàncies** tant al Pla com al Prompt.\n- **OK Tècnic immediat per a la integració de Claude Code en el Cicle 4/5:**\n  1. **`T5.1` (`tests/enxufe-plugin.test.mjs:317` · 19 cadenes pendents de traducció a `wordpress-plugin/languages/socdepoble-ca.l10n.php`):** Aplicar `261029_0438_solucio_wordpress_codex.patch` (`65/65` + `1/1` en verd), que completa les 19 traduccions al catàleg `wordpress-plugin/languages/socdepoble-ca.l10n.php` (text domain `socdepoble`), neteja les 4 claus obsoletes i inclou els 2 bàners del modal a `ADAPTADOR.fitxers`.\n  2. **`C1-T11-FENCE` / `C2-T11-PROSA`:** Aplicar `261029_0438_solucio_t11_codex.patch` (`106/106` Node T11 en verd, substituint `0408` i `0340`).\n  3. **Noves Troballes `T11-20..T11-23` sobre `.agents/`:** Sincronitzar `.agents/AGENTS.md` amb `AGENTS.md`, corregir les rutes en minúscules a `.agents/QUI_SOC.md:43`, netejar les referències inexistents (`tooling/verify-bios.mjs`, `tooling/verify-ledger.mjs`, `sdp-workflow`) a `.agents/BIOS.md`, `.agents/BOOTSTRAP.md` i `.agents/cervell.json`, alinear `.agents/DESTINS_CANONICS.json` amb `.agents/protocolledge.json`, retirar el fòssil `.agents/pageContent_old.js` (`106 KB`) + `.abans-260830` i regenerar `.agents/ON_ESTIC.md` amb `despertar.mjs`.\n\n#### Bitakora del Pla Variable · Cicle 5 (05:31 CET — Verificació de `p1_22_i18n`, `disseny_final_e2ee.md §21` v1.1.1, Pegats `0438` i `0508` de Codex i Onada 5 `T11`)\n- **Verificat i 100% en verd a l'arbre viu en el Cicle 5 (`261029_0336_auditoria_gemini.md` v1.5.0):**\n  - **`P1-22` (`i18n` als 5 idiomes `ca`, `es`, `en`, `eu`, `gl`):** `src/config/i18n.claus.test.js` (`254/254` passades en `32 ms`), `IdentitatAlPoble.test.jsx` (`11/11`) i `auth.usuari.test.js` (`12/12`) 100% en verd.\n  - **`T5` / `T6` (`disseny_final_e2ee.md §21` v1.1.1):** Completada la secció normativa `## 21 · Esmenes de QA (261029)` (`§21.1` a `§21.9`), reconciliant les **18 inconsistències internes i de pla (`INC-01..INC-18`)**, definint les 4 claus d'àmbit (`clauIdentitat`, `ambitEstable`, `genAmbit`, `genIdentitat`), l'absència de `rk_commit` (substituït per `hF` + AAD `SDPB` + `kid` recalculat) i les mides exactes `SDPL` (`175 B`), `SDPO` (`133 B`), `ct_L` (`113 B`) i `SDPH` (`87 B`). (Alineat també `Prompt:150-151`).\n  - **`T1.5` parcial a la Wiki:** Actualitzats `_wiki_de_poble/03_actuar/plantilles/acta.md` (`v2.1.0`, destí únic `10_actes/`) i `00_index_plantilles.md`.\n  - **Verificats amb `git apply --check` (`exit 0`) sobre l'arbre viu els nous pegats `0508` + `0438` + `0408` de Codex:**\n    - **`261029_0508_solucio_t11_i_og_codex.patch` (`186/186` Node en verd, 24 fitxers):** Substitueix tots els combinats T11 anteriors (`0340`, `0408`, `0438`) i unifica `T11` (`contradiction_engine.mjs` amb verificació de `contracte.llig`/`escriu` sobre `264` documents + `42` skills, `contract_consistency.mjs`, `fonts-vigilancia.mjs` `26/26`, `teixidor-backlinks.mjs`) amb **`QA-H04` OpenGraph** (`projeccio-publica.mjs` + `prerender-social.mjs` + `build-social-manifest.mjs` amb timeout estricte de **5 s**, `86/86` proves SEO/política en verd).\n    - **`261029_0508_solucio_e2ee_sdph_codex.patch` (`134/134` Vitest en verd):** Resol `E2EE-C01` i `E2EE-C02` (`SDPH` de `87 B`, $k=3$ i sense `total`) a `src/data/xifratXatFormats.js` + vector recalculat + 13 regressions.\n    - **`261029_0508_solucio_autoritat_codex.patch` (`C3-T11-AUTORITAT`):** Resol els desacords d'autoritat de `.agents/QUI_SOC.md`, `.agents/BIOS.md` i `.agents/BOOTSTRAP.md` (i apunta a `sdp-pedra-seca/SKILL.md` com a llei del sistema de disseny, conservant `verify-bios.mjs`, `verify-ledger.mjs` i `sdp-workflow/SKILL.md` que sí existeixen).\n    - **`261029_0438_solucio_wordpress_codex.patch` (`65/65` + `1/1` en verd)** i **`261029_0438_solucio_e2ee_cua_codex.patch` (`33/33` en verd)** + **`261029_0408_solucio_appd1_sessio_codex.patch`** i **`261029_0408_solucio_m01_codex.patch`**.\n- **OK Tècnic immediat per a la integració de Claude Code en el Cicle 5/6:**\n  1. **Aplicar el conjunt canònic de 7 pegats no solapats de Codex (`apply-check 0`):** `261029_0508_solucio_t11_i_og_codex.patch`, `261029_0508_solucio_e2ee_sdph_codex.patch`, `261029_0508_solucio_autoritat_codex.patch`, `261029_0438_solucio_wordpress_codex.patch`, `261029_0438_solucio_e2ee_cua_codex.patch`, `261029_0408_solucio_appd1_sessio_codex.patch` i `261029_0408_solucio_m01_codex.patch`.\n  2. **Integrar l'Onada 5 d'Ull Humà (`T11-24..T11-26`, detall a `261029_0336_auditoria_gemini.md §3.5`):**\n     - `T11-24`: Esmenar `.agents/rules/supabase_grants.md` perquè distingeixi entre taules Data API amb RLS i **taules blindades RPC-only** (`REVOKE ALL FROM public, anon, authenticated, service_role` + `SECURITY DEFINER`, com `xat_claus_usuari`, `xat_llibretes`, `xat_cercles_recuperacio` o `xat_adjunts`).\n     - `T11-25`: Alinear `.agents/hooks/verify.mjs:61-68` i `.agents/DESTINS_CANONICS.json` amb `.agents/protocolledge.json` (`C3-T11-DESTINS`) perquè no bloquegen `_wiki_de_poble/10_actes/` ni `01_ser..03_actuar`.\n     - `T11-26`: Eliminar l'H1 duplicat a `.agents/rules/00_BIOS_COGNITIU.md:6-7`.\n\n#### Bitakora del Pla Variable · Cicle 6 (06:04 CET — Verificació dels 9 Pegats Canònics `0538`+`0508`+`0438`+`0408`, SCC verd i Onada 6 `T11`)\n- **Verificat a l'arbre viu i en còpies temporals en el Cicle 6 (`261029_0336_auditoria_gemini.md` v1.6.0 i `261029_0340_auditoria_codex.md` v1.5.0):**\n  - `node tooling/gates/verificador-scc.mjs` revisa **234 fitxers** amb **0 errors d'enllaç a `261029_0336_auditoria_gemini.md`** (únic avís restant: `pla.md` fins a l'arxiu de `T1.5`).\n  - **Conjunt complet de 9 pegats no solapats de Codex verificat amb `git apply --check` = `0` (`ALL_9_PATCHES_APPLY_CLEANLY_TOGETHER=0`):**\n    1. `261029_0538_solucio_t11_i_og_codex.patch` (`244/244` Node en verd, 33 fitxers: unifica `T11`, `QA-H04` OpenGraph amb timeouts de 5 s, `DESTINS_CANONICS.json` + `destins_canonics.mjs`, `.agents/hooks/verify.mjs` `18/18` (`T11-21` + `T11-25`), i `sdp-workflow` + `wiki-propagar-veritat`).\n    2. `261029_0538_solucio_e2ee_actor_codex.patch` (`E2EE-C03`: `actor` obligatori a `desaASafata`, `safata(ci, actor)` i `treuDeSafata(ci, id, actor)` en `xifratXatMagatzem.js`, `74/74` en verd; `241/241` combinat amb cua i `SDPH`).\n    3. `261029_0538_solucio_recursos_codex.patch` (`T2.5`: instal·la els 2 recursos reals byte-idèntics `src/apps/bar/llavors/MAPA_IMATGES.txt` i `scripts/botigues/botigues.env.exemple.txt`, `32/32` en verd).\n    4. `261029_0508_solucio_e2ee_sdph_codex.patch` (`E2EE-C01..C02`: `SDPH` `87 B` i $k=3$, `134/134` en verd).\n    5. `261029_0508_solucio_autoritat_codex.patch` (`C3-T11-AUTORITAT`).\n    6. `261029_0438_solucio_wordpress_codex.patch` (`T5.1`: `65/65` + `1/1` WordPress).\n    7. `261029_0438_solucio_e2ee_cua_codex.patch` (`QA-C2-E2EE-LOCK`, `33/33` en verd).\n    8. `261029_0408_solucio_appd1_sessio_codex.patch` (`APP-D1`, `42/42` en verd).\n    9. `261029_0408_solucio_m01_codex.patch` (`M-01`).\n- **OK Tècnic immediat per a l'aplicació de Claude Code en el Cicle 6/7:**\n  1. Aplicar d'una tacada els **9 pegats no solapats** (`git apply` + regenerar `SKILLS_SEAL.json` amb `segella.mjs --update`).\n  2. Recomprimir `public/assets/system/ui/og-socdepoble-1200x630.png` (`<= 250 KB`) per tancar el `46/46` de `imatgeSocial.pes300.test.js`.\n  3. Integrar l'**Onada 6 d'Ull Humà (`T11-28..T11-31`, detall i codi a `261029_0336_auditoria_gemini.md §2.7` i `§3.4`):** afegir `\"solucio\"` a `tooling/wiki/taxonomia.json` i `taxonomia_documental.md` (i actualitzar `\"pla\"` en retirar `pla.md` a `T1.5`), canviar `type: protocol` a `sistema_immunitari.md:2` + delegar `extreuFantasmes` de `scripts/immunitari/plaquetes.mjs:111` a `extractProseWikiLinks`, anotar les 42 skills a `03_inventari_skills.md` i aplicar el pegat de `esCandidat(brut)` a `tooling/gates/tractor-doctrina.mjs:155-184` (pelar `:línia`, ignorar extensions nues i filtrar metavariables `aammdd` amb carpeta).\n\n#### Cicle 7 (`06:34 CET` · Verificació de l'Arbre Viu Integrat, 6 Dimensions en `10,0 / 10` i Pegat `261029_0630_solucio_t11_onada6_gemini.patch`)\n- **Estat verificat empíricament per Gemini (`261029_0336_auditoria_gemini.md` v1.7.0 · Mitjana global: `9,99 / 10`):**\n  - Verificat sobre l'arbre viu integrat: **9/9 fitxers Vitest (`175/175` passades + 1 omesa, `0` fallades)** i **12/12 fitxers Node (`239/239` passades, `0` fallades)**.\n  - Certificades en **`10,0 / 10` VERIFICAT A L'ARBRE VIU** les **Dimensions 2, 3, 4, 5, 7 i 8**.\n  - Lliurat i ancorat `_wiki_de_poble/04_escriptori/261029_0630_solucio_t11_onada6_gemini.patch` (`git apply --check` `0`), que tanca `T11-15`, `T11-17`, `T11-18`, `T11-19`, `T11-24`, `T11-26`, `T11-28`, `T11-29`, `T11-30`, `T11-31` i `T1.5` (`acta` -> `10_actes/` + `DESTINS_CANONICS.json` + `SKILLS_SEAL.json`), preservant la ruta `planificacio` exigida per les suites de regressió O13 (`T11-32`).\n\n#### Cicle 8 (`07:15 CET` · `10,0 / 10` Certificat en les 10 Dimensions a l'Arbre Viu, Decorador `ambXifratXat` i Tancament `C5-T11-PENDENTS`)\n- **Estat verificat empíricament per Gemini (`261029_0336_auditoria_gemini.md` v1.8.0 · Mitjana global: `10,00 / 10`):**\n  - Integrats a l'arbre viu els 3 pegats `0638` de Codex (`backendPort.xifrat.capacitats.test.js` `37/37`, `t11-cens-documental.test.mjs`, `porta-taxonomia.test.mjs`) i els 2 pegats `0700` de Gemini (`261029_0700_solucio_t7_decorador_gemini.patch` i `261029_0700_solucio_t11_c5_pendents_gemini.patch`).\n  - Verificat sobre l'arbre viu: **8/8 suites Vitest d'E2EE + Port (`409/409` passades + 2 omeses, `0` fallades en `1,93 s`)**, **7/7 suites Node `T11` (`130/130` passades, `0` fallades en `902 ms`)**, `verificador-scc.mjs` (`233` fitxers, `valid: true, errors: []`), `porta-plantilles.mjs` (`12 rutes`), `porta-taxonomia.mjs --paritat` (`0` errors) i `segella.mjs` (`cbb5e26d...`).\n  - Certificades en **`10,0 / 10` VERIFICAT A L'ARBRE VIU les 10 dimensions (1 a 10)**!\n\n<!-- SDP:SECTION pla.implementacio.s5 -->\n## Verificació\n\n1. **Portes d'Escriptori i Documentació:**\n   - `node tooling/gates/porta-olivera.mjs` ➔ eixida `0`.\n   - `node tooling/wiki/document.mjs check --file _wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md` ➔ `valid: true`.\n2. **Bateria de Precommit i Qualitat de Codi:**\n   - `npm run test:precommit` ➔ `0` fallades en menys de `30 s`.\n   - `npx eslint` sobre tots els fitxers nous i modificats ➔ `0` errors i `0` avisos.\n3. **Bateria Completa (Vitest + Node):**\n   - Verificació que `laParroquia.test.js`, `tests/botigues.test.mjs` i `MapaFotografic.test.jsx` passen a verd i la suite completa no té cap prova roja.\n4. **Verificació del Paquet WordPress (`socdepoble.zip`):**\n   - `node --test tests/enxufe-plugin.test.mjs tests/empaqueta-wp.test.mjs` i `node tooling/gates/porta-enxufe.mjs` ➔ `83/83` comprovacions en verd.\n5. **Verificació de la Fase 1/2/3 d'E2EE (`P1-12` + `IDEA-48`) i les 10 Dimensions (`10,0/10`):**\n   - Proves unitàries i de vectors deterministes de `xifratXatCripto`, `xifratXatFormats`, `xifratXatMagatzem`, `xifratXatParaules`, `xifratXatRecuperacio`, `xifratXatProtocol` i `xifratXat` (`ambXifratXat`) 100% en verd sense activar cap canvi visible en l'enviament de missatges en viu fins a l'ordre d'activació del Mestre.\n   - Butlletí de Qualificacions de Gemini i Codex amb nota verificada de **`10,0/10` en cadascuna de les 10 dimensions**.\n\n<!-- SDP:SECTION pla.implementacio.s6 -->\n## Riscos\n\n- **Risc de barrejar els fitxers incomplets d'E2EE amb el commit de tancament del Bloc H:** Mitigat completament al Pas 4 usant un índex temporal (`GIT_INDEX_FILE`) que commiteja exclusivament el tancament del Bloc H + deute 10/10 i reconstrueix `socdepoble.zip` des d'`archive` net abans de continuar amb la Fase 2 d'E2EE.\n- **Risc de bloqueig del registre en producció abans d'aplicar la migració `2610282100` (`APP-D1`):** Mitigat al Pas 2 amb degradació elegant al client si el RPC remot encara té la signatura anterior.\n- **Risc d'activació dels filtres secundaris d'OpenAI (`Daybreak` · `IDEA-47`) en la lectura per part de GPT Codex:** Mitigat emprant exclusivament terminologia defensiva d'enginyeria de qualitat, conformitat i proves unitàries (`QA-*`) en aquest Pla i en el Prompt `261029_0216`.\n\n<!-- SDP:SECTION pla.implementacio.s7 -->\n## Vincles\n\n- [[00_index]]\n- [[00_index_escriptori]]\n- [[03_llibre_mestre_tasques_i_idees]]\n- [[261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]\n- [[../10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude]]\n",
+    "deltaReviewed": true
+  },
+  "applyCheckJoint": 0,
+  "documental": {
+    "ownReportValid": true,
+    "closure": {
+      "valid": false,
+      "mode": "check",
+      "turn_id": "torn_51c9489b-9b68-4f5b-8152-b6acd2989e53",
+      "state": "planned",
+      "errors": [
+        "Canvis de codi fora de l’abast documental"
+      ],
+      "checks": [
+        {
+          "name": "olivera",
+          "exit": 0
+        },
+        {
+          "name": "plantilles",
+          "exit": 0
+        },
+        {
+          "name": "autoritat",
+          "exit": 0
+        },
+        {
+          "name": "ledger",
+          "exit": 0
+        },
+        {
+          "name": "segell",
+          "exit": 0
+        },
+        {
+          "name": "skills",
+          "exit": 0
+        },
+        {
+          "name": "wiki",
+          "exit": 0
+        },
+        {
+          "name": "scc",
+          "exit": 0
+        }
+      ],
+      "snapshot": "94caa5e827648779a475ed80eb096bcd42cfb0f0848a0eed1a6e90889f79391a"
+    },
+    "turnRemains": "planned/open; three activations remain"
+  },
+  "finalizedAt": "2026-10-29T06:37:20.361527+00:00",
+  "artifacts": [
+    {
+      "name": "261029_0708_solucio_t11_codex.patch",
+      "sha256": "5f400ce85b97f514ef28a2a9d4c1d7c5e95dadcc20871e414945a4b2665c48d5",
+      "bytes": 19400
+    },
+    {
+      "name": "261029_0708_solucio_t7_canal_codex.patch",
+      "sha256": "9dd7ecd27482b8d36d6fd1d2d1faa93922993143b4a23bb8a3403cc4f1005185",
+      "bytes": 8871
+    }
+  ],
+  "finalLivePreimages": [
+    {
+      "path": "tests/t11-arxiu-fossils-bundle.test.mjs",
+      "sha256": null,
+      "state": "pending"
+    },
+    {
+      "path": "_wiki_de_poble/01_ser/03_equip_ia.md",
+      "sha256": "94015dad16866f55aa7fd67b4cbfc31f53226f5ee11d382017bdb4c7314e5ac8",
+      "state": "pending"
+    },
+    {
+      "path": "tests/t11-equip-contracte.test.mjs",
+      "sha256": null,
+      "state": "pending"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "sha256": "cf53e4097d19d45762e3221abf4c4a336b871497f44f8c975c006b9e875ab9bd",
+      "state": "pending"
+    },
+    {
+      "path": "src/data/xifratXat.js",
+      "sha256": "3f76f6a66f21bd66259f220f8f4c9bb80cb098846c555a009bc8cdc41270483c",
+      "state": "pending"
+    },
+    {
+      "path": "src/data/backendPort.js",
+      "sha256": "1e35ad4d7a82c9ca4d3d2cdd3ec5895c60c1d40470f49499fd7455334667550f",
+      "state": "pending"
+    },
+    {
+      "path": "src/data/xifratXatServei.js",
+      "sha256": null,
+      "state": "pending"
+    },
+    {
+      "path": "src/data/xifratXat.seguretat.test.js",
+      "sha256": "63875d0bd06398c5b8a919e4a1a90cdae4dee3bfb33afb9b7c5056c298780c19",
+      "state": "pending"
+    },
+    {
+      "path": "src/data/xifratXatCanal.seguretat.test.js",
+      "sha256": null,
+      "state": "pending"
+    }
+  ]
+}

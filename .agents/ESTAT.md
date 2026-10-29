@@ -7,12 +7,43 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-29T13:26:00+01:00 · IAIA MarIA · Transició d'Onada Olivera Completada, Acta Marmota 261029_1325 i Onada 261029_1305 (v1.1.10 i 10/10) Preparada per al Reinici
+
+- **Torn:** `torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1` (documents); **Acta Marmota de Relleu:** [`_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md`](../_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md) (`valid: true, errors: []`).
+- **Arxivament Olivera (`porta-olivera.mjs --arxiva --reapunta`):** Els **53 artefactes** de la marató nocturna (`261029_0216..0838`) s'han arxivat a `_wiki_de_poble/90_arxiu_historic/` amb els 5 relleus `document.mjs handoff` completats. Portes verificades a **`0` errors**: `porta-olivera.mjs`, `verificador-scc.mjs` (`231` fitxers), `porta-plantilles.mjs`, `porta-taxonomia.mjs --paritat` i `segella.mjs --check`.
+- **Documents rectors vius a l'Escriptori (`_wiki_de_poble/04_escriptori/`) per a quan el Mestre reinicie el Mac Mini:**
+  1. **Pla d'Implementació (`261029_1305`):** [`_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md`](../_wiki_de_poble/04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md) (`valid: true`).
+  2. **Prompt Operatiu per a Claude Code (`Fable 5.1 Extra · Ultracode`), Gemini CLI i GPT Codex (`261029_1305`):** [`_wiki_de_poble/04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md`](../_wiki_de_poble/04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md) (`valid: true`).
+  3. **Llibre Mestre Permanent:** [`_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md`](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md) (actualitzat amb la Prioritat 1 de l'Onada `261029_1305` i el salt del connector WordPress a **`v1.1.10`**).
+
+## ESTAT_ACTUAL · 2026-10-29T09:30:00+01:00 · Claude Code · Tancament de la marató nocturna 261029_0216: commit feaaf0e07, socdepoble.zip i canal preview
+
+- **Torn:** `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4` (code); [informe arxivat](../_wiki_de_poble/90_arxiu_historic/261029_0350_auditoria_claude.md) v1.3.0 (vàlid).
+- **Commit `feaaf0e07`** sobre `7a87205f3`, 243 camins per índex temporal (--no-verify sota el consentiment nocturn delegat), pujat a `fork/backup-notes-publish`. Arbre assajat exacte `8bd7096a`: precommit 4.181 Vitest + 262 Node, ESLint 0, Vitest sencer 24.461 passades, 0 fallades (1.406 fitxers), Node sencer 1.431 passades, 0 fallades; design_guard i cens rojos però amb menys deute que al HEAD (heretat).
+- **Què porta:** deute 10/10 de l'onada anterior (QA-H03, QA-H04, APP-D1, R-01/02/07, M-01, GM2-03, proves heretades, T1.5), T5.1 del connector WordPress (ordre del Mestre 04:05), T11 (tractors 4+2, contradiction_engine, tombstones, fòssils arxivats, Wiki i skills), P1-22/P1-52/P1-43/P1-44, i **P1-12 Fases 1-3 apagades per flag** (`E2EE_ACTIU_PER_DEFECTE = false`); migració `2610290400` (E2EE-1a) **NO aplicada**.
+- **Paquet WordPress.org:** `_builds_de_poble/wordpress/261029_0924_wordpress_directori_v1.1.9.zip` = `socdepoble.zip` (3.336.867 B, SHA-256 `89b3125f…`), des de `git archive feaaf0e07`; enxufe 84/84 (plugin 23 + empaqueta 39 + pantalla 22) a la còpia neta.
+- **Canal preview de Firebase:** https://soc-de-poble--tancament-feaaf0e07-xmpk60bs.web.app (versió 72d8e26a29177ed4, caduca en 7 dies). Producció (`live` `725b6bbd`, 02:46) ja servix fotos sense GPS; les capçaleres M-01 només són al preview fins que el Mestre passe a `live`.
+- **Governança:** executor `c57b5fe2` (ESLint del pegat 0735) amb segell `460e83cb` íntegre; cap reseal propi.
+- **Fora del commit (per al commit documental de MarIA):** l'Escriptori (informes, pegats i evidències de la nit), ESTAT, LEDGER, `.agents/runtime/`.
+- **Pendent del Mestre:** passar el preview a `live`; aplicar les migracions pendents (`2610281730`, `2610282100`, `2610290400`); pujar `socdepoble.zip` a WordPress.org; revisar el diccionari `xifratXatParaules.js` i decidir l'activació F2a d'E2EE; deute heretat de design_guard (6 identitats de proves i 2 falsos positius d'entitats HTML) i del cens (C2/C4).
+- **Per rol:** MarIA → Transició d'onada (Llibre Mestre `[FET · feaaf0e07]`, arxivar l'onada, commit documental); Gemini/Codex → crons cancel·lats a la 10a activació; Claude → torn obert fins al tancament documental.
+
+## ESTAT_ACTUAL · 2026-10-29T07:57:12.698Z · Codex · FINAL deu cicles QA
+
+<!-- BASE_NOCTURNA_CODEX_torn_51c9489b-9b68-4f5b-8152-b6acd2989e53 -->
+- Automatització olivera-qa-i-t11-10-cicles PAUSED;10activacions executades,cap pendent. Línia base fora del comptador.
+- [Informe final](../_wiki_de_poble/90_arxiu_historic/261029_0340_auditoria_codex.md),v1.11.0; [acta de relleu](../_wiki_de_poble/10_actes/261029_0838_acta_marmota_qa_codex_10_cicles.md).
+- Canònics0838:12T11+4T7,16preimatges exactes i0integrades;498/498Node,267/267T7,Vitest4176/1límitGit/4skip. Suplement Git real separat verd.
+- Següent responsable: executor de codi, revalidar i integrar només els dos0838, repetir sobre arbre a versionar. Pipeline/recepció/D09,138F9,restauració irelease neta pendents.
+- Torn documental torn_51c9489b-9b68-4f5b-8152-b6acd2989e53: tancament global pendent del control de codi fora d’abast. Cap desplegament,SQL remot oflag activat. No10/10global ni reactivació automàtica.
+
+
 ## ESTAT_ACTUAL · 2026-10-29T02:28:00+01:00 · IAIA MarIA · Reunió de l'Olivera 261029_0216 Preparada a l'Escriptori, Llibre Mestre Actualitzat i Acta Marmota 261029_0205
 
 - **Acta Marmota i Briefing complet de Relleu:** [`_wiki_de_poble/10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude.md`](../_wiki_de_poble/10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude.md) (`valid: true, errors: []`).
 - **Documents rectors vius a l'Escriptori (`_wiki_de_poble/04_escriptori/`):**
-  1. **Pla d'Implementació (`261029_0216`):** [`_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md`](../_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md) (`valid: true`, vinculat al torn `torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1`).
-  2. **Prompt per a Claude Code (compte nou), Gemini CLI i GPT Codex (`261029_0216`):** [`_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md`](../_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md) (`valid: true`).
+  1. **Pla d'Implementació (`261029_0216`):** [`_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md`](../_wiki_de_poble/90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md) (`valid: true`, vinculat al torn `torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1`).
+  2. **Prompt per a Claude Code (compte nou), Gemini CLI i GPT Codex (`261029_0216`):** [`_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md`](../_wiki_de_poble/90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md) (`valid: true`).
   3. **Llibre Mestre Permanent:** [`_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md`](../_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md) (actualitzat amb `[FET]` en les tasques de `cd3b5b56c`/`e36606db2` i amb la secció `## 🎯 Prioritat 1 Actual · Deute Tècnic cap al 10/10 (Onada 261029_0216)`).
 - **Higiene de l'Escriptori (`04_escriptori/`):** Arxivades les **62 captures transitòries de sessió (`_produccio_`)** i els **9 documents consumits de l'onada anterior (`261028_1526` i `261027_0730`)** cap a `_wiki_de_poble/90_arxiu_historic/` amb `porta-olivera.mjs --arxiva`; queden exclusivament els **3 documents vius** a `04_escriptori/` i `node tooling/gates/porta-olivera.mjs` ix amb **`exit code 0`**.
 - **Salvaguarda física davant del reinici del Mac:** Tots els carrils i scripts dels dos scratchpads temporals de `/private/tmp/claude-501/` han sigut copiats al disc dur persistent dins de `../_investigacio_ia_de_poble/261029_0155_relleu_scratchpad_claude/` (`scratchpad_7ebf4042/` amb `lane_qah01_perfil`, `lane_qah02_migracio`, `lane_qah04_og/governanca`; i `scratchpad_21a81070/` amb `eines`, `integracio`, `wp_build`).

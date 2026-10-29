@@ -1,0 +1,261 @@
+--- a/tooling/lib/markdown-prose.mjs
++++ b/tooling/lib/markdown-prose.mjs
+@@ -1,9 +1,12 @@
+ /** Prosa documental compartida, amb offsets UTF-16 i salts de línia intactes.
+  * Emmascara comentaris HTML, fences i spans de backticks; no interpreta ni resol
+  * enllaços. Una fence curta o d'una altra família no tanca el bloc vigent.
++ * preserveInlineCode conserva directives escrites com a spans quan el consumidor
++ * ho demana; per defecte continuen emmascarades.
+  * Sense imports: els consumidors documental/Olivera/SCC no formen cap cicle.
+  */
+-export function markdownProse(text) {
++export function markdownProse(text, { preserveInlineCode = false } = {}) {
++  if (typeof preserveInlineCode !== 'boolean') throw new TypeError('preserveInlineCode must be boolean');
+   const output = text.split('');
+   const mask = (start, end) => {
+     for (let i = start; i < end; i++) if (text[i] !== '\n' && text[i] !== '\r') output[i] = ' ';
+@@ -37,7 +40,7 @@
+     }
+     return positions[low];
+   };
+-  let fence = null, opaqueUntil = 0;
++  let fence = null, opaqueUntil = 0, opaqueKind = null;
+   for (const line of lines) {
+     if (fence) {
+       mask(line.start, line.end);
+@@ -50,7 +53,12 @@
+     }
+     let i = line.start;
+     while (i < line.end) {
+-      if (i < opaqueUntil) { const end = Math.min(line.end, opaqueUntil); mask(i, end); i = end; continue; }
++      if (i < opaqueUntil) {
++        const end = Math.min(line.end, opaqueUntil);
++        if (opaqueKind !== 'inline' || !preserveInlineCode) mask(i, end);
++        i = end;
++        continue;
++      }
+       // L'escapament literal no inicia sintaxi de codi/comentari/enllaç.
+       if (text[i] === '\\' && i + 1 < line.end && /[\\[\]`<]/.test(text[i + 1])) {
+         if (text[i + 1] !== '\\') mask(i + 1, i + 2);
+@@ -59,6 +67,7 @@
+       if (text.startsWith('<!--', i)) {
+         const end = text.indexOf('-->', i + 4);
+         opaqueUntil = end < 0 ? text.length : end + 3;
++        opaqueKind = 'comment';
+         continue;
+       }
+       if (text[i] === '`') {
+@@ -67,6 +76,7 @@
+         const length = end - i, close = nextTick(i, length);
+         if (close !== undefined && close < line.boundary) {
+           opaqueUntil = close + length;
++          opaqueKind = 'inline';
+           continue;
+         }
+         i = end; continue;
+--- a/tooling/wiki/lib/contract_consistency.mjs
++++ b/tooling/wiki/lib/contract_consistency.mjs
+@@ -1,3 +1,4 @@
++import { markdownProse } from '../../lib/markdown-prose.mjs';
+ /** Explicit contract disagreements inside one caller-declared scope.
+  * This is a bounded review aid, not a semantic or general health score.
+  * History is counted only. Markdown quotations, fenced code and lines
+@@ -39,25 +40,14 @@
+ }
+ 
+ function activeLines(content) {
+-  const lines = content.split(/\r?\n/);
+-  let fence = null;
+-  let frontmatter = lines[0]?.trim() === '---';
++  const lines = markdownProse(content, { preserveInlineCode: true }).split(/\r?\n/);
++  let frontmatter = lines[0]?.replace(/^\ufeff/, '').trim() === '---';
+   return lines.map((raw, i) => {
+     const line = raw.trimStart();
+     if (frontmatter) {
+       if (i > 0 && line.trim() === '---') frontmatter = false;
+       return '';
+     }
+-    if (fence) {
+-      const close = line.match(/^(`{3,}|~{3,})\s*$/);
+-      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
+-      return '';
+-    }
+-    const open = line.match(/^(`{3,}|~{3,})/);
+-    if (open) {
+-      fence = { character: open[1][0], length: open[1].length };
+-      return '';
+-    }
+     if (/^>/.test(line) || (/^(?: {4}|\t)/.test(raw) && !/^(?:[-*+]|\d+[.)])\s/.test(line))
+       || /^(?:[-*+]\s+|\d+[.)]\s+)?(?:exemples?|examples?|e\.g\.)\s*:/i.test(line)) return '';
+     return raw;
+@@ -146,7 +136,7 @@
+     if (canonical.has(entry.id)) throw new TypeError('canonical ids must be unique');
+     canonical.set(entry.id, entry.value);
+   }
+-  const locations = new Map(documents.map((doc) => [doc.path, { doc, lines: activeLines(doc.content) }]));
++  const locations = new Map(documents.map((doc) => [doc.path, { doc, lines: activeLines(doc.content), originalLines: doc.content.split(/\r?\n/) }]));
+   const accepted = [];
+   let historicalClaims = 0;
+   let excludedClaims = 0;
+@@ -159,7 +149,7 @@
+     if (!location || claim.line > location.lines.length) throw new TypeError('catalog claim location must exist in documents');
+     if (location.doc.authority === 'history') { historicalClaims += 1; continue; }
+     if (!location.lines[claim.line - 1].trim()) { excludedClaims += 1; continue; }
+-    if (Object.hasOwn(claim, 'text') && claim.text !== location.lines[claim.line - 1]) throw new TypeError('catalog claim.text must match its exact source line');
++    if (Object.hasOwn(claim, 'text') && claim.text !== location.originalLines[claim.line - 1]) throw new TypeError('catalog claim.text must match its exact source line');
+     accepted.push({ id: claim.id, contract: `catalog:${claim.id}`, path: claim.path, line: claim.line,
+       value: claim.value, source: 'configured-catalog' });
+   }
+--- a/tooling/wiki/tests/contract_consistency.test.mjs
++++ b/tooling/wiki/tests/contract_consistency.test.mjs
+@@ -238,3 +238,21 @@
+ test('an optional exact source line prevents reuse of a stale configured label', () => {
+   assert.throws(() => configured([active('a', 'current source')], [{ id: 'CHECK-1', value: 'other', path: 'a', line: 1, text: 'old source' }]), /source line/);
+ });
++
++test('HTML comments are not active claims, including multiline and unclosed comments', () => {
++  for (const text of ['10 dimensions\n<!-- 9 dimensions -->','10 dimensions\n<!--\n9 dimensions\nPermissions-Policy: camera=()\n-->','10 dimensions\n<!--\n9 dimensions']) {const r=audit(active('a',text));assert.equal(r.findings.length,0);assert.equal(r.coverage.explicitClaims,1);}
++});
++test('a fence inside a comment cannot hide a later real contradiction', () => {
++  const text='10 dimensions\n<!--\n~~~md\n9 dimensions\n-->\n9 dimensions';assert.deepEqual(audit(active('a',text)).findings[0].claims.map(c=>c.line),[1,6]);
++});
++test('inline code directives stay active while HTML comments stay hidden', () => {
++  const r=audit(active('a','`Permissions-Policy: camera=(self)`\n<!-- Permissions-Policy: camera=* -->'),active('b','`Permissions-Policy: camera=()`'));assert.deepEqual(r.findings[0].values,['()','(self)']);assert.equal(r.coverage.explicitClaims,2);
++});
++test('BOM frontmatter is not contract prose',()=>{const r=audit(active('a','\ufeff---\ndescription: 9 dimensions\n---\n10 dimensions'));assert.deepEqual(r.findings,[]);assert.equal(r.coverage.explicitClaims,1);});
++test('configured labels in comments are excluded rather than conflicting',()=>{
++ const r=configured([active('a','<!--\nold rule\n-->\nnew rule')],[{id:'CHECK-1',value:'other',path:'a',line:2},{id:'CHECK-1',value:'meaning-one',path:'a',line:4}]);assert.equal(r.coverage.catalog.excludedClaims,1);assert.deepEqual(r.findings,[]);
++});
++test('exact pins use the original line when a trailing comment is masked',()=>{
++ const text='new rule <!-- explanatory note -->',claim={id:'CHECK-1',value:'other',path:'a',line:1,text};assert.equal(configured([active('a',text)],[claim]).findings.length,1);assert.throws(()=>configured([active('a',text)],[{...claim,text:'new rule'}]),/source line/);
++});
++test('escaped comment openers stay visible literal prose',()=>{assert.deepEqual(audit(active('a','10 dimensions\n\\<!-- 9 dimensions -->')).findings[0].values,['10','9']);});
+--- a/tests/document-links-prose.test.mjs
++++ b/tests/document-links-prose.test.mjs
+@@ -117,3 +117,14 @@
+   assert.equal(links.length, 6001);
+   assert.ok(links.every(link => link.target === 'real'));
+ });
++
++test('directive mode keeps inline bytes and offsets while hiding comments and fences',()=>{
++ const raw='`Permissions-Policy: camera=(self)`\n<!-- hidden -->\n~~~\nsecret\n~~~\nTail',prose=markdownProse(raw,{preserveInlineCode:true});assert.equal(prose.length,raw.length);assert.equal(prose.split('\n').length,raw.split('\n').length);assert.ok(prose.startsWith('`Permissions-Policy: camera=(self)`'));assert.ok(!prose.includes('hidden'));assert.ok(!prose.includes('secret'));assert.ok(prose.endsWith('Tail'));assert.ok(!markdownProse(raw).includes('Permissions-Policy'));
++});
++test('directive mode keeps multiline inline code and literal comment markers inside it',()=>{
++ const raw='Start `<!-- literal\ncomment -->` End\n<!-- hidden -->',prose=markdownProse(raw,{preserveInlineCode:true});assert.ok(prose.includes('`<!-- literal\ncomment -->`'));assert.ok(!prose.includes('hidden'));
++});
++
++test('directive mode rejects ambiguous non-boolean configuration',()=>{
++  for(const preserveInlineCode of ['false',1,null]) assert.throws(()=>markdownProse('text',{preserveInlineCode}),TypeError);
++});
+--- a/tooling/gates/porta-taxonomia.mjs
++++ b/tooling/gates/porta-taxonomia.mjs
+@@ -34,6 +34,7 @@
+  *   afig --json per a eixida de màquina
+  */
+ import fs from 'node:fs';
++import { markdownProse } from '../lib/markdown-prose.mjs';
+ import path from 'node:path';
+ import { execFileSync } from 'node:child_process';
+ import { arrelSegura, esMain } from '../lib/arrel.mjs';
+@@ -131,25 +132,55 @@
+   return rutes.sort();
+ }
+ 
+-/** Categories de la taula de la pàgina, entre les marques, primera columna entre accents greus. */
++/** Only the bounded canonical table contributes; examples/comments are not rows. */
++function filesDeLaPagina(text) {
++  // Keep marker offsets while letting the shared lexer see the whole context.
++  // Private sentinels cannot collide with source text: collisions fail closed.
++  const begin = '\ue000'.repeat(MARCA_INICI.length), end = '\ue001'.repeat(MARCA_FI.length);
++  if (text.includes('\ue000') || text.includes('\ue001')) return null;
++  const marked = text.replaceAll(MARCA_INICI, begin).replaceAll(MARCA_FI, end);
++  const visible = markdownProse(marked);
++  const matches = [...visible.matchAll(new RegExp(`^ {0,3}(${begin}|${end})[ \t]*\r?$`, 'gm'))];
++  if (matches.length !== 2 || matches[0][1] !== begin || matches[1][1] !== end) return null;
++  const i = matches[0].index + matches[0][0].indexOf(begin);
++  const f = matches[1].index + matches[1][0].indexOf(end);
++  const table = markdownProse(text.slice(i + MARCA_INICI.length, f), { preserveInlineCode: true });
++  return [...table.matchAll(/^\|\s*`([a-z0-9_]+)`\s*\|([^|]*)\|/gm)]
++    .map(m => ({ categoria: m[1], ruta: m[2] }));
++}
++/** Compatibility API: names only. Parity also compares each route below. */
+ export function categoriesDeLaPagina(text) {
+-  const i = text.indexOf(MARCA_INICI);
+-  const f = text.indexOf(MARCA_FI);
+-  if (i === -1 || f === -1 || f < i) return null;
+-  return [...text.slice(i, f).matchAll(/^\|\s*`([a-z0-9_]+)`\s*\|/gm)].map((m) => m[1]).sort();
++  return filesDeLaPagina(text)?.map(row => row.categoria).sort() ?? null;
+ }
+-
++function normalitzaRutes(value) {
++  if (typeof value !== 'string' || !value.trim()) return null;
++  const plain = value.replace(/`/g, '').trim().replace(/\s+/g, ' ');
++  if (/^sense ruta(?:\s*:.*)?$/.test(plain)) return 'sense ruta';
++  return plain.split('·').map(route => route.trim()).sort().join(' · ');
++}
+ export function paritat(arrel, config) {
+   const text = fs.readFileSync(path.join(arrel, config.pagina), 'utf8');
+-  const pagina = categoriesDeLaPagina(text);
+-  if (!pagina) return { valid: false, errors: [`${config.pagina}: falten les marques ${MARCA_INICI} … ${MARCA_FI}`] };
+-  const json = Object.keys(config.categories).sort();
+-  const falten = json.filter((c) => !pagina.includes(c));
+-  const sobren = pagina.filter((c) => !json.includes(c));
++  const rows = filesDeLaPagina(text);
++  if (!rows) return { valid: false, errors: [`${config.pagina}: marques absents, duplicades o fora d’ordre: ${MARCA_INICI} … ${MARCA_FI}`] };
++  const pagina = rows.map(row => row.categoria), json = Object.keys(config.categories).sort();
+   const errors = [
+-    ...falten.map((c) => `La categoria «${c}» és a ${CONFIG} i no a la pàgina.`),
+-    ...sobren.map((c) => `La categoria «${c}» és a la pàgina i no a ${CONFIG}.`)
++    ...json.filter(c => !pagina.includes(c)).map(c => `La categoria «${c}» és a ${CONFIG} i no a la pàgina.`),
++    ...pagina.filter(c => !json.includes(c)).map(c => `La categoria «${c}» és a la pàgina i no a ${CONFIG}.`)
+   ];
++  for (const category of [...new Set(pagina)].sort()) {
++    const matching = rows.filter(row => row.categoria === category);
++    if (matching.length !== 1) errors.push(`La categoria «${category}» està duplicada a la pàgina.`);
++    if (!Object.hasOwn(config.categories, category)) continue;
++    const expected = normalitzaRutes(config.categories[category]);
++    if (!expected) {
++      errors.push(`La categoria «${category}» té ruta invàlida a ${CONFIG}.`);
++      continue;
++    }
++    for (const row of matching) {
++      const actual = normalitzaRutes(row.ruta);
++      if (!actual || actual !== expected) errors.push(`La categoria «${category}» té ruta «${actual}» a la pàgina i «${expected}» a ${CONFIG}.`);
++    }
++  }
+   return { valid: errors.length === 0, errors };
+ }
+ 
+--- a/tests/porta-taxonomia.test.mjs
++++ b/tests/porta-taxonomia.test.mjs
+@@ -76,7 +76,7 @@
+ test('paritat: la pàgina de la Wiki i el JSON han de dir el mateix', () => {
+   const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'taxonomia-'));
+   const taula = (cats) => ['<!-- SDP:TAXONOMIA:CATEGORIES -->', '| Categoria | Ruta |', '|---|---|',
+-    ...cats.map((c) => `| \`${c}\` | x |`), '<!-- /SDP:TAXONOMIA:CATEGORIES -->'].join('\n');
++    ...cats.map((c) => `| \`${c}\` | ${CONFIG.categories[c] ?? 'x'} |`), '<!-- /SDP:TAXONOMIA:CATEGORIES -->'].join('\n');
+   fs.writeFileSync(path.join(arrel, 'pagina.md'), taula(Object.keys(CONFIG.categories)));
+   assert.equal(paritat(arrel, CONFIG).valid, true);
+   fs.writeFileSync(path.join(arrel, 'pagina.md'), taula(['acta', 'auditoria', 'incidencia']));
+@@ -85,3 +85,21 @@
+   assert.equal(r.errors.length, 4);
+   assert.equal(categoriesDeLaPagina('sense marques'), null);
+ });
++
++function parityFixture(t,categories,rows){const root=fs.mkdtempSync(path.join(os.tmpdir(),'taxonomia-rutes-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));fs.writeFileSync(path.join(root,'pagina.md'),['<!-- SDP:TAXONOMIA:CATEGORIES -->','| Categoria | Ruta |','|---|---|',...rows,'<!-- /SDP:TAXONOMIA:CATEGORIES -->'].join('\n'));return paritat(root,{...CONFIG,categories});}
++test('paritat detects a changed route even when category names still agree',t=>{const r=parityFixture(t,{pla:'pla.implementacio'},['| `pla` | `planificacio` |']);assert.equal(r.valid,false);assert.match(r.errors.join('\n'),/pla.*ruta/i);});
++test('paritat compares route unions independent of order and code-span formatting',t=>{assert.equal(parityFixture(t,{prompt:'prompt.local · prompt.consell'},['| `prompt` | `prompt.consell` · `prompt.local` |']).valid,true);});
++test('transient category explanation is distinct from a formal route',t=>{assert.equal(parityFixture(t,{solucio:'sense ruta: transitòria de torn (porta-olivera)'},['| `solucio` | sense ruta |']).valid,true);assert.equal(parityFixture(t,{solucio:'sense ruta: transitòria'},['| `solucio` | auditoria |']).valid,false);});
++test('duplicate categories and empty route cells cannot pass parity',t=>{for(const rows of [['| `pla` | pla.implementacio |','| `pla` | pla.implementacio |'],['| `pla` | |']])assert.equal(parityFixture(t,{pla:'pla.implementacio'},rows).valid,false);});
++test('parity excludes examples in fences and HTML comments inside the category region',t=>{assert.equal(parityFixture(t,{pla:'pla.implementacio'},['| `pla` | pla.implementacio |','~~~md','| `fantasma` | altre |','~~~','<!--','| `ocult` | altre |','-->']).valid,true);});
++
++test('parity fails explicitly for missing or non-string configured routes',t=>{
++ for(const value of [null,42,{},''])assert.equal(parityFixture(t,{pla:value},['| `pla` | pla.implementacio |']).valid,false);
++});
++
++function parityDocument(t,text){const root=fs.mkdtempSync(path.join(os.tmpdir(),'taxonomia-context-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));fs.writeFileSync(path.join(root,'pagina.md'),text);return paritat(root,{...CONFIG,categories:{pla:'pla.implementacio'}});}
++const region=route=>`<!-- SDP:TAXONOMIA:CATEGORIES -->\n| Categoria | Ruta |\n|---|---|\n| \`pla\` | ${route} |\n<!-- /SDP:TAXONOMIA:CATEGORIES -->`;
++test('a complete fenced example cannot replace the contradictory active region',t=>{assert.equal(parityDocument(t,'~~~md\n'+region('pla.implementacio')+'\n~~~\n'+region('planificacio')).valid,false);});
++test('hidden example regions do not duplicate the one active region',t=>{for(const example of ['~~~md\n'+region('other')+'\n~~~','<!--\n'+region('other')+'\n-->','    '+region('other').replaceAll('\n','\n    ')])assert.equal(parityDocument(t,example+'\n'+region('pla.implementacio')).valid,true);});
++test('two active canonical regions fail even when their routes agree',t=>{assert.equal(parityDocument(t,region('pla.implementacio')+'\n'+region('pla.implementacio')).valid,false);});
++test('inline-code markers and out-of-order markers do not define a canonical table',t=>{assert.equal(parityDocument(t,'`<!-- SDP:TAXONOMIA:CATEGORIES -->`\n| `pla` | pla.implementacio |\n`<!-- /SDP:TAXONOMIA:CATEGORIES -->`').valid,false);assert.equal(parityDocument(t,'<!-- /SDP:TAXONOMIA:CATEGORIES -->\n<!-- SDP:TAXONOMIA:CATEGORIES -->').valid,false);});

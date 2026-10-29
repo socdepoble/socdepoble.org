@@ -1,0 +1,694 @@
+diff --git a/tooling/scripts/desenterrar.mjs b/tooling/scripts/desenterrar.mjs
+--- a/tooling/scripts/desenterrar.mjs
++++ b/tooling/scripts/desenterrar.mjs
+@@ -1,263 +1,14 @@
+ #!/usr/bin/env node
+-/**
+- * desenterrar.mjs — Protocol de restauració en dues fases.
+- *
+- * FASE 1 (INSPECCIÓ, no escriu res):
+- *   node eines/desenterrar.mjs --ref <sha|tag> --fitxer <ruta>
+- *     → imprimeix l'autòpsia del cadàver i emet un SEGELL.
+- *
+- * FASE 2 (APLICACIÓ, escriu):
+- *   node eines/desenterrar.mjs --ref <sha> --fitxer <ruta> --segell <SEGELL>
+- *     → crea àncora de rescat, escriu el fitxer, imprimeix el desfer.
+- *
+- * El SEGELL és sha256(ref_resolt + ruta + blob_antic + blob_actual).
+- * No es pot endevinar sense executar la Fase 1, i caduca si el fitxer
+- * del disc canvia entremig. Açò fa MECÀNICAMENT impossible el checkout cec.
+- *
+- * Codis d'eixida: 0 ok · 1 refús/error · 2 ús incorrecte.
+- */
+-
+-import { execFileSync } from 'node:child_process';
+-import { createHash } from 'node:crypto';
+-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+-import { dirname, join } from 'node:path';
+-
+-const LLINDAR_DIES = 7;      // més vell que això → alarma
+-const LLINDAR_PERDUA = 0.15; // perdre >15% de línies → alarma
+-
+-// ─────────────────────────────────────────────────────────── utillatge
+-
+-const C = process.stdout.isTTY
+-  ? { r: '\x1b[31m', g: '\x1b[32m', y: '\x1b[33m', b: '\x1b[1m', x: '\x1b[0m', d: '\x1b[2m' }
+-  : { r: '', g: '', y: '', b: '', x: '', d: '' };
+-
+-function git(args, opcions = {}) {
+-  return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opcions });
++/** Retired duplicate restoration CLI. The canonical route owns its receipt and seal contract. */
++import path from 'node:path';
++import {fileURLToPath} from 'node:url';
++import {realpathSync} from 'node:fs';
++export const CANONICAL_CLI='tooling/brain/desenterrar.mjs';
++const message=`Ruta retirada: usa node ${CANONICAL_CLI} amb el seu contracte de rebut i segell vigent. El segell antic no es reutilitza. Esta ruta no executa Git ni restaura fitxers.`;
++let main=false;
++try{main=Boolean(process.argv[1])&&realpathSync(path.resolve(process.argv[1]))===realpathSync(fileURLToPath(import.meta.url));}catch{/* Imported by a host without a filesystem entrypoint. */}
++if(main){
++ const args=process.argv.slice(2),help=args.length===1&&['--help','-h'].includes(args[0]);
++ if(help)console.log(message);else console.error(message);
++ process.exitCode=help?0:2;
+ }
+-
+-function gitSilenciós(args) {
+-  try { return { ok: true, eixida: git(args, { stdio: ['ignore', 'pipe', 'ignore'] }) }; }
+-  catch (e) { return { ok: false, eixida: String(e.stdout || e.stderr || e.message) }; }
+-}
+-
+-function mor(missatge, codi = 1) {
+-  console.error(`\n${C.r}${C.b}✖ REFÚS${C.x} ${missatge}\n`);
+-  process.exit(codi);
+-}
+-
+-function args() {
+-  const a = process.argv.slice(2);
+-  const o = {};
+-  for (let i = 0; i < a.length; i++) {
+-    if (!a[i].startsWith('--')) continue;
+-    const clau = a[i].slice(2);
+-    o[clau] = a[i + 1] && !a[i + 1].startsWith('--') ? a[++i] : true;
+-  }
+-  return o;
+-}
+-
+-/** Identificadors "de valor" que un fitxer JS/JSX exposa o consumeix. */
+-function símbols(codi) {
+-  const s = new Set();
+-  const patrons = [
+-    /export\s+default\s+function\s+([A-Za-z_$][\w$]*)/g,
+-    /export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g,
+-    /export\s+(?:const|let|class)\s+([A-Za-z_$][\w$]*)/g,
+-    /(?:^|\s)(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g,
+-    /(?:^|\s)(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:\(|async|function|use[A-Z])/g,
+-    /\b(use[A-Z][\w$]*)\s*\(/g,
+-  ];
+-  for (const p of patrons) for (const m of codi.matchAll(p)) s.add(m[1]);
+-  for (const m of codi.matchAll(/import\s+[^;]*?from\s+['"]([^'"]+)['"]/g)) s.add(`⇠ ${m[1]}`);
+-  for (const m of codi.matchAll(/<([A-Z][\w$]*)/g)) s.add(`<${m[1]}>`);
+-  return s;
+-}
+-
+-function tallaDiff(text, màxim = 120) {
+-  const l = text.split('\n');
+-  if (l.length <= màxim) return text;
+-  return [...l.slice(0, màxim), `${C.d}… (${l.length - màxim} línies més retallades)${C.x}`].join('\n');
+-}
+-
+-// ─────────────────────────────────────────────────────────── àncora
+-
+-/**
+- * Fotografia TOT l'arbre de treball (inclosos els no rastrejats) en un
+- * commit orfe penjat de refs/sdp/ancora/*. No toca l'índex ni el worktree.
+- */
+-function creaÀncora(motiu) {
+-  const arrel = git(['rev-parse', '--show-toplevel']).trim();
+-  const índexTemporal = join(arrel, '.git', `index-ancora-${process.pid}`);
+-  const entorn = { ...process.env, GIT_INDEX_FILE: índexTemporal };
+-  try {
+-    git(['read-tree', 'HEAD'], { env: entorn });
+-    git(['add', '-A'], { env: entorn });
+-    const arbre = git(['write-tree'], { env: entorn }).trim();
+-    const pare = gitSilenciós(['rev-parse', 'HEAD']);
+-    const argsCommit = ['commit-tree', arbre, '-m', `ancora: ${motiu}`];
+-    if (pare.ok) argsCommit.splice(2, 0, '-p', pare.eixida.trim());
+-    const commit = git(argsCommit, { env: entorn }).trim();
+-    const marca = new Date().toISOString().replace(/[-:T]/g, '').slice(2, 12);
+-    const ref = `refs/sdp/ancora/${marca}`;
+-    git(['update-ref', ref, commit]);
+-    return { ref, commit };
+-  } finally {
+-    try { execFileSync('rm', ['-f', índexTemporal]); } catch { /* igual */ }
+-  }
+-}
+-
+-// ─────────────────────────────────────────────────────────── principal
+-
+-const o = args();
+-
+-if (o.ancores) {
+-  const r = gitSilenciós(['for-each-ref', '--sort=-creatordate',
+-    '--format=%(refname)  %(creatordate:short)  %(subject)', 'refs/sdp/ancora']);
+-  console.log(r.eixida.trim() || 'Cap àncora encara.');
+-  process.exit(0);
+-}
+-
+-if (!o.ref || !o.fitxer) {
+-  console.error(`
+-${C.b}desenterrar.mjs${C.x} — restauració en dues fases
+-
+-  Fase 1  node eines/desenterrar.mjs --ref <sha|tag> --fitxer <ruta>
+-  Fase 2  node eines/desenterrar.mjs --ref <sha|tag> --fitxer <ruta> --segell <SEGELL>
+-  Àncores node eines/desenterrar.mjs --ancores
+-`);
+-  process.exit(2);
+-}
+-
+-const ruta = String(o.fitxer);
+-
+-// 1. El ref existeix?
+-const refResolt = gitSilenciós(['rev-parse', '--verify', `${o.ref}^{commit}`]);
+-if (!refResolt.ok) mor(`El ref «${o.ref}» no existeix en este repositori.`);
+-const sha = refResolt.eixida.trim();
+-
+-// 2. El fitxer existia en eixe ref?
+-if (!gitSilenciós(['cat-file', '-e', `${sha}:${ruta}`]).ok) {
+-  mor(`«${ruta}» NO existeix dins de ${sha.slice(0, 8)}. L'etiqueta del commit menteix o la ruta ha canviat.`);
+-}
+-
+-const codiAntic = git(['show', `${sha}:${ruta}`]);
+-const blobAntic = git(['rev-parse', `${sha}:${ruta}`]).trim();
+-const existeixActual = existsSync(ruta);
+-const codiActual = existeixActual ? readFileSync(ruta, 'utf8') : '';
+-const blobActual = existeixActual
+-  ? createHash('sha1').update(`blob ${Buffer.byteLength(codiActual)}\0${codiActual}`).digest('hex')
+-  : 'BUIT';
+-
+-const segellEsperat = createHash('sha256')
+-  .update(`${sha}|${ruta}|${blobAntic}|${blobActual}`).digest('hex').slice(0, 16);
+-
+-// ── metadades del cadàver
+-const [dataCommit, assumpte, autor] = git(
+-  ['show', '-s', '--format=%cI%n%s%n%an', sha]).trim().split('\n');
+-const dies = Math.floor((Date.now() - new Date(dataCommit)) / 86400000);
+-
+-// Edat REAL del contingut: la data MÉS ANTIGA en què este blob exacte va existir
+-// en esta ruta, en tota la història. Un commit d'ahir pot transportar un fitxer
+-// de fa un mes: ací és exactament on ens van enganyar.
+-let dataContingut = dataCommit;
+-{
+-  const històric = gitSilenciós(['log', '--all', '-n', '400', '--format=%H %cI', '--', ruta]);
+-  if (històric.ok) {
+-    const files = històric.eixida.trim().split('\n').filter(Boolean).map((l) => l.split(' '));
+-    const consulta = files.map(([c]) => `${c}:${ruta}`).join('\n') + '\n';
+-    let blobs = [];
+-    try {
+-      blobs = execFileSync('git', ['cat-file', '--batch-check=%(objectname)'],
+-        { input: consulta, encoding: 'utf8' }).trim().split('\n');
+-    } catch { blobs = []; }
+-    for (let n = 0; n < files.length && n < blobs.length; n++) {
+-      if (blobs[n].trim() === blobAntic && files[n][1] < dataContingut) dataContingut = files[n][1];
+-    }
+-  }
+-}
+-const diesContingut = Math.floor((Date.now() - new Date(dataContingut)) / 86400000);
+-const líniesAntic = codiAntic.split('\n').length;
+-const líniesActual = codiActual.split('\n').length;
+-const delta = líniesActual ? (líniesActual - líniesAntic) / líniesActual : 0;
+-
+-const perduts = [...símbols(codiActual)].filter((s) => !símbols(codiAntic).has(s));
+-const guanyats = [...símbols(codiAntic)].filter((s) => !símbols(codiActual).has(s));
+-
+-const alarmes = [];
+-if (blobAntic === blobActual) alarmes.push('El contingut és IDÈNTIC. Esta restauració no fa res.');
+-if (diesContingut > LLINDAR_DIES) alarmes.push(`El CONTINGUT del fitxer té ${diesContingut} dies (el commit només ${dies}). L'etiqueta diu «${assumpte}», però l'arxiu és d'una altra època.`);
+-if (diesContingut - dies > LLINDAR_DIES) alarmes.push(`CISMA TERMODINÀMICA: commit recent amb càrrega arcaica. Este commit NO és una còpia de seguretat de l'estat actual.`);
+-if (delta > LLINDAR_PERDUA) alarmes.push(`Perds ${(delta * 100).toFixed(0)}% de les línies (${líniesActual} → ${líniesAntic}).`);
+-if (perduts.length) alarmes.push(`Desapareixen ${perduts.length} símbols que ara existeixen.`);
+-if (!existeixActual) alarmes.push('El fitxer no existix al disc: açò és una creació, no una restauració.');
+-
+-// ─────────────────────────────────────────── FASE 1: INSPECCIÓ
+-
+-if (!o.segell) {
+-  console.log(`
+-${C.b}╔══ AUTÒPSIA DEL CADÀVER ═════════════════════════════════════${C.x}
+-  Fitxer     ${ruta}
+-  Ref        ${sha.slice(0, 8)}  ${C.d}(${o.ref})${C.x}
+-  Assumpte   «${assumpte}»
+-  Autor      ${autor}
+-  Data commit      ${dataCommit.slice(0, 10)}  ${C.d}(fa ${dies} dies)${C.x}
+-  Data CONTINGUT   ${dataContingut.slice(0, 10)}  ${C.y}(fa ${diesContingut} dies)${C.x}
+-  Línies     ${líniesActual} (disc)  →  ${líniesAntic} (cadàver)
+-`);
+-
+-  if (perduts.length) {
+-    console.log(`${C.r}  ☠ EL QUE PERDS${C.x}\n     ${perduts.join('\n     ')}\n`);
+-  }
+-  if (guanyats.length) {
+-    console.log(`${C.g}  ✚ EL QUE RECUPERES${C.x}\n     ${guanyats.join('\n     ')}\n`);
+-  }
+-
+-  const temporal = join('/tmp', `desenterrar-${process.pid}.txt`);
+-  writeFileSync(temporal, codiAntic);
+-  const d = gitSilenciós(['diff', '--no-index', '--color', '--', ruta, temporal]);
+-  console.log(`${C.b}── DIFF (disc → cadàver) ─────────────────────────────────────${C.x}`);
+-  console.log(tallaDiff(d.eixida.split('\n').slice(4).join('\n')));
+-
+-  if (alarmes.length) {
+-    console.log(`${C.r}${C.b}⚠ ALARMES${C.x}`);
+-    for (const a of alarmes) console.log(`${C.r}   • ${a}${C.x}`);
+-  } else {
+-    console.log(`${C.g}   Cap alarma: restauració de baix risc.${C.x}`);
+-  }
+-
+-  console.log(`
+-${C.b}╚══ NO S'HA ESCRIT RES ═══════════════════════════════════════${C.x}
+-
+-Si el Mestre ho confirma DESPRÉS de llegir açò:
+-
+-  node eines/desenterrar.mjs --ref ${o.ref} --fitxer ${ruta} --segell ${segellEsperat}
+-
+-${C.d}El segell caduca si «${ruta}» canvia al disc.${C.x}
+-`);
+-  process.exit(0);
+-}
+-
+-// ─────────────────────────────────────────── FASE 2: APLICACIÓ
+-
+-if (String(o.segell) !== segellEsperat) {
+-  mor(`Segell invàlid.
+-   Rebut:   ${o.segell}
+-   Esperat: ${segellEsperat}
+-   O no has fet la Fase 1, o «${ruta}» ha canviat des de la inspecció.
+-   Torna a executar la inspecció i torna a demanar confirmació.`);
+-}
+-
+-const àncora = creaÀncora(`abans de restaurar ${ruta} des de ${sha.slice(0, 8)}`);
+-mkdirSync(dirname(ruta), { recursive: true });
+-writeFileSync(ruta, codiAntic);
+-
+-console.log(`
+-${C.g}${C.b}✔ RESTAURAT${C.x}  ${ruta}  ←  ${sha.slice(0, 8)}
+-   Àncora de rescat: ${àncora.ref}  (${àncora.commit.slice(0, 8)})
+-
+-${C.b}DESFER-HO TOT${C.x} (torna l'arbre sencer a com estava fa un segon):
+-   git checkout ${àncora.commit} -- .
+-
+-${C.d}Recorda el segell per al missatge de commit:${C.x}
+-   RESTAURACIÓ-VALIDADA: ${segellEsperat}
+-`);
+diff --git a/tests/t11-legacy-restoration.test.mjs b/tests/t11-legacy-restoration.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/t11-legacy-restoration.test.mjs
+@@ -0,0 +1,37 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import {fileURLToPath, pathToFileURL} from 'node:url';
++import {spawnSync} from 'node:child_process';
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
++const LEGACY=path.join(ROOT,'tooling/scripts/desenterrar.mjs');
++const CANONICAL='tooling/brain/desenterrar.mjs';
++function fixture(t){
++ const parent=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-legacy-restoration-')),cwd=path.join(parent,'workspace with spaces'),bin=path.join(parent,'bin'),marker=path.join(parent,'git-called');
++ fs.mkdirSync(cwd);fs.mkdirSync(bin);fs.writeFileSync(path.join(cwd,'sentinel.txt'),'current fixture bytes\n');
++ // A synthetic Git process only records its invocation; it never reads Git or restores files.
++ fs.writeFileSync(path.join(bin,'git'),`#!${process.execPath}\nrequire('node:fs').writeFileSync(${JSON.stringify(marker)},'called');process.exit(1);\n`,{mode:0o755});
++ t.after(()=>fs.rmSync(parent,{recursive:true,force:true}));return{cwd,marker,env:{...process.env,PATH:bin}};
++}
++for(const args of [[],['--ancores'],['--ref','HEAD','--fitxer','sentinel.txt'],['--ref','HEAD','--fitxer','sentinel.txt','--segell','0'.repeat(64)],['--help','--segell','0'.repeat(64)]]){
++ test('legacy route refuses ordinary request: '+JSON.stringify(args),t=>{
++  const f=fixture(t),r=spawnSync(process.execPath,[LEGACY,...args],{cwd:f.cwd,env:f.env,encoding:'utf8',timeout:5000});
++  assert.equal(r.status,2,r.stdout+r.stderr);assert.match(r.stderr,new RegExp(CANONICAL.replaceAll('.','\\.')));assert.match(r.stderr,/retirada/i);
++  assert.equal(fs.existsSync(f.marker),false,'retired CLI invoked synthetic Git');assert.equal(fs.readFileSync(path.join(f.cwd,'sentinel.txt'),'utf8'),'current fixture bytes\n');assert.deepEqual(fs.readdirSync(f.cwd),['sentinel.txt']);
++ });
++}
++for(const flag of ['--help','-h'])test('help diagnoses retirement without mutation: '+flag,t=>{
++ const f=fixture(t),r=spawnSync(process.execPath,[LEGACY,flag],{cwd:f.cwd,env:f.env,encoding:'utf8',timeout:5000});assert.equal(r.status,0,r.stdout+r.stderr);assert.match(r.stdout,/tooling\/brain\/desenterrar\.mjs/);assert.equal(r.stderr,'');assert.equal(fs.existsSync(f.marker),false);assert.deepEqual(fs.readdirSync(f.cwd),['sentinel.txt']);
++});
++test('import is inert and exports only the migration destination',t=>{
++ const f=fixture(t),url=pathToFileURL(LEGACY).href,r=spawnSync(process.execPath,['--input-type=module','-e',`const m=await import(${JSON.stringify(url)});process.stdout.write(JSON.stringify(Object.keys(m)));`],{cwd:f.cwd,env:f.env,encoding:'utf8',timeout:5000});
++ assert.equal(r.status,0,r.stdout+r.stderr);assert.deepEqual(JSON.parse(r.stdout),['CANONICAL_CLI']);assert.equal(r.stderr,'');assert.equal(fs.existsSync(f.marker),false);assert.deepEqual(fs.readdirSync(f.cwd),['sentinel.txt']);
++});
++
++test('retired CLI invoked through a symlink still refuses with a diagnosis',t=>{
++ const f=fixture(t),alias=path.join(f.cwd,'legacy-alias.mjs');fs.symlinkSync(LEGACY,alias);
++ const r=spawnSync(process.execPath,[alias,'--ref','HEAD','--fitxer','sentinel.txt'],{cwd:f.cwd,env:f.env,encoding:'utf8',timeout:5000});
++ assert.equal(r.status,2,r.stdout+r.stderr);assert.match(r.stderr,/retirada/i);assert.equal(fs.existsSync(f.marker),false);assert.equal(fs.readFileSync(path.join(f.cwd,'sentinel.txt'),'utf8'),'current fixture bytes\n');
++});
+diff --git a/tests/t11-legacy-prompt.test.mjs b/tests/t11-legacy-prompt.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/t11-legacy-prompt.test.mjs
+@@ -0,0 +1,21 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import {fileURLToPath} from 'node:url';
++import {spawnSync} from 'node:child_process';
++const SCRIPT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../scripts/generate-prompt.sh');
++function fixture(t){
++ const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-legacy-prompt-'));
++ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
++ const template=path.join(root,'_wiki_de_poble/03_actuar/plantilles/prompt_consell.md'),desk=path.join(root,'_wiki_de_poble/04_escriptori');
++ fs.mkdirSync(path.dirname(template),{recursive:true});fs.mkdirSync(desk,{recursive:true});fs.writeFileSync(template,'# Synthetic council template\n');return{root,template,desk};
++}
++for(const args of [[],['prova'],['--title','Prova de qualitat','--type','PROMPT'],['--help','prova']])test('retired prompt generator refuses '+JSON.stringify(args),t=>{
++ const f=fixture(t),r=spawnSync('/bin/sh',[SCRIPT,...args],{cwd:f.root,encoding:'utf8',timeout:5000});
++ assert.equal(r.status,2,r.stdout+r.stderr);assert.match(r.stderr,/retirat/i);assert.match(r.stderr,/tooling\/wiki\/document\.mjs/);assert.equal(r.stdout,'');assert.deepEqual(fs.readdirSync(f.desk),[]);assert.equal(fs.readFileSync(f.template,'utf8'),'# Synthetic council template\n');
++});
++for(const flag of ['--help','-h'])test('prompt migration help is inert '+flag,t=>{
++ const f=fixture(t),r=spawnSync('/bin/sh',[SCRIPT,flag],{cwd:f.root,encoding:'utf8',timeout:5000});assert.equal(r.status,0,r.stdout+r.stderr);assert.match(r.stdout,/context.*create/);assert.equal(r.stderr,'');assert.deepEqual(fs.readdirSync(f.desk),[]);
++});
+diff --git a/tooling/wiki/llaurador_indexs.mjs b/tooling/wiki/llaurador_indexs.mjs
+--- a/tooling/wiki/llaurador_indexs.mjs
++++ b/tooling/wiki/llaurador_indexs.mjs
+@@ -46,6 +46,7 @@
+ import fs from 'node:fs';
+ import { documentCorpus, documentLinkTargets, operationalDocumentText } from '../lib/document-corpus.mjs';
+ import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
++import { markdownProse } from '../lib/markdown-prose.mjs';
+ import path from 'node:path';
+ 
+ const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
+@@ -89,18 +90,32 @@
+ const penjats = [];
+ const ambigus = [];
+ 
++/** A single active, standalone managed pair; examples never become regions. */
++function blocActiu(txt) {
++  const begin='<'+ '\ue000'.repeat(INICI.length-1),end='<'+ '\ue001'.repeat(FI.length-1);
++  if(txt.includes('\ue000')||txt.includes('\ue001'))throw new Error('LLAURADOR: col·lisió de sentinella; cap índex escrit');
++  // Same UTF-16 offsets; retain < so escaped markers stay literal.
++  const visible=markdownProse(txt.replaceAll(INICI,begin).replaceAll(FI,end));
++  const hits=[...visible.matchAll(new RegExp(begin+'|'+end,'g'))];
++  if(!hits.length)return null;
++  if(hits.length!==2||hits[0][0]!==begin||hits[1][0]!==end)throw new Error('LLAURADOR: marques actives duplicades, incompletes o fora d’ordre; cap índex escrit');
++  for(const hit of hits) {
++    const start=visible.lastIndexOf('\n',hit.index-1)+1,next=visible.indexOf('\n',hit.index),finish=next<0?visible.length:next;
++    if(!/^ {0,3}$/.test(visible.slice(start,hit.index))||!/^\s*\r?$/.test(visible.slice(hit.index+hit[0].length,finish)))throw new Error('LLAURADOR: marca activa fora de línia pròpia; cap índex escrit');
++  }
++  return {a:hits[0].index,b:hits[1].index};
++}
+ function talla(txt) {
+-  const a = txt.indexOf(INICI);
+-  const b = txt.indexOf(FI);
+-  if (a < 0 || b < 0 || b < a) return { fora: txt, dins: '' };
+-  return { fora: txt.slice(0, a) + txt.slice(b + FI.length), dins: txt.slice(a, b) };
++  const region=blocActiu(txt);
++  if(!region)return {fora:txt,dins:''};
++  const {a,b}=region,end=b+FI.length;
++  return {fora:txt.slice(0,a)+txt.slice(a,end).replace(/[^\r\n]/g,' ')+txt.slice(end),dins:txt.slice(a+INICI.length,b)};
+ }
+ 
+ function arestes(n, txt, desti, registra) {
+-  let dinsCodi = false;
+-  txt.split('\n').forEach((ln, i) => {
+-    if (/^\s*```/.test(ln)) { dinsCodi = !dinsCodi; return; }
+-    if (dinsCodi) return;
++  // Emmascara primer el document sencer: comments/fences/spans poden
++  // travessar línies. Els offsets i les línies originals es conserven.
++  markdownProse(txt).split('\n').forEach((ln, i) => {
+     for (const link of extractDocumentLinks(ln)) {
+       try {
+         const target = path.relative(ARREL, resolveDocumentLink(link, path.join(ARREL, n), absoluteFiles, ARREL));
+@@ -243,8 +258,7 @@
+   const abs = path.join(ARREL, ix);
+   const orig = fs.readFileSync(abs, 'utf8');
+   const bloc = adopcions.has(ix) && adopcions.get(ix).size ? blocPer(ix) : '';
+-  const a = orig.indexOf(INICI);
+-  const b = orig.indexOf(FI);
++  const region=blocActiu(orig),a=region?.a??-1,b=region?.b??-1;
+   let nou;
+   if (a >= 0 && b > a) {
+     const abans = orig.slice(0, a).replace(/\n+$/, '');
+@@ -257,6 +271,7 @@
+   } else return false;
+   if (!nou.endsWith('\n')) nou += '\n';
+   if (nou === orig) return false;
++  if (bloc && !blocActiu(nou)) throw new Error('LLAURADOR: el bloc proposat quedaria dins de codi o comentari; cap índex escrit');
+   if (ESCRIU) fs.writeFileSync(abs, nou);
+   return true;
+ }
+diff --git a/tooling/wiki/core/parse.mjs b/tooling/wiki/core/parse.mjs
+--- a/tooling/wiki/core/parse.mjs
++++ b/tooling/wiki/core/parse.mjs
+@@ -232,6 +232,12 @@
+   }
+ 
+   const base = path.posix.basename(target);
++  // Un basename local existent té precedència sobre homònims globals,
++  // igual que el resolutor de disc compartit d'Olivera/SCC.
++  const localPath = posix(path.posix.normalize(path.posix.join(path.posix.dirname(source.relPath), target)));
++  const localHits = resolver.byPath.get(normalitza(localPath)) || [];
++  if (localHits.length === 1) return { status: 'resolved', doc: localHits[0] };
++  if (localHits.length > 1) return { status: 'ambiguous', docs: localHits };
+   const baseHits = resolver.byBase.get(normalitza(base)) || [];
+   if (baseHits.length === 1) return { status: 'resolved', doc: baseHits[0] };
+   if (baseHits.length > 1) {
+diff --git a/tooling/gates/tractor-arrel.mjs b/tooling/gates/tractor-arrel.mjs
+--- a/tooling/gates/tractor-arrel.mjs
++++ b/tooling/gates/tractor-arrel.mjs
+@@ -194,10 +194,26 @@
+     && /if\s*\(\s*esMain\s*\(\s*import\.meta\.url\s*\)\s*\)/.test(text);
+ }
+ 
++function registraProvesNode(text) {
++  const bindings=[];
++  for(const match of text.matchAll(/^\s*import\s+(?:([\w$]+)|\{([^}]+)\})\s+from\s*['"]node:test['"]/gm)) {
++    if(match[1])bindings.push(match[1]);
++    for(const part of (match[2]||'').split(',')) {
++      const named=/^\s*(?:test|it|describe)(?:\s+as\s+([\w$]+))?\s*$/.exec(part);
++      if(named)bindings.push(named[1]||part.trim());
++    }
++  }
++  return bindings.some(name=>new RegExp('^\\s*'+name.replace(/[$]/g,'\\$&')+'\\s*\\(','m').test(text));
++}
+ for (const abs of fitxers(CAMINS.portes)) {
+   const r = rel(abs);
+-  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) continue;
+   const text = senseComentaris(llegeix(abs));
++  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) {
++    const invocat=Object.values(pkg?.scripts||{}).some(command=>String(command).includes(r));
++    // Una fixture no necessita CLI. Si npm la presenta com a script,
++    // cal una entrada real o registres Node:test, no sols el sufix del nom.
++    if(!invocat||registraProvesNode(text))continue;
++  }
+   if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
+   if (!bibliotecaDeclarada(r, text) && !entradaCanonica(text) && !RE_ENTRADA.some((re) => re.test(text))) {
+     anota('A4', r, 'no té punt d\'entrada CLI: Node l\'importaria i eixiria amb codi 0',
+diff --git a/tests/t11-gate-prose.test.mjs b/tests/t11-gate-prose.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/t11-gate-prose.test.mjs
+@@ -0,0 +1,26 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import os from 'node:os';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';
++import {buildResolver,resolveLink} from '../tooling/wiki/core/parse.mjs';
++import {resolveDocumentLink} from '../tooling/lib/document-links.mjs';
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
++const INDEX='_wiki_de_poble/00_index.md',NOTE='_wiki_de_poble/02_saber/nota.md';
++function fixture(t,files={}){const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-t11-gates-')));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const put=(rel,body)=>{const file=path.join(root,rel);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,body);return file;};for(const [n,b]of Object.entries(files))put(n,b);return {root,put};}
++function llaura(root,...flags){return spawnSync(process.execPath,[path.join(ROOT,'tooling/wiki/llaurador_indexs.mjs'),`--arrel=${root}`,...flags],{cwd:root,encoding:'utf8',timeout:5000});}
++for(const [name,example]of [['tilde','~~~markdown\n[[02_saber/nota]]\n~~~'],['four ticks','````markdown\n```\n[[02_saber/nota]]\n````'],['comment','<!--\n[[02_saber/nota]]\n-->'],['inline multiline','``literal\n[[02_saber/nota]]\nfinal``']]){
++ test(`arestes d’exemple ${name} no acrediten abast real`,t=>{const f=fixture(t,{[INDEX]:'# Índex\n'+example+'\n',[NOTE]:'# Nota real\n'});const result=llaura(f.root,'--check');assert.equal(result.status,1,result.stdout+'\n'+result.stderr);assert.equal(fs.readFileSync(path.join(f.root,INDEX),'utf8'),'# Índex\n'+example+'\n');});
++}
++for(const [name,example]of [['tilde','~~~markdown\n[[absent]]\n~~~'],['comment','<!--\n[[absent]]\n-->'],['four ticks','````markdown\n```\n[[absent]]\n````']]){
++ test(`referència fictícia ${name} no provoca BROKEN LINK`,t=>{const f=fixture(t,{[INDEX]:'# Índex\n'+example+'\n'});const result=llaura(f.root,'--check');assert.equal(result.status,0,result.stdout+'\n'+result.stderr);});
++}
++test('enllaç real continua acreditant abast i un destí real absent continua roig',t=>{const f=fixture(t,{[INDEX]:'# Índex\n[[02_saber/nota]]\n',[NOTE]:'# Nota\n'});assert.equal(llaura(f.root,'--check').status,0);f.put(INDEX,'# Índex\n[[absent]]\n[[02_saber/nota]]\n');assert.equal(llaura(f.root,'--check').status,1);});
++test('adopció real conserva el bloc i idempotència amb exemples al costat',t=>{const f=fixture(t,{[INDEX]:'# Índex\n~~~markdown\n[[absent]]\n~~~\n',[NOTE]:'# Nota\n'});assert.equal(llaura(f.root,'--escriu').status,0);const before=fs.readFileSync(path.join(f.root,INDEX),'utf8');assert.equal(llaura(f.root,'--check').status,0);assert.equal(llaura(f.root,'--escriu').status,0);assert.equal(fs.readFileSync(path.join(f.root,INDEX),'utf8'),before);});
++test('resolutors compartixen prioritat local davant d’un homònim en arrel',t=>{const f=fixture(t,{'Note.md':'# Arrel','folder/Note.md':'# Local','folder/source.md':'# Font'}),docs=['Note.md','folder/Note.md','folder/source.md'].map(relPath=>({relPath,content:fs.readFileSync(path.join(f.root,relPath),'utf8')})),source=docs[2],link={kind:'wiki',target:'Note'};const graph=resolveLink(link,source,buildResolver(docs)),disk=resolveDocumentLink(link,path.join(f.root,source.relPath),docs.map(d=>path.join(f.root,d.relPath)),f.root);assert.equal(graph.status,'resolved');assert.equal(graph.doc.relPath,path.relative(f.root,disk));assert.equal(graph.doc.relPath,'folder/Note.md');});
++test('homònims globals sense candidat local continuen ambigus',()=>{const docs=['a/Note.md','b/Note.md'].map(relPath=>({relPath,content:'# Nota'}));assert.equal(resolveLink({kind:'wiki',target:'Note'},{relPath:'source.md'},buildResolver(docs)).status,'ambiguous');});
++function arrelFixture(t,body,command){const f=fixture(t,{'.agents/AGENTS.md':'# Fixture','package.json':JSON.stringify({type:'module',scripts:command?{check:command}:{}}),'tooling/gates/inert.test.mjs':body});for(const p of ['tooling/gates/tractor-arrel.mjs','tooling/lib/arrel.mjs'])f.put(p,fs.readFileSync(path.join(ROOT,p),'utf8'));const result=spawnSync(process.execPath,[path.join(f.root,'tooling/gates/tractor-arrel.mjs'),'--json'],{cwd:f.root,env:{...process.env,SDP_ARREL:f.root},encoding:'utf8'});assert.ok([0,1].includes(result.status),result.stderr);return JSON.parse(result.stdout);}
++test('sufix test no eximix una porta inert declarada en package.json',t=>{const r=arrelFixture(t,'export const inert=true;\n','node tooling/gates/inert.test.mjs');assert.ok(r.infraccions.some(i=>i.llei==='A4'&&i.fitxer.endsWith('inert.test.mjs')));});
++test('fitxer de proves no declarat i suite Node declarada conserven exempció justificada',t=>{assert.equal(arrelFixture(t,'export const fixture=true;\n').ok,true);assert.equal(arrelFixture(t,"import test from 'node:test';\ntest('control',()=>{});\n",'node --test tooling/gates/inert.test.mjs').ok,true);});
+diff --git a/scripts/generate-prompt.sh b/scripts/generate-prompt.sh
+--- a/scripts/generate-prompt.sh
++++ b/scripts/generate-prompt.sh
+@@ -1,16 +1,9 @@
+-#!/bin/bash
+-# Ús: ./generate-prompt.sh --title "Refactor Backend" --type PROMPT
+-
+-TEMPLATE="_wiki_de_poble/03_actuar/plantilles/prompt_consell.md"
+-BUNDLE="260915_0510_BUNDLE_auditoria.md"
+-OUTPUT="_wiki_de_poble/04_escriptori/$(date +%y%m%d_%H%M)_${1}.md"
+-
+-# Copiar plantilla
+-cp "$TEMPLATE" "$OUTPUT"
+-
+-# Omplir camps bàsics
+-sed -i "s/SDP-PROMPT-ITERACIO-3-EXECUCIO/SDP-PROMPT-$(date +%Y%m%d-%H%M)-${RANDOM}/g" "$OUTPUT"
+-sed -i "s/IAIA_MarIA/IAIA_MarIA/g" "$OUTPUT"
+-
+-echo "✅ Prompt generat: $OUTPUT"
+-echo "⚠️  RECORDA: Revisa les 3 barreres abans d'enviar!"
++#!/bin/sh
++# Retired duplicate: prompt creation belongs to the documental turn and receipt circuit.
++message='Generador retirat. Obri un torn amb tooling/gates/obrir_torn.mjs --actor NOM --scope documents; usa tooling/wiki/document.mjs context i create amb la ruta vigent. Esta ruta no copia plantilles ni genera prompts o bundles.'
++if [ "$#" -eq 1 ] && { [ "$1" = '--help' ] || [ "$1" = '-h' ]; }; then
++  printf '%s\n' "$message"
++  exit 0
++fi
++printf '%s\n' "$message" >&2
++exit 2
+diff --git a/tooling/tests/node-suite-manifest.json b/tooling/tests/node-suite-manifest.json
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -30,6 +30,7 @@
+     "tests/git-hooks.test.mjs",
+     "tests/hooks-local.test.mjs",
+     "tests/lint_enxufe.test.mjs",
++    "tests/llaurador-managed-region.test.mjs",
+     "tests/mapa-consola.test.mjs",
+     "tests/migracio-convergencia-perfil.test.mjs",
+     "tests/migracio-xat-de-pagina.test.mjs",
+@@ -45,9 +46,13 @@
+     "tests/t11-arxiu-fossils-bundle.test.mjs",
+     "tests/t11-cens-documental.test.mjs",
+     "tests/t11-equip-contracte.test.mjs",
++    "tests/t11-gate-prose.test.mjs",
++    "tests/t11-legacy-prompt.test.mjs",
++    "tests/t11-legacy-restoration.test.mjs",
+     "tests/t11-parser-consumers.test.mjs",
+     "tests/t11-retirada-planificacio.test.mjs",
+     "tests/t11-retrieval-provenance.test.mjs",
++    "tests/tractor-rls-r2-ddl.test.mjs",
+     "tests/verificador-scc.test.mjs",
+     "tests/vite-empremta-dev.test.mjs",
+     "tests/wiki-backlinks-readonly.test.mjs",
+@@ -358,6 +363,11 @@
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+     },
+     {
++      "path": "tests/llaurador-managed-region.test.mjs",
++      "suite": "primary",
++      "reason": "Regió gestionada de l’índex: només marques actives de prosa, conservació d’exemples i rebuig d’ambigüitat abans d’escriure."
++    },
++    {
+       "path": "tests/llaurador-progress.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+@@ -543,6 +553,21 @@
+       "reason": "Contracte de rols, cens vigent i referències de l’equip IA sense duplicar fonts d’autoritat."
+     },
+     {
++      "path": "tests/t11-gate-prose.test.mjs",
++      "suite": "primary",
++      "reason": "Regressions portables del graf de prosa, resolució local i portes de proves amb registres Node."
++    },
++    {
++      "path": "tests/t11-legacy-prompt.test.mjs",
++      "suite": "primary",
++      "reason": "Retirada del generador duplicat: cap còpia, document o bundle fora del circuit documental vigent."
++    },
++    {
++      "path": "tests/t11-legacy-restoration.test.mjs",
++      "suite": "primary",
++      "reason": "Retirada inert de la restauració duplicada: cap Git ni delegació, import segur i diagnòstic per àlies."
++    },
++    {
+       "path": "tests/t11-parser-consumers.test.mjs",
+       "suite": "primary",
+       "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
+@@ -596,6 +621,11 @@
+       "path": "tests/tractor-orfes-brain.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-rls-r2-ddl.test.mjs",
++      "suite": "primary",
++      "reason": "Regressions estàtiques R2: només DDL real acredita RLS; comentaris, literals i cossos SQL no compten."
+     },
+     {
+       "path": "tests/tractor-rls-realtime.test.mjs",
+diff --git a/tooling/gates/tractor-rls.mjs b/tooling/gates/tractor-rls.mjs
+--- a/tooling/gates/tractor-rls.mjs
++++ b/tooling/gates/tractor-rls.mjs
+@@ -72,6 +72,21 @@
+   }
+   if (buf.trim()) fora.push(buf);
+   return fora;
++}
++
++/* R2: només DDL de nivell superior acredita ENABLE. Comentaris, literals i
++ * cossos dollar-quoted no són evidència. L'últim ENABLE/DISABLE del fitxer
++ * per a la mateixa relació governa el control estàtic; no s'executa SQL.
++ */
++function rlsActivat(statements,schema,table) {
++  let enabled=false;
++  const alter=/^\s*alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(?:(?:"([^"]+)"|([a-zA-Z0-9_]+))\s*\.\s*)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+(enable|disable)\s+row\s+level\s+security\s*$/i;
++  for(const statement of statements) {
++    const m=alter.exec(statement);if(!m)continue;
++    const sch=m[1]??m[2]?.toLowerCase()??'public',name=m[3]??m[4]?.toLowerCase();
++    if(sch===schema.toLowerCase()&&name===table.toLowerCase())enabled=m[5].toLowerCase()==='enable';
++  }
++  return enabled;
+ }
+ 
+ /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
+@@ -155,15 +170,15 @@
+   }
+ 
+   // R2: RLS-ABSENT
+-  const createTableLines = sentencies(content).filter(s => s.toLowerCase().includes('create table '));
++  const statements=sentencies(content);
++  const createTableLines = statements.filter(s => /^\s*create\s+table\b/i.test(s));
+   for (const block of createTableLines) {
+-    const tableMatch = /create table (?:if not exists )?(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/i.exec(block);
++    const tableMatch = /^\s*create\s+table\s+(?:if\s+not\s+exists\s+)?(?:([a-zA-Z0-9_]+)\s*\.\s*)?([a-zA-Z0-9_]+)/i.exec(block);
+     if (tableMatch) {
+-      const schema = tableMatch[1] || 'public';
+-      const table = tableMatch[2];
++      const schema = (tableMatch[1] || 'public').toLowerCase();
++      const table = tableMatch[2].toLowerCase();
+       if (schema === 'private' || schema === 'storage') continue;
+-      const hasRLS = content.toLowerCase().includes(`alter table ${schema}.${table} enable row level security`) || 
+-                     content.toLowerCase().includes(`alter table ${table} enable row level security`);
++      const hasRLS = rlsActivat(statements,schema,table);
+       if (!hasRLS) {
+         falla('R2', file, `La taula ${schema}.${table} no té RLS activat.`);
+       }
+diff --git a/tests/tractor-rls-r2-ddl.test.mjs b/tests/tractor-rls-r2-ddl.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/tractor-rls-r2-ddl.test.mjs
+@@ -0,0 +1,17 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import os from 'node:os';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';
++const GATE=fileURLToPath(new URL('../tooling/gates/tractor-rls.mjs',import.meta.url));
++function audit(sql){const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-rls-r2-'));try{fs.mkdirSync(path.join(root,'supabase'));fs.writeFileSync(path.join(root,'supabase/fixture.sql'),sql);return spawnSync(process.execPath,[GATE],{cwd:root,encoding:'utf8'});}finally{fs.rmSync(root,{recursive:true,force:true});}}
++const create='create table public.private_row (id int);\n';
++for(const [name,evidence]of [['comment','-- alter table public.private_row enable row level security;'],['literal',"select 'alter table public.private_row enable row level security;';"],['dollar body','do $$ begin alter table public.private_row enable row level security; end $$;'],['other table','alter table public.other_row enable row level security;']])test(`R2 no accepta ${name} com ENABLE de la taula`,()=>{const r=audit(create+evidence);assert.equal(r.status,1,r.stdout);assert.match(r.stdout,/R2.*private_row/);});
++test('DDL real admet espais, caixa, IF EXISTS, ONLY i identificadors entre cometes exactes',()=>{for(const ddl of ['alter table public.private_row enable row level security;','AlTeR\n TaBlE IF EXISTS ONLY public.private_row ENABLE\nROW LEVEL\nSECURITY;','alter table "public"."private_row" enable row level security;']){const r=audit(create+ddl);assert.equal(r.status,0,r.stdout);}});
++test('DISABLE posterior torna roig; ENABLE posterior reprén el control estàtic',()=>{const enable='alter table public.private_row enable row level security;',disable='alter table public.private_row disable row level security;';assert.equal(audit(create+enable+disable).status,1);assert.equal(audit(create+disable+enable).status,0);});
++test('CREATE comentat o literal no introduïx una exigència R2 fictícia',()=>{for(const sql of ['-- create table public.fake(id int);\nselect 1;',"select 'create table public.fake(id int);';"]){const r=audit(sql);assert.equal(r.status,0,r.stdout);}});
++
++test('cometes amb caixa diferent no acrediten la relació unquoted',()=>{assert.equal(audit(create+'alter table public."PRIVATE_ROW" enable row level security;').status,1);});
++test('PRIVATE unquoted conserva l’exempció existent independentment de caixa',()=>{assert.equal(audit('CREATE TABLE PRIVATE.internal_row(id int);').status,0);});
+diff --git a/tests/llaurador-managed-region.test.mjs b/tests/llaurador-managed-region.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/llaurador-managed-region.test.mjs
+@@ -0,0 +1,25 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import os from 'node:os';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),SCRIPT=path.join(ROOT,'tooling/wiki/llaurador_indexs.mjs');
++const INDEX='_wiki_de_poble/00_index.md',NOTE='_wiki_de_poble/02_saber/nota.md',BEGIN='<!-- LLAURADOR:ADOPCIONS:INICI -->',END='<!-- LLAURADOR:ADOPCIONS:FI -->';
++function fixture(t){const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-managed-')));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const put=(rel,text)=>{const f=path.join(root,rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,text);};put(INDEX,'# Índex\n');put(NOTE,'# Nota\n');const run=(...flags)=>spawnSync(process.execPath,[SCRIPT,`--arrel=${root}`,...flags],{cwd:root,encoding:'utf8',timeout:5000});const read=()=>fs.readFileSync(path.join(root,INDEX),'utf8');return {root,put,run,read};}
++function seed(f){const r=f.run('--escriu');assert.equal(r.status,0,r.stderr);const raw=f.read(),a=raw.indexOf(BEGIN),b=raw.indexOf(END)+END.length;return raw.slice(a,b);}
++for(const [name,wrap]of [['tilde',b=>'~~~markdown\n'+b+'\n~~~'],['long fence',b=>'````markdown\n```\n'+b+'\n````'],['inline code',b=>'``exemple '+b.replace(/\n/g,' ')+' final``']]){
++ test(`bloc d’exemple ${name} no acredita abast i es conserva mentre s’afig un bloc actiu`,t=>{const f=fixture(t),block=seed(f),example=wrap(block);f.put(INDEX,'# Índex\n\n'+example+'\n');const before=f.read();assert.equal(f.run('--check').status,1);assert.equal(f.read(),before);const write=f.run('--escriu');assert.equal(write.status,0,write.stderr);assert.ok(f.read().includes(example));assert.equal(f.run('--check').status,0);const saved=f.read();assert.equal(f.run('--escriu').status,0);assert.equal(f.read(),saved);});
++}
++test('exemple abans i després d’una regió activa no canvia la parella seleccionada',t=>{const f=fixture(t),block=seed(f),prefix='~~~markdown\n'+block+'\n~~~',suffix='<!-- exemple\n'+block+'\n-->';f.put(INDEX,'# Índex\n\n'+prefix+'\n\n'+block+'\n\n'+suffix+'\n');const r=f.run('--escriu');assert.equal(r.status,0,r.stderr);assert.ok(f.read().includes(prefix));assert.ok(f.read().includes(suffix));assert.equal(f.run('--check').status,0);});
++for(const [name,text]of [['duplicate',BEGIN+'\n'+END+'\n'+BEGIN+'\n'+END],['orphan begin',BEGIN],['orphan end',END],['reversed',END+'\n'+BEGIN],['inline', 'prosa '+BEGIN+'\n'+END],['collision','text \ue000']]){
++ test(`marques ${name} fallen abans de qualsevol escriptura`,t=>{const f=fixture(t);f.put(INDEX,'# Índex\n'+text+'\n');const before=f.read(),r=f.run('--escriu');assert.notEqual(r.status,0);assert.equal(f.read(),before);});
++}
++test('marques escapades són literals i no s’usen per tallar ni reemplaçar',t=>{const f=fixture(t),literal='\\'+BEGIN+'\n\\'+END;f.put(INDEX,'# Índex\n'+literal+'\n[[02_saber/nota]]\n');assert.equal(f.run('--check').status,0);const before=f.read();assert.equal(f.run('--escriu').status,0);assert.equal(f.read(),before);});
++test('append dins d’una tanca oberta es rebutja abans d’escriure un bloc inactiu',t=>{const f=fixture(t);f.put(INDEX,'# Índex\n~~~markdown\nexemple sense tancament\n');const before=f.read(),r=f.run('--escriu');assert.notEqual(r.status,0);assert.equal(f.read(),before);});
++test('retirar la bastida només elimina la regió activa i preserva l’exemple',t=>{const f=fixture(t),block=seed(f),example='~~~markdown\n'+block+'\n~~~';f.put(INDEX,'# Índex\n[[02_saber/nota]]\n\n'+example+'\n\n'+block+'\n');const r=f.run('--escriu');assert.equal(r.status,0,r.stderr);assert.ok(f.read().includes(example));assert.equal(f.read().split(BEGIN).length-1,1);assert.equal(f.run('--check').status,0);});
++
++test('mostra de comentari amb marques internes es conserva sense substituir-la com a regió',t=>{const f=fixture(t),block=seed(f),example='<!-- exemple\n'+block+'\n-->';f.put(INDEX,'# Índex\n\n'+example+'\n');const before=f.read();const r=f.run('--escriu');assert.equal(r.status,0,r.stderr);assert.equal(f.read(),before);});
++test('append dins d’un comentari obert es rebutja abans d’escriure',t=>{const f=fixture(t);f.put(INDEX,'# Índex\n<!-- comentari obert\n');const before=f.read(),r=f.run('--escriu');assert.notEqual(r.status,0);assert.equal(f.read(),before);});
++test('la línia d’un enllaç real trencat després del bloc conserva l’offset original',t=>{const f=fixture(t);seed(f);const raw=f.read()+'\n[[absent_real]]\n';f.put(INDEX,raw);const result=f.run('--json');assert.equal(result.status,0,result.stderr);const report=JSON.parse(result.stdout);assert.equal(report.penjats.find(p=>p.desti==='absent_real').linia,raw.split('\n').indexOf('[[absent_real]]')+1);});

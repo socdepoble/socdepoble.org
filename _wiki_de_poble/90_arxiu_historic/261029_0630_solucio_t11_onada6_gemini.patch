@@ -1,0 +1,350 @@
+diff --git a/.agents/DESTINS_CANONICS.json b/.agents/DESTINS_CANONICS.json
+index 0074faa..25b184d 100644
+--- a/.agents/DESTINS_CANONICS.json
++++ b/.agents/DESTINS_CANONICS.json
+@@ -1,7 +1,7 @@
+ {
+   "schema": "sdp.destins-projectats.v1",
+   "font": ".agents/protocolledge.json",
+-  "contracte_sha256": "860ade46fc100b0df42f2f951104913d1d340239469c4d09d638bce3fb994fa6",
++  "contracte_sha256": "5b04a5fc7d189a07f0f5b6f6a2a762bf627657c4f4cc3d1c5732c90b443764b6",
+   "abast": "Projecció generada de destinacions de creació. No amplia permisos ni decidix retenció, trasllats o arxivament.",
+   "retencio_i_arxiu": {
+     "font": "AGENTS.md",
+@@ -12,7 +12,6 @@
+       "id": "acta",
+       "tipus": "acta",
+       "destins": [
+-        "_wiki_de_poble/04_escriptori",
+         "_wiki_de_poble/10_actes"
+       ]
+     },
+diff --git a/.agents/SKILLS_SEAL.json b/.agents/SKILLS_SEAL.json
+index fc9b770..8779e85 100644
+--- a/.agents/SKILLS_SEAL.json
++++ b/.agents/SKILLS_SEAL.json
+@@ -1,6 +1,6 @@
+ {
+-  "timestamp": "2026-10-29T05:14:10.595Z",
+-  "hash": "da5947cdbc5b143030331d913a76baf145643877c6b935c1358538dcb5866ffd",
++  "timestamp": "2026-10-29T05:31:13.673Z",
++  "hash": "bf230ae72987fa41473ab01a2f2e6c910da9476aa72679009cea05879b37dc16",
+   "filesCount": 43,
+   "manifest": {
+     ".agents/skills/00_INDEX_SKILLS.md": "2140617d1662e1fd31bc696bf5c491a018d3de3015140c84b4b79cc24b6a8dcf",
+@@ -12,7 +12,7 @@
+     ".agents/skills/core-direccio-autonoma/SKILL.md": "14a9dd5217e9430d7a55246baccf38154142fa1889e66290cc6c2d02f1742225",
+     ".agents/skills/core-edicio-segura/SKILL.md": "11861790753a4994f570a688476fddbd4a2c8f250c47c1412e0e11bea314ed36",
+     ".agents/skills/core-empaquetat-wp/SKILL.md": "725972690c120146559a01032f2b816423e427937b4c107879306c9ade9f88e5",
+-    ".agents/skills/core-estrategia-ia/SKILL.md": "315e06249d7170eca53aba68dc43e4e206cf1f963c5ca32b65f64660a7e171f0",
++    ".agents/skills/core-estrategia-ia/SKILL.md": "8488e7aa5170684ae8ea0db954e8efdccd56b64ca7adc58e244b826218e024fd",
+     ".agents/skills/core-gauntlet-loop/SKILL.md": "c26e792bfd8da4c10a31870f6a954ed8f8b517bb3d07b018cf38bb68ea088e8b",
+     ".agents/skills/core-higiene-escriptori/SKILL.md": "80a307d846444f138f0a1e762c8daa1ac021da2f729c188b607b3d9548e31494",
+     ".agents/skills/core-identitat-visual/SKILL.md": "7fc50b33b190ef51b8dd3780622b7b94475524bc3816f856a06d28d40e058e05",
+@@ -38,14 +38,14 @@
+     ".agents/skills/sdp-clon-whatsapp/SKILL.md": "967e3a55aaa743eaa6054c801acf0efcd009d99425771b93941b0eba6b03c6cb",
+     ".agents/skills/sdp-estudi-mercat/SKILL.md": "4d53a3962e252dd40298b5134c739f78cf588b80b940daec256402adf0612383",
+     ".agents/skills/sdp-pedra-seca/SKILL.md": "e2acdb7fca327aadb516eec21e92d4cb7248d8c786b8b06f93d7c59c78faf6a7",
+-    ".agents/skills/sdp-universal-editor/SKILL.md": "1700fef579fd06700cb5cf4be41a0192d5aff3a4ca50e55f70a8b37b5dbe7ee4",
++    ".agents/skills/sdp-universal-editor/SKILL.md": "e211d3e2da683506916b386628e3f866ece20c5bdd5d3aca5e6992db83ad3ccb",
+     ".agents/skills/sdp-universal-page/SKILL.md": "32ab89ebe8fa538d0300eacc0ad0aae46bb9d1221337c24bc0dd9b99ae0e1941",
+     ".agents/skills/sdp-vigilant-tellado/SKILL.md": "40092e87be8e199972320ceaace3547f4f1c476a770fdf98fa32711e574c0e5a",
+     ".agents/skills/sdp-workflow/SKILL.md": "e4033d2766de9441b21d5b701022ab5253d07ed82d9b3c3abc84728ec5612e33",
+     ".agents/skills/wiki-busca-skills/SKILL.md": "cb3e09095daf65e63c4a65682e2d5c671783c2dbbbba6b27ddb28e86a697cd1a",
+-    ".agents/skills/wiki-cicle-de-vida/SKILL.md": "0bf7d80c3af2fb7d3365aae5080a0095bd59fa66648a9862d39afd2409e3a62e",
+-    ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "2395f3b55338d14fa3b38cbb34e8feb03c64ccbfdde2ffd22c645c54135e6a5b",
++    ".agents/skills/wiki-cicle-de-vida/SKILL.md": "e246337b9d3765ed5457c5a8c06adeace07c83a35d903c90d88ad6f3174ec602",
++    ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d80d8f8eb3b3acde3ff98a1f9bc7e4c6cc10a3a28b7244fec8bfa052e5b2cc1b",
+     ".agents/skills/wiki-propagar-veritat/SKILL.md": "8092c14a4d4496156fee8dd4f37067a455dc0a1fc50876241942c4dc5276017b"
+   },
+-  "transaction": "7f146c0f-dab7-4d70-94c6-1a50ca9cfd03"
++  "transaction": "735c621d-0608-4dda-9fad-152709144159"
+ }
+diff --git a/.agents/protocolledge.json b/.agents/protocolledge.json
+index 16afe61..69b9e7c 100644
+--- a/.agents/protocolledge.json
++++ b/.agents/protocolledge.json
+@@ -160,7 +160,6 @@
+         "Vincles"
+       ],
+       "destins": [
+-        "_wiki_de_poble/04_escriptori",
+         "_wiki_de_poble/10_actes"
+       ],
+       "sectionIds": {
+diff --git a/.agents/rules/00_BIOS_COGNITIU.md b/.agents/rules/00_BIOS_COGNITIU.md
+index e249afa..4275c34 100644
+--- a/.agents/rules/00_BIOS_COGNITIU.md
++++ b/.agents/rules/00_BIOS_COGNITIU.md
+@@ -4,7 +4,8 @@ status: canonic
+ description: 00 BIOS COGNITIU
+ ---
+ # BIOS Cognitiu de les Portes Mecàniques
+-# BIOS Cognitiu de les Portes Mecàniques
++
++> **Nota d'autoritat:** La constitució operativa vigent és a `AGENTS.md` (sincronitzada amb `.agents/AGENTS.md`) i a les 42 skills de `.agents/skills/`. Aquest fitxer manté l'ancoratge R5 per a `tooling/gates/tractor-registre.mjs`.
+ 
+ Aquest document compleix amb l'exigència R5 del `tooling/gates/tractor-registre.mjs` per garantir un entorn d'execució d'agents segur.
+ 
+diff --git a/.agents/rules/supabase_grants.md b/.agents/rules/supabase_grants.md
+index c8eb68e..376926a 100644
+--- a/.agents/rules/supabase_grants.md
++++ b/.agents/rules/supabase_grants.md
+@@ -1,19 +1,24 @@
+ ---
+ type: rule
+-description: Regla obligatòria per a migracions de Supabase (Canvi d'octubre 2026)
++description: Regla obligatòria per a migracions de Supabase (Model de Mínim Privilegi i RPC-Only)
+ ---
+-# Regla de Migracions Supabase (GRANTS Explícits)
++# Regla de Migracions Supabase (GRANTS Explícits i Mínim Privilegi)
+ 
+-**Context:** A partir del 30 d'octubre de 2026, Supabase deixa d'atorgar accés automàtic a la Data API per a les noves taules de l'esquema `public`. 
++**Context:** Supabase no atorga accés automàtic a la Data API per a les noves taules de l'esquema `public`. Tanmateix, **mai s'han d'atorgar permisos massius (`SELECT` a `anon` o `INSERT, UPDATE, DELETE` a `authenticated`) per inèrcia**, sinó segons l'arquitectura de seguretat de cada taula:
+ 
+-**Regla Estricta per a IAs:**
+-Sempre que es genere una **nova migració SQL que cree una TAULA NOVA** al projecte, s'han d'afegir OBLIGATÒRIAMENT els següents `GRANT`s al final del mateix fitxer de migració. Si no es fa, l'API retornarà un error de permís denegat.
++1. **Taules Sensibles o Criptogràfiques (Patró RPC-Only — Recomanat):**
++   Les taules que custodien claus, sobres E2EE, adjunts o operacions atòmiques (com `2610220240_xat_adjunts.sql`, `2610282100` i `2610290400_xat_e2ee_claus_i_sobres.sql`) han de revocar tot accés directe de la Data API i operar exclusivament mitjançant funcions `SECURITY DEFINER` amb `search_path = `:
++   ```sql
++   ALTER TABLE public.nom_taula_sensible ENABLE ROW LEVEL SECURITY;
++   REVOKE ALL ON TABLE public.nom_taula_sensible FROM public, anon, authenticated, service_role;
++   GRANT SELECT, DELETE ON TABLE public.nom_taula_sensible TO service_role;
++   ```
+ 
+-```sql
+--- Exemples de grants obligatoris per a tota nova taula:
+-GRANT SELECT ON public.nom_de_la_nova_taula TO anon;
+-GRANT SELECT, INSERT, UPDATE, DELETE ON public.nom_de_la_nova_taula TO authenticated;
+-GRANT SELECT, INSERT, UPDATE, DELETE ON public.nom_de_la_nova_taula TO service_role;
+-```
++2. **Vistes o Projeccions Públiques de Només Lectura (Zero PII):**
++   Quan el prerender o la lectura anònima necessiten consultar contingut públic (com `public_items_public_projection`), s'exposa únicament `SELECT` sobre la projecció sanejada sense cap camp d'identitat o PII:
++   ```sql
++   GRANT SELECT ON public.nom_projeccio_publica TO anon, authenticated;
++   ```
+ 
+-*Nota:* Això no afecta a les taules existents, ni a les migracions que només facen `ALTER TABLE` (com afegir una columna). Només s'aplica a la creació de noves taules (`CREATE TABLE`).
++3. **Taules Ordinàries Exposades a Data API amb RLS Estricta:**
++   Només si el disseny requereix consulta directa via PostgREST amb polítiques RLS verificades, s'atorguen estrictament els verbs que les polítiques RLS permeten per a cada rol.
+diff --git a/.agents/skills/core-estrategia-ia/SKILL.md b/.agents/skills/core-estrategia-ia/SKILL.md
+index 78904c9..25e376a 100644
+--- a/.agents/skills/core-estrategia-ia/SKILL.md
++++ b/.agents/skills/core-estrategia-ia/SKILL.md
+@@ -9,6 +9,7 @@ contracte.llig:
+   - .agents/protocolledge.json
+ contracte.escriu:
+   - _wiki_de_poble/04_escriptori
++  - _wiki_de_poble/10_metriques/consum_ia.csv
+ ---
+ 
+ # ESTRATÈGIA DE CONSUM IA (Motor de Consum)
+diff --git a/.agents/skills/sdp-universal-editor/SKILL.md b/.agents/skills/sdp-universal-editor/SKILL.md
+index 238294d..52e60e9 100644
+--- a/.agents/skills/sdp-universal-editor/SKILL.md
++++ b/.agents/skills/sdp-universal-editor/SKILL.md
+@@ -40,7 +40,7 @@ Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament i la B
+ 
+ ## 3. La Barra d'Eines (`UniversalToolbar`), Jerarquia Semàntica i Llenç Complet
+ 
+-L'experiència d'edició de text ha de ser tan pura com la d'un processador de text editorial (`src/components/universal/editor/UniversalToolbar.jsx` i `UniversalEditor.css`), respectant la jerarquia SEO de la pàgina:
++L'experiència d'edició de text ha de ser tan pura com la d'un processador de text editorial (`src/components/universal/UniversalToolbar.jsx` i `src/components/universal/UniversalEditorShell.jsx`), respectant la jerarquia SEO de la pàgina:
+ 
+ - **Ubicació Estratègica i Sticky:** La barra d'edició negra **NO està a la capçalera blava de l'aplicació**. Viu a l'interior de la finestra d'edició, col·locada exactament **a sota de l'Entradilla**, marcant la frontera entre la capçalera i el cos del document, i queda fixada (`sticky`) en fer scroll.
+ - **Jerarquia de Capçaleres i Llistes (`H3 -> H2`, `List` i `ListOrdered`):**
+diff --git a/.agents/skills/wiki-cicle-de-vida/SKILL.md b/.agents/skills/wiki-cicle-de-vida/SKILL.md
+index 62283f6..ea4a5b4 100644
+--- a/.agents/skills/wiki-cicle-de-vida/SKILL.md
++++ b/.agents/skills/wiki-cicle-de-vida/SKILL.md
+@@ -26,7 +26,7 @@ contracte.escriu:
+ 3. Completa els camps editorials. El prompt local copia literalment Context i Olivera; valida amb `document.mjs check --file CAMI`.
+ 4. Vincula el pla aprovat amb `document.mjs plan --turn-id ID --file CAMI`. L’aprovació anterior continua vigent.
+ 5. En arbre compartit declara els fitxers propis amb `document.mjs own --turn-id ID --file CAMI`. La zona humana i els canvis de codi fora d’abast continuen vigilats globalment.
+-6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes admeten `10_actes/` i l’Escriptori. Els noms nous són minúscules.
++6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes viuen a `10_actes/`. Els noms nous són minúscules.
+ 7. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
+ 8. Executa `node tooling/gates/tancament.mjs --check --turn-id ID`. És lectura. `--close --turn-id ID` segella el LEDGER dins de l’operació i repeteix comprovacions abans de persistir `closed`; si falla, no declara tancament.
+ 9. Versiona documents, `.agents/runtime/turns/*.json`, `.agents/runtime/contracts/*.json` i `.claude/skills/` junts. No versionis locks ni punters locals. El pre-commit continua bloquejant quan hi ha errors.
+diff --git a/.agents/skills/wiki-documentacio-i-reflex/SKILL.md b/.agents/skills/wiki-documentacio-i-reflex/SKILL.md
+index 7bc35e2..21f5ae0 100644
+--- a/.agents/skills/wiki-documentacio-i-reflex/SKILL.md
++++ b/.agents/skills/wiki-documentacio-i-reflex/SKILL.md
+@@ -71,7 +71,7 @@ Quan es demana preparar el terreny per a una de les avaluacions:
+ 
+ 1. **La Lectura i Alternativa:** Llista fitxers i reformula què es farà. Pensa 2 solucions alternatives que NO proposes.
+ 2. **L'Empatia amb el Mantenidor:** "Serà fàcil modificar això d'aquí a 6 mesos?"
+-5. **L'Auto-Verificació:** 3 maneres per les quals aquest codi pot fallar abans de donar el vistiplau. 
++3. **L'Auto-Verificació:** 3 maneres per les quals aquest codi pot fallar abans de donar el vistiplau. 
+ 
+ ## 5. El Protocol "Reunió davall l'Olivera" (Col·laboració Local i Bucle de Millora)
+ 
+@@ -89,7 +89,7 @@ Aquesta és la mecànica per encadenar auditories entre IAs locals (per ex. Code
+    - Si les aportacions estan alineades o ja són suficients, done la petorreta per finalitzada.
+ 5. **Consolidació:** Finalment, llegiré totes les auditories per **millorar i refinar el meu propi Pla d'Implementació** iterativament abans d'executar-lo. Totes les IAs (les 3 iaies) tenen veu i participen activament a la taula.
+ 
+-Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seguretat** apuntant a `[[00_index_escriptori]]`.
++Els Estudis destil·lats a l'Escriptori es tanquen amb un **Ancoratge de Seguretat** apuntant a `[[00_index_escriptori]]`, mentre que les Actes viuen a `_wiki_de_poble/10_actes/` i apunten a `[[00_index]]`.
+ 
+ ## Lliçons del Mestre
+ 
+diff --git a/_wiki_de_poble/01_ser/00_bios.md b/_wiki_de_poble/01_ser/00_bios.md
+index de04aab..c7b0ee5 100644
+--- a/_wiki_de_poble/01_ser/00_bios.md
++++ b/_wiki_de_poble/01_ser/00_bios.md
+@@ -7,7 +7,7 @@ tags:
+   - genoma
+   - identitat
+ ---
+-\n# ⚰️ 00_BIOS — Tombstone
++# ⚰️ 00_BIOS — Tombstone
+ 
+ > [!CAUTION]
+ > Aquest document és històric i **no s'utilitza com a punt d'arrencada**.
+@@ -17,7 +17,7 @@ La BIOS executable actual és **`.agents/AGENTS.md`**.
+ Per a l'arrencada completa, llegiu:
+ - `.agents/AGENTS.md`
+ - `.agents/PROTOCOL_PETORRETA.md`
+-- `.agents/skills/identity-iaia-core/SKILL.md`
++- `.agents/skills/core-identitat/SKILL.md`
+ 
+ **Ancoratge de Seguretat:** [[00_index_identitat]]
+ 
+diff --git a/_wiki_de_poble/02_saber/00_full_de_ruta.md b/_wiki_de_poble/02_saber/00_full_de_ruta.md
+index ccb5d65..eb44197 100644
+--- a/_wiki_de_poble/02_saber/00_full_de_ruta.md
++++ b/_wiki_de_poble/02_saber/00_full_de_ruta.md
+@@ -15,12 +15,19 @@ Cada llavor porta el trimestre previst i la seua categoria. La direcció general
+ 
+ ## 🟢 En producció
+ 
++- **Arquitectura Online-First i Pedra Seca v10.38.0** [Nucli]: lectura pública sense compte, disseny editorial monocrom amb accent verd AAA (`#0e662e`, contrast $\ge 7:1$) i taronja socarrat, mode fosc i suport multilingüe en 5 idiomes (`ca`, `es`, `eu`, `gl`, `en`).
++- **Editor Universal (`/notes`) i Lector de la Wiki** [Contingut]: TipTap amb autoguardat, selector d'emojis a columna completa (`PaginaEmojis`), Proposa Card (`IDEA-41`) i compartició OpenGraph per ruta amb prerender estàtic (`P1-61`).
++- **Identitat Sobirana (`@username`) i Mapa Fotogràfic EXIF (`P1-64`)** [Comunitat]: reclamació atòmica d'àlies amb resolució d'homònims per poble (`P1-68`) i georeferenciació de patrimoni rural.
+ 
+ ## 🍏 Collita tancada (fet)
+ 
++- **Connector WordPress (`socdepoble.zip`) i Port Neutral Model B** [ Fedivers / Integracions ]: plugin oficial v1.0.1 amb verificació d'estat per `state` efímer (`T5.1`) i traduccions completes.
++- ** Sistema Documental Reflex i Portes Mecàniques** [Governança]: taxonomia termodinàmica, Porta Olivera v4, verificador SCC i blindatge de les 42 skills (`SKILLS_SEAL.json`).
+ 
+ ## 🍊 Sementeres vives (beta)
+ 
++- **Xat E2EE (`P1-12`) amb Frase de 12 Paraules i Recuperació Social Shamir $k=3$ (`IDEA-48`)** [Criptografia]: primitives WebCrypto P-256 + HKDF + AES-256-GCM, formats binaris `SDP*`, magatzem IndexedDB xifrat i migració SQL RPC-only (`2610290400_xat_e2ee_claus_i_sobres.sql`), apagat per defecte darrere de flag fins a completar la UI.
++
+ 
+ ## 🌱 Llavors (totes les idees)
+ 
+@@ -31,7 +38,7 @@ Les idees que depenen de xarxes sense internet (Bluetooth, malles locals o IA se
+ 
+ ## 🍂 Retirades per l'ADR-2026-08 (història superada)
+ 
+-Estes llavors es van declarar collides o en beta sobre la pila offline: doctrina A10, IndexedDB, PWA, Y.js i malla local. L'[[ADR-2026-08-ONLINE-FIRST]] les va retirar; es conserven com a memòria, no com a funcionalitat vigent.
++Estes llavors es van declarar collides o en beta sobre la pila offline: doctrina A10, Y.js i malla local. L'[[ADR-2026-08-ONLINE-FIRST]] va retirar la sincronització offline general, mentre que la PWA instal·lable (`P1-69`, [[ADR-2026-10-APPS-DEL-DISPOSITIU]]) i l'ús exclusiu d'IndexedDB per a claus/safata E2EE (`P1-12`, [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]) continuen vigents. La matriu viva d'execució és a [[03_llibre_mestre_tasques_i_idees]].
+ 
+ 
+ ## Vincles
+@@ -41,3 +48,4 @@ Estes llavors es van declarar collides o en beta sobre la pila offline: doctrina
+ - [[00_arquitectura_tecnica_unificada]]
+ - [[el_projecte]]
+ - [[ADR-2026-08-ONLINE-FIRST]]
++- [[03_llibre_mestre_tasques_i_idees]]
+diff --git a/_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md b/_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md
+index 1f4df0c..f67b663 100644
+--- a/_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md
++++ b/_wiki_de_poble/02_saber/03_consola_termodinamica/03_inventari_skills.md
+@@ -68,7 +68,7 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
+ | crida a una skill inexistent | un document o una skill cita una skill que no té carpeta a `.agents/skills/` | text + disc |
+ | skill fora de l'índex | té carpeta a `.agents/skills/` però no és a `.agents/skills_index.json` | disc + índex |
+ 
+-La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava.
++La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava. *(Nota d'estat 2026-10-29: el cens real unificat i segellat a `.agents/SKILLS_SEAL.json`, `.agents/skills_index.json`, `.agents/skills/` i `.claude/skills/` és de **42 skills** actives: 9 `core-*` i 33 `sdp-*/wiki-*`, verificades per `tooling/brain/cataleg_skills.mjs --check`).*
+ 
+ ## Salut agregada
+ 
+diff --git a/_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md b/_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md
+index d02d00b..02c954d 100644
+--- a/_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md
++++ b/_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md
+@@ -68,6 +68,7 @@ Cada categoria correspon a una ruta de `.agents/protocolledge.json`, que és qui
+ | `produccio` | `modo_produccion` | |
+ | `prompt` | `prompt.local` · `prompt.consell` | per a Claude i Codex, només `prompt`, mai `macro_` ni `micro_` |
+ | `skill` | `skill` | l'esborrany a l'Escriptori; la skill viva es diu `SKILL.md` |
++| `solucio` | sense ruta | transitòria de torn (porta Olivera) |
+ | `tasques` | sense ruta | transitòria de torn (porta Olivera) |
+ <!-- /SDP:TAXONOMIA:CATEGORIES -->
+ 
+diff --git a/_wiki_de_poble/02_saber/sistema_immunitari.md b/_wiki_de_poble/02_saber/sistema_immunitari.md
+index 9e7abcc..4b010e7 100644
+--- a/_wiki_de_poble/02_saber/sistema_immunitari.md
++++ b/_wiki_de_poble/02_saber/sistema_immunitari.md
+@@ -1,5 +1,5 @@
+ ---
+-type: skill
++type: protocol
+ status: canonic
+ description: "Manual operatiu de plaquetes.mjs v1.1: diagnostica ferides del graf (fantasmes, orfes) i només les cura amb aprovació per hash, lease del Reflex i escriptura verificada, sense esborrar res."
+ tags:
+diff --git a/scripts/immunitari/plaquetes.mjs b/scripts/immunitari/plaquetes.mjs
+index b5a5ea5..f1b1ff0 100755
+--- a/scripts/immunitari/plaquetes.mjs
++++ b/scripts/immunitari/plaquetes.mjs
+@@ -89,7 +89,7 @@ if (cmd === 'init') {
+     exclouFonts: ["00_AGENTS_I_SKILLS_MIRROR"],
+     hubsTaxonomics: ["Graf", "Maquina", "Identitat", "Coneixement", "Govern", "Sollutia", "07_plantilles", "skills"],
+     hubsDelegats: true,
+-    indexAdopcio: "00_INDEX",
++    indexAdopcio: "00_index",
+     memorialLapides: "00_MEMORIAL_Lapides"
+   };
+   
+@@ -109,12 +109,9 @@ const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+ const vaultDir = path.join(REPO_ROOT, config.vault);
+ 
+ function extreuFantasmes(content) {
+-  const linkRegex = /\[\[(.*?)\]\]/g;
+-  let matches = [];
+-  let match;
+-  const net = content.replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
+-  while ((match = linkRegex.exec(net)) !== null) {
+-    let raw = match[1];
++  const matches = [];
++  for (const rawLink of extractProseWikiLinks(content)) {
++    let raw = rawLink;
+     if (raw.includes('|')) raw = raw.split('|')[0];
+     if (raw.includes('#')) raw = raw.split('#')[0];
+     if (raw.trim() && !raw.startsWith('http')) matches.push(raw.trim());
+diff --git a/tooling/gates/tractor-doctrina.mjs b/tooling/gates/tractor-doctrina.mjs
+index 2253252..d0c18b0 100644
+--- a/tooling/gates/tractor-doctrina.mjs
++++ b/tooling/gates/tractor-doctrina.mjs
+@@ -153,10 +153,15 @@ const COMANDAMENTS = new Set([
+ 
+ /** Decidix si un token té forma de camí de fitxer i no de comandament o concepte. */
+ function esCandidat(brut) {
+-  const t = brut.trim().replace(/[.,;:]+$/, '');
++  const t = brut
++    .trim()
++    .replace(/[.,;:]+$/, '')
++    .replace(/:[0-9]+(?:-[0-9]+)?(?:,[0-9]+(?:-[0-9]+)?)*$/, '');
+   if (!t || t.length > 240) return null;
+-  // Metavariables documentades de la CLI i patró de taxonomia, mai camins reals.
+-  if (/^(?:aammdd_hhmm_|AAMMDD_HHMM_)/.test(t) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
++  // Extensions nues (.mjs, .php, .sh, .py, .sql) no són fitxers ocults del repositori.
++  if (/^\.[a-z0-9]+$/i.test(t)) return null;
++  // Metavariables documentades de la CLI i patró de taxonomia en qualsevol segment, mai camins reals.
++  if (/(?:^|\/)(?:aammdd(?:_hhmm)?|AAMMDD(?:_HHMM)?)(?:[_.].*)?$/.test(t) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
+   if (/^(https?:|mailto:|#|<|\{)/.test(t)) return null;
+   if (/[*?<>|"']/.test(t)) return null;              // globs i cometes: no és un camí concret
+   if (/\s/.test(t)) return null;                      // cap camí amb espais a la doctrina
+diff --git a/tooling/wiki/taxonomia.json b/tooling/wiki/taxonomia.json
+index 7aad79d..a46c590 100644
+--- a/tooling/wiki/taxonomia.json
++++ b/tooling/wiki/taxonomia.json
+@@ -31,6 +31,7 @@
+     "produccio": "modo_produccion",
+     "prompt": "prompt.local · prompt.consell",
+     "skill": "skill",
+-    "tasques": "sense ruta: transitòria de torn (porta-olivera)"
++    "tasques": "sense ruta: transitòria de torn (porta-olivera)",
++    "solucio": "sense ruta: transitòria de torn (porta-olivera)"
+   }
+ }

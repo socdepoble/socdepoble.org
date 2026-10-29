@@ -1,0 +1,54 @@
+--- a/.agents/BIOS.md
++++ b/.agents/BIOS.md
+@@ -10,12 +10,12 @@
+ ## PASSOS DE LA SEQÜÈNCIA D'ARRENCADA
+ 1. **Verificar el BIOS**: Executar `node tooling/verify-bios.mjs` per garantir que el sistema de fitxers core està intacte.
+ 2. **Revisar el BOOTSTRAP**: Llegir `.agents/BOOTSTRAP.md` per conèixer els valors i l'arquitectura.
+-3. **Assumir el Contracte**: Llegir `.agents/AGENTS.md` (La Font Única de Veritat Executiva).
++3. **Assumir el Contracte**: Llegir `AGENTS.md` de l’arrel, únic original normatiu. `.agents/AGENTS.md` és un mirall generat i es comprova amb `node tooling/gates/porta-autoritat.mjs`.
+ 4. **Verificar Portes Mecàniques**: Executar `npm run gate` per verificar que no hi ha regressions en persistència ni lints.
+ 5. **Comprovar el LEDGER**: Revisar `.agents/LEDGER.md` per veure les últimes decisions arquitectòniques històriques i signar-lo si es modifica (amb `node tooling/verify-ledger.mjs --sign`).
+ 
+ ## CONFIGURACIÓ ACTIVA
+ - **Model Arquitectònic**: Online-First Temporal amb Supabase.
+-- **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/sdp-workflow/SKILL.md`).
++- **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/sdp-pedra-seca/SKILL.md`); `sdp-workflow` governa el procediment de treball.
+ - **Emmagatzematge Local**: Eliminat a favor del model Online-First. No hi ha emmagatzematge persistit local (Poda del Quadrant A).
+ - **Sessions de Negoci**: Les sessions d'usuari passaran exclusivament per cookies HttpOnly (Sollutia) o seran gestionades 100% al backend, sense exposar el token al client.
+--- a/.agents/BOOTSTRAP.md
++++ b/.agents/BOOTSTRAP.md
+@@ -18,7 +18,7 @@
+ 
+ ## 2. La Jerarquia de Comandament
+ 1. La teua **Font Única de Veritat (Contracte)** és `AGENTS.md` de l’arrel (el fitxer `.agents/AGENTS.md` és un mirall generat). Has de llegir eixe document íntegre ABANS de processar peticions complexes, llançar tasques d'arquitectura, o iniciar refacturacions.
+-2. Llig `.agents/ESTAT.md` (bloc ESTAT_ACTUAL) i la seqüència de `.agents/cervell.json`. Si has de tocar disseny (React o CSS), **és obligatori** llegir la llei a `.agents/skills/sdp-workflow/SKILL.md`.
++2. Llig `.agents/ESTAT.md` (bloc ESTAT_ACTUAL) i la seqüència de `.agents/cervell.json`. Si has de tocar disseny (React o CSS), **és obligatori** llegir `.agents/skills/sdp-pedra-seca/SKILL.md`; el procediment de treball continua a `.agents/skills/sdp-workflow/SKILL.md`.
+ 3. Tota la informació de Cultura i Model de Dades està a la Wiki (`_wiki_de_poble/`), però les regles executives (l'Acció) resideixen únicament a `.agents/`.
+ 
+ ## 3. Llei de Prevenció (Fail-Closed)
+--- a/.agents/QUI_SOC.md
++++ b/.agents/QUI_SOC.md
+@@ -30,7 +30,7 @@
+ ## 4. Acte Reflex (Innegociable)
+ Abans de redactar qualsevol prompt, auditoria, o decisió arquitectònica:
+ 1. Obriu i llegiu la plantilla ISO a través de `.agents/protocolledge.json`.
+-2. Ometeu aquest pas només sota el risc d'esdevenir "Stochastic Parrots" per excés de confiança.
++2. No ometeu aquest pas; això evita esdevenir "Stochastic Parrots" per excés de confiança.
+ 3. L'autoritat executiva viu a `.agents/skills/`.
+ 
+ ## 5. Arquitectura i Baseline
+@@ -40,7 +40,7 @@
+ 
+ ## 6. L'Escriptori i el Cicle de Vida
+ - L'escriptori de treball és exclusivament `_wiki_de_poble/04_escriptori/`. 
+-- **ZONES RESTRINGIDES:** `04_escriptori/01_Produccio` és només humana. `04_escriptori/00_Bandeja_d_Entrada` s'ha de buidar sempre.
++- **ZONES RESTRINGIDES:** `04_escriptori/01_produccio` és només humana. `04_escriptori/00_bandeja_d_entrada` s'ha de buidar sempre.
+ - Prohibit esborrar a l'escriptori sense preguntar. MAI llegir `90_arxiu_historic/` en procediments automàtics de RAG.
+ - Cap tasca es tanca sense actualitzar l'`ESTAT.md` i executar el `tancament.mjs`.
+ 
+@@ -59,4 +59,4 @@
+ 11. **Copilot (Microsoft)** — autocompletat IDE.
+ 12. **ChatGPT Codex (OpenAI)** — segona opinió, estructuració.
+ 
+-*Aquest document reemplaça i fusiona BOOTSTRAP, AGENTS, BIOS i BASELINE.*
++*Este document descriu la identitat i el to de MarIA. L’únic original normatiu és `AGENTS.md` de l’arrel; `.agents/AGENTS.md` és un mirall generat. La seqüència d’arrencada és la de `.agents/cervell.json`; BOOTSTRAP, BIOS i BASELINE conserven els seus àmbits i no queden reemplaçats per este document.*

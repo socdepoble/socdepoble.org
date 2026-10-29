@@ -1,0 +1,564 @@
+--- a/src/data/xifratXatMagatzem.js
++++ b/src/data/xifratXatMagatzem.js
+@@ -65,7 +65,7 @@
+  *                  d'èpoques, que també és la marca apegalosa del fil
+  *                  (§4.5.3.8): només avança, comparant amb el cap d'abans.
+  *   · safata       [ci, 'clau'] { idClau, clau } i [ci, 'missatge', id] { fil,
+- *                  id, creatMs, idClau, iv, ct }: els missatges que esperen que
++ *                  id, actor, creatMs, idClau, iv, ct }: els missatges que esperen que
+  *                  l'altra part active el xifrat (§4.5.6, D-08), xifrats en
+  *                  repòs amb una clau local no extraïble que només evita la
+  *                  lectura casual, 30 dies com a molt (més d'un dia en el futur
+@@ -170,6 +170,9 @@
+ 
+ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+ const ID_CLAU = /^[0-9a-f]{32}$/;
++/* actorKey arriba del context: opac, sense normalitzar ni posar-lo a clauIdentitat.
++   El separador nul i els substituts UTF-16 aïllats no hi valen: l'AAD ha de conservar el valor exacte. */
++const esActor = (actor) => typeof actor === 'string' && actor.length > 0 && actor === actor.trim() && !actor.includes('\u0000') && !/\p{Surrogate}/u.test(actor);
+ const esUuid = (valor) => typeof valor === 'string' && UUID.test(valor);
+ const esBytes = (valor, n) => valor instanceof Uint8Array && valor.length === n;
+ const esPublica = (valor) => esBytes(valor, 65) && valor[0] === 0x04;
+@@ -442,7 +445,7 @@
+ 
+   /* ── Safata: caducitat (la de tothom, per clau primària) ──────────────── */
+ 
+-  const filaSafataSencera = (fila) => esObjectePla(fila) && esUuid(fila.fil) && esUuid(fila.id) && esMs(fila.creatMs)
++  const filaSafataSencera = (fila) => esObjectePla(fila) && esActor(fila.actor) && esUuid(fila.fil) && esUuid(fila.id) && esMs(fila.creatMs)
+     && typeof fila.idClau === 'string' && ID_CLAU.test(fila.idClau) && esBytes(fila.iv, BYTES_IV)
+     && fila.ct instanceof Uint8Array && fila.ct.length >= BYTES_ETIQUETA && fila.ct.length <= MAX_BYTES_SAFATA + BYTES_ETIQUETA;
+   /* Caducada als 30 dies; també si el rellotge diu que ve de més d'un dia en el futur (un rellotge tocat no l'eternitza). */
+@@ -604,10 +607,10 @@
+   const clauSafataSencera = (fila) => esObjectePla(fila) && typeof fila.idClau === 'string' && ID_CLAU.test(fila.idClau)
+     && esClau(fila.clau, PERFILS.local) && fila.clau.usages.includes('encrypt') && fila.clau.usages.includes('decrypt');
+   const aadSafata = (ci, fila) => new TextEncoder().encode(
+-    `sdp-xat-v1/safata\u0000${ci}\u0000${fila.fil}\u0000${fila.id}\u0000${fila.idClau}\u0000${fila.creatMs}`
++    `sdp-xat-v1/safata\u0000${ci}\u0000${fila.actor}\u0000${fila.fil}\u0000${fila.id}\u0000${fila.idClau}\u0000${fila.creatMs}`
+   );
+   const hex = (bytes) => [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+-  const resumSafata = (fila) => ({ fil: fila.fil, id: fila.id, creatMs: fila.creatMs, caducaMs: fila.creatMs + CADUCITAT_SAFATA_MS });
++  const resumSafata = (fila) => ({ fil: fila.fil, id: fila.id, actor: fila.actor, creatMs: fila.creatMs, caducaMs: fila.creatMs + CADUCITAT_SAFATA_MS });
+   const safataOblidada = () => errorAmbCodi('SAFATA_OBLIDADA', 'La safata d’esta sessió s’ha buidat mentre es desava el missatge.');
+   const obriEntrada = async (ci, clauFila, fila) => {
+     const resum = resumSafata(fila);
+@@ -1093,14 +1096,16 @@
+ 
+     /**
+      * Deixa un missatge esperant a l'aparell, xifrat en repòs. `contingut` és un
+-     * objecte pla (el que el decorador enviarà, amb el mateix `id`). Tres
++     * objecte pla (el que el decorador enviarà, amb el mateix `id`). `actor` és
++     * l'actorKey explícit del context i queda autenticat amb l'AAD. Tres
+      * transaccions perquè el WebCrypto no pot anar dins de cap: llegir (o fer)
+      * la clau de repòs, xifrar fora, i desar comprovant que la clau és encara
+      * la mateixa (SAFATA_OBLIDADA si s'ha eixit entremig). SAFATA_DUPLICADA si
+      * l'id ja hi és, SAFATA_PLENA amb 200 vius, SAFATA_GRAN per damunt de 64 KiB.
+      */
+-    async desaASafata(ci, { fil, id, contingut } = {}) {
+-      llegixCi(ci);
++    async desaASafata(ci, { fil, id, actor, contingut } = {}) {
++      llegixCi(ci);
++      exigix(esActor(actor), 'actor');
+       exigix(esUuid(fil) && esUuid(id), 'fil i id');
+       exigix(esObjectePla(contingut), 'contingut (objecte pla)');
+       let text;
+@@ -1114,7 +1119,7 @@
+         if (bytes.length > MAX_BYTES_SAFATA) throw errorAmbCodi('SAFATA_GRAN', 'Este missatge és massa gran per a deixar-lo esperant.');
+         const gen = generacio(ci);
+         const clauFila = await clauDeLaSafata(ci, gen);
+-        const fila = { fil, id, creatMs: araMs(), idClau: clauFila.idClau, iv: aleatori(BYTES_IV) };
++        const fila = { fil, id, actor, creatMs: araMs(), idClau: clauFila.idClau, iv: aleatori(BYTES_IV) };
+         fila.ct = new Uint8Array(await cripto.subtle.encrypt(
+           { name: 'AES-GCM', iv: fila.iv, additionalData: aadSafata(ci, fila), tagLength: 128 }, clauFila.clau, bytes
+         ));
+@@ -1147,14 +1152,15 @@
+     },
+ 
+     /**
+-     * Els missatges que esperen, del més vell al més nou, desxifrats:
+-     * { fil, id, creatMs, caducaMs, contingut, malmes }. Els caducats (30 dies)
++     * Els missatges de l’actor explícit que esperen, del més vell al més nou, desxifrats:
++     * { fil, id, actor, creatMs, caducaMs, contingut, malmes }. Els caducats (30 dies)
+      * i les files trencades s'esborren en la mateixa transacció; un que no es
+      * pot desxifrar torna amb malmes: true i contingut null, per a poder-lo
+      * descartar.
+      */
+-    async safata(ci) {
+-      llegixCi(ci);
++    async safata(ci, actor) {
++      llegixCi(ci);
++      exigix(esActor(actor), 'actor');
+       const gen = generacio(ci);
+       const { clau, vives } = await ambLaPersona(ci, gen, [SAFATA], 'readwrite', (s, torna, avorta, quan) => {
+         const store = s(SAFATA);
+@@ -1162,21 +1168,24 @@
+         vivesDeLaSafata(store, ci, quan, (files) => torna({ clau: clauP.result ?? null, vives: files }));
+       });
+       const clauFila = clauSafataSencera(clau) ? clau : null;
+-      const entrades = await Promise.all(vives.map((fila) => obriEntrada(ci, clauFila, fila)));
++      /* Només les files de l'actor demanat arriben al desxifrat; l'AAD l'autentica. */
++      const entrades = await Promise.all(vives.filter((fila) => fila.actor === actor).map((fila) => obriEntrada(ci, clauFila, fila)));
+       if (generacio(ci) !== gen) throw oblidat();
+       return entrades.sort((a, b) => a.creatMs - b.creatMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+     },
+ 
+-    /** Trau un missatge de la safata (ja ha eixit, o la persona el descarta); cert si hi era. */
+-    async treuDeSafata(ci, id) {
+-      llegixCi(ci);
++    /** Trau un missatge de l’actor explícit (ja ha eixit, o el descarta); cert si hi era i li corresponia. */
++    async treuDeSafata(ci, id, actor) {
++      llegixCi(ci);
++      exigix(esActor(actor), 'actor');
+       exigix(esUuid(id), 'id');
+       return operacio(ci, [SAFATA], 'readwrite', (s, torna, avorta, quan) => {
+         const store = s(SAFATA);
+         const peticio = store.get([ci, 'missatge', id]);
+         quan(peticio, () => {
+-          torna(peticio.result !== undefined);
+-          if (peticio.result !== undefined) store.delete([ci, 'missatge', id]);
++          const correspon = peticio.result !== undefined && peticio.result?.actor === actor;
++          torna(correspon);
++          if (correspon) store.delete([ci, 'missatge', id]);
+         });
+       });
+     },
+--- a/src/data/xifratXatMagatzem.seguretat.test.js
++++ b/src/data/xifratXatMagatzem.seguretat.test.js
+@@ -28,6 +28,8 @@
+ const ENDPOINT = 'https://exemple.supabase.co';
+ const CI = clauIdentitat({ backendId: 'supabase', endpoint: ENDPOINT, joId: JO });
+ const CI_ALTRA = clauIdentitat({ backendId: 'supabase', endpoint: ENDPOINT, joId: ALTRA });
++const ACTOR = `persona::${JO}`;
++const ACTOR_ALTRA = `persona::${ALTRA}`;
+ const INICI = Date.UTC(2026, 9, 29, 9);
+ const DIA = 24 * 60 * 60 * 1000;
+ const ambCodi = (codi) => expect.objectContaining({ codi });
+@@ -126,7 +128,7 @@
+   await m.fixa(ci, { usuari: uuid(), kid: bytes(16) });
+   await m.avancaCap(ci, FIL, { nou: { epoca: 1, hash: bytes(32) } });
+   await m.desaClauDeFil(ci, { fil: FIL, epoca: 1, clau: await clauDEpoca(), hashE: bytes(32) });
+-  await m.desaASafata(ci, { fil: FIL, id: uuid(), contingut: { text: 'esperant' } });
++  await m.desaASafata(ci, { actor: `persona::${usuari}`, fil: FIL, id: uuid(), contingut: { text: 'esperant' } });
+ }
+ 
+ describe('l’entorn i el fals estructurat', () => {
+@@ -236,7 +238,7 @@
+     await expect(m.comprova()).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+     await expect(m.identitat(CI)).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+     await expect(m.desaIdentitat(CI, identitat)).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+-    await expect(m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
++    await expect(m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+     expect(totesLesFiles(fals)).toEqual([]);
+     /* Un motor així no canvia: la sonda no es repetix. */
+     expect(fals.operacions.filter((o) => o === 'put')).toHaveLength(1);
+@@ -271,7 +273,7 @@
+     await expect(m.desaClauDeFil(CI, { fil: FIL, epoca: 1, clau: await clauDEpoca(), hashE: bytes(32) })).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+     expect(totesLesFiles(fals)).toEqual([]);
+     rellotge.ms = Number.NaN;
+-    await expect(m.safata(CI)).rejects.toThrow(ambCodi('DADES_INVALIDES'));
++    await expect(m.safata(CI, ACTOR)).rejects.toThrow(ambCodi('DADES_INVALIDES'));
+   });
+ 
+   test('un motor que passa la sonda però perd altres claus: cada escriptura es rellig i res no queda desat', async () => {
+@@ -288,7 +290,7 @@
+     const { identitat } = await novaIdentitat();
+     await expect(m.desaIdentitat(CI, identitat)).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+     await expect(m.desaClauDeFil(CI, { fil: FIL, epoca: 1, clau: await clauDEpoca(), hashE: bytes(32) })).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+-    await expect(m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
++    await expect(m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('CLAUS_NO_DESABLES'));
+     expect(totesLesFiles(fals)).toEqual([]);
+   });
+ 
+@@ -312,7 +314,7 @@
+     const { fals, m } = entorn();
+     expect(await m.comprova()).toBe(true);
+     await ompli(m, CI, JO);
+-    await m.safata(CI);
++    await m.safata(CI, ACTOR);
+     await m.purgaSafata();
+     await m.instantaniaLlibreta(CI);
+     await m.oblidaEnTancar(CI, { mantenSessio: true });
+@@ -452,7 +454,7 @@
+     const { identitat } = await novaIdentitat();
+     await m.desaIdentitat(CI, identitat);
+     const vell = uuid();
+-    await m.desaASafata(CI, { fil: FIL, id: vell, contingut: { text: 'abans' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: vell, contingut: { text: 'abans' } });
+     await m.desaClauDeFil(CI, { fil: FIL, epoca: 1, clau: await clauDEpoca(), hashE: bytes(32) });
+     m.tanca();
+     /* La restauració: cap CryptoKey desada abans es pot desembolcallar; la sonda, amb una clau nova, passa. */
+@@ -476,8 +478,8 @@
+     expect(await restaurada.desaClauDeFil(CI, { fil: FIL, epoca: 1, clau: await clauDEpoca(), hashE: bytes(32) })).toBe(true);
+     expect(await restaurada.clausDelFil(CI, FIL)).toHaveLength(1);
+     const nou = uuid();
+-    await restaurada.desaASafata(CI, { fil: FIL, id: nou, contingut: { text: 'després' } });
+-    const entrades = await restaurada.safata(CI);
++    await restaurada.desaASafata(CI, { actor: ACTOR, fil: FIL, id: nou, contingut: { text: 'després' } });
++    const entrades = await restaurada.safata(CI, ACTOR);
+     expect(Object.fromEntries(entrades.map((e) => [e.id, e.malmes]))).toEqual({ [vell]: true, [nou]: false });
+   });
+ });
+@@ -635,53 +637,53 @@
+     const { fals, m } = entorn();
+     const id = uuid();
+     const contingut = { text: 'Demà a les huit a la cooperativa', respostaA: null };
+-    const resum = await m.desaASafata(CI, { fil: FIL, id, contingut });
+-    expect(resum).toEqual({ fil: FIL, id, creatMs: INICI, caducaMs: INICI + CADUCITAT_SAFATA_MS });
+-    expect(await m.safata(CI)).toEqual([{ ...resum, contingut, malmes: false }]);
++    const resum = await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id, contingut });
++    expect(resum).toEqual({ fil: FIL, id, actor: ACTOR, creatMs: INICI, caducaMs: INICI + CADUCITAT_SAFATA_MS });
++    expect(await m.safata(CI, ACTOR)).toEqual([{ ...resum, contingut, malmes: false }]);
+     const files = fals.files(NOM_BD_XAT, 'safata');
+     expect(files.map((f) => f.clau)).toEqual([[CI, 'clau'], [CI, 'missatge', id]]);
+     expect(files[0].valor.clau.extractable).toBe(false);
+-    expect(Object.keys(files[1].valor).sort()).toEqual(['creatMs', 'ct', 'fil', 'id', 'idClau', 'iv']);
++    expect(Object.keys(files[1].valor).sort()).toEqual(['actor', 'creatMs', 'ct', 'fil', 'id', 'idClau', 'iv']);
+     expect(conte(files[1].valor.ct, new TextEncoder().encode('cooperativa'))).toBe(false);
+-    expect(await m.safata(CI_ALTRA)).toEqual([]);
++    expect(await m.safata(CI_ALTRA, ACTOR_ALTRA)).toEqual([]);
+   });
+ 
+   test('caduca als 30 dies: l’últim mil·lisegon encara hi és, el següent ja no i s’esborra de la base', async () => {
+     const { fals, m, rellotge } = entorn();
+     const [vell, nou] = [uuid(), uuid()];
+-    await m.desaASafata(CI, { fil: FIL, id: vell, contingut: { text: 'primer' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: vell, contingut: { text: 'primer' } });
+     rellotge.ms += 1000;
+-    await m.desaASafata(CI, { fil: ALTRE_FIL, id: nou, contingut: { text: 'segon' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: ALTRE_FIL, id: nou, contingut: { text: 'segon' } });
+     rellotge.ms = INICI + CADUCITAT_SAFATA_MS - 1;
+-    expect((await m.safata(CI)).map((e) => e.id)).toEqual([vell, nou]);
++    expect((await m.safata(CI, ACTOR)).map((e) => e.id)).toEqual([vell, nou]);
+     rellotge.ms = INICI + CADUCITAT_SAFATA_MS;
+-    expect((await m.safata(CI)).map((e) => e.id)).toEqual([nou]);
++    expect((await m.safata(CI, ACTOR)).map((e) => e.id)).toEqual([nou]);
+     expect(fals.files(NOM_BD_XAT, 'safata').map((f) => f.clau)).toEqual([[CI, 'clau'], [CI, 'missatge', nou]]);
+     rellotge.ms = INICI + 1000 + CADUCITAT_SAFATA_MS;
+     expect(await m.purgaSafata()).toBe(1);
+-    expect(await m.safata(CI)).toEqual([]);
++    expect(await m.safata(CI, ACTOR)).toEqual([]);
+   });
+ 
+   test('un rellotge tocat no eternitza un missatge: més d’un dia en el futur ja és caducat', async () => {
+     const { m, rellotge } = entorn();
+     rellotge.ms = INICI + 40 * DIA;
+-    await m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'del futur' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'del futur' } });
+     rellotge.ms = INICI;
+-    expect(await m.safata(CI)).toEqual([]);
++    expect(await m.safata(CI, ACTOR)).toEqual([]);
+     const proper = uuid();
+-    await m.desaASafata(CI, { fil: FIL, id: proper, contingut: { text: 'ara' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: proper, contingut: { text: 'ara' } });
+     rellotge.ms = INICI - MARGE_FUTUR_SAFATA_MS;
+-    expect((await m.safata(CI)).map((e) => e.id)).toEqual([proper]);
++    expect((await m.safata(CI, ACTOR)).map((e) => e.id)).toEqual([proper]);
+     rellotge.ms = INICI - MARGE_FUTUR_SAFATA_MS - 1;
+-    expect(await m.safata(CI)).toEqual([]);
++    expect(await m.safata(CI, ACTOR)).toEqual([]);
+   });
+ 
+   test('els caducats de qualsevol persona s’esborren: en la primera operació d’una càrrega i amb purgaSafata()', async () => {
+     const { fals, rellotge, obri, m } = entorn();
+     const missatges = (ci) => fals.files(NOM_BD_XAT, 'safata').filter(({ clau }) => clau[0] === ci && clau[1] === 'missatge');
+-    await m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'secret de la biblioteca' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'secret de la biblioteca' } });
+     rellotge.ms = INICI + DIA;
+-    await m.desaASafata(CI_ALTRA, { fil: FIL, id: uuid(), contingut: { text: 'de l’altra' } });
++    await m.desaASafata(CI_ALTRA, { actor: ACTOR_ALTRA, fil: FIL, id: uuid(), contingut: { text: 'de l’altra' } });
+     rellotge.ms = INICI + CADUCITAT_SAFATA_MS;
+     /* Una altra persona obri l'app: el de JO, que no ha tornat, ix sense que JO faça res. */
+     await obri().comprova();
+@@ -696,34 +698,34 @@
+   test('un missatge manipulat a la base (xifrat o data) torna malmés i es pot descartar; un sense la forma que toca s’esborra', async () => {
+     const { fals, m } = entorn();
+     const [tocat, mogut, trencat] = [uuid(), uuid(), uuid()];
+-    await m.desaASafata(CI, { fil: FIL, id: tocat, contingut: { text: 'hola' } });
+-    await m.desaASafata(CI, { fil: FIL, id: mogut, contingut: { text: 'adeu' } });
+-    await m.desaASafata(CI, { fil: FIL, id: trencat, contingut: { text: 'sense data' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: tocat, contingut: { text: 'hola' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: mogut, contingut: { text: 'adeu' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: trencat, contingut: { text: 'sense data' } });
+     filaDesada(fals, 'safata', [CI, 'missatge', tocat]).ct[0] ^= 1;
+     filaDesada(fals, 'safata', [CI, 'missatge', mogut]).creatMs -= DIA;
+     /* Sense una data que es puga comparar, no caducaria mai: fora. */
+     filaDesada(fals, 'safata', [CI, 'missatge', trencat]).creatMs = 'mai';
+-    const entrades = await m.safata(CI);
++    const entrades = await m.safata(CI, ACTOR);
+     expect(fals.files(NOM_BD_XAT, 'safata').some(({ clau }) => clau[2] === trencat)).toBe(false);
+     expect(entrades.map(({ id, malmes, contingut }) => ({ id, malmes, contingut })).sort((a, b) => (a.id < b.id ? -1 : 1)))
+       .toEqual([{ id: tocat, malmes: true, contingut: null }, { id: mogut, malmes: true, contingut: null }].sort((a, b) => (a.id < b.id ? -1 : 1)));
+-    expect(await m.treuDeSafata(CI, tocat)).toBe(true);
+-    expect(await m.treuDeSafata(CI, tocat)).toBe(false);
+-    await m.treuDeSafata(CI, mogut);
+-    expect(await m.safata(CI)).toEqual([]);
++    expect(await m.treuDeSafata(CI, tocat, ACTOR)).toBe(true);
++    expect(await m.treuDeSafata(CI, tocat, ACTOR)).toBe(false);
++    await m.treuDeSafata(CI, mogut, ACTOR);
++    expect(await m.safata(CI, ACTOR)).toEqual([]);
+   });
+ 
+   test('una clau de repòs plantada que no és la que toca (extraïble, de 128 bits, sense xifrar) no es fa servir mai', async () => {
+     const { fals, m } = entorn();
+-    await m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'hola' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'hola' } });
+     for (const clau of [
+       await cripto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']),
+       await cripto.subtle.generateKey({ name: 'AES-GCM', length: 128 }, false, ['encrypt', 'decrypt']),
+       await cripto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['wrapKey', 'unwrapKey'])
+     ]) {
+       filaDesada(fals, 'safata', [CI, 'clau']).clau = clau;
+-      await expect(m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('CLAUS_MALMESES'));
+-      expect((await m.safata(CI)).map((e) => e.malmes)).toEqual([true]);
++      await expect(m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('CLAUS_MALMESES'));
++      expect((await m.safata(CI, ACTOR)).map((e) => e.malmes)).toEqual([true]);
+     }
+   });
+ 
+@@ -734,25 +736,25 @@
+     await Promise.all([esta.comprova(), altra.comprova()]);
+     /* Just quan esta ha fet la seua clau, l'altra en desa una i algú la canvia per una extraïble. */
+     ganxo.despres = async () => {
+-      await altra.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { de: 'altra' } });
++      await altra.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { de: 'altra' } });
+       filaDesada(fals, 'safata', [CI, 'clau']).clau = await cripto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+     };
+-    await expect(esta.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { de: 'esta' } })).rejects.toThrow(ambCodi('CLAUS_MALMESES'));
++    await expect(esta.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { de: 'esta' } })).rejects.toThrow(ambCodi('CLAUS_MALMESES'));
+     expect(fals.files(NOM_BD_XAT, 'safata').filter(({ clau }) => clau[1] === 'missatge')).toHaveLength(1);
+   });
+ 
+   test('un id repetit, la safata plena i un missatge massa gran es rebutgen sense escriure res', async () => {
+     const { fals, m } = entorn();
+     const id = uuid();
+-    await m.desaASafata(CI, { fil: FIL, id, contingut: { text: 'hola' } });
+-    await expect(m.desaASafata(CI, { fil: FIL, id, contingut: { text: 'una altra' } })).rejects.toThrow(ambCodi('SAFATA_DUPLICADA'));
+-    for (let i = 1; i < MAX_MISSATGES_SAFATA; i += 1) await m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { n: i } });
+-    await expect(m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { n: 'massa' } })).rejects.toThrow(ambCodi('SAFATA_PLENA'));
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id, contingut: { text: 'hola' } });
++    await expect(m.desaASafata(CI, { actor: ACTOR, fil: FIL, id, contingut: { text: 'una altra' } })).rejects.toThrow(ambCodi('SAFATA_DUPLICADA'));
++    for (let i = 1; i < MAX_MISSATGES_SAFATA; i += 1) await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { n: i } });
++    await expect(m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { n: 'massa' } })).rejects.toThrow(ambCodi('SAFATA_PLENA'));
+     expect(fals.files(NOM_BD_XAT, 'safata')).toHaveLength(MAX_MISSATGES_SAFATA + 1);
+-    await expect(m.desaASafata(CI_ALTRA, { fil: FIL, id: uuid(), contingut: { text: 'x'.repeat(MAX_BYTES_SAFATA) } }))
++    await expect(m.desaASafata(CI_ALTRA, { actor: ACTOR_ALTRA, fil: FIL, id: uuid(), contingut: { text: 'x'.repeat(MAX_BYTES_SAFATA) } }))
+       .rejects.toThrow(ambCodi('SAFATA_GRAN'));
+     for (const contingut of [null, [], 'text', new Date(0)]) {
+-      await expect(m.desaASafata(CI_ALTRA, { fil: FIL, id: uuid(), contingut })).rejects.toThrow(ambCodi('DADES_INVALIDES'));
++      await expect(m.desaASafata(CI_ALTRA, { actor: ACTOR_ALTRA, fil: FIL, id: uuid(), contingut })).rejects.toThrow(ambCodi('DADES_INVALIDES'));
+     }
+     expect(deLaPersona(fals, CI_ALTRA)).toEqual([]);
+   });
+@@ -764,7 +766,7 @@
+     const altraPestanya = obriPestanya();
+     await estaPestanya.comprova();
+     ganxo.despres = () => altraPestanya.oblidaEnTancar(CI, { mantenSessio: true });
+-    await expect(estaPestanya.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'a mitges' } }))
++    await expect(estaPestanya.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'a mitges' } }))
+       .rejects.toThrow(ambCodi('SAFATA_OBLIDADA'));
+     expect(deLaPersona(fals, CI)).toEqual([]);
+   });
+@@ -773,11 +775,11 @@
+     const { fals, obriPestanya } = entorn();
+     const [a, b] = [obriPestanya(), obriPestanya()];
+     await Promise.all([
+-      a.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { de: 'a' } }),
+-      b.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { de: 'b' } })
++      a.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { de: 'a' } }),
++      b.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { de: 'b' } })
+     ]);
+     expect(fals.files(NOM_BD_XAT, 'safata').filter((f) => f.clau[1] === 'clau')).toHaveLength(1);
+-    for (const pestanya of [a, b]) expect((await pestanya.safata(CI)).map((e) => e.contingut.de).sort()).toEqual(['a', 'b']);
++    for (const pestanya of [a, b]) expect((await pestanya.safata(CI, ACTOR)).map((e) => e.contingut.de).sort()).toEqual(['a', 'b']);
+   });
+ });
+ 
+@@ -802,7 +804,7 @@
+     const recarregat = obri();
+     expect((await recarregat.identitat(CI)).sigPriv).toBeInstanceOf(ClasseClau);
+     expect(await recarregat.clausDelFil(CI, FIL)).toHaveLength(1);
+-    expect(await recarregat.safata(CI)).toEqual([]);
++    expect(await recarregat.safata(CI, ACTOR)).toEqual([]);
+   });
+ 
+   test('qualsevol opció que no siga mantenSessio: true ho esborra tot (també cap opció o null)', async () => {
+@@ -821,7 +823,7 @@
+       await m.desaIdentitat(CI, identitat);
+       const lectura = m.identitat(CI);
+       const fixacio = m.fixa(CI, { usuari: ALTRA, kid: bytes(16) });
+-      const missatge = m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'tard' } });
++      const missatge = m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'tard' } });
+       const oblit = m.oblidaEnTancar(CI, { mantenSessio });
+       for (const tardana of [lectura, fixacio, missatge]) await expect(tardana).rejects.toThrow(ambCodi('OBLIDAT'));
+       expect(await oblit).toBe(mantenSessio ? 0 : 1);
+@@ -835,9 +837,9 @@
+     const { fals, m } = entorn({ criptoDe });
+     const { identitat } = await novaIdentitat();
+     await m.desaIdentitat(CI, identitat);
+-    await m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'secret' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'secret' } });
+     ganxo.despres = () => m.oblidaEnTancar(CI, { mantenSessio: true });
+-    await expect(m.safata(CI)).rejects.toThrow(ambCodi('OBLIDAT'));
++    await expect(m.safata(CI, ACTOR)).rejects.toThrow(ambCodi('OBLIDAT'));
+     const abans = fals.operacions.length;
+     const lectura = m.identitat(CI);
+     /* Fins que la transacció de lectura ja ha demanat la fila: només queda la comprovació de després. */
+@@ -1018,7 +1020,7 @@
+     fals.omplit = true;
+     await expect(m.desaIdentitat(CI, identitat)).rejects.toThrow(ambCodi('SENSE_ESPAI'));
+     await expect(m.fixa(CI, { usuari: ALTRA, kid: bytes(16) })).rejects.toThrow(ambCodi('SENSE_ESPAI'));
+-    await expect(m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('SENSE_ESPAI'));
++    await expect(m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'hola' } })).rejects.toThrow(ambCodi('SENSE_ESPAI'));
+     expect(deLaPersona(fals, CI)).toEqual([]);
+     expect(await m.identitat(CI)).toBeNull();
+     fals.omplit = false;
+@@ -1030,13 +1032,13 @@
+     const { identitat } = await novaIdentitat();
+     await m.desaIdentitat(CI, identitat);
+     await m.desaClauDeFil(CI, { fil: FIL, epoca: 1, clau: await clauDEpoca(), hashE: bytes(32) });
+-    await m.desaASafata(CI, { fil: FIL, id: uuid(), contingut: { text: 'hola' } });
++    await m.desaASafata(CI, { actor: ACTOR, fil: FIL, id: uuid(), contingut: { text: 'hola' } });
+     m.tanca();
+     fals.omplit = true;
+     const ple = obri();
+     expect((await ple.identitat(CI)).sigPriv).toBeInstanceOf(ClasseClau);
+     expect(await ple.clausDelFil(CI, FIL)).toHaveLength(1);
+-    expect((await ple.safata(CI)).map((e) => e.contingut)).toEqual([{ text: 'hola' }]);
++    expect((await ple.safata(CI, ACTOR)).map((e) => e.contingut)).toEqual([{ text: 'hola' }]);
+     expect(await ple.fixacions(CI)).toEqual([]);
+     await expect(ple.comprova()).rejects.toThrow(ambCodi('SENSE_ESPAI'));
+     const { identitat: nova } = await novaIdentitat();
+--- /dev/null
++++ b/src/data/xifratXatMagatzem.actorSafata.seguretat.test.js
+@@ -0,0 +1,132 @@
++// @vitest-environment node
++/* QA-E07 / E2EE-C03: actor explícit de safata, sense dividir la identitat.
++   Dades sintètiques, IndexedDB fals estructurat i AES-GCM de Node. */
++import { describe, expect, test } from 'vitest';
++import { creaIdbFalsEstructurat } from '../../tests/helpers/idbFalsEstructurat.js';
++import { clauIdentitat, creaMagatzemXat, NOM_BD_XAT, SAFATA } from './xifratXatMagatzem.js';
++
++const cripto = globalThis.crypto;
++const JO = '6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b';
++const ALTRA = '0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d';
++const ENTITAT = '9b2d5f1e-3c4a-4e8b-9d6f-1a2b3c4d5e6f';
++const FIL = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
++const ID_A = '00000000-0000-4000-8000-000000000001';
++const ID_B = '00000000-0000-4000-8000-000000000002';
++const actorA = `persona::${JO}`;
++const actorB = `entitat::${ENTITAT}`;
++const ci = (joId = JO) => clauIdentitat({ backendId: 'supabase', endpoint: 'https://exemple.supabase.co', joId });
++const CI = ci();
++const errorDades = expect.objectContaining({ codi: 'DADES_INVALIDES' });
++function entorn() {
++  const fals = creaIdbFalsEstructurat();
++  const comptador = { decrypt: 0 };
++  const criptoDe = {
++    getRandomValues: (v) => cripto.getRandomValues(v),
++    subtle: {
++      generateKey: (...args) => cripto.subtle.generateKey(...args),
++      encrypt: (...args) => cripto.subtle.encrypt(...args),
++      decrypt: (...args) => { comptador.decrypt += 1; return cripto.subtle.decrypt(...args); }
++    }
++  };
++  const obri = (idb = fals) => creaMagatzemXat({ idb, rangs: fals.IDBKeyRange, cripto: criptoDe, ClasseClau: globalThis.CryptoKey, ara: () => 1793318400000 });
++  const fila = (id) => [...fals.bases.get(NOM_BD_XAT).stores.get(SAFATA).files.values()]
++    .find((f) => JSON.stringify(f.clau) === JSON.stringify([CI, 'missatge', id])).valor;
++  return { fals, obri, fila, comptador, m: obri() };
++}
++const desa = (m, actor, id = ID_A, contingut = { text: id }) => m.desaASafata(CI, { fil: FIL, id, actor, contingut });
++
++describe('safata amb actor explícit', () => {
++  test('control: dos actors compartixen la mateixa clauIdentitat, sense actor a la clau primària', () => {
++    expect(ci()).toBe(JSON.stringify(['supabase', 'https://exemple.supabase.co', JO]));
++    expect(ci()).not.toBe(ci(ALTRA));
++  });
++
++  test('cada lectura torna únicament l’actor demanat; el resum identifica l’actor', async () => {
++    const { m } = entorn();
++    expect(await desa(m, actorA)).toMatchObject({ actor: actorA, id: ID_A });
++    await desa(m, actorB, ID_B);
++    expect((await m.safata(CI, actorA)).map((e) => [e.actor, e.id])).toEqual([[actorA, ID_A]]);
++    expect((await m.safata(CI, actorB)).map((e) => [e.actor, e.id])).toEqual([[actorB, ID_B]]);
++    expect(await m.safata(ci(ALTRA), actorA)).toEqual([]);
++  });
++
++  test('llegir un altre actor no intenta desxifrar els missatges ocults ni els esborra', async () => {
++    const { m, fals, comptador } = entorn();
++    await desa(m, actorA);
++    comptador.decrypt = 0;
++    expect(await m.safata(CI, actorB)).toEqual([]);
++    expect(comptador.decrypt).toBe(0);
++    expect(fals.files(NOM_BD_XAT, SAFATA).filter((f) => f.clau[1] === 'missatge')).toHaveLength(1);
++    expect((await m.safata(CI, actorA))[0].contingut).toEqual({ text: ID_A });
++  });
++
++  test('l’actor és a la fila i a l’AAD: reetiquetar-lo no revela el contingut', async () => {
++    const { m, fila } = entorn();
++    await desa(m, actorA);
++    expect(fila(ID_A).actor).toBe(actorA);
++    fila(ID_A).actor = actorB;
++    expect(await m.safata(CI, actorA)).toEqual([]);
++    expect(await m.safata(CI, actorB)).toEqual([expect.objectContaining({ actor: actorB, id: ID_A, contingut: null, malmes: true })]);
++  });
++
++  test('contingut.actor no substituïx l’actor explícit del context', async () => {
++    const { m } = entorn();
++    await desa(m, actorA, ID_A, { actor: actorB, text: 'prova' });
++    expect(await m.safata(CI, actorB)).toEqual([]);
++    expect((await m.safata(CI, actorA))[0]).toMatchObject({ actor: actorA, contingut: { actor: actorB } });
++  });
++
++  test.each([undefined, null, '', ' ', ` ${actorA}`, `${actorA} `, `${actorA}\u0000altre`, `${actorA}\ud800`, `${actorA}\udc00`, 3, {}])('actor invàlid %j falla abans d’obrir IndexedDB', async (actor) => {
++    const { m, fals } = entorn();
++    await expect(desa(m, actor)).rejects.toThrow(errorDades);
++    await expect(m.safata(CI, actor)).rejects.toThrow(errorDades);
++    await expect(m.treuDeSafata(CI, ID_A, actor)).rejects.toThrow(errorDades);
++    expect(fals.bases.size).toBe(0);
++  });
++
++  test('una altra instància i una altra pestanya conserven el filtre sense canviar la clau de repòs', async () => {
++    const { m, fals, obri } = entorn();
++    await desa(m, actorA);
++    const altra = obri(fals.pestanya());
++    await desa(altra, actorB, ID_B);
++    for (const servei of [obri(), altra]) {
++      expect((await servei.safata(CI, actorA)).map((e) => e.id)).toEqual([ID_A]);
++      expect((await servei.safata(CI, actorB)).map((e) => e.id)).toEqual([ID_B]);
++    }
++    expect(fals.files(NOM_BD_XAT, SAFATA).map((f) => f.clau)).toEqual([[CI, 'clau'], [CI, 'missatge', ID_A], [CI, 'missatge', ID_B]]);
++  });
++
++  test('un actor no pot descartar una entrada d’un altre actor', async () => {
++    const { m } = entorn();
++    await desa(m, actorB);
++    expect(await m.treuDeSafata(CI, ID_A, actorA)).toBe(false);
++    expect((await m.safata(CI, actorB)).map((e) => e.id)).toEqual([ID_A]);
++    expect(await m.treuDeSafata(CI, ID_A, actorB)).toBe(true);
++    expect(await m.safata(CI, actorB)).toEqual([]);
++  });
++
++  test('l’id continua sent únic per persona encara que els actors siguen diferents', async () => {
++    const { m } = entorn();
++    await desa(m, actorA);
++    await expect(desa(m, actorB)).rejects.toThrow(expect.objectContaining({ codi: 'SAFATA_DUPLICADA' }));
++    expect((await m.safata(CI, actorA)).map((e) => e.id)).toEqual([ID_A]);
++    expect(await m.safata(CI, actorB)).toEqual([]);
++  });
++
++  test('una fila antiga sense actor no s’atribuïx al context vigent i es purga com a trencada', async () => {
++    const { m, fila, fals } = entorn();
++    await desa(m, actorA);
++    delete fila(ID_A).actor;
++    expect(await m.safata(CI, actorA)).toEqual([]);
++    expect(await m.safata(CI, actorB)).toEqual([]);
++    expect(fals.files(NOM_BD_XAT, SAFATA).map((f) => f.clau)).toEqual([[CI, 'clau']]);
++  });
++
++  test('eixir encara buida els missatges de tots els actors de la persona', async () => {
++    const { m, fals } = entorn();
++    await desa(m, actorA);
++    await desa(m, actorB, ID_B);
++    await m.oblidaEnTancar(CI, { mantenSessio: true });
++    expect(fals.files(NOM_BD_XAT, SAFATA)).toEqual([]);
++  });
++});

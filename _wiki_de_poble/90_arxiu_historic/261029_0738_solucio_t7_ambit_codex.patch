@@ -1,0 +1,489 @@
+diff --git a/src/data/xifratXat.js b/src/data/xifratXat.js
+--- a/src/data/xifratXat.js
++++ b/src/data/xifratXat.js
+@@ -86,7 +86,7 @@
+   if (typeof entrada === 'string') {
+     return {
+       ambitEstable: entrada.trim(),
+-      clauIdentitat: typeof segonaClau === 'string' ? segonaClau.trim() : entrada.trim()
++      clauIdentitat: typeof segonaClau === 'string' ? segonaClau.trim() : ''
+     };
+   }
+   if (entrada && typeof entrada === 'object') {
+@@ -327,16 +327,19 @@
+     };
+   };
+ 
+-  const claus = new Set([
+-    ...Object.keys(impl),
+-    ...Object.getOwnPropertyNames(Object.getPrototypeOf(impl) === Object.prototype ? {} : Object.getPrototypeOf(impl))
+-  ]);
++  const claus = new Set();
++  for (let owner = impl; owner && owner !== Object.prototype; owner = Object.getPrototypeOf(owner)) {
++    for (const nom of Object.getOwnPropertyNames(owner)) claus.add(nom);
++  }
+ 
+   const decorat = {};
+   for (const nom of claus) {
+     if (nom === 'constructor') continue;
+-    const descriptor = Object.getOwnPropertyDescriptor(impl, nom)
+-      ?? Object.getOwnPropertyDescriptor(Object.getPrototypeOf(impl), nom);
++    let descriptor;
++    for (let owner = impl; owner && owner !== Object.prototype; owner = Object.getPrototypeOf(owner)) {
++      descriptor = Object.getOwnPropertyDescriptor(owner, nom);
++      if (descriptor) break;
++    }
+     if (descriptor && ('get' in descriptor || 'set' in descriptor)) {
+       Object.defineProperty(decorat, nom, descriptor);
+       continue;
+@@ -472,6 +475,21 @@
+     writable: false
+   });
+ 
++  let ownerDestroy = impl, descriptorDestroy;
++  while (ownerDestroy && ownerDestroy !== Object.prototype) {
++    descriptorDestroy = Object.getOwnPropertyDescriptor(ownerDestroy, 'destroy');
++    if (descriptorDestroy) break;
++    ownerDestroy = Object.getPrototypeOf(ownerDestroy);
++  }
++  if (descriptorDestroy && (!('value' in descriptorDestroy) || typeof descriptorDestroy.value !== 'function')) {
++    throw new TypeError('destroy ha de ser un mètode.');
++  }
++  const destrueixBackend = descriptorDestroy?.value ?? null;
++  decorat.destroy = function destroyDecorat(...args) {
++    servei.desmunta();
++    return destrueixBackend ? Reflect.apply(destrueixBackend, impl, args) : undefined;
++  };
++
+   registraServeiXifratXat(decorat, servei);
+   return decorat;
+ }
+diff --git a/src/data/xifratXatContext.js b/src/data/xifratXatContext.js
+new file mode 100644
+--- /dev/null
++++ b/src/data/xifratXatContext.js
+@@ -0,0 +1,20 @@
++/** Claus explícites de §21.1: l'actor arriba del context i no fabrica la CI. */
++import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js';
++import { clauIdentitat } from './xifratXatMagatzem.js';
++
++export function clausDelContextXat({ config, joId, ambitEstable } = {}) {
++  const normalitzada = normalizeBackendConfig(config);
++  if (!joId || normalitzada.dataMode !== 'remote') return null;
++  let parts;
++  try { parts = JSON.parse(ambitEstable); } catch { /* comprovació següent */ }
++  if (!Array.isArray(parts) || parts.length !== 3
++    || JSON.stringify(parts) !== ambitEstable
++    || parts[0] !== backendScope(config) || parts[1] !== joId
++    || typeof parts[2] !== 'string' || !parts[2]) {
++    throw new TypeError('Cal l’ambitEstable canònic del context vigent.');
++  }
++  return Object.freeze({
++    ambitEstable,
++    clauIdentitat: clauIdentitat({ backendId: normalitzada.backendId, endpoint: normalitzada.backendUrl, joId })
++  });
++}
+diff --git a/src/data/xifratXatContext.seguretat.test.js b/src/data/xifratXatContext.seguretat.test.js
+new file mode 100644
+--- /dev/null
++++ b/src/data/xifratXatContext.seguretat.test.js
+@@ -0,0 +1,93 @@
++// @vitest-environment node
++import { describe, expect, test, vi } from 'vitest';
++import { backendScope } from '../config/backendConfig.js';
++import { clausDelContextXat } from './xifratXatContext.js';
++import { clauIdentitat } from './xifratXatMagatzem.js';
++import { ambXifratXat, creaServeiAmbitXat, serveiXifratXat } from './xifratXat.js';
++import { CONTRACTE_NUCLI } from './contracte.js';
++import { validaBackendImplementation } from './backendPort.js';
++const A = 'aaaaaaaa-1111-4111-8111-111111111111';
++const B = 'bbbbbbbb-2222-4222-8222-222222222222';
++const config = { backendId: 'supabase', supabaseUrl: 'https://backend.example.test', dataMode: 'remote', tenantId: null };
++const claus = (actor = `persona::${A}`, joId = A, c = config) => clausDelContextXat({
++  config: c, joId, ambitEstable: JSON.stringify([backendScope(c), joId, actor])
++});
++const espera = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return {promise, resolve}; };
++
++describe('CI explícita i àmbit autoritatiu de §21.1', () => {
++  test('la CI reutilitza el constructor del magatzem i no porta actor ni tenant', () => {
++    const personal = claus(), entitat = claus(`entitat::${B}`);
++    expect(personal.clauIdentitat).toBe(clauIdentitat({backendId:'supabase', endpoint:config.supabaseUrl, joId:A}));
++    expect(entitat.clauIdentitat).toBe(personal.clauIdentitat);
++    expect(entitat.ambitEstable).not.toBe(personal.ambitEstable);
++    const altrePoble = claus(`persona::${A}`, A, {...config, tenantId:B});
++    expect(altrePoble.clauIdentitat).toBe(personal.clauIdentitat);
++    expect(altrePoble.ambitEstable).not.toBe(personal.ambitEstable);
++  });
++  test('un actor opac arriba intacte del context; no es deduïx de la CI', () => {
++    const c = claus('entitat::valor-opac::amb::separadors');
++    expect(JSON.parse(c.ambitEstable)[2]).toBe('entitat::valor-opac::amb::separadors');
++    expect(JSON.parse(c.clauIdentitat)).toEqual(['supabase',config.supabaseUrl,A]);
++  });
++  test('persona i endpoint nous canvien la CI', () => {
++    expect(claus(`persona::${B}`, B).clauIdentitat).not.toBe(claus().clauIdentitat);
++    expect(claus(`persona::${A}`, A, {...config, supabaseUrl:'https://altre.example.test'}).clauIdentitat).not.toBe(claus().clauIdentitat);
++  });
++  test('scope alié o no canònic es rebutja, sense fabricar cap CI alternativa', () => {
++    for (const ambitEstable of [JSON.stringify([backendScope(config),B,`persona::${A}`]), JSON.stringify(['backend:altre',A,'actor']), '[]', 'malformat', '[1,2,3]', JSON.stringify([backendScope(config),A,''])]) {
++      expect(()=>clausDelContextXat({config,joId:A,ambitEstable})).toThrow(TypeError);
++    }
++  });
++  test('sense persona o en mode local no obri identitat persistent', () => {
++    expect(clausDelContextXat({config,joId:null,ambitEstable:'sense-sessio'})).toBeNull();
++    expect(clausDelContextXat({config:{...config,dataMode:'local'},joId:A,ambitEstable:'local'})).toBeNull();
++  });
++  test('fixaAmbit(string) exigix la CI explícita; la reserva no es resol inferint l’actor', () => {
++    const s=creaServeiAmbitXat(); expect(()=>s.fixaAmbit(claus().ambitEstable)).toThrow(TypeError);
++    s.fixaAmbit(claus().ambitEstable,claus().clauIdentitat);
++    expect(s.estatAmbit().clauIdentitat).toBe(claus().clauIdentitat);
++  });
++  test('JWT conserva resums i generacions; actor invalida RAM i conserva operació d’identitat', async()=>{
++    const s=creaServeiAmbitXat();s.fixaAmbit(claus());s.desaResumUltimXifrat('f','u','text propi');
++    const abans=s.estatAmbit(),id=s.captura('identitat'),op=s.captura();
++    s.fixaAmbit({...claus()});expect(s.estatAmbit()).toEqual(abans);expect(s.llegixResumUltimXifrat('f','u')).toBe('text propi');
++    const tardana=espera(), identitat=s.guardaIdentitat(async(exigix)=>{await tardana.promise;exigix();return 'restaurada';});
++    s.fixaAmbit(claus(`entitat::${B}`));expect(s.vigent(id)).toBe(true);expect(s.vigent(op)).toBe(false);
++    expect(s.llegixResumUltimXifrat('f','u')).toBeNull();tardana.resolve();await expect(identitat).resolves.toBe('restaurada');
++  });
++  test('A→B→A elimina resultat tardà, bytes i blob i impedix escriure després de l’espera', async()=>{
++    const revocaUrl=vi.fn(),s=creaServeiAmbitXat({revocaUrl});s.fixaAmbit(claus());
++    const tardana=espera(),bytes=Uint8Array.of(7,8),op=s.guardaAmbit(async(exigix,anota)=>{anota('blob:propi');return await tardana.promise;});
++    s.fixaAmbit(claus(`entitat::${B}`));s.fixaAmbit(claus());tardana.resolve(bytes);
++    await expect(op).rejects.toMatchObject({name:'AbortError'});expect([...bytes]).toEqual([0,0]);expect(revocaUrl).toHaveBeenCalledWith('blob:propi');
++  });
++  test('una guarda revalida abans del següent efecte després d’una espera',async()=>{
++    const s=creaServeiAmbitXat();s.fixaAmbit(claus());const tardana=espera(),escriu=vi.fn();
++    const op=s.guardaAmbit(async(exigix)=>{await tardana.promise;exigix();escriu();});
++    s.fixaAmbit(claus(`entitat::${B}`));tardana.resolve();await expect(op).rejects.toMatchObject({name:'AbortError'});expect(escriu).not.toHaveBeenCalled();
++  });
++  test('canvi de persona avorta també la identitat i el rebuig tardà es presenta com AbortError',async()=>{
++    const s=creaServeiAmbitXat();s.fixaAmbit(claus());let rebutja;const op=s.guardaIdentitat(()=>new Promise((_,r)=>{rebutja=r;}));
++    s.fixaAmbit(claus(`persona::${B}`,B));rebutja(Error('fallada sintètica'));await expect(op).rejects.toMatchObject({name:'AbortError'});
++  });
++  test('destroy validat invalida abans del destructor del backend i conserva el receptor',()=>{
++    let s;const impl=Object.fromEntries(CONTRACTE_NUCLI.map(n=>[n,()=>null]));
++    impl.destroy=vi.fn(function(){expect(this).toBe(impl);expect(s.estatAmbit().viu).toBe(false);return 'tancat';});
++    const d=ambXifratXat(impl,{actiu:true});s=serveiXifratXat(d);s.fixaAmbit(claus());const op=s.captura();
++    expect(validaBackendImplementation(d).dispose()).toBe('tancat');expect(s.vigent(op)).toBe(false);expect(()=>s.fixaAmbit(claus())).toThrow();
++  });
++  test('destroy getter es rebutja sense executar-lo i flagfalse preserva l’objecte',()=>{
++    const getter=vi.fn(()=>()=>{}),impl={};Object.defineProperty(impl,'destroy',{get:getter});
++    expect(ambXifratXat(impl,{actiu:false})).toBe(impl);expect(getter).not.toHaveBeenCalled();
++    expect(()=>ambXifratXat(impl,{actiu:true})).toThrow(TypeError);expect(getter).not.toHaveBeenCalled();
++  });
++  test('un adaptador amb prototip nul, com un namespace ESM, es pot decorar',()=>{
++    const impl=Object.assign(Object.create(null),Object.fromEntries(CONTRACTE_NUCLI.map(n=>[n,()=>null])));
++    const d=ambXifratXat(impl,{actiu:true});expect(serveiXifratXat(validaBackendImplementation(d).candidate)).toBe(serveiXifratXat(d));
++  });
++  test('els mètodes heretats de més d’un nivell conserven el receptor',()=>{
++    class Avi { metodePropi(){return this.valor;} }
++    class Pare extends Avi {} class Fill extends Pare {}
++    const impl=new Fill();impl.valor=17;expect(ambXifratXat(impl,{actiu:true}).metodePropi()).toBe(17);
++  });
++});
+diff --git a/src/host.js b/src/host.js
+--- a/src/host.js
++++ b/src/host.js
+@@ -46,6 +46,8 @@
+ import { setBackendImplementation, getBackendImplementation, freezeImplementation, validaBackendImplementation } from './data/backendPort.js';
+ import { defineCustomElement } from './PedraSecaEmbed.jsx';
+ import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
++import { ambXifratXat } from './data/xifratXat.js';
++import { E2EE_ACTIU_PER_DEFECTE } from './config/xifratXat.js';
+ import { adoptaSessioExterna, esborraSessio, configuraBackendSessio } from './data/identitat.js';
+ import { normalizeBackendConfig, backendScope } from './config/backendConfig.js';
+ import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
+@@ -83,6 +85,22 @@
+    fallat i ningú no l'ha tornada a provar encara (quanLlest la consumix). */
+ let arrencadaFallida = false;
+ let backendExtern = false;
++
++function backendAmbXifrat(impl) {
++  // Apagat: mateixa instància, sense inspeccionar WebCrypto ni IndexedDB.
++  if (!E2EE_ACTIU_PER_DEFECTE) return impl;
++  return ambXifratXat(impl, {
++    actiu: true,
++    modeDades: normalizeBackendConfig().dataMode,
++    isSecureContext: globalThis.isSecureContext === true,
++    origen: globalThis.location?.origin,
++    dev: import.meta.env.DEV === true,
++    enMarc: typeof window !== 'undefined' && window.top !== window.self,
++    cripto: globalThis.crypto,
++    indexedDB: globalThis.indexedDB,
++    revocaUrl: (url) => globalThis.URL?.revokeObjectURL?.(url)
++  });
++}
+ 
+ export function deferArrenca() {
+   _deferArrenca = true;
+@@ -138,8 +156,9 @@
+ export function injectaBackendDelPaquet(backend) {
+   if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
+   if (backendExtern) throw new Error('[host] El paquet ja porta un adaptador.');
+-  const { candidate } = validaBackendImplementation(backend);
+-  setBackendImplementation(backend);
++  const decorat = backendAmbXifrat(backend);
++  const { candidate } = validaBackendImplementation(decorat);
++  setBackendImplementation(decorat);
+   backendExtern = true;
+   const acceptats = Object.keys(candidate);
+   return { acceptats, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
+@@ -170,7 +189,7 @@
+       if (injectats.length && pendentsNucli.length) throw new Error('[host] Backend injectat incomplet');
+       if (!injectats.length) {
+         const supabaseImpl = await import('./data/supabase/index.js');
+-        setBackendImplementation(supabaseImpl);
++        setBackendImplementation(backendAmbXifrat(supabaseImpl));
+       }
+ 
+       getRuntimePolicy();
+diff --git a/src/sections/xat/XatContext.jsx b/src/sections/xat/XatContext.jsx
+--- a/src/sections/xat/XatContext.jsx
++++ b/src/sections/xat/XatContext.jsx
+@@ -203,6 +203,7 @@
+ import { useCoreContent } from '../../app/contexts/CoreContentContext';
+ import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
+ import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
++import useXifratXat from './useXifratXat.js';
+ /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
+    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
+    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
+@@ -607,6 +608,7 @@
+      renovació del JWT no és una sessió nova (vegeu la capçalera, «Dos àmbits»). */
+   const clauPersona = JSON.stringify([backendScope(config), joId]);
+   const ambitEstable = JSON.stringify([backendScope(config), joId, actorKey]);
++  const sincronitzaXifrat = useXifratXat({ config, joId, ambitEstable });
+   /* Decisió 1 del Mestre (261007) · `token` és la clau de l'OPERACIÓ (porta
+      `generacio` i la config: cada petició nova captura el testimoni nou) i
+      `ambit` hi viatja perquè l'efecte de més avall sàpia si el testimoni nou és
+@@ -975,6 +977,7 @@
+     try {
+       await hostReady(op.controller.signal);
+       if (!vigent(op)) return false;
++      sincronitzaXifrat();
+       const bruts = await loadFils({ ...config, signal: op.controller.signal });
+       if (!vigent(op)) return false;
+       if (meua !== genFils.current) return null;
+@@ -1042,7 +1045,7 @@
+     } finally {
+       if (vigent(op) && meua === genFils.current) setEstat('ready');
+     }
+-  }, [joId, config, captura, vigent, avisaSiCal, mutaFils, mutaVisitants]);
++  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaFils, mutaVisitants]);
+ 
+   /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ──
+      Torna true o false com carregaFils.
+@@ -1082,6 +1085,7 @@
+       try {
+         await hostReady(op.controller.signal);
+         if (!vigent(op)) return { ok: false, plena: false };
++        sincronitzaXifrat();
+         const opcions = { ...config, signal: op.controller.signal };
+         if (incremental) opcions.despresDeSeq = desDe;
+         if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
+@@ -1154,7 +1158,7 @@
+       }
+     })();
+     return lectura.promesa;
+-  }, [joId, config, captura, vigent, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
++  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
+ 
+   /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
+   const carregaMesAntics = useCallback(async (filId) => {
+@@ -1172,6 +1176,7 @@
+     try {
+       await hostReady(op.controller.signal);
+       if (!vigent(op)) return false;
++      sincronitzaXifrat();
+       const opcions = { ...config, signal: op.controller.signal, abansDeSeq: minim, limit: LIMIT_PAGINA };
+       if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
+       const bruts = await loadMissatges(filId, opcions);
+@@ -1203,7 +1208,7 @@
+       /* La d'una operació avortada no esborra la que el relleu ja ha llançat. */
+       if (carregantAnticsRef.current.get(filId) === op) carregantAnticsRef.current.delete(filId);
+     }
+-  }, [joId, config, captura, vigent, carregaMissatges, mutaMissatges, posaAvisFil, llevaAvisFil]);
++  }, [joId, config, captura, vigent, sincronitzaXifrat, carregaMissatges, mutaMissatges, posaAvisFil, llevaAvisFil]);
+ 
+   /* ── Càrrega inicial. `joId` a la clau: canviar de sessió recarrega. ──
+      Decisió 1 · Una renovació també hi torna (carregaFils penja de l'operació),
+diff --git a/src/sections/xat/XatContext.xifratAmbit.test.jsx b/src/sections/xat/XatContext.xifratAmbit.test.jsx
+new file mode 100644
+--- /dev/null
++++ b/src/sections/xat/XatContext.xifratAmbit.test.jsx
+@@ -0,0 +1,67 @@
++import { StrictMode } from 'react';
++import { cleanup, render, waitFor } from '@testing-library/react';
++import { afterEach, beforeEach, expect, test, vi } from 'vitest';
++import { XatProvider, useXat } from './XatContext.jsx';
++import { creaServeiAmbitXat } from '../../data/xifratXat.js';
++import { registraServeiXifratXat } from '../../data/xifratXatServei.js';
++import { clauIdentitat } from '../../data/xifratXatMagatzem.js';
++
++const m=vi.hoisted(()=>({session:{},actorKey:'',backend:null,loadFils:vi.fn(),loadMissatges:vi.fn(),enviaMissatge:vi.fn(),marcaLlegit:vi.fn(),creaFilDirecte:vi.fn(),carregaMembres:vi.fn(),subscribeToXat:vi.fn(),unsubscribeFromXat:vi.fn(),obriFilDePagina:vi.fn(),teCapacitat:vi.fn(),showToast:vi.fn()}));
++vi.mock('../../app/contexts/SessionContext',()=>({useSession:()=>m.session}));
++vi.mock('../../app/contexts/IdentitatContext.jsx',()=>({useIdentitat:()=>({actorKey:m.actorKey,identitats:undefined})}));
++vi.mock('../../app/contexts/RouterContext',()=>({useLocation:()=>({pathname:'/xat'})}));
++vi.mock('../../app/contexts/UIContext',()=>({useUIActions:()=>({t:(_,alternativa)=>alternativa})}));
++vi.mock('../../components/universal/NotificationContext.jsx',()=>({useToast:()=>({showToast:m.showToast})}));
++vi.mock('../../data/backendPort.js',()=>({...m,getBackendImplementation:()=>m.backend}));
++vi.mock('../../host.js',()=>({quanLlest:async()=>{await m.hostReady;}}));
++vi.mock('../../config/xifratXat.js',async(importOriginal)=>({...await importOriginal(),E2EE_ACTIU_PER_DEFECTE:true}));
++const A='aaaaaaaa-1111-4111-8111-111111111111',B='bbbbbbbb-2222-4222-8222-222222222222';
++const CONFIG={backendId:'supabase',supabaseUrl:'https://backend.example.test',dataMode:'remote',tenantId:null};
++let servei,value,revocats;
++function Sonda(){value=useXat();return null;}
++const arbre=(config=CONFIG)=><StrictMode><XatProvider config={config}><Sonda/></XatProvider></StrictMode>;
++const muntat=async()=>{const v=render(arbre());await waitFor(()=>expect(value.status).toBe('ready'));return v;};
++beforeEach(()=>{
++ vi.clearAllMocks();m.hostReady=null;m.session={currentUser:{id:A},generacio:1,estat:'dins'};m.actorKey=`persona::${A}`;m.backend={};revocats=[];
++ servei=creaServeiAmbitXat({revocaUrl:u=>revocats.push(u)});registraServeiXifratXat(m.backend,servei);
++ m.loadFils.mockResolvedValue([]);m.loadMissatges.mockResolvedValue([]);m.subscribeToXat.mockResolvedValue({subscription:null,error:null});m.unsubscribeFromXat.mockResolvedValue(null);m.teCapacitat.mockReturnValue(false);
++});
++afterEach(cleanup);
++
++test('XatContext fixa el mateix ambitEstable i CI explícita; JWT no buida RAM ni generacions',async()=>{
++ const v=await muntat();const e=servei.estatAmbit();expect(e.ambitEstable).toBe(value.ambitEstable);
++ expect(e.clauIdentitat).toBe(clauIdentitat({backendId:'supabase',endpoint:CONFIG.supabaseUrl,joId:A}));
++ servei.desaResumUltimXifrat('f','u','text sintètic');m.session={...m.session,generacio:2};v.rerender(arbre());
++ expect(servei.estatAmbit().genAmbit).toBe(e.genAmbit);expect(servei.estatAmbit().genIdentitat).toBe(e.genIdentitat);expect(servei.llegixResumUltimXifrat('f','u')).toBe('text sintètic');
++});
++test('A→B→A al proveïdor invalida resultat tardà i conserva la identitat de la persona',async()=>{
++ const v=await muntat(),abans=servei.estatAmbit(),id=servei.captura('identitat');let resol;const bytes=Uint8Array.of(5,6);
++ const op=servei.guardaAmbit(async(_,anota)=>{anota('blob:sintetic');return await new Promise(r=>{resol=r;});});
++ m.actorKey=`entitat::${B}`;v.rerender(arbre());expect(servei.vigent(id)).toBe(true);
++ m.actorKey=`persona::${A}`;v.rerender(arbre());expect(servei.estatAmbit().genAmbit).toBe(abans.genAmbit+2);expect(servei.estatAmbit().genIdentitat).toBe(abans.genIdentitat);
++ resol(bytes);await expect(op).rejects.toMatchObject({name:'AbortError'});expect([...bytes]).toEqual([0,0]);expect(revocats).toContain('blob:sintetic');
++});
++test('eixir i tornar a entrar invalida els dos tipus de testimoni',async()=>{
++ const v=await muntat(),a=servei.captura(),i=servei.captura('identitat');m.session={currentUser:null,generacio:2,estat:'fora'};v.rerender(arbre());
++ expect(servei.estatAmbit().clauIdentitat).toBeNull();expect(servei.vigent(a)).toBe(false);expect(servei.vigent(i)).toBe(false);
++ m.session={currentUser:{id:A},generacio:3,estat:'dins'};v.rerender(arbre());expect(servei.estatAmbit().ambitEstable).toBe(value.ambitEstable);expect(servei.vigent(i)).toBe(false);
++});
++test('desmuntar revoca blobs i invalida crides tardanes; StrictMode permet una reconnexió neta',async()=>{
++ const v=await muntat(),abans=servei.captura();servei.registraBlob('blob:registrat',abans);let resol;
++ const op=servei.guardaAmbit(()=>new Promise(r=>{resol=r;}));v.unmount();expect(servei.vigent(abans)).toBe(false);expect(revocats).toContain('blob:registrat');
++ resol('tardà');await expect(op).rejects.toMatchObject({name:'AbortError'});await muntat();expect(servei.estatAmbit().viu).toBe(true);expect(servei.estatAmbit().ambitEstable).toBe(value.ambitEstable);expect(servei.vigent(abans)).toBe(false);
++});
++test('un altre poble modifica l’àmbit RAM i conserva CI; una altra persona modifica tots dos',async()=>{
++ const v=await muntat(),i=servei.captura('identitat'),a=servei.captura();v.rerender(arbre({...CONFIG,tenantId:B}));expect(servei.vigent(i)).toBe(true);expect(servei.vigent(a)).toBe(false);
++ m.session={currentUser:{id:B},generacio:2};m.actorKey=`persona::${B}`;v.rerender(arbre());expect(servei.vigent(i)).toBe(false);expect(JSON.parse(servei.estatAmbit().clauIdentitat)[2]).toBe(B);
++});
++test('backend instal·lat després del render rep l’àmbit abans de la primera càrrega',async()=>{
++ let llest;m.hostReady=new Promise(r=>{llest=r;});const backend=m.backend;m.backend={};
++ m.loadFils.mockImplementation(async()=>{expect(servei.estatAmbit().ambitEstable).toBe(value.ambitEstable);return [];});
++ render(arbre());expect(servei.estatAmbit().ambitEstable).toBeNull();m.backend=backend;llest();await waitFor(()=>expect(value.status).toBe('ready'));
++ expect(servei.estatAmbit().ambitEstable).toBe(value.ambitEstable);
++});
++test('desmuntar abans de hostReady impedix la connexió i les càrregues tardanes',async()=>{
++ let llest;m.hostReady=new Promise(r=>{llest=r;});const backend=m.backend;m.backend={};const v=render(arbre());v.unmount();m.backend=backend;llest();await Promise.resolve();await Promise.resolve();
++ expect(servei.estatAmbit().ambitEstable).toBeNull();expect(m.loadFils).not.toHaveBeenCalled();
++});
+diff --git a/src/sections/xat/useXifratXat.js b/src/sections/xat/useXifratXat.js
+new file mode 100644
+--- /dev/null
++++ b/src/sections/xat/useXifratXat.js
+@@ -0,0 +1,39 @@
++/** Connexió de RAM del decorador al mateix àmbit confirmat per XatContext. */
++import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
++import { getBackendImplementation } from '../../data/backendPort.js';
++import { serveiXifratXat } from '../../data/xifratXat.js';
++import { clausDelContextXat } from '../../data/xifratXatContext.js';
++import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
++
++export default function useXifratXat({ config, joId, ambitEstable }) {
++  // Flag compilat, mai rebut de configura() ni d'un amfitrió.
++  const claus = E2EE_ACTIU_PER_DEFECTE ? clausDelContextXat({ config, joId, ambitEstable }) : null;
++  const identitat = claus?.clauIdentitat ?? null;
++  const ambit = claus?.ambitEstable ?? null;
++  // Objecte estable amb JWT; un A→B→A crea una connexió A nova.
++  const connexio = useMemo(() => ({ ambit, identitat }), [ambit, identitat]);
++  const confirmada = useRef(null);
++  const serveiActual = useRef(null);
++  const sincronitza = useCallback(() => {
++    if (!E2EE_ACTIU_PER_DEFECTE || confirmada.current !== connexio) return null;
++    const servei = serveiXifratXat(getBackendImplementation());
++    if (serveiActual.current && serveiActual.current !== servei) serveiActual.current.oblidaClausXat();
++    serveiActual.current = servei;
++    if (!servei) return null;
++    if (connexio.identitat && connexio.ambit) servei.fixaAmbit(connexio.ambit, connexio.identitat);
++    else servei.oblidaClausXat();
++    return servei;
++  }, [connexio]);
++  useLayoutEffect(() => {
++    confirmada.current = connexio;
++    sincronitza();
++    return () => { if (confirmada.current === connexio) confirmada.current = null; };
++  }, [connexio, sincronitza]);
++  useLayoutEffect(() => () => {
++    // StrictMode pot reconnectar; destroy del backend usa desmunta().
++    serveiActual.current?.oblidaClausXat();
++    serveiActual.current = null;
++  }, []);
++  // També després de hostReady: el backend pot haver-se instal·lat tard.
++  return sincronitza;
++}
+diff --git a/src/sections/xat/useXifratXat.test.jsx b/src/sections/xat/useXifratXat.test.jsx
+new file mode 100644
+--- /dev/null
++++ b/src/sections/xat/useXifratXat.test.jsx
+@@ -0,0 +1,34 @@
++import { StrictMode } from 'react';
++import { render, cleanup } from '@testing-library/react';
++import { afterEach, beforeEach, expect, test, vi } from 'vitest';
++import useXifratXat from './useXifratXat.js';
++import { creaServeiAmbitXat } from '../../data/xifratXat.js';
++import { registraServeiXifratXat } from '../../data/xifratXatServei.js';
++import { backendScope } from '../../config/backendConfig.js';
++const m=vi.hoisted(()=>({backend:null}));
++vi.mock('../../data/backendPort.js',()=>({getBackendImplementation:()=>m.backend}));
++vi.mock('../../config/xifratXat.js',async(importOriginal)=>({...await importOriginal(),E2EE_ACTIU_PER_DEFECTE:true}));
++const A='aaaaaaaa-1111-4111-8111-111111111111',B='bbbbbbbb-2222-4222-8222-222222222222';
++const config={backendId:'supabase',supabaseUrl:'https://backend.example.test',dataMode:'remote'};
++let sincronitza,servei;
++function Sonda({actor=`persona::${A}`,jwt=1}){
++ void jwt;
++ sincronitza=useXifratXat({config,joId:A,ambitEstable:JSON.stringify([backendScope(config),A,actor])});return null;
++}
++const arbre=(props={})=><StrictMode><Sonda {...props}/></StrictMode>;
++beforeEach(()=>{m.backend={};servei=creaServeiAmbitXat();registraServeiXifratXat(m.backend,servei);});
++afterEach(cleanup);
++test('un callback A antic no reconnecta després de A→B→A',()=>{
++ const v=render(arbre()),antic=sincronitza;v.rerender(arbre({actor:`entitat::${B}`}));v.rerender(arbre());const estat=servei.estatAmbit();
++ expect(antic()).toBeNull();expect(servei.estatAmbit()).toEqual(estat);expect(sincronitza()).toBe(servei);
++});
++test('després de desmuntar cap callback reobri les claus',()=>{
++ const v=render(arbre()),antic=sincronitza;v.unmount();expect(antic()).toBeNull();expect(servei.estatAmbit().clauIdentitat).toBeNull();
++});
++test('renovar JWT conserva callback i generacions',()=>{
++ const v=render(arbre()),antic=sincronitza,estat=servei.estatAmbit();v.rerender(arbre({jwt:2}));expect(sincronitza).toBe(antic);expect(servei.estatAmbit()).toEqual(estat);
++});
++test('substituir backend buida la RAM vella abans de connectar el nou',()=>{
++ render(arbre());const antiga=servei,op=antiga.captura();m.backend={};servei=creaServeiAmbitXat();registraServeiXifratXat(m.backend,servei);
++ expect(sincronitza()).toBe(servei);expect(antiga.vigent(op)).toBe(false);expect(antiga.estatAmbit().clauIdentitat).toBeNull();expect(servei.estatAmbit().clauIdentitat).not.toBeNull();
++});
+diff --git a/tests/host.xifrat.test.js b/tests/host.xifrat.test.js
+new file mode 100644
+--- /dev/null
++++ b/tests/host.xifrat.test.js
+@@ -0,0 +1,20 @@
++import { beforeEach, afterEach, expect, test, vi } from 'vitest';
++vi.mock('../src/PedraSecaEmbed.jsx',()=>({defineCustomElement:vi.fn()}));
++vi.mock('../src/data/identitat.js',()=>({adoptaSessioExterna:vi.fn(),esborraSessio:vi.fn(),configuraBackendSessio:vi.fn()}));
++vi.mock('../src/utils/sanitize.js',()=>({sanitizeHtml:x=>x}));
++vi.mock('../src/config/xifratXat.js',async(importOriginal)=>({...await importOriginal(),E2EE_ACTIU_PER_DEFECTE:true}));
++vi.mock('../src/data/supabase/index.js',async()=>{
++ const {CONTRACTE_NUCLI}=await import('../src/data/contracte.js');return Object.fromEntries(CONTRACTE_NUCLI.map(n=>[n,vi.fn()]));
++});
++beforeEach(()=>{vi.resetModules();vi.stubGlobal('isSecureContext',true);});
++afterEach(()=>vi.unstubAllGlobals());
++test('l’adaptador injectat rep servei abans de validació i segellat, sense ampliar el contracte',async()=>{
++ const {CONTRACTE_NUCLI}=await import('../src/data/contracte.js'),host=await import('../src/host.js');
++ const impl=Object.fromEntries(CONTRACTE_NUCLI.map(n=>[n,vi.fn()]));host.injectaBackendDelPaquet(impl);await host.arrenca();
++ const {getBackendImplementation}=await import('../src/data/backendPort.js'),{serveiXifratXat}=await import('../src/data/xifratXat.js');
++ const backend=getBackendImplementation();expect(Object.isFrozen(backend)).toBe(true);expect(serveiXifratXat(backend)).not.toBeNull();expect(Object.keys(backend)).not.toContain('fixaAmbit');
++});
++test('l’adaptador per defecte passa pel mateix decorador abans de segellar',async()=>{
++ const host=await import('../src/host.js');await host.arrenca();const {getBackendImplementation}=await import('../src/data/backendPort.js'),{serveiXifratXat}=await import('../src/data/xifratXat.js');
++ expect(Object.isFrozen(getBackendImplementation())).toBe(true);expect(serveiXifratXat(getBackendImplementation())).not.toBeNull();
++});

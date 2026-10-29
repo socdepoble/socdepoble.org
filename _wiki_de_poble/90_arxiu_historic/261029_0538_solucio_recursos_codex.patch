@@ -1,0 +1,497 @@
+diff --git a/src/apps/bar/llavors/MAPA_IMATGES.txt b/src/apps/bar/llavors/MAPA_IMATGES.txt
+new file mode 100644
+--- /dev/null
++++ b/src/apps/bar/llavors/MAPA_IMATGES.txt
+@@ -0,0 +1,328 @@
++MAPA D'IMATGES · La Parròquia · Menjar i Beure (Onada 3, T2, decisió D7)
++===========================================================================
++
++Per a qui fa la feina de les fotos (el Mestre o MarIA): els agents no poden
++copiar ni convertir binaris.
++
++DESTÍ (arrel del repositori):
++  public/assets/uploads/empresa/la-parroquia/bar/<categoria>/<slug>.webp
++  És el camí que pinta el Bar (src/apps/bar/vistes/vestits.js, imatgeDe) amb
++  l'establiment de slug «la-parroquia». Les línies d'avall diuen
++  <categoria>/<slug>.webp, i els slugs són els REALS que genera l'adaptador
++  (src/apps/bar/llavors/laParroquia.js).
++
++ORIGEN (relatiu a _wiki_de_poble/04_escriptori/01_produccio/, zona humana):
++  loyverse/¡¡¡Imatges de productes/<carpeta>/<fitxer>   el joc principal
++  la_parroquia/imatges/<fitxer>                          complement
++  Tots els orígens d'este mapa s'han comprovat amb ls el 2026-10-03.
++
++CONVERSIÓ de cada foto:
++  1. Retall quadrat 1:1 (Pedra Seca §8), centrat en el producte.
++  2. Redimensió a 512 × 512 px.
++  3. WebP amb qualitat 75-80: uns 40 KB per foto (orientatiu).
++  4. Desa-la al destí, amb el nom exacte (minúscules, guions, .webp).
++
++PAS FINAL (sense este pas, la foto no es mostra):
++  a) Afig el slug a IMATGES_DISPONIBLES de src/apps/bar/llavors/laParroquia.js,
++     per categoria. Exemple: { cafeteria: ['bombo', 'cafe-sol'], tapes: ['callos'] }
++  b) Passa la prova: npx vitest run src/apps/bar/llavors/laParroquia.test.js
++     Comprova que cada slug llistat té el seu webp a public/ (una foto marcada
++     sense fitxer es veuria trencada: la rajola no té pla B) i que cada destí
++     d'este mapa és un slug real i el seu origen existix.
++  c) A la tauleta: Ajustos › Carta › «Carrega la carta de La Parròquia» de nou
++     (amb el torn tancat), perquè la carta desada agafe les fotos.
++
++AVISOS:
++  · Canviar la categoria d'un producte amb foto trenca el camí (la categoria
++    forma part del camí).
++  · Moltes fotos són envasos de marques baixats de botigues web (els .webloc
++    de la_parroquia/imatges ho indiquen): els drets de publicar-les els ha de
++    decidir el Mestre abans de fer-ne cap commit (vegeu LLEGIU_PRIMER.txt).
++  · El mapatge s'ha fet pel NOM del fitxer, sense mirar les fotos: cal
++    revisar-lo a ull. Les marcades «a confirmar» són dubtoses.
++
++199 fotos per a 327 productes. Una línia per foto:
++  <categoria>/<slug>.webp  <-  <origen>
++
++
++cafeteria (13 de 14)
++--------------------
++cafeteria/bombo.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-bombo.jpg
++cafeteria/cafe-amb-llet.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-cafe-amb-llet.jpg
++cafeteria/cafe-america.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-cafe-america.jpg
++cafeteria/cafe-cappuccino.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-cafe-cappuccino.jpg
++cafeteria/cafe-sol.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-cafe-sol.png
++cafeteria/cafe-tallat.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-cafe-tallat.jpg
++cafeteria/carajillo-cremat.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-carajillo-cremat.jpg
++   (alternativa de més resolució: la_parroquia/imatges/cafeteria-carajillo-cremat-3984px.jpg)
++cafeteria/carajillo-d-anis-conyac-o-ron.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-carajillo-d-anis-conyac-o-ron.jpg
++   (alternativa: la_parroquia/imatges/035-carajillo-magno.webp)
++cafeteria/carajillo-de-baileys-o-whisky.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-carajillo-de-baileys.jpg
++cafeteria/cola-cao.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-colacao-800-gr.jpg
++cafeteria/infusio.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-infusio-normal.jpg
++cafeteria/infusio-tocaeta.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-infusio-tocaeta.jpg
++cafeteria/llet.webp  <-  loyverse/¡¡¡Imatges de productes/cafeteria/cafeteria-llet.png
++   Sense foto: variant (el producte «Variant», de preu obert).
++
++refrescs (25 de 26)
++-------------------
++refrescs/aigua.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aigua--.png
++refrescs/aigua-amb-gas-sant-narcis.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aigua-amb-gas-sant-narcis-1.png
++refrescs/aigua-amb-gas-vichy.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aigua-amb-gas-vichy-catala-1l.jpg
++refrescs/aquarius-llima.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aquarius-llima-300cl.jpg
++refrescs/aquarius-llima-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aquarius-llima-pot.jpg
++refrescs/aquarius-taronja.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aquarius-taronja-300cl.jpg
++refrescs/aquarius-taronja-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-aquarius-taronja-pot.jpg
++refrescs/bitter-kas.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-bitter-kas.jpg
++refrescs/cacaolat.webp  <-  la_parroquia/imatges/refresc-cacaolat-25cl.jpg
++refrescs/coca-cola-200.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-coca-cola-original-200ml.png
++refrescs/coca-cola-350.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-coca-cola-original-350ml.jpg
++refrescs/coca-cola-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-coca-cola-original-pot.jpg
++refrescs/coca-cola-zero-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-coca-cola-zero-pot.jpg
++refrescs/fanta-llima-200ml.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-fanta-llima-200ml.jpg
++refrescs/fanta-llima-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-fanta-llima-pot.jpg
++refrescs/fanta-taronja-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-fanta-taronja-pot.jpg
++refrescs/gasosa.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-gasosa.jpg
++refrescs/nestea-llima-300.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-nestea-30cl.jpg
++refrescs/nestea-llima-pot.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-nestea-pot.jpg
++refrescs/red-bull.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-red-bull.png
++refrescs/seven-up.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-seven-up.png
++refrescs/suc-de-pinya.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-suc-de-pinya.jpg
++refrescs/suc-de-pressec.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-suc-de-pressec.jpg
++refrescs/suc-de-taronja.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-suc-de-taronja.png
++refrescs/tonica-schweppes.webp  <-  loyverse/¡¡¡Imatges de productes/refrescs/refresc-tonica-schweppes.jpg
++   Sense foto: gasosa-la-casera-pet-50-cl.
++
++cerveseria (17 de 18)
++---------------------
++cerveseria/barril-estrella-damm.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa--barril-estrella-damm.jpg
++cerveseria/barril-turia-marzen.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa--barril-turia-marzen.jpg
++cerveseria/barril-voll-damm.webp  <-  la_parroquia/imatges/016-voll-damm.png
++cerveseria/amstel-radler-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-amstel-radler-llimo.png
++cerveseria/cervesa-de-pot-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-de-pot.jpg
++cerveseria/damm-lemon-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-damm-lemon.png
++cerveseria/daura-damm-1-3-sense-gluten.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-daura-damm-sense-gluten-33cl.jpg
++cerveseria/estrella-damm.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-estrella-damm-33cl.jpg
++cerveseria/estrella-galicia-1-5.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-estrella-galicia.png
++cerveseria/free-damm-0-0-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-free-damm-00-33cl.jpg
++cerveseria/heineken-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-heineken-33cl.jpg
++cerveseria/heineken-0-0-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-heineken-00-33cl.jpg
++cerveseria/mahou.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-mahou--33cl.jpg
++cerveseria/mahou-0-0.webp  <-  la_parroquia/imatges/009-mahou-sin-33cl.jpg
++   (alternativa: loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-mahou-00-torrada.png)
++cerveseria/sidra-ladron-de-manzanas.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cerveseria-sidra-de-manzana-botella-ladron-de-manzana-250-ml.png
++cerveseria/turia-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-turia.png
++cerveseria/voll-damm-1-3.webp  <-  loyverse/¡¡¡Imatges de productes/cerveseria/cervesa-voll-damm-33cl.jpg
++   Sense foto: alhambra-1-3.
++
++vins-i-caves (11 de 21)
++-----------------------
++vins-i-caves/castillo-de-urtau-ribera-del-duero.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-castillo-de-urtau.png
++vins-i-caves/galeam-monastrell-ecologic.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-galeam-monastrell.jpg
++vins-i-caves/mas-vilo-priorat.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-mas-vilo.png
++vins-i-caves/maset-rioja-tempranillo.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-maset-rioja-tempranillo.png
++vins-i-caves/muscat-blanc.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-galeam-blanc.jpg
++   (a confirmar: el producte es diu «Muscat (Blanc)» però el seu Handle diu galeam)
++vins-i-caves/verdejo-blanc.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-maset-verdejo-blanc.png
++vins-i-caves/vi-amb-gasosa.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-vi-amb-gasosa.png
++vins-i-caves/vi-negre-d-estiu-sangria.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-vi-negre-d-estiu.png
++vins-i-caves/vina-martina-blanc.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-vina-martina-blanc.png
++vins-i-caves/vina-martina-negre.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-vina-martina-negre.png
++vins-i-caves/vina-martina-rosat.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-vina-martina-rosat.png
++   Sense foto: arrocero-blanc, azpilicueta, marina-alta-blanc, pago-de-los-capellanes, protos,
++   ramon-bilbao-negre, ramon-bilbao-verdejo-rueda-blanc, sericis-negre, tinto-verano-la-casera-275-m, vi-rosat.
++
++combinats (1 de 9)
++------------------
++combinats/calimotxo.webp  <-  loyverse/¡¡¡Imatges de productes/vins-i-caves/vins-i-caves-vi-amb-coca-cola-calimotxo.jpg
++   (només 8 KB: baixa resolució)
++   Sense foto: cuba-libre, gintonic, plis-plai-de-cerol, plis-plai-de-pastor, raf-gin-cola, vodka-cola,
++   vodka-tonic, whisky-cola. Els .webloc de la_parroquia/imatges són enllaços, no imatges.
++
++licoreria (54 de 57)
++--------------------
++licoreria/angostura-aromatic-bitters.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-angostura-aromatic-bitters.png
++licoreria/anis.webp  <-  la_parroquia/imatges/licors-anis.jpg
++licoreria/anis-cervero.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-anis-cervero-sec.jpg
++licoreria/anis-del-mono-dolc.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-anis-del-mono-dolc.jpg
++licoreria/anis-tenis-sec-cassalla.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-anis-tenis-1litre.jpg
++licoreria/baileys.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-baileys.png
++licoreria/brandi-cardenal-mendoza.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-brandi-cardenal-mendoza.png
++licoreria/brandy-carlos-iii.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-brandi-carlosIII-70cl.jpg
++licoreria/brandy-magno.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-brandi-magno.png
++licoreria/brandy-soberano.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-brandi-soberano.png
++licoreria/brandy-torres-10.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-brandi-torres-10.jpg
++licoreria/cafe-licor-cerol.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-cafe-licor-cerol.jpg
++licoreria/cafe-licor-pastor.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-cafe-licor-pastor.jpg
++licoreria/cantueso.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-cantueso.jpg
++licoreria/cointreau.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-cointreau.png
++licoreria/ginebra-beefeter.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-beefeater.jpg
++licoreria/ginebra-bombay.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-bombay-original-gin-70-cl.jpg
++licoreria/ginebra-bombay-sapphire.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-bombay-sapphire-1litre.jpg
++licoreria/ginebra-hendricks.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-hendricks.png
++licoreria/ginebra-larios.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-larios.png
++licoreria/ginebra-puerto-de-indias.webp  <-  la_parroquia/imatges/licors-ginebra-puerto-de-indias-classic.jpg
++licoreria/ginebra-seagrams.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-seagrams.png
++licoreria/ginebra-tankerai.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ginebra-tanqueray-lime.jpg
++licoreria/herbero.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-herbero.jpg
++licoreria/jagermeister.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-jagermeister.png
++licoreria/licor-43.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-licor-43.png
++licoreria/licor-de-crema.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-licor-de-crema.jpg
++licoreria/licor-de-poma.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-licor-de-poma.jpg
++licoreria/licor-de-pressec.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-licor-de-pressec.jpg
++licoreria/malibu.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-malibu.png
++licoreria/mistela.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-mistela.jpg
++licoreria/orujo.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-orujo-de-herbes.jpg
++licoreria/patxaran.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-patxaran.jpg
++licoreria/ponx-caballero.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ponx-caballero-70-cl.jpg
++licoreria/ron-bacardi-carta-blanca.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ron-bacardi-carta-blanca.png
++licoreria/ron-barcelo-envellit.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ron-barcelo-anejo.png
++licoreria/ron-brugal-envellit.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ron-brugal-anejo-superior.png
++licoreria/ron-negrita-envellit.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-ron-negrita-envellit.png
++licoreria/tequila.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-tequila.png
++licoreria/vermut-cinzano-blanc.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vermut-cinzano-bianco.png
++licoreria/vermut-cinzano-roig.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vermut-cinzano-rosso.png
++licoreria/vermut-de-la-casa.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vermut-de-la-casa.png
++licoreria/vermut-martini-blanc.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vermut-martini-bianco.png
++licoreria/vermut-martini-roig.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vermut-martini-rosso.png
++licoreria/vodka-absolut.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vodka-absolut.png
++licoreria/vodka-smirnoff.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-vodka-smirnoff.png
++licoreria/whisky-ballantines.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-ballantines.png
++licoreria/whisky-cardhu-12-anys.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-cardhu-12-anys.png
++licoreria/whisky-four-roses.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-four-roses-bourbon.png
++licoreria/whisky-glenfiddich.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-glenfiddich-12.png
++licoreria/whisky-jack-daniels.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-jack-daniels-old-no7.png
++licoreria/whisky-jb.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-jb-rare.png
++licoreria/whisky-jim-beam.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-jim-beam.png
++licoreria/whisky-white-label.webp  <-  loyverse/¡¡¡Imatges de productes/licoreria/licors-whisky-white-label.png
++   Sense foto: brandy-terry, licor-d-herbes-geruch-berg, whisky-jameson.
++
++plats-combinats (15 de 27)
++--------------------------
++plats-combinats/amanida.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-amanida--basica.jpg
++plats-combinats/amanida-de-salat.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-amanida-amb-salat.jpg
++plats-combinats/plat-d-embotit.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-d-embotit.jpg
++plats-combinats/plat-d-emperador.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-d-emperador.jpg
++plats-combinats/plat-d-ous-trencats.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-d-ous-trencats.jpg
++plats-combinats/plat-de-baco.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-baco.jpg
++plats-combinats/plat-de-calamar-a-la-planxa.webp  <-  la_parroquia/imatges/plat-de-calamar-planxa.jpg
++   (4,3 MB: cal reduir-la)
++plats-combinats/plat-de-calamar-a-la-romana.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-calamar-a-la-romana.jpg
++plats-combinats/plat-de-corder.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-corder.jpg
++plats-combinats/plat-de-llom.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-llom.jpg
++plats-combinats/plat-de-pexuga-de-pollastre.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-pexuga-de-pollastre.jpg
++plats-combinats/plat-de-pollastre-adobat.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-pollastre-adobat.jpg
++plats-combinats/plat-de-ternera.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-ternera.jpg
++plats-combinats/plat-de-tonyina.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-tonyina.jpg
++plats-combinats/plat-de-truita.webp  <-  loyverse/¡¡¡Imatges de productes/plats-combinats/plat-de-truita.jpg
++   Sense foto: amanida-de-tomaca-i-capella, plat-d-entrecot, plat-de-cansalada-entreverada-panceta,
++   plat-de-costelles, plat-de-cuixa-de-pollastre, plat-de-llobarro, plat-de-mitjana-chuleton, plat-de-orada,
++   plat-de-sepia, plat-de-solomillo-rellom, plat-de-xulles-de-corder, plat-de-xurrasco.
++
++entrepans (20 de 33)
++--------------------
++entrepans/baco.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-baco.png
++entrepans/burret-mexica.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa--burret.jpg
++entrepans/cuixot.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-cuixot.jpg
++   (alternativa ja en webp: la_parroquia/imatges/070-entrepa-de-cuixot.webp)
++entrepans/embotit.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-d-embotit-al-gust.jpg
++entrepans/formatge-manxego.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-formatge-manxego.jpg
++entrepans/hamburgesa.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa--hamburguesa-completa.jpg
++entrepans/hueva-i-o-moixama.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-hueva.jpg
++entrepans/llom.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-llom.jpg
++entrepans/llom-adobat.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-llom-adobat.png
++entrepans/pepito-de-vedella.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa--pepito-de-vedella.jpg
++entrepans/pexuga-de-pollastre.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-pexuga-de-pollastre.jpg
++entrepans/pit-de-pollastre-adobat.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-pit-de-pollastre-adobat.png
++entrepans/salmo-i-o-bacalla-fumats.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-moixama.jpg
++   (a confirmar: el Handle és el de la moixama i el nom diu «Salmó i/o bacallà fumats»)
++entrepans/tonyina.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-tonyina-a-seques.jpg
++entrepans/tonyina-amb-anxoves.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-de-tonyina-amb-anxoves.jpg
++entrepans/tortilongui.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa--tortilongi.jpg
++entrepans/truita-amb-cuixot.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-truita-amb-cuixot.png
++entrepans/truita-amb-formatge.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-truita-amb-formatge.jpg
++entrepans/truita-francesa.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-truita-francesa.jpg
++entrepans/vegetal-entrepa.webp  <-  loyverse/¡¡¡Imatges de productes/entrepans/entrepa-vegetal.jpg
++   Sense foto: calamar-a-la-planxa, calamar-a-la-romana, calamars-andalusa, coquetes-fregides,
++   hamburgesa-de-pollastre, hamburgesa-de-vedella, magre-amb-salsa, rellom, saladet, salmo,
++   sandwich-mixte, sandwich-vegetal, sepia.
++
++torrades (8 de 8)
++-----------------
++torrades/torrada-amb-cuixot.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-cuixot-a-seques.jpg
++torrades/torrada-amb-cuixot-i-formatge.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-cuixot-i-formatge.jpg
++torrades/torrada-amb-formatge.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-formatge.jpg
++torrades/torrada-amb-mantega.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-mantega-a-seques.jpg
++torrades/torrada-amb-mantega-i-melmelada.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-mantega-i-melmelada.jpg
++torrades/torrada-amb-oli.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-oli.jpg
++torrades/torrada-amb-salat.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-salat.jpg
++torrades/torrada-amb-tomaca.webp  <-  loyverse/¡¡¡Imatges de productes/torrades/torrada-amb-tomaca.jpg
++
++tapes (24 de 71)
++----------------
++tapes/calamar-a-la-romana.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-calamar-a-la-romana.jpg
++tapes/callos.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-callos.jpg
++tapes/cloisses.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-cloisses.jpg
++tapes/clotxines.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-clotxines.png
++tapes/corets-de-carxofa-amb-anxova.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-corets-de-carxofa-amb-anxova.jpg
++tapes/costelles.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-costelletes.png
++tapes/creilles-amb-alls.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-creilles-amb-alls.jpg
++tapes/creilles-braves.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-braves.png
++tapes/croquetes-de-bacalla.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-croquetes.jpg
++tapes/ensaladilla.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-ensaladilla--russa.jpg
++tapes/ensaladilla-amb-carxofa.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-ensaladilla-amb-carxofa.jpg
++tapes/ensaladilla-amb-formatge.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-ensaladilla-amb-formatge.jpg
++tapes/faves-amb-cuixot.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-faves-amb-cuixot.jpg
++tapes/faves-bollides.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-faves-bollides.jpg
++tapes/fetxe-a-la-planxa.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-fetxe-a-la-planxa.jpg
++tapes/gamba-arrebossada.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-gambes-arrebossades.jpg
++tapes/magre-amb-salsa.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-magre-amb-salsa.jpg
++tapes/magre-amb-tomaca.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-magre-amb-tomaca.jpg
++tapes/mandonguilles.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-mandonguilles.jpg
++tapes/orella-de-porc.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-orella-de-porc.jpg
++tapes/polpet.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-polpet.jpg
++tapes/rabo-de-porc.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-rabo-de-porc.jpg
++tapes/xampinyo-a-la-planxa.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-xampinyo-a-la-planxa.jpg
++tapes/xoriset-picant.webp  <-  loyverse/¡¡¡Imatges de productes/tapes/tapa-xorisets-picants.jpg
++   Sense foto (47): agritos, aigua-sal, aletes-i-cuixetes-de-pollastre, ametles-fregides, bacalla-amb-tomaca,
++   borsa-de-papes, cacauets-salats, cacauets-sencers, calamar-a-la-planxa, calamar-andalusa, canapes, caragols,
++   clotxines-a-la-vinagreta, clotxines-tigre, creilles-fregides, croquetes-caseres, croquetes-de-boletus,
++   croquetes-de-cuixot, cuixetes-de-mar, cuixot-amb-formatge, embotit, ensaladilla-de-marisc, espardenyes,
++   esparrecs-amb-baco, estofat-de-ternera, formatge-fregit, gambeta-a-l-allet, gula-del-nord, lluc-arrebossat,
++   olives-farcides, olives-partides, pasamar-amb-salsa, pintxo-de-pit-de-pollastre, pintxo-de-pollastre-al-kebab,
++   pintxo-de-truita, pintxo-moru, piruletes-de-gamba, rellom-a-l-allet, saltejat-de-bolets, saquets-de-llonganissa,
++   sardines-a-la-planxa, sepia-a-la-planxa, sepia-amb-salsa, ternera-amb-salsa, truita-de-creilles,
++   verdura-a-la-planxa, xampinyo-farcit.
++
++postres (11 de 41)
++------------------
++postres/cloisa-de-mantecado.webp  <-  loyverse/¡¡¡Imatges de productes/postres/cloisa-de-nata.png
++   (a confirmar: triada pel Handle «cloïsses-de-nata»)
++postres/cloisa-de-torro.webp  <-  loyverse/¡¡¡Imatges de productes/postres/cloisa-de-torro.png
++postres/cloisa-de-xocolate.webp  <-  loyverse/¡¡¡Imatges de productes/postres/cloisa-de-xocolate.png
++postres/cono-de-nata-amb-xocolate.webp  <-  loyverse/¡¡¡Imatges de productes/postres/cono.png
++postres/flan.webp  <-  loyverse/¡¡¡Imatges de productes/postres/flan.png
++postres/fruita-dels-temps.webp  <-  loyverse/¡¡¡Imatges de productes/postres/fruita-de-temps.png
++postres/iogurt.webp  <-  loyverse/¡¡¡Imatges de productes/postres/iogurt.png
++postres/polo-de-maduixa.webp  <-  loyverse/¡¡¡Imatges de productes/postres/polo.jpg
++postres/tarta-de-figues.webp  <-  loyverse/¡¡¡Imatges de productes/postres/tarta-de-figues.jpg
++postres/tarta-de-formatge.webp  <-  loyverse/¡¡¡Imatges de productes/postres/tarta-de-formatge.png
++postres/tarta-de-tres-xocolates.webp  <-  loyverse/¡¡¡Imatges de productes/postres/tarta-de-tres-xocolates.jpg
++   Sense foto (30): les boles, els bombons, els conos de mantecado, de torró i Jicono, coulant-o-volcanet,
++   coyote, creps, els granissats, jumpi-push-up, mini-misiles, pink-mouse, els polos que no són de maduixa,
++   polo-gran-bombo-cookies, sandwich-de-nata i tarta.
++
++altres (0 de 2)
++---------------
++   Sense foto: altres-al-10, altres-al-21 (són preus oberts per a l'IVA del 10 % i del 21 %).
++
++
++QUÈ NO ES COPIA de la_parroquia/imatges
++---------------------------------------
++.DS_Store; els 3 .webloc; els fitxers -old i -orig repetits; les fotos de mides de
++variant del barril (001…, 002…-22cl, 003…, 004…, 005…, 006…, 007…, 012…, 013…);
++002-aplimet-tirador-exclusivo-damm.jpg (és un tirador); 002-estrella-damm-tanque.png;
++daura-nota-cata.jpg; download.jpg (no identificada); licors-cafe-licor.jpg (genèrica);
++licors-vermutc-cinzano-extradry.png (cap producte); refresc-tonica-schweppes-logo-blanc.png
++i -detall.jpg; 000-ous-fregits.jpg i les 6 una-racio-de-*.jpg (cap producte; podrien
++servir per a les opcions dels modificadors quan n'hi haja).
+diff --git a/src/apps/bar/llavors/laParroquia.test.js b/src/apps/bar/llavors/laParroquia.test.js
+--- a/src/apps/bar/llavors/laParroquia.test.js
++++ b/src/apps/bar/llavors/laParroquia.test.js
+@@ -11,10 +11,9 @@
+      en fa triar la variant abans del preu, i el cost és el de la triada.
+    · Les fotos: cada slug d'IMATGES_DISPONIBLES té el seu webp a public/, i
+      cada destí del mapa versionat és un slug real (199, sense omissions).
+-     El mapa viu al laboratori de l'Onada 3, que el 261026 va eixir de
+-     l'Escriptori i és germà de socdepoble.org (_investigacio_ia_de_poble/):
+-     sense ell (còpia temporal, CI, una altra màquina), eixa prova se salta
+-     i diu per què; mai un verd en silenci.
++     El mapa original de l'Onada 3 està versionat al costat de la llavor:
++     la comprovació dels 199 destins és obligatòria també en còpies i CI.
++     No depén del laboratori germà ni d'un lliurament humà dels originals.
+      Els originals humans ABSENT es declaren no comprovats; si arriba cap
+      arrel del corpus, tots els orígens han d'existir (PARTIAL és roig).
+    · El literal de compilació: fora del servidor de desenvolupament, La
+@@ -36,9 +35,8 @@
+ const COPIA = path.join(ARREL, 'src/apps/bar/llavors/la-parroquia-loyverse.csv');
+ const PRODUCCIO = path.join(ARREL, '_wiki_de_poble/04_escriptori/01_produccio');
+ const ORIGINAL = path.join(PRODUCCIO, 'la_parroquia/export_items.csv');
+-/* El laboratori de l'Onada 3 (261003_1330_parroquia_claude), germà de socdepoble.org des del 261026. */
+-const LABORATORI = path.resolve(ARREL, '../_investigacio_ia_de_poble/261003_1330_parroquia_claude');
+-const MAPA = path.join(LABORATORI, 'MAPA_IMATGES.txt');
++/* Manifest real de l'Onada 3, versionat amb la llavor: obligatori en CI. */
++const MAPA = path.join(ARREL, 'src/apps/bar/llavors/MAPA_IMATGES.txt');
+ const FOTOS = path.join(ARREL, 'public/assets/uploads/empresa/la-parroquia/bar');
+ 
+ const LLAVOR = llavorLaParroquia();
+@@ -199,8 +197,7 @@
+     for (const cami of llistades) expect(existsSync(path.join(FOTOS, `${cami}.webp`)), cami).toBe(true);
+   });
+ 
+-  test('cada destí del mapa versionat és un slug real; el corpus d’origen declara ABSENT, PARTIAL o COMPLETE', ({ skip }) => {
+-    skip(!existsSync(MAPA), `laboratori absent (${LABORATORI}): el mapa versionat no es comprova en esta màquina`);
++  test('cada destí del mapa versionat és un slug real; el corpus d’origen declara ABSENT, PARTIAL o COMPLETE', () => {
+     const reals = new Set(carta.productes.map((p) => `${p.categoriaId}/${p.imatge.slug}`));
+     const entrades = readFileSync(MAPA, 'utf8').split('\n')
+       .map((l) => /^\s*([a-z0-9-]+\/[a-z0-9-]+)\.webp\s+<-\s+(\S.*\S)\s*$/.exec(l)).filter(Boolean).map((m) => [m[1], m[2]]);
+diff --git a/scripts/botigues/botigues.env.exemple.txt b/scripts/botigues/botigues.env.exemple.txt
+new file mode 100644
+--- /dev/null
++++ b/scripts/botigues/botigues.env.exemple.txt
+@@ -0,0 +1,35 @@
++# Sóc de Poble · botigues («Pregunta Zero», 261003). PLANTILLA: només NOMS, cap valor.
++#
++# On va la còpia (l'omple el Mestre, mai un agent):
++#   · .env.botigues.local a l'arrel del repositori (git l'ignora per «.env.*», .gitignore:14), o
++#   · un fitxer FORA del repositori, amb la seua ruta a SDP_BOTIGUES_ENV (p. ex. ~/claus-socdepoble/botigues.env).
++#   Després: chmod 600. Els scripts paren si el grup o els altres el poden llegir.
++# Regles (els scripts les fan complir i paren si no):
++#   · cap nom VITE_*: Vite segellaria el valor dins del paquet de l'app;
++#   · les claus es nomenen per RUTA, i eixa ruta és FORA del repositori; mai s'hi copia el contingut
++#     d'una .p8, d'un JSON de compte de servei ni d'una keystore;
++#   · el fitxer no pot ser cap dels que carrega Vite (.env, .env.local, .env.natiu.local, .env.production.local…);
++#   · valors literals en una sola línia, sense $VARIABLES.
++
++# Comú
++SDP_APP_ID=
++
++# iOS · App Store Connect API (RUNBOOK H-A1, H-A4)
++SDP_APPLE_TEAM_ID=
++SDP_ASC_KEY_ID=
++SDP_ASC_ISSUER_ID=
++# Ruta de la clau, amb el nom que busca altool: AuthKey_<SDP_ASC_KEY_ID>.p8
++SDP_ASC_KEY_PATH=
++# Carpeta FORA del repositori per als arxius i els IPA
++SDP_BUILDS_DIR=
++
++# Android · Google Play Developer API (RUNBOOK H-G3, H-G4)
++SDP_PLAY_JSON_KEY_PATH=
++SDP_ANDROID_UPLOAD_CERT_SHA256=
++
++# Android · només si el Mestre decidix que el script signe l'AAB (--compila). Si no, signa ell (RUNBOOK A4, opció A)
++# i estes quatre es queden fora del fitxer.
++SDP_ANDROID_KEYSTORE_PATH=
++SDP_ANDROID_KEY_ALIAS=
++SDP_ANDROID_KEYSTORE_PASSWORD=
++SDP_ANDROID_KEY_PASSWORD=
+diff --git a/scripts/botigues/entorn.mjs b/scripts/botigues/entorn.mjs
+--- a/scripts/botigues/entorn.mjs
++++ b/scripts/botigues/entorn.mjs
+@@ -29,11 +29,11 @@
+ export const FITXER_PER_DEFECTE = '.env.botigues.local';
+ export const VARIABLE_DEL_CAMI = 'SDP_BOTIGUES_ENV';
+ 
+-/* El laboratori del disseny («LAB»). La plantilla del fitxer d'entorn no s'instal·la (LLEGIU.txt §6:
+-   en fa la còpia el Mestre) i el rebut de cada pujada va a LAB/rebuts/ (RUNBOOK A10). Els scripts
+-   només imprimixen estos camins: no escriuen cap rebut ni creen la carpeta. */
+-const LABORATORI = '_wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_empaquetat_mobil_claude';
+-export const PLANTILLA_DE_L_ENTORN = `${LABORATORI}/nous/botigues/botigues.env.exemple.txt`;
++/* La plantilla sense credencials està versionada amb els scripts. El Mestre
++   en fa una còpia privada fora del repo. Els rebuts continuen al laboratori
++   germà (RUNBOOK A10): els scripts només imprimixen el destí, no el creen. */
++const LABORATORI = '../_investigacio_ia_de_poble/261003_1330_empaquetat_mobil_claude';
++export const PLANTILLA_DE_L_ENTORN = 'scripts/botigues/botigues.env.exemple.txt';
+ export const REBUTS = `${LABORATORI}/rebuts`;
+ 
+ /** Codis d'eixida, els mateixos als tres scripts. */
+diff --git a/tests/botigues.test.mjs b/tests/botigues.test.mjs
+--- a/tests/botigues.test.mjs
++++ b/tests/botigues.test.mjs
+@@ -11,10 +11,10 @@
+    (el preflight rep consultes fingides): només peces pures, fitxers temporals fora del
+    repositori, git de només lectura, processos fills de Node, JDK fingits (scripts /bin/sh) i, en
+    macOS, «/usr/libexec/java_home -v 21».
+-   Les proves que miren «l'arbre real» (git, capacitor.config.json) i la del laboratori (que el
+-   261026 va eixir de l'Escriptori i és germà de socdepoble.org, a _investigacio_ia_de_poble/) se
+-   salten amb el motiu a la vista quan corren en una còpia temporal sense .git o sense el laboratori
+-   al costat: verd honest, mai un verd en silenci. */
++   Només les proves que miren «l'arbre real» (git, capacitor.config.json) se
++   salten en una còpia sense .git, amb el motiu a la vista. La plantilla és
++   versionada i obligatòria: es comprova igualment sense laboratori germà.
++   El destí extern dels rebuts és un contracte, pot ser un directori futur. */
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+ import fs from 'node:fs';
+@@ -28,10 +28,7 @@
+ import * as android from '../scripts/botigues/puja-android.mjs';
+ 
+ const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+-/* El laboratori del disseny (261003_1330_empaquetat_mobil_claude), germà de socdepoble.org des del 261026. */
+-const LABORATORI = path.resolve(ARREL, '../_investigacio_ia_de_poble/261003_1330_empaquetat_mobil_claude');
+ const SENSE_REPOSITORI = !fs.existsSync(path.join(ARREL, '.git')) && 'còpia sense .git: esta prova mira l\'arbre real del repositori';
+-const SENSE_LABORATORI = !fs.existsSync(LABORATORI) && `laboratori absent (${LABORATORI}): la plantilla i els rebuts no es comproven en esta màquina`;
+ 
+ test('botigues: peces pures (fitxer d\'entorn, prohibides, màscares, empremtes, opcions, arguments)', () => {
+   const { valors, errors } = e.analitzaEntorn('# comentari\nexport SDP_APP_ID=org.socdepoble.app\nSDP_ASC_KEY_ID="ABC123DEFG" # nota\nSDP_X=\'a b\'\nSDP_Y=valor # inline\nSDP_APP_ID=valorduplicat\nmal\nSDP_Z="valorobert\n\n');
+@@ -254,14 +251,27 @@
+   assert.deepEqual(r.valors, {});
+   assert.equal(r.jdk, null);
+   assert.match(r.linies.join('\n'), /✗ no hi ha cap fitxer d'entorn/);
+-});
+-
+-test('botigues: la plantilla i els rebuts que nomenen els missatges són al laboratori germà', { skip: SENSE_LABORATORI }, () => {
+-  // El preflight diu al Mestre «copia PLANTILLA_DE_L_ENTORN»: des de l'arrel del repositori, la ruta ha de dur a un fitxer real.
+-  // Si el laboratori es mou, PLANTILLA_DE_L_ENTORN i REBUTS (LABORATORI, scripts/botigues/entorn.mjs) es mouen amb ell.
+-  assert.ok(fs.existsSync(path.resolve(ARREL, e.PLANTILLA_DE_L_ENTORN)),
+-    `${e.PLANTILLA_DE_L_ENTORN} no existix des de l'arrel: LABORATORI (scripts/botigues/entorn.mjs) ha de ser ${path.relative(ARREL, LABORATORI)}`);
+-  assert.ok(fs.existsSync(path.dirname(path.resolve(ARREL, e.REBUTS))), path.dirname(e.REBUTS));
++  assert.ok(r.linies.join('\n').includes(e.PLANTILLA_DE_L_ENTORN), 'el missatge nomena la plantilla instal·lada');
++});
++
++test('botigues: la plantilla versionada existix i només conté les dotze variables buides', () => {
++  assert.equal(e.PLANTILLA_DE_L_ENTORN, 'scripts/botigues/botigues.env.exemple.txt');
++  const fitxer = path.resolve(ARREL, e.PLANTILLA_DE_L_ENTORN);
++  assert.ok(fs.existsSync(fitxer), 'falta la plantilla versionada: no depén del laboratori');
++  assert.ok(fs.lstatSync(fitxer).isFile(), 'la plantilla ha de ser un fitxer regular');
++  const { valors, errors } = e.analitzaEntorn(fs.readFileSync(fitxer, 'utf8'));
++  assert.deepEqual(errors, []);
++  assert.deepEqual(Object.keys(valors).sort(), Object.keys(e.VARIABLES).sort());
++  // Només booleans als errors: una contaminació accidental no exposa valors.
++  assert.equal(Object.values(valors).every(valor => valor === ''), true, 'la plantilla no pot portar credencials ni valors d’un entorn');
++  assert.deepEqual(e.desconegudes(valors), []);
++  assert.deepEqual(e.prohibides(valors), []);
++});
++
++test('botigues: el destí dels rebuts és extern i no exigix que el laboratori ja existisca', () => {
++  assert.equal(e.REBUTS, '../_investigacio_ia_de_poble/261003_1330_empaquetat_mobil_claude/rebuts');
++  assert.equal(path.isAbsolute(e.REBUTS), false);
++  assert.equal(e.esDins(ARREL, path.resolve(ARREL, e.REBUTS)), false);
+ });
+ 
+ test('botigues: sense JDK per a Gradle, --signa para amb l\'eixida 6 i sense --signa és un avís', () => {

@@ -1,0 +1,262 @@
+--- /dev/null
++++ b/tests/t11-arxiu-fossils-bundle.test.mjs
+@@ -0,0 +1,58 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import crypto from 'node:crypto';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
++const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
++const FOSSILS=['.agents/ESTAT.md.abans-260830','.agents/manifest.yaml.abans-260830','.agents/pageContent_old.js','tooling/wiki/rules/trellat-rules.json.abans-260830','tooling/wiki/generar_petorreta_inversa.mjs.abans-260830','tooling/wiki/tractor-cognitiu.mjs.abans-260830','tooling/wiki/core/edge_rag.mjs.abans-260830'];
++const archive=rel=>'_wiki_de_poble/90_arxiu_historic/fossils_retirats_261029/'+rel;
++test('CLI real: fòssil abans al bundle, després arxivat sense contaminació ni pèrdua de bytes',t=>{
++ const parent=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-fossils-bundle-'))),root=path.join(parent,'repo'),output=path.join(parent,'outputs');
++ fs.mkdirSync(root);fs.mkdirSync(output);t.after(()=>fs.rmSync(parent,{recursive:true,force:true}));
++ const put=(rel,content)=>{const file=path.join(root,rel);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,content);};
++ const current={'.agents/AGENTS.md':'# Current BIOS fixture\n','.agents/ESTAT.md':'# Current state fixture\n','.agents/LEDGER.md':'# Current ledger fixture\n','.agents/skills/current/SKILL.md':'# Current skill fixture\n','package.json':'{"type":"module"}\n','vite.config.js':'export default {};\n','eslint.config.js':'export default [];\n','index.html':'<!doctype html><html lang="ca"></html>\n','src/current.js':'export const current=true;\n','_wiki_de_poble/01_ser/00_bios.md':'# Current knowledge fixture\n'};
++ for(const[rel,content]of Object.entries(current))put(rel,content);
++ for(const dir of ['scripts','supabase','tests'])fs.mkdirSync(path.join(root,dir),{recursive:true});
++ const tools=['tooling/brain/crear_bundle.mjs','tooling/lib/arrel.mjs','tooling/wiki/lib/prompt_sgq.mjs'];
++ for(const rel of tools)put(rel,fs.readFileSync(path.join(ROOT,rel)));
++ const canary='SYNTHETIC_FOSSIL_RAG_SENTINEL_261029';
++ FOSSILS.forEach((rel,i)=>put(rel,`// Synthetic fossil ${i}: ${canary}_${i}\n`));
++ const currentPaths=[...Object.keys(current),...tools],beforeCurrent=currentPaths.map(rel=>sha(fs.readFileSync(path.join(root,rel))));
++ const run=phase=>{
++  const destination=path.join(output,phase+'.md');
++  const result=spawnSync(process.execPath,[path.join(root,tools[0]),'--perfil=macro','--eixida='+destination],{cwd:root,env:{...process.env,SDP_ARREL:root},encoding:'utf8'});
++  assert.equal(result.status,0,result.stdout+'\n'+result.stderr);
++  return fs.readFileSync(destination,'utf8');
++ };
++ const before=run('before');assert.ok(before.includes(canary+'_2'));assert.ok(before.includes('## Fitxer: .agents/pageContent_old.js'));
++ for(const rel of FOSSILS){
++  const original=path.join(root,rel),destination=path.join(root,archive(rel)),digest=sha(fs.readFileSync(original));
++  fs.mkdirSync(path.dirname(destination),{recursive:true});fs.renameSync(original,destination);
++  assert.equal(fs.existsSync(original),false);assert.equal(sha(fs.readFileSync(destination)),digest);
++ }
++ const after=run('after');assert.equal(after.includes(canary),false);
++ assert.ok(FOSSILS.every(rel=>!after.includes('## Fitxer: '+archive(rel))));
++ assert.deepEqual(currentPaths.map(rel=>sha(fs.readFileSync(path.join(root,rel)))),beforeCurrent);
++});
++
++const ORIGINAL_HASHES = Object.freeze({
++  ".agents/ESTAT.md.abans-260830": "da681ce7fcafda103c9a9e831b679d7fe4298cf2929b1f8d7d11ef9a5b2dce7f",
++  ".agents/manifest.yaml.abans-260830": "7133d2fe2262e5d86141d8ffb1be7e7ce637fd3d8363ea74f10b9244b518a1fb",
++  ".agents/pageContent_old.js": "43feb33df5ed78163bd0a52d6a88a0a897735231782f1f98865928a0244f4913",
++  "tooling/wiki/rules/trellat-rules.json.abans-260830": "1ad9790a2365673d44ff1c1cd798c2a112bded4e829e8759ed78c3b8a31694a3",
++  "tooling/wiki/generar_petorreta_inversa.mjs.abans-260830": "8cf2875b1fe48570fb9e781fc60cf82b1eae54d88946fdac6855ab654cbf90e6",
++  "tooling/wiki/tractor-cognitiu.mjs.abans-260830": "b10ce9c482352b59c9c4e1a34800c7196ec7ac6b2cbd771d656edf4f4d1704d9",
++  "tooling/wiki/core/edge_rag.mjs.abans-260830": "f92fcf825993fcdd539b4a248cf367f4ed9e91e5ac9ea12eabe094d870745bc7"
++});
++test('repositori: cap fòssil operatiu reapareix i cada original continua íntegre a l’arxiu',()=>{
++  for(const rel of FOSSILS){
++    assert.equal(fs.existsSync(path.join(ROOT,rel)),false,'Fòssil operatiu reintroduït: '+rel);
++    const destination=path.join(ROOT,archive(rel));
++    assert.equal(fs.existsSync(destination),true,'Original arxivat absent: '+rel);
++    assert.equal(sha(fs.readFileSync(destination)),ORIGINAL_HASHES[rel],'Bytes històrics alterats: '+rel);
++  }
++});
+--- a/_wiki_de_poble/01_ser/03_equip_ia.md
++++ b/_wiki_de_poble/01_ser/03_equip_ia.md
+@@ -1,7 +1,7 @@
+ ---
+ type: document
+ status: canonic
+-description: Defineix la família electrònica i la simbiosi entre l'equip humà, Antigravity i les IA auditores.
++description: Descriu els rols de l'equip i remet al contracte original, al cens vigent i al perfil de la IAIA MarIA.
+ tags:
+   - core
+   - genoma
+@@ -14,25 +14,37 @@
+ ---
+ # Equip IA
+ 
+-L'equip de Sóc de Poble és una simbiosi: el Mestre Javi decidix, la IAIA MarIA (Antigravity) executa i el Consell de les Petorretes audita i aporta mirades de fora. El cens narratiu sencer, membre a membre, és a [[agents_equip_ia]] i la font de veritat estructurada és `.agents/consell.json`.
++El Mestre Javi fixa el propòsit, les prioritats i les decisions humanes. La IAIA MarIA (Antigravity) interpreta, dissenya i coordina els relleus. Claude i ChatGPT Codex implementen i passen proves quan l'encàrrec els assigna codi, i també poden rebre encàrrecs d'auditoria. MarIA toca codi quan hi ha petició humana explícita, segons la skill de coordinació.
+ 
+-## Els 12 Seients del Consell de les Petorretes
++## Fonts i lectura
+ 
+-| # | Membre | Rol Canònic | Enllaç Oficial |
+-| :---: | :--- | :--- | :--- |
+-| 1 | **Z.ai** | Ingesta massiva i sentinella zero | [https://z.ai/](https://z.ai/) |
+-| 2 | **Qwen (Alibaba Cloud)** | Arquitectura i codi frugal | [https://chat.qwenlm.ai/](https://chat.qwenlm.ai/) |
+-| 3 | **Deepseek (DeepSeek AI)** | Caça de bugs i lògica matemàtica | [https://chat.deepseek.com/](https://chat.deepseek.com/) |
+-| 4 | **Dola** | Calendari i gestió d'agendes | [https://dola.com/chat/](https://dola.com/chat/) |
+-| 5 | **Kimi (Moonshot AI)** | Documents llargs i subvencions | [https://kimi.ai](https://kimi.ai) |
+-| 6 | **Claude (Anthropic)** | Auditor sènior, estil i empatia rural | [https://claude.ai/](https://claude.ai/) |
+-| 7 | **Perplexity (Perplexity AI)** | Verificació de fets i fonts en temps real | [https://www.perplexity.ai/](https://www.perplexity.ai/) |
+-| 8 | **Mistral Vibe (Mistral AI)** | Contrapunt europeu i codi obert | [https://chat.mistral.ai/](https://chat.mistral.ai/) |
+-| 9 | **Grok (xAI)** | Pluja d'idees salvatge i disruptiva | [https://grok.com/](https://grok.com/) |
+-| 10 | **Gemini (Google)** | Motor sensorial multimodal i orquestració | [https://gemini.google.com/](https://gemini.google.com/) |
+-| 11 | **Copilot (Microsoft)** | Autocompletat a la trinxera i GitHub | [https://copilot.microsoft.com/](https://copilot.microsoft.com/) |
+-| 12 | **ChatGPT Codex (OpenAI)** | Segona opinió generalista i auditories QA | [https://chatgpt.com/](https://chatgpt.com/) |
++Este retrat no crea permisos ni substituïx els procediments. L'original normatiu és [AGENTS.md](../../AGENTS.md); el fitxer de `.agents/` n'és un mirall generat. L'ordre d'entrada el fixa [cervell.json](../../.agents/cervell.json), sense duplicar-ne la seqüència ací. La veu i la conducta de MarIA viuen a [PROFILE.md](../../.agents/PROFILE.md), i l'assignació i coordinació dels rols a [core-consell-i-colmena](../../.agents/skills/core-consell-i-colmena/SKILL.md).
+ 
++El primer bloc d'[ESTAT.md](../../.agents/ESTAT.md) informa del treball vigent. Un perfil del cens, una acta antiga o esta pàgina no acrediten la disponibilitat d'una sessió, la quota ni una versió de model.
++
++## Cens vigent
++
++Esta taula és una projecció de les membres amb `actiu: true` de [consell.json](../../.agents/consell.json). El perfil de referència orienta el repartiment de tasques; l'encàrrec autoritzat concreta la funció en cada treball.
++
++| Identificador | Membre actiu del cens | Perfil de referència | Enllaç oficial |
++| --- | --- | --- | --- |
++| z-ai | Z.ai | Ingesta massiva | [Z.ai](https://z.ai/) |
++| qwen | Qwen | Arquitectura i codi | [Qwen](https://chat.qwenlm.ai/) |
++| deepseek | Deepseek | Caça de bugs | [Deepseek](https://chat.deepseek.com/) |
++| dola | Dola | Calendari | [Dola](https://dola.com/chat/) |
++| kimi | Kimi | Documents llargs i subvencions | [Kimi](https://kimi.ai) |
++| claude | Claude | Seient Núm. 5 · Auditor sènior i estil | [Claude](https://claude.ai/) |
++| perplexity | Perplexity | Verificació de fets | [Perplexity](https://www.perplexity.ai/) |
++| mistral | Mistral Vibe | Contrapunt europeu i codi obert | [Mistral Vibe](https://chat.mistral.ai/) |
++| grok | Grok | Pluja d'idees salvatge | [Grok](https://grok.com/) |
++| gemini | Gemini | Motor sensorial i orquestració | [Gemini](https://gemini.google.com/) |
++| copilot | Copilot | Autocompletat a la trinxera | [Copilot](https://copilot.microsoft.com/) |
++| chatgpt | ChatGPT Codex | Segona opinió generalista i auditories de codi | [ChatGPT Codex](https://chatgpt.com/) |
++
++## Memòria narrativa
++
++El [retrat narratiu del Consell](./agents_equip_ia.md) conserva les aportacions i descripcions de cada membre. Es manté com a memòria i context; els noms i perfils vigents es contrasten amb el cens original. L'àlies «12 petorretes» es conserva per a la navegació històrica.
++
+ ## Vincles
+ 
+ - [[agents_equip_ia]]
+--- /dev/null
++++ b/tests/t11-equip-contracte.test.mjs
+@@ -0,0 +1,97 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import {fileURLToPath} from 'node:url';
++import {parseDocument, validateSchema, sha} from '../tooling/documental/core.mjs';
++import {markdownProse} from '../tooling/lib/markdown-prose.mjs';
++import {extractDocumentLinks, resolveDocumentLink} from '../tooling/lib/document-links.mjs';
++import {documentCorpus, documentLinkTargets} from '../tooling/lib/document-corpus.mjs';
++import {auditContractClaims} from '../tooling/wiki/lib/contract_consistency.mjs';
++import {parseMarkdown} from '../src/sections/wiki-de-poble/parseMarkdown.js';
++
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
++const EQUIP='_wiki_de_poble/01_ser/03_equip_ia.md';
++const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
++const source=()=>JSON.parse(read('.agents/consell.json'));
++const members=registry=>registry.membres.filter(m=>m.actiu===true);
++
++// Taula editorial declarada, no inferència de rols a partir de prosa lliure.
++function auditRoster(content,registry=source()) {
++  if(!Array.isArray(registry?.membres))return {status:'incomplete',issues:['cens absent']};
++  const active=members(registry),ids=active.map(m=>m.id);
++  if(!active.length||new Set(ids).size!==ids.length||active.some(m=>['id','nom','rol','url'].some(k=>typeof m[k]!=='string'||!m[k].trim())))return {status:'incomplete',issues:['cens invàlid o buit']};
++  const lines=markdownProse(content).split(/\r?\n/),heads=[];
++  lines.forEach((l,i)=>{if(l==='## Cens vigent')heads.push(i);});
++  if(heads.length!==1)return {status:'incomplete',issues:['secció vigent absent o duplicada']};
++  let end=lines.findIndex((l,i)=>i>heads[0]&&/^## /.test(l));
++  if(end<0)end=lines.length;
++  const claims=[],seen=[],raw=content.split(/\r?\n/);
++  for(let i=heads[0]+1;i<end;i++) {
++    const match=/^\|\s*([a-z][a-z0-9-]*)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*\[[^\]]+\]\((https?:[^)]+)\)\s*\|$/.exec(lines[i]);
++    if(!match)continue;
++    const [,id,name,role,url]=match;seen.push(id);
++    for(const [field,value]of [['nom',name],['rol',role],['url',url]])claims.push({id:`${id}:${field}`,value,path:EQUIP,line:i+1,text:raw[i]});
++  }
++  const issues=[];
++  for(const id of ids)if(!seen.includes(id))issues.push(`membre absent:${id}`);
++  for(const id of seen)if(!ids.includes(id))issues.push(`membre alié o inactiu:${id}`);
++  if(new Set(seen).size!==seen.length)issues.push('fila duplicada');
++  if(issues.length)return {status:'incomplete',issues};
++  const scope='equip-cens-vigent';
++  return auditContractClaims({scope,documents:[{path:EQUIP,content,authority:'active'}],catalog:{scope,canonical:active.flatMap(m=>['nom','rol','url'].map(k=>({id:`${m.id}:${k}`,value:m[k]}))),claims}});
++}
++
++test('equip conserva frontmatter canònic i resol les fonts de rols i lectura amb el resolutor real',()=>{
++  const raw=read(EQUIP),doc=parseDocument(raw);
++  assert.deepEqual(validateSchema(doc.data,JSON.parse(read('tooling/wiki/schema.json'))),[]);
++  assert.ok(doc.data.aliases.includes('12 petorretes'));
++  const files=documentLinkTargets(ROOT,documentCorpus(ROOT));
++  const targets=extractDocumentLinks(raw).map(link=>path.relative(ROOT,resolveDocumentLink(link,path.join(ROOT,EQUIP),files,ROOT)));
++  for(const target of ['AGENTS.md','.agents/cervell.json','.agents/PROFILE.md','.agents/consell.json','.agents/ESTAT.md','.agents/skills/core-consell-i-colmena/SKILL.md'])assert.ok(targets.includes(target),target);
++});
++test('taula vigent compara noms i rols exactes contra totes les membres actives de la font',()=>{
++  const result=auditRoster(read(EQUIP));assert.equal(result.status,'no-explicit-disagreements');
++  assert.equal(result.coverage.catalog.activeClaims,members(source()).length*3);
++  assert.equal(result.coverage.catalog.comparedIds,members(source()).length*3);
++});
++test('un perfil obsolet produeix desacord localitzat encara que el nom continue correcte',()=>{
++  const m=members(source())[0],raw=read(EQUIP).replace(`| ${m.id} | ${m.nom} | ${m.rol} | [${m.nom}](${m.url}) |`,`| ${m.id} | ${m.nom} | Rol antic | [${m.nom}](${m.url}) |`),result=auditRoster(raw);
++  assert.equal(result.status,'explicit-disagreements');assert.equal(result.findings.length,1);
++  assert.equal(result.findings[0].contract,`catalog:${m.id}:rol`);assert.equal(result.findings[0].requiresReview,true);
++});
++test('un nom comercial o de model atribuït sense font produeix desacord nominal',()=>{
++  const m=members(source())[0],raw=read(EQUIP).replace(`| ${m.id} | ${m.nom} |`,`| ${m.id} | Model inventat |`);
++  const result=auditRoster(raw);assert.equal(result.status,'explicit-disagreements');assert.equal(result.findings[0].contract,`catalog:${m.id}:nom`);
++});
++test('cens absent, buit o duplicat i secció absent no donen verd per falta de dades',()=>{
++  const raw=read(EQUIP),registry=source();
++  for(const broken of [{},{membres:[]},{membres:[...registry.membres,registry.membres[0]]}])assert.equal(auditRoster(raw,broken).status,'incomplete');
++  assert.equal(auditRoster('# Equip IA\nVegeu el cens.').status,'incomplete');
++});
++test('una membre retirada de la font o una fila repetida exigeixen reconciliació',()=>{
++  const registry=source(),m=members(registry)[0],raw=read(EQUIP),row=`| ${m.id} | ${m.nom} | ${m.rol} | [${m.nom}](${m.url}) |`;
++  assert.equal(auditRoster(raw,{...registry,membres:registry.membres.filter(x=>x.id!==m.id)}).status,'incomplete');
++  assert.equal(auditRoster(raw.replace(row,row+'\n'+row)).status,'incomplete');
++  assert.equal(auditRoster(raw.replace(row,'')).status,'incomplete');
++});
++test('exemples fenced, comentats i inline no reparen una membre real absent',()=>{
++  const m=members(source())[0],row=`| ${m.id} | ${m.nom} | ${m.rol} | [${m.nom}](${m.url}) |`,raw=read(EQUIP).replace(row,'');
++  for(const example of [`~~~markdown\n${row}\n~~~`,`<!--\n${row}\n-->`,`\`\`${row}\`\``])assert.equal(auditRoster(raw.replace('## Cens vigent','## Cens vigent\n'+example)).status,'incomplete');
++  assert.equal(auditRoster('~~~~markdown\n'+read(EQUIP)+'\n~~~~').status,'incomplete');
++});
++test('un exemple complet abans de la taula no oculta un desacord vigent; dues seccions fallen tancades',()=>{
++  const m=members(source())[0],raw=read(EQUIP),wrong=raw.replace(`| ${m.id} | ${m.nom} | ${m.rol} | [${m.nom}](${m.url}) |`,`| ${m.id} | ${m.nom} | Rol antic | [${m.nom}](${m.url}) |`);
++  for(const prelude of [`~~~markdown\n${raw}\n~~~\n`,`<!--\n${raw}\n-->\n`])assert.equal(auditRoster(prelude+wrong).status,'explicit-disagreements');
++  assert.equal(auditRoster(raw+'\n## Cens vigent\n').status,'incomplete');
++});
++test('el lector web real mostra tots els perfils sense dependre d’una transclusió Obsidian',()=>{
++  const html=parseMarkdown(parseDocument(read(EQUIP)).body,{entradilla:false});
++  assert.equal(html.includes('![['),false);
++  for(const m of members(source()))assert.ok(html.includes(`<td>${m.nom}</td>`)&&html.includes(`<td>${m.rol}</td>`),m.id);
++});
++test('lectura, resolució i comprovació deixen intactes les fonts i la memòria narrativa',()=>{
++  const files=[EQUIP,'_wiki_de_poble/01_ser/agents_equip_ia.md','AGENTS.md','.agents/cervell.json','.agents/consell.json','.agents/PROFILE.md','.agents/ESTAT.md','.agents/skills/core-consell-i-colmena/SKILL.md'];
++  const before=files.map(p=>sha(read(p)));auditRoster(read(EQUIP));extractDocumentLinks(read(EQUIP));
++  assert.deepEqual(files.map(p=>sha(read(p))),before);
++});
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -41,7 +41,9 @@
+     "tests/security-chain.test.mjs",
+     "tests/sistema_nervios.test.mjs",
+     "tests/standalone-build.test.mjs",
++    "tests/t11-arxiu-fossils-bundle.test.mjs",
+     "tests/t11-cens-documental.test.mjs",
++    "tests/t11-equip-contracte.test.mjs",
+     "tests/t11-parser-consumers.test.mjs",
+     "tests/t11-retirada-planificacio.test.mjs",
+     "tests/verificador-scc.test.mjs",
+@@ -517,6 +519,11 @@
+       "path": "tests/standalone-build.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/t11-arxiu-fossils-bundle.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable de l’arxiu dels set fòssils: CLI amb fixture sintètica i invariants d’absència al corpus viu i preservació byte a byte dels originals."
+     },
+     {
+       "path": "tests/t11-cens-documental.test.mjs",
+@@ -524,6 +531,11 @@
+       "reason": "T11: cens verificable de skills, esquema documental, invariants i pins exactes de font; no score semàntic general."
+     },
+     {
++      "path": "tests/t11-equip-contracte.test.mjs",
++      "suite": "primary",
++      "reason": "Contracte de rols, cens vigent i referències de l’equip IA sense duplicar fonts d’autoritat."
++    },
++    {
+       "path": "tests/t11-parser-consumers.test.mjs",
+       "suite": "primary",
+       "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."

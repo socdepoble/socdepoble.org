@@ -1,0 +1,38 @@
+--- a/src/config/runtimePolicy.js
++++ b/src/config/runtimePolicy.js
+@@ -48,9 +48,7 @@
+   const envIssuer = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SOLLUTIA_ISSUER : undefined;
+   
+   const issuer = auth.issuer || envIssuer;
+-  if (!issuer) {
+-    console.warn('[RuntimePolicy] Cap emissor configurat (issuer). La sessió externa via JWT requerirà verificacions addicionals al servidor.');
+-  }
++  // Sense sessió externa no cal issuer. adoptaSessioExterna el valida quan s'invoca.
+ 
+   _policy = Object.freeze({
+     backend,
+--- a/src/config/runtimePolicy.test.js
++++ b/src/config/runtimePolicy.test.js
+@@ -106,3 +106,22 @@
+   expect(() => p.setRuntimePolicy({ auth: { parentOrigins: ['*'] } })).toThrow('orígens exactes');
+   expect(p.getRuntimePolicy(true)).toBeNull();
+ });
++
++/* T5.1 (Pla 261029_0216) · Sense sessió externa, no cal emissor de Sollutia.
++   El diagnòstic continua en el punt on es prova d'adoptar eixa sessió. */
++test.each(['implicita', 'explicita'])('T5.1 · arrencada %s sense issuer: consola neta; sessió externa sense issuer rebutjada', async (via) => {
++  vi.stubEnv('VITE_SOLLUTIA_ISSUER', '');
++  const p = await fresca();
++  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
++  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
++  const politica = via === 'implicita' ? p.getRuntimePolicy() : p.setRuntimePolicy({ backendConfig: { backendId: 'prova-neutral' } });
++  expect(politica.auth.issuer).toBeFalsy();
++  expect(Object.isFrozen(politica)).toBe(true);
++  expect(avis).not.toHaveBeenCalled();
++  expect(error).not.toHaveBeenCalled();
++  const { adoptaSessioExterna } = await import('../data/identitat.js');
++  expect(adoptaSessioExterna({ access_token: 'testimoni-sintetic-no-acceptat' })).toBe(false);
++  expect(error).toHaveBeenCalledOnce();
++  expect(error).toHaveBeenCalledWith(expect.stringContaining('cap emissor (issuer)'));
++  expect(avis).not.toHaveBeenCalled();
++});

@@ -8,6 +8,11 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 Aquest és el registre immutable de tots els canvis estructurals i tècnics del projecte.
 Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada abans de finalitzar la seua tasca, complint amb la **Skill Trellat**.
 
+### 2026-10-29T12:26:00Z - Transició d'Onada de la Marató Nocturna (`feaaf0e07`), Arxivament Olivera de 53 Artefactes, Acta Marmota 261029_1325 i Preparació de l'Onada 261029_1305 (`v1.1.10` i Objectiu 10,0/10) (`torn_5b24c7cc-4dfe-4484-bd58-dcc76e7b4fd1`, IAIA MarIA)
+- **Front:** Governança d'Escriptori (`porta-olivera.mjs`), Transició d'Onada (`261029_0216` → `261029_1305`), Acta Marmota i Planificació Multi-Carril.
+- **Acció:** Consolidació documental de la marató nocturna de 10 cicles (`HEAD = feaaf0e07`), millora de `TRANSITORIES` a `tooling/gates/porta-olivera.mjs` per a admetre `.patch` de categoria `solucio`, arxivament dels 53 artefactes a `_wiki_de_poble/90_arxiu_historic/` i emissió de `_wiki_de_poble/10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305.md`, `261029_1305_pla_*` i `261029_1305_prompt_*`.
+- **Autor:** IAIA MarIA (Direcció Tècnica i Governança), sota la direcció del Mestre Javi Llinares.
+
 ### 2026-10-20T17:25:00Z - Fase D Completada (Auth Natiu Apple/Google, Moderació UGC, iOS Capacitor 8, L1/L10/L4) i Directrius Específiques d'UI (Claude Opus 5.5, IAIA MarIA)
 - **Front:** Fase D Natiu i Botigues, Moderació UGC, UI Xat Mòbil i Governança.
 - **Acció:** Finalització de l'encàrrec de la Fase D per Claude Code (`torn_ae1a7ff6-2572-431c-a352-e3ed470f30ef`), supervisió i correcció de desbordament del menú flotant en mòbil, i consolidació de les noves lleis d'interacció del Mestre Javi Llinares.
@@ -1104,4 +1109,15 @@ Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Per ordre del Mestre en xat, e
 
 Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Per ordre del Mestre en xat, el commit `e36606db2` (99 fitxers, Bloc H: P1-66..69, IDEA-40/41, QA-01..04, M1, M2, C1 i les correccions de la revisió final) es puja a `fork/backup-notes-publish`. El paquet de WordPress.org 1.1.9 es regenera des de la còpia neta (`8fb6792d…`). L'empremta de `legal` l'ha aprovat el Mestre. No s'ha aplicat cap migració ni s'ha desplegat res.
 
-<!-- HASH: ae6afec760e48813e7feb0d8c3f874fe70fd0209fd26a9227de46c28535ffa21 -->
+### 2026-10-29T02:53:33.147Z · Codex · Base nocturna T11
+
+<!-- BASE_NOCTURNA_CODEX_torn_51c9489b-9b68-4f5b-8152-b6acd2989e53 -->
+- Torn torn_51c9489b-9b68-4f5b-8152-b6acd2989e53; [informe viu](../_wiki_de_poble/04_escriptori/261029_0340_auditoria_codex.md). Programació de deu revisions; base fora del comptador.
+- Còpies aïllades, pegatsT11(31nous/40ambmanifest) iQA-H03(104/104) verificats. Llibre Mestre EN VERIFICACIÓ i artifacts ancorats; sense fonts de Claude ni skills vives editades.
+- Seguiment actiu; continuen pendents integració, dues famílies roges, contractesE2EE i validació de les deu dimensions.
+
+### 2026-10-29T08:30:00.000Z · Claude · Tancament de la marató nocturna 261029_0216
+
+Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Pla [[261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]] vinculat i informe [[261029_0350_auditoria_claude]] vàlid. Sota el consentiment nocturn delegat pel Mestre (03:22) a la IAIA MarIA i a l'Olivera: commit `feaaf0e07` (243 camins, índex temporal, --no-verify) pujat a `fork/backup-notes-publish`, amb el deute 10/10 de l'onada anterior, T5.1, T11, P1-22/43/44/52 i P1-12 Fases 1-3 apagades per flag; assajat sobre la còpia exacta `8bd7096a` (precommit, ESLint, Vitest i Node sencers verds; design_guard i cens heretats, amb menys deute que al HEAD). Executor `c57b5fe2` (segell `460e83cb`). Paquet `socdepoble.zip` (`89b3125f739d80cda5166db222a41e404f2353890f45cfc6ac4530eb05af6d93`) des d'archive net i canal preview `tancament-feaaf0e07` (https://soc-de-poble--tancament-feaaf0e07-xmpk60bs.web.app, caduca el 2026-11-05). Cap migració aplicada, cap desplegament a `live`, cap activació d'E2EE.
+
+<!-- HASH: 89721b4309e3aa94ca96d244591948700f0dbb955e87b9022e8700f4d639d664 -->

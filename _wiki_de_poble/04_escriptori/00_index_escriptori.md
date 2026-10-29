@@ -14,8 +14,8 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]] — Prompt actiu per a la Reunió de l'Olivera (Claude Code compte nou, Gemini CLI i GPT Codex): tancament 10/10 del Bloc H (`QA-H01`, `QA-H02`, `QA-H04`, `APP-D1`, `R-01/02/07`, `M-01`, `socdepoble.zip`) i Fase 1/2 d'E2EE (`P1-12` + `IDEA-48`)
-- [[261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]] — Pla d'Implementació rector de l'onada `261029_0216` (ordre d'execució de 6 passos per assolir el 10/10 verificable)
+- [[261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]] — Prompt operatiu per a l'Onada `261029_1305` (Claude Code, Gemini CLI i GPT Codex): liquidació del deute tècnic de portes (`design_guard`, `tractor-cens`, `tractor-frontmatter`, `0838` `T11`), actius (`OG-02`, `R-02`, `D-C2`) i Fase 4 d'E2EE fins al `10,0/10` unànime
+- [[261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]] — Pla d'Implementació rector de l'onada `261029_1305` amb matriu d'exclusivitat de carrils (`E1`, `M1`, `G1`, `G2`, `G3`)
 - [[03_llibre_mestre_tasques_i_idees]] · Mestre 261021: Llibre Mestre permanent
 
 ## Producció humana
@@ -67,6 +67,59 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
+- [[../90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
+- [[../90_arxiu_historic/261029_0336_auditoria_gemini]]
+- [[../90_arxiu_historic/261029_0340_auditoria_codex]]
+- [[../90_arxiu_historic/261029_0340_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0340_solucio_contrast_codex.patch]]
+- [[../90_arxiu_historic/261029_0340_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0350_auditoria_claude]]
+- [[../90_arxiu_historic/261029_0408_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0408_solucio_appd1_sessio_codex.patch]]
+- [[../90_arxiu_historic/261029_0408_solucio_m01_codex.patch]]
+- [[../90_arxiu_historic/261029_0408_solucio_runtime_codex.patch]]
+- [[../90_arxiu_historic/261029_0408_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0438_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0438_produccio_barra_375_codex.png]]
+- [[../90_arxiu_historic/261029_0438_solucio_e2ee_cua_codex.patch]]
+- [[../90_arxiu_historic/261029_0438_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0438_solucio_wordpress_codex.patch]]
+- [[../90_arxiu_historic/261029_0508_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0508_solucio_autoritat_codex.patch]]
+- [[../90_arxiu_historic/261029_0508_solucio_e2ee_sdph_codex.patch]]
+- [[../90_arxiu_historic/261029_0508_solucio_t11_i_og_codex.patch]]
+- [[../90_arxiu_historic/261029_0538_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0538_solucio_e2ee_actor_codex.patch]]
+- [[../90_arxiu_historic/261029_0538_solucio_recursos_codex.patch]]
+- [[../90_arxiu_historic/261029_0538_solucio_t11_i_og_codex.patch]]
+- [[../90_arxiu_historic/261029_0608_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0608_solucio_grants_codex.patch]]
+- [[../90_arxiu_historic/261029_0608_solucio_regressions_codex.patch]]
+- [[../90_arxiu_historic/261029_0608_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0630_solucio_t11_onada6_gemini.patch]]
+- [[../90_arxiu_historic/261029_0638_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0638_solucio_backend_capacitats_codex.patch]]
+- [[../90_arxiu_historic/261029_0638_solucio_t11_docs_codex.patch]]
+- [[../90_arxiu_historic/261029_0638_solucio_t11_tractors_codex.patch]]
+- [[../90_arxiu_historic/261029_0700_solucio_t11_c5_pendents_gemini.patch]]
+- [[../90_arxiu_historic/261029_0700_solucio_t7_decorador_gemini.patch]]
+- [[../90_arxiu_historic/261029_0708_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0708_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0708_solucio_t7_canal_codex.patch]]
+- [[../90_arxiu_historic/261029_0735_solucio_t11_portes_cens_gemini.patch]]
+- [[../90_arxiu_historic/261029_0738_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0738_solucio_pla_referencies_codex.patch]]
+- [[../90_arxiu_historic/261029_0738_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0738_solucio_t7_ambit_codex.patch]]
+- [[../90_arxiu_historic/261029_0738_solucio_t7_contracte_codex.patch]]
+- [[../90_arxiu_historic/261029_0800_solucio_t7_ambit_i_t11_selectors_gemini.patch]]
+- [[../90_arxiu_historic/261029_0808_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0808_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0808_solucio_t7_adjunts_codex.patch]]
+- [[../90_arxiu_historic/261029_0838_informe_evidencies_codex.json]]
+- [[../90_arxiu_historic/261029_0838_solucio_t11_codex.patch]]
+- [[../90_arxiu_historic/261029_0838_solucio_t7_codex.patch]]
 - [[../90_arxiu_historic/261027_0730_solucio_opengraph_i_copy_codex]]
 - [[../90_arxiu_historic/261027_0730_informe_reforma_editorial_gemini]]
 - [[../90_arxiu_historic/261028_1526_pla_implementacio_deute_tecnic_opengraph_edicio_i_xat]]
@@ -102,3 +155,5 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - 261026 · `261026_1930_prompt_codex_gauntlet_share_target`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - [[../10_actes/261026_2115_acta_marmota_triomf_gauntlet_share_target_commit_d83188d2_i_relleu_rea]]
 - [[../10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude]]
+- [[../10_actes/261029_0838_acta_marmota_qa_codex_10_cicles]]
+- [[../10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305]]

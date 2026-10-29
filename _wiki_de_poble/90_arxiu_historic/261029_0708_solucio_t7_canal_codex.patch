@@ -1,0 +1,168 @@
+diff --git a/src/data/xifratXat.js b/src/data/xifratXat.js
+--- a/src/data/xifratXat.js
++++ b/src/data/xifratXat.js
+@@ -41,8 +41,7 @@
+ import { E2EE_ACTIU_PER_DEFECTE, esOrigenDeConfianca } from '../config/xifratXat.js';
+ import { ambitDelFil, teMarcaApegalosa } from './xifratXatAbast.js';
+ 
+-const SERVEIS_PER_BACKEND = new WeakMap();
+-let ultimServei = null;
++import { serveiXifratXatDe, registraServeiXifratXat } from './xifratXatServei.js';
+ 
+ function errorXifrat(codi, missatge, extres = {}) {
+   const error = new Error(missatge);
+@@ -317,6 +316,7 @@
+   }
+   const actiu = entorn?.actiu ?? E2EE_ACTIU_PER_DEFECTE;
+   const modeDades = entorn?.modeDades ?? 'remote';
++  if (actiu !== true || modeDades !== 'remote') return impl;
+   const servei = creaServeiAmbitXat({ revocaUrl: entorn?.revocaUrl });
+ 
+   const delega = (nom) => {
+@@ -431,6 +431,11 @@
+           if (typeof entorn.preparaSobreXifrat === 'function') {
+             const paquet = await entorn.preparaSobreXifrat({ fil, cos, config, exigix });
+             exigix();
++            if (!paquet || typeof paquet !== 'object' || paquet.text !== null
++              || !paquet.xifrat || typeof paquet.xifrat !== 'object') {
++              throw errorXifrat('clar-rebutjat', 'SDP-XAT-031: el preparador ha de tornar un sobre sense text en clar.',
++                { id: idMissatge, code: 'SDP-XAT-031', reintentable: false });
++            }
+             return Reflect.apply(impl.enviaXifratXat, impl, [fil.id, paquet, config]);
+           }
+ 
+@@ -467,20 +472,11 @@
+     writable: false
+   });
+ 
+-  SERVEIS_PER_BACKEND.set(decorat, servei);
+-  SERVEIS_PER_BACKEND.set(impl, servei);
+-  ultimServei = servei;
++  registraServeiXifratXat(decorat, servei);
+   return decorat;
+ }
+ 
+-/**
+- * Recupera el servei d'àmbit associat a una implementació o l'últim instal·lat,
+- * sense necessitat d'afegir `fixaAmbit` a `CONTRACTE_BACKEND`.
+- */
++/** Recupera només el servei associat a la implementació indicada. */
+ export function serveiXifratXat(impl = null) {
+-  if (impl && typeof impl === 'object') {
+-    if (SERVEIS_PER_BACKEND.has(impl)) return SERVEIS_PER_BACKEND.get(impl);
+-    if (impl.servei) return impl.servei;
+-  }
+-  return ultimServei;
+-}
++  return serveiXifratXatDe(impl);
++}
+diff --git a/src/data/backendPort.js b/src/data/backendPort.js
+--- a/src/data/backendPort.js
++++ b/src/data/backendPort.js
+@@ -1,3 +1,4 @@
++import { heretaServeiXifratXat } from './xifratXatServei.js';
+ import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
+ 
+ let currentImpl = null;
+@@ -46,7 +47,9 @@
+   }
+   if (teardown && (!('value' in teardown) || typeof teardown.value !== 'function'))
+     throw new TypeError('[backendPort] destroy invàlid');
+-  return { candidate: Object.freeze(candidate), dispose: teardown ? teardown.value.bind(impl) : null };
++  Object.freeze(candidate);
++  heretaServeiXifratXat(impl, candidate);
++  return { candidate, dispose: teardown ? teardown.value.bind(impl) : null };
+ }
+ export function getBackendImplementation() { return currentImpl || EMPTY; }
+ export function freezeImplementation() {
+diff --git a/src/data/xifratXatServei.js b/src/data/xifratXatServei.js
+new file mode 100644
+--- /dev/null
++++ b/src/data/xifratXatServei.js
+@@ -0,0 +1,12 @@
++/** Canal lateral per a serveis de cicle de vida, sense ampliar el transport. */
++const serveis = new WeakMap();
++export function serveiXifratXatDe(impl) {
++  return impl && (typeof impl === 'object' || typeof impl === 'function') ? serveis.get(impl) ?? null : null;
++}
++export function registraServeiXifratXat(impl, servei) {
++  serveis.set(impl, servei);
++}
++export function heretaServeiXifratXat(origen, desti) {
++  const servei = serveiXifratXatDe(origen);
++  if (servei) serveis.set(desti, servei);
++}
+diff --git a/src/data/xifratXat.seguretat.test.js b/src/data/xifratXat.seguretat.test.js
+--- a/src/data/xifratXat.seguretat.test.js
++++ b/src/data/xifratXat.seguretat.test.js
+@@ -153,13 +153,14 @@
+     const decorat = ambXifratXat(impl);
+     expect(decorat.loadFils()).toEqual(['ok']);
+     await expect(decorat.enviaMissatge(FIL_DIRECTE, { text: 'hola' })).rejects.toBe(errorOriginal);
+-    expect(serveiXifratXat(decorat)).toBe(decorat.servei);
++    expect(decorat).toBe(impl);
++    expect(serveiXifratXat(decorat)).toBeNull();
+   });
+ 
+   test('4 claus: renovació de JWT conserva RAM; canvi d’actor invalida àmbit però conserva identitat; A -> B -> A cancel·la i neteja', async () => {
+     const revocats = [];
+     const impl = creaBackendSintetic();
+-    const decorat = ambXifratXat(impl, { revocaUrl: (u) => revocats.push(u) });
++    const decorat = ambXifratXat(impl, { actiu: true, revocaUrl: (u) => revocats.push(u) });
+     const servei = serveiXifratXat(decorat);
+ 
+     const ambitA = { ambitEstable: '["backend:1","jo","persona::jo"]', clauIdentitat: '["supa","https://x","jo"]' };
+diff --git a/src/data/xifratXatCanal.seguretat.test.js b/src/data/xifratXatCanal.seguretat.test.js
+new file mode 100644
+--- /dev/null
++++ b/src/data/xifratXatCanal.seguretat.test.js
+@@ -0,0 +1,49 @@
++// @vitest-environment node
++import { test, expect, vi } from 'vitest';
++import { CONTRACTE_NUCLI } from './contracte.js';
++import { validaBackendImplementation } from './backendPort.js';
++import { ambXifratXat, serveiXifratXat } from './xifratXat.js';
++const core = (extres = {}) => ({...Object.fromEntries(CONTRACTE_NUCLI.map(n => [n, vi.fn()])), ...extres});
++const actiu = () => ({actiu: true, isSecureContext: true, origen: 'https://socdepoble.org', cripto: {subtle: {digest(){}}}, indexedDB: {open(){}}});
++test('flag false conserva identitat exacta i no inspecciona capacitats', () => {
++ const impl = core(); Object.defineProperty(impl,'enviaXifratXat',{enumerable:true,get(){throw Error('getter');}});
++ expect(ambXifratXat(impl)).toBe(impl); expect(ambXifratXat(impl,{actiu:false})).toBe(impl);
++});
++test('mode local conserva identitat encara que la configuració active el flag', () => {
++ const impl = core(); expect(ambXifratXat(impl,{actiu:true,modeDades:'local'})).toBe(impl);
++});
++test('la validació i el segellat conserven el servei exacte sense ampliar transport', () => {
++ const d = ambXifratXat(core(),actiu()); const servei=serveiXifratXat(d); const validat=validaBackendImplementation(d).candidate;
++ expect(Object.isFrozen(validat)).toBe(true); expect(serveiXifratXat(validat)).toBe(servei);
++ expect(Object.keys(validat)).not.toContain('servei'); expect(validat.fixaAmbit).toBeUndefined();
++});
++test('dos backends no comparteixen servei i desconeguts no reben l’últim servei', () => {
++ const a=ambXifratXat(core(),actiu()), b=ambXifratXat(core(),actiu());
++ const va=validaBackendImplementation(a).candidate,vb=validaBackendImplementation(b).candidate;
++ expect(serveiXifratXat(va)).toBe(serveiXifratXat(a)); expect(serveiXifratXat(vb)).toBe(serveiXifratXat(b));
++ expect(serveiXifratXat(va)).not.toBe(serveiXifratXat(vb)); expect(serveiXifratXat()).toBeNull();
++ const desconegut={get servei(){throw Error('no llegir getter');}};expect(serveiXifratXat(desconegut)).toBeNull();
++});
++test('tornar a decorar no substituïx el servei de l’embolcall anterior',()=>{
++ const impl=core(),a=ambXifratXat(impl,actiu()),b=ambXifratXat(impl,actiu());
++ expect(serveiXifratXat(a)).not.toBe(serveiXifratXat(b));expect(serveiXifratXat(impl)).toBeNull();
++});
++test('sense transport o pipeline privat no cau mai al transport en clar',async()=>{
++ const id='dddddddd-3333-4000-8000-000000000003';
++ for(const ambCapacitat of [false,true]){
++  const enviaMissatge=vi.fn(),enviaXifratXat=vi.fn();
++  const impl=core({enviaMissatge,loadFils:async()=>[{id,tipus:'directe',altres:[{id:'bbbbbbbb-2222-4000-8000-000000000002',tipus:'persona'}]}],...(ambCapacitat?{enviaXifratXat}:{})});
++  const d=ambXifratXat(impl,actiu());serveiXifratXat(d).fixaAmbit({ambitEstable:'a',clauIdentitat:'i'});
++  await expect(d.enviaMissatge(id,{text:'dada sintètica'})).rejects.toHaveProperty('codi',ambCapacitat?'clar-rebutjat':'sense-capacitat-e2ee');
++  expect(enviaMissatge).not.toHaveBeenCalled();expect(enviaXifratXat).not.toHaveBeenCalled();
++ }
++});
++
++test('un preparador que retorna text no pot lliurar-lo a cap transport',async()=>{
++ const id='dddddddd-3333-4000-8000-000000000003',enviaMissatge=vi.fn(),enviaXifratXat=vi.fn();
++ const impl=core({enviaMissatge,enviaXifratXat,loadFils:async()=>[{id,tipus:'directe',altres:[{id:'bbbbbbbb-2222-4000-8000-000000000002',tipus:'persona'}]}]});
++ const d=ambXifratXat(impl,{...actiu(),preparaSobreXifrat:async()=>({text:'dada sintètica malformada'})});
++ serveiXifratXat(d).fixaAmbit({ambitEstable:'a',clauIdentitat:'i'});
++ await expect(d.enviaMissatge(id,{text:'dada sintètica'})).rejects.toHaveProperty('codi','clar-rebutjat');
++ expect(enviaMissatge).not.toHaveBeenCalled();expect(enviaXifratXat).not.toHaveBeenCalled();
++});

@@ -1,0 +1,151 @@
+diff --git a/src/data/iaiaLocal.js b/src/data/iaiaLocal.js
+--- a/src/data/iaiaLocal.js
++++ b/src/data/iaiaLocal.js
+@@ -41,6 +41,7 @@
+  *   o el nom de la IAIA («Bon dia, IAIA», «Gràcies», «Qui ets?») no busca res.
+  */
+ 
++import { iniciDelContingut } from '../utils/iniciEditorial.js';
+ import { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
+ export { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
+ export const ENCAPCALAMENT_DE_LA_WIKI = 'Això és el que en sé per la Wiki de Poble:';
+@@ -193,7 +194,8 @@
+ export function titolDeDocument(item) {
+   const cos = String(item?.content ?? '');
+   const text = (cos.charCodeAt(0) === 0xFEFF ? cos.slice(1) : cos).replace(/\r\n?/g, '\n');
+-  const primera = text.split('\n').find((linia) => linia.trim() !== '');
++  const inici = iniciDelContingut(text);
++  const primera = inici < text.length ? text.slice(text.lastIndexOf('\n', inici - 1) + 1).split('\n')[0] : '';
+   const capcalera = primera !== undefined ? /^# (.*)$/.exec(primera) : null;
+   const titol = capcalera ? textPla(capcalera[1]) : '';
+   return titol || String(item?.title || item?.id || '');
+diff --git a/src/sections/wiki-de-poble/parseMarkdown.js b/src/sections/wiki-de-poble/parseMarkdown.js
+--- a/src/sections/wiki-de-poble/parseMarkdown.js
++++ b/src/sections/wiki-de-poble/parseMarkdown.js
+@@ -33,6 +33,7 @@
+  * Sense lookbehind: el Baseline és Safari 16.0 i no l'admet fins a 16.4.
+  */
+ 
++import { iniciDelContingut } from '../../utils/iniciEditorial.js';
+ import { llevaPuntFinal } from '../../components/universal/editorial.js';
+ import { marcaDeTaula } from '../../utils/sanitize.js';
+ 
+@@ -276,31 +277,6 @@
+    un recorregut lineal (indexOf, cada caràcter una vegada) i sense cap
+    expressió regular sobre el document: un comentari sense tancar és comentari
+    fins al final, i un «# Títol» de dins d'un comentari és comentari. */
+-const esBlanc = (caracter) => /\s/.test(caracter);
+-function esFiDeLinia(text, posicio) {
+-  while (posicio < text.length && text[posicio] !== '\n') {
+-    if (text[posicio] !== ' ' && text[posicio] !== '\t') return false;
+-    posicio += 1;
+-  }
+-  return true;
+-}
+-function iniciDelContingut(text) {
+-  let i = 0;
+-  while (i < text.length && esBlanc(text[i])) i += 1;
+-  if (text.startsWith('---', i) && esFiDeLinia(text, i + 3)) {
+-    // Frontmatter romanent, tancat per una línia «---»; sense tancar és un regle.
+-    let tanca = text.indexOf('\n---', i + 3);
+-    while (tanca !== -1 && !esFiDeLinia(text, tanca + 4)) tanca = text.indexOf('\n---', tanca + 1);
+-    if (tanca !== -1) i = tanca + 4;
+-  }
+-  for (;;) {
+-    while (i < text.length && esBlanc(text[i])) i += 1;
+-    if (!text.startsWith('<!--', i)) return i;
+-    const tanca = text.indexOf('-->', i + 2);
+-    if (tanca === -1) return text.length;
+-    i = tanca + 3;
+-  }
+-}
+ 
+ /**
+  * Separa la capçalera editorial d'un document Markdown. Funció pura.
+diff --git a/src/utils/iniciEditorial.js b/src/utils/iniciEditorial.js
+new file mode 100644
+--- /dev/null
++++ b/src/utils/iniciEditorial.js
+@@ -0,0 +1,27 @@
++/** Primer contingut editorial després de blancs, frontmatter i comentaris HTML. Funció pura compartida per la Wiki i la IAIA. */
++const esBlanc = (caracter) => /\s/.test(caracter);
++function esFiDeLinia(text, posicio) {
++  while (posicio < text.length && text[posicio] !== '\n') {
++    if (text[posicio] !== ' ' && text[posicio] !== '\t') return false;
++    posicio += 1;
++  }
++  return true;
++}
++export function iniciDelContingut(text) {
++  let i = 0;
++  while (i < text.length && esBlanc(text[i])) i += 1;
++  if (text.startsWith('---', i) && esFiDeLinia(text, i + 3)) {
++    // Frontmatter romanent, tancat per una línia «---»; sense tancar és un regle.
++    let tanca = text.indexOf('\n---', i + 3);
++    while (tanca !== -1 && !esFiDeLinia(text, tanca + 4)) tanca = text.indexOf('\n---', tanca + 1);
++    if (tanca !== -1) i = tanca + 4;
++  }
++  for (;;) {
++    while (i < text.length && esBlanc(text[i])) i += 1;
++    if (!text.startsWith('<!--', i)) return i;
++    const tanca = text.indexOf('-->', i + 2);
++    if (tanca === -1) return text.length;
++    i = tanca + 3;
++  }
++}
++
+diff --git a/src/data/xifratXatParaules.seguretat.test.js b/src/data/xifratXatParaules.seguretat.test.js
+--- a/src/data/xifratXatParaules.seguretat.test.js
++++ b/src/data/xifratXatParaules.seguretat.test.js
+@@ -73,7 +73,7 @@
+ senyor forca jou cort campana creu missa ermita bandera senyera rei reina corona mall rave api test lego vespa
+ mango puma cola golf bar jersei futbol xiprer tomba mort sang guerra fam preso bala caca escopeta trampa
+ parany veri bruixa dimoni diable infern pecat verge bisbe capella monja frare papa llei vot jutge soldat
+-iaia iaio mestre poble porta mur tractor segell epoca falla pastera navalla fuet feix truita cella mora sol
++iaia iaio poble mestre porta mur tractor segell epoca falla pastera navalla fuet feix truita cella mora sol
+ dona net nou deu bota pel soc son mes mon cap clau pols coure llima mata coma pujol front foca balena
+ alqueria pau custodia regent regna victoria suprem matriu membre truja xuclar cuca lotus zodiac gimcana casual
+ frase paraula copiar targeta xifrat
+diff --git a/src/sections/multimedia/censImatges.js b/src/sections/multimedia/censImatges.js
+--- a/src/sections/multimedia/censImatges.js
++++ b/src/sections/multimedia/censImatges.js
+@@ -29,8 +29,7 @@
+  * Cap EXIF al cens: cap ordre pot llegir binaris en esta fase. El visor llig
+  * l'EXIF de la foto oberta al client (useMetadadesFoto.js).
+  * Es carrega amb import() només a /multimedia (useCensImatges.js): ni el
+- * Cercador ni la resta de l'app no el paguen. Mòdul de dades pures: cap
+- * import, cap JSX.
++ * Cercador ni la resta de l'app no el paguen. Mòdul de dades pures: el mapa de variants socials és compartit; cap JSX.
+  * Prova: censImatges.test.js (cada src existix al disc i cada imatge ràster de
+  * public/assets és al cens, a EXCLOSES o n'és la bessona .webp).
+  * Bessones WebP (encàrrec 261019_1425) · tooling/media/optimitzar_webp.mjs
+@@ -47,6 +46,8 @@
+  * a ella, amb la mateixa entrada, el mateix id (idDelCens lleva l'extensió) i
+  * les mateixes mides.
+  */
++
++import { VARIANTS_SOCIALS } from '../../config/imatgeSocial.js';
+ 
+ export const AMBITS = Object.freeze(['poble', 'persona', 'entitat', 'ia', 'contingut']);
+ 
+@@ -235,6 +236,8 @@
+ /** Les imatges ràster de public/assets que NO entren al cens, amb el motiu. Tot
+  *  /assets/system/ (la interfície) i els SVG en queden fora sense nomenar-los. */
+ export const EXCLOSES = Object.freeze({
++  /* R-01: derivades socials explícites del mapa canònic, una sola foto a l’Arxiu. */
++  ...Object.fromEntries(Object.entries(VARIANTS_SOCIALS).map(([original, social]) => [social, `targeta social dedicada de ${original}: no és cap foto nova de l’Arxiu`])),
+   '/assets/ui/plugins/tpv_vinyeta.jpg': 'la mateixa vinyeta en JPEG; el codi només nomena la WebP (registrePlugins.js)',
+   /* P1-26 · El mateix fitxer, byte a byte, que l'original de brain/ (el que
+      nomenen el cens i agentsSeed.js); la .webp germana en seguix l'estat. */
+diff --git a/tooling/seo/build-social-manifest.mjs b/tooling/seo/build-social-manifest.mjs
+--- a/tooling/seo/build-social-manifest.mjs
++++ b/tooling/seo/build-social-manifest.mjs
+@@ -108,7 +108,7 @@
+   })]);
+   const POLITIQUES=['tooling/wiki/lib/publication-policy.mjs','src/config/imatgeSocial.js','src/config/metadadesSocials.js',
+     'src/config/rutaSocial.js','src/config/navigation.js','src/sections/wiki-de-poble/seoWiki.js','src/sections/wiki-de-poble/parseMarkdown.js',
+-    'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js'];
++    'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js','src/utils/iniciEditorial.js'];
+   const moduleAt = async rel => import(pathToFileURL(path.join(policyRoot,rel)).href);
+   const [{publicMetadata,publicSeoRoute,confinedFile},{CAP_SOCIAL_BASE},{metadadesDePagina,metadadesDeDetall},{idDeDocumentWiki},{resolvePageSlugPath},
+     {atributsPublics,metadadesDeDocumentPublic,metadadesDeDocumentWiki}]=await Promise.all(POLITIQUES.slice(0,6).map(moduleAt));

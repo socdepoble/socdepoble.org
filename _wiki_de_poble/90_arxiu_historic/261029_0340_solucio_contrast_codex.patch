@@ -1,0 +1,68 @@
+--- a/src/css/tokens.css
++++ b/src/css/tokens.css
+@@ -103,11 +103,12 @@
+   --sdp-exit-500:  #027e38;  --sdp-exit-50:  #e4f8e7;  --sdp-exit-700:  #005c27;
+ 
+   /* IDEA-40 (decisió del Mestre, 261028, Bloc H) · El verd de marca, un sol
+-     token: el de la icona i la pantalla d'inici natives, el logotip i la barra
+-     del Lector. El blanc al damunt fa 6,996:1: AA, no AAA (WCAG no arredonix;
+-     el «7,19:1» del Llibre no és cert). No és l'èxit (--sdp-exit-500, que no
+-     canvia) ni la Capa 0 (design-tokens.json): no canvia amb el tema. */
+-  --sdp-verd: #0f672f; /* 6,99:1 sobre blanc · AA, no AAA */
++     token per a la barra del Lector i els consumidors de marca. QA-H03
++     (Mestre 261029): ajust mínim a #0e662e per superar 7:1 sobre blanc
++     sense arredonir. Els recursos natius existents es verifiquen separadament.
++     No és l'èxit (--sdp-exit-500, que no canvia) ni la Capa 0
++     (design-tokens.json): no canvia amb el tema. */
++  --sdp-verd: #0e662e; /* >= 7:1 sobre blanc · AAA per a este parell opac */
+ 
+   /* ═══ CAPA 2 · SEMÀNTICS · TEMA CLAR ═══════════════════════════
+      Cada línia porta el contrast mesurat i el nivell que compleix.  */
+--- a/src/css/tokens.contracte.test.js
++++ b/src/css/tokens.contracte.test.js
+@@ -381,3 +381,23 @@
+     expect(mides.filter((px) => px < 14)).toEqual([]);
+   });
+ });
++
++/* QA-H03 (Mestre 261029) · Contrast del token real: 7:1 sense arredonir,
++   en tots els modes. El verd anterior és el control negatiu del llindar. */
++describe('QA-H03 · el verd de marca sobre blanc supera el llindar AAA de 7:1', () => {
++  test('la font única és el token de marca; els quatre modes conserven almenys 7:1', () => {
++    expect([...senseComentaris(TOKENS).matchAll(/--sdp-verd\s*:/g)]).toHaveLength(1);
++    for (const [mode, mapa] of Object.entries({ clar: CLAR, fosc: MAPA_FOSC, bancal: MAPA_BANCAL, bancalFosc: MAPA_BANCAL_FOSC })) {
++      const parell = { ...mapa, '--qa-blanc': '#ffffff' };
++      expect(contrast('--sdp-verd', '--qa-blanc', parell), mode).toBeGreaterThanOrEqual(7);
++    }
++  });
++
++  test('el color anterior no passa: 6,9965997583:1 és inferior a 7 encara que arredonit done 7,00', () => {
++    const parell = { '--qa-antic': /* ALLOW_RAW_COLOR */ '#0f672f', '--qa-blanc': '#ffffff' };
++    const ratio = contrast('--qa-antic', '--qa-blanc', parell);
++    expect(ratio).toBeLessThan(7);
++    expect(ratio).toBeCloseTo(6.996599758323873, 12);
++    expect(Number(ratio.toFixed(2))).toBe(7);
++  });
++});
+--- a/src/apps/lector/lector261024.test.jsx
++++ b/src/apps/lector/lector261024.test.jsx
+@@ -321,7 +321,7 @@
+     expect(lector.trim()).toBe('background-color: var(--sdp-crom-barra-lector);');
+     // IDEA-40 (Mestre, 261028) · El token del Lector cita el verd de marca únic, --sdp-verd.
+     expect(llig('src/css/tokens.css')).toMatch(/--sdp-crom-barra-lector:\s*var\(--sdp-verd\);/);
+-    const verdDeMarca = /* ALLOW_RAW_COLOR */ '#0f672f'; // el valor que va fixar el Mestre (IDEA-40)
++    const verdDeMarca = /* ALLOW_RAW_COLOR */ '#0e662e'; // ajust mínim QA-H03 del verd de marca (Mestre 261029)
+     expect(llig('src/css/tokens.css')).toMatch(new RegExp(`--sdp-verd:\\s*${verdDeMarca};`, 'i'));
+     expect(apps.match(/data-sdp-app/g)).toHaveLength(1);
+   });
+--- a/src/sections/consola/peces.test.jsx
++++ b/src/sections/consola/peces.test.jsx
+@@ -558,7 +558,7 @@
+   const declaracio = (css, nom) => css.split(/[;{}]/).map((d) => d.trim()).find((d) => d.startsWith(`${nom}:`))?.slice(nom.length + 1).trim();
+   const tokens = net('src/css/tokens.css');
+   const verd = ['--sdp', 'verd'].join('-');
+-  expect(declaracio(tokens, verd)).toBe(/* ALLOW_RAW_COLOR */ '#0f672f');
++  expect(declaracio(tokens, verd)).toBe(/* ALLOW_RAW_COLOR */ '#0e662e');
+   expect(declaracio(tokens, '--sdp-crom-barra-lector')).toBe(`var(${verd})`);
+   // L'èxit no canvia (Mestre 261028: cap canvi a --sdp-exit-500 ni a --sdp-exit-700).
+   expect(['500', '700'].map((pas) => declaracio(tokens, `--sdp-exit-${pas}`))).toEqual([/* ALLOW_RAW_COLOR */ '#027e38', /* ALLOW_RAW_COLOR */ '#005c27']);

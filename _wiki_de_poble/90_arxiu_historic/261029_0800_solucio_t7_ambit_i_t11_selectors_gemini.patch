@@ -1,0 +1,46 @@
+diff --git a/scripts/generate-prompt.sh b/scripts/generate-prompt.sh
+index 9517f1d..739ab24 100644
+--- a/scripts/generate-prompt.sh
++++ b/scripts/generate-prompt.sh
+@@ -1,9 +1,9 @@
+ #!/bin/bash
+ # Ús: ./generate-prompt.sh --title "Refactor Backend" --type PROMPT
+ 
+-TEMPLATE="_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md"
++TEMPLATE="_wiki_de_poble/03_actuar/plantilles/prompt_consell.md"
+ BUNDLE="260915_0510_BUNDLE_auditoria.md"
+-OUTPUT="_wiki_de_poble/04_ESCRIPTORI/$(date +%Y%m%d_%H%M)_${1}.md"
++OUTPUT="_wiki_de_poble/04_escriptori/$(date +%y%m%d_%H%M)_${1}.md"
+ 
+ # Copiar plantilla
+ cp "$TEMPLATE" "$OUTPUT"
+diff --git a/tooling/wiki/generar_genoma_v2.mjs b/tooling/wiki/generar_genoma_v2.mjs
+index a0f2c40..a410424 100644
+--- a/tooling/wiki/generar_genoma_v2.mjs
++++ b/tooling/wiki/generar_genoma_v2.mjs
+@@ -48,7 +48,6 @@ const ROOTS = [
+   '_wiki_de_poble/01_ser',
+   '_wiki_de_poble/02_saber',
+   '_wiki_de_poble/03_actuar',
+-  '_wiki_de_poble/02_saber',
+   '_wiki_de_poble/.obsidian/graph.json', // contracte de la Vista Gràfica (pre-commit 2/4)
+ ];
+ // .sdp-reflex queda FORA per disseny: el propi .gitignore del repositori el
+@@ -104,11 +103,16 @@ async function main() {
+   const repoRoot = path.resolve(arrel ?? process.cwd());
+ 
+   const fitxers = [];
++  const vistos = new Set();
+   const absents = [];
+   for (const r of ROOTS) {
+     const abs = path.join(repoRoot, r);
+     if (!fs.existsSync(abs)) { absents.push(r); continue; }
+-    for (const f of caminar(abs, r)) fitxers.push(f);
++    for (const f of caminar(abs, r)) {
++      if (vistos.has(f.rel)) continue;
++      vistos.add(f.rel);
++      fitxers.push(f);
++    }
+   }
+ 
+   const parts = [];

@@ -1,0 +1,682 @@
+{
+  "schema": "sdp.qa-nocturna.v1",
+  "createdAt": "2026-10-29T02:49:37.418Z",
+  "timezone": "Europe/Madrid",
+  "head": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+  "turn": "torn_51c9489b-9b68-4f5b-8152-b6acd2989e53",
+  "automation": {
+    "id": "olivera-qa-i-t11-10-cicles",
+    "createdAt": "2026-10-29T02:38:00.274Z",
+    "iterations": 10,
+    "minutes": 30,
+    "baselineOutsideCounter": true
+  },
+  "t11": {
+    "patch": {
+      "files": [
+        {
+          "path": "tooling/wiki/contradiction_engine.mjs",
+          "beforeSha256": "589472cf0a29aaae9b68fc78d8c2b152b9ec581b49155c735001ce17cfabebc7",
+          "afterSha256": "2057c3fa1efc71706549db5ed437d49784016b818f139a8536b27f324e1b21ef"
+        },
+        {
+          "path": "tooling/wiki/lib/contract_consistency.mjs",
+          "beforeSha256": null,
+          "afterSha256": "a2c02ee004385792abaf085fd25d3b5407212982703912a81df77e5f6604b59d"
+        },
+        {
+          "path": "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "671fda11f3d94d17b3412532f10998d2426fa5e9c90807931badbc4073c89247"
+        },
+        {
+          "path": "tooling/wiki/tests/contract_consistency.test.mjs",
+          "beforeSha256": null,
+          "afterSha256": "0ded0929c1efa84486b8ae5c7e5a75c387a2f4d8c6a1d78ab135011591b70bd1"
+        },
+        {
+          "path": "tooling/tests/node-suite-manifest.json",
+          "beforeSha256": "5cce460788fa86b5f805867bb0b934d4473a9f386d2a85e216f4c8fda98ac960",
+          "afterSha256": "8a080fd17f519338ef7f386a763f9aacc3565c9dfe34c80e528ae9a8d81588e3"
+        }
+      ],
+      "patchSha256": "5bb16f37414cbd3f65d55290a868fab19f92b37ed3eb884c94352145ca2fd078"
+    },
+    "findings": {
+      "inventory": {
+        "wiki_files": 723,
+        "wiki_bytes": 117507991,
+        "wiki_markdown": 368,
+        "wiki_markdown_bytes": 5737111,
+        "wiki_live_markdown": 226,
+        "skills": 42,
+        "skills_core": 9,
+        "skills_plugins": 33,
+        "skill_files_total": 43,
+        "skill_bytes_including_index": 246333,
+        "tooling_files": 255,
+        "tooling_bytes": 2060658,
+        "exact_normalized_body_duplicates": 0
+      },
+      "checks": {
+        "legacy_engine": {
+          "exit": 0,
+          "message": "Cap contradicció real",
+          "valid_scope_docs": 0
+        },
+        "cataleg_skills_check": 0,
+        "skills_index_check": 0,
+        "porta_autoritat": 0,
+        "temporary_node_tests": {
+          "pass": 12,
+          "fail": 0,
+          "skipped": 0,
+          "milliseconds": 97.452042
+        },
+        "temporary_eslint": {
+          "errors": 0,
+          "warnings": 0
+        }
+      },
+      "patch": {
+        "path": "/private/tmp/t11-engine.patch",
+        "copy": "/private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-t11-engine-b25p7txv",
+        "sha256": {
+          "tooling/wiki/contradiction_engine.mjs": "2057c3fa1efc71706549db5ed437d49784016b818f139a8536b27f324e1b21ef",
+          "tooling/wiki/tests/contradiction_engine.t11.test.mjs": "671fda11f3d94d17b3412532f10998d2426fa5e9c90807931badbc4073c89247"
+        },
+        "live_changes": false,
+        "manifest_pending_parent": true
+      },
+      "sanitation": [
+        {
+          "id": "T11-01",
+          "priority": "P1",
+          "issue": "Motor exclou totes les carpetes modernes i declara salut sobre zero documents",
+          "evidence": [
+            "tooling/wiki/contradiction_engine.mjs:52",
+            "tooling/wiki/contradiction_engine.mjs:98",
+            "tooling/wiki/contradiction_engine.mjs:175"
+          ],
+          "action": "Nou audit amb cobertura censada i estat incomplet, mapa cervell, API legacy compatible",
+          "status": "pegat temporal verificat"
+        },
+        {
+          "id": "T11-02",
+          "priority": "P1",
+          "issue": "acta encara admet escriptori; T1.5 demana destinació exclusiva 10_actes",
+          "evidence": [
+            ".agents/protocolledge.json:162",
+            ".agents/skills/wiki-cicle-de-vida/SKILL.md:29",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md:123"
+          ],
+          "action": "Actualitzar contracte i skill via executor, provar create/handoff i conservar rebuts antics",
+          "status": "pendent governança"
+        },
+        {
+          "id": "T11-03",
+          "priority": "P2",
+          "issue": "pla.md continua canònic i encaminat per planificacio; retirada indicada a T1.5 encara pendent",
+          "evidence": [
+            ".agents/protocolledge.json:414",
+            ".agents/protocolledge.json:422",
+            "_wiki_de_poble/03_actuar/plantilles/pla.md:3"
+          ],
+          "action": "Migrar ruta/consumidors abans arxivament; roadmap i pla implementació tenen intencions diferents hui",
+          "status": "pendent governança"
+        },
+        {
+          "id": "T11-04",
+          "priority": "P1",
+          "issue": "Exemple de substitució massiva no exclou 01_produccio",
+          "evidence": [
+            ".agents/skills/wiki-propagar-veritat/SKILL.md:40",
+            "AGENTS.md:67"
+          ],
+          "action": "Manifest explícit de superfícies, exclusió humana i dry-run verificable abans substitucions",
+          "status": "pendent pegat de skill"
+        },
+        {
+          "id": "T11-05",
+          "priority": "P2",
+          "issue": "Contracte escriu índex+AGENTS; cos ordena modificar tota Wiki i src",
+          "evidence": [
+            ".agents/skills/wiki-propagar-veritat/SKILL.md:16",
+            ".agents/skills/wiki-propagar-veritat/SKILL.md:22",
+            ".agents/skills/wiki-propagar-veritat/SKILL.md:43"
+          ],
+          "action": "Unificar contracte declaratiu i superfície real amb manifest per encàrrec",
+          "status": "pendent governança"
+        },
+        {
+          "id": "T11-06",
+          "priority": "P2",
+          "issue": "Dues skills gràfiques divergeixen en expressivitat teatral vs prohibició de sorpresa exagerada",
+          "evidence": [
+            ".agents/skills/core-identitat-visual/SKILL.md:36",
+            ".agents/skills/core-calibratge-visual-nano/SKILL.md:40",
+            ".agents/skills/core-calibratge-visual-nano/SKILL.md:41"
+          ],
+          "action": "Fusionar procediment visual en un sol punt amb modes de registre; filosofia a identitat_visual.md",
+          "status": "candidat de fusió contrastat"
+        },
+        {
+          "id": "T11-07",
+          "priority": "P2",
+          "issue": "UniversalPage prescriu ombra literal rgba contra política de tokens",
+          "evidence": [
+            ".agents/skills/sdp-universal-page/SKILL.md:69",
+            ".agents/skills/sdp-pedra-seca/SKILL.md:70"
+          ],
+          "action": "Referenciar token funcional canònic sense alterar píxels",
+          "status": "pendent pegat de skill"
+        },
+        {
+          "id": "T11-08",
+          "priority": "P2",
+          "issue": "Telemetria humana ordena inferir jornada/fatiga i puntuació cognitiva100%; cicle prohibix inventar mètriques humanes",
+          "evidence": [
+            ".agents/skills/core-telemetria-huma/SKILL.md:27",
+            ".agents/skills/core-telemetria-huma/SKILL.md:35",
+            ".agents/skills/wiki-cicle-de-vida/SKILL.md:36"
+          ],
+          "action": "Registrar només declaracions i temps observables; eliminar percentatges cognitius inferits",
+          "status": "pendent conciliació"
+        },
+        {
+          "id": "T11-09",
+          "priority": "P2",
+          "issue": "Política sis execucions vs ordre humana10; ordre explícita preval i excepció ha de quedar traçada",
+          "evidence": [
+            ".agents/skills/core-direccio-autonoma/SKILL.md:31",
+            ".agents/skills/core-gauntlet-loop/SKILL.md:82"
+          ],
+          "action": "Parametritzar límit per encàrrec explícit amb sostre i cancel·lació verificables",
+          "status": "excepció humana aplicable a esta onada"
+        },
+        {
+          "id": "T11-10",
+          "priority": "P2",
+          "issue": "Comentari plantilla pla mana aammdd_hhmm_pla_titol, skill mana pla_implementacio",
+          "evidence": [
+            "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md:20",
+            ".agents/skills/wiki-documentacio-i-reflex/SKILL.md:101"
+          ],
+          "action": "Derivar exemples de nomenclatura del catàleg/taxonomia únic",
+          "status": "pendent pegat de plantilla"
+        },
+        {
+          "id": "T11-11",
+          "priority": "P2",
+          "issue": "Cinc documents sense frontmatter impedeixen cobertura completa del nou motor",
+          "evidence": [
+            "_wiki_de_poble/05_social/00_explorador_social.md:1",
+            "_wiki_de_poble/10_actes/260926_2350_acta_marmota.md:1",
+            "_wiki_de_poble/10_actes/260927_0110_acta_marmota.md:1",
+            "_wiki_de_poble/10_actes/260927_1720_acta_marmota_govern_i_ui.md:1",
+            "_wiki_de_poble/10_metriques/11_grafica_consum.md:1"
+          ],
+          "action": "Classificar document canònic/evidència abans afegir metadades; no fabricar camps històrics",
+          "status": "detectat nou motor; pendent sanejament"
+        }
+      ],
+      "false_positive_controls": [
+        "core-llegibilitat-text vs core-maquetacio-markdown tenen fronteres HTML/component vs Markdown explícites; no fusionar per keywords.",
+        "core-higiene-escriptori vs core-neteja-brossa tracten escriptori i arrel respectivament; no són duplicats.",
+        "wiki-documentacio-i-reflex vs wiki-cicle-de-vida separen creació i cicle/tancament amb referències; es pot crear orquestració única sense absorció cega.",
+        "sdp-vigilant-tellado documenta tractor-vigilant com pendent, per tant ruta absent no prova un consumidor executable trencat.",
+        "Plantilles comparteixen Registre/Acte reflex/Vincles. Jaccard fins0,405 reflectix boilerplate i no justificaria fusió automàtica."
+      ],
+      "master_relevant": [
+        "Prioritat superior: deute verificable10/10, BlocH, paquetWP i E2EE Fase2; no noves idees abans de base tècnica.",
+        "P1-30 (línia779): cens/conformitat/frontieres de skills auditat però pendent; el número40 és tall històric, avui42.",
+        "P2-12 (línia812): cicle documental per estat/consumidors, preservant hash i resolució; no arxivar per antiguitat/commit.",
+        "P2-15 (línia816): dieta d’arrencada, context540KB històric i cap fusió cega per paraules clau.",
+        "IDEA-49/50 (línies707/708): divulgació progressiva L0/L1/L2, metadades verified/stale_after i consolidació amb portes deterministes."
+      ],
+      "limits": "Inventari i lectura mecànica de tots els Markdown; revisió semàntica dirigida de punts de sanejament, sense certificar exhaustivitat semàntica de les42 skills ni tota la Wiki. No s’ha editat cap fitxer viu."
+    },
+    "coverage": {
+      "schema": "sdp.coherence-audit.v1",
+      "complete": false,
+      "coverage": {
+        "wikiDocuments": 221,
+        "skillDocuments": 42,
+        "legacyDocuments": 0,
+        "protocolRoutes": 13,
+        "readDocuments": 263,
+        "parsedDocuments": 258,
+        "comparedDocuments": 124
+      },
+      "excluded": [
+        {
+          "ruta": "_wiki_de_poble/.DS_Store",
+          "reason": "hidden-state"
+        },
+        {
+          "ruta": "_wiki_de_poble/.obsidian",
+          "reason": "editor-state"
+        },
+        {
+          "ruta": "_wiki_de_poble/01_ser/.manifest.json",
+          "reason": "hidden-state"
+        },
+        {
+          "ruta": "_wiki_de_poble/04_escriptori/.ancora_sessio.json",
+          "reason": "hidden-state"
+        },
+        {
+          "ruta": "_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/.DS_Store",
+          "reason": "hidden-state"
+        },
+        {
+          "ruta": "_wiki_de_poble/04_escriptori/01_produccio",
+          "reason": "protected-human-zone"
+        },
+        {
+          "ruta": "_wiki_de_poble/04_escriptori/02_investigacio_ia",
+          "reason": "protected-research-zone"
+        },
+        {
+          "ruta": "_wiki_de_poble/90_arxiu_historic",
+          "reason": "historical-archive"
+        }
+      ],
+      "problems": [
+        {
+          "ruta": "_wiki_de_poble/05_social/00_explorador_social.md",
+          "code": "frontmatter-invalid",
+          "detail": "frontmatter absent"
+        },
+        {
+          "ruta": "_wiki_de_poble/10_actes/260926_2350_acta_marmota.md",
+          "code": "frontmatter-invalid",
+          "detail": "frontmatter absent"
+        },
+        {
+          "ruta": "_wiki_de_poble/10_actes/260927_0110_acta_marmota.md",
+          "code": "frontmatter-invalid",
+          "detail": "frontmatter absent"
+        },
+        {
+          "ruta": "_wiki_de_poble/10_actes/260927_1720_acta_marmota_govern_i_ui.md",
+          "code": "frontmatter-invalid",
+          "detail": "frontmatter absent"
+        },
+        {
+          "ruta": "_wiki_de_poble/10_metriques/11_grafica_consum.md",
+          "code": "frontmatter-invalid",
+          "detail": "frontmatter absent"
+        }
+      ],
+      "overlaps": [],
+      "contradictions": [],
+      "limits": [
+        "La similitud lèxica és un candidat de solapament, no una contradicció demostrada.",
+        "Les contradiccions demostrades ací són col·lisions de contractes de ruta; no es certifica tota la semàntica normativa.",
+        "Documents de treball, actes i índexs es censen, però no s'usen com a autoritat normativa per a proposar fusions."
+      ]
+    },
+    "claims": {
+      "scope": "0216",
+      "status": "explicit-disagreements",
+      "coverage": {
+        "documents": 2,
+        "activeDocuments": 2,
+        "historicalDocuments": 0,
+        "scannedActiveLines": 414,
+        "explicitClaims": 17,
+        "contracts": 4
+      },
+      "findings": [
+        {
+          "code": "EXPLICIT_CONTRACT_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "dimension-count",
+          "values": [
+            "10",
+            "9"
+          ],
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 50,
+              "value": "9",
+              "source": "prose"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 52,
+              "value": "10",
+              "source": "rubric"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 138,
+              "value": "9",
+              "source": "prose"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 186,
+              "value": "9",
+              "source": "prose"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 188,
+              "value": "9",
+              "source": "prose"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 101,
+              "value": "10",
+              "source": "prose"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 104,
+              "value": "10",
+              "source": "prose"
+            },
+            {
+              "contract": "dimension-count",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 149,
+              "value": "9",
+              "source": "prose"
+            }
+          ],
+          "requiresReview": true
+        },
+        {
+          "code": "EXPLICIT_CONTRACT_DISAGREEMENT",
+          "scope": "0216",
+          "contract": "permissions-policy:microphone",
+          "values": [
+            "()",
+            "(self)"
+          ],
+          "paths": [
+            "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+            "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md"
+          ],
+          "claims": [
+            {
+              "contract": "permissions-policy:microphone",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 109,
+              "value": "(self)",
+              "source": "directive"
+            },
+            {
+              "contract": "permissions-policy:microphone",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 152,
+              "value": "()",
+              "source": "directive"
+            },
+            {
+              "contract": "permissions-policy:microphone",
+              "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+              "line": 130,
+              "value": "(self)",
+              "source": "directive"
+            }
+          ],
+          "requiresReview": true
+        }
+      ]
+    },
+    "claimsSource": [
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "14191ba53439b14fd550e5f3c8746f9fb5b524dd954c7a28f7c60d451045b010"
+      },
+      {
+        "path": "_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md",
+        "sha256": "793a2492b683bdd5f5a9b15caaa811b9fc9c3b3d84ae8653d71839ebcbcfd638"
+      }
+    ],
+    "integration": {
+      "command": [
+        "node",
+        "--test",
+        "tests/node-suite-policy.test.mjs",
+        "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
+        "tooling/wiki/tests/contract_consistency.test.mjs"
+      ],
+      "exit": 0,
+      "fixtureAdded": {
+        "path": ".github/workflows/wiki-integrity.yml",
+        "sha256": "93c306095db2774ab05a0d0c4b1a2794c1d77af5aff86d73b5ebc254681c0bbe"
+      },
+      "log": "/private/tmp/sdp-qah-261029-1ttv030r/t11-integration-tests.log"
+    },
+    "tests": {
+      "new": 31,
+      "integrationWithManifest": 40,
+      "failed": 0,
+      "eslintErrors": 0,
+      "eslintWarnings": 0
+    },
+    "integrationLog": "CI · Node=1 · Vitest=0\nCI · Node=0 · Vitest=1\nCI · Node=0 · Vitest=0\n✔ el manifest viu classifica cada prova i protegeix les cobertures noves de CI i T5 (3.179084ms)\n✔ la descoberta és recursiva i totes les eines entren al cens (1.802709ms)\n✔ una prova nova sense classificació bloqueja la cadena (1.058292ms)\n✔ no s’accepten dobles assignacions, entrades absents ni exclusions sense motiu (1.170167ms)\n✔ la cobertura requerida no es pot excloure canviant-ne la categoria (0.892958ms)\n✔ cada corredor selecciona els fitxers exactes i conserva els codis de fallada (1.147083ms)\n✔ CI executa Node i Vitest run, també amb Node roig, i qualsevol fallada conserva exit 1 (1.862375ms)\n✔ el mode de CI manté totes les portes i elimina només les bateries ja executades (0.37575ms)\n✔ la comanda real del workflow arriba al CLI de les portes amb --nomes-portes (97.308583ms)\n✔ prose nine versus an explicit ten-dimension rubric is reported with lines (2.2085ms)\n✔ nine versus ten in different active prose is within the same explicit scope (0.103583ms)\n✔ matching prose and rubric has no explicit disagreement (0.109917ms)\n✔ a number table without dimension header is not a rubric (0.083333ms)\n✔ gapped or duplicate ordinal rows do not invent a rubric (0.089833ms)\n✔ microphone self versus empty is reported separately from equal camera (0.490958ms)\n✔ policy allowlists normalize whitespace, ordering, duplicate tokens and quoting (0.12475ms)\n✔ all explicitly named policy features can disagree, not just microphone (0.113375ms)\n✔ history is counted but cannot contribute a claim (0.189208ms)\n✔ zero active documents is incomplete even with a historical text (0.405125ms)\n✔ quotations, fenced examples, frontmatter and explicit example lines are excluded (0.955917ms)\n✔ a shorter or different fence marker does not close a longer code fence (0.124ms)\n✔ indented code and example list items do not contribute claims (0.099833ms)\n✔ reversed input produces exactly the same serialized bytes and codepoint order (0.11525ms)\n✔ scope and document input errors fail explicitly (0.333417ms)\n✔ path order uses Unicode codepoints rather than a locale or UTF-16 code units (0.056875ms)\n✔ an inherited authority is not explicit document authority (0.045125ms)\n✔ 300k characters are scanned without dropping later claims (0.137958ms)\n✔ unlabelled policy fragments and malformed directives do not become claims (0.03475ms)\n✔ T11 llig carpetes actuals, skills i rutes; solapament no equival a contradicció (11.446375ms)\n✔ T11 corpus buit queda incomplet (3.010125ms)\n✔ T11 exclou arxiu, zona humana i laboratori abans de llegir-ne continguts (4.110792ms)\n✔ T11 no seguix symlinks i declara la cobertura incompleta (3.765417ms)\n✔ T11 treball i actes són evidència censada, sense proposar-ne fusió normativa (4.7625ms)\n✔ T11 conserva forma API v2 i jurisdiccions legacy (3.619083ms)\n✔ T11 conserva errors de frontmatter/schema legacy (2.558959ms)\n✔ T11 detecta el mateix selector amb plantilles incompatibles (4.611333ms)\n✔ T11 registra ruta absent i no confon API documentada pendent amb salut (3.137125ms)\n✔ T11 determinista davant mateix tall, amb exclusions i problemes ordenats (3.117042ms)\n✔ T11 no seguix un directori .agents que siga symlink (2.314666ms)\n✔ T11 CLI JSON retorna 2 davant corpus buit, també amb entrada per symlink (32.5085ms)\nℹ tests 40\nℹ suites 0\nℹ pass 40\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 150.647208\n"
+  },
+  "blocH": {
+    "summary": "QA Bloc H · tall 2026-10-29 03:38 Europe/Madrid\nHEAD de captura: 7a87205f3db6eb76a868bb3ee8e6c89cd2771a56.\nCòpia /private/tmp/sdp-qah-261029-1ttv030r/copy. 3977 fitxers SHA-256.\nCap fitxer repo editat. node_modules enllaçat només per lectura; cache Vite pròpia en temporal. .git sintètic creat al temporal, sense copiar metadata del repo, per a provar git check-ignore.\n\nProves (en còpia):\n- NODE_PATH=\"$PWD/node_modules\" ./node_modules/.bin/vitest run --maxWorkers=1 src/sections/profile/PerfilContext.usuariTardana.test.jsx src/data/supabase/usuariIPoble.migracio.test.js src/components/universal/DocumentEditor.proposaCard.test.jsx src/apps/bar/llavors/laParroquia.test.js\n  4 fitxers; 3 passen, 1 falla; 112 casos: 110 passen, 1 falla, 1 omés. 4,11 s.\n  QA-H01+migració+DocumentEditor: 91/91 verds. laParroquia: 19 passen, 1 falla, 1 omés.\n  Fallada laParroquia: src/apps/bar/llavors/laParroquia.test.js:35 i :198 lligen MAPA_IMATGES.txt d'un laboratori absent. Confirmat absent també al viu. No s'ha fabricat fixture.\n- node --test --test-concurrency=1 tests/botigues.test.mjs\n  12 casos: 11 passen, 1 falla; 1,104 s. tests/botigues.test.mjs:250 exigix plantilla del laboratori absent, constants scripts/botigues/entorn.mjs:35-37. Confirmat absent al viu.\n- node --test --test-concurrency=1 tooling/seo/*.test.mjs\n  58 casos: 57 passen, 1 falla; 4,88 s. Única fallada social-http.test.mjs:32: listen EPERM a 127.0.0.1; és restricció d'entorn, no prova de defecte funcional.\n- node ../qah02-runtime.mjs\n  4/4 escenaris independents PGlite sobre funcions SQL reals llista_pobles+poble_derivat. Homònims de dues regions, UUID explícit, poble per defecte i pobles múltiples/ordre donen regions de les mateixes files escollides. No prova backfill, RLS ni concurrència.\n- Contrast sRGB independent: --sdp-verd #0f672f / #ffffff = 6,996599758323873:1; no satisfà >=7. Font src/css/tokens.css:110; el comentari ja declara AA.\n\nDictamen de requisits:\nQA-H01: correcció en codi i regressió focal acreditada; PerfilContext.jsx:601 reconcilia @usuari derivat i la suite prova canvis de sessió/respostes tardanes.\nQA-H02 homònims: correcció funcional focal acreditada en PGlite i checks estàtics. SQL:606-640 resol UNA fila per nom via lateral+limit1. Validació PostgreSQL real/concurrència pendent.\nQA-H03: obert (6,9966<7).\nQA-H04: obert. package.json:75 build:social no produïx ni passa --snapshot. prerender-social.mjs:281 usa [] sense argument; prerender-social.test.mjs:250 encara espera imatge genèrica per a Storage remot. Primera foto remota real i revocació dins de la cadena de publicació continuen sense acreditar.\nDocumentEditor 300k: prova permanent DocumentEditor.proposaCard.test.jsx:231 passa; no torna a parsejar el cos gran en canviar títol. Memo per cos a DocumentEditor.jsx:656-663. Perfil CPU/geometria autenticada/mòbil 360–393 pendents.\nDues proves heretades: continuen roges; no 10/10.\n\nRecomprovació del viu: dels 3977 fitxers capturats, només 00_index_escriptori.md havia canviat al final; fonts de codi focal sense canvis. Snapshot i hashes als JSON adjacents. Temps de captura i comandes als logs. No deploy, no migració remota, no pujada, no servidor persistent.\n",
+    "capturedFiles": 3977,
+    "focalSourceHashes": {
+      "src/apps/bar/llavors/laParroquia.test.js": "f6293a18ad6753681307f75d39092ee5e04dfdae83f591e730cfcb36f95e4c13",
+      "src/apps/bar/llavors/laParroquia.js": "1f0d41d0865e705b26f2e5bced6e662efed1b6289fcda8f97abdf8c95f7cc152",
+      "src/data/supabase/usuariIPoble.migracio.test.js": "0eac2976d112ad0a0c6eee4cc02869d5ae731c4a20c998df3781aaeb616d09ee",
+      "src/components/universal/DocumentEditor.proposaCard.test.jsx": "48676c24d1766640cb1b0748fec6529b7b2a0753c30bce13e583cfc9aa077bbe",
+      "src/components/universal/DocumentEditor.logotip.test.jsx": "1c7cb771824993f4b542049a9665aeb8d57e4b31a139c5530e63dbb9557e328a",
+      "src/components/universal/DocumentEditor.jsx": "534042045d15caded1bc248b649a9210cd57662a8ebdc3fd00c3a811f5cadef4",
+      "src/components/universal/DocumentEditor.exif.test.jsx": "b597b82453640fbb5a0d35eabf8ea07fb5555021f05a5cf6d04c960d451d1eb5",
+      "src/components/universal/DocumentEditor.peuDePagina.test.jsx": "9ba670aeaa7116efff2ffe9f641da34c1cae6b7117b36277e3cd80c1a7018afc",
+      "src/components/universal/DocumentEditor.test.jsx": "3904297dd7f83dd23d868c5c3aa9d8028e2fd00e7e6f5403f4302fbe7b63cb92",
+      "src/components/universal/DocumentEditor.targetes.test.jsx": "9a36a102bc633e31e6b98e66de78b8f65253be71a27f7b184675e27adf85b1a7",
+      "src/components/universal/DocumentEditor.edicioAvancada.test.jsx": "cc5111544d6ea567ba365e7977ffcca5e7dc15edb3c13389882f156c313ff2a6",
+      "src/components/universal/DocumentEditor.imatge.test.jsx": "a9c377d0d71409cfd27517c24d5bfcd0174dc77a1f3404f672d3d80f49f49bdf",
+      "src/components/universal/DocumentEditor.emojis.test.jsx": "aa950c2f39bdef5e4534dfabdc18adace1cb14341c588eef66132b35e154de75",
+      "src/sections/profile/PerfilContext.test.jsx": "d67e767603fd685dfad2bc2fa069fd2944a5a7728d15f237a3eb970c8a34ddef",
+      "src/sections/profile/PerfilContext.jsx": "743f69b7f58efef25c2e6772560295c827567f79f5beec87ec35268c81488f75",
+      "src/sections/profile/PerfilContext.usuariTardana.test.jsx": "adb493e54557c0c213b3d11dfbd2bb693e88e4f834902635504f243aeadcdb39",
+      "tooling/seo/prerender-social.test.mjs": "182016f308fba8e8f21eba59b9a57908d409bc7cbaea9e424920ec4ecc3bb5fa",
+      "tooling/seo/build-site-policy.mjs": "cd84535af4aa2c6cb5af691c06dcb86449e04a60bfb25e0eda7478147612195b",
+      "tooling/seo/apply-site-policy.mjs": "bcec58e41880d84eea2a8da0049084c823f38acf4c820b24993290bae972d61a",
+      "tooling/seo/check-editorial-copy.mjs": "f6633d68145989ad04d8f0b6bd596fd7b21468d499726a5f16b6a8022ab2389c",
+      "tooling/seo/prepare-social-shell.mjs": "271e8d695136ee4fcfac8d66ca1be91d9fa06fad7912942fc9645ae66d8aecb7",
+      "tooling/seo/social-edge.mjs": "0e823deae9cffb2dc29afc73416de19efc7cef1585f8fe94f13d84e116a3c83f",
+      "tooling/seo/social-http.test.mjs": "05e5dcb61d94fe53a022dedf42699d4221f18536052255a732ded9227778143d",
+      "tooling/seo/build-social-manifest.mjs": "9766b8a511162211cc1024474b1d60e7716e75205344359fcca98fc987e65d5e",
+      "tooling/seo/social-edge.test.mjs": "8d042caaeced5bc8513b4a1d81a3afa3559f651b646e61c8fd685aa217ae1861",
+      "tooling/seo/build-social-manifest.test.mjs": "fe14ab38beff9972b1b92d060332200edadf17d229caf1298c9e7b8502dfc4d7",
+      "tooling/seo/prerender-social.mjs": "25844f3790358ab887edb455e481c5d943da4e5d0a247b33bd7450cb80875543",
+      "tooling/seo/site-policy.test.mjs": "534c3fda17cabd28c93dfa491606294b644d0a7655f7f601dd139a4913d15f58",
+      "tooling/seo/adversarial-edge.test.mjs": "cfa6b5c69fb8e404a2f6fd49145acc1b208b236bd82a3d7d6485d40e890239a6",
+      "tests/botigues.test.mjs": "86c6a46a9e47a06af623e3df8198a26cebe53f57f864aa7a4d1b772ac8356020",
+      "supabase/migrations/2610282100_usuari_i_poble_canonic.sql": "796a4bd60740aae7059fce258d88e1522fcc55540fb26e52e9f60952bff2c68c"
+    },
+    "contrastPatch": {
+      "files": [
+        {
+          "path": "src/css/tokens.css",
+          "beforeSha256": "1fb0ec583ac8d1ce094658f52ca1928954d7b698497a781969913497c58ae0fb",
+          "afterSha256": "9fedd6b1559b8a77ca109ef15620b37998326b0d46712ec5a87258d80c3f6945"
+        },
+        {
+          "path": "src/css/tokens.contracte.test.js",
+          "beforeSha256": "9afb3bca9cf69cc104599405a4d9f11e37694bb6f4d343091296cf4990e5725d",
+          "afterSha256": "7e9b6072c0e2d83ca68f9ddea83b2696bab655ab13c9d23e852e843000379156"
+        },
+        {
+          "path": "src/apps/lector/lector261024.test.jsx",
+          "beforeSha256": "4c42b7a4ee1d7cf3134396701c3115056d72b219080cfb0a30c6e653723c91c0",
+          "afterSha256": "9a28846cde0fc0b8288d19a3f4dc8fd8596436eb3d3c6204ddbef80a63ec212f"
+        },
+        {
+          "path": "src/sections/consola/peces.test.jsx",
+          "beforeSha256": "1ed80be76994287418896e2d7f12b0a1a18da82d785b8de667e2f9d8df354c62",
+          "afterSha256": "f1594dd885d9bddaeb808913aa7fbc54dbbb63fad4c4b1188f87311fa6c4adca"
+        }
+      ],
+      "tests": {
+        "vitestPassed": 104,
+        "vitestFiles": 5,
+        "eslintExit": 0,
+        "controlAntic": {
+          "exit": 1,
+          "expectedFailure": true
+        }
+      },
+      "patchSha256": "4f3233ad386f3874f76b980cb450bc186ae253fbf64b5c410f4f7eb1d1cdd5bf"
+    },
+    "contrastLog": "\n RUN  v4.1.10 /private/tmp/sdp-qah-261029-1ttv030r/copy\n\n\n Test Files  5 passed (5)\n      Tests  104 passed (104)\n   Start at  03:41:31\n   Duration  4.45s (transform 903ms, setup 0ms, import 1.40s, tests 1.33s, environment 1.40s)\n\n",
+    "negativeControl": "\n RUN  v4.1.10 /private/tmp/sdp-qah-261029-1ttv030r/copy\n\n ❯ src/css/tokens.contracte.test.js (37 tests | 1 failed | 35 skipped) 5ms\n     × la font única és el token de marca; els quatre modes conserven almenys 7:1 4ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 1 passed | 35 skipped (37)\n   Start at  03:42:31\n   Duration  332ms (transform 13ms, setup 0ms, import 23ms, tests 5ms, environment 247ms)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/css/tokens.contracte.test.js > QA-H03 · el verd de marca sobre blanc supera el llindar AAA de 7:1 > la font única és el token de marca; els quatre modes conserven almenys 7:1\nAssertionError: clar: expected 6.996599758323873 to be greater than or equal to 7\n ❯ src/css/tokens.contracte.test.js:392:66\n    390|     for (const [mode, mapa] of Object.entries({ clar: CLAR, fosc: MAPA…\n    391|       const parell = { ...mapa, '--qa-blanc': '#ffffff' };\n    392|       expect(contrast('--sdp-verd', '--qa-blanc', parell), mode).toBeG…\n       |                                                                  ^\n    393|     }\n    394|   });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n"
+  },
+  "e2ee": {
+    "source": {
+      "head": "7a87205f3db6eb76a868bb3ee8e6c89cd2771a56",
+      "files": {
+        "src/data/xifratXatCripto.vectors.json": "f0451a5a437c0f8cd3d61a72ee7853238035d47f75a5eac35c38070e2d9793a4",
+        "src/data/xifratXatParaules.js": "50d03eea0e0ffe06a3769695b22d529953f96e15e41c032c7731f488dfee7dd4",
+        "src/data/xifratXatFormats.seguretat.test.js": "ce177e0eff12281e71eb1c37468ffe33e39c414989a77df4dd3cb95d72a9d2b4",
+        "src/data/xifratXatCripto.js": "638be70f9cfe11f2ca7b10e52de01d34cb1e65d6400a78dde621e5e383a6cbe8",
+        "src/data/xifratXatFormats.vectors.json": "83c3565b2d2df9f6c47bef8035da8009032e0bc1cf3a1e0b164f1f83a44f955d",
+        "src/data/xifratXatParaules.seguretat.test.js": "909ec77fbf80ffa86cc39c366aca36b12118ff024ff88f982f964f81135a10f1",
+        "src/data/xifratXatMagatzem.seguretat.test.js": "aee1c732edead44c16aea471c88a8ba756a388dce3e4964b41c4686105d0967b",
+        "src/data/xifratXatMagatzem.js": "ce59c24577f42983e587db36bf0f63701c3f13604360367a8e1c1e50e5b4e20b",
+        "src/data/xifratXatCripto.seguretat.test.js": "8aaa601ec41fb543f759f33efe2250437511c3ee507fed1e56200f67ab59a0ec",
+        "src/data/xifratXatFormats.js": "2fcfd016941c19cb2becbdf9881648c93cdeec728ea44fabdb19cec9df998bd7",
+        "src/data/xatMultimedia.js": "f9e45cbfd6a7bd3d3ed6993182f761d4969cc10949b4fb92615d09330f4b632e",
+        "tests/helpers/idbFalsEstructurat.js": "f5d392c2598b1812b7e31b066c4eafccd07067169eb0724df00e67afa7ea1ec5",
+        "src/sections/xat/XatContext.jsx": "493b9e6191bd8310ddaf90fa5777337a694f4aa9dd6a48fa64f093a462c28c49",
+        "design": "619b717115598c90dd4de6dca821d7be9bcf81adac679be44bfcb5e68b108d07"
+      }
+    },
+    "sourceManifestSha256": "c428931833453e61ee0b251b1741bc11d588992d0bed26d9c35c44072ff3ac0d",
+    "existingTestsPassed": 265,
+    "newCriteriaFailed": 3,
+    "newControlPassed": 1,
+    "liveActivation": false
+  },
+  "limits": [
+    "Pegats preparats i verificats en còpia; no integrats al repositori viu.",
+    "Coverage i claims són comprovacions acotades, no certificació semàntica completa.",
+    "La revisió inicial no executa per avançat els deu cicles programats."
+  ],
+  "deliveryFollowup": {
+    "time": "2026-10-29T02:56:21.403159+00:00",
+    "closureCheck": {
+      "valid": true,
+      "mode": "check",
+      "state": "planned",
+      "passedGates": [
+        "olivera",
+        "plantilles",
+        "autoritat",
+        "ledger",
+        "segell",
+        "skills",
+        "wiki",
+        "scc"
+      ]
+    },
+    "T11-12": {
+      "issue": "Inconsistència d’ancoratge d’artifacts no Markdown entre creador, Olivera i SCC",
+      "mitigation": "Wikilink amb camí relatiu explícit ./ i consumidor documental",
+      "permanentRegression": "Pendent del cicle següent"
+    }
+  },
+  "cycles": [
+    {
+      "cycle": 1,
+      "startedAt": "2026-10-29T03:08:15.936Z",
+      "completedAt": "2026-10-29T03:30:30.860166+00:00",
+      "evidence": "261029_0408_informe_evidencies_codex.json",
+      "sha256": "340f113457c23395c33eaa490d9ea4391ca43411b33cb4a46346d96312645386"
+    },
+    {
+      "cycle": 2,
+      "startedAt": "2026-10-29T03:38:16.195Z",
+      "completedAt": "2026-10-29T04:01:46.021Z",
+      "evidence": "261029_0438_informe_evidencies_codex.json",
+      "sha256": "15075f49cca161da5a388520737b5e6df330123aac082193a326a2f2733addc1"
+    },
+    {
+      "cycle": 3,
+      "startedAt": "2026-10-29T04:08:16.622Z",
+      "completedAt": "2026-10-29T04:27:54.436Z",
+      "evidence": "261029_0508_informe_evidencies_codex.json",
+      "sha256": "8353fcdd1bdbcb67667423a47cc7eb9fe423093c30fb3c2b4912c7a7bbfce423"
+    },
+    {
+      "cycle": 4,
+      "startedAt": "2026-10-29T04:38:16.921Z",
+      "completedAt": "2026-10-29T04:57:45.866Z",
+      "evidence": "261029_0538_informe_evidencies_codex.json",
+      "sha256": "11053019d26e0351ce385f5576339619c1592e1c90d3bf17c5728486bb2a4da1"
+    },
+    {
+      "cycle": 5,
+      "startedAt": "2026-10-29T05:08:17.249Z",
+      "completedAt": "2026-10-29T05:26:01.490Z",
+      "evidence": "261029_0608_informe_evidencies_codex.json",
+      "sha256": "af79df605149828be444cf4b68452d6d58f97b89908e1493c4058486c0d14a2c"
+    },
+    {
+      "cycle": 6,
+      "startedAt": "2026-10-29T05:38:17.667Z",
+      "completedAt": "2026-10-29T05:59:21.930Z",
+      "evidence": "261029_0638_informe_evidencies_codex.json",
+      "sha256": "5eb78006752253744b9ce3601edbe873bc801fbbf37540b70d9bfe68925ba431"
+    },
+    {
+      "cycle": 7,
+      "startedAt": "2026-10-29T06:08:18.098Z",
+      "completedAt": "2026-10-29T06:36:16.329630+00:00",
+      "evidence": "261029_0708_informe_evidencies_codex.json",
+      "sha256": "56dd29217fbe748568ad130b6ee67fe383102948cecd1e9a8db71d785d9d65e5"
+    },
+    {
+      "cycle": 8,
+      "startedAt": "2026-10-29T06:38:18.537Z",
+      "completedAt": "2026-10-29T07:01:02.488838+00:00",
+      "evidence": "261029_0738_informe_evidencies_codex.json",
+      "sha256": "1c3d87a471375ad74bf79b6ab5933e6c2c59aa992f2c2dff002639cd7e68b5dd"
+    },
+    {
+      "cycle": 9,
+      "startedAt": "2026-10-29T07:08:18.931Z",
+      "completedAt": "2026-10-29T07:29:53.821659+00:00",
+      "evidence": "261029_0808_informe_evidencies_codex.json",
+      "sha256": "acbada7330a0b65a33b268a3b61d23b00a135f3e5958a852231a377a3ef1209b"
+    },
+    {
+      "cycle": 10,
+      "startedAt": "2026-10-29T07:38:19.241Z",
+      "completedAt": "2026-10-29T07:59:45.907355+00:00",
+      "evidence": "261029_0838_informe_evidencies_codex.json",
+      "sha256": "accc8eba7f5eec3817336ea83188bdab50f08724c6a883991a4c48a06c897413"
+    }
+  ],
+  "marathon": {
+    "completedActivations": 10,
+    "initialBaselineExcluded": true,
+    "automationStatus": "PAUSED",
+    "global10Certified": false
+  }
+}

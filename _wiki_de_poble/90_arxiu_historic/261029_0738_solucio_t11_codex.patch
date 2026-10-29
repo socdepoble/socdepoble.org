@@ -1,0 +1,557 @@
+diff --git a/tooling/wiki/compile-wiki-to-system-prompt.mjs b/tooling/wiki/compile-wiki-to-system-prompt.mjs
+--- a/tooling/wiki/compile-wiki-to-system-prompt.mjs
++++ b/tooling/wiki/compile-wiki-to-system-prompt.mjs
+@@ -1,77 +1,17 @@
+ #!/usr/bin/env node
+ 
+-import fs from 'node:fs';
+ import path from 'node:path';
+-import { fileURLToPath } from 'node:url';
+-import { parseFrontmatter } from './lib/frontmatter.mjs';
+-
+-const ARREL = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
+-
+-// Llegim TOTS els pilars operatius i SKILLS, res d'arxius aïllats
+-const ACTIVE_DIRS = [
+-  '.agents/skills',
+-  '_wiki_de_poble/01_ser',
+-  '_wiki_de_poble/02_saber',
+-  '_wiki_de_poble/03_actuar',
+-  '_wiki_de_poble/02_saber'
+-];
+-
+-function walkAndBundle(dir, fileList = []) {
+-  if (!fs.existsSync(dir)) return fileList;
+-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+-  for (const entry of entries) {
+-    const fullPath = path.join(dir, entry.name);
+-    // Ignorem la carpeta de plantilles per a no carregar-les com a regles generals
+-    if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'plantilles') {
+-      walkAndBundle(fullPath, fileList);
+-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+-      fileList.push(fullPath);
+-    }
+-  }
+-  return fileList;
+-}
++import {fileURLToPath} from 'node:url';
++import {readContextInputs,writeGeneratedContext} from './lib/retrieval-sources.mjs';
++const ARREL=path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
+ 
+ async function compilePrompt() {
+   console.log("🧠 Extraient el Còrtex Global de la Wiki per evitar l'Amnèsia de Resurrecció...");
+   
+-  let output = '# CONTEXT MESTRE GLOBAL (SÓC DE POBLE)\n\n';
+-  output += "Aquest document és generat automàticament. No l'editis directament. Conté l'estat complet del Mas per carregar la memòria de l'Agent a l'instant.\n\n";
+-  
+-  let allFiles = ['AGENTS.md', '.agents/AGENTS.md', '.agents/PROTOCOL_PETORRETA.md'].map(p => path.resolve(ARREL, p));
+-  ACTIVE_DIRS.forEach(dir => walkAndBundle(path.resolve(ARREL, dir), allFiles));
+-
+-  // Deduplicació per si de cas
+-  const uniqueFiles = [...new Set(allFiles)];
+-  const missingFiles = uniqueFiles.filter(f => !fs.existsSync(f));
+-  if (missingFiles.length > 0) {
+-    console.error(`❌ Falten fitxers crítics per al context:\n${missingFiles.join('\n')}`);
+-    process.exit(1);
+-  }
+-  allFiles = uniqueFiles;
+-
+-  for (const fullPath of allFiles) {
+-    const relPath = path.relative(ARREL, fullPath);
+-    const content = fs.readFileSync(fullPath, 'utf8');
+-    
+-    // Extreure el frontmatter usant parseFrontmatter intern
+-    const parsed = parseFrontmatter(content);
+-    const status = parsed.data ? parsed.data.status : null;
+-    
+-    if (status === 'arxivat' || status === 'quarantena') {
+-      continue; // Ignorem documents arxivats o en quarantena (però sí que entra 'esborrany')
+-    }
+-    
+-    // Compressió termodinàmica: ens quedem només amb el contingut body sense el frontmatter
+-    const compressedContent = parsed.body.replace(/\n{3,}/g, '\n\n').trim();
+-    
+-    output += `## [FILE: ${relPath}]\n${compressedContent}\n\n---\n\n`;
+-  }
+-
+-  const outputFilePath = path.resolve(ARREL, '.agents/GENOMA.md');
+-  fs.writeFileSync(outputFilePath, output, 'utf8');
+-  
+-  const mbs = (Buffer.byteLength(output, 'utf8') / 1024 / 1024).toFixed(2);
+-  console.log(`✅ Còrtex total compilat correctament (${mbs} MB) a ${outputFilePath}. Injecteu açò com a System Prompt.`);
++  const sources=readContextInputs(ARREL);
++  const manifest=writeGeneratedContext(ARREL,sources);
++  const mbs=(manifest.artifact.bytes/1024/1024).toFixed(2);
++  console.log(`✅ Context compilat (${mbs} MB), ${manifest.emissions.length} emissions i ${manifest.sources.length} fonts traçades a .agents/GENOMA.sources.json.`);
+ }
+ 
+ compilePrompt().catch(err => {
+diff --git a/tooling/wiki/core/edge_rag.mjs b/tooling/wiki/core/edge_rag.mjs
+--- a/tooling/wiki/core/edge_rag.mjs
++++ b/tooling/wiki/core/edge_rag.mjs
+@@ -1,10 +1,11 @@
+ // core/edge_rag.mjs — Cercador semàntic local: TF-IDF + similitud cosinus. Zero dependències,
+ // zero vector DB extern, pura matemàtica. Índex invertit (terme -> llista de docs) perquè una
+ // consulta només toque els documents rellevants, no tot el corpus. A ~500 .md el corpus sencer
+-// (Maps dispersos, mai els fitxers originals sencers) cap folgadament dins la RAM del dispositiu de referència:
+-// el text cru de cada fitxer es descarta tan bon punt es tokenitza, no es reté enlloc.
++// retornat només reté vectors i metadades. Durant la construcció, la projecció conserva
++// els buffers seleccionats; el pic de RAM inclou el corpus cru i el replay de GENOMA.
+ import { readFile, readdir } from 'node:fs/promises';
+-import { join, relative } from 'node:path';
++import { join, resolve } from 'node:path';
++import {retrievalSources} from '../lib/retrieval-sources.mjs';
+ import { parseFrontmatter } from '../lib/frontmatter.mjs';
+ 
+ const RULES_URL = new URL('../rules/trellat-rules.json', import.meta.url);
+@@ -67,19 +68,21 @@
+   const df = new Map(); // terme -> nombre de documents que el contenen
+   const perDocTf = [];
+ 
+-  for (const file of files) {
+-    const raw = await readFile(file, 'utf8');
++  const projected=retrievalSources(root,[...files].map(file=>resolve(file)),{requireCoveredEmissions:!!options.files});
++  for (const group of projected.groups) {
++    const raw = group.source.bytes.toString('utf8');
+     const parsed = parseFrontmatter(raw);
+     if (parsed.malformed || parsed.errors.length) {
+-      throw new Error(`Frontmatter invàlid en ${relative(root, file)}: ${parsed.errors.join('; ') || 'bloc mal tancat'}`);
++      throw new Error(`Frontmatter invàlid en ${group.source.path}: ${parsed.errors.join('; ') || 'bloc mal tancat'}`);
+     }
+     const body = parsed.body;
+     const tokens = tokenize(body, stopwords, minLen);
+     const tf = termFreq(tokens);
+     for (const term of tf.keys()) df.set(term, (df.get(term) || 0) + 1);
+-    meta.push({ id: meta.length, path: relative(root, file), length: tokens.length });
++    meta.push({ id: meta.length, path: group.source.path, length: tokens.length, aliases:group.aliases });
+     perDocTf.push(tf);
+-    // `raw`/`body`/`tokens` moren ací: res del text cru sobreviu fora del Map `tf`.
++    // La projecció conserva els buffers fins al final de buildIndex. L'índex
++    // retornat només conserva vectors, àlies i metadades de procedència.
+   }
+ 
+   const N = meta.length || 1;
+@@ -99,7 +102,7 @@
+     norms[docId] = Math.sqrt(sumSq) || 1e-9; // evita divisió per zero en cosinus
+   });
+ 
+-  return { docs: meta, inverted, idf, norms, stopwords, minLen, docCount: meta.length };
++  return { docs: meta, inverted, idf, norms, stopwords, minLen, docCount: meta.length, sourceProvenance:projected.provenance };
+ }
+ 
+ /** Cerca les millors coincidències per a `query` dins l'índex de buildIndex(). */
+diff --git a/tooling/wiki/lib/retrieval-sources.mjs b/tooling/wiki/lib/retrieval-sources.mjs
+new file mode 100644
+--- /dev/null
++++ b/tooling/wiki/lib/retrieval-sources.mjs
+@@ -0,0 +1,145 @@
++/** Byte-exact retrieval projection. Bundles and authored documents are untouched.
++ * An aggregate is omitted only after replaying its real producer emissions.
++ * These hashes establish consistency, not authorship, permission or consent.
++ */
++import fs from 'node:fs';
++import path from 'node:path';
++import {createHash,randomUUID} from 'node:crypto';
++import {isDeepStrictEqual} from 'node:util';
++import {parseFrontmatter} from './frontmatter.mjs';
++export const GENOMA='.agents/GENOMA.md';
++export const GENOMA_SOURCES='.agents/GENOMA.sources.json';
++const PRODUCER='tooling/wiki/compile-wiki-to-system-prompt.mjs';
++const CONTEXT_DIRS=['.agents/skills','_wiki_de_poble/01_ser','_wiki_de_poble/02_saber','_wiki_de_poble/03_actuar'];
++const CONTEXT_FILES=['AGENTS.md','.agents/AGENTS.md','.agents/PROTOCOL_PETORRETA.md'];
++const DEPENDENCIES=['tooling/wiki/lib/frontmatter.mjs','tooling/wiki/lib/retrieval-sources.mjs'];
++const HEADER='# CONTEXT MESTRE GLOBAL (SÓC DE POBLE)\n\nAquest document és generat automàticament. No l\'editis directament. Conté les fonts seleccionades pel productor i traçades al sidecar de procedència.\n\n';
++const compare=(a,b)=>a<b?-1:a>b?1:0;
++const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
++const record=s=>({path:s.path,sha256:s.sha256,bytes:s.bytes.length});
++function relativeName(name) {
++ if(typeof name!=='string'||!name||name.startsWith('/')||/[\\\0]/.test(name)||name.split('/').some(p=>!p||p==='.'||p==='..'))throw new Error(`Ruta relativa invàlida: ${name}`);
++ return name;
++}
++function confined(root,file) {
++ const base=fs.realpathSync(root),absolute=path.resolve(root,file),rel=path.relative(path.resolve(root),absolute).split(path.sep).join('/');
++ relativeName(rel);let cursor=base;const parts=rel.split('/');
++ for(const [i,part]of parts.entries()) {
++  cursor=path.join(cursor,part);const stat=fs.lstatSync(cursor);
++  if(stat.isSymbolicLink()||(i<parts.length-1&&!stat.isDirectory()))throw new Error(`Symlink o camí no auditat: ${rel}`);
++ }
++ return {rel,cursor};
++}
++export function readContextSource(root,file) {
++ const {rel,cursor}=confined(root,file);
++ const fd=fs.openSync(cursor,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);let bytes;
++ try{if(!fs.fstatSync(fd).isFile())throw new Error(`No és un fitxer: ${rel}`);bytes=fs.readFileSync(fd);}finally{fs.closeSync(fd);}
++ return {path:rel,bytes,sha256:sha(bytes)};
++}
++export function contextInputFiles(root) {
++ const names=[...CONTEXT_FILES];
++ function visit(rel) {
++  let safe;try{safe=confined(root,rel);}catch(e){if(e.code==='ENOENT')return;throw e;}
++  if(!fs.lstatSync(safe.cursor).isDirectory())throw new Error(`No és un directori de context: ${rel}`);
++  for(const entry of fs.readdirSync(safe.cursor,{withFileTypes:true}).sort((a,b)=>compare(a.name,b.name))) {
++   const child=rel+'/'+entry.name;
++   if(entry.isSymbolicLink())throw new Error(`Symlink no auditat: ${child}`);
++   if(entry.isDirectory()&&!entry.name.startsWith('.')&&entry.name!=='plantilles'&&!entry.name.startsWith('90_'))visit(child);
++   else if(entry.isFile()&&entry.name.endsWith('.md'))names.push(child);
++  }
++ }
++ CONTEXT_DIRS.forEach(visit);return [...new Set(names)].sort(compare).map(p=>path.resolve(root,p));
++}
++export function readContextInputs(root) {return contextInputFiles(root).map(file=>readContextSource(root,file));}
++function revalidateSelection(root,sources) {
++ const expected=contextInputFiles(root).map(f=>path.relative(path.resolve(root),f).split(path.sep).join('/')).sort(compare),actual=sources.map(s=>s.path).sort(compare);
++ if(!isDeepStrictEqual(expected,actual))throw new Error('Selecció del productor canviada o incompleta');
++}
++export function groupIdenticalSources(sources) {
++ const unique=new Map(),buckets=new Map();
++ for(const source of sources) {
++  relativeName(source.path);
++  if(!Buffer.isBuffer(source.bytes))throw new Error('Calen bytes crus de cada font');
++  const prior=unique.get(source.path);if(prior&&!prior.bytes.equals(source.bytes))throw new Error(`Selecció divergent: ${source.path}`);
++  unique.set(source.path,{...source,sha256:sha(source.bytes)});
++ }
++ for(const source of unique.values()) {
++  const matches=buckets.get(source.sha256)||[],group=matches.find(g=>g[0].bytes.equals(source.bytes));
++  if(group)group.push(source);else matches.push([source]);buckets.set(source.sha256,matches);
++ }
++ const groups=[];
++ for(const matches of buckets.values())for(const group of matches) {
++  group.sort((a,b)=>compare(a.path,b.path));const source=group.find(s=>s.path==='AGENTS.md')||group[0];
++  groups.push({source,aliases:group.map(record)});
++ }
++ return groups.sort((a,b)=>compare(a.source.path,b.source.path));
++}
++function producer(root) {
++ const source=readContextSource(root,PRODUCER);
++ return {path:PRODUCER,sha256:source.sha256,dependencies:DEPENDENCIES.map(p=>record(readContextSource(root,p)))};
++}
++function compilerSource(name) {
++ relativeName(name);
++ if([GENOMA,GENOMA_SOURCES].includes(name))throw new Error('Procedència generada circular');
++ if(CONTEXT_FILES.includes(name))return;
++ const roots=CONTEXT_DIRS.map(p=>p+'/');
++ const prefix=roots.find(p=>name.startsWith(p));
++ if(!prefix||!name.endsWith('.md')||name.slice(prefix.length).split('/').slice(0,-1).some(p=>p.startsWith('.')||p==='plantilles'||p.startsWith('90_')))throw new Error(`Font fora del productor: ${name}`);
++}
++export function renderGeneratedContext(sources,producerRecord) {
++ const selected=new Map(),excluded=[],active=[];
++ for(const input of sources) {
++  if(!Buffer.isBuffer(input.bytes))throw new Error('Calen bytes crus de cada font');
++  const bytes=Buffer.from(input.bytes),source={path:input.path,bytes,sha256:sha(bytes)};
++  compilerSource(source.path);if(selected.has(source.path))throw new Error(`Font repetida: ${source.path}`);selected.set(source.path,source);
++  const parsed=parseFrontmatter(source.bytes.toString('utf8'));
++  if(parsed.malformed||parsed.errors.length)throw new Error(`Frontmatter invàlid: ${source.path}`);
++  if(['arxivat','quarantena'].includes(parsed.data?.status))excluded.push({...record(source),reason:parsed.data.status});else active.push(source);
++ }
++ if(!selected.size)throw new Error('Corpus del productor buit');
++ let text=HEADER;const emissions=[];
++ for(const group of groupIdenticalSources(active)) {
++  const parsed=parseFrontmatter(group.source.bytes.toString('utf8')),body=parsed.body.replace(/\n{3,}/g,'\n\n').trim();
++  const block=`## [FILE: ${group.source.path}]\n${body}\n\n---\n\n`;
++  emissions.push({path:group.source.path,aliases:group.aliases,start:Buffer.byteLength(text),bytes:Buffer.byteLength(block),sha256:sha(Buffer.from(block))});text+=block;
++ }
++ const artifact=Buffer.from(text);
++ return {bytes:artifact,manifest:{schema:'sdp.genoma.provenance.v1',producer:producerRecord,sources:[...selected.values()].map(record).sort((a,b)=>compare(a.path,b.path)),excluded:excluded.sort((a,b)=>compare(a.path,b.path)),emissions,artifact:{path:GENOMA,sha256:sha(artifact),bytes:artifact.length}}};
++}
++function revalidate(root,sources) {
++ for(const source of sources)if(readContextSource(root,source.path).sha256!==source.sha256)throw new Error(`Font canviada durant la captura: ${source.path}`);
++}
++export function writeGeneratedContext(root,sources) {
++ const code=producer(root),result=renderGeneratedContext(sources,code),captured=result.manifest.sources;
++ revalidateSelection(root,captured);revalidate(root,captured);if(!isDeepStrictEqual(producer(root),code))throw new Error('Productor canviat durant la captura');
++ const nonce=randomUUID(),body=path.join(root,GENOMA),sidecar=path.join(root,GENOMA_SOURCES),bodyTemp=body+'.tmp-'+nonce,sideTemp=sidecar+'.tmp-'+nonce;
++ // Cada rename és atòmic. Una interrupció entre els dos deixa un parell que
++ // el consumidor rebutja explícitament; mai interpreta un sidecar antic.
++ for(const target of [body,sidecar]){try{fs.lstatSync(target);readContextSource(root,target);}catch(e){if(e.code!=='ENOENT')throw e;}}
++ try{
++  fs.writeFileSync(bodyTemp,result.bytes,{flag:'wx'});fs.writeFileSync(sideTemp,JSON.stringify(result.manifest,null,2)+'\n',{flag:'wx'});
++  revalidateSelection(root,captured);revalidate(root,captured);if(!isDeepStrictEqual(producer(root),code))throw new Error('Productor canviat abans de publicar');
++  fs.renameSync(bodyTemp,body);fs.renameSync(sideTemp,sidecar);
++  revalidateSelection(root,captured);revalidate(root,captured);if(!isDeepStrictEqual(producer(root),code))throw new Error('Productor canviat durant la publicació');
++ }finally{for(const tmp of [bodyTemp,sideTemp])if(fs.existsSync(tmp))fs.unlinkSync(tmp);}
++ return result.manifest;
++}
++export function retrievalSources(root,files,{requireCoveredEmissions=false}={}) {
++ const selected=files.map(f=>readContextSource(root,f)),aggregate=selected.find(s=>s.path===GENOMA);let generated=null;
++ if(aggregate) {
++  let manifest;try{manifest=JSON.parse(readContextSource(root,GENOMA_SOURCES).bytes.toString('utf8'));}catch(e){throw new Error(`Procedència GENOMA absent o invàlida: ${e.message}`);}
++  if(manifest?.schema!=='sdp.genoma.provenance.v1'||!Array.isArray(manifest.sources)||!manifest.sources.length)throw new Error('Contracte de procedència GENOMA invàlid');
++  const seen=new Set(),sources=manifest.sources.map(s=>{
++   compilerSource(s?.path);if(seen.has(s.path))throw new Error('Procedència GENOMA repetida');seen.add(s.path);
++   const actual=readContextSource(root,s.path);if(actual.sha256!==s.sha256||actual.bytes.length!==s.bytes)throw new Error(`Procedència GENOMA desfasada: ${s.path}`);return actual;
++  });
++  revalidateSelection(root,sources);
++  const expected=renderGeneratedContext(sources,producer(root));
++  if(!isDeepStrictEqual(expected.manifest,manifest)||!aggregate.bytes.equals(expected.bytes))throw new Error('GENOMA i procedència divergeixen de les emissions reals');
++  for(const source of sources){const earlier=selected.find(s=>s.path===source.path);if(earlier&&earlier.sha256!==source.sha256)throw new Error(`Captura GENOMA inconsistent: ${source.path}`);}
++  if(requireCoveredEmissions&&manifest.emissions.some(e=>!e.aliases.some(a=>selected.some(s=>s.path===a.path))))throw new Error('GENOMA té emissions sense fonts seleccionades explícitament');
++  revalidateSelection(root,sources);revalidate(root,sources);generated={...manifest.artifact,producer:manifest.producer,emissions:manifest.emissions,sources:manifest.sources.map(s=>({...s,selected:selected.some(earlier=>earlier.path===s.path)}))};
++ }
++ const groups=groupIdenticalSources(selected.filter(s=>s.path!==GENOMA));
++ return {groups,provenance:{sources:[...new Map(selected.map(s=>[s.path,record(s)])).values()].sort((a,b)=>compare(a.path,b.path)),groups:groups.map(g=>({path:g.source.path,aliases:g.aliases})),generated}};
++}
+diff --git a/tests/t11-retrieval-provenance.test.mjs b/tests/t11-retrieval-provenance.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/t11-retrieval-provenance.test.mjs
+@@ -0,0 +1,134 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import {createHash} from 'node:crypto';
++import {fileURLToPath} from 'node:url';
++import {spawnSync} from 'node:child_process';
++import {buildIndex,search} from '../tooling/wiki/core/edge_rag.mjs';
++import {readContextSource,writeGeneratedContext,renderGeneratedContext,groupIdenticalSources,GENOMA,GENOMA_SOURCES} from '../tooling/wiki/lib/retrieval-sources.mjs';
++const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
++const PRODUCER='tooling/wiki/compile-wiki-to-system-prompt.mjs';
++const TOOLS=[PRODUCER,'tooling/wiki/lib/retrieval-sources.mjs','tooling/wiki/lib/frontmatter.mjs'];
++const hash=b=>createHash('sha256').update(b).digest('hex');
++const doc=(body,metadata='')=>`---\ntype: document\nstatus: canonic\ndescription: Fixture de recuperació\n${metadata}---\n${body}\n`;
++function fixture(t){
++ const parent=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-rag-provenance-'))),root=path.join(parent,'repo');fs.mkdirSync(root);t.after(()=>fs.rmSync(parent,{recursive:true,force:true}));
++ const put=(rel,bytes)=>{const f=path.join(root,rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,bytes);return f;};
++ const raw=doc('# BIOS\nbiosterm castanyeta'),sources={'AGENTS.md':raw,'.agents/AGENTS.md':raw,'.agents/PROTOCOL_PETORRETA.md':doc('# Protocol\nprotocolterm'),'.agents/skills/fixture/SKILL.md':doc('# Procediment\nskillterm'),'_wiki_de_poble/01_ser/03_equip_ia.md':doc('# Equip\nMarIA coordina rols'), '_wiki_de_poble/01_ser/agents_equip_ia.md':doc('# Narrativa\nMemòria cascavell i família\n\n~~~markdown\n## [FILE: fals.md]\n~~~'),'_wiki_de_poble/01_ser/personalitat_iaia.md':doc('# Personalitat\nVeu clara de MarIA')};
++ for(const [p,b]of Object.entries(sources))put(p,b);for(const rel of TOOLS)put(rel,fs.readFileSync(path.join(ROOT,rel)));
++ const compile=()=>spawnSync(process.execPath,[path.join(root,PRODUCER)],{cwd:root,encoding:'utf8'});
++ const run=()=>{const result=compile();assert.equal(result.status,0,result.stdout+'\n'+result.stderr);return JSON.parse(fs.readFileSync(path.join(root,GENOMA_SOURCES),'utf8'));};
++ return {parent,root,put,sources,compile,run,manifest:()=>JSON.parse(fs.readFileSync(path.join(root,GENOMA_SOURCES),'utf8'))};
++}
++test('CLI real emet una còpia BIOS, àlies i offsets byte-exactes de les emissions reals',t=>{
++ const f=fixture(t),m=f.run(),artifact=fs.readFileSync(path.join(f.root,GENOMA));assert.equal(m.sources.length,7);assert.equal(m.emissions.length,6);
++ const bios=m.emissions.find(e=>e.path==='AGENTS.md');assert.deepEqual(bios.aliases.map(a=>a.path),['.agents/AGENTS.md','AGENTS.md']);
++ for(const e of m.emissions)assert.equal(hash(artifact.subarray(e.start,e.start+e.bytes)),e.sha256);
++ assert.equal(m.artifact.sha256,hash(artifact));assert.ok(artifact.toString().includes('## [FILE: fals.md]'));
++ const first=hash(artifact),side=hash(fs.readFileSync(path.join(f.root,GENOMA_SOURCES)));f.run();assert.equal(hash(fs.readFileSync(path.join(f.root,GENOMA))),first);assert.equal(hash(fs.readFileSync(path.join(f.root,GENOMA_SOURCES))),side);
++});
++test('edgeRAG valida el parell real i conserva retrats diferents sense afegir fonts només de procedència',async t=>{
++ const f=fixture(t);f.run();const index=await buildIndex(f.root);assert.equal(index.docCount,5);
++ assert.equal(index.docs.some(d=>d.path===GENOMA),false);assert.equal(index.docs.some(d=>d.path==='.agents/PROTOCOL_PETORRETA.md'),false);
++ assert.equal(index.docs.find(d=>d.path==='AGENTS.md').aliases.length,2);assert.equal(index.sourceProvenance.generated.sources.find(s=>s.path==='.agents/PROTOCOL_PETORRETA.md').selected,false);
++ for(const p of Object.keys(f.sources).filter(p=>p.startsWith('_wiki')))assert.ok(index.docs.some(d=>d.path===p));
++ const hits=search(index,'biosterm',10);assert.equal(hits.length,1);assert.deepEqual(Object.keys(hits[0]).sort(),['path','score']);assert.equal(hits[0].path,'AGENTS.md');
++});
++test('sidecar absent i JSON corrupte rebutgen GENOMA sense recuperar-lo com a prosa',async t=>{
++ const f=fixture(t);f.run();fs.unlinkSync(path.join(f.root,GENOMA_SOURCES));await assert.rejects(buildIndex(f.root),/Procedència GENOMA absent/);
++ f.put(GENOMA_SOURCES,'{malformat');await assert.rejects(buildIndex(f.root),/Procedència GENOMA absent/);
++});
++test('artefacte alterat rebutja el parell encara que el sidecar original siga vàlid',async t=>{
++ const f=fixture(t);f.run();fs.appendFileSync(path.join(f.root,GENOMA),'\ncontingut alié');await assert.rejects(buildIndex(f.root),/divergeixen/);
++});
++test('font absent o canviada, inclosa una font exclosa pel selector, falla explícitament',async t=>{
++ const f=fixture(t);f.run();fs.unlinkSync(path.join(f.root,'.agents/PROTOCOL_PETORRETA.md'));await assert.rejects(buildIndex(f.root));
++ f.put('.agents/PROTOCOL_PETORRETA.md',doc('Canvi nou'));await assert.rejects(buildIndex(f.root),/desfasada/);
++});
++test('productor o dependència canviats exigixen reconstruir el parell',async t=>{
++ const f=fixture(t);f.run();fs.appendFileSync(path.join(f.root,PRODUCER),'\n// canvi\n');await assert.rejects(buildIndex(f.root),/divergeixen/);
++ f.run();fs.appendFileSync(path.join(f.root,'tooling/wiki/lib/frontmatter.mjs'),'\n// canvi\n');await assert.rejects(buildIndex(f.root),/divergeixen/);
++});
++test('emissions falsejades, procedència repetida o circular no poden ocultar text',async t=>{
++ const f=fixture(t);f.run();const original=f.manifest();
++ for(const mutate of [m=>m.emissions[0].start++,m=>m.emissions.pop(),m=>m.sources.push(m.sources[0]),m=>m.sources[0].path=GENOMA]){
++  const m=structuredClone(original);mutate(m);f.put(GENOMA_SOURCES,JSON.stringify(m));await assert.rejects(buildIndex(f.root));
++ }
++});
++test('selecció explícita parcial de GENOMA falla; les fonts explícites cobertes passen',async t=>{
++ const f=fixture(t);f.run();await assert.rejects(buildIndex(f.root,{files:[path.join(f.root,GENOMA)]}),/sense fonts seleccionades/);
++ const files=[GENOMA,...Object.keys(f.sources)].map(p=>path.join(f.root,p));const index=await buildIndex(f.root,{files});assert.equal(index.docCount,6);assert.ok(index.docs.some(d=>d.path==='.agents/PROTOCOL_PETORRETA.md'));
++});
++test('només mirall seleccionat es conserva; cos igual amb metadata distinta no es fusiona',async t=>{
++ const f=fixture(t),mirror=path.join(f.root,'.agents/AGENTS.md');const one=await buildIndex(f.root,{files:[mirror]});assert.equal(one.docs[0].path,'.agents/AGENTS.md');
++ f.put('_wiki_de_poble/01_ser/diferent.md',doc('# BIOS\nbiosterm castanyeta','visibility: private\n'));
++ const result=await buildIndex(f.root,{files:[mirror,path.join(f.root,'_wiki_de_poble/01_ser/diferent.md')]});assert.equal(result.docCount,2);
++});
++test('symlinks de font, sidecar o directori i selecció exterior es rebutgen',async t=>{
++ const f=fixture(t);f.run();fs.unlinkSync(path.join(f.root,GENOMA_SOURCES));f.put('outside.json','{}');fs.symlinkSync(path.join(f.root,'outside.json'),path.join(f.root,GENOMA_SOURCES));await assert.rejects(buildIndex(f.root),/Symlink/);
++ fs.unlinkSync(path.join(f.root,GENOMA_SOURCES));f.run();f.put('outside.md',doc('exterior'));fs.symlinkSync(path.join(f.root,'outside.md'),path.join(f.root,'linked.md'));await assert.rejects(buildIndex(f.root,{files:[path.join(f.root,'linked.md')]}),/Symlink/);
++ await assert.rejects(buildIndex(f.root,{files:[path.join(f.parent,'exterior.md')]}),/Ruta relativa/);
++});
++test('corpus únic manté vectors/puntuacions per ruta i selecció permutada dona metadades deterministes',async t=>{
++ const f=fixture(t),files=Object.keys(f.sources).filter(p=>p.startsWith('_wiki')).map(p=>path.join(f.root,p));const a=await buildIndex(f.root,{files}),b=await buildIndex(f.root,{files:[...files].reverse()});assert.deepEqual(a,b);assert.deepEqual(search(a,'MarIA',10),search(b,'MarIA',10));
++});
++test('publicació interrompuda entre renames deixa un parell rebutjat i neteja temporals',async t=>{
++ const f=fixture(t);f.run();f.put('AGENTS.md',doc('BIOS nou'));
++ const sources=Object.keys(f.sources).map(p=>readContextSource(f.root,p));const rename=fs.renameSync;
++ const mock=t.mock.method(fs,'renameSync',(a,b)=>{if(b.endsWith(GENOMA_SOURCES))throw new Error('Interrupció simulada');return rename(a,b);});
++ assert.throws(()=>writeGeneratedContext(f.root,sources),/Interrupció/);mock.mock.restore();await assert.rejects(buildIndex(f.root));assert.equal(fs.readdirSync(path.join(f.root,'.agents')).some(n=>n.includes('.tmp-')),false);
++});
++test('captura antiga o selecció divergent no es publica com a nova procedència',t=>{
++ const f=fixture(t),sources=Object.keys(f.sources).map(p=>readContextSource(f.root,p));f.put('AGENTS.md',doc('Modificat'));assert.throws(()=>writeGeneratedContext(f.root,sources),/Font canviada/);
++ assert.throws(()=>groupIdenticalSources([{path:'a.md',bytes:Buffer.from('a')},{path:'a.md',bytes:Buffer.from('b')}]));
++});
++test('bundle macro real manté totes les fonts/sidecar i hashes després de recuperar context',async t=>{
++ const f=fixture(t);f.run();for(const rel of ['tooling/brain/crear_bundle.mjs','tooling/lib/arrel.mjs','tooling/wiki/lib/prompt_sgq.mjs'])f.put(rel,fs.readFileSync(path.join(ROOT,rel)));
++ for(const [rel,text]of Object.entries({'package.json':'{"type":"module"}','vite.config.js':'export default {};','eslint.config.js':'export default [];','index.html':'<!doctype html>','src/current.js':'export const current=true;','.agents/ESTAT.md':'# Actual','.agents/LEDGER.md':'# Ledger'}))f.put(rel,text);
++ for(const dir of ['scripts','supabase','tests'])fs.mkdirSync(path.join(f.root,dir),{recursive:true});
++ const run=phase=>{const out=path.join(f.parent,phase+'.md'),p=spawnSync(process.execPath,[path.join(f.root,'tooling/brain/crear_bundle.mjs'),'--perfil=macro','--eixida='+out],{cwd:f.root,env:{...process.env,SDP_ARREL:f.root},encoding:'utf8'});assert.equal(p.status,0,p.stdout+'\n'+p.stderr);return JSON.parse(/```json\n([^\n]+)\n```/.exec(fs.readFileSync(out,'utf8'))[1]);};
++ const before=run('before');await buildIndex(f.root);const after=run('after');assert.deepEqual(after.fitxers,before.fitxers);assert.equal(after.verificat,true);
++ for(const rel of [GENOMA,GENOMA_SOURCES,'.agents/AGENTS.md',...Object.keys(f.sources).filter(p=>p.startsWith('_wiki'))])assert.ok(after.fitxers.some(s=>s.ruta===rel),rel);
++});
++
++test('nova font del selector i subconjunt falsejat de fonts exigixen reconstrucció',async t=>{
++ const f=fixture(t);f.run();f.put('_wiki_de_poble/02_saber/afegit.md',doc('Font nova'));
++ await assert.rejects(buildIndex(f.root),/Selecció del productor canviada/);f.run();assert.ok((await buildIndex(f.root)).docs.some(d=>d.path.endsWith('/afegit.md')));
++ const genuine=f.manifest(),subset=genuine.sources.filter(s=>!s.path.endsWith('/afegit.md')).map(s=>readContextSource(f.root,s.path)),fake=renderGeneratedContext(subset,genuine.producer);
++ f.put(GENOMA,fake.bytes);f.put(GENOMA_SOURCES,JSON.stringify(fake.manifest));await assert.rejects(buildIndex(f.root),/Selecció del productor canviada/);
++});
++test('estat arxivat s’explica en procedència i directoris històrics no es lligen pel productor',t=>{
++ const f=fixture(t);f.put('_wiki_de_poble/01_ser/antic.md','---\ntype: document\nstatus: arxivat\n---\nMemòria antiga');
++ f.put('_wiki_de_poble/01_ser/90_historic/no.md','---\nfrontmatter: invàlid: amb colon\n---\nNo llegir');
++ const m=f.run();assert.ok(m.excluded.some(s=>s.path.endsWith('/antic.md')&&s.reason==='arxivat'));assert.equal(m.sources.some(s=>s.path.includes('/90_historic/')),false);
++});
++
++test('bytes de captura modificats no es poden publicar amb un digest antic aportat pel caller',t=>{
++ const f=fixture(t),sources=Object.keys(f.sources).map(p=>readContextSource(f.root,p));sources[0].bytes=Buffer.from('Alterat en memòria');
++ assert.throws(()=>writeGeneratedContext(f.root,sources),/Font canviada/);assert.equal(fs.existsSync(path.join(f.root,GENOMA)),false);
++});
++
++test('API conserva arrel relativa i fitxers relatius al cwd, igual que readFile abans',async t=>{
++ const f=fixture(t),relativeRoot=path.relative(process.cwd(),f.root),absolute=await buildIndex(f.root),relative=await buildIndex(relativeRoot);assert.deepEqual(relative,absolute);
++ const file=path.join(f.root,'AGENTS.md'),fromCwd=path.relative(process.cwd(),file);assert.deepEqual(await buildIndex(f.root,{files:[fromCwd]}),await buildIndex(f.root,{files:[file]}));
++});
++
++
++test('productor rebutja outputs symlink existents o trencats sense modificar el destí',t=>{
++ const f=fixture(t),outside=f.put('fora.txt','sentinella intacta'),before=hash(fs.readFileSync(outside));
++ for(const rel of [GENOMA,GENOMA_SOURCES]) {
++  fs.symlinkSync(outside,path.join(f.root,rel));const result=f.compile();assert.notEqual(result.status,0);assert.match(result.stderr,/Symlink/);assert.equal(hash(fs.readFileSync(outside)),before);fs.unlinkSync(path.join(f.root,rel));
++ }
++ fs.symlinkSync(path.join(f.parent,'inexistent'),path.join(f.root,GENOMA));assert.notEqual(f.compile().status,0);assert.equal(fs.existsSync(path.join(f.root,GENOMA_SOURCES)),false);
++});
++test('outputs absents no permeten publicar a través d’un pare symlink',t=>{
++ const f=fixture(t),real=path.join(f.root,'agents_reals');fs.renameSync(path.join(f.root,'.agents'),real);fs.symlinkSync(real,path.join(f.root,'.agents'));
++ const result=f.compile();assert.notEqual(result.status,0);assert.match(result.stderr,/Symlink/);assert.equal(fs.existsSync(path.join(real,'GENOMA.md')),false);assert.equal(fs.existsSync(path.join(real,'GENOMA.sources.json')),false);
++});
++test('canvi de font després de preparar temporals es detecta abans de publicar qualsevol output',t=>{
++ const f=fixture(t),sources=Object.keys(f.sources).map(p=>readContextSource(f.root,p)),write=fs.writeFileSync;
++ const mock=t.mock.method(fs,'writeFileSync',(file,data,options)=>{const result=write(file,data,options);if(String(file).includes('GENOMA.sources.json.tmp-'))write(path.join(f.root,'AGENTS.md'),doc('Canvi durant staging'));return result;});
++ assert.throws(()=>writeGeneratedContext(f.root,sources),/Font canviada/);mock.mock.restore();assert.equal(fs.existsSync(path.join(f.root,GENOMA)),false);assert.equal(fs.existsSync(path.join(f.root,GENOMA_SOURCES)),false);assert.equal(fs.readdirSync(path.join(f.root,'.agents')).some(n=>n.includes('.tmp-')),false);
++});
+--- /dev/null
++++ b/tooling/wiki/core/rag-index-wire.mjs
+@@ -0,0 +1,33 @@
++/** Restore JSON collections; do not retokenize, deduplicate or rescore. */
++const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
++const positive=v=>typeof v==='number'&&Number.isFinite(v)&&v>0;
++const integer=v=>Number.isSafeInteger(v)&&v>=0;
++const fail=field=>{throw new TypeError('Invalid RAG index: '+field);};
++export function hydrateRagIndex(wire){
++ if(!record(wire)||!Array.isArray(wire.docs)||!Array.isArray(wire.norms)||!Array.isArray(wire.stopwords)||!record(wire.idf)||!record(wire.inverted))fail('shape');
++ if(!integer(wire.docCount)||wire.docCount!==wire.docs.length||wire.norms.length!==wire.docCount)fail('document count');
++ if(!integer(wire.minLen)||wire.stopwords.some(v=>typeof v!=='string'))fail('token settings');
++ const docs=wire.docs.map((doc,id)=>{
++  if(!record(doc)||doc.id!==id||typeof doc.path!=='string'||!doc.path||!integer(doc.length))fail('document metadata');
++  return{id:doc.id,path:doc.path,length:doc.length};
++ });
++ if(wire.norms.some(v=>!positive(v)))fail('norms');
++ const idf=new Map();
++ for(const[term,value]of Object.entries(wire.idf)){if(!term||!positive(value))fail('idf');idf.set(term,value);}
++ const sums=new Array(docs.length).fill(0);
++ const inverted=new Map();
++ for(const[term,postings]of Object.entries(wire.inverted)){
++  if(!idf.has(term)||!Array.isArray(postings)||!postings.length)fail('posting term');
++  const seen=new Set(),copy=postings.map(p=>{
++   if(!record(p)||!integer(p.docId)||p.docId>=docs.length||!positive(p.weight)||seen.has(p.docId))fail('posting');
++   seen.add(p.docId);sums[p.docId]+=p.weight*p.weight;return{docId:p.docId,weight:p.weight};
++  });inverted.set(term,copy);
++ }
++ if(idf.size!==inverted.size)fail('term coverage');
++ for(let i=0;i<sums.length;i++){
++  const expected=Math.sqrt(sums[i])||1e-9,actual=wire.norms[i];
++  if(!positive(expected)||Math.abs(expected-actual)>1e-10*Math.max(expected,actual))fail('vector norm');
++ }
++ if(wire.malformedCount!==undefined&&wire.malformedCount!==0)fail('malformed count');
++ return{docs,inverted,idf,norms:wire.norms.slice(),stopwords:new Set(wire.stopwords),minLen:wire.minLen,docCount:wire.docCount,...(wire.malformedCount===undefined?{}:{malformedCount:wire.malformedCount})};
++}
+--- a/tooling/wiki/core/search_cli.mjs
++++ b/tooling/wiki/core/search_cli.mjs
+@@ -1,6 +1,7 @@
+ import { readFile } from 'node:fs/promises';
+ import { join } from 'node:path';
+ import { search } from './edge_rag.mjs';
++import { hydrateRagIndex } from './rag-index-wire.mjs';
+ 
+ export async function run(options) {
+   if (!options.query) return { ok: false, summary: '[ERROR] Cal --query="text a buscar".', data: {} };
+@@ -14,7 +15,11 @@
+     return { ok: false, summary: '[ERROR] rag-index.json no trobat. Executa el pre-build de RAG.', data: {} };
+   }
+   
+-  const index = JSON.parse(indexData);
++  let index;
++  try { index = hydrateRagIndex(JSON.parse(indexData)); }
++  catch {
++    return { ok: false, summary: '[ERROR] Índex RAG invàlid. Reconstruïx rag-index.json.', data: { code: 'RAG_INDEX_INVALID' } };
++  }
+   const results = search(index, options.query, options.top ? Number(options.top) : undefined);
+   
+   return {
+--- /dev/null
++++ b/tests/search-cli-wire.test.mjs
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import {buildIndex} from '../tooling/wiki/core/build_rag_index.mjs';
++import {run} from '../tooling/wiki/core/search_cli.mjs';
++function fixture(t){const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-rag-wire-')));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));fs.mkdirSync(path.join(root,'public'));const put=(rel,text)=>{const f=path.join(root,rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,text);};return{root,put};}
++test('real public producer JSON can be consumed by the search CLI without losing ranking',async t=>{const f=fixture(t);f.put('_wiki_de_poble/02_saber/a.md','# Olivera\nolivera rural olivera');f.put('_wiki_de_poble/02_saber/b.md','# Aigua\naigua poble');const wire=await buildIndex(f.root);f.put('public/rag-index.json',JSON.stringify(wire));const before=fs.readFileSync(path.join(f.root,'public/rag-index.json'),'utf8');const r=await run({root:f.root,query:'olivera'});assert.equal(r.ok,true);assert.equal(r.data.docCount,2);assert.equal(r.data.results.length,1);assert.equal(r.data.results[0].path,'_wiki_de_poble/02_saber/a.md');assert.ok(r.data.results[0].score>0);assert.equal(fs.readFileSync(path.join(f.root,'public/rag-index.json'),'utf8'),before);});
++test('missing and malformed persisted index are explicit errors, never an uncaught TypeError',async t=>{const f=fixture(t);assert.equal((await run({root:f.root,query:'olivera'})).ok,false);for(const raw of ['{bad','{}']){f.put('public/rag-index.json',raw);const r=await run({root:f.root,query:'olivera'});assert.equal(r.ok,false);assert.match(r.summary,/índex|index/i);}});
++
++import {hydrateRagIndex} from '../tooling/wiki/core/rag-index-wire.mjs';
++import {search} from '../tooling/wiki/core/edge_rag.mjs';
++const sample=()=>({docs:[{id:0,path:'doc.md',length:1}],norms:[1],stopwords:['el'],idf:{olivera:1},inverted:{olivera:[{docId:0,weight:1}]},minLen:2,docCount:1,malformedCount:0});
++test('hydration preserves real producer scores, topK, order and source bytes',async t=>{const f=fixture(t);f.put('_wiki_de_poble/02_saber/a.md','# Olivera\nolivera rural poble');f.put('_wiki_de_poble/02_saber/b.md','# Aigua\naigua rural aigua');const wire=await buildIndex(f.root),before=JSON.stringify(wire),actual=hydrateRagIndex(wire),reference={...wire,stopwords:new Set(wire.stopwords),idf:new Map(Object.entries(wire.idf)),inverted:new Map(Object.entries(wire.inverted))};for(const q of ['rural','aigua','OLIVERA',"l’olivera",'inexistent'])for(const k of [1,2,10])assert.deepEqual(search(actual,q,k),search(reference,q,k));assert.equal(JSON.stringify(wire),before);assert.ok(actual.stopwords instanceof Set&&actual.idf instanceof Map&&actual.inverted instanceof Map);});
++test('empty index is usable and produces zero results without inventing coverage',()=>{const r=hydrateRagIndex({docs:[],norms:[],stopwords:[],idf:{},inverted:{},minLen:2,docCount:0});assert.deepEqual(search(r,'olivera'),[]);assert.equal(r.docCount,0);});
++test('malformed persisted metadata and vectors fail before scoring',()=>{const mutations=[x=>{x.docCount=2;},x=>{x.docs[0].id=3;},x=>{x.docs[0].length=-1;},x=>{x.norms=[];},x=>{x.norms[0]=0;},x=>{x.minLen=-1;},x=>{x.stopwords=[3];},x=>{x.idf.olivera=Infinity;},x=>{x.idf.aigua=1;},x=>{x.inverted.olivera[0].docId=2;},x=>{x.inverted.olivera.push({docId:0,weight:1});},x=>{x.inverted.olivera[0].weight=NaN;},x=>{x.inverted.olivera=[];},x=>{x.malformedCount=-1;}];for(const mutate of mutations){const wire=sample();mutate(wire);assert.throws(()=>hydrateRagIndex(wire),TypeError);}for(const bad of [null,[],{},new Map()])assert.throws(()=>hydrateRagIndex(bad),TypeError);});
++test('hydrated vectors are detached from mutable JSON input',()=>{const wire=sample(),index=hydrateRagIndex(wire);wire.docs[0].path='changed';wire.norms[0]=7;wire.inverted.olivera[0].weight=8;wire.stopwords.push('olivera');assert.deepEqual(search(index,'olivera'),[{path:'doc.md',score:1}]);});
++test('public producer policy remains enforced through persistence and CLI',async t=>{const f=fixture(t);f.put('_wiki_de_poble/02_saber/public.md','---\nvisibility: public\n---\nolivera rural');f.put('_wiki_de_poble/02_saber/private.md','---\nvisibility: private\n---\nprivatecanary');f.put('_wiki_de_poble/90_arxiu_historic/old.md','archivecanary');const wire=await buildIndex(f.root);f.put('public/rag-index.json',JSON.stringify(wire));for(const query of ['privatecanary','archivecanary']){const r=await run({root:f.root,query});assert.equal(r.ok,true);assert.equal(r.data.docCount,1);assert.deepEqual(r.data.results,[]);}});
++
++test('a producer-marked incomplete index is rejected by decoder and CLI',async t=>{const wire=sample();wire.malformedCount=1;assert.throws(()=>hydrateRagIndex(wire),TypeError);const f=fixture(t);f.put('public/rag-index.json',JSON.stringify(wire));const r=await run({root:f.root,query:'olivera'});assert.equal(r.ok,false);assert.equal(r.data.code,'RAG_INDEX_INVALID');});
++test('positive but inconsistent vector norms and overflowing vectors cannot manufacture scores',()=>{for(const norm of [0.1,2]){const wire=sample();wire.norms[0]=norm;assert.throws(()=>hydrateRagIndex(wire),/vector norm/);}const wire=sample();wire.inverted.olivera[0].weight=1e308;assert.throws(()=>hydrateRagIndex(wire),/vector norm/);});
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -38,6 +38,7 @@
+     "tests/porta-olivera-v3.test.mjs",
+     "tests/porta-reflex.test.mjs",
+     "tests/public_exports.test.mjs",
++    "tests/search-cli-wire.test.mjs",
+     "tests/security-chain.test.mjs",
+     "tests/sistema_nervios.test.mjs",
+     "tests/standalone-build.test.mjs",
+@@ -46,6 +47,7 @@
+     "tests/t11-equip-contracte.test.mjs",
+     "tests/t11-parser-consumers.test.mjs",
+     "tests/t11-retirada-planificacio.test.mjs",
++    "tests/t11-retrieval-provenance.test.mjs",
+     "tests/verificador-scc.test.mjs",
+     "tests/vite-empremta-dev.test.mjs",
+     "tests/wiki-backlinks-readonly.test.mjs",
+@@ -506,6 +508,11 @@
+       "reason": "Regressió del sanejament instal·lat: caducitat sense falsa verificació i protecció lock/CAS."
+     },
+     {
++      "path": "tests/search-cli-wire.test.mjs",
++      "suite": "primary",
++      "reason": "Compatibilitat persistent del RAG públic: JSON a Map/Set, normes coherents, rebuig de corpus incomplet i cerca sense canviar pesos ni ordre."
++    },
++    {
+       "path": "tests/security-chain.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+@@ -544,6 +551,11 @@
+       "path": "tests/t11-retirada-planificacio.test.mjs",
+       "suite": "primary",
+       "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
++    },
++    {
++      "path": "tests/t11-retrieval-provenance.test.mjs",
++      "suite": "primary",
++      "reason": "Contracte de fonts de recuperació: Wiki pública i regles vigents sense arxiu, fòssils ni corpus protegits."
+     },
+     {
+       "path": "tests/time-machine.test.mjs",

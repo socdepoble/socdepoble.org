@@ -1,0 +1,68 @@
+--- a/firebase.json
++++ b/firebase.json
+@@ -32,7 +32,7 @@
+           },
+           {
+             "key": "Permissions-Policy",
+-            "value": "camera=(), microphone=(self), geolocation=(self)"
++            "value": "camera=(self), microphone=(self), geolocation=(self)"
+           }
+         ]
+       },
+--- a/vercel.json
++++ b/vercel.json
+@@ -17,7 +17,7 @@
+         },
+         {
+           "key": "Permissions-Policy",
+-          "value": "camera=(), microphone=(self), geolocation=(self)"
++          "value": "camera=(self), microphone=(self), geolocation=(self)"
+         }
+       ]
+     },
+--- a/src/config/firebaseHosting.test.js
++++ b/src/config/firebaseHosting.test.js
+@@ -16,14 +16,14 @@
+    mateixes a vercel.json: X-Content-Type-Options: nosniff (cap ensumada de
+    tipus), Referrer-Policy: strict-origin-when-cross-origin (la mateixa
+    política que ja porten els iframes del Mur i del Lector) i
+-   Permissions-Policy: camera=(), microphone=(self), geolocation=(self).
++   Permissions-Policy: camera=(self), microphone=(self), geolocation=(self).
+    El perquè de cada permís:
+      · microphone=(self): les notes de veu del xat criden
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        (src/sections/xat/adjuntLocal.js · gravaVeu);
+-     · camera=(): la càmera només s'usa amb <input type="file"
+-       capture="environment"> (ControlsAdjunt.jsx), que Permissions-Policy no
+-       governa; cap getUserMedia({ video }) al codi;
++     · camera=(self): mateix àmbit propi que el micròfon, segons el Pla
++       Variable. Hui la càmera entra per <input type="file"
++       capture="environment"> (ControlsAdjunt.jsx); cap getUserMedia({ video }).
+      · geolocation=(self): hui no es demana, però el mapa fotogràfic podrà
+        demanar-la des del nostre origen;
+      · cap origen de tercers a la llista: l'amfitrió de Sollutia incrusta el
+@@ -75,7 +75,7 @@
+ const CAPCALERES_GLOBALS = Object.freeze({
+   'X-Content-Type-Options': 'nosniff',
+   'Referrer-Policy': 'strict-origin-when-cross-origin',
+-  'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(self)'
++  'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=(self)'
+ });
+ const valors = (regla) => Object.fromEntries(regla.headers.map((h) => [h.key, h.value]));
+ 
+@@ -110,13 +110,13 @@
+     expect(m, d).not.toBeNull();
+     return [m[1], m[2].split(/\s+/).filter(Boolean)];
+   }));
+-  expect(directives).toEqual({ camera: [], microphone: ['self'], geolocation: ['self'] });
++  expect(directives).toEqual({ camera: ['self'], microphone: ['self'], geolocation: ['self'] });
+   // Cap origen explícit: l'amfitrió de Sollutia incrusta un script, no un iframe del nostre origen.
+   expect(politica).not.toMatch(/https?:/);
+   const llig = (ruta) => readFileSync(path.join(process.cwd(), ruta), 'utf8');
+   // microphone=(self): les notes de veu demanen només àudio.
+   expect(llig('src/sections/xat/adjuntLocal.js')).toMatch(/mediaDevices\.getUserMedia\(\{ audio: true \}\)/);
+-  // camera=(): la càmera entra per <input type="file" capture>, que la política no governa.
++  // La captura actual continua sent l'input natiu; camera=(self) conserva l'àmbit propi del Pla.
+   expect(llig('src/sections/xat/components/ControlsAdjunt.jsx')).toMatch(/type="file"[^>]*capture="environment"/);
+   // I cap getUserMedia amb vídeo a tot src/ (fora de les proves).
+   const arrel = path.join(process.cwd(), 'src');

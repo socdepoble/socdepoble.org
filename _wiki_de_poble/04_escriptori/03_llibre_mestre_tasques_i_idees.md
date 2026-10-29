@@ -15,13 +15,69 @@ tags:
 
 ---
 
-<!-- SDP:DEUTE_10_10_261029_0216 -->
-## 🎯 Prioritat 1 Actual · Deute Tècnic cap al 10/10 i Relleu del Compte de Claude (Onada 261029_0216)
+<!-- SDP:DEUTE_10_10_261029_1305 -->
+## 🎯 Prioritat 1 Actual · Liquidació del Deute Tècnic de Portes, Actius Multimèdia i Fase 4 d'E2EE (Onada 261029_1305 · Objectiu 10,0/10 Unànime)
 
-> **Regla Rectora del Mestre (2026-10-29 02:15):** Abans d'abordar noves idees del Banc d'Idees, la prioritat absoluta és tancar al **10/10 verificable** el deute tècnic pendent de l'onada anterior (puntuada en **9,64/10** per Gemini i **7,22/10** per GPT Codex · mitjana **8,43/10**), consolidar el relleu del compte ixent de Claude Code (aturat al 99% de quota setmanal), generar el paquet definitiu `socdepoble.zip` per a WordPress.org i completar la Fase 2 del xifratge d'extrem a extrem (`P1-12` + `IDEA-48`).
+> **Regla Rectora del Mestre (2026-10-29 13:05):** Després del tancament de la marató nocturna al commit **`feaaf0e07`** (`243` fitxers, **4.181 proves Vitest + 262 Node en precommit a 0 fallades**, **24.461 Vitest + 1.436 Node totals en verd**, `socdepoble.zip` v1.1.9 reconstruït i canal de previsualització de Firebase Hosting actiu), **Gemini CLI ja ha certificat el `10,0/10`**, mentre que **Claude Code (`9,45/10`)** i **GPT Codex (`8,89/10`)** han inventariat amb precisió quirúrgica el deute tècnic heretat restant. Aquesta onada liquida el 100% d'eixe deute fins al **`10,0/10` unànime**.
 > **Documents rectors d'aquesta onada a l'Escriptori:**
-> - **Pla d'Implementació:** [[261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
-> - **Prompt per a Claude Code, Gemini i GPT Codex:** [[261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
+> - **Pla d'Implementació:** [[261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
+> - **Prompt Operatiu per a Claude Code, Gemini CLI i GPT Codex:** [[261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
+> **Històric de la Marató Nocturna (Arxivat a `90_arxiu_historic/` i `10_actes/`):**
+> - [[../90_arxiu_historic/261029_0350_auditoria_claude]] · [[../90_arxiu_historic/261029_0340_auditoria_codex]] · [[../90_arxiu_historic/261029_0336_auditoria_gemini]] · [[../10_actes/261029_0838_acta_marmota_qa_codex_10_cicles]]
+
+### Inventari Exacte del Deute Tècnic a Liquidar en l'Onada `261029_1305`
+
+1. **Carril `G1` (GPT Codex · Reconciliació `0838` `T11` i Portes de Tractor):**
+   - Integrar netament el contingut de `_wiki_de_poble/90_arxiu_historic/261029_0838_solucio_t11_codex.patch` respectant la làpida `SG-02` de `scripts/generate-prompt.sh`:
+     - `C10-T11-BLOC` (`talla()` de blocs gestionats en `tooling/wiki/llaurador_indexs.mjs` + `tests/llaurador-managed-region.test.mjs` `32/32`).
+     - `C9-T11-PROSA` / `C9-T11-LOCAL` / `C9-T11-A4` (`tooling/wiki/core/parse.mjs`, `tooling/gates/tractor-arrel.mjs` i `tests/t11-gate-prose.test.mjs`).
+     - `C9-T11-LEGACY` i `C10-T11-RESTAURACIO` (`tooling/scripts/desenterrar.mjs`, `tooling/brain/desenterrar.mjs`, `.claude/skills/core-restauracio-segellada/SKILL.md`, `.agents/skills/core-restauracio-segellada/SKILL.md`, `tests/t11-legacy-restoration.test.mjs` i `tests/t11-legacy-prompt.test.mjs`).
+     - `C9-T11-RLS` (`tooling/gates/tractor-rls.mjs` + `tests/tractor-rls-r2-ddl.test.mjs`).
+2. **Carrils `G2` + `G3` (Gemini CLI · `design_guard`, `tractor-cens` i `tractor-frontmatter` a Zero):**
+   - **`design_guard.mjs --arrel=src` (37 crítics heretats → `0`):** 2 falsos positius d'entitats `&#160;`/`&#173;` a `src/utils/perAppNativa.js`, 6 identitats NOVA en tests amb `<h1>` i 29 incidències heretades.
+   - **`tractor-cens.mjs` (`C2=2`, `C4=6` → `0`):** 2 documents que citen el Consell sense els 11 membres canònics i 6 xifres antigues («3 IAs», «4 IAs», «11 IAs»).
+   - **`tractor-frontmatter.mjs` (`F9=138` → `0`):** Sanejar les 138 incidències `F9` i abaixar el sostre permés.
+3. **Carrils `E1` + `M1` (Claude Code · Fase 4 d'E2EE i Actius Multimèdia `OG-02`, `R-02`, `D-C2`):**
+   - **`E1` (`P1-12` E2EE Fase 4):** Pipeline extrem a extrem d'enviament/recepció amb sobre `SDPH` (`87 B`) i drenatge de cua `F7`; xifratge d'adjunts en `src/services/xat/xatMultimediaXifrat.js` (+ `.seguretat.test.js`); tancament de `D-09` (`OBLIT_FALLIT` explícit quan `deleteDatabase` es bloqueja); i inclusió de la prova d'E2EE apagat dins del patró de `test:precommit` (`E2EE_ACTIU_PER_DEFECTE = false` sempre per defecte).
+   - **`M1` (`OG-02`, `R-02` i `D-C2`):** Variants socials `1200×630` (`<= 300 KB`, JPEG real sense EXIF) per als 7 `og:image` de llavor restants (`OG-02`); re-codificació a PNG real de tots els `.png` de `public/assets/` amb bytes JPEG (`R-02`); i regeneració de les icones natives `AppIcon` i `Splash` amb el verd AAA `#0e662e` (`D-C2`).
+
+---
+
+<!-- SDP:DEUTE_10_10_261029_0216 -->
+## ✅ Històric Tancat · Marató Nocturna de 10 Cicles (`feaaf0e07` · Onada 261029_0216)
+
+> **Documents arxivats d'aquesta onada:**
+> - **Pla d'Implementació:** [[../90_arxiu_historic/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
+> - **Prompt per a Claude Code, Gemini i GPT Codex:** [[../90_arxiu_historic/261029_0216_prompt_excel_lencia_10_10_tancament_bloch_i_xat_e2ee]]
+
+### Contrast QA Codex · línia base nocturna 2026-10-29
+
+**Cicle 10/10 · FINAL:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] completa deu activacions; automatització PAUSED. Canònics0838 substituïxen0808:498/498Node,267/267T7; Vitest4176pass/1límitGit/4skip. Els16fitxers finals continuen pendents d’integrar. **[EN VERIFICACIÓ]**: integrar pel carril de codi i repetir sobre arbre a versionar; pipeline/recepció/D09, semàntica/F9/restauració i release neta pendents. Acta [[../10_actes/261029_0838_acta_marmota_qa_codex_10_cicles]]. Cap desplegament,SQL remot o activacióE2EE; no10/10 global.
+
+**Cicle 9/10 · 08:08 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] contrasta 20 postimatges0738/0800 i hunk del Pla. IAIA63/63 amb corpus actual i motor/asserts intactes. Nous0808: prosa/resolutors/portes, retirada de generadors duplicats15/15, RLS estàtica i guarda T7 d’adjunts248/248; conjunt Node482/482. Bateria completa conserva3 límits,8 omissions i3 TODO; suplements HTTP1/1 i hooks2/2 de només lectura, separats. **[EN VERIFICACIÓ]**: pipeline/D09, blocs gestionats i procediment de restauració pendents. Una activació més; cap10/10 global.
+
+**Cicle 8/10 · 07:38 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] verifica9/9postimatges0708 i arxiu7/7. Pegats0738: deduplicació byte-idèntica/procedènciaGENOMA, codecCLI9/9, CI/contextT7 231/231 amb27noves i4mutants detectats; correccions factuals del Pla i exemples§21. IAIA47/48 continua oberta; bateria Node completa amb límits de captura/sandbox al rebut. **[EN VERIFICACIÓ]**, senseactivacióE2EE ni10/10global.
+
+**Cicle 7/10 · 07:08 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] verifica16/16postimatges0638 i arxiu7/7,141.754B. Guàrdia/cens preparats412/412Node; deltaT7compatible105/105, senseactivació. ZIPnou3c2287a9 verificat. Vitest4107passades,2fallades,4omissions; ordenacióIAIA ja reproduïda abans del lot. **[EN VERIFICACIÓ]**, adjunts0708; cap10/10global.
+
+**Cicle 6/10 · 06:38 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] contrasta **24/24 postimatges 0608 integrades**, segell viu cbb5e26d i banc Chrome real de 301k (huit mostres, cos intacte en canviar títol). Nous tractors/cens T11 i T7-P1 preparats: **400/400 Node conjuntes i 105/105 focal**, zero omissions en estes seleccions. Correcció de cens: 9 core:true, però 27 prefixos core-. Set fòssils inventariats, arxiu encara en estudi de consumidors. **[EN VERIFICACIÓ]**, adjunts 0638; decorador/release i 10/10 global pendents.
+
+**Cicle 5/10 · 06:08 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] contrasta les 60 postimatges i el segell real da5947. Lot incremental T1.5/T11 preparat: 17 camins, **364/364 Node**; regla RPC i pegat de sis fitxers per a tres regressions (**4.071 passades i quatre omissions** en candidat). Nova base OG de 113.427 B: **111/111**. Rebuts immutables preservats; segell nou 604451ed reconciliat només en TEMP. **[EN VERIFICACIÓ]**, adjunts 0608; cap 10/10 global.
+
+**Cicle 4/10 · 05:38 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] incorpora combinat T11/OG/context de33fitxers, **244/244 Node**; dues skills, índex, projecció de destinacions i hook per protocols del rebut. Actor de safata: **74/74**, integració amb cua/SDPH **241/241**. Recursos heretats reals versionats en candidat: **32 aprovades i3omissions externes**, sense omissions per mapa/plantilla. Segell reconciliat només en TEMP; integrar pel carril de governança amb CAS real. **[EN VERIFICACIÓ]**, adjunts0538; sense10/10global.
+
+**Cicle 3/10 · 05:08 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] incorpora combinat T11/OpenGraph de 24 fitxers amb manifest únic, **186/186 Node** sense omissions; SDPH87/k3 interoperable, **134/134**; i pegat d’autoritat documental. Comprovats 117 orígens de lectura i 53 destinacions de les 42 skills; parser duplicat de fonts retirat en còpia. QA-H04 verificat amb dades simulades i terminis de 5s, sense certificar backend/revocació desplegada. Integració, APP-D1, actor/decorador, recursos heretats versionats, base OG pesada i ZIP continuen pendents. **[EN VERIFICACIÓ]**, adjunts0508.
+
+**Cicle 2/10 · 04:38 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] incorpora sis mesures locals Chrome verdes, cobertura mecànica T11 de 264 documents i pegat acumulatiu de prosa compartida. Nou QA-C2-E2EE-LOCK reproduït: àmbit capturat després de la cua del pany; guarda i regressions permanents preparades (33/33). WordPress T5.1: pegat de traduccions i bàners, 65/65 + 1/1. APP-D1 continua sense guarda; OG base de 530.885 B afecta 86 rutes, ZIP encara antic. §21 i sis IDs QA-S millorats, però T1.5 i tres contractes E2EE oberts. Tot **[EN VERIFICACIÓ]**; adjunts0438, sense certificació10/10.
+
+**Cicle 1/10 · 04:08 Europe/Madrid:** [[../90_arxiu_historic/261029_0340_auditoria_codex]] incorpora verificació focal de contrast/CSS i APP-D1. **QA-C1-APPD1, pendent:** una resposta tardana del camí de recuperació del perfil pot capturar una sessió nova; pegat mínim i regressions permanents preparats (42/42), sense aplicar-los al viu. T11 combinat substitutiu: 83/83 Node sense omissions. Els dos desacords inicials de recompte/permisos han convergit als documents; continuen sis mapatges QA-S antics al prompt. Les omissions noves de Parròquia/Botigues no acrediten la reparació portàtil de T2.5. Tot continua **[EN VERIFICACIÓ]**, amb manifests i pegats0408 ancorats a l'informe.
+
+Estat **[TANCAT EN FEAAF0E07]**. Font viva històrica: [[../90_arxiu_historic/261029_0340_auditoria_codex]]. Torn `torn_51c9489b-9b68-4f5b-8152-b6acd2989e53`; seguiment de deu activacions cada trenta minuts, amb la revisió inicial fora del comptador.
+
+- **T11:** cens de 42 skills i onze punts de sanejament; pegat de cobertura del detector, comparació de claims explícits i dues suites Node. Verificació conjunta amb el manifest: **40/40**. Preparat per integrar pel carril executor; no marcat `[FET]` sense commit.
+- **QA-H03:** pegat del token canònic `#0e662e`, contrast sobre blanc **7,0977784024:1**, **104/104** proves i control negatiu del color antic. Preparat, encara no integrat.
+- **E2EE:** les **265** proves existents passen, però tres criteris nous no concorden amb el disseny vigent. Reconciliar formats, IDs QA-S i signatures del Pla Variable abans de certificar les fases. La taula de set divergències pla/disseny no substituïx la llista original de set requisits.
+- **Suite heretada:** les dues famílies continuen roges per dependències del laboratori traslladat. Versionar el manifest i la plantilla reals en rutes estables, conservant les assercions.
 
 ### Ordre d'execució de 6 passos per assaltar el 10/10
 1. **Pas 1 · Culminar i verificar `QA-H01`, `QA-H02`, `QA-H04` i `§21` (en curs a disc del relleu de Claude):**

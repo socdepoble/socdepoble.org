@@ -1,0 +1,13 @@
+--- a/_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md
++++ b/_wiki_de_poble/04_escriptori/261029_0216_pla_implementacio_excel_lencia_10_10_tancament_bloch_i_xat_e2ee.md
+@@ -171,8 +171,8 @@
+ #### 🫒 Arbitratge i OK Tècnic de la IAIA MarIA — Ronda 8 (`07:15 CET`)
+ Després d'inspeccionar l'avanç de la Ronda 8 en `261029_0336_auditoria_gemini.md` (v1.8.0, **10 de 10 dimensions certificades en `10,0 / 10` a l'arbre viu** i mitjana global en **`10,00 / 10`**) i `261029_0340_auditoria_codex.md` (v1.7.0, Cicle 6 amb els 3 pegats `0638`):
+ 1. **⚡ INTEGRACIÓ EXECUTADA EN VIU A L'ARBRE (`07:01–07:13 CET` · `0` conflictes):**
+-   - **Integrats a l'arbre viu els 3 pegats `0638` de GPT Codex (`12` fitxers):**
+-     1. `261029_0638_solucio_backend_capacitats_codex.patch` (**`T7-P1`, `37/37` proves Vitest**): estén `src/data/contracte.js`, `src/data/backendPort.js`, `src/data/supabase/index.js` i `src/data/backendPort.xifrat.capacitats.test.js` amb les **15 capacitats opcionals del port E2EE** (`clausXat`: 12 mètodes, `xatMultimediaXifrat`: 3 mètodes).
++   - **Integrats a l'arbre viu els 3 pegats `0638` de GPT Codex (`16` camins verificats):**
++     1. `261029_0638_solucio_backend_capacitats_codex.patch` (**`T7-P1`, `37/37` proves Vitest**): estén `src/data/contracte.js`, `src/data/backendPort.js`, `src/data/supabase/index.test.js` i `src/data/backendPort.xifrat.capacitats.test.js` amb els **15 mètodes de dues capacitats opcionals del port E2EE** (`clausXat`: 13 mètodes, `xatMultimediaXifrat`: 2 mètodes).
+      2. `261029_0638_solucio_t11_docs_codex.patch` i `261029_0638_solucio_t11_tractors_codex.patch` (**`94/94` proves Node `T11`**): consolida el cens de 42 skills, el frontmatter `protocol` de `sistema_immunitari.md`, el parser de `porta-taxonomia.mjs` i les suites `tests/t11-cens-documental.test.mjs` i `tests/porta-taxonomia.test.mjs`.
+    - **Integrats a l'arbre viu els 2 pegats `0700` de Gemini (`15` fitxers):**
+      1. `261029_0700_solucio_t7_decorador_gemini.patch` (**`T7-P2..P4` + `C5-SDPV`, `409/409` proves E2EE + Port en verd**): construeix `src/config/xifratXat.js` (`E2EE_ACTIU_PER_DEFECTE = false`), `src/data/xifratXatAbast.js` (`ambitDelFil` pur amb `xifratApegalos` i 3 regles anti-rebaixa), `src/data/xifratXat.js` (`ambXifratXat` apagat per flag + canal `serveiXifratXat` via `WeakMap` + les 4 claus `clauIdentitat`/`ambitEstable`/`genAmbit`/`genIdentitat` + cancel·lació `A -> B -> A` + `appendChatMessages` iterant sobre `enviaMissatge`), `src/data/xifratXat.seguretat.test.js` (`11/11`) i unifica `SDPV` a **175 B** a `src/data/xifratXatFormats.js` i els seus vectors.

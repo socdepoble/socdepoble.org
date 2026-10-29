@@ -1,0 +1,786 @@
+--- a/.agents/protocolledge.json
++++ b/.agents/protocolledge.json
+@@ -150,7 +150,7 @@
+       "skill": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+       "tipus": "acta",
+       "lectures": [],
+-      "version": "2.0.0",
++      "version": "2.1.0",
+       "seccions": [
+         "Registre",
+         "Acte reflex",
+@@ -160,7 +160,6 @@
+         "Vincles"
+       ],
+       "destins": [
+-        "_wiki_de_poble/04_escriptori",
+         "_wiki_de_poble/10_actes"
+       ],
+       "sectionIds": {
+@@ -380,7 +379,12 @@
+         "pla implementacio",
+         "pla implementació",
+         "implementacio",
+-        "implementació"
++        "implementació",
++        "planificació",
++        "pla director",
++        "roadmap",
++        "fases",
++        "pla"
+       ],
+       "plantilla": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+       "skill": ".agents/skills/sdp-workflow/SKILL.md",
+@@ -411,45 +415,6 @@
+       "blocsFixos": []
+     },
+     {
+-      "id": "planificacio",
+-      "claus": [
+-        "planificació",
+-        "pla director",
+-        "roadmap",
+-        "fases",
+-        "pla"
+-      ],
+-      "plantilla": "_wiki_de_poble/03_actuar/plantilles/pla.md",
+-      "skill": ".agents/skills/sdp-workflow/SKILL.md",
+-      "tipus": "document",
+-      "lectures": [],
+-      "version": "2.0.0",
+-      "seccions": [
+-        "Registre",
+-        "Acte reflex",
+-        "Historial",
+-        "Resultat final",
+-        "Fases",
+-        "Verificació",
+-        "Riscos",
+-        "Vincles"
+-      ],
+-      "destins": [
+-        "_wiki_de_poble/04_escriptori"
+-      ],
+-      "sectionIds": {
+-        "Registre": "planificacio.s1",
+-        "Acte reflex": "planificacio.s2",
+-        "Historial": "planificacio.s3",
+-        "Resultat final": "planificacio.s4",
+-        "Fases": "planificacio.s5",
+-        "Verificació": "planificacio.s6",
+-        "Riscos": "planificacio.s7",
+-        "Vincles": "planificacio.s8"
+-      },
+-      "blocsFixos": []
+-    },
+-    {
+       "id": "bundle",
+       "claus": [
+         "bundle",
+@@ -497,4 +462,4 @@
+     "Model IA",
+     "Tokens consumits"
+   ]
+-}
+\ No newline at end of file
++}
+--- a/.agents/DESTINS_CANONICS.json
++++ b/.agents/DESTINS_CANONICS.json
+@@ -1,7 +1,7 @@
+ {
+   "schema": "sdp.destins-projectats.v1",
+   "font": ".agents/protocolledge.json",
+-  "contracte_sha256": "860ade46fc100b0df42f2f951104913d1d340239469c4d09d638bce3fb994fa6",
++  "contracte_sha256": "afff7ab1b4faa4fbbd6a068255a149f3375e9ae50adf1ede05aa8d88cce565c9",
+   "abast": "Projecció generada de destinacions de creació. No amplia permisos ni decidix retenció, trasllats o arxivament.",
+   "retencio_i_arxiu": {
+     "font": "AGENTS.md",
+@@ -12,7 +12,6 @@
+       "id": "acta",
+       "tipus": "acta",
+       "destins": [
+-        "_wiki_de_poble/04_escriptori",
+         "_wiki_de_poble/10_actes"
+       ]
+     },
+@@ -73,13 +72,6 @@
+       ]
+     },
+     {
+-      "id": "planificacio",
+-      "tipus": "document",
+-      "destins": [
+-        "_wiki_de_poble/04_escriptori"
+-      ]
+-    },
+-    {
+       "id": "prompt.consell",
+       "tipus": "prompt",
+       "destins": [
+--- a/_wiki_de_poble/03_actuar/plantilles/pla.md
++++ /dev/null
+@@ -1,102 +0,0 @@
+----
+-type: plantilla
+-status: canonic
+-description: Plantilla per convertir un objectiu en fases, dependències, riscos i criteris d'acceptació.
+-tags:
+-  - maquina
+----
+-
+-<!-- SDP:EIXIDA
+-type: document
+-status: esborrany
+-description: "<12-220 caràcters: quin objectiu es converteix en fases>"
+-tags: [pla]
+--->
+-# Planificació Pro (L'Arquitectura del Marge)
+-**Categoria:** Plantilla
+-**Data:** 2026-06-19
+-**Hora:** 14:30
+-
+----
+-
+-
+-## Registre
+-
+-| Camp | Valor |
+-| --- | --- |
+-| Identificador | [pendent] |
+-| Versió del document | [pendent] |
+-| Entorn | [pendent] |
+-| Creació | [pendent] |
+-| Modificació | [pendent] |
+-| Propietari | [pendent] |
+-| Aprovació humana | [pendent] |
+-| Model IA | [pendent] |
+-| Tokens consumits | [pendent] |
+-
+-## Acte reflex
+-
+-La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+-
+-## Historial
+-
+-[pendent]
+-
+-## Resultat final
+-
+-[pendent]
+-
+-### Guia editorial de la plantilla
+-
+-
+-### LOGOS OFICIALS (Font de la Veritat)
+-Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`. Quan s'invoquen des del codi Font/HTML, la ruta és `/assets/system/ui/...`:
+-- **Quadrat Verd (Icones/Avatars):** `/assets/system/ui/logo-socdepoble-cuadrat-verd.svg`
+-- **Rectangular Blanc (Per a Dark Mode):** `/assets/system/ui/logo-socdepoble-rect-blanc.svg`
+-- **Rectangular Negre (Per a Light Mode):** `/assets/system/ui/logo-socdepoble-rect-negre.svg`
+-- **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
+-
+-### MISSIÓ DEL PROTOCOL
+-Convertir una idea solta en un pla d'execució sòlid com un marge de pedra seca.
+-
+-### ESTRUCTURA DEL PLA
+-1. **Resultat Final:** Definit en 1 frase i 3 criteris d'èxit.
+-2. **Fases del Llançament:**
+-   - **Preparació:** Llista d'ingredients (dades, recursos).
+-   - **Producció:** Execució mestra.
+-   - **Revisió QA:** Filtre forense.
+-   - **Publicació:** L'eixida al món.
+-3. **Detall del Llinatge (Tasques):** Cada tasca amb seqüència, lliurable i temps estimat.
+-4. **Riscos (Anti-Pedregada):** Llistar 3 possibles bloquejos i el seu pla B.
+-
+----
+-_Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
+-
+----
+-
+-
+-**Ancoratge de Seguretat:** [[00_index]]
+-
+-
+----
+-**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
+-
+-
+-
+-
+-
+-## Fases
+-
+-[pendent]
+-
+-## Verificació
+-
+-[pendent]
+-
+-## Riscos
+-
+-[pendent]
+-
+-## Vincles
+-
+-- [[00_index]]
+--- /dev/null
++++ b/_wiki_de_poble/90_arxiu_historic/plantilles_retirades_261029/pla.md
+@@ -0,0 +1,102 @@
++---
++type: plantilla
++status: canonic
++description: Plantilla per convertir un objectiu en fases, dependències, riscos i criteris d'acceptació.
++tags:
++  - maquina
++---
++
++<!-- SDP:EIXIDA
++type: document
++status: esborrany
++description: "<12-220 caràcters: quin objectiu es converteix en fases>"
++tags: [pla]
++-->
++# Planificació Pro (L'Arquitectura del Marge)
++**Categoria:** Plantilla
++**Data:** 2026-06-19
++**Hora:** 14:30
++
++---
++
++
++## Registre
++
++| Camp | Valor |
++| --- | --- |
++| Identificador | [pendent] |
++| Versió del document | [pendent] |
++| Entorn | [pendent] |
++| Creació | [pendent] |
++| Modificació | [pendent] |
++| Propietari | [pendent] |
++| Aprovació humana | [pendent] |
++| Model IA | [pendent] |
++| Tokens consumits | [pendent] |
++
++## Acte reflex
++
++La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
++
++## Historial
++
++[pendent]
++
++## Resultat final
++
++[pendent]
++
++### Guia editorial de la plantilla
++
++
++### LOGOS OFICIALS (Font de la Veritat)
++Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`. Quan s'invoquen des del codi Font/HTML, la ruta és `/assets/system/ui/...`:
++- **Quadrat Verd (Icones/Avatars):** `/assets/system/ui/logo-socdepoble-cuadrat-verd.svg`
++- **Rectangular Blanc (Per a Dark Mode):** `/assets/system/ui/logo-socdepoble-rect-blanc.svg`
++- **Rectangular Negre (Per a Light Mode):** `/assets/system/ui/logo-socdepoble-rect-negre.svg`
++- **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
++
++### MISSIÓ DEL PROTOCOL
++Convertir una idea solta en un pla d'execució sòlid com un marge de pedra seca.
++
++### ESTRUCTURA DEL PLA
++1. **Resultat Final:** Definit en 1 frase i 3 criteris d'èxit.
++2. **Fases del Llançament:**
++   - **Preparació:** Llista d'ingredients (dades, recursos).
++   - **Producció:** Execució mestra.
++   - **Revisió QA:** Filtre forense.
++   - **Publicació:** L'eixida al món.
++3. **Detall del Llinatge (Tasques):** Cada tasca amb seqüència, lliurable i temps estimat.
++4. **Riscos (Anti-Pedregada):** Llistar 3 possibles bloquejos i el seu pla B.
++
++---
++_Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
++
++---
++
++
++**Ancoratge de Seguretat:** [[00_index]]
++
++
++---
++**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
++
++
++
++
++
++## Fases
++
++[pendent]
++
++## Verificació
++
++[pendent]
++
++## Riscos
++
++[pendent]
++
++## Vincles
++
++- [[00_index]]
+--- a/_wiki_de_poble/03_actuar/plantilles/00_index_plantilles.md
++++ b/_wiki_de_poble/03_actuar/plantilles/00_index_plantilles.md
+@@ -19,7 +19,7 @@
+ - [[pla_implementacio|Plantilla de Pla d'Implementació]] (única plantilla de pla, ruta `pla.implementacio`)
+ - [[skill|Plantilla per a crear noves Skills d'IA]]
+ 
+-Retirada el 261029: `pla.md` («Planificació Pro», 2026-06-19) i la seua ruta `planificacio`, duplicades per `pla_implementacio`; l'original es conserva a `90_arxiu_historic/` amb nom datat.
++Retirada el 261029: `pla.md` («Planificació Pro», 2026-06-19) i la seua ruta `planificacio`, duplicades per `pla_implementacio`; l'original es conserva íntegre a [[../../90_arxiu_historic/plantilles_retirades_261029/pla|pla històric]]. Els rebuts ja emesos usen la seua instantània immutable.
+ 
+ ## Anàlisi i Producte
+ - [[prompt_nano_banana|Plantilla Prompt Nano Banana (Multimèdia)]]
+--- a/tooling/wiki/taxonomia.json
++++ b/tooling/wiki/taxonomia.json
+@@ -26,11 +26,12 @@
+     "micro_bundle": "bundle",
+     "micro_prompt": "prompt.consell",
+     "petorreta": "prompt.local · prompt.consell",
+-    "pla": "planificacio",
++    "pla": "pla.implementacio",
+     "pla_implementacio": "pla.implementacio",
+     "produccio": "modo_produccion",
+     "prompt": "prompt.local · prompt.consell",
+     "skill": "skill",
++    "solucio": "sense ruta: transitòria de torn (porta-olivera)",
+     "tasques": "sense ruta: transitòria de torn (porta-olivera)"
+   }
+ }
+--- a/_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md
++++ b/_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md
+@@ -50,7 +50,7 @@
+ <!-- SDP:TAXONOMIA:CATEGORIES -->
+ | Categoria | Ruta documental | Nota |
+ |---|---|---|
+-| `acta` | `acta` | també a `10_actes/`; `acta_marmota_…` és categoria `acta` i títol `marmota_…` |
++| `acta` | `acta` | creació nova només a `10_actes/`; `acta_marmota_…` és categoria `acta` i títol `marmota_…` |
+ | `auditoria` | `auditoria` | `aammdd_hhmm_auditoria_claude.md` o `…_auditoria_codex.md` |
+ | `brainstorming` | `brainstorming` | |
+ | `branding` | `branding` | |
+@@ -63,15 +63,16 @@
+ | `micro_bundle` | `bundle` | només per a IAs externes |
+ | `micro_prompt` | `prompt.consell` | només per a IAs externes |
+ | `petorreta` | `prompt.local` · `prompt.consell` | |
+-| `pla` | `planificacio` | |
++| `pla` | `pla.implementacio` | àlies de categoria de la plantilla única |
+ | `pla_implementacio` | `pla.implementacio` | el títol és el cognom exacte de la petorreta que l'origina |
+ | `produccio` | `modo_produccion` | |
+ | `prompt` | `prompt.local` · `prompt.consell` | per a Claude i Codex, només `prompt`, mai `macro_` ni `micro_` |
+ | `skill` | `skill` | l'esborrany a l'Escriptori; la skill viva es diu `SKILL.md` |
++| `solucio` | sense ruta | artefacte transitori de torn (porta Olivera), sense plantilla pròpia |
+ | `tasques` | sense ruta | transitòria de torn (porta Olivera) |
+ <!-- /SDP:TAXONOMIA:CATEGORIES -->
+ 
+-Una categoria nova necessita primer una ruta a `.agents/protocolledge.json` (amb plantilla i seccions) i després una fila ací i a `tooling/wiki/taxonomia.json`. `incidencia` no és al catàleg perquè no té ruta ni plantilla.
++Una categoria de document formal nova necessita primer una ruta a `.agents/protocolledge.json` (amb plantilla i seccions) i després una fila ací i a `tooling/wiki/taxonomia.json`. `solucio` i `tasques` són artefactes transitoris admesos per la porta Olivera, sense ruta formal; esta excepció no crea plantilles. `incidencia` no és al catàleg.
+ 
+ ## Superfícies i excepcions
+ 
+@@ -94,7 +95,7 @@
+ ## Deute conegut
+ 
+ - Les actes de `10_actes/` porten `ACTA_MARMOTA` en majúscules. La plantilla d'acta ja diu «minúscules i sense accents».
+-- Tres fonts donen tres regles per al nom del pla d'implementació (plantilla `pla.md`, porta Olivera i lliçó del 22-09). Esta pàgina seguix la porta i la lliçó: `aammdd_hhmm_pla_implementacio_COGNOM.md`.
++- La ruta antiga `planificacio` està retirada per a contextos nous. Els rebuts amb instantània anterior conserven la seua plantilla i versió; no es reescriuen. La plantilla operativa única és `pla_implementacio.md`.
+ - `document.mjs` i la porta Olivera no validen la categoria: accepten qualsevol paraula després de l'hora.
+ 
+ ## Vincles
+--- a/.agents/skills/wiki-cicle-de-vida/SKILL.md
++++ b/.agents/skills/wiki-cicle-de-vida/SKILL.md
+@@ -21,16 +21,20 @@
+ ---
+ # Cicle de vida documental
+ 
+-1. Obri el torn: `node tooling/gates/obrir_torn.mjs --actor NOM --scope code --output /tmp/torn-NOM.json`. El punter és local i opcional; no sobreescriu un fitxer existent.
++1. Tria l’abast real: `documents` per a documentació i `code` si també has de modificar codi. Obri el torn documental: `node tooling/gates/obrir_torn.mjs --actor NOM --scope documents --output /tmp/torn-NOM.json`. El punter és local i opcional; no sobreescriu un fitxer existent.
+ 2. Per a crear documents, aplica el circuit únic de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]; esta skill governa el torn, el relleu i el tancament.
+ 3. Completa els camps editorials. El prompt local copia literalment Context i Olivera; valida amb `document.mjs check --file CAMI`.
+ 4. Vincula el pla aprovat amb `document.mjs plan --turn-id ID --file CAMI`. L’aprovació anterior continua vigent.
+ 5. En arbre compartit declara els fitxers propis amb `document.mjs own --turn-id ID --file CAMI`. La zona humana i els canvis de codi fora d’abast continuen vigilats globalment.
+-6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes admeten `10_actes/` i l’Escriptori. Els noms nous són minúscules.
+-7. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
++6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes noves es creen només a `10_actes/`. Els rebuts històrics conserven les destinacions de la seua instantània. Els noms nous són minúscules.
++7. Aplica la «Transició d’onada» d’ací baix. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
+ 8. Executa `node tooling/gates/tancament.mjs --check --turn-id ID`. És lectura. `--close --turn-id ID` segella el LEDGER dins de l’operació i repeteix comprovacions abans de persistir `closed`; si falla, no declara tancament.
+ 9. Versiona documents, `.agents/runtime/turns/*.json`, `.agents/runtime/contracts/*.json` i `.claude/skills/` junts. No versionis locks ni punters locals. El pre-commit continua bloquejant quan hi ha errors.
+ 
++## Transició d’onada
++
++El procés únic uneix Llibre Mestre, retenció, pla i prompt. Marca FET només els ítems verificats i trasllada al pla següent els pendents amb la font citada. Un commit o un pla nou no consumix informes encara necessaris: conserva cada consumidor, torn vigent o retenció acreditada. MarIA aplica el procediment mecànic de [[core-higiene-escriptori/SKILL|core-higiene-escriptori]] només als consumits, primer en mode sec, després amb el relleu de rebut que corresponga. Crea el pla abans dels prompts pel circuit de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] i verifica portes i motius de retenció abans de convocar. No reescrigues rebuts tancats ni buides la taula.
++
+ ## Retenció i memòria
+ 
+ La plantilla d’acta és `_wiki_de_poble/03_actuar/plantilles/acta.md`. Inclou inici, final observat, resultats i següent acció. No inventes mètriques d’eficiència ni d’estat humà. El coneixement consultiu viu a [[memoria_aprenentatges]].
+--- a/.agents/skills/core-higiene-escriptori/SKILL.md
++++ b/.agents/skills/core-higiene-escriptori/SKILL.md
+@@ -53,11 +53,11 @@
+ 
+ ## Procediment: reflexiona → observa → actua → verifica → informa
+ 
+-0. **L'Acte Reflex Pre-Arxivament (L'Aturada de Seguretat):** Abans de fer l'acció d'arxivar cap fitxer o netejar l'Escriptori, és obligatori fer-te esta pregunta: *«Hi ha alguna tasca pendent? Algú altre (un altre agent com Codex/Claude o el Mestre) encara necessita llegir aquest informe o prompt?»*. Fes un cop d'ull ràpid al context. Si hi ha un flux pendent que requereix el fitxer (ex: «llança-li-ho a Codex quan acabe Claude»), atura't absolutament. No arxives res fins que la dependència siga resolta.
+-   - **Quan està resolta:** quan el document que havia de produir l'altre agent (la seua auditoria, el seu informe o la seua acta) ja és a l'Escriptori, o quan el seu torn està tancat o caducat.
++0. **L'Acte Reflex Pre-Arxivament (L'Aturada de Seguretat):** Abans de fer l'acció d'arxivar cap fitxer o netejar l'Escriptori, és obligatori fer-te esta pregunta: *«Hi ha alguna tasca pendent? Algú altre (un altre agent com Codex/Claude o el Mestre) encara necessita llegir aquest informe o prompt?»*. Fes un cop d'ull ràpid al context. Si hi ha un flux pendent que requereix el fitxer (ex: «llança-li-ho a Codex quan acabe Claude»), conserva els documents afectats fins que la dependència siga resolta; pots classificar els altres consumits.
++   - **Quan està resolta:** quan el consumidor ja ha acabat de llegir la font i el deute ha quedat destil·lat. Que existisca un informe nou o que caduque un torn no resol per si sol una dependència encara vigent.
+    - **Mentre no ho està:** el document continua declarat viu i ho dius al Mestre en la línia d'informe (pas 5): qui el necessita i per a què. Una dependència que no saps nomenar no protegix cap document: torna a preguntar-t'ho.
+ 1. **Observa:** `npm run porta:olivera`. És el mode informe: no llig stdin ni mou res. El mode hook necessita `--hook` i un payload. Llig també els «🌿 Declarats vius»: cada nom és una decisió pendent, no un verd.
+-2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`, una línia per document i amb el seu motiu darrere de «·» (procediment «Convocatòria», pas 3). L'informe llista cada declarat viu amb el seu motiu, i `--arxiva` se'n du la línia sencera.
++2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`, una línia per document i amb el seu motiu darrere de «·» (procediment «Transició d’onada» de wiki-cicle-de-vida). L'informe llista cada declarat viu amb el seu motiu, i `--arxiva` se'n du la línia sencera.
+ 3. **Actua**, sempre amb les ordres de la porta Olivera (`node tooling/gates/porta-olivera.mjs`), primer amb `--sec` per a vore què faria i després sense:
+    - Consumits de jornades anteriors no declarats: `npm run olivera:arxiva`.
+    - Declarats vius que ja no necessita ningú, de hui o d'abans: `--arxiva --nom FITXER`, un `--nom` per document. Per nom ixen documents i artefactes solts del primer nivell, de qualsevol extensió, amb categoria de torn, `produccio` o `avaluacio`, i amb la part termodinàmica del nom en minúscules: els `BUNDLE`, `PROMPT` i `ABSENTS` que escriu `crear_bundle` no ixen per nom (el remei és ANC-06, de `crear_bundle`), i per a eixos preguntes al Mestre.
+@@ -76,12 +76,7 @@
+ 
+ Esta skill decidix la vida dels documents i aplica la porta Olivera. La creació des de plantilles és de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]; l'obertura i el tancament del torn són de [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]].
+ 
+-1. Identifica documents consumits i dependències vives. Un commit o un pla nou no convertixen per si sols un document en consumit.
+-2. Trasllada sencers al pla nou els ítems pendents, amb la font citada. Conserva l'original mentre un consumidor viu encara el necessite.
+-3. Arxiva els consumits amb el procediment anterior: primer `--sec`, després `--arxiva --nom`. Conserva Llibre Mestre, pla, prompts, informes i altres documents que tinguen consumidor, torn vigent o retenció humana acreditada.
+-4. Declara cada viu a «## Activitat en curs», una línia amb el seu motiu. Net no vol dir limitar la taula a tres tipus de document.
+-5. Crea el pla abans dels prompts i completa'n estat, verificació i riscos. Aplica el circuit de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] i les marques de [[core-temps-termodinamic/SKILL|core-temps-termodinamic]].
+-6. Verifica la porta, els motius de retenció i el Preflight abans de convocar. Actualitza el Llibre Mestre amb el que continua pendent.
++Aplica la «Transició d’onada» de [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]], font única de la seqüència Llibre Mestre → retenció → pla → prompt. Esta skill conserva el procediment mecànic de classificació i arxivament, els modes secs i els límits de moviment.
+ 
+ ## Límits
+ 
+@@ -95,7 +90,7 @@
+ 
+ ## Lliçons del Mestre
+ 
+-- **261025 · El Cicle Atòmic de l'Auditoria i la Neteja:** Preparar una auditoria nova amb pla nou, prompt nou i llibre mestre actualitzat és un sol flux de treball inseparable que inclou l'arxivament immediat amb la porta Olivera dels informes, plans i prompts del torn precedent. L'exit code 0 de la porta mai serà excusa per a deixar ferralla consumida a la taula.
++- **261025 · El Cicle Atòmic de l'Auditoria i la Neteja:** Preparar una auditoria nova amb pla nou, prompt nou i llibre mestre actualitzat és un sol flux de treball inseparable que inclou l'arxivament amb la porta Olivera dels informes, plans i prompts del torn precedent quan ja estan consumits; si un torn o consumidor viu encara els necessita, es conserven segons la Transició d’onada. L'exit code 0 de la porta mai serà excusa per a deixar ferralla consumida a la taula.
+ - **260929 · La neteja és acció de l'orquestradora.** Quan l'Escriptori està brut, MarIA l'arxiva amb la porta, verifica el verd i després escriu el prompt.
+ - **260924 · Arxivar i despenjar l'àncora són un sol acte.** `--arxiva` fa les dues coses en la mateixa passada.
+ - **260924 · Una àncora pot ser l'únic fil que sosté un document.** Abans de llevar-la, mira on viu el fitxer.
+--- a/tooling/gates/porta-plantilla-viva.mjs
++++ b/tooling/gates/porta-plantilla-viva.mjs
+@@ -62,7 +62,7 @@
+   ['micro_prompt', Object.freeze(['prompt.consell'])],
+   ['petorreta', Object.freeze(['prompt.local', 'prompt.consell'])],
+   ['prompt', Object.freeze(['prompt.local', 'prompt.consell'])],
+-  ['pla', Object.freeze(['planificacio'])],
++  ['pla', Object.freeze(['pla.implementacio'])],
+ ]);
+ 
+ /** Forma comparable d'un nom: sense accents, en minúscules i amb `_`. */
+@@ -92,7 +92,7 @@
+   if (c) return CATEGORIES_VIGILADES.find(([k]) => k === c)[1];
+   const f = forma(nom);
+   if (/(^|_)pla_(d_)?implementacio/.test(f)) return ['pla.implementacio'];
+-  if (/(^|_)pla(_|\.md$)/.test(f)) return ['planificacio'];
++  if (/(^|_)pla(_|\.md$)/.test(f)) return ['pla.implementacio'];
+   return ['prompt.local', 'prompt.consell'];
+ }
+ 
+@@ -161,9 +161,15 @@
+   else {
+     informe.rebut = rebut.id;
+     routeId = rebut.receipt.route;
+-    if (!permeses.includes(routeId)) informe.errors.push(`ruta: el rebut és de «${routeId}» i el nom demana ${permeses.join(' o ')}`);
+     try { if (rebut.receipt.contractSnapshot) contract = readContract(root, rebut.receipt.contractSnapshot); }
+     catch (e) { informe.errors.push(`contracte del rebut: ${e.message}`); }
++    // Preserve issued legacy names only with their verified immutable contract.
++    const oldRoute = Array.isArray(contract?.router?.rutes)
++      ? contract.router.rutes.find(route => route.id === 'planificacio') : undefined;
++    const legacyPlan = routeId === 'planificacio' && categoriaDelNom(nom) === 'pla'
++      && oldRoute?.templateHash === rebut.receipt.templateHash
++      && oldRoute?.version === rebut.receipt.routeVersion;
++    if (!permeses.includes(routeId) && !legacyPlan) informe.errors.push(`ruta: el rebut és de «${routeId}» i el nom demana ${permeses.join(' o ')}`);
+   }
+   try {
+     contract ??= loadContract(root, { route: routeId });
+--- a/tests/helpers/documental.mjs
++++ b/tests/helpers/documental.mjs
+@@ -22,7 +22,9 @@
+ }
+ export function validDoc(root,{route='auditoria',scope='documents',turn=null,suffix='prova'}={}) {
+   turn ||= openTurn(root,{scope,actor:'test'});
+-  const file=`_wiki_de_poble/04_escriptori/260922_0300_auditoria_${suffix}.md`;
++  const dest=route==='acta'?'_wiki_de_poble/10_actes':'_wiki_de_poble/04_escriptori';
++  fs.mkdirSync(path.join(root,dest),{recursive:true});
++  const file=`${dest}/260922_0300_auditoria_${suffix}.md`;
+   const delivery=deliverContext(root,turn.turn_id,{route,file});
+   const content=draft(delivery,{title:'Prova vàlida',description:'Document positiu per a proves adversarials'}).replaceAll('[pendent]','Resultat comprovat amb evidència.');
+   return {turn,file,delivery,content};
+--- a/tests/documental.test.mjs
++++ b/tests/documental.test.mjs
+@@ -12,7 +12,7 @@
+ function planned(t) {const root=fixture(t),d=validDoc(root);writeDoc(root,d);const plan=validDoc(root,{route:'pla.implementacio',turn:d.turn,suffix:'pla'});writeDoc(root,plan);bindPlan(root,d.turn.turn_id,plan.file);relay(root,d.turn.turn_id);return {root,d,plan};}
+ function git(root,...args){return execFileSync('git',args,{cwd:root,encoding:'utf8'});}
+ 
+-test('les 13 rutes generen documents que passen el contracte',t=>{const root=fixture(t);for(const route of contract(root).router.rutes){const d=validDoc(root,{route:route.id,suffix:route.id.replaceAll('.','_')});assert.deepEqual(validateDocument(root,d.content,d.file),[],route.id);}});
++test('les rutes actives generen documents que passen el contracte',t=>{const root=fixture(t);for(const route of contract(root).router.rutes){const d=validDoc(root,{route:route.id,suffix:route.id.replaceAll('.','_')});assert.deepEqual(validateDocument(root,d.content,d.file),[],route.id);}});
+ test('encaminament explícit: prompt sense destinatari és ambigu',t=>{const root=fixture(t),c=loadContract(root);assert.throws(()=>resolveRoute(c,{intent:'prompt'}),/ambigua/);assert.equal(resolveRoute(c,{intent:'prompt',recipient:'local'}).id,'prompt.local');assert.throws(()=>resolveRoute(c,{route:'inventada'}),/desconeguda/);});
+ test('esquema viu invàlid bloqueja context nou però conserva el contracte emés',t=>{const root=fixture(t),d=validDoc(root);const file=path.join(root,'tooling/wiki/schema.json'),s=JSON.parse(fs.readFileSync(file));s.allOf=[];fs.writeFileSync(file,JSON.stringify(s));assert.throws(()=>loadContract(root),/no suportat/);assert.deepEqual(validateDocument(root,d.content,d.file),[]);fs.unlinkSync(file);assert.throws(()=>loadContract(root),/ENOENT/);assert.deepEqual(validateDocument(root,d.content,d.file),[]);});
+ test('plantilla i tipus del router han de coincidir',t=>{const root=fixture(t);const f=path.join(root,'.agents/protocolledge.json'),s=JSON.parse(fs.readFileSync(f));s.rutes[0].tipus='informe';fs.writeFileSync(f,JSON.stringify(s));assert.throws(()=>loadContract(root),/divergent/);});
+--- /dev/null
++++ b/tests/t11-retirada-planificacio.test.mjs
+@@ -0,0 +1,87 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import {fixture,REPO} from './helpers/documental.mjs';
++import {loadContract,resolveRoute,readContract,sha} from '../tooling/documental/core.mjs';
++import {openTurn,deliverContext,validateDocument} from '../tooling/documental/turns.mjs';
++import {draft} from '../tooling/wiki/document.mjs';
++import {rutesDelNom,inspeccionaText} from '../tooling/gates/porta-plantilla-viva.mjs';
++import {carregaConfig,paritat,analitzaNom} from '../tooling/gates/porta-taxonomia.mjs';
++import {comprovaDestins,projectaDestins} from '../tooling/brain/destins_canonics.mjs';
++const DESK='_wiki_de_poble/04_escriptori';
++const OLD='_wiki_de_poble/03_actuar/plantilles/pla.md';
++const ARCHIVE='_wiki_de_poble/90_arxiu_historic/plantilles_retirades_261029/pla.md';
++const OLD_SHA='a9e20c84733e780f1286161ea8505f15f463cde80f4a467ec0a1d8a064d72ddf';
++const registry=root=>JSON.parse(fs.readFileSync(path.join(root,'.agents/protocolledge.json'),'utf8'));
++const writeRegistry=(root,value)=>fs.writeFileSync(path.join(root,'.agents/protocolledge.json'),JSON.stringify(value));
++function document(root,route,file){
++ const turn=openTurn(root,{scope:'documents',actor:'test-t15'});
++ const delivery=deliverContext(root,turn.turn_id,{route,file});
++ const raw=draft(delivery,{title:'Prova de retirada',description:'Evidència portable de compatibilitat en retirar una ruta documental.'}).replaceAll('[pendent]','Resultat comprovat amb evidència.');
++ return {root,turn,delivery,file,raw};
++}
++function legacy(t,name='261029_0608_pla_legacy.md'){
++ const root=fixture(t),reg=registry(root),bytes=fs.readFileSync(path.join(REPO,ARCHIVE));
++ assert.equal(sha(bytes),OLD_SHA,'arxiu byte-idèntic a la plantilla retirada');
++ fs.writeFileSync(path.join(root,OLD),bytes);
++ reg.rutes.push({id:'planificacio',plantilla:OLD,tipus:'document',lectures:[],version:'2.0.0',seccions:['Registre','Acte reflex','Historial','Resultat final','Fases','Verificació','Riscos','Vincles'],destins:[DESK],blocsFixos:[]});
++ writeRegistry(root,reg);
++ const doc=document(root,'planificacio',`${DESK}/${name}`);
++ const id=doc.delivery.reflex.split(':').at(-1),turnFile=path.join(root,'.agents/runtime/turns',`${doc.turn.turn_id}.json`);
++ const turn=JSON.parse(fs.readFileSync(turnFile,'utf8')),receipt=turn.receipts[id];
++ const snapshot=path.join(root,'.agents/runtime/contracts',`${receipt.contractSnapshot}.json`),snapshotBytes=fs.readFileSync(snapshot);
++ const retire=()=>{writeRegistry(root,{...reg,rutes:reg.rutes.filter(r=>r.id!=='planificacio')});fs.unlinkSync(path.join(root,OLD));};
++ const mutateReceipt=update=>{const value=JSON.parse(fs.readFileSync(turnFile,'utf8'));Object.assign(value.receipts[id],update);fs.writeFileSync(turnFile,JSON.stringify(value));};
++ return {...doc,receipt,snapshot,snapshotBytes,retire,mutateReceipt};
++}
++test('contracte viu té12rutes i rebutja emetre context de planificacio retirada',t=>{
++ const root=fixture(t),contract=loadContract(root);assert.equal(contract.router.rutes.length,12);assert.equal(contract.router.rutes.some(r=>r.id==='planificacio'),false);
++ assert.throws(()=>resolveRoute(contract,{route:'planificacio'}),/desconeguda/);
++ const turn=openTurn(root,{scope:'documents'});assert.throws(()=>deliverContext(root,turn.turn_id,{route:'planificacio',file:`${DESK}/261029_0608_pla_nou.md`}),/desconeguda/);
++});
++test('noms pla i pla_implementacio nous resolen únicament al contracte canònic',t=>{
++ for(const name of ['261029_0608_pla_nou.md','261029_0608_pla_implementacio_nou.md']){
++  assert.deepEqual(rutesDelNom(name),['pla.implementacio']);const root=fixture(t),d=document(root,'pla.implementacio',`${DESK}/${name}`);
++  assert.deepEqual(inspeccionaText(root,d.file,d.raw).errors,[]);assert.deepEqual(validateDocument(root,d.raw,d.file),[]);
++ }
++ assert.deepEqual(rutesDelNom('pla_director.md'),['pla.implementacio']);
++});
++test('retirada conserva bytes i validesa del snapshot d’un rebut legacy ja emés',t=>{
++ const d=legacy(t);assert.deepEqual(inspeccionaText(d.root,d.file,d.raw).errors,[]);d.retire();
++ assert.equal(fs.existsSync(path.join(d.root,OLD)),false);assert.deepEqual(inspeccionaText(d.root,d.file,d.raw).errors,[]);
++ assert.deepEqual(validateDocument(d.root,d.raw,d.file),[]);assert.deepEqual(fs.readFileSync(d.snapshot),d.snapshotBytes);
++ assert.equal(readContract(d.root,d.receipt.contractSnapshot).router.rutes.some(r=>r.id==='planificacio'),true);
++});
++test('compatibilitat legacy no accepta snapshot absent o corrupte',t=>{
++ for(const mode of ['absent','corrupte']){const d=legacy(t);d.retire();if(mode==='absent')fs.unlinkSync(d.snapshot);else fs.appendFileSync(d.snapshot,'alterat');
++  const r=inspeccionaText(d.root,d.file,d.raw);assert.ok(r.errors.length,mode);assert.ok(r.errors.some(e=>e.includes('contracte del rebut')),r.errors.join('\n'));
++ }
++});
++test('versió o hash de plantilla divergents no obtenen l’excepció legacy',t=>{
++ for(const update of [{routeVersion:'999.0.0'},{templateHash:'0'.repeat(64)}]){const d=legacy(t);d.retire();d.mutateReceipt(update);
++  assert.ok(inspeccionaText(d.root,d.file,d.raw).errors.some(e=>e.startsWith('ruta:')));assert.ok(validateDocument(d.root,d.raw,d.file).some(e=>e.includes('Plantilla del rebut canviada')));
++ }
++});
++test('ruta legacy sota nom pla_implementacio continua sent incoherent',t=>{
++ const d=legacy(t,'261029_0608_pla_implementacio_legacy.md');d.retire();assert.ok(inspeccionaText(d.root,d.file,d.raw).errors.some(e=>e.startsWith('ruta:')));
++});
++test('acta2.1.0 nova nega Escriptori i accepta només10_actes',t=>{
++ const root=fixture(t),contract=loadContract(root),route=resolveRoute(contract,{route:'acta'});assert.equal(route.version,'2.1.0');assert.deepEqual(route.destins,['_wiki_de_poble/10_actes']);
++ const turn=openTurn(root,{scope:'documents'});assert.throws(()=>deliverContext(root,turn.turn_id,{route:'acta',file:`${DESK}/261029_0608_acta_nova.md`}),/Destí/);
++ const d=document(root,'acta','_wiki_de_poble/10_actes/261029_0608_acta_nova.md');assert.deepEqual(validateDocument(root,d.raw,d.file),[]);
++});
++test('solucio i pla conserven paritat taxonòmica i projecció de12destinacions',()=>{
++ const config=carregaConfig(REPO);assert.equal(config.categories.pla,'pla.implementacio');assert.match(config.categories.solucio,/transitòria/);
++ assert.deepEqual(paritat(REPO,config),{valid:true,errors:[]});assert.equal(analitzaNom('261029_0608_solucio_t11.patch',config,{ara:new Date('2026-10-29T06:08:00Z')}).valid,true);
++ const projection=projectaDestins(registry(REPO));assert.equal(projection.rutes.length,12);assert.equal(projection.rutes.some(r=>r.id==='planificacio'),false);assert.deepEqual(comprovaDestins(REPO),{ok:true,errors:[]});
++});
++test('snapshot amb digest correcte però router malformat dona errors, sense excepció del gate',t=>{
++ for(const router of [undefined,{rutes:'no-es-una-llista'}]){
++  const d=legacy(t);d.retire();const snapshot=JSON.parse(d.snapshotBytes.toString());
++  if(router===undefined)delete snapshot.router;else snapshot.router=router;
++  const raw=JSON.stringify(snapshot),digest=sha(raw);
++  fs.writeFileSync(path.join(d.root,'.agents/runtime/contracts',`${digest}.json`),raw);d.mutateReceipt({contractSnapshot:digest});
++  let report;assert.doesNotThrow(()=>{report=inspeccionaText(d.root,d.file,d.raw);});assert.ok(report.errors.length);
++ }
++});
+--- a/scripts/immunitari/plaquetes.mjs
++++ b/scripts/immunitari/plaquetes.mjs
+@@ -10,6 +10,7 @@
+ import {confined, prepareRecipe} from './plaquetes-plan.mjs';
+ import {executeMutation} from '../../tooling/gates/executor-mutacio.mjs';
+ import readline from 'readline';
++import {extractDocumentLinks} from '../../tooling/lib/document-links.mjs';
+ 
+ const args = process.argv.slice(2);
+ const REPO_ROOT = process.cwd();
+@@ -109,17 +110,7 @@
+ const vaultDir = path.join(REPO_ROOT, config.vault);
+ 
+ function extreuFantasmes(content) {
+-  const linkRegex = /\[\[(.*?)\]\]/g;
+-  let matches = [];
+-  let match;
+-  const net = content.replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
+-  while ((match = linkRegex.exec(net)) !== null) {
+-    let raw = match[1];
+-    if (raw.includes('|')) raw = raw.split('|')[0];
+-    if (raw.includes('#')) raw = raw.split('#')[0];
+-    if (raw.trim() && !raw.startsWith('http')) matches.push(raw.trim());
+-  }
+-  return matches;
++  return extractDocumentLinks(content).filter(link => link.kind === 'wiki').map(link => link.target);
+ }
+ 
+ function llistaFitxers(dir) {
+--- a/tooling/gates/tractor-doctrina.mjs
++++ b/tooling/gates/tractor-doctrina.mjs
+@@ -153,10 +153,13 @@
+ 
+ /** Decidix si un token té forma de camí de fitxer i no de comandament o concepte. */
+ function esCandidat(brut) {
+-  const t = brut.trim().replace(/[.,;:]+$/, '');
++  const t = brut.trim().replace(/[.,;:]+$/, '')
++    .replace(/:[0-9]+(?:[-–][0-9]+)?(?:,[0-9]+(?:[-–][0-9]+)?)*(?::[0-9]+)?$/, '');
+   if (!t || t.length > 240) return null;
+   // Metavariables documentades de la CLI i patró de taxonomia, mai camins reals.
+-  if (/^(?:aammdd_hhmm_|AAMMDD_HHMM_)/.test(t) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
++  if (t.split('/').some(segment => /(?:^|_)aammdd(?:_hhmm)?(?:[_.]|$)/i.test(segment)) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
++  // Una extensió nua no promet un fitxer; .env sí que és un nom concret.
++  if (/^\.[a-z0-9]+$/i.test(t) && EXTENSIONS.has(t.slice(1).toLowerCase()) && t.toLowerCase() !== '.env') return null;
+   if (/^(https?:|mailto:|#|<|\{)/.test(t)) return null;
+   if (/[*?<>|"']/.test(t)) return null;              // globs i cometes: no és un camí concret
+   if (/\s/.test(t)) return null;                      // cap camí amb espais a la doctrina
+--- /dev/null
++++ b/tests/t11-parser-consumers.test.mjs
+@@ -0,0 +1,94 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';
++import {extractDocumentLinks} from '../tooling/lib/document-links.mjs';
++const plaquetes=fileURLToPath(new URL('../scripts/immunitari/plaquetes.mjs',import.meta.url));
++const doctrina=fileURLToPath(new URL('../tooling/gates/tractor-doctrina.mjs',import.meta.url));
++function fixture(t){
++ const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-parser-consumer-')));
++ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
++ const put=(rel,text)=>{const f=path.join(root,rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,text);};
++ put('.agents/AGENTS.md','# BIOS de prova\n');
++ return {root,put,run:(script,args)=>spawnSync(process.execPath,[script,...args],{cwd:root,env:{...process.env,SDP_ARREL:root},encoding:'utf8'})};
++}
++function immune(t,example=''){
++ const f=fixture(t);f.put('.immunitari/config.json',JSON.stringify({vault:'_wiki_de_poble',exclouFonts:[],ignoraObjectius:[],hubsTaxonomics:[],hubsDelegats:false,indexAdopcio:'00_index',memorialLapides:'memorial'}));
++ f.put('.immunitari/baseline.json',JSON.stringify({ferides:0}));
++ f.put('_wiki_de_poble/00_index.md',`# Índex\n[[real]]\n${example}\n`);f.put('_wiki_de_poble/real.md','# Real\n[[00_index]]\n');
++ return {...f,diagnose:()=>f.run(plaquetes,['diagnostic','--porta'])};
++}
++function doctrine(t,text,args=[]){
++ const f=fixture(t);f.put('docs/norma.md',`# Norma\n${text}\n`);f.put('src/present.js','export const present=true;\n');
++ return {...f,check:()=>{const result=f.run(doctrina,['--json','--abast=docs',...args]);return {...result,data:JSON.parse(result.stdout)};}};
++}
++const inventory=root=>{
++ const scan=(dir,rel='')=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
++  const name=path.posix.join(rel,e.name),abs=path.join(dir,e.name);
++  if(e.isSymbolicLink())return [[name,'symlink',fs.readlinkSync(abs)]];
++  return e.isDirectory()?scan(abs,name):[[name,'file',fs.readFileSync(abs).toString('base64')]];
++ });return scan(root).sort((a,b)=>a[0].localeCompare(b[0]));
++};
++for(const[name,example]of[
++ ['doble backtick','``[[fantasma]]``'],['triple inline','``` [[fantasma]] ```'],
++ ['fence tildes','~~~markdown\n[[fantasma]]\n~~~'],
++ ['fence llarga amb marcador curt','````markdown\n```\n[[fantasma]]\n````'],
++ ['famílies barrejades','~~~~markdown\n```\n[[fantasma]]\n~~~~'],
++ ['comentari HTML','<!-- [[fantasma]] -->'],
++ ['wikilink escapat','\\[[fantasma]]']
++])test('Plaquetes no transforma exemple en ferida: '+name,t=>{
++ const f=immune(t,example),before=inventory(f.root),r=f.diagnose();
++ assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/0 ferides totals/);assert.deepEqual(inventory(f.root),before);
++ const content=`[[real]]\n${example}`;
++ assert.deepEqual(extractDocumentLinks(content).filter(l=>l.kind==='wiki').map(l=>l.target),['real']);
++});
++test('Plaquetes conserva àlies/fragments reals i escapament de taula Obsidian',t=>{
++ const f=immune(t,'| [[real\\|etiqueta]] | [[real#seccio|altra]] |'),r=f.diagnose();assert.equal(r.status,0,r.stderr);
++});
++test('Plaquetes continua fallant amb un fantasma real després dels exemples',t=>{
++ const f=immune(t,'``[[nomes_exemple]]``\n[[fantasma_real]]'),before=inventory(f.root),r=f.diagnose();
++ assert.equal(r.status,1);assert.match(r.stderr,/1 ferides noves/);assert.deepEqual(inventory(f.root),before);
++});
++test('Plaquetes distingix esquemes remots de noms locals que comencen per http',t=>{
++ const remote=immune(t,'[[https://example.invalid/absent]] [[mailto:veinat@example.invalid]]');assert.equal(remote.diagnose().status,0);
++ const local=immune(t,'[[http_document_local]]'),r=local.diagnose();assert.equal(r.status,1);assert.match(r.stderr,/1 ferides noves/);
++});
++test('Plaquetes conserva el recompte de dues referències reals repetides',t=>{
++ const f=immune(t,'[[fantasma_real]] [[fantasma_real]]'),r=f.diagnose();assert.equal(r.status,1);assert.match(r.stderr,/2 ferides noves/);
++});
++test('Plaquetes no seguix symlinks ni incorpora arxiu o producció humana',t=>{
++ const f=immune(t);f.put('_wiki_de_poble/90_arxiu_historic/vell.md','[[fantasma_arxiu]]');f.put('_wiki_de_poble/01_produccio/huma.md','[[fantasma_huma]]');
++ f.put('extern.md','[[fantasma_extern]]');fs.symlinkSync(path.join(f.root,'extern.md'),path.join(f.root,'_wiki_de_poble/simbolic.md'));
++ const before=inventory(f.root),r=f.diagnose();assert.equal(r.status,0,r.stderr);assert.deepEqual(inventory(f.root),before);
++});
++for(const suffix of [':45',':102-107',':30-33,121-133',':45:7',':3–6'])test('Doctrina resol la cita existent sense confondre el sufix amb el fitxer: '+suffix,t=>{
++ const f=doctrine(t,`Referència: \`src/present.js${suffix}\`.`),r=f.check();assert.equal(r.status,0,r.stderr);assert.equal(r.data.absents.length,0);assert.equal(r.data.resum.uniques,1);
++});
++test('Doctrina conserva línia i detecta realment un fitxer absent citat amb rang',t=>{
++ const f=doctrine(t,'Referència: `src/absent.js:10-12,17`.'),r=f.check();assert.equal(r.status,1);assert.deepEqual(r.data.absents.map(({cami,linia})=>({cami,linia})),[{cami:'src/absent.js',linia:2}]);
++});
++test('Doctrina ignora extensions nues però continua comprovant noms concrets',t=>{
++ const f=doctrine(t,'Extensions: `.mjs` `.php` `.sh` `.py` `.sql` `.md` `.json`. Referència: `src/absent.js`.'),r=f.check();
++ assert.equal(r.status,1);assert.deepEqual(r.data.absents.map(a=>a.cami),['src/absent.js']);
++});
++test('Doctrina conserva .env com a nom de fitxer concret, sense llegir-ne contingut',t=>{
++ const f=doctrine(t,'Configuració: `.env`.'),missing=f.check();assert.equal(missing.status,1);assert.deepEqual(missing.data.absents.map(a=>a.cami),['.env']);
++ f.put('.env','FIXTURE_SENSE_SECRETS=\n');const found=f.check();assert.equal(found.status,0,found.stderr);
++});
++for(const name of ['docs/aammdd_hhmm_auditoria.md','docs/AAMMDD_HHMM_auditoria.md','docs/aammdd/nota.md','docs/prefix_aammdd_hhmm_auditoria.md'])test('Doctrina exclou una metavariable de data declarada en qualsevol segment: '+name,t=>{
++ const f=doctrine(t,`Plantilla: \`${name}\`. Referència: \`src/present.js\`.`),r=f.check();assert.equal(r.status,0,r.stderr);assert.equal(r.data.resum.uniques,1);
++});
++test('Doctrina no amaga un nom literal que només s’assembla a una metavariable',t=>{
++ const f=doctrine(t,'Referència: `src/aammddurable.js`.'),r=f.check();assert.equal(r.status,1);assert.deepEqual(r.data.absents.map(a=>a.cami),['src/aammddurable.js']);
++});
++test('Doctrina conserva les exempcions externes i extern-fatal',t=>{
++ const f=doctrine(t,'Vegeu `../extern.js:45`.'),normal=f.check();assert.equal(normal.status,0);assert.equal(normal.data.externs[0].cami,'../extern.js');
++ const fatal=f.run(doctrina,['--json','--abast=docs','--extern-fatal']);assert.equal(fatal.status,1);
++});
++test('Doctrina és lectura, determinista i continua rebutjant abast buit',t=>{
++ const f=doctrine(t,'Referència: `src/present.js:45`.'),before=inventory(f.root),a=f.check(),b=f.check();assert.equal(a.status,0);assert.equal(a.stdout,b.stdout);assert.deepEqual(inventory(f.root),before);
++ const empty=f.run(doctrina,['--json','--abast=absent']);assert.equal(empty.status,1);assert.match(empty.stderr,/no existix/);
++});
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -41,6 +41,8 @@
+     "tests/security-chain.test.mjs",
+     "tests/sistema_nervios.test.mjs",
+     "tests/standalone-build.test.mjs",
++    "tests/t11-parser-consumers.test.mjs",
++    "tests/t11-retirada-planificacio.test.mjs",
+     "tests/verificador-scc.test.mjs",
+     "tests/vite-empremta-dev.test.mjs",
+     "tests/wiki-backlinks-readonly.test.mjs",
+@@ -514,8 +516,18 @@
+       "path": "tests/standalone-build.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/t11-parser-consumers.test.mjs",
++      "suite": "primary",
++      "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
+     },
+     {
++      "path": "tests/t11-retirada-planificacio.test.mjs",
++      "suite": "primary",
++      "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
++    },
++    {
+       "path": "tests/time-machine.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."

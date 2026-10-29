@@ -1,0 +1,1601 @@
+diff --git a/tooling/wiki/contradiction_engine.mjs b/tooling/wiki/contradiction_engine.mjs
+--- a/tooling/wiki/contradiction_engine.mjs
++++ b/tooling/wiki/contradiction_engine.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ /**
+  * contradiction_engine.mjs
+- * Motor autònom per a detectar duplicitats semàntiques a la Wiki de Poble.
++ * Revisor determinista de cobertura, solapaments lèxics i contractes de ruta.
+  * Usa similitud de Jaccard sobre shingles (n-grames de paraules).
+  *
+  * Canvis respecte a la versió anterior:
+@@ -16,9 +16,8 @@
+  *    `.wiki-safety/reports/`, fora del vault, en compte de només imprimir.
+  */
+ import path from 'node:path';
+-import { pathToFileURL } from 'node:url';
++import { esMain } from '../lib/arrel.mjs';
+ import fs from 'node:fs/promises';
+-import { buildWikiIndex } from './lib/wiki_walker.mjs';
+ import { parseFrontmatter, serializeFrontmatter } from './lib/frontmatter.mjs';
+ import { validarFrontmatter } from './entropia_zero_router.mjs';
+ import { getTimestamp } from './lib/termodinamic.mjs';
+@@ -41,13 +40,6 @@
+   return s;
+ }
+ 
+-function jaccard(a, b) {
+-  const A = shingles(a), B = shingles(b);
+-  if (A.size === 0 && B.size === 0) return 0;
+-  let inter = 0;
+-  A.forEach(x => { if (B.has(x)) inter++; });
+-  return inter / (A.size + B.size - inter);
+-}
+ 
+ const JURISDICTIONS = new Map([
+   ['00_SER_Brain_Identitat', 'principi'],
+@@ -62,15 +54,6 @@
+   '03_GOVERNAR_Normativa_Regles/agents_actius/',
+ ];
+ 
+-function jurisdictionFromPath(relPath) {
+-  return JURISDICTIONS.get(relPath.split(path.sep)[0]) || null;
+-}
+-
+-function isManagedOperationalDoc(doc) {
+-  const normalized = doc.relPath.split(path.sep).join('/');
+-  return jurisdictionFromPath(doc.relPath) !== null
+-    && !EXCLUDED_OPERATIONAL_PREFIXES.some(prefix => normalized.startsWith(prefix));
+-}
+ 
+ function parseManagedDocument(doc) {
+   const parsed = parseFrontmatter(doc.content);
+@@ -92,41 +75,202 @@
+   return text.replace(/<!--[\s\S]*?-->/g, '').replace(/%%[\s\S]*?%%/g, '').trim();
+ }
+ 
++/**
++ * T11: audita un tall de lectura. Una coincidència de shingles és un candidat
++ * de solapament; mai acredita una contradicció semàntica ni autoritza una fusió.
++ * El registre de rutes permet demostrar col·lisions estructurals concretes.
++ * La resta de contradiccions normatives requerixen evidència/revisió del text.
++ */
++const EXCLUSIONS = new Map([
++  ['90_arxiu_historic', 'historical-archive'],
++  ['01_produccio', 'protected-human-zone'],
++  ['02_investigacio_ia', 'protected-research-zone'],
++  ['node_modules', 'dependency'], ['.git', 'version-control'],
++  ['.obsidian', 'editor-state'],
++]);
++const CURRENT_JURISDICTIONS = new Map([
++  ['01_ser', 'identitat'], ['02_saber', 'coneixement'],
++  ['03_actuar', 'procediments'], ['04_escriptori', 'treball_actiu'],
++  ['05_social', 'social'], ['10_actes', 'evidencia'], ['10_metriques', 'metriques'],
++]);
++const cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
++const slash = value => value.split(path.sep).join('/');
++const errorText = error => error.code || error.message;
++const compareDocuments = (a, b) => cmp(a.ruta, b.ruta);
++
++function similarity(A, B) {
++  let intersection = 0;
++  for (const token of A) if (B.has(token)) intersection++;
++  return intersection / (A.size + B.size - intersection || 1);
++}
++
++async function collectCoherenceDocuments(wikiDir, projectDir, includeProject) {
++  const docs = [], excluded = [], problems = [];
++  const coverage = { wikiDocuments: 0, skillDocuments: 0, legacyDocuments: 0, protocolRoutes: 0 };
++  const jurisdictions = new Map([...JURISDICTIONS, ...CURRENT_JURISDICTIONS]);
++  const note = (ruta, reason) => excluded.push({ ruta, reason });
++  const fail = (ruta, code, detail = '') => problems.push({ ruta, code, detail });
++  let projectReadable = includeProject;
++  if (includeProject) {
++    try {
++      const agents = await fs.lstat(path.join(projectDir, '.agents'));
++      if (agents.isSymbolicLink() || !agents.isDirectory()) throw new Error('symlink-or-nondirectory');
++    } catch (error) {
++      projectReadable = false;
++      note('.agents', 'project-state-not-followed');
++      fail('.agents', 'project-state-unavailable', errorText(error));
++    }
++  }
++  // cervell.json és el mapa vigent. Es manté el mapa legacy per a callers v2.
++  if (projectReadable) {
++    const mapPath = path.join(projectDir, '.agents/cervell.json');
++    try {
++      const mapStat = await fs.lstat(mapPath);
++      if (mapStat.isSymbolicLink()) throw new Error('symlink');
++      const brain = JSON.parse(await fs.readFile(mapPath, 'utf8'));
++      for (const dimension of brain.dimensions || []) {
++        if (typeof dimension.ruta !== 'string' || typeof dimension.id !== 'string') continue;
++        const parts = dimension.ruta.split('/');
++        if (parts.length === 2 && parts[0] === '_wiki_de_poble') jurisdictions.set(parts[1], dimension.id);
++      }
++    } catch (error) {
++      // El mapa no era requisit del caller legacy; en mode projecte no s'amaga.
++      fail('.agents/cervell.json', 'cognitive-map-unavailable', errorText(error));
++    }
++  }
++  async function walk(root, relative = '', skills = false) {
++    const absolute = path.join(root, relative);
++    const display = `${skills ? '.agents/skills' : '_wiki_de_poble'}${relative ? '/' + slash(relative) : ''}`;
++    let stat;
++    try { stat = await fs.lstat(absolute); }
++    catch (error) { fail(display, 'source-unavailable', errorText(error)); return; }
++    if (stat.isSymbolicLink()) { note(display, 'symlink-not-followed'); fail(display, 'symlink-not-followed'); return; }
++    if (stat.isDirectory()) {
++      let entries;
++      try { entries = (await fs.readdir(absolute)).sort(cmp); }
++      catch (error) { fail(display, 'directory-unreadable', errorText(error)); return; }
++      for (const name of entries) {
++        const rel = path.join(relative, name), shown = `${skills ? '.agents/skills' : '_wiki_de_poble'}/${slash(rel)}`;
++        const reason = EXCLUSIONS.get(name) || (name.startsWith('.') ? 'hidden-state' : null);
++        if (reason) { note(shown, reason); continue; }
++        await walk(root, rel, skills);
++      }
++      return;
++    }
++    if (!stat.isFile() || !relative.endsWith('.md') || (skills && path.basename(relative) !== 'SKILL.md')) return;
++    if (stat.size > 2 * 1024 * 1024) { fail(display, 'document-too-large'); return; }
++    let text;
++    try { text = await fs.readFile(absolute, 'utf8'); }
++    catch (error) { fail(display, 'document-unreadable', errorText(error)); return; }
++    coverage[skills ? 'skillDocuments' : 'wikiDocuments']++;
++    const top = slash(relative).split('/')[0];
++    const legacy = !skills && JURISDICTIONS.has(top);
++    const parsed = parseFrontmatter(text);
++    if (!parsed.hasFrontmatter || parsed.errors.length) {
++      fail(display, 'frontmatter-invalid', parsed.errors.join('; ') || 'frontmatter absent');
++      return;
++    }
++    if (legacy) {
++      try { parseManagedDocument({ relPath: relative, content: text }); }
++      catch (error) { fail(display, 'legacy-schema-invalid', error.message); return; }
++      coverage.legacyDocuments++;
++      if (EXCLUDED_OPERATIONAL_PREFIXES.some(prefix => slash(relative).startsWith(prefix))) {
++        note(display, 'legacy-operational-mirror'); return;
++      }
++    }
++    const jurisdiction = skills ? 'skills' : (jurisdictions.get(top) || (relative.includes(path.sep) ? null : 'index'));
++    if (!jurisdiction) { fail(display, 'unclassified-document'); return; }
++    const evidence = ['treball_actiu', 'evidencia', 'metriques', 'social', 'index'].includes(jurisdiction);
++    const body = stripComments(parsed.body);
++    docs.push({ ruta: display, relative: slash(relative), jurisdiccio: jurisdiction, text: body,
++      evidence, skill: skills, shingles: evidence ? new Set() : shingles(body) });
++  }
++  await walk(wikiDir);
++  if (projectReadable) await walk(path.join(projectDir, '.agents/skills'), '', true);
++  docs.sort(compareDocuments);
++  return { docs, coverage, excluded, problems, fail, projectReadable };
++}
++
++async function auditRoutes(projectDir, result) {
++  const routePath = path.join(projectDir, '.agents/protocolledge.json');
++  let registry;
++  try {
++    const stat = await fs.lstat(routePath);
++    if (stat.isSymbolicLink()) throw new Error('symlink');
++    registry = JSON.parse(await fs.readFile(routePath, 'utf8'));
++    if (!Array.isArray(registry.rutes)) throw new Error('rutes no és array');
++  } catch (error) {
++    result.fail('.agents/protocolledge.json', 'routing-registry-unavailable', errorText(error));
++    return [];
++  }
++  const contradictions = [], byId = new Map(), bySelector = new Map();
++  for (const route of registry.rutes) {
++    result.coverage.protocolRoutes++;
++    const id = route?.id;
++    if (typeof id !== 'string' || !id) { result.fail('.agents/protocolledge.json', 'route-id-invalid'); continue; }
++    if (byId.has(id)) contradictions.push({ kind: 'duplicate-route-id', id,
++      evidence: ['.agents/protocolledge.json'], detail: 'Dos contractes comparteixen identificador.' });
++    byId.set(id, route);
++    if (route.quan && typeof route.quan === 'object' && !Array.isArray(route.quan)) {
++      const selector = JSON.stringify(Object.keys(route.quan).sort(cmp).map(key => [key, route.quan[key]]));
++      const previous = bySelector.get(selector);
++      if (previous && previous.id !== id && previous.plantilla !== route.plantilla) contradictions.push({
++        kind: 'routing-contract-conflict', ids: [previous.id, id].sort(cmp), selector,
++        evidence: ['.agents/protocolledge.json'], detail: 'El mateix selector té dues plantilles diferents.' });
++      bySelector.set(selector, route);
++    }
++    for (const field of ['plantilla', 'skill']) {
++      const rel = route[field];
++      if (typeof rel !== 'string' || path.isAbsolute(rel) || rel.includes('\\') || rel.split('/').some(p => !p || p === '.' || p === '..')) {
++        result.fail('.agents/protocolledge.json', 'route-path-invalid', `${id}.${field}`); continue;
++      }
++      let cursor = projectDir;
++      try {
++        for (const part of rel.split('/')) {
++          // Comprova caixa exacta també en volums macOS case-insensitive.
++          if (!(await fs.readdir(cursor)).includes(part)) throw new Error('target-absent-or-case-mismatch');
++          cursor = path.join(cursor, part);
++          if ((await fs.lstat(cursor)).isSymbolicLink()) throw new Error('symlink-not-followed');
++        }
++        if (!(await fs.lstat(cursor)).isFile()) throw new Error('target-not-file');
++      } catch (error) { result.fail(rel, 'route-target-unavailable', `${id}.${field}: ${errorText(error)}`); }
++    }
++  }
++  return contradictions.sort((a, b) => cmp(JSON.stringify(a), JSON.stringify(b)));
++}
++
++export async function auditCoherence(wikiDir = ROOT, { projectDir = path.dirname(wikiDir), includeProject = true } = {}) {
++  const result = await collectCoherenceDocuments(wikiDir, projectDir, includeProject);
++  const candidates = result.docs.filter(doc => !doc.evidence && doc.text.length > 200);
++  const overlaps = [];
++  for (let i = 0; i < candidates.length; i++) {
++    for (let j = i + 1; j < candidates.length; j++) {
++      const a = candidates[i], b = candidates[j], score = similarity(a.shingles, b.shingles);
++      if (score < UMBRAL_DUPLICAT) continue;
++      overlaps.push({ kind: 'lexical-overlap', s: score, a: a.ruta, b: b.ruta,
++        marcaJurisdiccioDiferent: a.jurisdiccio !== b.jurisdiccio,
++        jurA: a.jurisdiccio, jurB: b.jurisdiccio, action: 'review-scope-and-authority' });
++    }
++  }
++  const contradictions = result.projectReadable ? await auditRoutes(projectDir, result) : [];
++  const coverage = { ...result.coverage, readDocuments: result.coverage.wikiDocuments + result.coverage.skillDocuments, parsedDocuments: result.docs.length, comparedDocuments: candidates.length };
++  if (!coverage.comparedDocuments) result.fail('_wiki_de_poble', 'empty-comparison-corpus');
++  const excluded = result.excluded.sort((a, b) => cmp(a.ruta, b.ruta) || cmp(a.reason, b.reason));
++  const problems = result.problems.sort((a, b) => cmp(a.ruta, b.ruta) || cmp(a.code, b.code) || cmp(a.detail, b.detail));
++  return { schema: 'sdp.coherence-audit.v1', complete: !problems.length, coverage, excluded, problems,
++    overlaps, contradictions,
++    limits: ['La similitud lèxica és un candidat de solapament, no una contradicció demostrada.',
++      'Les contradiccions demostrades ací són col·lisions de contractes de ruta; no es certifica tota la semàntica normativa.',
++      'Documents de treball, actes i índexs es censen, però no s\'usen com a autoritat normativa per a proposar fusions.'] };
++}
++
++/** Caller v2: conserva forma de resultat i validació estricta de corpus legacy. */
+ export async function findDuplicates(wikiDir = ROOT) {
+-  const { mdDocs } = await buildWikiIndex(wikiDir);
+-  const docs = mdDocs
+-    .filter(isManagedOperationalDoc)
+-    .map(d => {
+-      const parsed = parseManagedDocument(d);
+-      return {
+-        ruta: d.relPath,
+-        fm: parsed.data,
+-        jurisdiccio: jurisdictionFromPath(d.relPath),
+-        text: stripComments(parsed.body),
+-      };
+-    })
+-    .filter(d => d.text.length > 200);
+-
+-  const duplicats = [];
+-  for (let i = 0; i < docs.length; i++) {
+-    for (let j = i + 1; j < docs.length; j++) {
+-      const sim = jaccard(docs[i].text, docs[j].text);
+-      if (sim < UMBRAL_DUPLICAT) continue;
+-
+-      const jurA = docs[i].jurisdiccio;
+-      const jurB = docs[j].jurisdiccio;
+-      const marcaJurisdiccioDiferent = jurA !== jurB;
+-
+-      duplicats.push({
+-        s: sim,
+-        a: docs[i].ruta,
+-        b: docs[j].ruta,
+-        marcaJurisdiccioDiferent,
+-        jurA, jurB
+-      });
+-    }
+-  }
+-  return duplicats;
++  const report = await auditCoherence(wikiDir, { includeProject: false });
++  if (!report.complete) throw new Error(`Auditoria incompleta: ${report.problems.map(p => `${p.ruta}: ${p.code} ${p.detail}`).join('; ')}`);
++  return report.overlaps.map(match => ({ s: match.s,
++    a: match.a.replace(/^_wiki_de_poble\//, ''), b: match.b.replace(/^_wiki_de_poble\//, ''),
++    marcaJurisdiccioDiferent: match.marcaJurisdiccioDiferent, jurA: match.jurA, jurB: match.jurB }));
+ }
+ 
+ async function escriureActaProposta(duplicatsReals) {
+@@ -144,14 +288,14 @@
+   const frontmatter = serializeFrontmatter({
+     status: 'arxivat',
+     type: 'acta',
+-    description: 'Proposta automàtica de revisió de possibles contradiccions semàntiques.',
++    description: 'Proposta automàtica de revisió de possibles solapaments lèxics; no acredita contradiccions.',
+   }, ['status', 'type', 'description']);
+   const lines = [
+     frontmatter.trimEnd(),
+-    `# Proposta de fusió — contradiccions detectades`,
++    `# Proposta de revisió — candidats de solapament`,
+     ``,
+     ...duplicatsReals.map(d =>
+-      `- **${(d.s * 100).toFixed(1)}%** — [[${d.a}]] ↔ [[${d.b}]] → escull document canònic i converteix l'altre en pont (wikilink).`
++      `- **${(d.s * 100).toFixed(1)}%** — [[${d.a}]] ↔ [[${d.b}]] → revisa abast i autoritat abans de proposar cap fusió.`
+     )
+   ];
+   await fs.writeFile(target, lines.join('\n') + '\n', { encoding: 'utf8', flag: 'wx' });
+@@ -159,33 +303,22 @@
+   return target;
+ }
+ 
+-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+-  log(`Iniciant Contradiction Engine a: ${ROOT} (mode: ${FORCE ? 'ESCRIPTURA' : 'DRY-RUN'})`);
+-  const duplicats = await findDuplicates();
+-
+-  const marcats = duplicats.filter(d => d.marcaJurisdiccioDiferent);
+-  const reals = duplicats.filter(d => !d.marcaJurisdiccioDiferent);
+-
+-  if (marcats.length) {
+-    log(`ℹ️ ${marcats.length} coincidència(es) amb Marca de Jurisdicció diferent — NO són contradicció, són capes legítimes:`);
+-    marcats.forEach(d => log(`  [${(d.s * 100).toFixed(1)}%] ${d.a} (${d.jurA}) ↔ ${d.b} (${d.jurB})`));
+-  }
+-
+-  if (reals.length === 0) {
+-    log('✅ Cap contradicció real (Veritat en Dos Miralls preservada).');
+-    process.exit(0);
+-  }
+-
+-  log(`⚠️ ${reals.length} contradicció(ns) semàntica(ques) real(s):`);
+-  reals.sort((a, b) => b.s - a.s).forEach(d => {
+-    log(`[${(d.s * 100).toFixed(1)}%] ${d.a}  ↔  ${d.b}`);
+-  });
+-
+-  if (FORCE) {
+-    const actaPath = await escriureActaProposta(reals);
+-    log(`📝 Acta de proposta escrita: ${path.relative(ROOT, actaPath)}`);
+-  } else {
+-    log('DRY-RUN: cap fitxer escrit. Per generar l\'Acta cal --force i --receipt=<lease Reflex>.');
+-  }
+-  process.exit(1);
+-}
++if (esMain(import.meta.url)) {
++  try {
++    const report = await auditCoherence();
++    if (process.argv.includes('--json')) console.log(JSON.stringify(report, null, 2));
++    else {
++      log(`${report.coverage.readDocuments} documents censats; ${report.coverage.comparedDocuments} comparats; ${report.excluded.length} exclusions explícites.`);
++      log(`${report.overlaps.length} candidats de solapament; ${report.contradictions.length} col·lisions de contracte de ruta.`);
++      for (const problem of report.problems) log(`INCOMPLET ${problem.ruta}: ${problem.code} ${problem.detail}`);
++      for (const overlap of report.overlaps) log(`REVISAR ${(overlap.s * 100).toFixed(1)}% ${overlap.a} ↔ ${overlap.b}`);
++      for (const conflict of report.contradictions) log(`CONTRACTE ${JSON.stringify(conflict)}`);
++      for (const limit of report.limits) log(limit);
++    }
++    if (FORCE && report.complete) {
++      const proposals = report.overlaps.filter(match => !match.marcaJurisdiccioDiferent);
++      if (proposals.length) log(`Proposta escrita: ${await escriureActaProposta(proposals)}`);
++    }
++    process.exitCode = !report.complete ? 2 : (report.overlaps.length || report.contradictions.length ? 1 : 0);
++  } catch (error) { log(`INCOMPLET: ${error.message}`); process.exitCode = 2; }
++}
+diff --git a/tooling/wiki/lib/contract_consistency.mjs b/tooling/wiki/lib/contract_consistency.mjs
+new file mode 100644
+--- /dev/null
++++ b/tooling/wiki/lib/contract_consistency.mjs
+@@ -0,0 +1,226 @@
++/** Explicit contract disagreements inside one caller-declared scope.
++ * This is a bounded review aid, not a semantic or general health score.
++ * History is counted only. Markdown quotations, fenced code and lines
++ * introduced as examples are excluded from active claims. Inline code is
++ * retained because policy directives are commonly written as code spans.
++ */
++const compare = (a, b) => {
++  let i = 0;
++  let j = 0;
++  while (i < a.length && j < b.length) {
++    const x = a.codePointAt(i);
++    const y = b.codePointAt(j);
++    if (x !== y) return x < y ? -1 : 1;
++    i += x > 0xffff ? 2 : 1;
++    j += y > 0xffff ? 2 : 1;
++  }
++  return i === a.length ? (j === b.length ? 0 : -1) : 1;
++};
++const locationOrder = (a, b) => compare(a.path, b.path) || a.line - b.line
++  || compare(a.value, b.value) || compare(a.source, b.source);
++const visible = (line) => line.replace(/\*\*|__|`/g, '');
++const cells = (line) => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((s) => visible(s).trim());
++const DIMENSIONS = /\b(9|10|nou|deu|nine|ten)\s+dimensions?\b/gi;
++const COUNTS = Object.freeze({ 9: '9', 10: '10', nou: '9', deu: '10', nine: '9', ten: '10' });
++
++function validate(scope, documents) {
++  if (typeof scope !== 'string' || !scope.trim() || scope.includes('\0')) throw new TypeError('scope must be an explicit nonempty string');
++  if (!Array.isArray(documents)) throw new TypeError('documents must be an array');
++  const paths = new Set();
++  for (const doc of documents) {
++    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) throw new TypeError('document must be an object');
++    if (typeof doc.path !== 'string' || !doc.path.trim() || doc.path.includes('\0')) throw new TypeError('document.path must be a nonempty string');
++    if (paths.has(doc.path)) throw new TypeError('document paths must be unique');
++    paths.add(doc.path);
++    if (typeof doc.content !== 'string') throw new TypeError('document.content must be a string');
++    if (!Object.hasOwn(doc, 'authority') || !['active', 'history'].includes(doc.authority)) throw new TypeError('document.authority must explicitly be active or history');
++    if (Object.hasOwn(doc, 'scope') && doc.scope !== scope) throw new TypeError('document.scope must match the requested scope');
++  }
++}
++
++function activeLines(content) {
++  const lines = content.split(/\r?\n/);
++  let fence = null;
++  let frontmatter = lines[0]?.trim() === '---';
++  return lines.map((raw, i) => {
++    const line = raw.trimStart();
++    if (frontmatter) {
++      if (i > 0 && line.trim() === '---') frontmatter = false;
++      return '';
++    }
++    if (fence) {
++      const close = line.match(/^(`{3,}|~{3,})\s*$/);
++      if (close && close[1][0] === fence.character && close[1].length >= fence.length) fence = null;
++      return '';
++    }
++    const open = line.match(/^(`{3,}|~{3,})/);
++    if (open) {
++      fence = { character: open[1][0], length: open[1].length };
++      return '';
++    }
++    if (/^>/.test(line) || (/^(?: {4}|\t)/.test(raw) && !/^(?:[-*+]|\d+[.)])\s/.test(line))
++      || /^(?:[-*+]\s+|\d+[.)]\s+)?(?:exemples?|examples?|e\.g\.)\s*:/i.test(line)) return '';
++    return raw;
++  });
++}
++
++function allowlist(text) {
++  if (text === '*') return '*';
++  const tokens = text.slice(1, -1).trim().match(/"[^"\n]*"|'[^'\n]*'|[^\s]+/g) ?? [];
++  const normalized = tokens.map((token) => {
++    const unquoted = /^(["']).*\1$/.test(token) ? token.slice(1, -1) : token;
++    return ['self', '*', 'src'].includes(unquoted.toLowerCase()) ? unquoted.toLowerCase() : JSON.stringify(unquoted);
++  });
++  return `(${[...new Set(normalized)].sort(compare).join(' ')})`;
++}
++
++function policyClaims(line, path, number) {
++  const claims = [];
++  const headers = /\bPermissions-Policy\s*:\s*/gi;
++  for (const header of line.matchAll(headers)) {
++    const rest = line.slice(header.index + header[0].length).replace(/^`/, '');
++    const directives = /\s*([a-z][a-z0-9-]*)\s*=\s*(\([^)]*\)|\*)\s*/giy;
++    let cursor = 0;
++    while (cursor < rest.length) {
++      directives.lastIndex = cursor;
++      const directive = directives.exec(rest);
++      if (!directive) break;
++      claims.push({ contract: `permissions-policy:${directive[1].toLowerCase()}`, path, line: number,
++        value: allowlist(directive[2]), source: 'directive' });
++      cursor = directives.lastIndex;
++      if (rest[cursor] !== ',') break;
++      cursor += 1;
++    }
++  }
++  return claims;
++}
++
++function documentClaims(doc) {
++  const lines = activeLines(doc.content);
++  const claims = [];
++  for (let i = 0; i < lines.length; i += 1) {
++    const line = visible(lines[i]);
++    for (const match of line.matchAll(DIMENSIONS)) {
++      claims.push({ contract: 'dimension-count', path: doc.path, line: i + 1,
++        value: COUNTS[match[1].toLowerCase()], source: 'prose' });
++    }
++    claims.push(...policyClaims(line, doc.path, i + 1));
++    // A rubric is evidence only with a dimension header and an explicit,
++    // consecutive, unique numeric range 1..9 or 1..10 in its first column.
++    if (!line.includes('|') || !cells(line).some((cell) => /\bdimensio(?:n|ns|s)?\b/i.test(cell.normalize('NFD').replace(/\p{M}/gu, '')))) continue;
++    const separator = cells(lines[i + 1] ?? '');
++    if (separator.length < 2 || !separator.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
++    const ids = [];
++    for (let j = i + 2; j < lines.length && lines[j].includes('|'); j += 1) {
++      const first = cells(lines[j])[0];
++      if (/^\d+$/.test(first)) ids.push(Number(first));
++    }
++    const sorted = [...ids].sort((a, b) => a - b);
++    if ([9, 10].includes(sorted.length) && sorted.every((n, index) => n === index + 1)) {
++      claims.push({ contract: 'dimension-count', path: doc.path, line: i + 1,
++        value: String(sorted.length), source: 'rubric' });
++    }
++  }
++  return { claims, lineCount: lines.length };
++}
++
++const explicitText = (value) => typeof value === 'string' && value.length > 0 && value.trim() === value && !value.includes('\0');
++
++/** A caller supplies stable labels; no natural-language meanings are inferred.
++ * catalog = {scope, canonical:[{id,value}], claims:[{id,value,path,line}]}.
++ * Optional scopes on documents/claims must match both explicit scope values.
++ * Optional claim.text pins the exact source line against stale registries.
++ * Claim locations must exist; historical, quoted and example/code locations
++ * are excluded. Labels are compared exactly, with no project-specific IDs.
++ * The caller remains responsible for the correctness of the supplied label.
++ */
++function auditCatalog(catalog, scope, documents) {
++  if (catalog === undefined) return null;
++  if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)
++    || !Object.hasOwn(catalog, 'scope') || catalog.scope !== scope) throw new TypeError('catalog.scope must explicitly match the requested scope');
++  if (!Array.isArray(catalog.canonical) || catalog.canonical.length === 0) throw new TypeError('catalog.canonical must be a nonempty array');
++  if (!Array.isArray(catalog.claims)) throw new TypeError('catalog.claims must be an array');
++  const canonical = new Map();
++  for (const entry of catalog.canonical) {
++    if (!entry || !explicitText(entry.id) || !explicitText(entry.value)) throw new TypeError('canonical entries need explicit id and value labels');
++    if (canonical.has(entry.id)) throw new TypeError('canonical ids must be unique');
++    canonical.set(entry.id, entry.value);
++  }
++  const locations = new Map(documents.map((doc) => [doc.path, { doc, lines: activeLines(doc.content) }]));
++  const accepted = [];
++  let historicalClaims = 0;
++  let excludedClaims = 0;
++  for (const claim of catalog.claims) {
++    if (!claim || !explicitText(claim.id) || !explicitText(claim.value) || !explicitText(claim.path)
++      || !Number.isSafeInteger(claim.line) || claim.line < 1) throw new TypeError('catalog claims need id, value, path and a positive integer line');
++    if (Object.hasOwn(claim, 'scope') && claim.scope !== scope) throw new TypeError('claim.scope must match the requested scope');
++    if (!canonical.has(claim.id)) throw new TypeError('every claim id needs an explicit canonical mapping');
++    const location = locations.get(claim.path);
++    if (!location || claim.line > location.lines.length) throw new TypeError('catalog claim location must exist in documents');
++    if (location.doc.authority === 'history') { historicalClaims += 1; continue; }
++    if (!location.lines[claim.line - 1].trim()) { excludedClaims += 1; continue; }
++    if (Object.hasOwn(claim, 'text') && claim.text !== location.lines[claim.line - 1]) throw new TypeError('catalog claim.text must match its exact source line');
++    accepted.push({ id: claim.id, contract: `catalog:${claim.id}`, path: claim.path, line: claim.line,
++      value: claim.value, source: 'configured-catalog' });
++  }
++  const claims = [...new Map(accepted.map((claim) => [JSON.stringify(claim), claim])).values()]
++    .sort((a, b) => locationOrder(a, b) || compare(a.id, b.id));
++  const groups = new Map();
++  for (const claim of claims) {
++    if (!groups.has(claim.id)) groups.set(claim.id, []);
++    groups.get(claim.id).push(claim);
++  }
++  const findings = [];
++  for (const [id, evidence] of groups) {
++    const value = canonical.get(id);
++    const values = [...new Set([value, ...evidence.map((claim) => claim.value)])].sort(compare);
++    if (values.length < 2) continue;
++    findings.push({ code: 'EXPLICIT_CATALOG_DISAGREEMENT', scope, contract: `catalog:${id}`, values,
++      canonical: { id, value }, paths: [...new Set(evidence.map((claim) => claim.path))].sort(compare),
++      claims: evidence, requiresReview: true });
++  }
++  return { findings, coverage: { canonicalIds: canonical.size, configuredClaims: catalog.claims.length,
++    activeClaims: claims.length, historicalClaims, excludedClaims, comparedIds: groups.size,
++    status: groups.size === 0 ? 'incomplete' : 'evaluated' } };
++}
++
++export function auditContractClaims({ scope, documents, catalog } = {}) {
++  validate(scope, documents);
++  const claims = [];
++  let scannedActiveLines = 0;
++  const ordered = [...documents].sort((a, b) => compare(a.path, b.path));
++  for (const doc of ordered) {
++    if (doc.authority !== 'active') continue;
++    const result = documentClaims(doc);
++    claims.push(...result.claims);
++    scannedActiveLines += result.lineCount;
++  }
++  const unique = [...new Map(claims.map((claim) => [JSON.stringify(claim), claim])).values()].sort(locationOrder);
++  const grouped = new Map();
++  for (const claim of unique) {
++    if (!grouped.has(claim.contract)) grouped.set(claim.contract, []);
++    grouped.get(claim.contract).push(claim);
++  }
++  const findings = [];
++  for (const [contract, evidence] of grouped) {
++    const values = [...new Set(evidence.map((claim) => claim.value))].sort(compare);
++    if (values.length < 2) continue;
++    findings.push({ code: 'EXPLICIT_CONTRACT_DISAGREEMENT', scope, contract, values,
++      paths: [...new Set(evidence.map((claim) => claim.path))].sort(compare),
++      claims: evidence, requiresReview: true });
++  }
++  const catalogResult = auditCatalog(catalog, scope, ordered);
++  if (catalogResult) findings.push(...catalogResult.findings);
++  findings.sort((a, b) => locationOrder(a.claims[0], b.claims[0]) || compare(a.contract, b.contract));
++  const activeDocuments = ordered.filter((doc) => doc.authority === 'active').length;
++  const incomplete = activeDocuments === 0 || catalogResult?.coverage.status === 'incomplete';
++  return {
++    scope,
++    status: incomplete ? 'incomplete' : findings.length ? 'explicit-disagreements' : 'no-explicit-disagreements',
++    coverage: { documents: ordered.length, activeDocuments, historicalDocuments: ordered.length - activeDocuments,
++      scannedActiveLines, explicitClaims: unique.length + (catalogResult?.coverage.activeClaims ?? 0),
++      contracts: grouped.size + (catalogResult?.coverage.comparedIds ?? 0),
++      ...(catalogResult ? { catalog: catalogResult.coverage } : {}) },
++    findings
++  };
++}
+diff --git a/tooling/wiki/tests/contradiction_engine.t11.test.mjs b/tooling/wiki/tests/contradiction_engine.t11.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tooling/wiki/tests/contradiction_engine.t11.test.mjs
+@@ -0,0 +1,143 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { spawnSync } from 'node:child_process';
++import { auditCoherence, findDuplicates } from '../contradiction_engine.mjs';
++
++const body = 'El procediment de qualitat conserva les fonts canòniques i comprova els contractes abans de publicar el resultat. Cada verificació conserva la seua evidència i els límits del tall. '.repeat(4);
++const md = (text = body, type = 'document') => `---\ntype: ${type}\nstatus: canonic\ndescription: Document de prova per verificar la coherència del sistema documental.\ntags: [govern]\n---\n# Qualitat\n\n${text}\n`;
++async function fixture(t, files = {}) {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'sdp-t11-fixture-'));
++  t.after(() => fs.rm(root, { recursive: true, force: true }));
++  const write = async (rel, content) => { const file = path.join(root, rel); await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, content); };
++  await fs.mkdir(path.join(root, '_wiki_de_poble'), { recursive: true });
++  await fs.mkdir(path.join(root, '.agents/skills'), { recursive: true });
++  await write('.agents/cervell.json', JSON.stringify({ dimensions: [{ id: 'identitat', ruta: '_wiki_de_poble/01_ser' }] }));
++  await write('.agents/protocolledge.json', JSON.stringify({ rutes: [] }));
++  for (const [rel, content] of Object.entries(files)) await write(rel, content);
++  return { root, wiki: path.join(root, '_wiki_de_poble'), write };
++}
++
++test('T11 llig carpetes actuals, skills i rutes; solapament no equival a contradicció', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md(), '_wiki_de_poble/02_saber/b.md': md(), '.agents/skills/prova/SKILL.md': md(body, 'skill') });
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, true);
++  assert.equal(result.coverage.wikiDocuments, 2);
++  assert.equal(result.coverage.skillDocuments, 1);
++  assert.equal(result.coverage.comparedDocuments, 3);
++  assert.equal(result.overlaps.length, 3);
++  assert.ok(result.overlaps.every(match => match.kind === 'lexical-overlap'));
++  assert.deepEqual(result.contradictions, []);
++});
++
++test('T11 corpus buit queda incomplet', async t => {
++  const f = await fixture(t);
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, false);
++  assert.ok(result.problems.some(problem => problem.code === 'empty-comparison-corpus'));
++  await assert.rejects(findDuplicates(f.wiki), /Auditoria incompleta/);
++});
++
++test('T11 exclou arxiu, zona humana i laboratori abans de llegir-ne continguts', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md(),
++    '_wiki_de_poble/90_arxiu_historic/a.md': 'frontmatter invàlid',
++    '_wiki_de_poble/04_escriptori/01_produccio/a.md': 'frontmatter invàlid',
++    '_wiki_de_poble/04_escriptori/02_investigacio_ia/a.md': 'frontmatter invàlid' });
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, true);
++  assert.equal(result.coverage.wikiDocuments, 1);
++  assert.deepEqual(result.excluded.map(item => item.reason).sort(), ['historical-archive', 'protected-human-zone', 'protected-research-zone']);
++});
++
++test('T11 no seguix symlinks i declara la cobertura incompleta', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md() });
++  await fs.symlink('/does-not-exist', path.join(f.wiki, '02_saber'));
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, false);
++  assert.ok(result.problems.some(problem => problem.code === 'symlink-not-followed'));
++  assert.ok(result.excluded.some(item => item.reason === 'symlink-not-followed'));
++});
++
++test('T11 treball i actes són evidència censada, sense proposar-ne fusió normativa', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md(), '_wiki_de_poble/04_escriptori/informe.md': md(), '_wiki_de_poble/10_actes/acta.md': md() });
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, true);
++  assert.equal(result.coverage.readDocuments, 3);
++  assert.equal(result.coverage.comparedDocuments, 1);
++  assert.deepEqual(result.overlaps, []);
++});
++
++test('T11 conserva forma API v2 i jurisdiccions legacy', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/00_SER_Brain_Identitat/a.md': md(), '_wiki_de_poble/00_SER_Brain_Identitat/b.md': md() });
++  const matches = await findDuplicates(f.wiki);
++  assert.equal(matches.length, 1);
++  assert.equal(matches[0].a, '00_SER_Brain_Identitat/a.md');
++  assert.equal(matches[0].jurA, 'principi');
++  assert.equal(matches[0].marcaJurisdiccioDiferent, false);
++  assert.equal(matches[0].s, 1);
++});
++
++test('T11 conserva errors de frontmatter/schema legacy', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/00_SER_Brain_Identitat/a.md': md().replace('type: document', 'type: desconegut') });
++  await assert.rejects(findDuplicates(f.wiki), /legacy-schema-invalid/);
++});
++
++test('T11 detecta el mateix selector amb plantilles incompatibles', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md(), '_wiki_de_poble/03_actuar/plantilles/a.md': md(), '_wiki_de_poble/03_actuar/plantilles/b.md': md(), '.agents/skills/prova/SKILL.md': md(body, 'skill') });
++  const skill = '.agents/skills/prova/SKILL.md';
++  await f.write('.agents/protocolledge.json', JSON.stringify({ rutes: [
++    { id: 'a', quan: { intencio: 'pla', destinatari: 'local' }, plantilla: '_wiki_de_poble/03_actuar/plantilles/a.md', skill },
++    { id: 'b', quan: { destinatari: 'local', intencio: 'pla' }, plantilla: '_wiki_de_poble/03_actuar/plantilles/b.md', skill },
++  ] }));
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, true);
++  assert.equal(result.coverage.protocolRoutes, 2);
++  assert.equal(result.contradictions.length, 1);
++  assert.equal(result.contradictions[0].kind, 'routing-contract-conflict');
++});
++
++test('T11 registra ruta absent i no confon API documentada pendent amb salut', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md() });
++  await f.write('.agents/protocolledge.json', JSON.stringify({ rutes: [{ id: 'a', plantilla: '_wiki_de_poble/absent.md', skill: '../extern/SKILL.md' }] }));
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, false);
++  assert.ok(result.problems.some(problem => problem.code === 'route-target-unavailable'));
++  assert.ok(result.problems.some(problem => problem.code === 'route-path-invalid'));
++});
++
++test('T11 determinista davant mateix tall, amb exclusions i problemes ordenats', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/02_saber/b.md': md(), '_wiki_de_poble/01_ser/a.md': md(), '_wiki_de_poble/04_escriptori/01_produccio/a.md': md() });
++  assert.deepEqual(await auditCoherence(f.wiki), await auditCoherence(f.wiki));
++});
++
++
++test('T11 no seguix un directori .agents que siga symlink', async t => {
++  const f = await fixture(t, { '_wiki_de_poble/01_ser/a.md': md() });
++  const external = await fs.mkdtemp(path.join(os.tmpdir(), 'sdp-t11-external-'));
++  t.after(() => fs.rm(external, { recursive: true, force: true }));
++  await fs.rm(path.join(f.root, '.agents'), { recursive: true });
++  await fs.symlink(external, path.join(f.root, '.agents'));
++  const result = await auditCoherence(f.wiki);
++  assert.equal(result.complete, false);
++  assert.equal(result.coverage.skillDocuments, 0);
++  assert.ok(result.problems.some(problem => problem.code === 'project-state-unavailable'));
++});
++
++
++test('T11 CLI JSON retorna 2 davant corpus buit, també amb entrada per symlink', async t => {
++  const f = await fixture(t);
++  await f.write('.agents/AGENTS.md', '# Marcador de prova\n');
++  const launcher = path.join(f.root, 'engine-link.mjs');
++  await fs.symlink(fileURLToPath(new URL('../contradiction_engine.mjs', import.meta.url)), launcher);
++  const child = spawnSync(process.execPath, [launcher, '--json'], {
++    cwd: f.root, env: { ...process.env, SDP_ARREL: f.root }, encoding: 'utf8', timeout: 10000,
++  });
++  assert.equal(child.error, undefined);
++  assert.equal(child.status, 2, child.stderr);
++  const result = JSON.parse(child.stdout);
++  assert.equal(result.complete, false);
++  assert.ok(result.problems.some(problem => problem.code === 'empty-comparison-corpus'));
++});
+diff --git a/tooling/wiki/tests/contract_consistency.test.mjs b/tooling/wiki/tests/contract_consistency.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tooling/wiki/tests/contract_consistency.test.mjs
+@@ -0,0 +1,240 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { auditContractClaims } from '../lib/contract_consistency.mjs';
++
++const active = (path, content) => ({ path, content, authority: 'active' });
++const audit = (...documents) => auditContractClaims({ scope: '0216', documents });
++const rubric = (n, title = 'Dimensió auditada') => `| # | ${title} |\n| --- | --- |\n${Array.from({ length: n }, (_, i) => `| **${i + 1}** | àrea |`).join('\n')}`;
++
++test('prose nine versus an explicit ten-dimension rubric is reported with lines', () => {
++  const result = audit(active('pla.md', `Les 9 dimensions.\n\n${rubric(10)}`));
++  assert.equal(result.status, 'explicit-disagreements');
++  assert.deepEqual(result.findings[0].values, ['10', '9']);
++  assert.deepEqual(result.findings[0].claims.map(({ line, source }) => ({ line, source })), [{ line: 1, source: 'prose' }, { line: 3, source: 'rubric' }]);
++  assert.equal(result.findings[0].requiresReview, true);
++});
++
++test('nine versus ten in different active prose is within the same explicit scope', () => {
++  const result = audit(active('b.md', 'Ten dimensions'), active('a.md', 'nou dimensions'));
++  assert.deepEqual(result.findings[0].paths, ['a.md', 'b.md']);
++  assert.equal(result.findings[0].scope, '0216');
++});
++
++test('matching prose and rubric has no explicit disagreement', () => {
++  const result = audit(active('pla.md', `Les **10** dimensions\n${rubric(10)}`));
++  assert.equal(result.status, 'no-explicit-disagreements');
++  assert.deepEqual(result.findings, []);
++});
++
++test('a number table without dimension header is not a rubric', () => {
++  assert.equal(audit(active('a', `9 dimensions\n${rubric(10, 'Tasques')}`)).findings.length, 0);
++});
++
++test('gapped or duplicate ordinal rows do not invent a rubric', () => {
++  const duplicate = rubric(10).replace('| **10** |', '| **9** |');
++  assert.equal(audit(active('a', `9 dimensions\n${duplicate}`)).findings.length, 0);
++});
++
++test('microphone self versus empty is reported separately from equal camera', () => {
++  const result = audit(active('a', 'Permissions-Policy: camera=(), microphone=(self), geolocation=(self)'),
++    active('b', '`Permissions-Policy: camera=(), microphone=(), geolocation=(self)`'));
++  assert.equal(result.findings.length, 1);
++  assert.equal(result.findings[0].contract, 'permissions-policy:microphone');
++  assert.deepEqual(result.findings[0].values, ['()', '(self)']);
++});
++
++test('policy allowlists normalize whitespace, ordering, duplicate tokens and quoting', () => {
++  const result = audit(active('a', 'Permissions-Policy: microphone=(self "https://a.test" "https://b.test")'),
++    active('b', 'Permissions-Policy: microphone=( "https://b.test" self "https://a.test" self )'));
++  assert.equal(result.status, 'no-explicit-disagreements');
++});
++
++test('all explicitly named policy features can disagree, not just microphone', () => {
++  const result = audit(active('a', 'Permissions-Policy: geolocation=(self), camera=*'),
++    active('b', 'Permissions-Policy: geolocation=(), camera=()'));
++  assert.deepEqual(result.findings.map((f) => f.contract).sort(), ['permissions-policy:camera', 'permissions-policy:geolocation']);
++});
++
++test('history is counted but cannot contribute a claim', () => {
++  const result = audit(active('a', '10 dimensions'), { path: 'historic', content: '9 dimensions\nPermissions-Policy: microphone=()', authority: 'history' });
++  assert.equal(result.coverage.historicalDocuments, 1);
++  assert.equal(result.coverage.explicitClaims, 1);
++  assert.deepEqual(result.findings, []);
++});
++
++test('zero active documents is incomplete even with a historical text', () => {
++  assert.equal(audit().status, 'incomplete');
++  assert.equal(audit({ path: 'old', content: '9 dimensions', authority: 'history' }).status, 'incomplete');
++});
++
++test('quotations, fenced examples, frontmatter and explicit example lines are excluded', () => {
++  const content = ['---', 'description: 9 dimensions', '---', '10 dimensions', '> 9 dimensions',
++    '```md', '9 dimensions', 'Permissions-Policy: microphone=(self)', '```',
++    '~~~', rubric(9), '~~~', 'Example: 9 dimensions', 'Exemple: Permissions-Policy: microphone=(self)',
++    'Permissions-Policy: microphone=()'].join('\n');
++  assert.deepEqual(audit(active('a', content)).findings, []);
++});
++
++test('a shorter or different fence marker does not close a longer code fence', () => {
++  const text = '10 dimensions\n````md\n```\n9 dimensions\n~~~\n````\n';
++  assert.equal(audit(active('a', text)).findings.length, 0);
++});
++
++test('indented code and example list items do not contribute claims', () => {
++  const text = '10 dimensions\n    9 dimensions\n\t9 dimensions\n- Example: 9 dimensions\n1. Exemple: 9 dimensions';
++  assert.equal(audit(active('a', text)).findings.length, 0);
++});
++
++test('reversed input produces exactly the same serialized bytes and codepoint order', () => {
++  const docs = [active('z.md', '9 dimensions\nPermissions-Policy: microphone=()'),
++    active('A.md', '10 dimensions\nPermissions-Policy: microphone=(self)'), active('à.md', '10 dimensions')];
++  assert.equal(JSON.stringify(audit(...docs)), JSON.stringify(audit(...docs.toReversed())));
++  assert.deepEqual(audit(...docs).findings[0].paths, ['A.md', 'z.md', 'à.md']);
++});
++
++test('scope and document input errors fail explicitly', () => {
++  for (const scope of [undefined, '', ' ', 4]) assert.throws(() => auditContractClaims({ scope, documents: [] }), TypeError);
++  assert.throws(() => auditContractClaims({ scope: '0216' }), TypeError);
++  for (const doc of [null, [], {}, { path: 'a', content: '' }, { path: 'a', content: 3, authority: 'active' },
++    { path: 'a', content: '', authority: 'assumed' }, { path: '', content: '', authority: 'active' }]) {
++    assert.throws(() => audit(doc), TypeError);
++  }
++  assert.throws(() => audit(active('same', ''), active('same', '')), /unique/);
++});
++
++test('path order uses Unicode codepoints rather than a locale or UTF-16 code units', () => {
++  const result = audit(active('😀', '9 dimensions'), active('\ue000', '10 dimensions'));
++  assert.deepEqual(result.findings[0].paths, ['\ue000', '😀']);
++});
++
++test('an inherited authority is not explicit document authority', () => {
++  const doc = Object.assign(Object.create({ authority: 'active' }), { path: 'a', content: '9 dimensions' });
++  assert.throws(() => audit(doc), /explicitly/);
++});
++
++test('300k characters are scanned without dropping later claims', () => {
++  const text = `${'a'.repeat(300_000)}\n9 dimensions\n10 dimensions`;
++  const result = audit(active('large.md', text));
++  assert.equal(result.coverage.scannedActiveLines, 3);
++  assert.deepEqual(result.findings[0].claims.map((c) => c.line), [2, 3]);
++});
++
++test('unlabelled policy fragments and malformed directives do not become claims', () => {
++  const result = audit(active('a', 'microphone=(self)\nPermissions-Policy: microphone=unclosed'),
++    active('b', 'Permissions-Policy: microphone=()'));
++  assert.equal(result.findings.length, 0);
++  assert.equal(result.coverage.explicitClaims, 1);
++});
++
++const configured = (documents, claims, canonical = [{ id: 'CHECK-1', value: 'meaning-one' }]) => auditContractClaims({
++  scope: '0216', documents, catalog: { scope: '0216', canonical, claims }
++});
++
++test('explicit catalog mapping reports a changed meaning with canonical and located evidence', () => {
++  const result = configured([active('prompt', 'CHECK-1: meaning-two')], [{ id: 'CHECK-1', value: 'meaning-two', path: 'prompt', line: 1 }]);
++  assert.equal(result.findings[0].code, 'EXPLICIT_CATALOG_DISAGREEMENT');
++  assert.deepEqual(result.findings[0].canonical, { id: 'CHECK-1', value: 'meaning-one' });
++  assert.equal(result.findings[0].claims[0].line, 1);
++  assert.equal(result.findings[0].requiresReview, true);
++});
++
++test('matching explicit catalog labels have no explicit disagreement', () => {
++  const result = configured([active('a', 'CHECK-1: meaning-one')], [{ id: 'CHECK-1', value: 'meaning-one', path: 'a', line: 1 }]);
++  assert.equal(result.status, 'no-explicit-disagreements');
++  assert.equal(result.coverage.catalog.comparedIds, 1);
++});
++
++test('arbitrary natural-language QA associations are not automatically interpreted', () => {
++  const result = audit(active('prompt', 'QA-S01 means rotation. QA-S01 means verification.'));
++  assert.deepEqual(result.findings, []);
++  assert.equal(result.coverage.explicitClaims, 0);
++});
++
++test('catalog labels are exact and support arbitrary caller-defined ids', () => {
++  const result = configured([active('a', 'custom')], [{ id: 'other-project', value: 'LABEL', path: 'a', line: 1 }], [{ id: 'other-project', value: 'label' }]);
++  assert.equal(result.findings[0].contract, 'catalog:other-project');
++  assert.deepEqual(result.findings[0].values, ['LABEL', 'label']);
++});
++
++test('catalog history is census only, even when its label conflicts', () => {
++  const documents = [active('a', 'present'), { path: 'old', content: 'old meaning', authority: 'history' }];
++  const claims = [{ id: 'CHECK-1', value: 'meaning-one', path: 'a', line: 1 }, { id: 'CHECK-1', value: 'old-meaning', path: 'old', line: 1 }];
++  const result = configured(documents, claims);
++  assert.deepEqual(result.findings, []);
++  assert.equal(result.coverage.catalog.historicalClaims, 1);
++});
++
++test('catalog locations in code, quotations and example lines are excluded', () => {
++  const document = active('a', '````md\nclaim\n````\n> claim\nExample: claim\nreal');
++  const claims = [2, 4, 5, 6].map((line) => ({ id: 'CHECK-1', value: line === 6 ? 'meaning-one' : 'other', path: 'a', line }));
++  const result = configured([document], claims);
++  assert.equal(result.coverage.catalog.excludedClaims, 3);
++  assert.deepEqual(result.findings, []);
++});
++
++test('catalog input requires its own explicit scope matching the requested scope', () => {
++  const documents = [active('a', 'line')];
++  for (const catalog of [{}, { scope: 'other', canonical: [], claims: [] }, null]) {
++    assert.throws(() => auditContractClaims({ scope: '0216', documents, catalog }), /catalog.scope/);
++  }
++});
++
++test('document and claim scopes cannot silently leak into another audit scope', () => {
++  assert.throws(() => auditContractClaims({ scope: '0216', documents: [{ ...active('a', 'line'), scope: 'other' }] }), /document.scope/);
++  assert.throws(() => configured([active('a', 'line')], [{ id: 'CHECK-1', value: 'meaning-one', path: 'a', line: 1, scope: 'other' }]), /claim.scope/);
++});
++
++test('canonical ids and labels must be explicit, unique and nonempty', () => {
++  for (const canonical of [[], [{ id: '', value: 'a' }], [{ id: 'x', value: '' }], [{ id: 'x', value: ' a ' }], [{ id: 'x', value: 'a' }, { id: 'x', value: 'b' }]]) {
++    assert.throws(() => configured([active('a', 'line')], [], canonical), TypeError);
++  }
++});
++
++test('each configured claim needs a mapped id and an existing positive line location', () => {
++  const claim = { id: 'CHECK-1', value: 'meaning-one', path: 'a', line: 1 };
++  for (const bad of [{ ...claim, id: 'unmapped' }, { ...claim, path: 'absent' }, { ...claim, line: 0 },
++    { ...claim, line: 2 }, { ...claim, line: 1.5 }, { ...claim, value: '' }, { ...claim, line: undefined }]) {
++    assert.throws(() => configured([active('a', 'line')], [bad]), TypeError);
++  }
++});
++
++test('no active catalog evidence reports incomplete rather than a successful comparison', () => {
++  assert.equal(configured([active('a', 'line')], []).status, 'incomplete');
++  const result = configured([{ path: 'old', content: 'line', authority: 'history' }], [{ id: 'CHECK-1', value: 'other', path: 'old', line: 1 }]);
++  assert.equal(result.status, 'incomplete');
++  assert.equal(result.coverage.catalog.activeClaims, 0);
++});
++
++test('catalog comparison is deterministic when document, canonical and claim arrays reverse', () => {
++  const documents = [active('z', 'line\nline'), active('a', 'line')];
++  const claims = [{ id: 'CHECK-1', value: 'other', path: 'z', line: 2 }, { id: 'CHECK-2', value: 'other', path: 'a', line: 1 }];
++  const canonical = [{ id: 'CHECK-1', value: 'meaning-one' }, { id: 'CHECK-2', value: 'meaning-two' }];
++  const forward = configured(documents, claims, canonical);
++  const reversed = configured(documents.toReversed(), claims.toReversed(), canonical.toReversed());
++  assert.equal(JSON.stringify(forward), JSON.stringify(reversed));
++  assert.deepEqual(forward.findings.map((f) => f.paths[0]), ['a', 'z']);
++});
++
++test('duplicate catalog evidence is counted once and same-id claims group together', () => {
++  const claim = { id: 'CHECK-1', value: 'other', path: 'a', line: 1 };
++  const result = configured([active('a', 'line')], [claim, { ...claim }]);
++  assert.equal(result.coverage.catalog.configuredClaims, 2);
++  assert.equal(result.coverage.catalog.activeClaims, 1);
++  assert.equal(result.findings.length, 1);
++});
++
++test('catalog evidence and 300k characters do not require searching natural-language meanings', () => {
++  const result = configured([active('a', `${'a'.repeat(300_000)}\nCHECK-1`)],[{ id: 'CHECK-1', value: 'other', path: 'a', line: 2 }]);
++  assert.equal(result.findings[0].claims[0].line, 2);
++});
++
++test('explicitly numbered nested list items remain active claims rather than indented code', () => {
++  const text = '    2. CHECK-1 means other';
++  const result = configured([active('a', text)], [{ id: 'CHECK-1', value: 'other', path: 'a', line: 1, text }]);
++  assert.equal(result.findings.length, 1);
++  assert.equal(result.coverage.catalog.excludedClaims, 0);
++});
++
++test('an optional exact source line prevents reuse of a stale configured label', () => {
++  assert.throws(() => configured([active('a', 'current source')], [{ id: 'CHECK-1', value: 'other', path: 'a', line: 1, text: 'old source' }]), /source line/);
++});
+diff --git a/tooling/documental/draft-write.mjs b/tooling/documental/draft-write.mjs
+--- a/tooling/documental/draft-write.mjs
++++ b/tooling/documental/draft-write.mjs
+@@ -6,7 +6,7 @@
+ import path from 'node:path';
+ import { randomUUID } from 'node:crypto';
+ import { CAMINS } from '../lib/arrel.mjs';
+-import { checkTaula, checkConvocatoria, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';
++import { checkTaula, checkConvocatoria, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts, resolAncora } from '../gates/porta-olivera.mjs';
+ 
+ const same = (a, b) => a.dev === b.dev && a.ino === b.ino;
+ const regular = stat => stat.isFile() && stat.nlink === 1;
+@@ -82,6 +82,24 @@
+   const end = next ? start + next.index : index.length;
+   return present(start, end) ? index : insereixLlista(index, start, [`- ${anchor}`]);
+ }
++/** Conserva el destí previ d'una abreviatura Markdown quan naix un adjunt homònim.
++ * També actualitza àncores anticipades de l'adjunt, sense perdre àlies/fragments.
++ */
++function attachmentReferences(index, name, before, presents) {
++  let text = index;
++  for (const anchor of ancoresDe(index).reverse()) {
++    const was = resolAncora(anchor.raw, before), now = resolAncora(anchor.raw, presents);
++    const split = anchor.raw.search(/\\?[|#]/);
++    const target = (split < 0 ? anchor.raw : anchor.raw.slice(0, split)).trim();
++    const suffix = split < 0 ? '' : anchor.raw.slice(split);
++    let replacement;
++    if (was && was !== now) replacement = `${was}${suffix || `|${target}`}`;
++    else if (now === name && !target.includes('/')) replacement = `./${name}${suffix || `|${name}`}`;
++    else continue;
++    text = text.slice(0, anchor.inici) + `${anchor.marca}[[${replacement}]]` + text.slice(anchor.final);
++  }
++  return text;
++}
+ export function writeIndexedDraft(root, file, content, { requireCleanTable = false } = {}) {
+   root = fs.realpathSync(root);
+   checkDraftDestinations(root, file);
+@@ -105,21 +123,27 @@
+       if (errors.length) throw new Error(`Convocatòria amb Escriptori brut:\n${errors.join('\n')}`);
+       avisos = conv.avisos;
+     }
++    const firstLevel = path.dirname(file) === path.join(root, CAMINS.escriptori);
++    const previousNames = firstLevel ? nomsSolts(root) : null;
+     parents(root, file, true);
+     const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
+     created = { fd, stat: fs.fstatSync(fd) };
+     assertOwned(root, file, created.stat, fd);
+     fs.writeFileSync(fd, content, 'utf8'); fs.fsyncSync(fd);
+-    const firstLevel = path.dirname(file) === path.join(root, CAMINS.escriptori);
+     const presents = firstLevel ? nomsSolts(root) : null;
+     const relative = path.relative(path.dirname(index.file), file).split(path.sep).join('/');
+     const stem = relative.replace(/\.md$/, '');
+     // .md s'omet com fa Obsidian, llevat que un recurs homònim sense extensió se
+     // l'enduria o que el nom porte una altra extensió: llavors va explícit.
+     const abreuja = !path.posix.extname(path.posix.basename(stem)) && !(firstLevel && presents.has(path.posix.basename(stem)));
+-    const anchor = `[[${abreuja ? stem : relative}]]`;
++    // Els adjunts no formen part del cens Markdown de SCC. Un basename solt
++    // els pot fer irresolts o homònims: el productor emet el camí relatiu exacte.
++    const attachment = firstLevel && !relative.endsWith('.md');
++    const anchor = attachment ? `[[./${relative}|${path.posix.basename(relative)}]]`
++      : `[[${abreuja ? stem : relative}]]`;
+     const rel = path.relative(root, file).split(path.sep).join('/');
+-    const anchored = anchorDraft(index.content, anchor, { rel, firstLevel, presents });
++    const indexContent = attachment ? attachmentReferences(index.content, path.posix.basename(relative), previousNames, presents) : index.content;
++    const anchored = anchorDraft(indexContent, anchor, { rel, firstLevel, presents });
+     if (anchored !== index.content) {
+       const tempFile = `${index.file}.${randomUUID()}.tmp`;
+       parents(root, tempFile);
+diff --git a/tooling/lib/document-links.mjs b/tooling/lib/document-links.mjs
+--- a/tooling/lib/document-links.mjs
++++ b/tooling/lib/document-links.mjs
+@@ -13,7 +13,17 @@
+ export function resolveDocumentLink(link, source, files, root) {
+   let target;
+   try { target = decodeURIComponent(link.target); } catch { throw new Error(`URL invàlida: ${link.target}`); }
+-  if (link.kind === 'wiki' && !path.extname(target)) target += '.md';
++  if (link.kind === 'wiki' && !path.extname(target)) {
++    // Un camí relatiu explícit identifica primer el recurs exacte, també sense
++    // extensió. Si no hi és, conserva l'abreviatura Markdown habitual.
++    let exact = false;
++    if (target.startsWith('./') || target.startsWith('../')) {
++      const local = path.resolve(path.dirname(source), target);
++      if (!inside(path.resolve(root), local) || !inside(canonical(root), canonical(local))) throw new Error(`Enllaç fora de l’arrel: ${target}`);
++      exact = fs.existsSync(local) && fs.statSync(local).isFile();
++    }
++    if (!exact) target += '.md';
++  }
+   let candidates;
+   if (link.kind === 'markdown' || target.startsWith('./') || target.startsWith('../')) candidates = [path.resolve(path.dirname(source), target)];
+   else if (target.includes('/')) candidates = [...new Set([path.resolve(root, target), path.resolve(root, CAMINS.wiki, target), path.resolve(path.dirname(source), target)])];
+diff --git a/tests/draft-attachment-anchoring.test.mjs b/tests/draft-attachment-anchoring.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/draft-attachment-anchoring.test.mjs
+@@ -0,0 +1,136 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { writeIndexedDraft } from '../tooling/documental/draft-write.mjs';
++import { VerificadorSCC } from '../tooling/gates/verificador-scc.mjs';
++import { checkTaula, ancoratge, ancoresDe, resolAncora, nomsSolts } from '../tooling/gates/porta-olivera.mjs';
++import { extractDocumentLinks, resolveDocumentLink } from '../tooling/lib/document-links.mjs';
++
++const DESK = '_wiki_de_poble/04_escriptori';
++const INDEX = `${DESK}/00_index_escriptori.md`;
++function setup(t) {
++  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-draft-attachment-')));
++  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
++  const put = (rel, text) => { const file = path.join(root, rel); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text); };
++  put('_wiki_de_poble/00_index.md', '# Índex\n\n[[00_index_escriptori]]\n');
++  put(INDEX, '# Escriptori\n\n## Activitat en curs\n\n## Referències\n\nText humà que es conserva.\n');
++  fs.mkdirSync(path.join(root, '.agents/runtime'), { recursive: true });
++  const write = (name, content = Buffer.from([0, 255, 42])) => writeIndexedDraft(root, path.join(root, DESK, name), content);
++  return { root, put, write, index: () => fs.readFileSync(path.join(root, INDEX), 'utf8') };
++}
++async function bothGates(root) {
++  assert.deepEqual(ancoratge(root), { senseAncora: [], fantasma: [] });
++  const olivera = checkTaula(root);
++  assert.equal(olivera.valid, true, JSON.stringify(olivera));
++  const scc = await new VerificadorSCC(root).runAudits();
++  assert.equal(scc.valid, true, JSON.stringify(scc));
++  return scc;
++}
++
++for (const extension of ['patch', 'json', 'html', 'png', 'bin', 'tar.gz']) {
++  test(`T11-12 productor: .${extension} queda ancorat en Olivera i SCC sense modificar el binari`, async t => {
++    const f = setup(t), name = `261029_0408_solucio_qa.${extension}`, bytes = Buffer.from([0, 255, 42]);
++    f.write(name, bytes);
++    assert.ok(f.index().includes(`[[./${name}|${name}]]`));
++    assert.deepEqual(fs.readFileSync(path.join(f.root, DESK, name)), bytes);
++    assert.ok(f.index().includes('Text humà que es conserva.'));
++    assert.equal(fs.existsSync(path.join(f.root, '.agents/runtime/document-create.lock')), false);
++    await bothGates(f.root);
++  });
++}
++
++test('T11-12 adjunt sense extensió i Markdown homònim mantenen dos destins exactes', async t => {
++  const f = setup(t), stem = '261029_0408_solucio_qa';
++  f.write(stem);
++  f.write(`${stem}.md`, '# Document\n');
++  assert.ok(f.index().includes(`[[./${stem}|${stem}]]`));
++  assert.ok(f.index().includes(`[[${stem}.md]]`));
++  const presents = nomsSolts(f.root);
++  assert.deepEqual(new Set(ancoresDe(f.index()).map(a => resolAncora(a.raw, presents))), new Set([stem, `${stem}.md`]));
++  const scc = await bothGates(f.root);
++  assert.equal(scc.filesChecked, 3);
++});
++
++test('T11-12 .patch i .patch.md homònims no compartixen àncora ni aresta', async t => {
++  const f = setup(t), attachment = '261029_0408_solucio_qa.patch';
++  f.write(`${attachment}.md`, '# Document\n');
++  f.write(attachment);
++  assert.ok(f.index().includes(`[[${attachment}.md]]`));
++  assert.ok(f.index().includes(`[[./${attachment}|${attachment}]]`));
++  await bothGates(f.root);
++});
++
++test('T11-12 Markdown simple conserva abreviatura i inserció dins Activitat en curs', async t => {
++  const f = setup(t), name = '261029_0408_auditoria_prova.md';
++  f.write(name, '# Document\n');
++  assert.ok(f.index().includes(`[[${name.slice(0, -3)}]]`));
++  assert.ok(f.index().indexOf(name.slice(0, -3)) < f.index().indexOf('## Referències'));
++  await bothGates(f.root);
++});
++
++test('T11-12 àncora existent explícita amb àlies es conserva sense duplicació', async t => {
++  const f = setup(t), name = '261029_0408_solucio_qa.patch';
++  f.put(INDEX, `# Escriptori\n\n## Activitat en curs\n\n- [[./${name}|Pegat comprovat]]\n`);
++  const before = f.index();
++  f.write(name);
++  assert.equal(f.index(), before);
++  await bothGates(f.root);
++});
++
++test('T11-12 un adjunt d’altra carpeta no queda acreditat per un homònim local', async t => {
++  const f = setup(t), name = '261029_0408_solucio_qa.patch';
++  f.put(`${DESK}/sub/${name}`, 'Fora del primer nivell');
++  f.put(INDEX, `# Escriptori\n\n## Activitat en curs\n\n- [[sub/${name}|Recurs de subcarpeta]]\n`);
++  f.write(name);
++  assert.ok(f.index().includes(`[[./${name}|${name}]]`));
++  assert.equal(ancoresDe(f.index()).length, 2);
++  await bothGates(f.root);
++});
++
++test('T11-12 lock ocupat impedix escriptura i conserva l’índex', t => {
++  const f = setup(t), name = '261029_0408_solucio_qa.patch';
++  f.put('.agents/runtime/document-create.lock', 'operació concurrent');
++  const before = f.index();
++  assert.throws(() => f.write(name), /EEXIST/);
++  assert.equal(f.index(), before);
++  assert.equal(fs.existsSync(path.join(f.root, DESK, name)), false);
++  assert.equal(fs.readFileSync(path.join(f.root, '.agents/runtime/document-create.lock'), 'utf8'), 'operació concurrent');
++});
++
++test('T11-12 ruta relativa sense extensió preferix el recurs exacte; abreviatura .md continua disponible', t => {
++  const f = setup(t), attachment = path.join(f.root, DESK, 'recurs'), markdown = attachment + '.md';
++  f.put(`${DESK}/recurs`, 'binari'); f.put(`${DESK}/recurs.md`, '# Document');
++  const files = [markdown], source = path.join(f.root, INDEX);
++  assert.equal(resolveDocumentLink({ kind: 'wiki', target: './recurs' }, source, files, f.root), attachment);
++  assert.equal(resolveDocumentLink({ kind: 'wiki', target: 'recurs' }, source, files, f.root), markdown);
++  fs.unlinkSync(attachment);
++  assert.equal(resolveDocumentLink({ kind: 'wiki', target: './recurs' }, source, files, f.root), markdown);
++  assert.equal(extractDocumentLinks('[[./recurs|Recurs]]')[0].target, './recurs');
++});
++
++test('T11-12 ruta explícita fora de l’arrel continua rebutjada', t => {
++  const f = setup(t);
++  assert.throws(() => resolveDocumentLink({ kind: 'wiki', target: '../../../extern' }, path.join(f.root, INDEX), [], f.root), /fora de l’arrel/);
++});
++
++
++test('T11-12 crear adjunt després del Markdown homònim conserva l’abreviatura anterior amb destí exacte', async t => {
++  const f = setup(t), stem = '261029_0408_solucio_qa';
++  f.write(`${stem}.md`, '# Document\n');
++  assert.ok(f.index().includes(`[[${stem}]]`));
++  f.write(stem);
++  assert.ok(f.index().includes(`[[${stem}.md|${stem}]]`));
++  assert.ok(f.index().includes(`[[./${stem}|${stem}]]`));
++  await bothGates(f.root);
++});
++
++test('T11-12 una àncora anticipada bare s’actualitza sense duplicar i conserva àlies/fragment', async t => {
++  const f = setup(t), name = '261029_0408_solucio_qa.patch';
++  f.put(INDEX, `# Escriptori\n\n## Activitat en curs\n\n- [[${name}#Resultat|Pegat comprovat]]\n`);
++  f.write(name);
++  assert.ok(f.index().includes(`[[./${name}#Resultat|Pegat comprovat]]`));
++  assert.equal(ancoresDe(f.index()).length, 1);
++  await bothGates(f.root);
++});
+diff --git a/scripts/teixidor-backlinks.mjs b/scripts/teixidor-backlinks.mjs
+--- a/scripts/teixidor-backlinks.mjs
++++ b/scripts/teixidor-backlinks.mjs
+@@ -11,17 +11,22 @@
+  * - Afegeix al final del document
+  * - Respecta SDP-LOCK: si el document té "locked: true" al frontmatter, s'omet
+  * 
+- * Ús: node scripts/teixidor-backlinks.mjs [--dry-run] [--dir=./_wiki_de_poble]
++ * Ús: node scripts/teixidor-backlinks.mjs --dry-run [--dir=./_wiki_de_poble]
++ * L’escriptura antiga està retirada: sense --dry-run, eixida 2 abans de llegir el corpus.
+  */
+ 
+ import { readFileSync, writeFileSync, existsSync } from 'fs';
+-import { resolve, relative, dirname } from 'path';
+-import { readdirSync } from 'fs';
++import { resolve, relative, dirname, sep, isAbsolute } from 'path';
++import { readdirSync, realpathSync, lstatSync } from 'fs';
+ 
+ // --- Configuració ---
+ const DEFAULT_DIR = './_wiki_de_poble';
+ const BACKLINK_SECTION_HEADER = '## Sinapsis Entrants (Autogenerat)';
+ const BACKLINK_SECTION_FOOTER = '<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->';
++const EXCLUDED_SEGMENTS = new Set([
++  'node_modules', '90_historic', '90_arxiu_historic',
++  '01_produccio', '02_investigacio_ia', '.sdp-paperera'
++]);
+ const WIKILINK_REGEX = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+ 
+ const LOCK_CHECK_REGEX = /^---\n[\s\S]*?locked:\s*true[\s\S]*?\n---\n/;
+@@ -43,6 +48,15 @@
+   return links;
+ }
+ 
++function documentConsultable(file, baseDir) {
++  try {
++    const rel = relative(realpathSync(baseDir), realpathSync(file));
++    return Boolean(rel) && rel !== '..' && !rel.startsWith('..' + sep)
++      && !isAbsolute(rel) && !rel.split(sep).some(part => part.startsWith('.') || EXCLUDED_SEGMENTS.has(part))
++      && lstatSync(file).isFile() && !lstatSync(file).isSymbolicLink();
++  } catch { return false; }
++}
++
+ function resolveWikiLink(linkName, sourceDir, baseDir) {
+   const candidates = [
+     resolve(sourceDir, `${linkName}.md`),
+@@ -57,11 +71,11 @@
+     try {
+       const entries = readdirSync(dir, { withFileTypes: true });
+       for (const entry of entries) {
+-        if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
++        if (entry.name.startsWith('.') || EXCLUDED_SEGMENTS.has(entry.name)) continue;
+         
+         const fullPath = resolve(dir, entry.name);
+         if (entry.isFile() && (entry.name === `${target}.md` || entry.name === target)) {
+-          return fullPath;
++          if (documentConsultable(fullPath, baseDir)) return fullPath;
+         }
+         if (entry.isDirectory()) {
+           const found = findRecursive(fullPath, target, depth + 1);
+@@ -75,7 +89,7 @@
+   }
+   
+   for (const candidate of candidates) {
+-    if (existsSync(candidate)) return candidate;
++    if (documentConsultable(candidate, baseDir)) return candidate;
+   }
+   
+   return findRecursive(baseDir, linkName);
+@@ -128,10 +142,7 @@
+     try {
+       const entries = readdirSync(dir, { withFileTypes: true });
+       for (const entry of entries) {
+-        if (entry.name.startsWith('.') || 
+-            entry.name === 'node_modules' || 
+-            entry.name === '90_historic' ||
+-            entry.name === '.sdp-paperera') continue;
++        if (entry.name.startsWith('.') || EXCLUDED_SEGMENTS.has(entry.name)) continue;
+         
+         const fullPath = resolve(dir, entry.name);
+         if (entry.isFile() && entry.name.endsWith('.md')) {
+@@ -158,11 +169,13 @@
+     const links = extractWikiLinks(content, filePath);
+     
+     for (const linkName of links) {
+-      if (!resolvedCache.has(linkName)) {
+-        resolvedCache.set(linkName, resolveWikiLink(linkName, fileDir, baseDir));
+-      }
+-      
+-      const destPath = resolvedCache.get(linkName);
++      // Un mateix [[nom]] pot tindre destins locals diferents segons la font.
++      const cacheKey = JSON.stringify([fileDir, linkName]);
++      if (!resolvedCache.has(cacheKey)) {
++        resolvedCache.set(cacheKey, resolveWikiLink(linkName, fileDir, baseDir));
++      }
++      
++      const destPath = resolvedCache.get(cacheKey);
+       if (!destPath) {
+         if (dryRun) console.log(`⚠️  Enllaç no resolt: [[${linkName}]] des de ${relative(baseDir, filePath)}`);
+         continue;
+@@ -242,12 +255,39 @@
+ 
+ const args = process.argv.slice(2);
+ const dryRun = args.includes('--dry-run');
+-const dirArg = args.find(a => a.startsWith('--dir='));
+-const baseDir = resolve(dirArg ? dirArg.split('=')[1] : DEFAULT_DIR);
++// T11: el CLI antic no pot reintroduir seccions després de Vincles ni mutar
++// documents sense el contracte de pla, Reflex i rollback de l’eina canònica.
++if (!dryRun) {
++  console.error('ESCRIPTURA RETIRADA (T11): usa --dry-run per a una consulta sense canvis. Les mutacions requerixen el circuit documental canònic.');
++  process.exit(2);
++}
++const dirArgs = args.filter(a => a.startsWith('--dir='));
++if (args.filter(a => a === '--dry-run').length !== 1 || dirArgs.length > 1
++    || args.some(a => a !== '--dry-run' && !a.startsWith('--dir='))
++    || dirArgs.some(a => a.length === '--dir='.length)) {
++  console.error('Ús: --dry-run [--dir=RUTA], sense opcions desconegudes ni repetides.');
++  process.exit(2);
++}
++const baseDir = resolve(dirArgs.length ? dirArgs[0].slice('--dir='.length) : DEFAULT_DIR);
++// Seleccionar directament un subdirectori protegit tampoc no habilita la consulta.
++if (baseDir.split(sep).some(part => EXCLUDED_SEGMENTS.has(part))) {
++  console.error('Corpus exclòs: arxiu històric o zona protegida.');
++  process.exit(2);
++}
+ 
+ if (!existsSync(baseDir)) {
+   console.error(`❌ Directori no trobat: ${baseDir}`);
+   process.exit(1);
+ }
+ 
++if (!lstatSync(baseDir).isDirectory() || lstatSync(baseDir).isSymbolicLink()) {
++  console.error('El corpus ha de ser un directori regular, no un enllaç simbòlic.');
++  process.exit(2);
++}
++
++if (realpathSync(baseDir).split(sep).some(part => EXCLUDED_SEGMENTS.has(part))) {
++  console.error('Corpus exclòs: la ruta real és arxiu històric o zona protegida.');
++  process.exit(2);
++}
++
+ weaveBacklinks(baseDir, dryRun);
+diff --git a/tests/wiki-backlinks-readonly.test.mjs b/tests/wiki-backlinks-readonly.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/tests/wiki-backlinks-readonly.test.mjs
+@@ -0,0 +1,175 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { spawnSync } from 'node:child_process';
++import { createHash } from 'node:crypto';
++
++const ROOT = fileURLToPath(new URL('..', import.meta.url));
++const content = body => `---\ntype: document\nstatus: canonic\ndescription: Fixture de consulta de backlinks sense modificació.\ntags: [govern]\n---\n# Prova\n\n${body}\n\n## Vincles\n`;
++function fixture(t) {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-backlinks-qa-'));
++  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
++  for (const [rel, body] of Object.entries({
++    '01_ser/font.md': '[[desti]]', '02_saber/desti.md': 'Document de destí.',
++    '90_arxiu_historic/arxiu.md': '[[desti]]',
++    '04_escriptori/01_produccio/huma.md': '[[desti]]',
++    '04_escriptori/02_investigacio_ia/recerca.md': '[[desti]]'
++  })) {
++    const target = path.join(root, rel);
++    fs.mkdirSync(path.dirname(target), { recursive: true });
++    fs.writeFileSync(target, content(body));
++  }
++  return root;
++}
++function snapshot(root, prefix = '') {
++  const found = {};
++  for (const entry of fs.readdirSync(path.join(root, prefix), { withFileTypes: true })) {
++    const rel = path.join(prefix, entry.name);
++    if (entry.isDirectory()) Object.assign(found, snapshot(root, rel));
++    else found[rel] = createHash('sha256').update(fs.readFileSync(path.join(root, rel))).digest('hex');
++  }
++  return found;
++}
++const run = (script, args, cwd) => spawnSync(process.execPath, [path.join(ROOT, script), ...args], {
++  cwd, encoding: 'utf8', timeout: 10000
++});
++
++test('el teixidor antic sense dry-run falla abans de modificar cap document', t => {
++  const root = fixture(t), before = snapshot(root);
++  const child = run('scripts/teixidor-backlinks.mjs', [`--dir=${root}`], os.tmpdir());
++  assert.equal(child.error, undefined);
++  assert.equal(child.status, 2, child.stderr);
++  assert.match(child.stderr, /ESCRIPTURA RETIRADA/u);
++  assert.equal(child.stdout, '');
++  assert.deepEqual(snapshot(root), before);
++});
++
++test('dry-run conserva hashes i exclou arxiu i zones protegides de cerca i cens', t => {
++  const root = fixture(t), before = snapshot(root);
++  const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${root}`], os.tmpdir());
++  assert.equal(child.error, undefined);
++  assert.equal(child.status, 0, child.stderr);
++  assert.match(child.stdout, /Trobats 2 fitxers markdown/u);
++  assert.match(child.stdout, /DRY-RUN/u);
++  assert.doesNotMatch(child.stdout, /arxiu\.md|huma\.md|recerca\.md/u);
++  assert.deepEqual(snapshot(root), before);
++});
++
++test('l enllaçador existent ja rebutja write i no necessita retirar la consulta', t => {
++  const root = fixture(t), before = snapshot(root);
++  const child = run('scripts/enllacat-intelligent-wiki.mjs', ['--write', `--root=${root}`], os.tmpdir());
++  assert.equal(child.error, undefined);
++  assert.notEqual(child.status, 0);
++  assert.match(child.stderr, /--write retirat/u);
++  assert.deepEqual(snapshot(root), before);
++});
++
++test('el bloqueig per defecte precedix fins i tot la lectura d un directori absent', t => {
++  const root = fixture(t);
++  const child = run('scripts/teixidor-backlinks.mjs', [`--dir=${path.join(root, 'absent')}`], os.tmpdir());
++  assert.equal(child.status, 2);
++  assert.match(child.stderr, /ESCRIPTURA RETIRADA/u);
++  assert.doesNotMatch(child.stderr, /Directori no trobat/u);
++});
++
++test('enllaços explícits no incorporen documents externs ni de zones protegides', t => {
++  const root = fixture(t);
++  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-backlinks-outside-'));
++  t.after(() => fs.rmSync(outside, { recursive: true, force: true }));
++  const external = path.join(outside, 'extern.md');
++  fs.writeFileSync(external, content('Document sintètic alié al corpus seleccionat.'));
++  const source = path.join(root, '01_ser/font.md');
++  fs.writeFileSync(source, content(`[[desti]]\n[[${path.relative(path.dirname(source), external).replace(/\.md$/, '')}]]\n[[../04_escriptori/01_produccio/huma]]`));
++  const before = snapshot(root), externalBefore = fs.readFileSync(external, 'utf8');
++  const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${root}`], os.tmpdir());
++  assert.equal(child.status, 0, child.stderr);
++  assert.match(child.stdout, /Mapa de 1 destins amb backlinks/u);
++  assert.doesNotMatch(child.stdout, /Modificaria: .*extern|Modificaria: .*huma/u);
++  assert.deepEqual(snapshot(root), before);
++  assert.equal(fs.readFileSync(external, 'utf8'), externalBefore);
++});
++
++
++test('opcions ambigües o mutatives no consulten ni escriuen el corpus, encara que porten dry-run', t => {
++  const root = fixture(t), before = snapshot(root);
++  for (const args of [
++    ['--dry-run', '--write', `--dir=${root}`],
++    ['--dry-run', '--dry-run', `--dir=${root}`],
++    ['--dry-run', `--dir=${root}`, '--dir=/no-ha-de-llegir'],
++    ['--dry-run', '--dir='],
++    ['--dry-run', '--desconeguda', `--dir=${root}`]
++  ]) {
++    const child = run('scripts/teixidor-backlinks.mjs', args, os.tmpdir());
++    assert.equal(child.status, 2, JSON.stringify({ args, stdout: child.stdout, stderr: child.stderr }));
++    assert.equal(child.stdout, '');
++  }
++  assert.deepEqual(snapshot(root), before);
++});
++
++test('dir amb signe igual es conserva sencer', t => {
++  const parent = fixture(t);
++  const root = path.join(parent, 'corpus=prova');
++  fs.mkdirSync(root);
++  fs.writeFileSync(path.join(root, 'font.md'), content('[[desti]]'));
++  fs.writeFileSync(path.join(root, 'desti.md'), content('Destí'));
++  const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${root}`], os.tmpdir());
++  assert.equal(child.status, 0, child.stderr);
++  assert.match(child.stdout, /Trobats 2 fitxers markdown/u);
++});
++
++test('un directori protegit no es pot seleccionar directament com a corpus', t => {
++  const root = fixture(t), before = snapshot(root);
++  for (const rel of ['90_arxiu_historic', '04_escriptori/01_produccio', '04_escriptori/02_investigacio_ia']) {
++    const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${path.join(root, rel)}`], os.tmpdir());
++    assert.equal(child.status, 2, JSON.stringify({ rel, stdout: child.stdout, stderr: child.stderr }));
++    assert.equal(child.stdout, '');
++  }
++  assert.deepEqual(snapshot(root), before);
++});
++
++test('directoris simbòlics no amplien el corpus i no poden ser la seua arrel', t => {
++  const root = fixture(t);
++  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-backlinks-symlink-'));
++  t.after(() => fs.rmSync(outside, { recursive: true, force: true }));
++  fs.writeFileSync(path.join(outside, 'privat.md'), content('[[desti]]'));
++  fs.symlinkSync(outside, path.join(root, 'alias'), 'dir');
++  fs.symlinkSync(path.join(outside, 'privat.md'), path.join(root, 'alias.md'));
++  const before = fs.readFileSync(path.join(outside, 'privat.md'), 'utf8');
++  const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${root}`], os.tmpdir());
++  assert.equal(child.status, 0, child.stderr);
++  assert.match(child.stdout, /Trobats 2 fitxers markdown/u);
++  const aliased = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${path.join(root, 'alias')}`], os.tmpdir());
++  assert.equal(aliased.status, 2, aliased.stderr);
++  assert.equal(aliased.stdout, '');
++  assert.equal(fs.readFileSync(path.join(outside, 'privat.md'), 'utf8'), before);
++});
++
++test('els noms iguals es resolen per directori font, sense reutilitzar una altra destinació local', t => {
++  const root = fixture(t);
++  fs.writeFileSync(path.join(root, '01_ser/desti.md'), content('Destí de ser'));
++  fs.writeFileSync(path.join(root, '02_saber/font.md'), content('[[desti]]'));
++  const before = snapshot(root);
++  const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${root}`], os.tmpdir());
++  assert.equal(child.status, 0, child.stderr);
++  assert.match(child.stdout, /Mapa de 2 destins amb backlinks/u);
++  assert.match(child.stdout, /Modificaria: 01_ser\/desti\.md/u);
++  assert.match(child.stdout, /Modificaria: 02_saber\/desti\.md/u);
++  assert.deepEqual(snapshot(root), before);
++});
++
++
++test('un ancestre simbòlic tampoc permet seleccionar una arrel protegida amb un nom alié', t => {
++  const root = fixture(t);
++  const protegit = path.join(root, '04_escriptori/01_produccio/subcorpus');
++  fs.mkdirSync(protegit);
++  fs.writeFileSync(path.join(protegit, 'pendent.md'), content('Document protegit sintètic.'));
++  const abans = fs.readFileSync(path.join(protegit, 'pendent.md'), 'utf8');
++  fs.symlinkSync(path.dirname(protegit), path.join(root, 'alias-protegit'), 'dir');
++  const child = run('scripts/teixidor-backlinks.mjs', ['--dry-run', `--dir=${path.join(root, 'alias-protegit/subcorpus')}`], os.tmpdir());
++  assert.equal(child.status, 2, child.stderr);
++  assert.equal(child.stdout, '');
++  assert.equal(fs.readFileSync(path.join(protegit, 'pendent.md'), 'utf8'), abans);
++});
+diff --git a/tooling/tests/node-suite-manifest.json b/tooling/tests/node-suite-manifest.json
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -16,6 +16,7 @@
+     "tests/conformitat-amfitrio.test.mjs",
+     "tests/dist-secrets.test.mjs",
+     "tests/documental.test.mjs",
++    "tests/draft-attachment-anchoring.test.mjs",
+     "tests/enxufe-empaqueta.test.mjs",
+     "tests/enxufe-pantalla.test.mjs",
+     "tests/enxufe-plugin.test.mjs",
+@@ -39,7 +40,10 @@
+     "tests/standalone-build.test.mjs",
+     "tests/verificador-scc.test.mjs",
+     "tests/vite-empremta-dev.test.mjs",
+-    "tooling/gates/guarda-nocturna.test.mjs"
++    "tests/wiki-backlinks-readonly.test.mjs",
++    "tooling/gates/guarda-nocturna.test.mjs",
++    "tooling/wiki/tests/contract_consistency.test.mjs",
++    "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
+   ],
+   "files": [
+     {
+@@ -153,6 +157,11 @@
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+     },
+     {
++      "path": "tests/draft-attachment-anchoring.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
++    },
++    {
+       "path": "tests/enllacos-sessio.test.mjs",
+       "suite": "session",
+       "reason": "Audita git diff HEAD de la sessió; un checkout net de CI no té els canvis locals que esta prova avalua. Manté corredor explícit i no s’amaga el deute de la sessió."
+@@ -548,6 +557,11 @@
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+     },
+     {
++      "path": "tests/wiki-backlinks-readonly.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
++    },
++    {
+       "path": "tests/xat_f0_migracio.test.mjs",
+       "suite": "primary",
+       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+@@ -606,6 +620,16 @@
+       "path": "tooling/seo/social-http.test.mjs",
+       "suite": "primary",
+       "reason": "P1-61 Fase 2 · prova HTTP local del Llibre d’Or amb User-Agent de WhatsApp; genera els artefactes del repositori en una carpeta temporal."
++    },
++    {
++      "path": "tooling/wiki/tests/contract_consistency.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
++    },
++    {
++      "path": "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
+     }
+   ]
+ }
