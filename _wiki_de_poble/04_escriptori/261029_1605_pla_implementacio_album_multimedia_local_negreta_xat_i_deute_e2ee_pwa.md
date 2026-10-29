@@ -73,10 +73,16 @@ Seguint el mateix patró d'enginyeria que `src/sections/gestoria/font/handleStor
        2. **`[ 📝 Enviar com a Nota al Bloc de Notes ]`** (creant una nota nova a l'emmagatzematge del Bloc de Notes o copiant-la estructurada i navegant a `/notes`).
        3. **`[ ➕ Nou fitxer .md en aquesta carpeta ]`** per crear notes o arxius de text directament dins de la carpeta local.
      - **Àudio (`.mp3`, `.wav`, `.ogg`, `.m4a`, `.webm`), Vídeo (`.mp4`, `.webm`, `.mov`) i PDF (`.pdf`):** reproductor `<audio controls>`, `<video controls>` o visor `<iframe title={nom} src={blobUrl} />` integrat sense eixir de Sóc de Poble.
-3. **`A.3 · Intel·ligència d'Auditoria Local estil Gestoria (Hash SHA-256, Cerca per Contingut, Suggeriment de Poble per EXIF/GPS i Escriptura Directa de `.webp` en Disc)`:**
+3. **`A.3 · Operacions Físiques Reals en Disc estil Obsidian/Finder (`readwrite`: Moure de carpeta, Reanomenar, Crear Subcarpeta, Eliminar) + Intel·ligència d'Auditoria Local:**
+   - **Manipulació física real al sistema d'arxius del Mac (`motorMultimediaLocal.js` + `GestorMultimediaLocal.jsx`):** igual que en Obsidian quan mous o reanomenes una nota i canvia físicament al Finder del Mac, afegir al contracte de `fontDesDeHandle` (amb permís `readwrite`) les operacions físiques segures:
+     1. **`font.mou(rutaOrigen, rutaDesti)` / `mouFitxerLocal`:** si en una carpeta d'imatges hi ha barrejat un `.txt`, `.md` o `.pdf` (o un original a `00_inbox/`), permetre moure'l físicament a una altra subcarpeta (ex. `documents_i_pdfs/` o `originals_raster_public/`) escrivint els bytes al destí, verificant la mida escrita i eliminant l'entrada d'origen amb `dirOrigen.removeEntry(nomOrigen)`.
+     2. **`font.reanomena(rutaOrigen, nouNom)`:** canviar el nom del fitxer en la mateixa carpeta i esborrar el nom antic un cop verificada l'escriptura.
+     3. **`font.creaCarpeta(rutaCarpeta)`:** crear una subcarpeta nova físicament al disc (`getDirectoryHandle(segment, { create: true })`).
+     4. **`font.elimina(ruta)`:** esborrar un fitxer local (sempre amb confirmació explícita de l'usuari).
+   - **Un sol arbre mixt real (Fototeca + Tots els arxius de cada carpeta):** en seleccionar qualsevol carpeta de l'arbre, mostrar tant les imatges com els fitxers `.txt`, `.md`, `.pdf`, `.json`, àudio o vídeo que hi haja dins d'eixa carpeta (amb targetes diferenciades en la vista de Graella/Fototeca i files clares en la vista de Taula), perquè cap `.txt` o document barrejat quede ocult.
    - **Detecció real de duplicats exactes per contingut (`SHA-256`):** afegir `calculaHashFitxerLocal(font, ruta)` amb `crypto.subtle.digest('SHA-256', bytes)` i un botó **«Verificar duplicats exactes (SHA-256)»**.
    - **Suggeriment intel·ligent de poble des d'EXIF/GPS i nom:** quan `inspeccionaImatgeLocal` extraga coordenades GPS (`exif.gps`) o nom reconeixible, suggerir el poble de la comarca i la categoria del catàleg.
-   - **Laboratori de Qualitat WebP amb Desat Directe en Carpeta Local (`readwrite`):** afegir el botó **«Desar .webp a la carpeta local»** que escriga `font.escriu(rutaWebp, bytesWebp, { sobreescriu: true })` al costat de l'original i refresque l'inventari local al moment.
+   - **Laboratori de Qualitat WebP amb Desat Directe i Evacuació d'Original (`readwrite`):** afegir el botó **«Desar .webp a la carpeta local»** i l'opció **«Desar .webp i moure l'original a `originals_raster_public/`»** que escriga el `.webp`, moga l'original ràster a la subcarpeta d'originals i refresque l'inventari local al moment.
 
 ---
 
