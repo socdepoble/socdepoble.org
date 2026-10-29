@@ -5,7 +5,7 @@
    paginaDElement). Si divergiren, el head servit d'una ruta i el de l'app no
    dirien el mateix. */
 import { describe, expect, test } from 'vitest';
-import { CAP_SOCIAL_BASE } from './imatgeSocial.js';
+import { CAP_SOCIAL_BASE, VARIANTS_SOCIALS } from './imatgeSocial.js';
 import { LIMIT_DESCRIPCIO, metadadesDeDetall, metadadesDePagina, SECCIONS_DE_DETALL, textPla } from './metadadesSocials.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { MOCK_MARKET_ITEMS } from '../sections/mercat/marketSeed.js';
@@ -82,7 +82,9 @@ describe('metadadesDePagina', () => {
   test('la imatge de la portada porta el seu imageAlt; una del cos, el títol; cap, null', () => {
     const anima = metadadesDePagina(PAGE_COPY.anima, OPCIONS);
     expect(anima.imatge.estat).toBe('triada');
-    expect(anima.image).toEqual({ url: `https://socdepoble.org${PAGE_COPY.anima.image}`, alt: PAGE_COPY.anima.imageAlt });
+    // R-01 (pla 261029_0216) · La il·lustració de /anima és WebP i pesa més de 300 KB: al <head> va la seua variant social; l'alt, el de la portada.
+    expect(anima.imatge.ref).toBe(PAGE_COPY.anima.image);
+    expect(anima.image).toEqual({ url: `https://socdepoble.org${VARIANTS_SOCIALS[PAGE_COPY.anima.image]}`, alt: PAGE_COPY.anima.imageAlt });
     const delCos = metadadesDePagina({ title: 'Del cos', html: '<p><img src="/assets/x.jpg" alt="x"></p>' }, OPCIONS);
     expect(delCos.image).toEqual({ url: 'https://socdepoble.org/assets/x.jpg', alt: 'Del cos' });
     const sense = metadadesDePagina({ title: 'Sense', html: '<p>Res</p>' }, OPCIONS);
@@ -120,7 +122,8 @@ describe('metadadesDeDetall · paritat amb el detall de veres (ItemDetailSection
   test('la samarreta porta la primera foto de la galeria (01-chica-jersey), mai el logotip ni el perfil', () => {
     const samarreta = MOCK_MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
     const { image } = metadadesDeDetall('mercat', samarreta, OPCIONS);
-    expect(image.url).toBe('https://socdepoble.org/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png');
+    // R-01 (pla 261029_0216) · Al <head> va la variant social de la xica; la portada que es pinta continua sent el .png.
+    expect(image.url).toBe('https://socdepoble.org/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey-social-1200x630.jpg');
     expect(image.url).not.toMatch(/logo|perfil/);
   });
 });

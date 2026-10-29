@@ -368,6 +368,44 @@ describe('extreuEditorial', () => {
   it('allò que no és text dona un document buit', () => {
     expect(extreuEditorial(undefined)).toEqual({ titol: null, entradilla: null, cos: '' });
   });
+
+  /* R-07 (pla 261029_0216) · El preàmbul no és contingut: les plantilles obrin
+     amb <!-- SDP:EIXIDA … --> davant de l'H1. */
+  it('salta els comentaris HTML inicials i no els torna al cos', () => {
+    const md = '\n<!-- SDP:EIXIDA\ntype: acta\n-->\n<!-- Nom: aammdd_hhmm_acta_titol.md -->\n# Títol\n\nEntradilla.\n\n## Secció';
+    expect(extreuEditorial(md)).toEqual({ titol: 'Títol', entradilla: 'Entradilla.', cos: '## Secció' });
+    expect(extreuEditorial('<!-- a --><!-- b -->  \n\n# T\nCos')).toEqual({ titol: 'T', entradilla: 'Cos', cos: '' });
+    expect(extreuEditorial('<!-->\n# T')).toEqual({ titol: 'T', entradilla: null, cos: '' });
+  });
+
+  it('un «# Títol» de dins d’un comentari és comentari', () => {
+    expect(extreuEditorial('<!--\n# Fals\n-->\n# Real\n\nCos').titol).toBe('Real');
+    const nomes = '<!-- # Fals -->\n\n## Només secció';
+    expect(extreuEditorial(nomes)).toEqual({ titol: null, entradilla: null, cos: nomes });
+  });
+
+  it.each([
+    ['sense tancar', '<!-- obert\n# Fals\n\nText.'],
+    ['sense tancar i «# » a l’última línia', '<!-- obert\n# Fals'],
+    ['«# » darrere d’un «-->» a la mateixa línia', '<!-- a --> # No\n\nText.'],
+    ['«# » sagnat', '<!-- a -->\n   # No\n\nText.']
+  ])('comentari %s: ni títol ni entradilla, i el cos és el document sencer', (_nom, md) => {
+    expect(extreuEditorial(md)).toEqual({ titol: null, entradilla: null, cos: md });
+  });
+
+  it('un frontmatter romanent se salta; un regle «---» sense tancar, no', () => {
+    expect(extreuEditorial('---\ntype: acta\ntitle: ---x\n---  \n\n<!-- c -->\n# Títol\n\nCos')).toEqual({ titol: 'Títol', entradilla: 'Cos', cos: '' });
+    const regle = '---\n\n# Títol';
+    expect(extreuEditorial(regle)).toEqual({ titol: null, entradilla: null, cos: regle });
+  });
+
+  it('el preàmbul es recorre en temps lineal (guarda de regressió contra un retrocés catastròfic)', () => {
+    const inici = performance.now();
+    expect(extreuEditorial(`<!--${'-<!'.repeat(200000)}`).titol).toBeNull();
+    expect(extreuEditorial(`---\n${'---x\n'.repeat(100000)}# T`).titol).toBeNull();
+    expect(extreuEditorial(`${'<!-- c -->\n'.repeat(50000)}# T`).titol).toBe('T');
+    expect(performance.now() - inici).toBeLessThan(2000);
+  });
 });
 
 describe('els documents reals de la Wiki', () => {
@@ -386,8 +424,11 @@ describe('els documents reals de la Wiki', () => {
     }
     expect(ambPunt).toEqual([]);
     // La majoria obrin amb «# » i entradilla; les plantilles, que comencen
-    // pel comentari SDP:EIXIDA, conserven el títol del manifest.
+    // pel comentari SDP:EIXIDA, tenen el títol de darrere del comentari (R-07).
     expect(wikiManifest.items.some((item) => extreuEditorial(item.content).entradilla)).toBe(true);
+    const plantilles = wikiManifest.items.filter((item) => item.content.includes('<!-- SDP:EIXIDA'));
+    expect(plantilles.length).toBeGreaterThan(0);
+    expect(plantilles.filter((item) => !extreuEditorial(item.content).titol).map((item) => item.id)).toEqual([]);
   });
 });
 

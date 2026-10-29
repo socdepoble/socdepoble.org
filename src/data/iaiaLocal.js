@@ -41,6 +41,7 @@
  *   o el nom de la IAIA («Bon dia, IAIA», «Gràcies», «Qui ets?») no busca res.
  */
 
+import { iniciDelContingut } from '../utils/iniciEditorial.js';
 import { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
 export { SALUTACIO_TECNICA_IAIA } from './iaiaTextos.js';
 export const ENCAPCALAMENT_DE_LA_WIKI = 'Això és el que en sé per la Wiki de Poble:';
@@ -193,7 +194,8 @@ function textPla(md, llevaPunt = true) {
 export function titolDeDocument(item) {
   const cos = String(item?.content ?? '');
   const text = (cos.charCodeAt(0) === 0xFEFF ? cos.slice(1) : cos).replace(/\r\n?/g, '\n');
-  const primera = text.split('\n').find((linia) => linia.trim() !== '');
+  const inici = iniciDelContingut(text);
+  const primera = inici < text.length ? text.slice(text.lastIndexOf('\n', inici - 1) + 1).split('\n')[0] : '';
   const capcalera = primera !== undefined ? /^# (.*)$/.exec(primera) : null;
   const titol = capcalera ? textPla(capcalera[1]) : '';
   return titol || String(item?.title || item?.id || '');

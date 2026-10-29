@@ -29,8 +29,7 @@
  * Cap EXIF al cens: cap ordre pot llegir binaris en esta fase. El visor llig
  * l'EXIF de la foto oberta al client (useMetadadesFoto.js).
  * Es carrega amb import() només a /multimedia (useCensImatges.js): ni el
- * Cercador ni la resta de l'app no el paguen. Mòdul de dades pures: cap
- * import, cap JSX.
+ * Cercador ni la resta de l'app no el paguen. Mòdul de dades pures: el mapa de variants socials és compartit; cap JSX.
  * Prova: censImatges.test.js (cada src existix al disc i cada imatge ràster de
  * public/assets és al cens, a EXCLOSES o n'és la bessona .webp).
  * Bessones WebP (encàrrec 261019_1425) · tooling/media/optimitzar_webp.mjs
@@ -47,6 +46,8 @@
  * a ella, amb la mateixa entrada, el mateix id (idDelCens lleva l'extensió) i
  * les mateixes mides.
  */
+
+import { VARIANTS_SOCIALS } from '../../config/imatgeSocial.js';
 
 export const AMBITS = Object.freeze(['poble', 'persona', 'entitat', 'ia', 'contingut']);
 
@@ -235,6 +236,8 @@ const COPIES_IA = [
 /** Les imatges ràster de public/assets que NO entren al cens, amb el motiu. Tot
  *  /assets/system/ (la interfície) i els SVG en queden fora sense nomenar-los. */
 export const EXCLOSES = Object.freeze({
+  /* R-01: derivades socials explícites del mapa canònic, una sola foto a l’Arxiu. */
+  ...Object.fromEntries(Object.entries(VARIANTS_SOCIALS).map(([original, social]) => [social, `targeta social dedicada de ${original}: no és cap foto nova de l’Arxiu`])),
   '/assets/ui/plugins/tpv_vinyeta.jpg': 'la mateixa vinyeta en JPEG; el codi només nomena la WebP (registrePlugins.js)',
   /* P1-26 · El mateix fitxer, byte a byte, que l'original de brain/ (el que
      nomenen el cens i agentsSeed.js); la .webp germana en seguix l'estat. */

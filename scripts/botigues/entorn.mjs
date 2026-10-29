@@ -29,11 +29,11 @@ import { spawn, spawnSync } from 'node:child_process';
 export const FITXER_PER_DEFECTE = '.env.botigues.local';
 export const VARIABLE_DEL_CAMI = 'SDP_BOTIGUES_ENV';
 
-/* El laboratori del disseny («LAB»). La plantilla del fitxer d'entorn no s'instal·la (LLEGIU.txt §6:
-   en fa la còpia el Mestre) i el rebut de cada pujada va a LAB/rebuts/ (RUNBOOK A10). Els scripts
-   només imprimixen estos camins: no escriuen cap rebut ni creen la carpeta. */
-const LABORATORI = '_wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_empaquetat_mobil_claude';
-export const PLANTILLA_DE_L_ENTORN = `${LABORATORI}/nous/botigues/botigues.env.exemple.txt`;
+/* La plantilla sense credencials està versionada amb els scripts. El Mestre
+   en fa una còpia privada fora del repo. Els rebuts continuen al laboratori
+   germà (RUNBOOK A10): els scripts només imprimixen el destí, no el creen. */
+const LABORATORI = '../_investigacio_ia_de_poble/261003_1330_empaquetat_mobil_claude';
+export const PLANTILLA_DE_L_ENTORN = 'scripts/botigues/botigues.env.exemple.txt';
 export const REBUTS = `${LABORATORI}/rebuts`;
 
 /** Codis d'eixida, els mateixos als tres scripts. */

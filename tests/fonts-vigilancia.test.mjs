@@ -7,6 +7,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { extractDocumentLinks } from '../tooling/lib/document-links.mjs';
+import { anchored } from '../tooling/documental/core.mjs';
+import { checkTaula } from '../tooling/gates/porta-olivera.mjs';
+import { VerificadorSCC } from '../tooling/gates/verificador-scc.mjs';
 import {
   resumTorns, resumEscriptori, resumLedger, resumEstat,
   analitzaLedger, dataEstat, ancoratA, LIMIT_SAFATA
@@ -105,7 +109,7 @@ test('escriptori: índex en majúscules, sense safata i sense torns', () => {
   });
 });
 
-test('ancoratA: rèplica d’anchored (sense .md, sense camí, fora de codi)', () => {
+test('ancoratA: indicador de noms curts (sense .md, sense camí, fora de codi)', () => {
   assert.equal(ancoratA('- [[x]]', 'x.md'), true);
   assert.equal(ancoratA('- [[x#secció]]', 'x.md'), true);
   assert.equal(ancoratA('- [[ x ]]', 'x.md'), true);
@@ -255,4 +259,72 @@ test('escriptori: només el Llibre canònic està exempt de rebut i conserva el 
   assert.equal(resumEscriptori(arrel).documents[1].ambRebut, false);
   escriu(arrel, `${DESK}/00_index_escriptori.md`, '# Índex\n');
   assert.deepEqual(resumEscriptori(arrel).documents[0], { nom: '03_llibre_mestre_tasques_i_idees.md', ancorat: false, ambRebut: null });
+});
+
+
+/* C3-T11-FONTS: cap segon lexer en el consumidor del mapa de vigilància. */
+for (const [cas, exemple] of [
+  ['doble backtick inline', '``[[x]]``'],
+  ['triple backtick inline', 'Text ```[[x]]``` final'],
+  ['span inline en dues línies', 'Text `[[x]]\nencara codi`'],
+  ['tilde de quatre amb fence curta interna', '~~~~markdown\n~~~\n[[x]]\n~~~\n~~~~'],
+  ['backticks de quatre amb fence curta interna', '````markdown\n```\n[[x]]\n```\n````'],
+  ['famílies de fence diferents', '~~~markdown\n```\n[[x]]\n~~~'],
+  ['comentari amb fences', '<!--\n~~~\n[[x]]\n~~~\n-->'],
+  ['wikilink escapat', String.raw`\[[x]]`],
+]) test(`C3-T11-FONTS ${cas}: l'exemple no acredita una àncora`, () => {
+  const source = exemple.replaceAll('\\n', '\n');
+  assert.equal(ancoratA(source, 'x.md'), false);
+  assert.equal(anchored(source, `${DESK}/x.md`), false);
+  assert.ok(extractDocumentLinks(source).every(link => link.target !== 'x'));
+  assert.equal(ancoratA(`${source}\n[[x]]`, 'x.md'), true, 'una àncora visible posterior continua acreditada');
+});
+
+test('C3-T11-FONTS àlies escapats Obsidian i escapaments literals usen l’extractor compartit', () => {
+  assert.equal(ancoratA(String.raw`| [[x\|Etiqueta]] | text |`, 'x.md'), true);
+  assert.equal(ancoratA('[[x#Resultat|Etiqueta]]', 'x.md'), true);
+  assert.equal(ancoratA(String.raw`\\[[x]]`, 'x.md'), true);
+  assert.equal(ancoratA(String.raw`\\\[[x]]`, 'x.md'), false);
+});
+
+test('C3-T11-FONTS el contracte de noms curts conserva les formes deliberades', () => {
+  for (const source of ['[[x]]', '[[ x ]]', '[[x|Etiqueta]]', '[[x#Resultat]]']) assert.equal(ancoratA(source, 'x.md'), true, source);
+  for (const source of ['[[x.md]]', '[[./x]]', '[[dir/x]]', '[[../10_actes/x]]', '[x](x.md)', '[[x_altra]]']) assert.equal(ancoratA(source, 'x.md'), false, source);
+  assert.equal(ancoratA(null, 'x.md'), false);
+  assert.equal(ancoratA('[[x]]', null), false);
+  assert.equal(ancoratA('', 'x.md'), false);
+});
+
+test('C3-T11-FONTS resumEscriptori no fabrica salut si l’única àncora és un exemple', async t => {
+  const root = fs.realpathSync(arrelNova());
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  escriu(root, '_wiki_de_poble/00_index.md', '# Índex\n\n[[00_index_escriptori]]\n');
+  escriu(root, `${DESK}/00_index_escriptori.md`, '# Escriptori\n\n## Activitat en curs\n\n- [[real]]\n\n``[[sense_ancora]]``\n');
+  escriu(root, `${DESK}/real.md`, '# Real\n');
+  escriu(root, `${DESK}/sense_ancora.md`, '# Requerix una àncora real\n');
+  const summary = resumEscriptori(root);
+  assert.equal(summary.documents.find(doc => doc.nom === 'real.md').ancorat, true);
+  assert.equal(summary.documents.find(doc => doc.nom === 'sense_ancora.md').ancorat, false);
+  assert.equal(checkTaula(root).valid, false);
+  const sccBefore = await new VerificadorSCC(root).runAudits();
+  assert.equal(sccBefore.valid, false);
+  assert.ok(sccBefore.errors.some(error => error.code === 'ESCRIPTORI_UNANCHORED'));
+  fs.appendFileSync(path.join(root, DESK, '00_index_escriptori.md'), '\n- [[sense_ancora]]\n');
+  assert.equal(resumEscriptori(root).documents.find(doc => doc.nom === 'sense_ancora.md').ancorat, true);
+  assert.equal(checkTaula(root).valid, true);
+  const sccAfter = await new VerificadorSCC(root).runAudits();
+  assert.equal(sccAfter.valid, true, JSON.stringify(sccAfter));
+});
+
+test('C3-T11-FONTS consultar les fonts no escriu fitxers ni altera el seu contingut', t => {
+  const root = fs.realpathSync(arrelNova());
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  escriu(root, `${DESK}/00_index_escriptori.md`, '# Índex\n\n[[x]]\n');
+  escriu(root, `${DESK}/x.md`, '# X\n');
+  const indexFile = path.join(root, DESK, '00_index_escriptori.md'), docFile = path.join(root, DESK, 'x.md');
+  const before = [fs.readFileSync(indexFile), fs.readFileSync(docFile)];
+  const entries = fs.readdirSync(path.join(root, DESK));
+  assert.equal(resumEscriptori(root).documents[0].ancorat, true);
+  assert.deepEqual([fs.readFileSync(indexFile), fs.readFileSync(docFile)], before);
+  assert.deepEqual(fs.readdirSync(path.join(root, DESK)), entries);
 });

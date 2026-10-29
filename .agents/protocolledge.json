@@ -150,7 +150,7 @@
       "skill": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
       "tipus": "acta",
       "lectures": [],
-      "version": "2.0.0",
+      "version": "2.1.0",
       "seccions": [
         "Registre",
         "Acte reflex",
@@ -160,7 +160,6 @@
         "Vincles"
       ],
       "destins": [
-        "_wiki_de_poble/04_escriptori",
         "_wiki_de_poble/10_actes"
       ],
       "sectionIds": {
@@ -380,7 +379,12 @@
         "pla implementacio",
         "pla implementació",
         "implementacio",
-        "implementació"
+        "implementació",
+        "planificació",
+        "pla director",
+        "roadmap",
+        "fases",
+        "pla"
       ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "skill": ".agents/skills/sdp-workflow/SKILL.md",
@@ -407,45 +411,6 @@
         "Verificació": "pla.implementacio.s5",
         "Riscos": "pla.implementacio.s6",
         "Vincles": "pla.implementacio.s7"
-      },
-      "blocsFixos": []
-    },
-    {
-      "id": "planificacio",
-      "claus": [
-        "planificació",
-        "pla director",
-        "roadmap",
-        "fases",
-        "pla"
-      ],
-      "plantilla": "_wiki_de_poble/03_actuar/plantilles/pla.md",
-      "skill": ".agents/skills/sdp-workflow/SKILL.md",
-      "tipus": "document",
-      "lectures": [],
-      "version": "2.0.0",
-      "seccions": [
-        "Registre",
-        "Acte reflex",
-        "Historial",
-        "Resultat final",
-        "Fases",
-        "Verificació",
-        "Riscos",
-        "Vincles"
-      ],
-      "destins": [
-        "_wiki_de_poble/04_escriptori"
-      ],
-      "sectionIds": {
-        "Registre": "planificacio.s1",
-        "Acte reflex": "planificacio.s2",
-        "Historial": "planificacio.s3",
-        "Resultat final": "planificacio.s4",
-        "Fases": "planificacio.s5",
-        "Verificació": "planificacio.s6",
-        "Riscos": "planificacio.s7",
-        "Vincles": "planificacio.s8"
       },
       "blocsFixos": []
     },

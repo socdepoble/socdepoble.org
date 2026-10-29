@@ -11,17 +11,22 @@
  * - Afegeix al final del document
  * - Respecta SDP-LOCK: si el document té "locked: true" al frontmatter, s'omet
  * 
- * Ús: node scripts/teixidor-backlinks.mjs [--dry-run] [--dir=./_wiki_de_poble]
+ * Ús: node scripts/teixidor-backlinks.mjs --dry-run [--dir=./_wiki_de_poble]
+ * L’escriptura antiga està retirada: sense --dry-run, eixida 2 abans de llegir el corpus.
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve, relative, dirname } from 'path';
-import { readdirSync } from 'fs';
+import { resolve, relative, dirname, sep, isAbsolute } from 'path';
+import { readdirSync, realpathSync, lstatSync } from 'fs';
 
 // --- Configuració ---
 const DEFAULT_DIR = './_wiki_de_poble';
 const BACKLINK_SECTION_HEADER = '## Sinapsis Entrants (Autogenerat)';
 const BACKLINK_SECTION_FOOTER = '<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->';
+const EXCLUDED_SEGMENTS = new Set([
+  'node_modules', '90_historic', '90_arxiu_historic',
+  '01_produccio', '02_investigacio_ia', '.sdp-paperera'
+]);
 const WIKILINK_REGEX = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
 
 const LOCK_CHECK_REGEX = /^---\n[\s\S]*?locked:\s*true[\s\S]*?\n---\n/;
@@ -43,6 +48,15 @@ function extractWikiLinks(content) {
   return links;
 }
 
+function documentConsultable(file, baseDir) {
+  try {
+    const rel = relative(realpathSync(baseDir), realpathSync(file));
+    return Boolean(rel) && rel !== '..' && !rel.startsWith('..' + sep)
+      && !isAbsolute(rel) && !rel.split(sep).some(part => part.startsWith('.') || EXCLUDED_SEGMENTS.has(part))
+      && lstatSync(file).isFile() && !lstatSync(file).isSymbolicLink();
+  } catch { return false; }
+}
+
 function resolveWikiLink(linkName, sourceDir, baseDir) {
   const candidates = [
     resolve(sourceDir, `${linkName}.md`),
@@ -57,11 +71,11 @@ function resolveWikiLink(linkName, sourceDir, baseDir) {
     try {
       const entries = readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+        if (entry.name.startsWith('.') || EXCLUDED_SEGMENTS.has(entry.name)) continue;
         
         const fullPath = resolve(dir, entry.name);
         if (entry.isFile() && (entry.name === `${target}.md` || entry.name === target)) {
-          return fullPath;
+          if (documentConsultable(fullPath, baseDir)) return fullPath;
         }
         if (entry.isDirectory()) {
           const found = findRecursive(fullPath, target, depth + 1);
@@ -75,7 +89,7 @@ function resolveWikiLink(linkName, sourceDir, baseDir) {
   }
   
   for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate;
+    if (documentConsultable(candidate, baseDir)) return candidate;
   }
   
   return findRecursive(baseDir, linkName);
@@ -128,10 +142,7 @@ function weaveBacklinks(baseDir, dryRun = false) {
     try {
       const entries = readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.name.startsWith('.') || 
-            entry.name === 'node_modules' || 
-            entry.name === '90_historic' ||
-            entry.name === '.sdp-paperera') continue;
+        if (entry.name.startsWith('.') || EXCLUDED_SEGMENTS.has(entry.name)) continue;
         
         const fullPath = resolve(dir, entry.name);
         if (entry.isFile() && entry.name.endsWith('.md')) {
@@ -158,11 +169,13 @@ function weaveBacklinks(baseDir, dryRun = false) {
     const links = extractWikiLinks(content, filePath);
     
     for (const linkName of links) {
-      if (!resolvedCache.has(linkName)) {
-        resolvedCache.set(linkName, resolveWikiLink(linkName, fileDir, baseDir));
+      // Un mateix [[nom]] pot tindre destins locals diferents segons la font.
+      const cacheKey = JSON.stringify([fileDir, linkName]);
+      if (!resolvedCache.has(cacheKey)) {
+        resolvedCache.set(cacheKey, resolveWikiLink(linkName, fileDir, baseDir));
       }
       
-      const destPath = resolvedCache.get(linkName);
+      const destPath = resolvedCache.get(cacheKey);
       if (!destPath) {
         if (dryRun) console.log(`⚠️  Enllaç no resolt: [[${linkName}]] des de ${relative(baseDir, filePath)}`);
         continue;
@@ -242,12 +255,39 @@ function weaveBacklinks(baseDir, dryRun = false) {
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
-const dirArg = args.find(a => a.startsWith('--dir='));
-const baseDir = resolve(dirArg ? dirArg.split('=')[1] : DEFAULT_DIR);
+// T11: el CLI antic no pot reintroduir seccions després de Vincles ni mutar
+// documents sense el contracte de pla, Reflex i rollback de l’eina canònica.
+if (!dryRun) {
+  console.error('ESCRIPTURA RETIRADA (T11): usa --dry-run per a una consulta sense canvis. Les mutacions requerixen el circuit documental canònic.');
+  process.exit(2);
+}
+const dirArgs = args.filter(a => a.startsWith('--dir='));
+if (args.filter(a => a === '--dry-run').length !== 1 || dirArgs.length > 1
+    || args.some(a => a !== '--dry-run' && !a.startsWith('--dir='))
+    || dirArgs.some(a => a.length === '--dir='.length)) {
+  console.error('Ús: --dry-run [--dir=RUTA], sense opcions desconegudes ni repetides.');
+  process.exit(2);
+}
+const baseDir = resolve(dirArgs.length ? dirArgs[0].slice('--dir='.length) : DEFAULT_DIR);
+// Seleccionar directament un subdirectori protegit tampoc no habilita la consulta.
+if (baseDir.split(sep).some(part => EXCLUDED_SEGMENTS.has(part))) {
+  console.error('Corpus exclòs: arxiu històric o zona protegida.');
+  process.exit(2);
+}
 
 if (!existsSync(baseDir)) {
   console.error(`❌ Directori no trobat: ${baseDir}`);
   process.exit(1);
+}
+
+if (!lstatSync(baseDir).isDirectory() || lstatSync(baseDir).isSymbolicLink()) {
+  console.error('El corpus ha de ser un directori regular, no un enllaç simbòlic.');
+  process.exit(2);
+}
+
+if (realpathSync(baseDir).split(sep).some(part => EXCLUDED_SEGMENTS.has(part))) {
+  console.error('Corpus exclòs: la ruta real és arxiu històric o zona protegida.');
+  process.exit(2);
 }
 
 weaveBacklinks(baseDir, dryRun);

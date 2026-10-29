@@ -11,6 +11,9 @@
      en fa triar la variant abans del preu, i el cost és el de la triada.
    · Les fotos: cada slug d'IMATGES_DISPONIBLES té el seu webp a public/, i
      cada destí del mapa versionat és un slug real (199, sense omissions).
+     El mapa original de l'Onada 3 està versionat al costat de la llavor:
+     la comprovació dels 199 destins és obligatòria també en còpies i CI.
+     No depén del laboratori germà ni d'un lliurament humà dels originals.
      Els originals humans ABSENT es declaren no comprovats; si arriba cap
      arrel del corpus, tots els orígens han d'existir (PARTIAL és roig).
    · El literal de compilació: fora del servidor de desenvolupament, La
@@ -32,7 +35,8 @@ const ARREL = process.cwd();
 const COPIA = path.join(ARREL, 'src/apps/bar/llavors/la-parroquia-loyverse.csv');
 const PRODUCCIO = path.join(ARREL, '_wiki_de_poble/04_escriptori/01_produccio');
 const ORIGINAL = path.join(PRODUCCIO, 'la_parroquia/export_items.csv');
-const MAPA = path.join(ARREL, '_wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_parroquia_claude/MAPA_IMATGES.txt');
+/* Manifest real de l'Onada 3, versionat amb la llavor: obligatori en CI. */
+const MAPA = path.join(ARREL, 'src/apps/bar/llavors/MAPA_IMATGES.txt');
 const FOTOS = path.join(ARREL, 'public/assets/uploads/empresa/la-parroquia/bar');
 
 const LLAVOR = llavorLaParroquia();

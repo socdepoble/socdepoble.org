@@ -11,6 +11,15 @@ const mocks = vi.hoisted(() => ({ nativa: false, resol: null }));
 vi.mock('../../config/origenPublic.js', async (original) => ({ ...(await original()), esAppNativa: () => mocks.nativa }));
 /* D3 (261028) · El port de mitjans: només el que la prova li diga. */
 vi.mock('../../data/backendPort.js', async (original) => ({ ...(await original()), resolveAsset: (ref) => (mocks.resol ? mocks.resol(ref) : Promise.reject(new Error('sense port'))) }));
+/* El full de Leaflet, els mateixos octets però llegits per Node: Vite (server.fs.strict) nega un
+   `?inline` d'un fitxer que la ruta real deixa fora de l'arrel, i en una còpia temporal de l'arbre
+   amb node_modules enllaçat paquet a paquet, leaflet.css hi queda fora («Denied ID»). A l'arbre
+   viu el text és el mateix; la prova és determinista a tots dos llocs. */
+vi.mock('leaflet/dist/leaflet.css?inline', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { createRequire } = await import('node:module');
+  return { default: readFileSync(createRequire(import.meta.url).resolve('leaflet/dist/leaflet.css'), 'utf8') };
+});
 import MapaFotografic from './MapaFotografic.jsx';
 
 const FOTO = (nom) => `/assets/uploads/gent/veina/mur/${nom}.webp`;

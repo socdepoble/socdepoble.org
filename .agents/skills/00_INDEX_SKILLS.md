@@ -52,7 +52,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[wiki-busca-skills/SKILL|wiki-busca-skills]]: Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.
 - [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]]: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.
 - [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]: Per a crear prompt, petorreta, bundle, pla o acta. Escriptori net (AGENTS §0.1), ruta de .agents/protocolledge.json (prompt.local per a Claude i Codex, prompt.consell per a IAs externes), document.mjs context i create.
-- [[wiki-propagar-veritat/SKILL|wiki-propagar-veritat]]: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
+- [[wiki-propagar-veritat/SKILL|wiki-propagar-veritat]]: Propaga una decisió estructural o arquitectònica aprovada sobre una llista explícita de fitxers vius per mantenir la coherència del sistema.
 
 
 ## Vincles

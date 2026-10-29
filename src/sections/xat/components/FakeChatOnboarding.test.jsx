@@ -147,6 +147,20 @@ test('una resposta simulada conserva la cita, i els seq no es repetixen en dos e
   expect(new Set(seqs).size).toBe(seqs.length);
 });
 
+/* P1-52 (Fita 16 del Llibre Mestre, 261029) · La resposta simulada diu el
+   literal del Mestre, pla i sense pompositat. El traductor d'esta prova torna
+   la reserva: és la del component la que es fixa ací; la clau
+   section.xat.fake.reply, en les cinc llengües, la fixa i18n.claus.test.js. */
+test('la resposta simulada és el literal del Mestre (P1-52)', async () => {
+  munta();
+  const fil = xat.chatThreads.find((f) => f.id === 'fake-iaia');
+  await act(async () => { await xat.sendChatMessage(fil, 'Hola'); });
+  act(() => { vi.runAllTimers(); });
+  const resposta = xat.getThreadMessages('fake-iaia').at(-1);
+  expect(resposta).toMatchObject({ sender: 'other', author: fil.name, is_ai: true });
+  expect(resposta.text).toBe('Açò és una simulació. Si vols guardar la conversa, has de registrar-te, i ja està.');
+});
+
 test('desmuntar cancel·la les respostes pendents', async () => {
   const { unmount } = munta();
   /* Gauntlet 261016_1530 · 'fake-sdp' ja és una comunitat: s'escriu al seu General. */

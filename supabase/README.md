@@ -892,6 +892,58 @@ description: "Documentació canònica de Sóc de Poble."
   2610281730. Idempotent i en una sola transacció;
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2610290400_xat_e2ee_claus_i_sobres.sql`
+  P1-12 i IDEA-48 · E2EE-1a (`disseny_final_e2ee.md` v1.1.0, §7.2 primera
+  fila, §7.3, §7.4 i §7.9; `esmenes_qa_261029.md` §13.1 R3, R5, R8 i R9;
+  auditoria Codex 261029_0340 E2EE-I03; pla 261029_0216, T7). El servidor del
+  xat xifrat d'extrem a extrem, primera part: les ajudes de codificació
+  (base64url canònic, JWK estricte), el registre només d'afegir
+  `public.xat_claus_usuari` (declaració SDPK de 175 bytes, les dues
+  públiques, `kid` recalculat al servidor, continuïtat, còpia xifrada de la
+  identitat i embolcall de la RK amb la frase; un sol actiu per persona; mai
+  la IAIA; disparador d'immobilitat `SDP-XAT-038`; cap RK ni privada en
+  clar), `public.xat_llibretes` (la llibreta de seguretat, comptador
+  estrictament creixent), el contracte de dades d'IDEA-48 amb les esmenes R5 i
+  R8 (`xat_cercles_recuperacio` amb un sol cercle vigent per persona,
+  `xat_avals_recuperacio`, `xat_peticions_recuperacio` amb `creat_ms` i
+  `caduca_ms` bigint exactes, clau forana al cercle i el SDPN sencer en
+  qualsevol estat, `xat_verificacions_recuperacio` i
+  `xat_alliberaments_recuperacio`), els orígens admesos
+  (`private.xat_origens_xifrat`: `https://socdepoble.org`,
+  `capacitor://localhost` i `https://localhost`; `private.xat_origen_admes`
+  llig l'Origin de `request.headers`), el ritme per persona
+  (`private.xat_ritme_claus`, 10 cada 24 h) i les set RPC d'E2EE-1a:
+  `xat_publica_identitat` (comparar-i-canviar amb la fila activa,
+  `SDP-XAT-041`; 5 publicacions cada 24 h i, sense continuïtat, 1 cada 24 h i
+  3 cada 30 dies; la còpia és obligatòria; retira el cercle vigent, esmena
+  R9), `xat_la_meua_identitat`, `xat_desa_frase` (10 cada 24 h),
+  `xat_claus_de` (d'1 a 256 identificadors, sense còpies i només de qui
+  compartix un fil: qui no en compartix cap no torna res), `xat_desa_llibreta`
+  (`SDP-XAT-044` si el comptador no creix), `xat_la_meua_llibreta` i
+  `xat_canvia_rk` (el nivell 3 de §5.6.5: comparar-i-canviar sobre el SHA-256
+  de la còpia viva, `SDP-XAT-046`, i la còpia, l'embolcall de la frase i la
+  llibreta nova en la mateixa transacció). Totes SECURITY DEFINER amb
+  `search_path` buit, revocades a `public` i `anon` i només per a
+  `authenticated`; sessió i origen sempre primer; un sol rellotge per crida
+  (el `now()` de la transacció, mai `clock_timestamp`); el pany consultiu
+  `xat:identitat:<usuari>` abans de la fila activa. Les taules noves amb RLS,
+  tot revocat i només `select, delete` per a `service_role`: cap lectura
+  directa des del client. No toca `xat_envia` ni cap taula de missatges, fils
+  o adjunts (això és E2EE-1b). Codis `SDP-XAT-001`, `009`, `033`, `038`,
+  `040`..`046` i `900` (guarda: la cadena fins a 2610282100). Abans, les tres
+  consultes de lectura de la capçalera (la cadena, cap taula ni funció
+  homònima); després, la RLS de les set taules (true), cap `select` per a
+  `anon` ni `authenticated`, els tres orígens i
+  `select private.xat_b64_enc(private.xat_b64('AQID', 3));` (`AQID`). La
+  verificació de les dues sessions (el comparar-i-canviar) és a la capçalera.
+  La inversa és un bloc comentat al final del fitxer i esborra exactament el
+  que es crea. La prova estàtica és
+  `src/data/supabase/xatE2ee.migracio.test.js`; l'execució (dues vegades, la
+  inversa i una tanda de crides a les RPC) la va fer la línia a PGlite 0.3.16,
+  fora del repositori. Va després de 2610282100 i abans d'E2EE-1b. Idempotent
+  i en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 

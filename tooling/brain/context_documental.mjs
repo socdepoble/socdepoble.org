@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, sha, font, segura, atomic, inventari, comprovaCataleg } from './cataleg_skills.mjs';
+import { comprovaDestins } from './destins_canonics.mjs';
 
 const GLOBALS = ['.agents/BOOTSTRAP.md', '.agents/AGENTS.md', '.agents/PROFILE.md',
   '.agents/BASELINE.md', '.agents/PROTOCOL_PETORRETA.md', '.agents/consell.json'];
@@ -65,6 +66,8 @@ export function prepara(task, ids = [], root = ROOT) {
   const all = inventari(root);
   const check = comprovaCataleg(root, all);
   if (!check.ok) throw new Error(check.problemes.join('; '));
+  const destinations = comprovaDestins(root);
+  if (!destinations.ok) throw new Error(destinations.errors.join('; '));
   const skills = all.filter(s => s.core || s.triggers.some(t => encaixa(task, t)))
     .sort((a,b) => a.prioritat - b.prioritat || (a.id < b.id ? -1 : 1));
   const protocols = resolProtocols(task, ids, root);

@@ -48,7 +48,6 @@ const ROOTS = [
   '_wiki_de_poble/01_ser',
   '_wiki_de_poble/02_saber',
   '_wiki_de_poble/03_actuar',
-  '_wiki_de_poble/02_saber',
   '_wiki_de_poble/.obsidian/graph.json', // contracte de la Vista Gràfica (pre-commit 2/4)
 ];
 // .sdp-reflex queda FORA per disseny: el propi .gitignore del repositori el
@@ -104,11 +103,16 @@ async function main() {
   const repoRoot = path.resolve(arrel ?? process.cwd());
 
   const fitxers = [];
+  const vistos = new Set();
   const absents = [];
   for (const r of ROOTS) {
     const abs = path.join(repoRoot, r);
     if (!fs.existsSync(abs)) { absents.push(r); continue; }
-    for (const f of caminar(abs, r)) fitxers.push(f);
+    for (const f of caminar(abs, r)) {
+      if (vistos.has(f.rel)) continue;
+      vistos.add(f.rel);
+      fitxers.push(f);
+    }
   }
 
   const parts = [];

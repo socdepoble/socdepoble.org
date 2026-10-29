@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {buildSocialManifest,LLISTES,normalizedKey,plainText} from './build-social-manifest.mjs';
 import {selectMetadata} from './social-edge.mjs';
 const policyRoot=process.env.SDP_PROJECT_ROOT || process.cwd();
@@ -149,4 +150,40 @@ test('les llistes: el diccionari valencià i, sense, la reserva de la secció',a
   assert.deepEqual([manifest.routes['/mur'].title,manifest.routes['/mur'].description],['Mur viu','El que passa al poble']);
   assert.equal(manifest.routes['/mercat'].title,'Mercat');
   assert.equal(manifest.routes['/mur'].image.url,origin+'/assets/system/ui/og-socdepoble-1200x630.png');
+});
+/* QA-H04 (certificació de Codex, 261029) · Una imatge d'un altre origen només
+   si és del Supabase del build (imageOrigins) i del camí públic de Storage. */
+test('imageOrigins: només el camí públic de Storage; ni signat, ni transformat, ni codificat, ni un altre origen',async t=>{
+  const {root}=fixture(t);const supabase='https://exemple.supabase.co';
+  const item=(id,image)=>({sectionId:'mur',id,visibility:'public',status:'published',title:`Foto ${id}`,description:'Descripció',image});
+  const publicSnapshot=[item('publica',`${supabase}/storage/v1/object/public/mitjans/u1/foto.webp`),
+    item('signada',`${supabase}/storage/v1/object/sign/mitjans/u1/foto.webp?token=abc`),
+    item('autenticada',`${supabase}/storage/v1/object/authenticated/mitjans/u1/foto.webp`),
+    item('transformada',`${supabase}/storage/v1/render/image/public/mitjans/u1/foto.webp`),
+    item('codificada',`${supabase}/storage/v1/object/public/mitjans/u1/foto%20nova.webp`),
+    item('arrel',`${supabase}/storage/v1/object/public/foto.webp`),
+    item('rest',`${supabase}/rest/v1/foto.png`),
+    item('forana','https://altre.supabase.co/storage/v1/object/public/mitjans/u1/foto.webp'),
+    // Revisió adversarial · Només el bucket «mitjans», com urlSocialDe: cap altre bucket del mateix Supabase.
+    item('privats',`${supabase}/storage/v1/object/public/mitjans_privats/u1/dni.webp`),
+    item('xat',`${supabase}/storage/v1/object/public/xat_adjunts/fil/x.jpg`),
+    item('avatars',`${supabase}/storage/v1/object/public/avatars/u1.png`),
+    item('majuscules',`${supabase}/storage/v1/object/public/Mitjans/u1/foto.webp`),
+    item('fonda',`${supabase}/storage/v1/object/public/mitjans/u1/mitjans_privats/foto.webp`),
+    item('fondaautenticada',`${supabase}/storage/v1/object/public/mitjans/u1/object/authenticated/foto.webp`),
+    item('fondasignada',`${supabase}/storage/v1/object/public/mitjans/u1/object/sign/foto.webp`),
+    item('fondatransformada',`${supabase}/storage/v1/object/public/mitjans/u1/render/image/foto.webp`),
+    item('arrelmitjans',`${supabase}/storage/v1/object/public/mitjans/foto.webp`)];
+  const {manifest}=await buildSocialManifest({root,origin,policyRoot,publicSnapshot,imageOrigins:[supabase]});
+  assert.deepEqual(manifest.routes['/mur/publica'].image,{url:`${supabase}/storage/v1/object/public/mitjans/u1/foto.webp`,alt:'Foto publica'});
+  assert.equal(manifest.routes['/mur/arrelmitjans'].image.url,`${supabase}/storage/v1/object/public/mitjans/foto.webp`);
+  for(const id of ['signada','autenticada','transformada','codificada','arrel','rest','forana','privats','xat','avatars','majuscules','fonda','fondaautenticada','fondasignada','fondatransformada'])
+    assert.equal(manifest.routes[`/mur/${id}`].image.url,origin+'/assets/system/ui/og-socdepoble-1200x630.png',id);
+  // Mai més ample que el client: cada foto remota que el manifest admet, urlSocialDe també l'admet.
+  const {urlSocialDe}=await import(pathToFileURL(path.join(policyRoot,'src/config/imatgeSocial.js')).href);
+  for(const {id,image} of publicSnapshot)if(manifest.routes[`/mur/${id}`].image.url===image)assert.equal(urlSocialDe(image,{origen:origin,supabaseUrl:supabase}),image,id);
+  // Sense imageOrigins, tampoc la pública.
+  const sense=await buildSocialManifest({root,origin,policyRoot,publicSnapshot});
+  assert.equal(sense.manifest.routes['/mur/publica'].image.url,origin+'/assets/system/ui/og-socdepoble-1200x630.png');
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot,imageOrigins:['https://exemple.supabase.co/']}),/Origen d’imatge invàlid/);
 });

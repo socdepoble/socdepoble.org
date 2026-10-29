@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** P1-61 (Fase 2, pla 261028_1526). Sense xarxa ni credencials; no exporta cossos ni attributes.
- * API: buildSocialManifest({root,origin,policyRoot=root,publicSnapshot=[],imageOrigins=[],estricte=false}).
+ * API: buildSocialManifest({root,origin,policyRoot=root,publicSnapshot=[],imageOrigins=[],estricte=false,strictSnapshot=false}).
  * Fonts, totes del repositori (cap dada remota):
  *   · pàgines: SYSTEM_PAGES ∪ les pàgines de text de sections.js (pageKey), amb
  *     PAGE_COPY i la MATEIXA regla que el client (src/config/metadadesSocials.js
@@ -17,7 +17,15 @@
  * sense, la targeta genèrica, com abans.
  * Snapshot és una projecció explícita de publicacions públiques, MAI notes:
  * [{sectionId:'events'|'mur'|'mercat',id,visibility:'public',status:'published',
- *   title,description,image,imageAlt}]. No és l'esquema SQL del backend.
+ *   title,description,image,imageAlt}]. No és l'esquema SQL del backend; la
+ * produïx projeccio-publica.mjs (QA-H04). Una publicació remota mana sobre la
+ * llavor del mateix camí, també si només en canvien les majúscules (un disc del
+ * Mac no les distingix: seria el mateix fitxer): en producció (remot) el
+ * detall pinta la remota.
+ * imageOrigins: orígens https d'imatges que no són de l'origen (el Supabase del
+ * build): només el bucket públic «mitjans» de Storage
+ * (/storage/v1/object/public/mitjans/…, segments nets; la regla d'urlSocialDe),
+ * mai un altre bucket, /object/sign/ ni cap altre camí.
  * Retorna {manifest,evidence}; evidence és un rebut LOCAL separat, no publicable.
  */
 import fs from 'node:fs';
@@ -28,11 +36,20 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {textPla} from '../../src/config/metadadesSocials.js';
 
 const sha = text => createHash('sha256').update(text).digest('hex');
-const BASE_IMAGE = '/assets/system/ui/og-socdepoble-1200x630.png';
+export const BASE_IMAGE = '/assets/system/ui/og-socdepoble-1200x630.png';
 const MAX_FILE = 2 * 1024 * 1024;
-const MAX_SNAPSHOT = 8 * 1024 * 1024;
+export const MAX_SNAPSHOT = 8 * 1024 * 1024;
 const SOCIAL_SECTIONS = new Set(['events','mur','mercat']);
-const ID_DETALL = /^[A-Za-z0-9][A-Za-z0-9_-]{0,159}$/;
+export const ID_DETALL = /^[A-Za-z0-9][A-Za-z0-9_-]{0,159}$/;
+/* QA-H04 · L'únic camí admés d'una imatge d'un altre origen: un objecte del
+   bucket públic «mitjans» de Storage, amb cada segment net (sense '%', punts
+   al principi ni barres buides). És el PREFIX_PUBLIC_DE_MITJANS d'urlSocialDe
+   (src/config/imatgeSocial.js), sensible a les majúscules com ell: cap altre
+   bucket (avatars, xat_adjunts, mitjans_privats), ni la signatura
+   (/object/sign/), l'autenticat o les transformacions (/render/image/). */
+export const CAMI_PUBLIC_DE_STORAGE = /^\/storage\/v1\/object\/public\/mitjans\/(?:[a-zA-Z0-9_-][a-zA-Z0-9._-]*\/)*[a-zA-Z0-9_-][a-zA-Z0-9._-]*$/;
+/* El MITJA_PRIVAT del client: on siga del camí, un mitjà privat o temporal. */
+const MITJA_PRIVAT = /mitjans_privats|\/object\/(?:sign|authenticated)\/|\/render\/image\//i;
 const noSecret = text => !/(?:\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}|\bsb_(?:secret|publishable)_[A-Za-z0-9_-]{10,}|\bsk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/.test(text);
 
 /* Les llistes públiques: [ruta, secció que la registra, [clau, reserva] del
@@ -80,7 +97,7 @@ export function normalizedKey(raw,origin) {
   return u.pathname;
 }
 
-export async function buildSocialManifest({root,origin,policyRoot=root,publicSnapshot=[],imageOrigins=[],estricte=false}={}) {
+export async function buildSocialManifest({root,origin,policyRoot=root,publicSnapshot=[],imageOrigins=[],estricte=false,strictSnapshot=false}={}) {
   if (!root || !origin) throw new Error('root i origin són obligatoris.');
   root=fs.realpathSync(root);policyRoot=fs.realpathSync(policyRoot);
   const originUrl=new URL(origin);
@@ -91,7 +108,7 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   })]);
   const POLITIQUES=['tooling/wiki/lib/publication-policy.mjs','src/config/imatgeSocial.js','src/config/metadadesSocials.js',
     'src/config/rutaSocial.js','src/config/navigation.js','src/sections/wiki-de-poble/seoWiki.js','src/sections/wiki-de-poble/parseMarkdown.js',
-    'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js'];
+    'src/components/universal/editorial.js','src/sections/pobles/nomsDelPoble.js','src/utils/iniciEditorial.js'];
   const moduleAt = async rel => import(pathToFileURL(path.join(policyRoot,rel)).href);
   const [{publicMetadata,publicSeoRoute,confinedFile},{CAP_SOCIAL_BASE},{metadadesDePagina,metadadesDeDetall},{idDeDocumentWiki},{resolvePageSlugPath},
     {atributsPublics,metadadesDeDocumentPublic,metadadesDeDocumentWiki}]=await Promise.all(POLITIQUES.slice(0,6).map(moduleAt));
@@ -220,10 +237,11 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     let u=null;
     try {u=input.url?new URL(input.url,origin):null;} catch {u=null;}
     const invalid = !u || u.protocol!=='https:'||u.username||u.password||u.search||u.hash||!allowedImages.has(u.origin)
-      || !/\.(?:png|jpe?g|webp)$/i.test(u.pathname)|| /\/object\/sign\//i.test(u.pathname)
+      || !/\.(?:png|jpe?g|webp)$/i.test(u.pathname)|| MITJA_PRIVAT.test(u.pathname)
       || (input.type && !/^image\/(?:png|jpeg|webp)$/.test(input.type))
+      || (u.origin!==origin && !CAMI_PUBLIC_DE_STORAGE.test(u.pathname))
       || (u.origin===origin && (!u.pathname.startsWith('/assets/')||!confinedFile(root,path.join(root,'public',decodeURIComponent(u.pathname)))));
-    if(invalid&&input.url&&own&&estricte)throw new Error(`Imatge social no servible a ${route}: ${input.url}`);
+    if(invalid&&input.url&&own&&estricte)throw new Error(`Imatge social no servible a ${route}.`);
     if(invalid||(u.pathname===BASE_IMAGE&&u.origin===origin))u=new URL(BASE_IMAGE,origin);
     if(u.origin===origin) {
       const asset=confinedFile(root,path.join(root,'public',decodeURIComponent(u.pathname)));
@@ -277,6 +295,7 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   for(const [route,,titleKey,descriptionKey] of LLISTES) {
     if(publicSeoRoute(route))add(route,{title:tradueix(titleKey),description:tradueix(descriptionKey),image:null});
   }
+  const deLlavor=new Map();
   for(const [section,rel,name] of LLAVORS) {
     if(!hiEs(rel))continue;
     const file=sourceFile(rel);
@@ -289,6 +308,7 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
       const route=`/${section}/${item.id}`;
       const meta=metadadesDeDetall(section,item,imageOptions);blocked(route,meta.imatge);
       add(route,{title:meta.title,description:meta.description,image:meta.image,own:true});
+      const key=normalizedKey(route,origin);deLlavor.set(key.toLowerCase(),key);
     }
   }
   const ids=new Set();
@@ -306,7 +326,11 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
   for(const item of publicSnapshot) {
     if(!item||item.visibility!=='public'||item.status!=='published'||!SOCIAL_SECTIONS.has(item.sectionId))continue;
     if(typeof item.id!=='string'||!item.id||item.id.length>160||/[\u0000- /?#\\]/.test(item.id))throw new Error('ID de publicació invàlid.');
-    add(`/${item.sectionId}/${encodeURIComponent(item.id)}`,{title:item.title,description:item.description,image:item.image,imageAlt:item.imageAlt,type:'article'});
+    const route=`/${item.sectionId}/${encodeURIComponent(item.id)}`;
+    // QA-H04 · La remota substituïx la llavor del mateix camí, també amb altres majúscules (mai una pàgina, una llista ni la Wiki).
+    const plegada=normalizedKey(route,origin).toLowerCase();
+    if(deLlavor.has(plegada)){delete routes[deLlavor.get(plegada)];deLlavor.delete(plegada);}
+    add(route,{title:item.title,description:item.description,image:item.image,imageAlt:item.imageAlt,type:'article',own:strictSnapshot});
   }
   if(publicSnapshot.length)sources.set('projection:public-section-submissions',sha(JSON.stringify(publicSnapshot)));
   for(const [file,digest] of sourcePaths)if(sha(fs.readFileSync(file))!==digest)throw new Error('Una font ha canviat durant el build; regenereu el manifest.');

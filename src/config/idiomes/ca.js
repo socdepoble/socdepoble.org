@@ -1406,7 +1406,8 @@ export default {
   'section.xat.fake.iaia2': "Si t'agrada el que veus, registra't per a entrar al xat de veritat!",
   'section.xat.fake.sdp1': 'Benvingut a Sóc de Poble. Som una xarxa de pobles connectats.',
   'section.xat.fake.sdp2': "Registra't per a descobrir tot el que oferim.",
-  'section.xat.fake.reply': "Açò és una simulació. Registra't per a parlar amb els pobles de veritat!",
+  /* P1-52 (Fita 16 del Llibre Mestre, 261029) · Literal del Mestre: to pla de poble, sense pompositat. No es toca. */
+  'section.xat.fake.reply': 'Açò és una simulació. Si vols guardar la conversa, has de registrar-te, i ja està.',
   'section.xat.fake.botoRegistrat': "Registra't",
   /* Torn 260930 (T1): el full «Ajustos» (anatomia habitual de missatgeria). */
   'section.xat.ajustos.titol': 'Ajustos',
@@ -1775,5 +1776,8 @@ export default {
   'section.descarregues.guia.menu': "Obri el menú del navegador i tria l'opció d'instal·lar Sóc de Poble com a aplicació (al mòbil, «Afegeix a la pantalla d'inici»).",
   'section.descarregues.guia.vore': "Vore les instruccions de cada navegador",
   'section.descarregues.instalada': "Aplicació ja instal·lada en aquest dispositiu",
-  'section.descarregues.instalar': "Instal·lar l'App (PWA)"
+  'section.descarregues.instalar': "Instal·lar l'App (PWA)",
+  // P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El visor: fixar la informació del panell.
+  'section.multimedia.visor.fixar': "Fixar la informació",
+  'section.multimedia.visor.desfixar': "Deixar de fixar"
 };

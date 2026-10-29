@@ -3,10 +3,11 @@
  * pública per a Firebase Hosting, sense JavaScript al navegador (WhatsApp,
  * Telegram i la resta de rastrejadors lligen l'HTML tal com ix del servidor).
  *
- *   node tooling/seo/prerender-social.mjs --root . --dist dist --origin https://socdepoble.org [--snapshot JSON]
+ *   node tooling/seo/prerender-social.mjs --root . --dist dist --origin https://socdepoble.org [--snapshot JSON] [--mode production]
  *
  * Després de vite build (npm run build:social, l'últim pas de npm run build;
- * mai a build:natiu ni a build:wp):
+ * mai a build:natiu ni a build:wp), darrere de projeccio-publica.mjs, que
+ * escriu el --snapshot (QA-H04):
  *   1. Llig dist/index.html (fitxer regular, com a molt 1 MiB) i en guarda el
  *      sha256; prepareShell en lleva el head de la ruta i hi deixa un forat.
  *   2. Les metadades són les de buildSocialManifest (estricte): les mateixes
@@ -28,7 +29,14 @@
  *   5. og:image ha de ser un fitxer de dist/ amb bytes d'imatge: el MIME i les
  *      mides es lligen dels bytes (PNG, JPEG o WebP); una imatge absent, que
  *      no és imatge o 'bloquejada' és porta roja. Més de 600 KB, un avís.
- * Refusa camins que isquen de dist/, segments amb punts o codis %, cap
+ *      QA-H04 · O una foto del bucket públic «mitjans» de Storage del Supabase del
+ *      mateix build (imageOrigins; a la CLI, VITE_SUPABASE_URL, només amb --snapshot):
+ *      no és a dist/, i abans d'escriure res se'n fa un GET fitat (termini,
+ *      cap redirecció, 600 KB com a molt) que ha de tornar 200, un MIME PNG,
+ *      JPEG o WebP i els mateixos bytes; si no, la CLI bloqueja la release.
+ *      L’API conserva la reserva per a diagnòstic, excepte amb strictRemoteImages.
+ * Refusa camins que isquen de dist/, segments amb punts o codis %, dues rutes
+ * que només es distingixen per les majúscules (en APFS, el mateix fitxer), cap
  * directori del camí que siga un enllaç simbòlic (tampoc el de la ruta), i
  * sobreescriure cap fitxer; no toca mai dist/index.html (en comprova el sha al
  * final) i cada fitxer escrit conserva els mateixos script i link que ell.
@@ -42,14 +50,19 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
-import {ATRIBUT_SSR} from '../../src/config/imatgeSocial.js';
-import {buildSocialManifest, llegixSnapshot} from './build-social-manifest.mjs';
+import {ATRIBUT_SSR, CAP_SOCIAL_BASE} from '../../src/config/imatgeSocial.js';
+import {BASE_IMAGE, buildSocialManifest, CAMI_PUBLIC_DE_STORAGE, llegixSnapshot} from './build-social-manifest.mjs';
 import {prepareShell} from './prepare-social-shell.mjs';
+import {cosFitat, origensDImatge} from './projeccio-publica.mjs';
 import {renderSocialHead, SOCIAL_SLOT} from './social-edge.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const MAX_SHELL = 1024 * 1024;
 const AVIS_IMATGE = 600 * 1024;
+const MAX_IMATGES_REMOTES = 500;
+const TERMINI_IMATGE = 5000;
+const EN_PARALLEL = 6;
+const TIPUS_D_IMATGE = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9_-]{0,179}$/;
 /* Les rutes el fitxer de les quals també es servix a altres URL. */
 const SENSE_CANONICAL = new Set(['/wikidepoble']);
@@ -143,7 +156,8 @@ export function rutaEscrivible(distDir, served) {
   return target;
 }
 
-export async function prerenderSocial({root, dist = 'dist', origin, policyRoot = root, publicSnapshot = [], JSDOM: JSDOMArg = null}) {
+export async function prerenderSocial({root, dist = 'dist', origin, policyRoot = root, publicSnapshot = [], imageOrigins = [],
+  fetchImpl = globalThis.fetch, JSDOM: JSDOMArg = null, strictRemoteImages = false}) {
   if (!root || !origin) throw new Error('root i origin són obligatoris.');
   root = fs.realpathSync(root);
   comprovaFirebaseHosting(root);
@@ -164,13 +178,56 @@ export async function prerenderSocial({root, dist = 'dist', origin, policyRoot =
   const shellDom = new JSDOM(html);
   const recursosDelShell = recursos(shellDom.window.document);
   shellDom.window.close();
-  const {manifest, evidence} = await buildSocialManifest({root, origin, policyRoot, publicSnapshot, estricte: true});
+  const {manifest, evidence} = await buildSocialManifest({root, origin, policyRoot, publicSnapshot, imageOrigins, estricte: true, strictSnapshot: strictRemoteImages});
   const warnings = [];
   const images = new Map();
+  /* QA-H04 · Les fotos remotes (el bucket públic de Storage, imageOrigins), cada
+     una baixada una vegada i fitada abans d'escriure res: {type,width,height}
+     si es pot servir; si no, null (la targeta genèrica) i un avís. */
+  const remotes = new Map();
+  const esRemota = url => url.protocol === 'https:' && url.origin !== origin && imageOrigins.includes(url.origin)
+    && !url.search && !url.hash && !url.username && !url.password && CAMI_PUBLIC_DE_STORAGE.test(url.pathname);
+  async function verificaRemota(href) {
+    let resposta = null;
+    try {
+      resposta = await fetchImpl(href, {method: 'GET', redirect: 'error', headers: {Accept: 'image/png,image/jpeg,image/webp'}, signal: AbortSignal.timeout(TERMINI_IMATGE)});
+      const tipus = (resposta.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      if (resposta.status !== 200) throw new Error(`HTTP ${resposta.status}`);
+      if (!TIPUS_D_IMATGE.has(tipus)) throw new Error(`MIME ${tipus || 'absent'}`);
+      const bytes = await cosFitat(resposta, AVIS_IMATGE);
+      resposta = null;
+      const sniffed = sniffImage(bytes);
+      if (!sniffed || !sniffed.width || !sniffed.height) throw new Error('els bytes no són cap imatge PNG, JPEG ni WebP');
+      if (sniffed.type !== tipus) throw new Error(`declarada ${tipus}, els bytes diuen ${sniffed.type}`);
+      return sniffed;
+    } catch (error) {
+      await resposta?.body?.cancel?.().catch(() => {});
+      warnings.push(`${href}: ${error.message}; la targeta genèrica`);
+      return null;
+    }
+  }
+  const hrefsRemots = [...new Set(Object.values(manifest.routes).map(entry => new URL(entry.image.url)).filter(esRemota).map(url => url.href))].sort();
+  for (const href of hrefsRemots.slice(MAX_IMATGES_REMOTES)) {
+    remotes.set(href, null);
+    warnings.push(`${href}: més de ${MAX_IMATGES_REMOTES} imatges remotes; la targeta genèrica`);
+  }
+  const pendents = hrefsRemots.slice(0, MAX_IMATGES_REMOTES);
+  await Promise.all(Array.from({length: Math.min(EN_PARALLEL, pendents.length)}, async () => {
+    for (let href = pendents.shift(); href !== undefined; href = pendents.shift()) remotes.set(href, await verificaRemota(href));
+  }));
+  if (strictRemoteImages && [...remotes.values()].some(remota => !remota)) {
+    throw new Error('La primera imatge remota no es pot servir: la release no pot substituir-la pel logotip.');
+  }
+  const reserva = {url: new URL(BASE_IMAGE, origin).href, alt: CAP_SOCIAL_BASE.image.alt};
   /* La imatge d'una ruta, comprovada sobre dist/ (el que es desplega): mateix
-     origen i https, un fitxer de dist/assets amb bytes d'imatge. */
+     origen i https, un fitxer de dist/assets amb bytes d'imatge; o una remota
+     ja verificada, o, si no ho és, la targeta genèrica. */
   function imageOf(key, image) {
     const url = new URL(image.url);
+    if (esRemota(url) && remotes.has(url.href)) {
+      const remota = remotes.get(url.href);
+      return remota ? {url: url.href, alt: image.alt, ...remota} : imageOf(key, reserva);
+    }
     if (url.protocol !== 'https:' || url.origin !== origin || url.search || url.hash || !url.pathname.startsWith('/assets/')) {
       throw new Error(`Imatge social fora de l’origen a ${key}: ${image.url}`);
     }
@@ -203,11 +260,18 @@ export async function prerenderSocial({root, dist = 'dist', origin, policyRoot =
     if (from.includes('?')) throw new Error(`Àlies amb consulta: ${from}`);
     pages.push([from, to, false]);
   }
+  /* Revisió adversarial (QA-H04) · Duplicada també si només canvien les
+     majúscules (/mur/Aplec i /mur/aplec): el disc del Mac (APFS) no les
+     distingix, i el segon fitxer petava amb el dist/ ja a mitges. Ara, abans
+     d'escriure res. */
   const plan = new Map();
+  const plegades = new Map();
   for (const [served, key, formaDeCami] of pages) {
     const target = rutaEscrivible(distDir, served);
     const rel = path.relative(distDir, target);
-    if (plan.has(target)) throw new Error(`Ruta social duplicada: ${served}`);
+    const plegada = rel.toLowerCase();
+    if (plegades.has(plegada)) throw new Error(`Ruta social duplicada: ${served}${plegades.get(plegada) === served ? '' : ` (i ${plegades.get(plegada)}: sense majúscules, el mateix fitxer)`}`);
+    plegades.set(plegada, served);
     try { fs.lstatSync(target); throw new Error(`Ja existix i no se sobreescriu: ${rel}`); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     const entry = manifest.routes[key];
     if (!entry || entry.index !== true) throw new Error(`Ruta social sense metadades: ${served}`);
@@ -267,24 +331,27 @@ export async function prerenderSocial({root, dist = 'dist', origin, policyRoot =
     routesWritten: [...plan.values()].filter(p => !Object.hasOwn(manifest.aliases, p.served)).map(p => p.served).sort(),
     aliases: Object.entries(manifest.aliases).map(([from, to]) => ({from, to})),
     dirsFilled: fills.map(relDist).sort(),
+    remoteImages: [...remotes].filter(([, remota]) => remota).map(([href]) => href).sort(),
     warnings
   };
 }
 
-function parseArgs(argv) {
+async function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 2) {
     const k = argv[i];
-    if (!['--root', '--dist', '--origin', '--snapshot'].includes(k) || !argv[i + 1] || args[k]) throw new Error('Ús: --root RUTA --dist dist --origin https://socdepoble.org [--snapshot JSON]');
+    if (!['--root', '--dist', '--origin', '--snapshot', '--mode'].includes(k) || !argv[i + 1] || args[k]) throw new Error('Ús: --root RUTA --dist dist --origin https://socdepoble.org [--snapshot JSON] [--mode production]');
     args[k] = argv[i + 1];
   }
   const publicSnapshot = args['--snapshot'] ? llegixSnapshot(args['--snapshot']) : [];
-  return {root: args['--root'], dist: args['--dist'] || 'dist', origin: args['--origin'], publicSnapshot};
+  // QA-H04 · Les fotos del bucket públic: l'origen de Supabase del mateix build, només si hi ha projecció.
+  const imageOrigins = args['--snapshot'] && args['--root'] ? await origensDImatge({root: args['--root'], mode: args['--mode'] || 'production'}) : [];
+  return {root: args['--root'], dist: args['--dist'] || 'dist', origin: args['--origin'], publicSnapshot, imageOrigins, strictRemoteImages: true};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   // Dins de la promesa: un ús o un snapshot dolents també ixen com a rebut JSON.
-  Promise.resolve().then(() => prerenderSocial(parseArgs(process.argv.slice(2))))
+  Promise.resolve().then(() => parseArgs(process.argv.slice(2))).then(prerenderSocial)
     .then(receipt => { process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`); })
     .catch(error => { console.error(JSON.stringify({valid: false, error: error.message})); process.exitCode = 1; });
 }

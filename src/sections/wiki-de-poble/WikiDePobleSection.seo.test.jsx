@@ -18,7 +18,11 @@ vi.mock('../../data/wikiManifest.js', () => ({ wikiManifest: { categories: [], i
     content: '# El Llibre d’Or\n\n## Memòria contrastada i llegible\n\nText de la memòria.' },
   { id: 'altre', title: 'altre', tags: [], attributes: {}, content: '# Un altre document\n\nUna entradeta **pròpia** del document.' },
   { id: '03_llibre_d_or_memoria_episodica', title: 'Memòria', tags: [], attributes: { description: 'Memòria dels pobles' }, content: '# El Llibre d’Or' },
-  { id: 'privat', title: 'TÍTOL SECRET', tags: [], attributes: { visibility: 'private', description: 'DESCRIPCIÓ SECRETA' }, content: '# TÍTOL SECRET' }
+  { id: 'privat', title: 'TÍTOL SECRET', tags: [], attributes: { visibility: 'private', description: 'DESCRIPCIÓ SECRETA' }, content: '# TÍTOL SECRET' },
+  // R-07 · Una plantilla (comentari SDP:EIXIDA davant de l'H1) i un esborrany sense H1 (comentari sense tancar).
+  { id: 'plantilla_acta', title: 'plantilla_acta', tags: [], attributes: { description: 'Plantilla d’acta' },
+    content: '<!-- SDP:EIXIDA\ntype: acta\n-->\n<!-- Nom: aammdd_hhmm_acta_titol.md -->\n# Acta de sessió\n\n## Registre\n\nTaula.' },
+  { id: 'esborrany_bundle', title: 'esborrany_bundle', tags: [], attributes: {}, content: '<!-- obert\n# Fals' }
 ] } }));
 vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({
   UniversalWorkspace: ({ model, renderDetail }) => renderDetail({ item: model.items.find((item) => item.id === estat.id) })
@@ -111,6 +115,20 @@ test('un document privat, desconegut o una consulta repetida: genèric, sense in
     expect(canonical()).toBeNull();
     expect(contingut('meta[property="og:url"]')).toBeNull();
   }
+});
+
+test('R-07 · una plantilla amb el comentari davant porta l’H1 al head i a la pàgina; sense H1, l’id humanitzat', () => {
+  Object.assign(estat, { id: 'plantilla_acta', search: '?item=plantilla_acta' });
+  const vista = render(<WikiDePobleSection />);
+  expect(document.title).toBe('Acta de sessió | Sóc de Poble');
+  expect(estat.props.title).toBe('Acta de sessió');
+  expect(contingut('meta[property="og:description"]')).toBe('Registre');
+  expect(canonical()).toMatch(/\/portal\/wikidepoble\?item=plantilla_acta$/);
+  Object.assign(estat, { id: 'esborrany_bundle', search: '?item=esborrany_bundle' });
+  vista.rerender(<WikiDePobleSection />);
+  expect(document.title).toBe('Esborrany bundle | Sóc de Poble');
+  expect(document.head.textContent + JSON.stringify([...document.head.querySelectorAll('meta')].map((m) => m.content))).not.toMatch(/Fals|esborrany_bundle \|/);
+  expect(contingut('meta[name="robots"]')).toBeNull();
 });
 
 test('sense ?item=, la portada de la Wiki és indexable amb el canonical de la llista', () => {

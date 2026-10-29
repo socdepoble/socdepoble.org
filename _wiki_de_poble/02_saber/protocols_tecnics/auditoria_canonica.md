@@ -63,7 +63,7 @@ Inventariar les carpetes reals de la Wiki i distingir contingut operatiu, 04_esc
 ### Coherència executable
 
 - Verifica que cada script citat existisca en una ruta activa.
-- No presentes scripts d’`04_ARXIU_Documents_Historics` com a eines disponibles.
+- No presentes scripts de `90_arxiu_historic` com a eines disponibles.
 - Contrasta les garanties documentals amb dependències, configuració, tests i codi observable.
 
 ### Comandes canòniques
@@ -109,17 +109,6 @@ Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprova
 - [[02_genotip]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
-**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-
-
-
-
-
 ## Verificació
 
 [pendent]
@@ -131,3 +120,6 @@ Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprova
 ## Vincles
 
 - [[00_index]]
+- [[00_index_maquina]]
+- [[doc_governanca]]
+- [[00_arquitectura_tecnica_unificada]]

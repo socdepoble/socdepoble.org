@@ -203,6 +203,7 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
 import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
+import useXifratXat from './useXifratXat.js';
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
@@ -607,6 +608,7 @@ export function XatProvider({ children, config }) {
      renovació del JWT no és una sessió nova (vegeu la capçalera, «Dos àmbits»). */
   const clauPersona = JSON.stringify([backendScope(config), joId]);
   const ambitEstable = JSON.stringify([backendScope(config), joId, actorKey]);
+  const sincronitzaXifrat = useXifratXat({ config, joId, ambitEstable });
   /* Decisió 1 del Mestre (261007) · `token` és la clau de l'OPERACIÓ (porta
      `generacio` i la config: cada petició nova captura el testimoni nou) i
      `ambit` hi viatja perquè l'efecte de més avall sàpia si el testimoni nou és
@@ -975,6 +977,7 @@ export function XatProvider({ children, config }) {
     try {
       await hostReady(op.controller.signal);
       if (!vigent(op)) return false;
+      sincronitzaXifrat();
       const bruts = await loadFils({ ...config, signal: op.controller.signal });
       if (!vigent(op)) return false;
       if (meua !== genFils.current) return null;
@@ -1042,7 +1045,7 @@ export function XatProvider({ children, config }) {
     } finally {
       if (vigent(op) && meua === genFils.current) setEstat('ready');
     }
-  }, [joId, config, captura, vigent, avisaSiCal, mutaFils, mutaVisitants]);
+  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaFils, mutaVisitants]);
 
   /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ──
      Torna true o false com carregaFils.
@@ -1082,6 +1085,7 @@ export function XatProvider({ children, config }) {
       try {
         await hostReady(op.controller.signal);
         if (!vigent(op)) return { ok: false, plena: false };
+        sincronitzaXifrat();
         const opcions = { ...config, signal: op.controller.signal };
         if (incremental) opcions.despresDeSeq = desDe;
         if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
@@ -1154,7 +1158,7 @@ export function XatProvider({ children, config }) {
       }
     })();
     return lectura.promesa;
-  }, [joId, config, captura, vigent, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
+  }, [joId, config, captura, vigent, sincronitzaXifrat, avisaSiCal, mutaMissatges, mutaPendents, marcaCarregat, posaAvisFil, llevaAvisFil, publicaLectura]);
 
   /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
   const carregaMesAntics = useCallback(async (filId) => {
@@ -1172,6 +1176,7 @@ export function XatProvider({ children, config }) {
     try {
       await hostReady(op.controller.signal);
       if (!vigent(op)) return false;
+      sincronitzaXifrat();
       const opcions = { ...config, signal: op.controller.signal, abansDeSeq: minim, limit: LIMIT_PAGINA };
       if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
       const bruts = await loadMissatges(filId, opcions);
@@ -1203,7 +1208,7 @@ export function XatProvider({ children, config }) {
       /* La d'una operació avortada no esborra la que el relleu ja ha llançat. */
       if (carregantAnticsRef.current.get(filId) === op) carregantAnticsRef.current.delete(filId);
     }
-  }, [joId, config, captura, vigent, carregaMissatges, mutaMissatges, posaAvisFil, llevaAvisFil]);
+  }, [joId, config, captura, vigent, sincronitzaXifrat, carregaMissatges, mutaMissatges, posaAvisFil, llevaAvisFil]);
 
   /* ── Càrrega inicial. `joId` a la clau: canviar de sessió recarrega. ──
      Decisió 1 · Una renovació també hi torna (carregaFils penja de l'operació),

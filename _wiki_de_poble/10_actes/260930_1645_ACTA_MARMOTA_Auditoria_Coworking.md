@@ -2,7 +2,7 @@
 type: acta
 status: canonic
 description: "Acta Marmota de la sessió hipermassiva de Coworking (Fable + Codex)"
-tags: [memoria, marmota]
+tags: [acta, marmota]
 ---
 # Acta Marmota · 2026-09-30 16:45
 
@@ -26,3 +26,7 @@ Una de les sessions més massives de la història del projecte s'ha tancat amb �
 
 ## Conclusions per al Demà
 Tota la informació està arxivada a `90_arxiu_historic/`. L'arquitectura UX/UI per a la clonació funcional ja té un mapa establert gràcies a l'esforç col·lectiu i es troba empaquetada. La integració frontend-backend amb WP està llesta. El Mestre té ara l'àrdua tasca de revisar i confirmar les decisions pendents (D1-D17 de l'informe de Claude) abans d'implementar el nou disseny en la `src/`.
+
+## Vincles
+
+- [[00_index]]

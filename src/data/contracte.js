@@ -158,6 +158,19 @@ export const CAPACITATS = Object.freeze({
        renova=true obliga a una signatura nova (cap URL desada).
      Sense servidor/migració: error 'sense-capacitat', mai èxit local simulat. */
   xatMultimedia: Object.freeze(['quotaXat', 'publicaAdjuntXat', 'urlAdjuntXat', 'descartaAdjuntXat']),
+  /* P1-12 · Disseny E2EE §8.3: transport opac i opcional, sense activar el
+     decorador ni donar suport a un backend que no implemente el grup sencer.
+     Els arguments i resultats els conserva l'adaptador; ací no es deriva cap
+     RPC ni es recodifica cap sobre. fixaAmbit és del servei del decorador
+     (§8.1 / §21.1), no una operació de transport. */
+  clausXat: Object.freeze([
+    'publicaIdentitatXat', 'laMevaIdentitatXat', 'desaFraseXat', 'clausDeXat',
+    'desaLlibretaXat', 'laMevaLlibretaXat', 'estatXifratXat', 'epoquesDelFilXat',
+    'sobresMeusXat', 'obriEpocaXat', 'enviaXifratXat', 'reembolcallaXat', 'demanaXifratXat'
+  ]),
+  /* Separada de xatMultimedia: els quatre mètodes antics continuen sent un
+     grup complet, i un backend sense bytes xifrats no anuncia este grup nou. */
+  xatMultimediaXifrat: Object.freeze(['publicaAdjuntXifratXat', 'bytesAdjuntXat']),
   agenda: Object.freeze([
     'loadActesAgenda'
   ]),

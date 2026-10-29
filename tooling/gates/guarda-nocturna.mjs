@@ -2,6 +2,7 @@
 import { esMain } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import { PROJECT_DIR, ESCRIPTORI_DIR } from '../wiki/lib/project_paths.mjs';
 import { ROOT, options } from '../documental/cli.mjs';
 
 const FITXER_GUARDA = '.agents/runtime/guarda_nocturna.json';
@@ -79,7 +80,7 @@ export function comprovarGuarda(root) {
   }
 
   // Comprovar fitxers a l'escriptori per determinar si l'Onada ha acabat
-  const dirEscriptori = path.join(root, '_wiki_de_poble/04_escriptori');
+  const dirEscriptori = path.resolve(root) === path.resolve(PROJECT_DIR) ? ESCRIPTORI_DIR : path.join(root, path.relative(PROJECT_DIR, ESCRIPTORI_DIR));
   let hiHaAuditoriaAprovada = false;
   let hiHaInformeClaudeTancat = false;
   let detalls = [];

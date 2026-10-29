@@ -558,7 +558,8 @@ test('IDEA-40 · el full: tres colors, el verd de marca únic, icona blanca i ca
   const declaracio = (css, nom) => css.split(/[;{}]/).map((d) => d.trim()).find((d) => d.startsWith(`${nom}:`))?.slice(nom.length + 1).trim();
   const tokens = net('src/css/tokens.css');
   const verd = ['--sdp', 'verd'].join('-');
-  expect(declaracio(tokens, verd)).toBe(/* ALLOW_RAW_COLOR */ '#0f672f');
+  // QA-H03 (261029) · 7,10:1 sobre blanc, AAA (verdDeMarca.contrast.test.js ho mesura).
+  expect(declaracio(tokens, verd)).toBe(/* ALLOW_RAW_COLOR */ '#0e662e');
   expect(declaracio(tokens, '--sdp-crom-barra-lector')).toBe(`var(${verd})`);
   // L'èxit no canvia (Mestre 261028: cap canvi a --sdp-exit-500 ni a --sdp-exit-700).
   expect(['500', '700'].map((pas) => declaracio(tokens, `--sdp-exit-${pas}`))).toEqual([/* ALLOW_RAW_COLOR */ '#027e38', /* ALLOW_RAW_COLOR */ '#005c27']);

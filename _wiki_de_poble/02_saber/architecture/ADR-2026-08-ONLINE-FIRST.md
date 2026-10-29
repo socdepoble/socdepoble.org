@@ -9,6 +9,14 @@ tags:
 
 Sóc de Poble abandona la doctrina offline total i el suport específic per a l'A10: el servidor és la font de veritat de les dades compartides i la memòria cau local només és una ajuda opcional. Esta decisió retira la PWA, Dexie i la sincronització parcial, i deixa escrit el compromís extern que cal resoldre.
 
+## Nota de vigència (261029)
+
+Esta ADR es conserva com a registre històric i el seu nucli continua vigent (el servidor com a font de veritat de les dades compartides, l'autenticació de servidor per a tota dada privada i cap garantia de CRDT), però tres punts han quedat superats per decisions posteriors:
+
+- **PWA.** La retirada de la PWA (secció Conseqüències) queda esmenada per la closca sense xarxa de l'[[ADR-2026-10-APPS-DEL-DISPOSITIU]] i per la instal·lació de l'App des de `/descarregues` (`P1-69`, commit `e36606db2`).
+- **IndexedDB.** La migració de tota dada fora d'IndexedDB queda esmenada per les dades del dispositiu de la mateixa ADR-2026-10 i pel cofre xifrat local de l'[[ADR-2026-13-BYOP-XIFRAT-LOCAL]] damunt de `creaMagatzemIdb`.
+- **Accessibilitat.** L'objectiu WCAG 2.2 AA queda superat per l'objectiu AAA (contrast de text no inferior a 7:1) que el Mestre va fixar el 261004 («AAA sempre», Q1 del Mestre, anotat a `src/css/tokens.css` línies 66-67) i que apliquen `src/css/tokens.css` i el Llibre Mestre (`IDEA-40`, `QA-H03`).
+
 ## Estat
 
 Acceptada per al desenvolupament nou el 2 d’agost de 2026. L’impacte sobre la
@@ -57,6 +65,8 @@ mantindre CRDT/NixOS en un subprojecte, comunicar el canvi d'abast o retirar la 
 ## Vincles
 
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[ADR-2026-10-APPS-DEL-DISPOSITIU]]
+- [[ADR-2026-13-BYOP-XIFRAT-LOCAL]]
 - [[arquitectura_sistema_nervios]]
 - [[00_arquitectura_tecnica_unificada]]
 - [[00_index]]

@@ -21,15 +21,19 @@ contracte.escriu:
 ---
 # Cicle de vida documental
 
-1. Obri el torn: `node tooling/gates/obrir_torn.mjs --actor NOM --scope code --output /tmp/torn-NOM.json`. El punter és local i opcional; no sobreescriu un fitxer existent.
+1. Tria l’abast real: `documents` per a documentació i `code` si també has de modificar codi. Obri el torn documental: `node tooling/gates/obrir_torn.mjs --actor NOM --scope documents --output /tmp/torn-NOM.json`. El punter és local i opcional; no sobreescriu un fitxer existent.
 2. Per a crear documents, aplica el circuit únic de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]; esta skill governa el torn, el relleu i el tancament.
 3. Completa els camps editorials. El prompt local copia literalment Context i Olivera; valida amb `document.mjs check --file CAMI`.
 4. Vincula el pla aprovat amb `document.mjs plan --turn-id ID --file CAMI`. L’aprovació anterior continua vigent.
 5. En arbre compartit declara els fitxers propis amb `document.mjs own --turn-id ID --file CAMI`. La zona humana i els canvis de codi fora d’abast continuen vigilats globalment.
-6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes admeten `10_actes/` i l’Escriptori. Els noms nous són minúscules.
-7. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
+6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes noves es creen només a `10_actes/`. Els rebuts històrics conserven les destinacions de la seua instantània. Els noms nous són minúscules.
+7. Aplica la «Transició d’onada» d’ací baix. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
 8. Executa `node tooling/gates/tancament.mjs --check --turn-id ID`. És lectura. `--close --turn-id ID` segella el LEDGER dins de l’operació i repeteix comprovacions abans de persistir `closed`; si falla, no declara tancament.
 9. Versiona documents, `.agents/runtime/turns/*.json`, `.agents/runtime/contracts/*.json` i `.claude/skills/` junts. No versionis locks ni punters locals. El pre-commit continua bloquejant quan hi ha errors.
+
+## Transició d’onada
+
+El procés únic uneix Llibre Mestre, retenció, pla i prompt. Marca FET només els ítems verificats i trasllada al pla següent els pendents amb la font citada. Un commit o un pla nou no consumix informes encara necessaris: conserva cada consumidor, torn vigent o retenció acreditada. MarIA aplica el procediment mecànic de [[core-higiene-escriptori/SKILL|core-higiene-escriptori]] només als consumits, primer en mode sec, després amb el relleu de rebut que corresponga. Crea el pla abans dels prompts pel circuit de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]] i verifica portes i motius de retenció abans de convocar. No reescrigues rebuts tancats ni buides la taula.
 
 ## Retenció i memòria
 

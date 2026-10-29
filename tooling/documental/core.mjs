@@ -1,5 +1,6 @@
 /** Shared document primitives. No I/O on import; every operation has an explicit root. */
 import { CAMINS } from '../lib/arrel.mjs';
+import { markdownProse } from '../lib/markdown-prose.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -142,19 +143,11 @@ export function resolveRoute(contract, { route, intent, recipient } = {}) {
   return candidates[0];
 }
 export function withoutCode(body) {
-  let fence = null;
-  return body.replace(/<!--[\s\S]*?-->/g, '').split('\n').filter(line => {
-    const m = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (m) {
-      if (!fence) fence = m[1];
-      else if (m[1][0] === fence[0] && m[1].length >= fence.length) fence = null;
-      return false;
-    }
-    return !fence;
-  }).join('\n');
+  return markdownProse(body);
 }
+
 export function anchored(index, file) {
-  const clean = withoutCode(index).replace(/`[^`]*`/g, '').replace(/\\(?=[|#])/g,'');
+  const clean = withoutCode(index).replace(/\\(?=[|#])/g,'');
   const lexical = String(file).split(path.sep).join('/');
   const start = lexical.indexOf(`${CAMINS.wiki}/`);
   if (start < 0) return false;

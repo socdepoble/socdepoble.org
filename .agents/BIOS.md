@@ -1,7 +1,7 @@
 ---
 type: document
 status: canonic
-description: BIOS
+description: Seqüència d'arrencada i verificació del BIOS de Sóc de Poble
 ---
 # BIOS Cognitiu Executable (Sóc de Poble)
 
@@ -10,12 +10,16 @@ Aquest document descriu la seqüència d'arrencada (boot) que ha de seguir quals
 ## PASSOS DE LA SEQÜÈNCIA D'ARRENCADA
 1. **Verificar el BIOS**: Executar `node tooling/verify-bios.mjs` per garantir que el sistema de fitxers core està intacte.
 2. **Revisar el BOOTSTRAP**: Llegir `.agents/BOOTSTRAP.md` per conèixer els valors i l'arquitectura.
-3. **Assumir el Contracte**: Llegir `.agents/AGENTS.md` (La Font Única de Veritat Executiva).
+3. **Assumir el Contracte**: Llegir `AGENTS.md` de l’arrel, únic original normatiu. `.agents/AGENTS.md` és un mirall generat i es comprova amb `node tooling/gates/porta-autoritat.mjs`.
 4. **Verificar Portes Mecàniques**: Executar `npm run gate` per verificar que no hi ha regressions en persistència ni lints.
 5. **Comprovar el LEDGER**: Revisar `.agents/LEDGER.md` per veure les últimes decisions arquitectòniques històriques i signar-lo si es modifica (amb `node tooling/verify-ledger.mjs --sign`).
 
 ## CONFIGURACIÓ ACTIVA
 - **Model Arquitectònic**: Online-First Temporal amb Supabase.
-- **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/sdp-workflow/SKILL.md`).
+- **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/sdp-pedra-seca/SKILL.md`); `sdp-workflow` governa el procediment de treball.
 - **Emmagatzematge Local**: Eliminat a favor del model Online-First. No hi ha emmagatzematge persistit local (Poda del Quadrant A).
 - **Sessions de Negoci**: Les sessions d'usuari passaran exclusivament per cookies HttpOnly (Sollutia) o seran gestionades 100% al backend, sense exposar el token al client.
+
+## Vincles
+
+- [[00_bios]]

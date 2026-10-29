@@ -40,6 +40,14 @@ const fontAdaptadorXat = fs.readFileSync(path.resolve(__dirI18n, '../data/supaba
 import fontTextosDelPoble from '../sections/pobles/usePublicacionsDelPoble.js?raw';
 /* Onada 8 (261009) · El botó gran de la Consola i del Cervell. */
 import fontSystemPages from './systemPages.js?raw';
+/* P1-52 (Fita 16 del Llibre Mestre, 261029) · La resposta simulada del xat de mostra. */
+import fontFakeChat from '../sections/xat/components/FakeChatOnboarding.jsx?raw';
+/* Lane P1-22 (261029) · Els diccionaris sencers, per a la paritat en sentit contrari. */
+import CA from './idiomes/ca.js';
+import ES from './idiomes/es.js';
+import EN from './idiomes/en.js';
+import EU from './idiomes/eu.js';
+import GL from './idiomes/gl.js';
 
 const CLAUS = {
   'nav.panel': {
@@ -712,6 +720,16 @@ const CLAUS = {
     en: 'You are writing as yourself: in this conversation you do not speak for {entitat}.',
     eu: 'Zeure izenean idazten ari zara: elkarrizketa honetan ez zara {entitat}-(r)en izenean ari.',
     gl: 'Escribes como ti: nesta conversa non falas en nome de {entitat}.'
+  },
+  /* P1-52 (Fita 16 del Llibre Mestre, 261029) · Literal del Mestre per a la
+     resposta simulada del xat de mostra: to pla de poble, sense pompositat.
+     Les d'eu i gl són proposta a revisar per algú que les parle. */
+  'section.xat.fake.reply': {
+    ca: 'Açò és una simulació. Si vols guardar la conversa, has de registrar-te, i ja està.',
+    es: 'Esto es una simulación. Si quieres guardar la conversación, tienes que registrarte, y ya está.',
+    en: 'This is a simulation. If you want to keep the conversation, you have to sign up, and that’s it.',
+    eu: 'Simulazio bat da hau. Elkarrizketa gorde nahi baduzu, erregistratu behar duzu, eta kito.',
+    gl: 'Isto é unha simulación. Se queres gardar a conversa, tes que rexistrarte, e xa está.'
   }
 };
 
@@ -764,7 +782,7 @@ describe('claus i18n del torn T1–T4', () => {
      existix o no al diccionari. */
   const FONTS = {
     NotesEditor: fontNotesEditor, destinsControl: fontDestinsControl, EstatErrorDades: fontEstatError, CalendariSection: fontCalendari,
-    MarcaAmfitrio: fontMarcaAmfitrio, estatConnexio: fontEstatConnexio
+    MarcaAmfitrio: fontMarcaAmfitrio, estatConnexio: fontEstatConnexio, FakeChatOnboarding: fontFakeChat
   };
   /* Ordre del Mestre, 261001 · Les tres claus del Calendari: la reserva de
      l'error ja porta l'apòstrof tipogràfic («s’han»), el mateix del
@@ -786,7 +804,8 @@ describe('claus i18n del torn T1–T4', () => {
     ['amfitrio.tanca', 'MarcaAmfitrio'],
     ['connexio.activa', 'estatConnexio'],
     ['connexio.connectant', 'estatConnexio'],
-    ['connexio.sense', 'estatConnexio']
+    ['connexio.sense', 'estatConnexio'],
+    ['section.xat.fake.reply', 'FakeChatOnboarding']
   ])('%s: la reserva de %s és el valor valencià', (clau, fitxer) => {
     const font = FONTS[fitxer];
     const crida = fitxer === 'destinsControl'
@@ -915,5 +934,18 @@ describe('claus i18n del torn T1–T4', () => {
   test('amfitrio.servidor ja no existix en cap llengua', () => {
     for (const codi of LLENGUES) expect([codi, createTranslator(codi)('amfitrio.servidor')]).toEqual([codi, 'amfitrio.servidor']);
     expect(fontI18n.includes(`'amfitrio.servidor':`)).toBe(false);
+  });
+
+  /* Lane P1-22 (261029) · LLEI_07 i i18n.idiomes.test.js només miren que el
+     valencià siga dins de cada llengua; la pols en sentit contrari (nav.skills
+     només a eu i gl, sense cap secció ni cap t() que la demanara) no la veia
+     ningú. Retirada, i la guarda en els dos sentits. */
+  test('nav.skills ja no existix en cap llengua', () => {
+    for (const codi of LLENGUES) expect([codi, createTranslator(codi)('nav.skills')]).toEqual([codi, 'nav.skills']);
+    expect(fontI18n.includes(`'nav.skills':`)).toBe(false);
+  });
+
+  test.each(Object.entries({ es: ES, en: EN, eu: EU, gl: GL }))('%s: cap clau que el valencià no tinga', (codi, dic) => {
+    expect(Object.keys(dic).filter((clau) => !Object.hasOwn(CA, clau))).toEqual([]);
   });
 });

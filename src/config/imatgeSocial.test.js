@@ -13,6 +13,9 @@
        separar; amb una triada, se separen a propòsit i la portada no la llig;
      · una primera imatge que no es pot servir queda 'bloquejada': mai es
        passa a la segona ni al logotip;
+     · R-01/R-02 (pla 261029_0216): un original amb variant social
+       (VARIANTS_SOCIALS) va al <head> com la variant -social-1200x630.jpg;
+       `ref`, les candidates i la portada continuen sent l'original;
      · srcsDeLesImg llig HTML i Markdown en ordre i no penja amb 1 MB hostil.
    La instantània remota de la Samarreta és la fila marketItems d'app_content
    de producció (lectura anònima del 27-10-2026, versió 250035): set fotos, i
@@ -32,6 +35,7 @@ import {
   MOTIUS_DE_BLOQUEIG,
   ORIGEN_SOCIAL_PER_DEFECTE,
   TIPUS_DE_PAGINA,
+  VARIANTS_SOCIALS,
   esImatgeDeReserva,
   imatgesDeLaPagina,
   primerValor,
@@ -55,6 +59,8 @@ const PUBLIC_DE_MITJANS = `${SUPABASE}/storage/v1/object/public/mitjans/`;
 
 const CARPETA = '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble';
 const XICA = `${CARPETA}/01-chica-jersey.png`;
+/* R-01 · La variant social de la xica, la que va al <head> (la portada continua sent el .png). */
+const XICA_SOCIAL = `${CARPETA}/01-chica-jersey-social-1200x630.jpg`;
 const LOGO_SVG = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 const AVATAR_JAVI = '/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.webp';
 
@@ -163,9 +169,9 @@ describe('una fulla sense imports, per a Vite i per a node pla', () => {
     expect(eixida.status).toBe(0);
     const { noms, triada } = JSON.parse(eixida.stdout);
     expect(noms).toEqual(['ATRIBUT_SSR', 'CAP_SOCIAL_BASE', 'HERO_PER_DEFECTE', 'IMATGES_DE_RESERVA', 'MARQUES', 'MARQUES_SVG_ANTIGUES',
-      'MOTIUS_DE_BLOQUEIG', 'ORIGEN_SOCIAL_PER_DEFECTE', 'TIPUS_DE_PAGINA', 'esImatgeDeReserva', 'imatgesDeLaPagina', 'primerValor',
+      'MOTIUS_DE_BLOQUEIG', 'ORIGEN_SOCIAL_PER_DEFECTE', 'TIPUS_DE_PAGINA', 'VARIANTS_SOCIALS', 'esImatgeDeReserva', 'imatgesDeLaPagina', 'primerValor',
       'primeraImatgeSocial', 'srcsDeLesImg', 'urlSocialDe']);
-    expect(triada).toEqual({ estat: 'triada', ref: XICA, url: `https://socdepoble.org${XICA}`, posicio: 0 });
+    expect(triada).toEqual({ estat: 'triada', ref: XICA, url: `https://socdepoble.org${XICA_SOCIAL}`, posicio: 0 });
   });
 });
 
@@ -637,8 +643,16 @@ describe('imatgesDeLaPagina · Mur, Agenda, Pobles, Pàgines i Notes', () => {
 
 describe('urlSocialDe: només el que pot baixar un rastrejador sense sessió', () => {
   test('/assets/… i el mateix origen dins d’/assets/, amb l’origen públic o el que es passe', () => {
-    expect(urlSocialDe(XICA)).toBe(`https://socdepoble.org${XICA}`);
-    expect(urlSocialDe(`https://socdepoble.org${XICA}?v=2#diapositiva`)).toBe(`https://socdepoble.org${XICA}?v=2`);
+    // R-01 · La xica té variant social: el <head> porta la variant, sense la consulta de l'original.
+    expect(urlSocialDe(XICA)).toBe(`https://socdepoble.org${XICA_SOCIAL}`);
+    expect(urlSocialDe(`https://socdepoble.org${XICA}?v=2#diapositiva`)).toBe(`https://socdepoble.org${XICA_SOCIAL}`);
+    // OG-01 (revisió final 261029) · La bessona .webp d'un original amb variant (una publicació remota la nomena) també va a la variant: WhatsApp no pinta WebP.
+    expect(urlSocialDe('/assets/uploads/brain/mac_mini_m4_1787721966622.webp')).toBe('https://socdepoble.org/assets/uploads/brain/mac_mini_m4_1787721966622-social-1200x630.jpg');
+    expect(urlSocialDe('/assets/events/aplec_2023_cartell.webp')).toBe('https://socdepoble.org/assets/events/aplec_2023_cartell-social-1200x630.jpg');
+    // Una .webp sense original amb variant es queda com està.
+    expect(urlSocialDe('/assets/uploads/mercat/sense-variant.webp')).toBe('https://socdepoble.org/assets/uploads/mercat/sense-variant.webp');
+    // Sense variant: el fragment se'n lleva i la consulta es queda, com sempre.
+    expect(urlSocialDe('https://socdepoble.org/assets/uploads/mercat/foto.jpg?v=2#diapositiva')).toBe('https://socdepoble.org/assets/uploads/mercat/foto.jpg?v=2');
     expect(urlSocialDe('/assets/uploads/l\'horta amb espai.jpg')).toBe("https://socdepoble.org/assets/uploads/l'horta%20amb%20espai.jpg");
     expect(urlSocialDe('/assets/x.jpg', { origen: 'https://staging.socdepoble.org/' })).toBe('https://staging.socdepoble.org/assets/x.jpg');
     expect(urlSocialDe('/assets/x.jpg', { origen: 'http://localhost:3340' })).toBe(null);
@@ -746,7 +760,7 @@ describe('urlSocialDe: només el que pot baixar un rastrejador sense sessió', (
 
 describe('primeraImatgeSocial: la primera, o bloquejada, o absent', () => {
   test('la Samarreta de producció i la de la llavor: la xica, posició 0, URL de socdepoble.org', () => {
-    const esperada = { estat: 'triada', ref: XICA, url: `https://socdepoble.org${XICA}`, posicio: 0 };
+    const esperada = { estat: 'triada', ref: XICA, url: `https://socdepoble.org${XICA_SOCIAL}`, posicio: 0 };
     expect(primeraImatgeSocial('mercat', SAMARRETA_REMOTA)).toEqual(esperada);
     expect(primeraImatgeSocial('mercat', MOCK_MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble'))).toEqual(esperada);
   });
@@ -810,7 +824,7 @@ describe('primeraImatgeSocial: la primera, o bloquejada, o absent', () => {
     expect(primeraImatgeSocial('pagina', { title: 'Sense imatge', html: '<p>Hola</p>' })).toEqual({ estat: 'absent' });
     /* P1-60 · /projecte nomena el panorama: és la seua. */
     expect(primeraImatgeSocial('pagina', { title: 'Projecte', image: HERO_PER_DEFECTE }))
-      .toEqual({ estat: 'triada', ref: HERO_PER_DEFECTE, url: `https://socdepoble.org${HERO_PER_DEFECTE}`, posicio: 0 });
+      .toEqual({ estat: 'triada', ref: HERO_PER_DEFECTE, url: `https://socdepoble.org${VARIANTS_SOCIALS[HERO_PER_DEFECTE]}`, posicio: 0 });
     expect(primeraImatgeSocial('pagina', { image: '/assets/uploads/brain/pagina.webp' }))
       .toEqual({ estat: 'triada', ref: '/assets/uploads/brain/pagina.webp', url: 'https://socdepoble.org/assets/uploads/brain/pagina.webp', posicio: 0 });
     expect(primeraImatgeSocial('notes', { image_url: XICA })).toEqual({ estat: 'absent' });
@@ -892,5 +906,45 @@ describe('la imatge que tria l’autor (og_image, o featured_image) va primera',
     expect(imatgesDeLaPagina('mercat', { og_image: HERO_PER_DEFECTE, featured_image: DESTACADA, images: [XICA] })).toEqual([XICA]);
     expect(imatgesDeLaPagina('mur', { og_image: AVATAR_JAVI, avatar_url: AVATAR_JAVI, featured_image: DESTACADA, imageSrc: '/assets/uploads/mur/portada.jpg' }))
       .toEqual(['/assets/uploads/mur/portada.jpg']);
+  });
+});
+
+/* Pla 261029_0216 (R-01/GM2-01 i R-02) · Les variants socials: el mapa, la
+   URL del <head> i la Llei del Píxel (ref i portada no canvien). El pes, les
+   mides, el format i l'EXIF de cada fitxer els fixa imatgeSocial.pes300.test.js. */
+describe('VARIANTS_SOCIALS: la variant va al <head>; l’original, a la pàgina (R-01, R-02)', () => {
+  test('cada parell existix a public/, a la mateixa carpeta i amb el sufix -social-1200x630.jpg; congelat; cap variant és reserva', () => {
+    expect(Object.isFrozen(VARIANTS_SOCIALS)).toBe(true);
+    expect(Object.keys(VARIANTS_SOCIALS).length).toBeGreaterThanOrEqual(17);
+    for (const [original, variant] of Object.entries(VARIANTS_SOCIALS)) {
+      expect(variant).toBe(original.replace(/\.[^./]+$/, '-social-1200x630.jpg'));
+      expect(existsSync(path.join(ARREL, 'public', original)), original).toBe(true);
+      expect(existsSync(path.join(ARREL, 'public', variant)), variant).toBe(true);
+      expect(IMATGES_DE_RESERVA).not.toContain(variant);
+    }
+    expect(VARIANTS_SOCIALS[XICA]).toBe(XICA_SOCIAL);
+    // La targeta base es commuta amb index.html i useSEO.js alhora: no és cap parell del mapa.
+    expect(VARIANTS_SOCIALS).not.toHaveProperty([CAP_SOCIAL_BASE.image.url]);
+  });
+
+  test('urlSocialDe: l’original propi (també codificat, amb barres repetides, amb consulta o amb l’origen de qui crida) dona la variant; un altre host, no', () => {
+    const variant = `https://socdepoble.org${XICA_SOCIAL}`;
+    expect(urlSocialDe(XICA)).toBe(variant);
+    expect(urlSocialDe(`https://socdepoble.org${XICA}?v=2#diapositiva`)).toBe(variant);
+    expect(urlSocialDe(XICA.replace('01-chica', '01-chic%61'))).toBe(variant);
+    expect(urlSocialDe(XICA.replace('/mercat/', '//mercat/'))).toBe(variant);
+    expect(urlSocialDe(XICA, { origen: 'https://staging.socdepoble.org' })).toBe(`https://staging.socdepoble.org${XICA_SOCIAL}`);
+    expect(urlSocialDe(`https://fora.example${XICA}`)).toBe(null);
+    expect(urlSocialDe(XICA_SOCIAL)).toBe(variant);
+  });
+
+  test('primeraImatgeSocial i imatgesDeLaPagina: ref i candidates són l’original (Llei del Píxel); només url canvia', () => {
+    const samarreta = MOCK_MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
+    expect(imatgesDeLaPagina('mercat', samarreta)[0]).toBe(XICA);
+    expect(primeraImatgeSocial('mercat', samarreta)).toEqual({ estat: 'triada', ref: XICA, url: `https://socdepoble.org${XICA_SOCIAL}`, posicio: 0 });
+    expect(primeraImatgeSocial('pobles', { image_url: '/assets/towns/relleu/1.jpg' }))
+      .toEqual({ estat: 'triada', ref: '/assets/towns/relleu/1.jpg', url: 'https://socdepoble.org/assets/towns/relleu/1-social-1200x630.jpg', posicio: 0 });
+    // Un original sense variant, com sempre.
+    expect(primeraImatgeSocial('pobles', { image_url: '/assets/towns/sella/1.jpg' }).url).toBe('https://socdepoble.org/assets/towns/sella/1.jpg');
   });
 });

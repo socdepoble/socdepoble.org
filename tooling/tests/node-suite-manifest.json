@@ -14,8 +14,12 @@
     "tests/cognitive-hook-safety.test.mjs",
     "tests/cognitive-preflight.test.mjs",
     "tests/conformitat-amfitrio.test.mjs",
+    "tests/destins-canonics.test.mjs",
+    "tests/destins-hook.test.mjs",
     "tests/dist-secrets.test.mjs",
+    "tests/document-links-prose.test.mjs",
     "tests/documental.test.mjs",
+    "tests/draft-attachment-anchoring.test.mjs",
     "tests/enxufe-empaqueta.test.mjs",
     "tests/enxufe-pantalla.test.mjs",
     "tests/enxufe-plugin.test.mjs",
@@ -34,12 +38,23 @@
     "tests/porta-olivera-v3.test.mjs",
     "tests/porta-reflex.test.mjs",
     "tests/public_exports.test.mjs",
+    "tests/search-cli-wire.test.mjs",
     "tests/security-chain.test.mjs",
     "tests/sistema_nervios.test.mjs",
     "tests/standalone-build.test.mjs",
+    "tests/t11-arxiu-fossils-bundle.test.mjs",
+    "tests/t11-cens-documental.test.mjs",
+    "tests/t11-equip-contracte.test.mjs",
+    "tests/t11-parser-consumers.test.mjs",
+    "tests/t11-retirada-planificacio.test.mjs",
+    "tests/t11-retrieval-provenance.test.mjs",
     "tests/verificador-scc.test.mjs",
     "tests/vite-empremta-dev.test.mjs",
-    "tooling/gates/guarda-nocturna.test.mjs"
+    "tests/wiki-backlinks-readonly.test.mjs",
+    "tooling/gates/guarda-nocturna.test.mjs",
+    "tooling/seo/projeccio-publica.test.mjs",
+    "tooling/wiki/tests/contract_consistency.test.mjs",
+    "tooling/wiki/tests/contradiction_engine.t11.test.mjs"
   ],
   "files": [
     {
@@ -128,6 +143,16 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/destins-canonics.test.mjs",
+      "suite": "primary",
+      "reason": "T11: projecció de destinacions, càrrega de context i hook amb rebuts reals; comprovacions de només lectura i denegacions conservades."
+    },
+    {
+      "path": "tests/destins-hook.test.mjs",
+      "suite": "primary",
+      "reason": "T11: projecció de destinacions, càrrega de context i hook amb rebuts reals; comprovacions de només lectura i denegacions conservades."
+    },
+    {
       "path": "tests/dist-secrets.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -148,9 +173,19 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/document-links-prose.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió obligatòria de la prosa compartida entre documental, Olivera i SCC; fences, comentaris, spans inline, escapaments i preservació del resolutor C1."
+    },
+    {
       "path": "tests/documental.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/draft-attachment-anchoring.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
     },
     {
       "path": "tests/enllacos-sessio.test.mjs",
@@ -473,6 +508,11 @@
       "reason": "Regressió del sanejament instal·lat: caducitat sense falsa verificació i protecció lock/CAS."
     },
     {
+      "path": "tests/search-cli-wire.test.mjs",
+      "suite": "primary",
+      "reason": "Compatibilitat persistent del RAG públic: JSON a Map/Set, normes coherents, rebuig de corpus incomplet i cerca sense canviar pesos ni ordre."
+    },
+    {
       "path": "tests/security-chain.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -486,6 +526,36 @@
       "path": "tests/standalone-build.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/t11-arxiu-fossils-bundle.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable de l’arxiu dels set fòssils: CLI amb fixture sintètica i invariants d’absència al corpus viu i preservació byte a byte dels originals."
+    },
+    {
+      "path": "tests/t11-cens-documental.test.mjs",
+      "suite": "primary",
+      "reason": "T11: cens verificable de skills, esquema documental, invariants i pins exactes de font; no score semàntic general."
+    },
+    {
+      "path": "tests/t11-equip-contracte.test.mjs",
+      "suite": "primary",
+      "reason": "Contracte de rols, cens vigent i referències de l’equip IA sense duplicar fonts d’autoritat."
+    },
+    {
+      "path": "tests/t11-parser-consumers.test.mjs",
+      "suite": "primary",
+      "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
+    },
+    {
+      "path": "tests/t11-retirada-planificacio.test.mjs",
+      "suite": "primary",
+      "reason": "T11: regressió portable dels consumidors documentals i compatibilitat de rebuts durant la retirada de rutes."
+    },
+    {
+      "path": "tests/t11-retrieval-provenance.test.mjs",
+      "suite": "primary",
+      "reason": "Contracte de fonts de recuperació: Wiki pública i regles vigents sense arxiu, fòssils ni corpus protegits."
     },
     {
       "path": "tests/time-machine.test.mjs",
@@ -548,6 +618,11 @@
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/wiki-backlinks-readonly.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
+    },
+    {
       "path": "tests/xat_f0_migracio.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -593,6 +668,11 @@
       "reason": "P1-61 Fase 2 · prerender estàtic de dist/<ruta>/index.html: fixture de dist amb hashos i dades de veres sobre un dist temporal; cap xarxa."
     },
     {
+      "path": "tooling/seo/projeccio-publica.test.mjs",
+      "suite": "primary",
+      "reason": "QA-H04 · projecció pública sanejada de les publicacions remotes (app_content amb la clau anon) cap al --snapshot del prerender: fetch simulat, cap xarxa ni credencial real; política de fallada, sostre de mida i retirada en el build següent."
+    },
+    {
       "path": "tooling/seo/site-policy.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · política HTTP derivada de firebase.json i composició amb el nucli social; fixtures portables."
@@ -606,6 +686,16 @@
       "path": "tooling/seo/social-http.test.mjs",
       "suite": "primary",
       "reason": "P1-61 Fase 2 · prova HTTP local del Llibre d’Or amb User-Agent de WhatsApp; genera els artefactes del repositori en una carpeta temporal."
+    },
+    {
+      "path": "tooling/wiki/tests/contract_consistency.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
+    },
+    {
+      "path": "tooling/wiki/tests/contradiction_engine.t11.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable T11: coherència, catàlegs, ancoratge compartit i consulta documental sense efectes laterals."
     }
   ]
 }

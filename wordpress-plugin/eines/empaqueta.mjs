@@ -58,7 +58,8 @@ export const ARREL_REPO = path.resolve(ARREL_PLUGIN, '..');
 
 /** Fitxers de l'adaptador que viatgen al paquet de WordPress (llista blanca). */
 export const ADAPTADOR = Object.freeze({
-  fitxers: Object.freeze(['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt']),
+  fitxers: Object.freeze(['socdepoble-enxufe.php', 'uninstall.php', 'readme.txt',
+    'assets/banner-772x250.png', 'assets/banner-1544x500.png']),
   carpetes: Object.freeze(['includes', 'templates', 'languages'])
 });
 

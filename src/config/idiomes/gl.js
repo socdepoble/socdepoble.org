@@ -54,6 +54,7 @@ export default {
   'editor.targetes.esquerra': 'Esquerda',
   'editor.targetes.dreta': 'Dereita',
   'editor.targetes.lleva': 'Quitar a tarxeta',
+  /* Pla 261028_1526 (P1-22, TE-02) · L’avís d’una targeta incrustada a l’editor (DocumentEditor.jsx). Pendent de revisió nadiua. */
   'editor.targetes.avis.titol': 'Esta tarxeta é unha vista previa',
   'editor.targetes.avis.descripcio': 'Esta tarxeta está incrustada no documento que editas. Os seus botóns —conectar, traducir, comentar e compartir— só funcionan cando se le o documento publicado.',
   'editor.targetes.avis.entesos': 'Entendido',
@@ -100,6 +101,7 @@ export default {
   'section.pobles.error': 'Error carregant els pobles.',
   'section.realitat.title': 'Realitat',
   'section.realitat.subtitle': 'Ti decides canta intelixencia artificial te acompaña',
+  /* Pla 261028_1526 (P1-22, TE-02) · SelectorRealitat.jsx. Pendent de revisió nadiua. */
   'section.realitat.acompanyants': 'Escolle os teus acompañantes',
   'section.realitat.lead': 'Cada nivel indica ata onde pode chegar a IA. A escolla gárdase só neste navegador e podes cambiala cando queiras.',
   'section.realitat.nivells': 'Nivel de interacción coa IAIA',
@@ -121,7 +123,6 @@ export default {
   'nav.constitucio': 'Constitución',
   'nav.constitucioShort': 'Leis',
   'nav.disseny': 'Deseño',
-  'nav.skills': 'Skills',
   'nav.wikidepoble': 'Wiki de Poble',
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': 'A alma da iaia',
@@ -161,6 +162,7 @@ export default {
   'common.back': 'Voltar',
   'common.entesos': 'Entendido',
   'common.reintenta': 'Téntao de novo',
+  /* Pla 261028_1526 (P1-22, TE-02) · DialegTriaTargeta.jsx: el botó de tancar el diàleg. Pendent de revisió nadiua. */
   'common.cancela': 'Cancelar',
   'app.tagline': 'Rede pública do pobo.',
   'app.description': 'Portal público do pobo.',
@@ -202,6 +204,7 @@ export default {
   'section.mercat.searchPlaceholder': 'Busca produtos, tendas ou categorías...',
   'section.mercat.results': 'resultados',
   'section.mercat.variations': 'variantes',
+  /* Pla 261028_1526 (P1-22, TE-02) · La compra d’un producte amb variants (detailSectionMeta.jsx). Pendent de revisió nadiua. */
   'section.mercat.esgotat': 'Esgotado',
   'section.mercat.variant': 'Variante',
   'section.mercat.triaVariant': 'Escolle a variante',
@@ -722,6 +725,7 @@ export default {
   'section.notes.format.bold': 'Grosa',
   'section.notes.format.italic': 'Cursiva',
   'section.notes.format.strike': 'Riscado',
+  /* Pla 261028_1526 (P1-22, TE-02) · UniversalToolbar.jsx. Pendent de revisió nadiua. */
   'section.notes.format.orderedList': 'Lista numerada',
   'section.notes.delete': 'Borrar',
   'section.control.lead': 'Publica, conecta e axusta o teu espazo dende un só lugar.',
@@ -1118,6 +1122,7 @@ export default {
   'section.perfil.public.aparador.mercat.buit': '{nom} non ten nada recente no escaparate do Mercado deste pobo.',
   'section.perfil.public.aparador.agenda': 'Axenda',
   'section.perfil.public.aparador.agenda.buit': '{nom} non ten ningún acto recente na Axenda deste pobo.',
+  /* Pla 261028_1526 (P1-22, TE-02) · La fitxa pública (PerfilPublicSection.jsx). Pendent de revisió nadiua. */
   'section.perfil.public.noTrobat': 'Perfil non atopado',
   'section.perfil.public.noTrobatText': 'Ninguén do pobo ten este identificador, ou a súa ficha é privada.',
   'section.perfil.public.noTrobatTextRemot': 'Ninguén do pobo ten este identificador, ou a súa ficha é privada. As fichas doutras persoas aínda non se poden abrir neste servidor.',
@@ -1152,6 +1157,7 @@ export default {
   'section.perfil.privacitat.dades.errorCompartir': 'Non se puido compartir o ficheiro. Copia o seu texto e gárdao ti.',
   'section.perfil.privacitat.dades.copiat': 'Texto copiado. Pégao nunha nota ou nun correo e gárdao como {nom}.',
   'section.perfil.privacitat.dades.errorCopiar': 'Non se puido copiar o texto. Selecciónao no cadro e cópiao ti.',
+  /* Pla 261028_1526 (P1-22, TE-01) · La resta de «Privacitat i dades» (DetallPrivacitat.jsx, TEXTOS_PRIVACITAT). Pendent de revisió nadiua. */
   'section.perfil.privacitat.pagina.titol': 'Privacidade e datos',
   'section.perfil.privacitat.pagina.lead': 'Os teus dereitos sobre o que gardamos: unha copia dos datos, o consentimento e a baixa.',
   'section.perfil.privacitat.pagina.buit': 'Este nodo aínda non ofrece ningunha destas opcións.',
@@ -1358,7 +1364,8 @@ export default {
   'section.xat.fake.iaia2': 'Se che gusta o que ves, rexístrate para entrar no chat de verdade!',
   'section.xat.fake.sdp1': 'Benvido a Sóc de Poble. Somos unha rede de vilas conectadas.',
   'section.xat.fake.sdp2': 'Rexístrate para descubrir todo o que ofrecemos.',
-  'section.xat.fake.reply': 'Isto é unha simulación. Rexístrate para falar coas vilas de verdade!',
+  /* P1-52 (261029) · La resposta simulada, en el to pla del Mestre. Pendent de revisió nadiua. */
+  'section.xat.fake.reply': 'Isto é unha simulación. Se queres gardar a conversa, tes que rexistrarte, e xa está.',
   'section.xat.fake.botoRegistrat': 'Rexístrate',
   'section.xat.ajustos.titol': 'Axustes',
   'section.xat.ajustos.obri': 'Ti: axustes',
@@ -1721,5 +1728,8 @@ export default {
   'section.descarregues.guia.menu': "Abre o menú do navegador e escolle a opción de instalar Sóc de Poble como aplicación (no móbil, «Engadir á pantalla de inicio»).",
   'section.descarregues.guia.vore': "Ver as instrucións de cada navegador",
   'section.descarregues.instalada': "Aplicación xa instalada neste dispositivo",
-  'section.descarregues.instalar': "Instalar a App (PWA)"
+  'section.descarregues.instalar': "Instalar a App (PWA)",
+  // P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El visor: fixar la informació del panell. Traducció pendent de revisió nadiua.
+  'section.multimedia.visor.fixar': "Fixar a información",
+  'section.multimedia.visor.desfixar': "Deixar de fixala"
 };

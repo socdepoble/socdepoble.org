@@ -46,11 +46,13 @@ export function setRuntimePolicy({ backend, backendConfig, auth = {}, rawHostCon
 
   // Obtenir de l'entorn de compilació el fallback
   const envIssuer = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SOLLUTIA_ISSUER : undefined;
-  
+
+  /* T5.1 (ordre del Mestre, 261029) · Sense emissor no s'avisa en arrencar: a
+     socdepoble.org i a gentdelatorre.net l'arrencada normal no porta cap sessió
+     externa de Sollutia, i l'avís deixava la consola bruta. Qui té motiu per a
+     dir-ho és el flux de validació de la sessió externa (identitat.js,
+     adoptaSessioExterna), i només quan s'invoca de veritat sense emissor. */
   const issuer = auth.issuer || envIssuer;
-  if (!issuer) {
-    console.warn('[RuntimePolicy] Cap emissor configurat (issuer). La sessió externa via JWT requerirà verificacions addicionals al servidor.');
-  }
 
   _policy = Object.freeze({
     backend,

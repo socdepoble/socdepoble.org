@@ -1,5 +1,6 @@
 ---
-type: rule
+type: protocol
+status: actiu
 description: Regla per a CI/CD amb Firebase Hosting (Canvi d'octubre 2026)
 ---
 # Regla de Desplegament a Firebase Hosting
@@ -20,3 +21,7 @@ Si Sóc de Poble s'arriba a desplegar utilitzant Firebase Hosting i una IA ha de
 ```
 
 *Nota:* Això només afecta la creació de *nous* projectes/entorns a Firebase. Si l'allotjament el proveeix Sollutia sense Firebase, aquesta regla queda inactiva, però es manté per precaució arquitectònica.
+
+## Vincles
+
+- [[00_BIOS_COGNITIU]]

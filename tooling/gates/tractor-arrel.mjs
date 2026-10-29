@@ -196,6 +196,7 @@ function entradaCanonica(text) {
 
 for (const abs of fitxers(CAMINS.portes)) {
   const r = rel(abs);
+  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) continue;
   const text = senseComentaris(llegeix(abs));
   if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
   if (!bibliotecaDeclarada(r, text) && !entradaCanonica(text) && !RE_ENTRADA.some((re) => re.test(text))) {

@@ -23,6 +23,7 @@ function seguitsPerGit(root) {
 const carpetesWorkspace = new Set([
   '_arxiu_wiki_de_poble', '_comunicacio_de_poble', '_cultura_de_poble',
   '_gestoria_de_poble', '_multimedia_de_poble', '_raw_de_poble',
+  '_builds_de_poble', '_investigacio_ia_de_poble', '_paperera_de_poble',
   'oficina_de_poble', 'socdepoble.org', '.DS_Store', '.gitignore'
 ]);
 

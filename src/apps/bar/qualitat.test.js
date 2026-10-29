@@ -74,8 +74,14 @@ describe('el cens del lot', () => {
     ]) expect(TOTS, esperat).toContain(`${BASE}/${esperat}`);
   });
 
-  test('l’únic fitxer que no és codi és la còpia del CSV de La Parròquia (els ocults del sistema no compten)', () => {
-    expect(TOTS.filter((f) => !/\.jsx?$/.test(f) && !path.basename(f).startsWith('.'))).toEqual([`${BASE}/llavors/la-parroquia-loyverse.csv`]);
+  /* Pla 261029_0216 (T2.5, pegat 261029_0538 de Codex) · El mapa versionat
+     d'imatges de La Parròquia (MAPA_IMATGES.txt) viu al costat de la llavor
+     perquè laParroquia.test.js el llija igual al viu, a les còpies i a CI,
+     després del trasllat del laboratori (261026). És l'únic altre fitxer que
+     no és codi. */
+  test('els únics fitxers que no són codi són la còpia del CSV de La Parròquia i el seu mapa d’imatges (els ocults del sistema no compten)', () => {
+    expect(TOTS.filter((f) => !/\.jsx?$/.test(f) && !path.basename(f).startsWith('.')).sort())
+      .toEqual([`${BASE}/llavors/MAPA_IMATGES.txt`, `${BASE}/llavors/la-parroquia-loyverse.csv`].sort());
   });
 });
 

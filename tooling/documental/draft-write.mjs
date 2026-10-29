@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { CAMINS } from '../lib/arrel.mjs';
-import { checkTaula, checkConvocatoria, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';
+import { checkTaula, checkConvocatoria, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts, resolAncora } from '../gates/porta-olivera.mjs';
 
 const same = (a, b) => a.dev === b.dev && a.ino === b.ino;
 const regular = stat => stat.isFile() && stat.nlink === 1;
@@ -82,6 +82,24 @@ function anchorDraft(index, anchor, { rel, firstLevel, presents }) {
   const end = next ? start + next.index : index.length;
   return present(start, end) ? index : insereixLlista(index, start, [`- ${anchor}`]);
 }
+/** Conserva el destí previ d'una abreviatura Markdown quan naix un adjunt homònim.
+ * També actualitza àncores anticipades de l'adjunt, sense perdre àlies/fragments.
+ */
+function attachmentReferences(index, name, before, presents) {
+  let text = index;
+  for (const anchor of ancoresDe(index).reverse()) {
+    const was = resolAncora(anchor.raw, before), now = resolAncora(anchor.raw, presents);
+    const split = anchor.raw.search(/\\?[|#]/);
+    const target = (split < 0 ? anchor.raw : anchor.raw.slice(0, split)).trim();
+    const suffix = split < 0 ? '' : anchor.raw.slice(split);
+    let replacement;
+    if (was && was !== now) replacement = `${was}${suffix || `|${target}`}`;
+    else if (now === name && !target.includes('/')) replacement = `./${name}${suffix || `|${name}`}`;
+    else continue;
+    text = text.slice(0, anchor.inici) + `${anchor.marca}[[${replacement}]]` + text.slice(anchor.final);
+  }
+  return text;
+}
 export function writeIndexedDraft(root, file, content, { requireCleanTable = false } = {}) {
   root = fs.realpathSync(root);
   checkDraftDestinations(root, file);
@@ -105,21 +123,27 @@ export function writeIndexedDraft(root, file, content, { requireCleanTable = fal
       if (errors.length) throw new Error(`Convocatòria amb Escriptori brut:\n${errors.join('\n')}`);
       avisos = conv.avisos;
     }
+    const firstLevel = path.dirname(file) === path.join(root, CAMINS.escriptori);
+    const previousNames = firstLevel ? nomsSolts(root) : null;
     parents(root, file, true);
     const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
     created = { fd, stat: fs.fstatSync(fd) };
     assertOwned(root, file, created.stat, fd);
     fs.writeFileSync(fd, content, 'utf8'); fs.fsyncSync(fd);
-    const firstLevel = path.dirname(file) === path.join(root, CAMINS.escriptori);
     const presents = firstLevel ? nomsSolts(root) : null;
     const relative = path.relative(path.dirname(index.file), file).split(path.sep).join('/');
     const stem = relative.replace(/\.md$/, '');
     // .md s'omet com fa Obsidian, llevat que un recurs homònim sense extensió se
     // l'enduria o que el nom porte una altra extensió: llavors va explícit.
     const abreuja = !path.posix.extname(path.posix.basename(stem)) && !(firstLevel && presents.has(path.posix.basename(stem)));
-    const anchor = `[[${abreuja ? stem : relative}]]`;
+    // Els adjunts no formen part del cens Markdown de SCC. Un basename solt
+    // els pot fer irresolts o homònims: el productor emet el camí relatiu exacte.
+    const attachment = firstLevel && !relative.endsWith('.md');
+    const anchor = attachment ? `[[./${relative}|${path.posix.basename(relative)}]]`
+      : `[[${abreuja ? stem : relative}]]`;
     const rel = path.relative(root, file).split(path.sep).join('/');
-    const anchored = anchorDraft(index.content, anchor, { rel, firstLevel, presents });
+    const indexContent = attachment ? attachmentReferences(index.content, path.posix.basename(relative), previousNames, presents) : index.content;
+    const anchored = anchorDraft(indexContent, anchor, { rel, firstLevel, presents });
     if (anchored !== index.content) {
       const tempFile = `${index.file}.${randomUUID()}.tmp`;
       parents(root, tempFile);

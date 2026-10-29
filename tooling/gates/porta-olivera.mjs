@@ -80,6 +80,7 @@
  *  just quan la skill manava executar-la.
  */
 import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
+import { markdownProse } from '../lib/markdown-prose.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import tty from 'node:tty';
@@ -242,18 +243,9 @@ export function safata(arrel = arrelPerDefecte()) {
 
 /** Prosa amb offsets intactes: comentaris i codi no acrediten cap àncora. */
 export function prosaIndex(text) {
-  const mask = part => part.replace(/[^\r\n]/g, ' ');
-  let fence = null;
-  return text.replace(/<!--[\s\S]*?-->/g, mask).split(/(?<=\n)/).map(line => {
-    const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (mark) {
-      if (!fence) fence = mark[1];
-      else if (mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
-      return mask(line);
-    }
-    return fence ? mask(line) : line;
-  }).join('').replace(/`[^`]*`/g, mask);
+  return markdownProse(text);
 }
+
 const referent = (raw, senseMarkdown = true) => {
   const ref = raw.replace(/\\(?=[|#])/g,'').split(/[|#]/)[0].trim();
   return senseMarkdown ? ref.replace(/\.md$/, '') : ref;

@@ -34,6 +34,7 @@
  *   afig --json per a eixida de màquina
  */
 import fs from 'node:fs';
+import { markdownProse } from '../lib/markdown-prose.mjs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
@@ -131,25 +132,55 @@ export function inventari(arrel, config) {
   return rutes.sort();
 }
 
-/** Categories de la taula de la pàgina, entre les marques, primera columna entre accents greus. */
-export function categoriesDeLaPagina(text) {
-  const i = text.indexOf(MARCA_INICI);
-  const f = text.indexOf(MARCA_FI);
-  if (i === -1 || f === -1 || f < i) return null;
-  return [...text.slice(i, f).matchAll(/^\|\s*`([a-z0-9_]+)`\s*\|/gm)].map((m) => m[1]).sort();
+/** Only the bounded canonical table contributes; examples/comments are not rows. */
+function filesDeLaPagina(text) {
+  // Keep marker offsets while letting the shared lexer see the whole context.
+  // Private sentinels cannot collide with source text: collisions fail closed.
+  const begin = '\ue000'.repeat(MARCA_INICI.length), end = '\ue001'.repeat(MARCA_FI.length);
+  if (text.includes('\ue000') || text.includes('\ue001')) return null;
+  const marked = text.replaceAll(MARCA_INICI, begin).replaceAll(MARCA_FI, end);
+  const visible = markdownProse(marked);
+  const matches = [...visible.matchAll(new RegExp(`^ {0,3}(${begin}|${end})[ \t]*\r?$`, 'gm'))];
+  if (matches.length !== 2 || matches[0][1] !== begin || matches[1][1] !== end) return null;
+  const i = matches[0].index + matches[0][0].indexOf(begin);
+  const f = matches[1].index + matches[1][0].indexOf(end);
+  const table = markdownProse(text.slice(i + MARCA_INICI.length, f), { preserveInlineCode: true });
+  return [...table.matchAll(/^\|\s*`([a-z0-9_]+)`\s*\|([^|]*)\|/gm)]
+    .map(m => ({ categoria: m[1], ruta: m[2] }));
 }
-
+/** Compatibility API: names only. Parity also compares each route below. */
+export function categoriesDeLaPagina(text) {
+  return filesDeLaPagina(text)?.map(row => row.categoria).sort() ?? null;
+}
+function normalitzaRutes(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const plain = value.replace(/`/g, '').trim().replace(/\s+/g, ' ');
+  if (/^sense ruta(?:\s*:.*)?$/.test(plain)) return 'sense ruta';
+  return plain.split('·').map(route => route.trim()).sort().join(' · ');
+}
 export function paritat(arrel, config) {
   const text = fs.readFileSync(path.join(arrel, config.pagina), 'utf8');
-  const pagina = categoriesDeLaPagina(text);
-  if (!pagina) return { valid: false, errors: [`${config.pagina}: falten les marques ${MARCA_INICI} … ${MARCA_FI}`] };
-  const json = Object.keys(config.categories).sort();
-  const falten = json.filter((c) => !pagina.includes(c));
-  const sobren = pagina.filter((c) => !json.includes(c));
+  const rows = filesDeLaPagina(text);
+  if (!rows) return { valid: false, errors: [`${config.pagina}: marques absents, duplicades o fora d’ordre: ${MARCA_INICI} … ${MARCA_FI}`] };
+  const pagina = rows.map(row => row.categoria), json = Object.keys(config.categories).sort();
   const errors = [
-    ...falten.map((c) => `La categoria «${c}» és a ${CONFIG} i no a la pàgina.`),
-    ...sobren.map((c) => `La categoria «${c}» és a la pàgina i no a ${CONFIG}.`)
+    ...json.filter(c => !pagina.includes(c)).map(c => `La categoria «${c}» és a ${CONFIG} i no a la pàgina.`),
+    ...pagina.filter(c => !json.includes(c)).map(c => `La categoria «${c}» és a la pàgina i no a ${CONFIG}.`)
   ];
+  for (const category of [...new Set(pagina)].sort()) {
+    const matching = rows.filter(row => row.categoria === category);
+    if (matching.length !== 1) errors.push(`La categoria «${category}» està duplicada a la pàgina.`);
+    if (!Object.hasOwn(config.categories, category)) continue;
+    const expected = normalitzaRutes(config.categories[category]);
+    if (!expected) {
+      errors.push(`La categoria «${category}» té ruta invàlida a ${CONFIG}.`);
+      continue;
+    }
+    for (const row of matching) {
+      const actual = normalitzaRutes(row.ruta);
+      if (!actual || actual !== expected) errors.push(`La categoria «${category}» té ruta «${actual}» a la pàgina i «${expected}» a ${CONFIG}.`);
+    }
+  }
   return { valid: errors.length === 0, errors };
 }
 

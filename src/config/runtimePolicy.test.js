@@ -106,3 +106,44 @@ test('ports aliens, camins, credencials i comodins mai són orígens', async () 
   expect(() => p.setRuntimePolicy({ auth: { parentOrigins: ['*'] } })).toThrow('orígens exactes');
   expect(p.getRuntimePolicy(true)).toBeNull();
 });
+
+/* T5.1 (ordre del Mestre, 261029) · La consola de l'amfitrió ha d'eixir neta: cap
+   avís en arrencar sense emissor, ni amb configura({}) (setRuntimePolicy({})) ni
+   amb la política de defecte que crea getRuntimePolicy() quan ningú no ha
+   configurat res (host.js, arrenca). Qui té motiu per a dir-ho és el flux de
+   validació de la sessió externa (identitat.js, adoptaSessioExterna), i només
+   quan s'invoca: ací es prova amb el runtimePolicy real, sense cap simulació. */
+test('T5.1 · arrencar sense emissor no escriu res a la consola, ni amb configura({}) ni amb la política de defecte', async () => {
+  vi.stubEnv('VITE_SOLLUTIA_ISSUER', '');
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  let p = await fresca();
+  expect(p.setRuntimePolicy({}).auth.issuer).toBeFalsy();
+  p = await fresca();
+  expect(p.getRuntimePolicy().auth.issuer).toBeFalsy();
+  expect(p.getRuntimePolicy(true)).not.toBeNull();
+  expect(warn).not.toHaveBeenCalled();
+  expect(error).not.toHaveBeenCalled();
+});
+test('T5.1 · només el flux de sessió externa via JWT parla d’emissor, i només quan s’invoca sense cap', async () => {
+  vi.stubEnv('VITE_SOLLUTIA_ISSUER', '');
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const p = await fresca();
+  const { adoptaSessioExterna } = await import('../data/identitat.js');
+  p.setRuntimePolicy({});
+  expect(warn).not.toHaveBeenCalled();
+  expect(error).not.toHaveBeenCalled();
+  // El JWT és sintètic i no es valida: sense emissor, el flux el rebutja abans de llegir-lo i ho diu una sola vegada.
+  expect(adoptaSessioExterna({ access_token: 'capcalera.carrega.signatura' })).toBe(false);
+  const missatges = [...warn.mock.calls, ...error.mock.calls].map(([missatge]) => String(missatge));
+  expect(missatges).toHaveLength(1);
+  expect(missatges[0]).toMatch(/emissor|issuer/);
+  // Amb emissor, el mateix flux calla: cap avís de política en cap dels dos camins.
+  warn.mockClear(); error.mockClear();
+  const q = await fresca();
+  const identitat = await import('../data/identitat.js');
+  q.setRuntimePolicy({ auth: { issuer: 'https://auth.example.test' } });
+  expect(identitat.adoptaSessioExterna({ access_token: 'capcalera.carrega.signatura' })).toBe(false);
+  expect([...warn.mock.calls, ...error.mock.calls].filter(([missatge]) => /emissor|issuer/.test(String(missatge)))).toEqual([]);
+});

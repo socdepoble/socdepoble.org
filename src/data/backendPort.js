@@ -1,3 +1,4 @@
+import { heretaServeiXifratXat } from './xifratXatServei.js';
 import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
 
 let currentImpl = null;
@@ -46,7 +47,9 @@ export function validaBackendImplementation(impl) {
   }
   if (teardown && (!('value' in teardown) || typeof teardown.value !== 'function'))
     throw new TypeError('[backendPort] destroy invàlid');
-  return { candidate: Object.freeze(candidate), dispose: teardown ? teardown.value.bind(impl) : null };
+  Object.freeze(candidate);
+  heretaServeiXifratXat(impl, candidate);
+  return { candidate, dispose: teardown ? teardown.value.bind(impl) : null };
 }
 export function getBackendImplementation() { return currentImpl || EMPTY; }
 export function freezeImplementation() {
@@ -146,6 +149,25 @@ export const quotaXat = asseguraMetode('quotaXat');
 export const publicaAdjuntXat = asseguraMetode('publicaAdjuntXat');
 export const urlAdjuntXat = asseguraMetode('urlAdjuntXat');
 export const descartaAdjuntXat = asseguraMetode('descartaAdjuntXat');
+
+/* P1-12 · Capacitats E2EE opcionals de §8.3. Delegació exacta: no crea claus,
+   no activa xifratge ni fabrica un transport absent. Pregunta teCapacitat
+   abans d'usar el grup; un mètode absent conserva el rebuig del port. */
+export const publicaIdentitatXat = asseguraMetode('publicaIdentitatXat');
+export const laMevaIdentitatXat = asseguraMetode('laMevaIdentitatXat');
+export const desaFraseXat = asseguraMetode('desaFraseXat');
+export const clausDeXat = asseguraMetode('clausDeXat');
+export const desaLlibretaXat = asseguraMetode('desaLlibretaXat');
+export const laMevaLlibretaXat = asseguraMetode('laMevaLlibretaXat');
+export const estatXifratXat = asseguraMetode('estatXifratXat');
+export const epoquesDelFilXat = asseguraMetode('epoquesDelFilXat');
+export const sobresMeusXat = asseguraMetode('sobresMeusXat');
+export const obriEpocaXat = asseguraMetode('obriEpocaXat');
+export const enviaXifratXat = asseguraMetode('enviaXifratXat');
+export const reembolcallaXat = asseguraMetode('reembolcallaXat');
+export const demanaXifratXat = asseguraMetode('demanaXifratXat');
+export const publicaAdjuntXifratXat = asseguraMetode('publicaAdjuntXifratXat');
+export const bytesAdjuntXat = asseguraMetode('bytesAdjuntXat');
 
 /* Fase 5 · Agenda */
 export const loadActesAgenda = asseguraMetode('loadActesAgenda');

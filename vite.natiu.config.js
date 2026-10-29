@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { esquemaInvertitDeGoogleIos, validatePublicCredentials } from './src/config/publicCredentials.js';
+import { VARIANTS_SOCIALS } from './src/config/imatgeSocial.js';
 import { esHostLocal, politicaDeMitjans, recursosPublicsDelPlugin, segellDeBuild } from './vite.standalone.config.js';
 
 /**
@@ -344,6 +345,11 @@ export const ORIGINALS_CITATS_SENSE_RESOLUTOR = Object.freeze([]);
    seo-routes.json no hi és: build:seo l'escriu a wordpress-plugin/dist/. */
 export const RECURSOS_QUE_L_APP_NO_LLIG = Object.freeze(['rag-index.json', 'slugIndex.json']);
 
+/* Revisió final 261029 (OG-03) · Les variants socials (R-01, imatgeSocial.js ·
+   VARIANTS_SOCIALS) només van al <head> OpenGraph del lloc, que l'app nativa no
+   emet mai: fora del paquet (−3,7 MB en 17 fitxers). Camins relatius a public/. */
+export const RECURSOS_NOMES_DEL_HEAD = Object.freeze(Object.values(VARIANTS_SOCIALS).map((cami) => cami.replace(/^\//, '')));
+
 /**
  * La política de mitjans de l'app a partir de la de l'autònom
  * (politicaDeMitjans('autonom')): cap origen ni cap carpeta externa, encara
@@ -415,7 +421,7 @@ export default defineConfig(({ mode, command, isPreview }) => {
          ni sw.js ni manifest.webmanifest, ni auth/, ni robots.txt. Amb la
          política, sense els originals que tenen bessona (Fase C, tasca 2), i
          sense els índexs de la Wiki que l'app no llig (Fase D, L10). */
-      recursosPublicsDelPlugin({ politica: mitjans, exclosos: RECURSOS_QUE_L_APP_NO_LLIG }),
+      recursosPublicsDelPlugin({ politica: mitjans, exclosos: [...RECURSOS_QUE_L_APP_NO_LLIG, ...RECURSOS_NOMES_DEL_HEAD] }),
       indexNatiuPlugin({ origenBackend })
     ],
     /* Fase C (tasca 2) · La política, segellada com a l'autònom

@@ -380,6 +380,7 @@ const FUNCIONS_WP = {
   register_rest_route: '4.4',
   register_setting: '4.7', // 2.7; amb l'array d'arguments (sanitize_callback, default), 4.7
   remove_filter: '1.2', rest_url: '4.4', restore_current_blog: '3.0', sanitize_text_field: '2.9', sanitize_title: '1.0',
+  network_admin_url: '3.0', // T5.1 (261029): l'enllaç «Mostra els detalls» de la fila, el del nucli (en xarxa, plugin-install.php redirigix a l'administració de xarxa)
   set_transient: '2.8', settings_fields: '2.7', shortcode_atts: '2.5', submit_button: '3.1', switch_to_blog: '3.0',
   the_content: '0.71', the_post: '1.5', trailingslashit: '1.2', untrailingslashit: '2.2', update_option: '1.0',
   update_site_option: '2.8', wp_add_inline_script: '4.5', wp_add_inline_style: '3.3', wp_body_open: '5.2',
@@ -406,6 +407,7 @@ const GANXOS_WP = {
   http_request_host_is_external: '3.6', init: '1.5', load_script_translation_file: '5.0.2', load_textdomain_mofile: '2.9',
   no_texturize_tags: '2.8', 'plugin_action_links_{$plugin_file}': '2.7',
   plugin_locale: '3.0', // el de load_plugin_textdomain, que la reserva de idioma-local.php també aplica
+  plugin_row_meta: '2.8', // T5.1 (261029): «Mostra els detalls» a la fila d'Extensions, també sense slug al transient
   plugins_api: '2.7', pre_get_document_title: '4.4',
   rest_api_init: '4.4', script_loader_tag: '4.1', site_status_tests: '5.2', template_include: '3.0',
   theme_page_templates: '3.9', 'update_plugins_{$hostname}': '5.8', upgrader_pre_download: '3.7',
@@ -778,6 +780,76 @@ test('readme a «Mostra els detalls», plantilla de blocs i getenv protegit', ()
   assert.equal(capcalera(llig('socdepoble-enxufe.php'), 'Requires at least'), '6.5', 'en 6.5 i 6.6 la plantilla es tria a l\'Edició ràpida (readme)');
 
   assert.match(cosDe('includes/traduccio.php', 'socdepoble_enxufe_deepl_clau'), /function_exists\( 'getenv' \) \? getenv\( 'DEEPL_API_KEY' \)/, 'getenv pot estar a disable_functions');
+});
+
+/* T5.1 (ordre del Mestre, 261029, captures de gentdelatorre.net) · Sense intèrpret, la forma:
+   el Plugin URI és una pàgina navegable; la fila de plugins.php porta «Mostra els detalls» cap a la
+   finestra nativa, que per a l'slug del directori s'alimenta del readme.txt local sense cap petició
+   de xarxa i sense cap peça del canal propi (ajustos.php viatja també al directori); la benvinguda
+   no inventa cap municipi actiu i la guia va en tres passos, traduïbles i escapats. */
+test('T5.1 · Plugin URI navegable, «Mostra els detalls» local per a l’slug del directori, cap municipi inventat i guia en tres passos', () => {
+  const principal = llig('socdepoble-enxufe.php');
+  assert.equal(capcalera(principal, 'Plugin URI'), 'https://socdepoble.org', 'una pàgina web navegable, no el canal');
+  assert.equal(capcalera(principal, 'Update URI'), 'https://socdepoble.org/enxufe/', 'el canal propi no canvia');
+
+  const ajustos = llig('includes/ajustos.php');
+  assert.match(ajustos, /^add_filter\( 'plugin_row_meta', 'socdepoble_enxufe_fila_detalls', 10, 3 \);$/m);
+  const fila = cosDe('includes/ajustos.php', 'socdepoble_enxufe_fila_detalls');
+  assert.match(fila, /plugin_basename\( SOCDEPOBLE_ENXUFE_FITXER \) !== \$plugin_file/, 'només la nostra fila');
+  assert.match(fila, /isset\( \$plugin_data\['slug'\] \)/, 'si el nucli ja pinta l\'enllaç (canal propi o directori), cap duplicat');
+  assert.match(fila, /current_user_can\( 'install_plugins' \)/, 'la mateixa capacitat que plugin-install.php');
+  assert.match(fila, /class="thickbox open-plugin-details-modal"/);
+  assert.match(fila, /network_admin_url\( 'plugin-install\.php' \)/);
+  assert.match(fila, /add_query_arg\(/);
+  for (const parell of ["'tab'       => 'plugin-information'", "'plugin'    => SOCDEPOBLE_ENXUFE_SLUG", "'TB_iframe' => 'true'", "'width'     => 600", "'height'    => 550"]) {
+    assert.ok(fila.includes(parell), parell);
+  }
+  assert.match(fila, /esc_url\( \$url \)/);
+  assert.match(fila, /esc_html__\( 'View details', 'socdepoble' \)/, 'el text del nucli, amb el text domain del plugin');
+
+  assert.match(ajustos, /^add_filter\( 'plugins_api', 'socdepoble_enxufe_detalls_plugins_api', 10, 3 \);$/m);
+  const api = cosDe('includes/ajustos.php', 'socdepoble_enxufe_detalls_plugins_api');
+  assert.match(api, /false !== \$resultat \|\| 'plugin_information' !== \$accio \|\| ! is_object\( \$args \) \|\| empty\( \$args->slug \) \|\| SOCDEPOBLE_ENXUFE_SLUG !== \$args->slug/, 'només el nostre slug, i només si ningú no ha respost');
+  assert.match(api, /\n\t\treturn \$resultat;\n/, 'la resta torna intacta');
+  assert.match(api, /\$info->slug\s*=\s*SOCDEPOBLE_ENXUFE_SLUG;/);
+  assert.match(api, /socdepoble_enxufe_llig_readme\(\)/, 'alimentat del readme local');
+  assert.match(api, /array_map\(\s*'wp_kses_post',\s*\$seccions\s*\)/);
+  assert.match(api, /get_file_data\(/);
+  assert.doesNotMatch(api, /'6\.5'|'7\.4'|'1\.1\.\d+'/, 'els requisits i la versió ixen de les capçaleres, no de literals');
+  assert.doesNotMatch(api, /download_link/, 'cap enllaç de baixada: la instal·lació és del canal o del directori');
+  assert.doesNotMatch(textDe['includes/ajustos.php'], /wp_remote_|wp_safe_remote_|download_url\(|api\.wordpress\.org/, 'ajustos.php no fa cap petició de xarxa');
+  assert.doesNotMatch(codiDe['includes/ajustos.php'], /SOCDEPOBLE_ENXUFE_SLUG_CANAL|socdepoble_enxufe_canal\(|socdepoble_enxufe_oferta\(/, 'res del canal propi');
+  const baners = cosDe('includes/ajustos.php', 'socdepoble_enxufe_baners_detalls');
+  assert.match(baners, /banner-772x250\.png/);
+  assert.match(baners, /banner-1544x500\.png/);
+  assert.match(baners, /is_readable\(/, 'només si viatgen amb el paquet');
+  assert.match(cosDe('includes/ajustos.php', 'socdepoble_enxufe_linia_detalls'), /esc_html\(\s*\$text\s*\)/, 'escapa abans de transformar');
+  const lector = cosDe('includes/ajustos.php', 'socdepoble_enxufe_llig_readme');
+  for (const seccio of ["'upgrade notice'", "'screenshots'", "'frequently asked questions' => 'faq'", "'changelog'"]) assert.ok(lector.includes(seccio), seccio);
+
+  // La benvinguda: cap municipi inventat, i la veritat sobre l'arrel i el primer portal actiu.
+  assert.doesNotMatch(ajustos, /9 municipalities|<code>(?:penaguila|benifallim|sella|orxeta|relleu|alcoleja|xixona|tibi)<\/code>|Active village nodes|anys de llegat rural/i, 'la llista inventada ha desaparegut');
+  assert.match(ajustos, /El Rentonar, 30 years of rural activism/);
+  assert.match(ajustos, /La Torre de les Maçanes \(%1\$s · Gent de la Torre\)/);
+  assert.match(ajustos, /<code>la-torre-de-les-macanes<\/code>/);
+  // La guia: tres passos, cada text per la traducció i l'escapat, i cap sprintf cru.
+  const pagina = cosDe('includes/ajustos.php', 'socdepoble_enxufe_pagina');
+  for (const pas of ['Step 1 · ', 'Step 2 · ', 'Step 3 · ']) assert.ok(pagina.includes(`esc_html_e( '${pas}`), pas);
+  for (const text of ['Save Changes', 'Pages ➔ Add New Page', '<code>[socdepoble_app]</code>', 'Publish', 'Add block', 'Template', 'Sóc de Poble · full screen', 'Settings ➔ Reading', 'A static page', 'Homepage']) {
+    assert.ok(pagina.includes(text), text);
+  }
+  assert.doesNotMatch(pagina, /echo\s+sprintf\(/, 'cap sprintf sense escapar: tot passa per wp_kses_post');
+  assert.equal((pagina.match(/echo wp_kses_post\(\n\s*sprintf\(/g) ?? []).length, 5, 'l\'arrel i els quatre textos de la guia amb marcatge');
+
+  // readme: instal·lació en tres passos i el crèdit de la tipografia.
+  const readme = llig('readme.txt');
+  const instal = readme.split(/^== Installation ==$/m)[1].split(/^== /m)[0];
+  assert.match(instal, /^\n+1\. Install the plugin and set up your village/, 'la secció comença per la llista: enxufe-pantalla.test.mjs exigix <ol> al davant');
+  assert.match(instal, /^2\. Put Sóc de Poble on a page/m);
+  assert.match(instal, /^3\. Make it fill the whole screen/m);
+  assert.equal((instal.match(/^\d+\. /gm) ?? []).length, 3, 'tres passos, ni un més');
+  for (const text of ['`[socdepoble_app]`', 'Save Changes', 'Add New Page', 'Publish', 'Add block', 'Settings → Reading', 'A static page', 'Homepage', 'Quick Edit']) assert.ok(instal.includes(text), text);
+  assert.match(readme, /Noto Sans[^\n]*SIL Open Font License 1\.1[^\n]*dist\/fonts\/OFL\.txt/, 'el crèdit de la tipografia, en una línia');
 });
 
 test('marcatge: integrity opcional, referència copiable, identificador i ruta com el nucli, manifest sense avisos', () => {

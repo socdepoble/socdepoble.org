@@ -24,6 +24,13 @@ export const ETIQUETA_DESA_USUARI = 'Desa l’identificador';
 export const AJUDA_USUARI = 'Es veu amb una @ davant a la teua fitxa pública, només si el teu perfil és públic.';
 export const AJUDA_POBLE = 'El teu poble principal. Si en tens més, es trien a «El compte».';
 export const TEXT_DESAT = 'Desat.';
+/* APP-D1 (pla 261029_0216, Pas 2) · El servidor encara no té 2610282100: la
+   RPC de l'identificador (NO-DISPONIBLE) o una columna del poble
+   (ErrorColumnaAbsent) no hi són. No és cap error de la persona ni res a
+   corregir: un avís (role=status, no alert) amb el motiu de l'adaptador i el
+   valor que s'ha quedat sense desar, mai «Desat.» ni el camp en roig. */
+export const TITOL_PENDENT_DE_MIGRACIO = 'Pendent de migració al servidor';
+const esPendentDeMigracio = (err) => err?.code === 'NO-DISPONIBLE' || err?.name === 'ErrorColumnaAbsent';
 
 /** El poble principal nou al davant i la resta dels triats darrere, sense repetir-lo. */
 export function pobleAmbPrincipal(actual, principal) {
@@ -37,6 +44,7 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
      l'identificador queda per a desa(). */
   const [errorPoble, setErrorPoble] = useState('');
   const [proposta, setProposta] = useState('');
+  const [pendent, setPendent] = useState('');
   const [estat, setEstat] = useState('');
   const [desant, setDesant] = useState(false);
   const [confirmatAra, setConfirmatAra] = useState(false);
@@ -64,6 +72,7 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
     const motiu = validaUsername(net, { actual: usuari });
     setEstat('');
     setProposta('');
+    setPendent('');
     if (motiu) {
       setError(motiu);
       return;
@@ -77,6 +86,10 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
       setEstat(TEXT_DESAT);
       tornaAlCamp.current = alCamp;
     } catch (err) {
+      if (esPendentDeMigracio(err)) {
+        setPendent(`${err.message} El teu identificador @${net} es queda escrit ací, sense desar: torna-ho a provar quan s’haja aplicat.`);
+        return;
+      }
       setError(String(err?.message || 'No s’ha pogut desar l’identificador.'));
       if (err?.code === 'ocupat' && typeof err.proposta === 'string') setProposta(err.proposta);
     } finally {
@@ -97,11 +110,16 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
     if (!nou || nou === principal || typeof onDesaPoble !== 'function') return;
     setEstat('');
     setErrorPoble('');
+    setPendent('');
     setDesant(true);
     try {
       await onDesaPoble(pobleAmbPrincipal(poble, nou));
       setEstat(TEXT_DESAT);
     } catch (err) {
+      if (esPendentDeMigracio(err)) {
+        setPendent(`${err.message} El poble «${nou}» no s’ha desat: continua el d’abans.`);
+        return;
+      }
       setErrorPoble(String(err?.message || 'No s’ha pogut desar el poble.'));
     } finally {
       setDesant(false);
@@ -124,11 +142,12 @@ export function IdentitatAlPoble({ usuari = '', confirmat = false, poble = '', p
             L’hem fet amb el teu nom. Si t’agrada, queda-te’l; si no, escriu-ne un altre ací davall.
           </Alerta>
         ) : null}
+        {pendent ? <Alerta to="avis" titol={TITOL_PENDENT_DE_MIGRACIO}>{pendent}</Alerta> : null}
         <Camp etiqueta={ETIQUETA_USUARI} ajuda={AJUDA_USUARI} error={error || undefined}>
           <CampText
             name="username"
             value={valor}
-            onChange={(event) => { setValor(netejaUsernameEnEscriure(event.target.value)); setError(''); setProposta(''); setEstat(''); }}
+            onChange={(event) => { setValor(netejaUsernameEnEscriure(event.target.value)); setError(''); setProposta(''); setPendent(''); setEstat(''); }}
             autoComplete="nickname"
             autoCapitalize="none"
             spellCheck={false}

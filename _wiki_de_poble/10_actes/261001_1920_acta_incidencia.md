@@ -3,9 +3,8 @@ type: acta
 status: canonic
 description: Acta d'incidència greu per error taxonòmic a l'Escriptori
 tags:
-  - incidencia
+  - acta
   - escriptori
-  - taxonomia
 ---
 
 # Acta d'Incidència Greu (261001_1920)
@@ -25,3 +24,7 @@ S'ha rebut la instrucció clara que **darrere de cada tractor cognitiu ha d'exis
 - Si no existeix, s'ha de crear pas a pas i passar-lo al Mestre per a aprovació o millora.
 - Les passes han de ser quantificables a la **Consola Termodinàmica**.
 - Aquesta qüestió es traslladarà immediatament a les IAs executives (Claude i Codex) perquè dissenyen els fluxos de treball corresponents de cada tractor existent.
+
+## Vincles
+
+- [[00_index]]

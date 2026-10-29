@@ -88,15 +88,15 @@ To build locally, run `npm ci`, `npm run build:wp` (standalone, dist/) and `npm 
 
 The directory variant requires WordPress 6.6 or later and loads core React, ReactDOM and the JSX runtime through the react, react-dom and react-jsx-runtime handles. The standalone package includes its own React for Sollutia, other hosts and the project's distribution channel. Both use the same embedding contract, with different bundle hashes.
 
+Typography: the Noto Sans font files in dist/fonts/ are used under the SIL Open Font License 1.1 (dist/fonts/OFL.txt).
+
 == Installation ==
 
-1. In Plugins → Add New → Upload Plugin, upload the package ZIP, or copy its socdepoble directory into wp-content/plugins. Keep this directory name.
-2. If another copy is active under a different directory name, deactivate it first. This version refuses activation while another copy is loaded and identifies both directories in its message.
-3. Deactivate the older "soc-de-poble" plugin if active: both define the same custom element.
-4. Activate Sóc de Poble — Enxufe.
-5. Optionally set the display name and village identifier in Settings → Sóc de Poble.
-6. Add the Sóc de Poble block or the `[socdepoble_app]` shortcode to a page.
-7. Optionally select the "Sóc de Poble · full screen" page template. Classic themes expose it in the page editor. Block themes expose it in the page editor's Template panel on WordPress 6.7 or later; on WordPress 6.5 and 6.6, use Quick Edit in the Pages list.
+1. Install the plugin and set up your village: upload the package ZIP from Plugins → Add New Plugin → Upload Plugin (or copy its socdepoble directory into wp-content/plugins, keeping that name) and activate it. Then, in Settings → Sóc de Poble, write the public name of your portal (for example Gent de la Torre) and the id of your village (la-torre-de-les-macanes) and press the blue Save Changes button.
+2. Put Sóc de Poble on a page of your website, choosing one of two options. Option A (copying the code): go to Pages → Add New Page, give it a title, type or paste exactly `[socdepoble_app]` in the body of the page and press Publish. Option B (with the visual block): inside the page editor press the + button (Add block), search for Sóc de Poble and click it.
+3. Make it fill the whole screen and be the home page: in the right column of the page editor open the Template panel and choose Sóc de Poble · full screen (block themes list it on WordPress 6.7 or later; on 6.5 and 6.6 use Quick Edit in the Pages list). To make that page the home page of your website, go to Settings → Reading, tick A static page and select it as Homepage.
+
+If another copy or the older "soc-de-poble" plugin is active, deactivate it first: this version refuses to activate while another copy is loaded and names both directories.
 
 == Frequently Asked Questions ==
 

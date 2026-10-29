@@ -40,7 +40,7 @@ Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament i la B
 
 ## 3. La Barra d'Eines (`UniversalToolbar`), Jerarquia Semàntica i Llenç Complet
 
-L'experiència d'edició de text ha de ser tan pura com la d'un processador de text editorial (`src/components/universal/editor/UniversalToolbar.jsx` i `UniversalEditor.css`), respectant la jerarquia SEO de la pàgina:
+L'experiència d'edició de text ha de ser tan pura com la d'un processador de text editorial (`src/components/universal/UniversalToolbar.jsx` i `src/components/universal/UniversalEditorShell.jsx`), respectant la jerarquia SEO de la pàgina:
 
 - **Ubicació Estratègica i Sticky:** La barra d'edició negra **NO està a la capçalera blava de l'aplicació**. Viu a l'interior de la finestra d'edició, col·locada exactament **a sota de l'Entradilla**, marcant la frontera entre la capçalera i el cos del document, i queda fixada (`sticky`) en fer scroll.
 - **Jerarquia de Capçaleres i Llistes (`H3 -> H2`, `List` i `ListOrdered`):**

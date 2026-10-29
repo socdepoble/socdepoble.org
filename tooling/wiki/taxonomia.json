@@ -26,11 +26,12 @@
     "micro_bundle": "bundle",
     "micro_prompt": "prompt.consell",
     "petorreta": "prompt.local · prompt.consell",
-    "pla": "planificacio",
+    "pla": "pla.implementacio",
     "pla_implementacio": "pla.implementacio",
     "produccio": "modo_produccion",
     "prompt": "prompt.local · prompt.consell",
     "skill": "skill",
+    "solucio": "sense ruta: transitòria de torn (porta-olivera)",
     "tasques": "sense ruta: transitòria de torn (porta-olivera)"
   }
 }

@@ -2991,6 +2991,13 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     border-end-start-radius: var(--sdp-radi-m);
     border-end-end-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta);
+    /* GM2-03 (pla 261029_0216, Pas 8) · La barra blava i la taronja són sticky
+       dins del contenidor de scroll (utilities.css · --contained; layout.css:
+       la taronja viu a top: --sdp-alt-accio, davall de la blava): el cos del
+       desplegable, quan es porta a la vista, s'atura davall de les dues barres
+       i no de la taronja. La mateixa recepta i el mateix token que
+       .sdp-consola__detall (modules.css); en píxels, igual a 375, 820 i 1280. */
+    scroll-margin-block-start: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
   }
   /* La identitat (l'avatar redó del Perfil i les seues píndoles), centrada i
      a la mida de la safata. */
@@ -3225,6 +3232,11 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
        l'escenari tanca el visor: la lupa és de la foto, ja no del fons. Les
        fotos del cos d'un detall que l'obrin (data-sdp-ampliable, CosAmbVisor)
        porten la lupa del disparador de la portada i l'anell per dins.
+     · P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · «Tancar» és l'aspa
+       gran (--sdp-alt-accio) i el panell porta «Fixar la informació»
+       (aria-pressed, la vora de l'acció com Informació desplegat); fixat, en
+       mòbil el full s'acurta al 40% i «anterior» i «següent» pugen damunt
+       d'ell: la foto es passa sense plegar el panell.
    Prova: PedraSeca/organismes/VisorImatges.test.jsx i PedraSeca/qualitat.visor.test.js. */
 @layer components {
   .sdp-dialeg.sdp-visor.sdp-dialeg--sense-marc {
@@ -3270,6 +3282,13 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-visor__marc:focus { outline: none; }
   .sdp-visor__boto:focus-visible { outline-color: var(--sdp-crom-focus); }
   .sdp-visor__boto[aria-expanded="true"] { border-color: var(--sdp-accio-control); }
+  /* P1-43 · L'aspa gran de «Tancar»: la mida de l'acció de bancal, perquè es
+     trobe sense mirar. La resta del crom, de --sdp-touch com sempre. */
+  .sdp-visor__boto--gran {
+    inline-size: var(--sdp-alt-accio);
+    min-inline-size: var(--sdp-alt-accio);
+    min-block-size: var(--sdp-alt-accio);
+  }
   .sdp-visor__cos {
     position: relative;
     flex: 1 1 auto;
@@ -3375,6 +3394,23 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     outline: var(--sdp-focus-gruix) solid var(--sdp-crom-focus);
     outline-offset: var(--sdp-focus-separacio);
   }
+  /* P1-43 · «Fixar la informació», dalt del panell i a la dreta: una pastilla
+     amb icona i text de l'alçada de l'acció de bancal; fixat (aria-pressed),
+     la vora de l'acció, com el botó d'Informació desplegat (modules.css la
+     torna a dir damunt del Perfil). */
+  .sdp-visor__fixador {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 var(--sdp-space-3);
+  }
+  .sdp-visor__fixar {
+    min-block-size: var(--sdp-alt-accio);
+    padding: 0 var(--sdp-space-4);
+    gap: var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+  }
+  .sdp-visor__fixar:focus-visible { outline-color: var(--sdp-crom-focus); }
+  .sdp-visor__fixar[aria-pressed="true"] { border-color: var(--sdp-accio-control); }
   /* Gauntlet 261017 (C04) · El disparador del visor fora del visor: la portada
      sola d'una publicació del Mur (detail/VisorDePublicacio.jsx) és un botó
      que embolcalla la imatge de sempre. Transparent, sense pell ni premut
@@ -3439,6 +3475,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
       border-inline-start: 0;
       border-block-start: 1px solid var(--sdp-crom-vora-forta);
     }
+    /* P1-43 · Fixat, el full deixa lliure la part de dalt i «anterior» i
+       «següent» s'hi centren, damunt d'ell: la foto es passa sense plegar res.
+       D-C (components.abast.capes.test.js): cap inset en tant per cent; els
+       controls ocupen el 60% de dalt per block-size, amb la vora de baix en auto. */
+    .sdp-visor__marc--fixat .sdp-visor__panell { max-block-size: 40%; }
+    .sdp-visor__marc--fixat .sdp-visor__controls { inset-block-end: auto; block-size: 60%; }
   }
 }
 

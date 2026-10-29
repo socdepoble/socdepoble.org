@@ -309,3 +309,52 @@ test.each([
   expect(desplegable.open).toBe(true);
   expect(document.activeElement).toBe(container.querySelector(desti));
 });
+
+/* GM2-03 (pla 261029_0216, Pas 8) · El full, llegit com a text (ací no hi ha
+   layout): el cos del desplegable porta scroll-margin-block-start amb el token
+   real de les barres sticky. A la pàgina continguda (utilities.css) la barra
+   blava és sticky a top: 0 i la taronja a top: --sdp-alt-accio, totes dues
+   d'alçada --sdp-alt-accio; el que es porta a la vista sense marge queda
+   davall de la taronja. El token és un valor fix en píxels, declarat una sola
+   vegada i fora de qualsevol @media: el marge val igual a 375, 820 i 1280 px.
+   La recepta és la de .sdp-consola__detall (modules.css). Cap :has()
+   (tests/lint_xat). */
+describe('GM2-03 · scroll-margin-block-start del cos del desplegable', () => {
+  const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
+  const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const bloc = (css, selector) => {
+    const m = new RegExp(`\\n\\s*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\{([^}]*)\\}`).exec(css);
+    expect(m, selector).not.toBeNull();
+    return m[1].split(';').map((d) => d.trim()).filter(Boolean);
+  };
+  const MARGE = 'scroll-margin-block-start: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4))';
+
+  test('el cos porta el marge de les dues barres sticky, amb el token --sdp-alt-accio', () => {
+    const components = senseComentaris(llig('src/css/components.css'));
+    expect(components.match(/\.sdp-edicio-avancada__cos \{/g)).toHaveLength(1);
+    const cos = bloc(components, '.sdp-edicio-avancada__cos');
+    expect(cos).toContain(MARGE);
+    expect(cos.filter((d) => d.startsWith('scroll-'))).toEqual([MARGE]);
+    expect(components).not.toMatch(/sdp-edicio-avancada[^{]*:has\(/);
+  });
+
+  test('--sdp-alt-accio és l’alçada i el top de la barra taronja sticky, declarat una vegada i en píxels', () => {
+    const tokens = senseComentaris(llig('src/css/tokens.css'));
+    // El nom, compost: la porta T3 de tractor-tokens només admet «--sdp-…:» a tokens.css.
+    const ALT_ACCIO = ['--sdp', 'alt-accio'].join('-');
+    const declaracions = [...tokens.matchAll(new RegExp(`${ALT_ACCIO}\\s*:\\s*([^;]+);`, 'g'))].map((m) => m[1].trim());
+    expect(declaracions).toHaveLength(1);
+    expect(declaracions[0]).toMatch(/^\d+px$/);
+    // Cap redefinició dins d'un @media: el mateix valor a totes les amplàries.
+    expect(tokens).not.toMatch(new RegExp(`@media[^{]*\\{[^}]*${ALT_ACCIO}\\s*:`));
+    const layout = senseComentaris(llig('src/css/layout.css'));
+    const taronja = bloc(layout, 'section.bar-orange');
+    expect(taronja).toEqual(expect.arrayContaining(['height: var(--sdp-alt-accio)', 'top: var(--sdp-alt-accio)', 'position: sticky']));
+    // A utilities.css la taronja té dues regles (una agrupada amb la blava): la seua pròpia porta el top.
+    const utilitats = senseComentaris(llig('src/css/utilities.css'));
+    const propies = [...utilitats.matchAll(/\n\s*\.sdp-universal-page-container--contained > \.bar-orange \{([^}]*)\}/g)].map((m) => m[1]);
+    expect(propies.some((cos) => /\btop: var\(--sdp-alt-accio\);/.test(cos))).toBe(true);
+    // La mateixa recepta que la Consola: un sol càlcul per a tot el Mas.
+    expect(senseComentaris(llig('src/css/modules.css'))).toContain(`${MARGE.replace('scroll-margin-block-start', 'scroll-margin-top')};`);
+  });
+});

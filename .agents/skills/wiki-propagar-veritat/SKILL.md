@@ -1,7 +1,7 @@
 ---
 type: skill
 status: canonic
-description: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
+description: Propaga una decisió estructural o arquitectònica aprovada sobre una llista explícita de fitxers vius per mantenir la coherència del sistema.
 tags:
   - saber
 name: wiki-propagar-veritat
@@ -13,45 +13,41 @@ contracte.llig:
   - _wiki_de_poble/00_index.md
   - AGENTS.md
   - _wiki_de_poble/02_saber/doc_governanca.md
+  - .agents/skills/sdp-workflow/SKILL.md
 contracte.escriu:
   - _wiki_de_poble/00_index.md
   - AGENTS.md
 ---
-# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
+# Propagar una decisió aprovada
 
-Quan una característica clau del sistema canvia (per exemple: abandonem un patró antic com el selector flotant per una subvista integrada, o reanomenem un terme d'arquitectura), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el fitxer).
+Esta skill reconcilia les referències d’una decisió arquitectònica aprovada amb les superfícies declarades en l’encàrrec. La coincidència d’una paraula no autoritza editar el fitxer que la conté.
 
-## Pas 1. Identificar les paraules clau a substituir
+## 1. Fixar el canvi i la superfície
 
-Identifica les frases o paraules exactes que l'arquitectura antiga feia servir i el seu reemplaçament canònic.
-Exemple: substituir `TERME_ANTIC` per `TERME_CANONIC`.
+Identifica la decisió font, la forma antiga i la forma canònica. Declara una llista explícita de fitxers i superfícies autoritzades, segons `sdp-workflow` («L’abast es definix per superfície, no per patró»). El contracte de la skill descriu les seues rutes; no amplia els permisos de la petició. Si cal arribar a altres rutes, deixa-les com a proposta fins que formen part de l’encàrrec autoritzat.
 
-## Pas 2. Cerca de l'abast
+## 2. Descoberta de només lectura
 
-Fes servir l'eina `grep_search` o una ordre `ripgrep` amb `run_command` per veure on apareixen aquestes paraules clau a `_wiki_de_poble` i `src`, excloent sempre `90_arxiu_historic` (immutable segons `AGENTS.md` §5).
+Busca les referències amb `rg` dins de la superfície declarada. Les coincidències fora d’ella es documenten com a pendents, sense substituir-les. L’arxiu `90_arxiu_historic/` queda fora del corpus operatiu i del RAG automàtic (AGENTS §5).
 
-## Pas 3. Formulació de l'expressió de substitució
+`04_escriptori/01_produccio/` i `04_escriptori/02_investigacio_ia/` queden fora de la cerca i de l’edició automàtiques; la propagació en estes zones requerix un encàrrec directe i explícit amb eixe abast (AGENTS §12). No seguixes enllaços simbòlics per ampliar la superfície declarada.
 
-Per realitzar canvis massius en múltiples fitxers de forma segura des del terminal, fes servir `find` combinat amb `sed` o `perl` excloent l'arxiu històric i el laboratori en quarantena:
+## 3. Preparar i revisar el pegat
 
-### Exemple d'ordre per a macOS (BSD `sed`)
+Prepara un diff sobre els fitxers declarats, preservant els exemples, cites i registres històrics que no siguen instruccions vives. Revisa cada ocurrència en context: una substitució literal pot canviar un significat diferent. No uses una cerca recursiva com a llista d’edició ni una ordre global de `find` amb `sed` o `perl`.
 
-```bash
-find ./_wiki_de_poble -type f -name "*.md" \
-  -not -path "*/90_arxiu_historic/*" \
-  -not -path "*/04_escriptori/02_investigacio_ia/*" \
-  -exec sed -i '' -e 's/TERME_ANTIC/TERME_CANONIC/g' {} +
-```
+Si hi ha treball concurrent sobre un fitxer, coordina la propietat i torna a llegir-ne la versió abans d’aplicar el pegat. Claude i Codex preparen i verifiquen els canvis de codi; la classificació i els moviments de documents corresponen a `core-higiene-escriptori` i no són part d’esta skill.
 
-## Pas 4. Execució i Verificació
+## 4. Aplicar i verificar
 
-1. Llança la comanda de substitució sobre les rutes vives autoritzades.
-2. Comprova amb un `git status` o un nou `grep_search` que no queden rastres de la informació desactualitzada i que cap fitxer de `90_arxiu_historic/` s'ha tocat.
-3. Si el canvi afecta plantilles o metadades estructurals que els agents llegeixen per defecte, revisa el registre `.agents/protocolledge.json`.
-
-> [!IMPORTANT]
-> Aquest procediment ha de ser un **acte reflex**. Si llegeixes una ADR que dicta la substitució d'un patró antic, el primer pas és esporgar eixe anacronisme dels llibres de regles vius perquè els futurs agents de l'eixam no el reintrodueixin.
+1. Aplica el pegat autoritzat pel carril d’execució vigent; esta skill no substituïx les portes ni els controls d’abast.
+2. Revisa el diff i comprova que només han canviat els fitxers declarats. Verifica explícitament que l’arxiu i les zones protegides s’han conservat.
+3. Repetix la cerca dins de la mateixa superfície i executa les comprovacions corresponents al canvi. Declara els rastres pendents amb la seua ruta i motiu; zero coincidències no acredita coherència semàntica completa.
+4. Si la decisió afecta plantilles, rutes o metadades, reconcilia `.agents/protocolledge.json` i els seus consumidors dins de l’abast autoritzat. La creació i el rebut documental continuen en `wiki-documentacio-i-reflex`; no dupliques eixe circuit ací.
 
 ## Vincles
 
 - [[00_INDEX_SKILLS]]
+- [[sdp-workflow/SKILL|sdp-workflow]]
+- [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]
+- [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]

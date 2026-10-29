@@ -1,10 +1,11 @@
 // core/edge_rag.mjs — Cercador semàntic local: TF-IDF + similitud cosinus. Zero dependències,
 // zero vector DB extern, pura matemàtica. Índex invertit (terme -> llista de docs) perquè una
 // consulta només toque els documents rellevants, no tot el corpus. A ~500 .md el corpus sencer
-// (Maps dispersos, mai els fitxers originals sencers) cap folgadament dins la RAM del dispositiu de referència:
-// el text cru de cada fitxer es descarta tan bon punt es tokenitza, no es reté enlloc.
+// retornat només reté vectors i metadades. Durant la construcció, la projecció conserva
+// els buffers seleccionats; el pic de RAM inclou el corpus cru i el replay de GENOMA.
 import { readFile, readdir } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join, resolve } from 'node:path';
+import {retrievalSources} from '../lib/retrieval-sources.mjs';
 import { parseFrontmatter } from '../lib/frontmatter.mjs';
 
 const RULES_URL = new URL('../rules/trellat-rules.json', import.meta.url);
@@ -67,19 +68,21 @@ export async function buildIndex(root, options = {}) {
   const df = new Map(); // terme -> nombre de documents que el contenen
   const perDocTf = [];
 
-  for (const file of files) {
-    const raw = await readFile(file, 'utf8');
+  const projected=retrievalSources(root,[...files].map(file=>resolve(file)),{requireCoveredEmissions:!!options.files});
+  for (const group of projected.groups) {
+    const raw = group.source.bytes.toString('utf8');
     const parsed = parseFrontmatter(raw);
     if (parsed.malformed || parsed.errors.length) {
-      throw new Error(`Frontmatter invàlid en ${relative(root, file)}: ${parsed.errors.join('; ') || 'bloc mal tancat'}`);
+      throw new Error(`Frontmatter invàlid en ${group.source.path}: ${parsed.errors.join('; ') || 'bloc mal tancat'}`);
     }
     const body = parsed.body;
     const tokens = tokenize(body, stopwords, minLen);
     const tf = termFreq(tokens);
     for (const term of tf.keys()) df.set(term, (df.get(term) || 0) + 1);
-    meta.push({ id: meta.length, path: relative(root, file), length: tokens.length });
+    meta.push({ id: meta.length, path: group.source.path, length: tokens.length, aliases:group.aliases });
     perDocTf.push(tf);
-    // `raw`/`body`/`tokens` moren ací: res del text cru sobreviu fora del Map `tf`.
+    // La projecció conserva els buffers fins al final de buildIndex. L'índex
+    // retornat només conserva vectors, àlies i metadades de procedència.
   }
 
   const N = meta.length || 1;
@@ -99,7 +102,7 @@ export async function buildIndex(root, options = {}) {
     norms[docId] = Math.sqrt(sumSq) || 1e-9; // evita divisió per zero en cosinus
   });
 
-  return { docs: meta, inverted, idf, norms, stopwords, minLen, docCount: meta.length };
+  return { docs: meta, inverted, idf, norms, stopwords, minLen, docCount: meta.length, sourceProvenance:projected.provenance };
 }
 
 /** Cerca les millors coincidències per a `query` dins l'índex de buildIndex(). */

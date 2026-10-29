@@ -22,7 +22,9 @@ export function fixture(t) {
 }
 export function validDoc(root,{route='auditoria',scope='documents',turn=null,suffix='prova'}={}) {
   turn ||= openTurn(root,{scope,actor:'test'});
-  const file=`_wiki_de_poble/04_escriptori/260922_0300_auditoria_${suffix}.md`;
+  const dest=route==='acta'?'_wiki_de_poble/10_actes':'_wiki_de_poble/04_escriptori';
+  fs.mkdirSync(path.join(root,dest),{recursive:true});
+  const file=`${dest}/260922_0300_auditoria_${suffix}.md`;
   const delivery=deliverContext(root,turn.turn_id,{route,file});
   const content=draft(delivery,{title:'Prova vàlida',description:'Document positiu per a proves adversarials'}).replaceAll('[pendent]','Resultat comprovat amb evidència.');
   return {turn,file,delivery,content};

@@ -1,7 +1,7 @@
 ---
 type: document
 status: canonic
-description: BASELINE
+description: Línia base estructural i contracte operatiu de Sóc de Poble
 ---
 # BASELINE CANÒNIC — SÓC DE POBLE (2022)
 
@@ -13,3 +13,7 @@ La fundació del codi de *Sóc de Poble* utilitza el sòl tecnològic de disposi
 * **Firefox**: 100
 
 Cap CSS ha de contenir *hacks* innecessaris per a aquest baseline, i cap JS ha de portar *polyfills* o condicions legacy ja superades.
+
+## Vincles
+
+- [[00_bios]]

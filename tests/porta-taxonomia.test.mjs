@@ -76,7 +76,7 @@ test('comprovaRutes només torna els que fallen i compta els revisats', () => {
 test('paritat: la pàgina de la Wiki i el JSON han de dir el mateix', () => {
   const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'taxonomia-'));
   const taula = (cats) => ['<!-- SDP:TAXONOMIA:CATEGORIES -->', '| Categoria | Ruta |', '|---|---|',
-    ...cats.map((c) => `| \`${c}\` | x |`), '<!-- /SDP:TAXONOMIA:CATEGORIES -->'].join('\n');
+    ...cats.map((c) => `| \`${c}\` | ${CONFIG.categories[c] ?? 'x'} |`), '<!-- /SDP:TAXONOMIA:CATEGORIES -->'].join('\n');
   fs.writeFileSync(path.join(arrel, 'pagina.md'), taula(Object.keys(CONFIG.categories)));
   assert.equal(paritat(arrel, CONFIG).valid, true);
   fs.writeFileSync(path.join(arrel, 'pagina.md'), taula(['acta', 'auditoria', 'incidencia']));
@@ -85,3 +85,21 @@ test('paritat: la pàgina de la Wiki i el JSON han de dir el mateix', () => {
   assert.equal(r.errors.length, 4);
   assert.equal(categoriesDeLaPagina('sense marques'), null);
 });
+
+function parityFixture(t,categories,rows){const root=fs.mkdtempSync(path.join(os.tmpdir(),'taxonomia-rutes-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));fs.writeFileSync(path.join(root,'pagina.md'),['<!-- SDP:TAXONOMIA:CATEGORIES -->','| Categoria | Ruta |','|---|---|',...rows,'<!-- /SDP:TAXONOMIA:CATEGORIES -->'].join('\n'));return paritat(root,{...CONFIG,categories});}
+test('paritat detects a changed route even when category names still agree',t=>{const r=parityFixture(t,{pla:'pla.implementacio'},['| `pla` | `planificacio` |']);assert.equal(r.valid,false);assert.match(r.errors.join('\n'),/pla.*ruta/i);});
+test('paritat compares route unions independent of order and code-span formatting',t=>{assert.equal(parityFixture(t,{prompt:'prompt.local · prompt.consell'},['| `prompt` | `prompt.consell` · `prompt.local` |']).valid,true);});
+test('transient category explanation is distinct from a formal route',t=>{assert.equal(parityFixture(t,{solucio:'sense ruta: transitòria de torn (porta-olivera)'},['| `solucio` | sense ruta |']).valid,true);assert.equal(parityFixture(t,{solucio:'sense ruta: transitòria'},['| `solucio` | auditoria |']).valid,false);});
+test('duplicate categories and empty route cells cannot pass parity',t=>{for(const rows of [['| `pla` | pla.implementacio |','| `pla` | pla.implementacio |'],['| `pla` | |']])assert.equal(parityFixture(t,{pla:'pla.implementacio'},rows).valid,false);});
+test('parity excludes examples in fences and HTML comments inside the category region',t=>{assert.equal(parityFixture(t,{pla:'pla.implementacio'},['| `pla` | pla.implementacio |','~~~md','| `fantasma` | altre |','~~~','<!--','| `ocult` | altre |','-->']).valid,true);});
+
+test('parity fails explicitly for missing or non-string configured routes',t=>{
+ for(const value of [null,42,{},''])assert.equal(parityFixture(t,{pla:value},['| `pla` | pla.implementacio |']).valid,false);
+});
+
+function parityDocument(t,text){const root=fs.mkdtempSync(path.join(os.tmpdir(),'taxonomia-context-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));fs.writeFileSync(path.join(root,'pagina.md'),text);return paritat(root,{...CONFIG,categories:{pla:'pla.implementacio'}});}
+const region=route=>`<!-- SDP:TAXONOMIA:CATEGORIES -->\n| Categoria | Ruta |\n|---|---|\n| \`pla\` | ${route} |\n<!-- /SDP:TAXONOMIA:CATEGORIES -->`;
+test('a complete fenced example cannot replace the contradictory active region',t=>{assert.equal(parityDocument(t,'~~~md\n'+region('pla.implementacio')+'\n~~~\n'+region('planificacio')).valid,false);});
+test('hidden example regions do not duplicate the one active region',t=>{for(const example of ['~~~md\n'+region('other')+'\n~~~','<!--\n'+region('other')+'\n-->','    '+region('other').replaceAll('\n','\n    ')])assert.equal(parityDocument(t,example+'\n'+region('pla.implementacio')).valid,true);});
+test('two active canonical regions fail even when their routes agree',t=>{assert.equal(parityDocument(t,region('pla.implementacio')+'\n'+region('pla.implementacio')).valid,false);});
+test('inline-code markers and out-of-order markers do not define a canonical table',t=>{assert.equal(parityDocument(t,'`<!-- SDP:TAXONOMIA:CATEGORIES -->`\n| `pla` | pla.implementacio |\n`<!-- /SDP:TAXONOMIA:CATEGORIES -->`').valid,false);assert.equal(parityDocument(t,'<!-- /SDP:TAXONOMIA:CATEGORIES -->\n<!-- SDP:TAXONOMIA:CATEGORIES -->').valid,false);});

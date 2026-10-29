@@ -218,8 +218,8 @@ test('dades de veres del repositori: /anima, /fedivers, la samarreta i el Llibre
   for(const ruta of ['/anima','/fedivers','/projecte','/mercat/samarreta-socdepoble','/wikidepoble','/wikidepoble/03_llibre_d_or_memoria_episodica'])assert.ok(rebut.routesWritten.includes(ruta),ruta);
   for(const ruta of ['/notes','/xat','/disseny','/consola'])assert.ok(!rebut.routesWritten.includes(ruta),ruta);
   const prop=(rel,nom)=>llig(dist,rel).querySelector(`meta[property="${nom}"]`)?.content??null;
-  assert.equal(prop('fedivers/index.html','og:image'),origin+'/assets/ui/plugins/fedivers_vinyeta.webp');
-  assert.equal(prop('mercat/samarreta-socdepoble/index.html','og:image'),origin+'/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png');
+  assert.equal(prop('fedivers/index.html','og:image'),origin+'/assets/ui/plugins/fedivers_vinyeta-social-1200x630.jpg');
+  assert.equal(prop('mercat/samarreta-socdepoble/index.html','og:image'),origin+'/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey-social-1200x630.jpg');
   assert.equal(prop('mercat/samarreta-socdepoble/index.html','og:image:type'),'image/jpeg');
   assert.equal(prop('wikidepoble/03_llibre_d_or_memoria_episodica/index.html','og:image'),origin+'/assets/system/ui/og-llibre-d-or-1200x630.png');
   assert.equal(prop('wikidepoble/03_llibre_d_or_memoria_episodica/index.html','og:url'),origin+'/wikidepoble/03_llibre_d_or_memoria_episodica');
@@ -256,6 +256,11 @@ test('snapshot públic: una publicació remota té el seu fitxer, per l’API i 
   const fitxer=path.join(snapshots,'snapshot.json');fs.writeFileSync(fitxer,JSON.stringify(publicSnapshot));
   const distCli=await distReal(t,publicSnapshot);
   const cli=extra=>spawnSync(process.execPath,[SCRIPT,'--root',projectRoot,'--dist',distCli,'--origin',origin,...extra],{encoding:'utf8'});
+  // La CLI de release refusa la foto bloquejada; l'API de diagnòstic anterior conserva la reserva.
+  const bloquejat=cli(['--snapshot',fitxer]);
+  assert.equal(bloquejat.status,1);assert.match(JSON.parse(bloquejat.stderr.trim()).error,/no servible/);
+  assert.equal(fs.existsSync(path.join(distCli,'mur/publicacio-sintetica-01')),false);
+  fs.writeFileSync(fitxer,JSON.stringify(publicSnapshot.filter(e=>e.id!=='remota-storage-01')));
   const bo=cli(['--snapshot',fitxer]);
   assert.equal(bo.status,0,bo.stderr);
   assert.ok(JSON.parse(bo.stdout).routesWritten.includes('/mur/publicacio-sintetica-01'));
@@ -275,4 +280,107 @@ test('les llistes: cada secció continua registrant les claus del seu títol i l
     assert.match(codi,new RegExp(`useSEO\\(\\{\\s*title: t\\('${titol.replace(/\./g,'\\.')}'`),`${ruta}: ${titol}`);
     assert.match(codi,new RegExp(`description: t\\('${descripcio.replace(/\./g,'\\.')}'`),`${ruta}: ${descripcio}`);
   }
+});
+
+/* QA-H04 (verificació QA local, 261029) · La primera foto real d'una
+   publicació remota: el bucket públic de Storage del Supabase del build
+   (imageOrigins). No és a dist/: un GET fitat abans d'escriure res, amb el
+   MIME i els bytes d'acord; si no es pot servir, la targeta genèrica. */
+const SUPABASE='https://exemple.supabase.co';
+const PUBLIC=`${SUPABASE}/storage/v1/object/public/mitjans/11111111-1111-4111-8111-111111111111`;
+test('una foto remota del bucket públic: la seua URL amb MIME i mides dels bytes; si no es pot servir, la targeta genèrica',async t=>{
+  const gran=Buffer.concat([jpeg(4000,3000),Buffer.alloc(600*1024)]);
+  const respostes={
+    'ok.png':()=>new Response(png(1080,1080),{headers:{'content-type':'image/png'}}),
+    'ok.webp':()=>new Response(webpVp8x(800,600),{headers:{'content-type':'image/webp; charset=binary'}}),
+    'gran.jpg':()=>new Response(gran,{headers:{'content-type':'image/jpeg'}}),
+    'html.png':()=>new Response('<html></html>',{headers:{'content-type':'text/html'}}),
+    'menteix.png':()=>new Response(jpeg(800,600),{headers:{'content-type':'image/png'}}),
+    'absent.jpg':()=>new Response('no',{status:404,headers:{'content-type':'text/plain'}}),
+    'caiguda.png':()=>Promise.reject(new TypeError('fetch failed'))
+  };
+  const crides=[];
+  const fetchImpl=async (href,opcions)=>{crides.push({href,opcions});return respostes[href.split('/').pop()]();};
+  const item=(id,image)=>({sectionId:'mur',id,visibility:'public',status:'published',title:`Foto ${id}`,description:'Una foto del servidor',image,imageAlt:`Alt ${id}`});
+  const publicSnapshot=[...Object.keys(respostes).map(nom=>item(nom.replace('.','-'),`${PUBLIC}/${nom}`)),
+    item('repetida',`${PUBLIC}/ok.png`),
+    item('signada',`${SUPABASE}/storage/v1/object/sign/mitjans/x.png?token=abc`),
+    item('transformada',`${SUPABASE}/storage/v1/render/image/public/mitjans/x.png`),
+    item('codificada',`${PUBLIC}/foto%20nova.png`),
+    item('forana','https://evil.example/storage/v1/object/public/mitjans/x.png')];
+  const {root,dist}=fixture(t);
+  const rebut=await run(root,{publicSnapshot,imageOrigins:[SUPABASE],fetchImpl});
+  // Una petició per URL (la repetida, del cau), GET sense redireccions i amb termini; cap per a les altres.
+  assert.deepEqual(crides.map(c=>c.href.split('/').pop()).sort(),Object.keys(respostes).sort());
+  for(const {opcions} of crides)assert.ok(opcions.method==='GET'&&opcions.redirect==='error'&&opcions.signal);
+  assert.deepEqual(rebut.remoteImages,[`${PUBLIC}/ok.png`,`${PUBLIC}/ok.webp`]);
+  const og=id=>{const d=llig(dist,`mur/${id}/index.html`);return ['og:image','og:image:type','og:image:width','og:image:height','og:image:alt'].map(n=>d.querySelector(`meta[property="${n}"]`)?.content??null);};
+  assert.deepEqual(og('ok-png'),[`${PUBLIC}/ok.png`,'image/png','1080','1080','Alt ok-png']);
+  assert.deepEqual(og('repetida'),[`${PUBLIC}/ok.png`,'image/png','1080','1080','Alt repetida']);
+  assert.deepEqual(og('ok-webp'),[`${PUBLIC}/ok.webp`,'image/webp','800','600','Alt ok-webp']);
+  assert.equal(llig(dist,'mur/ok-png/index.html').querySelector('meta[name="twitter:image"]').content,`${PUBLIC}/ok.png`);
+  const generica=origin+'/assets/system/ui/og-socdepoble-1200x630.png';
+  for(const id of ['gran-jpg','html-png','menteix-png','absent-jpg','caiguda-png','signada','transformada','codificada','forana'])assert.equal(og(id)[0],generica,id);
+  for(const [nom,motiu] of [['gran.jpg',/massa gran/],['html.png',/MIME text\/html/],['menteix.png',/declarada image\/png, els bytes diuen image\/jpeg/],['absent.jpg',/HTTP 404/],['caiguda.png',/fetch failed/]])
+    assert.ok(rebut.warnings.some(w=>w.startsWith(`${PUBLIC}/${nom}:`)&&motiu.test(w)&&/targeta genèrica/.test(w)),`${nom}: ${rebut.warnings.join(' | ')}`);
+  // Sense imageOrigins (cap Supabase al build), ni una petició: la targeta genèrica.
+  const sense=fixture(t);const cap=[];
+  await run(sense.root,{publicSnapshot:[item('ok-png',`${PUBLIC}/ok.png`)],fetchImpl:async href=>{cap.push(href);throw new Error('no');}});
+  assert.deepEqual(cap,[]);assert.equal(llig(sense.dist,'mur/ok-png/index.html').querySelector('meta[property="og:image"]').content,generica);
+});
+
+/* QA-H04 · En producció (remot), el detall d'un id que també és de llavor
+   pinta la publicació del servidor: el seu head mana, sense ruta duplicada. */
+test('la publicació remota substituïx la llavor del mateix camí',async t=>{
+  const {root,dist}=fixture(t);
+  const publicSnapshot=[{sectionId:'mercat',id:'samarreta-socdepoble',visibility:'public',status:'published',title:'Samarreta del servidor',description:'La del servidor',image:'/assets/mercat/01-chica-jersey.png',imageAlt:'Samarreta'}];
+  const rebut=await run(root,{publicSnapshot});
+  assert.equal(rebut.routesWritten.filter(r=>r==='/mercat/samarreta-socdepoble').length,1);
+  const d=llig(dist,'mercat/samarreta-socdepoble/index.html');
+  assert.equal(d.title,'Samarreta del servidor | Sóc de Poble');
+  assert.equal(d.querySelector('meta[property="og:type"]').content,'article');
+  assert.equal(d.querySelector('meta[property="og:image"]').content,origin+'/assets/mercat/01-chica-jersey.png');
+});
+
+/* Revisió adversarial (QA-H04) · /mur/Aplec i /mur/aplec són el mateix fitxer
+   en el disc del Mac (APFS no distingix majúscules): abans, el segon
+   writeFileSync petava amb el dist/ a mitges. Ara és una ruta duplicada abans
+   d'escriure res, en qualsevol disc; i una remota que només canvia les
+   majúscules d'una llavor la substituïx, com la del mateix camí. */
+test('majúscules: dues rutes plegades, porta roja sense escriure res; la remota amb altres majúscules substituïx la llavor',async t=>{
+  const item=(sectionId,id)=>({sectionId,id,visibility:'public',status:'published',title:`Títol ${id}`,description:'Del servidor',image:null});
+  const {root,dist}=fixture(t);const abans=fitxers(dist);
+  await assert.rejects(run(root,{publicSnapshot:[item('mur','Aplec'),item('mur','aplec')]}),/Ruta social duplicada: \/mur\/(?:A|a)plec \(i \/mur\/(?:A|a)plec/);
+  assert.deepEqual(fitxers(dist),abans,'cap fitxer escrit');
+  const llavor=fixture(t);
+  // Una llavor amb majúscules (Botijo) i una en minúscules (samarreta): cada remota plegada la substituïx.
+  llavor.put('src/sections/mercat/marketSeed.js',`export const MOCK_MARKET_ITEMS=[{id:'samarreta-socdepoble',title:'Samarreta',subtitle:'De cotó',images:['/assets/mercat/01-chica-jersey.png']},{id:'Botijo',title:'Botijo',subtitle:'De fang',images:['/assets/mercat/01-chica-jersey.png']}];`);
+  const rebut=await run(llavor.root,{publicSnapshot:[item('mercat','Samarreta-socdepoble'),item('mercat','botijo')]});
+  assert.deepEqual(rebut.routesWritten.filter(r=>/samarreta|botijo/i.test(r)),['/mercat/Samarreta-socdepoble','/mercat/botijo']);
+  assert.deepEqual(fs.readdirSync(path.join(llavor.dist,'mercat')).filter(n=>/samarreta|botijo/i.test(n)).sort(),['Samarreta-socdepoble','botijo']);
+  assert.equal(llig(llavor.dist,'mercat/Samarreta-socdepoble/index.html').title,'Títol Samarreta-socdepoble | Sóc de Poble');
+});
+
+
+test('porta de release: una foto remota no servible atura abans d’escriure cap pàgina',async t=>{
+  const item=image=>({sectionId:'mur',id:'primera',visibility:'public',status:'published',title:'Primera foto',description:'Una publicació',image,imageAlt:'Primera'});
+  for(const [image,fetchImpl] of [
+    [`${PUBLIC}/absent.png`,async()=>new Response('no',{status:404})],
+    [`${PUBLIC}/gran.png`,async()=>new Response(Buffer.concat([png(1200,630),Buffer.alloc(600*1024)]),{headers:{'content-type':'image/png'}})],
+    [`${PUBLIC}/menteix.png`,async()=>new Response(jpeg(1200,630),{headers:{'content-type':'image/png'}})],
+    [`${SUPABASE}/storage/v1/object/sign/mitjans/a.png?token=NO_EXPORTAR_TOKEN`,async()=>{throw new Error('no ha de consultar');}]
+  ]) {
+    const {root,dist}=fixture(t);const abans=fitxers(dist);
+    await assert.rejects(run(root,{strictRemoteImages:true,publicSnapshot:[item(image)],imageOrigins:[SUPABASE],fetchImpl}),/primera imatge remota|no servible/);
+    assert.deepEqual(fitxers(dist),abans,'cap HTML parcial ni logotip de substitució');
+  }
+});
+
+
+test('cada comprovació de foto remota té el termini contractual de cinc segons',async t=>{
+  const terminis=[];
+  t.mock.method(AbortSignal,'timeout',ms=>{terminis.push(ms);return new AbortController().signal;});
+  const {root}=fixture(t);
+  await run(root,{strictRemoteImages:true,imageOrigins:[SUPABASE],publicSnapshot:[{sectionId:'mur',id:'foto',visibility:'public',status:'published',title:'Foto',description:'Foto primera',image:`${PUBLIC}/foto.png`}],fetchImpl:async()=>new Response(png(1200,630),{headers:{'content-type':'image/png'}})});
+  assert.deepEqual(terminis,[5000]);
 });

@@ -10,7 +10,11 @@
    Cap prova compila, signa ni puja res, ni crida xcodebuild, altool, gradle, keytool ni fastlane
    (el preflight rep consultes fingides): només peces pures, fitxers temporals fora del
    repositori, git de només lectura, processos fills de Node, JDK fingits (scripts /bin/sh) i, en
-   macOS, «/usr/libexec/java_home -v 21». */
+   macOS, «/usr/libexec/java_home -v 21».
+   Només les proves que miren «l'arbre real» (git, capacitor.config.json) se
+   salten en una còpia sense .git, amb el motiu a la vista. La plantilla és
+   versionada i obligatòria: es comprova igualment sense laboratori germà.
+   El destí extern dels rebuts és un contracte, pot ser un directori futur. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -24,6 +28,7 @@ import * as ios from '../scripts/botigues/puja-ios.mjs';
 import * as android from '../scripts/botigues/puja-android.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const SENSE_REPOSITORI = !fs.existsSync(path.join(ARREL, '.git')) && 'còpia sense .git: esta prova mira l\'arbre real del repositori';
 
 test('botigues: peces pures (fitxer d\'entorn, prohibides, màscares, empremtes, opcions, arguments)', () => {
   const { valors, errors } = e.analitzaEntorn('# comentari\nexport SDP_APP_ID=org.socdepoble.app\nSDP_ASC_KEY_ID="ABC123DEFG" # nota\nSDP_X=\'a b\'\nSDP_Y=valor # inline\nSDP_APP_ID=valorduplicat\nmal\nSDP_Z="valorobert\n\n');
@@ -67,7 +72,7 @@ test('botigues: peces pures (fitxer d\'entorn, prohibides, màscares, empremtes,
   assert.throws(() => e.exportOptionsPlist('x'), /Team ID/);
 });
 
-test('botigues: git ignora .env.botigues.local i no ignora un fitxer d\'entorn d\'un altre nom', () => {
+test('botigues: git ignora .env.botigues.local i no ignora un fitxer d\'entorn d\'un altre nom', { skip: SENSE_REPOSITORI }, () => {
   assert.equal(e.gitIgnora(ARREL, path.join(ARREL, '.env.botigues.local')), true);
   assert.equal(e.gitIgnora(ARREL, path.join(ARREL, 'botigues.env')), false);
   assert.equal(e.gitIgnora(ARREL, path.join(ARREL, 'src', 'natiu', 'claus.env')), false);
@@ -246,9 +251,27 @@ test('botigues: preflight sobre l\'arbre real ix amb la primera família que fal
   assert.deepEqual(r.valors, {});
   assert.equal(r.jdk, null);
   assert.match(r.linies.join('\n'), /✗ no hi ha cap fitxer d'entorn/);
-  // La plantilla que nomena el missatge és al laboratori: si el laboratori es mou, PLANTILLA_DE_L_ENTORN i REBUTS es mouen amb ell.
-  assert.ok(fs.existsSync(path.join(ARREL, e.PLANTILLA_DE_L_ENTORN)), e.PLANTILLA_DE_L_ENTORN);
-  assert.ok(fs.existsSync(path.dirname(path.join(ARREL, e.REBUTS))), path.dirname(e.REBUTS));
+  assert.ok(r.linies.join('\n').includes(e.PLANTILLA_DE_L_ENTORN), 'el missatge nomena la plantilla instal·lada');
+});
+
+test('botigues: la plantilla versionada existix i només conté les dotze variables buides', () => {
+  assert.equal(e.PLANTILLA_DE_L_ENTORN, 'scripts/botigues/botigues.env.exemple.txt');
+  const fitxer = path.resolve(ARREL, e.PLANTILLA_DE_L_ENTORN);
+  assert.ok(fs.existsSync(fitxer), 'falta la plantilla versionada: no depén del laboratori');
+  assert.ok(fs.lstatSync(fitxer).isFile(), 'la plantilla ha de ser un fitxer regular');
+  const { valors, errors } = e.analitzaEntorn(fs.readFileSync(fitxer, 'utf8'));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(Object.keys(valors).sort(), Object.keys(e.VARIABLES).sort());
+  // Només booleans als errors: una contaminació accidental no exposa valors.
+  assert.equal(Object.values(valors).every(valor => valor === ''), true, 'la plantilla no pot portar credencials ni valors d’un entorn');
+  assert.deepEqual(e.desconegudes(valors), []);
+  assert.deepEqual(e.prohibides(valors), []);
+});
+
+test('botigues: el destí dels rebuts és extern i no exigix que el laboratori ja existisca', () => {
+  assert.equal(e.REBUTS, '../_investigacio_ia_de_poble/261003_1330_empaquetat_mobil_claude/rebuts');
+  assert.equal(path.isAbsolute(e.REBUTS), false);
+  assert.equal(e.esDins(ARREL, path.resolve(ARREL, e.REBUTS)), false);
 });
 
 test('botigues: sense JDK per a Gradle, --signa para amb l\'eixida 6 i sense --signa és un avís', () => {
@@ -353,7 +376,7 @@ test('botigues: sdkFacebookIos troba el SDK de Facebook a ios/ i al connector so
   }
 });
 
-test('botigues: l\'arbre real no porta el SDK de Facebook a ios/ ni al connector social', () => {
+test('botigues: l\'arbre real no porta el SDK de Facebook a ios/ ni al connector social', { skip: SENSE_REPOSITORI }, () => {
   assert.deepEqual(p.sdkFacebookIos(ARREL), []);
   assert.equal(p.SDK_FACEBOOK.test('.product(name: "FacebookLogin", package: "facebook-ios-sdk")'), true);
   assert.equal(p.SDK_FACEBOOK.test('.product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")'), false);

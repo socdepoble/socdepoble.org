@@ -1,0 +1,466 @@
+{
+  "descripcio": "Vectors de resposta coneguda de xifratXatCripto.seguretat.test.js (P1-12, pas 2). Copiats mecànicament de les fonts citades a cada «font» (URL i SHA-256 del fitxer baixat el 261029); cap valor escrit a mà.",
+  "base64_rfc4648": {
+    "font": {
+      "url": "https://www.rfc-editor.org/rfc/rfc4648.txt",
+      "sha256": "84e14418f795d503be5f34bf23ce4ebaa119e9ec7c9f667d8caeb111385b178f",
+      "lloc": "Section 10"
+    },
+    "casos": [
+      [
+        "",
+        ""
+      ],
+      [
+        "f",
+        "Zg=="
+      ],
+      [
+        "fo",
+        "Zm8="
+      ],
+      [
+        "foo",
+        "Zm9v"
+      ],
+      [
+        "foob",
+        "Zm9vYg=="
+      ],
+      [
+        "fooba",
+        "Zm9vYmE="
+      ],
+      [
+        "foobar",
+        "Zm9vYmFy"
+      ]
+    ]
+  },
+  "hkdf_rfc5869": {
+    "font": {
+      "url": "https://www.rfc-editor.org/rfc/rfc5869.txt",
+      "sha256": "7a40eb3835b35fc947eb12a2ed614db079d43b26e50dbc537c31fba16397089c",
+      "lloc": "Appendix A.1 i A.3"
+    },
+    "casos": [
+      {
+        "nom": "A.1.",
+        "ikm": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+        "salt": "000102030405060708090a0b0c",
+        "info": "f0f1f2f3f4f5f6f7f8f9",
+        "L": 42,
+        "prk": "077709362c2e32df0ddc3f0dc47bba6390b6c73bb50f9c3122ec844ad7c2b3e5",
+        "okm": "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+      },
+      {
+        "nom": "A.3.",
+        "ikm": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+        "salt": "",
+        "info": "",
+        "L": 42,
+        "prk": "19ef24a32c717b167f33a91d6f648bdf96596776afdb6377ac434c1c293ccb04",
+        "okm": "8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d9d201395faa4b61a96c8"
+      }
+    ]
+  },
+  "pbkdf2_rfc7914": {
+    "font": {
+      "url": "https://www.rfc-editor.org/rfc/rfc7914.txt",
+      "sha256": "df55932f8b6a5d271f36a634d91a25903724e189ba6c120bf7257cd47f10b197",
+      "lloc": "Section 11"
+    },
+    "casos": [
+      {
+        "P": "passwd",
+        "S": "salt",
+        "c": 1,
+        "dkLen": 64,
+        "dk": "55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc49ca9cccf179b645991664b39d77ef317c71b845b1e30bd509112041d3a19783"
+      },
+      {
+        "P": "Password",
+        "S": "NaCl",
+        "c": 80000,
+        "dkLen": 64,
+        "dk": "4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56a1d425a1225833549adb841b51c9b3176a272bdebba1d078478f62b397f33c8d"
+      }
+    ]
+  },
+  "aes256gcm_cavp": {
+    "font": {
+      "url": "https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip",
+      "sha256": "f9fc479e134cde2980b3bb7cddbcb567b2cd96fd753835243ed067699f26a023",
+      "fitxers": {
+        "gcmEncryptExtIV256.rsp": "4448b4998c3f58cd9f5542ddf7c573189a721ff3d3ac24cd5177bb4910a787f8",
+        "gcmDecrypt256.rsp": "ed318735a517d5a85c82d2846c23dcf56e57a352fb0f0a163d9e7617a7bd12ad"
+      },
+      "lloc": "NIST CAVP (CAVS 14.0), Keylen 256, IVlen 96, Taglen 128, Count 0 de cada grup triat"
+    },
+    "xifrat": [
+      {
+        "Count": 0,
+        "linia": 13,
+        "PTlen": 0,
+        "AADlen": 0,
+        "key": "b52c505a37d78eda5dd34f20c22540ea1b58963cf8e5bf8ffa85f9f2492505b4",
+        "iv": "516c33929df5a3284ff463d7",
+        "pt": "",
+        "aad": "",
+        "ct": "",
+        "tag": "bdc1ac884d332457a1d2664f168c76f0",
+        "falla": false
+      },
+      {
+        "Count": 0,
+        "linia": 895,
+        "PTlen": 0,
+        "AADlen": 128,
+        "key": "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223",
+        "iv": "d79cf22d504cc793c3fb6c8a",
+        "pt": "",
+        "aad": "b96baa8c1c75a671bfb2d08d06be5f36",
+        "ct": "",
+        "tag": "3e5d486aa2e30b22e040b85723a06e76",
+        "falla": false
+      },
+      {
+        "Count": 0,
+        "linia": 5305,
+        "PTlen": 128,
+        "AADlen": 128,
+        "key": "92e11dcdaa866f5ce790fd24501f92509aacf4cb8b1339d50c9c1240935dd08b",
+        "iv": "ac93a1a6145299bde902f21a",
+        "pt": "2d71bcfa914e4ac045b2aa60955fad24",
+        "aad": "1e0889016f67601c8ebea4943bc23ad6",
+        "ct": "8995ae2e6df3dbf96fac7b7137bae67f",
+        "tag": "eca5aa77d51d4a0a14d9c51e1da474ab",
+        "falla": false
+      },
+      {
+        "Count": 0,
+        "linia": 13243,
+        "PTlen": 256,
+        "AADlen": 0,
+        "key": "268ed1b5d7c9c7304f9cae5fc437b4cd3aebe2ec65f0d85c3918d3d3b5bba89b",
+        "iv": "9ed9d8180564e0e945f5e5d4",
+        "pt": "fe29a40d8ebf57262bdb87191d01843f4ca4b2de97d88273154a0b7d9e2fdb80",
+        "aad": "",
+        "ct": "791a4a026f16f3a5ea06274bf02baab469860abde5e645f3dd473a5acddeecfc",
+        "tag": "05b2b74db0662550435ef1900e136b15",
+        "falla": false
+      },
+      {
+        "Count": 0,
+        "linia": 21181,
+        "PTlen": 408,
+        "AADlen": 720,
+        "key": "148579a3cbca86d5520d66c0ec71ca5f7e41ba78e56dc6eebd566fed547fe691",
+        "iv": "b08a5ea1927499c6ecbfd4e0",
+        "pt": "9d0b15fdf1bd595f91f8b3abc0f7dec927dfd4799935a1795d9ce00c9b879434420fe42c275a7cd7b39d638fb81ca52b49dc41",
+        "aad": "e4f963f015ffbb99ee3349bbaf7e8e8e6c2a71c230a48f9d59860a29091d2747e01a5ca572347e247d25f56ba7ae8e05cde2be3c97931292c02370208ecd097ef692687fecf2f419d3200162a6480a57dad408a0dfeb492e2c5d",
+        "ct": "2097e372950a5e9383c675e89eea1c314f999159f5611344b298cda45e62843716f215f82ee663919c64002a5c198d7878fd3f",
+        "tag": "adbecdb0d5c2224d804d2886ff9a5760",
+        "falla": false
+      }
+    ],
+    "desxifrat": [
+      {
+        "Count": 0,
+        "linia": 5305,
+        "PTlen": 128,
+        "AADlen": 128,
+        "key": "54e352ea1d84bfe64a1011096111fbe7668ad2203d902a01458c3bbd85bfce14",
+        "iv": "df7c3bca00396d0c018495d9",
+        "pt": "85fc3dfad9b5a8d3258e4fc44571bd3b",
+        "aad": "7e968d71b50c1f11fd001f3fef49d045",
+        "ct": "426e0efc693b7be1f3018db7ddbb7e4d",
+        "tag": "ee8257795be6a1164d7e1d2d6cac77a7",
+        "falla": false
+      },
+      {
+        "Count": 2,
+        "linia": 5321,
+        "PTlen": 128,
+        "AADlen": 128,
+        "key": "9a0343f850a6427120f764789ffec6d237447b898fbf51d2182f065d3861497d",
+        "iv": "3deef6f453dd70d92143adcd",
+        "pt": null,
+        "aad": "dbb8226a624520863db6897017b2a4f8",
+        "ct": "e93165935ac18e3a2845d15fe31a9286",
+        "tag": "f5fc50d18766bc3d9e16dd136d45816b",
+        "falla": true
+      }
+    ]
+  },
+  "ecdh_rfc5903": {
+    "font": {
+      "url": "https://www.rfc-editor.org/rfc/rfc5903.txt",
+      "sha256": "939fab548a6e6bb49a5b3c4dd24a3c5df54a46645447b2d6f4df4fd88ff2d69f",
+      "lloc": "Section 8.1"
+    },
+    "i": "c88f01f510d9ac3f70a292daa2316de544e9aab8afe84049c62a9c57862d1433",
+    "gix": "dad0b65394221cf9b051e1feca5787d098dfe637fc90b9ef945d0c3772581180",
+    "giy": "5271a0461cdb8252d61f1c456fa3e59ab1f45b33accf5f58389e0577b8990bb3",
+    "r": "c6ef9c5d78ae012a011164acb397ce2088685d8f06bf9be0b283ab46476bee53",
+    "grx": "d12dfb5289c8d4f81208b70270398c342296970a0bccb74c736fc7554494bf63",
+    "gry": "56fbf3ca366cc23e8157854c13c58d6aac23f046ada30f8353e74f33039872ab",
+    "girx": "d6840f6b42f6edafd13116e0e12565202fef8e9ece7dce03812464d04b9442de",
+    "giry": "522bde0af0d8585b8def9c183b5ae38f50235206a8674ecb5d98edb20eb153a2",
+    "corba": {
+      "p": "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
+      "b": "5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",
+      "n": "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",
+      "gx": "6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",
+      "gy": "4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5"
+    }
+  },
+  "ecdsa_rfc6979": {
+    "font": {
+      "url": "https://www.rfc-editor.org/rfc/rfc6979.txt",
+      "sha256": "456e8f17558fdbd206f968b96fc6f1b4a71ea331ab30ad17f711ab3adaa7d701",
+      "lloc": "Appendix A.2.5 (SHA-256)"
+    },
+    "q": "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",
+    "x": "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721",
+    "ux": "60fed4ba255a9d31c961eb74c6356d68c049b8923b61fa6ce669622e60f29fb6",
+    "uy": "7903fe1008b8bc99a41ae9e95628bc64f2f1b20c2d7e9f5177a3c294d4462299",
+    "firmes": [
+      {
+        "missatge": "sample",
+        "r": "efd48b2aacb6a8fd1140dd9cd45e81d69d2c877b56aaf991c34d0ea84eaf3716",
+        "s": "f7cb1c942d657c41d436c7a1b6e29f65f3e900dbb9aff4064dc4ab2f843acda8"
+      },
+      {
+        "missatge": "test",
+        "r": "f1abb023518351cd71d881567b1ea663ed3efcf6c5132b354f28d3b0b7d38367",
+        "s": "019f4113742a2b14bd25926b49c649155f267e60d3814b4c0cc84250e46f0083"
+      }
+    ]
+  },
+  "hpke_rfc9180_a31": {
+    "font": {
+      "url": "https://www.rfc-editor.org/rfc/rfc9180.txt",
+      "sha256": "f45a8b7c30231b26d668b1e8168074e5ab514b174d656b67e859895117f1f8f6",
+      "lloc": "Appendix A.3.1 (DHKEM(P-256, HKDF-SHA256), HKDF-SHA256, AES-128-GCM, mode_base)"
+    },
+    "mode": 0,
+    "kem_id": 16,
+    "kdf_id": 1,
+    "aead_id": 1,
+    "info": "4f6465206f6e2061204772656369616e2055726e",
+    "ikmE": "4270e54ffd08d79d5928020af4686d8f6b7d35dbe470265f1f5aa22816ce860e",
+    "pkEm": "04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b61a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4",
+    "skEm": "4995788ef4b9d6132b249ce59a77281493eb39af373d236a1fe415cb0c2d7beb",
+    "ikmR": "668b37171f1072f3cf12ea8a236a45df23fc13b82af3609ad1e354f6ef817550",
+    "pkRm": "04fe8c19ce0905191ebc298a9245792531f26f0cece2460639e8bc39cb7f706a826a779b4cf969b8a0e539c7f62fb3d30ad6aa8f80e30f1d128aafd68a2ce72ea0",
+    "skRm": "f3ce7fdae57e1a310d87f1ebbde6f328be0a99cdbcadf4d6589cf29de4b8ffd2",
+    "enc": "04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b61a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4",
+    "shared_secret": "c0d26aeab536609a572b07695d933b589dcf363ff9d93c93adea537aeabb8cb8",
+    "key_schedule_context": "00b88d4e6d91759e65e87c470e8b9141113e9ad5f0c8ceefc1e088c82e6980500798e486f9c9c09c9b5c753ac72d6005de254c607d1b534ed11d493ae1c1d9ac85",
+    "secret": "2eb7b6bf138f6b5aff857414a058a3f1750054a9ba1f72c2cf0684a6f20b10e1",
+    "key": "868c066ef58aae6dc589b6cfdd18f97e",
+    "base_nonce": "4e0bc5018beba4bf004cca59",
+    "exporter_secret": "14ad94af484a7ad3ef40e9f3be99ecc6fa9036df9d4920548424df127ee0d99f",
+    "encryptions": [
+      {
+        "seq": 0,
+        "pt": "4265617574792069732074727574682c20747275746820626561757479",
+        "aad": "436f756e742d30",
+        "nonce": "4e0bc5018beba4bf004cca59",
+        "ct": "5ad590bb8baa577f8619db35a36311226a896e7342a6d836d8b7bcd2f20b6c7f9076ac232e3ab2523f39513434"
+      },
+      {
+        "seq": 1,
+        "pt": "4265617574792069732074727574682c20747275746820626561757479",
+        "aad": "436f756e742d31",
+        "nonce": "4e0bc5018beba4bf004cca58",
+        "ct": "fa6f037b47fc21826b610172ca9637e82d6e5801eb31cbd3748271affd4ecb06646e0329cbdf3c3cd655b28e82"
+      },
+      {
+        "seq": 2,
+        "pt": "4265617574792069732074727574682c20747275746820626561757479",
+        "aad": "436f756e742d32",
+        "nonce": "4e0bc5018beba4bf004cca5b",
+        "ct": "895cabfac50ce6c6eb02ffe6c048bf53b7f7be9a91fc559402cbc5b8dcaeb52b2ccc93e466c28fb55fed7a7fec"
+      },
+      {
+        "seq": 4,
+        "pt": "4265617574792069732074727574682c20747275746820626561757479",
+        "aad": "436f756e742d34",
+        "nonce": "4e0bc5018beba4bf004cca5d",
+        "ct": "8787491ee8df99bc99a246c4b3216d3d57ab5076e18fa27133f520703bc70ec999dd36ce042e44f0c3169a6a8f"
+      },
+      {
+        "seq": 255,
+        "pt": "4265617574792069732074727574682c20747275746820626561757479",
+        "aad": "436f756e742d323535",
+        "nonce": "4e0bc5018beba4bf004ccaa6",
+        "ct": "2ad71c85bf3f45c6eca301426289854b31448bcf8a8ccb1deef3ebd87f60848aa53c538c30a4dac71d619ee2cd"
+      },
+      {
+        "seq": 256,
+        "pt": "4265617574792069732074727574682c20747275746820626561757479",
+        "aad": "436f756e742d323536",
+        "nonce": "4e0bc5018beba4bf004ccb59",
+        "ct": "10f179686aa2caec1758c8e554513f16472bd0a11e2a907dde0b212cbe87d74f367f8ffe5e41cd3e9962a6afb2"
+      }
+    ]
+  },
+  "hpke_cfrg": {
+    "font": {
+      "url": "https://raw.githubusercontent.com/cfrg/draft-irtf-cfrg-hpke/5f503c564da00b0687b3de75f1dfbdfc4079ad31/test-vectors.json",
+      "sha256": "61fc662f01996cd06d713dacf5e133167bd309a1f329442d53f1e21a47b3ede6",
+      "lloc": "entrades mode 0, kem_id 16, kdf_id 1, aead_id 1 i 2 (sense «exports»); xifrats de les seqüències 0, 1, 2, 4, 255 i 256"
+    },
+    "suites": [
+      {
+        "mode": 0,
+        "kem_id": 16,
+        "kdf_id": 1,
+        "aead_id": 1,
+        "info": "4f6465206f6e2061204772656369616e2055726e",
+        "ikmR": "668b37171f1072f3cf12ea8a236a45df23fc13b82af3609ad1e354f6ef817550",
+        "ikmE": "4270e54ffd08d79d5928020af4686d8f6b7d35dbe470265f1f5aa22816ce860e",
+        "skRm": "f3ce7fdae57e1a310d87f1ebbde6f328be0a99cdbcadf4d6589cf29de4b8ffd2",
+        "skEm": "4995788ef4b9d6132b249ce59a77281493eb39af373d236a1fe415cb0c2d7beb",
+        "pkRm": "04fe8c19ce0905191ebc298a9245792531f26f0cece2460639e8bc39cb7f706a826a779b4cf969b8a0e539c7f62fb3d30ad6aa8f80e30f1d128aafd68a2ce72ea0",
+        "pkEm": "04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b61a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4",
+        "enc": "04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b61a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4",
+        "shared_secret": "c0d26aeab536609a572b07695d933b589dcf363ff9d93c93adea537aeabb8cb8",
+        "key_schedule_context": "00b88d4e6d91759e65e87c470e8b9141113e9ad5f0c8ceefc1e088c82e6980500798e486f9c9c09c9b5c753ac72d6005de254c607d1b534ed11d493ae1c1d9ac85",
+        "secret": "2eb7b6bf138f6b5aff857414a058a3f1750054a9ba1f72c2cf0684a6f20b10e1",
+        "key": "868c066ef58aae6dc589b6cfdd18f97e",
+        "base_nonce": "4e0bc5018beba4bf004cca59",
+        "exporter_secret": "14ad94af484a7ad3ef40e9f3be99ecc6fa9036df9d4920548424df127ee0d99f",
+        "encryptions": [
+          {
+            "seq": 0,
+            "aad": "436f756e742d30",
+            "ct": "5ad590bb8baa577f8619db35a36311226a896e7342a6d836d8b7bcd2f20b6c7f9076ac232e3ab2523f39513434",
+            "nonce": "4e0bc5018beba4bf004cca59",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 1,
+            "aad": "436f756e742d31",
+            "ct": "fa6f037b47fc21826b610172ca9637e82d6e5801eb31cbd3748271affd4ecb06646e0329cbdf3c3cd655b28e82",
+            "nonce": "4e0bc5018beba4bf004cca58",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 2,
+            "aad": "436f756e742d32",
+            "ct": "895cabfac50ce6c6eb02ffe6c048bf53b7f7be9a91fc559402cbc5b8dcaeb52b2ccc93e466c28fb55fed7a7fec",
+            "nonce": "4e0bc5018beba4bf004cca5b",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 4,
+            "aad": "436f756e742d34",
+            "ct": "8787491ee8df99bc99a246c4b3216d3d57ab5076e18fa27133f520703bc70ec999dd36ce042e44f0c3169a6a8f",
+            "nonce": "4e0bc5018beba4bf004cca5d",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 255,
+            "aad": "436f756e742d323535",
+            "ct": "2ad71c85bf3f45c6eca301426289854b31448bcf8a8ccb1deef3ebd87f60848aa53c538c30a4dac71d619ee2cd",
+            "nonce": "4e0bc5018beba4bf004ccaa6",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 256,
+            "aad": "436f756e742d323536",
+            "ct": "10f179686aa2caec1758c8e554513f16472bd0a11e2a907dde0b212cbe87d74f367f8ffe5e41cd3e9962a6afb2",
+            "nonce": "4e0bc5018beba4bf004ccb59",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          }
+        ]
+      },
+      {
+        "mode": 0,
+        "kem_id": 16,
+        "kdf_id": 1,
+        "aead_id": 2,
+        "info": "4f6465206f6e2061204772656369616e2055726e",
+        "ikmR": "a0ce15d49e28bd47a18a97e147582d814b08cbe00109fed5ec27d1b4e9f6f5e3",
+        "ikmE": "a90d3417c3da9cb6c6ae19b4b5dd6cc9529a4cc24efb7ae0ace1f31887a8cd6c",
+        "skRm": "317f915db7bc629c48fe765587897e01e282d3e8445f79f27f65d031a88082b2",
+        "skEm": "90345e3a1d116c1dd39ae76d95ab858c142223a63e44f8f85318cfa91a84858e",
+        "pkRm": "04abc7e49a4c6b3566d77d0304addc6ed0e98512ffccf505e6a8e3eb25c685136f853148544876de76c0f2ef99cdc3a05ccf5ded7860c7c021238f9e2073d2356c",
+        "pkEm": "04c06b4f6bebc7bb495cb797ab753f911aff80aefb86fd8b6fcc35525f3ab5f03e0b21bd31a86c6048af3cb2d98e0d3bf01da5cc4c39ff5370d331a4f1f7d5a4e0",
+        "enc": "04c06b4f6bebc7bb495cb797ab753f911aff80aefb86fd8b6fcc35525f3ab5f03e0b21bd31a86c6048af3cb2d98e0d3bf01da5cc4c39ff5370d331a4f1f7d5a4e0",
+        "shared_secret": "48893fecd82f7c3456af6a42d8f56325d21e08c10fa81299986aaff54cde7b49",
+        "key_schedule_context": "008fc3aeb832490a4b5ab3e42023287db29a1f4bc7c222c0df228727b70a4021127f1ff3fd1aa97af7e5d473e1cb01ba74831133d9659b6c26b03a038a49a84074",
+        "secret": "520da82c752ee6e0be7aafbad57a62535d266b6333513d3eb94cb497dceaf94e",
+        "key": "ee16802a936d5f544771131900ee6973d0551de9e852ece2ef34bf0d5f9e1d1d",
+        "base_nonce": "9bc50980832a7b4b58c40161",
+        "exporter_secret": "a8e9a7e62621879fdc89cea7da8e6153458f463e2851baaf009a7461d699cfb6",
+        "encryptions": [
+          {
+            "seq": 0,
+            "aad": "436f756e742d30",
+            "ct": "58c61a45059d0c5704560e9d88b564a8b63f1364b8d1fcb3c4c6ddc1d291742465e902cd216f8908da49f8f96f",
+            "nonce": "9bc50980832a7b4b58c40161",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 1,
+            "aad": "436f756e742d31",
+            "ct": "b4e7c90d1dd62cb563694956eb517ab55d5e7d1f6366a0066c04ababaa444dbaf60a30d7bb7d3e91b969762dee",
+            "nonce": "9bc50980832a7b4b58c40160",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 2,
+            "aad": "436f756e742d32",
+            "ct": "65463cc0e5fd16e1650a55fb37d5b6fe6e5ac5b6f6e8c2640cfb0fcd528dc37bc0963b5c53d6238c42d447ddf4",
+            "nonce": "9bc50980832a7b4b58c40163",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 4,
+            "aad": "436f756e742d34",
+            "ct": "8537ff19240d613badd398dbeedf0338ca9f549bad6775ae8c3a672666057f6709e0931155cd1cae7071c6fd27",
+            "nonce": "9bc50980832a7b4b58c40165",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 255,
+            "aad": "436f756e742d323535",
+            "ct": "2bcdb6aa31cf9b85855aa22c18ee7feb783b26d5f8fae4554a409845810bdac0fc06bdce6c60a37efb45a106eb",
+            "nonce": "9bc50980832a7b4b58c4019e",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          },
+          {
+            "seq": 256,
+            "aad": "436f756e742d323536",
+            "ct": "fcc4c798b73d45d4a241f4d05886befed63b8bdf0252454072c9f6170f6e262f2738cf2ea290053b2181ad46d6",
+            "nonce": "9bc50980832a7b4b58c40061",
+            "pt": "4265617574792069732074727574682c20747275746820626561757479"
+          }
+        ]
+      }
+    ]
+  },
+  "empremta_libsignal": {
+    "font": {
+      "url": "https://raw.githubusercontent.com/signalapp/libsignal/ff71b2a00080c1c2fec08c11c292372797f101f6/rust/protocol/src/fingerprint.rs",
+      "sha256": "65341e810bd7736e26467d8b0479934484d04d78c19d02675057650310d07302",
+      "lloc": "mod test: fingerprint_test_v1 (iterations 5200)"
+    },
+    "iteracions": 5200,
+    "alice": {
+      "clau": "0506863bc66d02b40d27b8d49ca7c09e9239236f9d7d25d6fcca5ce13c7064d868",
+      "id": "+14152222222",
+      "primers32": "1e301a0353dce3dbe7684cb8336e85136cdc0ee96219494ada305d62a7bd61df"
+    },
+    "bob": {
+      "clau": "05f781b6fb32fed9ba1cf2de978d4d5da28dc34046ae814402b5c0dbd96fda907b",
+      "id": "+14153333333",
+      "primers32": "d62cbf73a11592015b6b9f1682ac306fea3aaf3885b84d12bca631e9d4fb3a4d"
+    },
+    "mostra": "300354477692869396892869876765458257569162576843440918079131"
+  }
+}

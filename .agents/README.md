@@ -20,6 +20,6 @@ L’índex següent manté les àncores del govern i les skills.
 > desapareix: vol dir que la wiki està cosida a mà.
 
 - [[.agents/rules/firebase_hosting|firebase_hosting]] — Regla per a CI/CD amb Firebase Hosting (Canvi d'octubre 2026)
-- [[.agents/rules/supabase_grants|supabase_grants]] — Regla obligatòria per a migracions de Supabase (Canvi d'octubre 2026)
+- [[.agents/rules/supabase_grants|supabase_grants]] — Permisos SQL explícits segons el contracte d'accés de cada taula i RPC
 
 <!-- LLAURADOR:ADOPCIONS:FI -->

@@ -61,6 +61,17 @@
  * WordPress, el port del servidor) ha d'escapar l'atribut: el camí pot portar
  * un apòstrof (l'horta.jpg) o un '&'.
  *
+ * Pla 261029_0216 (R-01/GM2-01 i R-02; Pas 2 i Pas 9) · Les VARIANTS SOCIALS.
+ * WhatsApp no pinta a la primera una og:image de més de 300 KB ni cap WebP, i
+ * un .png amb bytes JPEG declara un MIME que els bytes desmentixen. Per a
+ * eixes imatges hi ha una derivada dedicada al costat de l'original,
+ * <nom>-social-1200x630.jpg: un JPEG baseline real, exactament 1200x630 i
+ * ≤300 000 bytes, sense EXIF (OG-7). urlSocialDe la posa al <head> en lloc de
+ * l'original (VARIANTS_SOCIALS, un mapa explícit: esta fulla no té disc);
+ * `ref` continua sent l'original, que la pàgina pinta com sempre (Llei del
+ * Píxel). imatgeSocial.pes300.test.js fixa que cada parell existix i que la
+ * variant pesa i mesura el que diu el nom.
+ *
  * API (els noms exactes):
  *   · ORIGEN_SOCIAL_PER_DEFECTE, CAP_SOCIAL_BASE, ATRIBUT_SSR: constants.
  *   · MARQUES, MARQUES_SVG_ANTIGUES, HERO_PER_DEFECTE, IMATGES_DE_RESERVA i
@@ -74,6 +85,8 @@
  *     de la pàgina en l'ordre en què les veu una persona.
  *   · MOTIUS_DE_BLOQUEIG i urlSocialDe(ref, opcions) → string | null: l'URL
  *     https absoluta que pot baixar un rastrejador.
+ *   · VARIANTS_SOCIALS: original → la seua variant social (-social-1200x630.jpg),
+ *     la que urlSocialDe torna en lloc de l'original.
  *   · primeraImatgeSocial(tipus, item, opcions) →
  *       { estat: 'triada', ref, url, posicio: 0 }
  *     | { estat: 'bloquejada', ref, motiu }
@@ -190,6 +203,45 @@ export const IMATGES_DE_RESERVA = Object.freeze([
   '/favicon.svg',
   '/favicon.ico'
 ]);
+
+/**
+ * Pla 261029_0216 (R-01/GM2-01 i R-02) · La variant social de cada original
+ * del manifest que un rastrejador no pintaria bé: les imatges de més de
+ * 300 KB (R-01), les WebP (WhatsApp no en pinta) i el .png amb bytes JPEG
+ * (R-02), en l'ordre del cens del 261029 (de més a menys pes). Camins nets de
+ * public/: original → el mateix camí amb el sufix -social-1200x630.jpg (la
+ * mateixa carpeta, cap carpeta nova), un JPEG baseline de 1200x630 i
+ * ≤300 000 bytes que només va al <head>. Parells literals, no derivats: així
+ * el cens de mitjans (tooling/media/cens_imatges.mjs) veu cada variant
+ * nomenada al codi. L'original no es toca: el pinten les pàgines (Llei del
+ * Píxel). La targeta base (CAP_SOCIAL_BASE) no hi és: la seua commutació va
+ * alhora amb index.html, useSEO.js i el productor del manifest, i un .jpg del
+ * mateix nom al costat del .png li llevaria la bessona WebP
+ * (politicaDeMitjans.js · bessonesDe).
+ */
+export const VARIANTS_SOCIALS = Object.freeze({
+  '/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png': '/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812-social-1200x630.jpg',
+  '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png': '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221-social-1200x630.jpg',
+  '/assets/nano_cards/drets_autor_comic.jpg': '/assets/nano_cards/drets_autor_comic-social-1200x630.jpg',
+  '/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png': '/assets/uploads/brain/forensic_psychiatry_ai_1775882113147-social-1200x630.jpg',
+  '/assets/uploads/brain/llibre_anima_cover_1776032370908.png': '/assets/uploads/brain/llibre_anima_cover_1776032370908-social-1200x630.jpg',
+  '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png': '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey-social-1200x630.jpg',
+  '/assets/uploads/brain/mac_mini_m4_1787721966622.jpg': '/assets/uploads/brain/mac_mini_m4_1787721966622-social-1200x630.jpg',
+  '/assets/towns/relleu/1.jpg': '/assets/towns/relleu/1-social-1200x630.jpg',
+  '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp': '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431-social-1200x630.jpg',
+  '/assets/uploads/brain/nano_descarregues_app.webp': '/assets/uploads/brain/nano_descarregues_app-social-1200x630.jpg',
+  '/assets/towns/benifallim/1.jpg': '/assets/towns/benifallim/1-social-1200x630.jpg',
+  '/assets/towns/penaguila/1.jpg': '/assets/towns/penaguila/1-social-1200x630.jpg',
+  '/assets/towns/alcoleja/1.jpg': '/assets/towns/alcoleja/1-social-1200x630.jpg',
+  '/assets/towns/xixona/1.jpg': '/assets/towns/xixona/1-social-1200x630.jpg',
+  '/assets/uploads/brain/xat_portada.webp': '/assets/uploads/brain/xat_portada-social-1200x630.jpg',
+  '/assets/ui/plugins/fedivers_vinyeta.webp': '/assets/ui/plugins/fedivers_vinyeta-social-1200x630.jpg',
+  '/assets/uploads/brain/nano_mixa_socis_1774215027069.png': '/assets/uploads/brain/nano_mixa_socis_1774215027069-social-1200x630.jpg',
+  /* Revisió final (261029, OG-01) · El cartell de l'Aplec (723x1024) és la foto
+     d'una publicació remota de producció: la seua bessona .webp arribava al
+     <head>. */
+  '/assets/events/aplec_2023_cartell.jpg': '/assets/events/aplec_2023_cartell-social-1200x630.jpg'
+});
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o
    null si és un camí. Una lletra de disc de Windows ('c:/…') també en dona un,
@@ -845,6 +897,21 @@ function permesosNets(permesos) {
   });
 }
 
+/* Pla 261029_0216 (R-01) · La URL d'un original propi d'/assets/ que va al
+   <head>: la seua variant social, si en té (es mira el camí descodificat i
+   sense barres repetides, que és el fitxer que servix Firebase), o la mateixa.
+   La consulta de l'original (un ?v=) no viatja a la variant: és un altre
+   fitxer. */
+function ambVariantSocial(url, cami) {
+  const net = cami.replace(/\/{2,}/g, '/');
+  /* Revisió final (261029, OG-01) · Una publicació remota nomena la bessona
+     .webp de l'original (la política de mitjans): la variant és la de
+     l'original del mateix nom. WhatsApp no pinta WebP. */
+  const variant = VARIANTS_SOCIALS[net]
+    ?? (/\.webp$/i.test(net) ? ['.png', '.jpg', '.jpeg'].map((ext) => VARIANTS_SOCIALS[net.replace(/\.webp$/i, ext)]).find(Boolean) : undefined);
+  return variant ? new URL(variant, url.origin).href : url.href;
+}
+
 /* { url } o { motiu }: la regla d'urlSocialDe, amb el perquè. */
 function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
   if (typeof ref !== 'string' || ref.trim() === '') return { motiu: 'no-analitzable' };
@@ -885,7 +952,7 @@ function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
      no és cap imatge. */
   if (url.pathname.endsWith('/')) return { motiu: 'no-servit' };
   url.hash = '';
-  if (propi && url.origin === propi && url.pathname.startsWith('/assets/')) return { url: url.href };
+  if (propi && url.origin === propi && url.pathname.startsWith('/assets/')) return { url: ambVariantSocial(url, cami) };
   if (supabase) {
     const prefix = `${supabase}${PREFIX_PUBLIC_DE_MITJANS}`;
     const sencera = `${url.origin}${url.pathname}`;
@@ -925,8 +992,10 @@ function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
  * credencials; mitjans_privats, /object/sign/, /object/authenticated/,
  * /render/image/ i una consulta signada (token=, signature=…, també
  * codificades o separades per ';'); una carpeta (acaba en '/'); més de 2.048
- * caràcters; qualsevol altre origen. No canvia mai a una bessona WebP ni en
- * fa cap derivada. El fragment se'n lleva; la consulta, no.
+ * caràcters; qualsevol altre origen. No canvia mai a una bessona WebP; l'única
+ * derivada és la variant social de VARIANTS_SOCIALS (R-01), que substituïx un
+ * original propi d'/assets/ i no n'arrossega la consulta. Per a la resta, el
+ * fragment se'n lleva; la consulta, no.
  */
 export function urlSocialDe(ref, opcions) {
   return analitza(ref, opcions || {}).url ?? null;
@@ -935,7 +1004,8 @@ export function urlSocialDe(ref, opcions) {
 /**
  * Pla 261027_1154 (P1-61) · La imatge social d'una pàgina, amb l'estat:
  *   · { estat: 'triada', ref, url, posicio: 0 }: la primera candidata
- *     d'imatgesDeLaPagina es pot servir; `url` és la d'urlSocialDe.
+ *     d'imatgesDeLaPagina es pot servir; `url` és la d'urlSocialDe (la variant
+ *     social, si l'original en té; `ref` és sempre l'original).
  *   · { estat: 'bloquejada', ref, motiu }: la primera candidata hi és però
  *     no es pot servir (motiu, una clau de MOTIUS_DE_BLOQUEIG). MAI es passa
  *     a la segona ni al logotip: el client hi posa la targeta genèrica i el

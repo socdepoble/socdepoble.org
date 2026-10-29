@@ -1,3 +1,11 @@
+---
+type: registre
+status: canonic
+description: Panell visual de les quotes d'IA (Claude i Codex) amb diagrames Mermaid a partir de consum_ia.csv, captura del 25-09-2026.
+tags:
+  - log
+visibility: private
+---
 # Panell Visual de Consum IA
 
 Aquest document reflecteix visualment l'estat de les nostres capacitats cognitives (quotes) basant-se en les dades recollides a `consum_ia.csv`.
@@ -42,3 +50,7 @@ xychart-beta
     y-axis "USD" 0 --> 120
     bar [93.28, 104.97, 12.26, 82.89]
 ```
+
+## Vincles
+
+- [[00_index]]

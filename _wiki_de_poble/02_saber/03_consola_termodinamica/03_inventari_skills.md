@@ -70,6 +70,21 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
 
 La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava.
 
+## Cens vigent (261029)
+
+Font executiva: les carpetes de `.agents/skills/`. `tooling/brain/cataleg_skills.mjs --check` comprova el catàleg; el segell i els miralls tenen comprovacions pròpies. El prefix d’un nom no equival a la marca `core: true` del frontmatter.
+
+| Mesura | Valor |
+| --- | --- |
+| skills actives | 42 |
+| marca core: true | 9 |
+| sense marca core: true | 33 |
+| prefix core- | 27 |
+| prefix sdp- | 11 |
+| prefix wiki- | 4 |
+
+Els recomptes de la secció del 24-09 són evidència històrica i es conserven amb la seua data; no són el cens vigent.
+
 ## Salut agregada
 
 Segons el contracte de la [[00_portada]], la xifra de l'inventari no és un percentatge d'ànim. És `skills sense cap avís / skills del cens`, amb numerador, denominador, font, data i l'ordre que la reproduïx. Si una font falta, el valor és `N/A`.

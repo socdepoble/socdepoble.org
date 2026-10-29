@@ -1351,7 +1351,8 @@ export default {
   'section.xat.fake.iaia2': 'Si te gusta lo que ves, ¡regístrate para entrar en el chat de verdad!',
   'section.xat.fake.sdp1': 'Bienvenido a Sóc de Poble. Somos una red de pueblos conectados.',
   'section.xat.fake.sdp2': 'Regístrate para descubrir todo lo que ofrecemos.',
-  'section.xat.fake.reply': 'Esto es una simulación. ¡Regístrate para hablar con los pueblos de verdad!',
+  /* P1-52 (261029) · La resposta simulada, en el to pla del Mestre. */
+  'section.xat.fake.reply': 'Esto es una simulación. Si quieres guardar la conversación, tienes que registrarte, y ya está.',
   'section.xat.fake.botoRegistrat': 'Regístrate',
   'section.xat.ajustos.titol': 'Ajustes',
   'section.xat.ajustos.obri': 'Tú: ajustes',
@@ -1712,5 +1713,8 @@ export default {
   'section.descarregues.guia.menu': "Abre el menú del navegador y elige la opción de instalar Sóc de Poble como aplicación (en el móvil, «Añadir a pantalla de inicio»).",
   'section.descarregues.guia.vore': "Ver las instrucciones de cada navegador",
   'section.descarregues.instalada': "Aplicación ya instalada en este dispositivo",
-  'section.descarregues.instalar': "Instalar la App (PWA)"
+  'section.descarregues.instalar': "Instalar la App (PWA)",
+  // P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El visor: fixar la informació del panell.
+  'section.multimedia.visor.fixar': "Fijar la información",
+  'section.multimedia.visor.desfixar': "Dejar de fijar"
 };

@@ -33,11 +33,41 @@ export function documentWikiPublic(id, items) {
   return trobats.length === 1 && atributsPublics(trobats[0].attributes) ? trobats[0] : null;
 }
 
+/* R-07 (pla 261029_0216, Pas 2 i Pas 9) · Un títol humà a partir de l'id quan
+   el document no té H1 ni títol propi: guions i guions baixos són espais, la
+   primera lletra en majúscula i la resta tal com ve (ADR, IAIA o SEO es
+   queden). Buit si l'id no té cap paraula. Lineal: una partició i una lletra. */
+export function titolHumaDeId(id) {
+  const paraules = String(id ?? '').split(/[-_]+/).filter(Boolean);
+  return paraules.join(' ').replace(/\p{L}/u, (lletra) => lletra.toUpperCase());
+}
+
+/* El títol propi d'un document sense H1: el del manifest o dels atributs quan
+   és un títol de veres. El compilador de la Wiki hi posa el nom del fitxer,
+   l'id, si el frontmatter no en du: eixe no compta. */
+function titolPropi(document) {
+  const atributs = document.attributes || {};
+  const propi = [document.title, atributs.title, atributs.name]
+    .find((valor) => typeof valor === 'string' && valor.trim() && valor.trim() !== document.id);
+  return propi || '';
+}
+
+/* Un títol d'una sola paraula que ve de l'id («Acta») no diu de què és la
+   targeta: porta « · Wiki de Poble» darrere si cap dins de LIMIT_TITOL. No
+   « · Wiki Sóc de Poble»: seoHead i social-edge ja afigen « | Sóc de Poble»
+   a tot títol, i la marca eixiria dues voltes. */
+function ambSufixDeWiki(titol) {
+  const sufixat = `${titol} · ${TITOL_WIKI}`;
+  return /\s/.test(titol) || sufixat.length > LIMIT_TITOL ? titol : sufixat;
+}
+
 /**
- * Les metadades d'un document públic: l'H1 editorial (o el títol del
- * manifest); de descripció, l'H2 que va just davall de l'H1 quan no hi ha
- * entradeta, si no la descripció del frontmatter, si no l'entradeta i, sense
- * res, «Document públic de la Wiki de Poble: <títol>.»; la imatge pròpia de
+ * Les metadades d'un document públic: l'H1 editorial (darrere del preàmbul
+ * de comentaris, si n'hi ha), si no el títol propi del manifest o dels
+ * atributs, si no l'id humanitzat (titolHumaDeId) i, sense cap paraula, l'id;
+ * de descripció, l'H2 que va just davall de l'H1 quan no hi ha entradeta, si
+ * no la descripció del frontmatter, si no l'entradeta i, sense res,
+ * «Document públic de la Wiki de Poble: <títol>.»; la imatge pròpia de
  * SOCIAL_IMAGES (`imatges`) o cap; og:type 'article'. El canonical no va
  * ací: és el de la clau de la ruta (useSEO · clauSocialDeRuta), ?item=<id>.
  */
@@ -45,9 +75,11 @@ export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES } 
   const editorial = extreuEditorial(document.content || '');
   const atributs = document.attributes || {};
   const h2 = !editorial.entradilla ? editorial.cos?.trimStart().match(/^##[ \t]+([^\n]+)/)?.[1] : null;
-  const titol = editorial.titol || document.title || atributs.title || atributs.name || document.id;
+  const propi = editorial.titol || titolPropi(document);
+  const huma = propi || titolHumaDeId(document.id) || document.id;
+  const titol = propi || ambSufixDeWiki(huma);
   const descripcio = h2 || atributs.description || editorial.entradilla
-    || `Document públic de la Wiki de Poble: ${editorial.titol || document.id}.`;
+    || `Document públic de la Wiki de Poble: ${huma}.`;
   return {
     title: textPla(titol, LIMIT_TITOL),
     description: textPla(descripcio, LIMIT_DESCRIPCIO),

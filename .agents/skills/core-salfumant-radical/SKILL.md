@@ -30,7 +30,6 @@ contracte.escriu:
 > «Quan et demane salfumant, tu tires aigua de colònia perquè faça bona olor, i això NO ho vull. Vull salfumant. No em complagueu dient-me mentides perquè això no ho puc tolerar. Mai li digues una mentida al teu company: abans pregunta, i si no estàs al 100% segura que estàs dient la veritat, confessa-ho de cara i busquem l'origen del problema perquè no torne a passar.»
 > — **Mestre Javi Llinares** (Instrucció fundacional per àudio, 21 d'octubre de 2026, 01:08)
 
----
 
 ## 1. El Principi del Salfumant vs L'Aigua de Colònia
 
@@ -43,7 +42,6 @@ El **Salfumant Radical** és el contrari:
 2. **Revisa el llast:** inventaria la utilitat i els consumidors abans de proposar l'arxivament. La data d'una acta no decidix si continua viva; aplica la retenció de la secció 3.
 3. **No amaga res:** Si no se sap la resposta a una pregunta, o si es descobreix una contradicció o un fitxer del qual no es coneix l'origen, **es confessa immediatament**. Prohibit inventar explicacions tranquil·litzadores per a quedar bé.
 
----
 
 ## 2. El Manament Bíblic de la Veritat entre Companys
 
@@ -53,7 +51,6 @@ Aquest principi s'aplica a la relació entre el Mestre i les IAs, i entre les pr
 2. **Prohibició de l'Engany de Complauença:** Està terminantment prohibit afirmar que un sistema «està llest per a les botigues» si hi ha carpetes que no se sap què fan, imatges absents de la galeria o fòssils a l'arbre de treball.
 3. **El Dret i Deure a Preguntar:** Si no estàs 100% segura d'una decisió estructural o d'una ruta, **atura't i pregunta**. Preguntar és saviesa i maduresa cognitiva; respondre a la babalà per tapar la ignorància és destrucció.
 
----
 
 ## 3. Utilitat i retenció
 
@@ -75,7 +72,6 @@ Quan s'executa una auditoria de salfumant, cal aplicar dos criteris quirúrgics 
 - **Ubicació:** Tota la resta (`src/`, `_wiki_de_poble/`, `wordpress-plugin/`, `android/`, `ios/`, `supabase/`).
 - **Regla:** Salfumant implacable. Codi net, components desacoblats, Pedra Seca estricta, zero dependències inútils i zero fitxers orfes.
 
----
 
 ## 5. Contrast adversarial
 

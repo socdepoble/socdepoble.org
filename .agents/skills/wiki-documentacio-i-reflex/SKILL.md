@@ -71,7 +71,7 @@ Quan es demana preparar el terreny per a una de les avaluacions:
 
 1. **La Lectura i Alternativa:** Llista fitxers i reformula què es farà. Pensa 2 solucions alternatives que NO proposes.
 2. **L'Empatia amb el Mantenidor:** "Serà fàcil modificar això d'aquí a 6 mesos?"
-5. **L'Auto-Verificació:** 3 maneres per les quals aquest codi pot fallar abans de donar el vistiplau. 
+3. **L'Auto-Verificació:** 3 maneres per les quals aquest codi pot fallar abans de donar el vistiplau. 
 
 ## 5. El Protocol "Reunió davall l'Olivera" (Col·laboració Local i Bucle de Millora)
 
@@ -89,7 +89,7 @@ Aquesta és la mecànica per encadenar auditories entre IAs locals (per ex. Code
    - Si les aportacions estan alineades o ja són suficients, done la petorreta per finalitzada.
 5. **Consolidació:** Finalment, llegiré totes les auditories per **millorar i refinar el meu propi Pla d'Implementació** iterativament abans d'executar-lo. Totes les IAs (les 3 iaies) tenen veu i participen activament a la taula.
 
-Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seguretat** apuntant a `[[00_index_escriptori]]`.
+Els Estudis destil·lats a l'Escriptori es tanquen amb un **Ancoratge de Seguretat** apuntant a `[[00_index_escriptori]]`, mentre que les Actes viuen a `_wiki_de_poble/10_actes/` i apunten a `[[00_index]]`.
 
 ## Lliçons del Mestre
 

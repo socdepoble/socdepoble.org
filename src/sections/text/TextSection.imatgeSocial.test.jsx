@@ -50,7 +50,15 @@ vi.mock('../../config/capaDelPaquet.js', async (importOriginal) => {
 });
 import TextSection from './TextSection.jsx';
 import { PAGE_COPY } from './pageContent.js';
-import { CAP_SOCIAL_BASE, HERO_PER_DEFECTE, MARQUES_SVG_ANTIGUES } from '../../config/imatgeSocial.js';
+import { CAP_SOCIAL_BASE, HERO_PER_DEFECTE, MARQUES_SVG_ANTIGUES, VARIANTS_SOCIALS } from '../../config/imatgeSocial.js';
+
+/* Pla 261029_0216 (R-01 i R-02) · La il·lustració de l'Ànima (WebP de 414 KB) i
+   el panorama (.png amb bytes JPEG, 1 MB) tenen variant social (JPEG real de
+   1200x630 i ≤300 KB, imatgeSocial.js · VARIANTS_SOCIALS): el <head> la porta;
+   la portada (heroImage) continua pintant l'original (Llei del Píxel). */
+const ANIMA = '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp';
+const ANIMA_SOCIAL = VARIANTS_SOCIALS[ANIMA];
+const HERO_SOCIAL = VARIANTS_SOCIALS[HERO_PER_DEFECTE];
 
 /* La targeta genèrica tal com la passava TextSection abans (resolveAsset amb
    la base '/'): useSEO la fa absoluta i la reconeix com a base. */
@@ -82,8 +90,9 @@ describe('una pàgina amb imatge pròpia', () => {
 
   test('L’Ànima de la IAIA (/ia): la seua il·lustració, no la targeta genèrica', () => {
     pinta(PAGE_COPY.anima, 'anima');
-    expect(mocks.props.heroImage).toBe('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp');
-    expect(imatgeDelSeo()).toBe('https://socdepoble.org/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp');
+    expect(mocks.props.heroImage).toBe(ANIMA);
+    expect(ANIMA_SOCIAL).toBe('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431-social-1200x630.jpg');
+    expect(imatgeDelSeo()).toBe(`https://socdepoble.org${ANIMA_SOCIAL}`);
   });
 
   /* Llibre Mestre, P1-60 (Fita 24; àudio del Mestre de les 05:08) · «Que la
@@ -94,12 +103,13 @@ describe('una pàgina amb imatge pròpia', () => {
     pinta(PAGE_COPY.projecte, 'projecte');
     expect(PAGE_COPY.projecte.image).toBe(HERO_PER_DEFECTE);
     expect(mocks.props.heroImage).toBe(HERO_PER_DEFECTE);
-    expect(ultimSeo().image).toEqual({ url: `https://socdepoble.org${HERO_PER_DEFECTE}`, alt: PAGE_COPY.projecte.imageAlt });
+    expect(HERO_SOCIAL).toBe('/assets/uploads/brain/hero_panoramic_rural_view_1774720664221-social-1200x630.jpg');
+    expect(ultimSeo().image).toEqual({ url: `https://socdepoble.org${HERO_SOCIAL}`, alt: PAGE_COPY.projecte.imageAlt });
   });
 
-  test('el panorama com a page.image i cap foto al cos: el panorama, no la targeta (P1-60)', () => {
+  test('el panorama com a page.image i cap foto al cos: el panorama (en variant social), no la targeta (P1-60)', () => {
     pinta({ title: 'Panorama', image: HERO_PER_DEFECTE, html: '<p>Hola</p>' });
-    expect(imatgeDelSeo()).toBe(`https://socdepoble.org${HERO_PER_DEFECTE}`);
+    expect(imatgeDelSeo()).toBe(`https://socdepoble.org${HERO_SOCIAL}`);
     expect(mocks.props.heroImage).toBe(HERO_PER_DEFECTE);
   });
 

@@ -5,8 +5,9 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-import { AJUDA_USUARI, ETIQUETA_DESA_USUARI, ETIQUETA_POBLE, ETIQUETA_USUARI, IdentitatAlPoble, TEXT_DESAT, pobleAmbPrincipal } from './IdentitatAlPoble.jsx';
-import { MISSATGE_USERNAME_FORMA, MISSATGE_USERNAME_RESERVAT, errorDUsername } from './onboardingModel.js';
+import { AJUDA_USUARI, ETIQUETA_DESA_USUARI, ETIQUETA_POBLE, ETIQUETA_USUARI, IdentitatAlPoble, TEXT_DESAT, TITOL_PENDENT_DE_MIGRACIO, pobleAmbPrincipal } from './IdentitatAlPoble.jsx';
+import { MISSATGES_USERNAME, MISSATGE_USERNAME_FORMA, MISSATGE_USERNAME_RESERVAT, errorDUsername } from './onboardingModel.js';
+import { ErrorColumnaAbsent } from '../../data/autodesament/errors.js';
 
 afterEach(cleanup);
 const camp = () => screen.getByLabelText(ETIQUETA_USUARI);
@@ -119,4 +120,67 @@ test('sense poble desat, La Torre de les Maçanes preseleccionada; sense catàle
   cleanup();
   render(<IdentitatAlPoble usuari="annaperez" confirmat poble="" pobles={[]} onDesaUsuari={vi.fn()} onDesaPoble={vi.fn()} />);
   expect(screen.queryByLabelText(ETIQUETA_POBLE)).toBeNull();
+});
+
+/* APP-D1 (pla 261029_0216, Pas 2) · El servidor encara no té 2610282100: un
+   avís explícit (role=status, mai alert ni el camp en roig) amb el motiu de
+   l'adaptador i el valor que no s'ha desat; mai «Desat.». La persona no ha
+   fet res mal: res a corregir, el valor es queda escrit per a tornar-ho a
+   provar. Qualsevol altre error continua com abans. */
+test('APP-D1 · l’@usuari sense la RPC (NO-DISPONIBLE): avís «Pendent de migració», el valor es queda i cap «Desat.»', async () => {
+  const desa = vi.fn(async () => { throw errorDUsername('NO-DISPONIBLE'); });
+  render(<IdentitatAlPoble usuari="annaperez" onDesaUsuari={desa} />);
+  fireEvent.change(camp(), { target: { value: 'annap' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: ETIQUETA_DESA_USUARI })); });
+  expect(desa).toHaveBeenCalledWith('annap');
+  const avis = screen.getByText(TITOL_PENDENT_DE_MIGRACIO).closest('[role="status"]');
+  expect(avis).not.toBeNull();
+  expect(avis.textContent).toContain(MISSATGES_USERNAME['NO-DISPONIBLE']);
+  expect(avis.textContent).toContain('@annap');
+  expect(screen.queryByRole('alert')).toBeNull();
+  // El valor escrit no es descarta, el camp no és en roig i el botó torna a estar actiu.
+  expect(camp().value).toBe('annap');
+  expect(camp().getAttribute('aria-invalid')).toBeNull();
+  expect(screen.getByRole('button', { name: ETIQUETA_DESA_USUARI }).disabled).toBe(false);
+  expect(screen.queryByText(TEXT_DESAT)).toBeNull();
+  // La proposta de l'alta continua: no s'ha confirmat res.
+  expect(screen.getByText('Et proposem @annaperez')).toBeTruthy();
+  // Escriure de nou lleva l'avís; un desat que va bé no en deixa cap rastre.
+  fireEvent.change(camp(), { target: { value: 'annap2' } });
+  expect(screen.queryByText(TITOL_PENDENT_DE_MIGRACIO)).toBeNull();
+  desa.mockImplementation(async () => {});
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: ETIQUETA_DESA_USUARI })); });
+  expect(screen.queryByText(TITOL_PENDENT_DE_MIGRACIO)).toBeNull();
+  expect(screen.getByRole('status').textContent).toBe(TEXT_DESAT);
+});
+
+test('APP-D1 · el poble amb una columna que el servidor no té (ErrorColumnaAbsent): l’avís nomena el poble i el selector no es marca en roig', async () => {
+  const desaPoble = vi.fn(async () => { throw new ErrorColumnaAbsent('El servidor encara no té la columna «town_name» del perfil: el canvi no s’ha desat. Cal aplicar-hi una migració pendent.', { columna: 'town_name', camps: ['town_name'] }); });
+  render(<IdentitatAlPoble usuari="annaperez" confirmat poble="La Torre de les Maçanes" pobles={['La Torre de les Maçanes', 'Benifallim']}
+    onDesaUsuari={vi.fn()} onDesaPoble={desaPoble} />);
+  await act(async () => { fireEvent.change(screen.getByLabelText(ETIQUETA_POBLE), { target: { value: 'Benifallim' } }); });
+  expect(desaPoble).toHaveBeenCalledWith('Benifallim · La Torre de les Maçanes');
+  const avis = screen.getByText(TITOL_PENDENT_DE_MIGRACIO).closest('[role="status"]');
+  expect(avis.textContent).toContain('«Benifallim»');
+  expect(avis.textContent).toContain('migració pendent');
+  expect(screen.queryByRole('alert')).toBeNull();
+  // El selector torna al poble que de veres hi ha i no es marca com a error de la persona.
+  const selector = screen.getByLabelText(ETIQUETA_POBLE);
+  expect(selector.value).toBe('La Torre de les Maçanes');
+  expect(selector.getAttribute('aria-invalid')).toBeNull();
+  expect(screen.queryByText(TEXT_DESAT)).toBeNull();
+});
+
+test('APP-D1 · regressió: un altre error de l’@usuari (ocupat) o del poble (xarxa) es diu com abans, sense l’avís de migració', async () => {
+  const desa = vi.fn(async () => { throw errorDUsername('ocupat', { proposta: 'annap-2' }); });
+  const desaPoble = vi.fn(async () => { throw new Error('Sense connexió'); });
+  render(<IdentitatAlPoble usuari="annaperez" confirmat poble="La Torre de les Maçanes" pobles={['La Torre de les Maçanes', 'Benifallim']}
+    onDesaUsuari={desa} onDesaPoble={desaPoble} />);
+  fireEvent.change(camp(), { target: { value: 'annap' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: ETIQUETA_DESA_USUARI })); });
+  expect(screen.getByText('Eixe identificador ja és d’algú. Et proposem @annap-2.')).toBeTruthy();
+  expect(camp().getAttribute('aria-invalid')).toBe('true');
+  await act(async () => { fireEvent.change(screen.getByLabelText(ETIQUETA_POBLE), { target: { value: 'Benifallim' } }); });
+  expect(screen.getByLabelText(ETIQUETA_POBLE).getAttribute('aria-invalid')).toBe('true');
+  expect(screen.queryByText(TITOL_PENDENT_DE_MIGRACIO)).toBeNull();
 });

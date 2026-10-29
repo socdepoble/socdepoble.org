@@ -1,7 +1,7 @@
 ---
 type: norma
 status: esborrany
-description: "Xifrat local BYOP (Bring Your Own Password) per a les apps amb dades sensibles: el cofre de la Gestoria generalitzat en un nucli compartit, un magatzem xifrat damunt de creaMagatzemIdb, la clau només en memòria, l'XLSX i les còpies, i els riscos en un amfitrió de tercers."
+description: "Xifrat local BYOP (Bring Your Own Password) per a les apps amb dades sensibles: cofre compartit damunt de creaMagatzemIdb, clau només en memòria, exportació XLSX i riscos en amfitrions de tercers."
 tags:
   - arquitectura
   - seguretat

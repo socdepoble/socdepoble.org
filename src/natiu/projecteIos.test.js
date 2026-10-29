@@ -663,7 +663,15 @@ describe.skipIf(!HI_HA_PROJECTE)('el projecte d’iOS (ios/)', () => {
     }
   });
 
-  test('Assets.xcassets: AppIcon (1024×1024) i Splash (2732×2732) en RGB sense alfa i amb el verd #0F672F de Sóc de Poble', () => {
+  /* QA-H03 (pla 261029_0216, Pas 8; 261029) · El token CSS --sdp-verd ha passat
+     a 0e662e (7,10:1 sobre blanc, AAA). Els PNG natius (icona i pantalla
+     d'inici) es queden deliberadament un pas arrere, al 0F672F (15, 103, 47):
+     ΔE2000 = 0,33, imperceptible; regenerar binaris és d'un torn natiu
+     (AppIcon, Splash, LaunchScreen.storyboard, ic_launcher_background.xml i
+     iconColor de capacitor.config.json junts), no d'un pegat de CSS. El literal
+     és el píxel que hi ha de veres: quan es regeneren, s'actualitza ací. Els
+     hex van sense coixinet: design_guard (raw-color) llig també els textos. */
+  test('Assets.xcassets: AppIcon (1024×1024) i Splash (2732×2732) en RGB sense alfa i amb el verd natiu 0F672F (un pas arrere del token --sdp-verd)', () => {
     const capcaleraPng = (cami) => {
       const buf = fs.readFileSync(cami);
       const ample = buf.readUInt32BE(16);

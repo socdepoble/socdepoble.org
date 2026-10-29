@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, segura, font } from '../../tooling/brain/cataleg_skills.mjs';
 import { verificaEmissio } from '../../tooling/brain/context_documental.mjs';
+import { comprovaDestins } from '../../tooling/brain/destins_canonics.mjs';
 
 const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
 const WRITES = new Set(['write_to_file', 'replace_file_content', 'multi_replace_file_content']);
@@ -60,12 +61,20 @@ export function decide(payload, root = ROOT) {
   }
   if (WRITES.has(call.name) && ext === '.md' && within(rel, '_wiki_de_poble')) {
     try {
-      const config = JSON.parse(font(root, '.agents/DESTINS_CANONICS.json').text);
-      const destinations = Object.values(config.destins_permesos ?? {});
+      const projectionCheck = comprovaDestins(root);
+      if (!projectionCheck.ok) throw new Error(projectionCheck.errors.join('; '));
+      const receipt = verificaEmissio(payload, root);
+      const source = font(root, '.agents/DESTINS_CANONICS.json');
+      if (receipt.fonts.find(entry => entry.ruta === source.ruta)?.sha256 !== source.sha256)
+        throw new Error('Projecció canviada després de verificar el context');
+      const config = JSON.parse(source.text);
+      if (!Array.isArray(receipt.protocols) || !receipt.protocols.length) throw new Error('Rebut sense protocols');
+      const routes = receipt.protocols.map(id => config.rutes.find(route => route.id === id));
+      if (routes.some(route => !route)) throw new Error('Protocol sense destinacions projectades');
+      const destinations = [...new Set(routes.flatMap(route => route.destins))];
       if (!destinations.length || destinations.some(d => typeof d !== 'string')) throw new Error('Destins invàlids');
       for (const d of destinations) segura(root, d);
-      if (!destinations.some(d => within(rel, d))) throw new Error('Destí no canònic');
-      const receipt = verificaEmissio(payload, root);
+      if (!destinations.some(d => within(rel, d))) throw new Error('Destí no canònic per als protocols del rebut');
       return answer('allow', `Context emés i vigent: ${receipt.torn}; destí ${rel}`);
     } catch (e) { return answer('deny', e.message); }
   }

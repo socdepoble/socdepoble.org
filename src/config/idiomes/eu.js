@@ -54,6 +54,7 @@ export default {
   'editor.targetes.esquerra': 'Ezkerra',
   'editor.targetes.dreta': 'Eskuina',
   'editor.targetes.lleva': 'Kendu txartela',
+  /* Pla 261028_1526 (P1-22, TE-02) · L’avís d’una targeta incrustada a l’editor (DocumentEditor.jsx). Pendent de revisió nadiua. */
   'editor.targetes.avis.titol': 'Txartel hau aurrebista bat da',
   'editor.targetes.avis.descripcio': 'Txartel hau editatzen ari zaren dokumentuan txertatuta dago. Bere botoiek —konektatu, itzuli, iruzkindu eta partekatu— argitaratutako dokumentua irakurtzean bakarrik funtzionatzen dute.',
   'editor.targetes.avis.entesos': 'Ulertuta',
@@ -106,6 +107,7 @@ export default {
   'section.pobles.error': 'Error carregant els pobles.',
   'section.realitat.title': 'Realitat',
   'section.realitat.subtitle': 'Zuk erabakitzen duzu zenbateraino laguntzen dizun adimen artifizialak',
+  /* Pla 261028_1526 (P1-22, TE-02) · SelectorRealitat.jsx. Pendent de revisió nadiua. */
   'section.realitat.acompanyants': 'Aukeratu zure lagunak',
   'section.realitat.lead': 'Maila bakoitzak dio IA noraino irits daitekeen. Aukera nabigatzaile honetan bakarrik gordetzen da, eta nahi duzunean alda dezakezu.',
   'section.realitat.nivells': 'IAIArekiko elkarreragin maila',
@@ -127,7 +129,6 @@ export default {
   'nav.constitucio': 'Konstituzioa',
   'nav.constitucioShort': 'Legeak',
   'nav.disseny': 'Diseinua',
-  'nav.skills': 'Trebetasunak',
   'nav.wikidepoble': 'Wiki de Poble',
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': 'iaia-ren arima',
@@ -167,6 +168,7 @@ export default {
   'common.back': 'Itzuli',
   'common.entesos': 'Ulertuta',
   'common.reintenta': 'Saiatu berriro',
+  /* Pla 261028_1526 (P1-22, TE-02) · DialegTriaTargeta.jsx: el botó de tancar el diàleg. Pendent de revisió nadiua. */
   'common.cancela': 'Utzi',
   'app.tagline': 'Herriko sare publikoa.',
   'app.description': 'Herriko atari publikoa.',
@@ -208,6 +210,7 @@ export default {
   'section.mercat.searchPlaceholder': 'Bilatu produktu, denda edo kategorien arabera...',
   'section.mercat.results': 'emaitza',
   'section.mercat.variations': 'aldaerak',
+  /* Pla 261028_1526 (P1-22, TE-02) · La compra d’un producte amb variants (detailSectionMeta.jsx). Pendent de revisió nadiua. */
   'section.mercat.esgotat': 'Agortuta',
   'section.mercat.variant': 'Aldaera',
   'section.mercat.triaVariant': 'Aukeratu aldaera',
@@ -723,6 +726,7 @@ export default {
   'section.notes.format.bold': 'Lodia',
   'section.notes.format.italic': 'Etzana',
   'section.notes.format.strike': 'Marratua',
+  /* Pla 261028_1526 (P1-22, TE-02) · UniversalToolbar.jsx. Pendent de revisió nadiua. */
   'section.notes.format.orderedList': 'Zerrenda zenbakitua',
   'section.notes.delete': 'Ezabatu',
   'section.control.lead': 'Argitaratu, konektatu eta doitu zure espazioa leku bakarretik.',
@@ -1119,6 +1123,7 @@ export default {
   'section.perfil.public.aparador.mercat.buit': 'Ez du ezer berririk herri honetako Merkatuko erakusleihoan: {nom}.',
   'section.perfil.public.aparador.agenda': 'Agenda',
   'section.perfil.public.aparador.agenda.buit': 'Ez du ekitaldi berririk herri honetako Agendan: {nom}.',
+  /* Pla 261028_1526 (P1-22, TE-02) · La fitxa pública (PerfilPublicSection.jsx). Pendent de revisió nadiua. */
   'section.perfil.public.noTrobat': 'Ez da profila aurkitu',
   'section.perfil.public.noTrobatText': 'Herriko inork ez du identifikatzaile hau, edo bere fitxa pribatua da.',
   'section.perfil.public.noTrobatTextRemot': 'Herriko inork ez du identifikatzaile hau, edo bere fitxa pribatua da. Beste pertsonen fitxak ezin dira oraindik zerbitzari honetan ireki.',
@@ -1153,6 +1158,7 @@ export default {
   'section.perfil.privacitat.dades.errorCompartir': 'Ezin izan da fitxategia partekatu. Kopiatu haren testua eta gorde zuk zeuk.',
   'section.perfil.privacitat.dades.copiat': 'Testua kopiatuta. Itsatsi ohar batean edo mezu elektroniko batean eta gorde. Fitxategiaren izena: {nom}.',
   'section.perfil.privacitat.dades.errorCopiar': 'Ezin izan da testua kopiatu. Hautatu laukian eta kopiatu zuk zeuk.',
+  /* Pla 261028_1526 (P1-22, TE-01) · La resta de «Privacitat i dades» (DetallPrivacitat.jsx, TEXTOS_PRIVACITAT). Pendent de revisió nadiua. */
   'section.perfil.privacitat.pagina.titol': 'Pribatutasuna eta datuak',
   'section.perfil.privacitat.pagina.lead': 'Gordetzen dugunaren gaineko zure eskubideak: datuen kopia bat, baimena eta baja.',
   'section.perfil.privacitat.pagina.buit': 'Nodo honek ez du oraindik aukera horietako bat ere eskaintzen.',
@@ -1359,7 +1365,8 @@ export default {
   'section.xat.fake.iaia2': 'Ikusten duzuna gustatzen bazaizu, erregistratu benetako txatean sartzeko!',
   'section.xat.fake.sdp1': 'Ongi etorri Sóc de Poble-ra. Konektatutako herrien sarea gara.',
   'section.xat.fake.sdp2': 'Erregistratu eskaintzen dugun guztia ezagutzeko.',
-  'section.xat.fake.reply': 'Simulazio bat da hau. Erregistratu benetako herriekin hitz egiteko!',
+  /* P1-52 (261029) · La resposta simulada, en el to pla del Mestre. Pendent de revisió nadiua. */
+  'section.xat.fake.reply': 'Simulazio bat da hau. Elkarrizketa gorde nahi baduzu, erregistratu behar duzu, eta kito.',
   'section.xat.fake.botoRegistrat': 'Erregistratu',
   'section.xat.ajustos.titol': 'Ezarpenak',
   'section.xat.ajustos.obri': 'Zu: ezarpenak',
@@ -1722,5 +1729,8 @@ export default {
   'section.descarregues.guia.menu': "Ireki nabigatzailearen menua eta aukeratu Sóc de Poble aplikazio gisa instalatzeko aukera (mugikorrean, «Gehitu hasierako pantailan»).",
   'section.descarregues.guia.vore': "Ikusi nabigatzaile bakoitzaren argibideak",
   'section.descarregues.instalada': "Aplikazioa gailu honetan instalatuta dago jada",
-  'section.descarregues.instalar': "Instalatu aplikazioa (PWA)"
+  'section.descarregues.instalar': "Instalatu aplikazioa (PWA)",
+  // P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El visor: fixar la informació del panell. Traducció pendent de revisió nadiua.
+  'section.multimedia.visor.fixar': "Informazioa finkatu",
+  'section.multimedia.visor.desfixar': "Finkatzea utzi"
 };

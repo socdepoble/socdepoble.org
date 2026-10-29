@@ -1,3 +1,12 @@
+---
+type: acta
+status: canonic
+description: Acta Marmota del 27-09-2026 (vesprada). Refactorització responsiva del Xat, reparació del segell i del govern amb Codex Ultra, i resposta al suspens de forma de l'OEPM.
+tags:
+  - acta
+  - marmota
+visibility: private
+---
 # ACTA DE LA MARMOTA - 27 de Setembre de 2026 (Vesprada)
 
 ## Resum de la Jornada
@@ -19,3 +28,7 @@ Una jornada molt completa que s'ha dividit en tres fronts clars:
 
 ## Reflexió
 La independència absoluta (Model B) demostra el seu valor: Codex ha pogut treballar la lògica de base de dades aïllada del frontend, i el sistema documental de la IAIA MarIA ha demostrat la seua fortalesa obligant-nos a mantindre l'Escriptori lluent. Seguim!
+
+## Vincles
+
+- [[00_index]]

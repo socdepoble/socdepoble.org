@@ -76,11 +76,16 @@ vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast:
 
 import ItemDetailSection from './ItemDetailSection.jsx';
 import { ModeracioContext } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
-import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../../config/imatgeSocial.js';
+import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE, VARIANTS_SOCIALS } from '../../config/imatgeSocial.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 
 const CARPETA = '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble';
 const XICA = `${CARPETA}/01-chica-jersey.png`;
+/* Pla 261029_0216 (R-01 i R-02) · La xica pesa 782 KB i és un .png amb bytes
+   JPEG: al <head> hi va la seua variant social (JPEG real de 1200x630 i
+   ≤300 KB, imatgeSocial.js · VARIANTS_SOCIALS). La portada i el carrusel
+   continuen pintant l'original (Llei del Píxel). */
+const XICA_SOCIAL = VARIANTS_SOCIALS[XICA];
 const LOGO_SVG = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 const RASTREIG = 'https://rastreig.example/p.gif';
 const GENERICA = `${ORIGEN_SOCIAL_PER_DEFECTE}${CAP_SOCIAL_BASE.image.url}`;
@@ -166,9 +171,10 @@ afterEach(() => {
 });
 
 describe('Mercat · la samarreta de producció', () => {
-  test('og:image és la xica (01-chica-jersey), absoluta i https; mai el logotip d’imageSrc ni d’avatar_url', () => {
+  test('og:image és la xica (01-chica-jersey) en la seua variant social, absoluta i https; mai el logotip d’imageSrc ni d’avatar_url', () => {
     pinta('mercat', SAMARRETA_REMOTA);
-    expect(urlDelSeo()).toBe(`https://socdepoble.org${XICA}`);
+    expect(XICA_SOCIAL).toBe(`${CARPETA}/01-chica-jersey-social-1200x630.jpg`);
+    expect(urlDelSeo()).toBe(`https://socdepoble.org${XICA_SOCIAL}`);
   });
 
   test('Llei del Píxel · el carrusel de la portada, el de sempre: les set fotos en ordre, la primera la xica', () => {
@@ -181,14 +187,14 @@ describe('Mercat · la samarreta de producció', () => {
     headDeLIndex();
     mocks.headReal = true;
     pinta('mercat', SAMARRETA_REMOTA);
-    expect(metaDelHead('meta[property="og:image"]')).toBe(`https://socdepoble.org${XICA}`);
-    expect(metaDelHead('meta[name="twitter:image"]')).toBe(`https://socdepoble.org${XICA}`);
+    expect(metaDelHead('meta[property="og:image"]')).toBe(`https://socdepoble.org${XICA_SOCIAL}`);
+    expect(metaDelHead('meta[name="twitter:image"]')).toBe(`https://socdepoble.org${XICA_SOCIAL}`);
   });
 
   test('un origen públic https mana sobre socdepoble.org', () => {
     mocks.origen = 'https://proves.socdepoble.test';
     pinta('mercat', SAMARRETA_REMOTA);
-    expect(urlDelSeo()).toBe(`https://proves.socdepoble.test${XICA}`);
+    expect(urlDelSeo()).toBe(`https://proves.socdepoble.test${XICA_SOCIAL}`);
   });
 
   test('Fase D · d’una samarreta bloquejada, cap imatge al <head> (ni la xica)', () => {
@@ -278,7 +284,7 @@ describe('Notes', () => {
 describe('l’alt de la imatge triada', () => {
   test('la samarreta: { url, alt } amb el títol, i al <head> og:image:alt i twitter:image:alt', () => {
     pinta('mercat', SAMARRETA_REMOTA);
-    expect(ultimSeo().image).toEqual({ url: `https://socdepoble.org${XICA}`, alt: 'Samarreta Sóc de Poble' });
+    expect(ultimSeo().image).toEqual({ url: `https://socdepoble.org${XICA_SOCIAL}`, alt: 'Samarreta Sóc de Poble' });
     cleanup();
     headDeLIndex();
     mocks.headReal = true;
@@ -317,7 +323,8 @@ describe('AT9 · l’og:image és la primera imatge que es pinta', () => {
   ])('%s', (_, sectionId, item, esperada) => {
     const container = pinta(sectionId, item);
     expect(primeraPintada(container)).toBe(esperada);
-    expect(new URL(urlDelSeo()).pathname).toBe(esperada);
+    // R-01 · Si la primera pintada té variant social, el <head> porta la variant; si no, la mateixa.
+    expect(new URL(urlDelSeo()).pathname).toBe(VARIANTS_SOCIALS[esperada] ?? esperada);
   });
 
   test.each([

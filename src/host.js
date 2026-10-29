@@ -46,6 +46,8 @@ if (typeof window !== 'undefined') {
 import { setBackendImplementation, getBackendImplementation, freezeImplementation, validaBackendImplementation } from './data/backendPort.js';
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
+import { ambXifratXat } from './data/xifratXat.js';
+import { E2EE_ACTIU_PER_DEFECTE } from './config/xifratXat.js';
 import { adoptaSessioExterna, esborraSessio, configuraBackendSessio } from './data/identitat.js';
 import { normalizeBackendConfig, backendScope } from './config/backendConfig.js';
 import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
@@ -83,6 +85,22 @@ let _deferArrenca = false;
    fallat i ningú no l'ha tornada a provar encara (quanLlest la consumix). */
 let arrencadaFallida = false;
 let backendExtern = false;
+
+function backendAmbXifrat(impl) {
+  // Apagat: mateixa instància, sense inspeccionar WebCrypto ni IndexedDB.
+  if (!E2EE_ACTIU_PER_DEFECTE) return impl;
+  return ambXifratXat(impl, {
+    actiu: true,
+    modeDades: normalizeBackendConfig().dataMode,
+    isSecureContext: globalThis.isSecureContext === true,
+    origen: globalThis.location?.origin,
+    dev: import.meta.env.DEV === true,
+    enMarc: typeof window !== 'undefined' && window.top !== window.self,
+    cripto: globalThis.crypto,
+    indexedDB: globalThis.indexedDB,
+    revocaUrl: (url) => globalThis.URL?.revokeObjectURL?.(url)
+  });
+}
 
 export function deferArrenca() {
   _deferArrenca = true;
@@ -138,8 +156,9 @@ export function configura(opcions = {}) {
 export function injectaBackendDelPaquet(backend) {
   if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
   if (backendExtern) throw new Error('[host] El paquet ja porta un adaptador.');
-  const { candidate } = validaBackendImplementation(backend);
-  setBackendImplementation(backend);
+  const decorat = backendAmbXifrat(backend);
+  const { candidate } = validaBackendImplementation(decorat);
+  setBackendImplementation(decorat);
   backendExtern = true;
   const acceptats = Object.keys(candidate);
   return { acceptats, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
@@ -170,7 +189,7 @@ export function arrenca() {
       if (injectats.length && pendentsNucli.length) throw new Error('[host] Backend injectat incomplet');
       if (!injectats.length) {
         const supabaseImpl = await import('./data/supabase/index.js');
-        setBackendImplementation(supabaseImpl);
+        setBackendImplementation(backendAmbXifrat(supabaseImpl));
       }
 
       getRuntimePolicy();

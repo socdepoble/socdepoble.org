@@ -86,7 +86,7 @@ for (const [literal, exportacio] of Object.entries(CANONICS)) {
 /* ─── R1: cap literal orfe ─── */
 for (const dir of ABAST) {
   for (const fitxer of camina(dir)) {
-    if (EXEMPTS.has(fitxer)) continue;
+    if (EXEMPTS.has(fitxer) || /\.test\.(?:mjs|cjs|js)$/.test(fitxer)) continue;
     const text = readFileSync(join(ARREL, fitxer), 'utf8');
     const importa = /from\s+['"][^'"]*project_paths\.mjs['"]/.test(text);
     if (importa) continue;

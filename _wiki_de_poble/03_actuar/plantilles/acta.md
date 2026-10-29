@@ -13,10 +13,13 @@ description: "<12-220 caràcters: què s'ha fet i què queda obert>"
 tags: [acta]
 -->
 <!-- Nom: aammdd_hhmm_acta_titol.md; minúscules i sense accents. -->
+<!-- Destí únic: _wiki_de_poble/10_actes/ (ruta «acta» de .agents/protocolledge.json, v2.1.0). Cap acta a l'Escriptori. -->
 <!-- Títol descriptiu; no imposa majúscules ni una longitud incompatible amb AGENTS.md. -->
 # 📜 {{DATA_I_HORA}} - ACTA ÚNICA: [Escriu un Títol Hiper-Descriptiu ací]
 
 > **Nota per a la IAIA:** Aquesta plantilla fon l'acta tècnica, el registre d'estat mental i el punt de control per al següent torn (Marmota). Ha de ser un document ric, detallat i exhaustiu. No escatimes en tokens ací, l'historial és la nostra única memòria a llarg termini. Descriu en profunditat què s'ha tocat, per què, i quins conflictes s'han superat.
+
+> **Destí i límit (guarda de conformitat):** esta acta viu només a `_wiki_de_poble/10_actes/` (ruta `acta`). És l'històric de la sessió: mai substituïx `prompt_local.md`, el pla d'implementació ni cap altre document de treball de l'Escriptori, i s'escriu després de la «Transició d'Onada a l'Olivera» (`wiki-cicle-de-vida`, pas 7).
 
 
 ## Registre
@@ -24,7 +27,7 @@ tags: [acta]
 | Camp | Valor |
 | --- | --- |
 | Identificador | [pendent] |
-| Versió del document | [pendent] |
+| Versió del document | 2.1.0 |
 | Entorn | [pendent] |
 | Creació | [pendent] |
 | Modificació | [pendent] |
@@ -32,6 +35,8 @@ tags: [acta]
 | Aprovació humana | [pendent] |
 | Model IA | [pendent] |
 | Tokens consumits | [pendent] |
+| Plantilla | acta.md (v2.1.0) |
+| Ruta | acta |
 
 ## Acte reflex
 
@@ -39,7 +44,8 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 
 ## Historial
 
-[pendent]
+- **v2.1.0 (261029):** Destí únic `_wiki_de_poble/10_actes/`: la ruta `acta` de `.agents/protocolledge.json` deixa d'admetre l'Escriptori (versió de la ruta 2.1.0). Es declara explícitament que l'acta és l'històric de la sessió i mai substituïx `prompt_local.md` ni el pla d'implementació, i que s'escriu després de la «Transició d'Onada a l'Olivera» (`wiki-cicle-de-vida` pas 7; ritual de tancament de `core-higiene-escriptori`). Guia editorial amb la secció 0 «Destí i abast».
+- **v2.0.0:** Alineació amb el contracte `acta` de `.agents/protocolledge.json`: seccions Registre, Acte reflex, Historial, Resultats, Pendents i Vincles, bloc SDP:EIXIDA i nom termodinàmic en minúscules.
 
 ## Resultats
 
@@ -47,6 +53,12 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 
 ### Guia editorial de la plantilla
 
+
+### 0. Destí i abast (Guarda de conformitat)
+- **Destí únic:** `_wiki_de_poble/10_actes/aammdd_hhmm_acta_titol.md`. `document.mjs context --route acta` rebutja qualsevol altre camí, també `04_escriptori/`.
+- **Què és:** l'històric de la sessió (Marmota): què s'ha fet, on queda el cursor i què continua pendent.
+- **Què no és:** mai substituïx `prompt_local.md` (ruta `prompt.local`), el pla d'implementació (ruta `pla.implementacio`) ni cap auditoria: eixos documents naixen a `04_escriptori/` amb `document.mjs create` i s'arxiven amb la porta Olivera.
+- **Quan:** després de la «Transició d'Onada a l'Olivera» (`wiki-cicle-de-vida` pas 7): Llibre Mestre al dia, onada vençuda arxivada i Pla i Prompt nous a la taula.
 
 ### 1. Part Tècnica (Graner Ple de Codis i Arquitectura)
 <!-- Quins fitxers hem modificat? Quines noves funcionalitats hem implementat? Hi ha hagut algun refactor profund? -->

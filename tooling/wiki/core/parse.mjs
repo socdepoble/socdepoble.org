@@ -171,8 +171,12 @@ export function buildResolver(docs) {
 
   for (const doc of docs) {
     const noExt = doc.relPath.replace(/\.md$/i, '');
+    const baseName = doc.base || path.posix.basename(noExt);
     add(byPath, noExt, doc);
-    add(byBase, doc.base, doc);
+    add(byBase, baseName, doc);
+    if (baseName.toUpperCase() === 'SKILL') {
+      add(byBase, path.posix.basename(path.posix.dirname(noExt)), doc);
+    }
     
     const parts = noExt.split('/');
     for (let i = 1; i < parts.length; i++) {
@@ -220,12 +224,21 @@ export function resolveLink(link, source, resolver) {
   }
 
   if (link.kind === 'markdown') return { status: 'unresolved' };
-  if (target.includes('/')) return { status: 'unresolved' };
+  if (target.includes('/')) {
+    const suffixHits = resolver.bySuffix.get(normalitza(target)) || [];
+    if (suffixHits.length === 1) return { status: 'resolved', doc: suffixHits[0] };
+    if (suffixHits.length > 1) return { status: 'ambiguous', docs: suffixHits };
+    return { status: 'unresolved' };
+  }
 
   const base = path.posix.basename(target);
   const baseHits = resolver.byBase.get(normalitza(base)) || [];
   if (baseHits.length === 1) return { status: 'resolved', doc: baseHits[0] };
-  if (baseHits.length > 1) return { status: 'ambiguous', docs: baseHits };
+  if (baseHits.length > 1) {
+    const rootHits = baseHits.filter((d) => !d.relPath.includes('/'));
+    if (rootHits.length === 1) return { status: 'resolved', doc: rootHits[0] };
+    return { status: 'ambiguous', docs: baseHits };
+  }
 
   // Obsidian prioritza un basename real sobre un alias homònim. Resoldre
   // l'alias primer podia convertir [[Target]] en una aresta cap a una altra

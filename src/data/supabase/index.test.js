@@ -69,3 +69,12 @@ test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls
     expect(typeof supabase[nom], nom).toBe('function');
   }
 });
+
+/* Registrar el contracte no implementa ni activa el transport del servidor. */
+test('l’adaptador actual no anuncia les capacitats E2EE noves ni les fabrica', () => {
+  setBackendImplementation({ ...supabase });
+  for (const cap of ['clausXat', 'xatMultimediaXifrat']) {
+    expect(teCapacitat(cap)).toBe(false);
+    for (const nom of CAPACITATS[cap]) expect(typeof supabase[nom], nom).toBe('undefined');
+  }
+});

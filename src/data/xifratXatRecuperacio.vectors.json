@@ -1,0 +1,96 @@
+{
+  "avis": "Vectors de la recuperació social (IDEA-48, P1-12, pas 5 de §16) per a xifratXatRecuperacio.seguretat.test.js. Tots els valors són còpia literal d’esmenes_qa_261029.md §6.2 i §9 (`_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/esmenes_qa_261029.md`), que els pren de FIPS-197 §4.2, §4.2.1 i §5.1.1 o els deriva a mà; cap valor escrit de memòria ni generat amb el codi propi. El que les esmenes deixen pendent (§9.4) hi és marcat «pendent» amb el motiu, i la prova corresponent s’omet. Els bytes van en hexadecimal sense prefix.",
+  "font": {
+    "document": "_investigacio_ia_de_poble/261028_2330_p112_e2ee_claude/esmenes_qa_261029.md",
+    "seccions": "§6.2 (mides), §9.1 (cos i reducció), §9.2 (V-GF1, V-GF2, V-GF3, V-INV), §9.3 (V-SH1), §9.4 (vectors independents, pendents)",
+    "data": "2026-10-29",
+    "cosa": "GF(2⁸) = GF(2)[X] / (X⁸ + X⁴ + X³ + X + 1), polinomi 0x11B, bits de FIPS-197 §4.2 (el bit 0 és el coeficient de X⁰)"
+  },
+  "polinomi": "11b",
+  "gf_fips197": {
+    "V-GF1": {
+      "font": "FIPS-197 §4.2 [F]",
+      "casos": [
+        { "a": "57", "b": "83", "producte": "c1" }
+      ]
+    },
+    "V-GF2": {
+      "font": "FIPS-197 §4.2.1 (xtime) [F]",
+      "casos": [
+        { "a": "57", "b": "02", "producte": "ae" },
+        { "a": "57", "b": "04", "producte": "47" },
+        { "a": "57", "b": "08", "producte": "8e" },
+        { "a": "57", "b": "10", "producte": "07" }
+      ]
+    },
+    "V-GF3": {
+      "font": "FIPS-197 §4.2.1 [F]",
+      "casos": [
+        { "a": "57", "b": "13", "producte": "fe" }
+      ]
+    },
+    "V-INV": {
+      "font": "Caixa S, FIPS-197 §5.1.1 i fig. 7 [F]",
+      "regla": "per a cada a: S(a) = afí(a⁻¹), amb 0 ↦ 0",
+      "casos": [
+        { "a": "53", "s": "ed" }
+      ],
+      "pendent": {
+        "caixaSSencera": "Les esmenes només porten l’exemple S({53}) = {ed}. La caixa S sencera (l’oracle publicat dels 255 inversos) s’ha de transcriure de FIPS-197 fig. 7 amb la font a mà, no de memòria ni amb el codi propi; mentre no hi siga, la prova dels 255 inversos només comprova a · a⁻¹ = 1."
+      }
+    }
+  },
+  "shamir_manual": {
+    "V-SH1": {
+      "font": "esmenes §9.3: derivat a mà de valors publicats de FIPS-197, no un vector publicat",
+      "polinomi": { "s": "83", "a1": "57", "a2": "01" },
+      "descripcio": "Un sol byte, f(X) = {83} ⊕ {57}·X ⊕ {01}·X². Cada producte és un valor publicat de §9.2 o un quadrat sense reducció, llevat de X⁸ = {1b}, que és la definició mateixa de m(X).",
+      "punts": [
+        { "x": "01", "57x": "57", "x2": "01", "y": "d5" },
+        { "x": "02", "57x": "ae", "x2": "04", "y": "29" },
+        { "x": "04", "57x": "47", "x2": "10", "y": "d4" },
+        { "x": "08", "57x": "8e", "x2": "40", "y": "4d" },
+        { "x": "10", "57x": "07", "x2": "1b", "y": "9f" }
+      ],
+      "esperat": { "secret": "83", "consistencia": true, "nota": "qualsevol terna dona s = {83}; la comprovació de consistència passa amb els cinc punts" },
+      "corromput": { "x": "08", "y": "4c", "consistencia": false, "nota": "canviar ({08}, {4d}) per ({08}, {4c}) ha de fer fallar la consistència" }
+    }
+  },
+  "shamir_independents": {
+    "estat": "pendent",
+    "motiu": "esmenes §9.4: calen vectors d’una implementació independent (HashiCorp Vault `shamir`, python-shamir-mnemonic de SLIP-0039 o `galois`), fixada per versió i commit, generats en una rascada fora del repositori i amb el permís del Mestre per a baixar l’eina; vectors_shamir_independents_v1.json no existix. Són bloquejants abans de picar F7, no abans d’este mòdul.",
+    "procediment": [
+      "fixar la versió i el commit de l’eina en una rascada fora del repositori",
+      "generar avaluacions deterministes de 16 polinomis fixos de 32 B en 8 valors de x, i Split de 8 secrets amb N = 5 i N = 8",
+      "congelar vectors_shamir_independents_v1.json amb la procedència (eina, versió, commit, ordre exacta, data i SHA-256 del fitxer)",
+      "provar en els dos sentits: el Combine propi sobre els fragments de l’eina (reordenant y ‖ x a x ‖ y) i el Combine de l’eina sobre fragments propis"
+    ]
+  },
+  "mides_esmenes_6_2": {
+    "font": "esmenes §6.2 (taula de mides), en bytes",
+    "T_SDPV": 175,
+    "info_L_SDPL": 175,
+    "info_H_SDPH": 87,
+    "fragment": 33,
+    "aval_ct": 49,
+    "aval_enc": 65,
+    "declaracio_SDPC": "83 + 97·n",
+    "declaracio_SDPC_n3": 374,
+    "declaracio_SDPC_n255": 24818,
+    "aprovacio_SDPO": 133,
+    "carrega_alliberament": 97,
+    "alliberament_ct": 113,
+    "alliberament_enc": 65,
+    "no_soc_jo_SDPN": 61,
+    "signatura": 64
+  },
+  "sas_5_6_2": {
+    "font": "disseny §5.6.2 (esmenat per esmenes §4.2): etiquetes HKDF i reducció",
+    "compromis": "cD = SHA-256(\"SDPP\" ‖ 0x01 ‖ hT ‖ nD32)",
+    "codi": "u64be(HKDF-SHA256(ikm = nD ‖ nA, sal = hT, info = \"sdp-xat-v1/sas-recuperacio\" ‖ 0x00, 8)) mod 10⁶",
+    "tornada": "u64be(HKDF-SHA256(ikm = nD ‖ nA, sal = hT, info = \"sdp-xat-v1/sas-tornada\" ‖ 0x00, 8)) mod 10⁶",
+    "etiqueta_codi": "sdp-xat-v1/sas-recuperacio",
+    "etiqueta_tornada": "sdp-xat-v1/sas-tornada",
+    "xifres": 6
+  }
+}

@@ -877,7 +877,10 @@ function pluginTrossejat({ directoriAmbTrossos = false } = {}) {
   const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-empaqueta-trossos-'));
   const plugin = path.join(arrel, 'wordpress-plugin');
   fs.mkdirSync(plugin, { recursive: true });
-  for (const rel of ADAPTADOR.fitxers) fs.copyFileSync(path.join(ARREL, 'wordpress-plugin', rel), path.join(plugin, rel));
+  for (const rel of ADAPTADOR.fitxers) {
+    fs.mkdirSync(path.dirname(path.join(plugin, rel)), { recursive: true });
+    fs.copyFileSync(path.join(ARREL, 'wordpress-plugin', rel), path.join(plugin, rel));
+  }
   for (const carpeta of ADAPTADOR.carpetes) fs.cpSync(path.join(ARREL, 'wordpress-plugin', carpeta), path.join(plugin, carpeta), { recursive: true });
   const node = { origen: 'http://localhost:54321', mode: 'seed', tenant: TENANT, desenvolupament: true };
   const escriu = (dist, fitxers, opcions) => {

@@ -43,7 +43,8 @@
  *   [{ clau, etiqueta, valor }] de la foto oberta (valor, text o node: qui la
  *   munta hi posa els enllaços) · infoInicial (false: el panell comença
  *   plegat) · etiquetes { tanca, anterior, seguent, ampliar, reduir, info,
- *   posicio ('Imatge {n} de {total}'), error, senseImatge }, ja traduïdes ·
+ *   posicio ('Imatge {n} de {total}'), error, senseImatge, fixar, desfixar },
+ *   ja traduïdes (fixar i desfixar, si no arriben, pel traductor de l'app) ·
  *   onCarrega(index, { amplada, alcada } | null) (Gauntlet 261017, C05 de
  *   Codex: la resolució del panell) · les mides reals de la foto pintada
  *   (naturalWidth i naturalHeight) quan carrega, o null si no carrega o el
@@ -79,16 +80,38 @@
  * (Gauntlet 261017). «i» plega i
  * desplega el panell, que és un <aside> amb nom i aria-controls/aria-expanded
  * al seu botó. El comptador és una regió viva educada («Imatge 3 de 20»).
- * Tots els botons, de --sdp-touch.
+ * Tots els botons, de --sdp-touch; «Tancar», de --sdp-alt-accio.
+ *
+ * MODE FIXAT (P1-43; pla 261029_0216; Llibre Mestre, fita 7). Dalt del panell,
+ * «Fixar la informació» (📌, aria-pressed): fixat, el panell es queda obert
+ * mentre es passa de foto (botons, fletxes, lliscament) i pinta les dades de
+ * cada imatge, que arriben per `metadades`; «Informació» i la tecla «i» el
+ * pleguen i el desfixen d'un colp (un botó que no fera res visible seria un
+ * botó trencat). L'estat viu al contingut del visor, com el del panell: dura
+ * el que dura el visor obert i no es desa enlloc. Sense fixar, res no canvia.
+ * En mòbil, fixat, el full de baix s'acurta i «anterior» i «següent» pugen
+ * damunt d'ell (components.css). «Tancar» és l'aspa gran, de --sdp-alt-accio;
+ * en tancar, el focus torna a qui l'havia obert (Dialeg), com sempre. Les dues
+ * etiquetes noves es traduïxen ací quan hi ha traductor (useTraductorOpcional,
+ * com Moderacio.jsx) o arriben per `etiquetes`.
  *
  * Dins de PedraSeca/, esta peça importa per camí directe (mai per index.js):
  * la porta de dependències circulars de Pedra Seca ho exigix.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Info, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Pin, PinOff, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { Dialeg } from './Dialeg.jsx';
 import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
+import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
+
+/* P1-43 · Les dues etiquetes del mode fixat, en parells [clau i18n, reserva]:
+   es traduïxen al visor quan hi ha traductor, perquè qui el munta no haja de
+   passar-les. Les de sempre continuen arribant per `etiquetes`, exactes. */
+const PARELLS_FIXAR = Object.freeze({
+  fixar: Object.freeze(['section.multimedia.visor.fixar', 'Fixar la informació']),
+  desfixar: Object.freeze(['section.multimedia.visor.desfixar', 'Deixar de fixar'])
+});
 
 const ETIQUETES = Object.freeze({
   titol: 'Visor d’imatges',
@@ -100,7 +123,9 @@ const ETIQUETES = Object.freeze({
   info: 'Informació de la imatge',
   posicio: 'Imatge {n} de {total}',
   error: 'No s’ha pogut carregar la imatge.',
-  senseImatge: 'Esta entrada no porta cap imatge.'
+  senseImatge: 'Esta entrada no porta cap imatge.',
+  fixar: PARELLS_FIXAR.fixar[1],
+  desfixar: PARELLS_FIXAR.desfixar[1]
 });
 
 /* Sense export: la porta del catàleg (tractor-cataleg.mjs) registra tot export
@@ -122,6 +147,9 @@ const MARGE_DEL_TOC = 10;
 /* Correccions del 261024 (R4-02) · Quant s'espera el tancament del fons: la
    finestra en què un segon clic encara fa un doble clic. */
 const FINESTRA_DEL_DOBLE_CLIC = 300;
+/* P1-43 · L'aspa gran de «Tancar»: la X de lucide (la del Dialeg) a esta mida,
+   dins del botó de --sdp-alt-accio (components.css, .sdp-visor__boto--gran). */
+const MIDA_ASPA = 28;
 
 const textDe = (valor, reserva) => (typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : reserva);
 const posicioDe = (plantilla, n, total) => plantilla.replace('{n}', () => String(n)).replace('{total}', () => String(total));
@@ -132,6 +160,8 @@ export function limitaEscala(escala) {
 }
 
 const vistaInicial = (clau) => ({ clau, escala: ESCALA_MINIMA, x: 0, y: 0 });
+/* El Boto passa aria-hidden i focusable; la mida la fixa el visor. */
+const AspaGran = (props) => <X {...props} size={MIDA_ASPA} />;
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 /* El factor d'un gir de roda: PAS_RODA elevat al gir en píxels partit per
@@ -165,7 +195,11 @@ export function VisorImatges({
   const total = llista.length;
   const visible = Boolean(obert) && total > 0;
   const actual = total ? Math.min(Math.max(0, Number.isInteger(index) ? index : 0), total - 1) : 0;
-  const text = Object.fromEntries(Object.entries(ETIQUETES).map(([clau, reserva]) => [clau, textDe(etiquetes?.[clau], reserva)]));
+  /* P1-43 · Fixar i desfixar passen pel traductor de l'app si n'hi ha; la
+     resta, les reserves de sempre. `etiquetes` mana sobre totes. */
+  const traductor = useTraductorOpcional();
+  const text = Object.fromEntries(Object.entries(ETIQUETES).map(([clau, reserva]) => [clau,
+    textDe(etiquetes?.[clau], Object.hasOwn(PARELLS_FIXAR, clau) ? tradueix(traductor, PARELLS_FIXAR[clau]) : reserva)]));
   const nom = textDe(titol, text.titol);
   const marc = useRef(null);
   /* El focus comença a «Tancar» quan el <dialog> ja és obert, a la SPA i
@@ -212,6 +246,10 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   const imatge = llista[actual];
   const clau = `${actual}|${imatge.src || ''}`;
   const [info, setInfo] = useState(Boolean(infoInicial));
+  /* P1-43 · El mode fixat viu ací, com `info`: dura el que dura el visor obert.
+     Fixat, el panell és obert (la guarda explícita: fixat ⇒ obert). */
+  const [fixat, setFixat] = useState(false);
+  const panellObert = info || fixat;
   const [vista, setVista] = useState(() => vistaInicial(clau));
   const [errada, setErrada] = useState(null);
   const [arrossegant, setArrossegant] = useState(false);
@@ -256,6 +294,22 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   const vesA = (desti) => {
     if (total < 2) return;
     onCanvi?.(((desti % total) + total) % total);
+  };
+
+  /* P1-43 · «Informació» i la tecla «i»: fixat, pleguen el panell i el
+     desfixen d'un colp; sense fixar, commuten com sempre. */
+  const commutaInfo = () => {
+    /* Revisió final (261029) · Si el focus és dins del panell (el botó de fixar
+       sempre hi és), amagar l'<aside> l'enviaria al <body> i les tecles del
+       visor deixarien d'arribar: torna al marc (tabIndex -1) abans d'amagar. */
+    const arrel = marcRef.current?.getRootNode?.() ?? document;
+    if (arrel.activeElement && marcRef.current?.querySelector('.sdp-visor__panell')?.contains(arrel.activeElement)) marcRef.current.focus();
+    if (fixat) {
+      setFixat(false);
+      setInfo(false);
+      return;
+    }
+    setInfo((obert) => !obert);
   };
 
   /* La roda amplia i redueix la foto. React registra `wheel` com a passiu i
@@ -359,8 +413,8 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
       '=': () => fixaEscala((escala) => escala * PAS_BOTO),
       '-': () => fixaEscala((escala) => escala / PAS_BOTO),
       0: () => fixaEscala(() => ESCALA_MINIMA),
-      i: () => setInfo((obert) => !obert),
-      I: () => setInfo((obert) => !obert)
+      i: commutaInfo,
+      I: commutaInfo
     };
     if (!Object.hasOwn(accions, event.key)) return;
     event.preventDefault();
@@ -380,6 +434,8 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   const files = Array.isArray(metadades) ? metadades.filter((fila) => fila && fila.etiqueta) : [];
   const classesEscenari = ['sdp-visor__escenari', ampliada && 'sdp-visor__escenari--ampliat', arrossegant && 'sdp-visor__escenari--arrossega']
     .filter(Boolean).join(' ');
+  /* P1-43 · Fixat, el marc ho diu: en mòbil el full s'acurta i els controls pugen (components.css). */
+  const classesMarc = ['sdp-visor__marc', fixat && 'sdp-visor__marc--fixat'].filter(Boolean).join(' ');
 
   /* tabIndex -1: el clic a la foto deixa el focus al marc (no al <body>) i les
      tecles hi continuen arribant; Tab no s'hi para mai.
@@ -390,9 +446,9 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
      marc (en captura: el segon d'un doble clic, un control, la foto) anul·la
      el 'vel' pendent. */
   return (
-    <div ref={marcRef} className="sdp-visor__marc" tabIndex={-1} onKeyDown={enTecla} onPointerDownCapture={anulaElVel}>
+    <div ref={marcRef} className={classesMarc} tabIndex={-1} onKeyDown={enTecla} onPointerDownCapture={anulaElVel}>
       <div className="sdp-visor__barra">
-        <Boto varietat="secundari" className="sdp-visor__boto" icona={X} aria-label={text.tanca}
+        <Boto varietat="secundari" className="sdp-visor__boto sdp-visor__boto--gran" icona={AspaGran} aria-label={text.tanca}
           aria-keyshortcuts="Escape" data-sdp-focus-inicial onClick={() => onTanca?.('boto')} />
         <p className="sdp-visor__comptador" aria-live="polite" aria-atomic="true">
           <span aria-hidden="true">{`${actual + 1} / ${total}`}</span>
@@ -403,7 +459,7 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
         <Boto varietat="secundari" className="sdp-visor__boto" icona={ZoomIn} aria-label={text.ampliar}
           aria-keyshortcuts="+" onClick={() => fixaEscala((escala) => escala * PAS_BOTO)} />
         <Boto varietat="secundari" className="sdp-visor__boto" icona={Info} aria-label={text.info}
-          aria-expanded={info} aria-controls={idPanell} aria-keyshortcuts="I" onClick={() => setInfo((obert) => !obert)} />
+          aria-expanded={panellObert} aria-controls={idPanell} aria-keyshortcuts="I" onClick={commutaInfo} />
       </div>
       <div className="sdp-visor__cos">
         <div ref={escenariRef} className={classesEscenari} onPointerDown={enPremer} onPointerMove={enMoure}
@@ -424,7 +480,14 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
             </div>
           ) : null}
         </div>
-        <aside id={idPanell} className="sdp-visor__panell" hidden={!info} aria-label={text.info}>
+        <aside id={idPanell} className="sdp-visor__panell" hidden={!panellObert} aria-label={text.info}>
+          {/* P1-43 · Fixar: aria-pressed diu l'estat; el text, l'acció que fa. */}
+          <div className="sdp-visor__fixador">
+            <Boto varietat="secundari" className="sdp-visor__fixar" icona={fixat ? PinOff : Pin} aria-pressed={fixat}
+              onClick={() => setFixat((previ) => !previ)}>
+              {fixat ? text.desfixar : text.fixar}
+            </Boto>
+          </div>
           {imatge.titol || imatge.alt ? <p className="sdp-visor__titol">{imatge.titol || imatge.alt}</p> : null}
           {files.length ? (
             <dl className="sdp-visor__dades">

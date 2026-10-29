@@ -66,7 +66,10 @@ function fixture({ node = NODE_BO, versio = '0.2.0', clauPublica = '' } = {}) {
   const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-empaqueta-'));
   const plugin = path.join(arrel, 'wordpress-plugin');
   fs.mkdirSync(plugin, { recursive: true });
-  for (const rel of ADAPTADOR.fitxers) fs.copyFileSync(path.join(PLUGIN_REAL, rel), path.join(plugin, rel));
+  for (const rel of ADAPTADOR.fitxers) {
+    fs.mkdirSync(path.dirname(path.join(plugin, rel)), { recursive: true });
+    fs.copyFileSync(path.join(PLUGIN_REAL, rel), path.join(plugin, rel));
+  }
   for (const carpeta of ADAPTADOR.carpetes) fs.cpSync(path.join(PLUGIN_REAL, carpeta), path.join(plugin, carpeta), { recursive: true });
   {
     const actualitzador = path.join(plugin, NOMES_CANAL_PROPI);
@@ -454,7 +457,12 @@ function trailingslashit( $text ) { return rtrim( $text, '/' ) . '/'; }
 function untrailingslashit( $text ) { return rtrim( $text, '/' ); }
 function plugin_basename( $fitxer ) { return substr( $fitxer, strlen( trailingslashit( WP_PLUGIN_DIR ) ) ); }
 function plugin_dir_path( $fitxer ) { return trailingslashit( dirname( $fitxer ) ); }
+function plugins_url( $path, $file ) { return 'https://fixture.invalid/' . dirname( plugin_basename( $file ) ) . '/' . $path; }
+function sanitize_title( $text ) { return trim( preg_replace( '/[^a-z0-9-]+/', '-', strtolower( $text ) ), '-' ); }
 function is_multisite() { return false; }
+// T5.1 (revisió final 261029) · «Mostra els detalls»: l'enllaç del nucli i la versió del lloc que alinea «Tested up to».
+function network_admin_url( $path = '' ) { return 'https://fixture.invalid/wp-admin/network/' . ltrim( (string) $path, '/' ); }
+function get_bloginfo( $show = '' ) { return 'version' === $show ? '7.1.4' : ''; }
 function wp_get_environment_type() { return 'production'; }
 function get_site_option( $clau, $defecte = false ) { return $GLOBALS['opcions'][ $clau ] ?? $defecte; }
 function update_option( $clau, $valor, $autoload = null ) { $GLOBALS['opcions'][ $clau ] = $valor; return true; }
@@ -505,6 +513,15 @@ if ( function_exists( 'socdepoble_enxufe_analitza_canal' ) ) {
 		$sortida['api'][ $clau ] = is_object( $info ) ? array( 'slug' => $info->slug, 'download_link' => $info->download_link ) : $info;
 	}
 }
+// T5.1: el filtre local de detalls és independent del canal d'actualitzacions.
+if ( function_exists( 'socdepoble_enxufe_detalls_plugins_api' ) ) {
+	$args = (object) array( 'slug' => SOCDEPOBLE_ENXUFE_SLUG );
+	$sortida['detalls'] = socdepoble_enxufe_detalls_plugins_api( false, 'plugin_information', $args );
+	$sortida['detalls_aliens'] = socdepoble_enxufe_detalls_plugins_api( false, 'plugin_information', (object) array( 'slug' => 'altre-plugin' ) );
+	$sortida['detalls_altra_accio'] = socdepoble_enxufe_detalls_plugins_api( false, 'query_plugins', $args );
+	$previ = (object) array( 'origen' => 'filtre-previ' );
+	$sortida['detalls_preserven_previ'] = $previ === socdepoble_enxufe_detalls_plugins_api( $previ, 'plugin_information', $args );
+}
 echo json_encode( $sortida );
 `;
 
@@ -549,7 +566,7 @@ test('WP-01: el PHP del paquet accepta el canal, la carpeta i el zip que fabrica
 /* MISSED P3 (verify-wp.txt) · amb SOCDEPOBLE_ENXUFE_SLUG = 'socdepoble', plugins_api responia per
    l'slug del plugin de WordPress.org: amb un paquet del canal propi actiu, «Instal·la ara» del
    plugin oficial rebia un download_link buit o simbòlic. */
-test('MISSED P3: el canal propi només respon per la seua identitat, mai per l\'slug del directori; la variant universal no intercepta res', AMB_PHP, () => {
+test('MISSED P3 i T5.1: canal propi separat dels detalls locals, sense canal d’actualitzacions a la variant universal', AMB_PHP, () => {
   const f = fixture();
   try {
     const propi = canalAmbPhp(f, 'enxufe');
@@ -563,7 +580,18 @@ test('MISSED P3: el canal propi només respon per la seua identitat, mai per l\'
     const directori = canalAmbPhp(g, 'directori');
     assert.equal(directori.fitxer, `${SLUG}/socdepoble-enxufe.php`);
     assert.equal(directori.canal, undefined, 'la variant del directori no porta l\'actualitzador');
-    assert.ok(!directori.filtres.includes('plugins_api') && !directori.filtres.some((nom) => nom.startsWith('update_plugins_')), 'cap intercepció a la variant universal');
+    assert.ok(directori.filtres.includes('plugins_api'), 'T5.1: els detalls locals també viatgen al directori');
+    assert.ok(!directori.filtres.some((nom) => nom.startsWith('update_plugins_')), 'cap canal d’actualitzacions a la variant universal');
+    assert.equal(directori.detalls.slug, SLUG);
+    assert.equal(directori.detalls.version, '0.2.0');
+    assert.equal(directori.detalls.homepage, 'https://socdepoble.org');
+    assert.equal(Object.hasOwn(directori.detalls, 'download_link'), false, 'els detalls locals no oferixen cap paquet');
+    assert.deepEqual(Object.keys(directori.detalls.sections), ['description', 'installation', 'faq', 'changelog']);
+    assert.ok(directori.detalls.sections.installation.includes('[socdepoble_app]'));
+    assert.ok(directori.detalls.banners.low.endsWith('/assets/banner-772x250.png'));
+    assert.equal(directori.detalls_aliens, false);
+    assert.equal(directori.detalls_altra_accio, false);
+    assert.equal(directori.detalls_preserven_previ, true);
   } finally { neteja(g); }
 });
 

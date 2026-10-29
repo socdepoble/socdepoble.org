@@ -155,7 +155,7 @@ for (const file of files) {
   }
 
   // R2: RLS-ABSENT
-  const createTableLines = content.split(';').filter(s => s.toLowerCase().includes('create table '));
+  const createTableLines = sentencies(content).filter(s => s.toLowerCase().includes('create table '));
   for (const block of createTableLines) {
     const tableMatch = /create table (?:if not exists )?(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/i.exec(block);
     if (tableMatch) {

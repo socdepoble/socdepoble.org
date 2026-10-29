@@ -10,6 +10,7 @@ import { execFileSync } from 'node:child_process';
 import {confined, prepareRecipe} from './plaquetes-plan.mjs';
 import {executeMutation} from '../../tooling/gates/executor-mutacio.mjs';
 import readline from 'readline';
+import {extractDocumentLinks} from '../../tooling/lib/document-links.mjs';
 
 const args = process.argv.slice(2);
 const REPO_ROOT = process.cwd();
@@ -109,17 +110,7 @@ const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 const vaultDir = path.join(REPO_ROOT, config.vault);
 
 function extreuFantasmes(content) {
-  const linkRegex = /\[\[(.*?)\]\]/g;
-  let matches = [];
-  let match;
-  const net = content.replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
-  while ((match = linkRegex.exec(net)) !== null) {
-    let raw = match[1];
-    if (raw.includes('|')) raw = raw.split('|')[0];
-    if (raw.includes('#')) raw = raw.split('#')[0];
-    if (raw.trim() && !raw.startsWith('http')) matches.push(raw.trim());
-  }
-  return matches;
+  return extractDocumentLinks(content).filter(link => link.kind === 'wiki').map(link => link.target);
 }
 
 function llistaFitxers(dir) {

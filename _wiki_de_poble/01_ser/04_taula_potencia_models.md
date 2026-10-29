@@ -3,8 +3,8 @@ type: document
 status: canonic
 description: Taula de potència i recomanacions d'ús per a la família de models Claude i la resta de l'eixam IA.
 tags:
-  - estrategia
-  - models
+  - core
+  - identitat
 ---
 # Taula de Potència de Models IA
 

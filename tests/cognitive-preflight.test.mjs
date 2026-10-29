@@ -72,7 +72,7 @@ test('una àncora fora d’Activitat queda intacta i el document nou queda viu',
 });
 test('l’informe usa l’arrel de l’eina quan cwd és una subcarpeta o un altre lloc',t=>{
  const root=fixture(t); dirty(root);
- for (const f of ['tooling/gates/porta-olivera.mjs','tooling/lib/arrel.mjs','.agents/AGENTS.md']) {
+ for (const f of ['tooling/gates/porta-olivera.mjs','tooling/lib/arrel.mjs','tooling/lib/markdown-prose.mjs','.agents/AGENTS.md']) {
   fs.mkdirSync(path.dirname(path.join(root,f)),{recursive:true});fs.copyFileSync(path.join(REPO,f),path.join(root,f));
  }
  const env={...process.env};delete env.SDP_ARREL;
@@ -147,7 +147,7 @@ test('crear prompt revalida dins del lock després del rebut si entra un documen
 test('importar funcions de torn en una còpia sense marcador no exigix arrel implícita; CLI falla tancat',t=>{
  const stripped=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-stripped-tools-')));
  t.after(()=>fs.rmSync(stripped,{recursive:true,force:true}));
- for (const file of ['tooling/documental/turns.mjs','tooling/documental/core.mjs','tooling/wiki/lib/frontmatter.mjs','tooling/lib/arrel.mjs','tooling/gates/porta-olivera.mjs']) {
+ for (const file of ['tooling/documental/turns.mjs','tooling/documental/core.mjs','tooling/wiki/lib/frontmatter.mjs','tooling/lib/arrel.mjs','tooling/lib/markdown-prose.mjs','tooling/gates/porta-olivera.mjs']) {
   fs.mkdirSync(path.dirname(path.join(stripped,file)),{recursive:true});fs.copyFileSync(path.join(REPO,file),path.join(stripped,file));
  }
  fs.symlinkSync(fs.realpathSync(path.join(REPO,'node_modules')),path.join(stripped,'node_modules'),'dir');

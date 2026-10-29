@@ -62,7 +62,7 @@ export const CATEGORIES_VIGILADES = Object.freeze([
   ['micro_prompt', Object.freeze(['prompt.consell'])],
   ['petorreta', Object.freeze(['prompt.local', 'prompt.consell'])],
   ['prompt', Object.freeze(['prompt.local', 'prompt.consell'])],
-  ['pla', Object.freeze(['planificacio'])],
+  ['pla', Object.freeze(['pla.implementacio'])],
 ]);
 
 /** Forma comparable d'un nom: sense accents, en minúscules i amb `_`. */
@@ -92,7 +92,7 @@ export function rutesDelNom(nom) {
   if (c) return CATEGORIES_VIGILADES.find(([k]) => k === c)[1];
   const f = forma(nom);
   if (/(^|_)pla_(d_)?implementacio/.test(f)) return ['pla.implementacio'];
-  if (/(^|_)pla(_|\.md$)/.test(f)) return ['planificacio'];
+  if (/(^|_)pla(_|\.md$)/.test(f)) return ['pla.implementacio'];
   return ['prompt.local', 'prompt.consell'];
 }
 
@@ -161,9 +161,15 @@ export function inspeccionaText(root, rel, raw, { complet = false } = {}) {
   else {
     informe.rebut = rebut.id;
     routeId = rebut.receipt.route;
-    if (!permeses.includes(routeId)) informe.errors.push(`ruta: el rebut és de «${routeId}» i el nom demana ${permeses.join(' o ')}`);
     try { if (rebut.receipt.contractSnapshot) contract = readContract(root, rebut.receipt.contractSnapshot); }
     catch (e) { informe.errors.push(`contracte del rebut: ${e.message}`); }
+    // Preserve issued legacy names only with their verified immutable contract.
+    const oldRoute = Array.isArray(contract?.router?.rutes)
+      ? contract.router.rutes.find(route => route.id === 'planificacio') : undefined;
+    const legacyPlan = routeId === 'planificacio' && categoriaDelNom(nom) === 'pla'
+      && oldRoute?.templateHash === rebut.receipt.templateHash
+      && oldRoute?.version === rebut.receipt.routeVersion;
+    if (!permeses.includes(routeId) && !legacyPlan) informe.errors.push(`ruta: el rebut és de «${routeId}» i el nom demana ${permeses.join(' o ')}`);
   }
   try {
     contract ??= loadContract(root, { route: routeId });

@@ -24,9 +24,16 @@
  *      UniversalPage els pinte al seu lloc (H1 al bloc blanc, entradilla
  *      davall de l'H2) i la prosa no els repetisca.
  *
+ * R-07 (pla 261029_0216, Pas 2 i Pas 9) 261029:
+ *  9 · extreuEditorial() salta el preàmbul que no és contingut (línies
+ *      buides, comentaris HTML i un frontmatter romanent) abans de buscar
+ *      l'H1: les plantilles obrin amb <!-- SDP:EIXIDA … --> i el títol social
+ *      eixia com l'id cru del fitxer.
+ *
  * Sense lookbehind: el Baseline és Safari 16.0 i no l'admet fins a 16.4.
  */
 
+import { iniciDelContingut } from '../../utils/iniciEditorial.js';
 import { llevaPuntFinal } from '../../components/universal/editorial.js';
 import { marcaDeTaula } from '../../utils/sanitize.js';
 
@@ -263,32 +270,45 @@ function textPla(md) {
     .trim());
 }
 
+/* R-07 (pla 261029_0216) · El preàmbul d'un document no és contingut: les
+   línies buides, els comentaris HTML (les plantilles obrin amb
+   <!-- SDP:EIXIDA … --> davant de l'H1) i un frontmatter romanent «---…---»
+   a la primera línia. Torna la posició del primer caràcter de contingut amb
+   un recorregut lineal (indexOf, cada caràcter una vegada) i sense cap
+   expressió regular sobre el document: un comentari sense tancar és comentari
+   fins al final, i un «# Títol» de dins d'un comentari és comentari. */
+
 /**
  * Separa la capçalera editorial d'un document Markdown. Funció pura.
  *
- *  · titol: si el primer bloc no buit és «# Títol», el títol en text pla,
- *    sense punt final. Si no, null.
+ *  · titol: si el primer bloc de contingut és «# Títol», el títol en text
+ *    pla, sense punt final. Si no, null. El preàmbul que no és contingut
+ *    (línies buides, comentaris HTML i un frontmatter romanent) no compta
+ *    (R-07): el títol d'una plantilla és el que ve darrere del comentari.
  *  · entradilla: si just després del títol ve un paràgraf pla (no títol,
  *    llista, taula, cita, codi, callout, regle, HTML, imatge ni línia
  *    d'etiqueta «**Categoria:** …»), eixe paràgraf en Markdown en línia.
  *    Si no, null.
- *  · cos: la resta del document, sense el títol ni l'entradilla.
+ *  · cos: la resta del document, sense el preàmbul, el títol ni l'entradilla.
  *
- * Sense títol no hi ha entradilla: el document es torna sencer com a cos.
+ * Sense títol no hi ha entradilla: el document es torna sencer com a cos,
+ * preàmbul inclòs.
  */
 export function extreuEditorial(md) {
   // BOM inicial (U+FEFF) fora, per codi i no amb un caràcter invisible al font.
   const senseBom = typeof md === 'string' && md.charCodeAt(0) === 0xFEFF ? md.slice(1) : md;
   const text = typeof senseBom === 'string' ? senseBom.replace(/\r\n?/g, '\n') : '';
-  const linies = text.split('\n');
-  let i = 0;
-  while (i < linies.length && linies[i].trim() === '') i += 1;
+  // Des de la línia del primer caràcter de contingut: un «# » que no obri la
+  // línia (darrere d'un «-->» o d'un sagnat) no és títol, i un preàmbul que
+  // s'ho menja tot (un comentari sense tancar) no deixa cap línia.
+  const inici = iniciDelContingut(text);
+  const linies = inici < text.length ? text.slice(text.lastIndexOf('\n', inici - 1) + 1).split('\n') : [''];
 
-  const capcalera = i < linies.length ? /^# (.*)$/.exec(linies[i]) : null;
+  const capcalera = /^# (.*)$/.exec(linies[0]);
   const titol = capcalera ? textPla(capcalera[1]) : '';
   if (!titol) return { titol: null, entradilla: null, cos: text };
 
-  i += 1;
+  let i = 1;
   while (i < linies.length && linies[i].trim() === '') i += 1;
   const iniciCos = i;
 

@@ -1,0 +1,17 @@
+{
+  "id": "f3cea2e6-65c7-4946-906b-7af6def4c838",
+  "session": "430279bb-5cae-44a5-9934-e98ed982e814",
+  "operationId": "torn_74bad4b9-lapida_generate_prompt_escriptor_directe_escriptori_sense_torn_ni_rebut-430279bb",
+  "claim": "430279bb-5cae-44a5-9934-e98ed982e814:governance-write",
+  "planHash": "b5bb6f538f74e308f68f49933cdb55f6a69111dff15216940a7e844146d06e51",
+  "beforeSeal": "1a2b81b2c6de16db857a0df67ff11ec8915ec46b040723a331739c4784a69eed",
+  "files": [
+    {
+      "path": "scripts/generate-prompt.sh",
+      "before": "e5a43fea67ae7424abfcbe490d521eb034f9957c6bab08b23565a499380b3e96",
+      "after": "9544dfebca569c9b8249c642ba3e3a09276a77848cd8db3b0f0db7d7f8825ac0"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "460e83cbbe70abf3fccd88984712c768a765ca37d0382f84b2dc97738dc6fe61"
+}

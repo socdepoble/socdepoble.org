@@ -7,7 +7,15 @@
    ref, cap atribut style. jsdom no té showModal: el Dialeg posa `open`. */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { useState } from 'react';
 import { VisorImatges, limitaEscala } from './VisorImatges.jsx';
+/* P1-43 · El traductor de l'app (UIProvider) i els cinc diccionaris, per a les
+   etiquetes del mode fixat; els fulls, per text, per a la Llei dels 58px. */
+import '../../../../tests/helpers/diccionaris.js';
+import { UIProvider } from '../../../app/contexts/UIContext.jsx';
+import { createTranslator } from '../../../config/i18n.js';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 /* El sostre del zoom (privat a l'organisme: la porta del catàleg registra tot
    export en majúscula). */
@@ -693,5 +701,239 @@ describe('encastat (dins d’un <soc-de-poble>)', () => {
     expect(tab(marc, true).defaultPrevented).toBe(true);
     expect(shadow.activeElement?.getAttribute('aria-label')).toBe('Informació de la imatge');
     expect(dialeg.contains(shadow.activeElement)).toBe(true);
+  });
+});
+
+/* P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El mode fixat del panell
+   d'informació i l'aspa gran de «Tancar». Guarda de conformitat: fixat, el
+   panell no es plega en passar de foto (botons i fletxes) i pinta les dades
+   de la foto nova; «Informació» i «i» el pleguen i el desfixen d'un colp; dura
+   el que dura el visor obert; sense fixar, tot és com abans (regressió). */
+describe('el mode fixat (P1-43)', () => {
+  const panellDe = (dialeg) => dialeg.querySelector('aside.sdp-visor__panell');
+  const fixarDe = (dialeg) => within(panellDe(dialeg)).getByRole('button', { pressed: false, name: 'Fixar la informació' });
+  const desfixarDe = (dialeg) => within(panellDe(dialeg)).getByRole('button', { pressed: true, name: 'Deixar de fixar' });
+  const glifsDe = (boto) => [...boto.querySelectorAll('svg')].flatMap((svg) => [...svg.classList].filter((classe) => classe.startsWith('lucide-')));
+  const obriPanell = (dialeg) => act(() => within(dialeg).getByRole('button', { name: 'Informació de la imatge' }).click());
+  const DADES_SELLA = [{ clau: 'data', etiqueta: 'Data i hora de captura', valor: '02/08/2019 18:40' }];
+
+  test('«Fixar la informació» viu dalt del panell amb aria-pressed; fixat, diu «Deixar de fixar», canvia el glif i el marc ho diu', () => {
+    const { dialeg } = pinta();
+    const panell = panellDe(dialeg);
+    const marc = dialeg.querySelector('.sdp-visor__marc');
+    // Plegat: el botó hi és però dins d'un <aside hidden>, fora de l'ordre de Tab de l'encastament.
+    expect(panell.hidden).toBe(true);
+    expect(panell.querySelector('.sdp-visor__fixador .sdp-visor__fixar')).not.toBeNull();
+    obriPanell(dialeg);
+    const fixar = fixarDe(dialeg);
+    expect(panell.firstElementChild.className).toBe('sdp-visor__fixador');
+    expect(fixar.className).toBe('sdp-boto sdp-boto--secundari sdp-visor__fixar');
+    expect(glifsDe(fixar)).toEqual(['lucide-pin']);
+    expect(marc.className).toBe('sdp-visor__marc');
+    act(() => fixar.click());
+    const desfixar = desfixarDe(dialeg);
+    expect(desfixar).toBe(fixar);
+    expect(glifsDe(desfixar)).toEqual(['lucide-pin-off']);
+    expect(marc.className).toBe('sdp-visor__marc sdp-visor__marc--fixat');
+    expect(panell.hidden).toBe(false);
+    // Desfixar amb el mateix botó: el panell es queda obert, com estava.
+    act(() => desfixar.click());
+    expect(fixarDe(dialeg)).toBe(fixar);
+    expect(marc.className).toBe('sdp-visor__marc');
+    expect(panell.hidden).toBe(false);
+  });
+
+  test('amb el focus al botó de fixar, «i» amaga el panell sense perdre el focus fora del marc (les tecles continuen arribant)', () => {
+    const { dialeg } = pinta();
+    obriPanell(dialeg);
+    act(() => fixarDe(dialeg).click());
+    const marc = dialeg.querySelector('.sdp-visor__marc');
+    act(() => desfixarDe(dialeg).focus());
+    expect(panellDe(dialeg).contains(document.activeElement)).toBe(true);
+    fireEvent.keyDown(document.activeElement, { key: 'i' });
+    expect(panellDe(dialeg).hidden).toBe(true);
+    expect(marc.contains(document.activeElement)).toBe(true);
+  });
+
+  test('fixat, el panell es manté obert en passar de foto (botons i fletxes) i pinta el títol i les dades de la nova; Escape tanca', () => {
+    const { dialeg, onCanvi, onTanca, rerender } = pinta();
+    obriPanell(dialeg);
+    act(() => fixarDe(dialeg).click());
+    expect(panellDe(dialeg).querySelector('.sdp-visor__titol').textContent).toBe('Tibi');
+    act(() => within(dialeg).getByRole('button', { name: 'Imatge següent' }).click());
+    expect(onCanvi).toHaveBeenLastCalledWith(1);
+    // Qui el munta passa la foto nova i les seues dades: el panell continua obert i fixat.
+    rerender(<VisorImatges obert imatges={FOTOS} index={1} onCanvi={onCanvi} onTanca={onTanca} metadades={DADES_SELLA} />);
+    const panell = panellDe(dialeg);
+    expect(panell.hidden).toBe(false);
+    expect(desfixarDe(dialeg)).not.toBeNull();
+    expect(panell.querySelector('.sdp-visor__titol').textContent).toBe('Sella');
+    expect([...panell.querySelectorAll('dd')].map((n) => n.textContent)).toEqual(['02/08/2019 18:40']);
+    expect(within(dialeg).getByRole('button', { name: 'Informació de la imatge' }).getAttribute('aria-expanded')).toBe('true');
+    // Les fletxes, també des del botó de fixar (el marc les rep).
+    fireEvent.keyDown(desfixarDe(dialeg), { key: 'ArrowRight' });
+    expect(onCanvi).toHaveBeenLastCalledWith(2);
+    fireEvent.keyDown(desfixarDe(dialeg), { key: 'ArrowLeft' });
+    expect(onCanvi).toHaveBeenLastCalledWith(0);
+    rerender(<VisorImatges obert imatges={FOTOS} index={2} onCanvi={onCanvi} onTanca={onTanca} metadades={DADES} />);
+    expect(panellDe(dialeg).hidden).toBe(false);
+    expect(panellDe(dialeg).querySelector('.sdp-visor__titol').textContent).toBe('Mur');
+    expect([...panellDe(dialeg).querySelectorAll('dd')].map((n) => n.textContent)).toEqual(['14/05/2017 10:22', 'CC BY-SA']);
+    // Escape continua sent del Dialeg: tanca amb 'esc', fixat o no.
+    const cancel = new Event('cancel', { cancelable: true });
+    act(() => { dialeg.dispatchEvent(cancel); });
+    expect(onTanca).toHaveBeenLastCalledWith('esc');
+  });
+
+  test('fixat, «Informació» o la tecla «i» pleguen el panell i el desfixen d’un colp; en tornar-lo a obrir, no és fixat', () => {
+    const { dialeg } = pinta();
+    const info = within(dialeg).getByRole('button', { name: 'Informació de la imatge' });
+    obriPanell(dialeg);
+    act(() => fixarDe(dialeg).click());
+    act(() => info.click());
+    expect(panellDe(dialeg).hidden).toBe(true);
+    expect(info.getAttribute('aria-expanded')).toBe('false');
+    expect(dialeg.querySelector('.sdp-visor__marc').className).toBe('sdp-visor__marc');
+    act(() => info.click());
+    expect(panellDe(dialeg).hidden).toBe(false);
+    expect(fixarDe(dialeg)).not.toBeNull();
+    act(() => fixarDe(dialeg).click());
+    fireEvent.keyDown(dialeg.querySelector('.sdp-visor__marc'), { key: 'i' });
+    expect(panellDe(dialeg).hidden).toBe(true);
+    fireEvent.keyDown(dialeg.querySelector('.sdp-visor__marc'), { key: 'I' });
+    expect(panellDe(dialeg).hidden).toBe(false);
+    expect(fixarDe(dialeg)).not.toBeNull();
+  });
+
+  test('el mode fixat dura el que dura el visor: tancat i reobert, torna plegat i sense fixar', () => {
+    const { dialeg, onTanca, rerender } = pinta();
+    obriPanell(dialeg);
+    act(() => fixarDe(dialeg).click());
+    rerender(<VisorImatges obert={false} imatges={FOTOS} index={0} onTanca={onTanca} metadades={DADES} />);
+    expect(dialeg.children).toHaveLength(0);
+    rerender(<VisorImatges obert imatges={FOTOS} index={0} onTanca={onTanca} metadades={DADES} />);
+    expect(panellDe(dialeg).hidden).toBe(true);
+    obriPanell(dialeg);
+    expect(fixarDe(dialeg)).not.toBeNull();
+    expect(dialeg.querySelector('.sdp-visor__marc').className).toBe('sdp-visor__marc');
+  });
+
+  /* Regressió · Sense fixar, res no canvia: el panell comença plegat (o
+     desplegat amb infoInicial), «Informació» i «i» el commuten, l'estat del
+     panell no es toca en passar de foto (viu al contingut del visor mentre
+     és obert, com abans de P1-43) i ✕ i Escape tanquen el visor. */
+  test('sense fixar, tot com abans: «Informació» i «i» commuten, passar de foto no toca el panell, ✕ i Escape tanquen', () => {
+    const { dialeg, onCanvi, onTanca, rerender } = pinta();
+    const info = within(dialeg).getByRole('button', { name: 'Informació de la imatge' });
+    expect(panellDe(dialeg).hidden).toBe(true);
+    act(() => within(dialeg).getByRole('button', { name: 'Imatge següent' }).click());
+    rerender(<VisorImatges obert imatges={FOTOS} index={1} onCanvi={onCanvi} onTanca={onTanca} metadades={DADES_SELLA} />);
+    expect(panellDe(dialeg).hidden).toBe(true);
+    expect(info.getAttribute('aria-expanded')).toBe('false');
+    act(() => info.click());
+    expect(panellDe(dialeg).hidden).toBe(false);
+    expect(within(panellDe(dialeg)).getByRole('button', { name: 'Fixar la informació' }).getAttribute('aria-pressed')).toBe('false');
+    rerender(<VisorImatges obert imatges={FOTOS} index={2} onCanvi={onCanvi} onTanca={onTanca} metadades={DADES} />);
+    expect(panellDe(dialeg).hidden).toBe(false);
+    expect(dialeg.querySelector('.sdp-visor__marc').className).toBe('sdp-visor__marc');
+    fireEvent.keyDown(dialeg.querySelector('.sdp-visor__marc'), { key: 'i' });
+    expect(panellDe(dialeg).hidden).toBe(true);
+    act(() => within(dialeg).getByRole('button', { name: 'Tancar el visor' }).click());
+    expect(onTanca).toHaveBeenLastCalledWith('boto');
+    const cancel = new Event('cancel', { cancelable: true });
+    act(() => { dialeg.dispatchEvent(cancel); });
+    expect(onTanca).toHaveBeenLastCalledWith('esc');
+    expect(onTanca).toHaveBeenCalledTimes(2);
+  });
+
+  test('«Tancar» és l’aspa gran: la X de lucide a 28px dins del botó de --sdp-alt-accio, primer i amb el focus; en tancar, el focus torna a qui l’havia obert', () => {
+    function Amfitrio() {
+      const [obert, setObert] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setObert(true)}>Obri la foto</button>
+          <VisorImatges obert={obert} imatges={FOTOS} index={0} onTanca={() => setObert(false)} metadades={DADES} />
+        </>
+      );
+    }
+    render(<Amfitrio />);
+    const obridor = screen.getByRole('button', { name: 'Obri la foto' });
+    act(() => obridor.focus());
+    act(() => obridor.click());
+    const dialeg = screen.getByRole('dialog', { name: 'Visor d’imatges' });
+    const tanca = within(dialeg).getByRole('button', { name: 'Tancar el visor' });
+    expect(dialeg.querySelector('button')).toBe(tanca);
+    expect(tanca.className).toBe('sdp-boto sdp-boto--secundari sdp-visor__boto sdp-visor__boto--gran');
+    expect(glifsDe(tanca)).toEqual(['lucide-x']);
+    expect(tanca.querySelector('svg').getAttribute('width')).toBe('28');
+    expect(tanca.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
+    expect(tanca.getAttribute('aria-keyshortcuts')).toBe('Escape');
+    expect(document.activeElement).toBe(tanca);
+    act(() => tanca.click());
+    expect(dialeg.hasAttribute('open')).toBe(false);
+    expect(document.activeElement).toBe(obridor);
+  });
+
+  test('les etiquetes del mode fixat: la reserva en valencià; amb el traductor de l’app, la seua llengua; per «etiquetes», les de qui el munta', () => {
+    for (const [clau, ca] of [['section.multimedia.visor.fixar', 'Fixar la informació'], ['section.multimedia.visor.desfixar', 'Deixar de fixar']]) {
+      expect([clau, createTranslator('ca')(clau)]).toEqual([clau, ca]);
+      for (const codi of ['es', 'en', 'eu', 'gl']) expect([codi, clau, createTranslator(codi)(clau) === ca]).toEqual([codi, clau, false]);
+    }
+    const { dialeg, unmount } = pinta({ infoInicial: true, etiquetes: { fixar: 'Pin info', desfixar: 'Unpin info' } });
+    const boto = within(panellDe(dialeg)).getByRole('button', { name: 'Pin info' });
+    act(() => boto.click());
+    expect(within(panellDe(dialeg)).getByRole('button', { name: 'Unpin info', pressed: true })).toBe(boto);
+    unmount();
+    /* UIProvider llig el tema del sistema (matchMedia), que jsdom no porta: el simulacre d'App.test.jsx. */
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({
+      matches: false, media: query, onchange: null, addListener: vi.fn(), removeListener: vi.fn(),
+      addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn()
+    })));
+    try {
+      render(
+        <UIProvider externalConfig={{ language: 'es' }}>
+          <VisorImatges obert imatges={FOTOS} index={0} metadades={DADES} infoInicial />
+        </UIProvider>
+      );
+      const enCastella = screen.getByRole('dialog', { name: 'Visor d’imatges' });
+      const fijar = within(panellDe(enCastella)).getByRole('button', { name: 'Fijar la información', pressed: false });
+      act(() => fijar.click());
+      expect(within(panellDe(enCastella)).getByRole('button', { name: 'Dejar de fijar', pressed: true })).toBe(fijar);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  /* Llei de Pedra Seca (tooling/gates/01_porta_pedra_seca_58px.mjs) · Els
+     controls nous fan --sdp-alt-accio (58px), mai un 58px en brut, al bloc
+     VISOR D'IMATGES de components.css; fixat, en mòbil el full s'acurta i els
+     controls pugen; modules.css torna a dir la vora de fixat damunt del Perfil. */
+  test('Pedra Seca · els controls nous fan --sdp-alt-accio (58px) i, fixat, el full de mòbil deixa lliures «anterior» i «següent»', () => {
+    const llig = (full) => readFileSync(path.join(process.cwd(), 'src/css', full), 'utf8');
+    const fullModuls = llig('modules.css');
+    const net = llig('components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+    const inici = net.indexOf('.sdp-dialeg.sdp-visor.sdp-dialeg--sense-marc');
+    const bloc = net.slice(inici, net.indexOf('\n}\n', inici));
+    expect(inici).toBeGreaterThan(0);
+    const regla = (selector) => bloc.match(new RegExp(selector.replace(/[.*+?^$()[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}'))?.[1] ?? '';
+    const gran = regla('.sdp-visor__boto--gran');
+    expect(gran).toMatch(/(?:^|[;\s])inline-size:\s*var\(--sdp-alt-accio\);/);
+    expect(gran).toMatch(/(?:^|[;\s])min-inline-size:\s*var\(--sdp-alt-accio\);/);
+    expect(gran).toMatch(/(?:^|[;\s])min-block-size:\s*var\(--sdp-alt-accio\);/);
+    const fixar = regla('.sdp-visor__fixar');
+    expect(fixar).toMatch(/(?:^|[;\s])min-block-size:\s*var\(--sdp-alt-accio\);/);
+    expect(fixar).toMatch(/(?:^|[;\s])border-radius:\s*var\(--sdp-radi-pastilla\);/);
+    expect(regla('.sdp-visor__fixar[aria-pressed="true"]')).toMatch(/border-color:\s*var\(--sdp-accio-control\);/);
+    expect(regla('.sdp-visor__fixar:focus-visible')).toMatch(/outline-color:\s*var\(--sdp-crom-focus\);/);
+    // Cap 58px ni 56px en brut, cap unitat de viewport, cap .sdp-boto al bloc.
+    expect(bloc).not.toMatch(/\b5[68]px\b/);
+    expect(bloc).not.toMatch(/\d(?:d|s|l)?v(?:h|w)\b/);
+    expect(bloc).not.toMatch(/\.sdp-boto\b/);
+    const mobil = bloc.slice(bloc.indexOf('@media (max-width: 720px)'));
+    expect(mobil).toMatch(/\.sdp-visor__marc--fixat \.sdp-visor__panell \{ max-block-size: 40%; \}/);
+    // D-C · cap inset en tant per cent: la franja de dalt es fa per block-size (60%) amb la vora de baix en auto.
+    expect(mobil).toMatch(/\.sdp-visor__marc--fixat \.sdp-visor__controls \{ inset-block-end: auto; block-size: 60%; \}/);
+    expect(fullModuls).toMatch(/\.sdp-visor \.sdp-boto--secundari\[aria-pressed="true"\] \{ border-color: var\(--sdp-accio-control\); \}/);
+    expect(fullModuls).toMatch(/\.sdp-visor \.sdp-visor__fixar \{ padding: 0 var\(--sdp-space-4\); \}/);
   });
 });

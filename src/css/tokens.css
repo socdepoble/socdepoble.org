@@ -104,10 +104,20 @@
 
   /* IDEA-40 (decisió del Mestre, 261028, Bloc H) · El verd de marca, un sol
      token: el de la icona i la pantalla d'inici natives, el logotip i la barra
-     del Lector. El blanc al damunt fa 6,996:1: AA, no AAA (WCAG no arredonix;
-     el «7,19:1» del Llibre no és cert). No és l'èxit (--sdp-exit-500, que no
-     canvia) ni la Capa 0 (design-tokens.json): no canvia amb el tema. */
-  --sdp-verd: #0f672f; /* 6,99:1 sobre blanc · AA, no AAA */
+     del Lector. No és l'èxit (--sdp-exit-500, que no canvia) ni la Capa 0
+     (design-tokens.json): no canvia amb el tema.
+     QA-H03 (pla 261029_0216, Pas 8) · Del 0f672f (6,9966:1 sobre blanc: AA,
+     no AAA; WCAG no arredonix, i el «7,19:1» del Llibre no era cert) al
+     0e662e: 7,0978:1 sobre blanc, AAA per a text normal (WCAG 2.x, 1.4.6:
+     7:1 o més) sense cap arredoniment abans de comparar. Fórmula exacta de
+     WCAG 2.x: c = canal / 255; lineal = c <= 0,04045 ? c / 12,92 :
+     ((c + 0,055) / 1,055) ^ 2,4; L = 0,2126 R + 0,7152 G + 0,0722 B;
+     contrast = (L1 + 0,05) / (L2 + 0,05) (src/config/contrast.js;
+     verdDeMarca.contrast.test.js ho mesura del valor declarat ací).
+     Entre els dos verds, ΔE2000 = 0,33 (ΔE76 = 0,40): imperceptible, el
+     llindar és 1. La icona i la pantalla d'inici natives (PNG) es queden un
+     pas arrere, al 0f672f, fins que es regeneren (projecteIos.test.js). */
+  --sdp-verd: #0e662e; /* 7,10:1 sobre blanc · AAA */
 
   /* ═══ CAPA 2 · SEMÀNTICS · TEMA CLAR ═══════════════════════════
      Cada línia porta el contrast mesurat i el nivell que compleix.  */

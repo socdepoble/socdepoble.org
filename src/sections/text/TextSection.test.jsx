@@ -66,8 +66,11 @@ test('L’Ànima de la IAIA (/ia): les props exactes de la UniversalPage i el co
      (metadadesSocials.js · metadadesDePagina). */
   expect(mocks.seo).toHaveBeenCalledWith({
     title: "L'Ànima de la IAIA", description: pagina.lead,
-    /* Revisió adversarial (261027) · Amb el seu alt: el de page.image (imageAlt). */
-    image: { url: 'https://socdepoble.org/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp', alt: pagina.imageAlt }
+    /* Revisió adversarial (261027) · Amb el seu alt: el de page.image (imageAlt).
+       Pla 261029_0216 (R-01) · Al <head>, la variant social de la il·lustració
+       (JPEG real de 1200x630 i ≤300 KB, imatgeSocial.js · VARIANTS_SOCIALS);
+       la portada (heroImage, dalt) continua sent el WebP original. */
+    image: { url: 'https://socdepoble.org/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431-social-1200x630.jpg', alt: pagina.imageAlt }
   });
 });
 

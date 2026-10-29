@@ -305,7 +305,7 @@ describe('interfície amb el servei: el que de veres ha passat', () => {
   });
 });
 
-/* Correcció R5-09 · El #0F672F en brut d'apps.css pintava el títol de la barra de TOTES les apps.
+/* Correcció R5-09 · El 0F672F en brut d'apps.css pintava el títol de la barra de TOTES les apps.
    L'ordre del Mestre de les 14:40 el volia només per al Lector: un token del crom (tokens.css) i una
    regla per a l'id de l'app (data-sdp-app, que posa BarraApp). */
 describe('correcció R5-09 · la barra verda és només del Lector', () => {
@@ -321,7 +321,7 @@ describe('correcció R5-09 · la barra verda és només del Lector', () => {
     expect(lector.trim()).toBe('background-color: var(--sdp-crom-barra-lector);');
     // IDEA-40 (Mestre, 261028) · El token del Lector cita el verd de marca únic, --sdp-verd.
     expect(llig('src/css/tokens.css')).toMatch(/--sdp-crom-barra-lector:\s*var\(--sdp-verd\);/);
-    const verdDeMarca = /* ALLOW_RAW_COLOR */ '#0f672f'; // el valor que va fixar el Mestre (IDEA-40)
+    const verdDeMarca = /* ALLOW_RAW_COLOR */ '#0e662e'; // IDEA-40, ajustat per QA-H03 (261029): 7,10:1 sobre blanc, AAA
     expect(llig('src/css/tokens.css')).toMatch(new RegExp(`--sdp-verd:\\s*${verdDeMarca};`, 'i'));
     expect(apps.match(/data-sdp-app/g)).toHaveLength(1);
   });

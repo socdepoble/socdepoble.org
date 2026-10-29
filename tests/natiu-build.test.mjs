@@ -13,6 +13,7 @@ import configNatiu, {
   FONTS_LOCALS,
   MODE_NATIU,
   ORIGINALS_CITATS_SENSE_RESOLUTOR,
+  RECURSOS_NOMES_DEL_HEAD,
   RECURSOS_QUE_L_APP_NO_LLIG,
   SUBSTITUCIONS_NATIVES,
   cspNativa,
@@ -90,7 +91,7 @@ function distNatiuVigent(t, arrel = ARREL) {
   if (fs.existsSync(publicDir)) {
     const substituits = new Set(politicaDeMitjansNativa(politicaDeMitjans('autonom', { directori: publicDir }))?.bessones ?? []);
     viatgen = recursosDelPlugin(publicDir)
-      .filter((rel) => !RECURSOS_QUE_L_APP_NO_LLIG.includes(rel) && !substituits.has(rel))
+      .filter((rel) => !RECURSOS_QUE_L_APP_NO_LLIG.includes(rel) && !RECURSOS_NOMES_DEL_HEAD.includes(rel) && !substituits.has(rel))
       .map((rel) => path.join(publicDir, rel));
   }
   const mesNou = mesNouQue(quan, [path.join(arrel, 'vite.natiu.config.js'), ...viatgen]);
@@ -686,7 +687,8 @@ test('vite.natiu.config.js no importa res de Capacitor ni de src/natiu/: es pot 
   const codi = fs.readFileSync(path.join(ARREL, 'vite.natiu.config.js'), 'utf8');
   assert.ok(!codi.includes(CAP), 'cap Capacitor');
   const especificadors = [...codi.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1]).sort();
-  assert.deepEqual(especificadors, ['./src/config/publicCredentials.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
+  // Revisió final 261029 (OG-03) · imatgeSocial.js és una fulla sense imports (com publicCredentials.js): el mapa de variants socials exclou del paquet les imatges que només van al <head>.
+  assert.deepEqual(especificadors, ['./src/config/imatgeSocial.js', './src/config/publicCredentials.js', './vite.standalone.config.js', '@vitejs/plugin-react', 'fs', 'path', 'url', 'vite']);
 });
 
 /* Fase D (261020, revisió) · La frescor de les eixides, sobre un arbre de mostra

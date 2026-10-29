@@ -1,5 +1,5 @@
 ---
-type: skill
+type: protocol
 status: canonic
 description: "Manual operatiu de plaquetes.mjs v1.1: diagnostica ferides del graf (fantasmes, orfes) i només les cura amb aprovació per hash, lease del Reflex i escriptura verificada, sense esborrar res."
 tags:
@@ -70,7 +70,7 @@ Requerix haver executat `segella` (i versionar `.immunitari/baseline.json`). La 
 
 ## Limitacions honestes de v1.1
 
-La detecció de fantasmes compara noms base en minúscules (o una ruta existent des de l'arrel), sense resoldre àlies: un nom base repetit en dos carpetes compta com a resolt, amb el mateix criteri laxista que Obsidian. Els incrustats (enllaços precedits de `!`) compten com un enllaç més, i LAPIDA també els reescriu. Un enllaç fantasma amb fragment, o amb àlies fora d'un índex, es diagnostica però LAPIDA no el reescriu: continua trencat fins que un humà el corregix. El codi en línia amb doble accent greu no s'emmascara. L'aprovació per hash garantix *lectura conscient de la recepta*, no identitat: la garantia d'identitat és la lease de `PROTOCOL_PETORRETA` i la cadena Git.
+La detecció de fantasmes compara noms base en minúscules (o una ruta existent des de l'arrel), sense resoldre àlies: un nom base repetit en dos carpetes compta com a resolt, amb el mateix criteri laxista que Obsidian. Els incrustats (enllaços precedits de `!`) compten com un enllaç més, i LAPIDA també els reescriu. Un enllaç fantasma amb fragment, o amb àlies fora d'un índex, es diagnostica però LAPIDA no el reescriu: continua trencat fins que un humà el corregix. El lexer compartit `markdownProse` emmascara fences de backticks o tildes, spans en línia de qualsevol longitud, comentaris HTML i escapaments literals; `extreuFantasmes` reutilitza `extractDocumentLinks` de `tooling/lib/document-links.mjs`. L’aprovació per hash acredita la coincidència de la recepta aprovada amb els bytes proposats; no prova comprensió ni identitat. La lease del Reflex i la cadena Git mantenen els seus controls propis.
 
 ## Vincles
 

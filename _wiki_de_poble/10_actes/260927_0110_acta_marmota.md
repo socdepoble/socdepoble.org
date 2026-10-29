@@ -1,3 +1,12 @@
+---
+type: acta
+status: canonic
+description: Acta Marmota de la matinada del 26 al 27-09-2026. Arquitectura del Xat clon de WhatsApp amb zero fricció, saturació de crèdits d'Opus i estratègia de relleu cap a Fable.
+tags:
+  - acta
+  - marmota
+visibility: private
+---
 # Acta Marmota - Sessió de la Matinada (26-09-2026 / 27-09-2026)
 
 ## Context
@@ -18,3 +27,7 @@ En aquesta sessió hem topat amb una forta saturació de crèdits i context: Opu
 - Llegir el prompt reconstruït a l'escriptori (`260927_0055_prompt_fable_xat.md`).
 - Assegurar-se que el document de disseny d'Opus ha finalitzat amb èxit.
 - Llançar a Fable Ultra Code per a que comence a generar l'esquema de bases de dades i els components React del Xat basats en l'especificació d'Opus.
+
+## Vincles
+
+- [[00_index]]

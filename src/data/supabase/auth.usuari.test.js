@@ -87,6 +87,37 @@ test('amb altres camps: la RPC i, després, el PATCH de sempre, sense username',
   expect(patch[2].body).toEqual({ lema: 'Hola' });
 });
 
+/* APP-D1 (pla 261029_0216, Pas 2) · El servidor encara no té 2610282100
+   (NO-DISPONIBLE) i l'@usuari viatja amb més camps: la resta es desa i la
+   fila diu què no (campsNoDesats, el contracte de columnesOpcionals). Només
+   per a este codi: qualsevol altre error de la RPC continua rebutjant-ho tot. */
+test('APP-D1 · sense la RPC (NO-DISPONIBLE) i amb més camps: la resta es desa i la fila porta campsNoDesats', async () => {
+  m.rpc.mockRejectedValueOnce(Object.assign(new Error('L\'esquema requerit no està aplicat (falta "desa_el_meu_usuari").'), { status: 404 }));
+  m.request.mockImplementation(async (ruta, _config, opcions) => (opcions?.method === 'PATCH' ? [{ id: 'A', lema: 'Hola' }] : {}));
+  const fila = await updateProfile({ username: 'annaperez', lema: 'Hola' });
+  expect(fila).toEqual({ id: 'A', lema: 'Hola', campsNoDesats: ['username'] });
+  expect(fila).not.toHaveProperty('username');
+  const patch = m.request.mock.calls.find(([, , opcions]) => opcions?.method === 'PATCH');
+  expect(patch[2].body).toEqual({ lema: 'Hola' });
+  expect(m.changed).not.toHaveBeenCalled();
+});
+
+test.each([
+  ['ocupat', [{ desat: false, motiu: 'ocupat', proposta: 'annaperez-2' }], null],
+  ['SDP-USER-003', null, Object.assign(new Error('Supabase 400: {"message":"SDP-USER-003: has provat massa identificadors seguits."}'), { status: 400 })],
+  ['DESCONEGUT (500)', null, Object.assign(new Error('Supabase 500: res'), { status: 500 })],
+])('APP-D1 · qualsevol altre error de la RPC (%s) amb més camps: res més es desa, com sempre', async (code, resposta, error) => {
+  if (error) m.rpc.mockRejectedValueOnce(error); else m.rpc.mockResolvedValueOnce(resposta);
+  await expect(updateProfile({ username: 'annaperez', lema: 'Hola' })).rejects.toMatchObject({ code: code.split(' ')[0] });
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+test('APP-D1 · regressió: l’@usuari sol sense la RPC continua rebutjant amb NO-DISPONIBLE i cap PATCH', async () => {
+  m.rpc.mockRejectedValueOnce(Object.assign(new Error('L\'esquema requerit no està aplicat (falta "desa_el_meu_usuari").'), { status: 404 }));
+  await expect(updateProfile({ username: 'annaperez' })).rejects.toMatchObject({ code: 'NO-DISPONIBLE', message: MISSATGES_USERNAME['NO-DISPONIBLE'] });
+  expect(m.request).not.toHaveBeenCalled();
+});
+
 test('en seed, localPerfils fa de servidor amb les mateixes regles', async () => {
   const usuari = { id: 'local-anna', user_metadata: { full_name: 'Anna Pérez Soler' } };
   m.user = usuari;

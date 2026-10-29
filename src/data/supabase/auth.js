@@ -14,6 +14,7 @@ import { resetClient } from './config.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { CODI_ENTRADA, ambCodi, esBackendInabastable } from '../errorsBackend.js';
 import { ErrorColumnaAbsent, columnaAbsent } from '../autodesament/errors.js';
+import { ambDescartats } from './columnesOpcionals.js';
 import { hidrataPerfilPersonaPilot } from '../identitatsSeed.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { FORMA_USERNAME, MINIM_USERNAME, errorDUsername, normalitzaUsername } from '../../sections/onboarding/onboardingModel.js';
@@ -169,6 +170,50 @@ const altesReparades = new Set();
 /* Un text sense espais; qualsevol altra cosa, ''. */
 const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 
+/* APP-D1 (pla 261029_0216, Pas 2) · Els camins del client que depenen de
+   2610282100, i què passa sense ella (producció, 261029):
+     · les metadades de l'alta (username, town_name: OnboardingSection) les
+       llig només el disparador de la migració; handle_new_user (2609261500)
+       escriu id, full_name i avatar_url i cap de les dues arriba a la fila;
+     · completa_la_meua_alta té UNA signatura al client, { p_tenant_id }
+       (2609261500; la migració no la redefinix): res a reintentar;
+     · desa_el_meu_usuari (updateProfile({ username })) no hi és: 404 o
+       PGRST202, que ja és NO-DISPONIBLE;
+     · la lectura de la fila no nomena cap columna (sense `select=`): no pot
+       fer cap 42703, i la fila ve sense username (PerfilContext ho tolera);
+     · cap PATCH no escriu username ni town_uuid; town_name és de sempre.
+   El poble triat a /registre sí que té camí: en la primera lectura d'una
+   fila SENSE la columna username (el senyal d'una base sense la migració) i
+   sense poble propi (buit o el de sèrie: profiles.town_name té DEFAULT
+   'La Torre de les Maçanes' des de 2609110600 i handle_new_user només escriu
+   id, full_name i avatar_url, la mateixa regla que 2610282100 aplica al
+   servidor), el client el completa ell amb el PATCH de la columna de
+   sempre, una vegada per compte i document i només si la sessió no ha
+   canviat; una fila amb username ja l'ha derivat el disparador i no es toca.
+   L'identificador no té cap camí sense la RPC: es queda a les metadades i
+   la fitxa ho diu (IdentitatAlPoble, NO-DISPONIBLE); mai es dona per desat. */
+const poblesCompletats = new Set();
+/* El DEFAULT de 2609110600:10 i el literal de 2610282100:800: una fila amb este
+   poble no l'ha triat ningú. */
+const POBLE_DE_SERIE = 'La Torre de les Maçanes';
+async function completaPobleDeLAlta(fila, user, config) {
+  const propi = textNet(fila?.town_name);
+  /* La columna username, present (també nul·la), és el senyal real de la migració. */
+  if (Object.hasOwn(fila ?? {}, 'username') || (propi && propi !== POBLE_DE_SERIE) || poblesCompletats.has(user.id)) return fila;
+  const poble = textNet(user.user_metadata?.town_name);
+  if (!poble || poble === propi) return fila;
+  poblesCompletats.add(user.id);
+  try {
+    const files = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config,
+      { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: { town_name: poble } });
+    if (getCurrentUser()?.id !== user.id) return fila;
+    return Array.isArray(files) && files[0]?.id === user.id ? files[0] : fila;
+  } catch (error) {
+    console.warn('[supabase] Avís completant el poble de l’alta:', error?.message);
+    return fila;
+  }
+}
+
 export async function getProfile(config = {}) {
   const user = getCurrentUser();
   if (!user) return null;
@@ -179,7 +224,7 @@ export async function getProfile(config = {}) {
     /* Pla 261018_1605 (Tasca 0, D7; ordre del Mestre, 18-10-2026) · La fila de
        la persona pilot porta les dades canòniques on no en porta cap
        (hidrataPerfilPersonaPilot només omple buits); qualsevol altra, tal qual. */
-    if (rows?.[0]) return hidrataPerfilPersonaPilot(rows[0], user);
+    if (rows?.[0]) return hidrataPerfilPersonaPilot(await completaPobleDeLAlta(rows[0], user, config), user);
     /* Ordre del Mestre (261002) · SENSE FILA no és cap error: és una persona
        orfe (el trigger d'alta no la va poder crear, o l'alta per correu no ha
        passat mai per una entrada explícita) i el cercador no la troba. Es
@@ -351,7 +396,21 @@ export async function updateProfile(entrada, config = {}) {
   /* P1-68 · L'identificador va per la seua RPC; la resta, pel PATCH de sempre. */
   if (entrada && typeof entrada === 'object' && Object.hasOwn(entrada, 'username')) {
     const { username, ...resta } = entrada;
-    const fila = await desaElMeuUsername(username, config);
+    const perfilVigent = capturaSessio();
+    let fila;
+    try {
+      fila = await desaElMeuUsername(username, config);
+    } catch (error) {
+      perfilVigent();
+      /* APP-D1 · Sense la RPC al servidor (NO-DISPONIBLE: 2610282100 pendent)
+         i amb més camps, la resta es desa igual i la fila diu què no s'ha
+         desat (campsNoDesats, el contracte de columnesOpcionals): cap camp
+         es dona per desat ni es descarta en silenci. Qualsevol altre error,
+         i l'identificador sol, rebutgen com sempre. */
+      if (error?.code !== 'NO-DISPONIBLE' || !Object.keys(resta).length) throw error;
+      const desada = await updateProfile(resta, config);
+      return ambDescartats(desada, [...(desada?.campsNoDesats || []), 'username']);
+    }
     return Object.keys(resta).length ? { ...(await updateProfile(resta, config)), ...fila } : fila;
   }
   const updates = ambIconNormalitzat(entrada);
@@ -380,10 +439,43 @@ export async function updateProfile(entrada, config = {}) {
   }
 
   // Filtrar camps segurs per a RLS (evita l'error 42501 amb camps com logo_url)
-  const safeUpdates = {};
+  let safeUpdates = {};
   for (const k of CAMPS_PERFIL) {
     if (updates[k] !== undefined) safeUpdates[k] = updates[k];
   }
+
+  /* Primer el perfil i, només si confirma la fila, la còpia de GoTrue. Una fila que
+     la RLS no deixa tocar (baixa en curs: «profiles sense baixa») no deixa GoTrue
+     desquadrat amb un canvi que el perfil no té. */
+  current();
+  let rows;
+  const descartats = [];
+  for (;;) {
+    try {
+      rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
+        { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
+      break;
+    } catch (error) {
+      const absent = errorDeColumnaAbsent(error, safeUpdates);
+      if (!absent) throw error;
+      /* APP-D1 · Amb més camps al cos, la resta es desa igual: el PATCH no ha
+         escrit res (PostgREST valida les columnes abans d'executar) i es torna
+         a enviar sense la columna que el servidor diu que no té, com fa
+         columnesOpcionals a Notes; com a molt un reintent per columna i qui
+         crida rep campsNoDesats. Sola, o sense nom de columna, l'error de sempre. */
+      if (!absent.columna || Object.keys(safeUpdates).length < 2) throw absent;
+      const { [absent.columna]: fora, ...resta } = safeUpdates;
+      void fora;
+      safeUpdates = resta;
+      descartats.push(absent.columna);
+      current();
+    }
+  }
+  current();
+  if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
+    throw new Error('El perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
+  }
+  /* Només del que la fila ha confirmat: un camp descartat no arriba a GoTrue. */
   const metadata = {};
   for (const k of CAMPS_METADATA) {
     if (safeUpdates[k] !== undefined) metadata[k] = safeUpdates[k];
@@ -393,28 +485,12 @@ export async function updateProfile(entrada, config = {}) {
   if (Object.hasOwn(metadata, 'avatar_url') && !metadata.avatar_url) metadata.picture = null;
   /* Només lema, presentació o capçalera: GoTrue no hi té res a veure. */
   const ambMetadata = Object.keys(metadata).length > 0;
-
-  /* Primer el perfil i, només si confirma la fila, la còpia de GoTrue. Una fila que
-     la RLS no deixa tocar (baixa en curs: «profiles sense baixa») no deixa GoTrue
-     desquadrat amb un canvi que el perfil no té. */
-  current();
-  let rows;
-  try {
-    rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
-      { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
-  } catch (error) {
-    throw errorDeColumnaAbsent(error, safeUpdates) || error;
-  }
-  current();
-  if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
-    throw new Error('El perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
-  }
   const authUser = ambMetadata
     ? await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { data: metadata } })
     : null;
   current();
   if (ambMetadata) actualitzaUsuariSessio({ ...metadata, ...(authUser || {}) });
-  return rows[0];
+  return ambDescartats(rows[0], descartats);
 }
 
 export async function updateUserPassword(password, config = {}) {
@@ -591,9 +667,26 @@ export function loginWithMagicLink(email, config = {}) {
   throw new Error("L'entrada per Magic Link està temporalment desactivada per seguretat (manca PKCE). Utilitza l'entrada amb Google.");
 }
 
-/* Sense la migració aplicada (404) no hi ha res a reparar ni a avisar. */
+/* Sense la migració aplicada (NO-DISPONIBLE) no hi ha res a reparar ni a avisar. */
 function avisaAlta(error) {
-  if (error?.status !== 404) console.warn('[supabase] Avís completant l’alta:', error?.message);
+  if (error?.code !== 'NO-DISPONIBLE') console.warn('[supabase] Avís completant l’alta:', error?.message);
+}
+
+/* APP-D1 (pla 261029_0216, Pas 2; auditoria Gemini 261029_0336 §2.5) · El
+   client només coneix UNA signatura de completa_la_meua_alta, la de
+   2609261500 ({ p_tenant_id }); cap crida no porta p_username ni p_town_uuid
+   (2610282100 no la redefinix). Un 404 de la ruta o un PGRST202 (la funció o
+   la signatura no són al servidor; rpc() ja els plega a 404) és una base
+   sense la migració: NO-DISPONIBLE, amb el vocabulari del port (seguiments,
+   perfils, organitzacions) i la causa darrere; l'alta i l'entrada no cauen
+   i la consola no s'embruta. Un AbortError, la xarxa caiguda i la resta
+   d'errors passen tal qual. */
+const ALTA_PENDENT_DE_MIGRACIO = 'El servidor d’este poble encara no sap completar l’alta: cal aplicar-hi una migració pendent.';
+const esquemaAbsent = (error) => Number(error?.status) === 404 || /PGRST20[25]/.test(String(error?.message || ''));
+function traduixErrorDAlta(error) {
+  if (!error || typeof error !== 'object' || error.name === 'AbortError' || esBackendInabastable(error)) return error;
+  if (!esquemaAbsent(error)) return error;
+  return Object.assign(new Error(ALTA_PENDENT_DE_MIGRACIO, { cause: error }), { code: 'NO-DISPONIBLE', status: 404 });
 }
 
 /* La reparació sola, amb la seua promesa: completaAlta no l'espera i getProfile
@@ -607,7 +700,7 @@ function reparaAlta(config) {
       const fila = Array.isArray(resposta) ? resposta[0] : resposta;
       if (fila?.poble_nou === true) globalThis.window?.dispatchEvent(new CustomEvent('sdp:refresh-data'));
       return fila;
-    });
+    }, (error) => { throw traduixErrorDAlta(error); });
 }
 
 /* D11 (260926). L'alta amb Google no porta el poble a les metadades i el trigger la pot

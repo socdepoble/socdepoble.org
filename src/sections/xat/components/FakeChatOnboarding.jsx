@@ -204,7 +204,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       const reply = {
         id: `r-${Date.now()}-${seq}`,
         seq,
-        text: t('section.xat.fake.reply', "Açò és una simulació. Registra't per a parlar amb els pobles de veritat!"),
+        /* P1-52 (Fita 16 del Llibre Mestre, 261029) · Literal del Mestre, pla i sense pompositat; la clau el porta en les cinc llengües. */
+        text: t('section.xat.fake.reply', 'Açò és una simulació. Si vols guardar la conversa, has de registrar-te, i ja està.'),
         sender: 'other',
         author: fil.name,
         is_ai: fil.tipus === 'ia',

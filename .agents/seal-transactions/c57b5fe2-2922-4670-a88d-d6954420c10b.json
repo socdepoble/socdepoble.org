@@ -1,0 +1,17 @@
+{
+  "id": "c57b5fe2-2922-4670-a88d-d6954420c10b",
+  "session": "24ba06f5-e6eb-4924-b23d-05f182520ad0",
+  "operationId": "torn_74bad4b9-retirar_import_sense_us_executar_poda_lots_eslint_zero_avisos-24ba06f5",
+  "claim": "24ba06f5-e6eb-4924-b23d-05f182520ad0:governance-write",
+  "planHash": "5ffdca9fc5434f2c279faf57b6bea70db94db5842ea24e48aef536a2773d63ff",
+  "beforeSeal": "33d2fad6f1b60db328d764e6529abc45686ffe3cdfbf2ed2714ed3fa33875a37",
+  "files": [
+    {
+      "path": "tooling/maquinaria/executar_poda_lots.mjs",
+      "before": "afd383e0ead27919fdacb7694ca77c7e8b22c5a590a75cac9fd193338cfd4a98",
+      "after": "81f5035be25a77efc9c5008bd1434b9f7d91da6ed8dac75826d1fea63042f48d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "460e83cbbe70abf3fccd88984712c768a765ca37d0382f84b2dc97738dc6fe61"
+}

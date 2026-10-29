@@ -337,7 +337,9 @@ describe('les 18 il·lustracions de les ordres', () => {
     for (const ruta of rutes) expect(esFitxerAmbPes(ruta), ruta).toBe(true);
     for (const id of ALTRES_VINYETES) expect(esFitxerAmbPes(`/assets/ui/plugins/${id}_vinyeta.${extensioDeVinyeta(id)}`), id).toBe(true);
     // La carpeta de vinyetes no en porta cap altra: les 14 i les ALTRES_VINYETES són totes les que hi ha.
-    const delDisc = readdirSync(alDisc('/assets/ui/plugins'));
+    // Pla 261029_0216 (R-01) · La variant social d'una vinyeta (-social-1200x630.jpg,
+    // imatgeSocial.js · VARIANTS_SOCIALS) només va al <head>: no és cap vinyeta.
+    const delDisc = readdirSync(alDisc('/assets/ui/plugins')).filter((f) => !f.endsWith('-social-1200x630.jpg'));
     expect(delDisc.filter((f) => f.endsWith('.jpg')).sort())
       .toEqual([...VINYETES, ...ALTRES_VINYETES].filter((id) => !VINYETES_NOMES_WEBP.has(id)).map((id) => `${id}_vinyeta.jpg`).sort());
     // Cada una té la seua .webp (la bessona o, sense original, la il·lustració), i cap altra.

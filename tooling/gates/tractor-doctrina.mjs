@@ -153,10 +153,13 @@ const COMANDAMENTS = new Set([
 
 /** Decidix si un token té forma de camí de fitxer i no de comandament o concepte. */
 function esCandidat(brut) {
-  const t = brut.trim().replace(/[.,;:]+$/, '');
+  const t = brut.trim().replace(/[.,;:]+$/, '')
+    .replace(/:[0-9]+(?:[-–][0-9]+)?(?:,[0-9]+(?:[-–][0-9]+)?)*(?::[0-9]+)?$/, '');
   if (!t || t.length > 240) return null;
   // Metavariables documentades de la CLI i patró de taxonomia, mai camins reals.
-  if (/^(?:aammdd_hhmm_|AAMMDD_HHMM_)/.test(t) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
+  if (t.split('/').some(segment => /(?:^|_)aammdd(?:_hhmm)?(?:[_.]|$)/i.test(segment)) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
+  // Una extensió nua no promet un fitxer; .env sí que és un nom concret.
+  if (/^\.[a-z0-9]+$/i.test(t) && EXTENSIONS.has(t.slice(1).toLowerCase()) && t.toLowerCase() !== '.env') return null;
   if (/^(https?:|mailto:|#|<|\{)/.test(t)) return null;
   if (/[*?<>|"']/.test(t)) return null;              // globs i cometes: no és un camí concret
   if (/\s/.test(t)) return null;                      // cap camí amb espais a la doctrina

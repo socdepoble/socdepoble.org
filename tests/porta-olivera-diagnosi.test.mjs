@@ -171,7 +171,7 @@ test('[CONTROL D6] l’informe i la simulació resolen l’arrel de l’eina enc
   const x = `${VELL}_0900_auditoria_rancia.md`;
   const arrel = mas(t, ['# Índex', '', `- [[${sense(x)}]]`, '']);
   posa(arrel, x);
-  for (const file of ['tooling/gates/porta-olivera.mjs', 'tooling/lib/arrel.mjs', '.agents/AGENTS.md']) {
+  for (const file of ['tooling/gates/porta-olivera.mjs', 'tooling/lib/arrel.mjs', 'tooling/lib/markdown-prose.mjs', '.agents/AGENTS.md']) {
     fs.mkdirSync(path.dirname(path.join(arrel, file)), { recursive: true });
     fs.copyFileSync(path.join(REPO, file), path.join(arrel, file));
   }

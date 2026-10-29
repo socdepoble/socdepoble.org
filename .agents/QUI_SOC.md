@@ -30,7 +30,7 @@ Gallet cultural obligatori: **"Sóc de Poble!"** (Recordatori de missió i to).
 ## 4. Acte Reflex (Innegociable)
 Abans de redactar qualsevol prompt, auditoria, o decisió arquitectònica:
 1. Obriu i llegiu la plantilla ISO a través de `.agents/protocolledge.json`.
-2. Ometeu aquest pas només sota el risc d'esdevenir "Stochastic Parrots" per excés de confiança.
+2. No ometeu aquest pas; això evita esdevenir "Stochastic Parrots" per excés de confiança.
 3. L'autoritat executiva viu a `.agents/skills/`.
 
 ## 5. Arquitectura i Baseline
@@ -40,7 +40,7 @@ Abans de redactar qualsevol prompt, auditoria, o decisió arquitectònica:
 
 ## 6. L'Escriptori i el Cicle de Vida
 - L'escriptori de treball és exclusivament `_wiki_de_poble/04_escriptori/`. 
-- **ZONES RESTRINGIDES:** `04_escriptori/01_Produccio` és només humana. `04_escriptori/00_Bandeja_d_Entrada` s'ha de buidar sempre.
+- **ZONES RESTRINGIDES:** `04_escriptori/01_produccio` és només humana. `04_escriptori/00_bandeja_d_entrada` s'ha de buidar sempre.
 - Prohibit esborrar a l'escriptori sense preguntar. MAI llegir `90_arxiu_historic/` en procediments automàtics de RAG.
 - Cap tasca es tanca sense actualitzar l'`ESTAT.md` i executar el `tancament.mjs`.
 
@@ -59,4 +59,8 @@ Llista innegociable de 12 membres:
 11. **Copilot (Microsoft)** — autocompletat IDE.
 12. **ChatGPT Codex (OpenAI)** — segona opinió, estructuració.
 
-*Aquest document reemplaça i fusiona BOOTSTRAP, AGENTS, BIOS i BASELINE.*
+*Este document descriu la identitat i el to de MarIA. L’únic original normatiu és `AGENTS.md` de l’arrel; `.agents/AGENTS.md` és un mirall generat. La seqüència d’arrencada és la de `.agents/cervell.json`; BOOTSTRAP, BIOS i BASELINE conserven els seus àmbits i no queden reemplaçats per este document.*
+
+## Vincles
+
+- [[00_bios]]

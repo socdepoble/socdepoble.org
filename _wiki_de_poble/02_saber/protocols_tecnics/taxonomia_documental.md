@@ -50,7 +50,7 @@ Cada categoria correspon a una ruta de `.agents/protocolledge.json`, que és qui
 <!-- SDP:TAXONOMIA:CATEGORIES -->
 | Categoria | Ruta documental | Nota |
 |---|---|---|
-| `acta` | `acta` | també a `10_actes/`; `acta_marmota_…` és categoria `acta` i títol `marmota_…` |
+| `acta` | `acta` | creació nova només a `10_actes/`; `acta_marmota_…` és categoria `acta` i títol `marmota_…` |
 | `auditoria` | `auditoria` | `aammdd_hhmm_auditoria_claude.md` o `…_auditoria_codex.md` |
 | `brainstorming` | `brainstorming` | |
 | `branding` | `branding` | |
@@ -63,15 +63,16 @@ Cada categoria correspon a una ruta de `.agents/protocolledge.json`, que és qui
 | `micro_bundle` | `bundle` | només per a IAs externes |
 | `micro_prompt` | `prompt.consell` | només per a IAs externes |
 | `petorreta` | `prompt.local` · `prompt.consell` | |
-| `pla` | `planificacio` | |
+| `pla` | `pla.implementacio` | àlies de categoria de la plantilla única |
 | `pla_implementacio` | `pla.implementacio` | el títol és el cognom exacte de la petorreta que l'origina |
 | `produccio` | `modo_produccion` | |
 | `prompt` | `prompt.local` · `prompt.consell` | per a Claude i Codex, només `prompt`, mai `macro_` ni `micro_` |
 | `skill` | `skill` | l'esborrany a l'Escriptori; la skill viva es diu `SKILL.md` |
+| `solucio` | sense ruta | artefacte transitori de torn (porta Olivera), sense plantilla pròpia |
 | `tasques` | sense ruta | transitòria de torn (porta Olivera) |
 <!-- /SDP:TAXONOMIA:CATEGORIES -->
 
-Una categoria nova necessita primer una ruta a `.agents/protocolledge.json` (amb plantilla i seccions) i després una fila ací i a `tooling/wiki/taxonomia.json`. `incidencia` no és al catàleg perquè no té ruta ni plantilla.
+Una categoria de document formal nova necessita primer una ruta a `.agents/protocolledge.json` (amb plantilla i seccions) i després una fila ací i a `tooling/wiki/taxonomia.json`. `solucio` i `tasques` són artefactes transitoris admesos per la porta Olivera, sense ruta formal; esta excepció no crea plantilles. `incidencia` no és al catàleg.
 
 ## Superfícies i excepcions
 
@@ -94,7 +95,7 @@ La porta de taxonomia ja és instal·lada a `tooling/gates/porta-taxonomia.mjs`,
 ## Deute conegut
 
 - Les actes de `10_actes/` porten `ACTA_MARMOTA` en majúscules. La plantilla d'acta ja diu «minúscules i sense accents».
-- Tres fonts donen tres regles per al nom del pla d'implementació (plantilla `pla.md`, porta Olivera i lliçó del 22-09). Esta pàgina seguix la porta i la lliçó: `aammdd_hhmm_pla_implementacio_COGNOM.md`.
+- La ruta antiga `planificacio` està retirada per a contextos nous. Els rebuts amb instantània anterior conserven la seua plantilla i versió; no es reescriuen. La plantilla operativa única és `pla_implementacio.md`.
 - `document.mjs` i la porta Olivera no validen la categoria: accepten qualsevol paraula després de l'hora.
 
 ## Vincles

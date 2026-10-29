@@ -15,16 +15,17 @@
  * null si la font no existix i MAI llança: un error de lectura és null, no un
  * verd. Cap funció escriu res ni llig `.sdp-reflex/`.
  *
- * Sense imports relatius (només node:fs, node:path i node:crypto): les dues
- * primitives documentals que calen (`anchored` de tooling/documental/core.mjs
- * i la signatura de tooling/documental/ledger.mjs + tooling/verify-ledger.mjs)
- * es repliquen ací, amb la mateixa semàntica, perquè el mòdul es puga provar
- * des del laboratori i no arrossegue js-yaml ni el descobriment d'arrel.
+ * Els enllaços es lligen amb l'extractor documental compartit, que usa
+ * markdownProse. No hi ha cap còpia del lexer de codi/comentaris ací.
+ * La selecció d'ancoratA continua acotada a wikilinks de nom curt: no és
+ * una porta general del graf. La comprovació de signatura del LEDGER conserva
+ * el contracte existent amb ledger.mjs i verify-ledger.mjs.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { exemptDeRebut } from '../documental/core.mjs';
+import { extractDocumentLinks } from '../lib/document-links.mjs';
 
 const DIR_TORNS = '.agents/runtime/turns';
 const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
@@ -118,30 +119,17 @@ export function resumTorns(root) {
 
 /* ══════════════════════ Escriptori ══════════════════════ */
 
-/** Text sense blocs de codi ni comentaris HTML (rèplica de `withoutCode`, core.mjs). */
-function senseCodi(cos) {
-  let tanca = null;
-  return cos.replace(/<!--[\s\S]*?-->/g, '').split('\n').filter((linia) => {
-    const m = /^ {0,3}(`{3,}|~{3,})/.exec(linia);
-    if (m) {
-      if (!tanca) tanca = m[1];
-      else if (m[1][0] === tanca[0] && m[1].length >= tanca.length) tanca = null;
-      return false;
-    }
-    return !tanca;
-  }).join('\n');
-}
-
 /**
- * El document apareix com a [[nom]] a l'índex, fora de blocs i de codi en
- * línia? Rèplica exacta de `anchored` (core.mjs): el nom va sense `.md` i un
- * enllaç amb camí (`[[../10_actes/x]]`) no ancora un document solt.
+ * Indicador de vigilància de noms curts de l'índex. Conserva l'API anterior:
+ * [[nom]], àlies i fragments sí; nom.md, camins i URLs Markdown no.
+ * La interpretació de codi, comentaris i escapaments és la de l'extractor comú.
  */
+function nomsAncorats(index) {
+  return new Set(extractDocumentLinks(index).filter((link) => link.kind === 'wiki').map((link) => link.target));
+}
 export function ancoratA(index, nom) {
   if (typeof index !== 'string' || typeof nom !== 'string') return false;
-  const net = senseCodi(index).replace(/`[^`]*`/g, '');
-  const base = path.basename(nom, '.md');
-  return [...net.matchAll(/\[\[([^|\]#]+)(?:[|#][^\]]*)?\]\]/g)].some((m) => m[1].trim() === base);
+  return nomsAncorats(index).has(path.basename(nom, '.md'));
 }
 
 /**
@@ -162,11 +150,13 @@ export function resumEscriptori(root) {
       ?? entrades.find((e) => e.isFile() && e.name.toLowerCase() === nom);
     const entradaIndex = fitxer(INDEX_ESCRIPTORI);
     const index = entradaIndex ? llig(path.join(dir, entradaIndex.name)) ?? '' : '';
+    // Una sola extracció per instantània, encara que hi haja molts documents.
+    const ancores = nomsAncorats(index);
     const rebuts = new Set((llegeixTorns(root) ?? []).flatMap((t) => t.fitxers));
     const documents = entrades
       .filter((e) => e.isFile() && !e.name.startsWith('.') && /\.md$/i.test(e.name) && e.name.toLowerCase() !== INDEX_ESCRIPTORI)
       .map((e) => e.name).sort()
-      .map((nom) => ({ nom, ancorat: ancoratA(index, nom), ambRebut: exemptDeRebut(root, `${ESCRIPTORI}/${nom}`) ? null : rebuts.has(`${ESCRIPTORI}/${nom}`) }));
+      .map((nom) => ({ nom, ancorat: ancores.has(path.basename(nom, '.md')), ambRebut: exemptDeRebut(root, `${ESCRIPTORI}/${nom}`) ? null : rebuts.has(`${ESCRIPTORI}/${nom}`) }));
     const carpetaSafata = entrades.find((e) => e.isDirectory() && e.name === SAFATA)
       ?? entrades.find((e) => e.isDirectory() && e.name.toLowerCase() === SAFATA);
     // Una Safata il·legible no és una Safata buida: l'excepció fa null el resum sencer.

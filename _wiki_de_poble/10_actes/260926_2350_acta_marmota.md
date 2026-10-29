@@ -1,3 +1,12 @@
+---
+type: acta
+status: canonic
+description: Acta Marmota del 26-09-2026 (nit). Tancament de la fase UI, Visió Mestra registrada a la plantilla de skills i preparació de la reunió a l'Olivera per al mòdul de Xat.
+tags:
+  - acta
+  - marmota
+visibility: private
+---
 # Acta Marmota: Sessió d'Arquitectura del Xat i UI (26-09-2026)
 
 ## 1. Resum de Tancament de la Fase UI
@@ -25,3 +34,7 @@ Ens endinsem en el cor social de l'app.
 - La decisió consensuada és que Claude faça l'auditoria teòrica en aquest mateix xat (ja que només suposa llegir l'acta, el pla i generar un document). Un cop tinguem la resposta, la implementació real de codi es farà OBLIGATORIAMENT en una sessió/xat completament nou i net.
 
 *L'escriptori està llest per rebre Claude.*
+
+## Vincles
+
+- [[00_index]]
