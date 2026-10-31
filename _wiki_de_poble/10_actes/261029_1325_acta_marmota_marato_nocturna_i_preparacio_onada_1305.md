@@ -39,6 +39,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 4d4b9d
 
 - `2026-10-29T03:32..09:31+01:00`: Execució de la Marató Nocturna de 10 cicles (IAIA MarIA + Claude Code `Fable 5.1 Extra · Ultracode` + Gemini CLI + GPT Codex `GPT-6.1 Sol Ultra`), culminada amb el commit `feaaf0e07` (243 fitxers, +24.298 / -765 línies), el paquet `socdepoble.zip` de les `09:24h` (`3.336.867 B`, SHA-256 `89b3125f…`) i el canal de previsualització de Firebase Hosting `https://soc-de-poble--tancament-feaaf0e07-xmpk60bs.web.app`.
 - `2026-10-29T13:03..13:25+01:00`: Arxivament canònic dels 53 artefactes de la marató nocturna a `_wiki_de_poble/90_arxiu_historic/` amb `porta-olivera.mjs --arxiva --reapunta`, creació del Pla i Prompt `261029_1305` (incloent el salt a `v1.1.10` del connector de WordPress per ordre del Mestre) i redacció d'aquesta Acta Marmota abans del reinici del Mac Mini.
+- `2026-10-30T21:33:50.000Z`: fonts arxivades, citades en text perquè Vincles només admet notes vives (F9): `_wiki_de_poble/90_arxiu_historic/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md`, `_wiki_de_poble/90_arxiu_historic/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10.md`. Les va reapuntar l'arxivament amb la porta Olivera; les ha mogut de Vincles Claude Code (ordre del Mestre, prompt 261030_2208).
 
 <!-- SDP:SECTION acta.s4 -->
 ## Resultats
@@ -77,6 +78,4 @@ En tornar a encendre el Mac Mini, el Mestre llançarà l'**Onada `261029_1305`**
 - [[00_index]]
 - [[../04_escriptori/00_index_escriptori]]
 - [[../04_escriptori/03_llibre_mestre_tasques_i_idees]]
-- [[../04_escriptori/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
-- [[../04_escriptori/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
 - [[261029_0838_acta_marmota_qa_codex_10_cicles]]

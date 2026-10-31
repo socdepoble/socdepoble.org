@@ -83,7 +83,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
   1. **Eradicació de les 10 fotos residuals de Wikipedia:** L'arxiu ha de recuperar i exposar tot el catàleg real de fotografies patrimonials, pobles, paisatges i il·lustracions generades pel Nano (més de 100-200 arxius reals).
   2. **Erradicació de rutes duplicades:** Eliminar la falsa pàgina duplicada `/multimedia/town-benifallim`. Punxar a Benifallim ha de portar a la pàgina canònica `/pobles/benifallim`.
   3. **Visor d'Imatges tipus Google Fotos (Lightbox / Modal):** En clicar sobre qualsevol fotografia a `/multimedia`, no s'obri una pàgina estranya; s'obri un visor net a pantalla completa amb fons fosc, la imatge en alta resolució, navegació anterior/següent i una barra lateral/inferior de metadades EXIF (data, hora, coordenades GPS, poble, autor i drets).
-  4. **Mapa Fotogràfic Interactiu d'Emowe al Mur / Territori:** Integració del motor de mapa HTML local-first d'Emowe per visualitzar les fotografies sobre el mapa del territori amb agrupació dinàmica per zoom, cronologia d'etapes i respecte absolut per la privacitat des del dispositiu.
+  4. **Mapa Fotogràfic Interactiu d'Emowe al Mur / Territori:** Integració del motor de mapa HTML local-first d'Emowe per visualitzar les fotografies sobre el mapa del territori amb agrupació dinàmica per zoom, cronologia d'etapes i respecte absolut per la privacitat des del dispositiu. <!-- tractor-psicopatia: allow ZOMBIE-LOCAL-FIRST -- acta tancada del 261016: «local-first» descriu el motor de mapa d'Emowe, no un requisit d'arquitectura del Mas -->
 
 ### 4. El Mandat Suprem Humà: Quadre de Comandament Web i Rescat de 418 Ítems
 - **Diagnòstic de Fatiga Humana:**

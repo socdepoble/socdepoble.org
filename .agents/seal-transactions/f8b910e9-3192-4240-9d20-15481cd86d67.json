@@ -1,0 +1,17 @@
+{
+  "id": "f8b910e9-3192-4240-9d20-15481cd86d67",
+  "session": "070dfd31-b6aa-4ed5-a64d-7e673129556f",
+  "operationId": "torn_438fe070-hora_final_relleu_estat_i_estat_del_torn_2208-070dfd31",
+  "claim": "070dfd31-b6aa-4ed5-a64d-7e673129556f:governance-write",
+  "planHash": "edf8a2ea523e484876a76f47c82972b659c2862a110438285524e45aafbe5252",
+  "beforeSeal": "56fefcb9e940e526b686f19d67636182821dcd4d45b20fc14b0e63fe1f9127aa",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "eeb608160792d0aaf1bc15fe9303401ad7f1b28b892524fb42cf1a3a0b45d3dc",
+      "after": "b80848c9053805bee921729e50b48032a4c0c8bda3d27530ff52427f3257c7d2"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

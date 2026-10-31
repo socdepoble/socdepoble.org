@@ -115,12 +115,12 @@ Per a l'agent de consola **Claude Code**, el procediment oficial s'executa amb e
 
 Tota sessió d'auditoria de seguretat ha de dipositar els resultats amb la següent estructura:
 
-1. **`CLAUDE-SECURITY-RESULTS.md` / `AAMMDD_HHMM_auditoria_seguretat.md`:**
+1. **`CLAUDE-SECURITY-<data>/CLAUDE-SECURITY-RESULTS.md` / `AAMMDD_HHMM_auditoria_seguretat.md`:**
    - **ID de la troballa i CWE:** Codi únic (`F01`, `F02`...) i categoria MITRE CWE (`CWE-20`, `CWE-284`, `CWE-1333`...).
    - **Severitat i Confiança:** Crítica, Alta, Mitjana o Baixa.
    - **Escenari d'explotació reproduïble:** Comanda o payload exacte que demostra la vulnerabilitat.
    - **Pegat i prova de regressió:** Ruta del `.patch` i del test que el certifica.
-2. **`pegats/F<n>.patch` i `pegats/PEGATS.md`:** Fitxers diff estàndard de Git verificats amb `git apply --check` i índex d'ordre d'aplicació.
+2. **`pegats/F<n>.patch` i `CLAUDE-SECURITY-<data>/pegats/PEGATS.md`:** Fitxers diff estàndard de Git verificats amb `git apply --check` i índex d'ordre d'aplicació.
 3. **Evacuació posterior:** Un cop aplicats i comessos els pegats, la carpeta d'auditoria de laboratori s'evacua a la carpeta satèl·lit canònica `../_investigacio_ia_de_poble/`.
 
 ## 6. Llista de Comprovació Pre-Release (Sentinella Obligatori)

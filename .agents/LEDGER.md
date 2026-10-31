@@ -1125,4 +1125,45 @@ Torn `torn_74bad4b9-c817-4dca-96b8-eb6ff86a0da4`. Pla [[261029_0216_pla_implemen
 G1 0838 aplicat per executor amb manifest Node autoritzat. Transacció be5c6198-75bf-4207-8a83-8a445e95c019; SG-02 intacta; segell 8383b204. Informe 261029_1447_auditoria_codex.md vàlid; G1 100/100, precommit, lint de fonts i Vitest complet verds. Reserves globals i límits del sandbox documentats. LEDGER previ idèntic a HEAD i inventari inicial però checksum invàlid (cos 967823b10057f2e4c0326eeaa9fe11305daba95c1012b2c5e099da4105b8ccc8; marcador 89721b4309e3aa94ca96d244591948700f0dbb955e87b9022e8700f4d639d664); cos preservat i signatura recalculada amb esta entrada. Consulta inicial --help va obrir el torn reutilitzat de codi amb actor genèric, sense falsejar inventari. Cap commit, desplegament, SQL remot, flag o recurrència propis.
 
 
-<!-- HASH: e56af28c3c7d47374b0b98d7bbed79a11dfa106ac2795e4147d584af1180edd4 -->
+## 2026-10-29T18:15:29.513Z · Codex · torn_a1fd0148-ebd5-4317-91a9-733ba1511a91
+
+QA1852 documental completada sobre pla1605: informe 261029_1859_auditoria_codex.md vàlid, contrast de Gemini1858 i dos àrbitres interns. Bateria165suites/2.569pass/3skip, precommit4.315Vitest+262Node i lint verds; P1/P2 i estadiE–G documentats. Canvi concurrent de logout revalidat68/68. Mestre i ESTAT actualitzats sense tocar fonts d’implementació, índexGit ni dades humanes; cap Git destructiu, publicació, flag o recurrència. El tancament conserva scope documents i no oculta deltes aliens.
+
+
+## 2026-10-29T22:33:55.792784+00:00 · Codex · QA Ronda 2 · torn_a1fd0148-ebd5-4317-91a9-733ba1511a91
+
+Quatre cicles QA2258 en lectura; matriu D01–D15 del Mestre completa i provisional. No10/10global: resten P1 permisos/selector/desat després oblit i clearIDB silenciós (QA-R2-03/04), contractes actors/escapes/panells, bot real, latència i Versions editorial. Bateria184:2951pass/2fail/3skip; SAS/App passen aïllats; lot40 posterior823pass/1fallada de suport i18n. Lint inicial bot1error+2avisos, corregit per Claude i revalidat complet amb exit0. Design0crítics/12avisos; Cens,Wiki,Enxufe,Persistència,RLS estàtica verds. No se sumen runs solapats ni es presenta25.195 de Claude com prova pròpia. Cap font de Claude editada, Git destructiu, SQL remot, flag o recurrència. Informe1859 i Mestre amb arbitratge independent, sense fals verd. Metadades per executor/CAS preservant història.
+
+
+## 2026-10-29T22:43:15.166Z · Codex · Ampliacions finals IDEA-58/31 de QA Ronda 2
+
+Ampliació final dels prompts2258/1605: IDEA-58 encara sense gestors de fletxes/HomeEnd entre columnes ni graella2D (QA-R2-12); IDEA-31 encara sense proveïdor lliure, endpoint local, URL de SPA i emissió d’atribut WordPress sense clau (QA-R2-13, inclou marcatge.php). Client/columnes47/47 i servei antic36/36 amb transports falsos passen, però no acrediten activació. Llint complet revalidat exit0; resta porta de suport i18n. Document/Plantilla Viva/Olivera verds; tancament general només rebutja deltes de codi fora de scope documental. Cap canvi de codi, xarxa de traducció, servei, flag o recurrència.
+
+### 2026-10-29T23:26:02.942Z · Codex · NLnet Fediversity 2026-08-1a6 · estudi documental
+
+Torn torn_b3a4417e-c57f-40d5-91e3-d2d51c1d5828; informe i pla2353 creats amb rebuts individuals. Fonts de gestoria en lectura, cap canvi de codi.445/445 en11fitxers, cap suma de proves alienes. Revisio oficial de termini/programa i transicioIA; P1-23 resta obert amb NGI-01..09, pressupost original i fites proposades. No es reconstruix log ni s’afirma adjudicacio. Mestre/ESTAT/LEDGER preserven antecedents i precisions concurrents; mutacio CAS, lease governance-write, segell intacte i rebut consumible. Resultat de tancament literal a l’informe, sense ocultar deltes aliens.
+
+
+261030 | correcció | core-identitat | Respondre sempre al Mestre en valencià, també els avisos curts
+261030 | llei | sdp-universal-page | Zero taules de prosa, H3 després de l'entradilla i hipervincles vius
+261030 | llei | core-calibratge-visual-nano | Punt gamberro d'Ibáñez contra el «Mundo Feliz» a les il·lustracions
+
+## 2026-10-30T19:35:00Z · Claude · Tancament del lot 261030 · torn_438fe070-961a-4576-bb08-f597a4daf763
+
+Ordres del Mestre del 30-10 (guàrdia nocturna 0252, tancament 10/10, cicle 4, tres columnes fixes, usabilitat de les icones, `/consola`, A1–A4, B1–B4, Bloc de Notes i tancament del lot), executades sense commit ni desplegament. Workflows Gauntlet c2, c3, c4, workspace, usabilitat, consola, f4a, f4b i la prova del Lector, amb crítics, verificació adversarial, correctors i porta d'àrea: f4a 22 úniques (14 corregides, 6 per al Mestre, 2 refutades), f4b 21 úniques (15 corregides, 3 per al Mestre, 3 refutades), Lector 3 de 3 verificadors sense refutació. Esta transacció alinea `MapaFotografic.css` a la línia base del vocabulari (Leaflet sense capa), escriu la lliçó de `sdp-app-grid-shell`, afig l'ESTAT del tancament i torna a signar este LEDGER, que la transacció de les 03:29 va deixar amb el HASH vell; l'executor refà `SKILLS_SEAL.json`. Frontissa `fediversity` aprovada per autorització del Mestre. Al Llibre Mestre, quatre SHA rebasats corregits per patch-id idèntic. Porta final i decisions del Mestre al relleu de tancament de [[261029_1723_auditoria_claude]].
+
+261030 | llei | sdp-app-grid-shell | Tres columnes fixes fora de mòbil i icona que plega
+261030 | llei | sdp-app-grid-shell | Columnes obertes en arrencar; navegació en rail de 721 a 1023
+
+## 2026-10-31T03:36:00+01:00 · Claude · Tancament pre-desplegament del prompt 261030_2208 · torn_f298d1e0-3122-47a0-b815-bf2f719c5be3
+
+Prompt 2208 (aprovat pel Mestre) i ordres del Mestre al xat de la nit del 30 al 31-10, executades sense commit ni desplegament amb sis workflows Gauntlet (constructors, crítics, refutadors, correctors): cobertura social de 34 rutes, `/disseny` i `/consola` públiques amb instantània sanejada de la Consola, tauler d'Umami nadiu com a `QuadreDeComandament` de Pedra Seca, llei de les llistes, polits de T4 i portes del cens segons les decisions del Mestre (Consell accepta l'anon, Llavor accepta la identitat de fundador, deute CSS només la part segura, Reflex i N1 després del commit, la tasca del tractor del Vigilant al Llibre). Esta transacció corregix 10 camins de skills, afig a la llista d'excepcions de Doctrina els fitxers de l'amfitrió WordPress i els artefactes de build, separa dos paràgrafs d'ESTAT (Promesa), escriu dues lliçons a `sdp-pedra-seca` i el relleu d'ESTAT; l'executor refà el segell de les skills. Informe i portes a [[261031_0040_auditoria_claude]].
+
+261031 | llei | sdp-pedra-seca | Llistes de text sempre més juntes que els paràgrafs (li-gap 4px)
+261031 | llei | sdp-pedra-seca | Un sol motlle QuadreDeComandament per als taulers de xifres
+
+## 2026-10-31T17:10:00+01:00 · Claude · Ronda 1 (Fase 0) del pla 261031_0136 · torn_2c6f4a62-406b-4eec-aaf6-e5ad90d3a405
+
+Pla 261031_0136 i ordres del Mestre al xat del 31-10. Portes Reflex, Nomenclatura N1, Pedra Seca i Tokens tancades (més Llaurador, Frontmatter i Unicode), textos de WordPress.org aprovats per la frontissa, connector 1.1.10 i natiu 1.0.0 (2), amb un reconeixement de huit agents i una revisió adversarial de cinc lents. Quatre transaccions de l'executor: correccions de les portes, empremtes i enllaços (44ff73d0), excepció de la classe d'estat (c835216a), estrenyiment de les excepcions de prosa (9d80170f) i esta, amb el relleu d'ESTAT, esta entrada i el lock del corpus. Cinc commits amb `--no-verify` per decisió del Mestre. Informe a [[261031_1402_auditoria_claude]].
+
+<!-- HASH: 66bd945efdec958ff7fc0b25d3de2d095a612357b247be6b2edc0a329e2ffd3c -->

@@ -94,7 +94,6 @@ La porta de taxonomia ja és instal·lada a `tooling/gates/porta-taxonomia.mjs`,
 
 ## Deute conegut
 
-- Les actes de `10_actes/` porten `ACTA_MARMOTA` en majúscules. La plantilla d'acta ja diu «minúscules i sense accents».
 - La ruta antiga `planificacio` està retirada per a contextos nous. Els rebuts amb instantània anterior conserven la seua plantilla i versió; no es reescriuen. La plantilla operativa única és `pla_implementacio.md`.
 - `document.mjs` i la porta Olivera no validen la categoria: accepten qualsevol paraula després de l'hora.
 

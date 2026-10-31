@@ -1,0 +1,27 @@
+{
+  "id": "1cc7837c-1d80-483b-8f44-cd2b89ff1bda",
+  "session": "462a4d0b-acb5-4a4a-b7ea-cfb85fe4af27",
+  "operationId": "torn_2c6f4a62-relleu_estat_ledger_i_resegell_del_lock_del_corpus_reflex_ronda_u-462a4d0b",
+  "claim": "462a4d0b-acb5-4a4a-b7ea-cfb85fe4af27:governance-write",
+  "planHash": "8936420a47c5c466fcaf7e1631b04380bb7cd9c5ac7e1ba5c07b0b2468dee4c0",
+  "beforeSeal": "6d8b406782082e0960a1e3dd8ccfc96bf8a65977a41c9190ca2ac0c7ba937569",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "d120ee8479322cdb45cd13f3545fbbdab1f041499967cc49e7f2ad33c719911b",
+      "after": "c9e969d21ac584e69041e2ba6e5566a3ffbd8cf7bf39d4bbdbeb4e912e31e697"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "78574caa4345914c4a4fe159bf88f3bbaa6c4d78de15bc73c71ba02b108f1524",
+      "after": "565b5df02fc4a1bdb0e489eca77c99197a71c903e6fde3f5af7ba36a1b75f7d3"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "8416a9e8d3dd160190c7893bf92121cbd1f1979a7e7b2d49476951333fb4f8b8",
+      "after": "920799a3c5ac401e8af9eb2ce8dacd11007cafc10e9ae8806382e5e7b69902cf"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

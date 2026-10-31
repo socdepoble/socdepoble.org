@@ -1,0 +1,17 @@
+{
+  "id": "df796a74-7201-429d-b123-98c2d0d6cb19",
+  "session": "f99076d8-1b79-4db8-a642-8975615b5524",
+  "operationId": "qa-master-referencies",
+  "claim": "f99076d8-1b79-4db8-a642-8975615b5524:governance-write",
+  "planHash": "719fe04a43adf17d0e5f9b6dcf57d5e2532695d94a45b9379796f388f69ac98f",
+  "beforeSeal": "e483ccf5d792b0641568293a88a3588ac9e824e6b30373365f6904281841368f",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "ad26179a8fcca1e544527e1804c698aaba589b9df10259ab7593fa1fb339ae55",
+      "after": "4ebe9778daacd59b634347cb3d85880d0bec89131782542f43d974e8a1647125"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "c9fad3f4f690de95be0997d5cf36c6a17ba33bdd36e0dfe00449eb44929fc0d4"
+}

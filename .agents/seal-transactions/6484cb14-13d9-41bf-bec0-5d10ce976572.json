@@ -1,0 +1,27 @@
+{
+  "id": "6484cb14-13d9-41bf-bec0-5d10ce976572",
+  "session": "414d0fde-1d99-4db6-b542-96abef361ff5",
+  "operationId": "qa-1852-relleu-documents",
+  "claim": "414d0fde-1d99-4db6-b542-96abef361ff5:governance-write",
+  "planHash": "9154ed246c7d933ba497d4727f1cee68d43a440906c0c44751e7db8bb520b0ba",
+  "beforeSeal": "7e6887f06d60b7c0635ae2eb98aec48bfbe9545c9270b0c94b6e4001017c73e5",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "1b911e91aaa1a0d800fc3cf3618a4839a733452205ca30ac8dce9e148177ab8d",
+      "after": "ad26179a8fcca1e544527e1804c698aaba589b9df10259ab7593fa1fb339ae55"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "8860e06bea249387d78ac9faf0d30c52318ed95d06cc7f732e83a04827b8f230",
+      "after": "79ebfdcfa7207dd4c843612196db35c5f91b17d317dafb9a761a7ce65fbd1eff"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "664c44d83db457c45c761d88bc61c1fbd433e60ef5307426bbc2c71f6e7c4d84",
+      "after": "a78fe238a3efaaf7f986ff6f31ba5d530df6806ca7b80c990928770a6409252b"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "c9fad3f4f690de95be0997d5cf36c6a17ba33bdd36e0dfe00449eb44929fc0d4"
+}

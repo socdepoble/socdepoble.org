@@ -39,7 +39,7 @@ contracte.escriu:
 
 # Tractor Vigilant Tellado · Perímetre i Enduriment
 
-> **Versió 1.0.0 (261021).** Instal·lada per ordre del pla aprovat `261021_1850_pla_implementacio_botigues_ayudawp_i_salfumant_fase2` (Mòdul C) amb `executor-mutacio` i llicència Reflex. L'script `tooling/gates/tractor-vigilant.mjs` encara no existix: fins que el faça un torn de codi, este tractor és un procediment que s'aplica a mà, i les comprovacions noves naixen com a avís.
+> **Versió 1.0.0 (261021).** Instal·lada per ordre del pla aprovat `261021_1850_pla_implementacio_botigues_ayudawp_i_salfumant_fase2` (Mòdul C) amb `executor-mutacio` i llicència Reflex. El tractor executable del Vigilant encara no existix (la tasca és al Llibre Mestre, dins d'IDEA-13, per ordre del Mestre del 261030): fins que el faça un torn de codi, este tractor és un procediment que s'aplica a mà, i les comprovacions noves naixen com a avís.
 
 Vigilant (abans «Vigilante») és el connector de seguretat gratuït de Fernando Tellado per a WordPress. Agrupa tallafoc, inici de sessió, 2FA, capçaleres, enumeració d'usuaris, REST API, XML-RPC, ocultació de la versió, enduriment, escàner d'integritat, autoprotecció i registre d'activitat. Sóc de Poble no és un WordPress. És una SPA amb Supabase, i WordPress només és un amfitrió més, a través del connector `socdepoble-enxufe`. Per això este tractor no copia Vigilant. Tradueix cada protecció a la capa on té sentit i la convertix en una comprovació que es pot repetir.
 
@@ -142,7 +142,7 @@ Cada comprovació té un identificador estable, la protecció de Vigilant (o d'u
   - Proposta: escanejar també `git ls-files` amb els mateixos patrons, i donar un error crític per a qualsevol fitxer ignorat que estiga versionat i tinga noms de secret.
 
   Severitat: crítica fins que el Mestre confirme que és local.
-- **VB10 · Fitxers sensibles servits** (Vigilant: bloqueig de `readme.html`, logs, bolcats i còpies). En viu, `/.env` i `/.well-known/security.txt` tornen `200 text/html` (el fallback SPA de 7.009 B). No filtra res, però no hi ha `security.txt` ni cap 404 real. Els builds porten `sourcemap: false` (`vite.modul.config.js:291`, `vite.standalone.config.js:553`). Proposta: comprovar que `dist/` no porta `.map`, `.env`, `.sql`, `.log` ni `.bak` i, en viu, comprovar que cada camí sensible respon amb el fallback HTML i no amb el fitxer. Severitat: baixa.
+- **VB10 · Fitxers sensibles servits** (Vigilant: bloqueig de `readme.html`, logs, bolcats i còpies). En viu, `/.env` i `/.well-known/security.txt` tornen `200 text/html` (el fallback SPA de 7.009 B). No filtra res, però no hi ha `/.well-known/security.txt` ni cap 404 real. Els builds porten `sourcemap: false` (`vite.modul.config.js:291`, `vite.standalone.config.js:553`). Proposta: comprovar que `dist/` no porta `.map`, `.env`, `.sql`, `.log` ni `.bak` i, en viu, comprovar que cada camí sensible respon amb el fallback HTML i no amb el fitxer. Severitat: baixa.
 - **VB11 · Empremta del servidor** (Vigilant: ocultació de `Server` i `X-Powered-By`). En viu no hi ha `Server` ni `X-Powered-By`, i `index.html` no porta `generator`. **Cobert de fet.**
 - **VB12 · Senyals per a bots d'IA** (AI Content Signals, VigIA). `public/robots.txt` només diu `Allow: /` i el sitemap. `rag-index.json` i `slugIndex.json` (generats) són públics. No és seguretat estricta, i ho decidix el Mestre (vegeu D-RAG-PUBLIC). El tractor **informa i no falla**.
 
@@ -182,7 +182,7 @@ Cada comprovació té un identificador estable, la protecció de Vigilant (o d'u
 
 1. **Fet (261021).** Esta SKILL.md s'ha instal·lat amb `executor-mutacio` i llicència Reflex. Amb ella s'ha regenerat `00_INDEX_SKILLS.md` i s'ha tornat a segellar.
 2. **Pendent del Mestre.** Cal el document de flux per a aprovar el tractor des de la Wiki (lliçó 261002 de [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]). Fins aleshores, cap comprovació bloqueja.
-3. **Pendent d'un torn de codi.** Cal fer `tooling/gates/tractor-vigilant.mjs`, sense dependències i a l'estil de `tractor-enxufe.mjs`, amb les seues proves i `npm run porta:vigilant`. A `run-portes.mjs` només hi entra el mode estàtic, amb `readOnly: true`. A `cron_higiene.mjs` hi entra com a part de L0.
+3. **Pendent d'un torn de codi.** Cal fer el tractor executable del Vigilant (tasca al Llibre Mestre, dins d'IDEA-13), sense dependències i a l'estil de `tractor-enxufe.mjs`, amb les seues proves i `npm run porta:vigilant`. A `run-portes.mjs` només hi entra el mode estàtic, amb `readOnly: true`. A `cron_higiene.mjs` hi entra com a part de L0.
 4. **Les comprovacions noves naixen com a avís:** VIG-01 a VIG-06, VA4, VA5, VA7, VB1, VB2, VB3, VB9, VB10 i VC2. Passen a bloquejar quan l'arbre les passa i el Mestre ho ordena.
 
 ## Fonts

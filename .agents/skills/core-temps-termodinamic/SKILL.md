@@ -21,7 +21,7 @@ contracte.escriu:
 
 # Llei del Temps Termodinàmic (Causalitat Documental)
 
-Aquesta skill s'activa automàticament cada vegada que l'agent orquestrador (IAIA MarIA) ha de crear, reanomenar o actualitzar un fitxer que continga una marca de temps (timestamp) en la seua nomenclatura, com ara un `AAMMDD_HHMM_prompt.md`, `auditoria.md` o `pla_implementacio.md`.
+Aquesta skill s'activa automàticament cada vegada que l'agent orquestrador (IAIA MarIA) ha de crear, reanomenar o actualitzar un fitxer que continga una marca de temps (timestamp) en la seua nomenclatura, com ara un `AAMMDD_HHMM_prompt.md`, `AAMMDD_HHMM_auditoria.md` o `AAMMDD_HHMM_pla_implementacio.md`.
 
 ## El Problema: "L'Efecte TARDIS"
 

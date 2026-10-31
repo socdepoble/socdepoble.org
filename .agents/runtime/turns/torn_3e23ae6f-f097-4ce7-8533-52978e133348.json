@@ -4,9 +4,9 @@
   "actor": "iaia-maria",
   "scope": "code",
   "state": "planned",
-  "revision": 5,
+  "revision": 10,
   "createdAt": "2026-10-29T15:05:11.429Z",
-  "updatedAt": "2026-10-29T15:05:11.891Z",
+  "updatedAt": "2026-10-29T21:58:54.759Z",
   "expiresAt": "2026-10-30T15:05:11.429Z",
   "contractHash": "1839756fa153a68d945b48956d870a4a082ab80adcf874a04dd10fc1327d8c45",
   "humanInventoryVersion": 1,
@@ -3962,11 +3962,47 @@
         "committedAt": "2026-10-29T15:05:11.891Z",
         "documentHash": "e200418fc12f4cceb8be9bdde26170566d55e18943beded61207e237047753cc"
       }
+    },
+    "545a7fc7-0108-4186-bc7c-1f1512b19c7a": {
+      "id": "545a7fc7-0108-4186-bc7c-1f1512b19c7a",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_1852_prompt_qa_gemini_codex_blocs_abcd_i_efg.md",
+      "contractSnapshot": "dd50e00a8184dcda1a212a8e24073399b29036006c3d29e8e26fff71aa7bd631",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-10-29T17:53:20.451Z"
+    },
+    "1b46824b-fec8-4fb3-a7d1-3561d7a5b246": {
+      "id": "1b46824b-fec8-4fb3-a7d1-3561d7a5b246",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_2258_prompt_gauntlet_qa_gemini_codex_blocs_ag_i_idea57.md",
+      "contractSnapshot": "dd50e00a8184dcda1a212a8e24073399b29036006c3d29e8e26fff71aa7bd631",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-10-29T21:58:54.557Z"
+    },
+    "23f1a2a0-3450-40a2-b6e5-e4be3c3dd49c": {
+      "id": "23f1a2a0-3450-40a2-b6e5-e4be3c3dd49c",
+      "route": "prompt.local",
+      "routeVersion": "3.11.0",
+      "file": "_wiki_de_poble/04_escriptori/261029_2258_prompt_gauntlet_qa_gemini_codex_blocs_ag_i_idea57.md",
+      "contractSnapshot": "dd50e00a8184dcda1a212a8e24073399b29036006c3d29e8e26fff71aa7bd631",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "edf7daf4d81ab3640d195369807d5ab047bbc60027abd2663f86de3b076d992a",
+      "issuedAt": "2026-10-29T21:58:54.687Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-29T21:58:54.687Z",
+        "committedAt": "2026-10-29T21:58:54.759Z",
+        "documentHash": "0b30bf66bcedc6c538a3aac73c3b1caaa533d711ca17e955242d14274a5d50a1"
+      }
     }
   },
   "plan": {
     "file": "_wiki_de_poble/04_escriptori/261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa.md",
-    "hash": "cdfc1a67255641058f3cef286eeb0078aeced152f6cf8d6ed13545a8a30a3eed"
+    "hash": "54edbe83ca327ecca34988a967da08345d24cfeabffef0824fd9d28516179bba"
   },
   "verification": null,
   "history": [
@@ -4003,6 +4039,33 @@
       "file": "_wiki_de_poble/04_escriptori/261029_1605_prompt_opus_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa.md",
       "at": "2026-10-29T15:05:11.891Z",
       "hash": "e200418fc12f4cceb8be9bdde26170566d55e18943beded61207e237047753cc"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T17:53:20.451Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-10-29T18:25:38.557Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T21:58:54.557Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-10-29T21:58:54.687Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "23f1a2a0-3450-40a2-b6e5-e4be3c3dd49c",
+      "file": "_wiki_de_poble/04_escriptori/261029_2258_prompt_gauntlet_qa_gemini_codex_blocs_ag_i_idea57.md",
+      "at": "2026-10-29T21:58:54.759Z",
+      "hash": "0b30bf66bcedc6c538a3aac73c3b1caaa533d711ca17e955242d14274a5d50a1"
     }
   ]
 }

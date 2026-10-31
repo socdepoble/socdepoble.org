@@ -7,6 +7,84 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-31T17:10:00+01:00 · Claude · Ronda 1 (Fase 0) del pla 261031_0136: portes del cens, cinc commits, WordPress.org i build natiu 1.0.0 (2)
+
+- **Torn i ordre:** `torn_2c6f4a62-406b-4eec-aaf6-e5ad90d3a405` (code). [Pla 261031_0136](../_wiki_de_poble/04_escriptori/261031_0136_pla_implementacio_assalt_fediversity_deploy_i_botigues.md) i ordres del Mestre al xat del 31-10 (Ronda 1 i les quatre decisions de les 15:05). Informe: [261031_1402_auditoria_claude](../_wiki_de_poble/04_escriptori/261031_1402_auditoria_claude.md).
+- **Fet:**
+  - **Portes:** Reflex (contracte de `graph.json`, `.claude/settings.json` versionat i lock del corpus resegellat amb 389 documents), Nomenclatura N1 (16 actes en minúscules), Pedra Seca (falsos positius G1–G7, enllaç despenjat, ajudants a `tests/helpers/` i part C amb excepcions escrites i motiu), Tokens (`--cal-*` i T3 sense la prosa pintada), Llaurador, Frontmatter i la resolució Unicode dels enllaços.
+  - **Textos:** `/page/descarregues`, `/page/fediversity` i l'Atles de la IAIA diuen l'aprovació de WordPress.org (slug `socdepoble`); frontissa 16/16 per ordre del Mestre.
+  - **Versions:** connector 1.1.10 (readme corregit) i natiu 1.0.0 (2).
+  - **Revisió adversarial:** cinc lents amb refutador; nou troballes confirmades i corregides, entre elles l'Atles i tres afluixaments latents de les portes.
+- **Commits:** cinc lots de 13 MB o menys amb `--no-verify` per decisió del Mestre; els kits de la Ronda 2 queden fora i `.immunitari/cron.out` ix de Git.
+- **Després del push:** zip `--directori` 1.1.10 i escenificació SVN des del commit pujat; `build:natiu`, `cap sync` i `preflight --signa` sobre l'arbre net. Els resultats van al xat i al relleu següent.
+- **Per al Mestre:** instal·lar Subversion i passar el guió de publicació del satèl·lit; desplegar la web després del commit SVN; connectar el compte d'Apple a Xcode i signar l'AAB; les decisions de Reflex i de Pedra Seca del Llibre Mestre (`SDP:DEUTE_261031_RONDA1_CLAUDE`).
+- **Porta final:** a la còpia congelada de l'arbre final, test:precommit, ESLint, test:node (1.725 passades i 0 fallades) i Vitest sencer (26.720 passades i 0 fallades) en verd; a l'arbre viu, Pedra Seca, Tokens, Nomenclatura, Llaurador, SCC dels documents propis, Teixit, Orfandat, Graella, frontissa 16/16, segell i LEDGER en verd; Reflex, verd en una còpia amb commit.
+- **Torn:** obert (`planned`). El `--close` queda per a l'inici de la Ronda 2, perquè la porta SCC del tancament veu els kits sense àncora a l'Escriptori. El torn `torn_734f3b4f-f3c4-49fc-b06d-e9de6370a529` (agent-local) es va obrir per error i no s'ha fet servir.
+- **Fronteres:** cap commit SVN, pujada a botigues, desplegament, `npm install` ni SQL remot; els fitxers d'entorn no s'han llegit.
+
+## ESTAT_ACTUAL · 2026-10-31T03:38:00+01:00 · Claude · Tancament pre-desplegament del prompt 261030_2208 (cobertura social, Consola pública amb instantània, tauler d'Umami, llistes i portes)
+
+- **Torn i ordre:** `torn_f298d1e0-3122-47a0-b815-bf2f719c5be3` (code). [Prompt 2208](../_wiki_de_poble/90_arxiu_historic/261030_2208_prompt_claude_tancament_seo_consola_publica_i_telemetria_didactica.md) amb les auditories vespertines de [Gemini](../_wiki_de_poble/90_arxiu_historic/261030_2114_auditoria_vespertina_gemini.md) i [Codex](../_wiki_de_poble/90_arxiu_historic/261030_2114_auditoria_vespertina_codex.md), i les ordres del Mestre al xat de la nit del 30 al 31-10. Informe: [261031_0040_auditoria_claude](../_wiki_de_poble/04_escriptori/261031_0040_auditoria_claude.md).
+- **Fet (sense commit ni desplegament):**
+  - **T1 · Cobertura social:** 34 rutes públiques amb `og:image` pròpia al client, al manifest i a l'HTML prerenderitzat (8 de plugins, 10 de `/page`, `/wikidepoble`, `/disseny`, `/consola`, 9 pàgines i 4 del Govern), amb 26 variants socials noves.
+  - **T2 · Obertura pública:** `/disseny` i `/consola` públiques i indexables; la Consola es munta sense guarda i, a cada build web, publica una instantània sanejada (fail-closed) de les seues quatre fonts; textos de consola, cervell i fediversity certs i frontissa 16/16.
+  - **T3 · Telemetria:** tauler nadiu d'Umami sense iframe, construït amb l'organisme reutilitzable de Pedra Seca `QuadreDeComandament` i el full `src/css/taulers.css`; textos didàctics; cap enviament des d'un servidor local.
+  - **T4 · Polits:** prosa del contracte de la graella, fila de l'enllaç de la imatge només a l'Arxiu o amb enllaç públic, vinyeta de Fedivers a sang.
+  - **Llistes:** `--sdp-li-gap` a 4px i cap llista de text que sume `gap` al marge dels `<li>`.
+  - **Documents i portes:** rebuts renovats de 14 documents de l'Escriptori; portes del cens arreglades segons les decisions del Mestre (Consell, Llavor, Rutes, Nomenclatura N2, Crom, Doctrina, Promesa, Llaurador); dades personals retirades d'una fila del Llibre Mestre perquè la matriu del Govern ara es publica.
+- **Per al Mestre:** posar l'enllaç d'Umami amb la `m` minúscula al seu fitxer d'entorn de producció abans del build de desplegament; Reflex i Nomenclatura N1 després del commit; la part C de Pedra Seca i els punts 5 i 6 de Tokens; les decisions D-1 a D-6 de les llistes; i la resta de decisions de l'informe.
+- **Porta final:** Vitest 26.725 passades i 0 fallades, `test:node` 1.713 i 0, `test:precommit`, ESLint, Doctrina, Promesa, Frontmatter, segell, LEDGER, frontissa 16/16 i Olivera en verd; el cens de `run-portes` en deixa 7 de roges, quatre per decisió del Mestre (Reflex, Nomenclatura N1, Pedra Seca i Tokens) i tres per un enllaç de l'índex a una acta de MarIA amb un altre nom.
+- **Torn:** no s'ha tancat amb `--close`. Falten un pla d'implementació del prompt 2208 per a vincular-lo, el reconeixement del canvi autoritzat a la zona humana (`contracte_graella.md`, que este torn no pot fer mecànicament) i l'enllaç de l'índex a l'acta de MarIA; no es fabrica cap tancament.
+- **Fronteres:** cap commit, push, desplegament, `npm install`, SQL remot ni lectura de fitxers d'entorn.
+
+
+## ESTAT_ACTUAL · 2026-10-30T19:35:00Z · Claude · Tancament del lot 261030 (guàrdia nocturna, cicle 4, workspace, Consola, f4 i ordre del Bloc de Notes)
+
+- **Torn i ordres:** `torn_438fe070-961a-4576-bb08-f597a4daf763`. Ordres del Mestre del 30-10: [ordre nocturna 0252](../_wiki_de_poble/04_escriptori/261030_0252_ordre_nocturna_autonoma_opus.md), tancament 10/10, cicle 4, tres columnes fixes, usabilitat de les icones, reparació de `/consola`, decisions A1–A4 i B1–B4, Bloc de Notes i tancament del lot. Relleus a [261029_1723_auditoria_claude](../_wiki_de_poble/04_escriptori/261029_1723_auditoria_claude.md) i informe a [261030_1533_informe_matinal_opus](../_wiki_de_poble/04_escriptori/261030_1533_informe_matinal_opus.md).
+- **Fet (sense commit ni desplegament):**
+  - **Workspace.** Les tres columnes són fixes per damunt de 720 px, i la icona de la columna plega i desplega. A1–A4: frontera ≤ 720, separador agafable, 721–761 sense desbordament i `railMitja`/`railEsquerra` retirats.
+  - **Bloc de Notes.** CARPETES arrenca oberta. De 721 a 1023 px de finestra, la navegació arrenca en rail (`layout/graella.js`).
+  - **Consola.** `/consola` didàctica, amb el Govern il·lustrat i `/__iaia/govern.json` viu.
+  - **Arxiu visual.** El visor copia l'enllaç de la imatge, i les vinyetes antigues van a sang.
+  - **Residus del cicle 4.** P1-49 com a cercador guiat, estat buit cert de la cerca del xat i el mot vetat fora del text visible.
+  - **Proves i Llibre.** La prova del Lector ja no té la cursa amb «Obrint el lector…». Al Llibre Mestre, quatre SHA rebasats corregits: el Govern segella 26 files de 86.
+- **Governança d'esta transacció:** línia base del vocabulari per a `MapaFotografic.css` (Leaflet sense capa; ordre «o alineant la línia base»), lliçó de `sdp-app-grid-shell`, LEDGER signat de nou (la transacció de les 03:29 l'havia deixat amb el HASH vell) i segell de skills refet per l'executor. Frontissa `fediversity` aprovada per autorització del Mestre (16/16).
+- **Proves de les àrees:**
+  - f4a: 15.782 passades i 0 caigudes.
+  - f4b: 6.867 passades i 0 caigudes.
+  - Lector: 2.434 passades i 0 caigudes.
+  - Totes dues: `test:precommit`, ESLint i `design_guard` (0 crítics) en verd.
+  - La porta final sencera és al relleu de tancament de l'auditoria.
+- **Per al Mestre:**
+  - f4a: la roda retallada a 721–830, la documentació dels talls, el mot vetat del nom d'un fitxer, la franja tàctil del separador, la icona de la columna 2 sota el separador i el separador del Xat.
+  - f4b: la caducitat de 24 h de la matriu del Govern, el retall de la Gestoria i la fila de l'enllaç fora de l'Arxiu.
+  - Pendents d'abans: el `anywhere` de Connectar, el quadrat de preu a 375 px, el `<wbr>` dels títols i el 404 de la funció Edge `noticies`.
+- **Fronteres:** cap commit, push, desplegament, `npm install`, SQL remot ni moviment de documents de l'Escriptori.
+
+
+## ESTAT_ACTUAL · 2026-10-29T23:26:02.942Z · Codex · NLnet Fediversity, estudi i disseny documental
+
+[Informe2353](../_wiki_de_poble/04_escriptori/261029_2353_auditoria_codex_nlnet_fediversity.md) i [pla2353](../_wiki_de_poble/04_escriptori/261029_2353_pla_implementacio_nlnet_fediversity.md), torn_b3a4417e-c57f-40d5-91e3-d2d51c1d5828, scope documents. Sis fonts obligatories llegides; revisions paral·leles de procedencia/pressupost, AP/export i empaquetat. Lot propi Vitest11fitxers/445pass/0fallades. P1-23 continua obert: export municipal restaurable, federacio efectiva amb abast acordat i stack complet reproduible encara no demostrats. Fediversity final1agost, no3novembre; transicioIA1.1 per a pendents a confirmar amb expedient. Annex/log/hores elegibles i IDEA-38 per reconciliar sense falses eixides ni percentatges globals. Pressupost160/240/440/160h,50.000€ conservat. Disseny A/B/C, demoEN/CA i Q&A intern sense enviar. Cap font de codi, gestoria, Git destructiu, build, SQL remot, publicacio o missatge. Registre formal i resultat literal de tancament a l’informe; cap scope/inventari alterat per ocultar concurrencia. Cap servidor, navegador, cron o monitor propi.
+
+
+### QA Ronda 2 · ampliació final 2026-10-29T22:43:15.166Z
+
+Ampliació final dels prompts2258/1605: IDEA-58 encara sense gestors de fletxes/HomeEnd entre columnes ni graella2D (QA-R2-12); IDEA-31 encara sense proveïdor lliure, endpoint local, URL de SPA i emissió d’atribut WordPress sense clau (QA-R2-13, inclou marcatge.php). Client/columnes47/47 i servei antic36/36 amb transports falsos passen, però no acrediten activació. Llint complet revalidat exit0; resta porta de suport i18n. Document/Plantilla Viva/Olivera verds; tancament general només rebutja deltes de codi fora de scope documental. Cap canvi de codi, xarxa de traducció, servei, flag o recurrència.
+
+
+## ESTAT_ACTUAL · 2026-10-29T22:33:55.792784+00:00 · Codex · QA Ronda 2 documental
+
+[Informe1859](../_wiki_de_poble/04_escriptori/261029_1859_auditoria_codex.md), torn documental torn_a1fd0148-ebd5-4317-91a9-733ba1511a91 reutilitzat. Quatre cicles QA2258 en lectura; matriu D01–D15 del Mestre completa i provisional. No10/10global: resten P1 permisos/selector/desat després oblit i clearIDB silenciós (QA-R2-03/04), contractes actors/escapes/panells, bot real, latència i Versions editorial. Bateria184:2951pass/2fail/3skip; SAS/App passen aïllats; lot40 posterior823pass/1fallada de suport i18n. Lint inicial bot1error+2avisos, corregit per Claude i revalidat complet amb exit0. Design0crítics/12avisos; Cens,Wiki,Enxufe,Persistència,RLS estàtica verds. No se sumen runs solapats ni es presenta25.195 de Claude com prova pròpia. Cap font de Claude editada, Git destructiu, SQL remot, flag o recurrència. Resultat literal de tancament i transacció a l’informe; no s’oculten deltes aliens. Corredors/navegador acabats; integració i acta general als seus carrils.
+
+
+## ESTAT_ACTUAL · 2026-10-29T18:15:29.513Z · Codex · QA documental 1852 sobre A–G
+
+- **Torn:** `torn_a1fd0148-ebd5-4317-91a9-733ba1511a91`, actor codex, scope documents; [informe canònic](../_wiki_de_poble/04_escriptori/261029_1859_auditoria_codex.md) vàlid i pla1605 vinculat.
+- **Verificat:** bateria165/2.569pass/3skip; precommit4.315Vitest+262Node; lint i portesdesign/cens/Enxufe/Persistència verds. Navegador local sense errors; cap carpeta humana vinculada. Doble lectura adversarial feta.
+- **Reserves:** integritat de moviments >50MiB i CAS de text fora de cua (P1); oblit ordinari ja connectat però expulsió host pendent, casos URL/negreta, LRU visible i Storage bloquejat. E–G encara en integració. Contrast Gemini1858 llegit i anotat al Mestre.
+- **Fronteres:** cap edició de src/tests/tooling/public, cap Git destructiu, commit, build, desplegament o activacióE2EE. Resultat de tancament formal al registre/informe; no es canvia scope ni inventari per ocultar edicions concurrents de Claude. Cap cron o monitor propi. Acta general pendent de la integració de l’onada.
+
+
 ## ESTAT_ACTUAL · 2026-10-29T13:59:46.827Z · Codex · G1 reconciliat amb reserves globals
 
 - **Torn:** `torn_0c834999-94ec-4377-8030-b45285a8d6b4` (code); [informe G1 i deu dimensions](../_wiki_de_poble/04_escriptori/261029_1447_auditoria_codex.md), circuit documental vàlid.
@@ -1585,6 +1663,7 @@ Torn: `torn_823c12d5-e3f6-4ba9-8031-d90b99226b8c`.
     * **Higiene, Rutes i Identitat (`C06`–`C10`, `ID1`–`ID4`, `ID6`):** Trencat l'import cíclic de `DocumentEditor.jsx`, preservat `#hash` en redireccions `/multimedia/town-*`, `?v=` abans del `#` i rebuig d'orígens disfressats (`'/\rastreig.example/…'`) a `assetResolver.js`, 9 famílies d'Emojis XL Unicode 18, eliminat el logotip verd de Sóc de Poble en publicacions/actes de persones (`ID1`), creada `fotoDelBucketPublic` a `src/utils/mitjaOpac.js` (`ID2`), estat neutre `aria-busy` mentre es restaura sessió (`ID4`) i aïllament d'àlies en comptes remots (`ID6`).
     * **Desterrament del «clon» (Bloc 3.1):** Reduïdes de 134 línies amb marca comercial a 1 sol ús nominatiu legítim («Pont WhatsApp» al full de ruta) i aprovada l'empremta `14/14` a `frontissa-contingut.mjs`.
   - **Bateria Completa Vitest:** **`1.118` fitxers aprovats (`6` omesos), `19.225` proves verdes (`89` omeses) i `0` fallades.**
+
 - **2. Conciliació Final del «Llibre d'Or» (Bloc 4 · Resolució `C11` + `34/34` Lots):**
   - `_wiki_de_poble/01_ser/03_llibre_d_or_memoria_episodica.md` (i la còpia satèl·lit `../_comunicacio_de_poble/03_llibre_d_or_memoria_episodica.md`) integra ara la totalitat dels `34/34` lots de lectura (`617/617` documents de text citats, empremta agregada `1bc25d4a86318f29356d5bcfcf8cbbe8bf0874051214459fe94ae9ea8e2068d9`, més el manifest físic `443f25ccce55c8a9fd24f710e9fa3a2dca2a9ec771bb8fe6afffb3f38002bcd5`), amb `260` afirmacions contrastades, `52` correccions aplicades, les Eres 0–V, els `18` Errors que no hem de tornar a cometre, la Crònica Humana (Capítols I–VI), les Perles oblidades, la Taula de decisions, els 4 límits remots del xat, l'alerta d'higiene de secrets i el mapa `H01`–`H10` / `C01`–`C09`.
   - Roman en `status: esborrany` pendent de l'aprovació i segellat del Mestre Javi Llinares abans d'evacuar cap fitxer de `90_arxiu_historic/` (dels quals `165` estan ja inventariats com a llast pur).

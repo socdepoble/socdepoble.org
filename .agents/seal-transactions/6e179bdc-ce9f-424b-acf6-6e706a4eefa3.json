@@ -1,0 +1,17 @@
+{
+  "id": "6e179bdc-ce9f-424b-acf6-6e706a4eefa3",
+  "session": "c835216a-af23-43e4-8bc1-873e0bcdb58f",
+  "operationId": "torn_2c6f4a62-excepcio_escrita_classe_estat_mode_compacte_pedra_seca_part_c-c835216a",
+  "claim": "c835216a-af23-43e4-8bc1-873e0bcdb58f:governance-write",
+  "planHash": "b9963102065416ab579721fda65e575e87337fc10d164eb6e5672afc6a3880cb",
+  "beforeSeal": "843c5d58d6dd2ff659f5b1a620e3739dc5fc57badadbb1af0b2dee9a92e83d3b",
+  "files": [
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "edba981c8d0e8ea4e3eba5fc08d69a72098d0a6cb688d4f68e71fb12fd9cd636",
+      "after": "db49963d0d54da8582b3cfa79d1792f51d0e728221b8706a675ad4ba5c999038"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

@@ -44,7 +44,7 @@ Tota auditoria sobre un Pla d'Implementació ha d'incorporar obligatòriament la
 
 | Requeriment del Pla | Estat (`[FET]` / `[PARCIAL]` / `[NO FET]`) | Evidència / Fitxer Comprovat | Motiu si no s'ha assolit |
 | :--- | :--- | :--- | :--- |
-| *Ex: Mirall H1 Nota sense títol* | `[FET]` | `src/sections/notes/Editor.jsx:45` | Totalment sincronitzat amb la card. |
+| *Ex: Mirall H1 Nota sense títol* | `[FET]` | `src/sections/notes/NotesEditor.jsx` | Totalment sincronitzat amb la card. |
 | *Ex: Visor modal Google Fotos* | `[NO FET]` | No s'ha creat el component Lightbox | Temps esgotat; es trasllada al següent torn. |
 
 ### La Regla del Balanç Transparent (Zero Oblits):
@@ -59,7 +59,7 @@ Abans de programar interfícies complexes o inventar rodes noves, qualsevol IA e
    - **Lector RSS (`/app/lector`):** Enginyeria inversa de **Feedly** (arbre de carpetes a l'esquerra, comptadors de no llegits, flux de lectura net a la dreta) muntat sobre `UniversalWorkspace`.
    - **TPV del Bar (`/app/bar`):** Enginyeria inversa de **Loyverse TPV** (Mode Bar i Mode Rebost, tiquets tàctils, selecció ràpida).
    - **Gestoria (`/app/gestoria`):** Enginyeria inversa de **Holded, FacturaDirecta i GnuCash** (llibre de factures i tresoreria neta per a gent de poble).
-   - **Mapa de Fotografies:** Enginyeria inversa de la plantilla de viatge d'**Emowe** (`plantilla-mapa.html`) per a agrupació dinàmica de pins GPS sobre el mapa de la vall.
+   - **Mapa de Fotografies:** Enginyeria inversa de la plantilla de viatge d'**Emowe** (`../_investigacio_ia_de_poble/261014_1930_emowe_mapa_de_tu_viaje/plantilla-mapa.html`) per a agrupació dinàmica de pins GPS sobre el mapa de la vall.
 2. **Procediment d'anàlisi:**
    - Analitzar la jerarquia de components, el model de dades, els patrons d'interacció i les dades d'accessibilitat.
    - Traduir aquesta essència directament als tokens i components de Pedra Seca de Sóc de Poble, sense dependències externes estranyes.

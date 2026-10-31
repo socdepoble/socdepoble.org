@@ -1,0 +1,47 @@
+{
+  "id": "4b02550d-4a79-45b9-a365-85957e1e21c7",
+  "session": "44ff73d0-8d47-4899-b429-04b780fd098b",
+  "operationId": "torn_2c6f4a62-tancament_portes_cens_pedra_seca_tokens_frontissa_i_enllacos_ronda_u-44ff73d0",
+  "claim": "44ff73d0-8d47-4899-b429-04b780fd098b:governance-write",
+  "planHash": "1f36d03b2074505907b3d51f09ca5c30637b17070cb116a400aa9213a47d4484",
+  "beforeSeal": "10f14f22bf9ffc366e809e4e08a818ee3118199d7cef17495e701fd5d462921c",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "09abae7d3f20a62128dfd1c6cd5b9fd20f0742544a7ac03914945ae14f17487e",
+      "after": "3c1496df52b6867cc5741c994681a71cafa520506e6953b30e7047d65009f7ca"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "b80848c9053805bee921729e50b48032a4c0c8bda3d27530ff52427f3257c7d2",
+      "after": "d120ee8479322cdb45cd13f3545fbbdab1f041499967cc49e7f2ad33c719911b"
+    },
+    {
+      "path": ".agents/ON_ESTIC.md",
+      "before": "d35e09e467781f5bc25a377c49b654f080f6203f5474eed5ef2f2b7e34794f22",
+      "after": "db572b403a049566c2ccd32a77267475b2785eba71958bc9ed3cc225b72e6419"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "3631d97281f24aa0fc0cc5136f156094d4556a269d0b494743d8b790d447d36f",
+      "after": "edba981c8d0e8ea4e3eba5fc08d69a72098d0a6cb688d4f68e71fb12fd9cd636"
+    },
+    {
+      "path": "tooling/gates/tractor-tokens.mjs",
+      "before": "83d07f5161a1a81fc60b148a68ff2554e6ad41ec98e31ded8fe554ce6b138c05",
+      "after": "edb63cf6ce117d5d60dc364586fea3b0d5536449446920faec37c02450da3ce6"
+    },
+    {
+      "path": "tooling/lib/document-links.mjs",
+      "before": "c09286b87dcb6cea1c593128000a872fcbe276070c9cd6969c43135c7a34f577",
+      "after": "98e9777e545becf82d4d2380d3cfdb69913d4c85ef23c2a6a3e618692aa626da"
+    },
+    {
+      "path": "tooling/lib/jsx-class-values.mjs",
+      "before": "7a33241ce045b64f2d4099d8cfec58095061a3e683c2b01a204ec5b757d16a9e",
+      "after": "8e67cf3dda377ca3263a443c9fb2f41beb98e783c3a855712bdfb07adc170091"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

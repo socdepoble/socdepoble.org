@@ -1,0 +1,32 @@
+{
+  "id": "f7aa3c1a-ccc1-4096-9978-4860cf2d9be1",
+  "session": "9d80170f-5741-4b9f-ac34-917f807d14b4",
+  "operationId": "torn_2c6f4a62-estrenyiment_excepcions_prosa_tokens_pedra_seca_revisio_adversarial_ronda_u-9d80170f",
+  "claim": "9d80170f-5741-4b9f-ac34-917f807d14b4:governance-write",
+  "planHash": "b10157e0d36357a2d960cbe939d6dfe3b5a02f8b8957a5a1d368d4602b97e4d2",
+  "beforeSeal": "ffbe64ab34981594cfd920ac24f9c371a7cca17e7f97eea9366da29ee07b7002",
+  "files": [
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "db49963d0d54da8582b3cfa79d1792f51d0e728221b8706a675ad4ba5c999038",
+      "after": "e7c871f1fdebe777fdcce2c883f11aad5f1cc3abd66c5f25349a14d5db328df5"
+    },
+    {
+      "path": "tooling/gates/tractor-tokens.mjs",
+      "before": "edb63cf6ce117d5d60dc364586fea3b0d5536449446920faec37c02450da3ce6",
+      "after": "73987cc150bb45edd46503b266f6872094ddd5e73b2f4fb911a133a61642aef8"
+    },
+    {
+      "path": "tooling/lib/jsx-class-values.mjs",
+      "before": "8e67cf3dda377ca3263a443c9fb2f41beb98e783c3a855712bdfb07adc170091",
+      "after": "6a91a699ba69dc0952a35b542a5ca0bc6f6c52bc4db543ad29b9b74d91bc2bac"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "d35917a19e192e910b3534e74df6d92c6b139e88753630de57423ac8f8c34f6d",
+      "after": "fe3078bb4a5142362d0655ad07cfe44ace18e520c197ffbf30a2514bb2812c28"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "64a9fa96-946d-4193-a79f-20f76e264d2f",
+  "session": "217cf240-869d-4182-9122-9667d38492cd",
+  "operationId": "torn_438fe070-hora_local_relleu_estat_ledger_i_porta_final_2208-217cf240",
+  "claim": "217cf240-869d-4182-9122-9667d38492cd:governance-write",
+  "planHash": "df5e446e18a5fda3eeddc89cea27a74e32a2b34ece76255ae25caa02165a3295",
+  "beforeSeal": "77c2bf618cbdf620abdf8340175122b7597fd833d34f3498d80ccb97fc1e6a64",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "74dcff5f99c236795432565983d295d7fdb47b71c183e23800a420f83d4b69d5",
+      "after": "eeb608160792d0aaf1bc15fe9303401ad7f1b28b892524fb42cf1a3a0b45d3dc"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "96c7678f5d98e0dd5a10e36b7049e4c28fe2978ffc23ec6156f8855f4b11799f",
+      "after": "78574caa4345914c4a4fe159bf88f3bbaa6c4d78de15bc73c71ba02b108f1524"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "d5f74e55-dc15-4eb8-930d-2d99931e4326",
+  "session": "d94f08df-4cc4-4ff6-96b2-0d93e8ff2fb1",
+  "operationId": "qa-r2-ampliacio-final-idea58-31",
+  "claim": "d94f08df-4cc4-4ff6-96b2-0d93e8ff2fb1:governance-write",
+  "planHash": "30c5edb3165db74a0a913495c02d55abf027800e67271a51dd838ada1b0be10a",
+  "beforeSeal": "98a43601151fbfdd189a7a282d0424b97ffec97e7807445a80047ca9b1533560",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/03_llibre_mestre_tasques_i_idees.md",
+      "before": "35d852f7c76c0c3301c9963af9d212b6a29c33ec4cbc2ecbc3f3c0256999a226",
+      "after": "7dca625a6a4e3f8177dc1fac9e7cff10f981536acd1a9279345b9d452291da00"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "1badb36645d74d347bac378bd0c359b5a14ae1920b53b16968f2d51a21b32ef1",
+      "after": "227339104ef533cd75adbe3d2233f2ea0fd4f641adc9eb54345695ee65c52c28"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "64909b95b1220e16134f8b0742397d69f368a0b4e5e782b6de667993f8ca18a3",
+      "after": "91ff6e7a623b8733feb48426044c8b15c2d5361f8b0363bd52cedae12062b397"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "c9fad3f4f690de95be0997d5cf36c6a17ba33bdd36e0dfe00449eb44929fc0d4"
+}

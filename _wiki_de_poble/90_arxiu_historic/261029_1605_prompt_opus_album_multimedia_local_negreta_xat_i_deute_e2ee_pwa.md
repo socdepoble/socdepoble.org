@@ -5,7 +5,7 @@ description: 'Prompt operatiu canònic v3.11.0 per a Claude Opus 5.5 Extra Ultra
 tags:
   - govern
 visibility: private
-reflex: sdp:torn_3e23ae6f-f097-4ce7-8533-52978e133348:4dfa38d8-fbbb-4369-8147-732e87fa0cf9
+reflex: sdp:torn_f298d1e0-3122-47a0-b815-bf2f719c5be3:cd2ab432-30e7-4a62-8c24-b15973f498d0
 ---
 # Prompt Operatiu 261029_1605 · Claude Opus 5.5 Ultracode · Àlbum Multimèdia Local (IDEA-54), Negreta al Xat (IDEA-53) i Deute E2EE/PWA
 
@@ -31,7 +31,7 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | sdp:torn_3e23ae6f-f097-4ce7-8533-52978e133348:4dfa38d8-fbbb-4369-8147-732e87fa0cf9 |
+| Identificador | sdp:torn_f298d1e0-3122-47a0-b815-bf2f719c5be3:cd2ab432-30e7-4a62-8c24-b15973f498d0 |
 | Versió del document | 3.11.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-10-29T15:05:11.849Z |
@@ -47,6 +47,9 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 
 - `2026-10-29T15:05:11.849Z`: Esborrany creat amb rebut canònic `sdp:torn_3e23ae6f-f097-4ce7-8533-52978e133348:4dfa38d8-fbbb-4369-8147-732e87fa0cf9` i vinculat al pla `261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa.md`.
 - `2026-10-29T15:10:30.000Z`: Completat seguint `prompt_local.md (v3.11.0)` per a l'execució autònoma de Claude (`Opus 5.5 · Ultracode` / `Fable 5.1 Extra`) durant el dinar del Mestre.
+- `2026-10-29T18:38:00.000Z`: Ampliat amb els **Blocs E, F i G** per ordre del Mestre Javi Llinares: convertir `/multimedia` (`MultimediaSection.jsx`) en un `UniversalWorkspace` de 3 columnes idèntic a `/disseny` i `/wikidepoble` orientat al treball amb arxius (`IDEA-55` / `P1-71`), reparar els 4 Actors Permanents de `/xat` (`Gent de la Torre` amb foto real mai `GD`, `Javi Llinares` sempre visible com a persona i Servei Tècnic, `IAIA MarIA` sempre visible) + Cervell Local Zero-Tokens de la `IAIA MarIA` (`P1-70` / `IDEA-56`), i blindar `CoreContentContext.jsx` contra HMR + `IDEA-50` + continuació pel Llibre Mestre.
+- `2026-10-30T21:31:55.000Z`: rebut renovat per Claude Code (Claude Opus 5.5, torn_f298d1e0-3122-47a0-b815-bf2f719c5be3) per ordre del Mestre (prompt 261030_2208, T4.4), perquè el torn del rebut anterior (`sdp:torn_3e23ae6f-f097-4ce7-8533-52978e133348:4dfa38d8-fbbb-4369-8147-732e87fa0cf9`) havia caducat sense tancar-se; el contingut no canvia.
+- `2026-10-30T21:33:50.000Z`: fonts arxivades, citades en text perquè Vincles només admet notes vives (F9): `_wiki_de_poble/90_arxiu_historic/261029_1455_auditoria_claude.md`, `_wiki_de_poble/90_arxiu_historic/261029_1514_auditoria_gemini.md`, `_wiki_de_poble/90_arxiu_historic/261029_1447_auditoria_codex.md`. Les va reapuntar l'arxivament amb la porta Olivera; les ha mogut de Vincles Claude Code (ordre del Mestre, prompt 261030_2208).
 
 <!-- SDP:SECTION prompt.local.s3 -->
 ## Context Tècnic i Arquitectònic
@@ -155,7 +158,73 @@ Estem en l'**Onada `261029_1605`** sobre **`Claude Opus 5.5 · Extra · Ultracod
 
 ---
 
-### 4. Criteris d’acceptació i reproducció
+### 4. BLOC E · `IDEA-55` + `P1-71`: Transformació de `/multimedia` (`src/sections/multimedia/MultimediaSection.jsx`) en un `UniversalWorkspace` de 3 Columnes idèntic a `/disseny` i `/wikidepoble` Orientat al Treball amb Arxius
+
+> **Ordre directa del Mestre Javi Llinares (18:35 CET, amb captura de `http://localhost:3340/multimedia`):**
+> «Esta página tiene que cambiar y quedar igual que la página de diseño o Wiki de Poble pero orientada al trabajo con archivos y yo lo veo claro ahora mismo.»
+
+1. **Converteix `src/sections/multimedia/MultimediaSection.jsx` en un `<UniversalWorkspace>` de 3 columnes (`collapsibleNavigation={false}`, `replegaTotaCapcalera`, `sortable`, `mestreDetall={{ clau: 'multimedia', element: activeItemId }}`), exactament igual que `src/sections/disseny/DesignSection.jsx` i `src/sections/wiki-de-poble/WikiDePobleSection.jsx`:**
+   - Elimina l'antiga vista d'article solt amb les 4 píndoles (`Galeria / Cronologia / IAIA / Carpeta local`) i unifica tant el **Catàleg Publicat (`public/assets/`)** com els **Volums i Carpetes Locals Muntats (`IndexedDB`)** i totes les peces que has construït (`BarraVolumsLocals.jsx`, `ArbreCarpetesLocals.jsx`, `AccionsCarpetaLocal.jsx`, `GraellaAlbumLocal.jsx`, `TaulaArxiusLocals.jsx`, `DetallArxiuLocal.jsx`, `EditorTextLocal.jsx`, `OperacionsArxiuLocal.jsx`, `LaboratoriWebpLocal.jsx`, `PropostaPobleLocal.jsx`) dins de les 3 columnes d'`UniversalWorkspace`:
+     1. **Columna 1 (`MULTIMÈDIA` · Arbre de Volums i Carpetes):**
+        - Primera entrada `__intro_cat` (`item: '__intro'`): **«Arxiu Visual i Gestor d'Arxius»** (portada i tauler d'accés ràpid als volums locals i a la fototeca).
+        - Carpetes del **Catàleg Publicat (`public/assets/`)**:
+          - `galeria_tots` («Galeria publicada · Tots»)
+          - `galeria_iaia` («Creacions IAIA / Nano Banana»)
+          - `galeria_cronologia` («Cronologia per mesos», amb subcarpetes per mes `parentId: 'galeria_cronologia'`)
+        - Carpetes dels **Volums Locals Muntats (`IndexedDB`)**:
+          - `local_root` («Carpeta local · Volums muntats») i totes les subcarpetes físiques reals del volum actiu (`00_inbox/`, `originals_raster_public/`, `nano_banana_historic/`, `captures_treball/`, `documents_i_pdfs/`, etc.) amb jerarquia `parentId` dins de l'arbre de la Columna 1!
+     2. **Columna 2 (`ARXIUS` · Llista Mixta d'Arxius amb Lupa de Cerca i Ordenació):**
+        - Mostra tots els arxius de la carpeta seleccionada a la Columna 1 (tant imatges amb miniatura `image` / `blob:` com fitxers `.md`, `.txt`, `.pdf`, `.json`, `.csv`, àudio o vídeo barrejats a la mateixa carpeta amb la seua icona `icon`), amb cercador instantani, ordenació (`sortable`) i subtítol amb carpeta · mida en KB · estat (`PUBLICADA`, `BESSONA WEBP`, `INÈDITA`, `PES ALT`, `DUPLICADA`, `DOCUMENT`).
+     3. **Columna 3 (`renderDetail` · `<UniversalPage chrome="context">` amb Barra Blava i Barra Taronja):**
+        - Quan es visualitza `__intro` o la vista general d'una carpeta: mostra la `BarraVolumsLocals` (`[ + Vincular carpeta local ]`, `[ Reconnectar amb 1 clic ]`), les `AccionsCarpetaLocal` (`+ Nova subcarpeta`, `+ Nou fitxer .md`, `Verificar duplicats SHA-256`), el commutador `Graella d'Àlbum (Fototeca)` / `Taula d'Arxius`, i la graella de fotos (`GraellaAlbumLocal` per a carpetes locals o `.photo-grid` amb `<Cella>` per al catàleg web).
+        - Quan es selecciona un arxiu concret (des de la Columna 2 o clicant-lo a la Fototeca): mostra dins d'`<UniversalPage chrome="context">` la fitxa completa de treball d'eixe arxiu (`DetallArxiuLocal` / visor d'alta nitidesa, comparador `Original Local ↔ WebP Publicat`, `EditorTextLocal` per a `.md/.txt/.json/.csv` amb desat físic en disc i `[ Enviar al Bloc de Notes ]`, `LaboratoriWebpLocal`, `PropostaPobleLocal` i `OperacionsArxiuLocal` per **Moure a una altra carpeta**, **Reanomenar**, **Crear subcarpeta** i **Eliminar** físicament al Finder del Mac).
+        - Mantín la compatibilitat amb `?foto=<id>` i actualitza/amplia les proves de `MultimediaSection`.
+
+---
+
+### 5. BLOC F · `P1-70` + `IDEA-56`: Reparació dels 4 Actors Permanents de `/xat` + Cervell Local Zero-Tokens de la `IAIA MarIA`
+
+> **Ordre directa del Mestre Javi Llinares (18:20 CET, amb captura de `http://localhost:3340/xat`):**
+> «No me veo a mí como Javi Llinares ni a la IAIA MarIA, esto es una regresión porque Javi Llinares debe de estar como persona que se identifica como persona además de Sóc de Poble. Quiero que la gente si no habla con la empresa pueda hablar conmigo como servicio técnico, y a Gent de la Torre le falta la imagen de Gent de la Torre y falta la IAIA MarIA también, que hay que darle algo de inteligencia sobre lo que es el sistema y lo que tiene en su Wiki de Poble en su cerebro rápidamente y sin gastar token.»
+
+1. **Els 4 Actors Permanents Inamovibles a `http://localhost:3340/xat` (`Sóc de Poble`, `Gent de la Torre`, `Javi Llinares`, `IAIA MarIA`):**
+   - **Imatge real de `Gent de la Torre` (mai inicials `GD`):** A `src/sections/xat/pobleAmfitrio.js`, afegeix `avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg'` a `POBLE_PER_DEFECTE` i com a reserva en `avatarDelPoble` quan `towns` siga buit o la fitxa remota de `la-torre-de-les-macanes` no porte `avatar_url`.
+   - **`Javi Llinares` sempre visible com a persona física i Servei Tècnic (inclòs quan qui mira és Javi `0001` o quan `chatThreads` és `[]` en remot):**
+     - A `src/sections/xat/XatContext.jsx` (vores de la línia 1913), elimina l'exclusió `quiMiraEsJavi ? senseXatPerDefecte(ambAjuda, 'javi') : ambAjuda` perquè Javi Llinares aparega sempre com a persona física i servei tècnic a la llista de converses.
+     - A `src/sections/xat/actorsDelXat.js` (`anteposaActors`) i `src/data/xatsPerDefecte.js`, garanteix que quan `virtual === true` a `XatSection.jsx` i `threads` no continga encara la fila de `Javi Llinares` ni la de la `IAIA MarIA` (perquè `chatThreads` és `[]` en remot amb `{ afig: false }`), `anteposaActors` sintetitze sempre les files permanents de `Javi Llinares` (`/assets/fotos/javi-llinares-256x256.jpg`, subtítol d'atenció personal i servei tècnic) i de la `IAIA MarIA` (`/assets/avatars/iaia_comic_matriarch.png`) juntament amb `Sóc de Poble` i `Gent de la Torre`.
+     - A `src/sections/xat/useObriXatPerDefecte.js`, elimina el bloqueig en mode `remote` que mostrava el toast *"Este contacte encara no està connectat al xat del poble"* en clicar `Javi Llinares`, de manera que òbriga sempre la conversa d'atenció personal i servei tècnic amb Javi Llinares!
+     - Actualitza `src/sections/xat/XatSection.actorsPermanents.test.jsx` verificant que els 4 actors permanents (`Sóc de Poble`, `Gent de la Torre` amb foto real, `Javi Llinares` i `IAIA MarIA`) es pinten sempre en tots els modes (sense sessió, amb sessió local, amb sessió remota encara que `threads` siga `[]`, i quan qui mira és Javi).
+2. **Intel·ligència Local Instantània i Zero-Tokens per a la `IAIA MarIA` al Xat (`src/data/iaiaLocal.js` + `FakeChatOnboarding.jsx` + `XatContext.jsx`):**
+   - Connecta `respostaDeLaIAIA(text)` a `src/sections/xat/components/FakeChatOnboarding.jsx` (perquè escriure al xat de la IAIA o de Javi responga amb intel·ligència real i no amb la frase fixa *"Açò és una simulació..."*) i al xat amb la `IAIA MarIA` en mode amb sessió (local i remot) perquè responga directament al fil del xat en <10 ms i amb 0 tokens externs.
+   - Amplia el corpus BM25 de `src/data/iaiaLocal.js` perquè, a més de `wikiManifest.js`, indexe:
+     - `PAGE_COPY` de `src/sections/text/pageContent.js` (*Qui som*, *El Projecte*, *L'ànima de la IAIA*, *Constitució*, *Full de ruta*, *Versions*, *Descàrregues*).
+     - `MOCK_TOWNS` de `src/sections/pobles/townsSeed.js` (els pobles de la Muntanya d'Alacant).
+     - Un **Atles Operatiu del Sistema** integrat a `src/data/iaiaLocal.js` (explicant amb *Trellat* què és Sóc de Poble, com funciona el Xat, el Mur, el Mercat, Pobles, el Bloc de Notes i `[ Proposa Card ]`, el nou Gestor d'Arxius d'`UniversalWorkspace` a `/multimedia`, qui és Javi Llinares com a creador i servei tècnic, i què és El Rentonar).
+   - Suavitza `passaElLlindar` a `src/data/iaiaLocal.js:368-379` perquè consultes d'1 sola paraula clau (*"Què és el Mercat?"*, *"Parla'm de Rentonar"*, *"Qui és Javi?"*, *"Com funciona Multimèdia?"*) troben resposta encara que el terme estiga als tags o al cos i no literalment al `# Títol`, i afegeix equivalències bàsiques castellà/valencià.
+
+---
+
+### 6. BLOC G · `P1-71` HMR + `IDEA-50` (`/versions`) + Continuació Sense Parar pel Deute Tècnic del Llibre Mestre
+
+1. **Blindatge HMR a `src/app/contexts/CoreContentContext.jsx:26`:** Substitueix `useIdentitat()` per `useIdentitatOpcional() || { actorId: null, actorKey: 'anon' }` perquè una recàrrega en calent (HMR) de Vite o un muntatge parcial mai llançe `Error: useIdentitat ha de ser usat dins de IdentitatProvider` a l'`ErrorBoundary`.
+2. **`IDEA-50` (Pastilla Clicable de Versió cap a `/versions`):** Garanteix que la versió canònica (`versioCanonica()`) porte un enllaç clicable a `/versions` (zero modals).
+3. **Continuació autònoma pel Deute Tècnic del Llibre Mestre (`03_llibre_mestre_tasques_i_idees.md`) i Matriu Universal de 15 Punts de Vista de TOT el Sistema (`IDEA-57` · Objectiu `10,0 / 10` i `Zero Deute Tècnic`):**
+   - Un cop verificats amb cicles de Gauntlet Loop els Blocs A–G i les troballes de Gemini (`261029_1858_auditoria_gemini.md`) i Codex (`261029_1859_auditoria_codex.md`), **continua atacant en lots segurs i atòmics totes les fites de deute tècnic de codi obertes al Llibre Mestre** (`P1-16` contrast de capçaleres de taula i wrapper accessible a `parseMarkdown.js`, `P1-22` claus `TE-02`/`TE-05`/`TE-01`, `P1-24` arrencada de `bot/arrels.mjs` i `edge_rag.search`, `P1-26` unicitat de `censImatges` i aïllament de `AppsLector`, `P1-27` guardes del port i `signal`, `P1-54`/`P1-55`/`P1-60`/`P1-63` i portes de `run-portes.mjs`).
+   - En el teu informe (`261029_1723_auditoria_claude.md`), és **obligatori** incloure la **Matriu Universal de les 15 Dimensions (`D01..D15`) de TOT el Sistema Sóc de Poble (`/10`)** definida a `IDEA-57` del Llibre Mestre, puntuant cada aspecte del sistema des de tots els punts de vista i detallant exactament què has liquidat i què queda pendent per assolir el **`10,0 / 10` absolut amb `0 deutes tècnics`**.
+4. **`IDEA-58` (Ordre del Mestre a les 23:22 CET: Navegació Completa amb les Fletxes del Teclat `↑ ↓ ← →` i `Home/End` a `UniversalWorkspace.jsx` i a les Graelles de Fotos/Arxius — `D08` WCAG 2.2 AAA `2.1.1`) + Tancament de `QA-R2-01` i `QA-R2-02`:**
+   - **Navegació amb fletxes a la Columna 2 (`ItemListColumn` — llista `.sdp-gestor-llista` a `src/components/universal/workspace/UniversalWorkspace.jsx`):** Quan el focus és en una fitxa `.sdp-gestor-fitxa`, `ArrowDown` i `ArrowUp` han de moure el focus i seleccionar l'element següent / anterior de `sortedItems` (`chooseItem(nextItem.id)` + `.focus()` + `scrollIntoView({ block: 'nearest' })`), de manera que la persona puga baixar i pujar amb les fletxes per `ARXIUS` veient canviar la foto o document al panell dret en temps real com al Finder de macOS (`Home`/`End` al primer/últim; `ArrowLeft` salta el focus a l'opció activa de la Columna 1 `CategoryColumn`; `ArrowRight` salta el focus al primer control o cel·la de la Columna 3 `DetailColumn`).
+   - **Navegació amb fletxes a la Columna 1 (`CategoryColumn` — arbre `.sdp-workspace-groups` a `UniversalWorkspace.jsx`):** Quan el focus és en un `.sdp-workspace-nav-item`, `ArrowDown` i `ArrowUp` mouen el focus pel següent/anterior `.sdp-workspace-nav-item` visible (`Home`/`End` al primer/últim); `ArrowRight` desplega la carpeta si té fills i està plegada, o salta el focus a la fitxa activa de la Columna 2 (`ItemListColumn`); `ArrowLeft` plega la carpeta si està desplegada o puja a la carpeta pare.
+   - **Navegació 2D amb fletxes a les Graelles (`.photo-grid` a `src/sections/multimedia/PaginesEspaiMultimedia.jsx` i `.sdp-arxiu-local__album` a `src/sections/multimedia/GraellaAlbumLocal.jsx`):** `ArrowRight` / `ArrowLeft` mouen el focus a la cel·la següent / anterior (`+1` / `-1`), i `ArrowDown` / `ArrowUp` salten a la fila inferior / superior calculant el nombre de columnes per geometria (`Home`/`End` primera/última).
+   - **Tanca també els 2 micro-ajustos de 2 línies de `261029_1858_auditoria_gemini.md` (`QA-R2-01` a `MultimediaSection.espai.test.jsx:358-365` i `QA-R2-02` a `eslint.config.js` / `bot/`).**
+5. **`IDEA-31` (Ordre del Mestre a les 23:30 CET: Activació del Traductor Sobirà Sense Google Translate ni Clau de DeepL — `C0545-S1` + `C0545-S2` + Servei en Viu `/__iaia/traduir`):**
+   - **Context:** Tota la peça client (`src/data/traductor.js`, `useTraduccioPagina.js`, `TraduccioPagina.jsx`, `MenuTraduir.jsx`) i servidor (`wordpress-plugin/includes/traduccio.php`) del Traductor Sobirà ja està construïda, però en fer clic al botó **«Traduir»** de la Barra Blava ix *"La traducció automàtica no està disponible en este servidor"* perquè `traduccio.php:61` exigeix `DEEPL_API_KEY` i `src/main.jsx:37-41` no defineix `traductorUrl`.
+   - **Peça 1 (`wordpress-plugin/includes/traduccio.php` · `C0545-S1`):** Quan `socdepoble_enxufe_deepl_clau()` estiga buida (`''`), **no** retornes `503 sense_clau` a `socdepoble_enxufe_traduccio_permis`; usa com a proveïdor lliure sense clau **Apertium API (`https://apertium.org/apy/translate`)** (amb parells `cat|spa`, `cat|eng`, `cat|fra` i fallback lliure configurable `SDP_TRADUCCIO_URL` per a `DE`), conservant tota la memòria cau de transients de 7 dies (`set_transient`), els panys atòmics i els límits de ritme i bytes de `traduccio.php` (i si `DEEPL_API_KEY` existeix, manté el camí de DeepL). Actualitza les proves de `traduccio.php` perquè validen tant el camí amb clau DeepL com el proveïdor lliure sense clau.
+   - **Peça 2 (`src/main.jsx` + `tooling/vite/consola-iaia.mjs` per a `localhost:3340`):** Afegeix `traductorUrl: import.meta.env.VITE_TRADUCTOR_URL || '/__iaia/traduir'` a `delLloc` dins de `src/main.jsx` (així les proves unitàries que munten `<PageFrame>` o `<UIProvider>` directament sense `main.jsx` mantenen `traductorUrl: ''` i cap test existent es trenca) i exposa `POST /__iaia/traduir` al middleware de Vite (`tooling/vite/consola-iaia.mjs` o un mòdul dedicat) que implemente el contracte de `src/data/traductor.js` (`{ textos, desti, origen: 'CA', format }` → `{ traduccions, origen: 'CA', desti, cache }`) delegant a Apertium amb memòria cau en memòria i fallback local net si no hi ha xarxa, perquè el botó **«Traduir»** de la Barra Blava funcione en viu a `http://localhost:3340`.
+   - **Peça 3 (`src/sections/translations/TranslationsSection.jsx` · `C0545-S2`):** Actualitza `/traduccions` (`TranslationsSection.jsx:42-73`) perquè explique que el **Traductor Sobirà de Pàgines** (botó *Traduir* de la Barra Blava amb `traductor.js` i proveïdor lliure sense Google Translate) ja està actiu, separant-lo netament de les targetes individuals pendents.
+
+---
+
+### 7. Criteris d’acceptació i reproducció
 
 - **URL de proves locals:** `http://localhost:3340/multimedia` (pestanya `Carpeta local`) i `http://localhost:3340/xat`.
 - **Criteris d'Acceptació:**
@@ -193,6 +262,3 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/prompt_local.md; SHA-25
 - [[00_index_escriptori]]
 - [[03_llibre_mestre_tasques_i_idees]]
 - [[261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]]
-- [[../90_arxiu_historic/261029_1455_auditoria_claude]]
-- [[../90_arxiu_historic/261029_1514_auditoria_gemini]]
-- [[../90_arxiu_historic/261029_1447_auditoria_codex]]

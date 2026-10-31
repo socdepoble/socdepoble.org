@@ -1,0 +1,17 @@
+{
+  "id": "81546b9d-0d4c-4e5f-bfee-fa4f1251db91",
+  "session": "cd24e638-32b5-4de4-bb71-67920c72bf9c",
+  "operationId": "qa-r2-ledger-format-terminal",
+  "claim": "cd24e638-32b5-4de4-bb71-67920c72bf9c:governance-write",
+  "planHash": "76bc0c96a751c4dd316b78dfc04efc14d9299775c4cbe6c6819b72c2906ec3fd",
+  "beforeSeal": "d5a4051847ea93ded0e8b53e57398e556f97cf695be1859bafb7354e89b8dd5d",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "9309e7e5104f1e8a9adb8ea049338b9a367a64b4633036e0dd07f8721f0e28a1",
+      "after": "64909b95b1220e16134f8b0742397d69f368a0b4e5e782b6de667993f8ca18a3"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "c9fad3f4f690de95be0997d5cf36c6a17ba33bdd36e0dfe00449eb44929fc0d4"
+}

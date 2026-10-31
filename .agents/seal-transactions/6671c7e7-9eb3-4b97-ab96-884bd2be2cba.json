@@ -1,0 +1,32 @@
+{
+  "id": "6671c7e7-9eb3-4b97-ab96-884bd2be2cba",
+  "session": "85f7528c-7808-485e-a561-1f7a1abcd4aa",
+  "operationId": "torn_438fe070-tancament_lot_261030_claude_vocabulari_graella_estat_ledger-85f7528c",
+  "claim": "85f7528c-7808-485e-a561-1f7a1abcd4aa:governance-write",
+  "planHash": "d06bf11e0ea8aff968d2f9b316d68746a373d75cc88aa7bf598465bf85f627d8",
+  "beforeSeal": "455517a9c2d03ca13462766f40f934140a7f85b10a602ae50382b8d83c03130f",
+  "files": [
+    {
+      "path": ".agents/deute/.vocabulari-deute.json",
+      "before": "5d143967a5dda7fd1198ef4eeed7c4833c5fe08b29f1f4fabb0e04dd02a2ecd8",
+      "after": "3e01dee6df0e9fc48048b266c75f5396e1c71df27cb7ba924c8be0be7e18ceb3"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "c5c66c8e0a46027e54588b0dd5133f21d2b76c4066bc7cbd1325491ae962a1db",
+      "after": "6111c4604ee48d5e1799dab149e6625de39c0c4ad382379f48ad092848211b9d"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "5aa4830d4744d2446945c082b2ced7f8247570ea47f839212ca9ecf5d10928cc",
+      "after": "30dad0391c5f2e4de4266a55aa2ffa3b5788580b0ce5f8646eb4ffc5d42fd63e"
+    },
+    {
+      "path": ".agents/skills/sdp-app-grid-shell/SKILL.md",
+      "before": "628aa15b358c56d54c2ed3de7d60096042c76164d7d19e9178b8e5d7c9ca4c14",
+      "after": "0695abcbbeb215f37a88309befa792bd4afc8b858064a4090e1988d0170599b5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "2310ca7a8901ebf62b0774376cb4017f29be0a16c2ae03e85293ac06814f65ca"
+}

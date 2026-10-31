@@ -57,13 +57,13 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 
 - [[10_actes/260915_1410_acta_marmota_tancament_fase4.md]]
 - [[10_actes/260916_0540_acta_marmota_fi_radar.md]]
-- [[10_actes/260916_0645_ACTA_sincronitzacio_disseny.md]]
-- [[10_actes/260917_0435_ACTA_MARMOTA_Auditoria_Atomica.md]]
-- [[10_actes/260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1.md]]
-- [[10_actes/260918_0626_ACTA_MARMOTA_Auditoria_Ghosts.md]]
-- [[10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md]]
-- [[10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes.md]]
-- [[10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar.md]]
+- [[10_actes/260916_0645_acta_sincronitzacio_disseny.md]]
+- [[10_actes/260917_0435_acta_marmota_auditoria_atomica.md]]
+- [[10_actes/260917_2349_acta_marmota_auditoria_codex_fase1.md]]
+- [[10_actes/260918_0626_acta_marmota_auditoria_ghosts.md]]
+- [[10_actes/260918_1436_acta_marmota_unificacio_i_llucidesa.md]]
+- [[10_actes/260918_1736_acta_marmota_disseny_bloc_notes.md]]
+- [[10_actes/260919_1945_acta_marmota_fusion_sidebar.md]]
 - [[10_actes/260921_1002_acta_marmota.md]]
 - [[10_actes/260924_1900_acta_marmota.md]]
 - [[10_actes/260925_1810_acta_marmota.md]]
@@ -82,7 +82,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/260928_2205_acta_marmota_onada_final.md]]
 - [[10_actes/260929_2158_acta_marmota.md]]
 - [[10_actes/260930_1330_acta_marmota_transicio_codex.md]]
-- [[10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking.md]]
+- [[10_actes/260930_1645_acta_marmota_auditoria_coworking.md]]
 - [[10_actes/261001_0010_acta_marmota.md]]
 - [[10_actes/261001_0045_acta_marmota.md]]
 - [[10_actes/261001_0245_acta_marmota_calendari_i_boina.md]]
@@ -92,7 +92,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/261001_1920_acta_incidencia.md]]
 - [[10_actes/261002_1300_acta_marmota.md]]
 - [[10_actes/261002_1645_acta_marmota.md]]
-- [[10_actes/261004_0206_ACTA_MARMOTA_Esgotament_Termodinamic.md]]
+- [[10_actes/261004_0206_acta_marmota_esgotament_termodinamic.md]]
 - [[10_actes/261004_0325_acta_marmota.md]]
 - [[10_actes/261004_0435_acta_marmota.md]]
 - [[10_actes/261005_0445_acta_marmota.md]]
@@ -100,7 +100,7 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/261007_0140_acta_marmota_fatiga_artefactes.md]]
 - [[10_actes/261008_1105_acta_tancament_onada_3.md]]
 - [[10_actes/261008_2300_acta_marmota.md]]
-- [[10_actes/261011_0200_ACTA_MARMOTA_Relleu_Nocturn.md]]
+- [[10_actes/261011_0200_acta_marmota_relleu_nocturn.md]]
 - [[10_actes/261011_0348_acta_marmota_fi_onada11.md]]
 - [[10_actes/261012_1230_acta_marmota.md]]
 - [[10_actes/261012_1920_acta_marmota.md]]
@@ -130,14 +130,14 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 ## Adopcions 15-09
 
 - [[260915_0325_acta_marmota_relleu_net]]
-- [[260915_0717_ACTA_MARMOTA_Colapse_Entropic]]
-- [[260915_0823_ACTA_MARMOTA_Plaquetes_i_Fusible]]
+- [[260915_0717_acta_marmota_colapse_entropic]]
+- [[260915_0823_acta_marmota_plaquetes_i_fusible]]
 
-- [[10_actes/260920_0235_ACTA_MARMOTA_Tancament_Alzheimer.md]]
-- [[10_actes/260920_0430_SUPER_ACTA_MARMOTA.md]]
+- [[10_actes/260920_0235_acta_marmota_tancament_alzheimer.md]]
+- [[10_actes/260920_0430_acta_marmota_super.md]]
 - [[10_actes/260920_0535_acta_marmota.md]]
 - [[10_actes/260920_0800_acta_marmota.md]]
-- [[10_actes/260922_0100_ACTA_MARMOTA_Limits_Codex.md]]
+- [[10_actes/260922_0100_acta_marmota_limits_codex.md]]
 - [[10_actes/260922_0235_acta_marmota.md]]
 - [[02_saber/govern.md]]
 - [[02_saber/identitat.md]]
@@ -167,7 +167,7 @@ La poda de l’índex de treball conserva ací l’accés als documents operatiu
 - [00_full_de_ruta](02_saber/00_full_de_ruta.md) · [00_explorador_social](05_social/00_explorador_social.md) · [260922_1920_acta_marmota](10_actes/260922_1920_acta_marmota.md) · [260922_2200_acta_marmota](10_actes/260922_2200_acta_marmota.md) · [260923_0035_acta_marmota](10_actes/260923_0035_acta_marmota.md)
 - [260923_1450_acta_marmota](10_actes/260923_1450_acta_marmota.md) · [260923_1532_auditoria_codex](10_actes/260923_1532_auditoria_codex.md) · [260923_1535_auditoria_claude](10_actes/260923_1535_auditoria_claude.md) · [260923_1630_implementacio_claude](10_actes/260923_1630_implementacio_claude.md) · [260923_1630_implementacio_codex](10_actes/260923_1630_implementacio_codex.md)
 - [260923_2020_acta_incidencia_cognitiva](10_actes/260923_2020_acta_incidencia_cognitiva.md) · [260923_2142_acta_marmota](10_actes/260923_2142_acta_marmota.md) · [260923_2215_acta_marmota](10_actes/260923_2215_acta_marmota.md) · [260924_0500_acta_marmota](10_actes/260924_0500_acta_marmota.md) · [260924_0717_acta_marmota_codex](10_actes/260924_0717_acta_marmota_codex.md)
-- [260924_0845_ACTA_MARMOTA_Super_Tancament](10_actes/260924_0845_ACTA_MARMOTA_Super_Tancament.md) · [260924_1445_acta_marmota_consola_termodinamica](10_actes/260924_1445_acta_marmota_consola_termodinamica.md) · [260930_0310_acta_marmota](10_actes/260930_0310_acta_marmota.md) · [261004_1027_acta_marmota](10_actes/261004_1027_acta_marmota.md) · [261004_2045_acta_marmota_fortificacio](10_actes/261004_2045_acta_marmota_fortificacio.md)
+- [260924_0845_acta_marmota_super_tancament](10_actes/260924_0845_acta_marmota_super_tancament.md) · [260924_1445_acta_marmota_consola_termodinamica](10_actes/260924_1445_acta_marmota_consola_termodinamica.md) · [260930_0310_acta_marmota](10_actes/260930_0310_acta_marmota.md) · [261004_1027_acta_marmota](10_actes/261004_1027_acta_marmota.md) · [261004_2045_acta_marmota_fortificacio](10_actes/261004_2045_acta_marmota_fortificacio.md)
 - [261007_0025_acta_marmota](10_actes/261007_0025_acta_marmota.md) · [261007_1645_acta_marmota](10_actes/261007_1645_acta_marmota.md) · [261009_0745_acta_marmota](10_actes/261009_0745_acta_marmota.md) · [261009_1216_acta_marmota](10_actes/261009_1216_acta_marmota.md) · [261010_1200_acta_marmota](10_actes/261010_1200_acta_marmota.md)
 - [261014_1315_acta_marmota](10_actes/261014_1315_acta_marmota.md) · [261014_2050_acta_marmota](10_actes/261014_2050_acta_marmota.md) · [261015_1310_acta_marmota](10_actes/261015_1310_acta_marmota.md) · [261016_0025_acta_marmota](10_actes/261016_0025_acta_marmota.md) · [261016_0035_acta_marmota_codex_gauntlet](10_actes/261016_0035_acta_marmota_codex_gauntlet.md)
 - [261016_1545_acta_marmota](10_actes/261016_1545_acta_marmota.md) · [261017_1350_acta_marmota_gauntlet_extrem_i_descans](10_actes/261017_1350_acta_marmota_gauntlet_extrem_i_descans.md) · [261017_2200_acta_marmota_tancament_gauntlet_extrem](10_actes/261017_2200_acta_marmota_tancament_gauntlet_extrem.md) · [261017_2350_acta_marmota_desplegament_social_i_relleu_usabilitat](10_actes/261017_2350_acta_marmota_desplegament_social_i_relleu_usabilitat.md) · [261018_1535_acta_marmota_harmonitzacio_perfil_i_estudi_obsidian](10_actes/261018_1535_acta_marmota_harmonitzacio_perfil_i_estudi_obsidian.md)

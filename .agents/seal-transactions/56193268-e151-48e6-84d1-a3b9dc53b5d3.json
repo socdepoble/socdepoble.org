@@ -1,0 +1,72 @@
+{
+  "id": "56193268-e151-48e6-84d1-a3b9dc53b5d3",
+  "session": "1ea3d91b-636d-48be-bfcd-d11ea3dcbb62",
+  "operationId": "torn_438fe070-tancament_predesplegament_prompt_2208_skills_doctrina_estat_ledger-1ea3d91b",
+  "claim": "1ea3d91b-636d-48be-bfcd-d11ea3dcbb62:governance-write",
+  "planHash": "312820c71a4a54e86bcbe099e072e981e336730b26f4d735cae604fc1c8da361",
+  "beforeSeal": "12701afdca6a0985c72a5b3fe3aae4f753e5523bddc65c5550a195dc8f6d6bf7",
+  "files": [
+    {
+      "path": ".agents/doctrina-ignora.txt",
+      "before": "8abf6ebd71bf3618956ae32e13e0ec84dcc363c14ab3be6320f242ce6c0be595",
+      "after": "e6c05c6f883f5e4694ce684c37a03ece5dbf22d504de39f9019187c0f86e07ef"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "6111c4604ee48d5e1799dab149e6625de39c0c4ad382379f48ad092848211b9d",
+      "after": "845505a2625d074095b17026b23dab7264fde83a7e0965022569a75a03286ac0"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "30dad0391c5f2e4de4266a55aa2ffa3b5788580b0ce5f8646eb4ffc5d42fd63e",
+      "after": "3067431558bd0d585f8a5aaced0593819c4cc726ed547c86cefeb4d36b6d1e67"
+    },
+    {
+      "path": ".agents/skills/core-gauntlet-loop/SKILL.md",
+      "before": "067349348c5ea4eeca1c83857e0ceeb48655c81149c748725d3dc9e14f87cc4e",
+      "after": "c357ff32c0811fc0121e2189cbfc85fc7ceefc5719ff7bbf7bf68bbb37e5c459"
+    },
+    {
+      "path": ".agents/skills/core-informes-pdf/SKILL.md",
+      "before": "db66405da9d5ecd2c88fe8591ce98d7ee8b503bdb391c36f4f7205dde77dfc81",
+      "after": "d60ede3b89109d4b6b6ed02063700a9e948c4bfdf9eae0479d3f7b50def6b014"
+    },
+    {
+      "path": ".agents/skills/core-maquetacio-markdown/SKILL.md",
+      "before": "4992154d3490c98da065b2421fbf1cde97342f225030a75a38fad0515a2b3002",
+      "after": "d503244c5d7ed9d273008eca6664a44f0a9852d1ff893be7dd11654c0cf9ee92"
+    },
+    {
+      "path": ".agents/skills/core-neteja-brossa/SKILL.md",
+      "before": "8d7f53e9ed19ab43e0e50ea758765e9e32164acf22f7fe40f432b4b7149de935",
+      "after": "440e02a3a9965266f4c42e1b7acc868535f14b82d7bb91847852e90db765561f"
+    },
+    {
+      "path": ".agents/skills/core-restauracio-segellada/SKILL.md",
+      "before": "f5af04efce51f732ea5c0af39248b395857c5e4fb3a36df2225addcc0165fc16",
+      "after": "4313304fe612c0b5b38710fc2454edd11d8b36d4c56ce1b80b87faad1f9451ba"
+    },
+    {
+      "path": ".agents/skills/core-seguretat-audit/SKILL.md",
+      "before": "1ce54435941edd04364e60f38bef87d45b50c71ca2224f00adb45618ee89a22b",
+      "after": "b2f2b855abe03b890c76c369dcbeced91f136e12cdbc194bec8243f03f693e72"
+    },
+    {
+      "path": ".agents/skills/core-temps-termodinamic/SKILL.md",
+      "before": "acc8174971aa6896785fd4e0219189afe00cd24162a8bbcf10bb73db7293be7e",
+      "after": "50909c33ebd2e8ef4929c68c1196801f2bfc39dc6062921f42745dd22968a34b"
+    },
+    {
+      "path": ".agents/skills/sdp-pedra-seca/SKILL.md",
+      "before": "e2acdb7fca327aadb516eec21e92d4cb7248d8c786b8b06f93d7c59c78faf6a7",
+      "after": "152c5730e83a9aa7f6da53befced59c36ebb3b89feeb1c17a0cb35500de0a104"
+    },
+    {
+      "path": ".agents/skills/sdp-vigilant-tellado/SKILL.md",
+      "before": "40092e87be8e199972320ceaace3547f4f1c476a770fdf98fa32711e574c0e5a",
+      "after": "54c62196d41319e666dda14b3b68bd9227a9e777667089006028ff93e65c97a5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

@@ -75,6 +75,15 @@ Per millorar contínuament la consistència dels prompts:
 - **Error 2 (Caricatura Desconnectada i Idiomes Aliens):** Un uelo amb cara de terror de meme i una iaia fumant en pipa amb bafarades en castellà/italià i marc de vinyeta. Rebutjat: no té gràcia, trenca la regla de llengua i la regla de treballar a sang (*full bleed*).
 - **Aprovat Canònic (Narrativa Còmica Absurda Coherent):** Caldera de coure bullint sobre llenya un cervell mecànic que expulsa xips amb potetes cap a cabassos; l'uelo sosté un xip brillant entre els dits mirant-lo de prop amb fascinació («flipant»); la iaia empunya una lupa enorme examinant un cervellet com si fóra una llavor rara; el gosset rosega un xip amb cables a terra; zero text, zero marcs, 100% *full bleed*. La història té sentit, és gamberra i ruralment autèntica.
 
+## Lliçons del Mestre
+
+- **261030** | **El Punt Gamberro i Inconformista d'Ibáñez contra el «Mundo Feliz»**:
+  - Prohibides les màquines simètriques, netes i polides («màquina professional») i els traços vectorials suaus de conte infantil («Mundo Feliz»).
+  - Exigir sempre traç de plumilla brugueriana amb trames de tinta (crosshatching), asimetria caòtica, xapes apedaçades amb reblons tortes, taques de greix/sutge i invents esbojarrats estil Professor Bacteri («FUM-O-MÀTIC», manòmetres tortes amb «HUMOR / VI / FUM / TEMPS», palanques «CALORET / PAELLA / REBUIG», onomatopeies en valencià «XOFF! / BROOOM! / FIUM!»).
+  - Actitud gamberra i canalla als personatges (ex: la IAIA amb ulleres negres gegants de soldador, l'apanyador amb una clau anglesa descomunal més gran que el seu tors) i horror vacui ciber-rural (gats ficats enmig dels engranatges, gossos rosegant microxips amb cables i potetes).
+  - **Invariància de la bellesa de dibuix animat (zero cares desencaixades o lletges):** Les cares dels personatges mai es deformen fent-se lletges, grotesques, mellades o «descuajaringadas» (ni tan sols quan riuen, s'enfaden o se sorprenen). Queden prohibides al prompt paraules trampa com «inventora boja / mad scientist / manic grin» que deformen la boca. Els rostres mantenen sempre la mateixa bellesa gràfica, netedat de línia i simpatia de dibuix animat clàssic.
+  - **Algorisme de la satisfacció naïf i despreocupada:** L'humor valencià i berlanguiano de Sóc de Poble naix del contrast entre una situació/màquina extremadament gamberra, caòtica i ciber-rural (plumilla brugueriana, «FUM-O-MÀTIC» apedaçat, gats als engranatges, gossos amb microxips) i uns personatges que viuen eixa situació des de dins amb una felicitat vivaç, naïf, amable i despreocupada (cara de satisfacció tranquil·la per la faena feta, sense adonar-se de l'absurd que els envolta i sense caure mai en la posa passiva o beatífica dels «Testimonis de Jehovà»).
+
 ## Vincles
 - [[00_INDEX_SKILLS]]
 - [[core-identitat-visual/SKILL]]

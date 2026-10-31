@@ -31,7 +31,7 @@ Segons la filosofia de la **safata d'entrada** i el control de brossa, les accio
 1. Només són candidats els **fitxers solts** de l'arrel que casen amb `PATRONS_BROSSA` (`*.log`, `*.diff`, `*.patch`, `test_output*.txt`, `lint_results*.json`, `probe_*.mjs`, `scratchpad_*.mjs`...).
 2. Mai toca una entrada que comença per punt. `.claude`, `.codex`, `.agents`, `.immunitari`, `.sdp-reflex`, `.iaia_auth` o `.snapshots` són configuració d'eines i estat local que llig la maquinària.
 3. Mai toca directoris ni fitxers seguits per git. La brossa versionada es retira amb `git rm`, en un commit revisat.
-4. Amb `--aplica`, mou els candidats a `.sdp-paperera/quarantena-<ISO>/` i hi deixa `MANIFEST.json` amb rutes relatives. No esborra mai res.
+4. Amb `--aplica`, mou els candidats a `.sdp-paperera/quarantena-<ISO>/` i hi deixa `.sdp-paperera/quarantena-<ISO>/MANIFEST.json` amb rutes relatives. No esborra mai res.
 
 ## Quan utilitzar-lo
 

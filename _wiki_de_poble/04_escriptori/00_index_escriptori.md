@@ -14,8 +14,15 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 ## Activitat en curs
 
-- [[261029_1605_prompt_opus_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]] — Prompt operatiu `261029_1605` per a Claude Opus 5.5 Ultracode (Àlbum Multimèdia Local `IDEA-54`, negreta al Xat `IDEA-53` i deute E2EE/PWA) · per a 
-- [[261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]] — Pla d'Implementació `261029_1605` per a l'Àlbum Multimèdia Local estil Gestoria, negreta al Xat i liquidació E2EE/PWA · per a 
+- [[261031_1402_auditoria_claude]]
+- [[261031_0136_pla_implementacio_assalt_fediversity_deploy_i_botigues]]
+- [[261031_0136_prompt_dissabte_fediversity_deploy_i_botigues]]
+- [[261031_0040_auditoria_claude]]
+-  — Auditoria QA Adversarial de Tancament Vespertí de Gemini 4 Argon (High): Cicle 4, Workspace 3 Columnes (`> 720 px`), Consola Didàctica, Govern (`B1`+`B2`), Visor (`B3`+`B4`), SEO `og:image` (`OG-GAP-01..04`), Matriu DAFO i 15 Dimensions (`9,89/10` -> `10,0/10`) · per a  i el Mestre
+-  — Auditoria QA Ronda 2 (Gauntlet Loop de 4 Cicles) + Estratègia i Enginyeria NGI Fediversity (`50.000 € · 2026-08-1a6` + `P1-23`) de Gemini 4 Argon (High): 10/10 llavors tancades, Blocs A–G, Matriu `D01..D15` i disseny d'`ActivityPub`, Open Data Municipal i `flake.nix` · per a Claude Opus 5.5 i el Mestre
+-  — Prompt operatiu `261029_1852` de Revisió de Qualitat i Conformitat (QA) per a Gemini CLI i GPT Codex sobre els Blocs A, B, C, D i contractes E, F, G · per a Gemini i Codex
+-  — Prompt operatiu `261029_1605` per a Claude Opus 5.5 Ultracode (Àlbum Multimèdia Local `IDEA-54`, negreta al Xat `IDEA-53` i deute E2EE/PWA) · per a 
+-  — Pla d'Implementació `261029_1605` per a l'Àlbum Multimèdia Local estil Gestoria, negreta al Xat i liquidació E2EE/PWA · per a 
 -  — Auditoria Gemini 4 Argon (High) dels carrils `G2` i `G3` de l'Onada `261029_1305`: `design_guard` a `0` crítics, estils inline a `0`, fitxa gestor a `0`, cens `C2=0`/`C4=0` i `tractor-frontmatter` `F9` · per a 
 -  — Informe de Claude Code (Fable 5.1) dels carrils `E1` i `M1` de l'Onada `261029_1305` (E2EE Fase 4, `OG-02`, `R-02`, `D-C2`, WP `1.1.10`) · per a 
 -  — Auditoria de GPT Codex del carril `G1` de l'Onada `261029_1305` (`0838` `T11`, `100/100` tests) · per a  i 
@@ -27,8 +34,8 @@ Documents actius de la sessió. Cada àncora correspon a un fitxer físic; la me
 
 Inventari d’àncores dels originals presents; els continguts es conserven sota custòdia humana.
 
-- [260911_0006_tasques_ui_standardization.md](01_produccio/260911_0006_tasques_ui_standardization.md) · [260911_0012_agenda_futur_extensio_chrome.md](01_produccio/260911_0012_agenda_futur_extensio_chrome.md) · [260911_0645_propostes_manifest_panell_control.md](01_produccio/260911_0645_propostes_manifest_panell_control.md) · [Full_dEixides_-_Plantilla.xls](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/Full_dEixides_-_Plantilla.xls) · [Full_de_control_loteria_nadal.ots](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/Full_de_control_loteria_nadal.ots) · [Model Fitxa dAlumne 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/Model%20Fitxa%20dAlumne%202007.xls) · [Planning Contrates 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/Planning%20Contrates%202007.xls) · [full-eixides-socdepoble.xls](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/full-eixides-socdepoble.xls)
-- [model_ficha_alumno_banda_1020.jpg](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/model_ficha_alumno_banda_1020.jpg) · [model_ficha_d_alumno_para_banda_d_musica.xls](01_produccio/Banda%20La%20Torre%20-%20Gestio%CC%81/model_ficha_d_alumno_para_banda_d_musica.xls) · [animalets_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/animalets_vinyeta.jpg) · [bascula_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/bascula_vinyeta.jpg) · [calendari_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/calendari_nano_card.jpg) · [cervell_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/cervell_vinyeta.jpg) · [consola_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/consola_vinyeta.jpg) · [disseny_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/disseny_vinyeta.jpg)
+- [260911_0006_tasques_ui_standardization.md](01_produccio/260911_0006_tasques_ui_standardization.md) · [260911_0012_agenda_futur_extensio_chrome.md](01_produccio/260911_0012_agenda_futur_extensio_chrome.md) · [260911_0645_propostes_manifest_panell_control.md](01_produccio/260911_0645_propostes_manifest_panell_control.md) · [Full_dEixides_-_Plantilla.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Full_dEixides_-_Plantilla.xls) · [Full_de_control_loteria_nadal.ots](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Full_de_control_loteria_nadal.ots) · [Model Fitxa dAlumne 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Model%20Fitxa%20dAlumne%202007.xls) · [Planning Contrates 2007.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/Planning%20Contrates%202007.xls) · [full-eixides-socdepoble.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/full-eixides-socdepoble.xls)
+- [model_ficha_alumno_banda_1020.jpg](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/model_ficha_alumno_banda_1020.jpg) · [model_ficha_d_alumno_para_banda_d_musica.xls](01_produccio/Banda%20La%20Torre%20-%20Gesti%C3%B3/model_ficha_d_alumno_para_banda_d_musica.xls) · [animalets_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/animalets_vinyeta.jpg) · [bascula_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/bascula_vinyeta.jpg) · [calendari_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/calendari_nano_card.jpg) · [cervell_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/cervell_vinyeta.jpg) · [consola_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/consola_vinyeta.jpg) · [disseny_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/disseny_vinyeta.jpg)
 - [gestoria_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/gestoria_vinyeta.jpg) · [habitatge_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/habitatge_vinyeta.jpg) · [mapa_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/mapa_vinyeta.jpg) · [mercat_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/mercat_nano_card.jpg) · [mur_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/mur_nano_card.jpg) · [rebost_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/rebost_vinyeta.jpg) · [rss_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/rss_vinyeta.jpg) · [salut_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/salut_vinyeta.jpg)
 - [snippet_nano_card.jpg](01_produccio/Targetes_Davinci_Llestes/snippet_nano_card.jpg) · [tpv_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/tpv_vinyeta.jpg) · [treball_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/treball_vinyeta.jpg) · [vehicle_vinyeta.jpg](01_produccio/Targetes_Davinci_Llestes/vehicle_vinyeta.jpg) · [Captura de pantalla 2026-09-28 a las 19.11.50.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.11.50.png) · [Captura de pantalla 2026-09-28 a las 19.12.18.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.12.18.png) · [Captura de pantalla 2026-09-28 a las 19.12.49.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.12.49.png) · [Captura de pantalla 2026-09-28 a las 19.13.56.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.13.56.png)
 - [Captura de pantalla 2026-09-28 a las 19.41.21.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.41.21.png) · [Captura de pantalla 2026-09-28 a las 19.41.43.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.41.43.png) · [Captura de pantalla 2026-09-28 a las 19.41.49.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.41.49.png) · [Captura de pantalla 2026-09-28 a las 19.41.58.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.41.58.png) · [Captura de pantalla 2026-09-28 a las 19.42.17.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.42.17.png) · [Captura de pantalla 2026-09-28 a las 19.42.54.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.42.54.png) · [Captura de pantalla 2026-09-28 a las 19.43.00.png](01_produccio/WhatsApp-Clon-01/Captura%20de%20pantalla%202026-09-28%20a%20las%2019.43.00.png) · [WhatsApp Image 2026-09-29 at 12.51.26.jpeg](01_produccio/WhatsApp-Clon-01/WhatsApp%20Image%202026-09-29%20at%2012.51.26.jpeg)
@@ -72,6 +79,24 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261030_0252_prompt_ordre_nocturna_autonoma_opus]]
+- [[../90_arxiu_historic/261029_1605_pla_implementacio_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]]
+- [[../90_arxiu_historic/261029_1605_prompt_opus_album_multimedia_local_negreta_xat_i_deute_e2ee_pwa]]
+- [[../90_arxiu_historic/261029_1723_auditoria_claude]]
+- [[../90_arxiu_historic/261029_1852_prompt_qa_gemini_codex_blocs_abcd_i_efg]]
+- [[../90_arxiu_historic/261029_1858_auditoria_gemini]]
+- [[../90_arxiu_historic/261029_1859_auditoria_codex]]
+- [[../90_arxiu_historic/261029_2258_prompt_gauntlet_qa_gemini_codex_blocs_ag_i_idea57]]
+- [[../90_arxiu_historic/261029_2353_auditoria_codex_nlnet_fediversity]]
+- [[../90_arxiu_historic/261029_2353_pla_implementacio_nlnet_fediversity]]
+- [[../90_arxiu_historic/261030_0255_auditoria_adversarial_tancament_gemini]]
+- [[../90_arxiu_historic/261030_0256_auditoria_adversarial_tancament_codex]]
+- [[../90_arxiu_historic/261030_1217_auditoria_adversarial_matinal_gemini]]
+- [[../90_arxiu_historic/261030_1224_auditoria_adversarial_matinal_codex]]
+- [[../90_arxiu_historic/261030_1946_prompt_qa_gemini_codex_tancament_vesperti]]
+- [[../90_arxiu_historic/261030_2114_auditoria_vespertina_codex]]
+- [[../90_arxiu_historic/261030_2114_auditoria_vespertina_gemini]]
+- [[../90_arxiu_historic/261030_2208_prompt_claude_tancament_seo_consola_publica_i_telemetria_didactica]]
 - [[../90_arxiu_historic/261029_1305_pla_implementacio_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
 - [[../90_arxiu_historic/261029_1305_prompt_deute_tecnic_portes_e2ee_fase4_i_excel_lencia_10_10]]
 - [[../90_arxiu_historic/261029_1447_auditoria_codex]]
@@ -167,3 +192,4 @@ Laboratori evacuat per ordre expressa a `../_investigacio_ia_de_poble/`: 10 elem
 - [[../10_actes/261029_0205_acta_marmota_blocs_ag_h_commit_e36606db2_disseny_e2ee_i_relleu_claude]]
 - [[../10_actes/261029_0838_acta_marmota_qa_codex_10_cicles]]
 - [[../10_actes/261029_1325_acta_marmota_marato_nocturna_i_preparacio_onada_1305]]
+- [[../10_actes/261031_0142_acta_tancament_seo_consola_telemetria_i_full_de_ruta_fediversity]]

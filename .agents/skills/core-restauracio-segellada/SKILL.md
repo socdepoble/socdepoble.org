@@ -105,7 +105,7 @@ node tooling/brain/desenterrar.mjs --ref <commit_resolt> --fitxer <ruta> --segel
 
 El CLI rebutja feina local per defecte. Si el destí existix, abans de substituir-lo
 crea una còpia en `.sdp-paperera/`, sincronitza i rellegix els bytes, comprova
-SHA-256 i mode, i escriu al costat un manifest `.restauracio.json` amb HEAD,
+SHA-256 i mode, i escriu al costat un manifest `<destí>.restauracio.json` amb HEAD,
 commit candidat, ruta, hash i mode previs. Si la còpia no es pot verificar, no
 substituïx el destí. La revisió s'escriu amb fitxer temporal i rename i es
 verifiquen bytes i mode abans de completar el claim. Un destí abans absent no

@@ -35,7 +35,7 @@ En tots els lliurables i informes de Sóc de Poble cal assegurar aquesta estruct
 Tot això s'ha de forçar via CSS Print (`@page { @top-center { content: "Títol"; font-size: 10pt; } @bottom-right { content: counter(page); } }`) en l'arxiu CSS o afegint els paràmetres escaients (`--display-header-footer`) a l'script de renderitzat.
 
 ## 4. Components Semàntics i Identitat Visual (CSS)
-S'han d'utilitzar caixes i components de disseny per emfatitzar la informació important, mai abocar el text de colp. El sistema de disseny es troba com a referència a: `_wiki_de_poble/04_escriptori/02_investigacio_ia/261012_0040_sistema_informes_claude/`.
+S'han d'utilitzar caixes i components de disseny per emfatitzar la informació important, mai abocar el text de colp. El sistema de disseny es troba com a referència a: `../_investigacio_ia_de_poble/261012_0040_sistema_informes_claude/`.
 
 Alguns patrons de referència inclouen:
 - `.alert`: Caixes cridaneres amb fons marí corporatiu per a dates límit i avisos greus.

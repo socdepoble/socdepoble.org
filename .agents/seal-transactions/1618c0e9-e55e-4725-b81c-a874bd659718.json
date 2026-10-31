@@ -1,0 +1,32 @@
+{
+  "id": "1618c0e9-e55e-4725-b81c-a874bd659718",
+  "session": "6b0e74ef-2fbf-40b0-89e0-4e94ccd60d4a",
+  "operationId": "torn_438fe070-llei_editorial_taules_hipervincles_i_llico_de_valencia_al_xat_261030-6b0e74ef",
+  "claim": "6b0e74ef-2fbf-40b0-89e0-4e94ccd60d4a:governance-write",
+  "planHash": "98eef301e1d2de4ef81a80d1f362be9efffe98748921dc7c11137a99225ff960",
+  "beforeSeal": "b3e0f5ff228337167cdac12483d880c145c51245c17bfd99a280ddece3b24349",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "98e1f24e6f3827fd294a12be2a6e06d4c8e5585779d68b1fef33e1595f340b18",
+      "after": "5aa4830d4744d2446945c082b2ced7f8247570ea47f839212ca9ecf5d10928cc"
+    },
+    {
+      "path": ".agents/skills/core-calibratge-visual-nano/SKILL.md",
+      "before": "c7ab935ab8d35e7dc1892783c340bd43a70c2e552adf1298b9935be759a90d6f",
+      "after": "65e3c2de4acdad606f09a88a62f8f3c3df03c8a990d3f98916251e1d66797038"
+    },
+    {
+      "path": ".agents/skills/core-identitat/SKILL.md",
+      "before": "26689bd02d0efb6c678fb02402d1aa5cf54e0a0cc7d7b93a39086d04ca6118ad",
+      "after": "4d2a036106143f7208c708cebc1f5153e66401aeaa976fffac6f497cc0de0112"
+    },
+    {
+      "path": ".agents/skills/sdp-universal-page/SKILL.md",
+      "before": "32ab89ebe8fa538d0300eacc0ad0aae46bb9d1221337c24bc0dd9b99ae0e1941",
+      "after": "d7d45a72a3b8ccfc32937eaa1a93566c2b198549d7920272fbc0d8181c90c508"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "1a377f43998acf2730a5043397cdf980eafd84dc02e6bea88cc1a5d6c8017501"
+}

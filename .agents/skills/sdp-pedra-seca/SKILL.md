@@ -110,5 +110,10 @@ L'equivalent a l'Spec-driven per al disseny:
 - **Topologia Natiu i Dynamic Island:** Ha de respectar estrictament el `safe-area-inset-top` d'iOS i Android mitjançant `padding-top: env(safe-area-inset-top, 0px)` i alçada calculada `calc(var(--sdp-alt-negra) + env(safe-area-inset-top, 0px))` amb `box-sizing: border-box`. Els controls (logo, icones) mai xoquen ni queden ocults darrere de la Dynamic Island o la barra d'estat nativa.
 - **Jerarquia Vertical:** Totes les subcapçaleres de secció (com la barra de `Converses`, taulers o filtres) se situen necessàriament per davall de la Barra Negra de Sóc de Poble, mai per damunt ni al seu mateix nivell visual.
 
+## Lliçons del Mestre
+
+- **261031** | **Les llistes, sempre més juntes que els paràgrafs**: els ítems (`<li>`) d'una llista `<ul>` o `<ol>` van més junts entre si que els paràgrafs (`<p>`). El ritme el fixa `--sdp-li-gap` (4px, a `src/css/tokens.css`) davant dels 20px de `--sdp-mb-p`, i cap llista de text (amb pics o números) hi suma un `gap` de graella o de flex damunt del marge dels `<li>` (`src/css/base.css`; ho vigila `src/css/llistes.llei.capes.test.js`). Les llistes de components sense marcadors que encara sumen `gap` les ha de decidir el Mestre.
+- **261031** | **Un sol motlle per als taulers de xifres**: un tauler de mètriques (Telemetria, Consola, Gestoria, TPV o Botiga) es construïx amb l'organisme `QuadreDeComandament` de `src/components/PedraSeca/organismes/QuadreDeComandament.jsx` i els estils de `src/css/taulers.css`. Porta capçalera d'estat, targetes KPI baixes amb etiqueta i xifra, l'explicació fora de les caixes amb el cos de paràgraf normal, la gràfica amb el detall per ratolí, tacte i teclat, i el rànquing compacte. Totes les dades li arriben per props.
+
 ## Vincles
 - [[00_INDEX_SKILLS]]

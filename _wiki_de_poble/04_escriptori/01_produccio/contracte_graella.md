@@ -7,7 +7,7 @@ description: Contracte de Graella
 
 Aquest document defineix el contracte del framework de graella responsiva (`AppGridShell`).
 
-Punts de tall (breakpoints): 720px i 1090px.
+Punts de tall (breakpoints): 720px, 900px i 1023px (`PUNTS_DE_TALL` de `src/components/layout/graella.js`).
 
 ## AppGridShell
 
@@ -25,9 +25,8 @@ Punts de tall (breakpoints): 720px i 1090px.
 | `panellEstret` | Panell estret per defecte |
 | `tornaEstret` | Retorn del panell estret |
 | `onPanell` | Notifica panell assentat |
-| `railMitja` | Llista plegada en rail en mitjà |
 | `railEstret` | Rail esquerre fix en estret |
-| `railEsquerra` | Rail navegació esquerra fixa en mitjà |
+| `columnesFixes` | Fora de mòbil (més de 720px), les tres columnes queden fixes a la graella i redimensionables amb els dos separadors, mai com a calaix flotant; el vel i els panells flotants només en estret. L'usa l'UniversalWorkspace (ordre del Mestre 261030) |
 | `aria-label` | Etiqueta accessible |
 | `className` | Classes addicionals |
 
@@ -36,7 +35,7 @@ Punts de tall (breakpoints): 720px i 1090px.
 | Prop | Descripció |
 |---|---|
 | `titol` | Títol de la columna |
-| `icona` | Icona de la columna |
+| `icona` | Icona de la columna; amb `onReplega`, a la capçalera oberta és un botó germà del [\|<] que fa el mateix i, plegada, el rail porta la mateixa icona al mateix lloc per a desplegar-la (ordre d'usabilitat del Mestre 261030) |
 | `startActions` | Accions a l'esquerra del títol |
 | `endActions` | Accions a la dreta del títol |
 | `accions` | (Deprecat) Ús `endActions` preferentment |
@@ -46,7 +45,7 @@ Punts de tall (breakpoints): 720px i 1090px.
 | `obert` | Estat d'obertura |
 | `onPlega` | Callback en plegar |
 | `onReplega` | Callback en replegar |
-| `replegaTotaCapcalera` | Oculta la capçalera en plegar |
+| `replegaTotaCapcalera` | Tota la fila de la capçalera oberta és el botó de replegar; només l'usa el Xat, i l'UniversalWorkspace ja no la passa (ordre d'usabilitat del Mestre 261030: hi pleguen la icona i el [\|<], i el títol és fix) |
 | `etiquetaReplega` | Etiqueta per a la icona de replegar |
 | `controls` | aria-controls de l'acció |
 | `replegaCompacte` | Replegador visible a mòbil (P6) |
@@ -55,3 +54,7 @@ Punts de tall (breakpoints): 720px i 1090px.
 | `collapseBtnRef` | Ref al botó de plegar (successor de focus en replegar) |
 | `expandBtnRef` | Ref al botó d'expandir (successor de focus en plegar) |
 | `children` | Contingut interior |
+
+## Vincles
+
+- [[00_index_escriptori]]

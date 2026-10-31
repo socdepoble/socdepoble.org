@@ -42,6 +42,10 @@ Quan l'usuari clica als icones d'ocultar les columnes (per amagar la barra later
 - **Ocultació de Carpetes:** Quan es replega la columna de carpetes, l'icona que serveix per a tornar a obrir-la s'alinea de manera perfecta amb l'icona de la "Roda Dentada". Ambdós icones queden visibles.
 - **Ocultació de Notes:** Quan es replega la columna de notes (cap a l'esquerra), el botó de "Crear Nota" **desapareix**. Només queda visible l'icona d'obrir la columna i la "Lupa".
 - **Resum:** Només es poden crear notes si la columna de notes està desplegada (oberta). Aquesta és la distribució inicial i obligatòria.
+- **Columnes fixes fora de mòbil (ordre del Mestre 261030):** amb més de 720 px la graella pinta sempre les tres columnes fixes, redimensionables amb els dos separadors i mai com a calaix flotant; amb 720 px o menys és la vista mòbil (mestre-detall). El tall és un de sol per al JS i la CSS (`PUNTS_DE_TALL.estret` de `src/components/layout/graella.js`).
+- **La icona de la columna plega i desplega:** oberta, la icona de la capçalera és un botó germà del [|<] que fa el mateix; plegada, el rail porta la mateixa icona al mateix lloc per a desplegar-la, i el focus passa al botó contrari. L'acordió de la capçalera porta només la paraula i el chevron apegat; sense acordió, el títol és text fix. La fila sencera com a botó només la porta el Xat.
+- **Estat d'arrencada:** les columnes arrenquen obertes a tots els espais, també al Bloc de Notes. Amb la finestra de 721 a 1023 px (entre `estret` i `compacte`), l'`UniversalWorkspace` arrenca amb la navegació plegada en rail (`navegacioPlegadaEnArrencar`); des de 1024 px, totes obertes. Només decidix la muntada: després mana la persona, i un `columnesInicials` explícit o el mode compacte manen sobre la franja.
+- **El separador del mig s'agafa sempre:** per davall de la capçalera, la seua franja queda per damunt de la barra taronja i de les eines de l'editor, i per davall de la barra blava.
 
 ## 5. Llei de la Barra Negra Immutable i Safe-Area Natiu (Mòbil i Escriptori)
 
@@ -56,6 +60,11 @@ Quan l'usuari clica als icones d'ocultar les columnes (per amagar la barra later
   2. Just a sota: **Barra Negra de Sóc de Poble** (`header.bar-black`) — FIXA i IMMUTABLE.
   3. A sota de la Barra Negra: Les capçaleres de secció o subbarres (com la barra de `Converses` amb el commutador, menú i botó `+`).
   4. La barra de `Converses` o subbarres podran en un futur adaptar-se o ocultar-se si faltés espai extrem, però la Barra Negra de Sóc de Poble mai.
+
+## Lliçons del Mestre
+
+- **261030** | **Tres columnes fixes i icona que plega**: fora de mòbil (més de 720 px) l'espai de treball pinta les tres columnes fixes i redimensionables. Cada columna té la seua icona, que a la capçalera oberta plega com el [|<] i al rail desplega des del mateix lloc.
+- **261030** | **Columnes obertes en arrencar**: tot espai de treball arrenca amb les columnes obertes. Només amb la finestra de 721 a 1023 px la navegació arrenca plegada en rail, i eixe tall viu a `src/components/layout/graella.js`.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]
