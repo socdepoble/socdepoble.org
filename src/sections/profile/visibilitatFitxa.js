@@ -10,7 +10,10 @@
  *     supabase/perfils.js): la marca es desa, i ho diem;
  *   · organització: `organizations.visibility` 'public' | 'members'. Privada
  *     vol dir «només les persones membres», no «ningú»;
- *   · agent IA: sempre pública, amb l'avís d'intel·ligència artificial.
+ *   · agent IA: sempre pública, amb l'avís d'intel·ligència artificial;
+ *   · empresa, entitat o ajuntament (kind 'company', 'entity' o 'city_hall'):
+ *     sempre pública, sense l'opció «Fitxa privada» (decisió del Mestre, xat
+ *     261031, RGPD). Els grups conserven la tria.
  * Persona i organització es poden tornar a fer privades: el text «reversible»
  * només ix ací, on és cert.
  */
@@ -89,6 +92,16 @@ const AGENT = Object.freeze({
 
 export const MOTIU_AGENT = 'La fitxa d’un agent IA sempre és pública i porta l’avís d’intel·ligència artificial.';
 
+/* Decisió del Mestre (xat 261031, RGPD) · Les empreses, les entitats i els
+   ajuntaments són figures públiques del directori (com fa el servidor amb la
+   migració 2610311500): el selector no oferix «Fitxa privada» i ho diu en una
+   sola línia. Els grups ('group') conserven la tria. */
+export const KINDS_FIGURA_PUBLICA = Object.freeze(['company', 'entity', 'city_hall']);
+export const MOTIU_FIGURA_PUBLICA = 'Les empreses, les entitats i els ajuntaments són figures públiques del directori: la seua fitxa ha de ser pública.';
+
+/** Si el tipus d'organització és una figura pública del directori. */
+export const esFiguraPublica = (kind) => KINDS_FIGURA_PUBLICA.includes(kind);
+
 /** Els textos del selector segons la mena de fitxa ('persona' | 'agent' | organització). */
 export function textosDeFitxa(mena) {
   if (mena === 'persona') return PERSONA;
@@ -96,7 +109,9 @@ export function textosDeFitxa(mena) {
   return ORGANITZACIO;
 }
 
-/** El que no es pot triar (null si tot es pot triar). */
-export function bloqueigDeFitxa(mena) {
-  return mena === 'agent' ? { opcio: 'privada', motiu: MOTIU_AGENT } : null;
+/** El que no es pot triar (null si tot es pot triar). `amaga`: l'opció ni s'oferix. */
+export function bloqueigDeFitxa(mena, kind) {
+  if (mena === 'agent') return { opcio: 'privada', motiu: MOTIU_AGENT };
+  if (mena === 'organitzacio' && esFiguraPublica(kind)) return { opcio: 'privada', motiu: MOTIU_FIGURA_PUBLICA, amaga: true };
+  return null;
 }

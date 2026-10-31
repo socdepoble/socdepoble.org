@@ -1,0 +1,32 @@
+{
+  "id": "f5de3fab-f144-4346-98de-64c35fae0d61",
+  "session": "fb44017d-370a-4278-8675-213c410e467a",
+  "operationId": "torn_2c6f4a62-relleu_rondes_dos_i_tres_empremta_fediversity_i_lock_del_corpus-fb44017d",
+  "claim": "fb44017d-370a-4278-8675-213c410e467a:governance-write",
+  "planHash": "2ba6bbedbe6aa7687a1b6478fa27c898079a4d11984e920d357c7463c8efb321",
+  "beforeSeal": "849b5509feb0a167a3b9d668d6dc25f0f80e5d77f135b77b8ed2efaa1463c1d4",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "bb9c5758d11c4fb330812b716eee7fe2714ecea73e9ad9ed0b1719d9614a2957",
+      "after": "aa3d40523b8a0afe50ec8854f4c73adc72f0e831eb93670d91009021e2cd3165"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "c9e969d21ac584e69041e2ba6e5566a3ffbd8cf7bf39d4bbdbeb4e912e31e697",
+      "after": "6fedc6825075d85d5fc1d78f4c05027880aab783e17720c0c17e2bdcacbd1969"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "565b5df02fc4a1bdb0e489eca77c99197a71c903e6fde3f5af7ba36a1b75f7d3",
+      "after": "7121ea0745346d8b0d86f5f39594146935344334918575541b77094d4fce390d"
+    },
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "920799a3c5ac401e8af9eb2ce8dacd11007cafc10e9ae8806382e5e7b69902cf",
+      "after": "400a03ddbee52bf56b47fd24cb85dc47d47589e5afbf3e5bd9bb0ee854a2999b"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "3f6b506b7981f75b392a54d0d53631f3da2b7379006d695845166918563941ef"
+}

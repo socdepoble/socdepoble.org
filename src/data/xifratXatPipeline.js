@@ -1,3 +1,4 @@
+import { directoriAmbHistoria } from './xifratXatHistoria.js';
 /**
  * src/data/xifratXatPipeline.js — El motor del pipeline extrem a extrem del
  * xat xifrat (`sdp-xat-v1`, P1-12 Fase 4; pla 261029_1305, Bloc C, E1.1–E1.3;
@@ -31,7 +32,8 @@
  */
 import { aBase64url, deBase64url, exigixCripto, sha256 } from './xifratXatCripto.js';
 import { MOTIU_EPOCA, ROL_EPOCA, TIPUS_FIL } from './xifratXatFormats.js';
-import { CODI, aplicaEpoca, creaDirectori, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, publiquesDe, xifraMissatge } from './xifratXatProtocol.js';
+import { CODI, aplicaEpoca, creaEpoca, esErrorProtocol, estatFilNou, obriMissatge, xifraMissatge } from './xifratXatProtocol.js';
+import { llegixEpoca } from './xifratXatFormats.js';
 import { desxifraAdjuntXat, errorPressupostBlobs, metadadesAdjuntDe, midaBlobAdjunt, TIPUS_DE_CLASSE, xifraAdjuntXat } from './xatMultimediaXifrat.js';
 
 export const VERSIO_SOBRE = 1;
@@ -81,7 +83,7 @@ export function serialitzaEpoca(genesi) {
   });
 }
 
-export const desserialitzaSobre = (s) => ({ receptor: s.receptor, kidReceptor: deBase64url(s.kidReceptor, 16), enc: deBase64url(s.enc), ct: deBase64url(s.ct) });
+export const desserialitzaSobre = (s) => ({ ...(s.alternatiu===true?{alternatiu:true,filId:s.filId,epoca:s.epoca,emissorId:s.emissorId}:{}), receptor: s.receptor, kidReceptor: deBase64url(s.kidReceptor, 16), enc: deBase64url(s.enc), ct: deBase64url(s.ct) });
 
 /* ── El motor ────────────────────────────────────────────────────────────── */
 
@@ -116,18 +118,15 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     return [joId, ...ids];
   };
 
-  const fixaContacte = async (directori, c) => directori.fixa({
-    usuari: c.usuariId ?? c.usuari, kid: deBase64url(c.kid, 16), sigPub: deBase64url(c.sigPub, 65), dhPub: deBase64url(c.dhPub, 65)
-  });
 
   const exigixTransport = (nom) => {
     if (typeof impl[nom] !== 'function') throw errorMotor(CODI_MOTOR.senseCapacitat, `El backend no exposa ${nom}.`, { reintentable: false });
   };
 
   /** El context d'un fil (estat del protocol, directori, jo, membres), construït una vegada per àmbit. */
-  const contextDelFil = async ({ fil, tipusFil, config, exigix }) => {
+  const contextDelFil = async ({ fil, tipusFil, config, exigix, refresca = false }) => {
     const desat = servei.estatFilDesat(fil.id);
-    if (desat) return desat;
+    if (desat && !refresca) return desat;
     const { ci, joId } = claus();
     const tipus = TIPUS_DEL_FIL[tipusFil];
     if (tipus === undefined) throw errorMotor('tipus-de-fil', 'Este tipus de fil no es pot xifrar.', { reintentable: false });
@@ -135,36 +134,56 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     const jo = await identitat(ci);
     exigix();
     if (jo.usuari !== joId) throw bloquejat(CODI_MOTOR.clausBloquejades, 'Les claus d’este aparell són d’una altra persona.');
-    const membres = membresDe(fil, joId);
-    if (membres.length < 2) throw errorMotor(CODI_MOTOR.filSenseMembres, 'El fil no té cap altre membre amb qui xifrar.', { reintentable: false });
-    const directori = creaDirectori(cripto);
-    await directori.fixa(publiquesDe(jo));
-    exigixTransport('clausDeXat');
-    const publiques = await impl.clausDeXat(membres.filter((u) => u !== joId), config);
-    exigix();
-    for (const c of Array.isArray(publiques) ? publiques : []) await fixaContacte(directori, c);
-    const estat = estatFilNou({ fil: fil.id, tipusFil: tipus });
+    let rols=membresDe(fil,joId).map(usuari=>({usuari,rol:ROL_EPOCA.membre}));
+    if(tipus===TIPUS_FIL.grup) {
+      exigixTransport('estatXifratXat');
+      const [remot]=await impl.estatXifratXat([fil.id],{...config,ambMembres:true}); exigix();
+      rols=remot?.membres;
+      if(!Array.isArray(rols)||rols.length<1||rols.length>256||new Set(rols.map(m=>m.usuari)).size!==rols.length||!rols.some(m=>m.usuari===joId)||!rols.every(m=>typeof m.usuari==='string'&&Object.values(ROL_EPOCA).includes(m.rol)))throw errorMotor('roster-invalid','No hi ha un roster canònic complet.');
+    }
+    const membres=rols.map(m=>m.usuari);
+    const ancorat=await magatzem.filXifrat?.(ci,fil.id)??null;exigix();
     exigixTransport('epoquesDelFilXat');
-    const epoques = [...(await impl.epoquesDelFilXat(fil.id, 0, config) ?? [])].sort((a, b) => a.epoca - b.epoca);
+    const des=desat?.estat.ultima?.epoca??0;
+    const epoques=[...(await impl.epoquesDelFilXat(fil.id,des,config)??[])].filter(e=>e.epoca>des).sort((a,b)=>a.epoca-b.epoca); exigix();
+    const declaracions=[...[...(desat?.estat.epoques.values()??[])].map(e=>e.valors),...epoques.map(e=>llegixEpoca(deBase64url(e.declaracio)))];
+    // Inclou els membres històrics; l'autoritat prové sempre de la SDPE signada.
+    const usuaris=new Set(membres);
+    for(const e of declaracions)for(const m of e.membres)usuaris.add(m.usuari);
+    exigixTransport('clausDeXat');
+    const publiques=[];const ids=[...usuaris];
+    for(let i=0;i<ids.length;i+=256){publiques.push(...(await impl.clausDeXat(ids.slice(i,i+256),config)??[]));exigix();}
+    const directori=await directoriAmbHistoria({cripto,jo,registres:Array.isArray(publiques)?publiques:[],usuaris,magatzem,ci,ara,exigix,declaracions}); exigix();
+    const estat=desat?{...desat.estat,epoques:new Map(desat.estat.epoques),vistos:new Set(desat.estat.vistos)}:estatFilNou({fil:fil.id,tipusFil:tipus});
     exigix();
     if (epoques.length) {
       exigixTransport('sobresMeusXat');
-      const sobres = (await impl.sobresMeusXat(fil.id, epoques.map((e) => e.epoca), config)) ?? [];
-      exigix();
+      const sobres=[];
+      for(let i=0;i<epoques.length;i+=256){sobres.push(...(await impl.sobresMeusXat(fil.id,epoques.slice(i,i+256).map(e=>e.epoca),{...config,kidReembolcall:aBase64url(jo.kid)})??[]));exigix();}
       for (const e of epoques) {
+        try {
         await aplicaEpoca(cripto, {
           estat, jo, declaracio: deBase64url(e.declaracio), firma: deBase64url(e.firma), directori, vigent: exigix,
           sobres: sobres.filter((s) => s.epoca === e.epoca).map(desserialitzaSobre)
         });
+        } catch(error) {if(esAmbitCanviat(error)||!esErrorProtocol(error))throw error;}
+
       }
     }
     /* Gauntlet c2 (C1) · Entre l'última guarda d'aplicaEpoca i ací l'àmbit pot haver canviat:
        el context (amb la meua identitat) mai no entra a la RAM d'un altre àmbit. */
     exigix();
-    const context = Object.freeze({ estat, directori, jo, membres });
+    if(ancorat && (!estat.cap || estat.cap.epoca<ancorat.epoca || aBase64url(estat.epoques.get(ancorat.epoca)?.hash??new Uint8Array())!==aBase64url(ancorat.hash)))throw errorMotor('cap-retrocedix','La cadena remota no conté el cap verificat d’este aparell.');
+    // Només després de totes les firmes, cadena i sobres: cap fixació motivada
+    // per una SDPE rebutjada no queda persistent.
+    if(!declaracions.length || estat.cap)await directori.confirma(new Set([...membres,...[...estat.epoques.values()].flatMap(e=>[...e.membres.keys()])]));exigix();
+    if(estat.cap && (!ancorat || estat.cap.epoca>ancorat.epoca) && magatzem.avancaCap){await magatzem.avancaCap(ci,fil.id,{anterior:ancorat,nou:{epoca:estat.cap.epoca,hash:estat.cap.hash}});exigix();}
+    const context = { estat, directori, jo, membres, rols, fil, tipusFil, capPersistent:estat.cap?{epoca:estat.cap.epoca,hash:estat.cap.hash}:ancorat };
     servei.desaEstatFil(fil.id, context);
     return context;
   };
+
+  const confirmacions = new WeakMap();
 
   const normalitzaCos = (cos) => (typeof cos === 'string' ? { text: cos } : (cos && typeof cos === 'object' ? cos : { text: null }));
 
@@ -176,14 +195,20 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
        és l'id de la fila (publicaAdjunt i el blob al servidor). Qui rep tanca la fila que no ho
        complix; ací no s'arriba ni a enviar-la. */
     if (entrada.a && entrada.a.id !== id) throw errorMotor(CODI.adjuntIncoherent, 'L’adjunt no és d’este missatge.', { reintentable: false });
-    const ctx = await contextDelFil({ fil, tipusFil, config, exigix });
+    // Refresca abans d'enviar: altes, baixes, rols i kids poden haver canviat.
+    const baseCtx = await contextDelFil({ fil, tipusFil, config, exigix, refresca:true });
+    // La candidata és privada d’este enviament fins a l’eco; ni un refresc
+    // concurrent ni una publicació fallida la poden convertir en àncora.
+    const ctx={...baseCtx,estat:{...baseCtx.estat,epoques:new Map(baseCtx.estat.epoques),vistos:new Set(baseCtx.estat.vistos)}};
+    if(ctx.estat.tipusFil===TIPUS_FIL.directe && ctx.membres.length!==2)throw errorMotor(CODI_MOTOR.filSenseMembres,'El directe necessita dues persones per enviar.',{reintentable:false});
+    if(ctx.estat.ultima?.saltada)throw errorMotor('epoca-saltada','L’última època no verifica; no s’envia amb una CK anterior.',{reintentable:false});
     let epocaNova = null;
-    if (ctx.estat.cap === null || ctx.estat.cap.ck === null) {
+    if (ctx.estat.cap === null || ctx.estat.cap.ck === null || ctx.rols.length!==ctx.estat.cap.membres.size || ctx.rols.some(m=>{const vell=ctx.estat.cap.membres.get(m.usuari);return !vell||vell.rol!==m.rol||aBase64url(vell.kid)!==aBase64url(ctx.directori.de(m.usuari)?.kid??new Uint8Array());})) {
       const epoca = (ctx.estat.ultima?.epoca ?? 0) + 1;
       let genesi;
       try {
         genesi = await creaEpoca(cripto, {
-          estat: ctx.estat, jo: ctx.jo, membres: ctx.membres.map((usuari) => ({ usuari, rol: ROL_EPOCA.membre })),
+          estat: ctx.estat, jo: ctx.jo, membres: ctx.rols,
           motiu: epoca === 1 ? null : MOTIU_ROTACIO, creatMs: ara(), directori: ctx.directori, vigent: exigix
         });
       } catch (error) {
@@ -198,13 +223,32 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     if (entrada.a) contingut.a = entrada.a;
     if (entrada.mini) contingut.mini = entrada.mini;
     const fila = await xifraMissatge(cripto, { estat: ctx.estat, jo: ctx.jo, id, contingut, comOrg: entrada.comOrgId ?? null, respostaA: entrada.respostaA ?? null, vigent: exigix });
-    return Object.freeze({ id, text: null, tipus: 'text', respostaA: entrada.respostaA ?? null, xifrat: serialitzaXifrat(fila), epocaNova });
+    const paquet=Object.freeze({ id, text: null, tipus: 'text', respostaA: entrada.respostaA ?? null, xifrat: serialitzaXifrat(fila), epocaNova });
+    confirmacions.set(paquet,{ctx,baseCtx,ci:claus().ci,filId:fil.id,exigix,anterior:ctx.capPersistent,nou:{epoca:ctx.estat.cap.epoca,hash:ctx.estat.cap.hash}});
+    return paquet;
   };
 
   /** L'eco d'un enviament: el servidor ha desat el que he enviat (IS-19) i la interfície rep el text en clar. */
-  const eco = (resultat, paquet, cos, filId = resultat?.filId ?? null) => {
+  const eco = async (resultat, paquet, cos, filId = resultat?.filId ?? null) => {
     const entrada = normalitzaCos(cos);
     if (resultat?.xifrat && resultat.xifrat.tf !== paquet.xifrat.tf) throw errorMotor(CODI_MOTOR.ecoNoQuadra, 'El servidor no ha desat el missatge que s’ha enviat.', { reintentable: false });
+    const pendent=confirmacions.get(paquet);
+    if(pendent){
+      pendent.exigix();
+      if(resultat?.id!==paquet.id||resultat?.filId!==pendent.filId||resultat?.text!==null||!Number.isSafeInteger(resultat?.seq)||resultat.seq<1||['v','epoca','iv','ct','kid','tf'].some(k=>resultat?.xifrat?.[k]!==paquet.xifrat[k])||(resultat.respostaA??null)!==paquet.respostaA)throw errorMotor(CODI_MOTOR.ecoNoQuadra,'L’eco no correspon al paquet verificat.',{reintentable:false});
+      const viu=servei.estatFilDesat(pendent.filId),capViu=viu?.estat.cap;
+      const incorporat=viu?.capPersistent?.epoca>=pendent.nou.epoca && aBase64url(viu.estat.epoques.get(pendent.nou.epoca)?.hash??new Uint8Array())===aBase64url(pendent.nou.hash);
+      if(capViu?.epoca===pendent.nou.epoca && aBase64url(capViu.hash)!==aBase64url(pendent.nou.hash))throw errorMotor(CODI_MOTOR.ecoNoQuadra,'L’eco bifurca el context verificat.');
+      if(!incorporat && magatzem.avancaCap && (!pendent.anterior||pendent.nou.epoca>pendent.anterior.epoca)){await magatzem.avancaCap(pendent.ci,pendent.filId,{anterior:pendent.anterior,nou:pendent.nou});pendent.exigix();}
+      // Un eco tardà no pot substituir un cap més nou que una lectura ja ha verificat.
+      const actual=servei.estatFilDesat(pendent.filId);
+      if(!actual?.estat.cap || actual.estat.cap.epoca<pendent.nou.epoca){
+        pendent.ctx.capPersistent=pendent.nou;
+        pendent.ctx.estat.vistos=new Set([...(actual?.estat.vistos??[]),...pendent.ctx.estat.vistos]);
+        servei.desaEstatFil(pendent.filId,pendent.ctx);
+      }
+      confirmacions.delete(paquet);
+    }
     const text = typeof entrada.text === 'string' ? entrada.text : null;
     const seguretat = Object.freeze({ xifrat: true, clauAntiga: false, verificat: true, propi: true });
     if (resultat?.id && filId) servei.desaTextDesxifrat(filId, resultat.id, { text, seguretat, a: entrada.a ?? null });
@@ -227,30 +271,14 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     const enCurs = resincronitzacions.get(ctx);
     if (enCurs) return enCurs;
     const promesa = (async () => {
-      const des = ctx.estat.ultima?.epoca ?? 0;
-      exigixTransport('epoquesDelFilXat');
-      const noves = [...(await impl.epoquesDelFilXat(filId, des, config) ?? [])]
-        .filter((e) => Number.isSafeInteger(e?.epoca) && e.epoca > des).sort((a, b) => a.epoca - b.epoca);
-      exigix();
-      if (!noves.length) return false;
-      exigixTransport('sobresMeusXat');
-      const sobres = (await impl.sobresMeusXat(filId, noves.map((e) => e.epoca), config)) ?? [];
-      exigix();
-      let aplicades = 0;
-      for (const e of noves) {
-        try {
-          await aplicaEpoca(cripto, {
-            estat: ctx.estat, jo: ctx.jo, declaracio: deBase64url(e.declaracio), firma: deBase64url(e.firma), directori: ctx.directori, vigent: exigix,
-            sobres: sobres.filter((s) => s.epoca === e.epoca).map(desserialitzaSobre)
-          });
-          aplicades += 1;
-        } catch (error) {
-          if (esAmbitCanviat(error)) throw error;
-          /* No valida: aplicaEpoca l'ha marcada saltada (o no encadena) i la resta prova igual (IS-12). */
-        }
-      }
-      exigix();
-      return aplicades > 0;
+      const des=ctx.estat.ultima?.epoca??0;
+      // Una lectora calenta necessita també els kids nous i les altes; una
+      // cadena que no verifica no substituïx el context vàlid anterior.
+      let renovat;
+      try {renovat=await contextDelFil({fil:ctx.fil,tipusFil:ctx.tipusFil,config,exigix,refresca:true});}
+      catch(error){exigix();servei.desaEstatFil(filId,ctx);throw error;}
+      exigix();Object.assign(ctx,renovat);servei.desaEstatFil(filId,ctx);
+      return (ctx.estat.ultima?.epoca??0)>des;
     })();
     resincronitzacions.set(ctx, promesa);
     const solta = () => { if (resincronitzacions.get(ctx) === promesa) resincronitzacions.delete(ctx); };
@@ -395,7 +423,7 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
         paquet = await prepara({ fil, tipusFil, cos: { id: entrada.id, ...entrada.contingut }, config, exigix });
         const resultat = await envia(fil.id, paquet);
         exigix();
-        eco(resultat, paquet, entrada.contingut, fil.id);
+        await eco(resultat, paquet, entrada.contingut, fil.id);
         await magatzem.treuDeSafata(ci, entrada.id, actor);
         enviats.push(entrada.id);
       } catch (error) {
@@ -437,7 +465,7 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
       }
       exigix();
       /* L'eco comprova (abans de desar res) que el servidor ha desat el que s'ha enviat; si no, la FK no entra a la RAM. */
-      const vestit = eco(resultat, paquet, { text: entrada.text ?? null, a: xifrat.a }, fil.id);
+      const vestit = await eco(resultat, paquet, { text: entrada.text ?? null, a: xifrat.a }, fil.id);
       servei.desaAdjunt(xifrat.a.id, Object.freeze({ fil: fil.id, emissor: ctx.jo.usuari, a: xifrat.a }));
       return vesteix(vestit, { text: vestit.text, seguretat: vestit.seguretat, a: xifrat.a });
     } catch (error) {

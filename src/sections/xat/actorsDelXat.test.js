@@ -191,4 +191,20 @@ describe('QA-R2-05 · la reserva de Sóc de Poble en remot sense UUID', () => {
       .toEqual(['comunitat:c-sdp', 'sdp-per-defecte:javi', 'poble:la-torre-de-les-macanes', 'sdp-per-defecte:iaia', 'comunitat:c-sdp']);
     expect(anteposaActors([delPoble, alie, deVeres, javi, iaia], { comunitat: comunitatDeReserva('remote') })[0]).toBe(deVeres);
   });
+
+  test('P1-70 · tant en seed, local com remote, anteposaActors amb les reserves manté sempre accessibles els 4 actors permanents', () => {
+    for (const mode of ['seed', 'local', 'remote']) {
+      const resultat = anteposaActors([delPoble], {
+        comunitat: comunitatDeReserva(mode),
+        reservaJavi: FILA_DE_RESERVA_DE_JAVI,
+        reservaIAIA: FILA_DE_RESERVA_DE_LA_IAIA
+      });
+      expect(claus(resultat)).toEqual([
+        CLAU_FILA_DE_SOC_DE_POBLE,
+        'sdp-per-defecte:javi',
+        'poble:la-torre-de-les-macanes',
+        'sdp-per-defecte:iaia'
+      ]);
+    }
+  });
 });

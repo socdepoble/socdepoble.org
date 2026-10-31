@@ -17,6 +17,8 @@ El codi executable viu fora de la Wiki, a `src/` i `tooling/`; ací només hi ha
 - [[02_saber/architecture/ADR-2026-11-PAGINACIO-SECCIONS|ADR-2026-11-PAGINACIO-SECCIONS]] · capacitat opcional del port (pendent de signatura): «Mostra més» al Mur i al Mercat després de les 50 primeres publicacions, amb un cursor (created_at, id).
 - [[02_saber/architecture/ADR-2026-12-MODULS-OPCIONALS|ADR-2026-12-MODULS-OPCIONALS]] · mòduls opcionals (pendent de signatura): el contracte sdp.modul.v1, el nucli SocDePoble.nucli, la guarda financera i el pressupost de pes; la Gestoria, primer mòdul.
 - [[02_saber/architecture/ADR-2026-13-BYOP-XIFRAT-LOCAL|ADR-2026-13-BYOP-XIFRAT-LOCAL]] · xifrat local BYOP (esborrany): el cofre de la Gestoria com a nucli compartit, el magatzem xifrat damunt de creaMagatzemIdb, la clau només en memòria, un sol cofre compartit de moment (D-16, 261011) i la guarda de document propi sense relaxar a WordPress amb el cofre actiu (D-17, 261011); en altres amfitrions, pendent del Mestre.
+- [[02_saber/architecture/ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA|ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA]] · Servei lliure de traducció sobirana (`P2-13`, esborrany): proposta pendent d'aprovació i desplegament; contractes i límits observats del client, amb proveïdors i privacitat diferenciats.
+- [[02_saber/architecture/api_port_neutral_i_allotjament_model_b|api_port_neutral_i_allotjament_model_b]] · inventari del port neutral (esborrany): les 32 operacions del nucli i les 31 capacitats de `src/data/contracte.js`, la Frontissa de lectura i els requisits d'allotjament verificables del Model B.
 - [[00_arquitectura_tecnica_unificada]]
 
 ## Estàndards del codi

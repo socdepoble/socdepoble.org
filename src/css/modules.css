@@ -2505,22 +2505,7 @@ details[open] summary.accordion-header svg:last-child {
 
 /* 7.13 Alta personal i d'organitzacions */
 
-.onboarding-card {
-  padding: clamp(var(--sdp-space-5), 5vw, var(--sdp-space-10));
-  border: 1px solid var(--sdp-vora);
-  border-top: 6px solid var(--sdp-accent);
-  border-radius: var(--sdp-radi-xl);
-  background: var(--sdp-fons-targeta);
-  box-shadow: var(--sdp-ombra-3);
-}
 
-.onboarding-card h2 {
-  margin: 0;
-  color: var(--sdp-text-titol);
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  line-height: var(--sdp-leading-tight);
-  text-transform: none;
-}
 
 .onboarding-card__intro {
   margin: 0 0 var(--sdp-space-6);

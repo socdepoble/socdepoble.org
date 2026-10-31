@@ -7,6 +7,21 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-11-01T00:51:00+01:00 · Claude · Rondes 2 i 3 del pla 261031_0136: kits de Codex i Gemini auditats i integrats, migracions RGPD i E2EE com a fitxers
+
+- **Torn i ordre:** `torn_2c6f4a62-406b-4eec-aaf6-e5ad90d3a405` (code). Ordres del Mestre al xat del 31-10 i de l'1-11 (Rondes 2 i 3 i les decisions que hi va prendre). Informe: [261031_1402_auditoria_claude](../_wiki_de_poble/04_escriptori/261031_1402_auditoria_claude.md).
+- **Ronda 2 (`f66de7865`, `c3a2c6bba`, pujats):** paquet segur reconciliat. Kit 1 de Codex amb federació només per a Sóc de Poble i La Torre; Kit 2 de Codex sense els pegats 01 (guarda del nom d'usuari fail-closed) i 04 (DNS estricte); subconjunt segur del Kit 1 de Gemini. Tres voltes de revisió adversarial amb les seues correccions.
+- **Ronda 3 (este commit):**
+  - Lots 3, 4, 5 i 6 de Codex reconciliats; cap lot cru de Gemini.
+  - Migracions `2610311500`, `2610311800`, `2610312000` i `2610311900` com a fitxers «NO aplicada: l'aplica el Mestre», en l'ordre 1500 → 1800 → 2000 → 1900.
+  - RGPD: empreses, entitats i ajuntaments, figures públiques sense `UPDATE` massiu; transferència de titularitat només de grups i empreses.
+  - E2EE de grups apagat per defecte.
+  - Document Model B i ADR-2026-14 a la Wiki. Lock del corpus resegellat amb 391 documents.
+- **Porta final:** a la còpia de l'arbre exacte, Vitest sencer (26.925 passades i 0 fallades), `test:node` (1.745 i 0), `test:precommit`, ESLint, cens (només Consell i Doctrina, de còpia neta), PGlite amb 64 migracions i `build:web` en verd.
+- **Per al Mestre:** aplicar les migracions i decidir abans els punts D2–D6 del Lot 3; tancar la D6 del Lot 4 abans d'activar E2EE; instal·lar Subversion i publicar 1.1.10; desplegar la web després del commit SVN; signar i pujar els natius 1.0.0 (2); revisar les traduccions en basc i gallec de la fitxa del poble.
+- **Torn:** obert (`planned`). El `--close` espera que els kits de `02_investigacio_ia/` passen al satèl·lit: sense àncora, tomben la porta SCC del tancament.
+- **Fronteres:** cap SVN, botiga, desplegament, `npm install` ni SQL remot; els fitxers d'entorn només s'han carregat als processos de build, sense mostrar-los.
+
 ## ESTAT_ACTUAL · 2026-10-31T17:10:00+01:00 · Claude · Ronda 1 (Fase 0) del pla 261031_0136: portes del cens, cinc commits, WordPress.org i build natiu 1.0.0 (2)
 
 - **Torn i ordre:** `torn_2c6f4a62-406b-4eec-aaf6-e5ad90d3a405` (code). [Pla 261031_0136](../_wiki_de_poble/04_escriptori/261031_0136_pla_implementacio_assalt_fediversity_deploy_i_botigues.md) i ordres del Mestre al xat del 31-10 (Ronda 1 i les quatre decisions de les 15:05). Informe: [261031_1402_auditoria_claude](../_wiki_de_poble/04_escriptori/261031_1402_auditoria_claude.md).

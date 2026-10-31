@@ -59,10 +59,22 @@ const MOTIUS = {
 };
 const UMAMI_CLIC = "S'ha anotat aquest clic de manera anònima al comptador públic.";
 
-function estatEnParaules({ tipus, enviat, motiu }) {
+/* P2-14 (C0545-S3) · Decisió del Mestre (xat 261031): es conserven les frases
+   del T3.2 (error de xarxa, amfitrió i clic d'Umami) i només s'afigen els dos
+   estats nous de l'enviament propi: «pendent de resposta» i «acceptat». Una
+   resposta fallada després d'eixir no diu «no s'ha enviat res»: usa la frase
+   de reserva de sempre. */
+const PENDENT_DE_RESPOSTA = "Pendent de resposta del comptador; s'ha intentat enviar.";
+const ACCEPTAT = "El comptador ha donat una resposta HTTP satisfactòria a l'intent; el registre final no es verifica ací.";
+const SENSE_CONFIRMACIO = "S'ha intentat enviar, però no sabem si ha arribat.";
+
+function estatEnParaules({ tipus, enviat, motiu, verificacio }) {
+  if (motiu === 'umami' && verificacio === 'intent') return PENDENT_DE_RESPOSTA;
+  if (motiu === 'umami' && verificacio === 'acceptat') return tipus === 'esdeveniment' ? UMAMI_CLIC : ACCEPTAT;
+  if (motiu === 'umami' && verificacio === 'fallat') return SENSE_CONFIRMACIO;
   if (motiu === 'umami' && tipus === 'esdeveniment') return UMAMI_CLIC;
   return MOTIUS[motiu] || (enviat
-    ? "S'ha intentat enviar, però no sabem si ha arribat."
+    ? SENSE_CONFIRMACIO
     : `No s'ha enviat res (motiu tècnic: ${motiu || 'desconegut'}).`);
 }
 
@@ -766,12 +778,16 @@ export default function TaulerTelemetria({
       </p>
       <p className="sdp-telemetria__nota">
         Una precisió honesta: esta llista diu el que este navegador ha intentat enviar, però no pot comprovar
-        si el comptador ho ha rebut. I viu només en la memòria d'esta pestanya: quan la tanques, s'esborra.
+        si el comptador ho ha registrat. I viu només en la memòria d'esta pestanya: quan la tanques, s'esborra.
       </p>
       {enviaments.length ? (
         <ol className="sdp-telemetria__llista">
           {enviaments.map((intent, i) => (
-            <li key={`${intent.moment}-${intent.tipus}-${intent.nom}-${intent.url}-${i}`} className="sdp-telemetria__intent">
+            <li
+              key={`${intent.moment}-${intent.tipus}-${intent.nom}-${intent.url}-${i}`}
+              className="sdp-telemetria__intent"
+              data-verificacio={intent.verificacio || 'no_comprovat'}
+            >
               <p className="sdp-telemetria__cap">
                 <span className="sdp-telemetria__nom">{nomDeLIntent(intent)}</span>
                 <time className="sdp-telemetria__moment" dateTime={intent.moment}>{hora(intent.moment)}</time>

@@ -202,9 +202,47 @@ test('T3.3: un servidor local sense comptador configurat diu «sense-configurar�
   vi.stubEnv('VITE_UMAMI_WEBSITE_ID', '');
   vi.stubEnv('VITE_UMAMI_HOST', '');
   try {
-    expect(registraVisita('/mur')).toMatchObject({ enviat: false, motiu: 'sense-configurar' });
+    expect(registraVisita('/mur')).toMatchObject({ enviat: false, motiu: 'sense-configurar', verificacio: 'no_comprovat' });
     expect(window.fetch).not.toHaveBeenCalled();
   } finally {
     vi.unstubAllEnvs();
   }
+});
+
+test('P2-14 (C0545-S3) · cada entrada de darrersEnviaments exposa verificacio (intent → acceptat | fallat | no_comprovat)', async () => {
+  let resolFetch;
+  window.fetch = vi.fn(() => new Promise((resolve) => { resolFetch = resolve; }));
+
+  const r1 = registraVisita('/mur', { cfg });
+  expect(r1).toMatchObject({ enviat: true, motiu: 'umami', verificacio: 'intent' });
+  expect(darrersEnviaments()[0]).toMatchObject({ enviat: true, motiu: 'umami', verificacio: 'intent' });
+
+  resolFetch({ ok: true });
+  await Promise.resolve();
+  expect(darrersEnviaments()[0]).toMatchObject({ enviat: true, motiu: 'umami', verificacio: 'acceptat' });
+
+  window.fetch = vi.fn(() => Promise.resolve({ ok: false, status: 502 }));
+  registraEsdeveniment('connectar', { seccio: 'mur' }, { cfg });
+  await Promise.resolve();
+  expect(darrersEnviaments()[0]).toMatchObject({ enviat: true, motiu: 'umami', verificacio: 'fallat' });
+
+  window.fetch = vi.fn(() => Promise.reject(new Error('offline')));
+  registraEsdeveniment('connectar', { seccio: 'notes' }, { cfg });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(darrersEnviaments()[0]).toMatchObject({ enviat: true, motiu: 'umami', verificacio: 'fallat' });
+});
+
+test('Lot4: cada resposta HTTP refresca el tauler, sense donar per acceptada una resposta opaca',async()=>{
+  const estats=[];const escolta=e=>estats.push(e.detail.verificacio);window.addEventListener(ESDEVENIMENT_DOM,escolta);
+  try {
+    registraEsdeveniment('prova',null,{cfg});await Promise.resolve();await Promise.resolve();
+    expect(estats).toEqual(['intent','acceptat']);
+    window.fetch=vi.fn(async()=>undefined);registraEsdeveniment('opac',null,{cfg});await Promise.resolve();await Promise.resolve();
+    expect(darrersEnviaments()[0].verificacio).toBe('no_comprovat');
+  } finally {window.removeEventListener(ESDEVENIMENT_DOM,escolta);}
+});
+test('Lot4: una resposta anterior al reinici no emet un estat d’una sessió descartada',async()=>{
+ let resol;window.fetch=vi.fn(()=>new Promise(r=>resol=r));registraEsdeveniment('antic',null,{cfg});_reiniciaTelemetria();const escolta=vi.fn();window.addEventListener(ESDEVENIMENT_DOM,escolta);
+ try {resol({ok:false});await Promise.resolve();await Promise.resolve();expect(escolta).not.toHaveBeenCalled();expect(darrersEnviaments()).toEqual([]);}finally{window.removeEventListener(ESDEVENIMENT_DOM,escolta);}
 });

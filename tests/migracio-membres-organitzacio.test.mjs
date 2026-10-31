@@ -15,6 +15,10 @@ const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NOM = '2610081402_membres_organitzacio.sql';
 /* P1-13 · C11-03 (261028) · La correcció de la carrera de l'alta concurrent. */
 const MEMBRES_CONCURRENTS = '2610281730_membres_concurrents_i_correu_public.sql';
+/* Lot 5 (Codex, reconciliat per Claude, 31-10-2026) · 2610311500 torna a crear
+   desa_membre_organitzacio i lleva_membre_organitzacio només per a afegir-hi el
+   pany sdp-orgowner: abans de llegir autoritat. Les branques d'organitzacions no canvien. */
+const COMMUTACIO = '2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = fs.readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
 const CLIENT = fs.readFileSync(path.join(ARREL, 'src/data/supabase/organizations.js'), 'utf8');
@@ -131,6 +135,17 @@ test('cap permís s’hereta: només les tres RPC accedixen a la taula, també e
       const insercio = (cos) => SENSE_ESPAIS(/insert into public\.organization_member_organizations[^;]*;/i.exec(cos)?.[0] ?? '');
       assert.ok(insercio(DESA.cos), 'falta la inserció de l’original');
       assert.equal(insercio(desa[0].cos), insercio(DESA.cos), `${fitxer}: la branca d’organitzacions no canvia`);
+    } else if (fitxer === COMMUTACIO) {
+      const fs2 = funcions(codi).filter((f) => f.esquema === 'public');
+      const desa = fs2.find((f) => f.nom === 'desa_membre_organitzacio');
+      const lleva = fs2.find((f) => f.nom === 'lleva_membre_organitzacio');
+      assert.ok(desa && lleva, `${fitxer}: les dues RPC`);
+      assert.equal((codi.match(/organization_member_organizations/gi) || []).length, 2, `${fitxer}: només la inserció i l’esborrat de sempre`);
+      const insercio = (cos) => SENSE_ESPAIS(/insert into public\.organization_member_organizations[^;]*;/i.exec(cos)?.[0] ?? '');
+      const esborrat = (cos) => SENSE_ESPAIS(/delete from public\.organization_member_organizations[^;]*;/i.exec(cos)?.[0] ?? '');
+      assert.ok(insercio(DESA.cos) && esborrat(LLEVA.cos), 'falten la inserció o l’esborrat de l’original');
+      assert.equal(insercio(desa.cos), insercio(DESA.cos), `${fitxer}: la inserció d’organitzacions no canvia`);
+      assert.equal(esborrat(lleva.cos), esborrat(LLEVA.cos), `${fitxer}: l’esborrat d’organitzacions no canvia`);
     } else {
       assert.doesNotMatch(codi, /organization_member_organizations/i, fitxer);
     }

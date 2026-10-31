@@ -18,7 +18,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { PAGE_COPY } from './pageContent.js';
 import { TITOL_GOVERN } from '../consola/govern/governConsola.js';
-import { CONTRACTE_NUCLI } from '../../data/contracte.js';
+import { CAPACITATS, CONTRACTE_BACKEND, CONTRACTE_NUCLI } from '../../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../../data/backendPort.js';
 import { getSessionState } from '../../data/sessionService.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
@@ -532,4 +532,37 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
     const tot = JSON.stringify(copy);
     expect(tot).not.toMatch(/(?:^|[^\p{L}])(?:aquest|aquesta|aquests|aquestes|avui|anglès)(?=$|[^\p{L}])/iu);
   });
+
+  test('F4 · la partida 1 i el document del Model B diuen les xifres exactes del contracte (32 nucli, 31 capacitats i 111 totals) sense dades inventades', () => {
+    const primeraFet = apartat(0, 'Fet hui (verificable)');
+    const primeraPendent = apartat(0, 'Pendent');
+    expect(CONTRACTE_NUCLI).toHaveLength(32);
+    expect(Object.keys(CAPACITATS)).toHaveLength(31);
+    expect(CONTRACTE_BACKEND).toHaveLength(111);
+    expect(primeraFet).toContain(
+      `L'inventari de l'API del port neutral (${CONTRACTE_NUCLI.length} mètodes del nucli i ${Object.keys(CAPACITATS).length} capacitats atòmiques a src/data/contracte.js) i dels requisits d'allotjament verificables del Model B, en esborrany a la Wiki de Poble.`
+    );
+    /* Decisió del Mestre (xat 261031, revisió R3 H-04): l'inventari és un
+       esborrany i els recursos mínims encara no s'han mesurat. */
+    expect(primeraFet).not.toMatch(/documentats a la Wiki/);
+    expect(primeraPendent).toContain("Mesurar i fixar els recursos mínims d'allotjament.");
+    expect(primeraPendent).not.toContain("Documentar l'API i els requisits d'allotjament");
+    const docModelB = readFileSync(
+      path.join(ARREL, '_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md'),
+      'utf8'
+    );
+    expect(docModelB).toContain('32 operacions obligatòries del Nucli (`CONTRACTE_NUCLI`)');
+    expect(docModelB).toContain('31 capacitats atòmiques opcionals (`CAPACITATS`)');
+    expect(docModelB).toContain('79 mètodes addicionals');
+    expect(docModelB).toContain('111 mètodes');
+    expect(docModelB).not.toMatch(/12\s*€|2\s*vCPU|40\s*GB|CouchDB|PocketBase/i);
+  });
+});
+
+test('Lot5 · el document enumera exactament els noms reals del nucli i les capacitats',()=>{
+ const doc=readFileSync(path.join(ARREL,'_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md'),'utf8');
+ const nucli=doc.slice(doc.indexOf('## 32 operacions'),doc.indexOf('## 31 capacitats'));
+ expect([...nucli.matchAll(/^- `([^`]+)`$/gm)].map(m=>m[1])).toEqual(CONTRACTE_NUCLI);
+ const files=[...doc.matchAll(/^\| `([^`]+)` \| (.+) \|$/gm)].map(m=>[m[1],[...m[2].matchAll(/`([^`]+)`/g)].map(m=>m[1])]);expect(Object.fromEntries(files)).toEqual(CAPACITATS);
+ for(const ruta of [...doc.matchAll(/`((?:src|tooling|wordpress-plugin)\/[a-zA-Z0-9_./-]+\.(?:js|jsx|mjs|nix|php))`/g)].map(m=>m[1]))expect(existix(ruta),ruta).toBe(true);
 });

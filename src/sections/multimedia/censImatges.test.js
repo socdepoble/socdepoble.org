@@ -15,11 +15,22 @@
    Ordre del Mestre (261021, torn fase 2, Mòdul B, P0-14) · Un original evacuat
    de public/ deixa la seua .webp sense ningú de qui ser bessona: el cens (o
    EXCLOSES) la nomena a ella, en el lloc de l'original i amb el mateix id. */
-import { readdirSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { bessonaDe, bessonesDe } from '../../config/politicaDeMitjans.js';
-import { ALIES_DEL_CENS, AMBITS, CENS_IMATGES, EXCLOSES, idDelCens, mitjansDelCens } from './censImatges.js';
+import {
+  ALIES_DEL_CENS,
+  AMBITS,
+  CENS_IMATGES,
+  EXCLOSES,
+  PARES_IDENTIQUES_ACREDITADES_CENS,
+  SVG_DOCUMENTATS_ARXIU,
+  TRAZABILITAT_RONDA1_CENS,
+  idDelCens,
+  mitjansDelCens
+} from './censImatges.js';
 
 const PUBLIC = path.join(process.cwd(), 'public');
 const RASTER = /\.(?:jpe?g|png|webp|gif|avif)$/i;
@@ -43,6 +54,49 @@ const BESSONES = new Map(bessonesDe(DISC.map((src) => src.slice(1)))
   .map((original) => [`/${bessonaDe(original)}`, `/${original}`])
   .filter(([bessona]) => !DECLARADA(bessona)));
 const esBessona = (src) => BESSONES.has(src);
+
+/* Revisió R3 (CLI-03) · Un consumidor declarat ha de citar el mitjà en codi,
+   no en un comentari ni amb el nom nu: es lleven els comentaris /* … *\/ i
+   // … i es demana el nom del fitxer amb extensió d'imatge, darrere d'una
+   barra o d'unes cometes (camí, plantilla o nom de fitxer en una cadena). */
+function senseComentaris(codi) {
+  let eixida = '';
+  let cadena = null;
+  for (let i = 0; i < codi.length; i += 1) {
+    const c = codi[i];
+    if (cadena) {
+      eixida += c;
+      if (c === '\\') { eixida += codi[i + 1] ?? ''; i += 1; } else if (c === cadena || (c === '\n' && cadena !== '`')) cadena = null;
+    } else if (c === '/' && codi[i + 1] === '*') {
+      const fi = codi.indexOf('*/', i + 2);
+      i = fi < 0 ? codi.length : fi + 1;
+      eixida += ' ';
+    } else if (c === '/' && codi[i + 1] === '/') {
+      const fi = codi.indexOf('\n', i);
+      i = fi < 0 ? codi.length : fi - 1;
+    } else {
+      if (c === "'" || c === '"' || c === '`') cadena = c;
+      eixida += c;
+    }
+  }
+  return eixida;
+}
+const escapa = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function citaElMitja(codi, src) {
+  const nom = escapa(path.basename(src).replace(/\.[a-z]+$/i, ''));
+  const directori = path.posix.dirname(src) + '/';
+  const cites = senseComentaris(codi).matchAll(new RegExp(
+    `([\\w./$\\{\\}-]*)(?<=[/'"\`])${nom}\\.(?:jpe?g|png|webp|gif|avif|svg)(?![\\w-])`, 'gi'
+  ));
+  /* El tros literal de camí que va just davant del nom (després d'una
+     variable de plantilla, si n'hi ha) ha de ser el final del directori del
+     mitjà: «/assets/system/ui/logo….svg» no cita «/assets/uploads/…/logo….svg». */
+  for (const [, davant] of cites) {
+    const literal = davant.slice(davant.lastIndexOf('}') + 1);
+    if (!literal || directori.endsWith(literal)) return true;
+  }
+  return false;
+}
 
 describe('el cens de l’Arxiu visual', () => {
   test('cada src existix al disc amb la caixa exacta', () => {
@@ -189,5 +243,73 @@ describe('el cens de l’Arxiu visual', () => {
       origen: 'foto', ambit: 'poble', poble: 'tibi', sectionId: 'multimedia'
     });
     expect(mitjans.find((m) => m.src === '/assets/notes/bloc_notes_vintage.jpg')).not.toHaveProperty('poble');
+  });
+
+  test('P1-29 · els tres SVG de public/assets fora de system/ (inclosa ngi-fediversity-tag.svg de dbc5a1c14) estan traçats a SVG_DOCUMENTATS_ARXIU i fora del ràster', () => {
+    const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
+    const svgsAlDisc = DISC.filter((src) => /\.svg$/i.test(src) && !src.startsWith('/assets/system/')).sort();
+    expect(svgsAlDisc).toEqual([
+      '/assets/cc-by-nc-sa.svg',
+      '/assets/uploads/empresa/soc-de-poble/avatars/logo-socdepoble-cuadrat-verd.svg',
+      '/assets/uploads/ngi-fediversity-tag.svg'
+    ]);
+    expect(Object.keys(SVG_DOCUMENTATS_ARXIU).sort()).toEqual(svgsAlDisc);
+    for (const [src, meta] of Object.entries(SVG_DOCUMENTATS_ARXIU)) {
+      expect(delCens.has(src), src).toBe(false);
+      expect(AMBITS, src).toContain(meta.ambit);
+      if (!/cap mòdul la cita/.test(meta.motiu)) expect(meta.consumidors.length, src).toBeGreaterThan(0);
+      for (const consumidor of meta.consumidors) {
+        expect(existsSync(path.join(process.cwd(), consumidor)), `${src} → ${consumidor}`).toBe(true);
+        expect(citaElMitja(readFileSync(path.join(process.cwd(), consumidor), 'utf8'), src), `${src} citat per ${consumidor}`).toBe(true);
+      }
+    }
+  });
+
+  test('P1-29 · tots els mitjans de la Ronda 1 (e7b05b3a5, 80d406b60, dbc5a1c14) estan traçats amb bessona WebP, variant social i consumidors vius', () => {
+    const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
+    const commitsAdmesos = new Set(['e7b05b3a5', '80d406b60', 'dbc5a1c14']);
+    expect(Object.keys(TRAZABILITAT_RONDA1_CENS).length).toBe(17);
+    for (const [src, traca] of Object.entries(TRAZABILITAT_RONDA1_CENS)) {
+      expect(traca.src, src).toBe(src);
+      expect(traca.assetId, src).toBe(idDelCens(src));
+      expect(delCens.has(src), src).toBe(true);
+      expect(commitsAdmesos.has(traca.commit), `${src} · ${traca.commit}`).toBe(true);
+      expect(AL_DISC.has(traca.bessonaWebp), `${src} · bessona ${traca.bessonaWebp}`).toBe(true);
+      if (traca.variantSocial) {
+        expect(AL_DISC.has(traca.variantSocial), `${src} · social ${traca.variantSocial}`).toBe(true);
+        expect(Object.hasOwn(EXCLOSES, traca.variantSocial), `${src} · social exclosa`).toBe(true);
+      }
+      expect(traca.consumidors.length, src).toBeGreaterThan(0);
+      for (const consumidor of traca.consumidors) {
+        expect(existsSync(path.join(process.cwd(), consumidor)), `${src} → ${consumidor}`).toBe(true);
+        expect(citaElMitja(readFileSync(path.join(process.cwd(), consumidor), 'utf8'), src), `${src} citat per ${consumidor}`).toBe(true);
+      }
+    }
+  });
+
+  test('P1-29 · zero duplicats ocults a CENS_IMATGES: les úniques parelles amb SHA-256 idèntic són les 5 acreditades a PARES_IDENTIQUES_ACREDITADES_CENS', () => {
+    const perSha = new Map();
+    for (const entrada of CENS_IMATGES) {
+      const bytes = readFileSync(path.join(PUBLIC, entrada.src.slice(1)));
+      const sha = createHash('sha256').update(bytes).digest('hex');
+      if (!perSha.has(sha)) perSha.set(sha, []);
+      perSha.get(sha).push(entrada.src);
+    }
+    const grupsReals = [...perSha.values()]
+      .filter((grup) => grup.length > 1)
+      .map((grup) => [...grup].sort())
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    const grupsAcreditats = PARES_IDENTIQUES_ACREDITADES_CENS
+      .map((parella) => [parella.primaria, parella.secundaria].sort())
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    expect(grupsReals).toEqual(grupsAcreditats);
+    for (const parella of PARES_IDENTIQUES_ACREDITADES_CENS) {
+      expect(parella.assetIdPrimari).toBe(idDelCens(parella.primaria));
+      expect(parella.assetIdSecundari).toBe(idDelCens(parella.secundaria));
+      expect(parella.assetIdPrimari).not.toBe(parella.assetIdSecundari);
+      expect(parella.motiu.length).toBeGreaterThan(20);
+    }
   });
 });

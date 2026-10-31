@@ -62,6 +62,28 @@ const descodificaEntitats = (text) => text.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-f
    a molt NOM_TAULA caràcters; sense cap columna amb text, «Taula N» (l'ordre
    en el document). */
 const NOM_TAULA = 120;
+export const ETIQUETA_TAULA_DESPLACABLE = 'Taula desplaçable';
+
+function escapaAtribut(text) {
+  return String(text)
+    .replace(/[<>\s]+/g, ' ')
+    .trim()
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;');
+}
+
+// Una etiqueta externa no pot reactivar les marques provisionals del parser.
+function etiquetaDeTaula(valor) {
+  if (typeof valor !== 'string') return '';
+  const net = valor.replace(/\u0000[A-Z]+\d*\u0000/g, '')
+    .replace(/[\u0000-\u001f\u007f-\u009f\p{Cf}]/gu, '')
+    .replace(/[<>\s]+/g, ' ').trim();
+  const punts = [...net];
+  const curt = punts.length > NOM_TAULA
+    ? `${punts.slice(0, NOM_TAULA - 1).join('').trimEnd()}…` : net;
+  return escapaAtribut(curt);
+}
+
 function nomDeTaula(capcalera, enLinia, n) {
   const columnes = capcalera.map((cella) => descodificaEntitats(cella.replace(/<[^<>]*>/g, ''))
     .replace(/\u0000LINIA(\d+)\u0000/g, (_m, i) => desescapaHtml((enLinia[Number(i)] ?? '').replace(/<[^<>]*>/g, '')))
@@ -130,7 +152,7 @@ function marcaEntradilla(md) {
   return linies.join('\n');
 }
 
-export function parseMarkdown(md, { entradilla = true } = {}) {
+export function parseMarkdown(md, { entradilla = true, etiquetaTaula = null } = {}) {
   if (!md) return '';
   let html = md.replace(/\r\n/g, '\n').replace(/\u0000/g, '');
 
@@ -213,11 +235,14 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
     taules += 1;
     /* IDEA-26 (261025) · La taula es desplaça dins de la seua caixa: la columna
        de la Wiki talla el que la desborda (overflow-x: hidden).
-       P1-16 (pla 261028_1526 §3.5.1) · La caixa és una regió amb nom i focus
-       (WCAG 2.1.1: s'hi arriba i es desplaça amb el teclat), com les taules
-       del catàleg; sanitize.js només li deixa role=region i tabindex=0 si
-       porta la marca d'esta càrrega (data-sdp-taula), que lleva en sanejar. */
-    return `<div class="sdp-taula-prosa" role="region" aria-label="${nomDeTaula(capcalera, enLinia, taules)}" tabindex="0" data-sdp-taula="${marcaDeTaula()}"><table>\n${thead}\n${tbody}\n</table></div>`;
+       P1-16 (pla 261028_1526 §3.5.1) / P2-16 (C1645-07) · La caixa és una regió
+       amb nom i focus (WCAG 2.1.1: s'hi arriba i es desplaça amb el teclat),
+       com les taules del catàleg; sanitize.js només li deixa role=region i
+       tabindex=0 si porta la marca d'esta càrrega (data-sdp-taula), que lleva
+       en sanejar. */
+    const ariaLabelTaula = etiquetaDeTaula(etiquetaTaula)
+      || nomDeTaula(capcalera, enLinia, taules);
+    return `<div class="sdp-taula-prosa" role="region" aria-label="${ariaLabelTaula}" tabindex="0" data-sdp-taula="${marcaDeTaula()}"><table>\n${thead}\n${tbody}\n</table></div>`;
   });
 
   // Paragraphs (grouping hard-wrapped lines)

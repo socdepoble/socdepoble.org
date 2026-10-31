@@ -151,11 +151,14 @@ test('el format continua sent el v1 que exigix l’adaptador compte.js', () => {
   expect(CLIENT).toContain("rpc('exporta_les_meues_dades', {}");
 });
 
-test('és l’última migració que definix l’exportació', () => {
+test('conserva els antecedents i admet la correctora explícita de federació', () => {
   const ordre = readdirSync(MIGRACIONS).filter((f) => f.endsWith('.sql')).sort();
   const amb = ordre.filter((f) => /create\s+or\s+replace\s+function\s+public\.exporta_les_meues_dades\b/i.test(senseComentaris(llig(f))));
-  expect(amb.at(-1)).toBe(NOM);
-  expect(amb).toEqual([F1, NOM]);
+  const correctora = '2610311900_exporta_dades_filtre_servidor_rgpd.sql';
+  expect(amb).toEqual([F1, NOM, correctora]);
+  const nou = llig(correctora);
+  expect(nou).toContain('SDP-FED-ESQUEMA-NO-ADMES');
+  expect(nou).not.toContain("c.column_name not in ('id', 'tenant_id')");
 });
 
 test('A/B · cada lectura nova filtra per la persona (v_uid), i les de moderació són les de qui actua', () => {

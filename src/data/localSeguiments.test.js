@@ -461,4 +461,29 @@ describe('IDEA-22 · connectar des d’una entitat (com)', () => {
     expect(local.estatSeguiment({ tipus: 'persona', id: 'p1', com: 'meua' }, de(JO))).toEqual({ seguint: false, creatAl: null });
     expect(local.quiEmSegueix({}, deP1)).toEqual([]);
   });
+
+  test('P2-10 (G1945-02 i G1945-03) · LIMIT_PER_HORA === 30 i refredament de 10 min en primera reactivació després de soft delete (1 segon després)', () => {
+    expect(LIMIT_PER_HORA).toBe(30);
+    expect(ESPERA_DE_REPRESA).toBe(10 * 60 * 1000);
+    const { local, rellotge } = adaptadorB2B();
+
+    /* 1. Persona seguint entitat: alta -> soft delete -> 1 segon després -> SDP-SEG-006 */
+    const altaPersona = local.segueix({ tipus: 'entitat', id: 'forn' }, de(JO));
+    expect(altaPersona).toMatchObject({ seguint: true, nou: true, primer: true });
+    expect(local.deixaDeSeguir({ tipus: 'entitat', id: 'forn' }, de(JO))).toEqual({ seguint: false });
+    rellotge.avança(1000);
+    expect(codi(() => local.segueix({ tipus: 'entitat', id: 'forn' }, de(JO)))).toBe('SDP-SEG-006');
+
+    /* 2. Entitat seguint persona (com): alta -> soft delete -> 1 segon després -> SDP-SEG-006 */
+    const altaEntitat = local.segueix({ tipus: 'persona', id: 'p1', com: 'meua' }, de(JO));
+    expect(altaEntitat).toMatchObject({ seguint: true, nou: true, primer: true });
+    expect(local.deixaDeSeguir({ tipus: 'persona', id: 'p1', com: 'meua' }, de(JO))).toEqual({ seguint: false });
+    rellotge.avança(1000);
+    expect(codi(() => local.segueix({ tipus: 'persona', id: 'p1', com: 'meua' }, de(JO)))).toBe('SDP-SEG-006');
+
+    /* 3. Completar els 10 minuts des de coalesce(reactivatAl, creatAl) permet la reactivació */
+    rellotge.avança(ESPERA_DE_REPRESA - 1000);
+    expect(local.segueix({ tipus: 'entitat', id: 'forn' }, de(JO))).toMatchObject({ seguint: true, nou: false, primer: false });
+    expect(local.segueix({ tipus: 'persona', id: 'p1', com: 'meua' }, de(JO))).toMatchObject({ seguint: true, nou: false, primer: false });
+  });
 });

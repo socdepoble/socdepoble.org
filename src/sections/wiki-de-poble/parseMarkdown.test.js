@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseMarkdown, parseMarkdownEnLinia, extreuEditorial } from './parseMarkdown.js';
+import {
+  ETIQUETA_TAULA_DESPLACABLE,
+  parseMarkdown,
+  parseMarkdownEnLinia,
+  extreuEditorial,
+} from './parseMarkdown.js';
 import { marcaDeTaula, sanitizeHtml } from '../../utils/sanitize.js';
 
 /* Mateix camí que WikiDePobleSection: parser → sanejador → DOM. */
@@ -95,6 +100,16 @@ describe('parseMarkdown · taules accessibles (P1-16)', () => {
     expect([...llarg]).toHaveLength(120);
     expect(llarg.endsWith('…')).toBe(true);
     expect(llarg.startsWith('Taula: Columna 1, Columna 2, ')).toBe(true);
+  });
+
+  it('admet etiquetaTaula explícita («Taula desplaçable», P2-16 / C1645-07) conservant role="region" i tabindex="0"', () => {
+    const arrel = pinta('| Camp | Valor |\n| --- | --- |\n| x | y |', {
+      etiquetaTaula: ETIQUETA_TAULA_DESPLACABLE,
+    });
+    const regio = arrel.querySelector('div.sdp-taula-prosa');
+    expect(regio.getAttribute('role')).toBe('region');
+    expect(regio.getAttribute('tabindex')).toBe('0');
+    expect(regio.getAttribute('aria-label')).toBe('Taula desplaçable');
   });
 });
 

@@ -166,3 +166,33 @@ test('en tornar a obrir es reinicia la tria i l’error', async () => {
   expect(radio(/Privat/).checked).toBe(true);
   expect(screen.queryByRole('alert')).toBeNull();
 });
+
+/* Decisió del Mestre (xat 261031, RGPD) · Empresa, entitat o ajuntament: el
+   selector no oferix «Fitxa privada» i ho diu en una sola línia; els grups
+   conserven la tria. */
+test.each(['company', 'entity', 'city_hall'])('una organització «%s» no oferix «Fitxa privada»: una sola línia diu que és una figura pública', async (kind) => {
+  const onTria = vi.fn().mockResolvedValue(true);
+  render(<Arnes esPublica textos={textosDeFitxa('organitzacio')} bloqueig={bloqueigDeFitxa('organitzacio', kind)} onTria={onTria} />);
+  expect(within(dialeg()).queryByRole('radio')).toBeNull();
+  expect(within(dialeg()).queryByText(/Fitxa privada/)).toBeNull();
+  expect(within(dialeg()).queryByRole('alert')).toBeNull();
+  const linia = within(dialeg()).getByText('Les empreses, les entitats i els ajuntaments són figures públiques del directori: la seua fitxa ha de ser pública.');
+  expect(dialeg().getAttribute('aria-describedby')).toBe(linia.id);
+  expect(within(dialeg()).queryByText(/Ho pots canviar quan vulgues/)).toBeNull();
+  expect(primari().textContent).toBe('Deixar-la pública');
+  await act(async () => { fireEvent.click(primari()); });
+  expect(onTria).toHaveBeenCalledWith(true);
+});
+
+test('una fila antiga «members» d’una empresa només es pot fer pública', () => {
+  render(<Arnes esPublica={false} textos={textosDeFitxa('organitzacio')} bloqueig={bloqueigDeFitxa('organitzacio', 'company')} onTria={vi.fn()} />);
+  expect(within(dialeg()).queryByRole('radio')).toBeNull();
+  expect(primari().textContent).toBe('Fer-la pública');
+});
+
+test('un grup conserva la tria entre pública i privada', () => {
+  expect(bloqueigDeFitxa('organitzacio', 'group')).toBeNull();
+  render(<Arnes esPublica textos={textosDeFitxa('organitzacio')} bloqueig={bloqueigDeFitxa('organitzacio', 'group')} onTria={vi.fn()} />);
+  expect(radio(/Fitxa pública/)).toBeTruthy();
+  expect(radio(/Fitxa privada/).disabled).toBe(false);
+});

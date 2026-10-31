@@ -292,7 +292,8 @@ describe('amb la Wiki de veres del paquet', () => {
      frase: «la Gestoria», «el Rebost», «el Bar» (ADR-2026-10 i ADR-2026-12 en
      parlen). Les tres files passen de sense_resultats a les seues fonts
      (actualitzat a posta). Les paraules comunes («Quant costa?», «Com faig una
-     nota?», «Què és un node?») continuen sense cap font. */
+     nota?») continuen sense cap font; «Què és un node?» respon amb el document
+     del Model B (decisió del Mestre, xat 261031). */
   test.each([
     ['Com puc publicar al Mercat?', 'sense_resultats'],
     ['Què és la Gestoria?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS',
@@ -301,7 +302,11 @@ describe('amb la Wiki de veres del paquet', () => {
     ['Qui porta Sóc de Poble?', 'resposta', '00_visio_i_pilars',
       ['00_full_de_ruta', '00_visio_i_pilars', 'identitat_visual', 'el_projecte', 'arquitectura_l_anima', '01_identitat', '00_index_identitat']],
     ['Com esborre el meu compte?', 'sense_resultats'],
-    ['Què és un node?', 'sense_resultats'],
+    /* Lot 5 (Codex, reconciliat per Claude) · Decisió del Mestre (xat 261031):
+       la IAIA local pot respondre «Què és un node?» amb el document verificat
+       api_port_neutral_i_allotjament_model_b, que descriu el «Node municipal»
+       (fila actualitzada a posta). */
+    ['Què és un node?', 'resposta', 'api_port_neutral_i_allotjament_model_b', ['api_port_neutral_i_allotjament_model_b']],
     ['Com puc connectar amb un autor?', 'sense_resultats'],
     ['Les meues dades són privades?', 'resposta', 'ADR-2026-08-ONLINE-FIRST',
       ['ADR-2026-08-ONLINE-FIRST', 'seguretat_execucio', 'ADR-2026-13-BYOP-XIFRAT-LOCAL', 'llei_05_privacitat']],

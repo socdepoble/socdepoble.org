@@ -339,3 +339,211 @@ export function mitjansDelCens(cens = CENS_IMATGES) {
     sectionId: 'multimedia'
   }));
 }
+
+/** P1-29 (D10/D12 · Lot 4) · Els tres fitxers vectorials SVG de `public/assets/`
+ *  (fora de `system/`) que resten fora del cens ràster, amb el seu origen i
+ *  consumidors explícits (inclosa la insígnia NGI Fediversity incorporada a la
+ *  Ronda 1, `dbc5a1c14`). */
+export const SVG_DOCUMENTATS_ARXIU = Object.freeze({
+  '/assets/cc-by-nc-sa.svg': Object.freeze({
+    ambit: 'contingut',
+    commit: 'historic',
+    motiu: 'insígnia vectorial Creative Commons CC BY-NC-SA 4.0; cap mòdul de l’App la carrega en temps d’execució: només la cita la prova del service worker',
+    consumidors: Object.freeze(['src/pwa/sw.test.js'])
+  }),
+  '/assets/uploads/empresa/soc-de-poble/avatars/logo-socdepoble-cuadrat-verd.svg': Object.freeze({
+    ambit: 'entitat',
+    commit: 'historic',
+    motiu: 'logotip vectorial institucional quadrat de Sóc de Poble; còpia idèntica de /assets/system/ui/logo-socdepoble-cuadrat-verd.svg: cap mòdul la cita',
+    consumidors: Object.freeze([])
+  }),
+  '/assets/uploads/ngi-fediversity-tag.svg': Object.freeze({
+    ambit: 'entitat',
+    commit: 'dbc5a1c14',
+    motiu: 'insígnia vectorial NGI Fediversity per a la pàgina institucional /fediversity',
+    consumidors: Object.freeze(['src/sections/text/pageContent.js'])
+  })
+});
+
+/** P1-29 (D10/D12 · Lot 4) · Traçabilitat explícita dels mitjans incorporats o
+ *  regenerats a la Ronda 1 (`e7b05b3a5`, `80d406b60`, `dbc5a1c14`), amb el seu
+ *  `assetId`, commit d'origen, bessona WebP, variant social 1200×630 (si n'hi ha)
+ *  i consumidors de codi. */
+const tracaRonda1 = (src, commit, bessonaWebp, variantSocial, consumidors) => Object.freeze({
+  src,
+  assetId: idDelCens(src),
+  commit,
+  bessonaWebp,
+  variantSocial,
+  consumidors: Object.freeze(consumidors)
+});
+
+export const TRAZABILITAT_RONDA1_CENS = Object.freeze({
+  '/assets/nano_cards/govern_requeriments_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/govern_requeriments_nano_card.jpg',
+    '80d406b60',
+    '/assets/nano_cards/govern_requeriments_nano_card.webp',
+    '/assets/nano_cards/govern_requeriments_nano_card-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/nano_cards/govern_balanc_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/govern_balanc_nano_card.jpg',
+    '80d406b60',
+    '/assets/nano_cards/govern_balanc_nano_card.webp',
+    '/assets/nano_cards/govern_balanc_nano_card-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/nano_cards/govern_certificacio_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/govern_certificacio_nano_card.jpg',
+    '80d406b60',
+    '/assets/nano_cards/govern_certificacio_nano_card.webp',
+    '/assets/nano_cards/govern_certificacio_nano_card-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/nano_cards/govern_comunicacio_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/govern_comunicacio_nano_card.jpg',
+    '80d406b60',
+    '/assets/nano_cards/govern_comunicacio_nano_card.webp',
+    '/assets/nano_cards/govern_comunicacio_nano_card-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/nano_cards/animalets_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/animalets_nano_card.jpg',
+    'e7b05b3a5',
+    '/assets/nano_cards/animalets_nano_card.webp',
+    '/assets/nano_cards/animalets_nano_card-social-1200x630.jpg',
+    ['src/sections/multimedia/censImatges.js', 'src/sections/multimedia/legacyMedia.js']
+  ),
+  '/assets/nano_cards/cervell_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/cervell_nano_card.jpg',
+    'e7b05b3a5',
+    '/assets/nano_cards/cervell_nano_card.webp',
+    '/assets/nano_cards/cervell_nano_card-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js', 'src/sections/multimedia/legacyMedia.js']
+  ),
+  '/assets/nano_cards/gestoria_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/gestoria_nano_card.jpg',
+    'e7b05b3a5',
+    '/assets/nano_cards/gestoria_nano_card.webp',
+    null,
+    ['src/sections/multimedia/censImatges.js', 'src/sections/multimedia/legacyMedia.js']
+  ),
+  '/assets/nano_cards/lector_rss_nano_card.jpg': tracaRonda1(
+    '/assets/nano_cards/lector_rss_nano_card.jpg',
+    'e7b05b3a5',
+    '/assets/nano_cards/lector_rss_nano_card.webp',
+    '/assets/nano_cards/lector_rss_nano_card-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/multimedia/censImatges.js', 'src/sections/multimedia/legacyMedia.js']
+  ),
+  '/assets/ui/plugins/cervell_vinyeta.jpg': tracaRonda1(
+    '/assets/ui/plugins/cervell_vinyeta.jpg',
+    'dbc5a1c14',
+    '/assets/ui/plugins/cervell_vinyeta.webp',
+    '/assets/ui/plugins/cervell_vinyeta-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/text/pageContent.js']
+  ),
+  '/assets/ui/plugins/consola_vinyeta.jpg': tracaRonda1(
+    '/assets/ui/plugins/consola_vinyeta.jpg',
+    'dbc5a1c14',
+    '/assets/ui/plugins/consola_vinyeta.webp',
+    '/assets/ui/plugins/consola_vinyeta-social-1200x630.jpg',
+    ['src/sections/consola/imatgesConsola.js', 'src/sections/text/pageContent.js']
+  ),
+  '/assets/ui/plugins/disseny_vinyeta.jpg': tracaRonda1(
+    '/assets/ui/plugins/disseny_vinyeta.jpg',
+    'dbc5a1c14',
+    '/assets/ui/plugins/disseny_vinyeta.webp',
+    null,
+    ['src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/ui/plugins/fedivers_vinyeta.webp': tracaRonda1(
+    '/assets/ui/plugins/fedivers_vinyeta.webp',
+    'dbc5a1c14',
+    '/assets/ui/plugins/fedivers_vinyeta.webp',
+    '/assets/ui/plugins/fedivers_vinyeta-social-1200x630.jpg',
+    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/uploads/consola-caldera.png': tracaRonda1(
+    '/assets/uploads/consola-caldera.png',
+    'dbc5a1c14',
+    '/assets/uploads/consola-caldera.webp',
+    null,
+    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/uploads/fediversity-hero.png': tracaRonda1(
+    '/assets/uploads/fediversity-hero.png',
+    'dbc5a1c14',
+    '/assets/uploads/fediversity-hero.webp',
+    '/assets/uploads/fediversity-hero-social-1200x630.jpg',
+    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/uploads/fediversity-maquinaria.png': tracaRonda1(
+    '/assets/uploads/fediversity-maquinaria.png',
+    'dbc5a1c14',
+    '/assets/uploads/fediversity-maquinaria.webp',
+    null,
+    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png': tracaRonda1(
+    '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png',
+    'dbc5a1c14',
+    '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.webp',
+    '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211-social-1200x630.jpg',
+    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+  ),
+  '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png': tracaRonda1(
+    '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png',
+    'dbc5a1c14',
+    '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.webp',
+    '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip-social-1200x630.jpg',
+    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+  )
+});
+
+/** P1-29 (D10/D12 · Lot 4) · Les cinc parelles d'entrades dins de `CENS_IMATGES`
+ *  que compartixen els mateixos bytes (SHA-256 idèntic) per raons històriques o
+ *  de regeneració a sang a la Ronda 1 (`e7b05b3a5` / `dbc5a1c14`), acreditades
+ *  explícitament perquè cap duplicat ocult puga entrar a `CENS_IMATGES` sense
+ *  declaració. */
+export const PARES_IDENTIQUES_ACREDITADES_CENS = Object.freeze([
+  Object.freeze({
+    primaria: '/assets/ui/plugins/cervell_vinyeta.jpg',
+    secundaria: '/assets/nano_cards/cervell_nano_card.jpg',
+    assetIdPrimari: idDelCens('/assets/ui/plugins/cervell_vinyeta.jpg'),
+    assetIdSecundari: idDelCens('/assets/nano_cards/cervell_nano_card.jpg'),
+    commit: 'e7b05b3a5+dbc5a1c14',
+    motiu: 'regenerades a sang (1024×1024, B4) des de la mateixa il·lustració del Cervell Mecànic; la vinyeta servix Explorador (.webp) i la nano card servix Agents (.jpg)'
+  }),
+  Object.freeze({
+    primaria: '/assets/towns/la-torre-de-les-macanes/1.jpg',
+    secundaria: '/assets/uploads/poble/la-torre-de-les-macanes/img-la-torre-de-les-ma-anes-main.jpg',
+    assetIdPrimari: idDelCens('/assets/towns/la-torre-de-les-macanes/1.jpg'),
+    assetIdSecundari: idDelCens('/assets/uploads/poble/la-torre-de-les-macanes/img-la-torre-de-les-ma-anes-main.jpg'),
+    commit: 'historic',
+    motiu: 'fotografia principal de La Torre de les Maçanes conservada a towns/ i al calaix d’uploads/poble/'
+  }),
+  Object.freeze({
+    primaria: '/assets/towns/penaguila/1.jpg',
+    secundaria: '/assets/uploads/poble/penaguila/img-pen-guila-main.jpg',
+    assetIdPrimari: idDelCens('/assets/towns/penaguila/1.jpg'),
+    assetIdSecundari: idDelCens('/assets/uploads/poble/penaguila/img-pen-guila-main.jpg'),
+    commit: 'historic',
+    motiu: 'fotografia principal de Penàguila conservada a towns/ i al calaix d’uploads/poble/'
+  }),
+  Object.freeze({
+    primaria: '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
+    secundaria: '/assets/uploads/empresa/soc-de-poble/posts/el-projecte/exemple-de-poble-001.png',
+    assetIdPrimari: idDelCens('/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png'),
+    assetIdSecundari: idDelCens('/assets/uploads/empresa/soc-de-poble/posts/el-projecte/exemple-de-poble-001.png'),
+    commit: 'historic',
+    motiu: 'panoràmica rural de brain/ reutilitzada com a il·lustració de l’article El Projecte'
+  }),
+  Object.freeze({
+    primaria: '/assets/uploads/companies/mercat/camiseta_portada.png',
+    secundaria: '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/06-group-tshirt.png',
+    assetIdPrimari: idDelCens('/assets/uploads/companies/mercat/camiseta_portada.png'),
+    assetIdSecundari: idDelCens('/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/06-group-tshirt.png'),
+    commit: 'historic',
+    motiu: 'portada històrica de la samarreta al Mercat i peça 06 de la galeria del producte'
+  })
+]);

@@ -1,13 +1,13 @@
 ---
 type: informe
 status: esborrany
-description: 'Execució de Claude de la Ronda 1 (Fase 0) del pla 261031_0136: portes del cens, cinc commits i push, paquet del directori 1.1.10 amb SVN i build natiu 1.0.0 (2).'
+description: 'Execució de Claude de les Rondes 1, 2 i 3 del pla 261031_0136: portes del cens, commits i push, paquet del directori 1.1.10 amb SVN, natiu 1.0.0 (2) i kits de Codex i Gemini auditats.'
 tags:
   - auditoria
 visibility: private
 reflex: sdp:torn_2c6f4a62-406b-4eec-aaf6-e5ad90d3a405:f6390028-2ae4-427d-9c29-b800bd557d76
 ---
-# Ronda 1 de Claude: portes del cens, commits, WordPress.org i botigues
+# Rondes 1, 2 i 3 de Claude: portes del cens, commits, WordPress.org, botigues i kits
 
 Esta guia és consultiva i de només lectura. Els resultats els calcula el codi vigent; la guia no pot substituir els scripts ni declarar salut si una comprovació falla.
 
@@ -20,12 +20,12 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
 | Creació | 2026-10-31T13:02:37.383Z |
-| Modificació | 2026-10-31T16:40:00.000Z |
+| Modificació | 2026-11-01T00:10:00.000Z |
 | Propietari | claude |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
 | Model IA | Claude Opus 5.5 (`claude-opus-5-5`), Claude Code amb Ultracode |
-| Tokens consumits | Uns 4,8 milions als subagents dels dos workflows (reconeixement i revisió adversarial); el fil principal no el mesura l'entorn |
+| Tokens consumits | Uns 22 milions als subagents dels workflows de les tres rondes (reconeixements, auditories de kits, integracions, correccions i revisions adversarials); el fil principal no el mesura l'entorn |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex
@@ -40,6 +40,9 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 - `2026-10-31T14:05Z`: decisions del Mestre al xat (les quatre opcions recomanades): commits de 13 MB o menys amb `--no-verify`, Reflex amb el contracte de `graph.json` i resegell, part C de Pedra Seca amb excepcions escrites, kits fora dels commits i `cron.out` fora de Git.
 - `2026-10-31T14:15Z – 15:30Z`: correccions a l'arbre viu, tres transaccions de governança per l'executor i revisió adversarial (cinc lents, un refutador per lent) amb les correccions que en confirma.
 - `2026-10-31T15:30Z – 16:40Z`: bateria sencera en una còpia congelada, relleu d'ESTAT i LEDGER, resegell del corpus i informe.
+- `2026-10-31T16:40Z – 17:20Z`: cinc commits (`e7b05b3a5`…`dea840764`) i push; zip del directori 1.1.10 i escenificació SVN des del commit pujat; `build:natiu`, `cap sync`, `preflight` i arxius natius sense signar.
+- `2026-10-31T17:20Z – 23:10Z`: Ronda 2. Auditoria dels kits de Codex i Gemini, decisions del Mestre, integració en còpia, tres voltes de revisió adversarial i correcció, i dos commits (`f66de7865`, `c3a2c6bba`) amb push.
+- `2026-10-31T19:00Z – 2026-11-01T00:10Z`: Ronda 3. Auditoria dels Lots 3, 4, 5 i 6 de Codex, decisions del Mestre, integració en còpia, revisió adversarial, correccions i aplicació a l'arbre viu.
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -112,8 +115,45 @@ Cinc lots per llista explícita, amb un índex temporal i `--no-verify` per deci
 
 Els kits de la Ronda 2 no hi entren, i `.immunitari/cron.out` ix de Git (ja era al `.gitignore`). L'arbre final de tots cinc s'ha assajat abans del primer commit.
 
+### Ronda 2 (Fediversity, llistes, Vigilant i deute)
+
+Els kits de Codex i Gemini no s'aplicaven tal com venien: els seus aplicadors fallaven sobre la Ronda 1, i alguna peça revertia decisions del Mestre. S'han auditat, reconciliat a tres bandes i integrat en una còpia, amb tres voltes de revisió adversarial abans de tocar l'arbre viu. Ha entrat el **paquet segur** que va triar el Mestre:
+
+- **Lot A (`f66de7865`):** paquet Open Data a la fitxa del poble, ActivityPub estàtic i NodeInfo **només per a Sóc de Poble i La Torre** (decisió del Mestre: els pobles de mostra no es poden descobrir), instal·lador de nodes germans, fletxes de teclat, llei de les llistes D1/D6, tractor Vigilant i text de `/page/fediversity`.
+- **Lot B (`c3a2c6bba`):** control compartit de Storage, amb el termini des que l'operació comença i una fita a la cua perquè cap crida no espere per sempre; progrés i rebut dels adjunts del Xat; perfil públic en 5 llengües; i Atles de la IAIA amb càpsules certes.
+- **Fora, per decisió del Mestre:** el pegat 01 del Kit 2 de Codex (la guarda del nom d'usuari continua bloquejant), el 04 (DNS estricte), la migració i el document Model B crus de Gemini, i el seu pegat 17 de skills.
+- **La revisió hi va trobar i corregir:** proves de federació que depenien de la xarxa, un paquet Open Data que deia més del que portava, el bloc de la fitxa sense traduir, l'enllaç de descàrrega inútil dins de l'app i un sol element nul que deixava sense connexió tot el Mas.
+
+### Ronda 3 (E2EE, migracions, Model B i RGPD)
+
+Entren els Lots 3, 4, 5 i 6 de Codex, auditats i reconciliats sobre la Ronda 2. Els lots crus de Gemini no s'han aplicat.
+
+- **Migracions com a fitxers, «NO aplicada: l'aplica el Mestre»:**
+  - `2610311500`: commutació grup ↔ empresa i transferència de titularitat. Força pública només la fitxa d'empreses, entitats i ajuntaments, sense cap `UPDATE` massiu (decisió RGPD del Mestre). La transferència queda limitada a grups i empreses.
+  - `2610311800`: E2EE, fases 1b i 1c.
+  - `2610312000`: les escriptures de `service_role` que la 1800 trencava.
+  - `2610311900`: el filtre del servidor de l'exportació RGPD.
+
+  L'ordre és 1500 → 1800 → 2000 → 1900, i s'ha provat a PostgreSQL 17.5 (PGlite) amb la cadena real de 64 migracions.
+- **Client:** E2EE de grups i reembolcalls, apagat per defecte.
+- **Interfície:** la fitxa no oferix «privada» a empreses, entitats i ajuntaments, i una línia ho explica.
+- **Telemetria:** el tauler conserva les frases T3.2 del Mestre i només hi afig els estats «pendent de resposta» i «acceptat».
+- **Wiki:**
+  - el document Model B verificat contra `contracte.js` (`api_port_neutral_i_allotjament_model_b.md`), del qual la IAIA respon «Què és un node?»;
+  - l'ADR-2026-14 de traducció, en esborrany;
+  - el catàleg de migracions corregit.
+- **La revisió hi va trobar i corregir:**
+  - la transferència d'entitats i ajuntaments sense reclamació;
+  - una política de lectura que deixava llegir un grup privat a la creadora expulsada;
+  - un commit de prova citat en un document públic;
+  - el missatge «sempre és pública»;
+  - la frase del clic d'Umami, que no podia aparéixer mai;
+  - el text de `/page/fediversity`: ara diu «inventari en esborrany» i la tasca de mesurar els recursos mínims queda al Pendent.
+
 ### Decisions pendents del Mestre
 
+- **Migracions:** aplicar 1500, 1800, 2000 i 1900 en l'ordre que diu `supabase/README.md`. Abans d'aplicar la 1800, decidir els punts D2 a D6 del Lot 3: la invitació al xifrat, la finestra de 15 minuts per a adjunts, el `search_path` de les funcions copiades, què queda després d'esborrar un compte i què entra a l'exportació.
+- **E2EE:** abans d'activar-lo cal tancar la troballa D6 del Lot 4 (una clau retirada pot signar una època posterior), amb una prova.
 - **Publicació SVN:** cal Subversion (`svn` no és en este Mac) i el guió de publicació del satèl·lit, que demana la contrasenya SVN en pantalla i no la guarda.
 - **Ordre de desplegament:** desplegar la web després del commit SVN, perquè l'enllaç de `/page/fediversity` mostre la fitxa i no una cerca buida.
 - **Reflex:** actualitzar `validateGraphContract` a les carpetes vives, i decidir si el lock del corpus deixa fora `10_actes` i `90_arxiu_historic`. Hui cada acta nova o arxivament el torna roig.
@@ -151,11 +191,25 @@ Còpia congelada de l'arbre final, sense els kits ni `cron.out`:
 
 L'arbre de la còpia (`ef6ff4b1`) és el mateix que construïxen els cinc lots amb l'índex temporal; el commit compara l'arbre final abans d'escriure res.
 
+Rondes 2 i 3, sobre l'arbre exacte de cada commit, en còpia:
+
+| Comprovació | Ronda 2 | Ronda 3 |
+| --- | --- | --- |
+| `npx vitest run` (suite sencera) | 1.539 fitxers; 26.813 passades, 0 fallades | 1.548 fitxers; 26.925 passades, 0 fallades |
+| `npm run test:node` | 1.746 passades, 0 fallades | 1.745 passades, 0 fallades |
+| `test:precommit` i ESLint | en verd | en verd |
+| `run-portes --cens` | només Consell i Doctrina (còpia neta) | només Consell i Doctrina (còpia neta) |
+| PostgreSQL 17.5 (PGlite) | — | cadena real de 64 migracions 20/20, sondes de seguretat 21/21, RGPD 25/25 |
+| `build:web` amb l'entorn real (només al procés) | en verd | en verd; `dist-secrets` 18/18 |
+| Reproducció dels lliurables sobre l'arbre viu | exacta (A i B) | exacta |
+
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
 
 - **Després del push (fora d'este informe):** el zip `--directori` 1.1.10 i l'escenificació SVN es construïxen des del commit pujat, i deixen el seu informe de validació a `_builds_de_poble/wordpress/`. El `build:natiu`, el `cap sync` i el `preflight --signa` es passen sobre l'arbre net. Els resultats van al xat del Mestre i al relleu següent.
-- **Sense publicació:** cap commit SVN, cap pujada a TestFlight ni a Google Play i cap desplegament web. Totes tres són del Mestre.
+- **Sense publicació:** cap commit SVN, cap pujada a TestFlight ni a Google Play, cap desplegament web i cap migració aplicada a Supabase. Totes són del Mestre.
+- **Rondes 2 i 3:** el zip 1.1.10, l'escenificació SVN i els natius es tornen a construir després del push de la Ronda 3, des del commit pujat; els resultats van al xat del Mestre. Les traduccions en basc i gallec de les claus noves de la fitxa del poble són propostes per revisar.
+- **Incident d'un revisor:** en la revisió de la Ronda 3, un agent va crear per error enllaços dins de `node_modules` de l'arbre viu i els va retirar. Comprovat després: no en queda cap.
 - **Fitxers d'entorn:** el build els importa al procés. No s'han llegit ni mostrat.
 - **Torn obert:** este torn queda «planned» als commits fins al tancament de la Ronda 2. A les 13:58 CET un `obrir_torn.mjs` sense arguments va obrir per error el torn `torn_734f3b4f-f3c4-49fc-b06d-e9de6370a529` (agent-local). No s'ha fet servir i caduca sol.
 - **Portes en una còpia neta:** Consell (L8) i Doctrina hi ixen roges perquè citen camins ignorats que només són a l'arbre viu (`.env`, `wordpress-plugin/dist`, `.husky/_`, `.claude/skills`). No és d'este torn.

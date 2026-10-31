@@ -1,9 +1,10 @@
+import { aBase64url, deBase64url } from '../xifratXatCripto.js';
 /**
  * src/data/supabase/xatXifrat.js — Transport opac de les capacitats `clausXat`
  * (13 mètodes) i `xatMultimediaXifrat` (2) del port (src/data/contracte.js;
  * disseny E2EE §7.4, §8.3 i §8.4; pla 261029_1305, Bloc C, E1.1 i E1.2).
  *
- * Opac vol dir: cap criptografia, cap `trim`, cap recodificació. Cada mètode
+ * Opac vol dir: cap desxifrat. Els bytea de lectures RLS es recodifiquen estrictament. Cada mètode
  * és una RPC amb els seus paràmetres; els resultats es mapegen de snake_case
  * a la forma del port i prou. Les RPC d'identitat, frase, claus i llibreta
  * són de la migració 2610290400 (E2EE-1a); les d'estat, èpoques, sobres,
@@ -103,10 +104,19 @@ export async function estatXifratXat(fils, config = {}) {
   const usuari = context(config);
   const data = await rpcXifrat('xat_estat_xifrat', { p_fils: Array.isArray(fils) ? fils : [] }, config);
   vigent(usuari, config);
-  return files(data).map((r) => ({
+  const resultat = files(data).map((r) => ({
     filId: r.fil_id, epoca: numero(r.epoca), cap: r.cap ?? null, e2eeDesDeSeq: r.e2ee_des_de_seq == null ? null : numero(r.e2ee_des_de_seq),
     abast: r.abast ?? null, declaracio: r.declaracio ?? null, sobre: r.sobre ?? null
   }));
+  if(config.ambMembres===true)for(const fil of resultat) {
+    if(!UUID.test(fil.filId))throw errorAdjuntXat('format');
+    const rows=await request(`/rest/v1/xat_participants?select=usuari_id,rol,com_org_id&fil_id=eq.${fil.filId}&visible_fins_seq=is.null&limit=257`,config,{signal:config.signal});
+    vigent(usuari,config);
+    const rols={membre:0,admin:1,propietari:2};
+    if(!Array.isArray(rows)||rows.length<1||rows.length>256||new Set(rows.map(r=>r.usuari_id)).size!==rows.length||!rows.some(r=>r.usuari_id===usuari)||!rows.every(r=>UUID.test(r.usuari_id)&&r.com_org_id==null&&Object.hasOwn(rols,r.rol)))throw errorAdjuntXat('format',{codi:'roster-invalid'});
+    fil.membres=rows.map(r=>({usuari:r.usuari_id,rol:rols[r.rol]}));
+  }
+  return resultat;
 }
 
 export async function epoquesDelFilXat(filId, desDe = 0, config = {}) {
@@ -116,11 +126,34 @@ export async function epoquesDelFilXat(filId, desDe = 0, config = {}) {
   return files(data).map(mapejaEpoca);
 }
 
+// PostgREST retorna bytea com \xhex; no s'accepten formats alternatius ni longituds ambigües.
+function bytea(r,n) {
+  if(typeof r!=='string'||!new RegExp('^\\\\x[0-9a-fA-F]{'+(n*2)+'}$').test(r))throw errorAdjuntXat('format',{codi:'reembolcall-invalid'});
+  return aBase64url(Uint8Array.from({length:n},(_,i)=>parseInt(r.slice(2+i*2,4+i*2),16)));
+}
 export async function sobresMeusXat(filId, epoques, config = {}) {
-  const usuari = context(config);
-  const data = await rpcXifrat('xat_meus_sobres', { p_fil_id: filId, p_epoques: Array.isArray(epoques) ? epoques : [] }, config);
-  vigent(usuari, config);
-  return files(data).map(mapejaSobre);
+  const usuari=context(config),llista=Array.isArray(epoques)?epoques:[];
+  if(!UUID.test(filId)||llista.length>256||!llista.every(e=>Number.isSafeInteger(e)&&e>0)||new Set(llista).size!==llista.length)throw errorAdjuntXat('format');
+  if(!llista.length)return [];
+  const data=await rpcXifrat('xat_meus_sobres',{p_fil_id:filId,p_epoques:llista},config);vigent(usuari,config);
+  // La RLS comprova membre vigent i destinatari. El protocol comprova a més
+  // l'època signada, el kid de l'aparell actual, l'emissor propi i el ckCommit.
+  let filtreKid='';
+  if(config.kidReembolcall!==undefined){
+    if(typeof config.kidReembolcall!=='string'||!/^[-_A-Za-z0-9]{22}$/.test(config.kidReembolcall))throw errorAdjuntXat('format');
+    const k=deBase64url(config.kidReembolcall,16);filtreKid='&destinatari_kid=eq.'+encodeURIComponent('\\x'+[...k].map(v=>v.toString(16).padStart(2,'0')).join(''));
+  }
+  const rows=await request(`/rest/v1/xat_reembolcalls?select=fil_id,epoca,destinatari_id,destinatari_kid,emissor_id,enc,ct&fil_id=eq.${filId}&destinatari_id=eq.${usuari}&epoca=in.(${llista.join(',')})${filtreKid}&limit=4097`,config,{signal:config.signal});
+  vigent(usuari,config);
+  if(!Array.isArray(rows)||rows.length>4096)throw errorAdjuntXat('format',{codi:'reembolcall-invalid'});
+  const vists=new Set();
+  const alternatius=rows.map(r=>{
+    if(r.fil_id!==filId||!llista.includes(r.epoca)||r.destinatari_id!==usuari||r.emissor_id!==usuari)throw errorAdjuntXat('format',{codi:'reembolcall-invalid'});
+    const kidReceptor=bytea(r.destinatari_kid,16);if(config.kidReembolcall!==undefined && kidReceptor!==config.kidReembolcall)throw errorAdjuntXat('format',{codi:'reembolcall-invalid'});const id=r.epoca+':'+kidReceptor;
+    if(vists.has(id))throw errorAdjuntXat('format',{codi:'reembolcall-invalid'});vists.add(id);
+    return {alternatiu:true,filId,epoca:r.epoca,receptor:usuari,emissorId:usuari,kidReceptor,enc:bytea(r.enc,65),ct:bytea(r.ct,48)};
+  });
+  return [...files(data).map(mapejaSobre),...alternatius];
 }
 
 export async function obriEpocaXat(filId, epocaNova, config = {}) {

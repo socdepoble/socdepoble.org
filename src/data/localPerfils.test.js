@@ -41,7 +41,7 @@ test('la fitxa naix de la sessió (pública per defecte) i els canvis es queden 
   expect(perfil).not.toHaveProperty('rol');
   expect(() => adapter.updateProfile(null, { lema: 'x' })).toThrow('Cal iniciar sessió');
   adapter.updateOrganization(ENTITAT_PILOT_ID, { lema: 'Fem xarxa', visibility: 'members' });
-  expect(adapter.listMyOrganizations(USUARI)[0]).toMatchObject({ lema: 'Fem xarxa', visibility: 'members' });
+  expect(adapter.listMyOrganizations(USUARI)[0]).toMatchObject({ lema: 'Fem xarxa', visibility: 'public' });
   expect(() => adapter.updateOrganization('cap', { lema: 'x' })).toThrow();
 });
 
@@ -410,4 +410,70 @@ test('Gauntlet 261016 · Onada 1.5: l’àlies javi-llinares resol la persona pi
   expect(adapter.loadPerfilPublic('javi-llinares', USUARI)).toMatchObject({ tipus: 'persona', id: USUARI.id, nom: 'Javi Pilot', propietari: true });
   /* La fitxa local de la persona porta l'àlies, com els altres. */
   expect(adapter.getProfile(USUARI).alies).toContain('javi-llinares');
+});
+
+test('P1-59 (c) · commutar un grup privat a company o entity força visibility public', () => {
+  adapter.updateOrganization(ENTITAT_PILOT_ID, { kind: 'group', visibility: 'private' });
+  expect(adapter.updateOrganization(ENTITAT_PILOT_ID, { kind: 'company' }).visibility).toBe('public');
+  adapter.updateOrganization(ENTITAT_PILOT_ID, { kind: 'group', visibility: 'private' });
+  expect(adapter.updateOrganization(ENTITAT_PILOT_ID, { kind: 'entity' }).visibility).toBe('public');
+});
+
+test('IDEA-24 · transfereixPropietatOrganitzacio passa la propietat a una persona membre i deixa l’antiga com a admin', () => {
+  const local = ambMembres();
+  local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa', rol: 'member' }, USUARI);
+  local.marcaTitularPublic(ENTITAT_PILOT_ID, true, USUARI);
+  const res = local.transfereixPropietatOrganitzacio(ENTITAT_PILOT_ID, 'pepa', USUARI);
+  expect(res).toEqual({
+    organizationId: ENTITAT_PILOT_ID,
+    anticOwnerId: USUARI.id,
+    nouOwnerId: 'pepa'
+  });
+  const membres = local.llistaMembresOrganitzacio(ENTITAT_PILOT_ID, USUARI);
+  expect(membres.find((m) => m.id === 'pepa')?.rol).toBe('owner');
+  expect(membres.find((m) => m.id === USUARI.id)?.rol).toBe('admin');
+  expect(local.loadTitularPublic(ENTITAT_PILOT_ID, USUARI)).toBeNull();
+});
+
+test('Revisió R3 (SQL-01) · la titularitat d’una entitat o d’un ajuntament no es transferix: només per reclamació', () => {
+  for (const kind of ['entity', 'city_hall']) {
+    const local = ambMembres();
+    local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa', rol: 'member' }, USUARI);
+    local.updateOrganization(ENTITAT_PILOT_ID, { kind });
+    expect(codiDe(() => local.transfereixPropietatOrganitzacio(ENTITAT_PILOT_ID, 'pepa', USUARI)), kind).toBe('SDP-ORGMEM-001');
+    const membres = local.llistaMembresOrganitzacio(ENTITAT_PILOT_ID, USUARI);
+    expect(membres.find((m) => m.id === USUARI.id)?.rol, kind).toBe('owner');
+    expect(membres.find((m) => m.id === 'pepa')?.rol, kind).toBe('member');
+  }
+  for (const kind of ['group', 'company']) {
+    const local = ambMembres();
+    local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa', rol: 'member' }, USUARI);
+    local.updateOrganization(ENTITAT_PILOT_ID, { kind });
+    expect(local.transfereixPropietatOrganitzacio(ENTITAT_PILOT_ID, 'pepa', USUARI).nouOwnerId, kind).toBe('pepa');
+  }
+});
+
+test('Lot5 · company/entity/city_hall són públiques malgrat visibility explícita i sense mare',()=>{
+ for(const kind of ['company','entity','city_hall'])expect(adapter.updateOrganization(ENTITAT_PILOT_ID,{kind,visibility:'private',parent_organization_id:'aliena'})).toMatchObject({kind,visibility:'public',parent_organization_id:null});
+});
+test('Lot5 · commutació i transferència conserven la tria privada del perfil personal',()=>{
+ const local=ambMembres();local.updateProfile(USUARI,{is_public:false});local.desaMembreOrganitzacio(ENTITAT_PILOT_ID,{tipus:'persona',id:'pepa',rol:'member'},USUARI);local.updateOrganization(ENTITAT_PILOT_ID,{kind:'company'});local.transfereixPropietatOrganitzacio(ENTITAT_PILOT_ID,'pepa',USUARI);expect(local.getProfile(USUARI).is_public).toBe(false);
+ expect(local.llegeixContacteOrganitzacio(ENTITAT_PILOT_ID,USUARI).perDefecte.correu).toBeNull();
+});
+
+/* Decisió del Mestre (xat 261031, RGPD) · Com el disparador de 2610311500: la
+   força només actua quan l'actualització toca kind, visibility o
+   parent_organization_id, i només per a company, entity i city_hall. */
+test('Decisió 261031 · editar la descripció d’una entitat desada com a «members» no la publica', () => {
+  const local = createLocalPerfilsAdapter({
+    entitats: ENTITATS_SEED.map((e) => (e.id === ENTITAT_PILOT_ID ? { ...e, kind: 'entity', visibility: 'members' } : e))
+  });
+  expect(local.updateOrganization(ENTITAT_PILOT_ID, { description: 'Nova descripció' })).toMatchObject({ kind: 'entity', visibility: 'members' });
+  expect(local.updateOrganization(ENTITAT_PILOT_ID, { visibility: 'members' })).toMatchObject({ kind: 'entity', visibility: 'public' });
+});
+
+test('Decisió 261031 · un grup conserva la visibilitat que tria', () => {
+  expect(adapter.updateOrganization(ENTITAT_PILOT_ID, { kind: 'group', visibility: 'members' })).toMatchObject({ kind: 'group', visibility: 'members' });
+  expect(adapter.updateOrganization(ENTITAT_PILOT_ID, { lema: 'Colla' })).toMatchObject({ kind: 'group', visibility: 'members' });
+  expect(adapter.updateOrganization(ENTITAT_PILOT_ID, { visibility: 'public' })).toMatchObject({ kind: 'group', visibility: 'public' });
 });

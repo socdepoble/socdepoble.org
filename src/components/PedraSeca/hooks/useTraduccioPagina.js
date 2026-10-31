@@ -1,7 +1,10 @@
 /**
  * useTraduccioPagina.js — L'estat del Traductor Sobirà d'una pàgina (ordre
- * del Mestre, 260930 · via B). El munta PageFrame i el passa a useAccions, que
- * hi posa el botó «Traduir» de la barra blava.
+ * del Mestre, 260930 · via B; P2-13 · C0545-S1/S2 · ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA).
+ * El munta PageFrame i el passa a useAccions, que hi posa el botó «Traduir» de
+ * la barra blava, distingint honestament les pàgines públiques amb traducció
+ * disponible de les targetes soltes (que continuen portant a /traduccions
+ * com a pendents de servei lliure) i de l'aplicació nativa sense servei.
  *
  *  · Descobriment: l'URL del servei ve de useUIState().externalConfig
  *    .traductorUrl (el plugin la hi fa arribar; ronda D1 de Codex, sense cap

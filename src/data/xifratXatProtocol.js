@@ -434,8 +434,8 @@ function exigixDirectori(directori) {
 }
 
 /* La fixació d'un usuari amb exactament este kid; si no, kid-no-fixat (§4.5.3.4). */
-function fixadaAmb(directori, usuari, kid) {
-  const fixada = directori.de(usuari);
+function fixadaAmb(directori, usuari, kid, historia = false) {
+  const fixada = (historia && directori.historica?.(usuari, kid)) || directori.de(usuari);
   if (fixada === null || !bytesIguals(fixada.kid, kid)) throw errorProtocol(CODI.kidNoFixat, 'Un membre porta una clau que no és la fixada en este aparell.');
   return fixada;
 }
@@ -652,33 +652,36 @@ export async function aplicaEpoca(cripto, { estat, jo, declaracio, firma, sobres
     if (!(await pas(kidQuadra(cripto, { usuari: v.autor, kid: v.kidAutor, sigPub: v.sigPubAutor, dhPub: v.dhPubAutor })))) {
       throw errorProtocol(CODI.kidNoQuadra, 'El kid de l’autor de l’època no és el de les seues claus.');
     }
-    fixadaAmb(directori, v.autor, v.kidAutor);
+    fixadaAmb(directori, v.autor, v.kidAutor, true);
     if (!(await pas(verificaSignatura(cripto, v.sigPubAutor, firma, declaracio)))) throw errorProtocol(CODI.firmaInvalida, 'La firma de l’època no verifica.');
-    for (const membre of v.membres) fixadaAmb(directori, membre.usuari, membre.kid);
+    for (const membre of v.membres) fixadaAmb(directori, membre.usuari, membre.kid, true);
     comprovaTransicio(estat, v);
     const meu = v.membres.find((membre) => membre.usuari === jo.usuari) ?? null;
     let ck = null;
     if (meu !== null) {
-      if (!bytesIguals(meu.kid, jo.kid)) throw errorProtocol(CODI.kidNoFixat, 'L’època em llista amb una clau que no és esta.');
       const llista = Array.isArray(sobres) ? sobres : [];
-      const sobre = llista.find((s) => esObjecte(s) && s.receptor === jo.usuari) ?? null;
-      if (sobre === null) throw errorProtocol(CODI.sobreAbsent, 'L’època em llista però no porta cap sobre per a mi.');
-      let envHash;
-      try {
-        envHash = await pas(hashSobre(cripto, sobre.enc, sobre.ct));
-      } catch (error) {
-        throw embolcalla(error, CODI.sobreInvalid, 'El sobre no té la forma esperada.');
-      }
-      if (!bytesIguals(envHash, meu.envHash)) throw errorProtocol(CODI.sobreInvalid, 'El sobre no és el que la declaració signa.');
+      const originals = llista.filter(s => esObjecte(s) && s.alternatiu !== true && s.receptor === jo.usuari && bytesIguals(meu.kid,jo.kid));
+      const alternatius = llista.filter(s => esObjecte(s) && s.alternatiu === true && s.filId === estat.fil && s.epoca === v.epoca && s.receptor === jo.usuari && s.emissorId === jo.usuari && bytesIguals(s.kidReceptor,jo.kid));
+      if(originals.length>1 || alternatius.length>1)throw errorProtocol(CODI.sobreInvalid,'Sobres duplicats.');
+      let fallada=errorProtocol(CODI.sobreAbsent,'L’època no porta cap sobre autoritzat per a mi.');
       const info = construeixInfoSobre({ fil: estat.fil, epoca: v.epoca, receptor: jo.usuari, kidReceptor: jo.kid, autor: v.autor, kidAutor: v.kidAutor });
-      try {
-        ck = await pas(obriBaseAClauHkdf(cripto, { skR: jo.dhPriv, pkR: jo.dhPub, enc: sobre.enc, info, ct: sobre.ct }));
-      } catch (error) {
-        throw embolcalla(error, CODI.sobreInvalid, 'El sobre no s’ha pogut obrir amb esta clau.');
+      for(const sobre of [...originals,...alternatius]) {
+        try {
+          // L'envHash signat només governa l'original; mai es reescriu.
+          if(sobre.alternatiu !== true && !bytesIguals(await pas(hashSobre(cripto,sobre.enc,sobre.ct)),meu.envHash))throw errorProtocol(CODI.sobreInvalid,'El sobre original no és el signat.');
+          if(!bytesIguals(sobre.kidReceptor,jo.kid))throw errorProtocol(CODI.sobreInvalid,'Kid del sobre incorrecte.');
+          const candidata=await pas(obriBaseAClauHkdf(cripto,{skR:jo.dhPriv,pkR:jo.dhPub,enc:sobre.enc,info,ct:sobre.ct}));
+          const compromis=await pas(derivaBitsHkdf(cripto,candidata,uuid16(estat.fil),infoCompromisEpoca(v.epoca),BYTES_HASH));
+          if(!bytesIguals(compromis,v.ckCommit))throw errorProtocol(CODI.compromisInvalid,'La CK no casa amb el compromís signat.');
+          ck=candidata;break;
+        } catch(error) {
+          if(error?.codi===CODI.ambitCanviat || error?.name==='AbortError')throw error;
+          fallada=esErrorProtocol(error)?error:embolcalla(error,CODI.sobreInvalid,'El sobre no s’ha pogut obrir.');
+        }
       }
-      const compromis = await pas(derivaBitsHkdf(cripto, ck, uuid16(estat.fil), infoCompromisEpoca(v.epoca), BYTES_HASH));
-      if (!bytesIguals(compromis, v.ckCommit)) throw errorProtocol(CODI.compromisInvalid, 'La CK del sobre no casa amb el compromís de l’època.');
+      if(ck===null)throw fallada;
     }
+    if(typeof vigent==='function')vigent();
     const membres = new Map(v.membres.map((membre) => [membre.usuari, Object.freeze({ kid: membre.kid, rol: membre.rol })]));
     const entrada = Object.freeze({ epoca: v.epoca, hash, declaracio: copia(declaracio), valors: v, membres, ck });
     estat.epoques.set(v.epoca, entrada);
@@ -812,7 +815,7 @@ export async function obriMissatge(cripto, { estat, fila, directori, purificador
     if (!bytesIguals(tf, f.tf)) throw errorProtocol(CODI.franqueigInvalid, 'El franqueig de la fila no és el de la càrrega.');
     if (estat.tipusFil !== TIPUS_FIL.directe || p.signada) {
       if (!p.signada) throw errorProtocol(CODI.firmaInvalida, 'Un missatge d’entitat o de grup va signat.');
-      const fixada = fixadaAmb(directori, f.emissor, f.kid);
+      const fixada = fixadaAmb(directori, f.emissor, f.kid, true);
       const hashDelCos = await pas(hashCos(cripto, p.cos));
       const entrada = construeixEntradaFirmaMissatge({ ...base, hashCos: hashDelCos });
       if (!(await pas(verificaSignatura(cripto, fixada.sigPub, p.firma, entrada)))) throw errorProtocol(CODI.firmaInvalida, 'La firma del missatge no verifica.');

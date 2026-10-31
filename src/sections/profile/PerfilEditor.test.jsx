@@ -541,6 +541,26 @@ test('T41 · triar privada en una organització posa «members», i el text ho d
   expect(m.toast).not.toHaveBeenCalled();
 });
 
+/* Decisió del Mestre (xat 261031, RGPD) · Empresa, entitat o ajuntament: el
+   selector no oferix «Fitxa privada» (amaga) i diu en una línia que són
+   figures públiques del directori. Els grups conserven la tria. */
+test.each(['company', 'entity', 'city_hall'])('261031 · una organització «%s» no oferix «Fitxa privada»', (kind) => {
+  const identitat = org('owner');
+  render(<PerfilEditor identitat={{ ...identitat, dades: { ...identitat.dades, kind } }} />);
+  expect(m.adapter.visibilitat.bloqueig).toEqual({
+    opcio: 'privada', amaga: true,
+    motiu: 'Les empreses, les entitats i els ajuntaments són figures públiques del directori: la seua fitxa ha de ser pública.'
+  });
+});
+
+test('261031 · un grup conserva la tria de visibilitat', async () => {
+  const identitat = org('owner');
+  render(<PerfilEditor identitat={{ ...identitat, mena: 'grup', dades: { ...identitat.dades, kind: 'group' } }} />);
+  expect(m.adapter.visibilitat.bloqueig).toBeNull();
+  await act(async () => { await m.adapter.visibilitat.onTria(false); });
+  expect(m.guardar).toHaveBeenCalledWith('visibility', 'members', 'O');
+});
+
 test('T41 · la fitxa d’un agent sempre és pública: privada bloquejada, amb el motiu, i no toca res', async () => {
   const agent = { id: 'A', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA' } };
   render(<PerfilEditor identitat={agent} />);

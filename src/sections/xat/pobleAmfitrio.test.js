@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 import {
   POBLE_PER_DEFECTE, anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, generalDeComunitat,
-  objecteDelPoble, pobleDeConfig, rutaSobreDelPoble
+  objecteDelPoble, pobleDeConfig, pobleDelXat, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
 import { objecteDeSobre } from './XatSection.jsx';
 
@@ -95,6 +95,14 @@ describe('avatarDelPoble (Onada 3, P2)', () => {
     }
     expect(avatarDelPoble({ id: POBLE.id, nom: '' }, [])).toBe(POBLE_PER_DEFECTE.avatar);
     expect(avatarDelPoble(POBLE, [{ id: POBLE.id, avatar_url: '/assets/towns/la-torre-de-les-macanes/2.webp' }])).toBe('/assets/towns/la-torre-de-les-macanes/2.webp');
+    /* Verificació P1-70 (D03/D09): pobleDelXat i avatarDelPoble garanteixen el fallback real (mai buit ni inicials GD). */
+    expect(pobleDelXat(null)).toEqual({
+      id: 'la-torre-de-les-macanes',
+      nom: 'Gent de la Torre',
+      avatar: '/assets/towns/la-torre-de-les-macanes/2.jpg'
+    });
+    expect(avatarDelPoble(pobleDelXat(null), [])).toBe('/assets/towns/la-torre-de-les-macanes/2.jpg');
+    expect(avatarDelPoble(pobleDelXat(undefined), undefined)).not.toBe('GD');
   });
 });
 

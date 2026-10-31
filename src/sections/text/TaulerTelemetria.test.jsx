@@ -605,7 +605,7 @@ test('T3.2: títol humà i explicació introductòria del Mestre', () => {
   expect(screen.queryByRole('heading', { name: "Els intents de comptar d'este navegador" })).toBeNull();
   expect(screen.getByText(/Ací baix pots comprovar, en directe, tot el que aquesta pestanya ha anotat mentre camines per Sóc de\s+Poble \(fins als últims 20 passos\)/)).toBeTruthy();
   expect(screen.getByText(/sense guardar mai qui eres, ni el teu correu, ni què has\s+llegit o escrit dins/)).toBeTruthy();
-  expect(screen.getByText(/no pot comprovar\s+si el comptador ho ha rebut/)).toBeTruthy();
+  expect(screen.getByText(/no pot comprovar\s+si el comptador ho ha registrat\./)).toBeTruthy();
   expect(screen.queryByText(/Petició iniciada|recepció no comprovada|Delegat/)).toBeNull();
 });
 
@@ -659,11 +659,23 @@ test.each([
   expect(llista).not.toMatch(/javillinares|0a1b2c3d|maria-del-forn|forn-de-la-placa/);
 });
 
-test('T3.2: «umami» diu visita sumada o clic anotat segons el tipus', () => {
+test('T3.2: les visites i clics pendents no afirmen un registre confirmat', () => {
   window.fetch = vi.fn(async () => ({ ok: true }));
   render(<TaulerTelemetria config={SENSE_COMPTADOR} />);
   act(() => { registraVisita('/disseny', { cfg: AMB_COMPTADOR }); });
   act(() => { registraEsdeveniment('connectar', { seccio: 'disseny', origen: 'pagina' }, { cfg: AMB_COMPTADOR, ruta: '/disseny' }); });
+  expect(window.fetch).toHaveBeenCalledTimes(2);
+  expect(screen.getAllByText("Pendent de resposta del comptador; s'ha intentat enviar.")).toHaveLength(2);
+});
+
+test('T3.2: «umami» diu visita sumada o clic anotat segons el tipus quan la resposta no porta estat HTTP', async () => {
+  window.fetch = vi.fn(async () => undefined);
+  render(<TaulerTelemetria config={SENSE_COMPTADOR} />);
+  await act(async () => {
+    registraVisita('/disseny', { cfg: AMB_COMPTADOR });
+    registraEsdeveniment('connectar', { seccio: 'disseny', origen: 'pagina' }, { cfg: AMB_COMPTADOR, ruta: '/disseny' });
+    await Promise.resolve();
+  });
   expect(window.fetch).toHaveBeenCalledTimes(2);
   expect(screen.getByText("S'ha sumat 1 visita anònima al comptador públic (sense cap dada personal).")).toBeTruthy();
   expect(screen.getByText("S'ha anotat aquest clic de manera anònima al comptador públic.")).toBeTruthy();
@@ -709,4 +721,37 @@ test('T3.3: des d’un servidor local la llista diu que no s’ha enviat res, i 
   expect(screen.getByText('Visita a: El Mur')).toBeTruthy();
   expect(screen.getByText("No s'ha enviat res: estàs en un servidor local de proves, i les visites d'ací no es sumen al comptador públic.")).toBeTruthy();
   expect(window.fetch).not.toHaveBeenCalled();
+});
+
+test('P2-14 (C0545-S3) · quan el fetch a Umami respon amb HTTP 500 o es rebutja asíncronament, l’entrada passa a data-verificacio="fallat"', async () => {
+  window.fetch = vi.fn(async () => ({ ok: false, status: 500 }));
+  const { container } = render(<TaulerTelemetria config={SENSE_COMPTADOR} />);
+  await act(async () => {
+    registraVisita('/disseny', { cfg: AMB_COMPTADOR });
+  });
+  expect(container.querySelector('.sdp-telemetria__intent')?.getAttribute('data-verificacio')).toBe('fallat');
+  expect(screen.getByText("S'ha intentat enviar, però no sabem si ha arribat.")).toBeTruthy();
+});
+
+test('Lot4: el tauler distingix pendent, resposta HTTP correcta i fallada',async()=>{
+ let resol;window.fetch=vi.fn(()=>new Promise(r=>resol=r));const {container}=render(<TaulerTelemetria config={AMB_COMPTADOR}/>);
+ act(()=>registraVisita('/lot4',{cfg:AMB_COMPTADOR}));
+ expect(container.querySelector('.sdp-telemetria__intent').textContent).toContain('Pendent');
+ await act(async()=>{resol({ok:true});await Promise.resolve();});
+ expect(container.querySelector('.sdp-telemetria__intent').getAttribute('data-verificacio')).toBe('acceptat');
+ expect(container.querySelector('.sdp-telemetria__intent').textContent).toContain('resposta HTTP satisfactòria');
+ act(()=>registraEsdeveniment('lot4-error',null,{cfg:AMB_COMPTADOR}));await act(async()=>{resol({ok:false});await Promise.resolve();});
+ expect(container.querySelector('.sdp-telemetria__intent').textContent).toContain('no sabem si ha arribat');
+ expect(container.querySelector('.sdp-telemetria__intent').textContent).not.toContain("No s'ha enviat res");
+});
+
+test('T3.2: un clic acceptat pel comptador conserva la frase del Mestre', async () => {
+  window.fetch = vi.fn(async () => ({ ok: true, status: 200 }));
+  const { container } = render(<TaulerTelemetria config={SENSE_COMPTADOR} />);
+  await act(async () => {
+    registraEsdeveniment('connectar', { seccio: 'disseny', origen: 'pagina' }, { cfg: AMB_COMPTADOR, ruta: '/disseny' });
+    await Promise.resolve();
+  });
+  expect(container.querySelector('.sdp-telemetria__intent')?.getAttribute('data-verificacio')).toBe('acceptat');
+  expect(screen.getByText("S'ha anotat aquest clic de manera anònima al comptador públic.")).toBeTruthy();
 });

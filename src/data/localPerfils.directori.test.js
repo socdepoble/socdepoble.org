@@ -33,7 +33,7 @@ test('Pla 261022_1955 · només les públiques, amb la fila de la vista i cap ca
 });
 
 test('Pla 261022_1955 · una organització que es fa privada ix del directori', () => {
-  local.updateOrganization(ENTITAT_PILOT_ID, { visibility: 'members' });
+  local.updateOrganization(ENTITAT_PILOT_ID, { kind: 'group', visibility: 'members' });
   expect(local.listPublicOrganizations().map((fila) => fila.id)).not.toContain(ENTITAT_PILOT_ID);
 });
 

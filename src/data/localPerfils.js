@@ -92,6 +92,8 @@ const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
    la llista blanca de supabase/auth.js: totes dues han de dir el mateix. */
 const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon'];
 /* Grup C (261008) · `town_name`: el poble de l'organització (2610081401). */
+/* P1-59 (c) · Les figures públiques del directori (decisió del Mestre, xat 261031). */
+const KINDS_FIGURA_PUBLICA = Object.freeze(['company', 'entity', 'city_hall']);
 const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright', 'town_name'];
 const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
 /* Pla 261022_1955 (T1) · Les columnes d'organization_directory (2610081401), en
@@ -222,8 +224,14 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
      propietària. Les organitzacions membres no hi compten mai: no hereten. */
   const rolDe = (orgId, usuari) => {
     const base = rolALEntitat(orgId, usuari?.id, { teSessio: Boolean(usuari?.id) });
-    if (ROLS_QUE_MANEN.has(base) || !usuari?.id) return base;
-    return connexio(orgId, usuari.id)?.rol || base;
+    if (!usuari?.id) return base;
+    const actual = connexio(orgId, usuari.id)?.rol;
+    if (actual === 'owner') return 'owner';
+    const mapa = estat.connexions.get(String(orgId));
+    const propietatTransferida = mapa && [...mapa.entries()].some(([id, m]) => m?.rol === 'owner' && id !== String(usuari.id));
+    if (propietatTransferida) return actual || (base === 'owner' ? 'admin' : base);
+    if (ROLS_QUE_MANEN.has(base)) return base;
+    return actual || base;
   };
   const orgsOnMana = (usuari) => [...estat.organitzacions.values()]
     .filter((org) => ROLS_QUE_MANEN.has(rolDe(org.id, usuari)));
@@ -396,6 +404,17 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       const org = estat.organitzacions.get(String(id));
       if (!org) throw new Error("No s'ha pogut actualitzar l'organització.");
       actualitza(org, updates, CAMPS_ORG, moment());
+      /* P1-59 (c) · Decisió del Mestre (xat 261031, RGPD) · Com el disparador
+         de 2610311500 (BEFORE INSERT OR UPDATE OF kind, visibility,
+         parent_organization_id): una empresa, una entitat o un ajuntament
+         queda pública i sense mare només quan l'actualització toca un d'eixos
+         camps. Editar la descripció o el lema no canvia la visibilitat d'una
+         fila ja desada, i els grups conserven la seua tria. */
+      const tocaVisibilitat = ['kind', 'visibility', 'parent_organization_id'].some((camp) => Object.hasOwn(updates || {}, camp));
+      if (tocaVisibilitat && KINDS_FIGURA_PUBLICA.includes(org.kind)) {
+        org.visibility = 'public';
+        org.parent_organization_id = null;
+      }
       return { ...org };
     },
 
@@ -512,8 +531,10 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       const llista = [];
       const connectades = estat.connexions.get(String(org.id));
       /* Ronda 2 (Kit de Gemini, D06) · Si una connexió ja porta la persona que
-         mira, la seua fila ix de la connexió: cap propietària duplicada. */
-      if (!connectades?.has(String(usuari.id)) && rolALEntitat(org.id, usuari.id, { teSessio: true }) === 'owner') {
+         mira, la seua fila ix de la connexió: cap propietària duplicada.
+         Lot 5 (Codex) · rolDe, perquè després d'una transferència l'antiga
+         propietària de la llavor ja no compta com a owner. */
+      if (!connectades?.has(String(usuari.id)) && rolDe(org.id, usuari) === 'owner') {
         llista.push(membreDePersona(usuari.id, 'owner', estat.naixement, usuari));
       }
       /* Revisió adversarial (261018) · Els membres que declara la llavor
@@ -620,6 +641,31 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       const org = orgDeLaPropietaria(orgId, usuari);
       estat.titulars.set(String(org.id), titularPublic ? String(usuari.id) : null);
       return { titularPublic };
+    },
+
+    /** IDEA-24 · Transferix la propietat ('owner') a una altra persona membre i passa l'actual a 'admin'. */
+    transfereixPropietatOrganitzacio(orgId, nouOwnerId, usuari) {
+      if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
+      const org = orgQueGestiona(orgId, usuari);
+      if (rolDe(org.id, usuari) !== 'owner') throw errorDeMembre('SDP-ORGMEM-006');
+      if (!['group', 'company'].includes(org.kind)) throw errorDeMembre('SDP-ORGMEM-001');
+      const destiId = String(nouOwnerId ?? '').trim();
+      if (!destiId || destiId === String(usuari.id)) throw errorDeMembre('SDP-ORGMEM-004');
+      const actualDesti = connexio(org.id, destiId);
+      if (!actualDesti) throw errorDeMembre('SDP-ORGMEM-003');
+      const mapa = estat.connexions.get(String(org.id));
+      const meu = mapa.get(String(usuari.id));
+      const araIso = moment();
+      mapa.set(String(usuari.id), { rol: 'admin', desDe: meu?.desDe || araIso });
+      mapa.set(destiId, { rol: 'owner', desDe: actualDesti.desDe || araIso });
+      if (estat.titulars.get(String(org.id)) === String(usuari.id)) {
+        estat.titulars.set(String(org.id), null);
+      }
+      return {
+        organizationId: String(org.id),
+        anticOwnerId: String(usuari.id),
+        nouOwnerId: destiId
+      };
     },
 
     /** Per a les proves: oblida els canvis. */

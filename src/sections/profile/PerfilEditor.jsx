@@ -498,9 +498,10 @@ export function PerfilEditor({ identitat }) {
   }, [esAgent, fitxa.isPublished, isPublicDesat, mena, guardarCampPerfil, identitat.id, ref]);
   const visibilitat = useMemo(() => ({
     textos: textosDeFitxa(mena),
-    bloqueig: bloqueigDeFitxa(mena),
+    /* Decisió del Mestre (xat 261031) · Empresa, entitat o ajuntament: sense «Fitxa privada». */
+    bloqueig: bloqueigDeFitxa(mena, dades.kind),
     onTria: triaVisibilitat,
-  }), [mena, triaVisibilitat]);
+  }), [mena, dades.kind, triaVisibilitat]);
 
   const uploadMedia = useCallback(
     (fitxer) => pujaMitja(fitxer, mena === 'persona' ? 'avatars' : esAgent ? 'agents' : 'organitzacions'),

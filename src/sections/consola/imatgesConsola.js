@@ -132,3 +132,43 @@ export function miniaturaDePagina(id) {
   const il = imatgeDePagina(id);
   return il.imatge ? { imatge: miniaturaDe(il.imatge), imatgeAlt: il.imatgeAlt } : il;
 }
+
+const tracaConsola = (assetId, estatObra, commitRonda1, reutilitzacioBytesAmb, consumidors) => Object.freeze({
+  assetId,
+  estatObra,
+  commitRonda1,
+  reutilitzacioBytesAmb,
+  consumidors: Object.freeze(consumidors)
+});
+
+/** P1-29 (D10/D12 · Lot 4) · Traçabilitat semàntica i de procedència de cada
+ *  entrada d'IMATGES_CONSOLA (amb el seu assetId del cens, estat de l'obra,
+ *  commit de la Ronda 1 si s'ha regenerat a sang, reutilització de bytes
+ *  acreditada entre targetes i consumidors). */
+export const TRAZABILITAT_IMATGES_CONSOLA = Object.freeze({
+  index: tracaConsola('cens-ui-plugins-consola-vinyeta', 'definitiva_ronda1', 'dbc5a1c14', null, ['PAGE_COPY.consola', 'IMATGES_CONSOLA.index']),
+  pols: tracaConsola('cens-nano-cards-metriques-nano-card', 'definitiva', null, null, ['IMATGES_CONSOLA.pols']),
+  explorador: tracaConsola('cens-ui-plugins-cervell-vinyeta', 'definitiva_ronda1', 'dbc5a1c14', 'agents', ['PAGE_COPY.cervell', 'IMATGES_CONSOLA.explorador']),
+  fluxos: tracaConsola('cens-ui-plugins-treball-vinyeta', 'esborrany_metafora', null, null, ['PAGE_COPY.treball', 'IMATGES_CONSOLA.fluxos']),
+  calendari: tracaConsola('cens-nano-cards-calendari-nano-card', 'esborrany_metafora', null, null, ['PAGE_COPY.publicar_calendari', 'IMATGES_CONSOLA.calendari']),
+  inventari: tracaConsola('cens-nano-cards-lector-rss-nano-card', 'definitiva_ronda1', 'e7b05b3a5', null, ['IMATGES_CONSOLA.inventari']),
+  entrades: tracaConsola('cens-ui-plugins-bascula-vinyeta', 'definitiva_recuperada', null, null, ['IMATGES_CONSOLA.entrades']),
+  agents: tracaConsola('cens-nano-cards-cervell-nano-card', 'definitiva_ronda1', 'e7b05b3a5', 'explorador', ['IMATGES_CONSOLA.agents']),
+  actors: tracaConsola('cens-ui-plugins-mapa-vinyeta', 'esborrany_metafora', null, null, ['PAGE_COPY.publicar_mapa', 'plugin:mapa', 'IMATGES_CONSOLA.actors']),
+  salut: tracaConsola('cens-ui-plugins-salut-vinyeta', 'esborrany_metafora', null, null, ['plugin:salut', 'IMATGES_CONSOLA.salut']),
+  requeriments: tracaConsola('cens-nano-cards-govern-requeriments-nano-card', 'definitiva_b1', null, null, ['IMATGES_CONSOLA.requeriments']),
+  balanc: tracaConsola('cens-nano-cards-govern-balanc-nano-card', 'definitiva_b1', null, null, ['IMATGES_CONSOLA.balanc']),
+  certificacio: tracaConsola('cens-nano-cards-govern-certificacio-nano-card', 'definitiva_b1', null, null, ['IMATGES_CONSOLA.certificacio']),
+  comunicacio: tracaConsola('cens-nano-cards-govern-comunicacio-nano-card', 'definitiva_b1', null, null, ['IMATGES_CONSOLA.comunicacio'])
+});
+
+/** P1-29 (D10/D12 · Lot 4) · La il·lustració de la Caldera de la Consola
+ *  dins del cos de `/page/consola` (`PAGE_COPY.consola.html`) incorporada a la
+ *  Ronda 1 (`dbc5a1c14`). */
+export const ILUSTRACIO_CALDERA_CONSOLA = Object.freeze({
+  src: '/assets/uploads/consola-caldera.png',
+  bessonaWebp: '/assets/uploads/consola-caldera.webp',
+  assetId: 'cens-uploads-consola-caldera',
+  commitRonda1: 'dbc5a1c14',
+  consumidor: 'PAGE_COPY.consola.html'
+});

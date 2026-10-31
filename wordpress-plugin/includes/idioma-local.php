@@ -74,15 +74,17 @@ function socdepoble_enxufe_carrega_traduccions() {
 	if ( class_exists( 'WP_Translation_Controller' ) ) {
 		return;
 	}
-	$inicial = (string) apply_filters( 'plugin_locale', determine_locale(), 'socdepoble' );
-	$actual  = $inicial;
+	$llengua_init = function_exists( 'determine_locale' ) ? determine_locale() : 'ca';
+	$inicial      = (string) apply_filters( 'plugin_locale', $llengua_init, 'socdepoble' );
+	$actual       = $inicial;
 	/* Tornar a la llengua d'init (la pila buida) és tornar a $inicial, la de
 	   determine_locale(), que a l'administració és la de la persona i no la
 	   del lloc que porta change_locale. */
 	add_action(
 		'change_locale',
 		static function ( $llengua ) use ( &$actual, $inicial ) {
-			$actual = is_locale_switched() ? (string) apply_filters( 'plugin_locale', (string) $llengua, 'socdepoble' ) : $inicial;
+			$canviada = function_exists( 'is_locale_switched' ) ? is_locale_switched() : ( '' !== (string) $llengua && (string) $llengua !== $inicial );
+			$actual   = $canviada ? (string) apply_filters( 'plugin_locale', (string) $llengua, 'socdepoble' ) : $inicial;
 		}
 	);
 	/* Només el que encara no està traduït: el filtre general gettext va

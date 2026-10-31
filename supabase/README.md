@@ -7,50 +7,6 @@ description: "Documentació canònica de Sóc de Poble."
 
 ## Fitxers
 
-- `migrations/2609291200_baixa_icon_copyright.sql`
-  La quarantena retira també `icon` i `copyright` del perfil i de les
-  metadades d'autenticació; cancel·lar la baixa els restaura de la còpia privada.
-
-- `migrations/2609291210_xat_cerca_accents.sql`
-  El directori busca sense accents ni distinció de majúscules i admet paraules
-  en qualsevol ordre, conservant les restriccions de poble i visibilitat.
-
-- `migrations/2609291230_xat_realtime_lectura.sql`
-  Autoritza només els participants vigents a rebre avisos privats del seu fil.
-  Exigix RLS ja actiu a `realtime.messages`; no autoritza emissions del client.
-
-- `migrations/2610021520_perfil_public.sql`
-  Ordre del Mestre (261002): la persona al cercador. L'RPC
-  `perfil_public(p_id)` torna la fitxa sencera a la mateixa persona o si és
-  publicada (`is_public`); si no, només `id`, `full_name`, `avatar_url` i
-  `town_name`, i només a qui comparteix poble (legalContent §13). Mai una
-  baixa, mai sense sessió (`SDP-PERFIL-010`). Additiva; **no aplicada**.
-  **Va després de 2609291230 i abans de publicar el client**: l'adaptador de
-  Supabase declara sempre la capacitat `directori` i el cercador enllaça cada
-  persona del padró a la seua fitxa; sense la funció, el clic acaba en «Perfil
-  no trobat».
-
-- `migrations/2610042350_convergencia_perfil_i_create_organization.sql`
-  Ordre del Mestre (261004, F1): convergència d'una base desfasada. Errors
-  reals: Visibilitat de la fitxa amb PGRST204 (`profiles.is_public` absent),
-  Avatar i Subtítol amb «no tens permís» i Nova organització amb PGRST203
-  (més d'una `create_organization`). Que l'error d'Avatar i Subtítol siga un
-  42501 de PostgREST (permís de columna absent) és una INFERÈNCIA: podria ser
-  un 403 de GoTrue al PUT de `/auth/v1/user`, i es confirma a la pestanya
-  Xarxa del navegador; si és GoTrue, esta migració no el cura. Afig
-  `is_public` si falta, torna a donar el permís d'UPDATE de cada columna de
-  `CAMPS_PERFIL` que existix (`SDP-CONV-001` avisa de les absents) i esborra,
-  sense CASCADE, tota funció `create_organization` (`prokind = 'f'`) que no
-  siga la canònica de 7 arguments; si la canònica falta, avorta sencera
-  (`SDP-CONV-002`). Cap
-  política ni funció nova; **no aplicada**. **Va després de totes les
-  pendents d'esta llista, en ordre alfabètic, i abans de publicar el
-  client**; no en substituïx cap. Abans d'aplicar-la, el Mestre o Sollutia
-  executen les quatre consultes de només lectura de la capçalera.
-  **No torneu a executar 2609110600 sola per a «arreglar» `is_public`**: la
-  seua política «profiles read own» per a `authenticated` i `anon` reobriria
-  el padró sencer, que 2609121500, 2609150000 i 2609160600 tornen a tancar.
-
 - `migrations/2609080000_initial_schema.sql`
   Taules base, funcions de `private`, triggers d'alta i polítiques RLS.
 
@@ -69,13 +25,13 @@ description: "Documentació canònica de Sóc de Poble."
 
 - `migrations/2609110600_perfil_avatar_i_permisos.sql`
   Permisos DML i definició RLS bàsica per a perfils.
-  
+
 - `migrations/2609121500_correccio_privacitat_perfils.sql`
   Correcció estricta RLS per a perfils i organitzacions.
 
 - `migrations/2609121600_admin_panel.sql`
   Funcions RPC per a l'admin panel.
-  
+
 - `migrations/2609130500_bucket_mitjans.sql`
   Creació del bucket `mitjans` per a àudios i avatars.
 
@@ -84,7 +40,7 @@ description: "Documentació canònica de Sóc de Poble."
   el Bloc de Notes torna 404 i el «Retall» del Xat no es pot guardar.
 
 - `migrations/2609140100_auditoria_rls_fixes.sql`
-  Paquet global d'auditoria (Deepseek, Perplexity, Dola, Claude). 
+  Paquet global d'auditoria (Deepseek, Perplexity, Dola, Claude).
   Resol spoofing de tenant al registre, SSRF i accessos anon RLS.
 
 - `migrations/2609150000_seguretat_profunda_deepseek.sql`
@@ -122,6 +78,17 @@ description: "Documentació canònica de Sóc de Poble."
   que no cau mai, exportació de dades, baixa amb quarantena i purga. Vegeu
   «Baixa, purga i consentiment».
 
+- `migrations/2609262232_copyright_editor.sql`
+  Drets d'autor lliures de l'editor (límit de 256 caràcters compartit amb el
+  client): afig la columna `copyright text not null default ''` amb el seu
+  `CHECK (char_length(copyright) <= 256)` a `public.notes`, `public.profiles`
+  i `public.organizations`, concedeix `select (copyright)` a `anon` i
+  `authenticated` sobre `public.organizations` i `update (copyright)` a
+  `authenticated` sobre `public.organizations` i `public.profiles`, i
+  recrea la vista `public.organization_directory` (`security_invoker = true`,
+  `security_barrier = true`) incloent-hi `copyright` al final. Va després de
+  2609261500. Estat remot no acreditat: comprovar abans d'aplicar.
+
 - `migrations/2609270200_xat_f0_fonament.sql`
   Xat F0 (Fonament): número d'ordre `seq` per conversa i marques per
   participant (`llegit_fins_seq`, `rebut_fins_seq`), cap escriptura directa a
@@ -129,11 +96,43 @@ description: "Documentació canònica de Sóc de Poble."
   `xat_envia` (idempotent per `id`), `xat_historial`, `xat_nous`, `xat_marca` i
   `xat_fils_meus` v2. Vegeu «Xat F0: seq, marques i RPC».
 
+- `migrations/2609271400_notes_paperera.sql`
+  Paperera i arxiu del bloc de notes (`public.notes`): afig l'ajust
+  `dies_paperera_notes = 30` a `private.ajustos`, les columnes `status`
+  (`activa`, `paperera`, `arxivada`; CHECK `notes_status_valid`) i
+  `trashed_at` amb la coherència `notes_paperera_amb_data` i l'índex
+  `idx_notes_tenant_owner_status`, el disparador `trg_notes_paperera`
+  (`public.notes_marca_paperera()`) perquè `trashed_at` el fixe sempre el
+  servidor, i la purga `private.purga_paperera_notes(integer)` als 30 dies,
+  programada amb `pg_cron` (`sdp-purga-paperera-notes`) només si l'extensió
+  és activa. Codis: `SDP-NOTES-900`. Va després de 2609261500. Estat remot no acreditat: comprovar abans d'aplicar.
+
 - `migrations/2609272100_notes_origen.sql`
   Lògica d'Usuari (T5): la columna `notes.origen` (jsonb) que recorda d'on ve
   una nota connectada des de «Connectar». Sense ella, el Bloc continua
   funcionant (la llista de resums no la demana) però crear una connexió en
   remot falla fins que s'aplique.
+
+- `migrations/2609272200_xat_entitats.sql`
+  Xat d'entitats (conversa privada entre persona veïna i organització): afig
+  `interlocutor_id` a `public.xat_fils`, `com_org_id` a
+  `public.xat_missatges` i l'índex únic `xat_fils_entitat_interlocutor_uq`,
+  redefinix `private.xat_participant_vigent`, `private.es_participant`,
+  `private.xat_pot_veure_participant`, `private.seq_visible` i
+  `private.es_admin_del_fil`, afig `private.xat_alta_gestor_entitat` i
+  `public.membres_del_poble`, i torna a crear `crea_fil_directe`,
+  `xat_envia`, `xat_historial`, `xat_nous`, `xat_marca`, `xat_fils_meus` i
+  `xat_missatges_del_fil`. Va després de 2609272100. Aplicada al node remot
+  el 261009 segons la capçalera de 2610241410.
+
+- `migrations/2609272201_grups_mare.sql`
+  Coherència entre RPC i RLS en crear un grup amb entitat mare: redefinix
+  `private.can_create_group(p_parent_organization_id uuid, p_tenant_id uuid)`
+  (`SECURITY DEFINER`, `search_path = ''`) exigint que
+  `p_parent_organization_id` no siga `null` i apunte a una organització del
+  mateix poble de tipus `company`, `entity` o `city_hall` on qui crida siga
+  `owner` o `admin`, evitant el 403 opac posterior de la política d'inserció.
+  Va després de 2609261200. Estat remot no acreditat: comprovar abans d'aplicar.
 
 - `migrations/2609281500_lema_entradilla_256.sql`
   T49: l'entradilla (`lema`) de perfils i organitzacions passa de 120 a 256
@@ -174,6 +173,29 @@ description: "Documentació canònica de Sóc de Poble."
   dependències ja hi eren: l'èxit de la convergència (`SDP-CONV-004`) ho
   acredita. Sense moderació: vegeu «Xat de pàgina i comunitats».
 
+- `migrations/2609291200_baixa_icon_copyright.sql`
+  La quarantena retira també `icon` i `copyright` del perfil i de les
+  metadades d'autenticació; cancel·lar la baixa els restaura de la còpia privada.
+
+- `migrations/2609291210_xat_cerca_accents.sql`
+  El directori busca sense accents ni distinció de majúscules i admet paraules
+  en qualsevol ordre, conservant les restriccions de poble i visibilitat.
+
+- `migrations/2609291230_xat_realtime_lectura.sql`
+  Autoritza només els participants vigents a rebre avisos privats del seu fil.
+  Exigix RLS ja actiu a `realtime.messages`; no autoritza emissions del client.
+
+- `migrations/2610021520_perfil_public.sql`
+  Ordre del Mestre (261002): la persona al cercador. L'RPC
+  `perfil_public(p_id)` torna la fitxa sencera a la mateixa persona o si és
+  publicada (`is_public`); si no, només `id`, `full_name`, `avatar_url` i
+  `town_name`, i només a qui comparteix poble (legalContent §13). Mai una
+  baixa, mai sense sessió (`SDP-PERFIL-010`). Additiva; **no aplicada**.
+  **Va després de 2609291230 i abans de publicar el client**: l'adaptador de
+  Supabase declara sempre la capacitat `directori` i el cercador enllaça cada
+  persona del padró a la seua fitxa; sense la funció, el clic acaba en «Perfil
+  no trobat».
+
 - `migrations/2610042330_xat_pagina_iaia.sql`
   Correcció posterior al xat de pàgina: `/iaia` és la clau i ruta canòniques;
   l'entrada antiga exacta `/ia` resol al mateix fil. Reanomena les metadades
@@ -183,6 +205,56 @@ description: "Documentació canònica de Sóc de Poble."
   Va després de 2609282100 i les seues dependències, abans de publicar un
   client amb la nova ruta; conserva la condició de moderació. **Aplicada al
   node remot pel Mestre el 261009**, just després de 2609282100.
+
+- `migrations/2610042350_convergencia_perfil_i_create_organization.sql`
+  Ordre del Mestre (261004, F1): convergència d'una base desfasada. Errors
+  reals: Visibilitat de la fitxa amb PGRST204 (`profiles.is_public` absent),
+  Avatar i Subtítol amb «no tens permís» i Nova organització amb PGRST203
+  (més d'una `create_organization`). Que l'error d'Avatar i Subtítol siga un
+  42501 de PostgREST (permís de columna absent) és una INFERÈNCIA: podria ser
+  un 403 de GoTrue al PUT de `/auth/v1/user`, i es confirma a la pestanya
+  Xarxa del navegador; si és GoTrue, esta migració no el cura. Afig
+  `is_public` si falta, torna a donar el permís d'UPDATE de cada columna de
+  `CAMPS_PERFIL` que existix (`SDP-CONV-001` avisa de les absents) i esborra,
+  sense CASCADE, tota funció `create_organization` (`prokind = 'f'`) que no
+  siga la canònica de 7 arguments; si la canònica falta, avorta sencera
+  (`SDP-CONV-002`). Cap
+  política ni funció nova; **no aplicada**. **Va després de totes les
+  pendents d'esta llista, en ordre alfabètic, i abans de publicar el
+  client**; no en substituïx cap. Abans d'aplicar-la, el Mestre o Sollutia
+  executen les quatre consultes de només lectura de la capçalera.
+  **No torneu a executar 2609110600 sola per a «arreglar» `is_public`**: la
+  seua política «profiles read own» per a `authenticated` i `anon` reobriria
+  el padró sencer, que 2609121500, 2609150000 i 2609160600 tornen a tancar.
+
+- `migrations/2610061448_superadmin_aal2.sql`
+  Exigència de segon factor (AAL2 / 2FA) per als privilegis de
+  superadministració: redefinix `private.es_superadmin()` (`SECURITY DEFINER`,
+  `search_path = ''`) comprovant tant la fila `role = 'superadmin'` a
+  `public.user_platform_roles` com `(select auth.jwt() ->> 'aal') = 'aal2'`.
+  2610101900 va després d'esta. **NO aplicada: l'aplica el Mestre, mai un
+  agent**.
+
+- `migrations/2610061450_capcalera_client_ip.sql`
+  V-FW-02 i V-LOGIN-07 (estil Vigilante 2.11.8): endurix
+  `private.capcalera_client(p_que text)` (`search_path = ''`) per a llegir
+  primer `cf-connecting-ip`, després `x-real-ip` i, si només hi ha
+  `x-forwarded-for`, l'últim element de la dreta (l'afegit per la
+  passarel·la de confiança, mai l'esquerra falsificable pel visitant), i
+  trunca `user-agent` a 300 caràcters. Va després de 2609261500. **NO
+  aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610072230_mur_imatges_propies.sql`
+  Decisió 3 del Mestre (261007 · Privacitat d'IP al Mur): prohibix imatges
+  externes de tercers a `public.section_submissions` per a les seccions
+  `mur`, `mercat` i `events`. Crea `private.origens_mitjans_propis()`,
+  `private.mur_imatge_propia(jsonb, text[])`,
+  `private.mur_neteja_imatges(jsonb, text[])` i el disparador
+  `sdp_mur_imatges_propies` (`private.trg_mur_imatges_propies()`, `BEFORE
+  INSERT OR UPDATE`), que buida qualsevol URL d'imatge que no siga pròpia
+  (`/assets/…`, `sdp-media://…`, `data:image/(png|jpeg|jpg|webp|gif|avif)` o
+  un origen declarat a `private.ajustos`). Les files existents no es toquen.
+  Requerix 2609080000..2609261500. Estat remot no acreditat: comprovar abans d'aplicar.
 
 - `migrations/2610081400_grups_sense_mare.sql`
   Ordre del Mestre (261008, grup C): un grup ja no necessita empresa mare.
@@ -479,66 +551,6 @@ description: "Documentació canònica de Sóc de Poble."
   `node tests/xat-multimedia-postgres.audit.mjs`: storage-api real si les
   imatges de Supabase són locals i, si no, la fixture, i diu quina ha corregut.
 
-- `migrations/2610241420_revocacio_apple.sql`
-  T1 (P0-04; App Store 5.1.1(v), Apple TN3194; auditoria Codex 261024_1315
-  C-01): la custòdia i la revocació de Sign in with Apple quan una persona es
-  dona de baixa. Crea `private.autoritzacions_apple` (el refresh token
-  d'Apple xifrat amb AES-256-GCM per la funció `compte-apple`, amb la persona
-  com a dades associades: la base no veu mai el text clar ni la clau), el
-  registre `private.revocacions_apple` (empremta pseudònima, origen i
-  resultat; sense clau forana, sobreviu a la purga), l'ajust
-  `dies_espera_revocacio_apple` = `7` i quatre RPC SECURITY DEFINER només per
-  a `service_role`: `apple_desa_autoritzacio` (només si el subjecte és la
-  identitat d'Apple de la persona a `auth.identities`), `apple_autoritzacio_de`,
-  `apple_revocacions_pendents` (primer les no provades i després les provades
-  fa més temps: una fila que falla no tapa la cua) i `apple_registra_revocacio`
-  (esborra la fila només quan Apple ha confirmat la revocació del mateix
-  xifrat; un `sense_testimoni` només s'anota si la baixa ja existix i com a
-  molt un per persona cada 24 hores). Permisos del
-  mandat Supabase 30-Oct-2026: les dues taules, RLS activa i
-  `revoke all ... from public, anon, authenticated, service_role` sense cap
-  grant (només hi entren les RPC); cada RPC, el mateix `revoke all` i
-  `grant execute on function ... to service_role`, i a dins la porta
-  `auth.role()`. Codis `SDP-APPLE-000`, `001` i `002`. No crida cap URL ni
-  toca `private.purga_una_baixa` (la porta de la purga és de 2610241440, T8).
-  Prerequisit aplicat de veres: 2609261500 (`private.baixes`,
-  `private.hash_subjecte`). Va ABANS de desplegar la funció `compte-apple`
-  (secció «Funció `compte-apple`», al final) i ABANS de 2610241440.
-  Verificació posterior (lectura):
-  `select count(*) from private.autoritzacions_apple;`,
-  `select origen, resultat, count(*) from private.revocacions_apple group by 1, 2;`
-  i `select valor from private.ajustos where clau = 'dies_espera_revocacio_apple';`.
-  Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
-
-- `migrations/2610241410_exporta_dades_moderacio.sql`
-  P2-08 (pla 261024_1315, T7; auditoria Codex C-04): torna a crear
-  `public.exporta_les_meues_dades()` amb el cos de 2609261500 al peu de la
-  lletra (la mateixa signatura i el format `socdepoble.exportacio.v1`; només
-  l'executa `authenticated`, ara després de revocar-ho tot a `public`, `anon`,
-  `authenticated` i `service_role`) i hi afig `moderacio` (`denuncies_fetes`,
-  `denuncies_rebudes` només amb `amb_mesura`, quantes de les que t'afecten han
-  acabat retirant el contingut: cap recompte de les pendents, revisades o
-  desestimades, ni per tipus ni per motiu, perquè comparant dues exportacions
-  delataria qui denuncia, i el detall es respon per correu (RGPD, art. 15.4),
-  els `bloquejos` que has fet tu i
-  `normes_acceptades`), el xat sencer (`id`, `seq`, `tipus`, `metadades` i
-  `esborrat_per_mi` dels missatges propis, el subjecte i els teus ajustos de
-  cada conversa, i `adjunts_propis` amb el bucket i el nom de cada objecte: un
-  àudio sense peu conserva la referència), `seguiments` (a qui seguixes ara i
-  quantes persones et seguixen ara: només les files amb `deixat_al` null, i
-  una 2610241430 sense eixa columna deixa la clau amb l'error),
-  `apple` (només la data del permís desat, mai
-  el testimoni xifrat) i `no_inclou` (qui t'ha denunciat o bloquejat, qui et
-  seguix, les empremtes d'IP i el testimoni d'Apple, i per què). Cap taula,
-  política ni permís de taula nou. Cada lectura nova va dins d'un
-  `to_regclass`: sense 2610201500, 2610220240, 2610241420 (T1) o 2610241430
-  (T6b), la clau ix null (`adjunts_propis`, buida) i l'exportació no falla; es
-  comprova en cridar-la, i l'ordre entre elles no importa. La prova estàtica
-  és `src/data/supabase/exportacio.migracio.test.js`. Verificació posterior,
-  amb la sessió d'una persona de prova a l'editor SQL:
-  `select jsonb_object_keys(public.exporta_les_meues_dades());`. Idempotent;
-  **NO aplicada: l'aplica el Mestre, mai un agent**.
-
 - `migrations/2610241400_normes_exigides_ugc.sql`
   T2 (P0-18; auditoria Codex 261024_1315 C-02; Google Play UGC i App Store
   1.2): el servidor exigix les normes de convivència abans d'admetre
@@ -578,6 +590,66 @@ description: "Documentació canònica de Sóc de Poble."
   (lectura):
   `select tgname from pg_trigger where tgname in ('section_submissions_exigix_normes', 'xat_missatges_exigix_normes');`
   i `select private.versio_normes_vigent();`. Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610241410_exporta_dades_moderacio.sql`
+  P2-08 (pla 261024_1315, T7; auditoria Codex C-04): torna a crear
+  `public.exporta_les_meues_dades()` amb el cos de 2609261500 al peu de la
+  lletra (la mateixa signatura i el format `socdepoble.exportacio.v1`; només
+  l'executa `authenticated`, ara després de revocar-ho tot a `public`, `anon`,
+  `authenticated` i `service_role`) i hi afig `moderacio` (`denuncies_fetes`,
+  `denuncies_rebudes` només amb `amb_mesura`, quantes de les que t'afecten han
+  acabat retirant el contingut: cap recompte de les pendents, revisades o
+  desestimades, ni per tipus ni per motiu, perquè comparant dues exportacions
+  delataria qui denuncia, i el detall es respon per correu (RGPD, art. 15.4),
+  els `bloquejos` que has fet tu i
+  `normes_acceptades`), el xat sencer (`id`, `seq`, `tipus`, `metadades` i
+  `esborrat_per_mi` dels missatges propis, el subjecte i els teus ajustos de
+  cada conversa, i `adjunts_propis` amb el bucket i el nom de cada objecte: un
+  àudio sense peu conserva la referència), `seguiments` (a qui seguixes ara i
+  quantes persones et seguixen ara: només les files amb `deixat_al` null, i
+  una 2610241430 sense eixa columna deixa la clau amb l'error),
+  `apple` (només la data del permís desat, mai
+  el testimoni xifrat) i `no_inclou` (qui t'ha denunciat o bloquejat, qui et
+  seguix, les empremtes d'IP i el testimoni d'Apple, i per què). Cap taula,
+  política ni permís de taula nou. Cada lectura nova va dins d'un
+  `to_regclass`: sense 2610201500, 2610220240, 2610241420 (T1) o 2610241430
+  (T6b), la clau ix null (`adjunts_propis`, buida) i l'exportació no falla; es
+  comprova en cridar-la, i l'ordre entre elles no importa. La prova estàtica
+  és `src/data/supabase/exportacio.migracio.test.js`. Verificació posterior,
+  amb la sessió d'una persona de prova a l'editor SQL:
+  `select jsonb_object_keys(public.exporta_les_meues_dades());`. Idempotent;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610241420_revocacio_apple.sql`
+  T1 (P0-04; App Store 5.1.1(v), Apple TN3194; auditoria Codex 261024_1315
+  C-01): la custòdia i la revocació de Sign in with Apple quan una persona es
+  dona de baixa. Crea `private.autoritzacions_apple` (el refresh token
+  d'Apple xifrat amb AES-256-GCM per la funció `compte-apple`, amb la persona
+  com a dades associades: la base no veu mai el text clar ni la clau), el
+  registre `private.revocacions_apple` (empremta pseudònima, origen i
+  resultat; sense clau forana, sobreviu a la purga), l'ajust
+  `dies_espera_revocacio_apple` = `7` i quatre RPC SECURITY DEFINER només per
+  a `service_role`: `apple_desa_autoritzacio` (només si el subjecte és la
+  identitat d'Apple de la persona a `auth.identities`), `apple_autoritzacio_de`,
+  `apple_revocacions_pendents` (primer les no provades i després les provades
+  fa més temps: una fila que falla no tapa la cua) i `apple_registra_revocacio`
+  (esborra la fila només quan Apple ha confirmat la revocació del mateix
+  xifrat; un `sense_testimoni` només s'anota si la baixa ja existix i com a
+  molt un per persona cada 24 hores). Permisos del
+  mandat Supabase 30-Oct-2026: les dues taules, RLS activa i
+  `revoke all ... from public, anon, authenticated, service_role` sense cap
+  grant (només hi entren les RPC); cada RPC, el mateix `revoke all` i
+  `grant execute on function ... to service_role`, i a dins la porta
+  `auth.role()`. Codis `SDP-APPLE-000`, `001` i `002`. No crida cap URL ni
+  toca `private.purga_una_baixa` (la porta de la purga és de 2610241440, T8).
+  Prerequisit aplicat de veres: 2609261500 (`private.baixes`,
+  `private.hash_subjecte`). Va ABANS de desplegar la funció `compte-apple`
+  (secció «Funció `compte-apple`», al final) i ABANS de 2610241440.
+  Verificació posterior (lectura):
+  `select count(*) from private.autoritzacions_apple;`,
+  `select origen, resultat, count(*) from private.revocacions_apple group by 1, 2;`
+  i `select valor from private.ajustos where clau = 'dies_espera_revocacio_apple';`.
+  Idempotent; **NO aplicada: l'aplica el Mestre, mai un agent**.
 
 - `migrations/2610241430_seguiments.sql`
   T6b (IDEA-14; decisió del Mestre, 261024): «Connectar / Seguir», el
@@ -944,6 +1016,93 @@ description: "Documentació canònica de Sóc de Poble."
   i en una sola transacció;
   **NO aplicada: l'aplica el Mestre, mai un agent**.
 
+- `migrations/2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql`
+  P1-59 (c) i IDEA-24 (lot 5 de Codex, reconciliat amb la Ronda 2). Disparador
+  `trg_forca_visibilitat_publica_empresa` (BEFORE INSERT o UPDATE OF kind,
+  visibility, parent_organization_id): només la propietària commuta entre
+  `group` i `company` o canvia la mare; una empresa amb grups fills no passa a
+  grup; `company`, `entity` i `city_hall` queden sempre `public` i sense mare
+  (sense backfill: una fila `members` actual canvia en la seua pròxima
+  actualització d'eixes columnes). Decisió del Mestre (xat 261031, RGPD):
+  empreses, entitats i ajuntaments són figures públiques del directori, sense
+  cap UPDATE massiu de les files existents; els grups conserven la visibilitat
+  que trien, i la interfície no oferix «Fitxa privada» als tres tipus públics.
+  `GRANT UPDATE (kind, parent_organization_id)`
+  a `authenticated`. RPC `transfereix_propietat_organitzacio(uuid, uuid)` (owner →
+  admin; una persona que ja és membre de l'organització i del seu poble, sense
+  baixa demanada → owner; només per a `group` i `company`: la titularitat d'una
+  entitat o d'un ajuntament només s'obté per reclamació revisada
+  (`resol_reclamacio`) mentre encara no té propietària; amb propietària, cap via
+  del client no la canvia (com abans de la 1500), i la RPC hi torna
+  `SDP-ORGMEM-001`) i el pany
+  `sdp-orgowner:` compartit amb `desa_membre_organitzacio` i
+  `lleva_membre_organitzacio`. Torna a crear la política `orgs_read_auth` sense
+  `created_by`: després d'una transferència, la creadora que ja no és membre no
+  llig una fitxa `members`. Cap client del port la crida encara. Abans:
+  `select kind, visibility, count(*) from
+  public.organizations group by 1, 2;`. Va després de 2610290400. Idempotent i
+  en una sola transacció;
+  **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql`
+  P1-12 i D03 · E2EE fases 1b i 1c (`sdp-xat-v1`: P-256, una identitat per
+  persona; kit Codex Lot 3 de 261031). Afig `xifrat jsonb` i
+  `resposta_a_xifrada uuid` a `public.xat_missatges`, `epoca_actual`,
+  `cap_epoca_hash` i `e2ee_des_de_seq` a `public.xat_fils` i
+  `xifrat boolean` a `public.xat_adjunts`, amb les CHECK
+  `xat_missatges_sobre_lot3` i `xat_fils_marques_lot3`. Crea
+  `public.xat_epoques`, `public.xat_epoques_membres`, `public.xat_claus_fil`
+  i `public.xat_reembolcalls` (RLS; només `select` per a `authenticated` amb
+  pertinença activa, i els sobres només de qui els rep; `select, delete` per a
+  `service_role`; registres immutables) i `private.xat_cohort_e2ee` i
+  `private.xat_configuracio_e2ee` (cap permís de client; cohort buida,
+  `general = false`, `pausa = false`). Les huit RPC de la fase:
+  `xat_estat_xifrat`, `xat_epoques_del_fil`, `xat_meus_sobres`,
+  `xat_obri_epoca`, `xat_envia_xifrat`, `xat_reembolcalla`,
+  `xat_demana_xifrat` i `xat_publica_adjunt_xifrat`, totes SECURITY DEFINER
+  amb `search_path = public, pg_temp` (la migració s'atura si `public` permet
+  CREATE als rols del client), revocades a `public` i `anon`. Torna a crear
+  `xat_historial`, `xat_nous` i `xat_fils_meus` amb el mateix cos i els camps
+  nous (`xifrat` i les marques del fil), i amplia els adjunts:
+  `application/octet-stream` només per a reserves xifrades, la mateixa quota
+  de 20 MB, l'RPC antiga rebutja els fils xifrats, i la sonda i l'escriptura
+  final de Storage són més estrictes (reserva de menys de 15 minuts i
+  participant vigent, també en els adjunts en clar). Un fil amb època activa
+  rebutja el clar, les rebaixes i la reclassificació. L'auditoria és
+  `select public.xat_verifica_prerequisits_e2ee();` (només `service_role`).
+  No activa res: el client continua amb `E2EE_ACTIU_PER_DEFECTE = false` i
+  cap gènesi és possible sense la cohort que afig el Mestre. Codis
+  `SDP-XAT-001`..`045`, `429` i `900`. Va després de 2610290400. Idempotent i
+  en una sola transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610311900_exporta_dades_filtre_servidor_rgpd.sql`
+  P2-09 (Lot 6 de Codex): torna a crear `public.exporta_les_meues_dades()` amb
+  el cos sencer de 2610241410 i canvia només el bloc `federacio_no_versionada`:
+  la propietat es tria per precedència (`realms`: `owner_user_id`, `user_id`;
+  `user_realms`: `user_id`; `connections`: `user_id`, `owner_user_id`;
+  `posts`: `author_id`, `owner_user_id`, `user_id`) i només ixen les columnes
+  del contracte de `src/data/supabase/contracteExportacioFederacio.js`. Cap
+  fila on `auth.uid()` siga només `target_user_id`, `moderator_id` o una altra
+  contrapart. Una propietat absent o no UUID, o una columna del contracte que
+  no siga escalar, dona `SDP-FED-ESQUEMA-NO-ADMES` (exportació incompleta). Les
+  columnes fora del contracte s'ometen. Mateixa ACL (només `authenticated`),
+  `SECURITY DEFINER` i `search_path = ''`. Va després de 2610241410 i
+  **abans de publicar el client** que l'espera. Idempotent i en una sola
+  transacció; **NO aplicada: l'aplica el Mestre, mai un agent**.
+
+- `migrations/2610312000_e2ee_lot3_validadors_service_role.sql`
+  Esmena de l'auditoria Claude al Lot 3 (261031). Les CHECK
+  `xat_fils_marques_lot3` i `xat_missatges_sobre_lot3` criden
+  `private.xat_lot3_b64` i `private.xat_sobre_format_v1_valid`; PostgreSQL
+  comprova EXECUTE en inicialitzar la CHECK, per a qualsevol fila, i un DML
+  directe amb `service_role` fallava (`permission denied for function
+  xat_lot3_b64`, o `for schema private` en un fil ja xifrat). Les dues
+  funcions, pures i sense accés a dades, passen a SECURITY DEFINER amb el
+  mateix `search_path` i només `service_role` rep EXECUTE. Va just després de
+  2610311800 i s'ha de tornar a aplicar si mai es reaplica el 2610311800.
+  Idempotent i en una sola transacció; **NO aplicada: l'aplica el Mestre, mai
+  un agent**.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -956,6 +1115,184 @@ description: "Documentació canònica de Sóc de Poble."
 5. Configurar el `.env` local amb `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` i `VITE_TENANT_ID`. No usar mai `service_role` en el client.
 
 Aplicar cada versió pendent amb el registre de migracions. Les migracions noves 2609272100 i 2609272200 s’han provat també repetides; no s’ha d’inferir que qualsevol migració històrica siga repetible sense revisar-la.
+
+### Verificació en 1 segon de l'estat de producció (`P0-05` / `DF-06`)
+
+Abans d'aplicar qualsevol lot pendent al panell SQL de Supabase, el Mestre pot consultar el registre i els objectes crítics amb estos blocs **només de lectura**:
+
+La rapidesa depén del node; esta consulta és només de lectura. Executeu primer
+esta sonda. Si torna `null`, el registre no existix: **estat desconegut**, no
+«cap migració aplicada». En eixe cas ometeu la segona consulta i executeu les
+sondes d’objectes igualment.
+
+```sql
+SELECT to_regclass('supabase_migrations.schema_migrations') AS registre_migracions;
+```
+
+Només si la sonda confirma el registre (instal·lació per Supabase CLI):
+
+```sql
+SELECT version, name
+FROM supabase_migrations.schema_migrations
+ORDER BY version;
+```
+
+Sondes d’objectes independents del registre:
+
+```sql
+-- 2. Sonda ràpida d'objectes crítics de les fases D, E, Fortificació i Lot 3/4
+SELECT
+  to_regclass('public.denuncies') IS NOT NULL AS te_moderacio_2610201500,
+  to_regclass('public.xat_adjunts') IS NOT NULL AS te_adjunts_2610220240,
+  to_regprocedure('private.versio_normes_vigent()') IS NOT NULL AS te_normes_2610241400,
+  to_regclass('private.autoritzacions_apple') IS NOT NULL AS te_apple_2610241420,
+  to_regclass('public.seguiments') IS NOT NULL AS te_seguiments_2610241430,
+  to_regclass('public.xat_claus_usuari') IS NOT NULL AS te_e2ee_1a_2610290400,
+  to_regprocedure('public.transfereix_propietat_organitzacio(uuid,uuid)') IS NOT NULL AS te_transferencia_2610311500,
+  to_regclass('public.xat_epoques') IS NOT NULL AS te_e2ee_1bc_2610311800,
+  coalesce(position('SDP-FED-ESQUEMA-NO-ADMES' in pg_get_functiondef(to_regprocedure('public.exporta_les_meues_dades()'))) > 0, false) AS te_filtre_rgpd_2610311900,
+  coalesce((SELECT p.prosecdef FROM pg_proc p WHERE p.oid = to_regprocedure('private.xat_lot3_b64(text,integer)')), false) AS te_esmena_2610312000;
+```
+
+### Nota d'auditoria `DF-06` (`P0-05`) i seqüència obligatòria de desplegament (`P0-21`)
+
+- **Aclariment `DF-06` (inexistència de `2610201400` i `elements_comu`):** Les referències històriques a una migració `2610201400` (esborrat de compte) o a una taula `elements_comu` no corresponen a cap fitxer real de `supabase/migrations/` ni de l'historial Git. La baixa amb quarantena i purga viu a `2609261500_identitat_perfil_f1.sql` i s'amplia a `2610241440_baixa_completa_ugc_i_fitxers.sql`.
+- **Ordre obligatori del lot `P0-21` i `Lot 3/4`:**
+  1. `2610201500_moderacio_denuncies_i_bloquejos.sql` (moderació UGC).
+  2. Desplegament del client amb `VERSIO_NORMES_CONVIVENCIA = '2026-10-24'`.
+  3. `2610241400_normes_exigides_ugc.sql` (amb el mateix rol propietari que `2610201500`).
+  4. `2610241410_exporta_dades_moderacio.sql` (exportació RGPD ampliada).
+  5. `2610241420_revocacio_apple.sql` (custòdia i cua de revocació d'Apple).
+  6. `2610241430_seguiments.sql` (abans d'obrir el botó «Seguir» al públic).
+  7. `2610241440_baixa_completa_ugc_i_fitxers.sql` (purga completa i porta d'Apple).
+  8. `2610250100` → `2610250300` → `2610281730` → `2610282100` → `2610290400` → `2610311500` → `2610311800` → `2610312000` → `2610311900` (2610312000 just després de 2610311800 i de nou si mai es reaplica 2610311800; 2610311900 abans de publicar el client).
+  9. Funcions de vora (`supabase/functions/`): `compte-apple` i `purga-fitxers` (secret compartit `SDP_CRON_SECRET`, crons horaris) i `noticies` (fonts personals desactivades fins a `SDP_NOTICIES_PERSONALS=1`).
+
+### Taula canònica ordenada: 60 fitxers de R1 + candidates 1500, 1800, 1900 i 2000 + `seed.sql` + 2 snippets (`P0-05` / `DF-06`)
+
+| Ordre | Versió | Fitxer a `supabase/migrations/` | Estat declarat | Objectiu resumit |
+| :---: | :--- | :--- | :--- | :--- |
+| 01 | `2609080000` | `2609080000_initial_schema.sql` | Estat remot no acreditat; comprovar abans d’aplicar | initial schema |
+| 02 | `2609080100` | `2609080100_xat_v2.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 |
+| 03 | `2609080200` | `2609080200_xat_v2_correccions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 correccions |
+| 04 | `2609080300` | `2609080300_xat_v2_membres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat v2 membres |
+| 05 | `2609110600` | `2609110600_perfil_avatar_i_permisos.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil avatar i permisos |
+| 06 | `2609121500` | `2609121500_correccio_privacitat_perfils.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccio privacitat perfils |
+| 07 | `2609121600` | `2609121600_admin_panel.sql` | Estat remot no acreditat; comprovar abans d’aplicar | admin panel |
+| 08 | `2609130500` | `2609130500_bucket_mitjans.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans |
+| 09 | `2609140000` | `2609140000_schema_notes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | schema notes |
+| 10 | `2609140100` | `2609140100_auditoria_rls_fixes.sql` | Estat remot no acreditat; comprovar abans d’aplicar | auditoria rls fixes |
+| 11 | `2609150000` | `2609150000_seguretat_profunda_deepseek.sql` | Estat remot no acreditat; comprovar abans d’aplicar | seguretat profunda deepseek |
+| 12 | `2609160600` | `2609160600_politiques_superadmin_organitzacions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | politiques superadmin organitzacions |
+| 13 | `2609162300` | `2609162300_correccions_mur_i_xat.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correccions mur i xat |
+| 14 | `2609191650` | `2609191650_bucket_mitjans_privats.sql` | Estat remot no acreditat; comprovar abans d’aplicar | bucket mitjans privats |
+| 15 | `2609200300` | `2609200300_blindatge_storage_i_contingut.sql` | Estat remot no acreditat; comprovar abans d’aplicar | blindatge storage i contingut |
+| 16 | `2609200600` | `2609200600_xat_limit_correccio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat limit correccio |
+| 17 | `2609211820` | `2609211820_fix_security_definer.sql` | Estat remot no acreditat; comprovar abans d’aplicar | fix security definer |
+| 18 | `2609261200` | `2609261200_publicacions_autoria.sql` | Estat remot no acreditat; comprovar abans d’aplicar | publicacions autoria |
+| 19 | `2609261500` | `2609261500_identitat_perfil_f1.sql` | Estat remot no acreditat; comprovar abans d’aplicar | identitat perfil f1 |
+| 20 | `2609262232` | `2609262232_copyright_editor.sql` | Estat remot no acreditat; comprovar abans d’aplicar | copyright editor |
+| 21 | `2609270200` | `2609270200_xat_f0_fonament.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat f0 fonament |
+| 22 | `2609271400` | `2609271400_notes_paperera.sql` | Estat remot no acreditat; comprovar abans d’aplicar | notes paperera |
+| 23 | `2609272100` | `2609272100_notes_origen.sql` | Estat remot no acreditat; comprovar abans d’aplicar | notes origen |
+| 24 | `2609272200` | `2609272200_xat_entitats.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | xat entitats |
+| 25 | `2609272201` | `2609272201_grups_mare.sql` | Estat remot no acreditat; comprovar abans d’aplicar | grups mare |
+| 26 | `2609281500` | `2609281500_lema_entradilla_256.sql` | Estat remot no acreditat; comprovar abans d’aplicar | lema entradilla 256 |
+| 27 | `2609282035` | `2609282035_perfil_emoticona.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil emoticona |
+| 28 | `2609282100` | `2609282100_xat_de_pagina.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | xat de pagina |
+| 29 | `2609291200` | `2609291200_baixa_icon_copyright.sql` | Estat remot no acreditat; comprovar abans d’aplicar | baixa icon copyright |
+| 30 | `2609291210` | `2609291210_xat_cerca_accents.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat cerca accents |
+| 31 | `2609291230` | `2609291230_xat_realtime_lectura.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat realtime lectura |
+| 32 | `2610021520` | `2610021520_perfil_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil public |
+| 33 | `2610042330` | `2610042330_xat_pagina_iaia.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | xat pagina iaia |
+| 34 | `2610042350` | `2610042350_convergencia_perfil_i_create_organization.sql` | Estat remot no acreditat; comprovar abans d’aplicar | convergencia perfil i create organization |
+| 35 | `2610061448` | `2610061448_superadmin_aal2.sql` | Estat remot no acreditat; comprovar abans d’aplicar | superadmin aal2 |
+| 36 | `2610061450` | `2610061450_capcalera_client_ip.sql` | Estat remot no acreditat; comprovar abans d’aplicar | capcalera client ip |
+| 37 | `2610072230` | `2610072230_mur_imatges_propies.sql` | Estat remot no acreditat; comprovar abans d’aplicar | mur imatges propies |
+| 38 | `2610081400` | `2610081400_grups_sense_mare.sql` | Estat remot no acreditat; comprovar abans d’aplicar | grups sense mare |
+| 39 | `2610081401` | `2610081401_organitzacions_poble.sql` | Estat remot no acreditat; comprovar abans d’aplicar | organitzacions poble |
+| 40 | `2610081402` | `2610081402_membres_organitzacio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | membres organitzacio |
+| 41 | `2610081543` | `2610081543_xat_consentiment_i_metadades.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat consentiment i metadades |
+| 42 | `2610090100` | `2610090100_convergencia_xat_de_pagina.sql` | Aplicada al node remot el 261009 (declarat en esta llista) | convergencia xat de pagina |
+| 43 | `2610101900` | `2610101900_personalitzacio_superadmin.sql` | Estat remot no acreditat; comprovar abans d’aplicar | personalitzacio superadmin |
+| 44 | `2610160250` | `2610160250_perfil_update_propi.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil update propi |
+| 45 | `2610181800` | `2610181800_perfil_public_per_defecte.sql` | Estat remot no acreditat; comprovar abans d’aplicar | perfil public per defecte |
+| 46 | `2610181915` | `2610181915_organitzacions_correu_i_membres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | organitzacions correu i membres |
+| 47 | `2610201500` | `2610201500_moderacio_denuncies_i_bloquejos.sql` | Estat remot no acreditat; comprovar abans d’aplicar | moderacio denuncies i bloquejos |
+| 48 | `2610211715` | `2610211715_revoca_correu_organitzacions.sql` | Estat remot no acreditat; comprovar abans d’aplicar | revoca correu organitzacions |
+| 49 | `2610220240` | `2610220240_xat_adjunts_i_quota.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat adjunts i quota |
+| 50 | `2610241400` | `2610241400_normes_exigides_ugc.sql` | Estat remot no acreditat; comprovar abans d’aplicar | normes exigides ugc |
+| 51 | `2610241410` | `2610241410_exporta_dades_moderacio.sql` | Estat remot no acreditat; comprovar abans d’aplicar | exporta dades moderacio |
+| 52 | `2610241420` | `2610241420_revocacio_apple.sql` | Estat remot no acreditat; comprovar abans d’aplicar | revocacio apple |
+| 53 | `2610241430` | `2610241430_seguiments.sql` | Estat remot no acreditat; comprovar abans d’aplicar | seguiments |
+| 54 | `2610241440` | `2610241440_baixa_completa_ugc_i_fitxers.sql` | Estat remot no acreditat; comprovar abans d’aplicar | baixa completa ugc i fitxers |
+| 55 | `2610242320` | `2610242320_correu_propietaria_nomes_titular.sql` | Estat remot no acreditat; comprovar abans d’aplicar | correu propietaria nomes titular |
+| 56 | `2610250100` | `2610250100_seguiments_des_d_entitat.sql` | Estat remot no acreditat; comprovar abans d’aplicar | seguiments des d entitat |
+| 57 | `2610250300` | `2610250300_titular_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | titular public |
+| 58 | `2610281730` | `2610281730_membres_concurrents_i_correu_public.sql` | Estat remot no acreditat; comprovar abans d’aplicar | membres concurrents i correu public |
+| 59 | `2610282100` | `2610282100_usuari_i_poble_canonic.sql` | Estat remot no acreditat; comprovar abans d’aplicar | usuari i poble canonic |
+| 60 | `2610290400` | `2610290400_xat_e2ee_claus_i_sobres.sql` | Estat remot no acreditat; comprovar abans d’aplicar | xat e2ee claus i sobres |
+| 61 | `2610311500` | `2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql` | **NO aplicada: l'aplica el Mestre** | commutacio grup empresa i transferencia propietat |
+| 62 | `2610311800` | `2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql` | **NO aplicada: l'aplica el Mestre** | e2ee fases 1b 1c rpcs i adjunts |
+| 63 | `2610311900` | `2610311900_exporta_dades_filtre_servidor_rgpd.sql` | **NO aplicada: l'aplica el Mestre** | filtre RGPD al servidor |
+| 64 | `2610312000` | `2610312000_e2ee_lot3_validadors_service_role.sql` | **NO aplicada: l'aplica el Mestre** | validadors E2EE per a service_role |
+
+| Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
+| :--- | :--- | :--- |
+| Llavor opcional | `seed.sql` | Contingut inicial de demostració del portal |
+| Snippet manual 1 | `snippets/2610181800_alinea_perfil_javi_llinares.sql` | Alineació puntual del perfil de la persona pilot (ús manual del Mestre) |
+| Snippet manual 2 | `snippets/2610181800_publica_perfil_javi_llinares.sql` | Publicació puntual del perfil de la persona pilot (ús manual del Mestre) |
+
+### Contracte explícit d'exportació RGPD per a les taules de federació (`P2-09` · `D06/D07`)
+
+Per a neutralitzar el risc `P2-09` (inferència per qualsevol columna `uuid` al bloc `federacio_no_versionada` d'`exporta_les_meues_dades()`), el mòdul `src/data/supabase/contracteExportacioFederacio.js` i l'adaptador `src/data/supabase/compte.js` imposen este contracte explícit de propietat i projecció de columnes en el navegador, abans que la resposta isca de l'adaptador i es mostre o es descarregue. El filtre del servidor és la 2610311900 (**NO aplicada: l'aplica el Mestre**); fins aleshores, les files arriben al navegador abans del filtre:
+
+| Recurs (`federacio_no_versionada`) | Columna canònica de propietat (`=== auth.uid()`) | Precedència admesa | Columnes UUID excloses d'inferència | Columnes exportades permeses |
+| :--- | :--- | :--- | :--- | :--- |
+| `realms` | `owner_user_id` | `owner_user_id`, `user_id` | `id`, `tenant_id`, `parent_realm_id`, `moderator_id`, `reviewed_by`, `invited_by`, `target_user_id`, `updated_by` | `id`, `tenant_id`, `slug`, `name`, `title`, `description`, `domain`, `protocol`, `visibility`, `status`, `owner_user_id`, `user_id`, `created_at`, `updated_at` |
+| `user_realms` | `user_id` | `user_id` | `id`, `tenant_id`, `realm_id`, `invited_by`, `granted_by`, `approved_by`, `revoked_by`, `moderator_id` | `id`, `tenant_id`, `user_id`, `realm_id`, `role`, `status`, `handle`, `actor_uri`, `created_at`, `updated_at` |
+| `connections` | `user_id` | `user_id`, `owner_user_id` | `id`, `tenant_id`, `realm_id`, `target_user_id`, `connected_user_id`, `peer_user_id`, `follower_id`, `following_id`, `invited_by`, `blocked_user_id` | `id`, `tenant_id`, `user_id`, `owner_user_id`, `realm_id`, `provider`, `remote_actor_uri`, `remote_handle`, `direction`, `status`, `created_at`, `updated_at` |
+| `posts` | `author_id` | `author_id`, `owner_user_id`, `user_id` | `id`, `tenant_id`, `realm_id`, `reply_to_user_id`, `in_reply_to_user_id`, `reblogged_by_id`, `moderator_id`, `mentioned_user_id`, `deleted_by` | `id`, `tenant_id`, `author_id`, `owner_user_id`, `user_id`, `realm_id`, `title`, `content`, `summary`, `visibility`, `status`, `uri`, `url`, `published_at`, `created_at`, `updated_at` |
+
+Consulta només de lectura perquè el Mestre audite l'esquema efectiu de federació al node remot:
+
+```sql
+SELECT table_name, column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name IN ('realms', 'user_realms', 'connections', 'posts')
+ORDER BY table_name, ordinal_position;
+```
+
+
+### Candidates posteriors i números reservats (Lot 6)
+
+La taula anterior agrupa 60 fitxers de R1 i les quatre candidates 1500, 1800,
+1900 i 2000. És una fotografia d’inventari, **no un recompte fix del
+ directori ni una acreditació d’aplicació remota**. Les migracions posteriors
+han de documentar-se ací amb el nom complet abans d’integrar-les. La prova de
+catàleg exigix cobertura de tots els fitxers presents i rebutja els desconeguts;
+no exigix que les candidates encara no integrades existisquen en R1.
+
+- Candidat Lot 6: `migrations/2610311900_exporta_dades_filtre_servidor_rgpd.sql`.
+  Endurix al servidor la selecció i projecció de les taules de federació.
+  Transaccional, idempotent, només candidat; no executat en remot.
+- `migrations/2610312000_e2ee_lot3_validadors_service_role.sql`: esmena de
+  Claude al Lot 3 perquè `service_role` puga escriure `xat_fils`/`xat_missatges`
+  amb les CHECK del 2610311800. Documentada a la llista; **NO aplicada: l'aplica
+  el Mestre, mai un agent**.
+- `2610311600`: era un bloc diagnòstic il·lustratiu del Kit 1 de Gemini,
+  substituït per les sondes d’este README; **no és una migració independent**
+  (confirmació del Mestre en Lot 6). No es compta com a fitxer SQL.
+
+**Límit P2-09:** `realms`, `user_realms`, `connections` i `posts` no tenen
+`CREATE TABLE` al repositori. Les columnes del contracte són variants admeses
+ explícites, no l’esquema remot acreditat. Executeu l’inventari SQL de columnes,
+contrasteu propietat, tipus i dades pròpies legítimes abans d’aplicar el candidat.
+Un camp de propietat absent o no UUID produïx `SDP-FED-ESQUEMA-NO-ADMES`;
+una exportació amb este marcador està **incompleta**. El filtre JS és una
+ defensa addicional: no substituïx el filtre SQL abans de travessar la xarxa.
+La projecció de columnes no és una promesa de sanejament arbitrari de JSONB.
 
 ## Per què cal el pegat
 

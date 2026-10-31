@@ -1,8 +1,11 @@
 /**
- * traductor.js — El Traductor Sobirà (ordre del Mestre, 260930 · via B).
+ * traductor.js — El Traductor Sobirà (ordre del Mestre, 260930 · via B; P2-13 · C0545-S1/S2).
  *
- * Client NEUTRE del servei de traducció que oferix l'amfitrió. No sap res del
- * proveïdor (DeepL) ni de l'amfitrió (WordPress): només el contracte acordat
+ * Client NEUTRE del servei de traducció que oferix l'amfitrió
+ * (ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA). És agnòstic del proveïdor que opere al
+ * servidor (Apertium, extrem autohospedat compatible amb LibreTranslate via
+ * SDP_TRADUCCIO_URL, o DeepL quan l'amfitrió hi haja configurat clau) i de
+ * l'amfitrió (WordPress): només parla el contracte acordat
  * amb Codex (auditoria 260930_2150, ronda D1, que accepta el lot proposat a
  * l'auditoria 260930_2145 amb dues esmenes):
  *   POST {url}  { textos: string[], desti, origen: 'CA', format: 'text'|'html' }
@@ -11,10 +14,12 @@
  * Esmena 1 de Codex: servei públic amb pressupost al servidor, sense nonce ni
  * galetes (credentials: 'omit'). Esmena 2: l'URL arriba per externalConfig
  * (traductorUrl), i no hi ha cap traductor-nonce.
- * La clau i l'URL del proveïdor no ixen mai del servidor: ací no n'hi ha cap.
- * Si demà un altre amfitrió (Sollutia) oferix el mateix contracte, n'hi ha
- * prou de canviar l'URL (Model B). La vista tria el missatge pel codi, mai
- * pel text del servidor (errorsBackend.js).
+ * La clau i l'URL del proveïdor no ixen mai del servidor: ací no n'hi ha cap,
+ * ni es toca mai la Frontissa GET. Si demà un altre amfitrió (Sollutia) oferix
+ * el mateix contracte, n'hi ha prou de canviar l'URL (Model B). La vista tria
+ * el missatge pel codi, mai pel text del servidor (errorsBackend.js), i
+ * distingix amb honestedat les pàgines amb traducció disponible de les
+ * targetes soltes pendents de servei lliure.
  */
 import { CODI_BACKEND_INABASTABLE } from './errorsBackend.js';
 

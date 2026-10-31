@@ -26,6 +26,7 @@
 import { capturaSessio, jwtPerBackend } from '../identitat.js';
 import { getResolvedConfig, request, rpc } from './runtime.js';
 import { asseguraUsuari, logout } from './auth.js';
+import { aplicaContracteExportacioFederacio } from './contracteExportacioFederacio.js';
 
 const FORMAT_EXPORTACIO = 'socdepoble.exportacio.v1';
 /* L'exportació arreplega tot el compte d'una volta: els 12 s de request() no basten. */
@@ -93,13 +94,13 @@ async function revocaAppleAbansDeLaBaixa(config, { usuari, testimoni }) {
 
 export async function exportaLesMeuesDades(config = {}) {
   const capturat = { ...config };
-  const { current } = await sessioDelCompte(capturat);
+  const { current, usuari } = await sessioDelCompte(capturat);
   current();   // D-01: la microtasca després de l'await no arriba mai a cap efecte
   const dades = fila(await rpc('exporta_les_meues_dades', {}, capturat,
     { timeoutMs: TEMPS_EXPORTACIO_MS, signal: capturat.signal }));
   current();
   if (!esObjecte(dades) || dades.format !== FORMAT_EXPORTACIO) throw formatInesperat('Exportació de dades');
-  return dades;
+  return aplicaContracteExportacioFederacio(dades, usuari.id);
 }
 
 export async function estatBaixa(config = {}) {

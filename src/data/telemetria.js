@@ -30,11 +30,12 @@ import { CLAUS_FUNDACIONALS } from './identitatsSeed.js';
  *     el que va després del primer tram de la ruta (`/notes/<id>` ix com a
  *     `/notes/*`), ni el títol de la pestanya (una fitxa de detall hi posa el
  *     títol de la nota), ni identificadors de persona, ni el camí del referent.
- *   - Cada intent, iniciat o no, es publica UNA vegada com a `sdp:telemetria`
- *     a `window` i es guarda en memòria (`darrersEnviaments`). `enviat: true`
- *     acredita que s'ha iniciat fetch o s'ha delegat a l'amfitrió, mai que la
- *     petició haja eixit ni que el comptador l'haja rebut o acceptat. El
- *     resultat HTTP no es comprova. Transparència, no promesa de recepció.
+ *   - Cada intent, iniciat o no, es publica com a `sdp:telemetria` a `window` i
+ *     es guarda en memòria (`darrersEnviaments`) amb el seu estat de
+ *     `verificacio` (`'intent' | 'acceptat' | 'fallat' | 'no_comprovat'`,
+ *     P2-14 · C0545-S3). `enviat: true` acredita que s'ha iniciat fetch
+ *     (`verificacio: 'intent'`, que passa a `'acceptat'` o `'fallat'` quan
+ *     resol la promesa) o s'ha delegat a l'amfitrió (`'no_comprovat'`).
  */
 
 export const CLAU_APAGADA = 'umami.disabled';
@@ -173,37 +174,41 @@ function referentExtern() {
   } catch { return ''; }
 }
 
+function notificaDom(intent) {
+  try { window.dispatchEvent(new CustomEvent(ESDEVENIMENT_DOM, { detail: { ...intent } })); } catch { /* sense DOM */ }
+}
+
 function publica(intent) {
   registre.unshift(intent);
   registre.length = Math.min(registre.length, MAX_REGISTRE);
-  try { window.dispatchEvent(new CustomEvent(ESDEVENIMENT_DOM, { detail: intent })); } catch { /* sense DOM */ }
-  return intent;
+  notificaDom(intent);
+  return { ...intent };
 }
 
 function envia(tipus, { nom, dades, ruta, cfg }) {
-  if (typeof window === 'undefined') return { enviat: false, motiu: 'sense-navegador' };
+  if (typeof window === 'undefined') return { enviat: false, motiu: 'sense-navegador', verificacio: 'no_comprovat' };
   const url = rutaTapada(ruta);
   const netes = dadesNetes(dades);
   const base = { tipus, nom: nom || null, url, dades: netes || null, moment: new Date().toISOString() };
 
-  if (telemetriaApagada()) return publica({ ...base, enviat: false, motiu: 'apagada' });
+  if (telemetriaApagada()) return publica({ ...base, enviat: false, motiu: 'apagada', verificacio: 'no_comprovat' });
 
   const amfitrio = window.umami;
   if (amfitrio && typeof amfitrio.track === 'function') {
-    if (tipus === 'visita') return publica({ ...base, enviat: false, motiu: 'amfitrio-compta-visites' });
-    try { amfitrio.track(nom, netes); return publica({ ...base, enviat: true, motiu: 'amfitrio' }); }
-    catch { return publica({ ...base, enviat: false, motiu: 'error-amfitrio' }); }
+    if (tipus === 'visita') return publica({ ...base, enviat: false, motiu: 'amfitrio-compta-visites', verificacio: 'no_comprovat' });
+    try { amfitrio.track(nom, netes); return publica({ ...base, enviat: true, motiu: 'amfitrio', verificacio: 'no_comprovat' }); }
+    catch { return publica({ ...base, enviat: false, motiu: 'error-amfitrio', verificacio: 'fallat' }); }
   }
 
-  if (encastada()) return publica({ ...base, enviat: false, motiu: 'encastada' });
+  if (encastada()) return publica({ ...base, enviat: false, motiu: 'encastada', verificacio: 'no_comprovat' });
 
   const config = cfg || configTelemetria();
-  if (!config.actiu) return publica({ ...base, enviat: false, motiu: 'sense-configurar' });
+  if (!config.actiu) return publica({ ...base, enviat: false, motiu: 'sense-configurar', verificacio: 'no_comprovat' });
   /* Ordre del Mestre (30-10-2026, prompt 2208, T3.3): un servidor local amb el
      comptador configurat (.env.local) no suma res a les xifres públiques.
      Només una prova que passa `cfg` explícit hi pot enviar. */
-  if (!cfg && esServidorLocal()) return publica({ ...base, enviat: false, motiu: 'servidor-local' });
-  if (typeof window.fetch !== 'function') return publica({ ...base, enviat: false, motiu: 'sense-fetch' });
+  if (!cfg && esServidorLocal()) return publica({ ...base, enviat: false, motiu: 'servidor-local', verificacio: 'no_comprovat' });
+  if (typeof window.fetch !== 'function') return publica({ ...base, enviat: false, motiu: 'sense-fetch', verificacio: 'no_comprovat' });
 
   const payload = {
     website: config.websiteId,
@@ -217,17 +222,31 @@ function envia(tipus, { nom, dades, ruta, cfg }) {
   if (netes) payload.data = netes;
 
   try {
-    window.fetch(`${config.host}/api/send`, {
+    const promesa = window.fetch(`${config.host}/api/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'event', payload }),
       keepalive: true,
       credentials: 'omit',
       referrerPolicy: 'no-referrer'
-    }).catch(() => { /* la telemetria mai trenca la interfície */ });
-    return publica({ ...base, enviat: true, motiu: 'umami' });
+    });
+    const entrada = { ...base, enviat: true, motiu: 'umami', verificacio: 'intent' };
+    const retorn = publica(entrada);
+    Promise.resolve(promesa)
+      .then((resposta) => {
+        if(!registre.includes(entrada))return;
+        entrada.verificacio = resposta?.ok === true ? 'acceptat' : resposta?.ok === false ? 'fallat' : 'no_comprovat';
+        notificaDom(entrada);
+      })
+      .catch(() => {
+        /* la telemetria mai trenca la interfície */
+        if(!registre.includes(entrada))return;
+        entrada.verificacio = 'fallat';
+        notificaDom(entrada);
+      });
+    return retorn;
   } catch {
-    return publica({ ...base, enviat: false, motiu: 'error-xarxa' });
+    return publica({ ...base, enviat: false, motiu: 'error-xarxa', verificacio: 'fallat' });
   }
 }
 

@@ -10,7 +10,15 @@ import { describe, expect, test } from 'vitest';
    alternatiu inventat per a una imatge que ja pinta una altra font (PAGE_COPY
    o el registre de plugins): el seu. Mateix patró que les proves de l'Índex
    de l'Onada 12 (indexConsola.test.js), que la taula hereta. */
-import { IMATGES_CONSOLA, imatgeDePagina, miniaturaDe, miniaturaDePagina } from './imatgesConsola.js';
+import {
+  ILUSTRACIO_CALDERA_CONSOLA,
+  IMATGES_CONSOLA,
+  TRAZABILITAT_IMATGES_CONSOLA,
+  imatgeDePagina,
+  miniaturaDe,
+  miniaturaDePagina
+} from './imatgesConsola.js';
+import { CENS_IMATGES, TRAZABILITAT_RONDA1_CENS, idDelCens } from '../multimedia/censImatges.js';
 import { IDS_PAGINES } from './consolaPagines.js';
 import { IDS_GOVERN } from './govern/governConsola.js';
 import { PAGE_COPY } from '../text/pageContent.js';
@@ -286,5 +294,70 @@ describe('miniaturaDe i miniaturaDePagina', () => {
     for (const id of IDS_PAGINES.filter((x) => x !== 'explorador')) expect(miniaturaDePagina(id), id).toEqual(imatgeDePagina(id));
     for (const id of ['index', 'mas', '', undefined]) expect(miniaturaDePagina(id), String(id)).toEqual({ imatge: null, imatgeAlt: '' });
     expect(imatgeDePagina('explorador').imatge).toBe('/assets/ui/plugins/cervell_vinyeta.jpg');
+  });
+});
+
+describe('P1-29 · traçabilitat semàntica i sincronització amb la Ronda 1 (e7b05b3a5, dbc5a1c14)', () => {
+  test('cada entrada d’IMATGES_CONSOLA té la seua fitxa a TRAZABILITAT_IMATGES_CONSOLA amb assetId canònic del cens', () => {
+    const delCens = new Set(CENS_IMATGES.map((entrada) => entrada.src));
+    expect(Object.isFrozen(TRAZABILITAT_IMATGES_CONSOLA)).toBe(true);
+    expect(Object.keys(TRAZABILITAT_IMATGES_CONSOLA)).toEqual(Object.keys(IMATGES_CONSOLA));
+    for (const [id, { imatge }] of Object.entries(IMATGES_CONSOLA)) {
+      const traca = TRAZABILITAT_IMATGES_CONSOLA[id];
+      expect(Object.isFrozen(traca), id).toBe(true);
+      expect(traca.assetId, id).toBe(idDelCens(imatge));
+      expect(delCens.has(imatge), `${id} · ${imatge}`).toBe(true);
+      expect(traca.consumidors.length, id).toBeGreaterThan(0);
+      /* Revisió R3 (CLI-03) · cada consumidor declarat ha d'existir de veres:
+         una clau de PAGE_COPY, un plugin del registre o una entrada
+         d'IMATGES_CONSOLA. Un nom que només viu en un comentari no compta. */
+      for (const consumidor of traca.consumidors) {
+        const [, tipus, clau] = /^(PAGE_COPY\.|plugin:|IMATGES_CONSOLA\.)(.+)$/.exec(consumidor) || [];
+        expect(tipus, `${id} → ${consumidor}`).toBeTruthy();
+        if (tipus === 'PAGE_COPY.') expect(Object.hasOwn(PAGE_COPY, clau), `${id} → ${consumidor}`).toBe(true);
+        if (tipus === 'plugin:') expect(pluginPerId(clau), `${id} → ${consumidor}`).toBeTruthy();
+        if (tipus === 'IMATGES_CONSOLA.') expect(Object.hasOwn(IMATGES_CONSOLA, clau), `${id} → ${consumidor}`).toBe(true);
+      }
+    }
+  });
+
+  test('Revisió R3 (CLI-02) · el commit de la Ronda 1 d’una imatge és el mateix a la Consola i al cens', () => {
+    let comparades = 0;
+    for (const [id, { imatge }] of Object.entries(IMATGES_CONSOLA)) {
+      const delCens = TRAZABILITAT_RONDA1_CENS[imatge];
+      const { commitRonda1 } = TRAZABILITAT_IMATGES_CONSOLA[id];
+      if (!delCens || !commitRonda1) continue;
+      expect(delCens.commit, `${id} · ${imatge}`).toBe(commitRonda1);
+      comparades += 1;
+    }
+    expect(comparades).toBeGreaterThan(0);
+  });
+
+  test('qualsevol coincidència de bytes SHA-256 dins d’IMATGES_CONSOLA està acreditada a reutilitzacioBytesAmb i pinta rutes diferents al tauler', () => {
+    const perSha = new Map();
+    for (const [id, { imatge }] of Object.entries(IMATGES_CONSOLA)) {
+      const sha = createHash('sha256').update(readFileSync(alDisc(imatge))).digest('hex');
+      if (!perSha.has(sha)) perSha.set(sha, []);
+      perSha.get(sha).push(id);
+    }
+    const compartides = [...perSha.values()].filter((ids) => ids.length > 1);
+    expect(compartides).toEqual([['explorador', 'agents']]);
+    expect(TRAZABILITAT_IMATGES_CONSOLA.explorador.reutilitzacioBytesAmb).toBe('agents');
+    expect(TRAZABILITAT_IMATGES_CONSOLA.agents.reutilitzacioBytesAmb).toBe('explorador');
+    expect(miniaturaDePagina('explorador').imatge).not.toBe(miniaturaDePagina('agents').imatge);
+    for (const [id, traca] of Object.entries(TRAZABILITAT_IMATGES_CONSOLA)) {
+      if (id !== 'explorador' && id !== 'agents') {
+        expect(traca.reutilitzacioBytesAmb, id).toBeNull();
+      }
+    }
+  });
+
+  test('la il·lustració de la Caldera de la Consola (dbc5a1c14) està sincronitzada entre PAGE_COPY.consola.html i CENS_IMATGES', () => {
+    expect(Object.isFrozen(ILUSTRACIO_CALDERA_CONSOLA)).toBe(true);
+    expect(PAGE_COPY.consola?.html).toContain(ILUSTRACIO_CALDERA_CONSOLA.bessonaWebp);
+    expect(esFitxerAmbPes(ILUSTRACIO_CALDERA_CONSOLA.src)).toBe(true);
+    expect(esFitxerAmbPes(ILUSTRACIO_CALDERA_CONSOLA.bessonaWebp)).toBe(true);
+    expect(CENS_IMATGES.some((e) => e.src === ILUSTRACIO_CALDERA_CONSOLA.src)).toBe(true);
+    expect(ILUSTRACIO_CALDERA_CONSOLA.assetId).toBe(idDelCens(ILUSTRACIO_CALDERA_CONSOLA.src));
   });
 });

@@ -147,3 +147,27 @@ test('amb la IAIA apagada no hi ha el seu fil, i el seu cervell no es crida mai'
   expect(respostaIAIA).not.toHaveBeenCalled();
   expect(missatges('fake-iaia')).toHaveLength(2);
 });
+
+/* P1-70 (D03/D09) · Preguntes d'1 paraula clau (i nom propi) sobre les 8 entrades
+   estructurals de l'Atles Operatiu del Sistema contestades per FakeChatOnboarding
+   i iaiaLocal.js sense xarxa ni temporitzador. */
+test.each([
+  ['Xat', '· El Xat — /xat'],
+  ['Mur', '· El Mur — /mur'],
+  ['Mercat', '· El Mercat — /mercat'],
+  ['Pobles', '· Pobles — /pobles'],
+  ['Notes', '· Bloc de Notes — /notes'],
+  ['Multimèdia', "· Multimèdia i Gestor d'Arxius — /multimedia"],
+  ['Javi Llinares', '· Javi Llinares — /javillinares'],
+  ['El Rentonar', '· El Rentonar — /rentonar']
+])('P1-70 · pregunta clau «%s» a l’Atles Operatiu respon al xat de mostra amb «%s» sense xarxa', async (pregunta, liniaEsperada) => {
+  const espia = vi.fn(async () => ({ items: [] }));
+  munta({ respostaIAIA: (text) => respostaDeLaIAIA(text, { carrega: espia }) });
+  await act(async () => { await xat.sendChatMessage(fil('fake-iaia'), pregunta); });
+  await buida();
+  const resposta = missatges('fake-iaia').at(-1);
+  expect(resposta).toMatchObject({ sender: 'other', author: 'IAIA MarIA', usuariId: IAIA_ID, is_ai: true });
+  expect(resposta.text.startsWith(`${ENCAPCALAMENT_DE_SOC_DE_POBLE}\n`)).toBe(true);
+  expect(resposta.text).toContain(liniaEsperada);
+  expect(espia).not.toHaveBeenCalled();
+});

@@ -1,9 +1,12 @@
-/* P2-08 (pla 261024_1315, T7; auditoria Codex C-04) · L'adaptador no retalla
-   l'exportació ampliada de la migració 2610241410: el format continua sent el
-   v1 i les claus noves (moderacio, seguiments, apple, no_inclou i, dins del
-   xat, adjunts_propis i les columnes noves dels missatges) arriben tal qual,
-   també l'àudio sense peu, que només té la referència a metadades.adjunt. Els
-   dobles són els de compte.test.js. */
+/* P2-08 (pla 261024_1315, T7; auditoria Codex C-04) i P2-09 (Lot 4, D06/D07) ·
+   L'adaptador no retalla l'exportació ampliada de la migració 2610241410: el
+   format continua sent el v1 i les claus noves (moderacio, seguiments, apple,
+   no_inclou i, dins del xat, adjunts_propis i les columnes noves dels missatges)
+   arriben tal qual, també l'àudio sense peu, que només té la referència a
+   metadades.adjunt. En canvi, a `federacio_no_versionada` (P2-09), l'adaptador
+   aplica el contracte explícit de propietat i columnes per recurs (`realms`,
+   `user_realms`, `connections`, `posts`) perquè cap fila aliena colada per
+   inferència d'UUID ni cap columna fora del contracte puga filtrar-se. */
 import { beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {} }));
@@ -53,4 +56,37 @@ test('sense la moderació, els seguiments ni Apple aplicats (claus null), l’ex
   const sense = { ...structuredClone(AMPLIADA), moderacio: null, seguiments: null, apple: null };
   m.rpc.mockResolvedValueOnce(sense);
   expect(await exportaLesMeuesDades()).toEqual(sense);
+});
+
+test('P2-09 · filtra files alienes colades per inferència d’UUID a federacio_no_versionada i retalla columnes no autoritzades', async () => {
+  const ambFederacio = {
+    ...structuredClone(AMPLIADA),
+    federacio_no_versionada: {
+      realms: [
+        { id: 'R1', owner_user_id: 'A', slug: 'la-torre', name: 'La Torre', private_key: 'SECRET' },
+        { id: 'R2', owner_user_id: 'ALTRE', moderator_id: 'A', slug: 'alie', name: 'Aliè' }
+      ],
+      user_realms: [
+        { id: 'UR1', user_id: 'A', realm_id: 'R1', role: 'member', invited_by: 'ALTRE' },
+        { id: 'UR2', user_id: 'ALTRE', realm_id: 'R1', role: 'member', invited_by: 'A' }
+      ],
+      connections: [
+        { id: 'C1', user_id: 'A', target_user_id: 'ALTRE', status: 'active', access_token: 'TOKEN' },
+        { id: 'C2', user_id: 'ALTRE', target_user_id: 'A', status: 'active' }
+      ],
+      posts: [
+        { id: 'P1', author_id: 'A', reply_to_user_id: 'ALTRE', content: 'Bon dia poble', ip_hash: 'HASH' },
+        { id: 'P2', author_id: 'ALTRE', reply_to_user_id: 'A', content: 'Resposta d’un altre' }
+      ],
+      taula_desconeguda: [{ id: 'X', user_id: 'A' }]
+    }
+  };
+  m.rpc.mockResolvedValueOnce(ambFederacio);
+  const dades = await exportaLesMeuesDades();
+  expect(dades.federacio_no_versionada).toEqual({
+    realms: [{ id: 'R1', owner_user_id: 'A', slug: 'la-torre', name: 'La Torre' }],
+    user_realms: [{ id: 'UR1', user_id: 'A', realm_id: 'R1', role: 'member' }],
+    connections: [{ id: 'C1', user_id: 'A', status: 'active' }],
+    posts: [{ id: 'P1', author_id: 'A', content: 'Bon dia poble' }]
+  });
 });

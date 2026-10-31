@@ -130,10 +130,12 @@ test('§6 · a 375 («estret»): la llista oberta tapa el rail; la carpeta de NO
 });
 
 // IDEA-58: regressió al Bloc muntat amb el workspace real, sense tocar el cursor de l’editor.
-test('IDEA-58 · ArrowDown/Up/Home/End recorren les notes visibles', () => {
+test('IDEA-58 · ArrowDown/Up/Home/End recorren les notes visibles i cap comentari JSX queda com a text al DOM', () => {
   const buida = ambAmplada(1400);
   dades.notes = [NOTA, { ...NOTA, id: 'a2', title: 'Segona', updatedAt: '2026-01-02T09:00:00Z' }, { ...NOTA, id: 'a3', title: 'Tercera', updatedAt: '2026-01-01T09:00:00Z' }];
   const { container } = munta('/notes'); buida();
+  expect(container.textContent).not.toContain('IDEA-58');
+  expect(container.textContent).not.toContain('/*');
   const botons = [...container.querySelectorAll('.sdp-gestor-llista > li')].map(li => li.querySelector('button')).filter(Boolean);
   expect(botons.length).toBeGreaterThanOrEqual(3);
   botons[0].focus(); fireEvent.keyDown(botons[0], { key: 'ArrowDown' }); expect(document.activeElement).toBe(botons[1]);

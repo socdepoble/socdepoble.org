@@ -9,7 +9,10 @@
  * CONTRACTE
  *   obert · onTanca(motiu: 'esc'|'vel'|'boto'|'fet') · esPublica (estat actual) ·
  *   onTria(publica) → Promise<boolean|void> | boolean | void · textos · bloqueig
- *   null | { opcio: 'publica'|'privada', motiu } · comNom (identitat que signa)
+ *   null | { opcio: 'publica'|'privada', motiu, amaga? } · comNom (identitat que signa)
+ *   Amb `amaga` (decisió del Mestre, xat 261031: empresa, entitat o
+ *   ajuntament) l'opció bloquejada ni s'oferix: el motiu és l'única línia de
+ *   la finestra, en lloc de la descripció, i no hi ha targetes per a triar.
  *
  * Confirmar SEMPRE crida onTria(triada === 'publica'): el consumidor decidix
  * (el Perfil posa el valor explícit; Notes publica o actualitza al Mur).
@@ -52,6 +55,7 @@ export function SelectorVisibilitat({
 }) {
   const actual = esPublica ? 'publica' : 'privada';
   const bloquejada = (opcio) => bloqueig?.opcio === opcio;
+  const amagada = bloqueig?.amaga === true;
   const inicial = bloquejada(actual) ? (actual === 'publica' ? 'privada' : 'publica') : actual;
   const [triada, setTriada] = useState(inicial);
   const [ocupat, setOcupat] = useState(false);
@@ -121,7 +125,7 @@ export function SelectorVisibilitat({
   const publicaNova = triada === 'publica' && actual !== 'publica';
 
   return (
-    <Dialeg obert={obert} onTanca={tanca} titol={textos.titol} descripcio={textos.descripcio}
+    <Dialeg obert={obert} onTanca={tanca} titol={textos.titol} descripcio={amagada ? bloqueig.motiu : textos.descripcio}
       /* Directiva del Mestre (261025, pla 261025_0045, T2) · Mida g: les dues
          targetes i els avisos respiren a l'ample (menys línies, menys alçada) i,
          si davall de les barres no hi caben, la finestra puja (Dialeg, lloc barra). */
@@ -135,9 +139,11 @@ export function SelectorVisibilitat({
       {comNom ? <p className="sdp-selector-visibilitat__com">Publicaràs com a <strong>{comNom}</strong>.</p> : null}
       {/* Correcció C20 (260928) · El motiu del bloqueig abans de les opcions:
           es llig (i es veu, sense baixar) abans de trobar l'opció desactivada. */}
-      {bloqueig ? <Alerta to="avis">{bloqueig.motiu}</Alerta> : null}
-      <GrupOpcions aspecte="targetes" llegenda={textos.llegenda} valor={triada} onCanvi={setTriada}
-        disabled={ocupat} textTriada="Triada" opcions={[opcio('publica'), opcio('privada')]} />
+      {bloqueig && !amagada ? <Alerta to="avis">{bloqueig.motiu}</Alerta> : null}
+      {amagada ? null : (
+        <GrupOpcions aspecte="targetes" llegenda={textos.llegenda} valor={triada} onCanvi={setTriada}
+          disabled={ocupat} textTriada="Triada" opcions={[opcio('publica'), opcio('privada')]} />
+      )}
       {!bloqueig && textos.reversible ? <Alerta to="info">{textos.reversible}</Alerta> : null}
       {triada === 'publica' && textos.avisPublica ? <Alerta to="avis">{textos.avisPublica}</Alerta> : null}
       {publicaNova && textos.irreversible ? <Alerta to="avis">{textos.irreversible}</Alerta> : null}
