@@ -45,6 +45,10 @@ const TEXTOS = Object.freeze({
   events: {
     etiqueta: ['section.perfil.public.aparador.agenda', 'Agenda'],
     buit: ['section.perfil.public.aparador.agenda.buit', '{nom} no té cap acte recent a l’Agenda d’este poble.']
+  },
+  connectats: {
+    etiqueta: ['section.perfil.public.aparador.connectats', 'El que connecta'],
+    buit: ['section.perfil.public.aparador.connectats.buit', '{nom} encara no connecta amb cap poble o col·lectiu públic.']
   }
 });
 
@@ -59,7 +63,7 @@ export function textosDeLAparador(nom, t = senseTraduccio) {
   };
   return {
     regio: omple(tradueix('section.perfil.public.aparador.titol', 'El que publica {nom}'), { nom }),
-    seccions: Object.fromEntries(SECCIONS_DE_LA_FITXA.map((seccio) => [seccio, {
+    seccions: Object.fromEntries([...SECCIONS_DE_LA_FITXA, 'connectats'].map((seccio) => [seccio, {
       etiqueta: tradueix(...TEXTOS[seccio].etiqueta),
       vista: { ...comuns, buit: ambNom(TEXTOS[seccio].buit) }
     }])),
@@ -68,24 +72,49 @@ export function textosDeLAparador(nom, t = senseTraduccio) {
   };
 }
 
-function AparadorAmbDades({ perfil, textos }) {
+/* Ronda 2 (auditoria del Kit de Gemini, M2) · La ruta d'una connexió ve de les
+   dades: només un camí intern de l'app («/…», mai «//…» ni un esquema). */
+const rutaInterna = (ruta) => (typeof ruta === 'string' && /^\/(?!\/)/.test(ruta) && !/[\\\s]/.test(ruta) ? ruta : null);
+
+function AparadorAmbDades({ perfil, textos, connectats = null }) {
   const fonts = usePublicacionsDeLaFitxa(perfil);
   const [triada, setTriada] = useState(null);
   const ambPublicacions = SECCIONS_DE_LA_FITXA.find((seccio) => fonts[seccio].elements.length > 0);
   const activa = triada ?? ambPublicacions ?? SECCIONS_DE_LA_FITXA[0];
+  const pestanyesBase = SECCIONS_DE_LA_FITXA.map((seccio) => ({
+    id: seccio,
+    etiqueta: textos.seccions[seccio].etiqueta,
+    contingut: (
+      <VistaPublicacionsDeLActor seccio={seccio} {...fonts[seccio]} nivell="h3" textos={textos.seccions[seccio].vista} />
+    )
+  }));
+  const pestanyes = Array.isArray(connectats)
+    ? [
+      ...pestanyesBase,
+      {
+        id: 'connectats',
+        etiqueta: textos.seccions.connectats.etiqueta,
+        contingut: connectats.length > 0 ? (
+          <ul>
+            {connectats.map((item) => (
+              <li key={`${item.tipus || 'entitat'}:${item.id}`}>
+                <a href={rutaInterna(item.ruta) || `/entitat/${encodeURIComponent(item.id)}`}>{item.nom}</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="sdp-buit" role="status">{textos.seccions.connectats.vista.buit}</p>
+        )
+      }
+    ]
+    : pestanyesBase;
   return (
     <Pestanyes
       centrades
       etiqueta={textos.regio}
       activa={activa}
       onCanvi={setTriada}
-      pestanyes={SECCIONS_DE_LA_FITXA.map((seccio) => ({
-        id: seccio,
-        etiqueta: textos.seccions[seccio].etiqueta,
-        contingut: (
-          <VistaPublicacionsDeLActor seccio={seccio} {...fonts[seccio]} nivell="h3" textos={textos.seccions[seccio].vista} />
-        )
-      }))}
+      pestanyes={pestanyes}
     />
   );
 }
@@ -107,7 +136,7 @@ export const useHiHaMur = () => typeof useMur()?.refresh === 'function';
  * PublicacioDetall) i les pestanyes. Qui munta el peu pregunta abans amb
  * useHiHaMur i teAparador: sense aparador, cap regió buida.
  */
-export function PublicacionsDeLaFitxa({ perfil, t = senseTraduccio }) {
+export function PublicacionsDeLaFitxa({ perfil, t = senseTraduccio, connectats = null }) {
   const hiHaMur = useHiHaMur();
   if (!hiHaMur || !teAparador(perfil)) return null;
   const textos = textosDeLAparador(perfil.nom || '', t);
@@ -118,7 +147,7 @@ export function PublicacionsDeLaFitxa({ perfil, t = senseTraduccio }) {
         resetKey={`${perfil.tipus}:${perfil.id}`}
         fallback={({ reinicia }) => <FalladaDeLHistoric t={t} textos={textos.fallada} reinicia={reinicia} nivell="h3" />}
       >
-        <AparadorAmbDades perfil={perfil} textos={textos} />
+        <AparadorAmbDades perfil={perfil} textos={textos} connectats={connectats} />
       </SlotErrorBoundary>
     </>
   );

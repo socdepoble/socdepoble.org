@@ -156,5 +156,31 @@ describe('l’aparador', () => {
     const textos = textosDeLAparador('Colla de la Serra');
     expect(textos.regio).toBe('El que publica Colla de la Serra');
     expect(textos.seccions.mercat.vista.buit).toBe('Colla de la Serra no té res recent a l’aparador del Mercat d’este poble.');
+    expect(textos.seccions.connectats.etiqueta).toBe('El que connecta');
+    expect(textos.seccions.connectats.vista.buit).toBe('Colla de la Serra encara no connecta amb cap poble o col·lectiu públic.');
+  });
+
+  test('IDEA-25 · si es passa connectats, renderitza la pestanya «El que connecta» i la llista d’entitats', () => {
+    render(
+      <PublicacionsDeLaFitxa
+        perfil={FORN}
+        connectats={[{ tipus: 'entitat', id: 'cooperativa', nom: 'Cooperativa Agrícola', ruta: '/entitat/cooperativa' }]}
+      />
+    );
+    const pestanya = screen.getByRole('tab', { name: 'El que connecta' });
+    fireEvent.click(pestanya);
+    expect(screen.getByRole('link', { name: 'Cooperativa Agrícola' }).getAttribute('href')).toBe('/entitat/cooperativa');
+  });
+
+  test('IDEA-25 · una ruta que no és interna no ix a l’enllaç: torna a la fitxa de l’entitat', () => {
+    render(
+      <PublicacionsDeLaFitxa
+        perfil={FORN}
+        connectats={[{ tipus: 'entitat', id: 'forn', nom: 'Fora', ruta: 'javascript:alert(1)' }, { tipus: 'entitat', id: 'altre', nom: 'Altre', ruta: '//evil.example/x' }]}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'El que connecta' }));
+    expect(screen.getByRole('link', { name: 'Fora' }).getAttribute('href')).toBe('/entitat/forn');
+    expect(screen.getByRole('link', { name: 'Altre' }).getAttribute('href')).toBe('/entitat/altre');
   });
 });

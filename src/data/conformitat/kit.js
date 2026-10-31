@@ -168,6 +168,15 @@ const ESCRIVIBLE = (fil) => !['comunitat', 'canal'].includes(fil?.tipus);
 const cas = (definicio) => Object.freeze({ capacitat: null, escriu: false, espera: 'resol', requerix: [], ...definicio });
 
 export const CASOS = Object.freeze([
+  /* Lot 2 PN-01: casos comuns als transports seed i remote. */
+  cas({ metode: 'resolveAsset', capacitat: 'mitjans', titol: 'resolveAsset preserva una URL pública sense consultar Storage', arguments: ctx => ['https://example.org/public.webp', ctx.config], comprova: v => v === 'https://example.org/public.webp' ? [] : ['URL pública alterada'] }),
+  cas({ metode: 'promoteToPublic', capacitat: 'mitjans', titol: 'promoteToPublic no torna a publicar un recurs ja públic', arguments: ctx => ['https://example.org/public.webp', ctx.config], comprova: v => v === 'https://example.org/public.webp' ? [] : ['recurs públic alterat'] }),
+  cas({ metode: 'getPublicUrl', capacitat: 'mitjans', titol: 'getPublicUrl rebutja un bucket buit abans del transport', arguments: ctx => ['', '', ctx.config], espera: 'rebutja', comprova: e => e instanceof Error ? [] : ['rebuig no estructurat'] }),
+  cas({ metode: 'uploadToStorage', capacitat: 'mitjans', titol: 'uploadToStorage rebutja una entrada sense Blob', arguments: ctx => [null, {}, ctx.config], espera: 'rebutja', comprova: e => e instanceof Error ? [] : ['rebuig no estructurat'] }),
+  cas({ metode: 'adminListUsers', capacitat: 'admin', titol: 'adminListUsers retorna una llista amb ids', arguments: ctx => [10, 0, ctx.config], comprova: v => exigixLlistaAmbId(v, 'persones') }),
+  cas({ metode: 'adminListOrganizations', capacitat: 'admin', titol: 'adminListOrganizations retorna una llista amb ids', arguments: ctx => [ctx.config], comprova: v => exigixLlistaAmbId(v, 'organitzacions') }),
+  cas({ metode: 'lesMevesReclamacions', capacitat: 'reclamacions', titol: 'lesMevesReclamacions retorna només les pròpies i amb id', arguments: ctx => [ctx.config], comprova: v => exigixLlistaAmbId(v, 'reclamacions') }),
+  cas({ metode: 'clausDeXat', capacitat: 'clausXat', titol: 'clausDeXat no accepta un destinatari malformat', arguments: ctx => [['id-no-valid'], ctx.config], espera: 'rebutja', comprova: e => e instanceof Error ? [] : ['rebuig no estructurat'] }),
   /* ── Nucli · lectures ── */
   cas({
     metode: 'getRuntimeDataMode', titol: "getRuntimeDataMode(config) → 'remote' | 'seed' | 'local'",

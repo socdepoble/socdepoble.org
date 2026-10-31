@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ETIQUETES_TIPUS, MINIM_CERCA, accionsSobre, candidatsDeMembre, clauDeMembre, ordenaMembres } from './membresModel.js';
+import { ETIQUETES_TIPUS, MINIM_CERCA, accionsSobre, candidatsDeMembre, clauDeMembre, ordenaMembres, potTransferirPropietat } from './membresModel.js';
 
 /* Ordre del Mestre (261008, grup C) · El model pur dels membres d'una
    organització: l'ordre de la llista, què s'oferix sobre cada membre (les
@@ -104,4 +104,12 @@ test('la clau, les etiquetes i el mínim de la cerca', () => {
   expect(clauDeMembre(null)).toBe(':');
   expect(ETIQUETES_TIPUS).toEqual({ persona: 'Persona', organitzacio: 'Organització' });
   expect(MINIM_CERCA).toBe(2);
+});
+
+test('IDEA-24 · potTransferirPropietat només per a la propietària sobre una altra persona membre', () => {
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'admin'), { rolMeu: 'owner', jo: 'p1' })).toBe(true);
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { rolMeu: 'owner', jo: 'p1' })).toBe(true);
+  expect(potTransferirPropietat(persona('p1', 'Jo', 'owner'), { rolMeu: 'owner', jo: 'p1' })).toBe(false);
+  expect(potTransferirPropietat(org('o1', 'Colla'), { rolMeu: 'owner', jo: 'p1' })).toBe(false);
+  expect(potTransferirPropietat(persona('p2', 'Pepa', 'member'), { rolMeu: 'admin', jo: 'p1' })).toBe(false);
 });

@@ -11,7 +11,7 @@ import { StorageClient } from '@supabase/storage-js';
 const m = vi.hoisted(() => ({ client: null }));
 vi.mock('./config.js', () => ({ getClient: async () => m.client }));
 vi.mock('./runtime.js', () => ({ getResolvedConfig: (config = {}) => ({ ...config }) }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => null }));
+vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => null }));
 
 import { promoteToPublic, resolveAsset } from './storage.js';
 

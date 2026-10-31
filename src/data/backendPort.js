@@ -1,9 +1,52 @@
+import { CODI_BACKEND_INABASTABLE } from './errorsBackend.js';
 import { heretaServeiXifratXat } from './xifratXatServei.js';
 import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
 
 let currentImpl = null;
 let isLocked = false;
 let dispose = null;
+const lecturesEnVol = new Set();
+const avortaLectures = () => { for (const control of lecturesEnVol) control.abort(); lecturesEnVol.clear(); };
+const FORMES_LECTURA = Object.freeze({ loadCoreContent: ['towns', 'pages', 'agents'], loadMur: ['feedPosts', 'events', 'marketItems'], loadMultimedia: ['mediaItems'], loadNotes: ['notes', 'noteFolders'], loadNotesPage: ['notes'] });
+const esFila = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+/* Una clau que no és una llista rebutja la lectura sencera. Un forat dins d'una
+   llista (un null, un número) només cau ell: la doctrina PN-02 de
+   CoreContentContext (nomesFitxes) és que la resta de fitxes es pinta. Mai es
+   muta la resposta de l'adaptador; una llista neta es torna tal qual. */
+function validaLectura(nom, valor) {
+  if (!esFila(valor) || FORMES_LECTURA[nom].some(clau => !Array.isArray(valor[clau]))) {
+    throw Object.assign(new TypeError(`[backendPort] Resposta invàlida de ${nom}.`), { codi: 'BACKEND_RESPOSTA_INVALIDA' });
+  }
+  const ambForats = FORMES_LECTURA[nom].filter(clau => !valor[clau].every(esFila));
+  if (!ambForats.length) return valor;
+  const net = { ...valor };
+  for (const clau of ambForats) net[clau] = valor[clau].filter(esFila);
+  return net;
+}
+function lligAmbGuardes(nom, args, backend) {
+  const control = new AbortController();
+  const config = args[1] && typeof args[1] === 'object' ? args[1] : {};
+  const avorta = () => control.abort();
+  const senyals = [...new Set([config.signal, ...(nom === 'loadNotesPage' ? [args[0]?.signal] : [])].filter(Boolean))];
+  if (senyals.some(s => s.aborted)) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
+  for (const signal of senyals) signal.addEventListener('abort', avorta, { once: true });
+  lecturesEnVol.add(control);
+  let rebutja;
+  const interrompuda = new Promise((_resol, reject) => { rebutja = reject; });
+  const talla = () => rebutja(control.signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError'));
+  control.signal.addEventListener('abort', talla, { once: true });
+  const rellotge = setTimeout(() => control.abort(Object.assign(new Error('El backend no ha respost a temps.'), { name: 'TimeoutError', codi: CODI_BACKEND_INABASTABLE })), 15000);
+  const feina = Promise.resolve().then(() => {
+    if (control.signal.aborted) throw control.signal.reason;
+    return backend[nom](nom === 'loadNotesPage' ? { ...args[0], signal: control.signal } : args[0], { ...config, signal: control.signal });
+  }).then(valor => {
+    if (control.signal.aborted || currentImpl !== backend) throw new DOMException('Operació cancel·lada.', 'AbortError');
+    return validaLectura(nom, valor);
+  });
+  return Promise.race([feina, interrompuda]).finally(() => {
+    clearTimeout(rellotge); for (const signal of senyals) signal.removeEventListener('abort', avorta); control.signal.removeEventListener('abort', talla); lecturesEnVol.delete(control);
+  });
+}
 const EMPTY = Object.freeze(Object.create(null));
 
 export function setBackendImplementation(impl, force = false) {
@@ -13,6 +56,7 @@ export function setBackendImplementation(impl, force = false) {
   if (!impl || typeof impl !== 'object') throw new TypeError('[backendPort] Implementació invàlida');
   const prepared = validaBackendImplementation(impl);
   // Commit després de validar-ho tot; cap mètode de la implementació vella sobreviu.
+  avortaLectures();
   currentImpl = prepared.candidate;
   dispose = prepared.dispose;
 }
@@ -56,7 +100,7 @@ export function freezeImplementation() {
   if (!currentImpl) throw new Error('[backendPort] No hi ha backend per segellar');
   isLocked = true;
 }
-export function destroy() { const fn = dispose; dispose = null; return fn?.(); }
+export function destroy() { avortaLectures(); const fn = dispose; dispose = null; return fn?.(); }
 export function teCapacitat(cap) {
   return Object.hasOwn(CAPACITATS, cap) && !!currentImpl && CAPACITATS[cap].every(name => typeof currentImpl[name] === 'function');
 }
@@ -65,7 +109,8 @@ const asseguraMetode = (nom) => (...args) => {
   if (!currentImpl || typeof currentImpl[nom] !== 'function') {
     throw new Error(`[backendPort] El mètode "${nom}" no està implementat al backend actual.`);
   }
-  return currentImpl[nom](...args);
+  const backend = currentImpl;
+  return Object.hasOwn(FORMES_LECTURA, nom) ? lligAmbGuardes(nom, args, backend) : backend[nom](...args);
 };
 
 export const adoptaSessioExterna = asseguraMetode('adoptaSessioExterna');

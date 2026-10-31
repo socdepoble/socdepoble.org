@@ -1,3 +1,4 @@
+import { creaEmissorRebutsEntrega } from '../../data/rebutsEntregaXat.js';
 /**
  * XatContext.jsx — L'estat del xat (F0: Fonament).
  *
@@ -1123,6 +1124,8 @@ export function XatProvider({ children, config }) {
      se'n demana la pàgina següent, cada una aplicada, fins a MAX_PAGINES_NOUS;
      abans, cada tic en portava 100 i un fil ja visitat amb 350 de nous tardava
      més d'un minut a arribar al final. L'adaptador no canvia. */
+  const rebutsEntregaRef = useRef(creaEmissorRebutsEntrega(marcaLlegit));
+
   const carregaMissatges = useCallback((filId) => {
     const op = captura();
     if (!filId || !joId || !vigent(op)) return Promise.resolve(false);
@@ -1158,6 +1161,12 @@ export function XatProvider({ children, config }) {
            completa a cada sondeig. */
         const maxim = seqMaxim(nous);
         cursorRef.current[filId] = incremental ? Math.max(desDe, maxim ?? desDe) : (maxim ?? 0);
+        // XC-05: els bytes ja han arribat; açò no marca cap bombolla com a llegida.
+        if (filId !== ID_FIL_DE_MOSTRA_DE_JAVI && !esVisitant(visitantsRef.current, filId)) {
+          void rebutsEntregaRef.current.rebut(filId, cursorRef.current[filId], {
+            config, signal: op.controller.signal, vigent: () => vigent(op)
+          });
+        }
         /* Gauntlet 261025_0545 (XC-13, XC-14) · El fil ja s'ha llegit bé una
            vegada en este àmbit, i l'avís d'una lectura fallida se'n va. */
         marcaCarregat(filId);

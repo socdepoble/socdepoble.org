@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ upload: vi.fn(), usuari: null }));
 vi.mock('./runtime.js', () => ({ getResolvedConfig: (config = {}) => ({ ...config }) }));
 vi.mock('./config.js', () => ({ getClient: async () => ({ storage: { from: (bucket) => ({ upload: (...args) => m.upload(bucket, ...args) }) } }) }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.usuari }));
+vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => m.usuari }));
 
 import { errorDePujada, uploadToStorage } from './storage.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../errorsBackend.js';

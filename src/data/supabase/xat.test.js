@@ -326,7 +326,7 @@ describe('historial per cursor i marques', () => {
   it('marcaLlegit crida xat_marca i torna les dos marques', async () => {
     query.data = [{ rebut_fins_seq: 15, llegit_fins_seq: 12 }];
     const marques = await marcaLlegit('fil', { ...REMOT, llegitFinsSeq: 12 });
-    expect(client.rpc).toHaveBeenCalledWith('xat_marca', { p_fil_id: 'fil', p_rebut_fins: null, p_llegit_fins: 12 });
+    expect(client.rpc).toHaveBeenCalledWith('xat_marca', { p_fil_id: 'fil', p_rebut_fins: 12, p_llegit_fins: 12 });
     expect(marques).toEqual({ llegitFinsSeq: 12, rebutFinsSeq: 15 });
   });
   it('loadFils mapeja la v2 de xat_fils_meus', async () => {
@@ -925,4 +925,32 @@ describe('CUR-03 · recuperació del canal real', () => {
     expect(callback).toHaveBeenCalledTimes(1);
     await unsubscribeFromXat(res.subscription);
   });
+});
+
+describe('Lot 2 XC-05/E1 · marques i camps de recepció', () => {
+  it('un rebut d’entrega no usa el null SQL que marcaria tot el fil com a llegit', async () => {
+    client.rpc.mockResolvedValue({data:[{rebut_fins_seq:8,llegit_fins_seq:0}],error:null});
+    await expect(marcaLlegit('fil',{...REMOT,rebutFinsSeq:8})).resolves.toEqual({rebutFinsSeq:8,llegitFinsSeq:0});
+    expect(client.rpc).toHaveBeenCalledWith('xat_marca_rebut',{p_fil_id:'fil',p_rebut_fins:8});
+  });
+  it('els cursors no enters o negatius es rebutgen abans de la RPC', async () => {
+    for(const seq of [-1,NaN,Infinity,'8']) await expect(marcaLlegit('fil',{...REMOT,rebutFinsSeq:seq})).rejects.toBeInstanceOf(Error);
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+  it('loadMissatges preserva el sobre xifrat i la columna cos com a text nul', async () => {
+    const xifrat={v:1,epoca:2,iv:'aa',ct:'bb',kid:'cc',tf:'dd'};
+    client.rpc.mockResolvedValue({data:[{id:'m1',fil_id:'fil',seq:3,usuari_id:'A',cos:null,tipus:'text',xifrat}],error:null});
+    expect((await loadMissatges('fil',REMOT))[0]).toMatchObject({id:'m1',text:null,xifrat});
+  });
+  it('loadFils conserva les marques apegaloses amb els noms del port', async () => {
+    client.rpc.mockResolvedValue({data:[{id:'fil',tipus:'directe',epoca_actual:'2',cap_epoca_hash:'cap-prova',e2ee_des_de_seq:'3'}],error:null});
+    const files=await loadFils(REMOT);
+    expect(files.find(f=>f.id==='fil')).toMatchObject({epocaActual:2,capEpoca:'cap-prova',e2eeDesDeSeq:3});
+  });
+});
+
+it('XC-05: una RPC d’entrega absent no cau a l’RPC de lectura', async () => {
+ client.rpc.mockResolvedValue({data:null,error:{code:'PGRST202'},status:404});
+ await expect(marcaLlegit('fil',{...REMOT,rebutFinsSeq:5,llegitFinsSeq:0})).rejects.toMatchObject({code:'SENSE_CAPACITAT_REBUTS'});
+ expect(client.rpc.mock.calls.map(c=>c[0])).toEqual(['xat_marca_rebut']);
 });

@@ -11,6 +11,7 @@ import { CONTRACTE_NUCLI, CAPACITATS } from '../src/data/contracte.js';
 import { validatePublicCredentials } from '../src/config/publicCredentials.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../src/data/errorsBackend.js';
 import { tempsLimitPujada } from '../src/data/xatMultimedia.js';
+import { controlStorageDe, informaReconciliacioStorage } from '../src/data/supabase/controlStorage.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
@@ -209,6 +210,8 @@ test('storage: poble explícit, carpetes validades i prefix coherent amb RLS', a
     getResolvedConfig: c => c, usuariDeSessio: () => ({id:uid}), handleError: e => e,
     getClient: async () => ({storage:{from:bucket=>({upload:async (name, data, options)=>{sent={bucket,name,options};return resposta;}})}}),
     CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable, tempsLimitPujada,
+    // Lot 2 P1-27 · storage.js importa ara la sessió capturada i el sostre físic compartit.
+    capturaSessio: () => () => {}, controlStorageDe, informaReconciliacioStorage,
   });
   const blob = new Blob(['x'], {type:'image/png'});
   await assert.rejects(storage.uploadToStorage(blob, {carpeta:'notes'}));

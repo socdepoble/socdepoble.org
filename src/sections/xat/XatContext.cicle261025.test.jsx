@@ -308,6 +308,8 @@ describe('XC-13 · una lectura fallida d’un fil no tapa la llista: avís per f
     expect(value.avisFil('fil-A')).toBe('Failed to fetch');
     await act(async () => { await value.carregaMesAntics('fil-A'); });
     expect(value.avisFil('fil-A')).toBeNull();
+    // Els rebuts d’entrega previs no són marques de lectura.
+    mock.marcaLlegit.mockClear();
     mock.marcaLlegit.mockRejectedValueOnce(Object.assign(new Error('No s’ha pogut marcar com a llegit.'), { retriable: true }));
     act(() => value.marcaVist('fil-A', 60));
     await pas(2000);

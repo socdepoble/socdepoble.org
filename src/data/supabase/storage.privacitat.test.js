@@ -18,7 +18,7 @@ vi.mock('./config.js', () => ({ getClient: async () => ({ storage: { from: (buck
   getPublicUrl: (...args) => m.publica(bucket, ...args)
 }) } }) }));
 vi.mock('./runtime.js', () => ({ getResolvedConfig: (config = {}) => ({ ...config }) }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => null }));
+vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => null }));
 
 import { promoteToPublic, resolveAsset } from './storage.js';
 import { CODI_MITJANS } from '../errorsBackend.js';

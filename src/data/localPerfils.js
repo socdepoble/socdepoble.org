@@ -510,13 +510,15 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
       const org = orgQueGestiona(orgId, usuari);
       const llista = [];
-      if (rolALEntitat(org.id, usuari.id, { teSessio: true }) === 'owner') {
+      const connectades = estat.connexions.get(String(org.id));
+      /* Ronda 2 (Kit de Gemini, D06) · Si una connexió ja porta la persona que
+         mira, la seua fila ix de la connexió: cap propietària duplicada. */
+      if (!connectades?.has(String(usuari.id)) && rolALEntitat(org.id, usuari.id, { teSessio: true }) === 'owner') {
         llista.push(membreDePersona(usuari.id, 'owner', estat.naixement, usuari));
       }
       /* Revisió adversarial (261018) · Els membres que declara la llavor
          (identitatsSeed · membres: la persona pilot a Rentonar) també hi són,
          llevat que una connexió de Connectar ja els porte. */
-      const connectades = estat.connexions.get(String(org.id));
       for (const declarat of entitatSeed(org.id)?.membres || []) {
         const personaId = String(declarat.usuariId);
         if (connectades?.has(personaId) || llista.some((m) => m.tipus === 'persona' && m.id === personaId)) continue;

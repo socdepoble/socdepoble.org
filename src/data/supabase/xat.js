@@ -228,8 +228,29 @@ function subjecteDeFila(f) {
   };
 }
 
+function marquesXifratDeFila(f) {
+  const marques = {};
+  for (const [columna, camp, minim] of [['epoca_actual','epocaActual',0],['e2ee_des_de_seq','e2eeDesDeSeq',1]]) {
+    if (!Object.hasOwn(f,columna)) continue;
+    const n=f[columna] == null ? null : numero(f[columna]);
+    if (n !== null && (!Number.isSafeInteger(n) || n < minim)) throw new TypeError('Marca xifrada del fil invàlida.');
+    marques[camp]=n;
+  }
+  if (Object.hasOwn(f,'cap_epoca_hash')) {
+    if (f.cap_epoca_hash !== null && typeof f.cap_epoca_hash !== 'string') throw new TypeError('Cap d’època invàlid.');
+    marques.capEpoca=f.cap_epoca_hash;
+  }
+  return marques;
+}
+function sobreXifratDeFila(m) {
+  if (m.xifrat == null) return {};
+  if (m.cos !== null || typeof m.xifrat !== 'object' || Array.isArray(m.xifrat) || m.xifrat.v !== 1) throw new TypeError('Sobre xifrat de recepció invàlid.');
+  return { xifrat:m.xifrat };
+}
+
 const mapejaFil = (f) => ({
   id: f.id,
+  ...marquesXifratDeFila(f),
   tipus: f.tipus || 'directe',
   titol: f.titol ?? null,
   altresNoms: Array.isArray(f.altres_noms) ? f.altres_noms : [],
@@ -270,6 +291,7 @@ const mapejaFil = (f) => ({
 /* Les RPC tornen id, usuari_id, autor_nom, cos, tipus, seq, resposta_a, editat_al, esborrat_al, metadades, es_ia, creat_al. */
 const mapejaMissatge = (m, filId) => ({
   id: m.id,
+  ...sobreXifratDeFila(m),
   filId: m.fil_id ?? filId,
   seq: numero(m.seq),
   usuariId: m.usuari_id,
@@ -606,19 +628,27 @@ export const loadMissatges = async (filId, config = {}) => {
 export const marcaLlegit = async (filId, config = {}) => {
   try {
     comprovaSenyal(config);
+    const rebut = config.rebutFinsSeq ?? config.llegitFinsSeq ?? null;
+    const nomesRebut = config.rebutFinsSeq != null && (config.llegitFinsSeq == null || config.llegitFinsSeq === 0);
+    const llegit = config.llegitFinsSeq ?? (nomesRebut ? 0 : null);
+    if ([rebut, llegit].some(n => n !== null && (!Number.isSafeInteger(n) || n < 0))) throw errorLocal('Cursor de lectura invàlid.', 'CURSOR_INVALID');
     const seed = await local(config);
-    if (seed) return seed.marcaLlegit(filId, config);
+    if (seed) return seed.marcaLlegit(filId, { ...config, rebutFinsSeq: rebut, llegitFinsSeq: llegit });
     const supabase = await getClient(config);
     comprovaSenyal(config);
-    const { data, error, status } = await ambSenyal(supabase.rpc('xat_marca', {
-      p_fil_id: filId,
-      p_rebut_fins: config.rebutFinsSeq ?? null,
-      p_llegit_fins: config.llegitFinsSeq ?? null
-    }), config);
-    if (error) throw ambEstat(error, status);
+    // L’RPC antiga modifica hora i lectura manual: mai s’usa de reserva per a una entrega.
+    const nom = nomesRebut ? 'xat_marca_rebut' : 'xat_marca';
+    const params = nomesRebut ? { p_fil_id: filId, p_rebut_fins: rebut }
+      : { p_fil_id: filId, p_rebut_fins: rebut, p_llegit_fins: llegit };
+    const { data, error, status } = await ambSenyal(supabase.rpc(nom, params), config);
+    if (error) {
+      if (nomesRebut && (status === 404 || error.code === 'PGRST202')) throw errorLocal('Este servidor encara no té els rebuts d’entrega independents.', 'SENSE_CAPACITAT_REBUTS');
+      throw ambEstat(error, status);
+    }
     const fila = primeraFila(data);
     return { llegitFinsSeq: numero(fila?.llegit_fins_seq), rebutFinsSeq: numero(fila?.rebut_fins_seq) };
   } catch (error) {
+    if (error?.code === 'SENSE_CAPACITAT_REBUTS') throw error;
     throw errorDeXat(error, 'No s’ha pogut marcar com a llegit.', config);
   }
 };

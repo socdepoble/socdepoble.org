@@ -6,6 +6,7 @@
    les cinc preguntes del Mestre, el castellà, les negatives, la privacitat,
    la integritat de l'Atles, les pàgines, el llindar i el temps. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   ATLES_OPERATIU, DF_MAXIM_DEL_COS, ENCAPCALAMENT_DE_LA_WIKI, ENCAPCALAMENT_DE_SOC_DE_POBLE, EQUIVALENCIES, MAXIM_FRAGMENT_DE_L_ATLES,
   PAGINES_PER_A_LA_IAIA, RUTA_INTERNA, RUTES_DE_PAGINA, componResposta, construeixIndex, cercaRellevant, documentDelPoble,
@@ -64,6 +65,32 @@ describe('la capa local respon sense cap càrrega', () => {
   ])('«%s» → %s', (pregunta, id) => {
     expect(cercaRellevant(indexDeLaCapaLocal(), pregunta).map((resultat) => resultat.id)).toEqual([id]);
   });
+
+  /* P1-24 / IDEA-31 (Part 3) · Les 8 categories de cultura rural, vida de poble i ús pràctic (valencià i castellà). */
+  test.each([
+    ["Quan és la collita de l'oliva i l'oli a l'almàssera?", 'atles:oliva_oli'],
+    ['¿Cuándo es la cosecha de la aceituna y el aceite?', 'atles:oliva_oli'],
+    ["Com es cultiven les tomaques a l'horta i al bancal?", 'atles:hort_tomaques'],
+    ['¿Cómo sembrar tomates en la huerta?', 'atles:hort_tomaques'],
+    ['On consulte les festes i el calendari del poble?', 'atles:festes_agenda'],
+    ['¿Dónde veo las fiestas y eventos del calendario?', 'atles:festes_agenda'],
+    ['Quines fonts i sendes de muntanya hi ha?', 'atles:patrimoni_fonts'],
+    ['¿Qué fuentes y senderos de ruta hay?', 'atles:patrimoni_fonts'],
+    ['Com cree la fitxa d’una cooperativa o comerç local?', 'atles:entitat_associacio'],
+    ['¿Cómo crear una cooperativa o tienda local?', 'atles:entitat_associacio'],
+    ['Com puc exportar les meues dades i privacitat RGPD?', 'atles:privacitat_baixa'],
+    ['¿Cómo exportar mis datos y privacidad?', 'atles:privacitat_baixa'],
+    ['En quines llengües funciona el traductor Apertium?', 'atles:idiomes_traductor'],
+    ['¿En qué idiomas puedo traducir?', 'atles:idiomes_traductor'],
+    ['Com funciona el cercador per trobar alguna cosa?', 'atles:cerca_global'],
+    ['¿Cómo usar el buscador para encontrar algo?', 'atles:cerca_global']
+  ])('P1-24 cultura rural i ús pràctic: «%s» → %s (< 5 ms, sense xarxa)', async (pregunta, id) => {
+    expect(cercaRellevant(indexDeLaCapaLocal(), pregunta)[0]?.id).toBe(id);
+    const carrega = vi.fn();
+    const text = await respostaDeLaIAIA(pregunta, { carrega });
+    expect(carrega).not.toHaveBeenCalled();
+    expect(text.split('\n')[0]).toBe(ENCAPCALAMENT_DE_SOC_DE_POBLE);
+  });
 });
 
 describe('el que la IAIA no sap', () => {
@@ -114,10 +141,14 @@ describe('l’Atles Operatiu del Sistema', () => {
   /* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · I la
      d'una pàgina del sistema servida a /page/<clau> (SYSTEM_PAGES): hui,
      només la candidatura, /page/fediversity. */
+  const RUTES_DE_L_APP = ['/calendari', '/traduccions', '/el-meu-perfil', '/cerca'];
   const rutesValides = new Set([
     ...SECTIONS.filter((seccio) => ['xat', 'mur', 'mercat', 'pobles', 'notes', 'multimedia', 'projecte'].includes(seccio.id)).map((seccio) => seccio.path),
     RUTES_CANONIQUES.javillinares, RUTES_CANONIQUES.rentonar,
-    ...SYSTEM_PAGES.map((pagina) => pagina.href).filter((ruta) => ruta.startsWith('/page/'))
+    ...SYSTEM_PAGES.map((pagina) => pagina.href).filter((ruta) => ruta.startsWith('/page/')),
+    /* Revisió de la Ronda 2 (R2-COR-08 i V1-03) · Les rutes que l'Atles cita fora de SECTIONS (App.jsx les servix: ho fixa
+       la prova de les càpsules), a la mateixa llista tancada que RUTA_INTERNA i la bombolla. */
+    ...RUTES_DE_L_APP
   ]);
   const text = (entrada) => entrada.paragrafs.join(' ');
   const perId = (id) => ATLES_OPERATIU.find((entrada) => entrada.id === id);
@@ -138,6 +169,27 @@ describe('l’Atles Operatiu del Sistema', () => {
       expect([entrada.id, /[<`@]|http/.test(cos)]).toEqual([entrada.id, false]);
       expect([entrada.id, vetades.filter((paraula) => plega(cos).includes(paraula))]).toEqual([entrada.id, []]);
     }
+  });
+
+  /* Revisió de la Ronda 2 (R-03, R-05, R2-COR-08) · Les càpsules de cultura rural i ús pràctic diuen el que hi ha hui:
+     cap Wiki oberta al poble ni col·lecció de memòria oral, cap invitació (l'alta és directa), una cerca que no busca
+     a la Wiki i que obri /cerca, i cada càpsula porta on diu que porta. */
+  test('les càpsules P1-24: cap contingut inexistent, «afegir» i no «convidar», i la ruta del lloc que nomenen', () => {
+    expect(['atles:festes_agenda', 'atles:idiomes_traductor', 'atles:privacitat_baixa', 'atles:cerca_global'].map((id) => perId(id).ruta))
+      .toEqual(['/calendari', '/traduccions', '/el-meu-perfil', '/cerca']);
+    /* V1-03 · La cerca obri /cerca, no el Mur; i cada una d'estes rutes té el seu <Route> a App.jsx. */
+    const app = readFileSync(new URL('../app/App.jsx', import.meta.url), 'utf8');
+    for (const ruta of RUTES_DE_L_APP) {
+      expect([ruta, app.includes(`<Route path="${ruta}"`) || app.includes(`<Route path="${ruta.slice(1)}"`)]).toEqual([ruta, true]);
+    }
+    for (const id of ['atles:oliva_oli', 'atles:hort_tomaques', 'atles:patrimoni_fonts', 'atles:cerca_global']) {
+      expect([id, /\bWiki\b/.test(text(perId(id)))]).toEqual([id, false]);
+    }
+    expect(text(perId('atles:patrimoni_fonts'))).toContain('encara no té cap col·lecció de toponímia ni de memòria oral');
+    expect(text(perId('atles:patrimoni_fonts'))).not.toMatch(/documentem/);
+    expect(text(perId('atles:entitat_associacio'))).toContain('afegir altres membres');
+    expect(text(perId('atles:entitat_associacio'))).not.toMatch(/convid/);
+    expect(text(perId('atles:cerca_global'))).not.toMatch(/sense eixir d'on estàs/);
   });
 
   test('cada ruta és interna, d’una secció o d’una identitat canònica, i cada títol troba la seua entrada', () => {

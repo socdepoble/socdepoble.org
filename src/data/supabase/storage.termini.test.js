@@ -24,7 +24,7 @@ vi.mock('./config.js', () => ({ getClient: async () => m.client ?? ({ storage: {
   remove: (...args) => m.esborra(bucket, ...args),
   getPublicUrl: (path) => ({ data: { publicUrl: `https://storage.invalid/${bucket}/${path}` } })
 }) } }) }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.usuari }));
+vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => m.usuari }));
 
 import { deleteFile, esborraElMeuMitja, llistaElsMeusMitjans, promoteToPublic, resolveAsset, uploadFile, uploadToStorage } from './storage.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
@@ -36,7 +36,8 @@ const CONFIG = { tenantId: POBLE };
 const RUTA_PRIVADA = `${POBLE}/${UID}/notes/4b5c6d7e-8f90-4a1b-8c2d-3e4f5a6b7c8d.webp`;
 const REF_PRIVADA = `sdp-media://mitjans_privats/${RUTA_PRIVADA}`;
 const REF_AVATAR = `sdp-media://mitjans/${POBLE}/${UID}/avatars/4b5c6d7e-8f90-4a1b-8c2d-3e4f5a6b7c8d.webp`;
-const penjada = () => new Promise(() => {});
+const pendentsDeProva = new Set();
+const penjada = () => new Promise(resol => pendentsDeProva.add(() => resol({ data:null, error:new DOMException('Fi del transport de prova','AbortError') })));
 const webp = (bytes) => new Blob([new Uint8Array(bytes)], { type: 'image/webp' });
 
 let avis;
@@ -46,7 +47,13 @@ beforeEach(() => {
   m.usuari = { id: UID };
   avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
-afterEach(() => {
+afterEach(async () => {
+  // El sostre és global: cada fixture allibera els seus transports després de les assercions.
+  for (let ronda=0; ronda<12; ronda++) {
+    const pendents=[...pendentsDeProva]; pendentsDeProva.clear();
+    pendents.forEach(acaba=>acaba()); await vi.advanceTimersByTimeAsync(0);
+    if (!pendentsDeProva.size) break;
+  }
   avis.mockRestore();
   vi.useRealTimers();
 });
@@ -160,8 +167,10 @@ describe('P1-27 · el termini també talla upload, createSignedUrl i remove (sto
   const anota = (url, init = {}) => m.peticions.push({ url: String(url), metode: init.method, signal: init.signal });
   const penjat = (url, init = {}) => {
     anota(url, init);
-    return new Promise((_resol, rebutja) => init.signal?.addEventListener('abort',
-      () => rebutja(new DOMException('Avortada', 'AbortError')), { once: true }));
+    return new Promise((_resol, rebutja) => {
+      pendentsDeProva.add(() => rebutja(new DOMException('Fi del transport de prova','AbortError')));
+      init.signal?.addEventListener('abort', () => rebutja(new DOMException('Avortada', 'AbortError')), { once:true });
+    });
   };
   /* Una resposta de signatura: un objecte i no un Response, per a no dependre
      dels streams d'undici amb el rellotge fals (storage-js només mira ok i json()). */

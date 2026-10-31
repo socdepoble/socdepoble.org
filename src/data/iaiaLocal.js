@@ -158,7 +158,15 @@ export const EQUIVALENCIES = Object.freeze({
   /* Ordre del Mestre (30-10-2026; candidatura NLnet NGI Fediversity) · «¿Qué es la subvención de NLnet?». */
   subvencion: 'subvencio', subvenciones: 'subvencio',
   /* Ordre del Mestre (30-10-2026, ~00:50) · «¿Qué nodos hay?», «¿Puedo abrir el nodo de mi pueblo?». */
-  nodo: 'node', nodos: 'nodes', abrir: 'obrir'
+  nodo: 'node', nodos: 'nodes', abrir: 'obrir',
+  /* P1-24 / IDEA-31 (Part 3) · Cultura rural, camp i ús pràctic en castellà i col·loquial. */
+  aceite: 'oli', aceituna: 'oliva', aceitunas: 'olives', almazara: 'almassera', cosecha: 'collita',
+  huerta: 'horta', huerto: 'hort', tomate: 'tomaca', tomates: 'tomaques', sembrar: 'sembrar', regar: 'reg',
+  fiesta: 'festa', fiestas: 'festes', evento: 'acte', eventos: 'actes',
+  fuente: 'font', fuentes: 'fonts', sendero: 'senda', senderos: 'sendes', ruta: 'ruta', rutas: 'rutes',
+  comercio: 'comerc', tienda: 'botiga', empresa: 'empresa', cooperativa: 'cooperativa',
+  exportar: 'exportar', idioma: 'llengua', idiomas: 'llengues', traducir: 'traduir',
+  buscador: 'cercador', filtrar: 'filtrar', filtro: 'filtre', encontrar: 'localitzar'
 });
 
 /* IDEA-56 (Bloc F.2) · «Sóc de Poble» (o «soy de pueblo») és un sol terme:
@@ -501,7 +509,7 @@ function esPublic(item) {
    (sections/xat/enllacos.js · PATRO_RUTA_WIKI; enllacos.test.js les compara
    ruta a ruta). Duplicada a posta: si enllacos.js importara este mòdul,
    l'Atles aniria a cada tros que pinta una bombolla. */
-export const RUTA_INTERNA = /^\/(?:pobles\/[a-z0-9-]+|page\/[a-z0-9_-]+|projecte|constitucio|anima|roadmap|versions|fedivers|xat|mur|mercat|pobles|notes|multimedia|javillinares|rentonar)$/;
+export const RUTA_INTERNA = /^\/(?:pobles\/[a-z0-9-]+|page\/[a-z0-9_-]+|projecte|constitucio|anima|roadmap|versions|fedivers|xat|mur|mercat|pobles|notes|multimedia|calendari|traduccions|el-meu-perfil|cerca|javillinares|rentonar)$/;
 
 /* IDEA-56 (Bloc F.2) · El sanejament d'un ítem: un carregador injectat (un
    pont, una prova) no pot colar cap ruta externa ni «javascript:». Una font
@@ -821,6 +829,78 @@ export const ATLES_OPERATIU = Object.freeze([
     ]
     /* [PAGE_COPY.fediversity i PAGE_COPY.fedivers (pageContent.js); gentdelatorre.net i socdepoble.org responen 200 (30-10-2026);
        WordPress.org ha aprovat l'slug socdepoble; el repositori SVN existix però encara és buit (31-10-2026)] */
+  },
+  {
+    id: 'atles:oliva_oli', titol: "Collita de l'oliva i l'oli", ruta: '/pobles',
+    claus: ['oliva', 'olives', 'oli', 'olivera', 'oliveres', 'almassera', 'collita'],
+    paragrafs: [
+      "La collita de l'oliva i l'elaboració d'oli d'oliva verge extra a les almàsseres i cooperatives és un dels pilars agrícoles de les nostres comarques de muntanya, des de la tardor fins a l'hivern.",
+      "A Sóc de Poble pots compartir l'estat de la campanya al Mur i anunciar oli o eines agrícoles de proximitat al Mercat."
+    ]
+    /* [PAGE_COPY.publicar_mur i publicar_mercat (pageContent.js); sections.js (Mur i Mercat)] */
+  },
+  {
+    id: 'atles:hort_tomaques', titol: "L'horta, les tomaques i el reg", ruta: '/pobles',
+    claus: ['hort', 'horta', 'tomaca', 'tomaques', 'sembrar', 'reg', 'bancal', 'bancals', 'llavors', 'cultiu'],
+    paragrafs: [
+      "L'horta tradicional, el cultiu de tomaques de penjar i d'estiu, el manteniment dels bancals i l'aprofitament de l'aigua de reg i de les séquies formen part viva de la memòria rural dels nostres pobles.",
+      "Al Mur pots compartir consells de sembra i varietats locals, i al Mercat, intercanviar planter, llavors tradicionals i excedents de collita amb el veïnat."
+    ]
+    /* [PAGE_COPY.publicar_mur i publicar_mercat (pageContent.js); sections.js (Mur i Mercat)] */
+  },
+  {
+    id: 'atles:festes_agenda', titol: 'Calendari, festes i agenda', ruta: '/calendari',
+    claus: ['calendari', 'agenda', 'festa', 'festes', 'acte', 'actes', 'esdeveniments', 'aplec', 'fira'],
+    paragrafs: [
+      "El Calendari comunitari aplega les festes majors, els mercats setmanals, les assemblees d'associacions, els aplecs i les activitats culturals o esportives del poble perquè ningú es perda res.",
+      "Qualsevol veí o entitat registrada pot consultar els pròxims actes a la vista del Calendari i anunciar convocatòries obertes a tota la comunitat des del Mur."
+    ]
+    /* [sections.js (Calendari a /calendari, el mateix calendari del Mur); App.jsx (ruta /calendari)] */
+  },
+  {
+    id: 'atles:patrimoni_fonts', titol: 'Fonts, sendes i patrimoni rural', ruta: '/pobles',
+    claus: ['font', 'fonts', 'senda', 'sendes', 'ruta', 'rutes', 'caminada', 'muntanya', 'patrimoni', 'barranc'],
+    paragrafs: [
+      "Les fonts naturals, els llavadors, les sendes de muntanya, els marges tradicionals i els masos formen el patrimoni viu del nostre terme municipal.",
+      "Al Mur pots compartir fotos i notes de les fonts, les sendes i els racons del terme; hui Sóc de Poble encara no té cap col·lecció de toponímia ni de memòria oral."
+    ]
+    /* [PAGE_COPY.publicar_mur (pageContent.js); exportaMunicipiOpenData.js (recullDadesPubliquesDelMunicipi: el Mas no té cap mòdul de memòria cultural)] */
+  },
+  {
+    id: 'atles:entitat_associacio', titol: 'Associacions, cooperatives i comerços', ruta: '/projecte',
+    claus: ['entitat', 'entitats', 'cooperativa', 'cooperatives', 'comerc', 'botiga', 'empresa', 'grup', 'col·lectiu'],
+    paragrafs: [
+      "Les associacions culturals, comissions de festes, cooperatives agrícoles i comerços locals poden tindre la seua pròpia fitxa pública a Sóc de Poble i publicar avisos en nom de l'entitat.",
+      "Des del teu perfil pots crear una organització o un grup, afegir altres membres de la junta amb rol d'administració i commutar amb un toc entre la teua veu personal i la del col·lectiu."
+    ]
+    /* [PerfilContext.jsx i contracte.js (alta directa de membres, sense invitació)] */
+  },
+  {
+    id: 'atles:privacitat_baixa', titol: 'Exportació de dades i privacitat', ruta: '/el-meu-perfil',
+    claus: ['privacitat', 'dades', 'exportar', 'rgpd', 'drets', 'visibilitat'],
+    paragrafs: [
+      "A Sóc de Poble les teues dades són teues: no hi ha publicitat ni rastrejadors comercials, i tu decideixes si la teua fitxa veïnal és pública o privada.",
+      "A l'apartat de Privacitat del teu perfil pots descarregar una còpia de les dades que Sóc de Poble guarda del teu compte, en un fitxer JSON, i demanar la baixa del compte."
+    ]
+    /* [DetallPrivacitat.jsx (còpia en JSON i baixa) i PerfilShell.jsx (vista Privacitat de /el-meu-perfil); legalContent.js (galetes: cap analítica comercial)] */
+  },
+  {
+    id: 'atles:idiomes_traductor', titol: 'Idiomes i traducció lliure', ruta: '/traduccions',
+    claus: ['llengua', 'llengues', 'traduir', 'traduccio', 'traductor', 'apertium', 'valencia', 'castella', 'angles', 'basc', 'gallec'],
+    paragrafs: [
+      "La interfície de Sóc de Poble està disponible en cinc llengües: valencià, castellà, anglés, basc i gallec, i pots canviar-la en qualsevol moment des de l'apartat d'Idioma.",
+      "A més, a socdepoble.org, el botó Traduir de la barra blava demana una traducció automàtica del text de la pàgina: amb Apertium, un traductor de programari lliure, al castellà, l'anglés, el francés i el gallec, i amb el servei MyMemory al basc i a l'alemany. És traducció automàtica, sense revisió de cap persona."
+    ]
+    /* [SUPPORTED_LANGUAGES (i18n.js); App.jsx (Idioma a /traduccions); PAGE_COPY.fediversity (Apertium i MyMemory)] */
+  },
+  {
+    id: 'atles:cerca_global', titol: 'Cercador i filtres', ruta: '/cerca',
+    claus: ['cercador', 'filtre', 'filtrar', 'lupa'],
+    paragrafs: [
+      "El cercador superior et permet trobar i localitzar a l'instant qualsevol publicació del Mur, anunci del Mercat, fitxa de poble, veí, entitat o pàgina escrivint una sola paraula clau.",
+      "Pots obrir la cerca des de la barra superior en qualsevol pantalla i filtrar els resultats per tipus."
+    ]
+    /* [indexCerca.js (TIPUS_CERCA, sense documents de la Wiki); App.jsx (el botó de la barra superior obri /cerca)] */
   }
 ].map((entrada) => Object.freeze({ ...entrada, claus: Object.freeze([...entrada.claus]), paragrafs: Object.freeze([...entrada.paragrafs]) })));
 

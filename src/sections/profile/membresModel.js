@@ -62,6 +62,16 @@ export function accionsSobre(membre, { rolMeu, jo } = {}) {
 }
 
 /**
+ * IDEA-24 · Només la propietària ('owner') pot transferir la propietat a una
+ * altra persona que ja siga membre ('admin' o 'member') de l'organització.
+ */
+export function potTransferirPropietat(membre, { rolMeu, jo } = {}) {
+  if (!membre || rolMeu !== 'owner' || membre.tipus !== 'persona' || membre.rol === 'owner') return false;
+  if (jo != null && String(membre.id) === String(jo)) return false;
+  return true;
+}
+
+/**
  * Els candidats a membre de l'organització `orgId`, sense els que ja ho són
  * (`membres`) ni la persona que mira (`jo`):
  *   · `persones`: files de carregaMembres (el padró del poble, ja cercat pel

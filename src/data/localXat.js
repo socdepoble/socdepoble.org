@@ -498,12 +498,13 @@ export function createLocalXatAdapter() {
       const { estat, jo } = magatzem(config);
       const meu = exigixParticipant(estat, filId, jo);
       const fil = estat.fils.get(filId);
+      const nomesRebut = config.rebutFinsSeq != null && (config.llegitFinsSeq == null || config.llegitFinsSeq === 0);
       /* `null` vol dir fins a l’últim; una marca mai retrocedix. */
       const objectiu = (valor) => (valor === null || valor === undefined ? fil.ultimSeq : Math.min(fil.ultimSeq, cursor(valor)));
-      meu.llegitFinsSeq = Math.max(meu.llegitFinsSeq, objectiu(config.llegitFinsSeq));
+      if (!nomesRebut) meu.llegitFinsSeq = Math.max(meu.llegitFinsSeq, objectiu(config.llegitFinsSeq));
       meu.rebutFinsSeq = Math.max(meu.rebutFinsSeq, objectiu(config.rebutFinsSeq), meu.llegitFinsSeq);
-      /* Com xat_marca: el «no llegit» manual s’apaga només quan s’ha llegit tot. */
-      if (meu.llegitFinsSeq >= fil.ultimSeq) meu.noLlegitManual = false;
+      /* Una entrega és independent de la lectura i de la marca manual. */
+      if (!nomesRebut && meu.llegitFinsSeq >= fil.ultimSeq) meu.noLlegitManual = false;
       /* El que llig un membre en nom de l'entitat, ho ha llegit l'entitat. */
       if (meu.comOrgId) {
         const virtual = estat.participants.get(filId).get(meu.comOrgId);

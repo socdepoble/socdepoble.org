@@ -140,7 +140,10 @@ export async function enviaXifratXat(filId, paquet, config = {}) {
   }, config);
   vigent(usuari, config);
   const m = primera(data);
-  if (!m || m.id !== paquet.id) throw errorAdjuntXat('sense-confirmacio', { codi: 'eco-absent' });
+  if (!m || m.id !== paquet.id || m.cos !== null || !Number.isSafeInteger(numero(m.seq)) || numero(m.seq) <= 0
+      || (m.fil_id != null && m.fil_id !== filId) || !m.xifrat || typeof m.xifrat !== 'object' || Array.isArray(m.xifrat)) {
+    throw errorAdjuntXat('sense-confirmacio', { codi: 'eco-absent' });
+  }
   return mapejaMissatgeXifrat(m, filId);
 }
 
@@ -182,7 +185,7 @@ export async function publicaAdjuntXifratXat(filId, entrada, { onProgres, ...con
   const m = primera(await rpcXifrat('xat_publica_adjunt_xifrat', { p_id: id, p_resposta_a: respostaA, p_xifrat: xifrat, p_epoca_nova: epocaNova }, config));
   vigent(usuari, config);
   const seq = numero(m?.seq);
-  if (m?.id !== id || !Number.isSafeInteger(seq) || seq <= 0 || m.cos != null) throw errorAdjuntXat('sense-confirmacio');
+  if (m?.id !== id || !Number.isSafeInteger(seq) || seq <= 0 || m.cos !== null || (m.fil_id != null && m.fil_id !== filId) || !m.xifrat || typeof m.xifrat !== 'object' || Array.isArray(m.xifrat)) throw errorAdjuntXat('sense-confirmacio');
   return mapejaMissatgeXifrat(m, filId);
 }
 

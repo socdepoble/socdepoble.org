@@ -26,7 +26,7 @@ vi.mock('./config.js', () => ({
     }) } };
   }
 }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.usuari }));
+vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => m.usuari }));
 
 import { esborraElMeuMitja, llistaElsMeusMitjans } from './storage.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR } from '../errorsBackend.js';
@@ -72,6 +72,23 @@ afterEach(() => { consola.forEach((espia) => espia.mockRestore()); });
 
 const avis = () => consola[0];
 const totaLaConsola = () => JSON.stringify(consola.flatMap((espia) => espia.mock.calls));
+
+test('P1-27: quaranta carpetes no desborden la cua física ni perden el llistat', async () => {
+  const carpetes = Array.from({ length: 40 }, (_, i) => `carpeta-${i}`);
+  arbre[ARREL] = carpetes.map(carpeta);
+  for (const nom of carpetes) arbre[`${ARREL}/${nom}`] = [fitxer('foto.webp')];
+  let enVol = 0, maxim = 0;
+  m.llista.mockImplementation(async (...args) => {
+    enVol++;
+    maxim = Math.max(maxim, enVol);
+    await Promise.resolve();
+    try { return await servix(...args); } finally { enVol--; }
+  });
+  const llista = await llistaElsMeusMitjans(CONFIG);
+  expect(llista).toHaveLength(40);
+  expect(new Set(llista.map(mitja => mitja.carpeta))).toEqual(new Set(carpetes));
+  expect(maxim).toBeLessThanOrEqual(4);
+});
 
 /** Cap secret a la consola ni al missatge: ni la ruta, ni l'uid, ni el poble, ni el text cru. */
 function senseSecrets(text, secrets = []) {

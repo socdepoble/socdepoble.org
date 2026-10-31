@@ -48,18 +48,39 @@ const primera = (valor) => Array.isArray(valor) ? valor[0] : valor;
 function enviaAmbProgres(url, { method, signal, body, headers }, onProgres) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    const autoritzada = new URL(url);
+    let tancada = false;
     const avorta = () => xhr.abort();
-    const acaba = (fes) => { signal.removeEventListener('abort', avorta); fes(); };
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable && e.total > 0) onProgres(Math.min(1, e.loaded / e.total)); };
-    xhr.onload = () => acaba(() => {
-      if (xhr.responseURL && xhr.responseURL !== new URL(url).href) { reject(new TypeError('Redirecció no admesa.')); return; }
-      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, text: async () => xhr.responseText });
-    });
+    const acaba = fes => {
+      if (tancada) return;
+      tancada = true;
+      signal.removeEventListener('abort', avorta);
+      xhr.onload = xhr.onerror = xhr.onabort = xhr.onreadystatechange = null;
+      xhr.upload.onprogress = null;
+      fes();
+    };
+    const respostaAutoritzada = () => {
+      if (!xhr.responseURL) return false;
+      try {
+        const rebuda = new URL(xhr.responseURL);
+        return rebuda.origin === autoritzada.origin && !rebuda.username && !rebuda.password;
+      } catch { return false; }
+    };
+    const vetaRedireccio = () => {
+      acaba(() => reject(new TypeError('Origen de resposta de pujada no autoritzat.')));
+      xhr.abort();
+    };
+    xhr.upload.onprogress = e => { if (!tancada && e.lengthComputable && e.total > 0) onProgres(Math.min(1, e.loaded / e.total)); };
+    xhr.onreadystatechange = () => { if (xhr.readyState === 2 && !respostaAutoritzada()) vetaRedireccio(); };
+    xhr.onload = () => {
+      if (!respostaAutoritzada()) { vetaRedireccio(); return; }
+      acaba(() => resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, text: async () => xhr.responseText }));
+    };
     xhr.onerror = () => acaba(() => reject(new TypeError('Failed to fetch')));
     xhr.onabort = () => acaba(() => reject(new DOMException('Operació cancel·lada.', 'AbortError')));
     xhr.open(method, url);
     for (const [nom, valor] of Object.entries(headers)) xhr.setRequestHeader(nom, valor);
-    if (signal.aborted) { reject(new DOMException('Operació cancel·lada.', 'AbortError')); return; }
+    if (signal.aborted) { acaba(() => reject(new DOMException('Operació cancel·lada.', 'AbortError'))); return; }
     signal.addEventListener('abort', avorta, { once: true });
     xhr.send(body);
   });

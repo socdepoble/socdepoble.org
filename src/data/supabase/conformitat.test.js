@@ -342,6 +342,9 @@ function fetchDelServidor(entrada, opcions = {}) {
     '/rest/v1/notes': () => rutaDeNotes(url, metode, cos),
     '/rest/v1/profiles': () => resposta(eq(p.get('id')) === PERSONA ? [{ id: PERSONA, full_name: 'Persona de conformitat', visibility: 'private' }] : []),
     '/rest/v1/rpc/list_my_organizations': () => resposta([]),
+    '/rest/v1/rpc/admin_list_users': () => resposta([{ id: PERSONA }]),
+    '/rest/v1/rpc/admin_list_organizations': () => resposta([]),
+    '/rest/v1/organization_claims': () => resposta([]),
     '/rest/v1/organization_directory': () => rutaDelDirectori(p),
     '/rest/v1/user_platform_roles': () => resposta([]),
     /* Fase D (261020, tasca 2) · La moderació (2610201500): la persona de

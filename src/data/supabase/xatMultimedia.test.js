@@ -259,3 +259,19 @@ test('si Storage no confirma el descart, la quota no s’allibera', async () => 
   await expect(descartaAdjuntXat(ID)).rejects.toMatchObject({ code: 'xarxa' });
   expect(m.rpc.mock.calls.map(([n]) => n)).toEqual(['xat_prepara_descart']);
 });
+
+test('Lot 2 C2120-02: l’origen es veta en HEADERS_RECEIVED abans de load i no es publica', async () => {
+  let resposta;
+  ambXhr(xhr => { resposta=xhr; xhr.readyState=2; xhr.responseURL='https://altre.example.org/object'; xhr.onreadystatechange?.(); });
+  await expect(publicaAdjuntXat(FIL, entrada(), {onProgres:vi.fn()})).rejects.toMatchObject({code:'xarxa'});
+  expect(resposta.abort).toHaveBeenCalledTimes(1);
+  expect(resposta.onload).toBeNull();
+  expect(m.rpc.mock.calls.some(([nom]) => nom==='xat_publica_adjunt')).toBe(false);
+});
+test('Lot 2 C2120-02: un responseURL buit, malformat o aliè en load no confirma la pujada', async () => {
+  for(const resposta of ['', '::url-malformada', 'https://altre.example.org/object']) {
+    m.rpc.mockClear();ambXhr(xhr=>xhr.respon(200,'{}',resposta));
+    await expect(publicaAdjuntXat(FIL,entrada(),{onProgres:vi.fn()})).rejects.toMatchObject({code:'xarxa'});
+    expect(m.rpc.mock.calls.some(([nom])=>nom==='xat_publica_adjunt')).toBe(false);
+  }
+});

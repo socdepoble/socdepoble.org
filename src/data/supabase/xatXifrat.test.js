@@ -77,3 +77,12 @@ describe('xatMultimediaXifrat', () => {
     expect(fila).toMatchObject({ id: ID, text: null, xifrat });
   });
 });
+
+test('Lot 2 E1 · el rebut xifrat exigix cos nul explícit, seq vàlid, fil coherent i el sobre', async () => {
+  const xifrat={v:1,epoca:1,iv:'aa',ct:'bb',kid:'cc',tf:'dd'};
+  const valida={id:ID,fil_id:FIL,seq:7,usuari_id:A,cos:null,xifrat};
+  for(const canvi of [{cos:undefined},{cos:'text en clar'},{seq:'no-enter'},{fil_id:A},{xifrat:null},{xifrat:[]}]) {
+    rpc.mockResolvedValueOnce([{...valida,...canvi}]);
+    await expect(X.enviaXifratXat(FIL,{id:ID,text:null,xifrat})).rejects.toMatchObject({code:'sense-confirmacio'});
+  }
+});

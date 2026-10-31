@@ -15,10 +15,11 @@
 
 import { getResolvedConfig } from './runtime.js';
 import { getClient } from './config.js';
-import { usuariDeSessio } from '../identitat.js';
+import { usuariDeSessio, capturaSessio } from '../identitat.js';
 import { handleError } from './utils.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendInabastable } from '../errorsBackend.js';
 import { tempsLimitPujada } from '../xatMultimedia.js';
+import { controlStorageDe, informaReconciliacioStorage } from './controlStorage.js';
 
 /* Límits per fitxer (ARQ-G07): 25 MiB al bucket privat, 5 MiB al públic. */
 const MIDA_MAX_PRIVADA = 26214400;
@@ -27,54 +28,92 @@ const MIDA_MAX_PUBLICA = 5242880;
 /* PN-04 (auditoria Port Neutral 261025) · Cap crida a Storage no espera per
    sempre. storage-js 2.112 no hi posa cap termini i el client es crea sense
    cap fetch propi (config.js): una pujada, una URL signada o un llistat que
-   no tornaven deixaven la vista «carregant» indefinidament. El patró de CUR-02
-   (ambSenyal, xat.js) i de la fitxa pública (perfils.js): la cursa allibera
-   qui espera encara que el transport no sàpia avortar, i el termini també
-   talla la petició: download i list reben el senyal per l'API de storage-js,
-   i upload, createSignedUrl i remove pel fetch de la seua instància (P1-27,
-   ambSenyalDelTermini). Una pujada creix amb la mida (tempsLimitPujada, la
-   regla dels adjunts del xat); una baixada no la sap abans i pren la del
-   fitxer més gran que admet el bucket privat. La resta són respostes curtes: 12 s, com request() (runtime.js).
-   El temps esgotat porta el codi neutral de «no ha arribat al servidor»: és
-   el que la persona pot fer (comprovar la connexió i tornar-ho a provar), i
-   errorDeStorage el traduïx amb la frase de sempre. */
+   no tornaven deixaven la vista «carregant» indefinidament. Des de P1-27, cada
+   crida passa pel control compartit (controlStorage.js: 4 places i una cua de
+   32), que allibera qui espera encara que el transport no sàpia avortar. El
+   termini compta des que la crida arranca, i també talla la petició: download
+   i list reben el senyal per l'API de storage-js, i upload, createSignedUrl i
+   remove pel fetch de la seua instància (ambSenyalDelTermini). L'espera a la
+   cua té el seu propi sostre, encara que qui crida no passe cap senyal (V2-01):
+   el termini de la crida més el més llarg de les que poden ocupar plaça abans.
+   Una pujada creix amb la mida (tempsLimitPujada, la regla dels adjunts del
+   xat); una baixada no la sap abans i pren la del fitxer més gran que admet
+   el bucket privat. La resta són respostes curtes: 12 s, com request() (runtime.js).
+   El temps esgotat i la cua plena o esgotada («Storage està ocupat») porten el
+   codi neutral de «no ha arribat al servidor»: és el que la persona pot fer
+   (comprovar la connexió i tornar-ho a provar), i errorDeStorage el traduïx
+   amb la frase de sempre. */
 const TEMPS_STORAGE_MS = 12_000;
 const TEMPS_BAIXADA_MS = tempsLimitPujada(MIDA_MAX_PRIVADA);
 
-function ambTermini(ms, feina) {
-  const controlador = new AbortController();
-  let talla;
-  const tallada = new Promise((_resol, rebutja) => { talla = rebutja; });
-  const perTermini = setTimeout(() => {
-    talla(Object.assign(new Error('Storage no ha respost a temps.'), { name: 'TimeoutError', codi: CODI_BACKEND_INABASTABLE }));
-    controlador.abort();
-  }, ms);
-  /* La feina entra en un then: una excepció síncrona del SDK és un rebuig, i
-     un resultat tardà queda consumit per la cursa. */
-  return Promise.race([Promise.resolve().then(() => feina(controlador.signal)), tallada])
-    .finally(() => clearTimeout(perTermini));
-}
-
-/* P1-27 (C2120-03, G2120-06) · storage-js 2.112.4 no accepta cap senyal a
-   upload, createSignedUrl ni remove: el termini alliberava qui esperava, però
-   la petició continuava viva per davall. Cada `storage.from(cubell)` és una
-   instància nova (StorageClient.from) que fa totes les seues peticions amb el
-   seu `fetch`; ací, només en eixa instància, el fetch porta el senyal del
-   termini. El client compartit i les altres crides no el veuen. Si l'SDK ja
-   hi posa un senyal (download, list), mana el seu. Si una versió futura no
-   exposa `fetch` a la instància, es queda com abans: la cursa continua
-   alliberant qui espera (storage.termini.test.js ho vigila amb l'SDK real).
-   Avortar una pujada o un esborrat que el servidor ja havia rebut no el desfà:
-   és igual que abans del canvi, i la reconciliació és decisió pendent. */
+// SDK 2.112: download/list tenen signal; upload/sign/remove el reben pel fetch de la instància.
 function ambSenyalDelTermini(cubell, signal) {
   const base = cubell?.fetch;
   if (typeof base !== 'function') return cubell;
   try {
-    cubell.fetch = (url, init) => base(url, init?.signal ? init : { ...init, signal });
-  } catch {
-    /* Una instància tancada (un doble congelat): com abans. */
-  }
+    cubell.fetch = (url, init = {}) => {
+      if (!init.signal || init.signal === signal) return base(url, { ...init, signal });
+      const control = new AbortController();
+      const talla = () => control.abort();
+      for (const s of [init.signal, signal]) { if (s.aborted) talla(); else s.addEventListener('abort', talla, { once: true }); }
+      return Promise.resolve().then(() => base(url, { ...init, signal: control.signal })).finally(() => {
+        init.signal.removeEventListener('abort', talla); signal.removeEventListener('abort', talla);
+      });
+    };
+  } catch { /* SDK opac: el límit físic i el descart tardà continuen actius. */ }
   return cubell;
+}
+
+const origenCubell = new WeakMap();
+function cubellDe(client, bucket, config) {
+  const cubell = client.storage.from(bucket);
+  origenCubell.set(cubell, { clau: client.storage, config });
+  return cubell;
+}
+function ambTermini(ms, feina, { clau, config = {}, reconcilia } = {}) {
+  return controlStorageDe(clau).executa(feina, { ms, signal: config.signal, reconcilia });
+}
+function operacioStorage(client, bucket, ms, config, feina, { tipus = 'lectura', rutes = [], compensa = false, propietari = usuariDeSessio()?.id ?? null, vigent = capturaSessio() } = {}) {
+  const cubell = cubellDe(client, bucket, config);
+  const usuari = propietari;
+  let canviInformat = false;
+  const avisaCanvi = () => { if (!canviInformat) { canviInformat = true; informaReconciliacioStorage({ tipus, estat: 'pendent', motiu: 'sessio-canviada' }); } };
+  const comprova = () => { vigent(); if ((usuariDeSessio()?.id ?? null) !== usuari) throw new DOMException('Operació cancel·lada.', 'AbortError'); };
+  return ambTermini(ms, async signal => {
+    comprova();
+    const valor = await feina(ambSenyalDelTermini(cubell, signal), signal);
+    try { comprova(); }
+    catch (error) { avisaCanvi(); throw error; }
+    return valor;
+  }, {
+    clau: client.storage, config,
+    reconcilia: async () => {
+      // Una sessió nova no pot reconciliar una mutació de la persona anterior.
+      try { comprova(); } catch { avisaCanvi(); return; }
+      const control = new AbortController();
+      const temps = setTimeout(() => control.abort(), TEMPS_STORAGE_MS);
+      let estat = 'invalida';
+      try {
+        const consulta = ambSenyalDelTermini(client.storage.from(bucket), control.signal);
+        if (compensa) {
+          const resultat = await consulta.remove(rutes);
+          estat = resultat?.error ? 'pendent' : 'compensat';
+        } else if (tipus === 'esborrat' || tipus === 'pujada') {
+          if (typeof consulta.info !== 'function') estat = 'pendent';
+          else {
+            const resultats = [];
+            for (const ruta of rutes) { comprova(); const resultat = await consulta.info(ruta); comprova(); resultats.push(resultat); }
+            estat = resultats.every(r => r.data || ['404', 'NoSuchKey', 'not_found'].includes(String(r.error?.status || r.error?.statusCode || r.error?.code))) ? 'comprovat' : 'pendent';
+          }
+        }
+      } catch { estat = 'pendent'; }
+      finally {
+        clearTimeout(temps);
+        try { comprova(); } catch { avisaCanvi(); return; }
+        informaReconciliacioStorage({ tipus, estat });
+      }
+    }
+  });
 }
 
 /* Un UUID de poble o d'usuari (uploadToStorage i la biblioteca de fotos pròpies). */
@@ -260,9 +299,11 @@ function diagnosiDeStorage(error) {
  * @returns {Promise<{data: object, error: object}>}
  */
 export const uploadFile = async (bucket, path, file, config = {}) => {
+  const vigent = capturaSessio();
+  const propietari = usuariDeSessio()?.id ?? null;
   try {
     const supabase = await getClient(config);
-    return await ambTermini(tempsLimitPujada(file?.size), (signal) => ambSenyalDelTermini(supabase.storage.from(bucket), signal).upload(path, file));
+    return await operacioStorage(supabase, bucket, tempsLimitPujada(file?.size), config, cubell => cubell.upload(path, file), { tipus: 'pujada', rutes: [path], propietari, vigent });
   } catch (error) {
     return handleError(error);
   }
@@ -276,9 +317,11 @@ export const uploadFile = async (bucket, path, file, config = {}) => {
  * @returns {Promise<{data: Blob, error: object}>}
  */
 export const downloadFile = async (bucket, path, config = {}) => {
+  const vigent = capturaSessio();
+  const propietari = usuariDeSessio()?.id ?? null;
   try {
     const supabase = await getClient(config);
-    return await ambTermini(TEMPS_BAIXADA_MS, (signal) => supabase.storage.from(bucket).download(path, undefined, { signal }));
+    return await operacioStorage(supabase, bucket, TEMPS_BAIXADA_MS, config, (cubell, signal) => cubell.download(path, undefined, { signal }), { propietari, vigent });
   } catch (error) {
     return handleError(error);
   }
@@ -292,10 +335,12 @@ export const downloadFile = async (bucket, path, config = {}) => {
  * @returns {Promise<{data: object, error: object}>}
  */
 export const deleteFile = async (bucket, pathOrPaths, config = {}) => {
+  const vigent = capturaSessio();
+  const propietari = usuariDeSessio()?.id ?? null;
   try {
     const supabase = await getClient(config);
     const paths = Array.isArray(pathOrPaths) ? pathOrPaths : [pathOrPaths];
-    return await ambTermini(TEMPS_STORAGE_MS, (signal) => ambSenyalDelTermini(supabase.storage.from(bucket), signal).remove(paths));
+    return await operacioStorage(supabase, bucket, TEMPS_STORAGE_MS, config, cubell => cubell.remove(paths), { tipus: 'esborrat', rutes: paths, propietari, vigent });
   } catch (error) {
     return handleError(error);
   }
@@ -309,9 +354,11 @@ export const deleteFile = async (bucket, pathOrPaths, config = {}) => {
  * @returns {Promise<{data: Array, error: object}>}
  */
 export const listFiles = async (bucket, path = '', config = {}) => {
+  const vigent = capturaSessio();
+  const propietari = usuariDeSessio()?.id ?? null;
   try {
     const supabase = await getClient(config);
-    return await ambTermini(TEMPS_STORAGE_MS, (signal) => supabase.storage.from(bucket).list(path, undefined, { signal }));
+    return await operacioStorage(supabase, bucket, TEMPS_STORAGE_MS, config, (cubell, signal) => cubell.list(path, undefined, { signal }), { propietari, vigent });
   } catch (error) {
     return handleError(error);
   }
@@ -325,6 +372,7 @@ export const listFiles = async (bucket, path = '', config = {}) => {
  * @returns {Promise<string>}
  */
 export const getPublicUrl = async (bucket, path, config = {}) => {
+  if (typeof bucket !== 'string' || !segmentNet(bucket) || typeof path !== 'string' || !camiNet(path)) throw new TypeError('Bucket o camí invàlid.');
   const supabase = await getClient(config);
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 };
@@ -336,6 +384,7 @@ export const getPublicUrl = async (bucket, path, config = {}) => {
  * @param {object} config
  */
 export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } = {}, config = {}) => {
+  const vigent = capturaSessio();
   const user = usuariDeSessio();
   if (!user?.id) throw new Error('Cal iniciar sessió');
   const resolvedTenant = getResolvedConfig(config).tenantId;
@@ -355,7 +404,7 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
      traducció que un rebuig: la vista diu el motiu pel codi, mai un error cru. */
   let error;
   try {
-    ({ error } = await ambTermini(tempsLimitPujada(fitxer.size), (signal) => ambSenyalDelTermini(client.storage.from(bucket), signal).upload(ruta, fitxer, { upsert: false })));
+    ({ error } = await operacioStorage(client, bucket, tempsLimitPujada(fitxer.size), config, cubell => cubell.upload(ruta, fitxer, { upsert: false }), { tipus: 'pujada', rutes: [ruta], compensa: true, propietari: user.id, vigent }));
   } catch (excepcio) {
     error = excepcio;
   }
@@ -406,6 +455,8 @@ export const resolveAsset = async (ref, config = {}) => {
   const path = pathPart.substring(slashIndex + 1);
   if (!segmentNet(bucket) || !camiNet(path)) return ref;
 
+  const vigent = capturaSessio();
+  const propietari = usuariDeSessio()?.id ?? null;
   const supabase = await getClient(config);
   
   if (bucket === 'mitjans_privats') {
@@ -414,7 +465,7 @@ export const resolveAsset = async (ref, config = {}) => {
     let data;
     let error;
     try {
-      ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, (signal) => ambSenyalDelTermini(supabase.storage.from(bucket), signal).createSignedUrl(path, 3600)));
+      ({ data, error } = await operacioStorage(supabase, bucket, TEMPS_STORAGE_MS, config, cubell => cubell.createSignedUrl(path, 3600), { tipus: 'signatura', propietari, vigent }));
     } catch (excepcio) {
       error = excepcio;
     }
@@ -550,7 +601,7 @@ async function llistaSencera(cubell, prefix) {
     // PN-04 · Cada pàgina, el seu termini (i el senyal, que storage-js passa a fetch).
     const { data, error } = await ambTermini(TEMPS_STORAGE_MS, (signal) => cubell.list(prefix, {
       limit: PAGINA_LLISTAT, offset: pagina * PAGINA_LLISTAT, sortBy: { column: 'name', order: 'asc' }
-    }, { signal }));
+    }, { signal }), { clau: origenCubell.get(cubell)?.clau ?? cubell, config: origenCubell.get(cubell)?.config });
     if (error) throw error;
     const lot = Array.isArray(data) ? data : [];
     entrades.push(...lot);
@@ -566,11 +617,12 @@ async function fitxersDeLArrel(cubell, arrel) {
   const carpetes = (await llistaSencera(cubell, arrel))
     .filter((entrada) => esCarpeta(entrada) && typeof entrada?.name === 'string' && RE_CARPETA.test(entrada.name))
     .map((entrada) => entrada.name);
-  const perCarpeta = await Promise.all(carpetes.map(async (carpeta) =>
-    (await llistaSencera(cubell, `${arrel}/${carpeta}`))
-      .filter((entrada) => entrada && !esCarpeta(entrada))
-      .map((fitxer) => ({ arrel, carpeta, fitxer }))));
-  return perCarpeta.flat();
+  const fitxers = [];
+  for (const carpeta of carpetes) {
+    const lot = await llistaSencera(cubell, `${arrel}/${carpeta}`);
+    fitxers.push(...lot.filter(entrada => entrada && !esCarpeta(entrada)).map(fitxer => ({ arrel, carpeta, fitxer })));
+  }
+  return fitxers;
 }
 
 /* Un instant ISO, o null: mai una data inventada. */
@@ -636,7 +688,8 @@ export const llistaElsMeusMitjans = async (config = {}) => {
   // El llegat es llista sempre: és una petició més i ningú l'esborra des d'ací.
   const arrels = propietari.poble ? [`${propietari.poble}/${propietari.uid}`, propietari.uid] : [propietari.uid];
   try {
-    const cubell = (await getClient(config)).storage.from(CUBELL_PUBLIC);
+    const client = await getClient(config);
+    const cubell = cubellDe(client, CUBELL_PUBLIC, config);
     const fitxers = (await Promise.all(arrels.map((arrel) => fitxersDeLArrel(cubell, arrel)))).flat();
     return fitxers.map((entrada) => mitjaDeFitxer(entrada, propietari)).filter(Boolean).sort(perMesNova);
   } catch (error) {
@@ -656,6 +709,8 @@ export const llistaElsMeusMitjans = async (config = {}) => {
  *   no és esborrable o el servidor no n'ha esborrat res; la resta, com la pujada.
  */
 export const esborraElMeuMitja = async (ref, config = {}) => {
+  const vigent = capturaSessio();
+  const uidOriginal = usuariDeSessio()?.id ?? null;
   if (esModeLocal(config)) throw rebuigDEsborrat(CODI_NO_DISPONIBLE, 'en este mode no hi ha cap servidor de fitxers.');
   const propietari = propietariDeSessio(config);
   if (!propietari.sessio) throw rebuigDEsborrat(CODI_MITJANS.SESSIO, 'cal iniciar sessió.');
@@ -664,8 +719,8 @@ export const esborraElMeuMitja = async (ref, config = {}) => {
   let data;
   let error;
   try {
-    const cubell = (await getClient(config)).storage.from(CUBELL_PUBLIC);
-    ({ data, error } = await ambTermini(TEMPS_STORAGE_MS, (signal) => ambSenyalDelTermini(cubell, signal).remove([ruta])));
+    const client = await getClient(config);
+    ({ data, error } = await operacioStorage(client, CUBELL_PUBLIC, TEMPS_STORAGE_MS, config, cubell => cubell.remove([ruta]), { tipus: 'esborrat', rutes: [ruta], propietari: uidOriginal, vigent }));
   } catch (excepcio) {
     error = excepcio;
   }

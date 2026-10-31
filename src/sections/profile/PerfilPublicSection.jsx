@@ -31,6 +31,7 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { entradaSessio } from '../../data/identitat.js';
 import { esRolQueMana } from '../../components/universal/identitat/rols.js';
+import { omple } from '../../config/moderacio.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
 import { desaVcard, nomFitxerVcard, vcardDOrganitzacio } from './vcardOrganitzacio.js';
 import { FORMA_USERNAME } from '../onboarding/onboardingModel.js';
@@ -702,8 +703,10 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
       : `/xat?amb=${encodeURIComponent(perfil.id)}`;
   const avisDIA = esLaIAIA
     ? t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona del poble.')
-    : `${perfil.nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.`;
-  const parlaAmbLaIA = esLaIAIA ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA') : `Parla amb ${perfil.nom}`;
+    : omple(t('section.perfil.public.iaAltresText', '{nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.'), { nom: perfil.nom });
+  const parlaAmbLaIA = esLaIAIA
+    ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA')
+    : omple(t('section.perfil.public.parlaIAAltres', 'Parla amb {nom}'), { nom: perfil.nom });
   /* Revisió del Gauntlet 261022_0225 (REV-PERF-7) · Sense cap botó (la fitxa
      del paquet de la persona pilot en remot amb sessió, P4b-3), la fila no es
      pinta: el seu marge deixava un forat davall de l'entradilla. */
@@ -810,7 +813,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           ) : null}
           {administra && !actuaComEsta ? (
             <Boto varietat="secundari" icona={UserCheck} onClick={() => setActor?.('entitat', membership.id)}>
-              {`Actua com a ${perfil.nom}`}
+              {omple(t('section.perfil.public.actuaCom', 'Actua com a {nom}'), { nom: perfil.nom })}
             </Boto>
           ) : null}
         </div>
@@ -820,10 +823,10 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
           {avisDIA}
         </Alerta>
       ) : null}
-      {actuaComEsta ? <p role="status">{`Ara actues com a ${perfil.nom}.`}</p> : null}
+      {actuaComEsta ? <p role="status">{omple(t('section.perfil.public.actuaComEsta', 'Ara actues com a {nom}.'), { nom: perfil.nom })}</p> : null}
       {mailto ? (
         <p>
-          {'Correu: '}
+          {t('section.perfil.public.correuEtiqueta', 'Correu: ')}
           <a href={mailto}>{correuPublic}</a>
         </p>
       ) : null}

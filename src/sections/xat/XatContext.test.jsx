@@ -930,6 +930,9 @@ describe('historial, lectura i avisos (F0)', () => {
     mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
     mock.marcaLlegit.mockResolvedValue({ llegitFinsSeq: 5, rebutFinsSeq: 5 });
     await open();
+    // L’entrega ja s’ha confirmat; ara es prova exclusivament l’agrupador de lectura.
+    expect(mock.marcaLlegit).toHaveBeenCalledWith('fil-A', expect.objectContaining({ llegitFinsSeq:0, rebutFinsSeq:expect.any(Number) }));
+    mock.marcaLlegit.mockClear();
     expect(value.chatThreads[0].noLlegits).toBe(5);
     expect(value.totalNoLlegits).toBe(5);
     vi.useFakeTimers();

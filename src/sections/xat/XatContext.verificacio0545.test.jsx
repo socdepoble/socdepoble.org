@@ -194,6 +194,8 @@ describe('D5 (dades) · tipusAvisFil i llegintFil', () => {
     expect(value.avisFil('fil-A')).toBeNull();
     expect(value.tipusAvisFil('fil-A')).toBeNull();
     vi.useFakeTimers();
+    // Els rebuts d’entrega previs no són marques de lectura.
+    mock.marcaLlegit.mockClear();
     mock.marcaLlegit.mockRejectedValueOnce(Object.assign(new Error('No s’ha pogut marcar com a llegit.'), { retriable: true }));
     act(() => value.marcaVist('fil-A', 1));
     await pas(2000);
@@ -262,6 +264,8 @@ describe('D5 (dades) · tipusAvisFil i llegintFil', () => {
     act(() => value.recarregaFil('fil-A'));
     await pas(0);
     expect(value.llegintFil('fil-A')).toBe(false);
+    // Els rebuts d’entrega previs no són marques de lectura.
+    mock.marcaLlegit.mockClear();
     mock.marcaLlegit.mockRejectedValueOnce(Object.assign(new Error('No s’ha pogut marcar com a llegit.'), { retriable: true }));
     act(() => value.marcaVist('fil-A', 1));
     await pas(2000);

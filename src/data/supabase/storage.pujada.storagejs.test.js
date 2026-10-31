@@ -13,7 +13,7 @@ import { StorageClient } from '@supabase/storage-js';
 const m = vi.hoisted(() => ({ fetch: null, uid: '11111111-1a1a-4000-8000-000000000001' }));
 vi.mock('./runtime.js', () => ({ getResolvedConfig: (config = {}) => ({ ...config }) }));
 vi.mock('./config.js', () => ({ getClient: async () => ({ storage: new StorageClient('https://exemple.invalid/storage/v1', {}, (...args) => m.fetch(...args)) }) }));
-vi.mock('../identitat.js', () => ({ usuariDeSessio: () => ({ id: m.uid }) }));
+vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => ({ id: m.uid }) }));
 
 import { uploadToStorage } from './storage.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../errorsBackend.js';
